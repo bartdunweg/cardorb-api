@@ -144,6 +144,19 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
                 <div key={f.key} className="filter-menu-inline">
                   <span className="filter-menu-inline-label">{f.label}</span>
                   <div className="cards-segmented" role="group" aria-label={f.label}>
+                    {/* Ticking nothing is an answer, and on a facet of two it
+                        is the commonest one — so it gets a word rather than
+                        being the state you reach by untickig whatever is on.
+                        Selected means the set is empty, which is exactly what
+                        this button writes. */}
+                    <button
+                      type="button"
+                      className={`cards-segment${f.selected.size === 0 ? " is-active" : ""}`}
+                      aria-pressed={f.selected.size === 0}
+                      onClick={() => f.onReplace(new Set())}
+                    >
+                      All
+                    </button>
                     {f.options.map((o) => (
                       <button
                         key={o.value}

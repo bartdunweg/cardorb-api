@@ -84,8 +84,8 @@ export default function ViewSheet({
               <div className="cards-segmented" role="group" aria-labelledby="sheet-group">
                 {(
                   [
-                    ["set", "Set"],
                     ["flat", "None"],
+                    ["set", "Set"],
                     ["dex", "Pokédex"],
                   ] as const
                 ).map(([key, text]) => (

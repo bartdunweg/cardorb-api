@@ -1834,6 +1834,11 @@ body:has(.page-cards) .theme-toggle {
    still governs the layout it always did. */
 .cards-item-link {
   display: contents;
+  /* A <button> on the public link, where a card has no URL to go to, and a
+     button centres its text by browser default. That put every name and every
+     number in the middle of its column while the anchor version had them flush
+     left, which is where the eye scans a list of names. */
+  text-align: left;
   color: inherit;
   text-decoration: none;
 }
@@ -2848,6 +2853,13 @@ button.cards-dex-body:focus-visible::after {
 .view-menu-panel .cards-views,
 .view-menu-panel .cards-size {
   width: 100%;
+}
+/* The track takes what the two icons beside it leave, rather than sitting at
+   its intrinsic width with the panel's spare room to its right. */
+.view-menu-panel .cards-size input[type="range"],
+.sheet .cards-size input[type="range"] {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* A short facet, shown open at the top of the filter panel instead of behind a

@@ -78,8 +78,8 @@ export default function ViewMenu({
           <div className="cards-segmented" role="group" aria-labelledby="view-group">
             {(
               [
-                ["set", "Set"],
                 ["flat", "None"],
+                ["set", "Set"],
                 ["dex", "Pokédex"],
               ] as const
             ).map(([key, text]) => (
