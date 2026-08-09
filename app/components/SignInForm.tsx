@@ -6,7 +6,14 @@ import { KeyRound } from "lucide-react";
 import { useCardsKey } from "../hooks/useCardsKey";
 
 /**
- * The one field there is: the key.
+ * The one field there is: the password.
+ *
+ * "Password" on screen, `CARDS_TOKEN` and `x-cards-key` underneath. The name in
+ * the code is what curl and the iOS app send and is not worth churning; the
+ * name on screen is what someone has to recognise, and nobody has a mental
+ * category called "key" that a password manager also fills. The input has been
+ * type="password" with autoComplete="current-password" all along, so the label
+ * was the only part still saying something else.
  *
  * Pulled out of CardsProfile so that the login at / and the profile screen ask
  * for it the same way. Two copies of a password field is how one of them ends
@@ -64,7 +71,7 @@ export default function SignInForm({
       {note && <p className="cards-profile-note">{note}</p>}
       <form className="cards-profile-form" onSubmit={submit}>
         <label className="cards-profile-field">
-          <span className="cards-profile-label">Key</span>
+          <span className="cards-profile-label">Password</span>
           {/* type="password", so it is not read over a shoulder and so a
               password manager offers to keep it. autoComplete tells the manager
               which one: without it, browsers fill the field with an address or

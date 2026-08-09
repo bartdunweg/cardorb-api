@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   // that is a long random string rather than something guessable by hand.
   // The limiter still stands in front of every endpoint the key opens.
   if (!keyIsRight(key)) {
-    return NextResponse.json({ error: "That key is not right." }, { status: 401 });
+    return NextResponse.json({ error: "That password is not right." }, { status: 401 });
   }
 
   const res = NextResponse.json({ ok: true });

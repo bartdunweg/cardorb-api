@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Eye } from "lucide-react";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import Card from "./components/Card";
@@ -47,16 +48,22 @@ export default async function Home({
         <h1 className="page-title">binder</h1>
         <SignInForm
           redirectTo={next}
-          note="A collection of Pokémon cards, and the key that opens it for editing."
+          note="A collection of Pokémon cards. Sign in to add to it."
         />
       </Card>
 
       {/* Something for the people this login is not for. Without it the root of
           the app is a locked door with no sign, which is a strange thing to
-          find at the end of a link someone shared. */}
-      <p className="signin-public">
-        Just looking? <Link href={`/user/${PUBLIC_USERNAME}`}>See the collection</Link>.
-      </p>
+          find at the end of a link someone shared.
+
+          A button rather than a sentence with a link in it: for anyone without
+          the password this is not a footnote, it is the only thing on the page
+          they can do. It is the plain .btn and not .btn--primary, because the
+          filled one is Sign in and two of those would be a page asking twice. */}
+      <Link href={`/user/${PUBLIC_USERNAME}`} className="btn signin-public">
+        <Eye size={16} strokeWidth={1.75} aria-hidden="true" />
+        <span>See the collection</span>
+      </Link>
     </section>
   );
 }

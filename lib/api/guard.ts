@@ -171,7 +171,7 @@ export function refuseUnauthorised(req: Request): Refusal | null {
   }
 
   if (!keyIsRight(keyFrom(req))) {
-    return { status: 401, error: "That key is not right." };
+    return { status: 401, error: "That password is not right." };
   }
 
   return null;

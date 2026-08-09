@@ -37,7 +37,7 @@ export function useCardsKey() {
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(body.error ?? "That key is not right.");
+        setError(body.error ?? "That password is not right.");
         return false;
       }
       // Only the refresh, so the server re-renders knowing about the cookie.

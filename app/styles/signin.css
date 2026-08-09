@@ -38,15 +38,15 @@
   color: var(--color-text-secondary);
 }
 
-.signin-public {
-  margin: 0;
-  font-size: var(--fs-body-s);
-  line-height: var(--lh-relaxed);
-  color: var(--color-text-tertiary);
-  text-align: center;
-}
+/* .btn carries the shape; this only says where it sits. Outside the card
+   rather than in it: the card is the thing you sign into, and the collection
+   is somewhere else entirely.
 
-.signin-public a {
-  color: var(--color-text-primary);
-  text-underline-offset: 3px;
+   align-self, because .btn sets flex-start for the toolbars it usually lives
+   in, and in this centred column that put the button against the left edge of
+   the window. Not .btn--center, which also carries a margin meant for the
+   cover-flow label it was written for; the gap on .page-signin already spaces
+   this. */
+.signin-public {
+  align-self: center;
 }

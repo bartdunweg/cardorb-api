@@ -5,7 +5,7 @@ import SignInForm from "./SignInForm";
 import { useTheme } from "./ThemeProvider";
 
 /**
- * Where the key is typed, and the only screen on /cards that is about the
+ * Where the password is typed, and the only screen on /cards that is about the
  * person rather than the collection.
  *
  * A screen next to the dashboard and the dex rather than a dialog, for one
@@ -51,7 +51,7 @@ export default function CardsProfile({
             </button>
           </>
         ) : (
-          <SignInForm note="The collection is Bart's to add to. With the key, a plus appears in the bar and a card can be added from the page that shows it." />
+          <SignInForm note="The collection is Bart's to add to. Signed in, a plus appears in the bar and a card can be added from the page that shows it." />
         )}
       </section>
 
