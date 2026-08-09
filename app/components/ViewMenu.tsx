@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ChevronDown, LayoutGrid, Rows3, Settings2, Square } from "lucide-react";
+import { LayoutGrid, Rows3, Settings2, Square } from "lucide-react";
 
 /**
  * The view options as a dropdown, for the widths that have room beside the
@@ -62,7 +62,6 @@ export default function ViewMenu({
           <Settings2 size={15} strokeWidth={1.75} aria-hidden="true" />
           View
         </span>
-        <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </summary>
 
       <div className="filter-menu-panel view-menu-panel">

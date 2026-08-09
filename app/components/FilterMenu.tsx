@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Check } from "lucide-react";
 
 export type Option = { value: string; count: number };
 
@@ -82,7 +82,6 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
           Filter
           {total > 0 && <span className="filter-menu-badge">{total}</span>}
         </span>
-        <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
       </summary>
 
       <div className="filter-menu-panel">

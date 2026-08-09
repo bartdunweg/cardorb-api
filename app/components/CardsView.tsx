@@ -367,7 +367,7 @@ export default function CardsView({
    * What it keeps is the one thing that is genuinely about the dex rather than
    * about the cards: which printing stands for a Pokémon. See dexSets.
    */
-  const [group, setGroup] = useState<"set" | "flat" | "dex">("set");
+  const [group, setGroup] = useState<"set" | "flat" | "dex">("flat");
   // A layout of the list, not a place, so it is off wherever there is no list:
   // the dashboard summarises the collection and the profile is about the
   // password. Read off `selected` rather than the onDashboard/onProfile flags
@@ -376,11 +376,12 @@ export default function CardsView({
   /**
    * One run of cards with nothing between them.
    *
-   * By set is how a binder is actually kept, so it is the default and it is
-   * what the headings are for. But a set heading every twelve cards is a lot of
-   * furniture when what you want is to see how much of something there is —
-   * every Charizard you own, say, which is nine cards across seven sets and
-   * eight headings. This drops the headings and runs the grid straight through.
+   * The default, and by set is one press away. A set heading every twelve cards
+   * is a lot of furniture on the screen you land on: the rail already lists the
+   * sets and names the one you are in, so the headings were repeating the
+   * navigation down the middle of the page. It also answers the question you
+   * usually arrive with — how much of something is there — without counting
+   * across eight headings for the nine Charizards in seven sets.
    */
   const onFlat = group === "flat" && selected !== "dashboard" && selected !== "profile";
 
@@ -1627,9 +1628,15 @@ const CardItem = memo(function CardItem({
       height={card.imageSize?.height ?? 342}
     />
   ) : (
-    // A card with no scan anywhere keeps its slot: the gap is the honest
-    // answer, and the number still identifies it.
-    <span className="cards-scan-missing" aria-hidden="true" />
+    // A card with no scan anywhere keeps its slot, and says which card it is
+    // rather than sitting there as a grey rectangle. Not aria-hidden any more:
+    // it carries the only text there is for this card in the grid.
+    <span className="cards-scan-missing">
+      <span className="cards-scan-missing-frame" aria-hidden="true" />
+      <span className="cards-scan-missing-name">{card.name}</span>
+      {card.number && <span className="cards-scan-missing-number">{card.number}</span>}
+      <span className="sr-only">No picture available</span>
+    </span>
   );
 
   return (

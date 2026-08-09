@@ -767,9 +767,17 @@ body:has(.page-cards) .theme-toggle {
      the gap and the padding is what gives the hover pill below something to
      draw inside. */
   gap: var(--space-3);
-  margin: 0;
-  padding: 0;
   list-style: none;
+  /* Room for the shadow, inside the box that clips it.
+     content-visibility above brings paint containment with it, and paint
+     containment clips to the padding box — so the scans' drop-shadow, which
+     reaches 18px sideways and 26 below, was being sliced off in a straight line
+     down both edges of the grid and along the bottom of every row. The padding
+     puts that reach inside the clip and the negative margin takes the same
+     distance back out of the layout, so nothing moves and the column keeps its
+     own gutters. */
+  margin: -10px -20px -26px;
+  padding: 10px 20px 26px;
 }
 
 .cards-item {
@@ -871,13 +879,62 @@ body:has(.page-cards) .theme-toggle {
 
 /* Nothing found at either source: the slot keeps the card's shape in the page's
    own ink, the way the hobbies card marks an empty cover. */
+/* The stand-in for a card no catalogue has a picture of.
+   It was a flat grey rectangle at 6% — honest, and indistinguishable from a
+   scan that had failed to load, which is the one thing it is not. This says so
+   instead: the card's own shape, its name and its number, drawn as the back of
+   a card rather than as an absence. Roughly 1% of the collection. */
 .cards-scan-missing {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 4px;
-  background: var(--color-text-primary);
-  opacity: 0.06;
+  padding: var(--space-3);
+  border-radius: 4.5% / 3.2%;
+  /* The corner radius of a real card is a percentage of its width, which is why
+     this is a two-value ratio rather than a pixel: at every size in the slider
+     it stays the same shape as the scans beside it. */
+  background:
+    radial-gradient(
+      120% 90% at 50% 0%,
+      color-mix(in srgb, var(--color-text-primary) 9%, transparent),
+      transparent 70%
+    ),
+    color-mix(in srgb, var(--color-text-primary) 5%, transparent);
+  overflow: hidden;
+  text-align: center;
+}
+/* A hairline inset from the edge, the way a card's border sits inside its trim.
+   Enough to read as a card back at a glance without drawing anything literal. */
+.cards-scan-missing-frame {
+  position: absolute;
+  inset: 6%;
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  border-radius: 3% / 2.2%;
+}
+.cards-scan-missing-name {
+  position: relative;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-small);
+  line-height: var(--lh-snug);
+  color: var(--color-text-secondary);
+  /* Two lines, then stop: some trainer names are longer than the card is wide. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cards-scan-missing-number {
+  position: relative;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-tiny);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* The price, in the meta tier the number and the type sit in, but in full ink:
@@ -1005,12 +1062,9 @@ body:has(.page-cards) .theme-toggle {
   align-items: center;
   gap: var(--space-2);
 }
-.filter-menu[open] > summary svg {
-  transform: rotate(180deg);
-}
-.filter-menu > summary svg {
-  transition: transform var(--dur-fast) var(--ease-smooth);
-}
+/* No rotate-on-open any more: the chevron it turned is gone, and the rule was
+   written against every svg in the summary rather than that one, so what was
+   left of it would have spun the Plus and the sliders instead. */
 .filter-menu-badge {
   display: inline-flex;
   align-items: center;
