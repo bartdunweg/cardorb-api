@@ -48,6 +48,39 @@ export default function PublicCardDialog({
     () => onGo?.(1),
     () => onGo?.(-1),
   );
+  /**
+   * What the grid already knows, shaped as a detail.
+   *
+   * The dialog used to open on the scan alone and swap to the real thing when
+   * the fetch landed, which read as the card arriving in two pieces. Most of
+   * what the page shows is already in the browser: the name, the set, the
+   * number, the type and the printing all came down with the collection. Only
+   * HP, stage, illustrator and the regulation mark need asking for.
+   *
+   * So the dialog opens complete and fills in the last four rows rather than
+   * appearing twice. Nothing here is invented: a field this cannot know is
+   * null, and CardDetail draws no row for a fact with no answer.
+   */
+  const known: Detail | null = card
+    ? {
+        id: card.tcgId ?? "",
+        name: card.name,
+        image: card.image,
+        rarity: card.variants[0]?.rarity ?? null,
+        illustrator: null,
+        hp: null,
+        types: card.type ? [card.type] : [],
+        stage: null,
+        evolveFrom: null,
+        regulationMark: null,
+        set: setName ? { id: "", name: setName, logo: null, total: null } : null,
+        cmId: null,
+        cmUrl: "",
+        price: null,
+        market: null,
+      }
+    : null;
+
   const [detail, setDetail] = useState<Detail | null>(null);
   const [failed, setFailed] = useState(false);
   const id = card?.tcgId ?? null;
@@ -84,9 +117,9 @@ export default function PublicCardDialog({
       className="modal--card"
     >
       <div {...swipe}>
-      {showing && card ? (
+      {card ? (
         <CardDetail
-          card={showing}
+          card={showing ?? known!}
           mine={{ card, setName: setName ?? "" }}
           nav={
             onGo && (hasPrev || hasNext) ? (
@@ -116,19 +149,8 @@ export default function PublicCardDialog({
             ) : undefined
           }
         />
-      ) : (
-        // The scan is already in the browser's cache from the grid, so it draws
-        // at once and the rest fills in under it. Showing it beats a spinner in
-        // an empty box: what you tapped is what you see.
-        <div className="card-detail-pending">
-          {card?.image && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={card.image} alt={card.name} className="card-detail-pending-scan" />
-          )}
-          <p className="card-detail-pending-name">{card?.name}</p>
-          {failed && <p className="cards-profile-error">That card would not load. Try again.</p>}
-        </div>
-      )}
+      ) : null}
+      {failed && <p className="cards-profile-error">That card would not load. Try again.</p>}
       </div>
     </Modal>
   );

@@ -1917,27 +1917,6 @@ body:has(.page-cards) .theme-toggle {
   }
 }
 
-/* While the detail is on its way. The scan is already in the browser's cache
-   from the grid, so this draws instantly and the rest arrives under it. */
-.card-detail-pending {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-8) 0;
-}
-.card-detail-pending-scan {
-  width: min(280px, 60%);
-  height: auto;
-  border-radius: var(--radius-md);
-}
-.card-detail-pending-name {
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-card);
-  color: var(--color-text-primary);
-}
 
 /* ── Adding a card (CardAddDialog) ──
 
