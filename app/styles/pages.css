@@ -1,0 +1,26 @@
+/* The reused timeline sits flush-left inside the panel (spine against the edge) */
+.exp-panel .right {
+  max-width: none;
+  margin: 0;
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+  /* match the card padding on the right edge (was 48px) */
+  padding-right: var(--card-pad);
+}
+/* ─── REDUCED MOTION ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* stylelint-disable declaration-no-important -- the one place !important
+       belongs: this reset must beat every animation/transition declaration. */
+    animation-duration: 0.01ms !important;
+    /* Without capping iterations, `infinite` animations (sound bars, typing
+       dots, logo marquee, location ping) keep looping at 0.01ms each, that
+       flickers instead of stopping. Each of those ends on its resting frame,
+       so a single instant iteration leaves them looking static, not half-done. */
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    /* stylelint-enable declaration-no-important */
+  }
+}

@@ -1,0 +1,290 @@
+"use client";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { animate } from "motion";
+import { X } from "lucide-react";
+import { SPRING_MODAL, DUR_NORMAL, DUR_SLOW, prefersReducedMotion } from "../../lib/core/motion";
+
+/**
+ * Hold the page still while a dialog is over it.
+ *
+ * `overflow: hidden` on the body alone is not enough, and the way it fails is
+ * loud: the rule propagates to the viewport, the document stops being
+ * scrollable, and the browser clamps the scroll position to zero. Open a card
+ * from halfway down /cards and everything behind the modal snapped to the top,
+ * then snapped back on close.
+ *
+ * So the body is pinned where it already was (fixed, offset by the scroll it
+ * had) and the offset is handed back to the scroller on release. Nothing
+ * moves, and the page is genuinely locked rather than merely overflowing.
+ */
+function lockScroll(): () => void {
+  const y = window.scrollY;
+  const { body } = document;
+  // The width the page has *with* its scrollbar. Hiding the overflow takes the
+  // scrollbar away, which hands every column a dozen more pixels and reflows
+  // the grid behind the dialog; pinning the width means nothing reflows at all.
+  // On a trackpad Mac there is no gutter to lose and this is simply the width.
+  const width = document.documentElement.clientWidth;
+  const was = {
+    overflow: body.style.overflow,
+    position: body.style.position,
+    top: body.style.top,
+    width: body.style.width,
+  };
+  body.style.overflow = "hidden";
+  body.style.position = "fixed";
+  body.style.top = `-${y}px`;
+  body.style.width = `${width}px`;
+  return () => {
+    body.style.overflow = was.overflow;
+    body.style.position = was.position;
+    body.style.top = was.top;
+    body.style.width = was.width;
+    window.scrollTo(0, y);
+  };
+}
+
+/**
+ * The dialog shell: the overlay, the panel, the scroll lock, the focus trap and
+ * the way in and out.
+ *
+ * All of that was written once for the connect panel and would have been
+ * written a second time for the card detail, which is how two dialogs on one
+ * site end up trapping focus differently. Everything that is the same about
+ * every dialog lives here; what each one puts inside it does not.
+ *
+ * Two variants, and they are the two shapes a dialog on this site takes: a
+ * drawer that comes in from the right on a desktop and up from the bottom on a
+ * phone, and a panel that scales up in the middle. Anything else would be a
+ * third way to open the same thing.
+ */
+export default function Modal({
+  open,
+  onClose,
+  label,
+  variant = "center",
+  className = "",
+  onOpened,
+  children,
+}: {
+  open: boolean;
+  /** Called once the exit animation has finished, not when it starts. */
+  onClose: () => void;
+  /** The dialog's accessible name. */
+  label: string;
+  variant?: "right" | "center";
+  className?: string;
+  /** Runs after the panel is in, for a dialog with content of its own to animate. */
+  onOpened?: () => void;
+  children: ReactNode;
+}) {
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const closingRef = useRef(false);
+  /** What puts the page back where it was. Held across open, close and unmount. */
+  const unlockRef = useRef<(() => void) | null>(null);
+
+  // Where the panel comes from, and the resting value of that same function.
+  // Both sides have to be written in the same function: animating to "none"
+  // gives motion nothing to interpolate towards, and the whole animation
+  // (opacity included) is dropped, which leaves the panel invisible.
+  //
+  // A function rather than a value, because the drawer's direction depends on
+  // the viewport at the moment it opens: a phone rotated mid-visit should not
+  // close upward.
+  const enterFrom = useCallback(
+    () =>
+      variant === "center"
+        ? "scale(0.97)"
+        : window.innerWidth <= 767
+          ? "translateY(100%)"
+          : "translateX(20px)",
+    [variant],
+  );
+  const settled = variant === "center" ? "scale(1)" : "translate(0, 0)";
+
+  const animateOpen = useCallback(() => {
+    const el = modalRef.current;
+    const overlay = overlayRef.current;
+    if (!el || !overlay) return;
+    unlockRef.current ??= lockScroll();
+    // The imperative animate() calls bypass CSS reduced-motion rules, so guard
+    // explicitly: jump straight to the settled state.
+    if (prefersReducedMotion()) {
+      el.style.opacity = "1";
+      el.style.transform = "none";
+      overlay.style.opacity = "1";
+      onOpened?.();
+      return;
+    }
+    // The blur is static in CSS and this fades the element carrying it, which
+    // fades the blur with it: an element with a backdrop-filter and an opacity
+    // below one composites the whole effect at that opacity. Animating the
+    // radius instead would repaint everything behind the overlay per frame,
+    // which is the one version of this that is genuinely unaffordable.
+    //
+    // It used to be deferred until the panel had finished springing, on the
+    // grounds that a live backdrop-filter costs a full re-blur on every frame
+    // anything above it moves. That measurement is real, and the deferral still
+    // looked wrong: the panel arrived, sat there, and the background dimmed a
+    // beat later. A quarter second of expensive frames buys an effect that
+    // reads as one movement, so it is paid.
+    animate(overlay, { opacity: [0, 1] }, { duration: DUR_SLOW });
+    animate(el, { opacity: [0, 1], transform: [enterFrom(), settled] }, SPRING_MODAL);
+    onOpened?.();
+  }, [enterFrom, settled, onOpened]);
+
+  const requestClose = useCallback(() => {
+    const el = modalRef.current;
+    const overlay = overlayRef.current;
+    if (!el || !overlay) return;
+    // Escape pressed twice inside the ~200ms exit would otherwise start two
+    // animations and call onClose twice.
+    if (closingRef.current) return;
+    closingRef.current = true;
+    const finish = () => {
+      unlockRef.current?.();
+      unlockRef.current = null;
+      el.style.opacity = "0";
+      overlay.style.opacity = "0";
+      onClose();
+    };
+    if (prefersReducedMotion()) {
+      finish();
+      return;
+    }
+    animate(overlay, { opacity: 0 }, { duration: DUR_NORMAL });
+    animate(el, { opacity: 0, transform: enterFrom() }, { duration: DUR_NORMAL }).then(finish);
+  }, [enterFrom, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    closingRef.current = false;
+    animateOpen();
+    // Unmounting while open (route change, parent teardown) must not leave the
+    // page permanently scroll-locked: finish() never runs then.
+    return () => {
+      unlockRef.current?.();
+      unlockRef.current = null;
+    };
+  }, [open, animateOpen]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && open) requestClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, requestClose]);
+
+  // Move focus into the dialog on open, trap Tab inside it, and restore focus
+  // to the element that opened it on close.
+  useEffect(() => {
+    if (!open) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const modal = modalRef.current;
+    const focusables = () =>
+      Array.from(
+        modal?.querySelectorAll<HTMLElement>(
+          'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      );
+    // preventScroll, or the page behind jumps. Moving focus into a dialog makes
+    // the browser scroll the focused element into view, and it measures that
+    // against the document rather than against the fixed layer the dialog sits
+    // in: the close button lands "off screen" and the whole page behind the
+    // modal shifts a couple of hundred pixels at the moment it opens.
+    focusables()[0]?.focus({ preventScroll: true });
+
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const els = focusables();
+      const first = els[0];
+      const last = els[els.length - 1];
+      if (!first || !last) return;
+      const active = document.activeElement as HTMLElement | null;
+      // Clicking non-focusable content inside the modal moves focus to <body>,
+      // which is neither first nor last: without this branch Tab would escape
+      // to the page behind the dialog.
+      if (!active || !modal?.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onTab);
+
+    // Hide the rest of the page from assistive tech and the tab order while the
+    // dialog is up. The panel lives inside the backdrop, so mark the backdrop's
+    // own siblings: under a parallel route that parent is the layout's slot
+    // wrapper rather than the page, which is exactly why this walks up from the
+    // element rather than assuming where it sits.
+    const backdrop = backdropRef.current;
+    const hidden: HTMLElement[] = [];
+    if (backdrop?.parentElement) {
+      for (const sibling of Array.from(backdrop.parentElement.children)) {
+        if (sibling !== backdrop && sibling instanceof HTMLElement) {
+          sibling.setAttribute("inert", "");
+          hidden.push(sibling);
+        }
+      }
+    }
+
+    return () => {
+      document.removeEventListener("keydown", onTab);
+      for (const el of hidden) el.removeAttribute("inert");
+      // preventScroll on the way out as well, and for the same reason it is on
+      // the way in: focusing an element makes the browser scroll it into view.
+      // The lock hands the page back to exactly where it was and then this
+      // dragged it off again, to wherever the button that opened the drawer
+      // happens to sit. On a desktop that button is roughly where you were
+      // looking and the jump was invisible; at 390 the page is one long column
+      // and "Show more" is a thousand pixels further down, so closing the
+      // drawer threw you down the page. Measured: 1400 out, 2462 back.
+      opener?.focus?.({ preventScroll: true });
+    };
+  }, [open]);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target === backdropRef.current || target.classList.contains("modal-overlay")) {
+      requestClose();
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div
+      className={`modal-backdrop${variant === "right" ? " modal-backdrop--right" : ""} is-open`}
+      ref={backdropRef}
+      onClick={handleBackdropClick}
+    >
+      <div className="modal-overlay" ref={overlayRef} />
+      {/* The dialog is the panel, not the backdrop: on the backdrop the role
+          covers the overlay too, so the whole screen becomes the dialog and the
+          click-outside-to-close target sits inside the thing it closes. */}
+      <div
+        className={`modal ${className}`.trim()}
+        ref={modalRef}
+        style={{ opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+      >
+        <button className="btn btn--icon modal-close" onClick={requestClose} aria-label="Close">
+          <X size={20} strokeWidth={1.75} />
+        </button>
+        <div className="modal-scroll">{children}</div>
+      </div>
+    </div>
+  );
+}

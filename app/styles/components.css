@@ -1,0 +1,408 @@
+/* Shared components used across routes: the button and the macOS-style tool
+   dock. Split out of about.css, which owned them only for historical reasons.
+   Imported immediately before about.css so cascade order is unchanged. *//* shadcn-style outline button: rounded-md (not pill), subtle shadow, quiet hover *//* Glass pill button: one shared component (Button.tsx) used everywhere. Same
+   recipe as the tab bar / toggle; icons are size 20 / strokeWidth 1.75 with an
+   8px gap to the label. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  height: var(--control-h);
+  padding: 0 var(--space-4);
+  font-family: var(--font-main);
+  /* same weight as the tab-bar labels */
+  font-weight: var(--fw-button);
+  /* Size comes from the shared control group below, which sets it for every
+     control at once. Declaring it here as well is how it was wrong for a while:
+     the group comes later in the file and quietly won. */
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-smooth),
+    border-color var(--dur-fast) var(--ease-smooth),
+    transform var(--dur-fast) var(--ease-smooth);
+}
+.btn svg {
+  display: block;
+  flex-shrink: 0;
+}
+.btn:hover {
+  box-shadow: var(--shadow-elevated);
+}
+.btn--center {
+  align-self: center;
+  margin-top: var(--space-3-5); /* centred under the cover-flow label */
+}
+.btn--back {
+  margin-bottom: var(--space-5); /* article back link */
+}
+/* ── Glass panel surface ──
+   The card/panel recipe, declared once. These six selectors are the standard
+   glass surface; each owning stylesheet keeps only its own padding, layout and
+   hover states. Grouped here rather than duplicated per file, where the copies
+   had already drifted apart.
+
+   Deliberately NOT in this list: .exp-panel (needs no backdrop-filter, see the
+   note in pages.css) and the hover pills, which use --blur-glass-pill and their
+   own inset geometry. */
+.bento-card,
+.about-card {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--blur-glass-card));
+  backdrop-filter: blur(var(--blur-glass-card));
+  box-shadow: var(--shadow-card);
+}
+/* ─── GLASS CONTROL ───
+   The surface every control on the site is made of: the buttons, the play
+   control, the chat field and its options, the card's external-link arrow, the
+   globe's zoom pill and the modal's close. Nine selectors across six files were
+   writing these five declarations out by hand, and they had already drifted:
+   which of them carried --shadow-card and which --shadow-elevated was decided
+   one file at a time, and .cards-views quietly had no blur at all.
+
+   Grouped for the same reason the card surface and the hover pill above it are.
+   Each control keeps its own size, radius and layout; this is only what it is
+   made of. Four separate comments in those files said "the same glass as .btn",
+   which is a thing a stylesheet should be able to state once. *//* The fields in the add-a-card form and the key on the profile screen. They
+   stand on the same page as the filter bar and are pressed the same way, so
+   they are made of the same thing rather than of a second idea of a field. *//* The numbered rings on the process card's ruler. They are 24px and round
+   rather than a pill with a label in it, but they are pressed like a button and
+   they stand on a card the same way, so they are made of the same thing: the
+   ring drew its own hairline before this and was the one control on home that
+   was a shade off every other. Size, radius and type stay in home.css. *//* Not a control: the nameplate under the memoji on the chat card. It is made of
+   the same glass all the same, which is the point of this group being about
+   material rather than about buttons. Its size, radius and layout are in
+   home.css as usual. */
+.btn,
+.modal-close,
+.cards-search,
+.cards-select,
+.cards-size,
+.card-add-field input,
+.cards-profile-field input,
+.filter-menu > summary,
+.cards-segmented,
+.cards-views {
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-solid);
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  backdrop-filter: blur(var(--blur-glass));
+  box-shadow: var(--shadow-card);
+  color: var(--color-text-primary);
+}
+/* ─── CONTROL ───
+   The height and the label every one of these shares: the search field and the
+   Filter button on /cards had each written their own, so three controls
+   standing next to each other in that toolbar were three different heights with
+   three different borders. A control that looks like a button should be built
+   like one.
+
+   The wrappers (.cards-segmented, .cards-views) are not here: they are tracks
+   holding smaller buttons, so they carry 3px of padding instead of a height. *//* .filter-menu, not .cards-filter. The component was renamed and these four
+   rules were not, so the Filter button lost the surface, the height, the radius
+   and the hover lift that cards.css:536 says it takes from here. */
+.btn,
+.cards-search,
+.cards-select,
+.cards-size,
+.card-add-field input,
+.cards-profile-field input,
+.filter-menu > summary {
+  height: var(--control-h);
+  font-family: var(--font-main);
+  /* One size across every control, label and field: see --fs-control. It was
+     --fs-small here, 13px, while the text inside .cards-search was 15px and the
+     chat field was 16, so a control's own label was the smallest type in its
+     own row. */
+  font-size: var(--fs-control-label);
+  font-weight: var(--fw-button);
+}
+/* The radius is the one thing they do not share, and that is the decision, not
+   an oversight. A labelled button is a pill wherever it stands. The filter-bar
+   controls are rounded rectangles, because a search field with round ends reads
+   as loose next to the menus beside it, and because /cards and /fifa are where
+   filter bars live.
+   This group used to include .btn, so every button on the site was 14px. That
+   made the toolbar consistent and the rest of the site quietly wrong: on home a
+   14px button already stood beside .chat-input, which is and
+   always were true pills. The three toolbar controls still match each other,
+   which is what that argument was actually about. */
+.btn {
+  border-radius: var(--radius-btn);
+}
+/* For a labelled button that has to stand in a filter bar. Nothing uses it
+   today: those bars are built from the controls above, not from .btn. It exists
+   so the shape has a name on the day one is needed, rather than a hardcoded
+   14px appearing next to the search field. */
+.cards-search,
+.cards-select,
+.cards-size,
+.card-add-field input,
+.cards-profile-field input,
+.filter-menu > summary {
+  border-radius: var(--radius-pill);
+}
+/* Lift on hover, the same on all of them. It was a border-colour change on the
+   two /cards controls and a shadow on every button elsewhere. */
+.cards-search:hover,
+.cards-select:hover,
+.cards-size:hover,
+.filter-menu > summary:hover {
+  box-shadow: var(--shadow-elevated);
+}
+/* The two that sit over the page rather than on a card, and lift further off it.
+   .tabbar is deliberately not here: it is a transparent, pointer-events: none
+   wrapper spanning the viewport, and the soft edge under it comes from
+   .tabbar-fade's gradient and mask. A shadow on it drew a hard band the full
+   width of the window, which turned a bar that dissolves into the page into a
+   fixed glass strip. The pill inside it is the control. */
+.theme-toggle,
+.tabbar-pages {
+  box-shadow: var(--shadow-elevated);
+}
+/* Dark mode swaps the hairline for the solid border on all of them at once; it
+   used to be restated per control, and only for three of the nine. *//* Style modifier: solid primary fill instead of glass. After the group above,
+   not before it: it overrides five of those six declarations, and at equal
+   specificity that only works if it comes last. */
+.btn--primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+.btn--primary:hover {
+  box-shadow: var(--shadow-elevated);
+  opacity: 0.9;
+}
+[data-theme="dark"] .btn,
+[data-theme="dark"] .modal-close,
+[data-theme="dark"] .cards-search,
+[data-theme="dark"] .cards-select,
+[data-theme="dark"] .cards-size,
+[data-theme="dark"] .card-add-field input,
+[data-theme="dark"] .cards-profile-field input,
+[data-theme="dark"] .filter-menu > summary,
+[data-theme="dark"] .cards-segmented,
+[data-theme="dark"] .cards-views {
+  border-color: var(--glass-border-control);
+}
+/* ─── HOVER PILL ───
+   The surface a row lifts onto when you point at it: the connect lists, the
+   article rows on home and on /articles, and the tabs on the "off the clock"
+   card. Grouped here for the same reason the card surface above is, and for the
+   same reason: it was written out five times, once per list, and the copies had
+   already drifted on which of them carried a shadow.
+
+   Only the recipe is here. Where it sits stays with each list, because a 40px
+   row, a four-line article row and a column of tabs want different insets. */
+.cards-nav-item::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  /* Two knobs, and they are the same knob really: how big the row is. A 40px
+     list item takes the pill radius and a firm lift; the article rows on
+     /articles are four lines tall, where 999px rounds the surface into a
+     lozenge and a 2% scale is a shove rather than a lift. */
+  border-radius: var(--pill-radius, var(--radius-pill));
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(var(--blur-glass-pill));
+  backdrop-filter: blur(var(--blur-glass-pill));
+  pointer-events: none;
+}
+/* The ones that fade in on hover, as opposed to the two that slide and are
+   therefore always on. */
+.cards-nav-item::after {
+  opacity: 0;
+  transform: scale(var(--pill-scale, 0.98));
+  transition:
+    opacity var(--dur-fast) var(--ease-smooth),
+    transform var(--dur-fast) var(--ease-smooth);
+}
+.cards-nav-item:hover::after,
+.cards-nav-item:focus-visible::after {
+  opacity: 1;
+  transform: scale(1);
+}
+/* ── Data table ──
+   The table recipe, declared once. Two of them, the priciest-cards table on
+   /cards and the song library on /fifa, were writing these seven declarations
+   out by hand and had already drifted: the head padding was symmetric on one
+   and flush left on the other, which is the only thing left below that is
+   still theirs.
+
+   Only what a data table is made of is here. Widths, minimum widths, column
+   padding and row tints stay with each table, because a top-ten of ten rows
+   and a library of six hundred want different room.
+
+   Deliberately NOT in this list: .article-table, which is prose furniture. It
+   is a step larger (--fs-body-s), its heads are Satoshi and primary rather than
+   Inter and tertiary, and it is read at a paragraph's pace rather than scanned.
+   A second tier on purpose, the same way a control label is not body copy. */
+.cards-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+}
+.cards-dash-table th {
+  text-align: left;
+  font-weight: var(--fw-title);
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+/* One rule in a table, under the head. That line separates two different kinds
+   of thing, the names of the columns from the data in them, so it earns itself.
+   Between one row and the next there is nothing to separate: they are the same
+   kind of thing and the alignment already says so, and a line per row turns a
+   list into a grid nobody asked for. /fifa had this argument written down and
+   the other two tables had quietly not followed it. *//* ─── LOADING OUTLINES ─── *//* The shape every route's loading.tsx draws its placeholders with. One
+   definition, because four pages showing the same idea in four slightly
+   different greys is how a system stops looking like one.
+   A sweep rather than a pulse: breathing between two low opacities is a real
+   animation and an invisible one, while a band of light crossing the block
+   reads as "filling in" at a glance. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+}
+/* :where(), so this is a default and not a decision. A skeleton is a finish,
+   not a shape: applied to a bare block it should round like a small element,
+   but the ones on /about are card-shaped and already carry .bento-card, whose
+   24px this was quietly overruling from further down the same file. Eight
+   pixels where twenty-four was about to appear is a visible pop the moment the
+   real card lands. */
+:where(.skeleton) {
+  border-radius: var(--radius-sm);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-text-primary) 9%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: skeleton-sweep 1.4s var(--ease-in-out) infinite;
+}
+/* Twelve card-shaped blocks sweeping in perfect unison read as a strobe rather
+   than as loading. Four offsets is enough to break the lockstep without the
+   grid looking like it is doing four different things. */
+.skeleton:nth-child(4n + 2)::after {
+  animation-delay: 0.15s;
+}
+.skeleton:nth-child(4n + 3)::after {
+  animation-delay: 0.3s;
+}
+.skeleton:nth-child(4n + 4)::after {
+  animation-delay: 0.45s;
+}
+@keyframes skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+.skeleton::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* ─── CIRCULAR ICON CONTROL ───
+   The site's glass button with no label in it. Two selectors because one is a
+   <button class="btn"> and the other is a badge that sits on artwork, but they
+   are one control and this is the one place that says so. --control-h square,
+   so it is exactly as tall as a labelled button beside it. */
+.btn--icon {
+  width: var(--control-h);
+  height: var(--control-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  /* No gap, because there is nothing to space out. Button always renders a
+     wrapper around its label, and on an icon-only button that label is an
+     sr-only span: the box is empty but it is still a flex item, so .btn's own
+     8px gap sat between the icon and it and the arrow on the binder card came
+     out four pixels left of the middle of its circle. */
+  gap: 0;
+}
+/* The controls that carry one. Each is the element the pointer actually lands
+   on, which is never the span itself: on a "Find me online" row that is the
+   whole row, and the arrow is a 16px box at the end of it.
+   .play-badge is deliberately not here. It fades in on hover of the artwork
+   underneath it, so the flight would run while the badge was still arriving,
+   and nobody would see either of them properly. */
+@media (hover: hover) and (pointer: fine) {
+  :is(.card-external, .connect-item, .btn):hover .external-arrow > svg:first-child {
+    transform: translate(160%, -160%);
+  }
+  :is(.card-external, .connect-item, .btn):hover .external-arrow > svg:last-child {
+    transform: translate(0, 0);
+  }
+}
+/* The same list again, and it cannot share the block above. :hover has to sit
+   behind the pointer query, because a tap on a touch screen fires a hover that
+   then sticks and leaves the arrow parked outside its button. :focus-visible
+   must not, or keyboard users on those same devices lose the effect entirely. */
+:is(.card-external, .connect-item, .btn):focus-visible .external-arrow > svg:first-child {
+  transform: translate(160%, -160%);
+}
+:is(.card-external, .connect-item, .btn):focus-visible .external-arrow > svg:last-child {
+  transform: translate(0, 0);
+}
+/* One arrow, standing still. The second copy is only ever the far end of a
+   movement, so with the movement gone there is nothing for it to say. */
+@media (prefers-reduced-motion: reduce) {
+  .external-arrow > svg {
+    transition: none;
+  }
+  .external-arrow > svg:last-child {
+    display: none;
+  }
+}
+/* Same correction as the play triangle below, for the other glyph on this site
+   that is symmetrical on paper and not to the eye.
+   Lucide draws a chevron from 9 to 15 in a 24 box, so it is centred exactly.
+   What you read is not the box though, it is the ink: the two strokes are
+   furthest apart at the open end and meet in a point at the other, so the
+   weight sits at the opening and the glyph looks shifted away from where it is
+   pointing. A pixel back towards the point puts it right.
+   The class is Lucide's own, which is why this needs nothing in the components:
+   they render <ChevronLeft> and <ChevronRight> and those carry it. */
+.btn--icon > .lucide-chevron-right {
+  position: relative;
+  left: 1px;
+}
+.btn--icon > .lucide-chevron-left {
+  position: relative;
+  left: -1px;
+}
+@keyframes play-badge-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* ─── TAG ───
+   The shape a label chip has everywhere: a pill, one line, never broken mid
+   label. Colour, size and edge are the route's business, because /cards and
+   /favorites dress theirs differently on purpose. See app/components/Tag.tsx. */
+.tag {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body), sans-serif;
+  line-height: var(--lh-normal);
+  white-space: nowrap;
+}

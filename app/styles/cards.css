@@ -1,0 +1,2504 @@
+/* /cards: the whole card collection, one card per set. */
+
+/* Full width, two panes, no padding of its own: the rail runs to the window
+   edge on every side and the inset belongs to what sits inside. The negative
+   top margin takes back --main-pad-top, which reserves 160px for a tab bar this
+   route deliberately does not have.
+
+   This is the database half of the pair with /fifa. The two wear the
+   same design system and are separate products, so these rules live here rather
+   than in a shell both routes share: a database wants overview, sorting and
+   filters in reach, a media player wants the one thing playing now. */
+.page-cards {
+  margin: calc(-1 * var(--main-pad-top)) auto 0;
+  padding: 0 0 var(--page-pad-bottom);
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  align-items: start;
+  /* One surface under both panes, the rail's. The body is --color-left-bg,
+     which left the results sitting on a grey the rail was not, so the divider
+     read as a change of page rather than as an edge. */
+  background: var(--glass-bg-solid);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+@media (max-width: 1000px) {
+  /* A 300px rail beside a grid of scans is two cramped columns. Above it
+     instead, where it reads as a list of sets with the filters under it. */
+  .page-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── The rail ── */
+
+/* A column of window, not a card floating in one: the rail runs from the top
+   edge to the bottom and from the left edge to its own hairline, the way a
+   file list does in a desktop app. It was an inset panel with a shadow under
+   it, which put a 16px gutter of page around a thing whose whole job is to be
+   the side of the window, and started it below the top of the results, so the
+   two panes disagreed about where the page began.
+
+   It holds the sets and nothing else. Everything that filters lives in the bar
+   above the results (.cards-tools). */
+.cards-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4) var(--space-3);
+  background: var(--glass-bg-solid);
+  /* The divider is --color-border-subtle, not --glass-border: the glass one is
+     white at 90% in light mode, so against a near-white page the rail had no
+     visible edge at all. Same call .cards-search documents below. */
+  border-right: 1px solid var(--color-border-subtle);
+  /* Sideways, because the only edge you can see is the right one: a shadow with
+     a vertical offset would spill down the page and never fall where the rail
+     actually meets the results. */
+  box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: blur(var(--blur-glass-card));
+  backdrop-filter: blur(var(--blur-glass-card));
+  position: sticky;
+  top: 0;
+  /* The whole window, edge to edge. */
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+}
+/* Dark mode carries its shadows heavier, the way --shadow-card and
+   --shadow-elevated do: 16% black over a near-black page is nothing at all.
+   That still holds, and this is still four times what a light-mode shadow would
+   be. The alpha came down by the same 0.71 those two took, for the same
+   measured reason: sampled at 1440 beside the rail, at 0.6 this dipped 3.0 dL*
+   below the background where a button on a card dips 2.56, so the one shadow on
+   the site with no light-mode counterpart at all was also the heaviest thing in
+   the theme. */
+[data-theme="dark"] .cards-rail {
+  box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.43);
+}
+@media (max-width: 1000px) {
+  /* One pane at a time.
+
+     The rail used to sit above the results as a 420px box with its own
+     scrollbar: fifty-one sets in a slot four rows deep, with the page you came
+     for underneath it. A list you have to scroll inside in order to scroll past
+     is not navigation, it is an obstacle, so the two take turns instead. The
+     results are the screen you land on, the way they are at full width, and the
+     button over them opens the rail. CardsSidebar carries the attribute;
+     .cards-main is its next sibling, which is what makes one attribute enough
+     for both.
+
+     :not([data-pane="rail"]) rather than [data-pane="main"], so the skeleton in
+     app/cards/loading.tsx, which renders neither, lands on the results too. A
+     fallback that outlines a rail and then hands over a dashboard is a page
+     that changed its mind while you watched. */
+  .cards-rail:not([data-pane="rail"]) {
+    display: none;
+  }
+  .cards-rail[data-pane="rail"] + .cards-main {
+    display: none;
+  }
+  /* The screen that arrives, arriving.
+
+     Swapping the two panes and scrolling to the top in the same frame reads as
+     the page having reloaded, which is the exact complaint FavoritesView was
+     rewritten to answer. A short rise under the incoming pane is enough to say
+     it went somewhere instead. Only the one coming in: the other is already
+     gone by the time this runs, so there is nothing to animate out. */
+  .cards-rail[data-pane="rail"],
+  .cards-rail[data-pane="main"] + .cards-main {
+    animation: cards-pane-in var(--dur-normal) var(--ease-out);
+  }
+  /* Neither matches before the first press, because there is no attribute until
+     then: see the `pane` state in CardsView. That is what keeps this a
+     transition between two screens rather than one the dashboard performs on
+     every page load, announcing a navigation that did not happen. */
+}
+@keyframes cards-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cards-rail,
+  .cards-main {
+    animation: none;
+  }
+}
+@media (max-width: 1000px) {
+  .cards-rail {
+    position: static;
+    /* The whole screen, scrolling with the page: there is nothing under it to
+       be in the way of any more, so neither the cap nor the inner scrollbar nor
+       the hairline that separated the two has anything left to do. */
+    height: auto;
+    overflow: visible;
+    border-right: 0;
+    box-shadow: none;
+  }
+}
+
+/* The page's name over the rail, drawn only where the rail is a screen rather
+   than a column beside the results. Above 1000px the heading over the results
+   is on view and this would be the page's name printed twice. */
+.cards-rail-title {
+  display: none;
+}
+@media (max-width: 1000px) {
+  .cards-rail-title {
+    display: block;
+    margin: 0 0 var(--space-4);
+    padding: var(--space-2);
+    font-family: var(--font-main);
+    font-weight: var(--fw-title);
+    font-size: var(--fs-h2);
+    line-height: var(--lh-tight);
+    color: var(--color-text-primary);
+  }
+}
+
+.cards-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Between the two top rows and the sets, and between one era and the next.
+   display:block because it is a span inside the era's list item as well as a
+   list item of its own, and an inline box takes neither the height nor the
+   background. */
+.cards-nav-rule {
+  display: block;
+  height: 1px;
+  margin: var(--space-2);
+  background: var(--color-border-subtle);
+}
+/* The era each run of sets belongs to. Sticky, so the label of the group you are
+   scrolling through stays visible in a rail this long. */
+.cards-nav-era {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  width: 100%;
+  margin: var(--space-4) 0 var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg-solid);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-title);
+  color: var(--color-text-tertiary);
+}
+.cards-nav-era:hover {
+  color: var(--color-text-primary);
+}
+.cards-nav-era.is-active {
+  color: var(--color-text-primary);
+  background: var(--color-left-bg);
+}
+.cards-nav-era:first-child {
+  margin-top: 0;
+}
+/* The site's own row hover, the one the connect lists and the article rows
+   wear: a glass pill that fades in under the row. The recipe lives in
+   components.css; the inset and the radius are this list's business. It used to
+   be a flat --color-left-bg fill, which is a hover state this site does not use
+   anywhere else. */
+.cards-nav-item {
+  position: relative;
+  --pill-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+/* Above the pill, which is positioned and would otherwise paint over them. */
+.cards-nav-item > * {
+  position: relative;
+  z-index: 1;
+}
+.cards-nav-item::after {
+  inset: 0;
+}
+/* Held, not hovered: the pill is a pointer following you around, and where you
+   are has to still be legible once the pointer moves on. */
+.cards-nav-item.is-active {
+  background: var(--color-left-bg);
+}
+.cards-nav-art {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 28px;
+}
+.cards-nav-art img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.cards-nav-blank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--color-left-bg);
+}
+.cards-nav-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-small);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The count, at the end of the row rather than on a line of its own under the
+   name. Tabular figures so a column of fifty-one of them lines up. */
+.cards-nav-count {
+  flex-shrink: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+/* ── The results pane ── */
+
+/* The rail owns the window's edge now, so the results carry the top and side
+   room the page used to hold for both of them. */
+.cards-main {
+  min-width: 0;
+  /* The box both grids answer to. How small a scan may be drawn is a question
+     about the room this column has, and this column is the window minus a 300px
+     rail above 1000px and the whole window below it, so the viewport is a poor
+     proxy for it: at 1000px and at 660px the grid has almost exactly the same
+     width and the old rules gave them different tiles. */
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--page-pad-x) 0 var(--space-6);
+}
+@media (max-width: 1000px) {
+  .cards-main {
+    padding: var(--space-5) var(--page-pad-x) 0;
+  }
+}
+
+/* ── The bar along the bottom (CardsTabBar) ──
+
+   Everything it looks like comes from .tabbar in tabbar.css: this is the site's
+   own navigation with this route's screens in it, standing where the site's own
+   bar stands, and TabBar steps aside on /cards so there is only ever one. What
+   is here is where it stands and how wide its slots are.
+
+   It replaces the rail rather than joining it, so it is on exactly where the
+   rail is off: from 1001px up the rail is back beside the cards and this is
+   gone. It also replaces the old .cards-back button, which was revealed at that
+   same width and said "Collection": the Sets slot is that control with a better
+   home, and the argument for it is worth keeping. It is not a back arrow,
+   because you land on the results and there is nothing behind you; it pushes no
+   history entry, because on a route with no per-set URL the phone's own back
+   gesture would then sometimes leave the site and sometimes close a pane. */
+
+/* The floating theme toggle stands down on this route, and the room it was
+   holding goes to the bar. It is a circle in the bottom right corner of every
+   other page, which is where this page put its own controls: on a phone it sat
+   in the bar's row, and layout.css had to reserve its footprint on both sides
+   so the pill could still be centred, which is 128px of a 390px screen. The
+   switch is on the profile screen instead (see CardsProfile), where it is two
+   named choices rather than a sun that means the opposite of what it shows. */
+body:has(.page-cards) .theme-toggle {
+  display: none;
+}
+
+/* The track fills the bar and the slots divide it, rather than each slot
+   sizing itself: five items at their own width overflow a 360px phone, and
+   .tabbar-item does not shrink. Divided, the bar gets narrower instead of
+   broken. */
+.cards-tabbar .tabbar-pages {
+  width: 100%;
+}
+/* Both undo layout.css, which reserves the theme toggle's footprint on either
+   side of the bar and caps the track to what is left. There is no toggle on
+   this route to reserve for. */
+@media (max-width: 640px) {
+  .cards-tabbar {
+    padding-inline: var(--space-4);
+  }
+  .cards-tabbar .tabbar-pages {
+    max-width: none;
+  }
+}
+/* .is-active restated, and only to beat layout.css, which pins the active tab
+   at 114px so the site's four labels cannot make the bar jump. This bar draws
+   no labels at any width, for the same reason the slots are divided: there is
+   no room for five. The names are on aria-label and title. */
+.cards-tabbar .tabbar-item,
+.cards-tabbar .tabbar-item.is-active {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0;
+}
+
+/* The one thing in the bar that is not a place: it does something. The pill
+   behind the selection is already the darkest ink here, so a second filled
+   black circle would read as a second selected tab. Accent instead, which is
+   this site's colour for an action and is nowhere else in this bar, so it ends
+   up with one ink for where you are and one for what you can do. */
+.cards-tabbar-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  /* min(), because below about 340px the slot is narrower than the circle and
+     a fixed width would push the bar wider than the screen. */
+  width: min(var(--control-h), 100%);
+  height: var(--control-h);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-dark);
+  cursor: pointer;
+  /* Above the pill, which shares this track and is positioned into it. */
+  z-index: 1;
+}
+.cards-tabbar-add:hover {
+  opacity: 0.9;
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Between 641 and 1000px, tabbar.css has already moved the bar to the top of
+   the window, which is right for a bar that is the site's navigation and wrong
+   for one that is standing in for a rail. Put it back, and restate the fade's
+   own gradient, which the same query points the other way. */
+@media (min-width: 641px) and (max-width: 1000px) {
+  .cards-tabbar-fade {
+    top: auto;
+    bottom: 0;
+    background: linear-gradient(
+      to top,
+      var(--color-left-bg) 20%,
+      color-mix(in srgb, var(--color-left-bg) 80%, transparent) 50%,
+      color-mix(in srgb, var(--color-left-bg) 0%, transparent) 100%
+    );
+    -webkit-mask-image: linear-gradient(to top, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 60%, transparent 100%);
+  }
+  .cards-tabbar {
+    top: auto;
+    bottom: 0;
+    padding: var(--space-6) var(--space-4);
+  }
+  /* There is room here, so the slots hug their icons again rather than
+     dividing a track that is wider than the bar needs. */
+  .cards-tabbar .tabbar-pages {
+    width: auto;
+  }
+  .cards-tabbar .tabbar-item,
+  .cards-tabbar .tabbar-item.is-active {
+    flex: 0 0 auto;
+    padding: 0 var(--space-4);
+  }
+  .cards-tabbar-add {
+    flex: 0 0 auto;
+    width: var(--control-h);
+  }
+  /* --page-pad-bottom is 64px here, which the bar sits in. This is the room
+     the bar actually takes plus the same air the phone gets. */
+  .page-cards {
+    padding-bottom: calc(var(--space-6) + var(--tabbar-pill-h) + var(--space-10));
+  }
+}
+
+/* The rail is back beside the cards, so the bar has nothing left to do. */
+@media (min-width: 1001px) {
+  .cards-tabbar,
+  .cards-tabbar-fade {
+    display: none;
+  }
+}
+
+/* Dashboard, Pokédex and Profile, where the bar carries all three. See the
+   comment on these in CardsSidebar: two controls for one destination six
+   pixels apart is one too many, and without them the rail is the list of sets
+   its title says it is. All cards has no slot in the bar and stays. */
+@media (max-width: 1000px) {
+  .cards-nav-elsewhere {
+    display: none;
+  }
+}
+
+/* Searching and adding, at the head of the rail. Both belong to the whole page
+   rather than to whichever screen is on the right, and above 1000px the rail is
+   the one thing that is always on screen, so this is where they can live without
+   standing over a dashboard that has nothing to narrow.
+
+   Below 1000px the bar carries both and this is gone: a rail you have to open is
+   not a place to keep a field you reach for. */
+.cards-rail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+}
+.cards-rail-head .cards-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cards-rail-add {
+  flex: 0 0 auto;
+}
+@media (max-width: 1000px) {
+  .cards-rail-head {
+    display: none;
+  }
+}
+/* The other half of that: the toolbar's own copy of the field is the one for
+   below 1000px, and above it the rail has it. Two fields, one query, and never
+   both on screen. */
+@media (min-width: 1001px) {
+  .cards-tools .cards-search {
+    display: none;
+  }
+}
+
+/* The heading, the count and the toolbar, as one block above the results.
+   Lifted, because every card below it carries a backdrop-filter and so is its
+   own stacking context: without this, a later sibling paints over the open
+   Filter panel however high that panel's own z-index is. */
+.cards-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+/* The set's wordmark ahead of its name, so the page says which shelf you are
+   standing at before it says anything else. */
+.cards-head-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.cards-head-logo {
+  height: 40px;
+  width: 132px;
+  object-fit: contain;
+  object-position: left center;
+  flex-shrink: 0;
+}
+.cards-main-title {
+  margin: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+}
+
+.cards-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  /* 12px between every control in the bar. */
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-5);
+}
+
+/* Only what makes it a search field rather than a button: the surface, the
+   height, the radius and the label come from the shared control in
+   components.css, which is the same one the chat input is built from. */
+.cards-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* Not greedy: it took the whole leftover width and dwarfed the controls
+     beside it, when the collection is mostly browsed by filter. */
+  flex: 0 1 260px;
+  min-width: 180px;
+  padding: 0 var(--space-3-5);
+  transition:
+    border-color var(--dur-fast) var(--ease-smooth),
+    box-shadow var(--dur-fast) var(--ease-smooth);
+}
+.cards-search:focus-within {
+  border-color: var(--color-border-active);
+}
+.cards-search svg {
+  flex-shrink: 0;
+}
+.cards-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--font-body), sans-serif;
+  /* The size of the control it sits in, and never under 16: at --fs-body-s
+     this field zoomed the page on iOS the moment it took focus, which
+     .chat-input had already been fixed for. See --fs-control. */
+  font-size: var(--fs-control);
+  color: var(--color-text-primary);
+}
+.cards-search input::placeholder {
+  color: var(--color-text-tertiary);
+}
+/* The engine's own clear affordance would sit beside ours. */
+.cards-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.cards-search button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+.cards-search button:hover {
+  color: var(--color-text-primary);
+}
+
+/* How big the scans are drawn, in the same glass and at the same height as the
+   search field beside it (components.css). The two squares are the ends of the
+   range rather than buttons, so they are aria-hidden and the label is on the
+   input. */
+.cards-size {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* Never grows: it is a setting, not a field, and the width below is enough
+     for the whole range to be reachable in one drag. */
+  flex: 0 0 auto;
+  padding: 0 var(--space-3);
+  color: var(--color-text-tertiary);
+}
+.cards-size svg {
+  flex-shrink: 0;
+}
+.cards-size input {
+  appearance: none;
+  width: 84px;
+  height: 100%;
+  margin: 0;
+  background: none;
+  cursor: ew-resize;
+}
+/* The two vendor tracks and the two vendor thumbs cannot be grouped: a selector
+   a browser does not recognise invalidates the whole rule, so each engine's
+   pseudo-element needs its own copy. */
+.cards-size input::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-border-active);
+}
+.cards-size input::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-border-active);
+}
+.cards-size input::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  /* Centred on a 3px track by hand: WebKit lays the thumb out from the top of
+     the track rather than on its centre line, which Firefox does for us. */
+  margin-top: -4.5px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+}
+.cards-size input::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+}
+/* The ring goes round the control, not round the input: the input is 84px of
+   track inside a 40px pill, and an outline on it drew a rectangle through the
+   two squares. Same move as .cards-select above. */
+.cards-size input:focus-visible {
+  outline: none;
+}
+.cards-size:has(input:focus-visible) {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.cards-count {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.cards-empty p {
+  margin: 0;
+  max-width: 52ch;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-secondary);
+}
+
+/* ── A set ── */
+
+/* Not a card: a heading with a grid under it, on the page's own surface. The
+   scans are the things on this page with edges, and putting a white panel
+   around a grid of white-bordered cards drew a box around a box. */
+.cards-set {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The tripwire under the last built set. See builtSets in CardsView: reaching it
+   builds the next few, 800px before it is on screen.
+
+   A hairline rather than nothing, because an element of zero height has no box
+   for an IntersectionObserver to intersect with once it is the last child of a
+   flex column. Not on the spacing scale on purpose: this is not a spacer and
+   must never read as one. */
+.cards-more {
+  height: 1px;
+}
+.cards-set-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+/* Set logos are wordmarks of wildly different proportions, so the height is
+   fixed and the width follows rather than the other way round. */
+/* A stated width, not `auto`. Two reasons, and the second is the bug: every set
+   header now lines up at the same place whatever shape its wordmark is, and the
+   browser has a box to decide the image is worth fetching. With `width: auto`
+   the box is zero wide until the file loads and the file never loads, so none
+   of them ever appeared. object-fit keeps each logo its own shape inside it. */
+.cards-set-logo {
+  height: 44px;
+  width: 160px;
+  object-fit: contain;
+  object-position: left center;
+  flex-shrink: 0;
+}
+/* No recolouring in dark mode. These were assumed to be dark artwork on
+   transparency, so they were flattened to white silhouettes; set logos are
+   full-colour wordmarks and that destroyed them. They read fine as they are. */
+.cards-set-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cards-set-name {
+  margin: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-card);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+}
+.cards-set-meta {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* ── The grid ── */
+
+.cards-grid {
+  display: grid;
+  /* Forty-eight of these, nineteen hundred items between them. The page is not
+     slow (68KB over the wire, complete in under 200ms), so this is not a fix
+     for a problem; it is the one cheap thing that helps a phone. The browser
+     skips layout and paint for the sets that are off screen and remembers each
+     one's real height after it has measured it once. Everything stays in the
+     DOM, so the filters and find-in-page still see the whole collection. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+  /* auto-fill, so a set with three cards leaves the rest of the row empty
+     instead of stretching three scans across the whole card.
+
+     132px unless the reader has moved the size slider, which writes
+     --cards-scan-w onto this element (see scanSize in CardsView). min() with
+     100% because that slider goes to 260: on a narrow column a track wider than
+     the grid would overflow it rather than fall back to one card per row, which
+     is what a minmax whose floor exceeds its container does. */
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--cards-scan-w, 132px), 100%), 1fr));
+  /* The Pokédex' spacing, because it is the same shape of thing: a wall of card
+     slots in a 132px column. It used to be 20px between the rows and 16 between
+     the columns with nothing around a tile, against the dex' even 12 plus 8 of
+     padding, so two views of one collection sat at different densities and the
+     tiles in this one had no box to hover. Splitting the same distance between
+     the gap and the padding is what gives the hover pill below something to
+     draw inside. */
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* ── The tile, and the pill under it ──
+
+   The same row hover the rail and the Pokédex wear, on the same grounds the
+   note in the dex says: it is the site's. This grid was the one wall of card
+   slots that did not have it, so pointing at a card in the dex lifted it and
+   pointing at the same card under "all sets" did nothing but underline its
+   name.
+
+   Grid only. A row in the list view has a rule under it and sits in a stack of
+   rows; a pill would be a second hover state in a place that already has its
+   own shape. */
+.cards-item[data-view="grid"] {
+  position: relative;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+}
+/* The pill is a pseudo-element behind the tile's own content rather than a
+   background on the tile, so it can scale up into place without taking the
+   scan with it. The children are lifted over it by name: .cards-item-link is
+   `display: contents` and has no box of its own, so a rule on the tile's direct
+   children would land on an element that cannot be stacked. */
+.cards-item[data-view="grid"] .cards-scan,
+.cards-item[data-view="grid"] .cards-item-text,
+.cards-item[data-view="grid"] .cards-item-tags {
+  position: relative;
+  z-index: 1;
+}
+.cards-item[data-view="grid"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  transform: scale(0.98);
+  transition:
+    opacity var(--dur-fast) var(--ease-smooth),
+    transform var(--dur-fast) var(--ease-smooth);
+  pointer-events: none;
+}
+/* focus-within rather than focus-visible on the link: the ring itself stays on
+   the scan (see .cards-item-link:focus-visible), and this is only the surface
+   coming up under a tile that has been tabbed to. */
+.cards-item[data-view="grid"]:hover::after,
+.cards-item[data-view="grid"]:focus-within::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Fixed by ratio rather than by content: the scans stream in lazily, and
+   without a box to land in every arrival would reflow the rows below it. */
+.cards-scan {
+  display: block;
+  position: relative;
+  aspect-ratio: 245 / 342;
+  margin-bottom: var(--space-2);
+}
+.cards-scan img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* The scans come with their own rounded, transparent corners, so the shadow
+     goes on the artwork where it follows the alpha. A box shadow would show
+     straight through those corners as a pale triangle. Same treatment the
+     hobbies card gives a card scan. */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12)) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.2));
+}
+/* The trading-card effect, once a card has been pointed at and is drawn large
+   enough for it (TILT_FROM in CardsView). Everything it is made of lives in
+   poke-holo.css, which is written for the single card on /about: that one stands
+   on its own and sizes itself, these have to fill a slot the grid has already
+   reserved. So the two elements are stretched and nothing else about the recipe
+   is touched.
+
+   Over the hover pill rather than under it: the pill is the surface the tile
+   lifts onto, and a card turning in front of it is the point. */
+.cards-scan .poke-tilt {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cards-scan .poke-card {
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+
+/* Nothing found at either source: the slot keeps the card's shape in the page's
+   own ink, the way the hobbies card marks an empty cover. */
+.cards-scan-missing {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--color-text-primary);
+  opacity: 0.06;
+}
+
+/* The price, in the meta tier the number and the type sit in, but in full ink:
+   it is the one number on the card you might actually be looking for. */
+.cards-item-price {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-eyebrow);
+  color: var(--color-text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+  margin-top: 2px;
+}
+
+.cards-item-name {
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-small);
+  line-height: var(--lh-snug);
+  color: var(--color-text-primary);
+  /* Two lines at most: a long trainer name should not push the row below it. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cards-item-meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px var(--space-2);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+.cards-item-number {
+  font-variant-numeric: lining-nums tabular-nums;
+  flex-shrink: 0;
+}
+/* Long enough to wrap on a narrow column ("Special Illustration Rare"), so both
+   clamp to one line rather than pushing the row below them out of alignment. */
+.cards-item-type {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The type used to sit at opacity 0.72 to separate it from the number and the
+   rarity. On text already at --color-text-tertiary that took it under the AA
+   threshold, and axe caught it. The separation now comes from a divider
+   instead, which costs no contrast at all. */
+.cards-item-type::before {
+  content: "·";
+  margin-right: var(--space-2);
+  opacity: 0.5;
+}
+
+/* Sits with the heading now, not in the toolbar. */
+.cards-count {
+  margin-top: var(--space-2);
+}
+
+/* A scan may go down to 104px when the column is narrow enough that 132 would
+   leave two per row. Measured on the container rather than the window, so the
+   rail collapsing does not change the answer on its own.
+
+   Still only the default: --cards-scan-w is set on the element itself, so a
+   reader who has picked a size keeps it here too. */
+@container (max-width: 560px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--cards-scan-w, 104px), 100%), 1fr));
+    /* The dex' own narrow gap, for the same reason as the wide one above. */
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 640px) {
+  .cards-set-head {
+    margin-bottom: var(--space-5);
+  }
+  .cards-set-logo {
+    height: 34px;
+    width: 120px;
+  }
+  /* The one in the h1 never stepped down with the one over each set, so at
+     390px a 132px wordmark took a third of the row and left the set's name
+     about 210px to be set at --fs-h2 in. */
+  .cards-head-logo {
+    height: 30px;
+    width: 96px;
+  }
+  /* Three columns and no minimum, so at 390px the card's name is squeezed by
+     the set beside it. The set is what goes: the scan and the name already say
+     which card this is, and the price is what the table is ranked by. Dropping
+     a column beats adding a second sideways scroller to this page. */
+  .cards-dash-set {
+    display: none;
+  }
+}
+
+/* ── Tick-list dropdowns ── */
+
+.filter-menu {
+  position: relative;
+}
+/* A button, and built like one: everything but the layout comes from .btn's own
+   surface and shape in components.css. */
+.filter-menu > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  cursor: pointer;
+  white-space: nowrap;
+  list-style: none;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-smooth),
+    border-color var(--dur-fast) var(--ease-smooth);
+}
+/* Safari draws its own disclosure triangle otherwise. */
+.filter-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.filter-menu > summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.filter-menu[open] > summary svg {
+  transform: rotate(180deg);
+}
+.filter-menu > summary svg {
+  transition: transform var(--dur-fast) var(--ease-smooth);
+}
+.filter-menu-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-size: var(--fs-tiny);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.filter-menu-panel {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: 280px;
+  max-width: min(280px, calc(100vw - 2 * var(--page-pad-x)));
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-solid);
+  box-shadow: var(--shadow-elevated);
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  backdrop-filter: blur(var(--blur-glass));
+}
+.filter-menu-panel ul {
+  /* Several hundred Pokémon, so the panel scrolls rather than the page. */
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.filter-menu-panel label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.filter-menu-panel label:hover {
+  background: var(--color-left-bg);
+  color: var(--color-text-primary);
+}
+/* The native box sits at the browser's own grey, which on this surface is
+   near enough to the background that ticked and unticked look alike at a
+   glance. Drawn by hand instead: an empty outline off, filled ink with a tick
+   on, which is the difference the eye is actually scanning for. */
+.filter-menu-panel input {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid var(--color-border-active);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition:
+    background var(--dur-fast) var(--ease-smooth),
+    border-color var(--dur-fast) var(--ease-smooth);
+}
+.filter-menu-panel label:hover input {
+  border-color: var(--color-text-primary);
+}
+.filter-menu-panel input:checked {
+  background: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+}
+/* The tick, drawn rather than a glyph so it keeps its weight at any size. */
+.filter-menu-panel input:checked::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 8px;
+  margin: 1px auto 0;
+  border: solid var(--color-bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.filter-menu-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.filter-menu-count {
+  flex-shrink: 0;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.filter-menu-clear {
+  width: 100%;
+  padding: var(--space-2);
+  margin-bottom: var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  text-align: left;
+  cursor: pointer;
+}
+.filter-menu-clear:hover {
+  color: var(--color-text-primary);
+  background: var(--color-left-bg);
+}
+
+.cards-reset {
+  height: var(--control-h);
+  padding: 0 var(--space-3-5);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-button);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+.cards-reset:hover {
+  color: var(--color-text-primary);
+}
+
+/* ── Loading outlines (app/cards/loading.tsx) ── */
+
+/* Sizes only; the look and the sweep come from .skeleton (components.css). */
+
+/* The toolbar outlines carry the real controls' geometry, so the row wraps the
+   same way and nothing jumps when they are replaced. */
+.cards-skeleton--search {
+  /* Not greedy: it took the whole leftover width and dwarfed the controls
+     beside it, when the collection is mostly browsed by filter. */
+  flex: 0 1 260px;
+  min-width: 180px;
+  height: var(--control-h);
+  border-radius: var(--radius-pill);
+}
+.cards-skeleton--filter {
+  width: 104px;
+  height: var(--control-h);
+  border-radius: var(--radius-pill);
+}
+/* Matches .cards-count, which sits under the heading with the same gap. */
+.cards-skeleton--count {
+  width: 150px;
+  /* The line box of a --fs-small paragraph, not the font size. */
+  height: 16px;
+  margin-top: var(--space-2);
+}
+/* One row in the rail: a set logo beside a single line of text, which is the
+   28px art plus the --space-2 padding a .cards-nav-item is built from. */
+.cards-skeleton--nav {
+  height: 44px;
+  border-radius: var(--radius-md);
+}
+.cards-skeleton--segmented {
+  width: 232px;
+  height: var(--control-h);
+  border-radius: var(--radius-pill);
+}
+.cards-skeleton--views {
+  width: 74px;
+  height: var(--control-h);
+  border-radius: var(--radius-pill);
+}
+.cards-skeleton--tag {
+  width: 56px;
+  height: 17px;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+}
+.cards-skeleton--logo {
+  width: 120px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.cards-skeleton--title {
+  width: 180px;
+  height: var(--fs-card);
+}
+.cards-skeleton--meta {
+  width: 110px;
+  height: var(--fs-small);
+  margin-top: var(--space-1);
+}
+/* Fills the slot the scan will land in, so the grid is already the right height
+   and the rows below do not move.
+   No sweep on these. A band of light travelling across a 40px text bar reads as
+   loading; the same band across a dozen card-sized blocks reads as the page
+   flickering, staggered or not. The small bars keep it, the images just sit
+   there and wait. */
+.cards-skeleton--scan {
+  width: 100%;
+  height: 100%;
+  /* The corner the artwork itself has: a scan is 245px wide with a ~12px
+     radius, so at the grid's 132px that lands on 6px, which is --radius-xs. */
+  border-radius: var(--radius-xs);
+}
+.cards-skeleton--scan::after {
+  content: none;
+}
+.cards-skeleton--name {
+  width: 70%;
+  height: var(--fs-small);
+}
+
+@media (max-width: 640px) {
+  .cards-skeleton--count {
+    width: 150px;
+    height: var(--fs-small);
+  }
+  /* The real .cards-segmented goes full width here, so its outline has to as well:
+     a fixed 232px both missed the geometry it is standing in for and was wider
+     than the card on a 320px screen. */
+  .cards-skeleton--segmented {
+    width: 100%;
+    height: var(--control-h);
+    border-radius: var(--radius-pill);
+  }
+  .cards-skeleton--views {
+    width: 74px;
+    height: var(--control-h);
+    border-radius: var(--radius-pill);
+  }
+  .cards-skeleton--tag {
+    width: 56px;
+    height: 17px;
+    margin-top: var(--space-1);
+    border-radius: var(--radius-pill);
+  }
+  .cards-skeleton--logo {
+    width: 92px;
+    height: 34px;
+  }
+}
+
+/* ── Era tabs, layout toggle, active filters ── */
+
+/* A track holding buttons. The glass and the border come from the shared
+   control; this is the shape it holds them in. */
+
+/* The ownership dropdown on the Pokédex.
+
+   A real <select>, so the list is the platform's own: it opens on touch, reads
+   on a screen reader, and needs no keyboard handling. The wrapper carries the
+   surface and the shape (see components.css, where it sits with the search
+   field and the Filter button), the select itself is stripped bare inside it,
+   and the chevron is drawn beside it because appearance: none takes the native
+   one away. */
+.cards-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-fast) var(--ease-smooth),
+    border-color var(--dur-fast) var(--ease-smooth);
+}
+
+.cards-select select {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.cards-select select:focus-visible {
+  outline: none;
+}
+
+.cards-select:has(select:focus-visible) {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+.cards-select svg {
+  flex-shrink: 0;
+  pointer-events: none;
+  color: var(--color-text-secondary);
+}
+
+.cards-segmented {
+  display: flex;
+  gap: var(--space-1);
+  padding: 3px;
+  border-radius: var(--radius-pill);
+}
+.cards-segment {
+  padding: 0 var(--space-4);
+  height: 32px;
+  border: none;
+  /* Concentric with the track around it, not the same number as it.
+     --radius-pill is 14px, and the track adds a 1px border and 3px of padding
+     on every side, so an inner corner at 14 is 4px too round against it. */
+  border-radius: calc(var(--radius-pill) - 4px);
+  background: none;
+  font-family: var(--font-main);
+  font-size: var(--fs-control-label);
+  font-weight: var(--fw-button);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-smooth),
+    background var(--dur-fast) var(--ease-smooth);
+}
+.cards-segment:hover {
+  color: var(--color-text-primary);
+}
+.cards-segment.is-active {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+/* In the row with the other controls, not pushed to the far end of it, and made
+   of the same track as the segmented switches beside it. */
+.cards-views {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+}
+.cards-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  /* Same correction as .cards-segment above. */
+  border-radius: calc(var(--radius-pill) - 4px);
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-smooth),
+    background var(--dur-fast) var(--ease-smooth);
+}
+.cards-view:hover {
+  color: var(--color-text-primary);
+}
+.cards-view.is-active {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.filter-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: 100%;
+  margin-top: var(--space-4);
+}
+.filter-chips-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 28px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: 1px solid var(--color-border-active);
+  border-radius: var(--radius-pill);
+  background: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-smooth),
+    color var(--dur-fast) var(--ease-smooth);
+}
+.filter-chips-chip:hover {
+  background: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+.filter-chips-chip svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.filter-chips-chip:hover svg {
+  opacity: 1;
+}
+.filter-chips-clear {
+  padding: 0 var(--space-2);
+  border: none;
+  background: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.filter-chips-clear:hover {
+  color: var(--color-text-primary);
+}
+
+/* ── Rarity tags, wishlist, list view ── */
+
+.cards-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cards-item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+/* Dense: these sit in a grid of scans, several to a card. Shape comes from
+   .tag; this is only what /cards does differently. */
+.cards-tag {
+  background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+  font-size: var(--fs-tiny);
+  color: var(--color-text-secondary);
+}
+/* Wanted rather than held: an outline instead of a fill, so the difference
+   survives being read in greyscale as well as in colour. */
+.cards-tag--want {
+  background: none;
+  border: 1px dashed var(--color-border-active);
+  color: var(--color-text-tertiary);
+}
+/* A card that is only wanted sits back from the ones actually in the binder. */
+.cards-item.is-wishlist .cards-scan img {
+  opacity: 0.55;
+  filter: grayscale(0.4) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+}
+
+/* List view: one row per card, the scan shrunk to a thumbnail beside it. */
+.cards-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+.cards-item[data-view="list"] {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.cards-rows > .cards-item:last-child {
+  border-bottom: none;
+}
+.cards-item[data-view="list"] .cards-scan {
+  width: 44px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+/* A row has one line to give a name, where a tile in the grid has two, so the
+   name is set larger and clamped harder here.
+
+   Every rule in this block is scoped to the row. They were not: a comment sat
+   between `.cards-item[data-view="list"]` and the selector under it, and a
+   comment is whitespace, so the two became one descendant selector and the
+   three rules that followed were left loose. The one that mattered was
+   .cards-item-name, which beat the grid's own rule further up the file and set
+   every tile's name in one line of --fs-body-s instead of two of --fs-small. */
+.cards-item[data-view="list"] .cards-item-name {
+  font-size: var(--fs-body-s);
+  -webkit-line-clamp: 1;
+}
+.cards-item[data-view="list"] .cards-item-text {
+  flex: 1;
+}
+.cards-item-gen {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cards-item-gen::before {
+  content: "·";
+  margin-right: var(--space-2);
+  opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  .cards-segmented {
+    width: 100%;
+  }
+  .cards-segment {
+    flex: 1;
+    padding: 0 var(--space-2);
+  }
+}
+
+/* Narrow: the bar wraps rather than scrolls. It scrolled for a while, and a
+   scrolling row of controls hides controls: the search took the full width and
+   pushed the era switch, Filter and the layout toggle off the right edge, where
+   nothing suggested they were still there. Four controls fit on two or three
+   short rows, and a row that wraps cannot hide anything. */
+@media (max-width: 900px) {
+  .cards-search {
+    flex: 1 0 100%;
+    max-width: none;
+  }
+}
+
+/* Only the chips scroll, because that row genuinely has no bound: it is as long
+   as the number of filters that happen to be on. */
+@media (max-width: 640px) {
+  .filter-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Room for the focus rings, which an overflow container would clip. */
+    padding-bottom: var(--space-1);
+  }
+  .filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .filter-chips > * {
+    flex-shrink: 0;
+  }
+}
+
+/* The facet list, the level above the tick-list. */
+.filter-menu-facet {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  /* A button centres its text, and the name sits in a flex:1 span, so every
+     facet in this list read as a centred word with the count floated off to the
+     right of it. */
+  text-align: left;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.filter-menu-facet:hover {
+  background: var(--color-left-bg);
+  color: var(--color-text-primary);
+}
+.filter-menu-facet svg:last-child {
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+/* How many values are on in a facet, so the list says which ones are doing
+   something without having to be opened. */
+.filter-menu-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  font-size: var(--fs-small);
+  color: var(--color-text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.filter-menu-back {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-2);
+  margin-bottom: var(--space-1);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: none;
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-button);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.filter-menu-back:hover {
+  color: var(--color-text-secondary);
+}
+.filter-menu > summary svg:first-of-type {
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .page-cards {
+    margin-top: 0;
+  }
+}
+
+/* ─── ONE CARD (app/cards/[id]) ─── */
+
+/* An ordinary page of this site: the tab bar is above it, so it keeps the top
+   room #main-content reserves instead of pulling back through it the way the
+   full-bleed list does. */
+.page-card {
+  max-width: calc(var(--content-max) + 2 * var(--page-pad-x));
+  margin: 0 auto;
+  padding: 0 var(--page-pad-x) var(--page-pad-bottom);
+}
+
+.card-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* The scan beside the facts, and the scan is the point: it takes the wider
+   column. Stacks on a phone, where a two-column split would leave the artwork
+   the size it is in the grid. */
+.card-detail-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: var(--space-8);
+  width: 100%;
+  margin-top: var(--space-6);
+}
+@media (max-width: 640px) {
+  .card-detail-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* The artwork carries its own rounded, transparent corners, so the shadow goes
+   on the alpha rather than on a box behind it, the same call the grid makes. */
+.card-detail-scan img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.14)) drop-shadow(0 16px 32px rgba(0, 0, 0, 0.22));
+  /* The small scan the grid already has, standing in until the big one lands.
+     CardDetail sets the URL; these are the rules that make it fit the box. */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.card-detail-scan .cards-scan-missing {
+  aspect-ratio: 245 / 342;
+}
+
+.card-detail-text {
+  min-width: 0;
+}
+.card-detail-eyebrow {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+.card-detail-title {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+}
+.card-detail-price {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-card);
+  color: var(--color-text-primary);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.card-detail-price-avg {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-regular);
+  color: var(--color-text-tertiary);
+}
+
+/* A definition list, two columns, so the labels line up down the left. */
+.card-detail-facts {
+  margin: var(--space-6) 0 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.card-detail-facts > div {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: baseline;
+}
+.card-detail-facts dt {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+.card-detail-facts dd {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  color: var(--color-text-primary);
+}
+
+.card-detail-mine {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.card-detail-mine-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+.card-detail-mine ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.card-detail-mine li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.card-detail-mine-state {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+
+.card-detail-cm {
+  margin-top: var(--space-6);
+}
+
+/* The scan and the name are the link; the tags below it are not. Display
+   contents, so the anchor adds no box of its own and the item's own flex column
+   still governs the layout it always did. */
+.cards-item-link {
+  display: contents;
+  color: inherit;
+  text-decoration: none;
+}
+.cards-item-link:hover .cards-item-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* display:contents removes the box a focus ring would draw, so the ring goes on
+   the scan, which is the part you are actually pointing at. */
+.cards-item-link:focus-visible {
+  outline: none;
+}
+.cards-item-link:focus-visible .cards-scan {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* The same card in a dialog, opened from the list. Everything inside it is the
+   route's own markup: only the box around it is different, and the margin the
+   route puts above the body is not wanted under a close button. */
+/* svh, not vh, and it is the last place on the site that still said vh. On iOS
+   vh is the large viewport, the height with the browser bars out of the way, so
+   anything measured in it is taller than what you can actually see while they
+   are showing. It matters most in the mobile block below, where this is a bottom
+   sheet: at 92vh its foot sat behind Safari's toolbar.
+   svh and not dvh for the reason .modal--connect states: dvh follows the bars in
+   and out, and a sheet that resizes while you are reading it moves under your
+   thumb. svh is the smallest it can be, so the sheet is drawn once and stays. */
+.modal--card {
+  width: min(920px, calc(100vw - 2 * var(--space-6)));
+  max-height: calc(100svh - 2 * var(--space-6));
+  border-radius: var(--radius-lg);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-elevated);
+}
+.modal--card .modal-scroll {
+  overflow-y: auto;
+  max-height: calc(100svh - 2 * var(--space-6));
+  /* Reaching the end of a card does not hand the scroll on. Modal.tsx already
+     pins the body, so there is no page behind this to move; what this stops is
+     iOS rubber-banding the whole viewport at the end of the list. The connect
+     drawer carries the same line. */
+  overscroll-behavior: contain;
+  padding: var(--space-10) var(--card-pad) var(--card-pad);
+}
+.modal--card .card-detail-body {
+  margin-top: 0;
+}
+@media (max-width: 640px) {
+  .modal--card {
+    width: 100%;
+    max-height: 92svh;
+    /* Off the bottom edge on a phone, the way a sheet sits. */
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    align-self: flex-end;
+  }
+  .modal--card .modal-scroll {
+    max-height: 92svh;
+  }
+}
+
+/* ── Adding a card (CardAddDialog) ──
+
+   Narrower than the card dialog above it: this is a form of short fields, and a
+   920px box would put a 60-character input on a line nobody has to read across.
+   The sheet treatment on a phone is the same one .modal--card takes, and for
+   the same reason: a dialog opened from a bar at the bottom of the screen
+   should arrive from the bottom of the screen. */
+.modal--card-add {
+  width: min(560px, calc(100vw - 2 * var(--space-6)));
+  max-height: calc(100svh - 2 * var(--space-6));
+  border-radius: var(--radius-lg);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-elevated);
+}
+.modal--card-add .modal-scroll {
+  overflow-y: auto;
+  max-height: calc(100svh - 2 * var(--space-6));
+  overscroll-behavior: contain;
+  padding: var(--space-10) var(--card-pad) var(--card-pad);
+}
+@media (max-width: 640px) {
+  .modal--card-add {
+    width: 100%;
+    max-height: 92svh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    align-self: flex-end;
+  }
+  .modal--card-add .modal-scroll {
+    max-height: 92svh;
+  }
+}
+
+/* Two columns, because the fields are short and a card is read in pairs:
+   number and set, rarity and generation. Name and the type chips take the whole
+   row. One column below 480px, where two would be two half-fields. */
+.card-add {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.card-add-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-card);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+}
+.card-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  /* A fieldset carries a border and padding of its own that no other field
+     here has, and the type chips are one of these. */
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.card-add-field--wide {
+  grid-column: 1 / -1;
+}
+.card-add-label {
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-eyebrow);
+  color: var(--color-text-secondary);
+  /* A legend sits in the fieldset's border by default, which puts the group's
+     name half a line above where every other label on this form sits. */
+  padding: 0;
+  float: none;
+}
+.card-add-field input,
+.cards-profile-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--space-3-5);
+  outline: none;
+  color: var(--color-text-primary);
+  /* Never under 16px: below it iOS zooms the page the moment the field takes
+     focus, which is what --fs-control exists for. */
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-regular);
+}
+.card-add-field input::placeholder,
+.cards-profile-field input::placeholder {
+  color: var(--color-text-tertiary);
+}
+.card-add-field input:focus-visible,
+.cards-profile-field input:focus-visible {
+  border-color: var(--color-border-active);
+}
+
+.card-add-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* The same pill the filter chips wear, pressed rather than dismissed: seven
+   fixed options are a row of things to turn on, not a field to type into. */
+.card-add-chip {
+  height: var(--control-h);
+  padding: 0 var(--space-3-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: none;
+  font-family: var(--font-main);
+  font-size: var(--fs-control-label);
+  font-weight: var(--fw-button);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.card-add-chip:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+.card-add-chip.is-on {
+  border-color: transparent;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.card-add-check {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.card-add-check input {
+  /* The platform's own box, at the size the platform draws it: a checkbox is
+     the one control here nobody gains anything from us redrawing. */
+  margin: 2px 0 0;
+  accent-color: var(--color-accent);
+}
+.card-add-check span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-add-hint {
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+
+.card-add-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+/* Always in the document, empty or not, so an answer arriving does not push
+   the button it arrived from. */
+.card-add-status {
+  grid-column: 1 / -1;
+  min-height: var(--space-5);
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+}
+.card-add-error {
+  color: var(--color-text-primary);
+  font-weight: var(--fw-eyebrow);
+}
+
+@media (max-width: 480px) {
+  .card-add {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── The profile (CardsProfile) ──
+
+   Not a card. Every other screen in this pane is a list or a grid that brings
+   its own panels; this one is a short column of settings, and a panel drawn
+   around it made a phone-sized screen look like a receipt in an empty room. It
+   sits on the page's own surface, the same call .cards-set makes above.
+
+   Measured rather than chosen: 52ch is where the two paragraphs on it stop
+   running the full width of a laptop pane. */
+.cards-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-10);
+  max-width: 52ch;
+}
+.cards-profile-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  width: 100%;
+}
+.cards-profile-title {
+  margin: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-card);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+}
+.cards-profile-note {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-secondary);
+}
+.cards-profile-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  width: 100%;
+}
+.cards-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  /* Takes the row it is on and lets the button sit beside it while there is
+     room for both. */
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.cards-profile-label {
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-eyebrow);
+  color: var(--color-text-secondary);
+}
+.cards-profile-error {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-eyebrow);
+  color: var(--color-text-primary);
+}
+
+/* ── The dashboard ──
+   Where /cards opens. Four headline numbers, the priciest cards as a table, and
+   two distributions as bars.
+
+   The bars are one hue, not a palette: each chart is a single series answering
+   "compare magnitude", which is a sequential job, and a single series needs no
+   legend because the heading already names what is plotted. Every label and
+   value wears a text token; the colour lives in the mark alone. */
+
+.cards-dash {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.cards-kpis {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+}
+/* The site's card, at the size a number wants: .about-card brings the surface,
+   the radius and the shadow, and the tile overrides only the padding, which at
+   --card-pad would be 32px around a two-line stat. The dashboard used to invent
+   its own tile here, one hairline and one grey that appear nowhere else. */
+.cards-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-5);
+}
+/* Secondary, not tertiary. Tertiary is #737373, and these sit on the tile's own
+   --color-surface-subtle rather than on the page, which lands the pair at
+   4.27:1 against the 4.5 that 13px text has to clear. Caught by the axe run in
+   e2e/a11y.spec.ts. */
+.cards-kpi-label {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+}
+.cards-kpi-value {
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+  /* Proportional figures, deliberately: tabular-nums gives every digit the width
+     of a zero, which reads loose at display sizes. Tabular is for columns that
+     have to line up, which is the table below rather than this. */
+}
+/* Same reason as the label above: on the tile's surface, tertiary does not
+   clear the contrast floor. */
+
+/* Each block is one of the site's cards, the same as a set on the results pane.
+   They were bare sections floating on the page, which on the new white surface
+   left the dashboard with nothing to sit on. */
+.cards-dash-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.cards-dash-title {
+  margin: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-card);
+  color: var(--color-text-primary);
+}
+.cards-dash-sub {
+  margin: 0 0 var(--space-3);
+  max-width: 60ch;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+/* ── Value over time ──
+   Full width of the dashboard column rather than sharing a row with anything,
+   because the x axis is time and a line needs the room to be a line. Beside
+   another block this is around 420px for twenty months, and the gap between the
+   two archived readings, which is the widest fact on the chart, collapses to
+   nothing. It is the same reason .cards-dash-table is not in the pair below. */
+.cards-value-chart {
+  margin-top: var(--space-5);
+}
+
+.cards-value-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* The rings on the first and last reading sit on the edge of the viewBox and
+     their stroke would otherwise be clipped in half. */
+  overflow: visible;
+}
+
+.cards-value-line {
+  fill: none;
+  stroke: var(--color-text-primary);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Palette rather than artwork: it is the page's own surface tint under the
+   line, and it has to follow the theme like every other surface here. */
+.cards-value-fill {
+  fill: var(--color-surface-subtle);
+  stroke: none;
+}
+
+/* Drawn as a ring rather than a disc, so the line reads as passing through the
+   reading rather than stopping at it. */
+.cards-value-dot {
+  fill: var(--color-bg);
+  stroke: var(--color-text-primary);
+  stroke-width: 2px;
+}
+
+.cards-value-axis {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+
+/* Two distributions side by side while there is room for both. */
+.cards-dash-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-8) var(--space-6);
+}
+
+/* Surface and type come from the shared data-table recipe in components.css.
+   Flush left, because this table starts at the card's own padding edge. */
+.cards-dash-table th {
+  padding: 0 var(--space-3) var(--space-2) 0;
+}
+.cards-dash-table td {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+}
+.cards-dash-table a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+.cards-dash-table a:hover {
+  text-decoration: underline;
+}
+/* The scan beside the name, small on purpose: it is there to be recognised at a
+   glance, not to be looked at. The name is what the row is about. */
+.cards-dash-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.cards-dash-thumb {
+  flex-shrink: 0;
+  display: block;
+  width: 22px;
+  height: 30px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--color-left-bg);
+}
+.cards-dash-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cards-dash-thumb-blank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--color-left-bg);
+}
+.cards-dash-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cards-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.cards-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+.cards-bar-label {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cards-bar-track {
+  height: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+  overflow: hidden;
+}
+.cards-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  /* Square where it leaves the baseline, rounded at the data end, so the tip
+     reads as the value and the start reads as zero. */
+  border-radius: 0 4px 4px 0;
+}
+/* The value at the tip, which is what a bar chart labels: the axis is implied by
+   the shared track, so a tick scale would be ink for something already known. */
+.cards-bar-value {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-tertiary);
+}
+
+/* ─── THE POKÉDEX ─── */
+
+/* Small tiles, a lot of them: a thousand and twenty-five entries is a wall
+   however it is drawn, so the job is to make one slot readable at a glance and
+   let the wall be the point. */
+.cards-dex {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: var(--space-3);
+}
+.cards-dex-slot {
+  position: relative;
+  min-width: 0;
+}
+
+/* Page through the cards of one Pokémon without leaving the dex. Held back
+   until the slot is pointed at or tabbed into: a thousand slots with two arrows
+   each, all visible at once, is a page of arrows with a dex behind it. */
+.cards-dex-step {
+  position: absolute;
+  /* Centred on the artwork, which is the part being paged, rather than on the
+     slot: the number and the name below it do not move. */
+  top: calc(var(--space-2) + 33%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--glass-bg-solid);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-smooth);
+  z-index: 2;
+}
+.cards-dex-step--back {
+  left: 0;
+}
+.cards-dex-step--next {
+  right: 0;
+}
+.cards-dex-slot:hover .cards-dex-step,
+.cards-dex-slot:focus-within .cards-dex-step {
+  opacity: 1;
+}
+.cards-dex-step:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-active);
+}
+/* A touch screen has no hover to reveal them with, so there they simply are. */
+@media (hover: none) {
+  .cards-dex-step {
+    opacity: 1;
+  }
+}
+.cards-dex-body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  position: relative;
+  --pill-radius: var(--radius-md);
+}
+/* The same row hover the rail wears, for the same reason: it is the site's. */
+button.cards-dex-body {
+  cursor: pointer;
+}
+button.cards-dex-body > * {
+  position: relative;
+  z-index: 1;
+}
+button.cards-dex-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  transform: scale(0.98);
+  transition:
+    opacity var(--dur-fast) var(--ease-smooth),
+    transform var(--dur-fast) var(--ease-smooth);
+  pointer-events: none;
+}
+button.cards-dex-body:hover::after,
+button.cards-dex-body:focus-visible::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* The scan, in the shape of a card, so a filled slot is recognisable before any
+   of the words are read. */
+.cards-dex-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 245 / 342;
+  margin-bottom: var(--space-2);
+}
+.cards-dex-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-xs);
+}
+/* The Pokémon rather than a card of it: the official artwork, small, held back
+   so a filled slot still reads as the filled one at a glance. Not greyed out:
+   knowing which Pokémon is missing is the whole reason it is drawn. */
+/* 64px in a box that is about 95 by 132, so it sits as a small mark in the
+   middle of an empty slot rather than filling it like a card would. The stored
+   file stays 120px: that is the 2x asset for this, and shrinking it further
+   would save four megabytes and cost every retina screen the sharpness. */
+/* Two classes deep on purpose: `.cards-dex-art img` above is a class and a type,
+   so a single class here loses to it and the ghost quietly filled the whole
+   slot like a scan. */
+.cards-dex-art .cards-dex-ghost {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  opacity: 0.5;
+}
+.cards-dex-slot.is-empty .cards-dex-art {
+  border-radius: var(--radius-xs);
+  border: 1px dashed var(--color-border-subtle);
+}
+/* How many cards there are of it, when there is more than one. */
+.cards-dex-count {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-tiny);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.cards-dex-no {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-tiny);
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--color-text-tertiary);
+}
+.cards-dex-name {
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-small);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The ones with nothing in them recede, but stay legible: a Pokédex is read for
+   its gaps as much as for its hits. */
+.cards-dex-slot.is-empty .cards-dex-name {
+  color: var(--color-text-tertiary);
+}
+
+.cards-dex-empty {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  color: var(--color-text-secondary);
+}
+
+/* Same question, same box: see the note on .cards-main. */
+@container (max-width: 560px) {
+  .cards-dex {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: var(--space-2);
+  }
+}

@@ -1,0 +1,166 @@
+/* Page-level responsive + page sections: split from globals.css (order preserved) *//* ─── RESPONSIVE ─── *//* Tablet landscape: 810px – 1215px */
+@media (max-width: 1215px) {
+  .case {
+    position: relative;
+  }
+  .case-meta {
+    width: 120px;
+  }
+}
+/* Tighter spacing on small screens (matches the mobile design) */
+@media (max-width: 640px) {
+  .tabbar {
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-3) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    /* The theme toggle is a separate fixed element sitting in this row's right
+       margin, and the pill knew nothing about it: centred on the viewport it
+       ran under the toggle on anything narrower than about 366px, and cleared
+       it by four pixels on a 375px phone. Reserving the toggle's footprint
+       stopped the collision, but only on the right, so the pill was centred in
+       what was left rather than on the screen: measured at 390, its middle sat
+       26px left of the screen's.
+
+       Reserved on both sides now. The gutter on the left holds nothing, which
+       is the point: it is there so the middle of the free space and the middle
+       of the screen are the same place. The toggle can still sit in the right
+       one and nothing can reach the pill. */
+    padding-inline: calc(var(--space-3) + var(--control-h) + var(--space-3));
+  }
+  /* Mobile: collapse to icons; the active tab shows its label. The active
+     item is sized to the longest label so the bar never jumps width. */
+  .tabbar-pages {
+    width: auto;
+    /* Both gutters, so this agrees with the padding above rather than assuming
+       one side of it. Below about 330px the pill gives up width before it gives
+       up its place in the middle. */
+    max-width: calc(100vw - 2 * (var(--space-3) + var(--control-h) + var(--space-3)));
+  }
+  .tabbar-item {
+    padding: 0 10px;
+  }
+  .tabbar-item.is-active {
+    flex: 0 0 auto;
+    /* Sized to the widest icon+label plus 16px each side, so the bar never
+       jumps and every pill hugs its content. Measured with the floor lifted, at
+       the label's own size: Home 101, About 102, Articles 112, Resume 114. It
+       said "Connect, 14px label" and 116 for a tab that is not in this bar any
+       more; the label is --fs-control-label now, so this number is read off that
+       token and has to be re-measured whenever it moves. */
+    min-width: 114px;
+    padding: 0 var(--space-4);
+  }
+  .tabbar-label {
+    max-width: 0;
+    opacity: 0;
+    margin-left: 0;
+    /* No font-size here any more. This was a hardcoded 13px undoing the type
+       scale, because --fs-small steps down to 12 inside this very block and the
+       nav label is supposed to read the same as on desktop. The label takes
+       --fs-control-label now, and that one is floored at 16px minus one by the
+       iOS-zoom rule, so it is 15px on both and there is nothing left to undo. */
+    /* Only fade: animating the width makes the bar briefly grow/shrink while
+       the old tab collapses, so the bar appears to change width on navigation. */
+    transition: opacity var(--dur-fast) var(--ease-smooth);
+  }
+  .tabbar-item.is-active .tabbar-label {
+    max-width: 160px;
+    opacity: 1;
+    margin-left: var(--space-2);
+  }
+}
+/* Tablet portrait: 480px – 809px */
+@media (max-width: 809px) {
+  .left {
+    padding: var(--space-12) var(--space-6);
+  }
+
+  .right {
+    padding: var(--space-10) var(--space-6) 100px 36px;
+  }
+  .right::before {
+    left: 4px;
+  }
+  .case {
+    position: relative;
+    flex-direction: column;
+    /* client/year sits just above its image, not a screen away */
+    gap: var(--space-4);
+    max-width: 512px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 80px;
+  }
+  .case-meta {
+    position: relative;
+    /* Reset the desktop sticky offset: otherwise `top: 112px` still applies and
+       pushes the client/year down onto (behind) the image. Stacked here, it sits
+       plainly above the image. */
+    top: 0;
+    width: auto;
+    padding-right: 0;
+  }
+  .case-meta::before {
+    /* Stacked: a line from the card's left edge to the label, instead of a
+       short tick floating in the gap. The case block is centred at 512px here,
+       so the distance to the card edge is half the leftover width plus the
+       card's own padding, and it collapses to just the padding once the
+       viewport is narrower than the block.
+       (The previous formula used min() of a viewport expression, which picks
+       the *more* negative value: at ~1000px it resolved to -246px and put the
+       tick clear outside the card.) */
+    /* Same mark as on desktop, at the same distance from the card edge: 16px
+       long, sitting 5px in. The centring gap is what changes with the viewport,
+       not the tick. The case block is capped at 512px and centred in the
+       panel, so the distance back to the card edge is that centring gap plus
+       the panel's own left padding and border (37px), collapsing to just those
+       once the block stops being narrower than its container.
+       Measured against the rendered layout at 560-809px rather than derived
+       from the token values, which disagree with it.
+       (The previous formula took min() of a viewport expression, which picks
+       the *more* negative value: at ~1000px it resolved to -246px and put the
+       tick clear outside the card.) */
+    --tick-reach: calc(
+      32px + max(0px, (min(var(--content-max), 100vw - 2 * var(--page-pad-x)) - 582px) / 2)
+    );
+    left: calc(-1 * var(--tick-reach));
+  }
+  .case-content {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+/* Phone: the case takes the whole panel, evenly. The right inset is the panel's
+   own --card-pad (set on .exp-panel .right in pages.css) and the left was 36px,
+   held open for the timeline spine: a lopsided column, and the narrow side of it
+   was the reading side. 20 and 20 on a 390 phone is 28px more line than it had.
+   What pays for it is the timeline. The spine and its ticks are drawn in that
+   left margin and there is no margin left to draw them in. They stay on tablet
+   and desktop, where it exists.
+   Only padding-left is set here on purpose: .exp-panel .right owns the other
+   three and beats a media query, so a shorthand would write two of them twice
+   and land nothing. */
+@media (max-width: 640px) {
+  .right {
+    padding-left: var(--card-pad);
+  }
+  .right::before,
+  .case-meta::before {
+    display: none;
+  }
+  .case {
+    /* The 512px reading measure is what centres the case between 480 and 640;
+       below the cap the card is already narrower than that, so all it did at
+       the top of this range was hold the card back from a gutter it now uses. */
+    max-width: none;
+  }
+}
+/* Mobile: max-width 479px */
+@media (max-width: 479px) {
+  .left {
+    padding: var(--space-12) var(--space-6);
+  }
+
+  .case-image {
+    border-radius: var(--radius-sm);
+  }
+}

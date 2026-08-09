@@ -43,11 +43,33 @@ curl localhost:3000/api/v1/collection | jq '.sets | length'
 ## Shape
 
 ```
-lib/core/   the domain layer. No React, no routes. This is the part worth having.
-lib/api/    who may write, and how often.
-app/api/v1/ the four endpoints.
-app/        the web tool. A placeholder today.
+lib/core/       the domain layer. No React, no routes. This is the part worth having.
+lib/api/        who may write, and how often.
+app/api/v1/     the four endpoints.
+app/api/cover/  a same-origin passthrough for the one host that sends no CORS headers.
+app/cards/      the collection: the rail, the dashboard, the Pokédex, one card.
+app/@modal/     that card again, as a dialog, intercepted so the list survives.
+app/components/ everything the two above are built from.
+app/styles/     the portfolio's stylesheets, copied whole rather than trimmed.
+scripts/        the generators lib/core keeps referring to.
 ```
+
+The web tool is the portfolio's `/cards`, moved rather than rewritten: the same
+rail, the same dashboard, the same Pokédex, the same tilt on a holo. Four things
+changed on the way over. The endpoints are binder's (`/api/v1/fields` and
+`/api/v1/cards` instead of one `/api/cards`), the imports point at `lib/core`,
+every JSON-LD graph came out because this ships `noindex`, and the locale stays
+`nl-NL`, so the numbers read `€ 41.042` rather than `€41,042`.
+
+`app/cards/page.tsx` calls `getCards()` directly rather than its own
+`/api/v1/collection`: a server component has no relative fetch, and the port
+changes per workspace. The route handler wraps the same function, so there is
+one implementation and nothing to drift.
+
+`/` only redirects to `/cards`. The list could have lived at the root, but the
+card dialog is an intercepted parallel route and interception is defined
+relative to the segment it intercepts, which is a poor thing to rewrite for one
+character of URL.
 
 Two things in `lib/core` are deliberately hollow. `localise()` and `measure()` in
 `util.ts` used to swap a remote image for a copy the portfolio served itself, and

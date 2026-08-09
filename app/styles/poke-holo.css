@@ -1,0 +1,243 @@
+/* The foil on a holographic trading card, from pokemon-cards-css.
+
+   Source: https://github.com/simeydotme/pokemon-cards-css (MIT), the CSS behind
+   https://poke-holo.simey.me. This is that project's own effect rather than an
+   imitation of it: the layers, the gradients, the blend modes and the filter
+   stacks below are copied from its public/css/cards/base.css and
+   v-full-art.css.
+
+   What drives them is not. Upstream's Card.svelte measures the pointer itself;
+   here that job belongs to `hover-tilt`, the same author's packaged tilt-and-
+   glare component (MPL-2.0), which ships a web component and so can be used in
+   React as published. It hands its slotted child --hover-tilt-x and -y (0 to 1)
+   and an opacity, and the block below maps those onto the four variables the
+   foil reads. That is the whole join between the two.
+
+   So: the turning, the springs, the shadow and the white glare are the library.
+   The foil is this file. What is left out of it, and why:
+
+   1. Class names are prefixed .poke-card rather than .card, which is far too
+      common a word to take over in a codebase that already has cards of three
+      other kinds in it.
+   2. Only the foil layer is here. Upstream stacks two more passes on it and a
+      glare of its own; hover-tilt draws the glare, and the extra passes are
+      what made this read as several effects at once on a picture 113px wide.
+   3. Its full-art recipe layers a texture (img/illusion.png, 50KB) under the
+      gradients. Skipped: a hover effect on one card is not worth 50KB on every
+      view of /about, and the gradients carry it on their own. */
+
+/* The custom element is inline by default and would not take the picture's
+   shape. The radius is here rather than on the card because hover-tilt's own
+   layers inherit it off the host: its glare is clipped to it, and so is the
+   shadow it casts, which is a rectangle otherwise and would show past the
+   scan's rounded, transparent corners. */
+.poke-tilt {
+  display: inline-block;
+  border-radius: 4.55% / 3.5%;
+  /* The host was 5px taller than the card it holds, and everything hover-tilt
+     draws is sized to the host: the glare and the shadow both hung that 5px
+     past the bottom edge, which is the only edge of a card lit from above where
+     you would notice. The 5px is a descender: .poke-card is an inline-grid, so
+     it sits on a baseline and the line box keeps room under it for the part of
+     a letter that would go below. There is no text in here to need it. */
+  line-height: 0;
+}
+/* And again inside the component, through its parts, because the radius on the
+   host does not reach them: hover-tilt's layers take theirs from
+   `border-radius: inherit`, and their parent is a div in its shadow root, which
+   a stylesheet out here does not style. So both came out square, and the shadow
+   the tilt casts is a box-shadow on one of them: at the corners it stood as a
+   hard right angle behind a scan whose own corners are rounded and transparent,
+   which read as the shadow being cut off. The glare in front of it was the same
+   rectangle. Same numbers as the host, percentages of the same box. */
+.poke-tilt::part(container),
+.poke-tilt::part(tilt) {
+  border-radius: 4.55% / 3.5%;
+}
+
+.poke-card {
+  /* ── The knob ──
+
+     Upstream has no strength setting: a card there is a card on a page full of
+     cards, and it goes as hard as the real foil does. At 113px next to a
+     playlist cover, full strength read as the artwork disappearing under a
+     rainbow. 1 is upstream exactly, 0 is no foil at all. The glare and the lean
+     have their own settings, and those are props on <hover-tilt> in
+     PullScan.tsx. */
+  --poke-foil: 0.45;
+
+  /* hover-tilt's pointer, in the shape the foil expects. --hover-tilt-x and -y
+     run 0 to 1 across the card; upstream's --pointer-* are percentages of the
+     same thing, and its --background-* are the same position squeezed into the
+     middle of the card (37 to 63 across, 33 to 67 down) so the foil never runs
+     off the end of its own gradient. Those two ranges are its numbers, out of
+     the adjust() calls in its Card.svelte. */
+  --pointer-x: calc(var(--hover-tilt-x, 0.5) * 100%);
+  --pointer-y: calc(var(--hover-tilt-y, 0.5) * 100%);
+  --background-x: calc(37% + var(--hover-tilt-x, 0.5) * 26%);
+  --background-y: calc(33% + var(--hover-tilt-y, 0.5) * 34%);
+  --card-opacity: var(--hover-tilt-opacity, 0);
+  /* Upstream brightens the foil the further the pointer is from the middle.
+     hover-tilt measures the same thing and calls it --hover-tilt-at-edge, 0 in
+     the centre and 1 at the border. */
+  --pointer-from-center: var(--hover-tilt-at-edge, 0);
+
+  /* A trading card's corners, in upstream's numbers. */
+  --card-radius: 4.55% / 3.5%;
+
+  /* Artwork and foil in one grid cell, which is how upstream keeps them the
+     same size and shape as the picture without measuring anything. Positioned
+     as well, because the reflection hangs off the bottom of it. */
+  position: relative;
+  display: inline-grid;
+  border-radius: var(--card-radius);
+}
+
+.poke-card > * {
+  grid-area: 1 / 1;
+  border-radius: var(--card-radius);
+}
+
+.poke-card__shine {
+  pointer-events: none;
+  /* The foil is clipped to the card rather than to the box around it: the scan
+     itself is the mask, so the rainbow ends exactly where the printed card
+     ends, corners included.
+
+     Upstream approximates a trading card's corner with --card-radius, 4.55% by
+     3.5%, and that is a number for a card drawn three times this wide. At 113px
+     it is about 5px against the scan's own rounded corners, and the difference
+     showed as foil hanging over the bottom edge of the card instead of lying on
+     it. A mask cannot be off by a pixel, because it is the same picture.
+
+     PullScan.tsx sets --poke-scan to the scan's URL. Without it the mask is
+     nothing and the foil would not paint at all, hence the `none` fallback,
+     which is a mask that lets everything through. */
+  -webkit-mask-image: var(--poke-scan, none);
+  mask-image: var(--poke-scan, none);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* ── The foil ──
+
+   pokemon-cards-css, v-full-art.css, the branch it uses for a full-art card
+   with no mask: a sunpillar rainbow, a steep metallic band across it, and the
+   pointer darkening everything it is not on. Blended into the artwork with
+   color-dodge.
+
+   Its regular-holo recipe was here first and was the wrong one. That effect is
+   built out of a 1px scanline grating and 3% bars, sized for a card rendered
+   three times this wide (upstream even halves the grating below 900px), and at
+   113px it stopped reading as foil and started reading as vertical stripes
+   drawn over the picture. This branch has no grating in it at all, and it is
+   also the branch that actually matches what is on the shelf: a full-art promo.
+
+   Upstream lays two more passes on top, a second copy of this on `exclusion`
+   and a white blob on `overlay`. Both are left off. Three moving layers over
+   one small picture was already the thing that looked like too much. */
+.poke-card__shine {
+  --space: 5%;
+  --angle: 133deg;
+
+  /* The six foil colours, from upstream's base.css. */
+  --sunpillar-1: hsl(2, 100%, 73%);
+  --sunpillar-2: hsl(53, 100%, 69%);
+  --sunpillar-3: hsl(93, 100%, 69%);
+  --sunpillar-4: hsl(176, 100%, 76%);
+  --sunpillar-5: hsl(228, 100%, 74%);
+  --sunpillar-6: hsl(283, 100%, 73%);
+
+  display: grid;
+  overflow: hidden;
+
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      var(--sunpillar-1) calc(var(--space) * 1),
+      var(--sunpillar-2) calc(var(--space) * 2),
+      var(--sunpillar-3) calc(var(--space) * 3),
+      var(--sunpillar-4) calc(var(--space) * 4),
+      var(--sunpillar-5) calc(var(--space) * 5),
+      var(--sunpillar-6) calc(var(--space) * 6),
+      var(--sunpillar-1) calc(var(--space) * 7)
+    ),
+    repeating-linear-gradient(
+      var(--angle),
+      #0e152e 0%,
+      hsl(180, 10%, 60%) 3.8%,
+      hsl(180, 29%, 66%) 4.5%,
+      hsl(180, 10%, 60%) 5.2%,
+      #0e152e 10%,
+      #0e152e 12%
+    ),
+    radial-gradient(
+      farthest-corner circle at var(--pointer-x) var(--pointer-y),
+      hsla(0, 0%, 0%, 0.1) 12%,
+      hsla(0, 0%, 0%, 0.15) 20%,
+      hsla(0, 0%, 0%, 0.25) 120%
+    );
+  background-position:
+    0% var(--background-y),
+    calc(var(--background-x) + (var(--background-y) * 0.2)) var(--background-y),
+    var(--background-x) var(--background-y);
+  background-size:
+    200% 700%,
+    300% 100%,
+    200% 100%;
+  background-blend-mode: hue, hard-light;
+  /* Brighter the further the pointer is from the middle, which is upstream's
+     own line. --pointer-from-center is mapped from hover-tilt at the top. */
+  filter: brightness(calc((var(--pointer-from-center) * 0.3) + 0.35)) contrast(2) saturate(1.5);
+  mix-blend-mode: color-dodge;
+  opacity: calc(var(--card-opacity) * var(--poke-foil));
+}
+
+/* Neither project answers prefers-reduced-motion, so this one is ours: the card
+   stops turning and stops growing, and the foil and the glare still light up
+   where the pointer is.
+
+   Through ::part rather than by overriding hover-tilt's variables, which does
+   not work: it writes those inline on an element inside its shadow root, and an
+   inline declaration there beats anything set on the host. It does expose the
+   element that carries the transform as part="tilt", and a rule from out here
+   wins over the shadow tree's own. */
+@media (prefers-reduced-motion: reduce) {
+  .poke-tilt::part(tilt) {
+    transform: none;
+  }
+}
+
+/* ── What kind of card it is ──
+
+   Upstream keys fifteen separate recipes off `data-rarity`, one per printing,
+   each its own file. This carries one recipe at three strengths, off the same
+   attribute, filled from the Rarity column in Notion (see PullScan). Three,
+   because that is what the binder actually holds: 560 non-holos, 314 reversed
+   holos and 262 rare holos, and 649 of the illustration, ultra and hyper rares
+   between them.
+
+   The tiers are the real thing, not taste. A non-holo has no foil in the hand
+   at all and gets none here: it keeps the tilt, the glare and the shadow, which
+   is what a printed card does under a lamp. A reversed or rare holo is foiled
+   in a window rather than corner to corner, so it catches less. A full-art and
+   anything above it is foil across the whole face, which is what the recipe in
+   this file draws, and it is the only tier that gets it at full strength. */
+.poke-card[data-rarity="non-holo"],
+.poke-card[data-rarity="promo"] {
+  --poke-foil: 0;
+}
+.poke-card[data-rarity="holo"],
+.poke-card[data-rarity="rare holo"],
+.poke-card[data-rarity="reversed holo"],
+.poke-card[data-rarity="reverse holo"] {
+  --poke-foil: 0.22;
+}
+.poke-card[data-rarity="illustration rare"],
+.poke-card[data-rarity="special illustration rare"],
+.poke-card[data-rarity="ultra rare"],
+.poke-card[data-rarity="hyper rare"] {
+  --poke-foil: 0.5;
+}

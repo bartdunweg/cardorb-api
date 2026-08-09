@@ -1,0 +1,29 @@
+/* These arrived from the portfolio, where they styled a personal site with a
+ * home page, a résumé, articles, a travel globe and a contact modal. Binder is
+ * one tool, so the sheets for pages that do not exist here were never brought
+ * over, and what did come over has been cut down to the rules something on
+ * these screens can actually match: 2,036 lines to 1,093.
+ *
+ * That cut was made by matching every selector against the class names the
+ * components render, not by reading. Doing it by eye is what dropped
+ * `.about-card`'s padding on the first attempt and left every card drawing its
+ * contents against its own border. The same check runs the other way too, and
+ * reports nothing used but undefined.
+ *
+ * Order is not cosmetic: tokens has to come first because every rule below
+ * reads its custom properties, and the rest keeps the source's sequence,
+ * because later sheets deliberately override earlier ones. card-shell.css sits
+ * where the portfolio's about.css did, for that reason.
+ */
+@import "./styles/tokens.css";
+
+@import "./styles/base.css";
+@import "./styles/modal.css";
+@import "./styles/tabbar.css";
+@import "./styles/layout.css";
+@import "./styles/components.css";
+@import "./styles/card-shell.css";
+@import "./styles/pages.css";
+@import "./styles/errors.css";
+@import "./styles/poke-holo.css";
+@import "./styles/cards.css";

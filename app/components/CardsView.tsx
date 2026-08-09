@@ -1,0 +1,1558 @@
+"use client";
+
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import { ChevronDown, LayoutGrid, Rows3, Search, Square, X } from "lucide-react";
+import Link from "next/link";
+import Card from "./Card";
+import Tag from "./Tag";
+import CardAddDialog from "./CardAddDialog";
+import CardsDashboard from "./CardsDashboard";
+import CardsPokedex from "./CardsPokedex";
+import CardsProfile from "./CardsProfile";
+import CardsSidebar, { retryAsPng } from "./CardsSidebar";
+import CardsTabBar, { type CardsTab } from "./CardsTabBar";
+import FilterMenu, { type Facet } from "./FilterMenu";
+import FilterChips, { type ActiveFilter } from "./FilterChips";
+import { useCardsKey } from "../hooks/useCardsKey";
+import { getCardsStats, tally } from "../../lib/core/cards-stats";
+import { caught, getPokedex } from "../../lib/core/pokedex";
+import { shownPrice } from "../../lib/core/cards";
+import type { CardSet, OwnedCard } from "../../lib/core/cards";
+import { LOCALE } from "../../lib/core/config";
+import { euro, euroWhole } from "../../lib/core/format";
+
+/** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
+function releasedIn(iso: string | null) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? null
+    : d.toLocaleDateString(LOCALE, { month: "long", year: "numeric" });
+}
+
+/**
+ * A Near Mint estimate, rounded to the euro, against a real price kept exact.
+ *
+ * The middle of the range is calibrated to within about 9% (see Price in
+ * lib/cards.ts), so writing €54.30 would claim a precision it has never had.
+ * Below €5 there is no range and the figure is Cardmarket's own, which is exact
+ * and keeps its cents: the two are different kinds of number and the rounding
+ * is the one visible clue which is which.
+ */
+const euroShown = (price: { market: number | null; nm: { mid: number } | null }) =>
+  price.nm ? euroWhole(price.nm.mid) : price.market != null ? euro(price.market) : null;
+
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+/**
+ * The years an era actually spans in this collection, read off the sets rather
+ * than written down. A hardcoded table would be a second source of truth that
+ * quietly goes stale the first time a new set arrives.
+ */
+function eraYears(sets: CardSet[]) {
+  const span = new Map<string, [number, number]>();
+  for (const set of sets) {
+    const year = set.releaseDate ? Number(set.releaseDate.slice(0, 4)) : NaN;
+    if (Number.isNaN(year)) continue;
+    for (const card of set.cards) {
+      if (!card.gen) continue;
+      const cur = span.get(card.gen);
+      span.set(card.gen, cur ? [Math.min(cur[0], year), Math.max(cur[1], year)] : [year, year]);
+    }
+  }
+  return span;
+}
+
+const label = (era: string, span: Map<string, [number, number]>) => {
+  const y = span.get(era);
+  if (!y) return era;
+  return `${era} (${y[0] === y[1] ? y[0] : `${y[0]}–${y[1]}`})`;
+};
+
+/**
+ * A card's scan and name, as a link when there is a page to link to.
+ *
+ * Not every row has one: a card TCGdex never matched has no id, and an id is
+ * what the detail route is addressed by. Those keep the markup they always had
+ * rather than becoming a dead anchor.
+ */
+function CardLink({ id, children }: { id: string | null; children: React.ReactNode }) {
+  if (!id) return <>{children}</>;
+  return (
+    // scroll={false}, because this opens as a dialog over the page you are on.
+    // The router scrolls to the top on a navigation, and it does it before the
+    // dialog mounts: the grid behind the modal jumped to the first row, the
+    // modal locked the page there, and closing it put you somewhere else than
+    // where you clicked.
+    <Link href={`/cards/${id}`} className="cards-item-link" scroll={false}>
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * What a set amounts to: how much of it is held, and when it came out.
+ *
+ * "of N" only while the two agree. A Notion set name can cover several TCGdex
+ * subsets, and `total` is the base set's official count, so a set built from
+ * subsets read "170 of 86" and looked broken. Where the pair cannot be true,
+ * the count that certainly is gets shown alone.
+ */
+function setMeta(set: CardSet) {
+  const held =
+    set.total && set.cards.length <= set.total
+      ? `${set.cards.length} of ${set.total}`
+      : `${set.cards.length} owned`;
+  const when = releasedIn(set.releaseDate);
+  return when ? `${held} · ${when}` : held;
+}
+
+/** How many sets are built at a time. See builtSets in CardsView. */
+const SET_STEP = 6;
+
+/**
+ * The narrowest, the widest and the resting width of a scan in the grid, in
+ * pixels. See scanSize in CardsView for what the middle one is and is not.
+ * SCAN_DEFAULT is the stylesheet's own column (cards.css, .cards-grid) and the
+ * two files have to agree: the slider would otherwise start somewhere the grid
+ * is not.
+ */
+const SCAN_MIN = 96;
+const SCAN_MAX = 260;
+const SCAN_DEFAULT = 132;
+
+/**
+ * The width from which a scan gets the foil and the tilt. See `tilted` in
+ * CardItem for how it is mounted.
+ *
+ * Not a taste threshold. poke-holo.css records what happened when that effect
+ * was drawn small: at 113px the recipe read as vertical stripes over the
+ * picture rather than as foil, because it is built for a card rendered three
+ * times that wide. The default column here is 132, so the effect is off until
+ * the slider has been pushed most of the way up and a card is being looked at
+ * rather than scanned past.
+ */
+const TILT_FROM = 200;
+
+/**
+ * The width from which the grid asks for the larger scan.
+ *
+ * TCGdex publishes two, and the note on `image` in lib/cards.ts argues at length
+ * for the small one: 245px and 22kB against 600px and 77kB, on a page that draws
+ * 1,622 of them at 104 to 132px and whose LCP was measured at seven seconds on a
+ * throttled phone. None of that changes. What changed is that the size is a
+ * slider now, and above about 180px the 245px file is being stretched, which is
+ * a soft card rather than a small one.
+ *
+ * So the trade is kept where it was made and reversed only where it stops
+ * holding: the default grid still costs 22kB a card, and the big file is asked
+ * for by the reader, one grid at a time, by dragging.
+ */
+const HIGH_FROM = 180;
+
+/** Vintage is the Wizards era. Decided on the sets' own dates, not a list. */
+const VINTAGE_BEFORE = 2010;
+
+export type DexOwned = "all" | "owned" | "wishlist" | "missing";
+
+/** The four states a dex slot can be in, in the order they narrow. */
+const DEX_OWNED: readonly (readonly [DexOwned, string])[] = [
+  ["all", "All Pokémon"],
+  ["owned", "Owned"],
+  ["wishlist", "On the wishlist"],
+  ["missing", "Not owned"],
+];
+
+export default function CardsView({ sets }: { sets: CardSet[] }) {
+  const [query, setQuery] = useState("");
+  // The list is well over a thousand items, so filtering runs against a
+  // deferred copy of the query: typing stays responsive and the grid catches up
+  // a frame later instead of every keystroke blocking on a full re-render.
+  const deferred = useDeferredValue(query);
+
+  /** "dashboard", "pokedex", "profile", "all", or a set name. The sets are
+      navigation now, not a tick-box facet, so this is what narrows the page to
+      one of them. */
+  const [selected, setSelected] = useState<string>("dashboard");
+
+  /**
+   * Which of the two panes is showing, and only where there is room for one of
+   * them: the rules that read this live inside the 1000px query, where the rail
+   * already sits above the results rather than beside them.
+   *
+   * That stacked layout put a 420px list with its own scrollbar between you and
+   * the page. A rail nobody can see past is not a rail, so on a narrow screen
+   * the two panes take turns: the collection is the screen you land on, picking
+   * something goes a level in, and the button at the top of the results comes
+   * back out.
+   *
+   * You land on the results, not on the rail. /fifa opens the other way round
+   * and that is not an inconsistency: there, the shelf of editions is the
+   * subject and the songs are what one of them contains. Here the dashboard is
+   * what the page is about, and landing on a list of fifty-one set names would
+   * be opening a book on its table of contents. The rail is one press away and
+   * says where you are the moment you get there.
+   *
+   * Undefined until something is pressed, which renders no attribute at all,
+   * and that is the landing state for both the real page and the skeleton in
+   * app/cards/loading.tsx: the stylesheet reads it as the results, which is why
+   * its selector is written as :not([data-pane="rail"]). It also means the
+   * pane-swap animation has nothing to match on the way in, so the dashboard
+   * does not perform an arrival on every page load.
+   *
+   * State rather than a media query in JS, so the server and the first client
+   * render agree and CSS alone decides whether any of it applies.
+   */
+  const [pane, setPane] = useState<"rail" | "main" | undefined>(undefined);
+
+  /**
+   * Where the rail was left, so coming back lands on the set you pressed rather
+   * than at the top of fifty-one of them.
+   *
+   * Going in scrolls to the top, which is not a nicety: the rail is one long
+   * column and the results replace it in the same scroll, so pressing a set
+   * forty rows down opened it forty rows into its own grid. It reads as the
+   * page having failed to navigate.
+   */
+  const railScroll = useRef(0);
+  const openPane = useCallback(
+    (value: string) => {
+      // Only the rail's own scroll is worth remembering. The bar at the bottom
+      // opens these same screens from the results, where this would store the
+      // grid's scroll instead and coming back would land on a rail row nobody
+      // pressed.
+      if (pane === "rail") railScroll.current = window.scrollY;
+      setSelected(value);
+      setPane("main");
+      window.scrollTo(0, 0);
+    },
+    [pane],
+  );
+  const backToRail = useCallback(() => {
+    setPane("rail");
+    // After the paint that swaps the panes, or there is nothing that tall to
+    // scroll to yet and the browser clamps it to zero.
+    requestAnimationFrame(() => window.scrollTo(0, railScroll.current));
+  }, []);
+  /**
+   * The key that opens the plus, and the dialog it opens. Both live here rather
+   * than in the bar: the same dialog is opened from the toolbar above 1000px,
+   * where the bar is not on screen at all.
+   */
+  const { key, signedIn, signIn, signOut } = useCardsKey();
+  const [adding, setAdding] = useState(false);
+
+  const [pickedNames, setPickedNames] = useState<Set<string>>(new Set());
+  const [pickedRarities, setPickedRarities] = useState<Set<string>>(new Set());
+  const [pickedTypes, setPickedTypes] = useState<Set<string>>(new Set());
+  const [pickedOwnership, setPickedOwnership] = useState<Set<string>>(new Set());
+  const [pickedValues, setPickedValues] = useState<Set<string>>(new Set());
+  const [era, setEra] = useState<"all" | "vintage" | "modern">("all");
+  const [view, setView] = useState<"grid" | "list">("grid");
+  /**
+   * How wide a scan is asked to be, in pixels, or null for whatever the
+   * stylesheet decides.
+   *
+   * Null rather than 132 as the starting value, and that is the whole trick: the
+   * grid's default column is a container query (132px, or 104 once the column is
+   * narrow enough that 132 would fit only two per row), and an inline custom
+   * property set on the list beats both. Starting at a number would hardcode the
+   * desktop answer onto a phone before anyone had touched the control. So
+   * nothing is written until the slider is moved, and from then on the reader's
+   * answer is the one that holds at every width.
+   */
+  const [scanSize, setScanSize] = useState<number | null>(null);
+  // Scans and logos whose file is not actually there. TCGdex publishes the
+  // record before the artwork, so a URL alone is not proof of an image.
+  const [brokenScans, setBrokenScans] = useState<Set<string>>(new Set());
+  const [brokenLogos, setBrokenLogos] = useState<Set<string>>(new Set());
+  // Sets whose artwork is not uploaded at all, learnt from the first card of
+  // that set that failed both attempts. A working scan carries a month of
+  // cache-control and comes off the edge; the 404 of a set that has no scans
+  // yet carries no cache header at all, so every request travels back to
+  // TCGdex' origin and takes seconds. Two of those per card, times a full set,
+  // is the difference between a page that loads and one that hangs. One slow
+  // failure buys the whole set its empty slots.
+  const [brokenSets, setBrokenSets] = useState<Set<string>>(new Set());
+  // One callback for every scan that gives up, defined once. A fresh function
+  // per card would be a new prop on all 1,622 items and would defeat the memo
+  // on CardItem entirely.
+  const onScanBroken = useCallback((cardKey: string, setName: string) => {
+    setBrokenScans((b) => new Set(b).add(cardKey));
+    setBrokenSets((b) => new Set(b).add(setName));
+  }, []);
+  // "set" is the collection's own order, which is what the page has always
+  // shown: by set, newest first, numbered within it. The other two reorder the
+  // cards inside each set rather than flattening the whole thing, so a sorted
+  // page is still a page of sets and you can still see what came from where.
+  const [sort, setSort] = useState<"set" | "value" | "value-asc">("set");
+
+  const all = useMemo(() => sets.flatMap((s) => s.cards), [sets]);
+  const total = all.length;
+  const wishlist = useMemo(() => all.filter((c) => !c.owned).length, [all]);
+  const years = useMemo(() => eraYears(sets), [sets]);
+
+  /**
+   * Held and wanted, as two lists rather than one with a tick box.
+   *
+   * The Notion database is a single list and ownership is a checkbox on the
+   * row, which is why this used to be a facet: "In the binder" or "On the
+   * wishlist", off by default, so the page opened on both at once. Thirty-three
+   * cards you do not own were mixed into a grid of sixteen hundred you do, and
+   * the only thing telling them apart was a dimmed scan.
+   *
+   * They answer different questions. One is what you have; the other is what to
+   * buy. So they are two destinations in the rail, and every list view below is
+   * scoped to whichever one you are in. `sets` itself stays whole, because the
+   * dashboard counts both and the Pokédex deliberately shows them together.
+   */
+  // Declared up here rather than beside onDashboard and the rest further down,
+  // because the scoping below is the first thing that needs it.
+  const onWishlist = selected === "wishlist";
+  const collectionSets = useMemo(
+    () =>
+      sets
+        .map((s) => ({ ...s, cards: s.cards.filter((c) => c.owned) }))
+        .filter((s) => s.cards.length > 0),
+    [sets],
+  );
+  const wishlistSets = useMemo(
+    () =>
+      sets
+        .map((s) => ({ ...s, cards: s.cards.filter((c) => !c.owned) }))
+        .filter((s) => s.cards.length > 0),
+    [sets],
+  );
+
+  /** Which eras count as vintage, from the earliest set each one appears in. */
+  const vintageEras = useMemo(() => {
+    const out = new Set<string>();
+    for (const [gen, [from]] of years) if (from < VINTAGE_BEFORE) out.add(gen);
+    return out;
+  }, [years]);
+
+  // Built from the whole collection rather than from what is currently shown,
+  // so the lists do not shuffle and shrink underneath the pointer as boxes are
+  // ticked. The count beside each option is the collection total.
+  const nameOptions = useMemo(() => tally(all.map((c) => c.name)), [all]);
+  const rarityOptions = useMemo(
+    () => tally(all.flatMap((c) => c.variants.map((v) => v.rarity))),
+    [all],
+  );
+  const typeOptions = useMemo(() => tally(all.map((c) => c.type)), [all]);
+  // Bands rather than a slider: a slider over a range this skewed (a €5.68
+  // median under a €3,250 top card) spends nine tenths of its travel on the
+  // last twenty cards. The edges are round numbers a collector already thinks
+  // in.
+  const VALUE_BANDS = useMemo(
+    () =>
+      [
+        { value: "Under €5", test: (n: number) => n < 5 },
+        { value: "€5 – €25", test: (n: number) => n >= 5 && n < 25 },
+        { value: "€25 – €100", test: (n: number) => n >= 25 && n < 100 },
+        { value: "€100 and up", test: (n: number) => n >= 100 },
+      ] as const,
+    [],
+  );
+  const valueOptions = useMemo(
+    () =>
+      VALUE_BANDS.map((b) => ({
+        value: b.value,
+        count: all.filter((c) => {
+          const n = shownPrice(c.price);
+          return n != null && b.test(n);
+        }).length,
+      })).filter((o) => o.count > 0),
+    [all, VALUE_BANDS],
+  );
+
+  /**
+   * Held or wanted, as a tick box. Now empty on every screen that has one.
+   *
+   * Since the two became separate destinations, every list is already one or
+   * the other, so this facet can only offer the option you are looking at.
+   * Counted against the scoped list rather than the whole database, which drops
+   * it to a single option, and the guard further down (`length > 1`) then takes
+   * the control out of the menu on its own. Kept rather than deleted because it
+   * earns its place again the moment there is a screen showing both.
+   */
+  const ownershipOptions = useMemo(
+    () =>
+      [
+        { value: "In the binder", count: onWishlist ? 0 : total - wishlist },
+        { value: "On the wishlist", count: onWishlist ? wishlist : 0 },
+      ].filter((o) => o.count > 0),
+    [onWishlist, total, wishlist],
+  );
+
+  /**
+   * The sets, grouped under the era they belong to.
+   *
+   * A set does not record an era; its cards do. So the era of a set is the one
+   * most of its cards carry, which handles the promo sets that mix a couple of
+   * strays in without letting those strays move the whole set. Ordered oldest
+   * era first, the way a binder runs, with anything unlabelled at the back.
+   */
+  const setGroups = useMemo(() => {
+    const groups = new Map<string, CardSet[]>();
+    // The rail lists the collection, so a set is only in it once something from
+    // it is actually held. Three sets here are wishlist-only (Team Up, Unbroken
+    // Bonds, Unified Minds); before this they sat in the rail reading "0" and
+    // opened onto nothing, which looks like a set that failed to load rather
+    // than one that has not been started. They are still reachable, under
+    // Wishlist, which is where a card you do not own belongs.
+    for (const set of collectionSets) {
+      const counts = new Map<string, number>();
+      for (const card of set.cards) {
+        if (card.gen) counts.set(card.gen, (counts.get(card.gen) ?? 0) + 1);
+      }
+      const era = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Other";
+      groups.set(era, [...(groups.get(era) ?? []), set]);
+    }
+    return (
+      [...groups.entries()]
+        .map(([era, inEra]) => ({
+          era,
+          label: label(era, years),
+          // Newest set first inside the era, which is the order a collection is
+          // actually browsed: the last pack you opened is the one you want.
+          sets: [...inEra].sort((a, b) =>
+            (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "", LOCALE),
+          ),
+        }))
+        // Newest era first, for the same reason. Anything unlabelled sorts last.
+        .sort((a, b) => (years.get(b.era)?.[1] ?? -Infinity) - (years.get(a.era)?.[1] ?? -Infinity))
+    );
+  }, [collectionSets, years]);
+
+  /**
+   * The toolbar sits above the dashboard as well as above the results, so
+   * reaching for it has to mean something there. Narrowing the collection while
+   * looking at the summary moves you to the cards, which is where the answer
+   * is: the dashboard reads the whole collection by definition and would sit
+   * there unchanged while the bar said four filters were on.
+   */
+  const leaveDashboard = useCallback(() => setSelected((s) => (s === "dashboard" ? "all" : s)), []);
+
+  const toggle = useCallback(
+    (setter: React.Dispatch<React.SetStateAction<Set<string>>>) => (value: string) => {
+      leaveDashboard();
+      setter((prev) => {
+        const next = new Set(prev);
+        if (!next.delete(value)) next.add(value);
+        return next;
+      });
+    },
+    [leaveDashboard],
+  );
+
+  const picked = [pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedValues];
+  const active = picked.some((s) => s.size > 0) || query.trim() !== "" || era !== "all";
+
+  const reset = useCallback(() => {
+    setQuery("");
+    setPickedNames(new Set());
+    setPickedRarities(new Set());
+    setPickedTypes(new Set());
+    setPickedOwnership(new Set());
+    setPickedValues(new Set());
+    setEra("all");
+  }, []);
+
+  const matchesValue = useCallback(
+    (c: OwnedCard) => {
+      if (!pickedValues.size) return true;
+      const n = shownPrice(c.price);
+      // A card with no price cannot be in a band. It is not worth nothing, it
+      // is unknown, and putting it in "under €5" would be inventing a fact.
+      if (n == null) return false;
+      return VALUE_BANDS.some((b) => pickedValues.has(b.value) && b.test(n));
+    },
+    [pickedValues, VALUE_BANDS],
+  );
+
+  const matchesOwnership = useCallback(
+    (c: OwnedCard) =>
+      !pickedOwnership.size ||
+      (pickedOwnership.has("In the binder") && c.owned) ||
+      (pickedOwnership.has("On the wishlist") && !c.owned),
+    [pickedOwnership],
+  );
+
+  const filtered = useMemo(() => {
+    const q = norm(deferred.trim());
+    // Wishlist is the one screen that runs over the cards you do not hold; the
+    // sets, the eras and My collection are all the ones you do. Scoped here, at
+    // the source, rather than as one more condition inside the card filter, so
+    // there is no view left where the two can be mixed by accident.
+    const scope = onWishlist ? wishlistSets : collectionSets;
+    return scope
+      .map((set) => {
+        // "era:Base" keeps every set that holds a card from it; the cards
+        // themselves are narrowed below. A plain set name keeps just that set.
+        if (selected.startsWith("era:")) {
+          const want = selected.slice(4);
+          if (!set.cards.some((c) => c.gen === want)) return null;
+        } else if (
+          selected !== "all" &&
+          selected !== "wishlist" &&
+          selected !== "dashboard" &&
+          set.name !== selected
+        ) {
+          return null;
+        }
+        // A set whose name matches the search keeps all of its cards: typing
+        // "surging" is asking for the set, not for cards with that word in
+        // them. The tick boxes still apply on top of it.
+        const bySetName = q !== "" && norm(set.name).includes(q);
+        const cards = set.cards.filter((c) => {
+          if (selected.startsWith("era:") && c.gen !== selected.slice(4)) return false;
+          if (era !== "all") {
+            const isVintage = c.gen ? vintageEras.has(c.gen) : false;
+            if (era === "vintage" ? !isVintage : isVintage) return false;
+          }
+          if (pickedNames.size && !pickedNames.has(c.name)) return false;
+          if (pickedTypes.size && !pickedTypes.has(c.type ?? "")) return false;
+          if (!matchesOwnership(c)) return false;
+          if (!matchesValue(c)) return false;
+          if (pickedRarities.size && !c.variants.some((v) => pickedRarities.has(v.rarity ?? "")))
+            return false;
+          if (!q || bySetName) return true;
+          return (
+            norm(c.name).includes(q) ||
+            norm(c.number).includes(q) ||
+            norm(c.type ?? "").includes(q) ||
+            norm(c.gen ?? "").includes(q) ||
+            c.variants.some((v) => norm(v.rarity ?? "").includes(q))
+          );
+        });
+        if (!cards.length) return null;
+        // Sorted within the set, not across the collection: the page is a
+        // shelf of sets and flattening it would throw away the one thing the
+        // grouping tells you. A card with no price sorts last either way,
+        // unknown is not the cheapest.
+        const ordered =
+          sort === "set"
+            ? cards
+            : [...cards].sort((a, b) => {
+                const x = shownPrice(a.price);
+                const y = shownPrice(b.price);
+                if (x === null && y === null) return 0;
+                if (x === null) return 1;
+                if (y === null) return -1;
+                return sort === "value" ? y - x : x - y;
+              });
+        return { ...set, cards: ordered };
+      })
+      .filter(Boolean) as CardSet[];
+  }, [
+    onWishlist,
+    collectionSets,
+    wishlistSets,
+    deferred,
+    era,
+    vintageEras,
+    selected,
+    pickedNames,
+    pickedRarities,
+    pickedTypes,
+    matchesOwnership,
+    matchesValue,
+    sort,
+  ]);
+
+  const shown = useMemo(() => filtered.reduce((n, set) => n + set.cards.length, 0), [filtered]);
+
+  /**
+   * How many of the matching sets are actually built, and why the page does not
+   * build all of them.
+   *
+   * "All cards" is 1,622 items of about twelve nodes each. Rendering them in one
+   * commit was 19,288 DOM nodes and a 436ms long task at 4x CPU throttling,
+   * which is the freeze between pressing "All cards" and seeing anything. The
+   * grid already carries `content-visibility: auto` (cards.css), so the browser
+   * was skipping the layout and paint of everything below the fold; what it
+   * cannot skip is React creating the elements and the nodes in the first place.
+   * That is the half this fixes.
+   *
+   * Whole sets rather than a window of rows, because the page is already a stack
+   * of sets and a set is the unit that has a heading, a logo and its own grid.
+   * Slicing inside one would mean reserving the height of a grid whose column
+   * count is a container query, and guessing it wrong is a scroll that jumps
+   * under the reader. Slicing between them needs no reservation at all: what has
+   * not been built yet is simply below what has.
+   *
+   * The cost is that find-in-page only reaches what has been built. That is the
+   * honest trade for the freeze, and this page has a search box of its own which
+   * looks through all 1,622 whatever is on screen.
+   */
+  const [builtSets, setBuiltSets] = useState(SET_STEP);
+  /**
+   * Back to the first few whenever the answer changes. Without this, narrowing a
+   * search kept whatever count the last scroll had grown to, so a query matching
+   * three sets would still build fifty.
+   *
+   * During the render rather than in an effect, which is what React asks for
+   * when state has to follow its input: an effect would commit the long list
+   * first and the short one a pass later, so every search would build the old
+   * count before throwing it away. Comparing the array by identity is enough
+   * here because `filtered` is a useMemo, so it is a new array exactly when what
+   * it holds has changed.
+   */
+  const [builtFor, setBuiltFor] = useState(filtered);
+  /**
+   * Bumped on every reset and every batch, and it is what the marker below is
+   * keyed on. See the note there: it has to be a value that changes even when
+   * the count does not, because resetting six back to six is the case that
+   * silently stopped the whole thing.
+   */
+  const [generation, setGeneration] = useState(0);
+  if (builtFor !== filtered) {
+    setBuiltFor(filtered);
+    setBuiltSets(SET_STEP);
+    setGeneration((g) => g + 1);
+  }
+  const visibleSets = useMemo(
+    () => filtered.slice(0, builtFor === filtered ? builtSets : SET_STEP),
+    [filtered, builtFor, builtSets],
+  );
+
+  /**
+   * The marker under the last built set. Reaching it builds the next few.
+   *
+   * 800px of rootMargin so the next sets exist before they are scrolled to: at a
+   * normal reading scroll that is far enough ahead that nothing is ever waited
+   * for, and it is why this is not a spinner.
+   *
+   * A callback ref rather than a useRef read inside an effect, and that is the
+   * whole reason it works. The marker does not exist on the screen you land on:
+   * the dashboard renders instead of the list, so a useRef is still null when
+   * the effect first runs. Pressing "All cards" mounts the marker but changes
+   * neither of the values such an effect could sensibly depend on, so it never
+   * runs again and nothing is ever observed. React calls a callback ref exactly
+   * when the node appears and again with null when it goes, which is the event
+   * this needs.
+   */
+  const observer = useRef<IntersectionObserver | null>(null);
+  const moreRef = useCallback((node: HTMLDivElement | null) => {
+    observer.current?.disconnect();
+    if (!node) return;
+    observer.current = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        setBuiltSets((n) => n + SET_STEP);
+        setGeneration((g) => g + 1);
+      },
+      { rootMargin: "800px" },
+    );
+    observer.current.observe(node);
+  }, []);
+  const hasMore = builtSets < filtered.length;
+
+  // The dashboard reads the whole collection, not what is filtered: it is the
+  // page's answer to "what is in here", and a total that moved every time a box
+  // was ticked would be answering a different question.
+  const stats = useMemo(() => getCardsStats(sets), [sets]);
+
+  const facets = useMemo(
+    (): Facet[] => [
+      {
+        key: "name",
+        label: "Pokémon",
+        options: nameOptions,
+        selected: pickedNames,
+        onToggle: toggle(setPickedNames),
+        onClear: () => setPickedNames(new Set()),
+      },
+      {
+        key: "rarity",
+        label: "Rarity",
+        options: rarityOptions,
+        selected: pickedRarities,
+        onToggle: toggle(setPickedRarities),
+        onClear: () => setPickedRarities(new Set()),
+      },
+      {
+        key: "value",
+        label: "Value",
+        options: valueOptions,
+        selected: pickedValues,
+        onToggle: toggle(setPickedValues),
+        onClear: () => setPickedValues(new Set()),
+      },
+      {
+        key: "type",
+        label: "Type",
+        options: typeOptions,
+        selected: pickedTypes,
+        onToggle: toggle(setPickedTypes),
+        onClear: () => setPickedTypes(new Set()),
+      },
+      ...(ownershipOptions.length > 1
+        ? [
+            {
+              key: "owned",
+              label: "Owned",
+              options: ownershipOptions,
+              selected: pickedOwnership,
+              onToggle: toggle(setPickedOwnership),
+              onClear: () => setPickedOwnership(new Set()),
+            },
+          ]
+        : []),
+    ],
+    [
+      nameOptions,
+      rarityOptions,
+      typeOptions,
+      ownershipOptions,
+      valueOptions,
+      pickedValues,
+      pickedNames,
+      pickedRarities,
+      pickedTypes,
+      pickedOwnership,
+      toggle,
+    ],
+  );
+
+  /** Every tick that is on, flattened, so the bar can list and undo them. */
+  const activeFilters = useMemo((): ActiveFilter[] => {
+    const groups: [string, Set<string>, React.Dispatch<React.SetStateAction<Set<string>>>][] = [
+      ["Pokémon", pickedNames, setPickedNames],
+      ["Rarity", pickedRarities, setPickedRarities],
+      ["Type", pickedTypes, setPickedTypes],
+      ["Ownership", pickedOwnership, setPickedOwnership],
+    ];
+    const out = groups.flatMap(([group, set, setter]) =>
+      [...set].map((value) => ({
+        group,
+        value,
+        onRemove: () =>
+          setter((prev) => {
+            const next = new Set(prev);
+            next.delete(value);
+            return next;
+          }),
+      })),
+    );
+    if (query.trim()) {
+      out.unshift({ group: "Search", value: `“${query.trim()}”`, onRemove: () => setQuery("") });
+    }
+    return out;
+  }, [query, pickedNames, pickedRarities, pickedTypes, pickedOwnership]);
+
+  const onDashboard = selected === "dashboard";
+  /** The set the page is on, when it is on one: its logo and its facts head the
+      page rather than being repeated over the grid below. */
+  const currentSet = useMemo(() => sets.find((s) => s.name === selected) ?? null, [sets, selected]);
+  const onPokedex = selected === "pokedex";
+  const onProfile = selected === "profile";
+
+  /**
+   * Which slot in the bar is lit, which is not quite the same question as which
+   * screen is up: on the rail nothing else is, and a set is a leaf of Sets
+   * rather than a destination of its own. Null on the results of a filter or a
+   * search, where the answer is honestly none of the four.
+   */
+  const activeTab: CardsTab | null =
+    pane === "rail" || currentSet || selected.startsWith("era:")
+      ? "sets"
+      : onDashboard
+        ? "dashboard"
+        : onPokedex
+          ? "pokedex"
+          : // Searching is a state rather than a place: the slot is lit while
+            // there is something in the field, and goes out when it is cleared.
+            // The profile has no slot at all and so lights none.
+            query.trim()
+            ? "search"
+            : null;
+
+  /**
+   * The search field in the toolbar, so the bar's Search slot can put the caret
+   * in it. Only ever one field is on screen (the other is the rail's), and
+   * below 1000px, where the bar exists, this is the one.
+   */
+  const searchRef = useRef<HTMLInputElement>(null);
+  const openSearch = useCallback(() => {
+    // To the cards, because that is where a search is answered: pressing this
+    // on the dashboard and being left on the dashboard with a caret blinking
+    // is the field appearing to do nothing.
+    setSelected((s) => (s === "dashboard" || s === "profile" ? "all" : s));
+    setPane("main");
+    // After the paint that swaps the screens, or the field is not there yet.
+    requestAnimationFrame(() => searchRef.current?.focus());
+  }, []);
+
+  /**
+   * Every Pokémon there is, with the collection filed into it. Built here rather
+   * than on the server so the payload carries the cards once: the dex is the
+   * same nineteen hundred rows, grouped a different way.
+   *
+   * Its own era rather than the toolbar's, and modern to begin with. A Pokédex
+   * of the whole binder is mostly answered by the vintage cards, which are the
+   * ones that cover the first hundred and fifty and nothing after them, so the
+   * default view of it was a page of Kanto and a thousand empty slots. Modern
+   * is the collection as it actually is. The switch is right there to widen it,
+   * and it stays out of the era the card lists use, which the rail already
+   * decides.
+   */
+  const [dexEra, setDexEra] = useState<"all" | "vintage" | "modern">("modern");
+  /**
+   * All 1,025, or one of the three things a slot can be.
+   *
+   * "Have" used to mean "there is a card", which folded two different states
+   * together: a card in the binder and a card on the wishlist are both rows in
+   * Notion, and only one of them is something you own. The dex was answering
+   * "do you have a Beedrill" with yes for a Beedrill Bart wants.
+   */
+  const [dexOwned, setDexOwned] = useState<DexOwned>("all");
+  const dex = useMemo(() => {
+    const wantVintage = dexEra === "vintage";
+    const isVintage = (card: OwnedCard) => (card.gen ? vintageEras.has(card.gen) : false);
+    return getPokedex(
+      sets.map((set) => ({
+        ...set,
+        cards: set.cards.filter((c) => {
+          if (dexEra !== "all" && isVintage(c) !== wantVintage) return false;
+          // Which rarity counts is decided by the era rather than by a control
+          // of its own, because the honest answer differs between the two and a
+          // single switch could only ever be right for one of them.
+          //
+          // Vintage is the Wizards sets, which have no illustration rares at
+          // all: filtering for them there empties the shelf. Modern has
+          // thousands of cards and the ordinary ones all look alike, so a dex
+          // filled by whichever copy was read first is a wall of commons; the
+          // full arts are the ones worth looking at a thousand of.
+          //
+          // On "All" the same rule applies per card rather than per page, which
+          // is the only way one list can hold both without lying about either.
+          if (isVintage(c)) return true;
+          // Both the Illustration Rares and the Special ones, which is what the
+          // one word they share is doing here.
+          return c.variants.some((v) => /illustration rare/i.test(v.rarity ?? ""));
+        }),
+      })),
+    );
+  }, [sets, dexEra, vintageEras]);
+
+  /**
+   * Vintage stops at Mew.
+   *
+   * The dex is 1,025 slots and the Wizards era could only ever fill the first
+   * 151 of them, so the other 874 are not gaps in the collection, they are
+   * Pokémon that did not exist yet. Drawing them as empty slots says something
+   * untrue about the binder, at eighty-five percent of the page.
+   */
+  const dexShown = useMemo(() => (dexEra === "vintage" ? dex.slice(0, 151) : dex), [dex, dexEra]);
+
+  return (
+    <>
+      {/* The page's heading, outside both panes because either of them can be
+          the one on screen: it sat in .cards-main, which is display:none on the
+          rail, so the screen you were on could have no h1 at all. Absolutely
+          positioned by .sr-only, so it is not a third column in the grid.
+
+          Out of sight rather than out of the document, the same call /fifa
+          makes: what you can see already says which page this is, twice over,
+          and a title over both panes would be a third thing saying it. */}
+      <h1 className="sr-only">Cards</h1>
+
+      <CardsSidebar
+        sets={sets}
+        setGroups={setGroups}
+        selected={selected}
+        pane={pane}
+        onSelect={openPane}
+        query={query}
+        // Typing in the rail is a way into the cards: the dashboard would
+        // otherwise sit there unchanged while the field said something was
+        // being searched for.
+        onQuery={(value) => {
+          leaveDashboard();
+          setQuery(value);
+        }}
+        signedIn={signedIn}
+        onAdd={() => setAdding(true)}
+        brokenLogos={brokenLogos}
+        onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}
+      />
+
+      <section className="cards-main">
+        {/* The page's own heading, over the pane it names. It used to sit at the
+            top of the rail, which put the h1 over a list of sets rather than
+            over what you are actually reading. */}
+        <header className="cards-head">
+          <div className="cards-head-title">
+            {/* The set's own wordmark, ahead of its name. */}
+            {currentSet?.logo && !brokenLogos.has(currentSet.name) && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentSet.logo}
+                alt=""
+                className="cards-head-logo"
+                width={currentSet.logoSize?.width}
+                height={currentSet.logoSize?.height}
+                decoding="async"
+                onError={(e) =>
+                  retryAsPng(e.currentTarget, () =>
+                    setBrokenLogos((b) => new Set(b).add(currentSet.name)),
+                  )
+                }
+              />
+            )}
+            {/* An h2 under the rail's h1, not the page's own heading. What it
+                says is which part of the collection is on screen, and it
+                changes with the rail; the page is called Cards whatever it
+                says. It also could not stay the h1: below 1000px it is one of
+                two screens and the other one then had no heading at all. */}
+            {/* The screen's own name, not the page's. It said "Cards" over the
+                dashboard, which is the one heading here that named the route
+                instead of what is under it: the sr-only h1 already says Cards
+                and it is in the document whichever pane is up. */}
+            <h2 className="cards-main-title">
+              {onDashboard
+                ? "Dashboard"
+                : onPokedex
+                  ? "Pokédex"
+                  : onProfile
+                    ? "Profile"
+                    : onWishlist
+                      ? "Wishlist"
+                      : selected === "all"
+                        ? "My collection"
+                        : selected.startsWith("era:")
+                          ? label(selected.slice(4), years)
+                          : selected}
+            </h2>
+          </div>
+          {/* What you are looking at, in numbers, announced politely so it
+              reaches a screen reader as it changes rather than only being
+              visible. It used to report the collection total under every
+              heading, so a set of twelve cards was captioned "1,622 cards
+              across 51 sets". */}
+          {/* Not on the profile: that screen is about the key, and a count of
+              the collection under it would be answering a question nobody on it
+              is asking. */}
+          {total > 0 && !onProfile && (
+            <p className="cards-count" role="status">
+              {onPokedex
+                ? `${caught(dexShown).toLocaleString(LOCALE)} of ${dexShown.length.toLocaleString(LOCALE)} Pokémon in the binder`
+                : /* The dashboard is the one screen that speaks for the whole
+                     database, held and wanted together. Everywhere else the
+                     count comes from what is actually on the page, which since
+                     the split is either the collection or the wishlist and
+                     never both; "1,645 across 52 sets" over a grid of 1,612
+                     was the old line describing a page that no longer exists. */
+                  onDashboard
+                  ? `${total.toLocaleString(LOCALE)} cards across ${sets.length} sets`
+                  : currentSet && !active
+                    ? setMeta(currentSet)
+                    : filtered.length === 1
+                      ? `${shown.toLocaleString(LOCALE)} ${shown === 1 ? "card" : "cards"}`
+                      : `${shown.toLocaleString(LOCALE)} cards across ${filtered.length} sets`}
+            </p>
+          )}
+
+          {/* Everything that narrows the collection, in one row above it, and
+              only above the screens where there is something to narrow.
+
+              It used to stand over the dashboard and the profile too, on the
+              argument that a search box you can only reach by navigating away
+              from the page you land on is a search box nobody finds. That
+              argument was right and it is answered rather than ignored: the
+              search has moved to the head of the rail above 1000px, where it is
+              on screen without going anywhere, and to a slot of its own in the
+              bar below it. Neither is a place you have to find. What is left
+              here is filtering, sorting and layout, which are answers about a
+              list of cards and mean nothing over a summary or a key. */}
+          {!onProfile && !onDashboard && (
+            <div className="cards-tools">
+              {/* The same field as the one in the rail's head, and only ever
+                  one of the two on screen: this is the copy for below 1000px,
+                  where the rail is a screen you have to open rather than a
+                  column you can see. The bar's Search slot lands here and puts
+                  the caret in it. */}
+              <div className="cards-search">
+                <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+                <input
+                  ref={searchRef}
+                  type="search"
+                  value={query}
+                  onChange={(e) => {
+                    leaveDashboard();
+                    setQuery(e.target.value);
+                  }}
+                  placeholder={onPokedex ? "Search the Pokédex" : "Search the collection"}
+                  aria-label={onPokedex ? "Search the Pokédex" : "Search the collection"}
+                  autoComplete="off"
+                />
+                {query && (
+                  <button type="button" onClick={() => setQuery("")} aria-label="Clear the search">
+                    <X size={15} strokeWidth={1.75} />
+                  </button>
+                )}
+              </div>
+
+              {/* Beside the search box, because both are things you do to the
+                whole grid before you start reading it, and only where there is
+                a grid: the list view has one row per card and the dashboard has
+                no scans at all.
+
+                A range rather than two or three preset sizes. The reason it
+                exists is that a collection is browsed at two distances, hunting
+                for one card and looking at the artwork, and where the line falls
+                between them is the reader's own eyesight and screen. 96 is about
+                nine per row on a laptop, 260 is about three; past that the page
+                stops being a grid. The step is 4 because the column is a
+                fraction anyway, so a finer one only produces sizes that round to
+                the same layout. */}
+              {!onPokedex && !onDashboard && view === "grid" && (
+                <label className="cards-size">
+                  <span className="sr-only">Card size</span>
+                  <Square size={11} strokeWidth={2} aria-hidden="true" />
+                  <input
+                    type="range"
+                    min={SCAN_MIN}
+                    max={SCAN_MAX}
+                    step={4}
+                    // The stylesheet's own default while nothing has been chosen.
+                    // On a narrow column the grid is actually drawing 104, so the
+                    // thumb is one notch optimistic until it is first moved; the
+                    // alternative is measuring the grid on every resize to keep a
+                    // slider honest about a number nobody has asked for yet.
+                    value={scanSize ?? SCAN_DEFAULT}
+                    onChange={(e) => setScanSize(Number(e.target.value))}
+                  />
+                  <Square size={16} strokeWidth={2} aria-hidden="true" />
+                </label>
+              )}
+
+              {/* Only over the whole collection. Vintage and modern are a way of
+                cutting fifty-one sets in half; on one set, or on an era you
+                have already picked in the rail, it is a control whose two
+                other answers are always empty. */}
+              {(selected === "all" || onPokedex) && (
+                <Segmented
+                  label="Era"
+                  value={onPokedex ? dexEra : era}
+                  onChange={onPokedex ? setDexEra : setEra}
+                  options={[
+                    ["all", "All"],
+                    ["vintage", "Vintage"],
+                    ["modern", "Modern"],
+                  ]}
+                />
+              )}
+
+              {/* A dropdown rather than a segmented control, because this one has
+                four answers and they are words rather than icons: four labelled
+                segments is most of the toolbar's width for a control that is
+                set once and left alone. */}
+              {onPokedex && (
+                <label className="cards-select">
+                  <span className="sr-only">Ownership</span>
+                  <select
+                    value={dexOwned}
+                    onChange={(e) => setDexOwned(e.target.value as DexOwned)}
+                  >
+                    {DEX_OWNED.map(([value, text]) => (
+                      <option key={value} value={value}>
+                        {text}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
+                </label>
+              )}
+              {/* Sorting is an answer about a list of cards, so it is only offered
+                where one is being shown. */}
+              {!onPokedex && !onDashboard && (
+                <Segmented
+                  label="Sort"
+                  value={sort}
+                  onChange={(value) => {
+                    leaveDashboard();
+                    setSort(value);
+                  }}
+                  options={[
+                    ["set", "By set"],
+                    ["value", "Priciest"],
+                    ["value-asc", "Cheapest"],
+                  ]}
+                />
+              )}
+
+              {/* The long tick-lists (Pokémon, rarity, value, type, owned)
+                behind one button, because a facet nobody is filtering by does
+                not need a permanent control. What is on shows up as chips
+                under the bar. */}
+              {/* Nothing behind this on the dex: rarity and type are facts about
+                cards, and that view is a list of Pokémon. */}
+              {!onPokedex && <FilterMenu facets={facets} />}
+
+              {/* In the row with the rest, not floated off to the far right: how
+                the cards are drawn is one more thing the bar decides. */}
+              {!onDashboard && !onPokedex && (
+                <div className="cards-views" role="group" aria-label="Layout">
+                  {(
+                    [
+                      ["grid", LayoutGrid, "Grid"],
+                      ["list", Rows3, "List"],
+                    ] as const
+                  ).map(([key, Icon, text]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`cards-view${view === key ? " is-active" : ""}`}
+                      aria-pressed={view === key}
+                      aria-label={`${text} view`}
+                      onClick={() => setView(key)}
+                    >
+                      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {active && (
+                <button type="button" className="cards-reset" onClick={reset}>
+                  Reset
+                </button>
+              )}
+            </div>
+          )}
+
+          {activeFilters.length > 0 && <FilterChips filters={activeFilters} onClearAll={reset} />}
+        </header>
+
+        {onProfile ? (
+          <CardsProfile signedIn={signedIn} onSignIn={signIn} onSignOut={signOut} />
+        ) : onPokedex ? (
+          <CardsPokedex
+            entries={dexShown}
+            query={query}
+            owned={dexOwned}
+            // Straight to that Pokémon's cards: the dex says what you have, and
+            // this is the only question anyone has after reading it.
+            onPick={(name) => {
+              setQuery(name);
+              setSelected("all");
+            }}
+          />
+        ) : onDashboard ? (
+          <CardsDashboard stats={stats} />
+        ) : (
+          <>
+            {/* No token, a Notion outage or an empty collection all land here. Saying
+          so beats an empty page that looks like something failed to paint. */}
+            {sets.length === 0 ? (
+              <Card className="cards-empty">
+                <p>The collection is not available right now. It should be back shortly.</p>
+              </Card>
+            ) : filtered.length === 0 ? (
+              <Card className="cards-empty">
+                <p>
+                  Nothing matches that combination. Try fewer filters, or a different Pokémon or
+                  set.
+                </p>
+              </Card>
+            ) : (
+              visibleSets.map((set) => (
+                <section key={set.name} className="cards-set">
+                  {/* Nothing at all when the set is what you picked: its logo,
+                      its name and its facts are the page's own heading by then,
+                      and repeating them over the grid made the page look like
+                      it had lost its place. */}
+                  {selected !== set.name && (
+                    <div className="cards-set-head">
+                      {set.logo && !brokenLogos.has(set.name) && (
+                        // The box is reserved in CSS, which is what makes the lazy
+                        // attribute work at all here: the rule used to be `height:44px;
+                        // width:auto`, so before the file arrived the box was 44 tall
+                        // and *zero* wide, and a browser never lazy-loads a zero-width
+                        // image. No width until it loads, never loads without a width:
+                        // every set logo on this page was permanently blank.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={set.logo}
+                          alt=""
+                          className="cards-set-logo"
+                          loading="lazy"
+                          width={set.logoSize?.width}
+                          height={set.logoSize?.height}
+                          // A set too new for TCGdex to have converted its logo
+                          // publishes only a PNG. See retryAsPng.
+                          onError={(e) =>
+                            retryAsPng(e.currentTarget, () =>
+                              setBrokenLogos((b) => new Set(b).add(set.name)),
+                            )
+                          }
+                        />
+                      )}
+                      <div className="cards-set-text">
+                        {/* One step down with the title above it: a set sits
+                            inside the view rather than beside it. */}
+                        <h3 className="cards-set-name">{set.name}</h3>
+                        <p className="cards-set-meta">{setMeta(set)}</p>
+                      </div>
+                    </div>
+                  )}
+                  {/* The chosen width as a custom property rather than as a
+                      grid-template-columns of our own, so the auto-fill, the
+                      gaps and the container query stay in the stylesheet where
+                      the rest of the grid is. Nothing at all until the slider is
+                      moved: see scanSize. */}
+                  <ul
+                    className={view === "grid" ? "cards-grid" : "cards-rows"}
+                    style={
+                      view === "grid" && scanSize
+                        ? ({ "--cards-scan-w": `${scanSize}px` } as CSSProperties)
+                        : undefined
+                    }
+                  >
+                    {set.cards.map((card) => (
+                      <CardItem
+                        key={card.key}
+                        card={card}
+                        setName={set.name}
+                        view={view}
+                        years={years}
+                        // Resolved here rather than handed the two Sets, so the
+                        // item's props only change when the answer for that card
+                        // changes. See the note on CardItem.
+                        scan={
+                          !!card.image && !brokenScans.has(card.key) && !brokenSets.has(set.name)
+                        }
+                        // Resolved here for the same reason `scan` is: one
+                        // boolean the item can compare, rather than the size
+                        // itself, which would be a changed prop on all 1,622
+                        // items for every step of the slider.
+                        tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
+                        big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
+                        onScanBroken={onScanBroken}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              ))
+            )}
+            {/* Nothing to see and nothing to announce: the sets it stands for are
+                built before anyone scrolls this far, so a "loading more" line
+                would flash a state the reader never waits in. aria-hidden keeps
+                it out of the reading order, and the count above it already says
+                how many cards matched, whatever has been built so far.
+
+                Keyed on a counter that moves on every reset and every batch, so
+                the marker is a new element each time either changes. An
+                IntersectionObserver reports crossings rather than standing
+                state, and the case that needs this is a marker already inside
+                the margin when the count resets: there is no crossing left to
+                report, so it would sit there silently. Remounting hands the
+                fresh observer an immediate first callback instead, which is
+                what lets a short result keep growing until the page is long
+                enough to push the marker out of range.
+
+                The counter rather than the count itself, because a reset from
+                six back to six is exactly the case that has to remount and is
+                the one a count cannot see. */}
+            {hasMore && (
+              <div key={generation} ref={moreRef} className="cards-more" aria-hidden="true" />
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Last, so Tab reaches the collection before the bar under it. It is
+          fixed, so where it sits in the document costs it nothing. */}
+      <CardsTabBar
+        active={activeTab}
+        signedIn={signedIn}
+        onSelect={(tab) =>
+          tab === "sets" ? backToRail() : tab === "search" ? openSearch() : openPane(tab)
+        }
+        onAdd={() => setAdding(true)}
+      />
+
+      {/* Only mounted with a key: the dialog's first act is to ask the database
+          what its sets are called, and there is nothing to ask with otherwise. */}
+      {key && (
+        <CardAddDialog
+          open={adding}
+          cardKey={key}
+          onClose={() => setAdding(false)}
+          // A key the server has stopped accepting is worse than none: every
+          // press would fail the same way with nothing saying why. Sign out,
+          // and the profile screen is one press along the bar.
+          onUnauthorised={() => {
+            setAdding(false);
+            signOut();
+            setSelected("profile");
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * One card in the grid or the list, and the reason it is its own component.
+ *
+ * The case it is actually for is the broken scans. A scan that 404s twice calls
+ * setBrokenScans, around two hundred of them do, and that state lives above the
+ * whole collection: every one of those used to re-render all 1,622 items, or
+ * 19,288 nodes, to change one picture into one empty slot. They arrive spread
+ * over seconds as the lazy images load, so React cannot batch them into one
+ * pass. Memoised, the other 1,621 are skipped.
+ *
+ * Do not expect it to make searching much faster, which is what it was first
+ * written for. Measured against the same build without it, at 4x CPU throttling,
+ * typing "charizard" cost 789ms of script time before and 702ms after, with the
+ * runs overlapping: real but inside the noise. Narrowing a search mostly
+ * *unmounts* cards rather than re-rendering them, and a memo cannot skip an
+ * unmount. The filtering itself was never the expense either: five norm() calls
+ * over 1,622 cards benchmark at 1.9ms.
+ *
+ * Either way the props have to stay stable to be worth anything. `scan` is a
+ * boolean the parent has already resolved rather than the two Sets it came
+ * from, since a new Set on any card would otherwise change the props of all of
+ * them, and `onScanBroken` is one useCallback for the whole page.
+ */
+const CardItem = memo(function CardItem({
+  card,
+  setName,
+  view,
+  years,
+  scan,
+  tilt,
+  big,
+  onScanBroken,
+}: {
+  card: OwnedCard;
+  setName: string;
+  view: "grid" | "list";
+  years: Map<string, [number, number]>;
+  /** Whether this card still has a scan worth trying. */
+  scan: boolean;
+  /** Whether this card is drawn large enough for the foil. See TILT_FROM. */
+  tilt: boolean;
+  /** Whether it is drawn large enough to want the bigger scan. See HIGH_FROM. */
+  big: boolean;
+  onScanBroken: (cardKey: string, setName: string) => void;
+}) {
+  /**
+   * Whether this one card has been given the trading-card effect yet.
+   *
+   * The effect is `hover-tilt` and the foil over it is pokemon-cards-css, the
+   * same pair the binder card on /about is built from: see PullScan, which is
+   * where both are argued for.
+   *
+   * What is different here is that there are 1,622 of these rather than one, and
+   * the honest answer to "can it go on all of them" is no, not standing. Each
+   * instance is a custom element with a shadow root, three stylesheets injected
+   * into it and `will-change: transform, box-shadow, opacity` on two layers,
+   * which asks the compositor for a permanent layer per card. A browser will not
+   * grant sixteen hundred of those; it drops them on a budget nobody controls.
+   *
+   * So a card is upgraded when it is first pointed at, and only then. One at a
+   * time, and only the ones actually visited, which on any real visit is a
+   * handful. It stays upgraded afterwards: leaving and coming back should not
+   * pay the cost twice, and an element already in the document is free.
+   */
+  const [tilted, setTilted] = useState(false);
+  const arm = () => {
+    // Imported here rather than at the top of the file, for the reason PullScan
+    // gives: the module calls customElements.define on evaluation, and a client
+    // component is still evaluated on the server. Repeat calls are the module
+    // cache, so this costs nothing after the first card.
+    import("hover-tilt/web-component");
+    setTilted(true);
+  };
+
+  /**
+   * The picture, lifted out of the tree below because it is rendered in two
+   * shapes: bare, and inside the tilt once this card has been armed.
+   *
+   * Swapping between them remounts the element, which is the price of doing this
+   * per card rather than for all of them up front. By the time anyone points at
+   * a card its file is decoded and in the memory cache, so the second mount
+   * paints in the same frame.
+   */
+  const scanImg = scan ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      // The larger file once the grid is drawing cards that want it, and only
+      // where TCGdex has one. The attribute is swapped on the element that is
+      // already showing rather than the element being replaced, which is what
+      // makes this quiet: a browser keeps painting the picture it has until the
+      // new one has decoded, so crossing the threshold sharpens the grid in
+      // place instead of blanking it and filling it back in.
+      src={(big && card.imageHigh) || card.image!}
+      alt={card.name}
+      loading="lazy"
+      decoding="async"
+      // Two ways a scan goes missing, and they need different answers.
+      // The grid asks for `low` because it draws these at 120px, but
+      // TCGdex does not publish that quality for every card and its CDN
+      // is not always up. So a first failure retries at `high`, the
+      // size this page used before, and only a second failure gives up
+      // and shows the empty slot. A card whose artwork simply is not
+      // uploaded yet ends there honestly; one whose `low` is missing
+      // gets its picture back.
+      //
+      // A second failure also condemns the set it came from, because
+      // artwork arrives per set rather than per card: if this one has
+      // none, the twenty-three beside it have none either, and they
+      // should not each spend two slow requests finding that out.
+      onError={(e) => {
+        const img = e.currentTarget;
+        if (img.dataset.retried) {
+          onScanBroken(card.key, setName);
+          return;
+        }
+        img.dataset.retried = "1";
+        img.src = img.src.replace("/low.webp", "/high.webp");
+      }}
+      // The ratio .cards-scan already reserves, stated on the element
+      // too, so the browser knows the shape before the file lands
+      // instead of relaying the grid out as each of a few hundred scans
+      // decodes. The CSS still does the drawing (100% / 100% /
+      // contain); these only describe.
+      //
+      // The measured size where there is one, since the scans that were
+      // pulled into public/artwork have been sized exactly and 245x342
+      // is only what TCGdex's `low` usually is. Same shape, one less
+      // assumption.
+      width={card.imageSize?.width ?? 245}
+      height={card.imageSize?.height ?? 342}
+    />
+  ) : (
+    // A card with no scan anywhere keeps its slot: the gap is the honest
+    // answer, and the number still identifies it.
+    <span className="cards-scan-missing" aria-hidden="true" />
+  );
+
+  return (
+    <li className={`cards-item${card.owned ? "" : " is-wishlist"}`} data-view={view}>
+      {/* Only the cards TCGdex matched have a page: the id is what addresses it,
+          and an unmatched row has none. The rest stay exactly as they were
+          rather than becoming a link to nowhere. The tags sit outside the link:
+          they are what the card is, not somewhere to go. */}
+      <CardLink id={card.tcgId}>
+        <span
+          className="cards-scan"
+          // Arming rather than tilting: the effect is mounted for this one card
+          // and stays mounted, so a card upgrades once and never again.
+          onPointerEnter={tilt && !tilted ? arm : undefined}
+        >
+          {tilted && scan ? (
+            /* The same two props PullScan settles on, minus the shadow: these
+               already carry a drop-shadow that follows the scan's transparent
+               corners (.cards-scan img), and the library's own is a box behind
+               a tile in a dense grid. The foil is the stylesheet's, keyed off
+               the printing exactly as it is on /about. */
+            <hover-tilt className="poke-tilt" tilt-factor="1" glare-intensity="0.5" glare-hue="200">
+              <span
+                className="poke-card"
+                data-rarity={card.variants[0]?.rarity?.toLowerCase() ?? undefined}
+                style={{ "--poke-scan": `url("${card.image}")` } as CSSProperties}
+              >
+                {scanImg}
+                <span className="poke-card__shine" aria-hidden="true" />
+              </span>
+            </hover-tilt>
+          ) : (
+            scanImg
+          )}
+        </span>
+        <span className="cards-item-text">
+          <span className="cards-item-name">{card.name}</span>
+          <span className="cards-item-meta">
+            {card.number && <span className="cards-item-number">{card.number}</span>}
+            {card.type && <span className="cards-item-type">{card.type}</span>}
+            {view === "list" && card.gen && (
+              <span className="cards-item-gen">{label(card.gen, years)}</span>
+            )}
+          </span>
+          {/* What the card costs, in euros, as one figure: the middle of the
+              Near Mint range, which is what an English Near Mint copy is listed
+              at, or the plain market price under €5 where no range would mean
+              anything. The range itself is on the card's own page, where there
+              is room for it; here it would not fit and would not add up. The
+              title says which of the two the number is, because on a tile they
+              look alike. A card with no listing at all has no line, not a
+              zero. */}
+          {card.price && euroShown(card.price) && (
+            <span
+              className="cards-item-price"
+              title={
+                card.price.nm
+                  ? `About ${euroWhole(card.price.nm.low)} to ${euroWhole(card.price.nm.high)} for an English Near Mint copy · ${euro(card.price.market!)} on Cardmarket`
+                  : `${euro(card.price.market!)} on Cardmarket`
+              }
+            >
+              {euroShown(card.price)}
+            </span>
+          )}
+          {/* One tag per printing. Holding a card normally and as a reverse holo
+              is two tags under one scan, not two cards. */}
+          <span className="cards-item-tags">
+            {card.variants.map((v) => (
+              <Tag
+                key={`${v.rarity}-${v.owned}`}
+                className={`cards-tag${v.owned ? "" : " cards-tag--want"}`}
+              >
+                {v.rarity ?? "Unknown"}
+                {!v.owned && <span className="sr-only"> (on the wishlist)</span>}
+              </Tag>
+            ))}
+          </span>
+        </span>
+      </CardLink>
+    </li>
+  );
+});
+
+/**
+ * A row of choices with one of them on: the era switch and the sort order.
+ *
+ * Both are a single answer out of three, which is a segmented control rather
+ * than a dropdown: three words fit in the bar, and a menu would hide the
+ * current answer behind a press.
+ */
+function Segmented<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  options: readonly (readonly [T, string])[];
+}) {
+  return (
+    <div className="cards-segmented" role="group" aria-label={label}>
+      {options.map(([key, text]) => (
+        <button
+          key={key}
+          type="button"
+          aria-pressed={value === key}
+          className={`cards-segment${value === key ? " is-active" : ""}`}
+          onClick={() => onChange(key)}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}

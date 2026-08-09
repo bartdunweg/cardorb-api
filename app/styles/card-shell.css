@@ -1,0 +1,25 @@
+/* The one rule this app needs out of the portfolio's about.css.
+ *
+ * components.css gives .about-card its border, glass and shadow; the padding
+ * and the clip live two files away, in the stylesheet for the About page. So
+ * every card here was drawing its border in the right place and its contents
+ * hard against it.
+ *
+ * Extracted rather than copying about.css whole, which is two thousand lines
+ * for a page binder does not have. That is the same shortcut that lost this
+ * rule in the first place, so it was checked rather than assumed: every class
+ * name the components render was matched against the stylesheets in this
+ * project and against about.css, and .about-card is the only one that was
+ * missing. If a card ever looks wrong again, run that comparison before
+ * reaching for a new rule.
+ *
+ * Imported where about.css sits in the portfolio's own order, after
+ * components.css and before pages.css, because that order is what decides which
+ * of two rules for the same selector wins.
+ */
+.about-card {
+  padding: var(--card-pad);
+  /* cards.css turns this back off for .cards-intro on purpose: the filter
+     panels open past the card's edge and were being sliced along it. */
+  overflow: hidden;
+}
