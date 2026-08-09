@@ -437,10 +437,14 @@ body:has(.page-cards) .theme-toggle {
   }
 }
 
-/* Dashboard, Pokédex and Profile, where the bar carries all three. See the
-   comment on these in CardsSidebar: two controls for one destination six
-   pixels apart is one too many, and without them the rail is the list of sets
-   its title says it is. All cards has no slot in the bar and stays. */
+/* The rows the bottom bar already carries, which is why they leave the rail
+   below 1000px: two controls for one destination six pixels apart is one too
+   many, and without them the rail is the list of sets its title says it is.
+
+   Which rows those are depends on the mode, so CardsSidebar puts this class on
+   rather than the markup wearing it. Signed in: Dashboard, Pokédex, Profile.
+   On the public link: those, plus Collection and Wishlist, which have slots
+   there because the plus and the dashboard do not. */
 @media (max-width: 1000px) {
   .cards-nav-elsewhere {
     display: none;

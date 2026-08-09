@@ -156,7 +156,11 @@ export default function CardsSidebar({
               icon={ListOrdered}
             />
           </li>
-          <li>
+          {/* On the public link the bar carries these two, so below 1000px they
+              come out of the rail and it becomes the list of sets its title
+              says it is. Signed in the bar has no room for them — the plus and
+              the dashboard have the slots — so there they stay. */}
+          <li className={isPublic ? "cards-nav-elsewhere" : undefined}>
             <NavItem
               active={selected === "all"}
               onClick={() => onSelect("all")}
@@ -168,7 +172,7 @@ export default function CardsSidebar({
           {/* Only where there is one. An empty wishlist is a row that answers a
               question nobody asked, and the count beside it would be a zero. */}
           {wanted > 0 && (
-            <li>
+            <li className={isPublic ? "cards-nav-elsewhere" : undefined}>
               <NavItem
                 active={selected === "wishlist"}
                 onClick={() => onSelect("wishlist")}
@@ -188,7 +192,14 @@ export default function CardsSidebar({
               />
             </li>
           )}
-          <li aria-hidden="true" className="cards-nav-rule" />
+          {/* The hairline between the destinations and the sets. It goes with
+              them: on the public link below 1000px there is nothing above it,
+              and a rule dividing one thing from nothing is a line for its own
+              sake. */}
+          <li
+            aria-hidden="true"
+            className={`cards-nav-rule${isPublic ? " cards-nav-elsewhere" : ""}`}
+          />
           {/* Fifty-one sets in one run is a wall. Under the era they belong to
               it is a handful of short lists, and the label is the thing a
               collector already sorts by. */}
