@@ -9,7 +9,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import {LayoutGrid, Rows3, Search, Square, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Link from "next/link";
 import Card from "./Card";
 import Tag from "./Tag";
@@ -23,6 +23,7 @@ import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 import FilterMenu, { type Facet } from "./FilterMenu";
 import FilterSheet from "./FilterSheet";
 import ViewSheet from "./ViewSheet";
+import ViewMenu from "./ViewMenu";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
 import { useCardsKey } from "../hooks/useCardsKey";
 import { getCardsStats, tally } from "../../lib/core/cards-stats";
@@ -366,12 +367,22 @@ export default function CardsView({
    * What it keeps is the one thing that is genuinely about the dex rather than
    * about the cards: which printing stands for a Pokémon. See dexSets.
    */
-  const [group, setGroup] = useState<"set" | "dex">("set");
+  const [group, setGroup] = useState<"set" | "flat" | "dex">("set");
   // A layout of the list, not a place, so it is off wherever there is no list:
   // the dashboard summarises the collection and the profile is about the
   // password. Read off `selected` rather than the onDashboard/onProfile flags
   // further down, because the facets above need it before those exist.
   const onPokedex = group === "dex" && selected !== "dashboard" && selected !== "profile";
+  /**
+   * One run of cards with nothing between them.
+   *
+   * By set is how a binder is actually kept, so it is the default and it is
+   * what the headings are for. But a set heading every twelve cards is a lot of
+   * furniture when what you want is to see how much of something there is —
+   * every Charizard you own, say, which is nine cards across seven sets and
+   * eight headings. This drops the headings and runs the grid straight through.
+   */
+  const onFlat = group === "flat" && selected !== "dashboard" && selected !== "profile";
 
   const all = useMemo(() => sets.flatMap((s) => s.cards), [sets]);
   const total = all.length;
@@ -1165,95 +1176,39 @@ export default function CardsView({
                 it was the last thing on a row that wraps, which on a phone put
                 it alone on a line of its own. */}
               {!onDashboard && !onPokedex && (
-                <span className="only-narrow">
-                  <ViewSheet
-                    view={view}
-                    onView={setView}
-                    group={group}
-                    onGroup={setGroup}
-                    size={scanSize ?? SCAN_DEFAULT}
-                    onSize={setScanSize}
-                    min={SCAN_MIN}
-                    max={SCAN_MAX}
-                  />
-                </span>
+                <>
+                  {/* The same three controls twice, and never both on screen:
+                      a panel where the page is visible around it, a sheet where
+                      it is not. Swapped in the stylesheet rather than by
+                      measuring the window, so the server renders one markup and
+                      the browser does not correct it after hydration. */}
+                  <span className="only-wide">
+                    <ViewMenu
+                      view={view}
+                      onView={setView}
+                      group={group}
+                      onGroup={setGroup}
+                      size={scanSize ?? SCAN_DEFAULT}
+                      onSize={setScanSize}
+                      min={SCAN_MIN}
+                      max={SCAN_MAX}
+                    />
+                  </span>
+                  <span className="only-narrow">
+                    <ViewSheet
+                      view={view}
+                      onView={setView}
+                      group={group}
+                      onGroup={setGroup}
+                      size={scanSize ?? SCAN_DEFAULT}
+                      onSize={setScanSize}
+                      min={SCAN_MIN}
+                      max={SCAN_MAX}
+                    />
+                  </span>
+                </>
               )}
 
-              {/* The same choice the sheet offers, for the widths that have room
-                  to show it rather than to hide it behind a button. */}
-              {!onDashboard && !onProfile && (
-                <span className="only-wide">
-                  <Segmented
-                    label="Group by"
-                    value={group}
-                    onChange={setGroup}
-                    options={[
-                      ["set", "Set"],
-                      ["dex", "Pokédex"],
-                    ]}
-                  />
-                </span>
-              )}
-
-              {!onDashboard && !onPokedex && (
-                <div className="cards-views only-wide" role="group" aria-label="Layout">
-                  {(
-                    [
-                      ["grid", LayoutGrid, "Grid"],
-                      ["list", Rows3, "List"],
-                    ] as const
-                  ).map(([key, Icon, text]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`cards-view${view === key ? " is-active" : ""}`}
-                      aria-pressed={view === key}
-                      aria-label={`${text} view`}
-                      onClick={() => setView(key)}
-                    >
-                      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Beside the search box, because both are things you do to the
-                whole grid before you start reading it, and only where there is
-                a grid: the list view has one row per card and the dashboard has
-                no scans at all.
-
-                A range rather than two or three preset sizes. The reason it
-                exists is that a collection is browsed at two distances, hunting
-                for one card and looking at the artwork, and where the line falls
-                between them is the reader's own eyesight and screen. 96 is about
-                nine per row on a laptop, 260 is about three; past that the page
-                stops being a grid. The step is 4 because the column is a
-                fraction anyway, so a finer one only produces sizes that round to
-                the same layout. */}
-              {!onPokedex && !onDashboard && view === "grid" && (
-                <label className="cards-size only-wide">
-                  <span className="sr-only">Card size</span>
-                  <Square size={11} strokeWidth={2} aria-hidden="true" />
-                  <input
-                    type="range"
-                    min={SCAN_MIN}
-                    max={SCAN_MAX}
-                    step={4}
-                    // The stylesheet's own default while nothing has been chosen.
-                    // On a narrow column the grid is actually drawing 104, so the
-                    // thumb is one notch optimistic until it is first moved; the
-                    // alternative is measuring the grid on every resize to keep a
-                    // slider honest about a number nobody has asked for yet.
-                    value={scanSize ?? SCAN_DEFAULT}
-                    onChange={(e) => setScanSize(Number(e.target.value))}
-                  />
-                  <Square size={16} strokeWidth={2} aria-hidden="true" />
-                </label>
-              )}
-
-              {/* The Pokédex only. It used to sit over the collection too, and
-                there it was answering a question the rail already answers
-                better: the eras are headings you can press, with the years
               {/* Sorting is an answer about a list of cards, so it is only offered
                 where one is being shown. Two of the three orders are by price,
                 and on the public link there are no prices to order by: that
@@ -1340,6 +1295,41 @@ export default function CardsView({
                 </p>
               </Card>
             ) : (
+              onFlat ? (
+                <section className="cards-set">
+                  {/* One grid over every set that survived the filters. The
+                      cards keep their own set name for the dialog they open,
+                      which is what setName is for; what goes is the heading
+                      between them. */}
+                  <ul
+                    className={view === "grid" ? "cards-grid" : "cards-rows"}
+                    style={
+                      view === "grid" && scanSize
+                        ? ({ "--cards-scan-w": `${scanSize}px` } as CSSProperties)
+                        : undefined
+                    }
+                  >
+                    {visibleSets.flatMap((set) =>
+                      set.cards.map((card) => (
+                        <CardItem
+                          key={card.key}
+                          card={card}
+                          setName={set.name}
+                          view={view}
+                          years={years}
+                          scan={!brokenScans.has(card.key)}
+                          tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
+                          big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
+                          onScanBroken={onScanBroken}
+                          onPick={
+                            isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
+                          }
+                        />
+                      )),
+                    )}
+                  </ul>
+                </section>
+              ) : (
               visibleSets.map((set) => (
                 <section key={set.name} className="cards-set">
                   {/* Nothing at all when the set is what you picked: its logo,
@@ -1423,6 +1413,7 @@ export default function CardsView({
                   </ul>
                 </section>
               ))
+              )
             )}
             {/* Nothing to see and nothing to announce: the sets it stands for are
                 built before anyone scrolls this far, so a "loading more" line

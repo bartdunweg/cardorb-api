@@ -33,8 +33,8 @@ export default function ViewSheet({
   view: "grid" | "list";
   onView: (v: "grid" | "list") => void;
   /** How the same cards are arranged: as the sets, or against the Pokédex. */
-  group: "set" | "dex";
-  onGroup: (g: "set" | "dex") => void;
+  group: "set" | "flat" | "dex";
+  onGroup: (g: "set" | "flat" | "dex") => void;
   size: number;
   onSize: (n: number) => void;
   min: number;
@@ -79,6 +79,7 @@ export default function ViewSheet({
                 {(
                   [
                     ["set", "Set"],
+                    ["flat", "None"],
                     ["dex", "Pokédex"],
                   ] as const
                 ).map(([key, text]) => (
@@ -120,7 +121,7 @@ export default function ViewSheet({
 
             {/* Only where there is a grid to size. In the list view every card
                 is a row and the slider would move nothing. */}
-            {group === "set" && view === "grid" && (
+            {group !== "dex" && view === "grid" && (
               <div className="sheet-field">
                 <span className="sheet-label" id="sheet-size">
                   Card size

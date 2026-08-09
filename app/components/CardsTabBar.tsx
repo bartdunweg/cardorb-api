@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Boxes, Heart, LayoutDashboard, Layers, Plus, Search } from "lucide-react";
+import { Heart, LayoutDashboard, Layers, List, Plus, Search } from "lucide-react";
 import { useSlidingPill } from "../hooks/useSlidingPill";
 
 /**
@@ -79,9 +79,10 @@ export default function CardsTabBar({
       icon: <Layers {...ICON} aria-hidden="true" />,
     },
     wishlist: { key: "wishlist", label: "Wishlist", icon: <Heart {...ICON} aria-hidden="true" /> },
-    // Boxes rather than Layers, which Collection now wears: the rail is a shelf
-    // of fifty sets to pick from, not another view of the whole thing.
-    sets: { key: "sets", label: "Sets", icon: <Boxes {...ICON} aria-hidden="true" /> },
+    // A list rather than boxes: what this slot opens is the rail, which is a
+    // list of set names to pick from. Layers belongs to Collection, which is
+    // the cards themselves.
+    sets: { key: "sets", label: "Sets", icon: <List {...ICON} aria-hidden="true" /> },
     search: { key: "search", label: "Search", icon: <Search {...ICON} aria-hidden="true" /> },
   };
 
