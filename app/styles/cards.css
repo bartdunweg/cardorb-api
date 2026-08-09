@@ -963,7 +963,11 @@ body:has(.page-cards) .theme-toggle {
 .cards-item-meta {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
+  /* One line, so a dot can never end up at the start of a wrapped one. What
+     does not fit is cut rather than moved down: these are the small facts, and
+     the card's name above them is the one that must always be whole. */
+  flex-wrap: nowrap;
+  overflow: hidden;
   gap: 2px var(--space-2);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
@@ -985,7 +989,12 @@ body:has(.page-cards) .theme-toggle {
    rarity. On text already at --color-text-tertiary that took it under the AA
    threshold, and axe caught it. The separation now comes from a divider
    instead, which costs no contrast at all. */
-.cards-item-type::before {
+/* The dot belongs between two facts, not in front of one. It used to hang off
+   .cards-item-type and .cards-item-gen, which meant it appeared whenever either
+   of those was drawn — including as the first thing on the line, when Number
+   was switched off, leading with a separator and nothing to separate. Keyed on
+   position now, so it is only ever between siblings. */
+.cards-item-meta > *:not(:first-child)::before {
   content: "·";
   margin-right: var(--space-2);
   opacity: 0.5;
@@ -1563,11 +1572,7 @@ body:has(.page-cards) .theme-toggle {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cards-item-gen::before {
-  content: "·";
-  margin-right: var(--space-2);
-  opacity: 0.5;
-}
+
 
 @media (max-width: 640px) {
   .cards-segmented {
@@ -2968,10 +2973,11 @@ button.cards-dex-body:focus-visible::after {
 .card-detail-scan {
   position: relative;
 }
-@media (max-width: 640px) {
-  /* Out over the edges, where there is no column beside the scan to sit in. */
-  .card-detail-move {
-    left: calc(-1 * var(--space-4));
-    right: calc(-1 * var(--space-4));
-  }
+/* Half on the picture and half off it, at the scan's own edges. They were
+   pushed out to the dialog's edges on a phone, which put them against the
+   window with a stretch of empty card between them and the thing they move —
+   and on a 240px scan centred in a full-screen dialog that is a long way. */
+.card-detail-move {
+  left: calc(-1 * var(--space-4));
+  right: calc(-1 * var(--space-4));
 }

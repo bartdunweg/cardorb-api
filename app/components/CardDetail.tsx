@@ -51,12 +51,12 @@ export default function CardDetail({
 
   return (
     <div className="card-detail-body">
-      {/* Over the scan rather than under the facts, because moving between
-          cards is looking at pictures: the control belongs where the picture
-          is, and on a phone that is the half of the dialog a thumb is already
-          near. */}
-      {nav && <div className="card-detail-move">{nav}</div>}
       <div className="card-detail-scan">
+        {/* Inside the scan, not beside it. As a child of the body it was
+            absolutely positioned against the dialog, which put the arrows on
+            the window's edges with a stretch of empty card between them and the
+            picture they move. */}
+        {nav && <div className="card-detail-move">{nav}</div>}
         {card.image ? (
           // The full-size scan: this is the one place on the site where the
           // artwork is the point, so it gets `high` where the grid takes `low`.

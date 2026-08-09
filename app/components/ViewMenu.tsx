@@ -36,8 +36,8 @@ export default function ViewMenu({
 }: {
   view: "grid" | "list";
   onView: (v: "grid" | "list") => void;
-  group: "set" | "flat" | "dex";
-  onGroup: (g: "set" | "flat" | "dex") => void;
+  group: "set" | "flat" | "year" | "dex";
+  onGroup: (g: "set" | "flat" | "year" | "dex") => void;
   /** Which optional facts a tile carries, and the toggle for one of them. */
   fields: ReadonlySet<CardField>;
   onField: (f: CardField) => void;
@@ -80,6 +80,7 @@ export default function ViewMenu({
               [
                 ["flat", "None"],
                 ["set", "Set"],
+                ["year", "Year"],
                 ["dex", "Pokédex"],
               ] as const
             ).map(([key, text]) => (

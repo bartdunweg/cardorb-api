@@ -36,8 +36,8 @@ export default function ViewSheet({
   view: "grid" | "list";
   onView: (v: "grid" | "list") => void;
   /** How the same cards are arranged: as the sets, or against the Pokédex. */
-  group: "set" | "flat" | "dex";
-  onGroup: (g: "set" | "flat" | "dex") => void;
+  group: "set" | "flat" | "year" | "dex";
+  onGroup: (g: "set" | "flat" | "year" | "dex") => void;
   /** Which optional facts a tile carries, and the toggle for one of them. */
   fields: ReadonlySet<CardField>;
   onField: (f: CardField) => void;
@@ -86,6 +86,7 @@ export default function ViewSheet({
                   [
                     ["flat", "None"],
                     ["set", "Set"],
+                    ["year", "Year"],
                     ["dex", "Pokédex"],
                   ] as const
                 ).map(([key, text]) => (

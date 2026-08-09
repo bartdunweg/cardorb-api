@@ -380,7 +380,7 @@ export default function CardsView({
    * What it keeps is the one thing that is genuinely about the dex rather than
    * about the cards: which printing stands for a Pokémon. See dexSets.
    */
-  const [group, setGroup] = useState<"set" | "flat" | "dex">("flat");
+  const [group, setGroup] = useState<"set" | "flat" | "year" | "dex">("flat");
 
   /**
    * Which facts a tile carries under its scan.
@@ -414,6 +414,7 @@ export default function CardsView({
    * across eight headings for the nine Charizards in seven sets.
    */
   const onFlat = group === "flat" && selected !== "dashboard" && selected !== "profile";
+  const onYear = group === "year" && selected !== "dashboard" && selected !== "profile";
 
   const all = useMemo(() => sets.flatMap((s) => s.cards), [sets]);
   const total = all.length;
@@ -697,6 +698,27 @@ export default function CardsView({
   const shown = useMemo(() => filtered.reduce((n, set) => n + set.cards.length, 0), [filtered]);
 
   /**
+   * The same cards under the year their set came out, newest first.
+   *
+   * Grouped on the set's release date rather than on the card's era, which is
+   * the other date this collection knows: an era spans years and answers "which
+   * generation", while this answers "when did I get to open these", which is
+   * the question a shelf sorted by time is actually asked. A set with no date
+   * at TCGdex lands under Undated rather than under a guess.
+   */
+  const yearGroups = useMemo(() => {
+    if (!onYear) return [];
+    const by = new Map<string, CardSet>();
+    for (const set of filtered) {
+      const year = set.releaseDate?.slice(0, 4) ?? "Undated";
+      const at = by.get(year);
+      if (at) at.cards.push(...set.cards);
+      else by.set(year, { ...set, name: year, logo: null, logoSize: null, total: null, cards: [...set.cards] });
+    }
+    return [...by.values()].sort((a, b) => b.name.localeCompare(a.name));
+  }, [onYear, filtered]);
+
+  /**
    * Every card on screen in the order it is drawn, so the dialog's arrows and
    * its swipe follow what you were looking at rather than the collection's own
    * order. That is the difference between here and the signed-in route: this
@@ -762,9 +784,13 @@ export default function CardsView({
     setBuiltSets(SET_STEP);
     setGeneration((g) => g + 1);
   }
+  // Years or sets, whichever the page is grouped by. Both are CardSet[] on
+  // purpose: a year is a set of cards with a name and no logo, so everything
+  // that draws a section keeps working without knowing which it is looking at.
+  const grouped = onYear ? yearGroups : filtered;
   const visibleSets = useMemo(
-    () => filtered.slice(0, builtFor === filtered ? builtSets : SET_STEP),
-    [filtered, builtFor, builtSets],
+    () => grouped.slice(0, builtFor === filtered ? builtSets : SET_STEP),
+    [grouped, filtered, builtFor, builtSets],
   );
 
   /**
@@ -1380,7 +1406,6 @@ export default function CardsView({
                           card={card}
                           setName={set.name}
                           view={view}
-                          years={years}
                           scan={!brokenScans.has(card.key)}
                           tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
                           big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
@@ -1432,7 +1457,11 @@ export default function CardsView({
                         {/* One step down with the title above it: a set sits
                             inside the view rather than beside it. */}
                         <h3 className="cards-set-name">{set.name}</h3>
-                        <p className="cards-set-meta">{setMeta(set)}</p>
+                        <p className="cards-set-meta">
+                          {onYear
+                            ? `${set.cards.length.toLocaleString(LOCALE)} ${set.cards.length === 1 ? "card" : "cards"}`
+                            : setMeta(set)}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -1455,7 +1484,6 @@ export default function CardsView({
                         card={card}
                         setName={set.name}
                         view={view}
-                        years={years}
                         // Resolved here rather than handed the two Sets, so the
                         // item's props only change when the answer for that card
                         // changes. See the note on CardItem.
@@ -1593,7 +1621,6 @@ const CardItem = memo(function CardItem({
   card,
   setName,
   view,
-  years,
   scan,
   tilt,
   big,
@@ -1605,7 +1632,6 @@ const CardItem = memo(function CardItem({
   card: OwnedCard;
   setName: string;
   view: "grid" | "list";
-  years: Map<string, [number, number]>;
   /** The year the set came out, for the Year field. Null where TCGdex has no
       date for it, which is a handful of promo sets. */
   setYear: string | null;
@@ -1756,16 +1782,23 @@ const CardItem = memo(function CardItem({
           <span className="cards-item-name">{card.name}</span>
           <span className="cards-item-meta">
             {fields.has("number") && card.number && (
-              <span className="cards-item-number">{card.number}</span>
+              <span className="cards-item-number">
+                {/* The hash is the difference between "085" as this card's
+                    place in its set and "085" as any other number on a tile
+                    that can now also carry a year. */}
+                <span aria-hidden="true">#</span>
+                {card.number}
+              </span>
             )}
             {fields.has("type") && card.type && (
               <span className="cards-item-type">{card.type}</span>
             )}
             {fields.has("set") && <span className="cards-item-set">{setName}</span>}
             {fields.has("year") && setYear && <span className="cards-item-year">{setYear}</span>}
-            {fields.has("era") && card.gen && (
-              <span className="cards-item-gen">{label(card.gen, years)}</span>
-            )}
+            {/* The era's name on its own. label() appends the years it spans,
+                which is worth a heading in the rail and is noise on a tile that
+                can also be showing the set's year right beside it. */}
+            {fields.has("era") && card.gen && <span className="cards-item-gen">{card.gen}</span>}
           </span>
           {/* What the card costs, in euros, as one figure: the middle of the
               Near Mint range, which is what an English Near Mint copy is listed
