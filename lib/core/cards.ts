@@ -563,6 +563,35 @@ export function getCards(): Promise<CardSet[]> {
   return collection;
 }
 
+/**
+ * The same collection with every price taken out.
+ *
+ * This is what makes the public link honest rather than decorative. Hiding a
+ * price in the interface leaves it in the props React ships to the browser, in
+ * the HTML of a server-rendered page, and in view for anyone who opens the
+ * developer tools. Removing it here means the number never leaves the server:
+ * /user/<name> renders from this, and there is nothing to find.
+ *
+ * `price` is already nullable, because plenty of cards have no Cardmarket
+ * entry, so nothing downstream needs a new branch. Every place that shows money
+ * is already written as `card.price && …` for that reason, and all of them go
+ * quiet on their own.
+ *
+ * Only `price` needs clearing: the raw Cardmarket figures live on `CardDetail`,
+ * which the public page does not build. If a `market` field ever moves onto
+ * `OwnedCard`, it has to be cleared here too.
+ *
+ * A new array rather than a mutation: `getCards()` hands out a memoised object
+ * that the owner's page is also holding, and editing it in place would empty
+ * the prices out of /cards for as long as the process lived.
+ */
+export function stripPrices(sets: CardSet[]): CardSet[] {
+  return sets.map((set) => ({
+    ...set,
+    cards: set.cards.map((card) => ({ ...card, price: null })),
+  }));
+}
+
 async function walkCollection(): Promise<CardSet[]> {
   const token = process.env.NOTION_TOKEN;
   // Not a failure, and the one empty worth remembering: a deployment either has

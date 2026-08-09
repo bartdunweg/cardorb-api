@@ -1,0 +1,52 @@
+/* The login at /, which is the only screen in this app that is not the
+ * collection.
+ *
+ * A short column in the middle of the page rather than anything designed: one
+ * field and a way past it. It borrows .about-card, .page-title and the form
+ * rules from cards.css so the door looks like the room behind it, and adds
+ * nothing that is not about placing them.
+ */
+.page-signin {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  /* The layout reserves room at the top for a nav bar this route does not have,
+     and a form centred in what is left sits visibly high. */
+  margin-top: calc(-1 * var(--main-pad-top));
+  padding: var(--page-pad-x);
+}
+
+.signin-card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* .about-card clips, and nothing here escapes its edges; kept explicit
+     because the form's focus ring sits right against the padding. */
+  overflow: visible;
+}
+
+/* The heading is the app's name, so it is smaller here than the page titles it
+   shares a class with: this is a label on a door, not a section heading. */
+.page-signin .page-title {
+  margin: 0;
+  font-size: var(--fs-sub);
+  color: var(--color-text-secondary);
+}
+
+.signin-public {
+  margin: 0;
+  font-size: var(--fs-body-s);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.signin-public a {
+  color: var(--color-text-primary);
+  text-underline-offset: 3px;
+}

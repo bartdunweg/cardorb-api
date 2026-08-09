@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCards } from "../../../../lib/core/cards";
-import { readHeaders } from "../../../../lib/api/guard";
+import { readHeaders, refuseUnauthorised } from "../../../../lib/api/guard";
 
 /**
  * The whole collection, grouped by set. This is the endpoint every client
@@ -15,10 +15,22 @@ import { readHeaders } from "../../../../lib/api/guard";
  *
  * An ETag comes when the iOS app is built and can send an If-None-Match. Adding
  * one now would be guessing at what it wants to compare.
+ *
+ * Behind the key since /user/<name> exists. That page shows the collection with
+ * every price removed, and it is only worth removing them if they cannot be
+ * asked for directly: an open endpoint here would hand back the same cards with
+ * the numbers still on them, which makes the public page a curtain rather than
+ * a wall. Nothing was lost by closing it — the page renders from getCards()
+ * rather than from this route, and the iOS app was always going to send a key.
  */
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const refusal = refuseUnauthorised(req);
+  if (refusal) {
+    return NextResponse.json({ error: refusal.error }, { status: refusal.status });
+  }
+
   const sets = await getCards();
 
   // An empty collection is never true. getCards() fails soft and returns []
@@ -32,16 +44,10 @@ export async function GET() {
   // the token was in the environment and serving an empty binder for an hour.
   if (!sets.length) throw new Error("The collection came back empty; refusing to serve it.");
 
-  return NextResponse.json(
-    { sets },
-    {
-      headers: {
-        ...readHeaders,
-        // Stale-while-revalidate rather than a hard hour: a client that asks
-        // one second after the window closes should get last hour's answer
-        // immediately and the fresh one next time, not wait on a Notion walk.
-        "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
-      },
-    },
-  );
+  // The stale-while-revalidate hour that used to be here has gone with the
+  // lock: `public` on a shared cache means the CDN may hand this to the next
+  // person who asks, key or no key, which would quietly undo the check above.
+  // readHeaders now says `private, no-store`. The walk itself is still
+  // memoised inside getCards(), so this costs a round trip and not a rebuild.
+  return NextResponse.json({ sets }, { headers: readHeaders(req) });
 }

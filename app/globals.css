@@ -27,3 +27,5 @@
 @import "./styles/errors.css";
 @import "./styles/poke-holo.css";
 @import "./styles/cards.css";
+/* After cards.css: the login reuses its form rules and then places them. */
+@import "./styles/signin.css";

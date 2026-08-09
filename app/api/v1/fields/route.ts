@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const no = refuseUnauthorised(req);
-  if (no) return NextResponse.json({ error: no.error }, { status: no.status, headers: readHeaders });
+  if (no) return NextResponse.json({ error: no.error }, { status: no.status, headers: readHeaders(req) });
 
   const token = process.env.NOTION_TOKEN;
   if (!token) {
@@ -30,13 +30,13 @@ export async function GET(req: Request) {
   }
 
   try {
-    return NextResponse.json(await cardFields(token), { headers: readHeaders });
+    return NextResponse.json(await cardFields(token), { headers: readHeaders(req) });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Notion did not answer.";
     console.error("Card fields failed:", message);
     // Notion's own words. The only person who can read this is the one who can
     // act on it, and "something went wrong" would send them to the logs for a
     // message that is already here.
-    return NextResponse.json({ error: message }, { status: 502, headers: readHeaders });
+    return NextResponse.json({ error: message }, { status: 502, headers: readHeaders(req) });
   }
 }

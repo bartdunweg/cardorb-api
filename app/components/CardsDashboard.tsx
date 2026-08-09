@@ -18,30 +18,47 @@ import { euro } from "../../lib/core/format";
  * needs no legend. Values sit at the tip of each bar and every label wears a
  * text token, never the mark's colour.
  */
-export default function CardsDashboard({ stats }: { stats: CardsStats }) {
+export default function CardsDashboard({
+  stats,
+  isPublic = false,
+}: {
+  stats: CardsStats;
+  /**
+   * The public link shows what the collection is, not what it is worth. Three
+   * of the blocks below are entirely about money and are the reason this flag
+   * exists: the value tile, its history, and the priciest ten.
+   *
+   * The tile row is built for four and gets three here. That is deliberate
+   * rather than overlooked: the grid wraps them evenly, and inventing a fourth
+   * number to fill the hole would be decoration.
+   */
+  isPublic?: boolean;
+}) {
   return (
     <div className="cards-dash">
-      {/* Four numbers rather than four one-bar charts: a headline value is a
-          stat tile, and a bar chart of unrelated totals compares things that do
-          not belong on one scale. */}
+      {/* Numbers rather than one-bar charts: a headline value is a stat tile,
+          and a bar chart of unrelated totals compares things that do not belong
+          on one scale. */}
       <ul className="cards-kpis" role="list">
         <Kpi label="In the binder" value={stats.owned.toLocaleString(LOCALE)} />
         <Kpi label="On the wishlist" value={stats.wishlist.toLocaleString(LOCALE)} />
         <Kpi label="Sets" value={String(stats.sets)} />
-        <Kpi
-          // What the collection is worth, said in the plainest words there are.
-          // It was "Cheapest rebuild", which is exactly what the number is and
-          // not at all what anyone looking for it would scan for.
-          label="Collection value"
-          value={euro(stats.value)}
-        />
+        {!isPublic && (
+          <Kpi
+            // What the collection is worth, said in the plainest words there
+            // are. It was "Cheapest rebuild", which is exactly what the number
+            // is and not at all what anyone looking for it would scan for.
+            label="Collection value"
+            value={euro(stats.value)}
+          />
+        )}
       </ul>
 
       {/* Directly under the tiles, because it is the history of the last one
           of them. */}
-      <CollectionValueCard />
+      {!isPublic && <CollectionValueCard />}
 
-      {stats.top.length > 0 && (
+      {!isPublic && stats.top.length > 0 && (
         <Card className="cards-dash-block">
           <h2 className="cards-dash-title">Priciest cards</h2>
           <p className="cards-dash-sub">

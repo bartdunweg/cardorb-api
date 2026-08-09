@@ -1,16 +1,27 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import CardsView from "../components/CardsView";
 import { getCards } from "../../lib/core/cards";
+import { SESSION_COOKIE } from "../../lib/api/guard";
 
 export const metadata: Metadata = {
   title: "Cards",
 };
 
-// An hour. Packs get opened in bursts and then nothing changes for weeks, so
-// this is far less volatile than it looks. It has to stay a cached render
-// either way: the collection walks every page of the Notion query, and no
-// visitor should be waiting on that.
-export const revalidate = 3600;
+/**
+ * Rendered per request rather than cached for an hour.
+ *
+ * The collection itself is still memoised inside getCards(), so this does not
+ * cost a Notion walk per visitor; what changed is that the page now reads a
+ * cookie, and a page whose output depends on who is asking cannot be handed to
+ * the next person out of a shared cache.
+ *
+ * The middleware in front of this route means there is always a session by the
+ * time it runs, so in practice `signedIn` is true here. It is read rather than
+ * assumed because the middleware only checks that a cookie exists, and the two
+ * would drift the moment that changes.
+ */
+export const dynamic = "force-dynamic";
 
 /**
  * The hosts this route's pictures come from, opened while the HTML is still
@@ -36,7 +47,8 @@ function Preconnect({ to }: { to: string[] }) {
 }
 
 export default async function CardsPage() {
-  const sets = await getCards();
+  const [sets, jar] = await Promise.all([getCards(), cookies()]);
+  const signedIn = Boolean(jar.get(SESSION_COOKIE)?.value);
 
   return (
     <section className="page-cards">
@@ -45,7 +57,7 @@ export default async function CardsPage() {
           search engines, and this app ships noindex (see app/layout.tsx), so
           it would be markup written for a reader that never arrives. */}
       <Preconnect to={["https://assets.tcgdex.net", "https://images.pokemontcg.io"]} />
-      <CardsView sets={sets} />
+      <CardsView sets={sets} signedIn={signedIn} />
     </section>
   );
 }

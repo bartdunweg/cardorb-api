@@ -171,7 +171,32 @@ const DEX_OWNED: readonly (readonly [DexOwned, string])[] = [
   ["missing", "Not owned"],
 ];
 
-export default function CardsView({ sets }: { sets: CardSet[] }) {
+/**
+ * Which of the two this screen is.
+ *
+ * "owner" is /cards, behind the login: prices, what the collection is worth,
+ * and the button that adds to it. "public" is /user/<name>, the link you hand
+ * to someone: the same cards, the same filters, and nothing about money.
+ *
+ * The distinction is not enforced here. The public page strips every price out
+ * of `sets` before this component ever sees them, so what this flag does is
+ * take away the controls that would then be pointing at nothing — a Value facet
+ * whose bands are all empty, a Priciest sort with nothing to sort by. Hiding is
+ * done at the source; this is tidying up after it.
+ */
+export type CardsMode = "owner" | "public";
+
+export default function CardsView({
+  sets,
+  signedIn = false,
+  mode = "owner",
+}: {
+  sets: CardSet[];
+  /** Read from the session cookie on the server, so the first paint is right. */
+  signedIn?: boolean;
+  mode?: CardsMode;
+}) {
+  const isPublic = mode === "public";
   const [query, setQuery] = useState("");
   // The list is well over a thousand items, so filtering runs against a
   // deferred copy of the query: typing stays responsive and the grid catches up
@@ -243,11 +268,17 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
     requestAnimationFrame(() => window.scrollTo(0, railScroll.current));
   }, []);
   /**
-   * The key that opens the plus, and the dialog it opens. Both live here rather
-   * than in the bar: the same dialog is opened from the toolbar above 1000px,
+   * Signing in and out, and the dialog the plus opens. The dialog lives here
+   * rather than in the bar: it is opened from the toolbar above 1000px too,
    * where the bar is not on screen at all.
+   *
+   * `signedIn` is a prop rather than something this hook reports, because the
+   * session is a cookie the server reads. That is what keeps the plus from
+   * appearing a frame after everything else.
    */
-  const { key, signedIn, signIn, signOut } = useCardsKey();
+  // Only signing out from here: the form that signs in owns that call itself,
+  // so the key never passes through this component.
+  const { signOut } = useCardsKey();
   const [adding, setAdding] = useState(false);
 
   const [pickedNames, setPickedNames] = useState<Set<string>>(new Set());
@@ -680,14 +711,21 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
         onToggle: toggle(setPickedRarities),
         onClear: () => setPickedRarities(new Set()),
       },
-      {
-        key: "value",
-        label: "Value",
-        options: valueOptions,
-        selected: pickedValues,
-        onToggle: toggle(setPickedValues),
-        onClear: () => setPickedValues(new Set()),
-      },
+      // Not on the public link. The bands are labelled in euros ("Under €5",
+      // "€100 and up"), so the facet says what a collection is worth even with
+      // every price stripped out of the cards themselves.
+      ...(isPublic
+        ? []
+        : [
+            {
+              key: "value",
+              label: "Value",
+              options: valueOptions,
+              selected: pickedValues,
+              onToggle: toggle(setPickedValues),
+              onClear: () => setPickedValues(new Set()),
+            },
+          ]),
       {
         key: "type",
         label: "Type",
@@ -710,6 +748,7 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
         : []),
     ],
     [
+      isPublic,
       nameOptions,
       rarityOptions,
       typeOptions,
@@ -755,7 +794,7 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
       page rather than being repeated over the grid below. */
   const currentSet = useMemo(() => sets.find((s) => s.name === selected) ?? null, [sets, selected]);
   const onPokedex = selected === "pokedex";
-  const onProfile = selected === "profile";
+  const onProfile = selected === "profile" && !isPublic;
 
   /**
    * Which slot in the bar is lit, which is not quite the same question as which
@@ -881,7 +920,8 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
           leaveDashboard();
           setQuery(value);
         }}
-        signedIn={signedIn}
+        signedIn={signedIn && !isPublic}
+        isPublic={isPublic}
         onAdd={() => setAdding(true)}
         brokenLogos={brokenLogos}
         onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}
@@ -1075,8 +1115,10 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
                 </label>
               )}
               {/* Sorting is an answer about a list of cards, so it is only offered
-                where one is being shown. */}
-              {!onPokedex && !onDashboard && (
+                where one is being shown. Two of the three orders are by price,
+                and on the public link there are no prices to order by: that
+                leaves one option, and a control with one option is furniture. */}
+              {!onPokedex && !onDashboard && !isPublic && (
                 <Segmented
                   label="Sort"
                   value={sort}
@@ -1136,7 +1178,7 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
         </header>
 
         {onProfile ? (
-          <CardsProfile signedIn={signedIn} onSignIn={signIn} onSignOut={signOut} />
+          <CardsProfile signedIn={signedIn} onSignOut={signOut} />
         ) : onPokedex ? (
           <CardsPokedex
             entries={dexShown}
@@ -1150,7 +1192,7 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
             }}
           />
         ) : onDashboard ? (
-          <CardsDashboard stats={stats} />
+          <CardsDashboard stats={stats} isPublic={isPublic} />
         ) : (
           <>
             {/* No token, a Notion outage or an empty collection all land here. Saying
@@ -1276,27 +1318,25 @@ export default function CardsView({ sets }: { sets: CardSet[] }) {
           fixed, so where it sits in the document costs it nothing. */}
       <CardsTabBar
         active={activeTab}
-        signedIn={signedIn}
+        signedIn={signedIn && !isPublic}
         onSelect={(tab) =>
           tab === "sets" ? backToRail() : tab === "search" ? openSearch() : openPane(tab)
         }
         onAdd={() => setAdding(true)}
       />
 
-      {/* Only mounted with a key: the dialog's first act is to ask the database
-          what its sets are called, and there is nothing to ask with otherwise. */}
-      {key && (
+      {/* Only when signed in: the dialog's first act is to ask the database
+          what its sets are called, and that endpoint is behind the key. */}
+      {signedIn && (
         <CardAddDialog
           open={adding}
-          cardKey={key}
           onClose={() => setAdding(false)}
-          // A key the server has stopped accepting is worse than none: every
-          // press would fail the same way with nothing saying why. Sign out,
-          // and the profile screen is one press along the bar.
+          // A session the server has stopped accepting is worse than none:
+          // every press would fail the same way with nothing saying why. Sign
+          // out, which lands on the login rather than leaving a dead plus.
           onUnauthorised={() => {
             setAdding(false);
             signOut();
-            setSelected("profile");
           }}
         />
       )}

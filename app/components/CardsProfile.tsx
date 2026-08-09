@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { KeyRound, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import SignInForm from "./SignInForm";
 import { useTheme } from "./ThemeProvider";
 
 /**
@@ -27,40 +27,12 @@ import { useTheme } from "./ThemeProvider";
  */
 export default function CardsProfile({
   signedIn,
-  onSignIn,
   onSignOut,
 }: {
   signedIn: boolean;
-  onSignIn: (key: string) => void;
   onSignOut: () => void;
 }) {
   const { theme, toggle } = useTheme();
-  const [value, setValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const key = value.trim();
-    if (!key || busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/fields", { headers: { "x-cards-key": key } });
-      if (res.ok) {
-        onSignIn(key);
-        setValue("");
-        return;
-      }
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
-      setError(body.error ?? "That did not work.");
-    } catch {
-      // The one failure that is not about the key: no connection at all.
-      setError("No answer from the server. Try again in a moment.");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <div className="cards-profile">
@@ -69,8 +41,9 @@ export default function CardsProfile({
         {signedIn ? (
           <>
             <p className="cards-profile-note">
-              The key is held in this browser, so the plus stays in the bar on this device. Adding a
-              card writes a row to the Notion database the rest of this page reads.
+              The session is a cookie on this device, so the plus stays in the bar until you sign
+              out or thirty days pass. Adding a card writes a row to the Notion database the rest of
+              this page reads.
             </p>
             <button type="button" className="btn" onClick={onSignOut}>
               <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
@@ -78,42 +51,7 @@ export default function CardsProfile({
             </button>
           </>
         ) : (
-          <>
-            <p className="cards-profile-note">
-              The collection is Bart&rsquo;s to add to. With the key, a plus appears in the bar and
-              a card can be added from the page that shows it.
-            </p>
-            <form className="cards-profile-form" onSubmit={submit}>
-              <label className="cards-profile-field">
-                <span className="cards-profile-label">Key</span>
-                {/* type="password", so it is not read over a shoulder and so a
-                    password manager offers to keep it. autoComplete tells the
-                    manager which one: without it, browsers fill the field with
-                    an address or a name they guessed from the page. */}
-                <input
-                  type="password"
-                  name="cards-key"
-                  autoComplete="current-password"
-                  value={value}
-                  onChange={(e) => setValue(e.target.value)}
-                  placeholder="••••••••"
-                  aria-describedby={error ? "cards-profile-error" : undefined}
-                />
-              </label>
-              <button type="submit" className="btn btn--primary" disabled={busy || !value.trim()}>
-                <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />
-                <span>{busy ? "Checking" : "Sign in"}</span>
-              </button>
-            </form>
-            {/* role="alert", because the message replaces nothing on screen: a
-                wrong key leaves the form exactly as it was, and without this the
-                only thing that changed is invisible to a screen reader. */}
-            {error && (
-              <p className="cards-profile-error" id="cards-profile-error" role="alert">
-                {error}
-              </p>
-            )}
-          </>
+          <SignInForm note="The collection is Bart's to add to. With the key, a plus appears in the bar and a card can be added from the page that shows it." />
         )}
       </section>
 

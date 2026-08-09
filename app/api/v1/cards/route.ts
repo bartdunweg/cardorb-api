@@ -19,11 +19,11 @@ const MAX_BODY_BYTES = 8_192;
 
 export async function POST(req: Request) {
   const no = refuseWrite(req);
-  if (no) return NextResponse.json({ error: no.error }, { status: no.status, headers: readHeaders });
+  if (no) return NextResponse.json({ error: no.error }, { status: no.status, headers: readHeaders(req) });
 
   const declared = Number(req.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return NextResponse.json({ error: "Payload too large" }, { status: 413, headers: readHeaders });
+    return NextResponse.json({ error: "Payload too large" }, { status: 413, headers: readHeaders(req) });
   }
 
   let body: unknown;
@@ -33,17 +33,17 @@ export async function POST(req: Request) {
     if (raw.length > MAX_BODY_BYTES) {
       return NextResponse.json(
         { error: "Payload too large" },
-        { status: 413, headers: readHeaders },
+        { status: 413, headers: readHeaders(req) },
       );
     }
     body = JSON.parse(raw);
   } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: readHeaders });
+    return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: readHeaders(req) });
   }
 
   const result = validateCardDraft(body);
   if (result.kind === "invalid") {
-    return NextResponse.json({ error: result.error }, { status: 400, headers: readHeaders });
+    return NextResponse.json({ error: result.error }, { status: 400, headers: readHeaders(req) });
   }
 
   const token = process.env.NOTION_TOKEN;
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     console.error("NOTION_TOKEN is not set");
     return NextResponse.json(
       { error: "Notion is not connected here." },
-      { status: 503, headers: readHeaders },
+      { status: 503, headers: readHeaders(req) },
     );
   }
 
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Notion did not answer.";
     console.error("Adding a card failed:", message);
-    return NextResponse.json({ error: message }, { status: 502, headers: readHeaders });
+    return NextResponse.json({ error: message }, { status: 502, headers: readHeaders(req) });
   }
 
   // Two caches stand between the row and /v1/collection. The tag drops the
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
   revalidateTag(CARDS_TAG, { expire: 0 });
   forgetCollection();
 
-  return NextResponse.json({ ok: true, id }, { headers: readHeaders });
+  return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });
 }
 
 /**

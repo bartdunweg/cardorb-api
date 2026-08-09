@@ -46,13 +46,10 @@ const EMPTY: Draft = {
 
 export default function CardAddDialog({
   open,
-  cardKey,
   onClose,
   onUnauthorised,
 }: {
   open: boolean;
-  /** The key from useCardsKey. The dialog is never opened without one. */
-  cardKey: string;
   onClose: () => void;
   /** The key stopped working: the page signs out rather than keep a dead one. */
   onUnauthorised: () => void;
@@ -73,7 +70,11 @@ export default function CardAddDialog({
     let cancelled = false;
     // The portfolio served both of these off one /api/cards; here the read and
     // the write are separate endpoints, so the suggestions come from /v1/fields.
-    fetch("/api/v1/fields", { headers: { "x-cards-key": cardKey } })
+    //
+    // No x-cards-key header any more: the session cookie is httpOnly, so this
+    // page cannot read the key to send it, and does not have to. Same-origin
+    // fetch sends the cookie on its own, and the guard accepts either.
+    fetch("/api/v1/fields")
       .then(async (res) => {
         if (cancelled) return;
         if (res.status === 401) {
@@ -90,7 +91,7 @@ export default function CardAddDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, cardKey, onUnauthorised]);
+  }, [open, onUnauthorised]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,7 +102,7 @@ export default function CardAddDialog({
     try {
       const res = await fetch("/api/v1/cards", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-cards-key": cardKey },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
       if (res.status === 401) {

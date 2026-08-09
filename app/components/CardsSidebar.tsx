@@ -31,6 +31,7 @@ export default function CardsSidebar({
   query,
   onQuery,
   signedIn,
+  isPublic = false,
   onAdd,
   brokenLogos,
   onBrokenLogo,
@@ -48,6 +49,8 @@ export default function CardsSidebar({
   query: string;
   onQuery: (value: string) => void;
   signedIn: boolean;
+  /** On the public link there is no Profile row: there is nothing to sign into. */
+  isPublic?: boolean;
   onAdd: () => void;
   brokenLogos: Set<string>;
   onBrokenLogo: (name: string) => void;
@@ -170,14 +173,16 @@ export default function CardsSidebar({
               />
             </li>
           )}
-          <li>
-            <NavItem
-              active={selected === "profile"}
-              onClick={() => onSelect("profile")}
-              name="Profile"
-              icon={UserRound}
-            />
-          </li>
+          {!isPublic && (
+            <li>
+              <NavItem
+                active={selected === "profile"}
+                onClick={() => onSelect("profile")}
+                name="Profile"
+                icon={UserRound}
+              />
+            </li>
+          )}
           <li aria-hidden="true" className="cards-nav-rule" />
           {/* Fifty-one sets in one run is a wall. Under the era they belong to
               it is a handful of short lists, and the label is the thing a
