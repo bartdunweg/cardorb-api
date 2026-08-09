@@ -7,58 +7,46 @@ import { LOCALE } from "../../lib/core/config";
 import { euro } from "../../lib/core/format";
 
 /**
- * The collection at a glance, and where /cards now opens.
+ * The collection at a glance, and where /cards opens.
  *
  * It used to open on nineteen hundred cards with nothing saying what you were
  * looking at. This is the database's front page: four headline numbers, the
  * cards worth the most, and what the collection is made of.
+ *
+ * Owner-only. The public link has no dashboard at all — three of the blocks
+ * here are about money and would have to go, and what is left is three tiles
+ * and two bar charts, which is not somewhere to land. /user/<name> opens on the
+ * cards, which is what the link was shared to show.
  *
  * On the charts here: both distributions are a single series answering "compare
  * magnitude", so they are one hue rather than a palette, and a single series
  * needs no legend. Values sit at the tip of each bar and every label wears a
  * text token, never the mark's colour.
  */
-export default function CardsDashboard({
-  stats,
-  isPublic = false,
-}: {
-  stats: CardsStats;
-  /**
-   * The public link shows what the collection is, not what it is worth. Three
-   * of the blocks below are entirely about money and are the reason this flag
-   * exists: the value tile, its history, and the priciest ten.
-   *
-   * The tile row is built for four and gets three here. That is deliberate
-   * rather than overlooked: the grid wraps them evenly, and inventing a fourth
-   * number to fill the hole would be decoration.
-   */
-  isPublic?: boolean;
-}) {
+export default function CardsDashboard({ stats }: { stats: CardsStats }) {
   return (
     <div className="cards-dash">
-      {/* Numbers rather than one-bar charts: a headline value is a stat tile,
-          and a bar chart of unrelated totals compares things that do not belong
-          on one scale. */}
+      {/* Four numbers rather than four one-bar charts: a headline value is a
+          stat tile, and a bar chart of unrelated totals compares things that do
+          not belong on one scale. */}
       <ul className="cards-kpis" role="list">
         <Kpi label="In the binder" value={stats.owned.toLocaleString(LOCALE)} />
         <Kpi label="On the wishlist" value={stats.wishlist.toLocaleString(LOCALE)} />
         <Kpi label="Sets" value={String(stats.sets)} />
-        {!isPublic && (
-          <Kpi
-            // What the collection is worth, said in the plainest words there
-            // are. It was "Cheapest rebuild", which is exactly what the number
-            // is and not at all what anyone looking for it would scan for.
-            label="Collection value"
-            value={euro(stats.value)}
-          />
-        )}
+        <Kpi
+          // What the collection is worth, said in the plainest words there are.
+          // It was "Cheapest rebuild", which is exactly what the number is and
+          // not at all what anyone looking for it would scan for.
+          label="Collection value"
+          value={euro(stats.value)}
+        />
       </ul>
 
       {/* Directly under the tiles, because it is the history of the last one
           of them. */}
-      {!isPublic && <CollectionValueCard />}
+      <CollectionValueCard />
 
-      {!isPublic && stats.top.length > 0 && (
+      {stats.top.length > 0 && (
         <Card className="cards-dash-block">
           <h2 className="cards-dash-title">Priciest cards</h2>
           <p className="cards-dash-sub">

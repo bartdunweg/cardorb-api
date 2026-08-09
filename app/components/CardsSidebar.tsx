@@ -133,16 +133,21 @@ export default function CardsSidebar({
               and Profile stay: the bar carries neither, and Profile is here
               rather than in the bar precisely because this is the one place
               that exists at every width. */}
-          <li className="cards-nav-elsewhere">
-            <NavItem
-              active={selected === "dashboard"}
-              onClick={() => onSelect("dashboard")}
-              name="Dashboard"
-              // An icon where the sets carry their logo, so the two rows sit on
-              // the same left edge as everything under them.
-              icon={LayoutDashboard}
-            />
-          </li>
+          {/* The public link has no dashboard: with the money taken out it was
+              three tiles and two bar charts, which is not a destination. It
+              opens on the collection instead. */}
+          {!isPublic && (
+            <li className="cards-nav-elsewhere">
+              <NavItem
+                active={selected === "dashboard"}
+                onClick={() => onSelect("dashboard")}
+                name="Dashboard"
+                // An icon where the sets carry their logo, so the two rows sit
+                // on the same left edge as everything under them.
+                icon={LayoutDashboard}
+              />
+            </li>
+          )}
           <li className="cards-nav-elsewhere">
             <NavItem
               active={selected === "pokedex"}

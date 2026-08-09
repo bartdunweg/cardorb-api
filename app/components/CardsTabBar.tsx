@@ -40,12 +40,15 @@ const ICON = { size: 20, strokeWidth: 1.75 } as const;
 export default function CardsTabBar({
   active,
   signedIn,
+  isPublic = false,
   onSelect,
   onAdd,
 }: {
   active: CardsTab | null;
   /** The plus is only in the bar once the key is in (see the profile screen). */
   signedIn: boolean;
+  /** No Dashboard on the public link: it is three tiles and two charts there. */
+  isPublic?: boolean;
   onSelect: (tab: CardsTab) => void;
   onAdd: () => void;
 }) {
@@ -54,7 +57,7 @@ export default function CardsTabBar({
     pill,
     animate,
     style: pillStyle,
-  } = useSlidingPill(trackRef, ".tabbar-item.is-active", [active, signedIn]);
+  } = useSlidingPill(trackRef, ".tabbar-item.is-active", [active, signedIn, isPublic]);
 
   const tabs: { key: CardsTab; label: string; icon: React.ReactNode }[] = [
     {
@@ -67,11 +70,17 @@ export default function CardsTabBar({
     { key: "pokedex", label: "Pokédex", icon: <ListOrdered {...ICON} aria-hidden="true" /> },
   ];
 
-  // The plus sits in the middle of the four, which is why the list is split
-  // rather than mapped in one go: it is the thing you came to the bar to do,
-  // and on a phone the middle is the thumb's own place.
-  const left = tabs.slice(0, 2);
-  const right = tabs.slice(2);
+  // Dashboard is the owner's landing screen and has no public equivalent worth
+  // a slot, so the public bar is three.
+  const shown = isPublic ? tabs.filter((t) => t.key !== "dashboard") : tabs;
+
+  // The plus sits in the middle, which is why the list is split rather than
+  // mapped in one go: it is the thing you came to the bar to do, and on a phone
+  // the middle is the thumb's own place. With no plus the split is invisible,
+  // because both halves land in the same flex row.
+  const half = Math.ceil(shown.length / 2);
+  const left = shown.slice(0, half);
+  const right = shown.slice(half);
 
   const item = (tab: (typeof tabs)[number]) => {
     const on = tab.key === active;

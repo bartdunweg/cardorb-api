@@ -206,7 +206,10 @@ export default function CardsView({
   /** "dashboard", "pokedex", "profile", "all", or a set name. The sets are
       navigation now, not a tick-box facet, so this is what narrows the page to
       one of them. */
-  const [selected, setSelected] = useState<string>("dashboard");
+  // The owner lands on the dashboard, which is the collection's front page.
+  // The public link has no dashboard at all, so it opens on the cards, which is
+  // the thing the link was shared to show.
+  const [selected, setSelected] = useState<string>(mode === "public" ? "all" : "dashboard");
 
   /**
    * Which of the two panes is showing, and only where there is room for one of
@@ -691,7 +694,9 @@ export default function CardsView({
   // The dashboard reads the whole collection, not what is filtered: it is the
   // page's answer to "what is in here", and a total that moved every time a box
   // was ticked would be answering a different question.
-  const stats = useMemo(() => getCardsStats(sets), [sets]);
+  // Only the dashboard reads these, and the public link has no dashboard, so
+  // the walk over sixteen hundred cards is skipped rather than thrown away.
+  const stats = useMemo(() => (isPublic ? null : getCardsStats(sets)), [isPublic, sets]);
 
   const facets = useMemo(
     (): Facet[] => [
@@ -789,7 +794,11 @@ export default function CardsView({
     return out;
   }, [query, pickedNames, pickedRarities, pickedTypes, pickedOwnership]);
 
-  const onDashboard = selected === "dashboard";
+  // Never on the public link, which has no dashboard to be on. Guarded here
+  // rather than trusting the initial state: `selected` is also written by the
+  // bar, the rail and the search, and one of them forgetting would land someone
+  // on a screen that does not exist there.
+  const onDashboard = selected === "dashboard" && !isPublic;
   /** The set the page is on, when it is on one: its logo and its facts head the
       page rather than being repeated over the grid below. */
   const currentSet = useMemo(() => sets.find((s) => s.name === selected) ?? null, [sets, selected]);
@@ -1191,8 +1200,8 @@ export default function CardsView({
               setSelected("all");
             }}
           />
-        ) : onDashboard ? (
-          <CardsDashboard stats={stats} isPublic={isPublic} />
+        ) : onDashboard && stats ? (
+          <CardsDashboard stats={stats} />
         ) : (
           <>
             {/* No token, a Notion outage or an empty collection all land here. Saying
@@ -1319,6 +1328,7 @@ export default function CardsView({
       <CardsTabBar
         active={activeTab}
         signedIn={signedIn && !isPublic}
+        isPublic={isPublic}
         onSelect={(tab) =>
           tab === "sets" ? backToRail() : tab === "search" ? openSearch() : openPane(tab)
         }
