@@ -33,11 +33,12 @@ import { useSlidingPill } from "../hooks/useSlidingPill";
  * not divide a 360px phone into anything readable. Profile loses out and lives
  * in the rail, which is fair, since signing in happens once per device.
  *
- * The public link has no plus and no dashboard, which buys back two slots, and
- * they go to Collection and Wishlist. Those were rail-only rows, so on a phone
- * the only way back to the whole collection was through the menu the rail
- * opens — which is a menu standing in front of the two screens anyone came to
- * see. Sets keeps its own slot for what it is actually for, picking one.
+ * The public link has no plus and no dashboard, and gives up Search as well,
+ * which leaves four for the four places there are: Collection, Wishlist, Sets,
+ * Pokédex. Collection and Wishlist were rail-only rows, so on a phone the only
+ * way back to either was through the menu the rail opens — a menu standing in
+ * front of the two screens anyone followed the link to see. Sets keeps a slot
+ * for what it is actually for, picking one.
  */
 export type CardsTab = "dashboard" | "collection" | "wishlist" | "sets" | "search" | "pokedex";
 
@@ -89,7 +90,12 @@ export default function CardsTabBar({
   };
 
   const order = isPublic
-    ? ["collection", "wishlist", "sets", "search", "pokedex"]
+    ? // No Search slot. Searching is not a place you go, it is something you do
+      // to the list you are looking at, and the field is already in the toolbar
+      // above it. Signed in the slot earns its keep by jumping out of the
+      // dashboard into the cards with the caret in the field; the public link
+      // opens on the cards, so there is nothing to jump out of.
+      ["collection", "wishlist", "sets", "pokedex"]
     : ["dashboard", "sets", "search", "pokedex"];
   const shown = order.map((k) => all[k]!);
 

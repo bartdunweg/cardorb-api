@@ -821,11 +821,12 @@ export default function CardsView({
           : // Searching is a state rather than a place: the slot is lit while
             // there is something in the field, and goes out when it is cleared.
             // The profile has no slot at all and so lights none.
-            query.trim()
+            query.trim() && !isPublic
             ? "search"
             : // Only where the bar carries them. Signed in these two are rail
               // rows with no slot to light, and pointing the pill at a slot
-              // that is not there leaves it parked on whatever was last.
+              // that is not there leaves it parked on whatever was last. The
+              // same reason the search test above is owner-only.
               isPublic && onWishlist
               ? "wishlist"
               : isPublic && selected === "all"
