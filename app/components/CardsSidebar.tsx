@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LayoutDashboard, Layers, ListOrdered, Plus, Search, UserRound, X } from "lucide-react";
+import { Heart, LayoutDashboard, Layers, ListOrdered, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
 import { LOCALE } from "../../lib/core/config";
 
@@ -28,8 +28,6 @@ export default function CardsSidebar({
   selected,
   pane,
   onSelect,
-  query,
-  onQuery,
   signedIn,
   isPublic = false,
   onAdd,
@@ -46,8 +44,6 @@ export default function CardsSidebar({
   pane: "rail" | "main" | undefined;
   onSelect: (value: string) => void;
   /** The one search on the page, shown here above 1000px. See the head below. */
-  query: string;
-  onQuery: (value: string) => void;
   signedIn: boolean;
   /** On the public link there is no Profile row: there is nothing to sign into. */
   isPublic?: boolean;
@@ -83,38 +79,16 @@ export default function CardsSidebar({
         Sets
       </p>
 
-      {/* Searching and adding, at the head of the rail, above 1000px only.
-          Both used to sit in the toolbar over the results, which put them over
-          the dashboard as well: three rows of controls above a screen where
-          there is nothing to narrow. Here they belong to the whole page rather
-          than to whatever is on the right, and the rail is on screen at every
-          moment that width exists.
+      {/* Adding, at the head of the rail, above 1000px only. The search field
+          used to sit here beside it and does not any more: a field in the rail
+          searches whatever screen happens to be on the right, including the
+          dashboard and the Pokédex, which are not lists it can narrow. It
+          belongs to the two screens that are lists, and it is on them.
 
-          Below 1000px neither is here. The bar along the bottom carries them,
-          and the search there lands you on the cards with the field focused,
-          which is the difference between the two shapes: a rail you can see is
-          a place to put a field, a rail you have to open is not. */}
-      <div className="cards-rail-head">
-        <div className="cards-search">
-          <Search size={16} strokeWidth={1.75} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => onQuery(e.target.value)}
-            // Short, because the rail is 300px and the plus takes a bite out of
-            // it: "Search the collection" was clipped mid-word. The full phrase
-            // is still what a screen reader hears.
-            placeholder="Search"
-            aria-label="Search the collection"
-            autoComplete="off"
-          />
-          {query && (
-            <button type="button" onClick={() => onQuery("")} aria-label="Clear the search">
-              <X size={15} strokeWidth={1.75} />
-            </button>
-          )}
-        </div>
-        {signedIn && (
+          Below 1000px this whole head is gone. The bar along the bottom carries
+          the plus. */}
+      {signedIn && (
+        <div className="cards-rail-head">
           <button
             type="button"
             className="btn btn--icon cards-rail-add"
@@ -124,8 +98,8 @@ export default function CardsSidebar({
           >
             <Plus size={18} strokeWidth={2} aria-hidden="true" />
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <nav aria-label="Collection">
         <ul className="cards-nav" role="list">

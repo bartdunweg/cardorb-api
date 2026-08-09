@@ -479,11 +479,10 @@ body:has(.page-cards) .theme-toggle {
 /* The other half of that: the toolbar's own copy of the field is the one for
    below 1000px, and above it the rail has it. Two fields, one query, and never
    both on screen. */
-@media (min-width: 1001px) {
-  .cards-tools .cards-search {
-    display: none;
-  }
-}
+/* The toolbar's field is the only one now. It used to be hidden above 1000px,
+   where the rail carried a copy; the rail's has gone, because a field up there
+   searches whatever screen is on the right — including the dashboard and the
+   Pokédex, which are not lists it can narrow. */
 
 /* The heading, the count and the toolbar, as one block above the results.
    Lifted, because every card below it carries a backdrop-filter and so is its

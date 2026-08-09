@@ -21,8 +21,9 @@ import { useSlidingPill } from "../hooks/useSlidingPill";
  *
  * No labels at any width. With the theme toggle's footprint reserved on both
  * sides (layout.css), a 360px phone leaves about 214px of track, and five
- * labelled slots do not fit it. The names are on aria-label and title, which is
- * what the favourites bar already does for four of its six.
+ * labelled slots do not fit it. So only the active one says its name: the rest
+ * carry it on aria-label and title, and the stylesheet fades the word in beside
+ * whichever icon is lit (see .tabbar-label in layout.css).
  */
 
 /**
@@ -120,6 +121,13 @@ export default function CardsTabBar({
         onClick={() => onSelect(tab.key)}
       >
         <span className="tabbar-icon">{tab.icon}</span>
+        {/* The name, beside the icon, on the one slot that is lit. The
+            stylesheet has collapsed this to nothing and faded it in on
+            .is-active since the portfolio; there was simply never a label here
+            to collapse, because this bar was written with the names on
+            aria-label alone. Five icons and no words is a bar you learn rather
+            than read. */}
+        <span className="tabbar-label">{tab.label}</span>
       </button>
     );
   };

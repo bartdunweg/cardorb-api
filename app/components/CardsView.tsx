@@ -238,7 +238,11 @@ export default function CardsView({
   // The owner lands on the dashboard, which is the collection's front page.
   // The public link has no dashboard at all, so it opens on the cards, which is
   // the thing the link was shared to show.
-  const [selected, setSelected] = useState<string>(mode === "public" ? "all" : "dashboard");
+  // The collection, in both modes. It used to be the dashboard when signed in,
+  // which is the screen that summarises the cards rather than the cards: you
+  // arrived at four numbers and a chart and pressed once more to reach what you
+  // came for. The dashboard is still a slot in the bar and a row in the rail.
+  const [selected, setSelected] = useState<string>("all");
 
   /**
    * Which of the two panes is showing, and only where there is room for one of
@@ -317,6 +321,7 @@ export default function CardsView({
   const [pickedRarities, setPickedRarities] = useState<Set<string>>(new Set());
   const [pickedTypes, setPickedTypes] = useState<Set<string>>(new Set());
   const [pickedOwnership, setPickedOwnership] = useState<Set<string>>(new Set());
+  const [pickedEras, setPickedEras] = useState<Set<string>>(new Set());
   const [pickedValues, setPickedValues] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"grid" | "list">("grid");
   /**
@@ -516,7 +521,7 @@ export default function CardsView({
     [leaveDashboard],
   );
 
-  const picked = [pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedValues];
+  const picked = [pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedValues, pickedEras];
   const active = picked.some((s) => s.size > 0) || query.trim() !== "";
 
   const reset = useCallback(() => {
@@ -526,6 +531,7 @@ export default function CardsView({
     setPickedTypes(new Set());
     setPickedOwnership(new Set());
     setPickedValues(new Set());
+    setPickedEras(new Set());
   }, []);
 
   const matchesValue = useCallback(
@@ -576,6 +582,12 @@ export default function CardsView({
         const bySetName = q !== "" && norm(set.name).includes(q);
         const cards = set.cards.filter((c) => {
           if (selected.startsWith("era:") && c.gen !== selected.slice(4)) return false;
+          // Vintage or modern, decided by the set's own release date rather
+          // than by a list kept by hand. See vintageEras.
+          if (pickedEras.size) {
+            const isVintage = c.gen ? vintageEras.has(c.gen) : false;
+            if (!pickedEras.has(isVintage ? "Vintage" : "Modern")) return false;
+          }
           if (pickedNames.size && !pickedNames.has(c.name)) return false;
           if (pickedTypes.size && !pickedTypes.has(c.type ?? "")) return false;
           if (!matchesOwnership(c)) return false;
@@ -616,6 +628,8 @@ export default function CardsView({
     wishlistSets,
     deferred,
     selected,
+    vintageEras,
+    pickedEras,
     pickedNames,
     pickedRarities,
     pickedTypes,
@@ -719,6 +733,26 @@ export default function CardsView({
   // the walk over sixteen hundred cards is skipped rather than thrown away.
   const stats = useMemo(() => (isPublic ? null : getCardsStats(sets)), [isPublic, sets]);
 
+  /**
+   * Vintage and modern, as a facet rather than as three buttons in the bar.
+   *
+   * It was a segmented control beside the search, and it came out because the
+   * rail already groups the sets under their era: two controls for one idea,
+   * and one of them permanently on screen. As a tick box it costs nothing when
+   * it is not being used and it lands in the same place every other narrowing
+   * does, including the chips that say what is on.
+   *
+   * Which eras count as vintage is read off the sets' own release dates (see
+   * vintageEras), so this stays a list of two and never a list of eras.
+   */
+  const eraOptions = useMemo(() => {
+    const vintage = all.filter((c) => (c.gen ? vintageEras.has(c.gen) : false)).length;
+    return [
+      { value: "Vintage", count: vintage },
+      { value: "Modern", count: all.length - vintage },
+    ].filter((o) => o.count > 0);
+  }, [all, vintageEras]);
+
   const facets = useMemo(
     (): Facet[] => [
       {
@@ -729,6 +763,15 @@ export default function CardsView({
         onToggle: toggle(setPickedNames),
         onClear: () => setPickedNames(new Set()),
         onReplace: (next: Set<string>) => setPickedNames(next),
+      },
+      {
+        key: "era",
+        label: "Era",
+        options: eraOptions,
+        selected: pickedEras,
+        onToggle: toggle(setPickedEras),
+        onClear: () => setPickedEras(new Set()),
+        onReplace: (next: Set<string>) => setPickedEras(next),
       },
       {
         key: "rarity",
@@ -785,6 +828,8 @@ export default function CardsView({
       typeOptions,
       ownershipOptions,
       valueOptions,
+      eraOptions,
+      pickedEras,
       pickedValues,
       pickedNames,
       pickedRarities,
@@ -801,6 +846,7 @@ export default function CardsView({
       ["Rarity", pickedRarities, setPickedRarities],
       ["Type", pickedTypes, setPickedTypes],
       ["Ownership", pickedOwnership, setPickedOwnership],
+      ["Era", pickedEras, setPickedEras],
     ];
     const out = groups.flatMap(([group, set, setter]) =>
       [...set].map((value) => ({
@@ -818,7 +864,7 @@ export default function CardsView({
       out.unshift({ group: "Search", value: `“${query.trim()}”`, onRemove: () => setQuery("") });
     }
     return out;
-  }, [query, pickedNames, pickedRarities, pickedTypes, pickedOwnership]);
+  }, [query, pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedEras]);
 
   // Never on the public link, which has no dashboard to be on. Guarded here
   // rather than trusting the initial state: `selected` is also written by the
@@ -955,14 +1001,6 @@ export default function CardsView({
         selected={selected}
         pane={pane}
         onSelect={openPane}
-        query={query}
-        // Typing in the rail is a way into the cards: the dashboard would
-        // otherwise sit there unchanged while the field said something was
-        // being searched for.
-        onQuery={(value) => {
-          leaveDashboard();
-          setQuery(value);
-        }}
         signedIn={signedIn && !isPublic}
         isPublic={isPublic}
         onAdd={() => setAdding(true)}
