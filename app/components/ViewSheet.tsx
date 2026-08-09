@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { LayoutGrid, Rows3, Settings2, Square } from "lucide-react";
 import Modal from "./Modal";
+import { CARD_FIELDS, type CardField } from "./CardsView";
 
 /**
  * How the cards are drawn, behind one button, for a phone.
@@ -25,6 +26,8 @@ export default function ViewSheet({
   onView,
   group,
   onGroup,
+  fields,
+  onField,
   size,
   onSize,
   min,
@@ -35,6 +38,9 @@ export default function ViewSheet({
   /** How the same cards are arranged: as the sets, or against the Pokédex. */
   group: "set" | "flat" | "dex";
   onGroup: (g: "set" | "flat" | "dex") => void;
+  /** Which optional facts a tile carries, and the toggle for one of them. */
+  fields: ReadonlySet<CardField>;
+  onField: (f: CardField) => void;
   size: number;
   onSize: (n: number) => void;
   min: number;
@@ -121,6 +127,29 @@ export default function ViewSheet({
 
             {/* Only where there is a grid to size. In the list view every card
                 is a row and the slider would move nothing. */}
+
+          {/* Which facts a tile carries. Checkboxes rather than a segmented row:
+              these are independent answers, not one choice among several, and
+              there are six of them. */}
+          {group !== "dex" && (
+            <div className="sheet-field">
+              <span className="sheet-label">Show on card</span>
+              <ul className="view-fields" role="list">
+                {CARD_FIELDS.map(([key, text]) => (
+                  <li key={key}>
+                    <label className="view-field">
+                      <input
+                        type="checkbox"
+                        checked={fields.has(key)}
+                        onChange={() => onField(key)}
+                      />
+                      <span>{text}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
             {group !== "dex" && view === "grid" && (
               <div className="sheet-field">
                 <span className="sheet-label" id="sheet-size">

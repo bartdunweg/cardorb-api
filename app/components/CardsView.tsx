@@ -183,6 +183,18 @@ const VINTAGE_BEFORE = 2010;
 
 export type DexOwned = "all" | "owned" | "wishlist" | "missing";
 
+/** The optional facts a tile can carry. Its name is always drawn. */
+export type CardField = "number" | "type" | "era" | "rarity" | "price" | "set";
+
+export const CARD_FIELDS: readonly (readonly [CardField, string])[] = [
+  ["number", "Number"],
+  ["type", "Type"],
+  ["era", "Era"],
+  ["set", "Set"],
+  ["rarity", "Rarity"],
+  ["price", "Price"],
+];
+
 /**
  * Which of the two this screen is.
  *
@@ -368,6 +380,23 @@ export default function CardsView({
    * about the cards: which printing stands for a Pokémon. See dexSets.
    */
   const [group, setGroup] = useState<"set" | "flat" | "dex">("flat");
+
+  /**
+   * Which facts a tile carries under its scan.
+   *
+   * The tile used to show a fixed five: name, number, type, price and a tag per
+   * printing. That is right for browsing and wrong for the two other things
+   * this page is used for — checking a set against its numbers, where the name
+   * is noise, and looking at the artwork, where all of it is. So it is a
+   * setting, and it lives beside grouping and size because it is the same kind
+   * of question: how much of the card do you want to see.
+   *
+   * Name is not in here. A tile with no name is a picture of a card you cannot
+   * search for by eye, and every other field is a detail about it.
+   */
+  const [fields, setFields] = useState<Set<CardField>>(
+    () => new Set<CardField>(["number", "type", "price", "rarity"]),
+  );
   // A layout of the list, not a place, so it is off wherever there is no list:
   // the dashboard summarises the collection and the profile is about the
   // password. Read off `selected` rather than the onDashboard/onProfile flags
@@ -1189,6 +1218,14 @@ export default function CardsView({
                       onView={setView}
                       group={group}
                       onGroup={setGroup}
+                      fields={fields}
+                      onField={(f) =>
+                        setFields((prev) => {
+                          const next = new Set(prev);
+                          if (!next.delete(f)) next.add(f);
+                          return next;
+                        })
+                      }
                       size={scanSize ?? SCAN_DEFAULT}
                       onSize={setScanSize}
                       min={SCAN_MIN}
@@ -1201,6 +1238,14 @@ export default function CardsView({
                       onView={setView}
                       group={group}
                       onGroup={setGroup}
+                      fields={fields}
+                      onField={(f) =>
+                        setFields((prev) => {
+                          const next = new Set(prev);
+                          if (!next.delete(f)) next.add(f);
+                          return next;
+                        })
+                      }
                       size={scanSize ?? SCAN_DEFAULT}
                       onSize={setScanSize}
                       min={SCAN_MIN}
@@ -1322,6 +1367,7 @@ export default function CardsView({
                           tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
                           big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
                           onScanBroken={onScanBroken}
+                          fields={fields}
                           onPick={
                             isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
                           }
@@ -1404,6 +1450,7 @@ export default function CardsView({
                         tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
                         big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
                         onScanBroken={onScanBroken}
+                        fields={fields}
                         onPick={
                           isPublic
                             ? (card, setName) => setOpenCard({ card, setName })
@@ -1526,11 +1573,14 @@ const CardItem = memo(function CardItem({
   big,
   onScanBroken,
   onPick,
+  fields,
 }: {
   card: OwnedCard;
   setName: string;
   view: "grid" | "list";
   years: Map<string, [number, number]>;
+  /** Which optional facts to draw under the scan. See fields in CardsView. */
+  fields: ReadonlySet<CardField>;
   /** Opens the card in place. Only on the public link; elsewhere it is a URL. */
   onPick?: (card: OwnedCard, setName: string) => void;
   /** Whether this card still has a scan worth trying. */
@@ -1675,9 +1725,14 @@ const CardItem = memo(function CardItem({
         <span className="cards-item-text">
           <span className="cards-item-name">{card.name}</span>
           <span className="cards-item-meta">
-            {card.number && <span className="cards-item-number">{card.number}</span>}
-            {card.type && <span className="cards-item-type">{card.type}</span>}
-            {view === "list" && card.gen && (
+            {fields.has("number") && card.number && (
+              <span className="cards-item-number">{card.number}</span>
+            )}
+            {fields.has("type") && card.type && (
+              <span className="cards-item-type">{card.type}</span>
+            )}
+            {fields.has("set") && <span className="cards-item-set">{setName}</span>}
+            {fields.has("era") && card.gen && (
               <span className="cards-item-gen">{label(card.gen, years)}</span>
             )}
           </span>
@@ -1689,7 +1744,7 @@ const CardItem = memo(function CardItem({
               title says which of the two the number is, because on a tile they
               look alike. A card with no listing at all has no line, not a
               zero. */}
-          {card.price && euroShown(card.price) && (
+          {fields.has("price") && card.price && euroShown(card.price) && (
             <span
               className="cards-item-price"
               title={
@@ -1703,6 +1758,7 @@ const CardItem = memo(function CardItem({
           )}
           {/* One tag per printing. Holding a card normally and as a reverse holo
               is two tags under one scan, not two cards. */}
+          {fields.has("rarity") && (
           <span className="cards-item-tags">
             {card.variants.map((v) => (
               <Tag
@@ -1714,6 +1770,7 @@ const CardItem = memo(function CardItem({
               </Tag>
             ))}
           </span>
+          )}
         </span>
       </CardLink>
     </li>

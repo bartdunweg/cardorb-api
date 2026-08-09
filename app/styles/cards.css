@@ -2849,3 +2849,70 @@ button.cards-dex-body:focus-visible::after {
 .view-menu-panel .cards-size {
   width: 100%;
 }
+
+/* A short facet, shown open at the top of the filter panel instead of behind a
+   row of its own. Era is two answers and Owned is two or three; going a level
+   in to tick one of those is a press to reach a press. */
+.filter-menu-inline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-3);
+}
+.filter-menu-inline + .filter-menu-inline {
+  padding-top: 0;
+}
+.filter-menu-inline-label {
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+}
+.filter-menu-inline .cards-segmented {
+  width: 100%;
+}
+
+/* The row a facet's name and its Clear share. Fixed by its content on both
+   sides, so ticking a box fills the right-hand side in rather than adding a
+   line that pushes the list down under the pointer. */
+.filter-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding-right: var(--space-2);
+}
+.filter-menu-head .filter-menu-back {
+  flex: 1 1 auto;
+}
+
+/* Which facts a tile carries. Two columns, because six checkboxes in one run is
+   a panel twice as tall as the controls above it for the least important of the
+   three questions it asks. */
+.view-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.view-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+/* The set name on a tile, which is only there when it has been asked for: in
+   the flat grouping there is no heading above the card saying which set it came
+   from, and that is exactly when it is worth the line. */
+.cards-item-set {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

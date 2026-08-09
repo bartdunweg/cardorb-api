@@ -5,6 +5,9 @@ import { ChevronLeft, ChevronRight, Plus, Check } from "lucide-react";
 
 export type Option = { value: string; count: number };
 
+/** Up to this many answers, a facet is shown open rather than behind a row. */
+const INLINE_MAX = 3;
+
 export type Facet = {
   key: string;
   label: string;
@@ -87,20 +90,28 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
       <div className="filter-menu-panel">
         {!opened ? null : current ? (
           <>
-            <button
-              type="button"
-              className="filter-menu-back"
-              onClick={() => setOpenFacet(null)}
-              aria-label="Back to all filters"
-            >
-              <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" />
-              {current.label}
-            </button>
-            {current.selected.size > 0 && (
-              <button type="button" className="filter-menu-clear" onClick={current.onClear}>
-                Clear {current.label.toLowerCase()}
+            {/* One row, always the same height, with Clear in it rather than
+                under it. It used to appear as its own line the moment a box was
+                ticked, which pushed the whole list down by its height under the
+                pointer that had just ticked it — so the next option you meant
+                to click had moved. Now the row is there either way and only its
+                right-hand side fills in. */}
+            <div className="filter-menu-head">
+              <button
+                type="button"
+                className="filter-menu-back"
+                onClick={() => setOpenFacet(null)}
+                aria-label="Back to all filters"
+              >
+                <ChevronLeft size={14} strokeWidth={1.75} aria-hidden="true" />
+                {current.label}
               </button>
-            )}
+              {current.selected.size > 0 && (
+                <button type="button" className="filter-menu-clear" onClick={current.onClear}>
+                  Clear
+                </button>
+              )}
+            </div>
             <ul>
               {current.options.map((o) => (
                 <li key={o.value}>
@@ -120,8 +131,35 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
             </ul>
           </>
         ) : (
-          <ul>
-            {facets.map((f) => (
+          <>
+            {/* A facet of two or three answers is shown here rather than behind
+                a row of its own: going a level in to tick one of two boxes is a
+                press to reach a press. Era is the reason this exists — it is
+                Vintage and Modern and nothing else — and Owned is the same
+                shape. Anything longer stays a row, because several hundred
+                Pokémon do not belong in a panel you opened to glance at. */}
+            {facets
+              .filter((f) => f.options.length > 0 && f.options.length <= INLINE_MAX)
+              .map((f) => (
+                <div key={f.key} className="filter-menu-inline">
+                  <span className="filter-menu-inline-label">{f.label}</span>
+                  <div className="cards-segmented" role="group" aria-label={f.label}>
+                    {f.options.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        className={`cards-segment${f.selected.has(o.value) ? " is-active" : ""}`}
+                        aria-pressed={f.selected.has(o.value)}
+                        onClick={() => f.onToggle(o.value)}
+                      >
+                        {f.display ? f.display(o.value) : o.value}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            <ul>
+            {facets.filter((f) => f.options.length > INLINE_MAX).map((f) => (
               <li key={f.key}>
                 <button
                   type="button"
@@ -149,7 +187,8 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
                 </button>
               </li>
             ))}
-          </ul>
+            </ul>
+          </>
         )}
       </div>
     </details>

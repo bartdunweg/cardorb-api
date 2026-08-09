@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { LayoutGrid, Rows3, Settings2, Square } from "lucide-react";
+import { CARD_FIELDS, type CardField } from "./CardsView";
 
 /**
  * The view options as a dropdown, for the widths that have room beside the
@@ -26,6 +27,8 @@ export default function ViewMenu({
   onView,
   group,
   onGroup,
+  fields,
+  onField,
   size,
   onSize,
   min,
@@ -35,6 +38,9 @@ export default function ViewMenu({
   onView: (v: "grid" | "list") => void;
   group: "set" | "flat" | "dex";
   onGroup: (g: "set" | "flat" | "dex") => void;
+  /** Which optional facts a tile carries, and the toggle for one of them. */
+  fields: ReadonlySet<CardField>;
+  onField: (f: CardField) => void;
   size: number;
   onSize: (n: number) => void;
   min: number;
@@ -117,6 +123,29 @@ export default function ViewMenu({
           </div>
         )}
 
+
+        {/* Which facts a tile carries. Checkboxes rather than a segmented row:
+            these are independent answers, not one choice among several, and
+            there are six of them. */}
+        {group !== "dex" && (
+          <div className="sheet-field">
+            <span className="sheet-label">Show on card</span>
+            <ul className="view-fields" role="list">
+              {CARD_FIELDS.map(([key, text]) => (
+                <li key={key}>
+                  <label className="view-field">
+                    <input
+                      type="checkbox"
+                      checked={fields.has(key)}
+                      onChange={() => onField(key)}
+                    />
+                    <span>{text}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {group !== "dex" && view === "grid" && (
           <div className="sheet-field">
             <span className="sheet-label" id="view-size">
