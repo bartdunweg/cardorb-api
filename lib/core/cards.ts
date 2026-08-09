@@ -657,12 +657,28 @@ async function walkCollection(): Promise<CardSet[]> {
     // localId is the number as TCGdex writes it, so index every form of it once
     // and the per-card match becomes a lookup instead of a scan. Subsets are
     // folded into the same index: TG01 simply is not in the parent set.
+    /**
+     * Keyed without case, because the two vocabularies disagree on it.
+     *
+     * TCGdex writes an alternate printing's number with a lowercase letter —
+     * "77a", "XY67a", "XY150a" — and Notion has them in capitals. Everything
+     * else about those rows lines up, so three real cards sat unmatched, with
+     * no scan, no price and no page, over the shape of one letter. Shaymin EX
+     * is the one that shows why it has to be the *same* card rather than a
+     * fallback to 77: "77a" is the alternate art, and quietly serving 77's
+     * picture instead would be a confidently wrong scan.
+     *
+     * Only the lookup is folded, not numberForms itself: that also builds the
+     * Limitless filenames, where the case is part of the path.
+     */
+    const numberKey = (n: string) => n.toLowerCase();
     const byNumber = new Map<string, TcgCard>();
     for (const d of details) {
       for (const card of d.cards ?? []) {
         if (!card.localId) continue;
         for (const form of numberForms(card.localId)) {
-          if (!byNumber.has(form)) byNumber.set(form, card);
+          const k = numberKey(form);
+          if (!byNumber.has(k)) byNumber.set(k, card);
         }
       }
     }
@@ -676,7 +692,8 @@ async function walkCollection(): Promise<CardSet[]> {
         const tail = card.localId?.match(/^[A-Za-z]+(\d+[A-Za-z]?)$/)?.[1];
         if (!tail) continue;
         for (const form of numberForms(tail)) {
-          if (!byNumber.has(form)) byNumber.set(form, card);
+          const k = numberKey(form);
+          if (!byNumber.has(k)) byNumber.set(k, card);
         }
       }
     }
@@ -734,7 +751,7 @@ async function walkCollection(): Promise<CardSet[]> {
       const name = text(props.Name);
       const number = text(props.Number);
       const match = numberForms(number)
-        .map((form) => byNumber.get(form))
+        .map((form) => byNumber.get(form.toLowerCase()))
         .find(Boolean);
       // A number that resolves to a different Pokémon means the numbering does
       // not line up, and a wrong scan is worse than a missing one.
