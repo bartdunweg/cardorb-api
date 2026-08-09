@@ -823,7 +823,14 @@ export default function CardsView({
             // The profile has no slot at all and so lights none.
             query.trim()
             ? "search"
-            : null;
+            : // Only where the bar carries them. Signed in these two are rail
+              // rows with no slot to light, and pointing the pill at a slot
+              // that is not there leaves it parked on whatever was last.
+              isPublic && onWishlist
+              ? "wishlist"
+              : isPublic && selected === "all"
+                ? "collection"
+                : null;
 
   /**
    * The search field in the toolbar, so the bar's Search slot can put the caret
@@ -1330,7 +1337,15 @@ export default function CardsView({
         signedIn={signedIn && !isPublic}
         isPublic={isPublic}
         onSelect={(tab) =>
-          tab === "sets" ? backToRail() : tab === "search" ? openSearch() : openPane(tab)
+          tab === "sets"
+            ? backToRail()
+            : tab === "search"
+              ? openSearch()
+              : // Collection and Wishlist are the two list screens; the rail
+                // calls them "all" and "wishlist", and the bar's own key for
+                // the first is "collection" because "all" says nothing on a
+                // label. Everything else is its own name already.
+                openPane(tab === "collection" ? "all" : tab)
         }
         onAdd={() => setAdding(true)}
       />

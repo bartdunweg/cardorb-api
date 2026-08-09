@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { LayoutDashboard, Layers, ListOrdered, Plus, Search } from "lucide-react";
+import { Boxes, Heart, LayoutDashboard, Layers, ListOrdered, Plus, Search } from "lucide-react";
 import { useSlidingPill } from "../hooks/useSlidingPill";
 
 /**
@@ -28,12 +28,18 @@ import { useSlidingPill } from "../hooks/useSlidingPill";
 /**
  * Where the sliding pill may land. The plus is not one of these.
  *
- * Profile is not one either, and that is the trade: five slots plus a circle do
- * not divide a 360px phone into anything readable, so the four go to the things
- * a collection is browsed with every day. Signing in happens once per device
- * and lives in the rail, one press behind Sets.
+ * Two different bars, because the two modes have different room. Signed in the
+ * plus takes the middle, so four slots is the ceiling: five plus a circle does
+ * not divide a 360px phone into anything readable. Profile loses out and lives
+ * in the rail, which is fair, since signing in happens once per device.
+ *
+ * The public link has no plus and no dashboard, which buys back two slots, and
+ * they go to Collection and Wishlist. Those were rail-only rows, so on a phone
+ * the only way back to the whole collection was through the menu the rail
+ * opens — which is a menu standing in front of the two screens anyone came to
+ * see. Sets keeps its own slot for what it is actually for, picking one.
  */
-export type CardsTab = "dashboard" | "sets" | "search" | "pokedex";
+export type CardsTab = "dashboard" | "collection" | "wishlist" | "sets" | "search" | "pokedex";
 
 const ICON = { size: 20, strokeWidth: 1.75 } as const;
 
@@ -59,20 +65,33 @@ export default function CardsTabBar({
     style: pillStyle,
   } = useSlidingPill(trackRef, ".tabbar-item.is-active", [active, signedIn, isPublic]);
 
-  const tabs: { key: CardsTab; label: string; icon: React.ReactNode }[] = [
-    {
+  const all: Record<string, { key: CardsTab; label: string; icon: React.ReactNode }> = {
+    dashboard: {
       key: "dashboard",
       label: "Dashboard",
       icon: <LayoutDashboard {...ICON} aria-hidden="true" />,
     },
-    { key: "sets", label: "Sets", icon: <Layers {...ICON} aria-hidden="true" /> },
-    { key: "search", label: "Search", icon: <Search {...ICON} aria-hidden="true" /> },
-    { key: "pokedex", label: "Pokédex", icon: <ListOrdered {...ICON} aria-hidden="true" /> },
-  ];
+    collection: {
+      key: "collection",
+      label: "Collection",
+      icon: <Layers {...ICON} aria-hidden="true" />,
+    },
+    wishlist: { key: "wishlist", label: "Wishlist", icon: <Heart {...ICON} aria-hidden="true" /> },
+    // Boxes rather than Layers, which Collection now wears: the rail is a shelf
+    // of fifty sets to pick from, not another view of the whole thing.
+    sets: { key: "sets", label: "Sets", icon: <Boxes {...ICON} aria-hidden="true" /> },
+    search: { key: "search", label: "Search", icon: <Search {...ICON} aria-hidden="true" /> },
+    pokedex: {
+      key: "pokedex",
+      label: "Pokédex",
+      icon: <ListOrdered {...ICON} aria-hidden="true" />,
+    },
+  };
 
-  // Dashboard is the owner's landing screen and has no public equivalent worth
-  // a slot, so the public bar is three.
-  const shown = isPublic ? tabs.filter((t) => t.key !== "dashboard") : tabs;
+  const order = isPublic
+    ? ["collection", "wishlist", "sets", "search", "pokedex"]
+    : ["dashboard", "sets", "search", "pokedex"];
+  const shown = order.map((k) => all[k]!);
 
   // The plus sits in the middle, which is why the list is split rather than
   // mapped in one go: it is the thing you came to the bar to do, and on a phone
@@ -82,7 +101,7 @@ export default function CardsTabBar({
   const left = shown.slice(0, half);
   const right = shown.slice(half);
 
-  const item = (tab: (typeof tabs)[number]) => {
+  const item = (tab: (typeof shown)[number]) => {
     const on = tab.key === active;
     return (
       <button
