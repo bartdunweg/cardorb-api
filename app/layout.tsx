@@ -32,9 +32,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   colorScheme: "light dark",
+  // Exactly --color-left-bg, in both themes. Safari paints the bars above and
+  // below the page with this, so while it said #ffffff and #101010 the chrome
+  // was a shade off the page it framed and the seam was visible at the top and
+  // the bottom of every screen. Written out rather than read from the token,
+  // because this is a meta tag rather than CSS; if the token moves, this moves.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#101010" },
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#181818" },
   ],
 };
 

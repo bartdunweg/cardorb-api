@@ -1,5 +1,11 @@
 /* Base: html/body, links, page-enter animation, split from globals.css (order preserved) */
 html {
+  /* On html as well as on body. The canvas takes its colour from body only
+     while html has none, and Safari paints the rubber-band area past the top
+     and bottom of the page from the canvas — so anything that gave html a
+     background later would show as two bands the moment you overscrolled.
+     Saying it in both places means they can never disagree. */
+  background: var(--color-left-bg);
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   /* Always reserve the scrollbar gutter so the centered bottom bar doesn't

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, Rows3, Settings2, Square } from "lucide-react";
+import { LayoutGrid, Rows3, Settings2 } from "lucide-react";
 import Modal from "./Modal";
 import { CARD_FIELDS, type CardField } from "./CardsView";
 
@@ -28,8 +28,8 @@ export default function ViewSheet({
   onGroup,
   fields,
   onField,
-  size,
-  onSize,
+  cols,
+  onCols,
   min,
   max,
 }: {
@@ -41,8 +41,9 @@ export default function ViewSheet({
   /** Which optional facts a tile carries, and the toggle for one of them. */
   fields: ReadonlySet<CardField>;
   onField: (f: CardField) => void;
-  size: number;
-  onSize: (n: number) => void;
+  /** How many cards across, and the range this screen allows. */
+  cols: number;
+  onCols: (n: number) => void;
   min: number;
   max: number;
 }) {
@@ -154,21 +155,21 @@ export default function ViewSheet({
             {group !== "dex" && view === "grid" && (
               <div className="sheet-field">
                 <span className="sheet-label" id="sheet-size">
-                  Card size
+                  Per row
                 </span>
-                <label className="cards-size">
-                  <Square size={11} strokeWidth={2} aria-hidden="true" />
-                  <input
-                    type="range"
-                    min={min}
-                    max={max}
-                    step={4}
-                    value={size}
-                    aria-labelledby="sheet-size"
-                    onChange={(e) => onSize(Number(e.target.value))}
-                  />
-                  <Square size={17} strokeWidth={2} aria-hidden="true" />
-                </label>
+                <div className="cards-count-picker" role="group" aria-label="Cards per row">
+              {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={`cards-count-option${cols === n ? " is-active" : ""}`}
+                  aria-pressed={cols === n}
+                  onClick={() => onCols(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
               </div>
             )}
           </div>

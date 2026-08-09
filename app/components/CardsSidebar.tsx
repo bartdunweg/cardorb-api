@@ -2,6 +2,7 @@
 
 import { Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
+import { OWNER_NAME } from "../../lib/core/config";
 import { LOCALE } from "../../lib/core/config";
 
 /**
@@ -54,6 +55,7 @@ export default function CardsSidebar({
   // Held and wanted are two destinations now, so the rail counts them apart.
   // A single total over both was the number that made "My collection" read as
   // 1,645 while the collection is 1,612 and the other 33 are a shopping list.
+  const collectionName = isPublic ? `${OWNER_NAME}'s collection` : "My collection";
   const held = sets.reduce((n, s) => n + s.cards.filter((c) => c.owned).length, 0);
   const wanted = sets.reduce((n, s) => n + s.cards.filter((c) => !c.owned).length, 0);
 
@@ -135,7 +137,7 @@ export default function CardsSidebar({
             <NavItem
               active={selected === "all"}
               onClick={() => onSelect("all")}
-              name="My collection"
+              name={collectionName}
               count={held}
               icon={Layers}
             />

@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  memo,
-  useCallback,
-  useDeferredValue,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { memo, useCallback, useDeferredValue, useMemo, useRef, useState, type CSSProperties, useEffect } from "react";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import Card from "./Card";
@@ -30,7 +22,7 @@ import { getCardsStats, tally } from "../../lib/core/cards-stats";
 import { caught, getPokedex } from "../../lib/core/pokedex";
 import { shownPrice } from "../../lib/core/cards";
 import type { CardSet, OwnedCard } from "../../lib/core/cards";
-import { LOCALE } from "../../lib/core/config";
+import { LOCALE, OWNER_NAME } from "../../lib/core/config";
 import { euro, euroWhole } from "../../lib/core/format";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
@@ -138,45 +130,38 @@ function setMeta(set: CardSet) {
 /** How many sets are built at a time. See builtSets in CardsView. */
 const SET_STEP = 6;
 
-/**
- * The narrowest, the widest and the resting width of a scan in the grid, in
- * pixels. See scanSize in CardsView for what the middle one is and is not.
- * SCAN_DEFAULT is the stylesheet's own column (cards.css, .cards-grid) and the
- * two files have to agree: the slider would otherwise start somewhere the grid
- * is not.
- */
-const SCAN_MIN = 96;
-const SCAN_MAX = 260;
-const SCAN_DEFAULT = 132;
+
 
 /**
- * The width from which a scan gets the foil and the tilt. See `tilted` in
- * CardItem for how it is mounted.
+ * How many cards fit across, per screen, and what it opens on.
+ *
+ * This was a pixel width on a slider, which is the honest unit for a grid built
+ * on auto-fill and the wrong one to ask a reader for: nobody wants a scan 148px
+ * wide, they want four across. So the control counts columns and the stylesheet
+ * does the division.
+ *
+ * The two ranges are different because the columns are: a phone that fits six
+ * would be drawing thumbnails, and a laptop stopped at four would be drawing
+ * posters. The defaults are the middle of each, and switching between them is
+ * what the effect below is for — a window dragged narrow should not keep a
+ * count that only made sense wide.
+ */
+const COLS = {
+  narrow: { min: 2, max: 5, fallback: 3 },
+  wide: { min: 3, max: 10, fallback: 6 },
+} as const;
+
+/**
+ * The column count from which a scan gets the foil and the tilt.
  *
  * Not a taste threshold. poke-holo.css records what happened when that effect
  * was drawn small: at 113px the recipe read as vertical stripes over the
  * picture rather than as foil, because it is built for a card rendered three
- * times that wide. The default column here is 132, so the effect is off until
- * the slider has been pushed most of the way up and a card is being looked at
+ * times that wide. Four across or fewer is where a card is being looked at
  * rather than scanned past.
  */
-const TILT_FROM = 200;
+const TILT_UNDER = 5;
 
-/**
- * The width from which the grid asks for the larger scan.
- *
- * TCGdex publishes two, and the note on `image` in lib/cards.ts argues at length
- * for the small one: 245px and 22kB against 600px and 77kB, on a page that draws
- * 1,622 of them at 104 to 132px and whose LCP was measured at seven seconds on a
- * throttled phone. None of that changes. What changed is that the size is a
- * slider now, and above about 180px the 245px file is being stretched, which is
- * a soft card rather than a small one.
- *
- * So the trade is kept where it was made and reversed only where it stops
- * holding: the default grid still costs 22kB a card, and the big file is asked
- * for by the reader, one grid at a time, by dragging.
- */
-const HIGH_FROM = 180;
 
 /** Vintage is the Wizards era. Decided on the sets' own dates, not a list. */
 const VINTAGE_BEFORE = 2010;
@@ -341,7 +326,25 @@ export default function CardsView({
    * nothing is written until the slider is moved, and from then on the reader's
    * answer is the one that holds at every width.
    */
-  const [scanSize, setScanSize] = useState<number | null>(null);
+  const [cols, setCols] = useState<number | null>(null);
+  const [narrow, setNarrow] = useState(false);
+
+  // Which of the two ranges applies. 640 is where the rail stops being a column
+  // beside the cards, which is the same place the grid stops having room for a
+  // wide count.
+  useEffect(() => {
+    const q = window.matchMedia("(max-width: 640px)");
+    const read = () => setNarrow(q.matches);
+    read();
+    q.addEventListener("change", read);
+    return () => q.removeEventListener("change", read);
+  }, []);
+
+  const range = narrow ? COLS.narrow : COLS.wide;
+  // Clamped rather than remembered across the breakpoint: eight columns chosen
+  // on a laptop is not an answer a phone can honour, and silently keeping it
+  // would draw eight thumbnails 40px wide.
+  const shownCols = Math.min(Math.max(cols ?? range.fallback, range.min), range.max);
   // Scans and logos whose file is not actually there. TCGdex publishes the
   // record before the artwork, so a URL alone is not proof of an image.
   const [brokenScans, setBrokenScans] = useState<Set<string>>(new Set());
@@ -974,6 +977,8 @@ export default function CardsView({
       page rather than being repeated over the grid below. */
   const currentSet = useMemo(() => sets.find((s) => s.name === selected) ?? null, [sets, selected]);
   const onProfile = selected === "profile" && !isPublic;
+  // Whose it is. On the link you hand to somebody else it is not theirs.
+  const collectionName = isPublic ? `${OWNER_NAME}'s collection` : "My collection";
 
   /**
    * The dex's own ownership control, read off the collection's Owned facet.
@@ -1170,7 +1175,7 @@ export default function CardsView({
                   : onWishlist
                     ? "Wishlist"
                     : selected === "all"
-                      ? "My collection"
+                      ? collectionName
                       : selected.startsWith("era:")
                         ? label(selected.slice(4), years)
                         : selected}
@@ -1270,10 +1275,10 @@ export default function CardsView({
                           return next;
                         })
                       }
-                      size={scanSize ?? SCAN_DEFAULT}
-                      onSize={setScanSize}
-                      min={SCAN_MIN}
-                      max={SCAN_MAX}
+                      cols={shownCols}
+                      onCols={setCols}
+                      min={range.min}
+                      max={range.max}
                     />
                   </span>
                   <span className="only-narrow">
@@ -1290,10 +1295,10 @@ export default function CardsView({
                           return next;
                         })
                       }
-                      size={scanSize ?? SCAN_DEFAULT}
-                      onSize={setScanSize}
-                      min={SCAN_MIN}
-                      max={SCAN_MAX}
+                      cols={shownCols}
+                      onCols={setCols}
+                      min={range.min}
+                      max={range.max}
                     />
                   </span>
                 </>
@@ -1394,8 +1399,8 @@ export default function CardsView({
                   <ul
                     className={view === "grid" ? "cards-grid" : "cards-rows"}
                     style={
-                      view === "grid" && scanSize
-                        ? ({ "--cards-scan-w": `${scanSize}px` } as CSSProperties)
+                      view === "grid"
+                        ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
                         : undefined
                     }
                   >
@@ -1407,8 +1412,8 @@ export default function CardsView({
                           setName={set.name}
                           view={view}
                           scan={!brokenScans.has(card.key)}
-                          tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
-                          big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
+                          tilt={view === "grid" && shownCols <= TILT_UNDER}
+                          big={view === "grid" && shownCols <= TILT_UNDER}
                           onScanBroken={onScanBroken}
                           fields={fields}
                           setYear={set.releaseDate?.slice(0, 4) ?? null}
@@ -1473,8 +1478,8 @@ export default function CardsView({
                   <ul
                     className={view === "grid" ? "cards-grid" : "cards-rows"}
                     style={
-                      view === "grid" && scanSize
-                        ? ({ "--cards-scan-w": `${scanSize}px` } as CSSProperties)
+                      view === "grid"
+                        ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
                         : undefined
                     }
                   >
@@ -1494,8 +1499,8 @@ export default function CardsView({
                         // boolean the item can compare, rather than the size
                         // itself, which would be a changed prop on all 1,622
                         // items for every step of the slider.
-                        tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
-                        big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
+                        tilt={view === "grid" && shownCols <= TILT_UNDER}
+                        big={view === "grid" && shownCols <= TILT_UNDER}
                         onScanBroken={onScanBroken}
                         fields={fields}
                         setYear={set.releaseDate?.slice(0, 4) ?? null}

@@ -758,7 +758,11 @@ body:has(.page-cards) .theme-toggle {
      100% because that slider goes to 260: on a narrow column a track wider than
      the grid would overflow it rather than fall back to one card per row, which
      is what a minmax whose floor exceeds its container does. */
-  grid-template-columns: repeat(auto-fill, minmax(min(var(--cards-scan-w, 132px), 100%), 1fr));
+  /* A count, not a width. auto-fill with a minimum is the right shape for a
+     grid that must not overflow, and the wrong thing to ask a reader for:
+     nobody wants a scan 148px wide, they want four across. CardsView writes
+     --cards-cols and the division happens here. */
+  grid-template-columns: repeat(var(--cards-cols, 6), minmax(0, 1fr));
   /* The Pokédex' spacing, because it is the same shape of thing: a wall of card
      slots in a 132px column. It used to be 20px between the rows and 16 between
      the columns with nothing around a tile, against the dex' even 12 plus 8 of
@@ -2621,14 +2625,11 @@ button.cards-dex-body:focus-visible::after {
   max-width: none;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   border-bottom: none;
-  /* Solid, not the 0.8 alpha .modal wears. That panel floats over a page it is
-     meant to stay connected to; this one covers the bottom half of the screen
-     and every row in it is a word over whatever card art happened to be behind
-     it. A list you read needs a surface. */
-  background: var(--glass-bg-solid);
-}
-[data-theme="dark"] .modal--sheet {
-  background: var(--glass-bg-solid);
+  /* Opaque, and not --glass-bg-solid, which is solid only by name: it is 0.9
+     in the light theme and 0.66 in the dark one, so a sheet wearing it read as
+     the same frosted layer as the blur behind it and every row was a word over
+     whatever card art happened to be there. A list you read needs a surface. */
+  background: var(--color-bg);
 }
 .modal--sheet .modal-scroll {
   height: auto;
@@ -2959,4 +2960,31 @@ button.cards-dex-body:focus-visible::after {
 .card-detail-move {
   left: calc(-1 * var(--space-4));
   right: calc(-1 * var(--space-4));
+}
+
+/* How many cards across. A row of numbers rather than a slider: the answer is a
+   small whole number and there are never more than eight of them, so picking
+   one directly beats dragging until the grid happens to land on it. */
+.cards-count-picker {
+  display: flex;
+  gap: var(--space-1);
+  width: 100%;
+}
+.cards-count-option {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.cards-count-option.is-active {
+  border-color: transparent;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
