@@ -2928,3 +2928,15 @@ button.cards-dex-body:focus-visible::after {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* The segments inside a panel, rather than in the toolbar they were sized for.
+   .cards-segment carries 16px of its own padding, which in a 246px track put
+   "All" a centimetre inside the left edge while the facet rows under it start
+   flush — the same distance read as an indent rather than as a control. Equal
+   thirds, and the padding down to what the words need. */
+.filter-menu-inline .cards-segment,
+.view-menu-panel .cards-segment {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 var(--space-2);
+}

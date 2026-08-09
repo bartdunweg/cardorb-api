@@ -184,12 +184,13 @@ const VINTAGE_BEFORE = 2010;
 export type DexOwned = "all" | "owned" | "wishlist" | "missing";
 
 /** The optional facts a tile can carry. Its name is always drawn. */
-export type CardField = "number" | "type" | "era" | "rarity" | "price" | "set";
+export type CardField = "number" | "type" | "era" | "year" | "rarity" | "price" | "set";
 
 export const CARD_FIELDS: readonly (readonly [CardField, string])[] = [
   ["number", "Number"],
   ["type", "Type"],
   ["era", "Era"],
+  ["year", "Year"],
   ["set", "Set"],
   ["rarity", "Rarity"],
   ["price", "Price"],
@@ -1368,6 +1369,7 @@ export default function CardsView({
                           big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
                           onScanBroken={onScanBroken}
                           fields={fields}
+                          setYear={set.releaseDate?.slice(0, 4) ?? null}
                           onPick={
                             isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
                           }
@@ -1451,6 +1453,7 @@ export default function CardsView({
                         big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
                         onScanBroken={onScanBroken}
                         fields={fields}
+                        setYear={set.releaseDate?.slice(0, 4) ?? null}
                         onPick={
                           isPublic
                             ? (card, setName) => setOpenCard({ card, setName })
@@ -1574,11 +1577,15 @@ const CardItem = memo(function CardItem({
   onScanBroken,
   onPick,
   fields,
+  setYear,
 }: {
   card: OwnedCard;
   setName: string;
   view: "grid" | "list";
   years: Map<string, [number, number]>;
+  /** The year the set came out, for the Year field. Null where TCGdex has no
+      date for it, which is a handful of promo sets. */
+  setYear: string | null;
   /** Which optional facts to draw under the scan. See fields in CardsView. */
   fields: ReadonlySet<CardField>;
   /** Opens the card in place. Only on the public link; elsewhere it is a URL. */
@@ -1732,6 +1739,7 @@ const CardItem = memo(function CardItem({
               <span className="cards-item-type">{card.type}</span>
             )}
             {fields.has("set") && <span className="cards-item-set">{setName}</span>}
+            {fields.has("year") && setYear && <span className="cards-item-year">{setYear}</span>}
             {fields.has("era") && card.gen && (
               <span className="cards-item-gen">{label(card.gen, years)}</span>
             )}
