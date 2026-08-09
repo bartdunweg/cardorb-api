@@ -289,7 +289,6 @@ export default function CardsView({
   const [pickedTypes, setPickedTypes] = useState<Set<string>>(new Set());
   const [pickedOwnership, setPickedOwnership] = useState<Set<string>>(new Set());
   const [pickedValues, setPickedValues] = useState<Set<string>>(new Set());
-  const [era, setEra] = useState<"all" | "vintage" | "modern">("all");
   const [view, setView] = useState<"grid" | "list">("grid");
   /**
    * How wide a scan is asked to be, in pixels, or null for whatever the
@@ -489,7 +488,7 @@ export default function CardsView({
   );
 
   const picked = [pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedValues];
-  const active = picked.some((s) => s.size > 0) || query.trim() !== "" || era !== "all";
+  const active = picked.some((s) => s.size > 0) || query.trim() !== "";
 
   const reset = useCallback(() => {
     setQuery("");
@@ -498,7 +497,6 @@ export default function CardsView({
     setPickedTypes(new Set());
     setPickedOwnership(new Set());
     setPickedValues(new Set());
-    setEra("all");
   }, []);
 
   const matchesValue = useCallback(
@@ -549,10 +547,6 @@ export default function CardsView({
         const bySetName = q !== "" && norm(set.name).includes(q);
         const cards = set.cards.filter((c) => {
           if (selected.startsWith("era:") && c.gen !== selected.slice(4)) return false;
-          if (era !== "all") {
-            const isVintage = c.gen ? vintageEras.has(c.gen) : false;
-            if (era === "vintage" ? !isVintage : isVintage) return false;
-          }
           if (pickedNames.size && !pickedNames.has(c.name)) return false;
           if (pickedTypes.size && !pickedTypes.has(c.type ?? "")) return false;
           if (!matchesOwnership(c)) return false;
@@ -592,8 +586,6 @@ export default function CardsView({
     collectionSets,
     wishlistSets,
     deferred,
-    era,
-    vintageEras,
     selected,
     pickedNames,
     pickedRarities,
@@ -1060,6 +1052,33 @@ export default function CardsView({
                 )}
               </div>
 
+              {/* Next to the search rather than at the end of the row. Grid or
+                list is the shape of the answer, and the field is where the
+                question goes in, so the two belong together; down at the end
+                it was the last thing on a row that wraps, which on a phone put
+                it alone on a line of its own. */}
+              {!onDashboard && !onPokedex && (
+                <div className="cards-views" role="group" aria-label="Layout">
+                  {(
+                    [
+                      ["grid", LayoutGrid, "Grid"],
+                      ["list", Rows3, "List"],
+                    ] as const
+                  ).map(([key, Icon, text]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`cards-view${view === key ? " is-active" : ""}`}
+                      aria-pressed={view === key}
+                      aria-label={`${text} view`}
+                      onClick={() => setView(key)}
+                    >
+                      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Beside the search box, because both are things you do to the
                 whole grid before you start reading it, and only where there is
                 a grid: the list view has one row per card and the dashboard has
@@ -1094,15 +1113,18 @@ export default function CardsView({
                 </label>
               )}
 
-              {/* Only over the whole collection. Vintage and modern are a way of
-                cutting fifty-one sets in half; on one set, or on an era you
-                have already picked in the rail, it is a control whose two
-                other answers are always empty. */}
-              {(selected === "all" || onPokedex) && (
+              {/* The Pokédex only. It used to sit over the collection too, and
+                there it was answering a question the rail already answers
+                better: the eras are headings you can press, with the years
+                each one spans written next to them, so a coarse cut into two
+                was a second way to do the same thing with less of an answer.
+                The dex has no rail of its own, and its own reason to default
+                to modern (see dexEra). */}
+              {onPokedex && (
                 <Segmented
                   label="Era"
-                  value={onPokedex ? dexEra : era}
-                  onChange={onPokedex ? setDexEra : setEra}
+                  value={dexEra}
+                  onChange={setDexEra}
                   options={[
                     ["all", "All"],
                     ["vintage", "Vintage"],
@@ -1159,29 +1181,6 @@ export default function CardsView({
                 cards, and that view is a list of Pokémon. */}
               {!onPokedex && <FilterMenu facets={facets} />}
 
-              {/* In the row with the rest, not floated off to the far right: how
-                the cards are drawn is one more thing the bar decides. */}
-              {!onDashboard && !onPokedex && (
-                <div className="cards-views" role="group" aria-label="Layout">
-                  {(
-                    [
-                      ["grid", LayoutGrid, "Grid"],
-                      ["list", Rows3, "List"],
-                    ] as const
-                  ).map(([key, Icon, text]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`cards-view${view === key ? " is-active" : ""}`}
-                      aria-pressed={view === key}
-                      aria-label={`${text} view`}
-                      onClick={() => setView(key)}
-                    >
-                      <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
-                    </button>
-                  ))}
-                </div>
-              )}
 
               {active && (
                 <button type="button" className="cards-reset" onClick={reset}>

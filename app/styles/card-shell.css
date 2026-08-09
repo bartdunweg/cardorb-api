@@ -1,4 +1,6 @@
-/* The one rule this app needs out of the portfolio's about.css.
+/* The handful of rules binder needs that the ported sheets do not give it.
+ *
+ * First, the one out of the portfolio's about.css.
  *
  * components.css gives .about-card its border, glass and shadow; the padding
  * and the clip live two files away, in the stylesheet for the About page. So
@@ -22,4 +24,23 @@
   /* cards.css turns this back off for .cards-intro on purpose: the filter
      panels open past the card's edge and were being sliced along it. */
   overflow: hidden;
+}
+
+/* And second: no nav bar, so nothing to leave room for above the page.
+ *
+ * tabbar.css pads #main-content by --main-pad-top to clear the site's own
+ * navigation. .page-cards pulls that padding back with a negative margin so its
+ * surface reaches the top edge — but only above 640px, because on the portfolio
+ * the narrow layout wanted its cards inset from the top like every other page.
+ * binder has no nav and one full-bleed sheet rather than cards, so what was left
+ * on a phone was sixteen pixels of page colour above the white: a grey bar
+ * nobody put there.
+ *
+ * Overridden here rather than edited into tabbar.css, which is a copy kept
+ * comparable with its source. This file is imported after it.
+ */
+@media (max-width: 640px) {
+  #main-content {
+    padding-top: 0;
+  }
 }
