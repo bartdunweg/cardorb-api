@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import CardModal from "../../../components/CardModal";
 import CardDetail from "../../../components/CardDetail";
-import { getCardDetail, getCards, type OwnedCard } from "../../../../lib/core/cards";
+import CardNav from "../../../components/CardNav";
+import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../../../lib/core/cards";
 
 /**
  * A card, opened from the list.
@@ -62,14 +63,17 @@ async function owned(id: string): Promise<{ card: OwnedCard; setName: string } |
 
 export default async function CardModalPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [card, mine] = await Promise.all([getCardDetail(id), owned(id)]);
+  // getCards() is memoised for the process, so asking a third time here costs
+  // a map lookup rather than another walk of the collection.
+  const [card, mine, sets] = await Promise.all([getCardDetail(id), owned(id), getCards()]);
+  const { prev, next } = cardNeighbours(sets, id);
   if (!card) notFound();
 
   return (
     <CardModal label={card.name}>
       {/* h2: the page underneath still has its own h1, and the dialog is not a
           new document. */}
-      <CardDetail card={card} mine={mine} heading="h2" />
+      <CardDetail card={card} mine={mine} heading="h2" nav={<CardNav prev={prev} next={next} />} />
     </CardModal>
   );
 }

@@ -1,5 +1,6 @@
 import Button from "./Button";
 import Tag from "./Tag";
+import type { ReactNode } from "react";
 import { ExternalLink } from "lucide-react";
 import type { CardDetail as Detail, OwnedCard } from "../../lib/core/cards";
 import { euro, euroWhole } from "../../lib/core/format";
@@ -15,11 +16,19 @@ export default function CardDetail({
   card,
   mine,
   heading = "h1",
+  nav,
 }: {
   card: Detail;
   mine: { card: OwnedCard; setName: string } | null;
   /** h1 on the route, h2 inside the dialog, where the page already has one. */
   heading?: "h1" | "h2";
+  /**
+   * Whatever moves you to the card either side of this one, drawn over the
+   * scan. A slot rather than two ids, because this is a server component and
+   * the two hosts reach the neighbours differently: the route links to them by
+   * URL, the public dialog swaps them in place with no URL to link to.
+   */
+  nav?: ReactNode;
 }) {
   const price = card.price?.market ?? null;
   const Title = heading;
@@ -42,6 +51,11 @@ export default function CardDetail({
 
   return (
     <div className="card-detail-body">
+      {/* Over the scan rather than under the facts, because moving between
+          cards is looking at pictures: the control belongs where the picture
+          is, and on a phone that is the half of the dialog a thumb is already
+          near. */}
+      {nav && <div className="card-detail-move">{nav}</div>}
       <div className="card-detail-scan">
         {card.image ? (
           // The full-size scan: this is the one place on the site where the

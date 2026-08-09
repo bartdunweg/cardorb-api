@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import CardDetail from "./CardDetail";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSwipe } from "../hooks/useSwipe";
 import type { CardDetail as Detail, OwnedCard } from "../../lib/core/cards";
 
 /**
@@ -28,13 +30,24 @@ export default function PublicCardDialog({
   card,
   setName,
   onClose,
+  onGo,
+  hasPrev,
+  hasNext,
 }: {
   username: string;
+  /** Move to the card either side of this one, in the order on screen. */
+  onGo?: (dir: -1 | 1) => void;
+  hasPrev?: boolean;
+  hasNext?: boolean;
   /** The row from the collection, which the detail is drawn against. */
   card: OwnedCard | null;
   setName: string | null;
   onClose: () => void;
 }) {
+  const swipe = useSwipe(
+    () => onGo?.(1),
+    () => onGo?.(-1),
+  );
   const [detail, setDetail] = useState<Detail | null>(null);
   const [failed, setFailed] = useState(false);
   const id = card?.tcgId ?? null;
@@ -70,8 +83,39 @@ export default function PublicCardDialog({
       label={card?.name ?? "Card"}
       className="modal--card"
     >
+      <div {...swipe}>
       {showing && card ? (
-        <CardDetail card={showing} mine={{ card, setName: setName ?? "" }} />
+        <CardDetail
+          card={showing}
+          mine={{ card, setName: setName ?? "" }}
+          nav={
+            onGo && (hasPrev || hasNext) ? (
+              // Buttons, not links: on the public page a card has no URL of its
+              // own, so there is nothing for an anchor to point at. Swiping the
+              // dialog does the same thing.
+              <>
+                <button
+                  type="button"
+                  className="btn btn--icon"
+                  onClick={() => onGo(-1)}
+                  disabled={!hasPrev}
+                  aria-label="Previous card"
+                >
+                  <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--icon"
+                  onClick={() => onGo(1)}
+                  disabled={!hasNext}
+                  aria-label="Next card"
+                >
+                  <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
+                </button>
+              </>
+            ) : undefined
+          }
+        />
       ) : (
         // The scan is already in the browser's cache from the grid, so it draws
         // at once and the rest fills in under it. Showing it beats a spinner in
@@ -85,6 +129,7 @@ export default function PublicCardDialog({
           {failed && <p className="cards-profile-error">That card would not load. Try again.</p>}
         </div>
       )}
+      </div>
     </Modal>
   );
 }

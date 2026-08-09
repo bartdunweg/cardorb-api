@@ -4,7 +4,8 @@ import Card from "../../components/Card";
 import CardDetail from "../../components/CardDetail";
 import Button from "../../components/Button";
 import { ChevronLeft } from "lucide-react";
-import { getCardDetail, getCards, type OwnedCard } from "../../../lib/core/cards";
+import CardNav from "../../components/CardNav";
+import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../../lib/core/cards";
 
 /**
  * One card, in full.
@@ -61,7 +62,10 @@ export async function generateMetadata({
 
 export default async function CardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [card, mine] = await Promise.all([getCardDetail(id), owned(id)]);
+  // getCards() is memoised for the process, so asking a third time here costs
+  // a map lookup rather than another walk of the collection.
+  const [card, mine, sets] = await Promise.all([getCardDetail(id), owned(id), getCards()]);
+  const { prev, next } = cardNeighbours(sets, id);
   if (!card) notFound();
 
   return (
@@ -74,7 +78,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           Cards
         </Button>
 
-        <CardDetail card={card} mine={mine} />
+        <CardDetail card={card} mine={mine} nav={<CardNav prev={prev} next={next} />} />
       </Card>
     </section>
   );

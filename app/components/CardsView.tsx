@@ -697,6 +697,23 @@ export default function CardsView({
   const shown = useMemo(() => filtered.reduce((n, set) => n + set.cards.length, 0), [filtered]);
 
   /**
+   * Every card on screen in the order it is drawn, so the dialog's arrows and
+   * its swipe follow what you were looking at rather than the collection's own
+   * order. That is the difference between here and the signed-in route: this
+   * dialog has no URL, so it can afford to answer to the page's state.
+   *
+   * Only built where it is used, which is the public link with a card open.
+   */
+  const flatCards = useMemo(
+    () =>
+      !isPublic || !openCard
+        ? []
+        : filtered.flatMap((set) => set.cards.map((card) => ({ card, setName: set.name }))),
+    [isPublic, openCard, filtered],
+  );
+  const openIndex = openCard ? flatCards.findIndex((c) => c.card.key === openCard.card.key) : -1;
+
+  /**
    * How many of the matching sets are actually built, and why the page does not
    * build all of them.
    *
@@ -1190,7 +1207,7 @@ export default function CardsView({
                     leaveDashboard();
                     setQuery(e.target.value);
                   }}
-                  placeholder="Search the collection"
+                  placeholder="Search"
                   aria-label="Search the collection"
                   autoComplete="off"
                 />
@@ -1523,6 +1540,12 @@ export default function CardsView({
           card={openCard?.card ?? null}
           setName={openCard?.setName ?? null}
           onClose={() => setOpenCard(null)}
+          hasPrev={openIndex > 0}
+          hasNext={openIndex >= 0 && openIndex < flatCards.length - 1}
+          onGo={(dir) => {
+            const at = flatCards[openIndex + dir];
+            if (at) setOpenCard(at);
+          }}
         />
       )}
 

@@ -585,6 +585,29 @@ export function getCards(): Promise<CardSet[]> {
  * that the owner's page is also holding, and editing it in place would empty
  * the prices out of /cards for as long as the process lived.
  */
+/**
+ * The card before and after this one, in the collection's own order.
+ *
+ * Sets newest first and numbered within them, which is the order getCards()
+ * already returns and the order the page draws when it is grouped by set. It is
+ * deliberately not the order on screen: the filters and the grouping are client
+ * state, and a card page reached by its URL has no idea what was ticked when
+ * somebody opened it. Following the collection means the arrows answer the same
+ * way whether you got here from the grid, from a link, or from a refresh.
+ *
+ * Cards with no tcgId are skipped: they have no page to move to.
+ */
+export function cardNeighbours(
+  sets: CardSet[],
+  tcgId: string,
+): { prev: string | null; next: string | null } {
+  const ids: string[] = [];
+  for (const set of sets) for (const c of set.cards) if (c.tcgId) ids.push(c.tcgId);
+  const i = ids.indexOf(tcgId);
+  if (i === -1) return { prev: null, next: null };
+  return { prev: ids[i - 1] ?? null, next: ids[i + 1] ?? null };
+}
+
 export function stripPrices(sets: CardSet[]): CardSet[] {
   return sets.map((set) => ({
     ...set,

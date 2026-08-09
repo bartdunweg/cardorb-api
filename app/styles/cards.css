@@ -2832,6 +2832,9 @@ button.cards-dex-body:focus-visible::after {
     max-width: 160px;
     opacity: 1;
     margin-left: var(--space-2);
+    /* A step up from --fs-control-label, which is sized for a field's caption.
+       This is the one word on the bar and it names where you are. */
+    font-size: var(--fs-body-s);
   }
 }
 
@@ -2939,4 +2942,36 @@ button.cards-dex-body:focus-visible::after {
   flex: 1 1 0;
   min-width: 0;
   padding: 0 var(--space-2);
+}
+
+/* Previous and next, over the scan. Pinned to its sides rather than placed
+   under it: the arrows belong to the picture, and on a phone the picture is the
+   half of the dialog a thumb can reach. */
+.card-detail-move {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.card-detail-move > * {
+  pointer-events: auto;
+}
+.card-detail-move .is-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.card-detail-scan {
+  position: relative;
+}
+@media (max-width: 640px) {
+  /* Out over the edges, where there is no column beside the scan to sit in. */
+  .card-detail-move {
+    left: calc(-1 * var(--space-4));
+    right: calc(-1 * var(--space-4));
+  }
 }
