@@ -66,16 +66,21 @@ export default function CardsSidebar({
     // files up: .cards-main is this element's next sibling, so one attribute
     // here is enough for the stylesheet to hide either side.
     <div className="cards-rail" data-pane={pane}>
-      {/* The page's name over the rail, and only on the screens where the rail
-          is a screen of its own: without it you arrive at fifty-one set names
-          with nothing saying what they are a list of. Above 1000px the heading
-          over the results is on view anyway.
+      {/* What this screen is, and only on the widths where the rail is a screen
+          of its own: without it you arrive at fifty sets with nothing saying
+          what they are a list of. Above 1000px the heading over the results is
+          on view anyway and this would be a second one.
+
+          "Sets", not "Cards". It is only ever reached by pressing the slot
+          labelled Sets, and a screen that answers to a different name than the
+          button that opened it makes you check whether you pressed the right
+          one. Cards is the app; this is one screen in it.
 
           aria-hidden, and not a heading: the h1 in CardsView already named the
           page and it is in the document whichever pane is up. This is the same
           fact drawn for anyone who can see the layout. */}
       <p className="cards-rail-title" aria-hidden="true">
-        Cards
+        Sets
       </p>
 
       {/* Searching and adding, at the head of the rail, above 1000px only.
