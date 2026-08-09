@@ -23,6 +23,8 @@ import Modal from "./Modal";
 export default function ViewSheet({
   view,
   onView,
+  group,
+  onGroup,
   size,
   onSize,
   min,
@@ -30,6 +32,9 @@ export default function ViewSheet({
 }: {
   view: "grid" | "list";
   onView: (v: "grid" | "list") => void;
+  /** How the same cards are arranged: as the sets, or against the Pokédex. */
+  group: "set" | "dex";
+  onGroup: (g: "set" | "dex") => void;
   size: number;
   onSize: (n: number) => void;
   min: number;
@@ -63,6 +68,33 @@ export default function ViewSheet({
           </div>
 
           <div className="sheet-body sheet-body--pad">
+            {/* First, because it is the bigger of the two choices: it decides
+                what the page is a list of before anything decides how the rows
+                are drawn. */}
+            <div className="sheet-field">
+              <span className="sheet-label" id="sheet-group">
+                Group by
+              </span>
+              <div className="cards-segmented" role="group" aria-labelledby="sheet-group">
+                {(
+                  [
+                    ["set", "Set"],
+                    ["dex", "Pokédex"],
+                  ] as const
+                ).map(([key, text]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`cards-segment${group === key ? " is-active" : ""}`}
+                    aria-pressed={group === key}
+                    onClick={() => onGroup(key)}
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="sheet-field">
               <span className="sheet-label">Layout</span>
               <div className="cards-views" role="group" aria-label="Layout">
@@ -88,7 +120,7 @@ export default function ViewSheet({
 
             {/* Only where there is a grid to size. In the list view every card
                 is a row and the slider would move nothing. */}
-            {view === "grid" && (
+            {group === "set" && view === "grid" && (
               <div className="sheet-field">
                 <span className="sheet-label" id="sheet-size">
                   Card size

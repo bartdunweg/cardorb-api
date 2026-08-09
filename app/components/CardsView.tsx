@@ -9,7 +9,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { ChevronDown, LayoutGrid, Rows3, Search, Square, X } from "lucide-react";
+import {LayoutGrid, Rows3, Search, Square, X } from "lucide-react";
 import Link from "next/link";
 import Card from "./Card";
 import Tag from "./Tag";
@@ -22,7 +22,6 @@ import CardsSidebar, { retryAsPng } from "./CardsSidebar";
 import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 import FilterMenu, { type Facet } from "./FilterMenu";
 import FilterSheet from "./FilterSheet";
-import DexFilterSheet from "./DexFilterSheet";
 import ViewSheet from "./ViewSheet";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
 import { useCardsKey } from "../hooks/useCardsKey";
@@ -183,14 +182,6 @@ const VINTAGE_BEFORE = 2010;
 
 export type DexOwned = "all" | "owned" | "wishlist" | "missing";
 
-/** The four states a dex slot can be in, in the order they narrow. */
-const DEX_OWNED: readonly (readonly [DexOwned, string])[] = [
-  ["all", "All Pokémon"],
-  ["owned", "Owned"],
-  ["wishlist", "On the wishlist"],
-  ["missing", "Not owned"],
-];
-
 /**
  * Which of the two this screen is.
  *
@@ -232,7 +223,7 @@ export default function CardsView({
   // a frame later instead of every keystroke blocking on a full re-render.
   const deferred = useDeferredValue(query);
 
-  /** "dashboard", "pokedex", "profile", "all", or a set name. The sets are
+  /** "dashboard", "profile", "all", "wishlist", or a set name. The sets are
       navigation now, not a tick-box facet, so this is what narrows the page to
       one of them. */
   // The owner lands on the dashboard, which is the collection's front page.
@@ -362,6 +353,26 @@ export default function CardsView({
   // page is still a page of sets and you can still see what came from where.
   const [sort, setSort] = useState<"set" | "value" | "value-asc">("set");
 
+  /**
+   * How the same list is laid out: as the sets it came in, or against the
+   * Pokédex.
+   *
+   * The dex used to be a destination of its own, with its own era control, its
+   * own ownership dropdown and its own search placeholder. That made it a
+   * second app beside the collection: the filters you had set did not follow
+   * you into it, and the ones inside it did not come back out. It is a way of
+   * arranging the cards you are already looking at, so it is a view option.
+   *
+   * What it keeps is the one thing that is genuinely about the dex rather than
+   * about the cards: which printing stands for a Pokémon. See dexSets.
+   */
+  const [group, setGroup] = useState<"set" | "dex">("set");
+  // A layout of the list, not a place, so it is off wherever there is no list:
+  // the dashboard summarises the collection and the profile is about the
+  // password. Read off `selected` rather than the onDashboard/onProfile flags
+  // further down, because the facets above need it before those exist.
+  const onPokedex = group === "dex" && selected !== "dashboard" && selected !== "profile";
+
   const all = useMemo(() => sets.flatMap((s) => s.cards), [sets]);
   const total = all.length;
   const wishlist = useMemo(() => all.filter((c) => !c.owned).length, [all]);
@@ -456,8 +467,11 @@ export default function CardsView({
       [
         { value: "In the binder", count: onWishlist ? 0 : total - wishlist },
         { value: "On the wishlist", count: onWishlist ? wishlist : 0 },
+        // The gaps, which only the dex draws: a Pokémon you hold no card of is
+        // not a row in the collection, it is an empty slot on a shelf of 1,025.
+        { value: "Not owned", count: onPokedex ? 1 : 0 },
       ].filter((o) => o.count > 0),
-    [onWishlist, total, wishlist],
+    [onWishlist, onPokedex, total, wishlist],
   );
 
   /**
@@ -874,8 +888,25 @@ export default function CardsView({
   /** The set the page is on, when it is on one: its logo and its facts head the
       page rather than being repeated over the grid below. */
   const currentSet = useMemo(() => sets.find((s) => s.name === selected) ?? null, [sets, selected]);
-  const onPokedex = selected === "pokedex";
   const onProfile = selected === "profile" && !isPublic;
+
+  /**
+   * The dex's own ownership control, read off the collection's Owned facet.
+   *
+   * It used to be a dropdown of four beside the shelf, which meant the tick you
+   * had already made in Filter did not follow you in. One facet answers both
+   * now. "Not owned" only exists here, because a card you do not have is not in
+   * the collection at all and only the dex has a slot to leave empty for it;
+   * ownershipOptions offers it exactly where it means something.
+   */
+  const dexOwned: DexOwned =
+    pickedOwnership.size !== 1
+      ? "all"
+      : pickedOwnership.has("Not owned")
+        ? "missing"
+        : pickedOwnership.has("On the wishlist")
+          ? "wishlist"
+          : "owned";
 
   /**
    * Which slot in the bar is lit, which is not quite the same question as which
@@ -888,9 +919,7 @@ export default function CardsView({
       ? "sets"
       : onDashboard
         ? "dashboard"
-        : onPokedex
-          ? "pokedex"
-          : // Searching is a state rather than a place: the slot is lit while
+        : // Searching is a state rather than a place: the slot is lit while
             // there is something in the field, and goes out when it is cleared.
             // The profile has no slot at all and so lights none.
             query.trim() && !isPublic
@@ -934,7 +963,6 @@ export default function CardsView({
    * and it stays out of the era the card lists use, which the rail already
    * decides.
    */
-  const [dexEra, setDexEra] = useState<"all" | "vintage" | "modern">("modern");
   /**
    * All 1,025, or one of the three things a slot can be.
    *
@@ -943,35 +971,34 @@ export default function CardsView({
    * Notion, and only one of them is something you own. The dex was answering
    * "do you have a Beedrill" with yes for a Beedrill Bart wants.
    */
-  const [dexOwned, setDexOwned] = useState<DexOwned>("all");
-  const dex = useMemo(() => {
-    const wantVintage = dexEra === "vintage";
-    const isVintage = (card: OwnedCard) => (card.gen ? vintageEras.has(card.gen) : false);
-    return getPokedex(
-      sets.map((set) => ({
-        ...set,
-        cards: set.cards.filter((c) => {
-          if (dexEra !== "all" && isVintage(c) !== wantVintage) return false;
-          // Which rarity counts is decided by the era rather than by a control
-          // of its own, because the honest answer differs between the two and a
-          // single switch could only ever be right for one of them.
-          //
-          // Vintage is the Wizards sets, which have no illustration rares at
-          // all: filtering for them there empties the shelf. Modern has
-          // thousands of cards and the ordinary ones all look alike, so a dex
-          // filled by whichever copy was read first is a wall of commons; the
-          // full arts are the ones worth looking at a thousand of.
-          //
-          // On "All" the same rule applies per card rather than per page, which
-          // is the only way one list can hold both without lying about either.
-          if (isVintage(c)) return true;
-          // Both the Illustration Rares and the Special ones, which is what the
-          // one word they share is doing here.
-          return c.variants.some((v) => /illustration rare/i.test(v.rarity ?? ""));
-        }),
-      })),
-    );
-  }, [sets, dexEra, vintageEras]);
+  /**
+   * The dex, built from whatever the filters have left rather than from the
+   * whole database. That is the point of it being a view: tick Charizard, or
+   * Fire, or a set in the rail, and the shelf answers with those.
+   *
+   * The one rule it keeps for itself is which printing represents a Pokémon.
+   * Vintage is the Wizards sets, which have no illustration rares at all, so
+   * filtering for them there empties the shelf; modern has thousands of cards
+   * whose ordinary printings all look alike, and a dex filled by whichever copy
+   * was read first is a wall of commons. Applied per card rather than per page,
+   * which is the only way one list can hold both without lying about either.
+   */
+  const dex = useMemo(
+    () =>
+      getPokedex(
+        filtered.map((set) => ({
+          ...set,
+          cards: set.cards.filter((c) => {
+            const isVintage = c.gen ? vintageEras.has(c.gen) : false;
+            if (isVintage) return true;
+            // Both the Illustration Rares and the Special ones, which is what
+            // the one word they share is doing here.
+            return c.variants.some((v) => /illustration rare/i.test(v.rarity ?? ""));
+          }),
+        })),
+      ),
+    [filtered, vintageEras],
+  );
 
   /**
    * Vintage stops at Mew.
@@ -981,7 +1008,12 @@ export default function CardsView({
    * Pokémon that did not exist yet. Drawing them as empty slots says something
    * untrue about the binder, at eighty-five percent of the page.
    */
-  const dexShown = useMemo(() => (dexEra === "vintage" ? dex.slice(0, 151) : dex), [dex, dexEra]);
+  // Vintage stops at Mew: the Wizards sets never printed anything after 151, so
+  // the other 874 slots are a certainty rather than a gap worth drawing.
+  const dexShown = useMemo(
+    () => (pickedEras.size === 1 && pickedEras.has("Vintage") ? dex.slice(0, 151) : dex),
+    [dex, pickedEras],
+  );
 
   return (
     <>
@@ -1040,20 +1072,23 @@ export default function CardsView({
                 dashboard, which is the one heading here that named the route
                 instead of what is under it: the sr-only h1 already says Cards
                 and it is in the document whichever pane is up. */}
+            {/* The screen, not the layout. It used to say "Pokédex" when the
+                dex was a destination; now that it is a way of arranging the
+                cards, saying it here would replace the name of the thing you
+                are actually looking at — the collection, the wishlist, or one
+                set — with the name of a control. */}
             <h2 className="cards-main-title">
               {onDashboard
                 ? "Dashboard"
-                : onPokedex
-                  ? "Pokédex"
-                  : onProfile
-                    ? "Profile"
-                    : onWishlist
-                      ? "Wishlist"
-                      : selected === "all"
-                        ? "My collection"
-                        : selected.startsWith("era:")
-                          ? label(selected.slice(4), years)
-                          : selected}
+                : onProfile
+                  ? "Profile"
+                  : onWishlist
+                    ? "Wishlist"
+                    : selected === "all"
+                      ? "My collection"
+                      : selected.startsWith("era:")
+                        ? label(selected.slice(4), years)
+                        : selected}
             </h2>
           </div>
           {/* What you are looking at, in numbers, announced politely so it
@@ -1113,8 +1148,8 @@ export default function CardsView({
                     leaveDashboard();
                     setQuery(e.target.value);
                   }}
-                  placeholder={onPokedex ? "Search the Pokédex" : "Search the collection"}
-                  aria-label={onPokedex ? "Search the Pokédex" : "Search the collection"}
+                  placeholder="Search the collection"
+                  aria-label="Search the collection"
                   autoComplete="off"
                 />
                 {query && (
@@ -1134,10 +1169,28 @@ export default function CardsView({
                   <ViewSheet
                     view={view}
                     onView={setView}
+                    group={group}
+                    onGroup={setGroup}
                     size={scanSize ?? SCAN_DEFAULT}
                     onSize={setScanSize}
                     min={SCAN_MIN}
                     max={SCAN_MAX}
+                  />
+                </span>
+              )}
+
+              {/* The same choice the sheet offers, for the widths that have room
+                  to show it rather than to hide it behind a button. */}
+              {!onDashboard && !onProfile && (
+                <span className="only-wide">
+                  <Segmented
+                    label="Group by"
+                    value={group}
+                    onChange={setGroup}
+                    options={[
+                      ["set", "Set"],
+                      ["dex", "Pokédex"],
+                    ]}
                   />
                 </span>
               )}
@@ -1201,60 +1254,6 @@ export default function CardsView({
               {/* The Pokédex only. It used to sit over the collection too, and
                 there it was answering a question the rail already answers
                 better: the eras are headings you can press, with the years
-                each one spans written next to them, so a coarse cut into two
-                was a second way to do the same thing with less of an answer.
-                The dex has no rail of its own, and its own reason to default
-                to modern (see dexEra). */}
-              {/* The dex's two controls, the same way the collection's are
-                  handled one screen over: side by side above 640px, behind one
-                  Filter button below it. */}
-              {onPokedex && (
-                <span className="only-wide">
-                  <Segmented
-                    label="Era"
-                    value={dexEra}
-                    onChange={setDexEra}
-                    options={[
-                      ["all", "All"],
-                      ["vintage", "Vintage"],
-                      ["modern", "Modern"],
-                    ]}
-                  />
-                </span>
-              )}
-
-              {onPokedex && (
-                <span className="only-narrow">
-                  <DexFilterSheet
-                    era={dexEra}
-                    onEra={setDexEra}
-                    owned={dexOwned}
-                    onOwned={setDexOwned}
-                    ownedOptions={DEX_OWNED}
-                  />
-                </span>
-              )}
-
-              {/* A dropdown rather than a segmented control, because this one has
-                four answers and they are words rather than icons: four labelled
-                segments is most of the toolbar's width for a control that is
-                set once and left alone. */}
-              {onPokedex && (
-                <label className="cards-select only-wide">
-                  <span className="sr-only">Ownership</span>
-                  <select
-                    value={dexOwned}
-                    onChange={(e) => setDexOwned(e.target.value as DexOwned)}
-                  >
-                    {DEX_OWNED.map(([value, text]) => (
-                      <option key={value} value={value}>
-                        {text}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={15} strokeWidth={1.75} aria-hidden="true" />
-                </label>
-              )}
               {/* Sorting is an answer about a list of cards, so it is only offered
                 where one is being shown. Two of the three orders are by price,
                 and on the public link there are no prices to order by: that

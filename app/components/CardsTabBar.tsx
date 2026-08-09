@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Boxes, Heart, LayoutDashboard, Layers, ListOrdered, Plus, Search } from "lucide-react";
+import { Boxes, Heart, LayoutDashboard, Layers, Plus, Search } from "lucide-react";
 import { useSlidingPill } from "../hooks/useSlidingPill";
 
 /**
@@ -41,7 +41,7 @@ import { useSlidingPill } from "../hooks/useSlidingPill";
  * front of the two screens anyone followed the link to see. Sets keeps a slot
  * for what it is actually for, picking one.
  */
-export type CardsTab = "dashboard" | "collection" | "wishlist" | "sets" | "search" | "pokedex";
+export type CardsTab = "dashboard" | "collection" | "wishlist" | "sets" | "search";
 
 const ICON = { size: 20, strokeWidth: 1.75 } as const;
 
@@ -83,11 +83,6 @@ export default function CardsTabBar({
     // of fifty sets to pick from, not another view of the whole thing.
     sets: { key: "sets", label: "Sets", icon: <Boxes {...ICON} aria-hidden="true" /> },
     search: { key: "search", label: "Search", icon: <Search {...ICON} aria-hidden="true" /> },
-    pokedex: {
-      key: "pokedex",
-      label: "Pokédex",
-      icon: <ListOrdered {...ICON} aria-hidden="true" />,
-    },
   };
 
   const order = isPublic
@@ -96,8 +91,8 @@ export default function CardsTabBar({
       // above it. Signed in the slot earns its keep by jumping out of the
       // dashboard into the cards with the caret in the field; the public link
       // opens on the cards, so there is nothing to jump out of.
-      ["collection", "wishlist", "sets", "pokedex"]
-    : ["dashboard", "sets", "search", "pokedex"];
+      ["collection", "wishlist", "sets"]
+    : ["dashboard", "collection", "sets", "search"];
   const shown = order.map((k) => all[k]!);
 
   // The plus sits in the middle, which is why the list is split rather than

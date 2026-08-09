@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LayoutDashboard, Layers, ListOrdered, Plus, UserRound } from "lucide-react";
+import { Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
 import { LOCALE } from "../../lib/core/config";
 
@@ -127,14 +127,6 @@ export default function CardsSidebar({
               />
             </li>
           )}
-          <li className="cards-nav-elsewhere">
-            <NavItem
-              active={selected === "pokedex"}
-              onClick={() => onSelect("pokedex")}
-              name="Pokédex"
-              icon={ListOrdered}
-            />
-          </li>
           {/* On the public link the bar carries these two, so below 1000px they
               come out of the rail and it becomes the list of sets its title
               says it is. Signed in the bar has no room for them — the plus and
