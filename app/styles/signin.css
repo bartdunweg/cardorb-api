@@ -24,18 +24,54 @@
   max-width: 380px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  /* Wider than the gap inside .signin-head, which is what makes the title and
+     its line read as one thing and the form as another. */
+  gap: var(--space-6);
   /* .about-card clips, and nothing here escapes its edges; kept explicit
      because the form's focus ring sits right against the padding. */
   overflow: visible;
 }
 
-/* The heading is the app's name, so it is smaller here than the page titles it
-   shares a class with: this is a label on a door, not a section heading. */
+.signin-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* The app's name, and the only heading on the page, so it is allowed to look
+   like one. It was --fs-sub in secondary grey on the reasoning that this is a
+   label on a door rather than a section heading — but at that weight it read as
+   a caption for the sentence under it, and the card looked unfinished. */
 .page-signin .page-title {
   margin: 0;
-  font-size: var(--fs-sub);
+  font-size: var(--fs-card);
+  color: var(--color-text-primary);
+}
+
+.signin-note {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  line-height: var(--lh-relaxed);
   color: var(--color-text-secondary);
+}
+
+/* A column here, unlike on the profile screen this form is shared with.
+   .cards-profile-form is a wrapping row built to sit a button beside the field;
+   with the button gone, the "Press Enter" line took that slot and squeezed the
+   input to two thirds of the card with a stray sentence beside it. */
+.page-signin .cards-profile-form {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+/* The field's `flex: 1 1 200px` is a width on the profile screen's row. Turned
+   upright it becomes a height, so the label and the input sat in a 200px block
+   with two hundred pixels of nothing under them and "Press Enter" stranded at
+   the bottom of the card. */
+.page-signin .cards-profile-field {
+  flex: 0 0 auto;
 }
 
 /* .btn carries the shape; this only says where it sits. Outside the card
@@ -51,11 +87,13 @@
   align-self: center;
 }
 
-/* Stands in for the button that is not there: the only thing that changes
-   between pressing Enter and the page moving. Quiet, because it is an
-   instruction you need once and then never again. */
+/* Stands in for the button that is not there, and only while there is
+   something to say. Empty the rest of the time, which costs no height. */
 .signin-hint {
   margin: 0;
   font-size: var(--fs-small);
   color: var(--color-text-tertiary);
+}
+.signin-hint:empty {
+  display: none;
 }

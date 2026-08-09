@@ -22,6 +22,7 @@ import CardsSidebar, { retryAsPng } from "./CardsSidebar";
 import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 import FilterMenu, { type Facet } from "./FilterMenu";
 import FilterSheet from "./FilterSheet";
+import DexFilterSheet from "./DexFilterSheet";
 import ViewSheet from "./ViewSheet";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
 import { useCardsKey } from "../hooks/useCardsKey";
@@ -1166,17 +1167,34 @@ export default function CardsView({
                 was a second way to do the same thing with less of an answer.
                 The dex has no rail of its own, and its own reason to default
                 to modern (see dexEra). */}
+              {/* The dex's two controls, the same way the collection's are
+                  handled one screen over: side by side above 640px, behind one
+                  Filter button below it. */}
               {onPokedex && (
-                <Segmented
-                  label="Era"
-                  value={dexEra}
-                  onChange={setDexEra}
-                  options={[
-                    ["all", "All"],
-                    ["vintage", "Vintage"],
-                    ["modern", "Modern"],
-                  ]}
-                />
+                <span className="only-wide">
+                  <Segmented
+                    label="Era"
+                    value={dexEra}
+                    onChange={setDexEra}
+                    options={[
+                      ["all", "All"],
+                      ["vintage", "Vintage"],
+                      ["modern", "Modern"],
+                    ]}
+                  />
+                </span>
+              )}
+
+              {onPokedex && (
+                <span className="only-narrow">
+                  <DexFilterSheet
+                    era={dexEra}
+                    onEra={setDexEra}
+                    owned={dexOwned}
+                    onOwned={setDexOwned}
+                    ownedOptions={DEX_OWNED}
+                  />
+                </span>
               )}
 
               {/* A dropdown rather than a segmented control, because this one has
@@ -1184,7 +1202,7 @@ export default function CardsView({
                 segments is most of the toolbar's width for a control that is
                 set once and left alone. */}
               {onPokedex && (
-                <label className="cards-select">
+                <label className="cards-select only-wide">
                   <span className="sr-only">Ownership</span>
                   <select
                     value={dexOwned}

@@ -92,16 +92,21 @@ export default function SignInForm({
           />
         </label>
         {/* No submit button. A form with a single field submits on Enter on its
-            own — that is implicit submission, and it is why the key can go in
-            and go. On a phone the keyboard's own Go key does the same thing.
-            What a button was also doing was saying that something is happening,
-            so that part stays as a line of text rather than as a control.
+            own — that is implicit submission, and it is why the password can go
+            in and go. On a phone the keyboard's own Go key does the same.
 
-            aria-live, because with the button gone this is the only thing that
-            changes between pressing Enter and the page moving: without it a
-            screen reader is told nothing at all for as long as it takes. */}
+            It used to say "Press Enter" at rest. A password box with nothing
+            beside it is already a box you press Enter in, so that line was
+            instructing someone who was not stuck, on the one screen where there
+            is nothing else to do. Empty at rest, and empty means no box: a <p>
+            with no content is zero pixels tall.
+
+            Kept in the DOM rather than mounted when it fills, because aria-live
+            only announces changes to a region that was already there. Without
+            it a screen reader is told nothing at all between the keypress and
+            the page moving, which is the whole gap the button used to cover. */}
         <p className="signin-hint" id="sign-in-hint" aria-live="polite">
-          {busy ? "Checking…" : "Press Enter"}
+          {busy ? "Checking…" : ""}
         </p>
       </form>
       {/* role="alert", because the message replaces nothing on screen: a wrong

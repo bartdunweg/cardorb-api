@@ -1657,6 +1657,16 @@ body:has(.page-cards) .theme-toggle {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-6);
   }
+  /* Capped, and centred in the column it no longer fills.
+     Beside the facts on a laptop the scan takes five twelfths of a 920px box;
+     stacked above them on a phone it took the full width of the dialog, which
+     since that dialog went full screen is the whole device. A card printed
+     larger than life, with everything it says about itself pushed under the
+     fold. 240px is about the size it is in the hand. */
+  .card-detail-scan {
+    width: min(240px, 62%);
+    margin-inline: auto;
+  }
 }
 
 /* The artwork carries its own rounded, transparent corners, so the shadow goes

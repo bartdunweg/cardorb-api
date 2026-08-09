@@ -45,11 +45,16 @@ export default async function Home({
   return (
     <section className="page-signin">
       <Card className="signin-card">
-        <h1 className="page-title">binder</h1>
-        <SignInForm
-          redirectTo={next}
-          note="A collection of Pokémon cards. Sign in to add to it."
-        />
+        {/* Heading and subtitle as one block, so the space between them is
+            smaller than the space to the field. Before this the card was three
+            things evenly spaced and read as a list rather than as a title with
+            a form under it. The note used to be passed into SignInForm, which
+            put it inside the form and out of reach of that grouping. */}
+        <div className="signin-head">
+          <h1 className="page-title">binder</h1>
+          <p className="signin-note">A collection of Pokémon cards. Sign in to add to it.</p>
+        </div>
+        <SignInForm redirectTo={next} />
       </Card>
 
       {/* Something for the people this login is not for. Without it the root of
