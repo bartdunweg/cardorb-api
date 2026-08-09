@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, keyIsRight, sameOrigin } from "../../../../lib/api/guard";
+import { SESSION_COOKIE, emailIsRight, keyIsRight, sameOrigin } from "../../../../lib/api/guard";
 
 /**
  * Signing in and out, which here means putting the key in a cookie or removing
@@ -31,15 +31,24 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (!process.env.CARDS_TOKEN) {
-    console.error("CARDS_TOKEN is not set: nobody can sign in");
-    return NextResponse.json({ error: "This deployment has no key configured." }, { status: 503 });
+  // Told apart from wrong credentials on purpose, and 503 rather than 401: a
+  // deployment missing its configuration is not somebody getting it wrong, and
+  // the form can say so instead of sending its user looking for a password that
+  // would not work anyway.
+  if (!process.env.CARDS_TOKEN || !process.env.OWNER_EMAIL) {
+    console.error("CARDS_TOKEN or OWNER_EMAIL is not set: nobody can sign in");
+    return NextResponse.json(
+      { error: "This deployment has no account configured." },
+      { status: 503 },
+    );
   }
 
   let key = "";
+  let email = "";
   try {
-    const body = (await req.json()) as { key?: unknown };
+    const body = (await req.json()) as { key?: unknown; email?: unknown };
     if (typeof body.key === "string") key = body.key;
+    if (typeof body.email === "string") email = body.email;
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -49,8 +58,12 @@ export async function POST(req: Request) {
   // and would lock the owner out of their own tool after ten typos, on a key
   // that is a long random string rather than something guessable by hand.
   // The limiter still stands in front of every endpoint the key opens.
-  if (!keyIsRight(key)) {
-    return NextResponse.json({ error: "That password is not right." }, { status: 401 });
+  // One message for both, and deliberately vague about which half was wrong.
+  // "No account with that address" is a way to ask whether an address has an
+  // account here, one guess at a time. There is exactly one account, so that
+  // matters less than it would elsewhere, and it costs nothing to not say.
+  if (!emailIsRight(email) || !keyIsRight(key)) {
+    return NextResponse.json({ error: "That email or password is not right." }, { status: 401 });
   }
 
   const res = NextResponse.json({ ok: true });

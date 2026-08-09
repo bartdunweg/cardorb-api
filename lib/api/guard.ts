@@ -131,6 +131,26 @@ export function keyFrom(req: Request): string {
  * if it were caught and turned into an answer. The lengths are compared first
  * and folded in, so every wrong key costs the same.
  */
+/**
+ * Whether this is the owner's address.
+ *
+ * Not a secret, and not treated as one: an email is a name, and the thing that
+ * proves you are its owner is the password beside it. So this is a plain
+ * comparison, case-insensitive and trimmed, because nobody types their own
+ * address the same way twice and a login that refuses "Bart@" is a login that
+ * looks broken.
+ *
+ * It exists at all so the email field is a real check rather than decoration.
+ * A form that asks for two things and only reads one is worse than a form that
+ * asks for one: it tells you the account is yours when the door is the
+ * password alone.
+ */
+export function emailIsRight(given: string): boolean {
+  const expected = process.env.OWNER_EMAIL;
+  if (!expected) return false;
+  return given.trim().toLowerCase() === expected.trim().toLowerCase();
+}
+
 export function keyIsRight(given: string): boolean {
   const expected = process.env.CARDS_TOKEN;
   if (!expected) return false;

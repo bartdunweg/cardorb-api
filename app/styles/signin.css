@@ -24,36 +24,24 @@
   max-width: 380px;
   display: flex;
   flex-direction: column;
-  /* Wider than the gap inside .signin-head, which is what makes the title and
-     its line read as one thing and the form as another. */
+  /* Air between the three things in here: the heading, the field and the way
+     past it. */
   gap: var(--space-6);
   /* .about-card clips, and nothing here escapes its edges; kept explicit
      because the form's focus ring sits right against the padding. */
   overflow: visible;
 }
 
-.signin-head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-/* The app's name, and the only heading on the page, so it is allowed to look
-   like one. It was --fs-sub in secondary grey on the reasoning that this is a
-   label on a door rather than a section heading — but at that weight it read as
-   a caption for the sentence under it, and the card looked unfinished. */
+/* The only heading on the page, so it is allowed to look like one. It was
+   --fs-sub in secondary grey, which read as a caption rather than a title.
+   Centred over the card: it names the whole card rather than the field
+   directly under it, and the two buttons below are full width and centred too,
+   so a left-aligned line at the top was the one thing off the axis. */
 .page-signin .page-title {
   margin: 0;
   font-size: var(--fs-card);
   color: var(--color-text-primary);
-}
-
-.signin-note {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  line-height: var(--lh-relaxed);
-  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 /* A column here, unlike on the profile screen this form is shared with.
@@ -74,26 +62,46 @@
   flex: 0 0 auto;
 }
 
-/* .btn carries the shape; this only says where it sits. Outside the card
-   rather than in it: the card is the thing you sign into, and the collection
-   is somewhere else entirely.
-
-   align-self, because .btn sets flex-start for the toolbars it usually lives
-   in, and in this centred column that put the button against the left edge of
-   the window. Not .btn--center, which also carries a margin meant for the
-   cover-flow label it was written for; the gap on .page-signin already spaces
-   this. */
-.signin-public {
-  align-self: center;
-}
-
-/* Stands in for the button that is not there, and only while there is
-   something to say. Empty the rest of the time, which costs no height. */
-.signin-hint {
-  margin: 0;
+/* The break between the two ways in, with the word that names it.
+   The lines are pseudo-elements so the markup is just the word: they take
+   whatever the word leaves, which keeps "or" centred without measuring
+   anything. Pulled out past the card's padding so they run edge to edge; inset,
+   it read as a gap in the layout rather than as a division. The card clips, so
+   they stop at the rounded corners on their own. */
+.signin-or {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 calc(-1 * var(--card-pad));
+  font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   color: var(--color-text-tertiary);
 }
-.signin-hint:empty {
-  display: none;
+.signin-or::before,
+.signin-or::after {
+  content: "";
+  flex: 1 1 0;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Square-ish and full width, unlike the pill .btn draws for toolbars: this is
+   the width of the card it sits in and the only control on its line, so a
+   capsule floating in the middle of that width read as a stray chip.
+
+   align-self overrides .btn's flex-start, which in this column would leave it
+   hugging the left edge. */
+.signin-public {
+  align-self: stretch;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+/* Full width and square, matching the demo button under the rule: the two are
+   the two ways in and should read as a pair, one filled and one not. .btn's
+   own align-self would leave this hugging the left edge of the column. */
+.signin-submit {
+  align-self: stretch;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-2);
 }

@@ -34,7 +34,16 @@ import { useCardsKey } from "../hooks/useCardsKey";
 export default function SignInForm({
   redirectTo,
   note,
+  defaultEmail = "",
 }: {
+  /**
+   * Filled in for you. There is one account, so the address is not a thing
+   * anyone has to remember, and it comes from OWNER_EMAIL on the server so the
+   * field and the check it is measured against cannot drift apart. It does
+   * mean the address is in the page's HTML; it is a name rather than a secret,
+   * and the password beside it is what actually opens anything.
+   */
+  defaultEmail?: string;
   /**
    * Where to go once it worked. Set on /, which is a door rather than a place;
    * omitted in the profile screen, where you are already standing in the room
@@ -45,6 +54,7 @@ export default function SignInForm({
 }) {
   const router = useRouter();
   const { signIn, error } = useCardsKey();
+  const [email, setEmail] = useState(defaultEmail);
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [offline, setOffline] = useState<string | null>(null);
@@ -52,11 +62,11 @@ export default function SignInForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const key = value.trim();
-    if (!key || busy) return;
+    if (!key || !email.trim() || busy) return;
     setBusy(true);
     setOffline(null);
     try {
-      if (await signIn(key)) {
+      if (await signIn(email.trim(), key)) {
         setValue("");
         if (redirectTo) router.push(redirectTo);
       }
@@ -75,11 +85,24 @@ export default function SignInForm({
       {note && <p className="cards-profile-note">{note}</p>}
       <form className="cards-profile-form" onSubmit={submit}>
         <label className="cards-profile-field">
+          <span className="cards-profile-label">Email</span>
+          <input
+            type="email"
+            name="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            disabled={busy}
+          />
+        </label>
+
+        <label className="cards-profile-field">
           <span className="cards-profile-label">Password</span>
           {/* type="password", so it is not read over a shoulder and so a
               password manager offers to keep it. autoComplete tells the manager
-              which one: without it, browsers fill the field with an address or
-              a name they guessed from the page. */}
+              which one, and pairs with the username field above it: without the
+              two together, browsers fill this with something they guessed. */}
           <input
             type="password"
             name="cards-key"
@@ -88,26 +111,17 @@ export default function SignInForm({
             onChange={(e) => setValue(e.target.value)}
             placeholder="••••••••"
             disabled={busy}
-            aria-describedby={`sign-in-hint${message ? " sign-in-error" : ""}`}
+            aria-describedby={message ? "sign-in-error" : undefined}
           />
         </label>
-        {/* No submit button. A form with a single field submits on Enter on its
-            own — that is implicit submission, and it is why the password can go
-            in and go. On a phone the keyboard's own Go key does the same.
 
-            It used to say "Press Enter" at rest. A password box with nothing
-            beside it is already a box you press Enter in, so that line was
-            instructing someone who was not stuck, on the one screen where there
-            is nothing else to do. Empty at rest, and empty means no box: a <p>
-            with no content is zero pixels tall.
-
-            Kept in the DOM rather than mounted when it fills, because aria-live
-            only announces changes to a region that was already there. Without
-            it a screen reader is told nothing at all between the keypress and
-            the page moving, which is the whole gap the button used to cover. */}
-        <p className="signin-hint" id="sign-in-hint" aria-live="polite">
-          {busy ? "Checking…" : ""}
-        </p>
+        {/* A button again. It was Enter alone, which is right for a single
+            field: one box, one obvious thing to do with it. Two fields is a
+            form, and a form with no visible way to submit leaves you looking
+            for one. Enter still works, from either field. */}
+        <button type="submit" className="btn btn--primary signin-submit" disabled={busy}>
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
       </form>
       {/* role="alert", because the message replaces nothing on screen: a wrong
           key leaves the form exactly as it was, and without this the only thing

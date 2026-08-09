@@ -28,16 +28,16 @@ export function useCardsKey() {
   const [error, setError] = useState<string | null>(null);
 
   const signIn = useCallback(
-    async (value: string): Promise<boolean> => {
+    async (email: string, value: string): Promise<boolean> => {
       setError(null);
       const res = await fetch("/api/v1/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: value }),
+        body: JSON.stringify({ email, key: value }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(body.error ?? "That password is not right.");
+        setError(body.error ?? "That email or password is not right.");
         return false;
       }
       // Only the refresh, so the server re-renders knowing about the cookie.
