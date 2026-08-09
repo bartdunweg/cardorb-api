@@ -59,7 +59,7 @@ export default async function PublicCollection({
     <section className="page-cards">
       <link rel="preconnect" href="https://assets.tcgdex.net" crossOrigin="anonymous" />
       <link rel="preconnect" href="https://images.pokemontcg.io" crossOrigin="anonymous" />
-      <CardsView sets={sets} mode="public" />
+      <CardsView sets={sets} mode="public" username={username} />
     </section>
   );
 }

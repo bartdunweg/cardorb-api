@@ -14,6 +14,7 @@ import Link from "next/link";
 import Card from "./Card";
 import Tag from "./Tag";
 import CardAddDialog from "./CardAddDialog";
+import PublicCardDialog from "./PublicCardDialog";
 import CardsDashboard from "./CardsDashboard";
 import CardsPokedex from "./CardsPokedex";
 import CardsProfile from "./CardsProfile";
@@ -86,8 +87,24 @@ const label = (era: string, span: Map<string, [number, number]>) => {
  * what the detail route is addressed by. Those keep the markup they always had
  * rather than becoming a dead anchor.
  */
-function CardLink({ id, children }: { id: string | null; children: React.ReactNode }) {
+function CardLink({
+  id,
+  onPick,
+  children,
+}: {
+  id: string | null;
+  /** Set on the public link, where a card has no URL to go to. */
+  onPick?: () => void;
+  children: React.ReactNode;
+}) {
   if (!id) return <>{children}</>;
+  if (onPick) {
+    return (
+      <button type="button" className="cards-item-link" onClick={onPick}>
+        {children}
+      </button>
+    );
+  }
   return (
     // scroll={false}, because this opens as a dialog over the page you are on.
     // The router scrolls to the top on a navigation, and it does it before the
@@ -192,13 +209,22 @@ export default function CardsView({
   sets,
   signedIn = false,
   mode = "owner",
+  username,
 }: {
   sets: CardSet[];
   /** Read from the session cookie on the server, so the first paint is right. */
   signedIn?: boolean;
   mode?: CardsMode;
+  /** Whose collection this is. Public only, and only to address its API by. */
+  username?: string;
 }) {
   const isPublic = mode === "public";
+  /**
+   * The card the public link has open, if any. Signed in this is a URL and an
+   * intercepted route; here it is state, because /cards is behind middleware
+   * and navigating there logs the visitor out of the page they were sent.
+   */
+  const [openCard, setOpenCard] = useState<{ card: OwnedCard; setName: string } | null>(null);
   const [query, setQuery] = useState("");
   // The list is well over a thousand items, so filtering runs against a
   // deferred copy of the query: typing stays responsive and the grid catches up
@@ -1332,6 +1358,11 @@ export default function CardsView({
                         tilt={view === "grid" && (scanSize ?? 0) >= TILT_FROM}
                         big={view === "grid" && (scanSize ?? 0) >= HIGH_FROM}
                         onScanBroken={onScanBroken}
+                        onPick={
+                          isPublic
+                            ? (card, setName) => setOpenCard({ card, setName })
+                            : undefined
+                        }
                       />
                     ))}
                   </ul>
@@ -1386,6 +1417,18 @@ export default function CardsView({
 
       {/* Only when signed in: the dialog's first act is to ask the database
           what its sets are called, and that endpoint is behind the key. */}
+      {/* The public link's answer to the intercepted route. Mounted always and
+          drawing nothing until a card is picked, so opening one is state rather
+          than a navigation the middleware would turn into a login. */}
+      {isPublic && username && (
+        <PublicCardDialog
+          username={username}
+          card={openCard?.card ?? null}
+          setName={openCard?.setName ?? null}
+          onClose={() => setOpenCard(null)}
+        />
+      )}
+
       {signedIn && (
         <CardAddDialog
           open={adding}
@@ -1435,11 +1478,14 @@ const CardItem = memo(function CardItem({
   tilt,
   big,
   onScanBroken,
+  onPick,
 }: {
   card: OwnedCard;
   setName: string;
   view: "grid" | "list";
   years: Map<string, [number, number]>;
+  /** Opens the card in place. Only on the public link; elsewhere it is a URL. */
+  onPick?: (card: OwnedCard, setName: string) => void;
   /** Whether this card still has a scan worth trying. */
   scan: boolean;
   /** Whether this card is drawn large enough for the foil. See TILT_FROM. */
@@ -1546,7 +1592,7 @@ const CardItem = memo(function CardItem({
           and an unmatched row has none. The rest stay exactly as they were
           rather than becoming a link to nowhere. The tags sit outside the link:
           they are what the card is, not somewhere to go. */}
-      <CardLink id={card.tcgId}>
+      <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined}>
         <span
           className="cards-scan"
           // Arming rather than tilting: the effect is mounted for this one card
