@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound } from "lucide-react";
 import { useCardsKey } from "../hooks/useCardsKey";
 
 /**
@@ -20,6 +19,11 @@ import { useCardsKey } from "../hooks/useCardsKey";
  * up without the autocomplete hint, or checking against a different endpoint
  * than the other, and neither is the sort of thing anyone notices until it
  * misbehaves.
+ *
+ * There is no submit button: one field, and Enter sends it. A button next to a
+ * single password box is a second thing to aim at for something the keyboard
+ * already does, and on a phone it competes with the Go key on the keyboard
+ * that is covering half the screen anyway.
  *
  * It posts to /api/v1/session, which verifies the key and sets the cookie. It
  * used to check the key against /api/v1/fields and then store it in this
@@ -83,13 +87,22 @@ export default function SignInForm({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="••••••••"
-            aria-describedby={message ? "sign-in-error" : undefined}
+            disabled={busy}
+            aria-describedby={`sign-in-hint${message ? " sign-in-error" : ""}`}
           />
         </label>
-        <button type="submit" className="btn btn--primary" disabled={busy || !value.trim()}>
-          <KeyRound size={16} strokeWidth={1.75} aria-hidden="true" />
-          <span>{busy ? "Checking" : "Sign in"}</span>
-        </button>
+        {/* No submit button. A form with a single field submits on Enter on its
+            own — that is implicit submission, and it is why the key can go in
+            and go. On a phone the keyboard's own Go key does the same thing.
+            What a button was also doing was saying that something is happening,
+            so that part stays as a line of text rather than as a control.
+
+            aria-live, because with the button gone this is the only thing that
+            changes between pressing Enter and the page moving: without it a
+            screen reader is told nothing at all for as long as it takes. */}
+        <p className="signin-hint" id="sign-in-hint" aria-live="polite">
+          {busy ? "Checking…" : "Press Enter"}
+        </p>
       </form>
       {/* role="alert", because the message replaces nothing on screen: a wrong
           key leaves the form exactly as it was, and without this the only thing

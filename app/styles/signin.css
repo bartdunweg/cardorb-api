@@ -50,3 +50,12 @@
 .signin-public {
   align-self: center;
 }
+
+/* Stands in for the button that is not there: the only thing that changes
+   between pressing Enter and the page moving. Quiet, because it is an
+   instruction you need once and then never again. */
+.signin-hint {
+  margin: 0;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
