@@ -2506,3 +2506,190 @@ button.cards-dex-body:focus-visible::after {
     gap: var(--space-2);
   }
 }
+
+/* ─── SHEETS (below 640px) ─── */
+
+/* Which of the two copies of a control is on screen. The dropdown and the sheet
+   are both in the markup at every width, and this is what decides: rendering
+   one of them from a measured window would mean the server picks wrong and the
+   browser corrects it a frame later, in the toolbar, in front of you. */
+.only-narrow {
+  display: none;
+}
+@media (max-width: 640px) {
+  .only-wide {
+    display: none;
+  }
+  .only-narrow {
+    display: contents;
+  }
+}
+
+/* The sheet borrows the drawer Modal already animates up from the bottom on a
+   phone (see the note on enterFrom in Modal). What it needs of its own is the
+   width, the corners and a height that stops short of the top.
+
+   .modal has no width of its own — the connect panel sized itself from its
+   content — so without this the sheet came up as a column three quarters of the
+   way across the screen with the page showing beside it, which is a drawer that
+   happens to be at the bottom rather than a sheet. */
+.modal--sheet {
+  width: 100%;
+  max-width: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+  /* Solid, not the 0.8 alpha .modal wears. That panel floats over a page it is
+     meant to stay connected to; this one covers the bottom half of the screen
+     and every row in it is a word over whatever card art happened to be behind
+     it. A list you read needs a surface. */
+  background: var(--glass-bg-solid);
+}
+[data-theme="dark"] .modal--sheet {
+  background: var(--glass-bg-solid);
+}
+.modal--sheet .modal-scroll {
+  height: auto;
+  max-height: 88svh;
+  overscroll-behavior: contain;
+}
+/* No round close button. It sat over the header and collided with Clear, and
+   this dialog has two plainer ways out that are already under the thumb: the
+   buttons in the foot, and the backdrop. */
+.modal--sheet .modal-close {
+  display: none;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 88svh;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sheet-title {
+  margin: 0;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-sub);
+  color: var(--color-text-primary);
+}
+
+.sheet-back {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-main);
+  font-weight: var(--fw-title);
+  font-size: var(--fs-sub);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.sheet-clear {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+/* The one part that scrolls. Several hundred Pokémon in one facet, and the head
+   and the foot have to stay where a thumb left them. */
+.sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.sheet-body--pad {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.sheet-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet-option,
+.sheet-facet {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  /* 48px, which is the size of a target a thumb hits without aiming. The
+     dropdown's rows are 32 and that is fine for a pointer. */
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: none;
+  background: none;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.sheet-option-name,
+.sheet-facet .sheet-option-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-option-count {
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-facet-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-small);
+  color: var(--color-text-primary);
+}
+
+.sheet-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sheet-label {
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+}
+
+/* Below the scroller, so it is reachable without scrolling to the end of six
+   hundred Pokémon first, and clear of the home indicator. */
+.sheet-foot {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border);
+}
+.sheet-foot .btn {
+  flex: 1 1 0;
+  justify-content: center;
+  align-self: auto;
+}
+.sheet-apply {
+  flex: 2 1 0;
+}

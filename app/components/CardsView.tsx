@@ -20,6 +20,8 @@ import CardsProfile from "./CardsProfile";
 import CardsSidebar, { retryAsPng } from "./CardsSidebar";
 import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 import FilterMenu, { type Facet } from "./FilterMenu";
+import FilterSheet from "./FilterSheet";
+import ViewSheet from "./ViewSheet";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
 import { useCardsKey } from "../hooks/useCardsKey";
 import { getCardsStats, tally } from "../../lib/core/cards-stats";
@@ -699,6 +701,7 @@ export default function CardsView({
         selected: pickedNames,
         onToggle: toggle(setPickedNames),
         onClear: () => setPickedNames(new Set()),
+        onReplace: (next: Set<string>) => setPickedNames(next),
       },
       {
         key: "rarity",
@@ -707,6 +710,7 @@ export default function CardsView({
         selected: pickedRarities,
         onToggle: toggle(setPickedRarities),
         onClear: () => setPickedRarities(new Set()),
+        onReplace: (next: Set<string>) => setPickedRarities(next),
       },
       // Not on the public link. The bands are labelled in euros ("Under €5",
       // "€100 and up"), so the facet says what a collection is worth even with
@@ -721,6 +725,7 @@ export default function CardsView({
               selected: pickedValues,
               onToggle: toggle(setPickedValues),
               onClear: () => setPickedValues(new Set()),
+              onReplace: (next: Set<string>) => setPickedValues(next),
             },
           ]),
       {
@@ -730,6 +735,7 @@ export default function CardsView({
         selected: pickedTypes,
         onToggle: toggle(setPickedTypes),
         onClear: () => setPickedTypes(new Set()),
+        onReplace: (next: Set<string>) => setPickedTypes(next),
       },
       ...(ownershipOptions.length > 1
         ? [
@@ -740,6 +746,7 @@ export default function CardsView({
               selected: pickedOwnership,
               onToggle: toggle(setPickedOwnership),
               onClear: () => setPickedOwnership(new Set()),
+              onReplace: (next: Set<string>) => setPickedOwnership(next),
             },
           ]
         : []),
@@ -1058,7 +1065,20 @@ export default function CardsView({
                 it was the last thing on a row that wraps, which on a phone put
                 it alone on a line of its own. */}
               {!onDashboard && !onPokedex && (
-                <div className="cards-views" role="group" aria-label="Layout">
+                <span className="only-narrow">
+                  <ViewSheet
+                    view={view}
+                    onView={setView}
+                    size={scanSize ?? SCAN_DEFAULT}
+                    onSize={setScanSize}
+                    min={SCAN_MIN}
+                    max={SCAN_MAX}
+                  />
+                </span>
+              )}
+
+              {!onDashboard && !onPokedex && (
+                <div className="cards-views only-wide" role="group" aria-label="Layout">
                   {(
                     [
                       ["grid", LayoutGrid, "Grid"],
@@ -1093,7 +1113,7 @@ export default function CardsView({
                 fraction anyway, so a finer one only produces sizes that round to
                 the same layout. */}
               {!onPokedex && !onDashboard && view === "grid" && (
-                <label className="cards-size">
+                <label className="cards-size only-wide">
                   <span className="sr-only">Card size</span>
                   <Square size={11} strokeWidth={2} aria-hidden="true" />
                   <input
@@ -1179,7 +1199,21 @@ export default function CardsView({
                 under the bar. */}
               {/* Nothing behind this on the dex: rarity and type are facts about
                 cards, and that view is a list of Pokémon. */}
-              {!onPokedex && <FilterMenu facets={facets} />}
+              {/* The same facets twice, and never both on screen: the dropdown
+                where the page is visible around it, the sheet where it is not.
+                Swapped in the stylesheet rather than by measuring the window,
+                so the server renders one markup and the browser does not have
+                to correct it after hydration. */}
+              {!onPokedex && (
+                <>
+                  <span className="only-wide">
+                    <FilterMenu facets={facets} />
+                  </span>
+                  <span className="only-narrow">
+                    <FilterSheet facets={facets} />
+                  </span>
+                </>
+              )}
 
 
               {active && (

@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { animate } from "motion";
 import { X } from "lucide-react";
 import { SPRING_MODAL, DUR_NORMAL, DUR_SLOW, prefersReducedMotion } from "../../lib/core/motion";
@@ -260,9 +261,30 @@ export default function Modal({
     }
   };
 
-  if (!open) return null;
+  // No document to portal into on the server. `open` is false there anyway —
+  // a dialog is never up on a first paint — so this is a guard for the type
+  // rather than a branch anyone reaches.
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  /**
+   * Into the body, not where it was written.
+   *
+   * The backdrop is fixed with z-index 1000, which beats the bottom bar's 900
+   * — but only if the two are being compared in the same stacking context. A
+   * dialog opened from a control inside the toolbar was nested under
+   * .cards-intro, which lifts itself with position and a z-index so its filter
+   * panels can escape the card; inside that context 1000 means nothing to a bar
+   * outside it, and the sheet's own buttons sat under the tab bar and could not
+   * be pressed.
+   *
+   * The dialogs that worked did so by accident of where they are mounted: the
+   * card modal is a parallel route rendered beside <main>, and the add dialog
+   * sits at the top of CardsView. A dialog should not depend on its caller
+   * being careful about that, so it portals.
+   *
+   * React context still crosses a portal, so nothing above needs to change.
+   */
+  return createPortal(
     <div
       className={`modal-backdrop${variant === "right" ? " modal-backdrop--right" : ""} is-open`}
       ref={backdropRef}
@@ -285,6 +307,7 @@ export default function Modal({
         </button>
         <div className="modal-scroll">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
