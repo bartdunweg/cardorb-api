@@ -1,0 +1,29 @@
+{
+  "name": "binder",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "check": "npm run typecheck && npm run test && npm run lint"
+  },
+  "dependencies": {
+    "next": "^16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.10",
+    "prettier": "^3.9.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
