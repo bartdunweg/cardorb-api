@@ -20,7 +20,7 @@ import FilterChips, { type ActiveFilter } from "./FilterChips";
 import { useCardsKey } from "../hooks/useCardsKey";
 import { getCardsStats, tally } from "../../lib/core/cards-stats";
 import { caught, getPokedex } from "../../lib/core/pokedex";
-import { shownPrice } from "../../lib/core/cards";
+import { highScan, shownPrice } from "../../lib/core/cards";
 import type { CardSet, OwnedCard } from "../../lib/core/cards";
 import { LOCALE, OWNER_NAME } from "../../lib/core/config";
 import { euro, euroWhole } from "../../lib/core/format";
@@ -761,7 +761,21 @@ export default function CardsView({
    * honest trade for the freeze, and this page has a search box of its own which
    * looks through all 1,622 whatever is on screen.
    */
-  const [builtSets, setBuiltSets] = useState(SET_STEP);
+  /**
+   * How many groups are built to begin with.
+   *
+   * Six behind the login, which is the point of the incremental build: a
+   * thousand-odd tiles is a second of blocked main thread, and nobody scrolls
+   * that far before the observer has caught up.
+   *
+   * All of them on the public link, and that is the one page where the trade
+   * goes the other way. It is the only indexed page in the app, and a crawler
+   * does not scroll — six sets meant 91 of 1,645 cards were the entire page as
+   * far as a search engine was concerned. The cost is paid once, in prerender,
+   * because that route is static.
+   */
+  const initialSets = isPublic ? Number.MAX_SAFE_INTEGER : SET_STEP;
+  const [builtSets, setBuiltSets] = useState(initialSets);
   /**
    * Back to the first few whenever the answer changes. Without this, narrowing a
    * search kept whatever count the last scroll had grown to, so a query matching
@@ -784,7 +798,7 @@ export default function CardsView({
   const [generation, setGeneration] = useState(0);
   if (builtFor !== filtered) {
     setBuiltFor(filtered);
-    setBuiltSets(SET_STEP);
+    setBuiltSets(initialSets);
     setGeneration((g) => g + 1);
   }
   // Years or sets, whichever the page is grouped by. Both are CardSet[] on
@@ -792,8 +806,8 @@ export default function CardsView({
   // that draws a section keeps working without knowing which it is looking at.
   const grouped = onYear ? yearGroups : filtered;
   const visibleSets = useMemo(
-    () => grouped.slice(0, builtFor === filtered ? builtSets : SET_STEP),
-    [grouped, filtered, builtFor, builtSets],
+    () => grouped.slice(0, builtFor === filtered ? builtSets : initialSets),
+    [grouped, filtered, builtFor, builtSets, initialSets],
   );
 
   /**
@@ -1727,7 +1741,7 @@ const CardItem = memo(function CardItem({
       // makes this quiet: a browser keeps painting the picture it has until the
       // new one has decoded, so crossing the threshold sharpens the grid in
       // place instead of blanking it and filling it back in.
-      src={(big && card.imageHigh) || card.image!}
+      src={(big && highScan(card.image)) || card.image!}
       alt={card.name}
       loading="lazy"
       decoding="async"

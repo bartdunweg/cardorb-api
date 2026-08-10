@@ -608,6 +608,46 @@ export function cardNeighbours(
   return { prev: ids[i - 1] ?? null, next: ids[i + 1] ?? null };
 }
 
+/**
+ * The large scan for a card, worked out rather than carried.
+ *
+ * `imageHigh` used to travel with every card and it is pure redundancy: over
+ * the whole collection, 1,548 of the 1,548 cards that have one are exactly
+ * their own `image` with "low" swapped for "high", and none of the 62 that
+ * lack one match that shape. So the field is 105 kB — 13.6% of the payload —
+ * restating a string the client already holds.
+ *
+ * The rule is the host, not the URL shape: TCGdex publishes both sizes, and the
+ * two fallback catalogues (pokemontcg.io, and Limitless through /api/cover)
+ * publish a single file. That is exactly the 62.
+ *
+ * Kept on OwnedCard and on the API for now, because /v1/collection is a
+ * published shape with a client that does not exist yet to renegotiate it
+ * with. What changed is that the browser is no longer sent it.
+ */
+export function highScan(image: string | null): string | null {
+  if (!image) return null;
+  return image.startsWith("https://assets.tcgdex.net/") && image.endsWith("/low.webp")
+    ? image.replace(/\/low\.webp$/, "/high.webp")
+    : null;
+}
+
+/**
+ * The collection as the grid needs it, without what the grid can work out.
+ *
+ * Today that is `imageHigh` alone. It sits beside stripPrices rather than
+ * inside it because they answer different questions — one is about what a
+ * visitor may see, the other about what is worth sending — and folding them
+ * together would mean the owner's page could not have the second without the
+ * first.
+ */
+export function forGrid(sets: CardSet[]): CardSet[] {
+  return sets.map((set) => ({
+    ...set,
+    cards: set.cards.map((card) => ({ ...card, imageHigh: null })),
+  }));
+}
+
 export function stripPrices(sets: CardSet[]): CardSet[] {
   return sets.map((set) => ({
     ...set,

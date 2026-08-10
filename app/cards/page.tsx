@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import CardsView from "../components/CardsView";
-import { getCards } from "../../lib/core/cards";
+import { forGrid, getCards } from "../../lib/core/cards";
 import { SESSION_COOKIE } from "../../lib/api/guard";
 
 export const metadata: Metadata = {
@@ -47,7 +47,10 @@ function Preconnect({ to }: { to: string[] }) {
 }
 
 export default async function CardsPage() {
-  const [sets, jar] = await Promise.all([getCards(), cookies()]);
+  const [all, jar] = await Promise.all([getCards(), cookies()]);
+  // Derivable fields off before the collection crosses into a client
+  // component. See forGrid in lib/core/cards.ts.
+  const sets = forGrid(all);
   const signedIn = Boolean(jar.get(SESSION_COOKIE)?.value);
 
   return (

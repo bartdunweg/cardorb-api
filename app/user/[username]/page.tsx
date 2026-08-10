@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
-import { getCards, stripPrices } from "../../../lib/core/cards";
+import { forGrid, getCards, stripPrices } from "../../../lib/core/cards";
 import { OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
 
 /**
@@ -82,7 +82,7 @@ export default async function PublicCollection({
 
   // Stripped before it is handed to a client component, so the prices are not
   // in the HTML and not in the props. See stripPrices in lib/core/cards.ts.
-  const sets = stripPrices(await getCards());
+  const sets = forGrid(stripPrices(await getCards()));
 
   const held = sets.reduce((n, set) => n + set.cards.filter((c) => c.owned).length, 0);
 
