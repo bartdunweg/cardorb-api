@@ -159,10 +159,17 @@ const COLS = {
  * Not a taste threshold. poke-holo.css records what happened when that effect
  * was drawn small: at 113px the recipe read as vertical stripes over the
  * picture rather than as foil, because it is built for a card rendered three
- * times that wide. Four across or fewer is where a card is being looked at
- * rather than scanned past.
+ * times that wide.
+ *
+ * Six rather than five, which is the number the default was falling one short
+ * of: a wide screen opens at six columns (COLS.wide.fallback) and the effect
+ * was off at exactly that, so on a laptop nobody saw it at all unless they
+ * went into View and asked for fewer. Measured on a 1400px window, six columns
+ * draws a 164px card — half again the width the stripes argument is about — so
+ * the reason for the limit does not reach this far. At ten it does, and ten is
+ * still out.
  */
-const TILT_UNDER = 5;
+const TILT_UNDER = 6;
 
 /** Vintage is the Wizards era. Decided on the sets' own dates, not a list. */
 const VINTAGE_BEFORE = 2010;
