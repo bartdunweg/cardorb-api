@@ -1,0 +1,70 @@
+/* The one form in this app, and both screens that draw it.
+ *
+ * These rules were in cards.css. They had to leave when the collection's
+ * stylesheet stopped loading on every route: the login uses the same field, the
+ * same label and the same error line as the profile screen — that sharing is
+ * deliberate, so there is one password box in the app rather than two that
+ * drift — and taking cards.css off the login took the form's layout with it.
+ * The field sat inline with its label and the button ended up beside it.
+ *
+ * Named for what it is rather than kept under .cards-profile-*: the class names
+ * stay, because renaming them across two components is churn for its own sake,
+ * but the file no longer claims this belongs to the collection.
+ */
+.cards-profile-note {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-s);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-secondary);
+}
+.cards-profile-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  width: 100%;
+}
+.cards-profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  /* Takes the row it is on and lets the button sit beside it while there is
+     room for both. */
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.cards-profile-label {
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-eyebrow);
+  color: var(--color-text-secondary);
+}
+.cards-profile-error {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  font-weight: var(--fw-eyebrow);
+  color: var(--color-text-primary);
+}
+
+.cards-profile-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--space-3-5);
+  outline: none;
+  color: var(--color-text-primary);
+  /* Never under 16px: below it iOS zooms the page the moment the field takes
+     focus, which is what --fs-control exists for. */
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-control);
+  font-weight: var(--fw-regular);
+}
+.card-add-field input::placeholder,
+.cards-profile-field input::placeholder {
+  color: var(--color-text-tertiary);
+}
+.card-add-field input:focus-visible,
+.cards-profile-field input:focus-visible {
+  border-color: var(--color-border-active);
+}

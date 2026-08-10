@@ -1,4 +1,11 @@
-/* These arrived from the portfolio, where they styled a personal site with a
+/* The foundation every route needs: the tokens, the base rules, the shared
+ * controls, the card shell, the dialog. What used to be here as well is the
+ * collection itself — cards.css and poke-holo.css, 3,233 of these 5,227 lines —
+ * and it moved to app/styles/collection.css, imported by the routes that draw a
+ * collection. The login was pulling three thousand lines of grid, rail, tab bar
+ * and holo-foil to render a field and a button.
+ *
+ * These arrived from the portfolio, where they styled a personal site with a
  * home page, a résumé, articles, a travel globe and a contact modal. Binder is
  * one tool, so the sheets for pages that do not exist here were never brought
  * over, and what did come over has been cut down to the rules something on
@@ -25,7 +32,6 @@
 @import "./styles/card-shell.css";
 @import "./styles/pages.css";
 @import "./styles/errors.css";
-@import "./styles/poke-holo.css";
-@import "./styles/cards.css";
+@import "./styles/form.css";
 /* After cards.css: the login reuses its form rules and then places them. */
 @import "./styles/signin.css";

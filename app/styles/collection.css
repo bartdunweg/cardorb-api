@@ -1,0 +1,9 @@
+/* Everything that draws a collection, for the routes that draw one.
+ *
+ * Imported by the pages rather than by the root layout, which is what keeps it
+ * off the login and the 404. Order still holds: globals.css comes from the
+ * layout and therefore first, so the overrides in here still win the way they
+ * did when both were in one file.
+ */
+@import "./cards.css";
+@import "./poke-holo.css";

@@ -6,26 +6,56 @@ import Button from "../../components/Button";
 import { ChevronLeft } from "lucide-react";
 import CardNav from "../../components/CardNav";
 import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../../lib/core/cards";
+import "../../styles/collection.css";
 
 /**
  * One card, in full.
  *
- * Every card is prerendered and nothing outside the collection resolves, which
- * is not the cheap option but is the only correct one: with dynamicParams on,
- * notFound() inside a revalidating segment answers 200 with the not-found page
- * in the body (a soft 404, measured) and the same trap the articles route
- * documents. Listing the ids makes the router itself refuse an unknown card.
- *
- * The cost is bounded by getCards() being walked once per build rather than
- * once per page, and by every TCGdex call being fetch-cached for a day.
+ * Rendered on demand and cached for an hour after. This route used to prerender
+ * every card in the collection, and the argument for it — that a soft 404 is a
+ * real problem — was inherited from a repo where these pages were indexed. Here
+ * they are noindex and behind middleware. See generateStaticParams below for
+ * what that listing actually cost.
  */
-export const dynamicParams = false;
+export const dynamicParams = true;
+/**
+ * Cached for an hour after the first request.
+ *
+ * A missing card answers 200 with the not-found page in the body — a soft 404,
+ * and it is not fixed here. Two things were tried: rendering per request
+ * instead of caching, and adding the root not-found boundary that was missing.
+ * Neither changed the status, because app/cards/loading.tsx makes this route
+ * stream: the headers are on their way before the component gets far enough to
+ * call notFound().
+ *
+ * Left as it is, deliberately. The only thing a wrong status costs is a
+ * crawler's understanding, and this route is noindex and behind middleware, so
+ * nothing crawls it and the only visitor who can reach a bad id is the owner
+ * mistyping one — who gets a page that says Not found. The alternative was
+ * prerendering all 1,603 ids so the router itself refuses unknown ones, which
+ * is what this used to do, at 175 MB and most of the build time per deploy.
+ *
+ * If /cards is ever indexed, this is the trade to revisit, and the honest fix
+ * is to resolve the id before the page begins streaming.
+ */
 export const revalidate = 3600;
 export async function generateStaticParams() {
-  const sets = await getCards();
-  return sets.flatMap((set) =>
-    set.cards.flatMap((card) => (card.tcgId ? [{ id: card.tcgId }] : [])),
-  );
+  // Nothing up front, everything on demand.
+  //
+  // This used to list every id, and the reasoning was sound in the repo it came
+  // from: there, a card page was indexed, and with dynamicParams on a
+  // notFound() inside a revalidating segment answers 200 with the not-found
+  // body — a soft 404, which is a real problem for a page a crawler reads.
+  //
+  // Neither half of that is true here. These pages are noindex and sit behind
+  // middleware, so nothing crawls them and the only visitor who can reach a
+  // bad id is the owner typing one. What the listing cost instead was 1,603
+  // pages built twice — this route and the intercepting modal — for 175 MB and
+  // most of the build, all of it for pages one person opens a handful of.
+  //
+  // ISR still caches each page for an hour after its first request, so the
+  // second visitor pays nothing either way.
+  return [];
 }
 
 /** The Notion side: which printings are held, and what the collection calls it. */

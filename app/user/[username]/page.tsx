@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
 import { forGrid, getCards, stripPrices } from "../../../lib/core/cards";
 import { OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
+import "../../styles/collection.css";
 
 /**
  * The link you hand to someone: the collection, to look at.

@@ -1577,7 +1577,6 @@ body:has(.page-cards) .theme-toggle {
   white-space: nowrap;
 }
 
-
 @media (max-width: 640px) {
   .cards-segmented {
     width: 100%;
@@ -1921,7 +1920,6 @@ body:has(.page-cards) .theme-toggle {
   }
 }
 
-
 /* ── Adding a card (CardAddDialog) ──
 
    Narrower than the card dialog above it: this is a form of short fields, and a
@@ -1997,26 +1995,6 @@ body:has(.page-cards) .theme-toggle {
   float: none;
 }
 .card-add-field input,
-.cards-profile-field input {
-  width: 100%;
-  min-width: 0;
-  padding: 0 var(--space-3-5);
-  outline: none;
-  color: var(--color-text-primary);
-  /* Never under 16px: below it iOS zooms the page the moment the field takes
-     focus, which is what --fs-control exists for. */
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-control);
-  font-weight: var(--fw-regular);
-}
-.card-add-field input::placeholder,
-.cards-profile-field input::placeholder {
-  color: var(--color-text-tertiary);
-}
-.card-add-field input:focus-visible,
-.cards-profile-field input:focus-visible {
-  border-color: var(--color-border-active);
-}
 
 .card-add-chips {
   display: flex;
@@ -2128,42 +2106,6 @@ body:has(.page-cards) .theme-toggle {
   font-weight: var(--fw-title);
   font-size: var(--fs-card);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
-}
-.cards-profile-note {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  line-height: var(--lh-relaxed);
-  color: var(--color-text-secondary);
-}
-.cards-profile-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
-  width: 100%;
-}
-.cards-profile-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  /* Takes the row it is on and lets the button sit beside it while there is
-     room for both. */
-  flex: 1 1 200px;
-  min-width: 0;
-}
-.cards-profile-label {
-  font-family: var(--font-main);
-  font-size: var(--fs-small);
-  font-weight: var(--fw-eyebrow);
-  color: var(--color-text-secondary);
-}
-.cards-profile-error {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-weight: var(--fw-eyebrow);
   color: var(--color-text-primary);
 }
 

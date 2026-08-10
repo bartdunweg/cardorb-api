@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import CardsView from "../components/CardsView";
 import { forGrid, getCards } from "../../lib/core/cards";
 import { SESSION_COOKIE } from "../../lib/api/guard";
+import "../styles/collection.css";
 
 export const metadata: Metadata = {
   title: "Cards",

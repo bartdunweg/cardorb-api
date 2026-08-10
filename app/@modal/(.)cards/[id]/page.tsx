@@ -3,6 +3,7 @@ import CardModal from "../../../components/CardModal";
 import CardDetail from "../../../components/CardDetail";
 import CardNav from "../../../components/CardNav";
 import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../../../lib/core/cards";
+import "../../../styles/collection.css";
 
 /**
  * A card, opened from the list.
@@ -20,16 +21,13 @@ import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../.
 export const revalidate = 3600;
 
 /**
- * The same refusal /cards/[id] makes, and for both of the same reasons.
+ * On demand, like the route it intercepts.
  *
- * Written out at length there (app/cards/[id]/page.tsx, above its own copy of
- * this line): with dynamicParams on, the notFound() below returns HTTP 200 with
- * the not-found body, which is a soft 404, and any id not in the list falls into
- * exactly the dynamic render the comment underneath says was the bug. This route
- * had the expensive half of that problem documented and the line that prevents
- * it missing.
+ * This is the half that made the old arrangement expensive rather than merely
+ * cautious: the same 1,603 ids were prerendered here as well, so every card in
+ * the collection was built twice per deploy.
  */
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 /**
  * Every card, prerendered, exactly like the page it stands in for.
@@ -46,10 +44,22 @@ export const dynamicParams = false;
  * fetched and cached for that build.
  */
 export async function generateStaticParams() {
-  const sets = await getCards();
-  return sets.flatMap((set) =>
-    set.cards.flatMap((card) => (card.tcgId ? [{ id: card.tcgId }] : [])),
-  );
+  // Nothing up front, everything on demand.
+  //
+  // This used to list every id, and the reasoning was sound in the repo it came
+  // from: there, a card page was indexed, and with dynamicParams on a
+  // notFound() inside a revalidating segment answers 200 with the not-found
+  // body — a soft 404, which is a real problem for a page a crawler reads.
+  //
+  // Neither half of that is true here. These pages are noindex and sit behind
+  // middleware, so nothing crawls them and the only visitor who can reach a
+  // bad id is the owner typing one. What the listing cost instead was 1,603
+  // pages built twice — this route and the intercepting modal — for 175 MB and
+  // most of the build, all of it for pages one person opens a handful of.
+  //
+  // ISR still caches each page for an hour after its first request, so the
+  // second visitor pays nothing either way.
+  return [];
 }
 
 async function owned(id: string): Promise<{ card: OwnedCard; setName: string } | null> {
