@@ -30,3 +30,24 @@ export const PUBLIC_USERNAME = process.env.PUBLIC_USERNAME ?? "bartdunweg";
  * lookup on the same day that one does.
  */
 export const OWNER_NAME = process.env.OWNER_NAME ?? "Bart";
+
+/**
+ * Where this app lives, absolutely.
+ *
+ * Needed the moment anything has to say its own address: a canonical, an
+ * og:url, a sitemap. A relative path cannot do any of those.
+ *
+ * Three sources in order. An explicit NEXT_PUBLIC_SITE_URL wins, because a
+ * custom domain is a decision rather than something to infer. Failing that,
+ * Vercel's own production URL, which is right on every deploy without anyone
+ * setting it — note this is the *project* production URL and not VERCEL_URL,
+ * which is the per-deployment address and would put a preview's hostname in a
+ * canonical. Failing both, localhost, so development does not emit somebody
+ * else's domain.
+ */
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000")
+).replace(/\/$/, "");

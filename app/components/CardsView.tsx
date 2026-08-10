@@ -972,6 +972,7 @@ export default function CardsView({
   // rather than trusting the initial state: `selected` is also written by the
   // bar, the rail and the search, and one of them forgetting would land someone
   // on a screen that does not exist there.
+  const MainTitle = isPublic ? "h1" : "h2";
   const onDashboard = selected === "dashboard" && !isPublic;
   /** The set the page is on, when it is on one: its logo and its facts head the
       page rather than being repeated over the grid below. */
@@ -1115,7 +1116,12 @@ export default function CardsView({
           Out of sight rather than out of the document, the same call /fifa
           makes: what you can see already says which page this is, twice over,
           and a title over both panes would be a third thing saying it. */}
-      <h1 className="sr-only">Cards</h1>
+      {/* Owner side only. On the public link the visible title below is the h1
+          instead: that page is indexed, and an h1 reading "Cards" on a page
+          titled "<name>'s Pokémon card collection" is the heading disagreeing
+          with the title about what the page is. Here there is nothing to
+          disagree with — the tab says binder and the screen says Cards. */}
+      {!isPublic && <h1 className="sr-only">Cards</h1>}
 
       <CardsSidebar
         sets={sets}
@@ -1167,7 +1173,17 @@ export default function CardsView({
                 cards, saying it here would replace the name of the thing you
                 are actually looking at — the collection, the wishlist, or one
                 set — with the name of a control. */}
-            <h2 className="cards-main-title">
+            {/* An h1 on the public link and an h2 behind the login. The
+                indexed page needs exactly one top-level heading and this is
+                the only thing on it that names the collection; the owner side
+                already has one in the sr-only line above.
+
+                The trade, stated: below 1000px the rail is a screen of its own
+                and .cards-main is hidden, so a public visitor looking at the
+                list of sets is on a screen whose h1 is not rendered. A crawler
+                is never in that state, and the rail is one press from the
+                screen that has it. */}
+            <MainTitle className="cards-main-title">
               {onDashboard
                 ? "Dashboard"
                 : onProfile
@@ -1179,7 +1195,7 @@ export default function CardsView({
                       : selected.startsWith("era:")
                         ? label(selected.slice(4), years)
                         : selected}
-            </h2>
+            </MainTitle>
           </div>
           {/* What you are looking at, in numbers, announced politely so it
               reaches a screen reader as it changes rather than only being

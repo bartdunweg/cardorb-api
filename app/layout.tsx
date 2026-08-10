@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
 /**
@@ -44,6 +45,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  /**
+   * What every relative URL in any metadata on any route is resolved against.
+   *
+   * Without it Next warns and drops relative og:image and canonical values, so
+   * this is what makes the public page's own metadata mean anything. It lives
+   * on the layout because it is one fact about the deployment rather than
+   * something a route decides.
+   */
+  metadataBase: new URL(SITE_URL),
   title: "binder",
   description: "A Pokemon card collection, and the API behind it.",
   // Nothing here is for search engines: it is one person's collection tool.
