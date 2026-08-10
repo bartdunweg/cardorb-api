@@ -26,12 +26,29 @@ function lockScroll(): () => void {
   // the grid behind the dialog; pinning the width means nothing reflows at all.
   // On a trackpad Mac there is no gutter to lose and this is simply the width.
   const width = document.documentElement.clientWidth;
+  /**
+   * The viewport as it is *right now*, scrollbar and all.
+   *
+   * Pinning the body stops the page scrolling, which takes the scrollbar away,
+   * which narrows the viewport — and a `position: fixed` element measures
+   * itself against the viewport, not against the body we just pinned. So the
+   * bar along the bottom lost four pixels the moment a card was opened and got
+   * them back when it closed: a flinch under your thumb, in the one place on a
+   * phone you are already looking.
+   *
+   * Handed to the stylesheet rather than fixed here, because which fixed
+   * elements care is a layout question. See --lock-vw in tabbar.css.
+   */
+  const vw = window.innerWidth;
+  const root = document.documentElement;
   const was = {
     overflow: body.style.overflow,
     position: body.style.position,
     top: body.style.top,
     width: body.style.width,
+    vw: root.style.getPropertyValue("--lock-vw"),
   };
+  root.style.setProperty("--lock-vw", `${vw}px`);
   body.style.overflow = "hidden";
   body.style.position = "fixed";
   body.style.top = `-${y}px`;
@@ -41,6 +58,10 @@ function lockScroll(): () => void {
     body.style.position = was.position;
     body.style.top = was.top;
     body.style.width = was.width;
+    // Back to nothing, so the bar goes back to measuring the live viewport and
+    // keeps following a rotation or a resize.
+    if (was.vw) root.style.setProperty("--lock-vw", was.vw);
+    else root.style.removeProperty("--lock-vw");
     window.scrollTo(0, y);
   };
 }

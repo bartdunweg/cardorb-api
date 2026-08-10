@@ -1,6 +1,11 @@
 /* Tab bar (floating bottom bar + top-bar variant), split from globals.css (order preserved) *//* ─── TAB BAR (floating bottom bar) ─── *//* Fade + blur strip behind the bar so content dissolves at the bottom edge */
 .tabbar-fade {
   position: fixed;
+  /* While a dialog has the page pinned there is no scrollbar, so the viewport
+     is a few pixels narrower and this bar — which measures the viewport, not
+     the body — would shrink with it. --lock-vw is the width it had a moment
+     before; unset the rest of the time, which is what the fallback is for. */
+  width: var(--lock-vw, 100%);
   left: 0;
   right: 0;
   bottom: 0;
@@ -31,6 +36,11 @@
 }
 .tabbar {
   position: fixed;
+  /* While a dialog has the page pinned there is no scrollbar, so the viewport
+     is a few pixels narrower and this bar — which measures the viewport, not
+     the body — would shrink with it. --lock-vw is the width it had a moment
+     before; unset the rest of the time, which is what the fallback is for. */
+  width: var(--lock-vw, 100%);
   left: 0;
   right: 0;
   bottom: 0;
