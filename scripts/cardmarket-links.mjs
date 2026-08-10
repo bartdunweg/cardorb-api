@@ -40,8 +40,8 @@ import { join } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 /** tcgId -> Cardmarket idProduct, written by scripts/snapshot-collection-value.mjs. */
-const IDS = join(ROOT, "lib", "cardmarket-ids.generated.json");
-const OUT = join(ROOT, "lib", "cardmarket-links.generated.json");
+const IDS = join(ROOT, "lib", "core", "cardmarket-ids.generated.json");
+const OUT = join(ROOT, "lib", "core", "cardmarket-links.generated.json");
 
 /** Every Pokémon single they sell, rebuilt nightly. Public, no login. 13MB. */
 const CATALOGUE =

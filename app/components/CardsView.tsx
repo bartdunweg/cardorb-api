@@ -1411,7 +1411,19 @@ export default function CardsView({
                           card={card}
                           setName={set.name}
                           view={view}
-                          scan={!brokenScans.has(card.key)}
+                          // The same three conditions the by-set branch below
+                          // uses. This one only checked the first, so a card
+                          // with no scan at all, or one from a set already
+                          // condemned as broken, still tried to draw a picture
+                          // — and this is the branch the public link opens on.
+                          // Two copies of one expression is exactly how that
+                          // happens; they are still two, and that is the split
+                          // this refactor round is for.
+                          scan={
+                            !!card.image &&
+                            !brokenScans.has(card.key) &&
+                            !brokenSets.has(set.name)
+                          }
                           tilt={view === "grid" && shownCols <= TILT_UNDER}
                           big={view === "grid" && shownCols <= TILT_UNDER}
                           onScanBroken={onScanBroken}

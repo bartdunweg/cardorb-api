@@ -40,12 +40,12 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { priceOf, shownPrice } from "../lib/price-basis.mjs";
+import { priceOf, shownPrice } from "../lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const OUT = join(ROOT, "lib", "collection-value.generated.json");
+const OUT = join(ROOT, "lib", "core", "collection-value.generated.json");
 /** tcgId -> Cardmarket idProduct. Cached because it costs 1,553 requests and never moves. */
-const IDS = join(ROOT, "lib", "cardmarket-ids.generated.json");
+const IDS = join(ROOT, "lib", "core", "cardmarket-ids.generated.json");
 
 const BASE = process.env.SITE ?? "http://127.0.0.1:3111";
 const SEED = process.argv.includes("--seed");

@@ -29,7 +29,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(root, "public", "artwork", "pokedex");
 const SPECIES = JSON.parse(
   await import("node:fs/promises").then((fs) =>
-    fs.readFile(join(root, "lib", "pokedex.generated.json"), "utf8"),
+    fs.readFile(join(root, "lib", "core", "pokedex.generated.json"), "utf8"),
   ),
 );
 
