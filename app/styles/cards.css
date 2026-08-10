@@ -1169,20 +1169,20 @@ body:has(.page-cards) .theme-toggle {
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
-.filter-menu-name {
+.filter-menu-panel .facet-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.filter-menu-count {
+.filter-menu-panel .facet-count {
   flex-shrink: 0;
   font-size: var(--fs-small);
   color: var(--color-text-tertiary);
   font-variant-numeric: lining-nums tabular-nums;
 }
-.filter-menu-clear {
+.filter-menu-panel .facet-clear {
   width: 100%;
   padding: var(--space-2);
   margin-bottom: var(--space-1);
@@ -1195,7 +1195,7 @@ body:has(.page-cards) .theme-toggle {
   text-align: left;
   cursor: pointer;
 }
-.filter-menu-clear:hover {
+.filter-menu-panel .facet-clear:hover {
   color: var(--color-text-primary);
   background: var(--color-left-bg);
 }
@@ -1618,7 +1618,7 @@ body:has(.page-cards) .theme-toggle {
 }
 
 /* The facet list, the level above the tick-list. */
-.filter-menu-facet {
+.filter-menu-panel .facet-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -1636,17 +1636,17 @@ body:has(.page-cards) .theme-toggle {
   color: var(--color-text-secondary);
   cursor: pointer;
 }
-.filter-menu-facet:hover {
+.filter-menu-panel .facet-row:hover {
   background: var(--color-left-bg);
   color: var(--color-text-primary);
 }
-.filter-menu-facet svg:last-child {
+.filter-menu-panel .facet-row svg:last-child {
   flex-shrink: 0;
   opacity: 0.4;
 }
 /* How many values are on in a facet, so the list says which ones are doing
    something without having to be opened. */
-.filter-menu-on {
+.filter-menu-panel .facet-on {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -1656,7 +1656,7 @@ body:has(.page-cards) .theme-toggle {
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-.filter-menu-back {
+.filter-menu-panel .facet-back {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -1673,7 +1673,7 @@ body:has(.page-cards) .theme-toggle {
   color: var(--color-text-primary);
   cursor: pointer;
 }
-.filter-menu-back:hover {
+.filter-menu-panel .facet-back:hover {
   color: var(--color-text-secondary);
 }
 .filter-menu > summary svg:first-of-type {
@@ -2608,7 +2608,7 @@ button.cards-dex-body:focus-visible::after {
   color: var(--color-text-primary);
 }
 
-.sheet-back {
+.sheet .facet-back {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -2648,14 +2648,37 @@ button.cards-dex-body:focus-visible::after {
   gap: var(--space-5);
 }
 
-.sheet-list {
+/* The short facets, inline, which the sheet did not use to have.
+   They came with the merge: Era is two answers, and going a level in to tick
+   one of two is a press to reach a press — as true under a thumb as it is
+   under a pointer. Its own padding here rather than the dropdown's, because a
+   sheet's rows are inset further and the label has to line up with them. */
+.sheet .facet-inline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+.sheet .facet-inline + .facet-inline {
+  padding-top: 0;
+}
+.sheet .facet-inline-label {
+  font-family: var(--font-main);
+  font-size: var(--fs-small);
+  color: var(--color-text-secondary);
+}
+.sheet .facet-inline .cards-segmented {
+  width: 100%;
+}
+
+.sheet .facet-list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.sheet-option,
-.sheet-facet {
+.sheet .facet-option,
+.sheet .facet-row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -2672,20 +2695,20 @@ button.cards-dex-body:focus-visible::after {
   text-align: left;
   cursor: pointer;
 }
-.sheet-option-name,
-.sheet-facet .sheet-option-name {
+.sheet .facet-name,
+.sheet .facet-row .facet-name {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sheet-option-count {
+.sheet .facet-count {
   font-size: var(--fs-small);
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
-.sheet-facet-on {
+.sheet .facet-on {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -2795,28 +2818,28 @@ button.cards-dex-body:focus-visible::after {
 /* A short facet, shown open at the top of the filter panel instead of behind a
    row of its own. Era is two answers and Owned is two or three; going a level
    in to tick one of those is a press to reach a press. */
-.filter-menu-inline {
+.filter-menu-panel .facet-inline {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-2) var(--space-3);
 }
-.filter-menu-inline + .filter-menu-inline {
+.filter-menu-panel .facet-inline + .facet-inline {
   padding-top: 0;
 }
-.filter-menu-inline-label {
+.filter-menu-panel .facet-inline-label {
   font-family: var(--font-main);
   font-size: var(--fs-small);
   color: var(--color-text-secondary);
 }
-.filter-menu-inline .cards-segmented {
+.filter-menu-panel .facet-inline .cards-segmented {
   width: 100%;
 }
 
 /* The row a facet's name and its Clear share. Fixed by its content on both
    sides, so ticking a box fills the right-hand side in rather than adding a
    line that pushes the list down under the pointer. */
-.filter-menu-head {
+.filter-menu-panel .facet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2824,7 +2847,7 @@ button.cards-dex-body:focus-visible::after {
   min-height: var(--control-h);
   padding-right: var(--space-2);
 }
-.filter-menu-head .filter-menu-back {
+.filter-menu-panel .facet-head .facet-back {
   flex: 1 1 auto;
 }
 
@@ -2864,7 +2887,7 @@ button.cards-dex-body:focus-visible::after {
    "All" a centimetre inside the left edge while the facet rows under it start
    flush — the same distance read as an indent rather than as a control. Equal
    thirds, and the padding down to what the words need. */
-.filter-menu-inline .cards-segment,
+.filter-menu-panel .facet-inline .cards-segment,
 .view-menu-panel .cards-segment {
   flex: 1 1 0;
   min-width: 0;

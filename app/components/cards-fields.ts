@@ -23,3 +23,27 @@ export const CARD_FIELDS: readonly (readonly [CardField, string])[] = [
   ["rarity", "Rarity"],
   ["price", "Price"],
 ];
+
+export type Option = { value: string; count: number };
+
+
+export type Facet = {
+  key: string;
+  label: string;
+  options: Option[];
+  /** Read-only here: a control only ever asks what is on. A mutable Set is
+      still accepted; this just does not claim the right to change one. */
+  selected: ReadonlySet<string>;
+  onToggle: (value: string) => void;
+  onClear: () => void;
+  /**
+   * The whole selection at once, for a control that stages its changes instead
+   * of applying them as they are made. FilterMenu never calls this — it applies
+   * a tick the moment it is made, which is right for a dropdown you can see the
+   * page behind. FilterSheet does, because a sheet covers the page and there is
+   * nothing to watch change until it closes.
+   */
+  onReplace: (next: Set<string>) => void;
+  /** How to show an option, when it reads better than the raw value. */
+  display?: (value: string) => string;
+};
