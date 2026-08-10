@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { DexEntry } from "../../lib/core/pokedex";
-import type { DexOwned } from "./CardsView";
+import type { DexOwned } from "./cards-fields";
 import { normalise } from "../../lib/core/pokedex";
 
 /**

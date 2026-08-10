@@ -21,6 +21,7 @@ import { useCardsKey } from "../hooks/useCardsKey";
 import { getCardsStats, tally } from "../../lib/core/cards-stats";
 import { caught, getPokedex } from "../../lib/core/pokedex";
 import { highScan, shownPrice } from "../../lib/core/cards";
+import { type CardField, type DexOwned } from "./cards-fields";
 import type { CardSet, OwnedCard } from "../../lib/core/cards";
 import { LOCALE, OWNER_NAME } from "../../lib/core/config";
 import { euro, euroWhole } from "../../lib/core/format";
@@ -130,8 +131,6 @@ function setMeta(set: CardSet) {
 /** How many sets are built at a time. See builtSets in CardsView. */
 const SET_STEP = 6;
 
-
-
 /**
  * How many cards fit across, per screen, and what it opens on.
  *
@@ -162,24 +161,8 @@ const COLS = {
  */
 const TILT_UNDER = 5;
 
-
 /** Vintage is the Wizards era. Decided on the sets' own dates, not a list. */
 const VINTAGE_BEFORE = 2010;
-
-export type DexOwned = "all" | "owned" | "wishlist" | "missing";
-
-/** The optional facts a tile can carry. Its name is always drawn. */
-export type CardField = "number" | "type" | "era" | "year" | "rarity" | "price" | "set";
-
-export const CARD_FIELDS: readonly (readonly [CardField, string])[] = [
-  ["number", "Number"],
-  ["type", "Type"],
-  ["era", "Era"],
-  ["year", "Year"],
-  ["set", "Set"],
-  ["rarity", "Rarity"],
-  ["price", "Price"],
-];
 
 /**
  * Which of the two this screen is.
@@ -1375,7 +1358,6 @@ export default function CardsView({
                   </span>
                 </>
               )}
-
 
               {active && (
                 <button type="button" className="cards-reset" onClick={reset}>

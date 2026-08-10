@@ -1,52 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, Rows3, Settings2 } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import Modal from "./Modal";
-import { CARD_FIELDS, type CardField } from "./CardsView";
+import ViewOptions, { type ViewOptionsProps } from "./ViewOptions";
 
 /**
- * How the cards are drawn, behind one button, for a phone.
+ * The same view options as a sheet, for a phone.
  *
- * It was two controls in the toolbar: a pair of icons for grid or list and a
- * slider for the size. On a laptop those sit in a row with room to spare; on a
- * phone they were most of a bar that already wraps, for two settings you change
- * once and then leave.
+ * On a laptop the toggles and the picker sit in a row with room to spare; on a
+ * phone they were most of a bar that already wraps, for settings you change
+ * once and then leave. So one button, and everything behind it.
  *
  * Unlike the filters, this applies as you touch it. There is no Apply, and that
  * asymmetry is deliberate: a filter changes what is on the page, so staging it
- * behind a sheet you cannot see past is the honest thing to do, but the size of
- * a scan is a thing you judge by looking at it. Dragging a slider whose effect
- * arrives after you confirm is dragging in the dark. So the sheet is
- * translucent to the page in the only way that matters — you shut it and the
- * grid is already what you chose.
+ * behind a sheet you cannot see past is the honest thing to do, but how big a
+ * scan is drawn is a thing you judge by looking at it. The button at the bottom
+ * says Done rather than Apply because it is a door, not a decision.
+ *
+ * The controls are ViewOptions, shared with ViewMenu. Both are always mounted
+ * and the stylesheet decides which is visible, so anything that lived in both
+ * files existed four times over — and had already drifted: the dropdown hid the
+ * Layout toggle in Pokédex mode and this one did not.
  */
-export default function ViewSheet({
-  view,
-  onView,
-  group,
-  onGroup,
-  fields,
-  onField,
-  cols,
-  onCols,
-  min,
-  max,
-}: {
-  view: "grid" | "list";
-  onView: (v: "grid" | "list") => void;
-  /** How the same cards are arranged: as the sets, or against the Pokédex. */
-  group: "set" | "flat" | "year" | "dex";
-  onGroup: (g: "set" | "flat" | "year" | "dex") => void;
-  /** Which optional facts a tile carries, and the toggle for one of them. */
-  fields: ReadonlySet<CardField>;
-  onField: (f: CardField) => void;
-  /** How many cards across, and the range this screen allows. */
-  cols: number;
-  onCols: (n: number) => void;
-  min: number;
-  max: number;
-}) {
+export default function ViewSheet(props: ViewOptionsProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -75,107 +52,9 @@ export default function ViewSheet({
           </div>
 
           <div className="sheet-body sheet-body--pad">
-            {/* First, because it is the bigger of the two choices: it decides
-                what the page is a list of before anything decides how the rows
-                are drawn. */}
-            <div className="sheet-field">
-              <span className="sheet-label" id="sheet-group">
-                Group by
-              </span>
-              <div className="cards-segmented" role="group" aria-labelledby="sheet-group">
-                {(
-                  [
-                    ["flat", "None"],
-                    ["set", "Set"],
-                    ["year", "Year"],
-                    ["dex", "Pokédex"],
-                  ] as const
-                ).map(([key, text]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`cards-segment${group === key ? " is-active" : ""}`}
-                    aria-pressed={group === key}
-                    onClick={() => onGroup(key)}
-                  >
-                    {text}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="sheet-field">
-              <span className="sheet-label">Layout</span>
-              <div className="cards-views" role="group" aria-label="Layout">
-                {(
-                  [
-                    ["grid", LayoutGrid, "Grid"],
-                    ["list", Rows3, "List"],
-                  ] as const
-                ).map(([key, Icon, text]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`cards-view${view === key ? " is-active" : ""}`}
-                    aria-pressed={view === key}
-                    aria-label={`${text} view`}
-                    onClick={() => onView(key)}
-                  >
-                    <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Only where there is a grid to size. In the list view every card
-                is a row and the slider would move nothing. */}
-
-          {/* Which facts a tile carries. Checkboxes rather than a segmented row:
-              these are independent answers, not one choice among several, and
-              there are six of them. */}
-          {group !== "dex" && (
-            <div className="sheet-field">
-              <span className="sheet-label">Show on card</span>
-              <ul className="view-fields" role="list">
-                {CARD_FIELDS.map(([key, text]) => (
-                  <li key={key}>
-                    <label className="view-field">
-                      <input
-                        type="checkbox"
-                        checked={fields.has(key)}
-                        onChange={() => onField(key)}
-                      />
-                      <span>{text}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-            {group !== "dex" && view === "grid" && (
-              <div className="sheet-field">
-                <span className="sheet-label" id="sheet-size">
-                  Per row
-                </span>
-                <div className="cards-count-picker" role="group" aria-label="Cards per row">
-              {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`cards-count-option${cols === n ? " is-active" : ""}`}
-                  aria-pressed={cols === n}
-                  onClick={() => onCols(n)}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-              </div>
-            )}
+            <ViewOptions {...props} />
           </div>
 
-          {/* Done, not Apply: it already is. This closes the sheet on the state
-              it has been in the whole time it was open. */}
           <div className="sheet-foot">
             <button
               type="button"
