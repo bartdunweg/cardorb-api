@@ -1,4 +1,5 @@
 import Button from "./Button";
+import TiltScan from "./TiltScan";
 import Tag from "./Tag";
 import type { ReactNode } from "react";
 import { ExternalLink } from "lucide-react";
@@ -69,16 +70,21 @@ export default function CardDetail({
           // fades over it whenever it lands. Without it the dialog opened onto
           // an empty rectangle for as long as TCGdex' CDN took, which is what
           // "opening a card feels slow" actually was.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={`${card.image}/high.webp`}
-            alt={card.name}
-            width={734}
-            height={1024}
-            fetchPriority="high"
-            decoding="async"
-            style={mine?.card.image ? { backgroundImage: `url("${mine.card.image}")` } : undefined}
-          />
+          <TiltScan
+            scan={mine?.card.image ?? null}
+            rarity={mine?.card.variants[0]?.rarity ?? card.rarity}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${card.image}/high.webp`}
+              alt={card.name}
+              width={734}
+              height={1024}
+              fetchPriority="high"
+              decoding="async"
+              style={mine?.card.image ? { backgroundImage: `url("${mine.card.image}")` } : undefined}
+            />
+          </TiltScan>
         ) : (
           <span className="cards-scan-missing" aria-hidden="true" />
         )}

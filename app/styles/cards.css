@@ -754,7 +754,7 @@ body:has(.page-cards) .theme-toggle {
      instead of stretching three scans across the whole card.
 
      132px unless the reader has moved the size slider, which writes
-     --cards-scan-w onto this element (see scanSize in CardsView). min() with
+     the count onto this element as --cards-cols (see cols in CardsView). min() with
      100% because that slider goes to 260: on a narrow column a track wider than
      the grid would overflow it rather than fall back to one card per row, which
      is what a minmax whose floor exceeds its container does. */
@@ -1009,15 +1009,16 @@ body:has(.page-cards) .theme-toggle {
   margin-top: var(--space-2);
 }
 
-/* A scan may go down to 104px when the column is narrow enough that 132 would
-   leave two per row. Measured on the container rather than the window, so the
-   rail collapsing does not change the answer on its own.
-
-   Still only the default: --cards-scan-w is set on the element itself, so a
-   reader who has picked a size keeps it here too. */
+/* Only the gap here now.
+   This used to set the columns as well, auto-filling against a minimum scan
+   width — and it was the reason the per-row picker did nothing on a phone. It
+   read --cards-scan-w, which the size *slider* used to write; that slider was
+   replaced by the count picker and nothing has written that variable since, so
+   this rule always took its 104px fallback and always produced three columns,
+   whatever you pressed. The columns come from --cards-cols above, at every
+   width. */
 @container (max-width: 560px) {
   .cards-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--cards-scan-w, 104px), 100%), 1fr));
     /* The dex' own narrow gap, for the same reason as the wide one above. */
     gap: var(--space-2);
   }

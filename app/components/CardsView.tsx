@@ -146,7 +146,10 @@ const SET_STEP = 6;
  * count that only made sense wide.
  */
 const COLS = {
-  narrow: { min: 2, max: 5, fallback: 3 },
+  // One is a real answer on a phone: it is the "show me this card" view, and
+  // the only width where a single column fills the screen with the artwork
+  // rather than stranding it in a lane.
+  narrow: { min: 1, max: 5, fallback: 3 },
   wide: { min: 3, max: 10, fallback: 6 },
 } as const;
 
