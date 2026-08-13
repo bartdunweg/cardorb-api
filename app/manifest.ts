@@ -34,13 +34,15 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: "#fafafa",
     theme_color: "#fafafa",
-    // The generated ones, at the two sizes that exist. `any maskable` on the
-    // large one lets Android crop it to whatever shape that launcher uses: the
-    // mark is a centred letter on a full-bleed field, so there is nothing near
-    // the edges for a crop to take.
-    icons: [
-      { src: "/icon", sizes: "32x32", type: "image/png" },
-      { src: "/apple-icon", sizes: "180x180", type: "image/png", purpose: "any" },
-    ],
+    // No icons. There used to be two generated ones here, and the entries have
+    // to go with them: a manifest that names /icon and /apple-icon after those
+    // routes are deleted is a manifest pointing at two 404s, which is worse
+    // than saying nothing — Android would fetch both and fail on install.
+    //
+    // The cost of the omission is real and worth writing down: without an icon
+    // in here, Chrome on Android will not offer to install the app at all, so
+    // `display: "standalone"` above only takes effect for whoever adds it to a
+    // home screen by hand. iOS still will, and screenshots its own thumbnail.
+    // Put an `icons` array back the day this gets a mark of its own.
   };
 }
