@@ -1,18 +1,52 @@
 import type { NextConfig } from "next";
 
+// React's development build reconstructs callstacks with eval() and the dev
+// server hot-reloads over a websocket. Both are dev-only concessions: the
+// production policy below stays strict.
+const isDev = process.env.NODE_ENV !== "production";
+
 /**
- * The five headers that do not need to wait on anything.
+ * The catalogue image hosts, which is what the policy was waiting on.
  *
- * A full Content-Security-Policy is still deferred — see the comment below —
- * because it needs the catalogue image hosts named before it will let a scan
- * load, and the portfolio's own history is the warning: one missing entry
- * blocked every picture on a page whose whole subject was pictures. But
- * `frame-ancestors` and the other four here have no such dependency, and there
- * is no reason a card's worth of clickjacking protection should wait on that.
+ * Every card picture on the site comes from one of these three, and a host
+ * that is not here renders as a broken image with a console error, silently
+ * on the page and loudly in the devtools. The portfolio's own history is the
+ * warning: one missing entry blocked every picture on a page whose whole
+ * subject was pictures. Adding a fourth source means adding it here first.
+ */
+const IMG_SRC =
+  "img-src 'self' data: blob: https://assets.tcgdex.net https://images.pokemontcg.io https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com";
+
+/**
+ * The whole policy, and every route gets the same one.
  *
- * On every route (`source: "/(.*)"`), applied once here rather than per-route,
- * for the same reason `robots: { index: false }` sits on the root layout: a
- * new screen should be protected by accident, not exposed by accident.
+ * Inline scripts are allowed because Next's own bootstrap is inline; a nonce
+ * would need middleware and force dynamic rendering on every route. Inline
+ * styles because motion writes transforms straight onto the element.
+ *
+ * No frame-src: the app embeds nothing, so default-src holding frames to
+ * 'self' is the honest answer. connect-src is 'self' alone because every
+ * fetch in the client is same-origin against /api/v1; the TCGdex and
+ * Pokemon TCG APIs are only ever called from the server, through proxy.ts.
+ */
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self' data:",
+  IMG_SRC,
+  `connect-src 'self'${isDev ? " ws: http://localhost:*" : ""}`,
+].join("; ");
+
+/**
+ * The five headers, on every route (`source: "/(.*)"`), applied once here
+ * rather than per-route, for the same reason `robots: { index: false }` sits
+ * on the root layout: a new screen should be protected by accident, not
+ * exposed by accident.
  */
 const SECURITY_HEADERS = [
   {
@@ -30,16 +64,12 @@ const SECURITY_HEADERS = [
   // nothing here is left to a default that assumes otherwise.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
   {
-    // Deliberately two directives and not a real policy. frame-ancestors is
-    // the modern replacement for X-Frame-Options: DENY (this app in someone
-    // else's iframe is always a clickjacking attempt, never a use case), and
-    // object-src closes off plugins. img-src and connect-src stay out until
-    // the catalogue hosts are settled:
-    //
-    //   assets.tcgdex.net, images.pokemontcg.io,
-    //   limitlesstcg.nyc3.cdn.digitaloceanspaces.com
+    // frame-ancestors carries what X-Frame-Options: DENY used to (this app in
+    // someone else's iframe is always a clickjacking attempt, never a use
+    // case), and it is now one directive in a real policy rather than the
+    // whole of it.
     key: "Content-Security-Policy",
-    value: "frame-ancestors 'none'; object-src 'none'",
+    value: CSP,
   },
 ];
 
