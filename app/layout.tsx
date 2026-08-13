@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -125,6 +126,11 @@ export default function RootLayout({
           <main id="main-content">{children}</main>
           {modal}
         </ThemeProvider>
+        {/* In production this serves itself from /_vercel/insights on this
+            origin, so the CSP's script-src 'self' and connect-src 'self'
+            already cover it. Locally it reaches for va.vercel-scripts.com
+            instead, which is why next.config.ts names that host in dev only. */}
+        <Analytics />
       </body>
     </html>
   );

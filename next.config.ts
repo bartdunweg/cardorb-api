@@ -35,7 +35,11 @@ const CSP = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // va.vercel-scripts.com is the debug build of the analytics beacon, which is
+  // the only thing @vercel/analytics loads off-origin and only outside
+  // production. Deployed, the script and its beacon are both served from
+  // /_vercel/insights on this origin and 'self' is all either one needs.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   IMG_SRC,
