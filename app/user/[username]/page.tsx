@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
 import { forGrid, getCards, stripPrices } from "../../../lib/core/cards";
-import { OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
+import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
 import "../../styles/collection.css";
 
 /**
@@ -51,9 +51,10 @@ export async function generateMetadata({
   return {
     title,
     description,
-    // The one part of this app that is meant to be found. Everything else is
-    // noindex (see app/layout.tsx), because everything else is a tool; this is
-    // the page whose entire purpose is being shown to someone.
+    // One of the two parts of this app that are meant to be found — the other
+    // is the landing page at /. Everything else is noindex (see
+    // app/layout.tsx), because everything else is a tool; this is the page
+    // whose entire purpose is being shown to someone.
     robots: { index: true, follow: true },
     // Absolute, resolved against metadataBase. Without it this page has no
     // stated address, and a link shared with a tracking parameter on it becomes
@@ -62,7 +63,7 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       url: path,
-      siteName: "binder",
+      siteName: APP_NAME,
       title,
       description,
       locale: "en_GB",

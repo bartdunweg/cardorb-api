@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
-import { config, middleware } from "./middleware";
+import { config, proxy } from "./proxy";
 import { SESSION_COOKIE } from "./lib/api/session-cookie";
 
 /**
  * The redirect in front of /cards.
  *
  * It is not the lock — every endpoint behind it verifies the key properly, and
- * this only checks that a cookie is present, because the edge runtime has no
- * timingSafeEqual to compare with. What it is for is sending a signed-out
- * visitor to the login instead of onto a screen built for somebody else, and
- * carrying where they were aiming so the login can put them back.
+ * this only checks that a cookie is present. What it is for is sending a
+ * signed-out visitor to the login instead of onto a screen built for somebody
+ * else, and carrying where they were aiming so the login can put them back.
+ *
+ * These tests call the exported function directly, so they say nothing about
+ * which runtime it lands in. That is what makes them the same four assertions
+ * before and after the rename from `middleware` to `proxy`: the behaviour being
+ * described never depended on the runtime, only the old reasoning did.
  *
  * The matcher is asserted as well. It is the difference between this running on
  * the owner's screens and running on the public link, and getting it wrong in
@@ -21,29 +25,29 @@ import { SESSION_COOKIE } from "./lib/api/session-cookie";
 function get(path: string, cookie?: string) {
   const h = new Headers();
   if (cookie) h.set("cookie", cookie);
-  return new NextRequest(new URL(`https://binder.example${path}`), { headers: h });
+  return new NextRequest(new URL(`https://cardorb.example${path}`), { headers: h });
 }
 
-describe("middleware", () => {
+describe("the proxy", () => {
   it("lets a request with a session through", () => {
-    const res = middleware(get("/cards", `${SESSION_COOKIE}=anything`));
+    const res = proxy(get("/cards", `${SESSION_COOKIE}=anything`));
     expect(res.headers.get("location")).toBeNull();
   });
 
   it("sends a signed-out visitor to the login", () => {
-    const res = middleware(get("/cards"));
+    const res = proxy(get("/cards"));
     const to = new URL(res.headers.get("location")!);
-    expect(to.pathname).toBe("/");
+    expect(to.pathname).toBe("/login");
   });
 
   it("remembers where they were aiming", () => {
-    const res = middleware(get("/cards/sv03-125"));
+    const res = proxy(get("/cards/sv03-125"));
     const to = new URL(res.headers.get("location")!);
     expect(to.searchParams.get("next")).toBe("/cards/sv03-125");
   });
 
   it("treats an empty cookie as no cookie", () => {
-    const res = middleware(get("/cards", `${SESSION_COOKIE}=`));
+    const res = proxy(get("/cards", `${SESSION_COOKIE}=`));
     expect(res.headers.get("location")).not.toBeNull();
   });
 });
@@ -67,8 +71,9 @@ describe("the matcher", () => {
     expect(matches("/user/bartdunweg")).toBe(false);
   });
 
-  it("leaves the login and the API alone", () => {
+  it("leaves the landing page, the login and the API alone", () => {
     expect(matches("/")).toBe(false);
+    expect(matches("/login")).toBe(false);
     expect(matches("/api/v1/session")).toBe(false);
     expect(matches("/api/v1/collection")).toBe(false);
   });

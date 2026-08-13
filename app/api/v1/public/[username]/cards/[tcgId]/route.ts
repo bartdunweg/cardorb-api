@@ -8,7 +8,7 @@ import { PUBLIC_USERNAME } from "../../../../../../../lib/core/config";
  * The keyed twin of this route (/v1/cards/[tcgId]) carries the price and the
  * raw Cardmarket figures, which is exactly what /user/<name> goes out of its
  * way not to show. This one exists because the public page still needs to open
- * a card: it used to link to /cards/<id>, and the middleware in front of /cards
+ * a card: it used to link to /cards/<id>, and the proxy in front of /cards
  * turned a visitor's tap on a scan into the login screen.
  *
  * Addressed by username rather than left open at /v1/public/cards/<id>, so the

@@ -42,14 +42,14 @@ function req(
 ) {
   const h = new Headers();
   if (opts.origin) h.set("origin", opts.origin);
-  h.set("host", opts.host ?? "binder.example");
+  h.set("host", opts.host ?? "cardorb.example");
   if (opts.header) h.set("x-cards-key", opts.header);
   if (opts.cookie) h.set("cookie", opts.cookie);
   // A distinct address per call unless one is given, so the limiter's budget is
   // never shared between tests that are not about the limiter.
   h.set("x-real-ip", opts.ip ?? `10.0.0.${Math.floor(Math.random() * 200) + 1}`);
   if (opts.contentType) h.set("content-type", opts.contentType);
-  return new Request("https://binder.example/api/v1/collection", { headers: h });
+  return new Request("https://cardorb.example/api/v1/collection", { headers: h });
 }
 
 beforeEach(() => {
@@ -136,7 +136,7 @@ describe("sameOrigin", () => {
   });
 
   it("allows the app's own pages", () => {
-    expect(sameOrigin(req({ origin: "https://binder.example" }))).toBe(true);
+    expect(sameOrigin(req({ origin: "https://cardorb.example" }))).toBe(true);
   });
 
   it("refuses another site", () => {
@@ -145,9 +145,9 @@ describe("sameOrigin", () => {
 
   it("compares against the forwarded host, since a proxy rewrites the URL", () => {
     const h = new Headers({
-      origin: "https://binder.example",
+      origin: "https://cardorb.example",
       host: "internal-7f3a.vercel.internal",
-      "x-forwarded-host": "binder.example",
+      "x-forwarded-host": "cardorb.example",
     });
     expect(sameOrigin(new Request("https://internal/api", { headers: h }))).toBe(true);
   });
@@ -167,7 +167,7 @@ describe("originAllowed", () => {
   });
 
   it("allows the app's own origin without it being written down", () => {
-    expect(originAllowed(req({ origin: "https://binder.example" }))).toBe(true);
+    expect(originAllowed(req({ origin: "https://cardorb.example" }))).toBe(true);
   });
 
   it("refuses an origin that is neither", () => {

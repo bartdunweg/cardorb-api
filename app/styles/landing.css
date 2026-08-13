@@ -1,0 +1,191 @@
+/* The landing page at /, which is the only screen in this app addressed to
+ * someone who has not seen it before.
+ *
+ * Like signin.css, it places things the other sheets already draw — .about-card
+ * for the three panels, .btn and .btn--primary for the two actions — and adds
+ * nothing but the layout around them. The type sizes are tokens, not numbers:
+ * a landing page with its own scale is how two headings that should match stop
+ * matching six months later.
+ */
+.page-landing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-12);
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: var(--page-pad-x);
+  padding-bottom: var(--page-pad-bottom);
+}
+
+/* ─── HERO ─── */
+
+.landing-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  text-align: center;
+  /* Air above, so the name is not welded to the top edge of the window. Not
+     min-height: 100vh like the login's column: that screen is one small card
+     and has to be centred or it floats; this one is a page with things below
+     the fold, and centring it would push the first panel off the bottom. */
+  padding-top: var(--space-12);
+}
+
+/* The name, above the headline. --fs-eyebrow and the tracking that goes with
+   it, because this is the same shape as every eyebrow in the ported sheets and
+   inventing a second one for the one place the product signs its name is how
+   they drift apart. */
+.landing-wordmark {
+  margin: 0;
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.landing-title {
+  margin: 0;
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-display);
+  font-weight: var(--fw-title);
+  line-height: var(--lh-tight);
+  color: var(--color-text-primary);
+  /* The hard <br> in the markup is the break that is wanted on a narrow screen.
+     text-wrap: balance handles every other width, where the line is short
+     enough that the browser's own break would leave one word alone. */
+  text-wrap: balance;
+}
+
+.landing-lede {
+  margin: 0;
+  /* 52ch and not the card's full width: the lede is one sentence and a sentence
+     running the whole 860px is a line nobody finishes. */
+  max-width: 52ch;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body-l);
+  line-height: var(--lh-relaxed);
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* .btn sets align-self: flex-start, which in this centred column would hang
+   both buttons off the left edge. They also get a floor on their width so the
+   filled one and the outlined one read as a pair rather than as a button and a
+   link that happens to have a border. */
+.landing-action {
+  align-self: center;
+  justify-content: center;
+  min-width: 168px;
+}
+
+.landing-note {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+}
+
+/* ─── THE THREE PANELS ─── */
+
+.landing-features {
+  /* A list, because it is three of the same thing, and a list is what a screen
+     reader should count. The markers go; the semantics stay. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  /* auto-fit rather than a media query: at 860px this is three columns, and it
+     becomes two and then one on its own as the page narrows, at whatever width
+     260px stops fitting. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.landing-features > li {
+  display: flex;
+}
+
+/* .about-card brings the surface and the padding; this is the column inside it,
+   and the stretch so three panels of unequal text still line up at the bottom. */
+.landing-feature {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.landing-feature svg {
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.landing-feature-title {
+  margin: 0;
+  font-family: var(--font-main), sans-serif;
+  /* --fs-label and not --fs-card: these are three panel headings under one page
+     title, and at card size they compete with the h1 for the eye. */
+  font-size: var(--fs-label);
+  font-weight: var(--fw-title);
+  color: var(--color-text-primary);
+}
+
+.landing-feature-body {
+  margin: 0;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  color: var(--color-text-secondary);
+}
+
+/* ─── FOOTER ─── */
+
+.landing-footer {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.landing-footer p {
+  margin: 0;
+}
+
+.landing-footer a {
+  color: var(--color-text-secondary);
+  /* Kept underlined: it is the only link in a line of grey text, and a colour
+     change alone is not something everyone can see. */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .page-landing {
+    gap: var(--space-10);
+  }
+  .landing-hero {
+    padding-top: var(--space-8);
+  }
+  /* Full width on a phone, where two 168px buttons side by side leave a gutter
+     too narrow to tell them apart. */
+  .landing-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .landing-action {
+    align-self: stretch;
+  }
+}

@@ -41,7 +41,7 @@ const { GET } = await import("./route");
 const { PUBLIC_USERNAME } = await import("../../../../../../../lib/core/config");
 
 const params = (username: string, tcgId = "sv03-125") => ({ params: Promise.resolve({ username, tcgId }) });
-const req = () => new Request("https://binder.example/api/v1/public/owner/cards/sv03-125");
+const req = () => new Request("https://cardorb.example/api/v1/public/owner/cards/sv03-125");
 
 beforeEach(() => {
   getCardDetail.mockResolvedValue(detail);

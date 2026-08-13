@@ -14,8 +14,8 @@ import { useCardsKey } from "../hooks/useCardsKey";
  * type="password" with autoComplete="current-password" all along, so the label
  * was the only part still saying something else.
  *
- * Pulled out of CardsProfile so that the login at / and the profile screen ask
- * for it the same way. Two copies of a password field is how one of them ends
+ * Pulled out of CardsProfile so that /login and the profile screen ask for it
+ * the same way. Two copies of a password field is how one of them ends
  * up without the autocomplete hint, or checking against a different endpoint
  * than the other, and neither is the sort of thing anyone notices until it
  * misbehaves.
@@ -45,9 +45,9 @@ export default function SignInForm({
    */
   defaultEmail?: string;
   /**
-   * Where to go once it worked. Set on /, which is a door rather than a place;
-   * omitted in the profile screen, where you are already standing in the room
-   * and the page only has to redraw with the plus in it.
+   * Where to go once it worked. Set on /login, which is a door rather than a
+   * place; omitted in the profile screen, where you are already standing in the
+   * room and the page only has to redraw with the plus in it.
    */
   redirectTo?: string;
   note?: string;

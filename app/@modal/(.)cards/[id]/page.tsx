@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import CardModal from "../../../components/CardModal";
 import CardDetail from "../../../components/CardDetail";
 import CardNav from "../../../components/CardNav";
-import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../../../lib/core/cards";
+import {
+  cardNeighbours,
+  getCardDetail,
+  getCards,
+  type OwnedCard,
+} from "../../../../lib/core/cards";
 import "../../../styles/collection.css";
 
 /**
@@ -52,7 +57,7 @@ export async function generateStaticParams() {
   // body — a soft 404, which is a real problem for a page a crawler reads.
   //
   // Neither half of that is true here. These pages are noindex and sit behind
-  // middleware, so nothing crawls them and the only visitor who can reach a
+  // the proxy, so nothing crawls them and the only visitor who can reach a
   // bad id is the owner typing one. What the listing cost instead was 1,603
   // pages built twice — this route and the intercepting modal — for 175 MB and
   // most of the build, all of it for pages one person opens a handful of.

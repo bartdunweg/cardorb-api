@@ -14,9 +14,10 @@
  * log says which one is missing.
  *
  * Called from instrumentation.ts, which Next runs once per server before any
- * request. That is also the only place it can be called: a module-level check
- * in a file the edge runtime imports would run in the middleware too, where
- * most of these are not available.
+ * request. That is also the only place it belongs: a module-level check would
+ * fire wherever the module is imported, proxy.ts included, which is once per
+ * matched request for an answer that cannot change between them. See the
+ * comment there.
  */
 
 type Check = { name: string; required: boolean; without: string };

@@ -17,9 +17,9 @@ export const metadata: Metadata = {
  * cookie, and a page whose output depends on who is asking cannot be handed to
  * the next person out of a shared cache.
  *
- * The middleware in front of this route means there is always a session by the
+ * The proxy in front of this route means there is always a session by the
  * time it runs, so in practice `signedIn` is true here. It is read rather than
- * assumed because the middleware only checks that a cookie exists, and the two
+ * assumed because the proxy only checks that a cookie exists, and the two
  * would drift the moment that changes.
  */
 export const dynamic = "force-dynamic";

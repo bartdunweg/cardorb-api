@@ -1,6 +1,15 @@
 "use client";
 
-import { memo, useCallback, useDeferredValue, useMemo, useRef, useState, type CSSProperties, useEffect } from "react";
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  useEffect,
+} from "react";
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import Card from "./Card";
@@ -205,7 +214,7 @@ export default function CardsView({
   const isPublic = mode === "public";
   /**
    * The card the public link has open, if any. Signed in this is a URL and an
-   * intercepted route; here it is state, because /cards is behind middleware
+   * intercepted route; here it is state, because /cards is behind the proxy
    * and navigating there logs the visitor out of the page they were sent.
    */
   const [openCard, setOpenCard] = useState<{ card: OwnedCard; setName: string } | null>(null);
@@ -574,7 +583,14 @@ export default function CardsView({
     [leaveDashboard],
   );
 
-  const picked = [pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedValues, pickedEras];
+  const picked = [
+    pickedNames,
+    pickedRarities,
+    pickedTypes,
+    pickedOwnership,
+    pickedValues,
+    pickedEras,
+  ];
   const active = picked.some((s) => s.size > 0) || query.trim() !== "";
 
   const reset = useCallback(() => {
@@ -709,7 +725,15 @@ export default function CardsView({
       const year = set.releaseDate?.slice(0, 4) ?? "Undated";
       const at = by.get(year);
       if (at) at.cards.push(...set.cards);
-      else by.set(year, { ...set, name: year, logo: null, logoSize: null, total: null, cards: [...set.cards] });
+      else
+        by.set(year, {
+          ...set,
+          name: year,
+          logo: null,
+          logoSize: null,
+          total: null,
+          cards: [...set.cards],
+        });
     }
     return [...by.values()].sort((a, b) => b.name.localeCompare(a.name));
   }, [onYear, filtered]);
@@ -1018,19 +1042,19 @@ export default function CardsView({
       : onDashboard
         ? "dashboard"
         : // Searching is a state rather than a place: the slot is lit while
-            // there is something in the field, and goes out when it is cleared.
-            // The profile has no slot at all and so lights none.
-            query.trim() && !isPublic
-            ? "search"
-            : // Only where the bar carries them. Signed in these two are rail
-              // rows with no slot to light, and pointing the pill at a slot
-              // that is not there leaves it parked on whatever was last. The
-              // same reason the search test above is owner-only.
-              isPublic && onWishlist
-              ? "wishlist"
-              : isPublic && selected === "all"
-                ? "collection"
-                : null;
+          // there is something in the field, and goes out when it is cleared.
+          // The profile has no slot at all and so lights none.
+          query.trim() && !isPublic
+          ? "search"
+          : // Only where the bar carries them. Signed in these two are rail
+            // rows with no slot to light, and pointing the pill at a slot
+            // that is not there leaves it parked on whatever was last. The
+            // same reason the search test above is owner-only.
+            isPublic && onWishlist
+            ? "wishlist"
+            : isPublic && selected === "all"
+              ? "collection"
+              : null;
 
   /**
    * The search field in the toolbar, so the bar's Search slot can put the caret
@@ -1411,55 +1435,52 @@ export default function CardsView({
                   set.
                 </p>
               </Card>
-            ) : (
-              onFlat ? (
-                <section className="cards-set">
-                  {/* One grid over every set that survived the filters. The
+            ) : onFlat ? (
+              <section className="cards-set">
+                {/* One grid over every set that survived the filters. The
                       cards keep their own set name for the dialog they open,
                       which is what setName is for; what goes is the heading
                       between them. */}
-                  <ul
-                    className={view === "grid" ? "cards-grid" : "cards-rows"}
-                    style={
-                      view === "grid"
-                        ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
-                        : undefined
-                    }
-                  >
-                    {visibleSets.flatMap((set) =>
-                      set.cards.map((card) => (
-                        <CardItem
-                          key={card.key}
-                          card={card}
-                          setName={set.name}
-                          view={view}
-                          // The same three conditions the by-set branch below
-                          // uses. This one only checked the first, so a card
-                          // with no scan at all, or one from a set already
-                          // condemned as broken, still tried to draw a picture
-                          // — and this is the branch the public link opens on.
-                          // Two copies of one expression is exactly how that
-                          // happens; they are still two, and that is the split
-                          // this refactor round is for.
-                          scan={
-                            !!card.image &&
-                            !brokenScans.has(card.key) &&
-                            !brokenSets.has(set.name)
-                          }
-                          tilt={view === "grid" && shownCols <= TILT_UNDER}
-                          big={view === "grid" && shownCols <= TILT_UNDER}
-                          onScanBroken={onScanBroken}
-                          fields={fields}
-                          setYear={set.releaseDate?.slice(0, 4) ?? null}
-                          onPick={
-                            isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
-                          }
-                        />
-                      )),
-                    )}
-                  </ul>
-                </section>
-              ) : (
+                <ul
+                  className={view === "grid" ? "cards-grid" : "cards-rows"}
+                  style={
+                    view === "grid"
+                      ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
+                      : undefined
+                  }
+                >
+                  {visibleSets.flatMap((set) =>
+                    set.cards.map((card) => (
+                      <CardItem
+                        key={card.key}
+                        card={card}
+                        setName={set.name}
+                        view={view}
+                        // The same three conditions the by-set branch below
+                        // uses. This one only checked the first, so a card
+                        // with no scan at all, or one from a set already
+                        // condemned as broken, still tried to draw a picture
+                        // — and this is the branch the public link opens on.
+                        // Two copies of one expression is exactly how that
+                        // happens; they are still two, and that is the split
+                        // this refactor round is for.
+                        scan={
+                          !!card.image && !brokenScans.has(card.key) && !brokenSets.has(set.name)
+                        }
+                        tilt={view === "grid" && shownCols <= TILT_UNDER}
+                        big={view === "grid" && shownCols <= TILT_UNDER}
+                        onScanBroken={onScanBroken}
+                        fields={fields}
+                        setYear={set.releaseDate?.slice(0, 4) ?? null}
+                        onPick={
+                          isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
+                        }
+                      />
+                    )),
+                  )}
+                </ul>
+              </section>
+            ) : (
               visibleSets.map((set) => (
                 <section key={set.name} className="cards-set">
                   {/* Nothing at all when the set is what you picked: its logo,
@@ -1539,16 +1560,13 @@ export default function CardsView({
                         fields={fields}
                         setYear={set.releaseDate?.slice(0, 4) ?? null}
                         onPick={
-                          isPublic
-                            ? (card, setName) => setOpenCard({ card, setName })
-                            : undefined
+                          isPublic ? (card, setName) => setOpenCard({ card, setName }) : undefined
                         }
                       />
                     ))}
                   </ul>
                 </section>
               ))
-              )
             )}
             {/* Nothing to see and nothing to announce: the sets it stands for are
                 built before anyone scrolls this far, so a "loading more" line
@@ -1600,7 +1618,7 @@ export default function CardsView({
           what its sets are called, and that endpoint is behind the key. */}
       {/* The public link's answer to the intercepted route. Mounted always and
           drawing nothing until a card is picked, so opening one is state rather
-          than a navigation the middleware would turn into a login. */}
+          than a navigation the proxy would turn into a login. */}
       {isPublic && username && (
         <PublicCardDialog
           username={username}
@@ -1862,17 +1880,17 @@ const CardItem = memo(function CardItem({
           {/* One tag per printing. Holding a card normally and as a reverse holo
               is two tags under one scan, not two cards. */}
           {fields.has("rarity") && (
-          <span className="cards-item-tags">
-            {card.variants.map((v) => (
-              <Tag
-                key={`${v.rarity}-${v.owned}`}
-                className={`cards-tag${v.owned ? "" : " cards-tag--want"}`}
-              >
-                {v.rarity ?? "Unknown"}
-                {!v.owned && <span className="sr-only"> (on the wishlist)</span>}
-              </Tag>
-            ))}
-          </span>
+            <span className="cards-item-tags">
+              {card.variants.map((v) => (
+                <Tag
+                  key={`${v.rarity}-${v.owned}`}
+                  className={`cards-tag${v.owned ? "" : " cards-tag--want"}`}
+                >
+                  {v.rarity ?? "Unknown"}
+                  {!v.owned && <span className="sr-only"> (on the wishlist)</span>}
+                </Tag>
+              ))}
+            </span>
           )}
         </span>
       </CardLink>

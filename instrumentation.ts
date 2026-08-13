@@ -3,9 +3,13 @@ import { checkEnv } from "./lib/core/env";
 /**
  * Once per server, before the first request.
  *
- * The only place the environment can be checked in one go: a module-level check
- * would also run in middleware, which is the edge runtime and does not have
- * most of these.
+ * The only place the environment can be checked in one go. A module-level check
+ * would run wherever the module is imported, which includes proxy.ts — once per
+ * matched request, in a bundle at the network boundary, to answer a question
+ * about the server that only changes when the server restarts. It used to be
+ * worse than noisy: proxy.ts was middleware.ts on the edge runtime, which does
+ * not have most of these variables at all, so the check would have reported
+ * them missing on a deployment where they were set.
  */
 export function register() {
   checkEnv();

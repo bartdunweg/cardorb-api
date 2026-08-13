@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
+import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
 import { getCards, stripPrices } from "../../../lib/core/cards";
 
 /**
@@ -70,7 +70,7 @@ export default async function Image() {
             child and no display throws, and the failure is the whole image
             500ing rather than a layout that looks off. */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", fontSize: 30, color: "#767676" }}>binder</div>
+          <div style={{ display: "flex", fontSize: 30, color: "#767676" }}>{APP_NAME}</div>
           <div style={{ display: "flex", fontSize: 68, color: "#101010", fontWeight: 700 }}>
             {OWNER_NAME}&rsquo;s collection
           </div>
