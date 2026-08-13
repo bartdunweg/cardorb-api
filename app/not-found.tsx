@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Card from "./components/Card";
+import { APP_NAME } from "../lib/core/config";
 
 /**
  * What a URL that is not a page looks like.
@@ -27,7 +28,7 @@ export default function NotFound() {
           or
         </p>
         <Link href="/" className="btn signin-public">
-          Go to binder
+          Go to {APP_NAME}
         </Link>
       </Card>
     </section>

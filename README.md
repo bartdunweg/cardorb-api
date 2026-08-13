@@ -1,4 +1,4 @@
-# binder
+# Card Orb
 
 A Pokémon card collection: 1,600-odd cards kept in Notion, matched against three
 card catalogues, priced, and served as an API that a web tool and an iOS app both
@@ -40,6 +40,28 @@ curl localhost:3000/api/v1/collection | jq '.sets | length'
 
 `npm run check` is typecheck, tests and lint together.
 
+## Production
+
+Deployed on Vercel, DNS on Cloudflare (DNS-only, not proxied — Cloudflare in front of
+Vercel would break `x-forwarded-host`, which `sameOrigin()` in `lib/api/guard.ts` reads).
+Seven env vars, matching what `lib/core/env.ts` checks at boot and `.env.example`
+documents:
+
+| | required | |
+| --- | --- | --- |
+| `NOTION_TOKEN` | yes | reads and writes the card database |
+| `CARDS_TOKEN` | yes | the one passcode that may write |
+| `OWNER_EMAIL` | yes | the address the login checks against |
+| `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — canonicals, `og:url`, the sitemap and `robots.txt` all read this |
+| `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
+| `PUBLIC_USERNAME`, `OWNER_NAME` | no | whose collection `/user/<name>` shows |
+
+`NEXT_PUBLIC_SITE_URL` matters more than its "recommended" tag suggests: without it,
+`SITE_URL` falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, which is whichever
+`*.vercel.app` alias Vercel currently treats as production rather than the custom domain —
+set it explicitly the moment a custom domain is attached, or a canonical link can point at
+the wrong address.
+
 ## Shape
 
 ```
@@ -47,6 +69,8 @@ lib/core/       the domain layer. No React, no routes. This is the part worth ha
 lib/api/        who may write, and how often.
 app/api/v1/     the four endpoints.
 app/api/cover/  a same-origin passthrough for the one host that sends no CORS headers.
+app/page.tsx    the landing page: the one screen written for someone new here.
+app/login/      the password field, and the redirect back to where you were aiming.
 app/cards/      the collection: the rail, the dashboard, the Pokédex, one card.
 app/@modal/     that card again, as a dialog, intercepted so the list survives.
 app/components/ everything the two above are built from.
@@ -56,26 +80,31 @@ scripts/        the generators lib/core keeps referring to.
 
 The web tool is the portfolio's `/cards`, moved rather than rewritten: the same
 rail, the same dashboard, the same Pokédex, the same tilt on a holo. Four things
-changed on the way over. The endpoints are binder's (`/api/v1/fields` and
+changed on the way over. The endpoints are Card Orb's (`/api/v1/fields` and
 `/api/v1/cards` instead of one `/api/cards`), the imports point at `lib/core`,
-every JSON-LD graph came out because this ships `noindex`, and the locale stays
-`nl-NL`, so the numbers read `€ 41.042` rather than `€41,042`.
+the locale stays `nl-NL`, so the numbers read `€ 41.042` rather than `€41,042`,
+and the JSON-LD came out of `/cards` because that screen ships `noindex`. Two
+pages do not: `/`, which is the landing page, and `/user/<name>`, which is the
+collection you hand to someone. Both carry a graph again, and they are the only
+two entries in `sitemap.xml`.
 
 `app/cards/page.tsx` calls `getCards()` directly rather than its own
 `/api/v1/collection`: a server component has no relative fetch, and the port
 changes per workspace. The route handler wraps the same function, so there is
 one implementation and nothing to drift.
 
-`/` only redirects to `/cards`. The list could have lived at the root, but the
-card dialog is an intercepted parallel route and interception is defined
-relative to the segment it intercepts, which is a poor thing to rewrite for one
-character of URL.
+`/` is the landing page and `/login` is the password field; the collection stays
+at `/cards`. The list could have lived at the root, but the card dialog is an
+intercepted parallel route and interception is defined relative to the segment
+it intercepts, which is a poor thing to rewrite for one character of URL. The
+proxy bounces a signed-out request for `/cards` to `/login` with a `next`
+parameter, so the form can put you back where you were aiming.
 
 Two things in `lib/core` are deliberately hollow. `localise()` and `measure()` in
 `util.ts` used to swap a remote image for a copy the portfolio served itself, and
 those paths resolve on one domain only, so an iOS client would have been handed a
 thousand broken pictures. Here the scans come from the catalogues directly. When
-binder wants its own artwork in-house, `util.ts` is the one file that changes.
+Card Orb wants its own artwork in-house, `util.ts` is the one file that changes.
 
 `TRADING_DATABASE` in `lib/core/notion.ts` is also written down in the
 portfolio's own `lib/notion.ts`, which reads one row out of the same database for

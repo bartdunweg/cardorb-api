@@ -42,8 +42,8 @@ export function useCardsKey() {
       }
       // Only the refresh, so the server re-renders knowing about the cookie.
       // Where to go next is the caller's question: on /cards you are already
-      // there, and on / there is a redirect waiting that a refresh alone does
-      // not follow. SignInForm decides.
+      // there, and on /login there is a redirect waiting that a refresh alone
+      // does not follow. SignInForm decides.
       startTransition(() => router.refresh());
       return true;
     },
@@ -54,8 +54,12 @@ export function useCardsKey() {
     await fetch("/api/v1/session", { method: "DELETE" });
     // Signing out on /cards has to leave /cards, so this navigates rather than
     // refreshing in place. refresh() after the push because the router may
-    // still be holding a cached render of / from before the cookie went, which
-    // would show the signed-in redirect for a beat.
+    // still be holding a cached render from before the cookie went, which would
+    // show the signed-in view for a beat.
+    //
+    // To / rather than /login: signing out and being handed the sign-in form
+    // again reads as "that did not work". The landing page is where someone who
+    // is not signed in belongs, and the way back in is a button on it.
     router.push("/");
     router.refresh();
   }, [router]);

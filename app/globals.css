@@ -35,3 +35,5 @@
 @import "./styles/form.css";
 /* After cards.css: the login reuses its form rules and then places them. */
 @import "./styles/signin.css";
+/* The landing page, which places .about-card and .btn and adds nothing else. */
+@import "./styles/landing.css";

@@ -1,4 +1,39 @@
 /**
+ * What this thing is called.
+ *
+ * Two renames in one week, and both were the same lesson twice.
+ *
+ * It was "binder", which is also the word for the object a collection lives in,
+ * and the two were impossible to tell apart: half the strings in this app say
+ * "in the binder" meaning the folder on the shelf, and the title said the same
+ * word meaning the product. That became "Pokebinder", which fixed the ambiguity
+ * and bought a worse problem: this is about to have open signup, and "Poké" in
+ * the name of a public product is somebody else's trademark. A tool for one
+ * person can borrow a word. A product taking accounts cannot.
+ *
+ * So: Card Orb, which is the domain, says what it holds, and belongs to nobody
+ * else. The word "binder" stays everywhere it means the folder — "In the
+ * binder" on a card is still the right English.
+ *
+ * A constant rather than a string in each file, and this rename is the argument
+ * for it: the whole change above was this line, two letters in the drawn icons,
+ * and the package name. The title template, the og:site_name, the manifest,
+ * both OG images, the landing page, the login and the 404 all followed.
+ */
+export const APP_NAME = "Card Orb";
+
+/**
+ * The sentence under the name, everywhere the name needs one.
+ *
+ * One line, because that is what a search result shows and what a link preview
+ * shows, and writing two different ones is how they drift. It says what the
+ * thing is and who it is for without adjectives: a search engine has no use for
+ * "beautiful" and neither does anyone deciding whether to click.
+ */
+export const APP_TAGLINE =
+  "Track your Pokémon card collection set by set — what you own, what it is worth, and what is still missing.";
+
+/**
  * The locale every number and every sort in here is answered in.
  *
  * Dutch, because Bart is, and because it decides two visible things: how a

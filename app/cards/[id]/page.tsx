@@ -14,7 +14,7 @@ import "../../styles/collection.css";
  * Rendered on demand and cached for an hour after. This route used to prerender
  * every card in the collection, and the argument for it — that a soft 404 is a
  * real problem — was inherited from a repo where these pages were indexed. Here
- * they are noindex and behind middleware. See generateStaticParams below for
+ * they are noindex and behind the proxy. See generateStaticParams below for
  * what that listing actually cost.
  */
 export const dynamicParams = true;
@@ -29,7 +29,7 @@ export const dynamicParams = true;
  * call notFound().
  *
  * Left as it is, deliberately. The only thing a wrong status costs is a
- * crawler's understanding, and this route is noindex and behind middleware, so
+ * crawler's understanding, and this route is noindex and behind the proxy, so
  * nothing crawls it and the only visitor who can reach a bad id is the owner
  * mistyping one — who gets a page that says Not found. The alternative was
  * prerendering all 1,603 ids so the router itself refuses unknown ones, which
@@ -48,7 +48,7 @@ export async function generateStaticParams() {
   // body — a soft 404, which is a real problem for a page a crawler reads.
   //
   // Neither half of that is true here. These pages are noindex and sit behind
-  // middleware, so nothing crawls them and the only visitor who can reach a
+  // the proxy, so nothing crawls them and the only visitor who can reach a
   // bad id is the owner typing one. What the listing cost instead was 1,603
   // pages built twice — this route and the intercepting modal — for 175 MB and
   // most of the build, all of it for pages one person opens a handful of.

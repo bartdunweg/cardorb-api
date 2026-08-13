@@ -22,8 +22,8 @@ const ask = (url: string | null) =>
   GET(
     new Request(
       url === null
-        ? "https://binder.example/api/cover"
-        : `https://binder.example/api/cover?url=${encodeURIComponent(url)}`,
+        ? "https://cardorb.example/api/cover"
+        : `https://cardorb.example/api/cover?url=${encodeURIComponent(url)}`,
     ),
   );
 

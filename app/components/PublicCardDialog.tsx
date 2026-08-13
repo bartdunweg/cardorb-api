@@ -12,7 +12,7 @@ import type { CardDetail as Detail, OwnedCard } from "../../lib/core/cards";
  *
  * The signed-in side opens a card by navigating to /cards/<id>, which an
  * intercepted route catches and draws as a dialog. That cannot work here: the
- * middleware in front of /cards sends anyone without a session to the login, so
+ * proxy in front of /cards sends anyone without a session to the login, so
  * on the public page a tap on a scan bounced the visitor out of the collection
  * they had been given a link to.
  *
@@ -117,40 +117,40 @@ export default function PublicCardDialog({
       className="modal--card"
     >
       <div {...swipe}>
-      {card ? (
-        <CardDetail
-          card={showing ?? known!}
-          mine={{ card, setName: setName ?? "" }}
-          nav={
-            onGo && (hasPrev || hasNext) ? (
-              // Buttons, not links: on the public page a card has no URL of its
-              // own, so there is nothing for an anchor to point at. Swiping the
-              // dialog does the same thing.
-              <>
-                <button
-                  type="button"
-                  className="btn btn--icon"
-                  onClick={() => onGo(-1)}
-                  disabled={!hasPrev}
-                  aria-label="Previous card"
-                >
-                  <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--icon"
-                  onClick={() => onGo(1)}
-                  disabled={!hasNext}
-                  aria-label="Next card"
-                >
-                  <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
-                </button>
-              </>
-            ) : undefined
-          }
-        />
-      ) : null}
-      {failed && <p className="cards-profile-error">That card would not load. Try again.</p>}
+        {card ? (
+          <CardDetail
+            card={showing ?? known!}
+            mine={{ card, setName: setName ?? "" }}
+            nav={
+              onGo && (hasPrev || hasNext) ? (
+                // Buttons, not links: on the public page a card has no URL of its
+                // own, so there is nothing for an anchor to point at. Swiping the
+                // dialog does the same thing.
+                <>
+                  <button
+                    type="button"
+                    className="btn btn--icon"
+                    onClick={() => onGo(-1)}
+                    disabled={!hasPrev}
+                    aria-label="Previous card"
+                  >
+                    <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--icon"
+                    onClick={() => onGo(1)}
+                    disabled={!hasNext}
+                    aria-label="Next card"
+                  >
+                    <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
+                  </button>
+                </>
+              ) : undefined
+            }
+          />
+        ) : null}
+        {failed && <p className="cards-profile-error">That card would not load. Try again.</p>}
       </div>
     </Modal>
   );

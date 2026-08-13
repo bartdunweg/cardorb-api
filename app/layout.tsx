@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { SITE_URL } from "../lib/core/config";
+import { APP_NAME, APP_TAGLINE, OWNER_NAME, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
 /**
@@ -54,11 +54,36 @@ export const metadata: Metadata = {
    * something a route decides.
    */
   metadataBase: new URL(SITE_URL),
-  title: "binder",
-  description: "A Pokemon card collection, and the API behind it.",
-  // Nothing here is for search engines: it is one person's collection tool.
-  // This is also why every JSON-LD graph the portfolio's /cards carried was
-  // dropped on the way over rather than ported.
+  /**
+   * The name, and how every other page's title ends.
+   *
+   * A template rather than a bare string, so a title bar and a search result
+   * both say which product they belong to without every route repeating the
+   * word: /login is "Sign in · Card Orb", the public collection is "Bart's
+   * Pokémon card collection · Card Orb". The two pages that are mostly the
+   * name itself opt out with `title.absolute`, which is what that field is for.
+   *
+   * `default` is required alongside a template and is what a child with no
+   * title of its own gets.
+   */
+  title: {
+    default: `${APP_NAME} — your Pokémon card collection, sorted`,
+    template: `%s · ${APP_NAME}`,
+  },
+  description: APP_TAGLINE,
+  applicationName: APP_NAME,
+  authors: [{ name: OWNER_NAME }],
+  /**
+   * noindex is the default here, and it is still the right default: almost
+   * every route in this app is a tool behind a password, and a tool has nothing
+   * to offer a search engine.
+   *
+   * Two routes override it, and only two — / , which is the page whose whole
+   * job is being found, and /user/<name>, which is the collection worth
+   * finding. Set here rather than per-route so that a new screen is private by
+   * accident rather than public by accident, which is the direction that
+   * mistake should fall in.
+   */
   robots: { index: false, follow: false },
 };
 

@@ -93,9 +93,10 @@ export function sameOrigin(req: Request): boolean {
 /**
  * The cookie a signed-in browser carries. Set by POST /api/v1/session.
  *
- * Imported rather than declared here, and passed straight back out: the
- * middleware needs the name and cannot afford this file's node:crypto import,
- * so the string lives in session-cookie.ts. Imported *and* exported, not
+ * Imported rather than declared here, and passed straight back out: proxy.ts
+ * needs the name and should not be dragging this file's node:crypto import to
+ * the network boundary for it, so the string lives in session-cookie.ts — see
+ * the comment there for why that is still true. Imported *and* exported, not
  * re-exported in one line — `export { x } from` forwards the name without
  * binding it locally, and keyFrom below reads it.
  */
@@ -109,7 +110,7 @@ export { SESSION_COOKIE };
  *
  * Parsed by hand rather than through next/headers so this stays a plain
  * `Request` function: the same code then answers for a route handler and for
- * middleware, and there is one comparison in the app rather than two that have
+ * the proxy, and there is one comparison in the app rather than two that have
  * to be kept agreeing with each other.
  */
 export function keyFrom(req: Request): string {

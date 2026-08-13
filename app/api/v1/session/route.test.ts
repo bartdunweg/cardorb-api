@@ -19,9 +19,9 @@ const EMAIL = "owner@example.com";
 
 function post(body: unknown, opts: { origin?: string | null; host?: string } = {}) {
   const h = new Headers({ "content-type": "application/json" });
-  h.set("host", opts.host ?? "binder.example");
-  if (opts.origin !== null) h.set("origin", opts.origin ?? "https://binder.example");
-  return new Request("https://binder.example/api/v1/session", {
+  h.set("host", opts.host ?? "cardorb.example");
+  if (opts.origin !== null) h.set("origin", opts.origin ?? "https://cardorb.example");
+  return new Request("https://cardorb.example/api/v1/session", {
     method: "POST",
     headers: h,
     body: typeof body === "string" ? body : JSON.stringify(body),
