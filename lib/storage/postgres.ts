@@ -268,3 +268,86 @@ export async function profileByUsername(
   const row = data as { id: string; username: string; display_name: string | null };
   return { id: row.id, username: row.username, displayName: row.display_name };
 }
+
+/** A profile as its owner sees it, which is more than a stranger gets. */
+export type OwnProfile = {
+  username: string;
+  displayName: string | null;
+  isPublic: boolean;
+};
+
+/**
+ * The signed-in person's own profile row.
+ *
+ * Separate from profileByUsername() because the questions are different:
+ * that one asks "is this name shared with me", filters on is_public, and
+ * returns null for a private one. This asks "what are my settings", and a
+ * private profile is exactly what it expects to find.
+ *
+ * No is_public filter and no user_id clause: the policy is `is_public or id =
+ * auth.uid()`, and the id comes from the session rather than the query, so a
+ * caller can only ever be handed their own.
+ */
+export async function ownProfile(db: SupabaseClient, userId: string): Promise<OwnProfile | null> {
+  const { data, error } = await db
+    .from("profiles")
+    .select("username,display_name,is_public")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(`Reading your profile failed: ${error.message}`);
+  if (!data) return null;
+
+  const row = data as { username: string; display_name: string | null; is_public: boolean };
+  return { username: row.username, displayName: row.display_name, isPublic: row.is_public };
+}
+
+/**
+ * Changes to a profile, by its owner.
+ *
+ * Takes only the two fields that are the owner's to change. The username is not
+ * here on purpose — it goes through the claim_username RPC, which checks the
+ * reserved list inside the same statement so two people cannot both win a race
+ * for one name. A plain update could not make that promise.
+ *
+ * RLS does the authorising: profiles_write is `update using (id = auth.uid())`,
+ * so the WHERE below narrows and the policy decides. Both, because a query that
+ * relies only on the policy is a query one bad refactor away from updating
+ * every row it is allowed to see.
+ */
+export async function updateProfile(
+  db: SupabaseClient,
+  userId: string,
+  patch: { displayName?: string | null; isPublic?: boolean },
+): Promise<void> {
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if ("displayName" in patch) row.display_name = patch.displayName;
+  if ("isPublic" in patch) row.is_public = patch.isPublic;
+
+  const { error } = await db.from("profiles").update(row).eq("id", userId);
+  if (error) throw new Error(`That change could not be saved: ${error.message}`);
+}
+
+/**
+ * Claiming a name, through the function that can do it atomically.
+ *
+ * The RPC raises two different errors on purpose and this keeps them apart:
+ * P0001 for a reserved name and 23505 for one somebody already has. They need
+ * different sentences — "that name is not available" and "that name is taken"
+ * are different facts, and collapsing them would make the reserved list look
+ * like a very popular set of usernames.
+ */
+export type ClaimResult = { ok: true } | { ok: false; reason: "reserved" | "taken" | "failed" };
+
+export async function claimUsername(db: SupabaseClient, wanted: string): Promise<ClaimResult> {
+  const { error } = await db.rpc("claim_username", { wanted });
+  if (!error) return { ok: true };
+  if (error.code === "P0001" || /reserved/i.test(error.message)) {
+    return { ok: false, reason: "reserved" };
+  }
+  if (error.code === "23505" || /duplicate|unique/i.test(error.message)) {
+    return { ok: false, reason: "taken" };
+  }
+  console.error("Claiming a username failed:", error.message);
+  return { ok: false, reason: "failed" };
+}

@@ -128,30 +128,34 @@ describe("the accent is split because one value cannot do both jobs", () => {
   });
 });
 
-describe("this file and tokens.css have not parted company", () => {
+describe("this file and the stylesheet it generates agree", () => {
   /**
-   * The transition guard, and it got stronger when the CSS changed shape.
+   * What survived the direction being reversed.
    *
-   * It used to read the light value out of the :root block and compare one
-   * half of the pair, because the dark half lived in a separate block a long
-   * way down the file. The tokens are light-dark() pairs now, so both values
-   * sit in one declaration and both can be checked — which is the version this
-   * always should have been. The dark palette had no guard at all until now.
+   * This began as a drift guard between two hand-maintained copies: the values
+   * here and the values in tokens.css. That job is gone — the CSS is generated
+   * now, and `npm run check` regenerates it and fails on a diff, which is a
+   * stronger guarantee than any assertion could be.
    *
-   * Two copies of a value is a value that can drift, and this one exists on
-   * purpose for the length of the rebuild: tokens.css is still what the browser
-   * reads. This is what makes the day one of them changes alone the day CI says
-   * so, rather than the day somebody notices a shade is off.
+   * What is left is worth more than the drift check was. It asserts that the
+   * *numbers* are still the ones the prose argued for: that the tier which
+   * measured 4.35:1 on the page has not crept back, that the dark palette still
+   * matches its light counterpart's ratio. A generator will faithfully emit a
+   * wrong value; this is what notices the value is wrong.
+   *
+   * Reading the generated file rather than the source is deliberate. Comparing
+   * the module to itself proves nothing. This proves the thing the browser is
+   * handed says what the module says.
    */
-  const css = readFileSync("app/styles/tokens.css", "utf8");
+  const css = readFileSync("app/styles/tailwind.generated.css", "utf8");
 
   const pairs: [string, { light: string; dark: string }][] = [
-    ["--color-text-primary", colour.label],
-    ["--color-text-secondary", colour.labelSecondary],
-    ["--color-text-tertiary", colour.labelTertiary],
-    ["--color-logo", colour.labelQuaternary],
-    ["--color-bg", colour.bgSurface],
-    ["--color-left-bg", colour.bgGrouped],
+    ["--color-label", colour.label],
+    ["--color-label-secondary", colour.labelSecondary],
+    ["--color-label-tertiary", colour.labelTertiary],
+    ["--color-label-quaternary", colour.labelQuaternary],
+    ["--color-bg-surface", colour.bgSurface],
+    ["--color-bg-grouped", colour.bgGrouped],
   ];
 
   for (const [name, expected] of pairs) {
@@ -169,7 +173,7 @@ describe("this file and tokens.css have not parted company", () => {
   it("the accent is a single value in both themes, on purpose", () => {
     // The one colour that should not shift when the lights go out: it is the
     // only one carrying "this is the thing you chose".
-    const value = css.match(/--color-accent:\s*([^;]+);/)?.[1]?.trim();
+    const value = css.match(/--color-tint:\s*([^;]+);/)?.[1]?.trim();
     expect(value).toBe(colour.tint.light);
     expect(colour.tint.light).toBe(colour.tint.dark);
   });

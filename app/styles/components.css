@@ -88,7 +88,7 @@
   -webkit-backdrop-filter: blur(var(--blur-glass));
   backdrop-filter: blur(var(--blur-glass));
   box-shadow: var(--shadow-card);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 /* ─── CONTROL ───
    The height and the label every one of these shares: the search field and the
@@ -238,12 +238,12 @@
   border-collapse: collapse;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .cards-dash-table th {
   text-align: left;
   font-weight: var(--fw-title);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 /* One rule in a table, under the head. That line separates two different kinds
@@ -260,7 +260,7 @@
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  background: color-mix(in srgb, var(--color-label) 8%, transparent);
 }
 /* :where(), so this is a default and not a decision. A skeleton is a finish,
    not a shape: applied to a bare block it should round like a small element,
@@ -278,7 +278,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--color-text-primary) 9%, transparent) 50%,
+    color-mix(in srgb, var(--color-label) 9%, transparent) 50%,
     transparent 100%
   );
   transform: translateX(-100%);

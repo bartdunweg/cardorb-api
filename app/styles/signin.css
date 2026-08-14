@@ -40,7 +40,7 @@
 .page-signin .page-title {
   margin: 0;
   font-size: var(--fs-card);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   text-align: center;
 }
 
@@ -75,7 +75,7 @@
   margin: 0 calc(-1 * var(--card-pad));
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .signin-or::before,
 .signin-or::after {
@@ -113,7 +113,7 @@
   margin-block-start: 1rem;
   text-align: center;
   font-size: 0.875rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 .signin-links a {
@@ -123,7 +123,7 @@
 }
 
 .signin-links a:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 /* What a field expects, said before it is typed in rather than after it is
@@ -133,7 +133,7 @@
   display: block;
   margin-block-start: 0.35rem;
   font-size: 0.8125rem;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 /* Why you are on this screen when it was not your idea: an expired recovery
@@ -150,7 +150,7 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   background: var(--color-surface-subtle);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   font-size: var(--fs-body-s);
   line-height: var(--lh-relaxed);
 }

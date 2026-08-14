@@ -1,0 +1,181 @@
+/* Settings: a narrow column of panels.
+   Written against the generated colour roles, so this and the iOS app read the
+   same names. Nothing here is shared with the collection — the shell, the rail
+   and the grid are a different screen with different problems. */
+
+.settings {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--page-pad-bottom);
+}
+
+.settings-back {
+  display: inline-block;
+  font-size: var(--fs-small);
+  color: var(--color-label-secondary);
+  text-decoration: none;
+  margin-bottom: var(--space-4);
+}
+.settings-back:hover { color: var(--color-label); }
+
+.settings-title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--color-label);
+  margin: 0;
+}
+
+.settings-who {
+  font-size: var(--fs-small);
+  color: var(--color-label-tertiary);
+  margin: var(--space-1) 0 var(--space-6);
+}
+
+.settings-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+
+.settings-row {
+  display: block;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+}
+.settings-row-title { display: block; font-weight: 600; color: var(--color-label); }
+.settings-row-blurb {
+  display: block;
+  font-size: var(--fs-small);
+  color: var(--color-label-secondary);
+  margin-top: 2px;
+}
+
+.settings-panels { display: grid; gap: var(--space-4); }
+
+.settings-panel {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.settings-panel-title {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-label);
+  margin: 0 0 var(--space-3);
+}
+
+.settings-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--color-border-active);
+  background: var(--color-bg-grouped);
+  color: var(--color-label);
+  /* 16px or larger, or iOS Safari zooms the page when the field is focused and
+     never zooms back. --fs-body clamps to 15px at its smallest, so this is set
+     rather than inherited. */
+  font-size: 16px;
+}
+.settings-input:focus-visible {
+  outline: 2px solid var(--color-tint);
+  outline-offset: 1px;
+}
+
+.settings-hint {
+  font-size: var(--fs-small);
+  color: var(--color-label-secondary);
+  margin: var(--space-2) 0;
+}
+
+.settings-said {
+  font-size: var(--fs-small);
+  color: var(--color-label);
+  margin: var(--space-2) 0 0;
+}
+
+.settings-link { margin: var(--space-3) 0 0; font-size: var(--fs-small); }
+.settings-link a { color: var(--color-tint-label); }
+
+/* The switch. A real checkbox, visually hidden, with the track drawn beside it:
+   it keeps the keyboard behaviour, the announced state and the focus ring that
+   a div with role="switch" would have to reimplement. */
+.settings-switch {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  cursor: pointer;
+}
+.settings-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.settings-switch-track {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--color-border-active);
+  padding: 3px;
+  transition: background 0.18s ease;
+}
+.settings-switch-thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: var(--shadow-image);
+  transition: transform 0.18s ease;
+}
+.settings-switch input:checked + .settings-switch-track {
+  background: var(--color-tint);
+}
+.settings-switch input:checked + .settings-switch-track .settings-switch-thumb {
+  transform: translateX(18px);
+}
+.settings-switch input:focus-visible + .settings-switch-track {
+  outline: 2px solid var(--color-tint);
+  outline-offset: 2px;
+}
+.settings-switch-label strong { display: block; color: var(--color-label); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-switch-track,
+  .settings-switch-thumb { transition: none; }
+}
+
+/* The three-way appearance choice. Radios, so arrow keys move between them and
+   the group announces itself as one question with three answers. */
+.settings-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); }
+.settings-mode input { position: absolute; opacity: 0; width: 0; height: 0; }
+.settings-mode-face {
+  display: block;
+  padding: var(--space-3);
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--color-border-active);
+  text-align: center;
+  cursor: pointer;
+}
+.settings-mode-label { display: block; font-weight: 500; color: var(--color-label); }
+.settings-mode input:checked + .settings-mode-face {
+  border-color: var(--color-tint);
+  box-shadow: inset 0 0 0 1px var(--color-tint);
+}
+.settings-mode input:focus-visible + .settings-mode-face {
+  outline: 2px solid var(--color-tint);
+  outline-offset: 2px;
+}
+
+/* Deleting everything reads as what it is. The border is the only place in the
+   app that uses a warning colour, so it is stated here rather than promoted to
+   a token nothing else would use. */
+.settings-panel--danger { border: 1px solid color-mix(in srgb, #d7263d 40%, transparent); }
+.btn--danger {
+  background: #d7263d;
+  color: #fff;
+  border-color: transparent;
+}
+.btn--danger:disabled { opacity: 0.5; }
