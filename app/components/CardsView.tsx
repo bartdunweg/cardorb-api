@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  memo,
   useCallback,
   useDeferredValue,
   useMemo,
@@ -11,11 +10,10 @@ import {
   useEffect,
 } from "react";
 import { Search, X } from "lucide-react";
-import Link from "next/link";
 import Card from "./Card";
-import Tag from "./Tag";
 import CardAddDialog from "./CardAddDialog";
 import PublicCardDialog from "./PublicCardDialog";
+import CardItem from "./CardItem";
 import CardsDashboard from "./CardsDashboard";
 import CardsPokedex from "./CardsPokedex";
 import CardsProfile from "./CardsProfile";
@@ -23,17 +21,17 @@ import CardsSidebar, { retryAsPng } from "./CardsSidebar";
 import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 import FilterMenu, { type Facet } from "./FilterMenu";
 import FilterSheet from "./FilterSheet";
+import Segmented from "./Segmented";
 import ViewSheet from "./ViewSheet";
 import ViewMenu from "./ViewMenu";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
 import { useSession } from "../hooks/useSession";
 import { getCardsStats, tally } from "../../lib/core/cards-stats";
 import { caught, getPokedex } from "../../lib/core/pokedex";
-import { highScan, shownPrice } from "../../lib/core/cards";
+import { shownPrice } from "../../lib/core/cards";
 import { type CardField, type DexOwned } from "./cards-fields";
 import type { CardSet, OwnedCard } from "../../lib/core/cards";
 import { LOCALE, OWNER_NAME } from "../../lib/core/config";
-import { euro, euroWhole } from "../../lib/core/format";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
 function releasedIn(iso: string | null) {
@@ -43,18 +41,6 @@ function releasedIn(iso: string | null) {
     ? null
     : d.toLocaleDateString(LOCALE, { month: "long", year: "numeric" });
 }
-
-/**
- * A Near Mint estimate, rounded to the euro, against a real price kept exact.
- *
- * The middle of the range is calibrated to within about 9% (see Price in
- * lib/cards.ts), so writing €54.30 would claim a precision it has never had.
- * Below €5 there is no range and the figure is Cardmarket's own, which is exact
- * and keeps its cents: the two are different kinds of number and the rounding
- * is the one visible clue which is which.
- */
-const euroShown = (price: { market: number | null; nm: { mid: number } | null }) =>
-  price.nm ? euroWhole(price.nm.mid) : price.market != null ? euro(price.market) : null;
 
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -82,43 +68,6 @@ const label = (era: string, span: Map<string, [number, number]>) => {
   if (!y) return era;
   return `${era} (${y[0] === y[1] ? y[0] : `${y[0]}–${y[1]}`})`;
 };
-
-/**
- * A card's scan and name, as a link when there is a page to link to.
- *
- * Not every row has one: a card TCGdex never matched has no id, and an id is
- * what the detail route is addressed by. Those keep the markup they always had
- * rather than becoming a dead anchor.
- */
-function CardLink({
-  id,
-  onPick,
-  children,
-}: {
-  id: string | null;
-  /** Set on the public link, where a card has no URL to go to. */
-  onPick?: () => void;
-  children: React.ReactNode;
-}) {
-  if (!id) return <>{children}</>;
-  if (onPick) {
-    return (
-      <button type="button" className="cards-item-link" onClick={onPick}>
-        {children}
-      </button>
-    );
-  }
-  return (
-    // scroll={false}, because this opens as a dialog over the page you are on.
-    // The router scrolls to the top on a navigation, and it does it before the
-    // dialog mounts: the grid behind the modal jumped to the first row, the
-    // modal locked the page there, and closing it put you somewhere else than
-    // where you clicked.
-    <Link href={`/cards/${id}`} className="cards-item-link" scroll={false}>
-      {children}
-    </Link>
-  );
-}
 
 /**
  * What a set amounts to: how much of it is held, and when it came out.
@@ -1653,288 +1602,3 @@ export default function CardsView({
   );
 }
 
-/**
- * One card in the grid or the list, and the reason it is its own component.
- *
- * The case it is actually for is the broken scans. A scan that 404s twice calls
- * setBrokenScans, around two hundred of them do, and that state lives above the
- * whole collection: every one of those used to re-render all 1,622 items, or
- * 19,288 nodes, to change one picture into one empty slot. They arrive spread
- * over seconds as the lazy images load, so React cannot batch them into one
- * pass. Memoised, the other 1,621 are skipped.
- *
- * Do not expect it to make searching much faster, which is what it was first
- * written for. Measured against the same build without it, at 4x CPU throttling,
- * typing "charizard" cost 789ms of script time before and 702ms after, with the
- * runs overlapping: real but inside the noise. Narrowing a search mostly
- * *unmounts* cards rather than re-rendering them, and a memo cannot skip an
- * unmount. The filtering itself was never the expense either: five norm() calls
- * over 1,622 cards benchmark at 1.9ms.
- *
- * Either way the props have to stay stable to be worth anything. `scan` is a
- * boolean the parent has already resolved rather than the two Sets it came
- * from, since a new Set on any card would otherwise change the props of all of
- * them, and `onScanBroken` is one useCallback for the whole page.
- */
-const CardItem = memo(function CardItem({
-  card,
-  setName,
-  setTitle,
-  view,
-  scan,
-  tilt,
-  big,
-  onScanBroken,
-  onPick,
-  fields,
-  setYear,
-}: {
-  card: OwnedCard;
-  /** What this card's set is called for matching: keys, broken-scan sets. */
-  setName: string;
-  /** What it is called for reading. See CardSet.title. */
-  setTitle: string;
-  view: "grid" | "list";
-  /** The year the set came out, for the Year field. Null where TCGdex has no
-      date for it, which is a handful of promo sets. */
-  setYear: string | null;
-  /** Which optional facts to draw under the scan. See fields in CardsView. */
-  fields: ReadonlySet<CardField>;
-  /** Opens the card in place. Only on the public link; elsewhere it is a URL. */
-  onPick?: (card: OwnedCard, setName: string) => void;
-  /** Whether this card still has a scan worth trying. */
-  scan: boolean;
-  /** Whether this card is drawn large enough for the foil. See TILT_FROM. */
-  tilt: boolean;
-  /** Whether it is drawn large enough to want the bigger scan. See HIGH_FROM. */
-  big: boolean;
-  onScanBroken: (cardKey: string, setName: string) => void;
-}) {
-  /**
-   * Whether this one card has been given the trading-card effect yet.
-   *
-   * The effect is `hover-tilt` and the foil over it is pokemon-cards-css, the
-   * same pair the binder card on /about is built from: see PullScan, which is
-   * where both are argued for.
-   *
-   * What is different here is that there are 1,622 of these rather than one, and
-   * the honest answer to "can it go on all of them" is no, not standing. Each
-   * instance is a custom element with a shadow root, three stylesheets injected
-   * into it and `will-change: transform, box-shadow, opacity` on two layers,
-   * which asks the compositor for a permanent layer per card. A browser will not
-   * grant sixteen hundred of those; it drops them on a budget nobody controls.
-   *
-   * So a card is upgraded when it is first pointed at, and only then. One at a
-   * time, and only the ones actually visited, which on any real visit is a
-   * handful. It stays upgraded afterwards: leaving and coming back should not
-   * pay the cost twice, and an element already in the document is free.
-   */
-  const [tilted, setTilted] = useState(false);
-  const arm = () => {
-    // Imported here rather than at the top of the file, for the reason PullScan
-    // gives: the module calls customElements.define on evaluation, and a client
-    // component is still evaluated on the server. Repeat calls are the module
-    // cache, so this costs nothing after the first card.
-    import("hover-tilt/web-component");
-    setTilted(true);
-  };
-
-  /**
-   * The picture, lifted out of the tree below because it is rendered in two
-   * shapes: bare, and inside the tilt once this card has been armed.
-   *
-   * Swapping between them remounts the element, which is the price of doing this
-   * per card rather than for all of them up front. By the time anyone points at
-   * a card its file is decoded and in the memory cache, so the second mount
-   * paints in the same frame.
-   */
-  const scanImg = scan ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      // The larger file once the grid is drawing cards that want it, and only
-      // where TCGdex has one. The attribute is swapped on the element that is
-      // already showing rather than the element being replaced, which is what
-      // makes this quiet: a browser keeps painting the picture it has until the
-      // new one has decoded, so crossing the threshold sharpens the grid in
-      // place instead of blanking it and filling it back in.
-      src={(big && highScan(card.image)) || card.image!}
-      alt={card.name}
-      loading="lazy"
-      decoding="async"
-      // Two ways a scan goes missing, and they need different answers.
-      // The grid asks for `low` because it draws these at 120px, but
-      // TCGdex does not publish that quality for every card and its CDN
-      // is not always up. So a first failure retries at `high`, the
-      // size this page used before, and only a second failure gives up
-      // and shows the empty slot. A card whose artwork simply is not
-      // uploaded yet ends there honestly; one whose `low` is missing
-      // gets its picture back.
-      //
-      // A second failure also condemns the set it came from, because
-      // artwork arrives per set rather than per card: if this one has
-      // none, the twenty-three beside it have none either, and they
-      // should not each spend two slow requests finding that out.
-      onError={(e) => {
-        const img = e.currentTarget;
-        if (img.dataset.retried) {
-          onScanBroken(card.key, setName);
-          return;
-        }
-        img.dataset.retried = "1";
-        img.src = img.src.replace("/low.webp", "/high.webp");
-      }}
-      // The ratio .cards-scan already reserves, stated on the element
-      // too, so the browser knows the shape before the file lands
-      // instead of relaying the grid out as each of a few hundred scans
-      // decodes. The CSS still does the drawing (100% / 100% /
-      // contain); these only describe.
-      //
-      // The measured size where there is one, since the scans that were
-      // pulled into public/artwork have been sized exactly and 245x342
-      // is only what TCGdex's `low` usually is. Same shape, one less
-      // assumption.
-      width={card.imageSize?.width ?? 245}
-      height={card.imageSize?.height ?? 342}
-    />
-  ) : (
-    // A card with no scan anywhere keeps its slot, and says which card it is
-    // rather than sitting there as a grey rectangle. Not aria-hidden any more:
-    // it carries the only text there is for this card in the grid.
-    <span className="cards-scan-missing">
-      <span className="cards-scan-missing-frame" aria-hidden="true" />
-      <span className="cards-scan-missing-name">{card.name}</span>
-      {card.number && <span className="cards-scan-missing-number">{card.number}</span>}
-      <span className="sr-only">No picture available</span>
-    </span>
-  );
-
-  return (
-    <li className={`cards-item${card.owned ? "" : " is-wishlist"}`} data-view={view}>
-      {/* Only the cards TCGdex matched have a page: the id is what addresses it,
-          and an unmatched row has none. The rest stay exactly as they were
-          rather than becoming a link to nowhere. The tags sit outside the link:
-          they are what the card is, not somewhere to go. */}
-      <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined}>
-        <span
-          className="cards-scan"
-          // Arming rather than tilting: the effect is mounted for this one card
-          // and stays mounted, so a card upgrades once and never again.
-          onPointerEnter={tilt && !tilted ? arm : undefined}
-        >
-          {tilted && scan ? (
-            /* The same two props PullScan settles on, minus the shadow: these
-               already carry a drop-shadow that follows the scan's transparent
-               corners (.cards-scan img), and the library's own is a box behind
-               a tile in a dense grid. The foil is the stylesheet's, keyed off
-               the printing exactly as it is on /about. */
-            <hover-tilt className="poke-tilt" tilt-factor="1" glare-intensity="0.5" glare-hue="200">
-              <span
-                className="poke-card"
-                data-rarity={card.variants[0]?.rarity?.toLowerCase() ?? undefined}
-                style={{ "--poke-scan": `url("${card.image}")` } as CSSProperties}
-              >
-                {scanImg}
-                <span className="poke-card__shine" aria-hidden="true" />
-              </span>
-            </hover-tilt>
-          ) : (
-            scanImg
-          )}
-        </span>
-        <span className="cards-item-text">
-          <span className="cards-item-name">{card.name}</span>
-          <span className="cards-item-meta">
-            {fields.has("number") && card.number && (
-              <span className="cards-item-number">
-                {/* The hash is the difference between "085" as this card's
-                    place in its set and "085" as any other number on a tile
-                    that can now also carry a year. */}
-                <span aria-hidden="true">#</span>
-                {card.number}
-              </span>
-            )}
-            {fields.has("type") && card.type && (
-              <span className="cards-item-type">{card.type}</span>
-            )}
-            {fields.has("set") && <span className="cards-item-set">{setTitle}</span>}
-            {fields.has("year") && setYear && <span className="cards-item-year">{setYear}</span>}
-            {/* The era's name on its own. label() appends the years it spans,
-                which is worth a heading in the rail and is noise on a tile that
-                can also be showing the set's year right beside it. */}
-            {fields.has("era") && card.gen && <span className="cards-item-gen">{card.gen}</span>}
-          </span>
-          {/* What the card costs, in euros, as one figure: the middle of the
-              Near Mint range, which is what an English Near Mint copy is listed
-              at, or the plain market price under €5 where no range would mean
-              anything. The range itself is on the card's own page, where there
-              is room for it; here it would not fit and would not add up. The
-              title says which of the two the number is, because on a tile they
-              look alike. A card with no listing at all has no line, not a
-              zero. */}
-          {fields.has("price") && card.price && euroShown(card.price) && (
-            <span
-              className="cards-item-price"
-              title={
-                card.price.nm
-                  ? `About ${euroWhole(card.price.nm.low)} to ${euroWhole(card.price.nm.high)} for an English Near Mint copy · ${euro(card.price.market!)} on Cardmarket`
-                  : `${euro(card.price.market!)} on Cardmarket`
-              }
-            >
-              {euroShown(card.price)}
-            </span>
-          )}
-          {/* One tag per printing. Holding a card normally and as a reverse holo
-              is two tags under one scan, not two cards. */}
-          {fields.has("rarity") && (
-            <span className="cards-item-tags">
-              {card.variants.map((v) => (
-                <Tag
-                  key={`${v.rarity}-${v.owned}`}
-                  className={`cards-tag${v.owned ? "" : " cards-tag--want"}`}
-                >
-                  {v.rarity ?? "Unknown"}
-                  {!v.owned && <span className="sr-only"> (on the wishlist)</span>}
-                </Tag>
-              ))}
-            </span>
-          )}
-        </span>
-      </CardLink>
-    </li>
-  );
-});
-
-/**
- * A row of choices with one of them on: the era switch and the sort order.
- *
- * Both are a single answer out of three, which is a segmented control rather
- * than a dropdown: three words fit in the bar, and a menu would hide the
- * current answer behind a press.
- */
-function Segmented<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (value: T) => void;
-  options: readonly (readonly [T, string])[];
-}) {
-  return (
-    <div className="cards-segmented" role="group" aria-label={label}>
-      {options.map(([key, text]) => (
-        <button
-          key={key}
-          type="button"
-          aria-pressed={value === key}
-          className={`cards-segment${value === key ? " is-active" : ""}`}
-          onClick={() => onChange(key)}
-        >
-          {text}
-        </button>
-      ))}
-    </div>
-  );
-}
