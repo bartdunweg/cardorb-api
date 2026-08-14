@@ -101,6 +101,32 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
   })();
 
 /**
+ * The collection, assembled, cached across requests under the same tag as the
+ * rows it is built from.
+ *
+ * buildCollection() is a pure function of cachedRows() and setCatalogue() — both
+ * already cached — but was, until this, re-run in full on every request: every
+ * page under app/(app)/layout.tsx (force-dynamic) calls getCards() on every
+ * navigation, and so do the public API routes. React's cache() on getCards only
+ * dedupes within one render, so none of that repetition was ever avoided across
+ * requests. The rebuild itself walks every row doing Levenshtein matching
+ * (sameCard) and a linear species scan (speciesOf) per card — the same cost
+ * that was fixed client-side in cards-stats.ts, still paid server-side, per
+ * request. This is what showed up as Vercel's Fluid CPU total.
+ *
+ * Sharing cardsTag(userId) with cachedRows() means the four write routes that
+ * already revalidate that tag on a mutation invalidate this too, for free —
+ * no separate invalidation path needed. revalidate matches cachedRows()'s TTL:
+ * the assembled collection can never be fresher than the rows it is built from.
+ */
+const cachedCollection = (userId: string, db: SupabaseClient | null) =>
+  unstable_cache(
+    async () => buildCollection(await cachedRows(userId, db)),
+    ["collection", userId],
+    { revalidate: 3600, tags: [cardsTag(userId)] },
+  )();
+
+/**
  * The collection, built.
  *
  * `token`, when given, is the caller's own bearer credential — an API route
@@ -120,7 +146,7 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
 export const getCards = cache(async (userId: string, token?: string): Promise<CardSet[]> => {
   try {
     const db = token ? userClient(token) : await serverClient();
-    return await buildCollection(await cachedRows(userId, db));
+    return await cachedCollection(userId, db);
   } catch (err) {
     console.error("Card collection walk failed, retrying on the next render:", err);
     return [];

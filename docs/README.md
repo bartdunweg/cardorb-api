@@ -29,4 +29,7 @@ root `CLAUDE.md` for how and when to write to it.
 - `decisions/0008-per-variant-inventory-fields-and-bearer-rls-fix.md` — per-variant
   inventory fields, and the bearer-token/row-level-security bug the iOS client's
   extension work uncovered.
+- `decisions/0014-cache-assembled-collection.md` — why the assembled collection is
+  cached across requests, not just its rows and catalogue inputs, and the Vercel
+  Fluid CPU cost that surfaced it.
 - Root `README.md` — what Card Orb is, the API surface, production environment.
