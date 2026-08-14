@@ -89,12 +89,13 @@ sending domain is `cardorb.com` and its DNS is already at Cloudflare. Set SPF,
 DKIM and DMARC while you are there — confirmation mail in a spam folder is
 exactly as broken as no confirmation mail.
 
-**A keepalive, before the link is shared.** Free Supabase projects pause after
-about a week of quiet and the public page 500s. `GET /api/v1/health` exists to be
-hit by a daily Vercel cron, which keeps the project awake and doubles as the
-monitor. Development runs against a local `supabase start` rather than a second
-cloud project, because a second cloud project is precisely the one that would sit
-quiet long enough to pause.
+**A keepalive.** Free Supabase projects pause after about a week of quiet and the
+public page 500s. `vercel.json` runs a daily cron against `GET /api/v1/health`,
+which queries one row — enough to count as activity — and doubles as the monitor:
+it answers 503 when the database is configured and not answering, so a check that
+only reads the status code still means something. Development runs against a local
+`supabase start` rather than a second cloud project, because a second cloud
+project is precisely the one that would sit quiet long enough to pause.
 
 **Asymmetric JWT signing keys, before the guard reads a token.** With them, a
 token is verified locally against the project's JWKS; without them, every
