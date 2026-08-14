@@ -15,5 +15,5 @@ import CardsView from "./CardsView";
  */
 export default function CollectionScreen({ scope }: { scope: string }) {
   const { sets } = useCollection();
-  return <CardsView sets={sets} signedIn chrome={false} scope={scope} />;
+  return <CardsView sets={sets} variant="owner" scope={scope} />;
 }
