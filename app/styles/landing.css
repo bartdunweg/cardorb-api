@@ -1,191 +1,681 @@
-/* The landing page at /, which is the only screen in this app addressed to
- * someone who has not seen it before.
- *
- * Like signin.css, it places things the other sheets already draw — .about-card
- * for the three panels, .btn and .btn--primary for the two actions — and adds
- * nothing but the layout around them. The type sizes are tokens, not numbers:
- * a landing page with its own scale is how two headings that should match stop
- * matching six months later.
- */
 .page-landing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-12);
-  max-width: var(--content-max);
+  width: min(100%, 1180px);
   margin-inline: auto;
-  padding: var(--page-pad-x);
-  padding-bottom: var(--page-pad-bottom);
+  padding: var(--space-6) var(--page-pad-x) var(--page-pad-bottom);
+  overflow: hidden;
 }
 
-/* ─── HERO ─── */
+.landing-nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: var(--control-h);
+}
 
-.landing-hero {
+.landing-brand,
+.landing-footer > span {
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-button);
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.landing-nav-links {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: var(--space-5);
-  text-align: center;
-  /* Air above, so the name is not welded to the top edge of the window. Not
-     min-height: 100vh like the login's column: that screen is one small card
-     and has to be centred or it floats; this one is a page with things below
-     the fold, and centring it would push the first panel off the bottom. */
-  padding-top: var(--space-12);
 }
 
-/* The name, above the headline. --fs-eyebrow and the tracking that goes with
-   it, because this is the same shape as every eyebrow in the ported sheets and
-   inventing a second one for the one place the product signs its name is how
-   they drift apart. */
-.landing-wordmark {
+.landing-nav a:not(.landing-brand) {
+  color: var(--color-text-secondary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-smooth);
+}
+
+.landing-nav a:not(.landing-brand):hover {
+  color: var(--color-text-primary);
+}
+
+.landing-nav-signin {
+  justify-self: end;
+}
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(440px, 1.12fr);
+  align-items: center;
+  gap: clamp(var(--space-10), 7vw, 88px);
+  min-height: 620px;
+  padding-block: clamp(72px, 10vw, 128px);
+}
+
+.landing-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.landing-eyebrow {
   margin: 0;
+  color: var(--color-text-tertiary);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-eyebrow);
   font-weight: var(--fw-eyebrow);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-tertiary);
+}
+
+.landing-title,
+.landing-intro h2,
+.landing-section-heading h2,
+.landing-workflow-copy h2,
+.landing-share h2,
+.landing-closing h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-weight: var(--fw-title);
+  letter-spacing: -0.045em;
+  line-height: 0.98;
 }
 
 .landing-title {
-  margin: 0;
-  font-family: var(--font-main), sans-serif;
-  font-size: var(--fs-display);
-  font-weight: var(--fw-title);
-  line-height: var(--lh-tight);
-  color: var(--color-text-primary);
-  /* The hard <br> in the markup is the break that is wanted on a narrow screen.
-     text-wrap: balance handles every other width, where the line is short
-     enough that the browser's own break would leave one word alone. */
-  text-wrap: balance;
+  max-width: 9ch;
+  font-size: clamp(42px, 4.5vw, 64px);
 }
 
-.landing-lede {
+.landing-lede,
+.landing-intro > p,
+.landing-workflow-copy > p,
+.landing-share p,
+.landing-closing > p {
   margin: 0;
-  /* 52ch and not the card's full width: the lede is one sentence and a sentence
-     running the whole 860px is a line nobody finishes. */
-  max-width: 52ch;
+  color: var(--color-text-secondary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-l);
   line-height: var(--lh-relaxed);
-  color: var(--color-text-secondary);
-  text-wrap: pretty;
+}
+
+.landing-lede {
+  max-width: 34ch;
 }
 
 .landing-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: var(--space-3);
   margin-top: var(--space-2);
 }
 
-/* .btn sets align-self: flex-start, which in this centred column would hang
-   both buttons off the left edge. They also get a floor on their width so the
-   filled one and the outlined one read as a pair rather than as a button and a
-   link that happens to have a border. */
 .landing-action {
-  align-self: center;
   justify-content: center;
-  min-width: 168px;
+  min-width: 178px;
 }
 
 .landing-note {
   margin: 0;
+  color: var(--color-text-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
 }
 
-/* ─── THE THREE PANELS ─── */
+.landing-note a,
+.landing-footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.landing-preview {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg-solid);
+  box-shadow: var(--shadow-elevated);
+  color: inherit;
+  text-decoration: none;
+  transform: rotate(1.5deg);
+  transition:
+    transform var(--dur-normal) var(--ease-smooth),
+    box-shadow var(--dur-normal) var(--ease-smooth);
+}
+
+.landing-preview:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 10%, transparent),
+    var(--shadow-elevated);
+  transform: rotate(0deg) translateY(-4px);
+}
+
+.landing-preview::before {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--color-bg) 74%, transparent),
+    transparent 45%
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.landing-preview-bar,
+.landing-preview-body,
+.landing-preview-intro,
+.landing-preview-stats,
+.landing-preview-cards,
+.landing-preview-caption {
+  position: relative;
+  z-index: 2;
+}
+
+.landing-preview-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 42px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-tiny);
+}
+
+.landing-preview-bar > svg {
+  margin-left: auto;
+}
+
+.landing-preview-dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.landing-preview-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-border-active);
+}
+
+.landing-preview-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-8);
+  min-height: 420px;
+  padding: clamp(var(--space-5), 4vw, var(--space-8));
+}
+
+.landing-preview-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.landing-preview-kicker,
+.landing-preview-intro > span,
+.landing-preview-stats span {
+  color: var(--color-text-tertiary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+}
+
+.landing-preview-intro strong {
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-card);
+  font-weight: var(--fw-title);
+  letter-spacing: -0.035em;
+}
+
+.landing-preview-stats {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.landing-preview-stats span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.landing-preview-stats b {
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+
+.landing-preview-cards {
+  grid-column: 1 / -1;
+  align-self: end;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: clamp(6px, 1.2vw, var(--space-3));
+  padding-inline: clamp(var(--space-2), 2vw, var(--space-5));
+}
+
+.landing-preview-cards img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-card);
+}
+
+.landing-preview-cards img:nth-child(2),
+.landing-preview-cards img:nth-child(4) {
+  transform: translateY(var(--space-4));
+}
+
+.landing-preview-caption {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border-subtle);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-tiny);
+}
+
+.landing-intro,
+.landing-section,
+.landing-workflow,
+.landing-share,
+.landing-closing {
+  margin-inline: auto;
+}
+
+.landing-intro {
+  max-width: 670px;
+  padding-block: clamp(96px, 12vw, 160px);
+  text-align: center;
+}
+
+.landing-intro h2,
+.landing-section-heading h2,
+.landing-workflow-copy h2,
+.landing-share h2,
+.landing-closing h2 {
+  font-size: var(--fs-display);
+}
+
+.landing-intro > p:last-child {
+  max-width: 57ch;
+  margin: var(--space-5) auto 0;
+}
+
+.landing-section--features {
+  max-width: 1040px;
+}
+
+.landing-section-heading {
+  max-width: 600px;
+  margin-bottom: var(--space-8);
+}
+
+.landing-section-heading .landing-eyebrow,
+.landing-workflow-copy .landing-eyebrow,
+.landing-share .landing-eyebrow,
+.landing-closing .landing-eyebrow {
+  margin-bottom: var(--space-4);
+}
 
 .landing-features {
-  /* A list, because it is three of the same thing, and a list is what a screen
-     reader should count. The markers go; the semantics stay. */
-  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
-  width: 100%;
-  display: grid;
-  /* auto-fit rather than a media query: at 860px this is three columns, and it
-     becomes two and then one on its own as the page narrows, at whatever width
-     260px stops fitting. */
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-4);
+  list-style: none;
 }
 
 .landing-features > li {
   display: flex;
 }
 
-/* .about-card brings the surface and the padding; this is the column inside it,
-   and the stretch so three panels of unequal text still line up at the bottom. */
 .landing-feature {
   display: flex;
   flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
-.landing-feature svg {
-  color: var(--color-text-tertiary);
-  margin-bottom: var(--space-1);
-}
-
-.landing-feature-title {
-  margin: 0;
-  font-family: var(--font-main), sans-serif;
-  /* --fs-label and not --fs-card: these are three panel headings under one page
-     title, and at card size they compete with the h1 for the eye. */
-  font-size: var(--fs-label);
-  font-weight: var(--fw-title);
+.landing-feature-icon,
+.landing-workflow-card-icon,
+.landing-share-link-icon {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 50%;
   color: var(--color-text-primary);
 }
 
-.landing-feature-body {
+.landing-feature h3,
+.landing-workflow-card h3 {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-sub);
+  font-weight: var(--fw-title);
+  letter-spacing: -0.03em;
+  line-height: var(--lh-snug);
+}
+
+.landing-feature p,
+.landing-workflow-card p {
   margin: 0;
+  color: var(--color-text-secondary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body);
   line-height: var(--lh-normal);
-  color: var(--color-text-secondary);
 }
 
-/* ─── FOOTER ─── */
+.landing-workflow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(330px, 0.7fr);
+  align-items: center;
+  gap: clamp(var(--space-10), 10vw, 140px);
+  max-width: 960px;
+  padding-block: clamp(104px, 14vw, 180px);
+}
 
-.landing-footer {
+.landing-workflow-copy > p,
+.landing-share > div > p {
+  margin-top: var(--space-5);
+}
+
+.landing-workflow-copy ul {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-workflow-copy li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+}
+
+.landing-workflow-copy li svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-text-primary);
+}
+
+.landing-workflow-card {
+  position: relative;
+  min-height: 430px;
+  padding: clamp(var(--space-6), 4vw, var(--space-10));
+}
+
+.landing-workflow-number {
+  position: absolute;
+  top: var(--space-8);
+  right: var(--space-8);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-small);
+}
+
+.landing-workflow-card h3 {
+  max-width: 11ch;
+  margin-top: var(--space-8);
+  font-size: var(--fs-card);
+}
+
+.landing-workflow-card p {
+  max-width: 28ch;
+  margin-top: var(--space-4);
+}
+
+.landing-workflow-rule {
+  position: absolute;
+  right: var(--space-8);
+  bottom: 78px;
+  left: var(--space-8);
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--color-timeline) 0 4px, transparent 4px 10px);
+}
+
+.landing-workflow-label {
+  position: absolute;
+  bottom: var(--space-8);
+  left: var(--space-8);
+  color: var(--color-text-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
+}
+
+.landing-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.65fr);
+  align-items: center;
+  gap: clamp(var(--space-8), 9vw, 128px);
+  max-width: 1040px;
+  padding: clamp(var(--space-8), 7vw, 88px);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+
+.landing-share h2 {
+  max-width: 12ch;
+}
+
+.landing-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-button);
+  text-decoration: none;
+}
+
+.landing-inline-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.landing-share-link {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-5);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.landing-share-link > span:last-child {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.landing-share-link small {
   color: var(--color-text-tertiary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
+}
+
+.landing-share-link strong {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-family: var(--font-main), sans-serif;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-closing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 680px;
+  padding-block: clamp(112px, 15vw, 200px);
   text-align: center;
+}
+
+.landing-closing h2 {
+  max-width: 12ch;
+}
+
+.landing-closing > p {
+  max-width: 42ch;
+  margin-top: var(--space-5);
+}
+
+.landing-closing .landing-action {
+  margin-top: var(--space-6);
+}
+
+.landing-footer {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 1.6fr) 1fr;
+  gap: var(--space-4);
+  align-items: start;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border-subtle);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--fs-small);
 }
 
 .landing-footer p {
   margin: 0;
+  text-align: center;
 }
 
 .landing-footer a {
-  color: var(--color-text-secondary);
-  /* Kept underlined: it is the only link in a line of grey text, and a colour
-     change alone is not something everyone can see. */
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  justify-self: end;
+}
+
+@media (max-width: 800px) {
+  .landing-hero {
+    grid-template-columns: 1fr;
+    gap: var(--space-10);
+    min-height: 0;
+    padding-block: 88px 96px;
+  }
+
+  .landing-hero-copy {
+    align-items: center;
+    text-align: center;
+  }
+
+  .landing-title {
+    max-width: 12ch;
+  }
+
+  .landing-preview {
+    width: min(100%, 600px);
+    margin-inline: auto;
+  }
+
+  .landing-features {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-workflow,
+  .landing-share {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-workflow {
+    gap: var(--space-8);
+  }
+
+  .landing-share-link {
+    max-width: 430px;
+  }
 }
 
 @media (max-width: 640px) {
   .page-landing {
-    gap: var(--space-10);
+    padding-top: var(--space-4);
   }
-  .landing-hero {
-    padding-top: var(--space-8);
+
+  .landing-nav {
+    grid-template-columns: 1fr auto;
   }
-  /* Full width on a phone, where two 168px buttons side by side leave a gutter
-     too narrow to tell them apart. */
+
+  .landing-nav-links {
+    display: none;
+  }
+
+  .landing-title {
+    font-size: clamp(40px, 12vw, 52px);
+  }
+
   .landing-actions {
     width: 100%;
     flex-direction: column;
   }
+
   .landing-action {
     align-self: stretch;
+  }
+
+  .landing-preview {
+    transform: none;
+  }
+
+  .landing-preview-body {
+    min-height: 360px;
+    gap: var(--space-5);
+  }
+
+  .landing-preview-stats {
+    gap: var(--space-3);
+  }
+
+  .landing-preview-cards {
+    padding-inline: 0;
+  }
+
+  .landing-intro {
+    padding-block: 96px;
+  }
+
+  .landing-workflow-card {
+    min-height: 370px;
+  }
+
+  .landing-share {
+    margin-inline: calc(-1 * var(--space-2));
+    padding: var(--space-6);
+  }
+
+  .landing-footer {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .landing-footer a {
+    justify-self: center;
   }
 }
