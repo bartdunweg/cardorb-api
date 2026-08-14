@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
+import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
+import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
 
 /**
  * An address and a password, which is now what those words mean.
@@ -38,6 +40,11 @@ import { useSession } from "../hooks/useSession";
 export default function SignInForm({
   redirectTo,
   note,
+  /** "column" on /login, where the field stands upright in a narrow card;
+   *  "row" (default) inline in the profile screen's rail, which wraps a row
+   *  instead. Mirrors the .page-signin override that used to apply this by
+   *  ancestor selector. */
+  layout = "row",
 }: {
   /**
    * Where to go once it worked. Set on /login, which is a door rather than a
@@ -46,6 +53,7 @@ export default function SignInForm({
    */
   redirectTo?: string;
   note?: string;
+  layout?: "row" | "column";
 }) {
   const router = useRouter();
   const { signIn, error, unconfirmed, resendConfirmation } = useSession();
@@ -79,11 +87,11 @@ export default function SignInForm({
 
   return (
     <>
-      {note && <p className="cards-profile-note">{note}</p>}
-      <form className="cards-profile-form" onSubmit={submit}>
-        <label className="cards-profile-field">
-          <span className="cards-profile-label">Email</span>
-          <input
+      {note && <FormNote>{note}</FormNote>}
+      <FormForm layout={layout} onSubmit={submit}>
+        <FormField layout={layout}>
+          <FormLabel>Email</FormLabel>
+          <FormInput
             type="email"
             name="email"
             autoComplete="username"
@@ -92,15 +100,15 @@ export default function SignInForm({
             placeholder="you@example.com"
             disabled={busy}
           />
-        </label>
+        </FormField>
 
-        <label className="cards-profile-field">
-          <span className="cards-profile-label">Password</span>
+        <FormField layout={layout}>
+          <FormLabel>Password</FormLabel>
           {/* type="password", so it is not read over a shoulder and so a
               password manager offers to keep it. autoComplete tells the manager
               which one, and pairs with the username field above it: without the
               two together, browsers fill this with something they guessed. */}
-          <input
+          <FormInput
             type="password"
             name="password"
             autoComplete="current-password"
@@ -110,23 +118,27 @@ export default function SignInForm({
             disabled={busy}
             aria-describedby={message ? "sign-in-error" : undefined}
           />
-        </label>
+        </FormField>
 
         {/* A button again. It was Enter alone, which is right for a single
             field: one box, one obvious thing to do with it. Two fields is a
             form, and a form with no visible way to submit leaves you looking
             for one. Enter still works, from either field. */}
-        <button type="submit" className="btn btn--primary signin-submit" disabled={busy}>
+        <button
+          type="submit"
+          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          disabled={busy}
+        >
           {busy ? "Signing in…" : "Sign in"}
         </button>
-      </form>
+      </FormForm>
       {/* role="alert", because the message replaces nothing on screen: a wrong
           key leaves the form exactly as it was, and without this the only thing
           that changed is invisible to a screen reader. */}
       {message && (
-        <p className="cards-profile-error" id="sign-in-error" role="alert">
+        <FormError id="sign-in-error" role="alert">
           {message}
-        </p>
+        </FormError>
       )}
 
       {/* The one refusal with a way out, and the way out has to be here.
@@ -134,7 +146,7 @@ export default function SignInForm({
           this existed there was nowhere to ask: signing in fails, and a password
           reset does not help because the password was never the problem. */}
       {unconfirmed && !resent && (
-        <p className="cards-profile-note">
+        <FormNote>
           <button
             type="button"
             className="btn"
@@ -145,22 +157,26 @@ export default function SignInForm({
           >
             Send a new confirmation link
           </button>
-        </p>
+        </FormNote>
       )}
       {resent && (
-        <p className="cards-profile-note" role="status">
+        <FormNote role="status">
           A new link is on its way to {email.trim()}. It replaces the old one.
-        </p>
+        </FormNote>
       )}
 
       {/* The two ways out of a login that is not working for you, and they
           belong here rather than on the page: whichever screen shows this form
           shows them, so neither can go missing on one of them. */}
-      <p className="signin-links">
-        <Link href="/signup">Create an account</Link>
+      <SigninLinks>
+        <Link href="/signup" className={signinLinkClassName}>
+          Create an account
+        </Link>
         {" · "}
-        <Link href="/password/forgotten">Forgot your password?</Link>
-      </p>
+        <Link href="/password/forgotten" className={signinLinkClassName}>
+          Forgot your password?
+        </Link>
+      </SigninLinks>
     </>
   );
 }

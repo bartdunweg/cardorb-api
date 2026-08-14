@@ -4,6 +4,7 @@ import { currentViewer } from "../../../lib/api/viewer";
 import { serverClient } from "../../../lib/storage/supabase";
 import { ownProfile } from "../../../lib/storage/postgres";
 import ProfileSettings from "../../components/ProfileSettings";
+import { SettingsHint } from "../../components/SettingsPanel";
 
 /**
  * Read on the server, edited on the client.
@@ -24,7 +25,7 @@ export default async function ProfilePage() {
   const profile = db ? await ownProfile(db, viewer.userId) : null;
 
   if (!profile) {
-    return <p className="settings-hint">Your profile could not be read right now.</p>;
+    return <SettingsHint>Your profile could not be read right now.</SettingsHint>;
   }
 
   return <ProfileSettings initial={profile} />;

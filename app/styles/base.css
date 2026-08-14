@@ -1,52 +1,34 @@
-/* Base: html/body, links, page-enter animation, split from globals.css (order preserved) */
-html {
-  /* On html as well as on body. The canvas takes its colour from body only
-     while html has none, and Safari paints the rubber-band area past the top
-     and bottom of the page from the canvas — so anything that gave html a
-     background later would show as two bands the moment you overscrolled.
-     Saying it in both places means they can never disagree. */
-  background: var(--color-bg-grouped);
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  /* Always reserve the scrollbar gutter so the centered bottom bar doesn't
-     shift when navigating between pages with/without a scrollbar. */
-  scrollbar-gutter: stable;
-}
-body {
-  /* Shared clean backdrop across the whole site. */
-  background: var(--color-bg-grouped);
-  color: var(--color-label);
-  font-family: var(--font-main);
-  min-height: 100vh;
-  /* No line ends on a word by itself, anywhere. text-wrap inherits, so this is
-     the default for every piece of running text on the site rather than a list
-     of element types that has to be kept in step: it was p, li, figcaption and
-     four classes, which left the panel copy, the card facts and every new
-     component out. */
-  text-wrap: pretty;
-}
+/* What is left of this file after the Tailwind migration.
+ *
+ * html/body's own styling moved to app/layout.tsx as Tailwind classes.
+ * pageEnterFlat, the second keyframe this file used to carry, is gone — a
+ * repo-wide grep found no `animation:` referencing it; it was ported from the
+ * portfolio's /resume page, which does not exist here.
+ *
+ * Two permanent exceptions remain:
+ *
+ * - The tap-highlight reset is a global, cross-cutting concern (every link
+ *   and button, site-wide) with no Tailwind utility and no single component
+ *   to attach a class to — the same shape of exception as
+ *   app/styles/pages.css's reduced-motion kill-switch.
+ * - @keyframes cannot be authored by a Tailwind class; the animation is
+ *   still applied via Tailwind (`animate-page-enter` in the consumer), this
+ *   just supplies the keyframe body it names.
+ */
+
 /* Remove tap flash on iOS for all interactive elements */
 a,
 button,
 [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
-/* ─── LINE BREAKING ───
-   No line ending in a single word, anywhere: `pretty` is inherited from body,
-   so running text and headings alike get it whether or not anyone remembered to
-   add it. The list of element types that used to be here is gone with it.
 
-   `balance` is gone too, and deliberately, not by omission. It evened the lines
-   of a two-line heading out to the same length, which is a typographic idea
-   rather than this site's: a heading that breaks where the sentence breaks says
-   something about the words, and one broken to make two equal bars says
-   something about the box. Do not put it back on a heading class without saying
-   why here. *//* Page entrance: the intro + sidebar persist across routes, so only the page
-   content re-mounts and "grows in" (scales up), like a card expanding open. *//* Entrance: the page grows in from a smaller scale while a blur clears and it
-   fades, reads like a card expanding open, not a hard cut (rule 5). *//* No opacity fade: starting at opacity 0 means the browser does not count the
-   page as painted, which pushed Largest Contentful Paint out by ~1.2s on mobile
-   (5.5s -> 4.3s, Lighthouse 80 -> 86). Scale plus the clearing blur still read
-   as a card expanding open. */
+/* Page entrance: the intro + sidebar persist across routes, so only the page
+   content re-mounts and "grows in" (scales up), like a card expanding open.
+   No opacity fade: starting at opacity 0 means the browser does not count the
+   page as painted, which pushed Largest Contentful Paint out by ~1.2s on
+   mobile (5.5s -> 4.3s, Lighthouse 80 -> 86). Scale plus the clearing blur
+   still read as a card expanding open. */
 @keyframes pageEnter {
   from {
     transform: scale(0.9);
@@ -57,44 +39,3 @@ button,
     filter: blur(0);
   }
 }
-/* Blur-free variant for /resume: `filter` makes a containing block for the
-   duration of the animation, which would disturb the sticky case labels. */
-@keyframes pageEnterFlat {
-  from {
-    transform: scale(0.9);
-  }
-  to {
-    transform: none;
-  }
-}
-/* Whichever of the two actually opens the route. On a route with a loading.tsx
-   that is the fallback: it is what arrives when you press the link, so it is
-   what grows in, and the real content then replaces it without a second
-   entrance. Running it on both played the same 420ms twice, a few hundred
-   milliseconds apart; running it only on the page meant pressing the link did
-   nothing visible and the animation arrived late, once the data had landed,
-   which reads as the page hiccuping rather than opening.
-   /about and /fifa used to be excluded here, because they had a fallback and
-   that was their entrance. Neither has one any more, so both are in the list
-   like the rest: the page itself is what arrives. Measured at 4 Mbit on /about,
-   the real heading is up 270ms after the click, where the fallback route showed
-   a skeleton at 62ms and only swapped it for the real card at 381ms. *//* .page-article was missing from this list, and the asymmetry is what gave it
-   away: /articles is .page-blog and grew in, the piece you opened from it did
-   not, so pressing Back animated and pressing a title did not.
-
-   It keeps the blurring variant. The one fixed element inside it is the reading
-   progress bar, and a transform or a filter on an ancestor makes a containing
-   block for fixed descendants, which would carry that bar along for the 420ms.
-   In practice it cannot show: you land at scroll 0, where the bar is scaleX(0),
-   and the animation is long finished by the time there is any progress to
-   draw. */
-#main-content > .is-fallback {
-  animation: pageEnter 420ms var(--ease-out);
-  transform-origin: center top;
-  /* No will-change: transform: it leaves a persistent containing block that
-     breaks position: sticky (the Experience case labels). */
-}
-/* On Resume the heading sits in the timeline as its own row (see CvTimeline),
-   so its left edge comes from the same column widths as the cases and follows
-   them through every breakpoint. *//* The gap under the heading matches the one on Articles. The cases carry their
-   own top spacing, so this only has to make up the difference. */

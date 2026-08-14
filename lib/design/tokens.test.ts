@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { over, ratio } from "./contrast";
-import { colour, surfaces } from "./tokens";
+import { colour, radius, surfaces } from "./tokens";
 
 /**
  * The test the stylesheets thought they had.
@@ -177,4 +177,11 @@ describe("this file and the stylesheet it generates agree", () => {
     expect(value).toBe(colour.tint.light);
     expect(colour.tint.light).toBe(colour.tint.dark);
   });
+
+  for (const [name, expected] of Object.entries(radius)) {
+    it(`--radius-${name} still reads ${expected}`, () => {
+      const value = css.match(new RegExp(`--radius-${name}:\\s*([^;]+);`))?.[1]?.trim();
+      expect(value, `--radius-${name} is missing from tailwind.generated.css`).toBe(expected);
+    });
+  }
 });

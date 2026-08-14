@@ -3,6 +3,14 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LOCALE } from "../../lib/core/config";
+import {
+  SettingsHint,
+  SettingsInput,
+  SettingsPanel,
+  SettingsPanelTitle,
+  SettingsPanels,
+  SettingsSaid,
+} from "./SettingsPanel";
 
 /**
  * Bringing a collection in, from a spreadsheet or from Notion.
@@ -102,21 +110,24 @@ export default function ImportSettings({
     router.refresh();
   }
 
+  // Monospace-ish numbers so the line numbers in a skipped-rows list line up
+  // with each other rather than drifting.
+  const listClass = "list-none my-3 p-0 grid gap-1 [font-size:var(--fs-small)]";
+
   return (
-    <div className="settings-panels">
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">From a spreadsheet</h2>
-        <p className="settings-hint">
+    <SettingsPanels>
+      <SettingsPanel>
+        <SettingsPanelTitle>From a spreadsheet</SettingsPanelTitle>
+        <SettingsHint>
           A CSV with a column for the card name and one for the set. Anything
           else — number, rarity, types, the date you got it — is used if it is
           there. A row with no “owned” column counts as owned.
-        </p>
+        </SettingsHint>
 
-        <input
+        <SettingsInput
           ref={file}
           type="file"
           accept=".csv,text/csv"
-          className="settings-input"
           onChange={async (e) => {
             const f = e.target.files?.[0];
             if (!f) return;
@@ -135,26 +146,24 @@ export default function ImportSettings({
         >
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
         </button>
-      </section>
+      </SettingsPanel>
 
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">From Notion</h2>
+      <SettingsPanel>
+        <SettingsPanelTitle>From Notion</SettingsPanelTitle>
 
         {connection ? (
           <>
-            <p className="settings-hint">
+            <SettingsHint>
               Connected to <code>{connection.database_id.slice(0, 8)}…</code>
               {connection.last_import_at
                 ? ` — last imported ${new Date(connection.last_import_at).toLocaleDateString(LOCALE)}.`
                 : " — not imported yet."}
-            </p>
-            {connection.last_error && (
-              <p className="settings-said">Last attempt failed: {connection.last_error}</p>
-            )}
-            <p className="settings-hint">
+            </SettingsHint>
+            {connection.last_error && <SettingsSaid>Last attempt failed: {connection.last_error}</SettingsSaid>}
+            <SettingsHint>
               Running it again only brings in pages that are not here yet, so it
               is safe to press whenever you have added cards over there.
-            </p>
+            </SettingsHint>
             <button className="btn" type="button" disabled={busy === "notion"} onClick={() => look("notion")}>
               {busy === "notion" ? "Reading…" : "Check for new cards"}
             </button>{" "}
@@ -182,21 +191,19 @@ export default function ImportSettings({
               router.refresh();
             }}
           >
-            <p className="settings-hint">
+            <SettingsHint>
               Create an integration at notion.so/my-integrations, share your card
               database with it, then paste the token and the database link here.
               The token is encrypted before it is stored.
-            </p>
-            <input
-              className="settings-input"
+            </SettingsHint>
+            <SettingsInput
               type="password"
               placeholder="ntn_…"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               autoComplete="off"
             />
-            <input
-              className="settings-input"
+            <SettingsInput
               placeholder="https://notion.so/…"
               value={database}
               onChange={(e) => setDatabase(e.target.value)}
@@ -207,19 +214,19 @@ export default function ImportSettings({
             </button>
           </form>
         )}
-      </section>
+      </SettingsPanel>
 
       {preview && (
-        <section className="settings-panel">
-          <h2 className="settings-panel-title">What this would bring in</h2>
-          <p className="settings-hint">
+        <SettingsPanel>
+          <SettingsPanelTitle>What this would bring in</SettingsPanelTitle>
+          <SettingsHint>
             {n(preview.seen)} rows read
             {preview.skipped ? `, ${n(preview.skipped)} skipped` : ""}. Nothing has
             been written yet.
-          </p>
+          </SettingsHint>
 
           {preview.skippedRows?.length ? (
-            <ul className="settings-skipped">
+            <ul className={`${listClass} text-label-tertiary tabular-nums`}>
               {preview.skippedRows.slice(0, 5).map((s) => (
                 <li key={s.line}>
                   Line {s.line}: {s.why}
@@ -228,10 +235,11 @@ export default function ImportSettings({
             </ul>
           ) : null}
 
-          <ul className="settings-sample">
+          <ul className={`${listClass} text-label-secondary`}>
             {preview.sample.map((c, i) => (
               <li key={i}>
-                <strong>{c.name}</strong> — {c.setName} {c.number}
+                <strong className="text-label font-medium">{c.name}</strong> — {c.setName}{" "}
+                {c.number}
                 {c.rarity ? ` · ${c.rarity}` : ""} · {c.owned ? "in the binder" : "wanted"}
               </li>
             ))}
@@ -240,15 +248,15 @@ export default function ImportSettings({
           <button className="btn btn--primary" type="button" disabled={busy === "commit"} onClick={run}>
             {busy === "commit" ? "Importing…" : "Import these"}
           </button>
-        </section>
+        </SettingsPanel>
       )}
 
-      {said && <p className="settings-said">{said}</p>}
+      {said && <SettingsSaid>{said}</SettingsSaid>}
 
       {history.length > 0 && (
-        <section className="settings-panel">
-          <h2 className="settings-panel-title">Earlier imports</h2>
-          <ul className="settings-runs">
+        <SettingsPanel>
+          <SettingsPanelTitle>Earlier imports</SettingsPanelTitle>
+          <ul className={`${listClass} text-label-secondary tabular-nums`}>
             {history.map((r) => (
               <li key={r.id}>
                 {new Date(r.started_at).toLocaleDateString(LOCALE)} · {r.kind} ·{" "}
@@ -260,8 +268,8 @@ export default function ImportSettings({
               </li>
             ))}
           </ul>
-        </section>
+        </SettingsPanel>
       )}
-    </div>
+    </SettingsPanels>
   );
 }

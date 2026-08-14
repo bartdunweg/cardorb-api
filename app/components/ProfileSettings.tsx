@@ -3,6 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_URL } from "../../lib/core/config";
+import {
+  SettingsHint,
+  SettingsInput,
+  SettingsLink,
+  SettingsPanel,
+  SettingsPanelTitle,
+  SettingsPanels,
+  SettingsSaid,
+  SettingsSwitch,
+  settingsLinkAnchorClassName,
+} from "./SettingsPanel";
 
 /**
  * The profile screen, and the switch that turns a whole feature on.
@@ -90,94 +101,85 @@ export default function ProfileSettings({
   const link = `${SITE_URL}/user/${initial.username}`;
 
   return (
-    <div className="settings-panels">
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">Your link</h2>
+    <SettingsPanels>
+      <SettingsPanel>
+        <SettingsPanelTitle>Your link</SettingsPanelTitle>
 
         {/* A real checkbox with a label, styled as a switch. role="switch" on a
             div would need its own key handling and its own focus ring; a
             checkbox arrives with both, and screen readers announce the state
             without being told to. */}
-        <label className="settings-switch">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            disabled={busy === "isPublic"}
-            onChange={async (e) => {
-              const next = e.target.checked;
-              setIsPublic(next);
-              // Put back if the server disagreed, so the switch never shows a
-              // state the database does not hold.
-              if (!(await patch("isPublic", { isPublic: next }))) setIsPublic(!next);
-            }}
-          />
-          <span className="settings-switch-track" aria-hidden="true">
-            <span className="settings-switch-thumb" />
-          </span>
-          <span className="settings-switch-label">
-            <strong>Anyone with the link can see my collection</strong>
-            <span className="settings-hint">
-              Prices are never shown on the public page, whatever this says.
-            </span>
-          </span>
-        </label>
+        <SettingsSwitch
+          checked={isPublic}
+          disabled={busy === "isPublic"}
+          onChange={async (e) => {
+            const next = e.target.checked;
+            setIsPublic(next);
+            // Put back if the server disagreed, so the switch never shows a
+            // state the database does not hold.
+            if (!(await patch("isPublic", { isPublic: next }))) setIsPublic(!next);
+          }}
+        >
+          <strong className="block text-label font-medium">
+            Anyone with the link can see my collection
+          </strong>
+          <SettingsHint>Prices are never shown on the public page, whatever this says.</SettingsHint>
+        </SettingsSwitch>
 
         {isPublic ? (
-          <p className="settings-link">
-            <a href={link} target="_blank" rel="noreferrer">
+          <SettingsLink>
+            <a href={link} target="_blank" rel="noreferrer" className={settingsLinkAnchorClassName}>
               {link.replace(/^https?:\/\//, "")}
             </a>
-          </p>
+          </SettingsLink>
         ) : (
-          <p className="settings-hint">
+          <SettingsHint>
             While this is off, that address answers 404 — the same answer as a
             name nobody has taken, so it cannot be used to find out you are here.
-          </p>
+          </SettingsHint>
         )}
-        {saying.isPublic && <p className="settings-said">{saying.isPublic}</p>}
-      </section>
+        {saying.isPublic && <SettingsSaid>{saying.isPublic}</SettingsSaid>}
+      </SettingsPanel>
 
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">Display name</h2>
+      <SettingsPanel>
+        <SettingsPanelTitle>Display name</SettingsPanelTitle>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             await patch("displayName", { displayName });
           }}
         >
-          <input
-            className="settings-input"
+          <SettingsInput
             value={displayName}
             maxLength={60}
             placeholder={initial.username}
             onChange={(e) => setDisplayName(e.target.value)}
             aria-describedby="display-name-hint"
           />
-          <p className="settings-hint" id="display-name-hint">
+          <SettingsHint id="display-name-hint">
             What the public page calls you. Empty means your username.
-          </p>
+          </SettingsHint>
           <button className="btn" type="submit" disabled={busy === "displayName"}>
             {busy === "displayName" ? "Saving…" : "Save"}
           </button>
-          {saying.displayName && <p className="settings-said">{saying.displayName}</p>}
+          {saying.displayName && <SettingsSaid>{saying.displayName}</SettingsSaid>}
         </form>
-      </section>
+      </SettingsPanel>
 
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">Username</h2>
+      <SettingsPanel>
+        <SettingsPanelTitle>Username</SettingsPanelTitle>
         <form onSubmit={saveUsername}>
-          <input
-            className="settings-input"
+          <SettingsInput
             value={username}
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
             spellCheck={false}
             autoCapitalize="none"
             aria-describedby="username-hint"
           />
-          <p className="settings-hint" id="username-hint">
+          <SettingsHint id="username-hint">
             Two to thirty characters: lowercase letters, numbers and hyphens.
             Changing it changes your link, and the old one stops working.
-          </p>
+          </SettingsHint>
           <button
             className="btn"
             type="submit"
@@ -185,9 +187,9 @@ export default function ProfileSettings({
           >
             {busy === "username" ? "Saving…" : "Save"}
           </button>
-          {saying.username && <p className="settings-said">{saying.username}</p>}
+          {saying.username && <SettingsSaid>{saying.username}</SettingsSaid>}
         </form>
-      </section>
-    </div>
+      </SettingsPanel>
+    </SettingsPanels>
   );
 }

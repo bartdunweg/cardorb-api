@@ -123,7 +123,9 @@ describe("the things that would look like leftovers", () => {
 });
 
 describe("the fixed bar does not flinch when a modal opens", () => {
-  const tabbar = read("app/styles/tabbar.css");
+  // Moved from app/styles/tabbar.css to app/components/tabbarClasses.ts's
+  // exported class-name strings during the Tailwind migration (ADR-0009).
+  const tabbar = read("app/components/tabbarClasses.ts");
 
   it("keeps the --lock-vw consumers", () => {
     // A position:fixed element measures itself against the viewport, not
@@ -140,26 +142,34 @@ describe("the fixed bar does not flinch when a modal opens", () => {
 describe("the Safari fixes, which look like superstition and are not", () => {
   it("keeps the tab bar on its own layer", () => {
     // Overscroll makes the bar flicker, because it rasterises together with
-    // .tabbar-fade's backdrop-filter. This is a fix rather than a look.
+    // the fade strip's backdrop-filter. This is a fix rather than a look.
+    // tabbarClassName is the exported string carrying this now (was the
+    // `.tabbar { transform: translateZ(0) }` rule in tabbar.css).
     expect(
-      has(read("app/styles/tabbar.css"), /\.tabbar\s*\{[^}]*translateZ\(0\)/),
+      has(read("app/components/tabbarClasses.ts"), /tabbarClassName\s*=[^;]*translateZ\(0\)/s),
       "no flicker on overscroll in Safari",
     ).toBe(true);
   });
 
   it("keeps the background on html as well as body", () => {
     // Safari paints the rubber-band area past the top and bottom of the page
-    // from the canvas, so body alone leaves a pale strip at the edges.
-    const base = read("app/styles/base.css");
-    expect(has(base, /html\s*,?[^{]*\{[^}]*background/), "the rubber-band area is painted").toBe(
-      true,
-    );
+    // from the canvas, so body alone leaves a pale strip at the edges. Moved
+    // from base.css's `html`/`body` rules to Tailwind classes directly on
+    // those elements in layout.tsx during the Tailwind migration (ADR-0011).
+    const layout = read("app/layout.tsx");
+    expect(
+      (layout.match(/bg-bg-grouped/g) ?? []).length,
+      "both html and body carry the page background",
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it("keeps the scrollbar gutter stable", () => {
     // Otherwise the centred bottom bar shifts between a route that scrolls and
     // one that does not.
-    expect(has(read("app/styles/base.css"), /scrollbar-gutter:\s*stable/), "no shift").toBe(true);
+    expect(
+      has(read("app/layout.tsx"), /\[scrollbar-gutter:stable\]/),
+      "no shift",
+    ).toBe(true);
   });
 });
 

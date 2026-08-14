@@ -3,6 +3,15 @@
 import { useRef } from "react";
 import { Settings, Heart, LayoutDashboard, Layers, List, Plus, Search } from "lucide-react";
 import { useSlidingPill } from "../hooks/useSlidingPill";
+import {
+  tabbarClassName,
+  tabbarFadeClassName,
+  tabbarIconClassName,
+  tabbarItemClassName,
+  tabbarLabelClassName,
+  tabbarPagesClassName,
+  tabbarPillClassName,
+} from "./tabbarClasses";
 
 /**
  * The bottom bar on /cards, below 1000px, where the rail is not beside the
@@ -124,36 +133,36 @@ export default function CardsTabBar({
       <button
         key={tab.key}
         type="button"
-        className={`tabbar-item${on ? " is-active" : ""}`}
+        className={`${tabbarItemClassName}${on ? " is-active" : ""}`}
         aria-current={on ? "page" : undefined}
         aria-label={tab.label}
         title={tab.label}
         onClick={() => onSelect(tab.key)}
       >
-        <span className="tabbar-icon">{tab.icon}</span>
+        <span className={tabbarIconClassName}>{tab.icon}</span>
         {/* The name, beside the icon, on the one slot that is lit. The
             stylesheet has collapsed this to nothing and faded it in on
             .is-active since the portfolio; there was simply never a label here
             to collapse, because this bar was written with the names on
             aria-label alone. Five icons and no words is a bar you learn rather
             than read. */}
-        <span className="tabbar-label">{tab.label}</span>
+        <span className={tabbarLabelClassName}>{tab.label}</span>
       </button>
     );
   };
 
   return (
     <>
-      <div className="tabbar-fade cards-tabbar-fade" aria-hidden="true" />
+      <div className={`${tabbarFadeClassName} cards-tabbar-fade`} aria-hidden="true" />
       {/* "Cards" rather than "Collection", which is the rail's name: both are on
           the page at once, and two landmarks with one name is a list of two
           identical entries in a screen reader's rotor. This one is the route,
           that one is the sets in it. */}
-      <nav className="tabbar cards-tabbar" aria-label="Cards">
-        <div className="tabbar-pages" ref={trackRef}>
+      <nav className={`${tabbarClassName} cards-tabbar`} aria-label="Cards">
+        <div className={tabbarPagesClassName} ref={trackRef}>
           {/* One pill for the whole control, behind the icons. */}
           <span
-            className={`tabbar-pill${pill.ready ? " is-ready" : ""}${animate ? " is-animated" : ""}`}
+            className={`${tabbarPillClassName}${pill.ready ? " is-ready" : ""}${animate ? " is-animated" : ""}`}
             aria-hidden="true"
             style={pillStyle}
           />

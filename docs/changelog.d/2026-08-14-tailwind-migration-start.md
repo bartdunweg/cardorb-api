@@ -1,0 +1,1 @@
+- Started migrating hand-written CSS to Tailwind: Tailwind utilities are now available on every route (previously only the collection views), and the error-page and about-card styling now ship as Tailwind classes instead of separate stylesheets. No visual change intended.

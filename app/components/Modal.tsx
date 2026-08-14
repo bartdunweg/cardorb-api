@@ -277,7 +277,7 @@ export default function Modal({
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target === backdropRef.current || target.classList.contains("modal-overlay")) {
+    if (target === backdropRef.current || target === overlayRef.current) {
       requestClose();
     }
   };
@@ -305,28 +305,53 @@ export default function Modal({
    *
    * React context still crosses a portal, so nothing above needs to change.
    */
+  // display:none/.is-open used to gate visibility in CSS; `open` already
+  // gates the whole render above (return null), so the backdrop is always
+  // visible whenever it exists — the toggle was dead weight once that guard
+  // existed. flex unconditionally, same visible result. "modal-backdrop" and
+  // "modal-overlay" are fully gone (no other stylesheet reached them by
+  // name); "modal"/"modal-scroll"/"modal-close" stay below because cards.css
+  // (not yet migrated) still does — .modal--card .modal-scroll,
+  // .modal--sheet .modal-close, and the `className` prop's variant classes
+  // (modal--card/-card-add/-sheet) presuppose these exact names exist to
+  // scope under. Remove them only once cards.css's own migration rewrites
+  // those selectors.
+  const backdropClassName =
+    variant === "right"
+      ? "fixed inset-0 z-[var(--z-modal)] flex items-center justify-end p-6 max-sm:p-0 max-sm:items-end max-sm:justify-stretch"
+      : "fixed inset-0 z-[var(--z-modal)] flex items-center justify-center";
+
   return createPortal(
-    <div
-      className={`modal-backdrop${variant === "right" ? " modal-backdrop--right" : ""} is-open`}
-      ref={backdropRef}
-      onClick={handleBackdropClick}
-    >
-      <div className="modal-overlay" ref={overlayRef} />
+    <div className={backdropClassName} ref={backdropRef} onClick={handleBackdropClick}>
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 opacity-0 [background:rgba(0,0,0,0.02)] [backdrop-filter:blur(var(--blur-scrim))]"
+      />
       {/* The dialog is the panel, not the backdrop: on the backdrop the role
           covers the overlay too, so the whole screen becomes the dialog and the
           click-outside-to-close target sits inside the thing it closes. */}
       <div
-        className={`modal ${className}`.trim()}
+        className={`modal relative border border-[var(--color-border-subtle)] [background:rgba(255,255,255,0.8)] dark:[background:rgba(34,34,34,0.8)] ${className}`.trim()}
         ref={modalRef}
         style={{ opacity: 0 }}
         role="dialog"
         aria-modal="true"
         aria-label={label}
       >
-        <button className="btn btn--icon modal-close" onClick={requestClose} aria-label="Close">
+        <button
+          className="modal-close btn btn--icon absolute top-6 right-6 z-10 text-label-secondary cursor-pointer
+            text-[0] leading-[0]
+            [transition:transform_var(--dur-fast)_var(--ease-in-out),color_var(--dur-fast)_var(--ease-in-out),box-shadow_var(--dur-fast)_var(--ease-in-out)]
+            hover:scale-[1.06] hover:text-label hover:[box-shadow:var(--shadow-elevated)]
+            dark:[background:var(--glass-bg-solid)] dark:[border-color:var(--color-border)]"
+          onClick={requestClose}
+          aria-label="Close"
+        >
           <X size={20} strokeWidth={1.75} />
         </button>
-        <div className="modal-scroll">{children}</div>
+        <div className="modal-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {children}
+        </div>
       </div>
     </div>,
     document.body,

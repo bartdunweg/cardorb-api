@@ -1,0 +1,1 @@
+- Fixed a cascade-layers bug from the Tailwind migration where padding/margin utility classes were silently overridden by legacy CSS on every migrated component (spacing that used `gap` was unaffected, which is why it wasn't visible in screenshots). Migrated the outermost `/cards` and public-collection page shell to Tailwind.

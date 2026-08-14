@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react";
 import SignInForm from "./SignInForm";
 import { useTheme } from "./ThemeProvider";
+import { FormNote } from "./FormField";
 
 /**
  * Where the password is typed, and the only screen on /cards that is about the
@@ -40,11 +41,11 @@ export default function CardsProfile({
         <h3 className="cards-profile-title">{signedIn ? "Signed in" : "Sign in"}</h3>
         {signedIn ? (
           <>
-            <p className="cards-profile-note">
+            <FormNote>
               The session is a cookie on this device, so the plus stays in the bar until you sign
               out or thirty days pass. Adding a card writes a row to the Notion database the rest of
               this page reads.
-            </p>
+            </FormNote>
             <button type="button" className="btn" onClick={onSignOut}>
               <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
               <span>Sign out</span>

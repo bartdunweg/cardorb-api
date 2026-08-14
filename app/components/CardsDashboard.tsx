@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Card from "./Card";
+import Card, { aboutCardClassName } from "./Card";
 import CollectionValueCard from "./CollectionValueCard";
 import { shownPrice } from "../../lib/core/cards";
 import type { CardsStats } from "../../lib/core/cards-stats";
@@ -118,7 +118,7 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <li className="cards-kpi about-card">
+    <li className={`cards-kpi ${aboutCardClassName}`}>
       <span className="cards-kpi-label">{label}</span>
       {/* Proportional figures on purpose: tabular-nums gives every digit the
           width of a zero, which reads loose at this size. Tabular is for columns

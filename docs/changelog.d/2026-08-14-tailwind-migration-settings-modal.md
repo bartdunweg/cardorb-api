@@ -1,0 +1,1 @@
+- Migrated the settings screens and the shared dialog shell (Modal) from hand-written CSS to Tailwind. No visual change intended.

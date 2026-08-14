@@ -1,0 +1,1 @@
+- Migrated the login, signup, forgotten-password, set-password and profile sign-in forms from hand-written CSS to Tailwind (shared `FormField`/`SigninShell` components). Fixed a pre-existing bug where the 404 page's description text had no styling. No other visual change intended.

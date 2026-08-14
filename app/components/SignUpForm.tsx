@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
 import { MIN_PASSWORD } from "../../lib/core/account";
+import {
+  FormError,
+  FormField,
+  FormForm,
+  FormHint,
+  FormInput,
+  FormLabel,
+  formNoteClassName,
+} from "./FormField";
+import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
 
 /**
  * Two fields.
@@ -61,7 +71,7 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
   // everything right that they did something wrong.
   if (sent) {
     return (
-      <div className="cards-profile-note" role="status">
+      <div className={formNoteClassName} role="status">
         <p style={{ margin: "0 0 8px", fontWeight: 500 }}>Check your email</p>
         <p style={{ margin: "0 0 8px" }}>
           A confirmation link is on its way to <strong>{sent}</strong>. Open it and your
@@ -77,10 +87,10 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
 
   return (
     <>
-      <form className="cards-profile-form" onSubmit={submit}>
-        <label className="cards-profile-field">
-          <span className="cards-profile-label">Email</span>
-          <input
+      <FormForm layout="column" onSubmit={submit}>
+        <FormField layout="column">
+          <FormLabel>Email</FormLabel>
+          <FormInput
             type="email"
             name="email"
             autoComplete="username"
@@ -90,13 +100,13 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
             disabled={busy}
             required
           />
-        </label>
+        </FormField>
 
-        <label className="cards-profile-field">
-          <span className="cards-profile-label">Password</span>
+        <FormField layout="column">
+          <FormLabel>Password</FormLabel>
           {/* new-password, not current-password: it tells a password manager to
               offer to generate one rather than to fill the last one it saw. */}
-          <input
+          <FormInput
             type="password"
             name="new-password"
             autoComplete="new-password"
@@ -108,25 +118,23 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
             required
             aria-describedby="signup-password-hint"
           />
-          <span className="cards-profile-hint" id="signup-password-hint">
-            At least {MIN_PASSWORD} characters.
-          </span>
-        </label>
+          <FormHint id="signup-password-hint">At least {MIN_PASSWORD} characters.</FormHint>
+        </FormField>
 
-        <button type="submit" className="btn btn--primary signin-submit" disabled={busy}>
+        <button
+          type="submit"
+          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          disabled={busy}
+        >
           {busy ? "Creating your account…" : "Create account"}
         </button>
-      </form>
+      </FormForm>
 
-      {message && (
-        <p className="cards-profile-error" role="alert">
-          {message}
-        </p>
-      )}
+      {message && <FormError role="alert">{message}</FormError>}
 
-      <p className="signin-links">
-        Already have an account? <Link href="/login">Sign in</Link>
-      </p>
+      <SigninLinks>
+        Already have an account? <Link href="/login" className={signinLinkClassName}>Sign in</Link>
+      </SigninLinks>
     </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme, type Mode } from "./ThemeProvider";
+import { SettingsHint, SettingsPanel, SettingsPanelTitle } from "./SettingsPanel";
 
 /**
  * Three answers, and the third was unreachable until now.
@@ -26,32 +27,37 @@ export default function AppearanceSettings() {
   const { mode, theme, setMode } = useTheme();
 
   return (
-    <section className="settings-panel">
-      <h2 className="settings-panel-title">Appearance</h2>
+    <SettingsPanel>
+      <SettingsPanelTitle>Appearance</SettingsPanelTitle>
 
-      <div className="settings-modes" role="radiogroup" aria-label="Appearance">
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Appearance">
         {OPTIONS.map((o) => (
-          <label key={o.value} className="settings-mode">
+          <label key={o.value} className="group">
             <input
               type="radio"
               name="appearance"
               value={o.value}
               checked={mode === o.value}
               onChange={() => setMode(o.value)}
+              className="absolute opacity-0 w-0 h-0"
             />
-            <span className="settings-mode-face">
-              <span className="settings-mode-label">{o.label}</span>
-              <span className="settings-hint">{o.hint}</span>
+            <span
+              className="block p-3 rounded-btn border border-[var(--color-border-active)] text-center cursor-pointer
+                group-has-[:checked]:border-[var(--color-tint)] group-has-[:checked]:[box-shadow:inset_0_0_0_1px_var(--color-tint)]
+                group-has-[:focus-visible]:[outline:2px_solid_var(--color-tint)] group-has-[:focus-visible]:[outline-offset:2px]"
+            >
+              <span className="block text-label font-medium">{o.label}</span>
+              <SettingsHint>{o.hint}</SettingsHint>
             </span>
           </label>
         ))}
       </div>
 
-      <p className="settings-hint">
+      <SettingsHint>
         {mode === "system"
           ? `Following this device, which is currently ${theme}.`
           : `Set to ${mode}, whatever this device prefers.`}
-      </p>
-    </section>
+      </SettingsHint>
+    </SettingsPanel>
   );
 }

@@ -1,0 +1,1 @@
+- Migrated html/body base styling, the card surface, and the tag chip to Tailwind. Fixed a regression from an earlier pass where login/signup form fields had lost their border and background styling. Removed two unused CSS animations. No other visual change intended.
