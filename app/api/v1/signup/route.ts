@@ -115,13 +115,24 @@ export async function POST(req: Request) {
     if (/duplicate key|already registered|unique/i.test(error.message)) {
       return NextResponse.json({ error: "That name or address is already in use." }, { status: 409 });
     }
+    // Sign-ups being switched off is a deployment's decision, not the visitor's
+    // mistake, and it deserves to say so rather than reading as a fault in what
+    // they typed.
+    if (/signups? not allowed|signup is disabled/i.test(error.message)) {
+      return NextResponse.json({ error: "New accounts are closed right now." }, { status: 403 });
+    }
     console.error("Sign-up failed:", error.message);
     return NextResponse.json({ error: "That account could not be created." }, { status: 400 });
   }
 
-  // Signed in already, because email confirmation is off while there is no
-  // sender configured. When it goes on, this stops being true and the response
-  // has to say "check your email" instead — which is the one line of this file
-  // that changes on the day Resend is set up.
-  return NextResponse.json({ ok: true });
+  // Not signed in. Confirmation is on, so what exists now is an account that
+  // cannot be used until somebody opens the link in their mail — which is the
+  // whole point of it, and the reason the caller must not redirect to /cards.
+  //
+  // `pending` says that out loud rather than leaving the client to infer it from
+  // a bare ok. The previous version of this line returned the same shape whether
+  // the person was signed in or not, which was fine only while confirmation was
+  // off and would have become a screen that says "welcome" to somebody who is
+  // still shut out.
+  return NextResponse.json({ ok: true, pending: true, email });
 }

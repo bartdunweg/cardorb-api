@@ -72,28 +72,36 @@ export function useSession() {
   }, [router]);
 
   /**
-   * Making an account, which signs you in on success — for now.
+   * Making an account, which does not sign you in.
    *
-   * That is true only while email confirmation is off, and it is off only while
-   * there is no sender configured. When it goes on this stops redirecting and
-   * starts saying "check your email", and the change is in the route rather
-   * than here: this hook reports what the server did.
+   * Confirmation is on, so what comes back is an account nobody can use until
+   * the link in their mail is opened. The route says so with `pending`, and this
+   * returns it rather than deciding: whether the person is through the door is
+   * the server's answer to give, and a client that assumed otherwise would send
+   * them to a collection they cannot load.
    */
   const signUp = useCallback(
-    async (email: string, password: string, username: string): Promise<boolean> => {
+    async (
+      email: string,
+      password: string,
+      username: string,
+    ): Promise<{ ok: boolean; pending?: boolean }> => {
       setError(null);
       const res = await fetch("/api/v1/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, username }),
       });
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        pending?: boolean;
+      };
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
         setError(body.error ?? "That account could not be created.");
-        return false;
+        return { ok: false };
       }
       startTransition(() => router.refresh());
-      return true;
+      return { ok: true, pending: body.pending === true };
     },
     [router],
   );

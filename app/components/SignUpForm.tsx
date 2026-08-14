@@ -35,6 +35,8 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [busy, setBusy] = useState(false);
+  /** The address the confirmation went to, once it has. */
+  const [sent, setSent] = useState<string | null>(null);
   const [local, setLocal] = useState<string | null>(null);
 
   // Lowercased and stripped as it is typed rather than rejected afterwards. A
@@ -56,7 +58,14 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
 
     setBusy(true);
     try {
-      if (await signUp(email.trim(), password, username)) router.push(redirectTo);
+      const result = await signUp(email.trim(), password, username);
+      if (!result.ok) return;
+      // Waiting on a confirmation link is a state, not a redirect. Sending them
+      // to the collection would show an empty screen behind a door they have not
+      // opened yet; sending them to a sign-in form would be worse, because the
+      // password they just chose does not work until they confirm.
+      if (result.pending) return setSent(email.trim());
+      router.push(redirectTo);
     } catch {
       setLocal("No answer from the server. Try again in a moment.");
     } finally {
@@ -65,6 +74,26 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
   }
 
   const message = local ?? error;
+
+  // The form is replaced rather than annotated. Leaving the fields on screen
+  // under a success notice invites somebody to press the button again, and the
+  // second attempt fails with "already in use" — telling a person who did
+  // everything right that they did something wrong.
+  if (sent) {
+    return (
+      <div className="cards-profile-note" role="status">
+        <p style={{ margin: "0 0 8px", fontWeight: 500 }}>Check your email</p>
+        <p style={{ margin: "0 0 8px" }}>
+          A confirmation link is on its way to <strong>{sent}</strong>. Open it and your
+          collection is ready.
+        </p>
+        <p style={{ margin: 0, opacity: 0.75 }}>
+          Nothing happens until you do — the account cannot be used before it is confirmed. If
+          the message has not arrived in a few minutes, look in your spam folder.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
