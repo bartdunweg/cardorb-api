@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import Card from "../components/Card";
 import SignInForm from "../components/SignInForm";
-import { SESSION_COOKIE } from "../../lib/api/guard";
+import { currentViewer } from "../../lib/api/viewer";
 import { APP_NAME, PUBLIC_USERNAME } from "../../lib/core/config";
 
 export const metadata: Metadata = {
@@ -36,7 +35,7 @@ export default async function Login({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const [jar, params] = await Promise.all([cookies(), searchParams]);
+  const params = await searchParams;
   // Only a path within this app, never an absolute URL. `next` arrives in the
   // query string, and following whatever it says would let a link from anywhere
   // bounce someone off this domain while wearing its name. The second test
@@ -45,7 +44,7 @@ export default async function Login({
   const next =
     params.next?.startsWith("/") && !params.next.startsWith("//") ? params.next : "/cards";
 
-  if (jar.get(SESSION_COOKIE)?.value) redirect(next);
+  if (await currentViewer()) redirect(next);
 
   return (
     <section className="page-signin">
@@ -55,7 +54,7 @@ export default async function Login({
             sign in to add to the collection — a title that named the product
             and a subtitle doing the title's job. One line says both. */}
         <h1 className="page-title">Sign in to {APP_NAME}</h1>
-        <SignInForm redirectTo={next} defaultEmail={process.env.OWNER_EMAIL ?? ""} />
+        <SignInForm redirectTo={next} />
 
         {/* Something for the people this login is not for. Without it this
             address is a locked door with no sign, which is a strange thing to

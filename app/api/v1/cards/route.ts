@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "../../../../lib/core/collection-row";
-import { OWNER } from "../../../../lib/core/collection";
 import { createRow } from "../../../../lib/storage/collection";
-import { refuseWrite, readHeaders } from "../../../../lib/api/guard";
+import { authoriseWrite, readHeaders, refused } from "../../../../lib/api/guard";
 
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
@@ -19,8 +18,9 @@ import { refuseWrite, readHeaders } from "../../../../lib/api/guard";
 const MAX_BODY_BYTES = 8_192;
 
 export async function POST(req: Request) {
-  const no = refuseWrite(req);
-  if (no) return NextResponse.json({ error: no.error }, { status: no.status, headers: readHeaders(req) });
+  const who = await authoriseWrite(req);
+  if (refused(who))
+    return NextResponse.json({ error: who.error }, { status: who.status, headers: readHeaders(req) });
 
   const declared = Number(req.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
@@ -67,8 +67,8 @@ export async function POST(req: Request) {
 
   // Two caches stand between the row and /v1/collection, and they are two
   // because the store is fetched over HTTP: CARDS_TAG drops the store's own
-  // query, cardsTag() drops the rows this deployment had cached for the person
-  // who wrote. Both, because dropping only one leaves the other answering.
+  // query, cardsTag() drops the rows cached for the person who just wrote.
+  // Both, because dropping only one leaves the other answering.
   //
   // There used to be a third — a promise memoised in this process, cleared here
   // by forgetCollection(). It is gone, and with it the whole read-your-own-write
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
   // zero is what makes the card the writer's own write rather than the one
   // after it.
   revalidateTag(CARDS_TAG, { expire: 0 });
-  revalidateTag(cardsTag(OWNER), { expire: 0 });
+  revalidateTag(cardsTag(who.userId), { expire: 0 });
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });
 }

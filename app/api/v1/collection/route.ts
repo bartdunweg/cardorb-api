@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCards } from "../../../../lib/core/collection";
-import { readHeaders, refuseUnauthorised } from "../../../../lib/api/guard";
+import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
 
 /**
  * The whole collection, grouped by set. This is the endpoint every client
@@ -26,15 +26,18 @@ import { readHeaders, refuseUnauthorised } from "../../../../lib/api/guard";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const refusal = refuseUnauthorised(req);
-  if (refusal) {
-    return NextResponse.json({ error: refusal.error }, { status: refusal.status });
+  const who = await authorise(req);
+  if (refused(who)) {
+    return NextResponse.json({ error: who.error }, { status: who.status });
   }
 
-  const sets = await getCards();
+  // Whose collection, which is the whole of what changed here. It used to be
+  // the collection, singular, and the endpoint could not have said whose if it
+  // had been asked.
+  const sets = await getCards(who.userId);
 
   // An empty collection is never true. getCards() fails soft and returns []
-  // when there is no token or Notion is unreachable, and 200 with an empty
+  // when the store is unreachable, and 200 with an empty
   // array tells a client that every card is gone: an app that trusts it wipes
   // its cache, and the answer sits in front of the next reader for an hour.
   //

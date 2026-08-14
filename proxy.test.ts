@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { config, proxy } from "./proxy";
-import { SESSION_COOKIE } from "./lib/api/session-cookie";
+import { isAuthCookie } from "./lib/api/session-cookie";
 
 /**
  * The redirect in front of /cards.
@@ -30,7 +30,7 @@ function get(path: string, cookie?: string) {
 
 describe("the proxy", () => {
   it("lets a request with a session through", () => {
-    const res = proxy(get("/cards", `${SESSION_COOKIE}=anything`));
+    const res = proxy(get("/cards", "sb-abcdefg-auth-token=anything"));
     expect(res.headers.get("location")).toBeNull();
   });
 
@@ -47,7 +47,7 @@ describe("the proxy", () => {
   });
 
   it("treats an empty cookie as no cookie", () => {
-    const res = proxy(get("/cards", `${SESSION_COOKIE}=`));
+    const res = proxy(get("/cards", `sb-abcdefg-auth-token=`));
     expect(res.headers.get("location")).not.toBeNull();
   });
 });
@@ -76,5 +76,26 @@ describe("the matcher", () => {
     expect(matches("/login")).toBe(false);
     expect(matches("/api/v1/session")).toBe(false);
     expect(matches("/api/v1/collection")).toBe(false);
+  });
+});
+
+describe("isAuthCookie", () => {
+  it("recognises the cookie @supabase/ssr writes", () => {
+    expect(isAuthCookie("sb-fprjroupecdhosfdrqhv-auth-token")).toBe(true);
+  });
+
+  it("recognises a chunked one, which is what a large token becomes", () => {
+    // The reason this is a predicate and not the constant it replaced: a token
+    // too big for one cookie is split across .0, .1 and so on, and a proxy that
+    // only knew the unsuffixed name would sign those people out.
+    expect(isAuthCookie("sb-fprjroupecdhosfdrqhv-auth-token.0")).toBe(true);
+    expect(isAuthCookie("sb-fprjroupecdhosfdrqhv-auth-token.1")).toBe(true);
+  });
+
+  it("ignores Supabase's other cookies and everybody else's", () => {
+    expect(isAuthCookie("sb-fprjroupecdhosfdrqhv-auth-token-code-verifier")).toBe(true);
+    expect(isAuthCookie("sb-something-else")).toBe(false);
+    expect(isAuthCookie("binder_session")).toBe(false);
+    expect(isAuthCookie("theme")).toBe(false);
   });
 });

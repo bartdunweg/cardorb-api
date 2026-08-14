@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCardDetail } from "../../../../../lib/core/cards";
-import { readHeaders, refuseUnauthorised } from "../../../../../lib/api/guard";
+import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
 
 /**
  * One card, by the id TCGdex gives it ("sv03-125").
@@ -19,9 +19,12 @@ import { readHeaders, refuseUnauthorised } from "../../../../../lib/api/guard";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: Promise<{ tcgId: string }> }) {
-  const refusal = refuseUnauthorised(req);
-  if (refusal) {
-    return NextResponse.json({ error: refusal.error }, { status: refusal.status });
+  // Authorised but not personalised: a card's detail is a fact about the card,
+  // the same for everyone who asks. The check is here because this endpoint is
+  // behind the door, not because the answer depends on who opened it.
+  const who = await authorise(req);
+  if (refused(who)) {
+    return NextResponse.json({ error: who.error }, { status: who.status });
   }
 
   const { tcgId } = await params;

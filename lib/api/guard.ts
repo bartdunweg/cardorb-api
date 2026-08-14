@@ -1,6 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { createRateLimiter } from "./rate-limit";
 import { SESSION_COOKIE } from "./session-cookie";
+import { configured } from "../storage/supabase";
+import { requestViewer, type Viewer } from "./viewer";
 
 /**
  * Who may read and write, and from where.
@@ -133,25 +135,18 @@ export function keyFrom(req: Request): string {
  * and folded in, so every wrong key costs the same.
  */
 /**
- * Whether this is the owner's address.
+ * Whether a key is the one shared passcode, in constant time.
  *
- * Not a secret, and not treated as one: an email is a name, and the thing that
- * proves you are its owner is the password beside it. So this is a plain
- * comparison, case-insensitive and trimmed, because nobody types their own
- * address the same way twice and a login that refuses "Bart@" is a login that
- * looks broken.
+ * On its way out. This is the compatibility path: curl, the snapshot script and
+ * anything else that learned CARDS_TOKEN keeps working while accounts arrive
+ * beside it, resolving to whoever OWNER_USER_ID names. It logs every time it is
+ * used, so the question "does anything still depend on this" has an answer in
+ * the logs rather than in somebody's memory.
  *
- * It exists at all so the email field is a real check rather than decoration.
- * A form that asks for two things and only reads one is worse than a form that
- * asks for one: it tells you the account is yours when the door is the
- * password alone.
+ * timingSafeEqual throws on a length mismatch, which would be a length oracle
+ * if it were caught and turned into an answer. The lengths are compared first
+ * and folded in, so every wrong key costs the same.
  */
-export function emailIsRight(given: string): boolean {
-  const expected = process.env.OWNER_EMAIL;
-  if (!expected) return false;
-  return given.trim().toLowerCase() === expected.trim().toLowerCase();
-}
-
 export function keyIsRight(given: string): boolean {
   const expected = process.env.CARDS_TOKEN;
   if (!expected) return false;
@@ -161,17 +156,21 @@ export function keyIsRight(given: string): boolean {
 }
 
 /**
- * Who is asking: origin, rate, key. Returns the refusal, or null to carry on.
+ * Who is asking. Returns the viewer, or the refusal to send instead.
  *
- * Separate from the content-type check below because /v1/fields wants exactly
- * this and is a GET: it is behind the key, since it is the cheapest thing a
- * client can call to find out whether the key it holds still works.
+ * Every function this replaced answered "is this the key". This one answers
+ * "who is this", and that is the whole of what accounts change at the door: a
+ * boolean cannot name a person, and every caller downstream needs the name.
  *
- * The order is deliberate: the checks that need no secret come first, so a
- * flood of cross-site requests is turned away before it can touch the limiter's
- * map or the key comparison.
+ * The order is unchanged and still deliberate: the checks that need no secret
+ * come first, so a flood of cross-site requests is turned away before it can
+ * touch the limiter's map, let alone a token verification.
+ *
+ * Async now, which is the one thing that ripples — a signature is checked and
+ * sometimes a profile is read, and neither is a comparison against an
+ * environment variable any more.
  */
-export function refuseUnauthorised(req: Request): Refusal | null {
+export async function authorise(req: Request): Promise<Refusal | Viewer> {
   if (!originAllowed(req)) return { status: 403, error: "Forbidden" };
 
   // x-real-ip first: the platform sets it from the actual connection. The
@@ -183,31 +182,48 @@ export function refuseUnauthorised(req: Request): Refusal | null {
     "unknown";
   if (rateLimited(ip)) return { status: 429, error: "Too many requests" };
 
-  // Told apart from a wrong key on purpose. A deployment without the variable
-  // is not somebody getting it wrong, and the client can say so rather than
-  // sending its user looking for a password that would not work anyway.
-  if (!process.env.CARDS_TOKEN) {
-    console.error("CARDS_TOKEN is not set: every request will be refused");
-    return { status: 503, error: "This deployment has no key configured." };
+  // Told apart from a wrong credential on purpose, and kept in the same place
+  // in the order. A deployment with no database is not somebody getting it
+  // wrong, and the client can say so rather than sending its user looking for a
+  // password that would not work anyway.
+  if (!configured()) {
+    console.error("No database is configured: every request will be refused");
+    return { status: 503, error: "This deployment has no database configured." };
   }
 
-  if (!keyIsRight(keyFrom(req))) {
-    return { status: 401, error: "That password is not right." };
+  // The compatibility path, first because it is cheapest and because a request
+  // carrying this header is not carrying a session. It is deliberately narrow:
+  // the passcode alone is not an identity, so it only works where the
+  // deployment has said which account it stands for.
+  const legacy = req.headers.get("x-cards-key");
+  if (legacy && keyIsRight(legacy)) {
+    const owner = process.env.OWNER_USER_ID?.trim();
+    if (!owner) {
+      console.error("CARDS_TOKEN was accepted but OWNER_USER_ID is not set: nobody to be");
+      return { status: 503, error: "This deployment has no account configured." };
+    }
+    console.warn("[deprecated] CARDS_TOKEN was used; move this client to an account token");
+    return { userId: owner, email: process.env.OWNER_EMAIL ?? "", username: "" };
   }
 
-  return null;
+  const viewer = await requestViewer(req);
+  if (!viewer) return { status: 401, error: "Sign in to see this." };
+  return viewer;
 }
+
+/** Whether authorise() said no. Narrow, so the caller keeps the viewer typed. */
+export const refused = (r: Refusal | Viewer): r is Refusal => "status" in r;
 
 /**
  * The same, plus the content type. A cross-site POST is only a "simple request"
  * while its content type is one of three, so insisting on JSON is what forces
  * the preflight that the origin check above then decides.
  */
-export function refuseWrite(req: Request): Refusal | null {
+export async function authoriseWrite(req: Request): Promise<Refusal | Viewer> {
   if (!req.headers.get("content-type")?.includes("application/json")) {
     return { status: 415, error: "Invalid request" };
   }
-  return refuseUnauthorised(req);
+  return authorise(req);
 }
 
 /**
