@@ -1455,6 +1455,7 @@ export default function CardsView({
                         key={card.key}
                         card={card}
                         setName={set.name}
+                        setTitle={set.title}
                         view={view}
                         // The same three conditions the by-set branch below
                         // uses. This one only checked the first, so a card
@@ -1516,7 +1517,7 @@ export default function CardsView({
                       <div className="cards-set-text">
                         {/* One step down with the title above it: a set sits
                             inside the view rather than beside it. */}
-                        <h3 className="cards-set-name">{set.name}</h3>
+                        <h3 className="cards-set-name">{set.title}</h3>
                         <p className="cards-set-meta">
                           {onYear
                             ? `${set.cards.length.toLocaleString(LOCALE)} ${set.cards.length === 1 ? "card" : "cards"}`
@@ -1543,6 +1544,7 @@ export default function CardsView({
                         key={card.key}
                         card={card}
                         setName={set.name}
+                        setTitle={set.title}
                         view={view}
                         // Resolved here rather than handed the two Sets, so the
                         // item's props only change when the answer for that card
@@ -1677,6 +1679,7 @@ export default function CardsView({
 const CardItem = memo(function CardItem({
   card,
   setName,
+  setTitle,
   view,
   scan,
   tilt,
@@ -1687,7 +1690,10 @@ const CardItem = memo(function CardItem({
   setYear,
 }: {
   card: OwnedCard;
+  /** What this card's set is called for matching: keys, broken-scan sets. */
   setName: string;
+  /** What it is called for reading. See CardSet.title. */
+  setTitle: string;
   view: "grid" | "list";
   /** The year the set came out, for the Year field. Null where TCGdex has no
       date for it, which is a handful of promo sets. */
@@ -1850,7 +1856,7 @@ const CardItem = memo(function CardItem({
             {fields.has("type") && card.type && (
               <span className="cards-item-type">{card.type}</span>
             )}
-            {fields.has("set") && <span className="cards-item-set">{setName}</span>}
+            {fields.has("set") && <span className="cards-item-set">{setTitle}</span>}
             {fields.has("year") && setYear && <span className="cards-item-year">{setYear}</span>}
             {/* The era's name on its own. label() appends the years it spans,
                 which is worth a heading in the rail and is noise on a tile that

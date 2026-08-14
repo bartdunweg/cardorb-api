@@ -30,6 +30,7 @@ const CARDS = {
 const catalogue = (over: Partial<SetCatalogue> = {}): SetCatalogue => ({
   byNumber: CARDS,
   assetBase: "https://assets.tcgdex.net/en/base/base1",
+  officialName: "Base Set",
   code: "BS",
   setHasScans: true,
   logo: "https://assets.tcgdex.net/en/base/base1/logo.webp",
@@ -45,6 +46,7 @@ const KNOWN: Record<string, SetCatalogue> = { Base: catalogue() };
 const empty = (): SetCatalogue => ({
   byNumber: {},
   assetBase: null,
+  officialName: null,
   code: null,
   setHasScans: false,
   logo: null,
@@ -228,6 +230,23 @@ describe("buildCollection", () => {
       row({ setName: "Base" }),
     ]);
     expect(sets.map((s) => s.name)).toEqual(["Base", "Nowhere"]);
+  });
+
+  it("shows the catalogue's name for a set and keeps the owner's for matching", async () => {
+    // "Set 1 Unlimited" is a print run filed as a set; the set is Base Set. The
+    // heading should say what the card is, and everything that groups, keys or
+    // selects should keep saying what its owner typed — change that and you
+    // change what a card is.
+    const [set] = await buildCollection([row()]);
+    expect(set!.name).toBe("Base");
+    expect(set!.title).toBe("Base Set");
+  });
+
+  it("falls back to the owner's name for a set nobody has heard of", async () => {
+    // No catalogue match means no official name to prefer, and theirs is the
+    // only one there is. A blank heading would be worse than an unofficial one.
+    const [set] = await buildCollection([row({ setName: "Nowhere", number: "001" })]);
+    expect(set!.title).toBe("Nowhere");
   });
 
   it("carries the set's own details up from the catalogue", async () => {
