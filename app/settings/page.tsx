@@ -22,6 +22,11 @@ const SECTIONS = [
     blurb: "Email address, password, and deleting everything.",
   },
   {
+    href: "/settings/import",
+    title: "Import",
+    blurb: "Bring a collection in from a spreadsheet or from Notion.",
+  },
+  {
     href: "/settings/appearance",
     title: "Appearance",
     blurb: "Light, dark, or whatever this device is set to.",
