@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "../../../../lib/core/collection-row";
 import { createRow } from "../../../../lib/storage/collection";
-import { authoriseWrite, readHeaders, refused } from "../../../../lib/api/guard";
+import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "../../../../lib/api/guard";
 
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
@@ -51,18 +51,7 @@ export async function POST(req: Request) {
   try {
     id = await createRow(result.draft);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "The collection did not answer.";
-    console.error("Adding a card failed:", message);
-    // Told apart on the message rather than on a type, because there is one
-    // shape of failure the store raises before it has tried anything: a
-    // deployment with no store configured. That is a 503 — nothing is wrong,
-    // this instance simply cannot write — where a refusal from the store it
-    // does have is a 502.
-    const unconfigured = /not connected|not wired up/.test(message);
-    return NextResponse.json(
-      { error: message },
-      { status: unconfigured ? 503 : 502, headers: readHeaders(req) },
-    );
+    return storeErrorResponse(err, req, "Adding a card failed");
   }
 
   // Two caches stand between the row and /v1/collection, and they are two

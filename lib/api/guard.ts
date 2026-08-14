@@ -1,4 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
+import { NextResponse } from "next/server";
 import { createRateLimiter } from "./rate-limit";
 import { SESSION_COOKIE } from "./session-cookie";
 import { configured } from "../storage/supabase";
@@ -28,6 +29,13 @@ import { requestViewer, type Viewer } from "./viewer";
 const rateLimited = createRateLimiter(60_000, 10);
 
 export type Refusal = { status: number; error: string };
+
+/**
+ * The one message every route reaches for when serverClient()/configured()
+ * says there is nowhere to write. Shared so the six places that send it can't
+ * drift into six slightly different sentences.
+ */
+export const NO_DATABASE_CONFIGURED = "This deployment has no database configured.";
 
 /**
  * Which origins may post here, from ALLOWED_ORIGINS, comma separated.
@@ -158,6 +166,15 @@ export function keyIsRight(given: string): boolean {
 /**
  * Who is asking. Returns the viewer, or the refusal to send instead.
  *
+ * For the /v1 data routes only. The session-management routes (login,
+ * signup, password, confirmation) call sameOrigin() and currentViewer()
+ * directly instead of this — they are only ever posted to by this app's own
+ * pages, so they don't need the ALLOWED_ORIGINS cross-site allowlist or the
+ * read-cache headers this pairs with (readHeaders()) that the data routes do.
+ * Reach for authorise() when a route serves the iOS app or another client;
+ * reach for sameOrigin() + currentViewer() when a route only ever runs from
+ * this app's own forms.
+ *
  * Every function this replaced answered "is this the key". This one answers
  * "who is this", and that is the whole of what accounts change at the door: a
  * boolean cannot name a person, and every caller downstream needs the name.
@@ -188,7 +205,7 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
   // password that would not work anyway.
   if (!configured()) {
     console.error("No database is configured: every request will be refused");
-    return { status: 503, error: "This deployment has no database configured." };
+    return { status: 503, error: NO_DATABASE_CONFIGURED };
   }
 
   // The compatibility path, first because it is cheapest and because a request
@@ -239,6 +256,27 @@ export async function authoriseWrite(req: Request): Promise<Refusal | Viewer> {
  * now behind a key, and a shared cache must not keep one and serve it to the
  * next person who asks without one.
  */
+/**
+ * Turns a failed store call into the response two read routes were building by
+ * hand, identically. The store's own words, because the only person who can
+ * read this is the one who can act on it, and "something went wrong" would
+ * send them to the logs for a message that is already here.
+ *
+ * A deployment with no store at all is a 503 rather than a 502: nothing
+ * refused, there is simply nothing to ask. Told apart on the message rather
+ * than on a type, because there is one shape of failure the store raises
+ * before it has tried anything.
+ */
+export function storeErrorResponse(err: unknown, req: Request, logPrefix: string) {
+  const message = err instanceof Error ? err.message : "The collection did not answer.";
+  console.error(`${logPrefix}:`, message);
+  const unconfigured = /not connected|not wired up/.test(message);
+  return NextResponse.json(
+    { error: message },
+    { status: unconfigured ? 503 : 502, headers: readHeaders(req) },
+  );
+}
+
 export function readHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin");
   return {
