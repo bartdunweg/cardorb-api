@@ -88,3 +88,16 @@ export async function optionsFor(): Promise<CardFields> {
   if (!token) throw new Error("Notion is not connected here.");
   return notion.optionsFor(token);
 }
+
+/**
+ * Who /user/<name> belongs to, when the store can answer that.
+ *
+ * Null on Notion, which has one collection and no notion of whose: that
+ * deployment falls back to PUBLIC_USERNAME, which is what it always did.
+ */
+export async function publicProfile(username: string) {
+  if (source() !== "postgres") return null;
+  const db = await serverClient();
+  if (!db) return null;
+  return postgres.profileByUsername(db, username);
+}

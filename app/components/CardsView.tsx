@@ -26,7 +26,7 @@ import FilterSheet from "./FilterSheet";
 import ViewSheet from "./ViewSheet";
 import ViewMenu from "./ViewMenu";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
-import { useCardsKey } from "../hooks/useCardsKey";
+import { useSession } from "../hooks/useSession";
 import { getCardsStats, tally } from "../../lib/core/cards-stats";
 import { caught, getPokedex } from "../../lib/core/pokedex";
 import { highScan, shownPrice } from "../../lib/core/cards";
@@ -306,7 +306,7 @@ export default function CardsView({
    */
   // Only signing out from here: the form that signs in owns that call itself,
   // so the key never passes through this component.
-  const { signOut } = useCardsKey();
+  const { signOut } = useSession();
   const [adding, setAdding] = useState(false);
 
   const [pickedNames, setPickedNames] = useState<Set<string>>(new Set());

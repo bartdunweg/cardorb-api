@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { optionsFor } from "../../../../lib/storage/collection";
-import { refuseUnauthorised, readHeaders } from "../../../../lib/api/guard";
+import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
 
 /**
  * What the collection's select columns currently offer, so a form is built from
@@ -21,8 +21,9 @@ import { refuseUnauthorised, readHeaders } from "../../../../lib/api/guard";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const no = refuseUnauthorised(req);
-  if (no) return NextResponse.json({ error: no.error }, { status: no.status, headers: readHeaders(req) });
+  const who = await authorise(req);
+  if (refused(who))
+    return NextResponse.json({ error: who.error }, { status: who.status, headers: readHeaders(req) });
 
   try {
     return NextResponse.json(await optionsFor(), { headers: readHeaders(req) });

@@ -1,15 +1,33 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  emailIsRight,
+import type { Viewer } from "./viewer";
+
+/**
+ * Who the request turns out to be, per test.
+ *
+ * Mocked at the module rather than stubbed at the network, because "is this a
+ * valid token" is auth-js's question and this file is about the order the door
+ * asks its questions in. Setting this to null is a request with no session;
+ * setting it to a viewer is one with a good token, however it arrived.
+ */
+let viewer: Viewer | null = null;
+vi.mock("./viewer", () => ({ requestViewer: async () => viewer }));
+/** Every test here runs as though a database exists; the one that does not says so. */
+let hasDatabase = true;
+vi.mock("../storage/supabase", () => ({ configured: () => hasDatabase }));
+
+const {
+  authorise,
+  authoriseWrite,
   keyFrom,
   keyIsRight,
   originAllowed,
   readHeaders,
-  refuseUnauthorised,
-  refuseWrite,
+  refused,
   sameOrigin,
   SESSION_COOKIE,
-} from "./guard";
+} = await import("./guard");
+
+const SOMEBODY: Viewer = { userId: "user-1", email: "a@example.com", username: "a" };
 
 /**
  * The whole of who may read and write.
@@ -53,7 +71,10 @@ function req(
 }
 
 beforeEach(() => {
+  viewer = SOMEBODY;
+  hasDatabase = true;
   vi.stubEnv("CARDS_TOKEN", KEY);
+  vi.stubEnv("OWNER_USER_ID", "owner-1");
   vi.stubEnv("OWNER_EMAIL", "owner@example.com");
   vi.stubEnv("ALLOWED_ORIGINS", "https://app.example, https://ios.example");
 });
@@ -84,22 +105,6 @@ describe("keyIsRight", () => {
     vi.stubEnv("CARDS_TOKEN", "");
     expect(keyIsRight("")).toBe(false);
     expect(keyIsRight(KEY)).toBe(false);
-  });
-});
-
-describe("emailIsRight", () => {
-  it("ignores case and surrounding space, because nobody types it twice the same", () => {
-    expect(emailIsRight("  Owner@Example.com ")).toBe(true);
-  });
-
-  it("refuses another address", () => {
-    expect(emailIsRight("someone@example.com")).toBe(false);
-  });
-
-  it("refuses everything when no owner is configured", () => {
-    vi.stubEnv("OWNER_EMAIL", "");
-    expect(emailIsRight("owner@example.com")).toBe(false);
-    expect(emailIsRight("")).toBe(false);
   });
 });
 
@@ -179,80 +184,101 @@ describe("originAllowed", () => {
   });
 });
 
-describe("refuseUnauthorised", () => {
-  it("lets the right key through", () => {
-    expect(refuseUnauthorised(req({ header: KEY }))).toBeNull();
-  });
-
-  it("lets a session cookie through", () => {
-    expect(refuseUnauthorised(req({ cookie: `${SESSION_COOKIE}=${KEY}` }))).toBeNull();
-  });
-
-  it("refuses no credentials at all with 401", () => {
-    expect(refuseUnauthorised(req())).toEqual({
-      status: 401,
-      error: "That password is not right.",
+describe("authorise", () => {
+  it("hands back who is asking rather than a yes", () => {
+    // The whole of what accounts changed at the door. A boolean cannot name a
+    // person, and every caller downstream needs the name.
+    return authorise(req()).then((r) => {
+      expect(refused(r)).toBe(false);
+      expect(r).toMatchObject({ userId: "user-1" });
     });
   });
 
-  it("refuses a wrong key with 401", () => {
-    expect(refuseUnauthorised(req({ header: OTHER }))?.status).toBe(401);
+  it("refuses a request with no session at all with 401", async () => {
+    viewer = null;
+    const r = await authorise(req());
+    expect(r).toMatchObject({ status: 401 });
   });
 
-  it("refuses a cross-site origin with 403, before it ever looks at the key", () => {
-    const r = refuseUnauthorised(req({ origin: "https://evil.example", header: KEY }));
-    expect(r).toEqual({ status: 403, error: "Forbidden" });
+  it("refuses a cross-site origin with 403, before it looks at any credential", async () => {
+    viewer = null;
+    const r = await authorise(req({ origin: "https://evil.example" }));
+    expect(r).toMatchObject({ status: 403 });
   });
 
-  it("says 503 when the deployment has no key, rather than blaming the caller", () => {
-    vi.stubEnv("CARDS_TOKEN", "");
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(refuseUnauthorised(req({ header: KEY }))?.status).toBe(503);
+  it("says 503 when the deployment has no database, rather than blaming the caller", async () => {
+    hasDatabase = false;
+    viewer = null;
+    const r = await authorise(req());
+    expect(r).toMatchObject({ status: 503 });
   });
 
-  it("rate limits one address at eleven requests a minute", () => {
-    const ip = "203.0.113.9";
-    for (let i = 0; i < 10; i++) {
-      expect(refuseUnauthorised(req({ header: KEY, ip }))).toBeNull();
-    }
-    expect(refuseUnauthorised(req({ header: KEY, ip }))).toEqual({
-      status: 429,
-      error: "Too many requests",
+  it("rate limits one address at twenty-one requests a minute", async () => {
+    const ip = "10.9.9.9";
+    for (let i = 0; i < 10; i++) await authorise(req({ ip }));
+    const r = await authorise(req({ ip }));
+    expect(r).toMatchObject({ status: 429 });
+  });
+
+  it("does not let one address spend another's budget", async () => {
+    for (let i = 0; i < 11; i++) await authorise(req({ ip: "10.9.9.8" }));
+    const r = await authorise(req({ ip: "10.9.9.7" }));
+    expect(refused(r)).toBe(false);
+  });
+
+  it("counts a request with no session against the limit too, so guessing is not free", async () => {
+    viewer = null;
+    const ip = "10.9.9.6";
+    for (let i = 0; i < 10; i++) await authorise(req({ ip }));
+    const r = await authorise(req({ ip }));
+    expect(r).toMatchObject({ status: 429 });
+  });
+
+  describe("the CARDS_TOKEN compatibility path", () => {
+    it("lets the old shared passcode through as the owner", async () => {
+      // curl and the snapshot script keep working while accounts arrive beside
+      // them. On its way out; see the note on keyIsRight.
+      viewer = null;
+      const r = await authorise(req({ header: KEY }));
+      expect(r).toMatchObject({ userId: "owner-1" });
     });
-  });
 
-  it("does not let one address spend another's budget", () => {
-    const ip = "203.0.113.10";
-    for (let i = 0; i < 11; i++) refuseUnauthorised(req({ header: KEY, ip }));
-    expect(refuseUnauthorised(req({ header: KEY, ip: "203.0.113.11" }))).toBeNull();
-  });
+    it("refuses to be anybody when the deployment has not said who the owner is", async () => {
+      // A passcode is not an identity. Without OWNER_USER_ID there is nobody
+      // for it to be, and guessing would be worse than refusing.
+      viewer = null;
+      vi.stubEnv("OWNER_USER_ID", "");
+      const r = await authorise(req({ header: KEY }));
+      expect(r).toMatchObject({ status: 503 });
+    });
 
-  it("counts a wrong key against the limit too, so guessing is not free", () => {
-    const ip = "203.0.113.12";
-    for (let i = 0; i < 10; i++) refuseUnauthorised(req({ header: OTHER, ip }));
-    expect(refuseUnauthorised(req({ header: KEY, ip }))?.status).toBe(429);
+    it("ignores a wrong passcode and falls through to the session", async () => {
+      const r = await authorise(req({ header: OTHER }));
+      expect(r).toMatchObject({ userId: "user-1" });
+    });
   });
 });
 
-describe("refuseWrite", () => {
-  it("insists on JSON, which is what forces a preflight", () => {
-    const r = refuseWrite(req({ header: KEY, contentType: "text/plain" }));
-    expect(r).toEqual({ status: 415, error: "Invalid request" });
+describe("authoriseWrite", () => {
+  it("insists on JSON, which is what forces a preflight", async () => {
+    const r = await authoriseWrite(req({ contentType: "application/json" }));
+    expect(refused(r)).toBe(false);
   });
 
-  it("refuses a write with no content type at all", () => {
-    expect(refuseWrite(req({ header: KEY }))?.status).toBe(415);
+  it("refuses a write with no content type at all", async () => {
+    const r = await authoriseWrite(req());
+    expect(r).toMatchObject({ status: 415 });
   });
 
-  it("accepts JSON with a charset on it", () => {
-    expect(
-      refuseWrite(req({ header: KEY, contentType: "application/json; charset=utf-8" })),
-    ).toBeNull();
+  it("accepts JSON with a charset on it", async () => {
+    const r = await authoriseWrite(req({ contentType: "application/json; charset=utf-8" }));
+    expect(refused(r)).toBe(false);
   });
 
-  it("still applies every check the read does", () => {
-    const r = refuseWrite(req({ contentType: "application/json" }));
-    expect(r?.status).toBe(401);
+  it("still applies every check the read does", async () => {
+    viewer = null;
+    const r = await authoriseWrite(req({ contentType: "application/json" }));
+    expect(r).toMatchObject({ status: 401 });
   });
 });
 

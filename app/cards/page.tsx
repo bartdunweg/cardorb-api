@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import CardsView from "../components/CardsView";
 import { forGrid } from "../../lib/core/cards";
 import { getCards } from "../../lib/core/collection";
-import { SESSION_COOKIE } from "../../lib/api/guard";
+import { currentViewer } from "../../lib/api/viewer";
 import "../styles/collection.css";
 
 export const metadata: Metadata = {
@@ -49,11 +49,18 @@ function Preconnect({ to }: { to: string[] }) {
 }
 
 export default async function CardsPage() {
-  const [all, jar] = await Promise.all([getCards(), cookies()]);
+  // The real check, and it has to be here rather than in the proxy. The proxy
+  // reads a cookie's presence, which was a fair proxy for identity while a
+  // cookie could only mean one person; now it names somebody, so this page
+  // verifies a signature instead of noticing a string. See proxy.ts, whose own
+  // comment used to claim a forged cookie bought nothing.
+  const viewer = await currentViewer();
+  if (!viewer) redirect("/login?next=/cards");
+
   // Derivable fields off before the collection crosses into a client
   // component. See forGrid in lib/core/cards.ts.
-  const sets = forGrid(all);
-  const signedIn = Boolean(jar.get(SESSION_COOKIE)?.value);
+  const sets = forGrid(await getCards(viewer.userId));
+  const signedIn = true;
 
   return (
     <section className="page-cards">

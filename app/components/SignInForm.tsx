@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCardsKey } from "../hooks/useCardsKey";
+import Link from "next/link";
+import { useSession } from "../hooks/useSession";
 
 /**
- * The one field there is: the password.
+ * An address and a password, which is now what those words mean.
  *
- * "Password" on screen, `CARDS_TOKEN` and `x-cards-key` underneath. The name in
- * the code is what curl and the iOS app send and is not worth churning; the
- * name on screen is what someone has to recognise, and nobody has a mental
- * category called "key" that a password manager also fills. The input has been
- * type="password" with autoComplete="current-password" all along, so the label
- * was the only part still saying something else.
+ * The label said "Password" for a long time while the thing underneath was one
+ * shared passcode in `CARDS_TOKEN`, checked against a single `OWNER_EMAIL`. The
+ * screen was telling the truth about what to type and a small lie about what it
+ * was. Both are now true.
+ *
+ * The email field lost its default value with that change. It used to be filled
+ * in, on the honest reasoning that there was one account and the address was
+ * not a thing anyone had to remember. There is no one address any more, and a
+ * login that suggests somebody else's is worse than an empty box.
  *
  * Pulled out of CardsProfile so that /login and the profile screen ask for it
  * the same way. Two copies of a password field is how one of them ends
@@ -34,16 +38,7 @@ import { useCardsKey } from "../hooks/useCardsKey";
 export default function SignInForm({
   redirectTo,
   note,
-  defaultEmail = "",
 }: {
-  /**
-   * Filled in for you. There is one account, so the address is not a thing
-   * anyone has to remember, and it comes from OWNER_EMAIL on the server so the
-   * field and the check it is measured against cannot drift apart. It does
-   * mean the address is in the page's HTML; it is a name rather than a secret,
-   * and the password beside it is what actually opens anything.
-   */
-  defaultEmail?: string;
   /**
    * Where to go once it worked. Set on /login, which is a door rather than a
    * place; omitted in the profile screen, where you are already standing in the
@@ -53,8 +48,8 @@ export default function SignInForm({
   note?: string;
 }) {
   const router = useRouter();
-  const { signIn, error } = useCardsKey();
-  const [email, setEmail] = useState(defaultEmail);
+  const { signIn, error } = useSession();
+  const [email, setEmail] = useState("");
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [offline, setOffline] = useState<string | null>(null);
@@ -105,7 +100,7 @@ export default function SignInForm({
               two together, browsers fill this with something they guessed. */}
           <input
             type="password"
-            name="cards-key"
+            name="password"
             autoComplete="current-password"
             value={value}
             onChange={(e) => setValue(e.target.value)}
@@ -131,6 +126,15 @@ export default function SignInForm({
           {message}
         </p>
       )}
+
+      {/* The two ways out of a login that is not working for you, and they
+          belong here rather than on the page: whichever screen shows this form
+          shows them, so neither can go missing on one of them. */}
+      <p className="signin-links">
+        <Link href="/signup">Create an account</Link>
+        {" · "}
+        <Link href="/password/forgotten">Forgot your password?</Link>
+      </p>
     </>
   );
 }

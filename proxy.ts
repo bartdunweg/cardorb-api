@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE } from "./lib/api/session-cookie";
+import { isAuthCookie } from "./lib/api/session-cookie";
 
 /**
  * The first thing in this app that decides who may see a page.
@@ -18,8 +18,12 @@ import { SESSION_COOKIE } from "./lib/api/session-cookie";
  * Next 16 renamed the convention to `proxy` and moved it to the Node.js
  * runtime, so timingSafeEqual is now reachable from here and the old reason is
  * gone. The check stays a presence check anyway, for two better ones. This is
- * not the lock: every endpoint behind it verifies the key properly, so a forged
- * cookie buys a page shell that then fails to load anything. And a proxy is
+ * not the lock — and the second half of that sentence had to be rewritten. It
+ * used to say a forged cookie buys a page shell that then fails to load
+ * anything, which was true while a cookie could only ever mean the one person.
+ * Now a cookie names somebody, so the lock moved into currentViewer(), which
+ * every protected page and route calls and which verifies a signature rather
+ * than noticing a string. What is left here is a router. And a proxy is
  * meant to be a thin thing at the network boundary — Next's own guidance is not
  * to lean on shared modules from in here, and pulling guard.ts and its
  * node:crypto into the boundary to re-answer a question the route answers again
@@ -29,7 +33,9 @@ import { SESSION_COOKIE } from "./lib/api/session-cookie";
  * instead of showing them a screen built for someone else.
  */
 export function proxy(req: NextRequest) {
-  if (req.cookies.get(SESSION_COOKIE)?.value) return NextResponse.next();
+  if (req.cookies.getAll().some((c) => isAuthCookie(c.name) && c.value)) {
+    return NextResponse.next();
+  }
 
   // /login and not /, which is the landing page now: bouncing a signed-out
   // visitor onto a page that describes the product and then asks them to find

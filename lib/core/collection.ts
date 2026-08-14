@@ -37,7 +37,8 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { buildCollection, type CardSet } from "./cards";
 import { cardsTag } from "./collection-row";
-import { listRows } from "../storage/collection";
+import { listRows, publicProfile } from "../storage/collection";
+import { PUBLIC_USERNAME } from "./config";
 
 /**
  * Whose collection, while there is only one.
@@ -56,6 +57,15 @@ export const OWNER = "owner";
  * An hour, matching what the Notion fetch was already tagged with, because a
  * collection changes when a pack is opened rather than by the minute.
  *
+ * The userId goes to the *query* as well as to the key, and the first version
+ * of this passed it only to the key. That is worth writing down because of how
+ * it failed: row level security allowed the read, correctly — the policy that
+ * lets a public profile be read by strangers is the same policy a signed-in
+ * stranger is judged by — so a brand new account asking for its own empty
+ * collection was handed the public one instead, 1,645 cards that were not
+ * theirs. RLS is the wall against seeing what is private; it is not a
+ * substitute for the application saying whose collection it wants.
+ *
  * The call is deliberately *inside* here and the try/catch deliberately
  * outside: a store that is down should not have its outage written into the
  * cache as "this person owns nothing". The old code went to some length to
@@ -64,7 +74,7 @@ export const OWNER = "owner";
  * empties after an incident.
  */
 const cachedRows = (userId: string) =>
-  unstable_cache(() => listRows(), ["collection-rows", userId], {
+  unstable_cache(() => listRows(userId), ["collection-rows", userId], {
     revalidate: 3600,
     tags: [cardsTag(userId)],
   })();
@@ -86,3 +96,21 @@ export const getCards = cache(async (userId: string = OWNER): Promise<CardSet[]>
     return [];
   }
 });
+
+/**
+ * Whose collection /user/<name> shows, or null where nobody's is.
+ *
+ * Two answers behind one question, because there are two stores. Postgres looks
+ * the name up and refuses one that is not shared. Notion has one collection and
+ * no idea whose, so it falls back to the environment variable that has stood in
+ * for a profile table all along — and returns the placeholder user id, which is
+ * the only one that store's reader understands.
+ */
+export async function ownerOf(username: string): Promise<string | null> {
+  const profile = await publicProfile(username);
+  if (profile) return profile.id;
+  // The Notion path, where publicProfile() answers null by design.
+  const { source } = await import("../storage/collection");
+  if (source() === "notion" && username === PUBLIC_USERNAME) return OWNER;
+  return null;
+}

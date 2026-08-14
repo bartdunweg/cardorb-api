@@ -68,3 +68,24 @@
 .cards-profile-field input:focus-visible {
   border-color: var(--color-border-active);
 }
+
+/* What a field looks like while it is being submitted.
+   Every form in this app disables its inputs and its button on submit and, until
+   now, nothing about them changed: the only signal was the button's label
+   swapping to "Signing in…". Somebody who had already looked away from the
+   button had no way to tell the form was busy rather than ignoring them.
+
+   Dimmed rather than greyed, so the value you typed stays legible — the point is
+   that it is briefly not yours to edit, not that it stopped mattering.
+   `cursor: not-allowed` on the wrapping label as well as the input, because the
+   label is what the pointer is usually over. */
+.cards-profile-field input:disabled,
+.cards-profile-field select:disabled,
+.cards-profile-field textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cards-profile-field:has(input:disabled) .cards-profile-label {
+  opacity: 0.6;
+}

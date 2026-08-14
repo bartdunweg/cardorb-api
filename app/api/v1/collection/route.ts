@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCards } from "../../../../lib/core/collection";
-import { readHeaders, refuseUnauthorised } from "../../../../lib/api/guard";
+import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
 
 /**
  * The whole collection, grouped by set. This is the endpoint every client
@@ -26,23 +26,28 @@ import { readHeaders, refuseUnauthorised } from "../../../../lib/api/guard";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const refusal = refuseUnauthorised(req);
-  if (refusal) {
-    return NextResponse.json({ error: refusal.error }, { status: refusal.status });
+  const who = await authorise(req);
+  if (refused(who)) {
+    return NextResponse.json({ error: who.error }, { status: who.status });
   }
 
-  const sets = await getCards();
+  // Whose collection, which is the whole of what changed here. It used to be
+  // the collection, singular, and the endpoint could not have said whose if it
+  // had been asked.
+  const sets = await getCards(who.userId);
 
-  // An empty collection is never true. getCards() fails soft and returns []
-  // when there is no token or Notion is unreachable, and 200 with an empty
-  // array tells a client that every card is gone: an app that trusts it wipes
-  // its cache, and the answer sits in front of the next reader for an hour.
+  // "An empty collection is never true" used to live here, and it threw. It was
+  // right: there was one collection, it had sixteen hundred cards in it, and an
+  // empty answer could only mean the store was unreachable — which a client
+  // would cache as "every card is gone" and an app would wipe its own cache
+  // over.
   //
-  // Thrown rather than returned as a 503, which is the rule this project
-  // inherits: a failure that would otherwise be cached has to throw, so the
-  // cache does not remember it. Found the honest way, by building this before
-  // the token was in the environment and serving an empty binder for an hour.
-  if (!sets.length) throw new Error("The collection came back empty; refusing to serve it.");
+  // It stopped being right on the day somebody could make an account. A new
+  // account owns nothing, and that is the honest answer to give them rather
+  // than a 500 on their first sign-in. What made the old rule safe to retire is
+  // that the thing it guarded against moved: getCards() no longer caches a
+  // failure, so an outage is an empty answer for one request rather than for an
+  // hour, and the next one tries again.
 
   // The stale-while-revalidate hour that used to be here has gone with the
   // lock: `public` on a shared cache means the CDN may hand this to the next

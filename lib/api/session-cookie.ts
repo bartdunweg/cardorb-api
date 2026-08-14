@@ -16,3 +16,19 @@
  * re-exports it so there is still one obvious place to look.
  */
 export const SESSION_COOKIE = "binder_session";
+
+/**
+ * Whether a cookie is one of the session's.
+ *
+ * The name stopped being ours. @supabase/ssr writes `sb-<project-ref>-auth-token`
+ * and splits it across `.0`, `.1` and so on when the token is too big for one
+ * cookie, so there is no single string left to compare against — which is why
+ * this is a predicate rather than the constant it replaces.
+ *
+ * Deliberately loose, because of who asks. The proxy uses this to decide
+ * whether to show a page or a login, and being wrong in the permissive
+ * direction costs a redirect that the page itself then makes properly. Being
+ * wrong in the strict direction signs somebody out who is signed in.
+ */
+export const isAuthCookie = (name: string) =>
+  name.startsWith("sb-") && name.includes("-auth-token");
