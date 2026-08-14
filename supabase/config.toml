@@ -237,11 +237,14 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-# Off, and this is a dated decision rather than a preference: confirmation mail
-# needs SMTP, and until Resend is configured a confirmation is a message that
-# goes nowhere and an account that can never be used. It goes back on in the
-# same change that configures the sender.
-enable_confirmations = false
+# On. Resend is configured and a real reset mail has been delivered end to end,
+# so a confirmation is now a message that arrives — which is what this was
+# waiting for.
+#
+# What it buys: an account can only be made on an address its owner can read.
+# Without it, anybody could register somebody else's address, and that person
+# would find out when a stranger's collection turned up under their email.
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -252,14 +255,36 @@ otp_length = 8
 otp_expiry = 3600
 
 # Use a production-ready SMTP server
-# [auth.email.smtp]
-# enabled = true
-# host = "smtp.sendgrid.net"
-# port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# The sender, which is what everything else in [auth.email] was waiting for.
+#
+# Port 465 and implicit TLS rather than 587 with STARTTLS: 587 negotiates its way
+# up to encryption and can, in principle, be talked back down. 465 is encrypted
+# from the first byte and there is nothing to negotiate.
+#
+# The user really is the literal string "resend" — it is not a placeholder for an
+# account name. The password is the API key, which is why it is read from the
+# environment and not written here: this file is committed.
+#
+# noreply@, and that is the honest choice rather than the nice one.
+#
+# hello@ would read better, and it was here first for a good reason: a password
+# reset is a message somebody may need to answer. But cardorb.com publishes a
+# null MX (`0 .`), which does not mean "no inbox yet" — it declares that this
+# domain accepts no mail at all, so a reply is refused outright. An address that
+# invites a reply and then bounces it is worse than one that says up front not
+# to bother.
+#
+# The way back is Cloudflare Email Routing, free and already running on
+# bartdunweg.com. On the day that is switched on, this becomes hello@ again and
+# nothing else has to change.
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "noreply@cardorb.com"
+sender_name = "Card Orb"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
