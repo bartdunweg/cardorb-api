@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
 import { forGrid, stripPrices } from "../../../lib/core/cards";
 import { getCards } from "../../../lib/core/collection";
+import { ownerOf } from "../../../lib/core/collection";
 import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
 import "../../styles/collection.css";
 
@@ -100,11 +101,16 @@ export default async function PublicCollection({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  if (username !== PUBLIC_USERNAME) notFound();
+  // The lookup this route's sibling predicted long before there was a table to
+  // do it in. A private profile and a missing one give the same 404, so this
+  // page cannot be used to ask whether a name is taken by somebody who would
+  // rather not be found.
+  const owner = await ownerOf(username);
+  if (!owner) notFound();
 
   // Stripped before it is handed to a client component, so the prices are not
   // in the HTML and not in the props. See stripPrices in lib/core/cards.ts.
-  const sets = forGrid(stripPrices(await getCards()));
+  const sets = forGrid(stripPrices(await getCards(owner)));
 
   const held = sets.reduce((n, set) => n + set.cards.filter((c) => c.owned).length, 0);
 

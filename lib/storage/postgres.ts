@@ -236,3 +236,35 @@ export async function optionsFor(db: SupabaseClient): Promise<CardFields> {
     types: out.types ?? [],
   };
 }
+
+/** A public profile, or null where the name is unknown or not shared. */
+export type PublicProfile = { id: string; username: string; displayName: string | null };
+
+/**
+ * Who owns /user/<name>, if anybody is willing to say.
+ *
+ * The lookup the public route's own comment predicted years before there was a
+ * table to do it in: "when there are accounts, this is already the shape that
+ * asks the right question, and the check below becomes a lookup."
+ *
+ * A private profile and a missing one are the same answer on purpose. The
+ * caller turns both into a 404, so the page cannot be used to ask whether a
+ * name is taken by somebody who would rather not be found.
+ */
+export async function profileByUsername(
+  db: SupabaseClient,
+  username: string,
+): Promise<PublicProfile | null> {
+  const { data, error } = await db
+    .from("profiles")
+    .select("id,username,display_name")
+    .eq("username", username)
+    .eq("is_public", true)
+    .maybeSingle();
+
+  if (error) throw new Error(`Reading that profile failed: ${error.message}`);
+  if (!data) return null;
+
+  const row = data as { id: string; username: string; display_name: string | null };
+  return { id: row.id, username: row.username, displayName: row.display_name };
+}
