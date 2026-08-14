@@ -135,8 +135,28 @@ export type OwnedCard = {
 export type ImageSize = { width: number; height: number } | null;
 
 export type CardSet = {
-  /** Notion's own name for the set, which is what groups the collection. */
+  /**
+   * The name the collection uses, which is what groups it and what everything
+   * addresses it by: the selection in the rail, the card keys, the broken-logo
+   * set. It is somebody's own typing and it is not to be prettied up, because
+   * changing it changes what a card is.
+   */
   name: string;
+  /**
+   * The same set, as the catalogues name it, for anywhere it is read rather
+   * than matched.
+   *
+   * These differ more often than they look like they should. "Set 1 Unlimited"
+   * is a print run filed as a set; the set is Base Set. A collection kept by
+   * hand for years accumulates that sort of thing, and every one of them is
+   * correct as a personal filing decision and wrong as a fact about the card.
+   *
+   * Falling back to `name` is the honest default: a set the catalogues do not
+   * know has no official name to prefer, and the owner's is the only one there
+   * is. This also stops being one person's problem the moment there are
+   * accounts — everybody arrives with their own names for things.
+   */
+  title: string;
   logo: string | null;
   /** The logo's size, for the same reason a card's scan carries one. */
   logoSize: ImageSize;
@@ -527,6 +547,7 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
 
     return {
       name: setName,
+      title: cat.officialName ?? setName,
       logo: cat.logo,
       logoSize: measure(cat.logo),
       releaseDate: cat.releaseDate,

@@ -71,6 +71,14 @@ export type SetCatalogue = {
    */
   byNumber: Record<string, CatalogueCard>;
   assetBase: string | null;
+  /**
+   * What the catalogue calls this set.
+   *
+   * Null where nothing matched, and that null is the interesting case: it is a
+   * set the catalogues have never heard of, and then the only name anybody has
+   * is the one its owner typed.
+   */
+  officialName: string | null;
   /** The printed abbreviation, for the Limitless guess. */
   code: string | null;
   setHasScans: boolean;
@@ -368,6 +376,7 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   return {
     byNumber,
     assetBase,
+    officialName: detail?.name ?? null,
     code,
     setHasScans,
     logo: await setArt(setName, detail),
@@ -386,7 +395,7 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v1"], {
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v2"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });

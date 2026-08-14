@@ -201,7 +201,10 @@ export default function CardsSidebar({
                     <NavItem
                       active={selected === set.name}
                       onClick={() => onSelect(set.name)}
-                      name={set.name}
+                      // The label is the catalogue's name; everything that
+                      // selects, keys or remembers is still set.name. The two
+                      // are different questions and this row asks both.
+                      name={set.title}
                       // How many are held, beside the name rather than under
                       // it. "12 of 84 cards" on a second line turned a list of
                       // fifty-one sets into a wall of two-line rows for a fact
