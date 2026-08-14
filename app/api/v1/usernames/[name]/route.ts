@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { sameOrigin } from "../../../../../lib/api/guard";
 import { createRateLimiter } from "../../../../../lib/api/rate-limit";
-import { serverClient } from "../../../../../lib/storage/supabase";
+import { adminClient } from "../../../../../lib/storage/supabase";
 import { validateUsername } from "../../../../../lib/core/account";
 
 /**
@@ -36,8 +35,6 @@ import { validateUsername } from "../../../../../lib/core/account";
 const byAddress = createRateLimiter(60_000, 60);
 
 export async function GET(req: Request, { params }: { params: Promise<{ name: string }> }) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
   const ip =
     req.headers.get("x-real-ip")?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -55,7 +52,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ name: st
   const shape = validateUsername(username);
   if (!shape.ok) return NextResponse.json({ available: false, reason: shape.error });
 
-  const db = await serverClient();
+  const db = adminClient();
   if (!db) return NextResponse.json({ available: false, reason: "Names cannot be checked here." });
 
   const [{ data: taken }, { data: reserved }] = await Promise.all([

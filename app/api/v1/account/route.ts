@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { sameOrigin } from "../../../../lib/api/guard";
-import { currentViewer } from "../../../../lib/api/viewer";
-import { adminClient, serverClient } from "../../../../lib/storage/supabase";
+import { authorise, refused } from "../../../../lib/api/guard";
+import { adminClient } from "../../../../lib/storage/supabase";
 
 /**
  * Deleting an account, and everything of its owner's with it.
@@ -23,10 +22,8 @@ import { adminClient, serverClient } from "../../../../lib/storage/supabase";
  * called it.
  */
 export async function DELETE(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const viewer = await currentViewer();
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  const viewer = await authorise(req);
+  if (refused(viewer)) return NextResponse.json({ error: viewer.error }, { status: viewer.status });
 
   const admin = adminClient();
   if (!admin) {
@@ -43,8 +40,5 @@ export async function DELETE(req: Request) {
   // The session outlives the account it named unless it is ended: the cookies
   // are still on the browser and still parse. Signed out here so the next page
   // is the landing page rather than a stack of failed lookups.
-  const db = await serverClient();
-  await db?.auth.signOut();
-
   return NextResponse.json({ ok: true });
 }
