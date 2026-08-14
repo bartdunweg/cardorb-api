@@ -173,7 +173,21 @@ enable_refresh_token_rotation = true
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
-enable_signup = true
+# Shut, until there is a sender.
+#
+# Every route and every screen for making an account exists and works; this is
+# the door, and it is closed at the auth server rather than by hiding a button,
+# because a hidden button is a door that a POST walks straight through.
+#
+# The reason is email. Confirmation is off while there is no SMTP configured, so
+# an open sign-up would let somebody register an address that is not theirs, and
+# password reset — the way back in when they forget — would send mail nowhere.
+# One of those is a nuisance and the other is an account with no way out of it.
+#
+# This goes back to true in the same change that configures the sender and turns
+# enable_confirmations back on. The three belong together and should move
+# together.
+enable_signup = false
 # Allow/disallow anonymous sign-ins to your project.
 enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
