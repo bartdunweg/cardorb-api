@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
@@ -40,8 +41,8 @@ export const viewport: Viewport = {
   // the bottom of every screen. Written out rather than read from the token,
   // because this is a meta tag rather than CSS; if the token moves, this moves.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
-    { media: "(prefers-color-scheme: dark)", color: "#181818" },
+    { media: "(prefers-color-scheme: light)", color: colour.bgGrouped.light },
+    { media: "(prefers-color-scheme: dark)", color: colour.bgGrouped.dark },
   ],
 };
 

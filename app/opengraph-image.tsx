@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
-import { APP_NAME, APP_TAGLINE } from "../lib/core/config";
+import { colour } from "../lib/design/tokens";
+import { APP_NAME, APP_TAGLINE_SHORT, APP_TAGLINE } from "../lib/core/config";
 
 /**
  * What a link to this app looks like before anyone clicks it.
@@ -27,7 +28,7 @@ export default function Image() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        background: "#fafafa",
+        background: colour.bgGrouped.light,
         padding: 96,
         fontFamily: "sans-serif",
       }}
@@ -43,7 +44,7 @@ export default function Image() {
             fontSize: 28,
             letterSpacing: 4,
             textTransform: "uppercase",
-            color: "#767676",
+            color: colour.labelTertiary.light,
           }}
         >
           {APP_NAME}
@@ -53,17 +54,17 @@ export default function Image() {
             display: "flex",
             fontSize: 76,
             lineHeight: 1.1,
-            color: "#101010",
+            color: colour.label.light,
             fontWeight: 700,
           }}
         >
           Your Pokémon card collection, sorted.
         </div>
-        {/* The tagline, cut at the clause: the whole sentence at this size is
-              four lines and a preview card is not somewhere anyone reads four
-              lines. */}
-        <div style={{ display: "flex", fontSize: 32, color: "#4a4a4a" }}>
-          Set by set — what you own, what it is worth, what is missing.
+        {/* The short tagline, which lives in config.ts beside the long one — it
+              used to be typed out here, where nobody would think to look for a
+              sentence that had drifted. */}
+        <div style={{ display: "flex", fontSize: 32, color: colour.labelSecondary.light }}>
+          {APP_TAGLINE_SHORT}
         </div>
       </div>
     </div>,
