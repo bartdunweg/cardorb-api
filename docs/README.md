@@ -18,4 +18,6 @@ root `CLAUDE.md` for how and when to write to it.
   `decisions/0002-subtle-free-european-positioning.md` — the landing-page rebuild.
 - `decisions/0003-split-lib-core-cards.md`, `decisions/0004-split-lib-core-catalogue.md`,
   `decisions/0005-split-cardsview.md` — the `lib/core`/`CardsView` refactor.
+- `decisions/0006-generated-username-at-signup.md` — why signup generates a username
+  instead of asking for one.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

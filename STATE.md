@@ -37,6 +37,18 @@ into this session's `docs/CHANGELOG.md`/`changelog.d/` convention.
 
 `npm run check` is green throughout (typecheck, tests, lint).
 
+Since then, in this session: signup no longer collects a username. It's
+generated server-side (`generateUsername()` in `lib/core/account.ts`, an
+adjective+noun+digits scheme, checked against the same taken/reserved logic
+the form used to rely on) in `app/api/v1/signup/route.ts`, with a five-attempt
+retry loop before falling back to a 503. `SignUpForm.tsx` is down to
+email+password, `useSession.ts`'s `signUp` dropped its `username` param.
+Settings' existing username-change flow (`ProfileSettings.tsx`, `POST
+/api/v1/username`, `claim_username` RPC) needed no changes.
+`docs/decisions/0006-generated-username-at-signup.md` and
+`docs/changelog.d/2026-08-14-generated-username-signup.md` record it.
+`npm run check` is green.
+
 ## Open
 
 Nothing flagged from this session's own work. Worth knowing for whoever
@@ -44,6 +56,11 @@ picks this up: the merge with the app-shell/Tailwind work was done via
 `npm run check` plus a static-render smoke test only (no `NOTION_TOKEN` in
 this workspace) — exercising the new `app/(app)/` shell and `CardsView`'s
 `chrome={false}` path with real data and a browser hasn't happened yet.
+
+The generated-username signup flow also hasn't been exercised in a running
+`npm run dev` + browser session (no `NOTION_TOKEN`/Supabase credentials
+confirmed in this workspace) — only `npm run check` and code inspection
+verified it. Worth a real signup-and-confirm pass before shipping.
 
 ## Next session
 

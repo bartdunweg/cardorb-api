@@ -47,3 +47,33 @@ export function validateUsername(name: string): NameCheck {
   }
   return { ok: true };
 }
+
+const ADJECTIVES = [
+  "swift", "shiny", "bold", "quiet", "bright", "brave", "calm", "clever",
+  "eager", "gentle", "golden", "lucky", "mighty", "nimble", "steady",
+  "vivid", "wild", "wise", "young", "zesty",
+];
+
+const NOUNS = [
+  "charizard", "pikachu", "eevee", "snorlax", "gengar", "lapras", "mew",
+  "dragonite", "vaporeon", "gyarados", "arcanine", "jolteon", "moltres",
+  "articuno", "zapdos", "ninetales", "blastoise", "venusaur", "magikarp",
+  "mewtwo",
+];
+
+/**
+ * A name nobody had to think of yet.
+ *
+ * Signup only asks for an address and a password; this is what fills the
+ * third field the database still needs. An adjective, a noun from the set
+ * every collector here already knows, and a few digits for spread — good
+ * enough to ship a working link with, not meant to be a name anyone keeps.
+ * `lib/core/account.ts:35` (validateUsername) accepts anything this can
+ * produce, since it is built from the same alphabet and shape.
+ */
+export function generateUsername(): string {
+  const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+  const digits = Math.floor(Math.random() * 9000 + 1000);
+  return `${adjective}-${noun}-${digits}`;
+}
