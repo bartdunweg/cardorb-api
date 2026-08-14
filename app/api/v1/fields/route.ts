@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { optionsFor } from "../../../../lib/storage/collection";
-import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
+import { authorise, readHeaders, refused, storeErrorResponse } from "../../../../lib/api/guard";
 
 /**
  * What the collection's select columns currently offer, so a form is built from
@@ -28,16 +28,6 @@ export async function GET(req: Request) {
   try {
     return NextResponse.json(await optionsFor(), { headers: readHeaders(req) });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "The collection did not answer.";
-    console.error("Card fields failed:", message);
-    // The store's own words. The only person who can read this is the one who
-    // can act on it, and "something went wrong" would send them to the logs for
-    // a message that is already here. A deployment with no store at all is a
-    // 503 rather than a 502: nothing refused, there is simply nothing to ask.
-    const unconfigured = /not connected|not wired up/.test(message);
-    return NextResponse.json(
-      { error: message },
-      { status: unconfigured ? 503 : 502, headers: readHeaders(req) },
-    );
+    return storeErrorResponse(err, req, "Card fields failed");
   }
 }

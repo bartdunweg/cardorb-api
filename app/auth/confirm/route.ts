@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { serverClient } from "../../../lib/storage/supabase";
+import { NO_DATABASE_CONFIGURED } from "../../../lib/api/guard";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
 /**
@@ -33,7 +34,7 @@ export async function GET(req: Request) {
   if (!token_hash || !type) return fail("That link is missing something.");
 
   const db = await serverClient();
-  if (!db) return fail("This deployment has no database configured.");
+  if (!db) return fail(NO_DATABASE_CONFIGURED);
 
   const { error } = await db.auth.verifyOtp({ type, token_hash });
   if (error) {

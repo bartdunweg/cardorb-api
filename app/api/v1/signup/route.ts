@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sameOrigin } from "../../../../lib/api/guard";
+import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../lib/api/guard";
 import { createRateLimiter } from "../../../../lib/api/rate-limit";
 import { serverClient } from "../../../../lib/storage/supabase";
 import { MIN_PASSWORD, validateUsername } from "../../../../lib/core/account";
@@ -40,10 +40,7 @@ export async function POST(req: Request) {
   const db = await serverClient();
   if (!db) {
     console.error("No database is configured: nobody can sign up");
-    return NextResponse.json(
-      { error: "This deployment has no database configured." },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: NO_DATABASE_CONFIGURED }, { status: 503 });
   }
 
   if (bySignup(clientIp(req))) {
