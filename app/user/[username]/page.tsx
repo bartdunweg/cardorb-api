@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
-import { forGrid, getCards, stripPrices } from "../../../lib/core/cards";
+import { forGrid, stripPrices } from "../../../lib/core/cards";
+import { getCards } from "../../../lib/core/collection";
 import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
 import "../../styles/collection.css";
 
@@ -20,9 +21,28 @@ import "../../styles/collection.css";
  * users, the lookup below is the only thing in this file that changes.
  */
 
-// An hour, the same as the collection's own memo. Nothing here depends on who
-// is asking, so unlike /cards this can be cached and shared.
-export const revalidate = 3600;
+/**
+ * Rendered per request, and the expensive parts cached underneath it.
+ *
+ * This was `revalidate = 3600` on the reasoning that nothing here depends on
+ * who is asking — true, and beside the point. What it depends on is whether the
+ * owner still wants it shared, and that is a thing they can change. An ISR
+ * entry survives its own subject: turn a collection private and the last public
+ * render of it sits on disk, servable, for up to an hour after the switch. A
+ * privacy control with an hour of lag is not a privacy control.
+ *
+ * The alternative was to remember to call revalidatePath() everywhere the flag
+ * can change. That works right up until somebody adds a second place it can
+ * change, which is exactly the kind of promise this file should not be built
+ * on. Rendering per request removes the window rather than policing it.
+ *
+ * It is not the trade it would have been before the caching split. The rows are
+ * cached per person and the catalogue is cached for everybody, so a request
+ * here costs one lookup of whose page this is plus an in-memory join — not the
+ * thirteen-second walk that made caching the whole page necessary in the first
+ * place.
+ */
+export const dynamic = "force-dynamic";
 
 /**
  * Roughly how big the collection is, for the description only.

@@ -5,21 +5,33 @@ import CardDetail from "../../components/CardDetail";
 import Button from "../../components/Button";
 import { ChevronLeft } from "lucide-react";
 import CardNav from "../../components/CardNav";
-import { cardNeighbours, getCardDetail, getCards, type OwnedCard } from "../../../lib/core/cards";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../lib/core/cards";
+import { getCards } from "../../../lib/core/collection";
 import "../../styles/collection.css";
 
 /**
  * One card, in full.
  *
- * Rendered on demand and cached for an hour after. This route used to prerender
- * every card in the collection, and the argument for it — that a soft 404 is a
- * real problem — was inherited from a repo where these pages were indexed. Here
- * they are noindex and behind the proxy. See generateStaticParams below for
- * what that listing actually cost.
+ * Rendered per request. This route used to prerender every card in the
+ * collection, and the argument for it — that a soft 404 is a real problem — was
+ * inherited from a repo where these pages were indexed. Here they are noindex
+ * and behind the proxy, so the listing came out; then the hour of ISR that
+ * replaced it came out too, for the reason below.
  */
 export const dynamicParams = true;
 /**
- * Cached for an hour after the first request.
+ * Rendered per request, not cached for an hour.
+ *
+ * It used to be `revalidate = 3600`, which was safe while there was one
+ * collection and is not safe now. This page renders `owned(id)` — whether *you*
+ * hold the card, and which of your printings — and an ISR entry is keyed by the
+ * path alone. Two people asking for the same card would be asking two different
+ * questions and getting one answer, whichever of them rendered it first.
+ *
+ * The cost is smaller than it looks, because the expensive half moved. The
+ * catalogue is cached and shared (lib/core/catalogue.ts) and the rows are cached
+ * per person (lib/core/collection.ts), so what a request pays for now is the
+ * join, which is memory and milliseconds.
  *
  * A missing card answers 200 with the not-found page in the body — a soft 404,
  * and it is not fixed here. Two things were tried: rendering per request
@@ -38,26 +50,7 @@ export const dynamicParams = true;
  * If /cards is ever indexed, this is the trade to revisit, and the honest fix
  * is to resolve the id before the page begins streaming.
  */
-export const revalidate = 3600;
-export async function generateStaticParams() {
-  // Nothing up front, everything on demand.
-  //
-  // This used to list every id, and the reasoning was sound in the repo it came
-  // from: there, a card page was indexed, and with dynamicParams on a
-  // notFound() inside a revalidating segment answers 200 with the not-found
-  // body — a soft 404, which is a real problem for a page a crawler reads.
-  //
-  // Neither half of that is true here. These pages are noindex and sit behind
-  // the proxy, so nothing crawls them and the only visitor who can reach a
-  // bad id is the owner typing one. What the listing cost instead was 1,603
-  // pages built twice — this route and the intercepting modal — for 175 MB and
-  // most of the build, all of it for pages one person opens a handful of.
-  //
-  // ISR still caches each page for an hour after its first request, so the
-  // second visitor pays nothing either way.
-  return [];
-}
-
+export const dynamic = "force-dynamic";
 /** The Notion side: which printings are held, and what the collection calls it. */
 async function owned(id: string): Promise<{ card: OwnedCard; setName: string } | null> {
   const sets = await getCards();
@@ -92,8 +85,10 @@ export async function generateMetadata({
 
 export default async function CardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // getCards() is memoised for the process, so asking a third time here costs
-  // a map lookup rather than another walk of the collection.
+  // getCards() is wrapped in React's cache(), so asking a third time inside one
+  // render costs nothing. Per request rather than per process, which is the
+  // whole of what changed: a memo the next request inherits is a memo the next
+  // person inherits.
   const [card, mine, sets] = await Promise.all([getCardDetail(id), owned(id), getCards()]);
   const { prev, next } = cardNeighbours(sets, id);
   if (!card) notFound();

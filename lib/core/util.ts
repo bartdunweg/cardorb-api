@@ -44,3 +44,39 @@ export const localise = (url: string | null): string | null => url;
  * the real picture lands.
  */
 export const measure = (_image?: string | null): null => null;
+
+/**
+ * The forms a card number can be written in, so a lookup can try all of them.
+ *
+ * The collection pads to three digits and TCGdex mostly agrees but not always,
+ * so "88", "088" and whatever was actually typed are the same card. Deduped,
+ * because for a number already three digits long all three forms collapse.
+ *
+ * Here rather than in cards.ts because both sides of the join need it: the
+ * catalogue indexes every form of every localId, and a row is looked up by
+ * every form of its own number. Two copies of this would be two rules.
+ */
+export const numberForms = (n: string) => [...new Set([n, n.replace(/^0+/, ""), n.padStart(3, "0")])];
+
+/**
+ * Runs `work` over `items` a few at a time.
+ *
+ * Everything used to be fired at once, which for a collection this size meant
+ * 48 simultaneous set fetches and then a burst of per-card fallbacks on top.
+ * TCGdex started refusing them, and a refused set fetch is a whole section of
+ * the page with no artwork, so the page was being punished for asking too fast
+ * rather than for asking wrongly.
+ */
+export async function mapLimit<T, R>(items: T[], limit: number, work: (item: T) => Promise<R>) {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await work(items[i]!);
+      }
+    }),
+  );
+  return out;
+}

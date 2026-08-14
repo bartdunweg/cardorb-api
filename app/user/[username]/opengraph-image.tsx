@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
-import { getCards, stripPrices } from "../../../lib/core/cards";
+import { stripPrices } from "../../../lib/core/cards";
+import { getCards } from "../../../lib/core/collection";
 
 /**
  * What a shared link looks like before anyone clicks it.

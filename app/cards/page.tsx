@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import CardsView from "../components/CardsView";
-import { forGrid, getCards } from "../../lib/core/cards";
+import { forGrid } from "../../lib/core/cards";
+import { getCards } from "../../lib/core/collection";
 import { SESSION_COOKIE } from "../../lib/api/guard";
 import "../styles/collection.css";
 

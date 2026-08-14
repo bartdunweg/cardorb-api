@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
-import type { CardFields } from "../../lib/core/cards-add";
+import type { CardFields } from "../../lib/core/collection-row";
 
 /**
  * The form behind the plus: one card, eight columns, straight into Notion.
