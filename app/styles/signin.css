@@ -105,3 +105,33 @@
   border-radius: var(--radius-sm);
   margin-top: var(--space-2);
 }
+
+/* The way out of a login that is not working for you: making an account, or
+   asking for a new password. Under the form and quieter than it, because they
+   are the second and third things anybody wants from this screen. */
+.signin-links {
+  margin-block-start: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.signin-links a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.signin-links a:hover {
+  color: var(--text, inherit);
+}
+
+/* What a field expects, said before it is typed in rather than after it is
+   refused. Tied to its input with aria-describedby, so it is read out as part
+   of the field instead of as loose text after it. */
+.cards-profile-hint {
+  display: block;
+  margin-block-start: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted, #6b7280);
+}
