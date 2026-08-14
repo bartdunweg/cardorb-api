@@ -286,6 +286,22 @@ pass = "env(RESEND_API_KEY)"
 admin_email = "noreply@cardorb.com"
 sender_name = "Card Orb"
 
+# The three messages this app actually sends. See supabase/templates/_README.md
+# for why they are written out rather than left to the defaults — the short
+# version is that every link is built by hand so it lands on /auth/confirm,
+# which is the only place that can set the session cookies.
+[auth.email.template.confirmation]
+subject = "Confirm your Card Orb account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Set a new Card Orb password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new Card Orb address"
+content_path = "./supabase/templates/email-change.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

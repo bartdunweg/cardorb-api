@@ -45,6 +45,17 @@ export async function POST(req: Request) {
 
   const { error } = await db.auth.updateUser({ password });
   if (error) {
+    // The one refusal worth translating. Supabase declines a password that
+    // matches the current one, and it is a likely thing to type: somebody who
+    // came here through a reset link often does not remember *whether* they
+    // remember, and tries the one they think it is. "That password could not be
+    // set" tells them nothing about which part to change.
+    if (/should be different|same as the old|new password/i.test(error.message)) {
+      return NextResponse.json(
+        { error: "That is already your password. Pick a different one." },
+        { status: 400 },
+      );
+    }
     console.error("Password change failed:", error.message);
     return NextResponse.json({ error: "That password could not be set." }, { status: 400 });
   }
