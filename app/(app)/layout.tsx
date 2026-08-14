@@ -3,6 +3,15 @@ import { currentViewer } from "../../lib/api/viewer";
 import { forGrid } from "../../lib/core/cards";
 import { getCards } from "../../lib/core/collection";
 import AppShell from "./AppShell";
+// Everything that draws a collection, once for every screen in the shell.
+//
+// On the layout rather than on each page, which is the difference between this
+// and how /cards does it: there the one page that draws a collection imports
+// it, here seven do. It was missing entirely when these routes were first
+// written — they rendered the markup and none of the 3,199 lines that style
+// it — which is a mistake that only shows up if you look at the page rather
+// than at the status code, and every route answered 200.
+import "../styles/collection.css";
 
 /**
  * Everything you see once you are signed in.
