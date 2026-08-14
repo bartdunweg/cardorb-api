@@ -187,6 +187,14 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
       // history in the snapshot script is built on this column, and a wrong
       // date is worse than a missing one.
       acquiredAt: parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null,
+      // A spreadsheet import has never carried these — see docs/decisions/0006.
+      quantity: 1,
+      condition: null,
+      grade: null,
+      purchasePrice: null,
+      purchaseDate: null,
+      notes: null,
+      isFavorite: false,
     });
   });
 

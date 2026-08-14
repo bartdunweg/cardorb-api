@@ -35,9 +35,11 @@
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCollection, type CardSet } from "./cards";
 import { cardsTag } from "./collection-row";
 import { listRows, publicProfile } from "../storage/collection";
+import { serverClient, userClient } from "../storage/supabase";
 import { PUBLIC_USERNAME } from "./config";
 
 /**
@@ -83,9 +85,17 @@ export const OWNER = "owner";
  * avoid memoising a failure and the same care is wanted here — worth
  * re-checking against Next's behaviour if this ever starts serving stale
  * empties after an incident.
+ *
+ * `db` is resolved by the caller (getCards(), below) and only ever closed
+ * over here, never built here: unstable_cache refuses cookies() inside its
+ * own callback, so a cookie-bound client has to exist before this function is
+ * entered. It is safe to close over regardless of how it was built, because
+ * the cache key is `userId` alone — on a hit this closure never runs, and on
+ * a miss the client is used once, for the one read that fills the cache with
+ * plain data that carries no session of its own.
  */
-const cachedRows = (userId: string) =>
-  unstable_cache(() => listRows(userId), ["collection-rows", userId], {
+const cachedRows = (userId: string, db: SupabaseClient | null) =>
+  unstable_cache(() => listRows(userId, db), ["collection-rows", userId], {
     revalidate: 3600,
     tags: [cardsTag(userId)],
   })();
@@ -93,15 +103,24 @@ const cachedRows = (userId: string) =>
 /**
  * The collection, built.
  *
+ * `token`, when given, is the caller's own bearer credential — an API route
+ * serving curl or the iOS app rather than a page render. Left out, this is a
+ * page holding a cookie session. Either way the client is resolved here,
+ * before cachedRows() is entered, for the reason on that function's own
+ * comment: row level security needs to see the caller who is actually asking,
+ * and finding out too late — inside a cache that cannot ask cookies() the
+ * question — is how a private collection came back empty to its own owner.
+ *
  * Fails soft, like everything else that faces a page: a store outage or a
  * catalogue that refuses three times in a row renders an empty state and says
  * so, rather than taking the route down. The empty lasts one render — nothing
  * here remembers it — so the next request tries again and finds most of the
  * work already in a cache.
  */
-export const getCards = cache(async (userId: string): Promise<CardSet[]> => {
+export const getCards = cache(async (userId: string, token?: string): Promise<CardSet[]> => {
   try {
-    return await buildCollection(await cachedRows(userId));
+    const db = token ? userClient(token) : await serverClient();
+    return await buildCollection(await cachedRows(userId, db));
   } catch (err) {
     console.error("Card collection walk failed, retrying on the next render:", err);
     return [];

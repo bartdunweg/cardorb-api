@@ -21,7 +21,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CardDraft, CardFields, CollectionRow } from "../core/collection-row";
+import type { CardDraft, CardFields, CardPatch, CollectionRow } from "../core/collection-row";
 
 /** The row as the table has it, before it is turned into the shape above. */
 type CardRecord = {
@@ -35,9 +35,17 @@ type CardRecord = {
   owned: boolean;
   excluded: boolean;
   acquired_at: string;
+  quantity: number;
+  condition: string | null;
+  grade: string | null;
+  purchase_price: number | null;
+  purchase_date: string | null;
+  notes: string | null;
+  is_favorite: boolean;
 };
 
-const COLUMNS = "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at";
+const COLUMNS =
+  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,quantity,condition,grade,purchase_price,purchase_date,notes,is_favorite";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -70,6 +78,13 @@ const toRow = (r: CardRecord): CollectionRow => ({
   owned: r.owned,
   excluded: r.excluded,
   acquiredAt: r.acquired_at ?? null,
+  quantity: r.quantity ?? 1,
+  condition: r.condition,
+  grade: r.grade,
+  purchasePrice: r.purchase_price,
+  purchaseDate: r.purchase_date,
+  notes: r.notes,
+  isFavorite: r.is_favorite ?? false,
 });
 
 /**
@@ -150,6 +165,13 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       types: draft.types,
       owned: draft.collection,
       excluded: draft.excluded,
+      quantity: draft.quantity,
+      condition: draft.condition,
+      grade: draft.grade,
+      purchase_price: draft.purchasePrice,
+      purchase_date: draft.purchaseDate,
+      notes: draft.notes,
+      is_favorite: draft.isFavorite,
       source: "manual",
     })
     .select("id")
@@ -157,6 +179,46 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
 
   if (error) throw new Error(`The card could not be saved: ${error.message}`);
   return (data as { id: string }).id;
+}
+
+/**
+ * Changes to one printing, by its owner.
+ *
+ * The same shape as updateProfile(): only the keys present in `patch` are
+ * touched, so a client that sends `{ isFavorite: true }` cannot accidentally
+ * clear a note it never saw. No user_id in the query — cards_update is
+ * `using (user_id = auth.uid()) with check (user_id = auth.uid())`, and the id
+ * alone is enough for the policy to either find the row or refuse it; adding a
+ * second copy of that check here is a second place it could disagree with the
+ * database.
+ *
+ * `.select().single()` rather than a bare update: the caller needs the row
+ * back to hand a client its own write, and a row that RLS refused to update
+ * comes back as zero rows here rather than as a thrown error from Postgres —
+ * `.single()` is what turns that into the "not found" a wrong id or somebody
+ * else's row should read as.
+ */
+export async function updateRow(db: SupabaseClient, id: string, patch: CardPatch): Promise<CollectionRow> {
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if ("owned" in patch) row.owned = patch.owned;
+  if ("excluded" in patch) row.excluded = patch.excluded;
+  if ("quantity" in patch) row.quantity = patch.quantity;
+  if ("condition" in patch) row.condition = patch.condition;
+  if ("grade" in patch) row.grade = patch.grade;
+  if ("purchasePrice" in patch) row.purchase_price = patch.purchasePrice;
+  if ("purchaseDate" in patch) row.purchase_date = patch.purchaseDate;
+  if ("notes" in patch) row.notes = patch.notes;
+  if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
+
+  const { data, error } = await db
+    .from("cards")
+    .update(row)
+    .eq("id", id)
+    .select(COLUMNS)
+    .single();
+
+  if (error) throw new Error(`That card could not be updated: ${error.message}`);
+  return toRow(data as CardRecord);
 }
 
 export type InsertResult = { added: number; skipped: number };

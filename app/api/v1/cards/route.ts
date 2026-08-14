@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "../../../../lib/core/collection-row";
 import { createRow } from "../../../../lib/storage/collection";
 import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "../../../../lib/api/guard";
+import { bearer } from "../../../../lib/api/viewer";
 
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
@@ -49,7 +50,10 @@ export async function POST(req: Request) {
 
   let id: string;
   try {
-    id = await createRow(result.draft);
+    // The token, not just the draft: createRow() needs the caller's own
+    // connection for cards_insert to authorise the write, see its own
+    // comment in lib/storage/collection.ts.
+    id = await createRow(result.draft, bearer(req) ?? undefined);
   } catch (err) {
     return storeErrorResponse(err, req, "Adding a card failed");
   }

@@ -95,6 +95,13 @@ describe("rowFromDraft", () => {
       types: [],
       owned: true,
       excluded: false,
+      quantity: 1,
+      condition: null,
+      grade: null,
+      purchasePrice: null,
+      purchaseDate: null,
+      notes: null,
+      isFavorite: false,
     });
   });
 

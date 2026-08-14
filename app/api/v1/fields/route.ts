@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { optionsFor } from "../../../../lib/storage/collection";
 import { authorise, readHeaders, refused, storeErrorResponse } from "../../../../lib/api/guard";
+import { bearer } from "../../../../lib/api/viewer";
 
 /**
  * What the collection's select columns currently offer, so a form is built from
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: who.error }, { status: who.status, headers: readHeaders(req) });
 
   try {
-    return NextResponse.json(await optionsFor(), { headers: readHeaders(req) });
+    return NextResponse.json(await optionsFor(bearer(req) ?? undefined), { headers: readHeaders(req) });
   } catch (err) {
     return storeErrorResponse(err, req, "Card fields failed");
   }

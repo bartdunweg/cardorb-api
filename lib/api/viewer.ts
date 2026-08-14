@@ -34,8 +34,20 @@ export type Viewer = {
   username: string;
 };
 
-/** The bearer token on a request, if it carries one. */
-function bearer(req: Request): string | null {
+/**
+ * The bearer token on a request, if it carries one.
+ *
+ * Exported alongside requestViewer() rather than kept private, for the
+ * routes that need the token itself and not just who it names: every
+ * Postgres write and read below the accounts migration is subject to row
+ * level security, which is enforced against the client's own connection, not
+ * against a userId the application hands over. A route that resolved its
+ * viewer via this token and then queried through a cookie-bound or anonymous
+ * client would be asking Postgres to authorise a caller it never saw — see
+ * lib/storage/collection.ts, which threads this same token through to
+ * userClient() for exactly that reason.
+ */
+export function bearer(req: Request): string | null {
   const header = req.headers.get("authorization");
   if (!header) return null;
   const [scheme, ...rest] = header.split(" ");
