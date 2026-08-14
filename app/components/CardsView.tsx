@@ -177,6 +177,8 @@ export type CardsMode = "owner" | "public";
 export default function CardsView({
   sets,
   signedIn = false,
+  chrome = true,
+  scope,
   mode = "owner",
   username,
 }: {
@@ -186,6 +188,21 @@ export default function CardsView({
   mode?: CardsMode;
   /** Whose collection this is. Public only, and only to address its API by. */
   username?: string;
+  /**
+   * Whether to draw the furniture: the rail, the bar, and .cards-main itself.
+   *
+   * True on /user/<name>, which is one screen that owns all of it. False inside
+   * the signed-in shell, where the layout owns them and this is handed in as
+   * children — nesting a second .cards-main inside the first would put a
+   * container-type inside a container-type and quietly halve every card.
+   */
+  chrome?: boolean;
+  /**
+   * Which part of the collection this is, when the address decides rather than
+   * a press. Undefined leaves the old behaviour: internal state, changed by the
+   * rail.
+   */
+  scope?: string;
 }) {
   const isPublic = mode === "public";
   /**
@@ -210,7 +227,19 @@ export default function CardsView({
   // which is the screen that summarises the cards rather than the cards: you
   // arrived at four numbers and a chart and pressed once more to reach what you
   // came for. The dashboard is still a slot in the bar and a row in the rail.
-  const [selected, setSelected] = useState<string>("all");
+  const [selectedState, setSelected] = useState<string>("all");
+  /**
+   * Where you are, from the address when there is one.
+   *
+   * The state stays for the public link, which is a single page with no routing
+   * of its own and where pressing a set genuinely is the only way to change
+   * what is shown. Signed in the URL is the answer, so the prop wins — and
+   * setSelected still exists but no longer decides anything, which is what
+   * makes this a step rather than a rewrite: the rail navigates, the navigation
+   * changes the prop, and every consumer below reads the same variable it
+   * always did.
+   */
+  const selected = scope ?? selectedState;
 
   /**
    * Which of the two panes is showing, and only where there is room for one of
@@ -1083,37 +1112,20 @@ export default function CardsView({
     [dex, pickedEras],
   );
 
-  return (
+  /**
+   * What lives inside .cards-main: the toolbar and whichever screen is up.
+   *
+   * Split out from the furniture around it so the same body can be rendered
+   * two ways. On /user/<name> this component still draws its own rail and
+   * bar, because that page is one screen and owns all of it. Inside the
+   * signed-in shell the rail, the bar and .cards-main itself belong to the
+   * layout, and this is handed in as its children — so `chrome={false}`
+   * returns the body alone rather than a second .cards-main nested in the
+   * first, which would put a container-type inside a container-type and
+   * quietly halve every card in the grid.
+   */
+  const main = (
     <>
-      {/* The page's heading, outside both panes because either of them can be
-          the one on screen: it sat in .cards-main, which is display:none on the
-          rail, so the screen you were on could have no h1 at all. Absolutely
-          positioned by .sr-only, so it is not a third column in the grid.
-
-          Out of sight rather than out of the document, the same call /fifa
-          makes: what you can see already says which page this is, twice over,
-          and a title over both panes would be a third thing saying it. */}
-      {/* Owner side only. On the public link the visible title below is the h1
-          instead: that page is indexed, and an h1 reading "Cards" on a page
-          titled "<name>'s Pokémon card collection" is the heading disagreeing
-          with the title about what the page is. Here there is nothing to
-          disagree with — the tab says binder and the screen says Cards. */}
-      {!isPublic && <h1 className="sr-only">Cards</h1>}
-
-      <CardsSidebar
-        sets={sets}
-        setGroups={setGroups}
-        selected={selected}
-        pane={pane}
-        onSelect={openPane}
-        signedIn={signedIn && !isPublic}
-        isPublic={isPublic}
-        onAdd={() => setAdding(true)}
-        brokenLogos={brokenLogos}
-        onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}
-      />
-
-      <section className="cards-main">
         {/* The page's own heading, over the pane it names. It used to sit at the
             top of the rail, which put the h1 over a list of sets rather than
             over what you are actually reading. */}
@@ -1540,7 +1552,42 @@ export default function CardsView({
             )}
           </>
         )}
-      </section>
+    </>
+  );
+
+  if (!chrome) return main;
+
+  return (
+    <>
+      {/* The page's heading, outside both panes because either of them can be
+          the one on screen: it sat in .cards-main, which is display:none on the
+          rail, so the screen you were on could have no h1 at all. Absolutely
+          positioned by .sr-only, so it is not a third column in the grid.
+
+          Out of sight rather than out of the document, the same call /fifa
+          makes: what you can see already says which page this is, twice over,
+          and a title over both panes would be a third thing saying it. */}
+      {/* Owner side only. On the public link the visible title below is the h1
+          instead: that page is indexed, and an h1 reading "Cards" on a page
+          titled "<name>'s Pokémon card collection" is the heading disagreeing
+          with the title about what the page is. Here there is nothing to
+          disagree with — the tab says binder and the screen says Cards. */}
+      {!isPublic && <h1 className="sr-only">Cards</h1>}
+
+      <CardsSidebar
+        sets={sets}
+        setGroups={setGroups}
+        selected={selected}
+        pane={pane}
+        onSelect={openPane}
+        signedIn={signedIn && !isPublic}
+        isPublic={isPublic}
+        onAdd={() => setAdding(true)}
+        brokenLogos={brokenLogos}
+        onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}
+      />
+
+      <section className="cards-main">{main}</section>
 
       {/* Last, so Tab reaches the collection before the bar under it. It is
           fixed, so where it sits in the document costs it nothing. */}
