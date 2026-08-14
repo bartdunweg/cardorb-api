@@ -106,6 +106,30 @@ export async function POST(req: Request) {
 
   const { error } = await db.auth.signInWithPassword({ email, password });
   if (error) {
+    // The one refusal that is told apart, and it is a deliberate trade rather
+    // than an oversight.
+    //
+    // An unconfirmed account is turned away with the right password. Answering
+    // "that email or password is not right" is a lie in the one case where the
+    // person did everything correctly, and it sends them somewhere useless:
+    // they try the password again, then reset it, and the reset does not help
+    // either, because the account was never the problem.
+    //
+    // Saying so does reveal that an account exists on this address. That is the
+    // cost, and it is small here — the only way to reach this branch is to know
+    // a working password for the address, and anyone who just signed up already
+    // knows it exists. Every other failure stays vague, so this is not a way to
+    // ask whether an address is registered; it is only a way to be told why the
+    // door did not open when you had the key.
+    if (/email not confirmed|not confirmed/i.test(error.message)) {
+      return NextResponse.json(
+        {
+          error: "Confirm your email address first — the link is in your inbox.",
+          unconfirmed: true,
+        },
+        { status: 403 },
+      );
+    }
     // One message for both halves, and deliberately vague about which was
     // wrong. "No account with that address" is a way to ask whether an address
     // has an account here, one guess at a time.
