@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
-import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
+import { APP_NAME, OWNER_NAME } from "../../../lib/core/config";
 import { stripPrices } from "../../../lib/core/cards";
-import { getCards } from "../../../lib/core/collection";
+import { getCards, ownerOf } from "../../../lib/core/collection";
 
 /**
  * What a shared link looks like before anyone clicks it.
@@ -21,16 +21,46 @@ export const alt = `${OWNER_NAME}'s Pokémon card collection`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export async function generateImageMetadata() {
-  return [{ id: PUBLIC_USERNAME, size, alt, contentType }];
+/**
+ * One image per profile, named after the profile.
+ *
+ * It used to return the one username the deployment had in its environment,
+ * which was true while there was one collection and became a way of drawing
+ * every visitor the same picture.
+ *
+ * `params` is typed as possibly absent and possibly a promise on purpose. The
+ * docs call it optional, and the build proved why: collecting the metadata for
+ * `[__metadata_id__]` calls this to enumerate the images, and reading
+ * `params.username` off nothing is what broke the build rather than anything at
+ * request time. Awaiting a value that may not be a promise is harmless; reading
+ * a property off undefined is not.
+ */
+export async function generateImageMetadata({
+  params,
+}: {
+  params?: { username: string } | Promise<{ username: string }>;
+}) {
+  const resolved = params ? await params : null;
+  const username = resolved?.username;
+  // Nothing to enumerate without a name. The route is dynamic, so the image is
+  // drawn on request when the name is known.
+  return username ? [{ id: username, size, alt, contentType }] : [];
 }
 
-export default async function Image() {
-  // The same memo the page reads, so this is free inside the hour and never a
-  // second walk of Notion. Prices come off for the same reason they do on the
-  // page: this image is public in a way even the page is not, since a preview
-  // is fetched and cached by anything the link passes through.
-  const sets = stripPrices(await getCards());
+export default async function Image({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
+
+  // The same lookup the page does, and for the same reason it had to become a
+  // lookup: this used to call getCards() with nothing, which resolved to the
+  // Notion placeholder id, which Postgres cannot parse. The walk failed, the
+  // fail-soft catch returned an empty collection, and the preview of a public
+  // collection said it held nothing.
+  const owner = await ownerOf(username);
+
+  // Prices come off for the same reason they do on the page: this image is
+  // public in a way even the page is not, since a preview is fetched and cached
+  // by anything the link passes through.
+  const sets = owner ? stripPrices(await getCards(owner)) : [];
   const held = sets.reduce((n, s) => n + s.cards.filter((c) => c.owned).length, 0);
   const withHeld = sets.filter((s) => s.cards.some((c) => c.owned)).length;
 

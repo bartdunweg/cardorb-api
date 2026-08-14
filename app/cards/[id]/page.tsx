@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Card from "../../components/Card";
 import CardDetail from "../../components/CardDetail";
 import Button from "../../components/Button";
 import { ChevronLeft } from "lucide-react";
 import CardNav from "../../components/CardNav";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../lib/core/cards";
+import { currentViewer } from "../../../lib/api/viewer";
 import { getCards } from "../../../lib/core/collection";
 import "../../styles/collection.css";
 
@@ -51,9 +52,19 @@ export const dynamicParams = true;
  * is to resolve the id before the page begins streaming.
  */
 export const dynamic = "force-dynamic";
-/** The Notion side: which printings are held, and what the collection calls it. */
-async function owned(id: string): Promise<{ card: OwnedCard; setName: string } | null> {
-  const sets = await getCards();
+/**
+ * Which printings this person holds, and what their collection calls the set.
+ *
+ * Takes the viewer rather than reaching for a default, and that is the whole of
+ * what was wrong here. It used to call getCards() with nothing, which resolved
+ * to the placeholder id the Notion reader uses, which Postgres could not parse
+ * — so the query failed, the fail-soft catch returned an empty collection, and
+ * this answered "you do not hold this card" to somebody holding 1,968 of them.
+ * An empty collection is an ordinary-looking answer, which is why it went
+ * unnoticed.
+ */
+async function owned(id: string, userId: string): Promise<{ card: OwnedCard; setName: string } | null> {
+  const sets = await getCards(userId);
   for (const set of sets) {
     const card = set.cards.find((c) => c.tcgId === id);
     if (card) return { card, setName: set.name };
@@ -89,7 +100,18 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
   // render costs nothing. Per request rather than per process, which is the
   // whole of what changed: a memo the next request inherits is a memo the next
   // person inherits.
-  const [card, mine, sets] = await Promise.all([getCardDetail(id), owned(id), getCards()]);
+  // The lock, not the proxy. proxy.ts only checks that a session cookie is
+  // present; this is where it is verified, and it has to happen before the
+  // collection is asked for, because the collection is now a question about a
+  // person rather than a thing the deployment has.
+  const viewer = await currentViewer();
+  if (!viewer) redirect(`/login?next=/cards/${encodeURIComponent(id)}`);
+
+  const [card, mine, sets] = await Promise.all([
+    getCardDetail(id),
+    owned(id, viewer.userId),
+    getCards(viewer.userId),
+  ]);
   const { prev, next } = cardNeighbours(sets, id);
   if (!card) notFound();
 
