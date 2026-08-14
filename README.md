@@ -23,6 +23,11 @@ system: one person edits this.
 | `GET /api/v1/fields` | the database's select options, key required |
 | `POST /api/v1/cards` | add a card, key required |
 
+Native clients authenticate with a Supabase access token in `Authorization: Bearer <jwt>`.
+Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
+`GET /api/v1/value-history`, `GET /api/v1/public/:username/collection`, and
+`DELETE /api/v1/account`. The public collection response never contains prices.
+
 `GET /v1/fields` is behind the key on purpose: it is the cheapest thing a client
 can call to find out whether the key it holds still works, so signing in is one
 request rather than a failed card.
