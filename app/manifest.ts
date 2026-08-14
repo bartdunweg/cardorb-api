@@ -18,7 +18,7 @@ import { APP_NAME, APP_TAGLINE } from "../lib/core/config";
  * you back in the collection in one tap.
  *
  * The two colours are the ones app/layout.tsx already gives the browser chrome
- * through `viewport.themeColor`, and they are --color-left-bg in both themes.
+ * through `viewport.themeColor`, and they are --color-bg-grouped in both themes.
  * Written out rather than read from the token for the same reason they are
  * there: this is a JSON document, not CSS. If the token moves, three places
  * move.

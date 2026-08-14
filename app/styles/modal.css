@@ -80,7 +80,7 @@
   /* The circular icon control, like the play badge and the card's arrow: the
      size and the shape both come from .btn--icon, the glass from the group
      above it in components.css. */
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
   transition:
     transform var(--dur-fast) var(--ease-in-out),
@@ -91,7 +91,7 @@
 }
 .modal-close:hover {
   transform: scale(1.06);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   box-shadow: var(--shadow-elevated);
 }
 [data-theme="dark"] .modal-close {

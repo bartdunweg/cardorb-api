@@ -18,20 +18,20 @@
   font-family: var(--font-main);
   font-size: var(--fs-display);
   font-weight: var(--fw-button);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   line-height: 1;
 }
 .error-title {
   font-family: var(--font-main);
   font-size: var(--fs-h2);
   font-weight: var(--fw-button);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   line-height: var(--lh-tight);
 }
 .error-desc {
   font-family: var(--font-body);
   font-size: var(--fs-body-s);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   line-height: var(--lh-normal);
   margin-bottom: var(--space-2);
 }
@@ -41,7 +41,7 @@
 .error-digest {
   font-family: var(--font-body);
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   margin-top: var(--space-2);
 }
 .error-digest code {

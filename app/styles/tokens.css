@@ -15,8 +15,8 @@
   top: -100%;
   left: 16px;
   padding: var(--space-2) var(--space-4);
-  background: var(--color-text-primary);
-  color: var(--color-bg);
+  background: var(--color-label);
+  color: var(--color-bg-surface);
   border-radius: var(--radius-sm);
   font-size: var(--fs-small);
   z-index: var(--z-skip);
@@ -43,11 +43,21 @@
 
 /* ─── FOCUS STYLES ─── */
 :focus-visible {
-  outline: 2px solid var(--color-text-primary);
+  outline: 2px solid var(--color-label);
   outline-offset: 2px;
 }
 
 :root {
+  /* The colour roles are not here any more.
+     They are generated into tailwind.generated.css from lib/design/tokens.ts,
+     because three consumers cannot read CSS — the manifest, themeColor and the
+     two OG images — and keeping the values here meant keeping copies there. One
+     of those copies shipped a value this file rejects in a paragraph for failing
+     AA, which is what settled the direction.
+     What is still here is everything CSS is the only reader of: spacing, radii,
+     blur, the shadows, the layout variables. Their arguments belong beside the
+     value rather than in a TypeScript comment two files away. */
+
   /* Tied to the site's own switch, not the OS. The meta in layout.tsx says
      "light dark", which lets the browser pick from the system preference, and
      the two disagree the moment anyone uses the toggle: on a machine set to
@@ -70,30 +80,24 @@
 
      One consequence, and it is the reason ThemeProvider stopped reading a
      token by name: the *computed value* of a paired custom property is that
-     token stream, not a colour. Ask for --color-left-bg through
+     token stream, not a colour. Ask for --color-bg-grouped through
      getComputedStyle and you get something no meta tag can carry. Ask the body
      what it is painted and you get rgb(). */
   color-scheme: light dark;
 
   /* Surfaces */
-  --color-bg: light-dark(#ffffff, #101010);
-  --color-left-bg: light-dark(#fafafa, #181818);
 
   /* Text colour tiers (one tier per role: keep same-role text on the same tier):
        primary   → titles, headings, strong, interactive labels/links
        secondary → body copy / paragraphs (and tag chips)
        tertiary  → meta, dates, eyebrows, captions, de-emphasised labels */
-  --color-text-primary: light-dark(#111111, #ffffff);
-  --color-text-secondary: light-dark(#666666, #959595);
   /* 4.54:1 on pure white, but this tier renders on the glass cards
      (rgba(254,254,254,.78) over #fafafa = #fdfdfd) and on the #fafafa page
      background, where #767676 measured 4.47:1 and 4.35:1, just under AA.
      #737373 is the lightest value that clears 4.5:1 on all three. */
-  --color-text-tertiary: light-dark(#737373, #8c8c8c);
   /* Client logos: lighter than any text tier, they sit behind the content, but
      not below the 3:1 that WCAG asks of a graphic carrying information. #b0b0b0
      measured 2.3:1 on the glass; this is 3.1:1 and still reads as a backdrop. */
-  --color-logo: light-dark(#949494, #676767);
 
   /* ── Globe (the travel card) ──
      Five tones, and every one of them is a token because MapLibre paints onto a
@@ -146,7 +150,7 @@
      backdrop lit from above behaves. It was ramped the other way first, and the
      numbers worked but the light came from the floor.
 
-     The top stop is not a grey anybody picked: it is --color-left-bg, and the
+     The top stop is not a grey anybody picked: it is --color-bg-grouped, and the
      reason to hard-code rather than reference it is that this has to hold when
      the theme flips and that token does not (see the pair below). It is the
      backdrop the resume artwork was shot on, measured rgb(250,250,250) in the
@@ -182,7 +186,7 @@
      white page a white edge is already invisible, so this is the light theme
      declining to change. Dark mode has to say it with the edge instead, because
      a black shadow on a near-black page moves it by one value. See its pair. */
-  --glass-border-hover: var(--color-bg);
+  --glass-border-hover: var(--color-bg-surface);
   /* The edge of a control rather than of a panel, which in this theme is the
      same value: a near-white hairline on a near-white button, which you cannot
      see and which is not there for you. It is there for the controls that stand
@@ -488,7 +492,6 @@
 
   /* Accent: iOS system blue (the map pin). Brand-neutral and theme-stable,
      so it is intentionally not overridden in dark mode. */
-  --color-accent: #007aff;
   --color-accent-rgb: 0, 122, 255;
 
   /* Z-index scale: single source of truth for stacking context.
@@ -596,7 +599,7 @@
      shirt in it is black, so a dark disc would eat the shoulders and leave a
      head floating on the card. The pair steps down from light's instead, which
      takes the glare off the brightest thing on a #101010 page without touching
-     the silhouette. This is also where it stops matching --color-left-bg, which
+     the silhouette. This is also where it stops matching --color-bg-grouped, which
      the light pair's top stop is a copy of: that token is #181818 here, and a
      disc of it would be the dark card with a head on it. The ramp runs the same
      way down, but its job here is only the light: a shadow that colour on a
@@ -633,7 +636,7 @@
   /* Hover, and dark mode needs its own answer rather than the light one.
      .bento-card:hover lifts a card two ways, and on a #101010 page neither one
      arrives: --shadow-elevated is black on near-black, and the border going to
-     --color-bg is the border going to exactly the page colour, so the faint
+     --color-bg-surface is the border going to exactly the page colour, so the faint
      hairline the card has at rest was being erased. Measured at rest against
      hovered, the only thing that changed was the card losing its edge: pointing
      at it made it flatter.

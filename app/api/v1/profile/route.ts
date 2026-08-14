@@ -1,73 +1,94 @@
 import { NextResponse } from "next/server";
-import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
-import { validateUsername } from "../../../../lib/core/account";
-import { adminClient } from "../../../../lib/storage/supabase";
+import { revalidatePath } from "next/cache";
+import { sameOrigin } from "../../../../lib/api/guard";
+import { currentViewer } from "../../../../lib/api/viewer";
+import { serverClient } from "../../../../lib/storage/supabase";
+import { ownProfile, updateProfile } from "../../../../lib/storage/postgres";
 
-type ProfilePatch = { username?: unknown; displayName?: unknown; isPublic?: unknown };
+/**
+ * The two things about a profile its owner may change.
+ *
+ * is_public is the one that matters. It defaults to false — the migration
+ * argues that sharing "is something you do, not something that happens to you"
+ * — and until this route existed nothing could set it, which meant
+ * /user/<name> was unreachable for every account whose row had not been edited
+ * by hand. One switch turns on a feature that was already entirely built: the
+ * profile lookup, stripPrices, the OG image, the JSON-LD.
+ *
+ * PATCH rather than PUT: a body that mentions one field must not clear the
+ * other. The screen has two controls that save independently.
+ */
+export async function PATCH(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-export async function GET(req: Request) {
-  const viewer = await authorise(req);
-  if (refused(viewer))
-    return NextResponse.json({ error: viewer.error }, { status: viewer.status, headers: readHeaders(req) });
+  const viewer = await currentViewer();
+  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
-  const db = adminClient();
-  if (!db) return NextResponse.json({ error: "Profiles are not configured." }, { status: 503 });
-  const { data, error } = await db
-    .from("profiles")
-    .select("username,display_name,is_public")
-    .eq("id", viewer.userId)
-    .single();
-  if (error) return NextResponse.json({ error: "Profile unavailable." }, { status: 502 });
-  return NextResponse.json(
-    { username: data.username, displayName: data.display_name, isPublic: data.is_public },
-    { headers: readHeaders(req) },
-  );
+  let body: Record<string, unknown>;
+  try {
+    body = (await req.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const patch: { displayName?: string | null; isPublic?: boolean } = {};
+
+  if ("displayName" in body) {
+    const raw = typeof body.displayName === "string" ? body.displayName.trim() : "";
+    // Emptied means "use my username", which is a null in the column rather
+    // than an empty string: the public page falls back on null, and "" would
+    // render as a heading with nothing in it.
+    if (raw.length > 60) {
+      return NextResponse.json({ error: "That name is too long." }, { status: 400 });
+    }
+    patch.displayName = raw || null;
+  }
+
+  if ("isPublic" in body) {
+    if (typeof body.isPublic !== "boolean") {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+    patch.isPublic = body.isPublic;
+  }
+
+  if (!Object.keys(patch).length) {
+    return NextResponse.json({ error: "Nothing to change." }, { status: 400 });
+  }
+
+  const db = await serverClient();
+  if (!db) {
+    return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
+  }
+
+  try {
+    await updateProfile(db, viewer.userId, patch);
+  } catch (err) {
+    console.error("Updating a profile failed:", err);
+    return NextResponse.json({ error: "That change could not be saved." }, { status: 500 });
+  }
+
+  // The public page is dynamic, so there is no ISR entry to drop — but it is
+  // rendered from a profile lookup that Next may still be holding for this
+  // request tree, and a visitor who just turned sharing off should not be able
+  // to refresh into their own cached page. Cheap, and it removes a class of
+  // "it says it is private but it is still there".
+  revalidatePath(`/user/${viewer.username}`);
+
+  return NextResponse.json({ ok: true, ...patch });
 }
 
-export async function PATCH(req: Request) {
-  const viewer = await authorise(req);
-  if (refused(viewer))
-    return NextResponse.json({ error: viewer.error }, { status: viewer.status, headers: readHeaders(req) });
+/** What the settings screen renders from. */
+export async function GET() {
+  const viewer = await currentViewer();
+  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
-  let body: ProfilePatch;
-  try {
-    body = (await req.json()) as ProfilePatch;
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: readHeaders(req) });
+  const db = await serverClient();
+  if (!db) {
+    return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
   }
 
-  const patch: Record<string, string | boolean | null> = {};
-  if (typeof body.username === "string") {
-    const username = body.username.trim().toLowerCase();
-    const valid = validateUsername(username);
-    if (!valid.ok)
-      return NextResponse.json({ error: valid.error }, { status: 400, headers: readHeaders(req) });
-    patch.username = username;
-  }
-  if (typeof body.displayName === "string") {
-    const displayName = body.displayName.trim();
-    if (displayName.length > 60)
-      return NextResponse.json({ error: "That display name is too long." }, { status: 400, headers: readHeaders(req) });
-    patch.display_name = displayName || null;
-  }
-  if (typeof body.isPublic === "boolean") patch.is_public = body.isPublic;
-  if (!Object.keys(patch).length)
-    return NextResponse.json({ error: "Nothing to update." }, { status: 400, headers: readHeaders(req) });
+  const profile = await ownProfile(db, viewer.userId);
+  if (!profile) return NextResponse.json({ error: "No profile." }, { status: 404 });
 
-  const db = adminClient();
-  if (!db) return NextResponse.json({ error: "Profiles are not configured." }, { status: 503 });
-  const { data, error } = await db
-    .from("profiles")
-    .update(patch)
-    .eq("id", viewer.userId)
-    .select("username,display_name,is_public")
-    .single();
-  if (error) {
-    const status = /duplicate|unique/i.test(error.message) ? 409 : 502;
-    return NextResponse.json({ error: status === 409 ? "That name is taken." : "Profile unavailable." }, { status, headers: readHeaders(req) });
-  }
-  return NextResponse.json(
-    { username: data.username, displayName: data.display_name, isPublic: data.is_public },
-    { headers: readHeaders(req) },
-  );
+  return NextResponse.json({ ...profile, email: viewer.email });
 }
