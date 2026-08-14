@@ -6,6 +6,7 @@ import { getCards } from "../../../lib/core/collection";
 import { ownerOf } from "../../../lib/core/collection";
 import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
 import "../../styles/collection.css";
+import { pageCardsClassName } from "../../components/cardsPageClasses";
 
 /**
  * The link you hand to someone: the collection, to look at.
@@ -142,7 +143,7 @@ export default async function PublicCollection({
   };
 
   return (
-    <section className="page-cards">
+    <section className={pageCardsClassName}>
       <link rel="preconnect" href="https://assets.tcgdex.net" crossOrigin="anonymous" />
       <link rel="preconnect" href="https://images.pokemontcg.io" crossOrigin="anonymous" />
       <script

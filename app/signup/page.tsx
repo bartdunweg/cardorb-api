@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import SignUpForm from "../components/SignUpForm";
-import Card from "../components/Card";
+import SigninShell from "../components/SigninShell";
 import { currentViewer } from "../../lib/api/viewer";
 import { APP_NAME } from "../../lib/core/config";
 
@@ -24,11 +24,8 @@ export default async function SignUp() {
   if (await currentViewer()) redirect("/cards");
 
   return (
-    <section className="page-signin">
-      <Card className="signin-card">
-        <h1 className="page-title">Start a collection on {APP_NAME}</h1>
-        <SignUpForm />
-      </Card>
-    </section>
+    <SigninShell title={`Start a collection on ${APP_NAME}`}>
+      <SignUpForm />
+    </SigninShell>
   );
 }

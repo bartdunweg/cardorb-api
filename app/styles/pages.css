@@ -1,4 +1,9 @@
 /* ─── REDUCED MOTION ─── */
+/* Permanent Tailwind-migration exception, not an oversight: a blanket kill
+   switch has to catch every animation/transition site-wide, including ones
+   added later, and Tailwind's motion-reduce: is a per-utility variant you'd
+   have to remember to apply everywhere — which is exactly the failure mode
+   this global override exists to prevent. Stays raw CSS. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

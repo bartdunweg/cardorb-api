@@ -229,10 +229,8 @@
      saw the ends and not the journey. Reach for it only when something is
      travelling, never to make an ordinary transition more relaxed. */
 
-  /* Corner radius scale */
-  --radius-sm: 8px; /* buttons, covers */
-  --radius-md: 16px; /* small cards, photos */
-  --radius-lg: 24px; /* bento cards / panels */
+  /* Corner radius scale: generated into tailwind.generated.css from
+     lib/design/tokens.ts (radius), same mechanism as colour above. */
 
   /* Shared content column width: every page lines up to this (one knob).
      860px gives ~70 chars/line at 16px body; --page-pad-x gutters sit outside this value. */
@@ -422,18 +420,6 @@
 
   /* Solid glass surface: .btn, .theme-toggle, .tabbar-pages (more opaque than --glass-bg) */
   --glass-bg-solid: light-dark(rgba(254, 254, 254, 0.9), rgba(37, 37, 40, 0.66));
-
-  /* Border radius additions.
-     Two control shapes, and the names are worth reading carefully, because for
-     a while they were the same shape by accident. --radius-btn is the pill: a
-     40px control with fully round ends, and what every labelled button on the
-     site wears. --radius-pill is not a pill despite the name, it is the rounded
-     rectangle: the glass hover-pill on rows, and the filter-bar controls on
-     /cards and /fifa, where a round end beside a search field reads as loose.
-     The name stays because thirty rules answer to it. */
-  --radius-xs: 6px;
-  --radius-btn: 999px;
-  --radius-pill: 14px; /* glass hover-pill (connect rows, tab pills, FAQ) */
 
   /* Tooltip chrome: intentionally always-dark (not inverted in dark mode) */
   --color-tooltip-bg: light-dark(rgba(30, 30, 30, 0.85), rgba(60, 60, 60, 0.9));
@@ -719,6 +705,17 @@
    These live here, not in a route stylesheet: they retune the site-wide gutter
    and type scale, so tokens.css is the one place to look for what a token is
    at any viewport. Declared after the base :root so source order wins. */
+
+/* Room to clear the centred top nav (32 above + ~56 bar + 72 below). Used to
+   live in tabbar.css, which is the one component that draws the bar this
+   clears — but --main-pad-top has other readers (the login's negative
+   margin, the mobile #main-content padding), so a component file redefining
+   it by media query was the token's real value hiding in the wrong file. */
+@media (min-width: 641px) {
+  :root {
+    --main-pad-top: 160px;
+  }
+}
 
 /* Tablet gutter */
 @media (max-width: 900px) {

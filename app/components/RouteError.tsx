@@ -40,11 +40,26 @@ export default function RouteError({
   }, [error]);
 
   return (
-    <section className="page-error">
-      <div className="error-inner">
-        <p className="error-code">500</p>
-        <h1 className="error-title">{title}</h1>
-        <p className="error-desc">{description}</p>
+    <section className="flex items-center justify-center min-h-[60vh] p-[var(--card-pad)]">
+      <div className="flex flex-col items-center gap-3 text-center max-w-[320px]">
+        <p
+          className="[font-family:var(--font-main)] [font-size:var(--fs-display)]
+            [font-weight:var(--fw-button)] text-label-tertiary leading-none"
+        >
+          500
+        </p>
+        <h1
+          className="[font-family:var(--font-main)] [font-size:var(--fs-h2)]
+            [font-weight:var(--fw-button)] text-label [line-height:var(--lh-tight)]"
+        >
+          {title}
+        </h1>
+        <p
+          className="[font-family:var(--font-body)] [font-size:var(--fs-body-s)]
+            text-label-secondary leading-normal mb-2"
+        >
+          {description}
+        </p>
         <Button onClick={reset} className="btn--primary btn--center">
           Try again
         </Button>
@@ -65,8 +80,11 @@ export default function RouteError({
             same digest on the other side, so quoting it is enough to find the
             error that caused this exact screen. */}
         {error.digest && (
-          <p className="error-digest">
-            Reference <code>{error.digest}</code>
+          <p
+            className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+              text-label-tertiary mt-2"
+          >
+            Reference <code className="[font-family:var(--font-mono)] select-all">{error.digest}</code>
           </p>
         )}
       </div>

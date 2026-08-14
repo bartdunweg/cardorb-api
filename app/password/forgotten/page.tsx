@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import ForgottenForm from "../../components/ForgottenForm";
-import Card from "../../components/Card";
+import SigninShell from "../../components/SigninShell";
 import { APP_NAME } from "../../../lib/core/config";
 
 /**
@@ -15,11 +15,8 @@ export const metadata: Metadata = { title: "Forgotten password" };
 
 export default function Forgotten() {
   return (
-    <section className="page-signin">
-      <Card className="signin-card">
-        <h1 className="page-title">Get back into {APP_NAME}</h1>
-        <ForgottenForm />
-      </Card>
-    </section>
+    <SigninShell title={`Get back into ${APP_NAME}`}>
+      <ForgottenForm />
+    </SigninShell>
   );
 }

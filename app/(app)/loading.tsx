@@ -1,4 +1,10 @@
 import Card from "../components/Card";
+import {
+  tabbarClassName,
+  tabbarFadeClassName,
+  tabbarItemClassName,
+  tabbarPagesClassName,
+} from "../components/tabbarClasses";
 
 /**
  * What /cards shows while the collection is on its way.
@@ -29,7 +35,10 @@ export default function Loading() {
   // .page-cards at all, so it ignored the two-pane grid and the outlines ran
   // the full width of the window before snapping into place.
   return (
-    <section className="page-cards is-fallback">
+    // [animation:...]/[transform-origin:...] used to be #main-content
+    // > .is-fallback in base.css — the direct-child selector only ever
+    // matched this one element, so it's a direct class now.
+    <section className="page-cards [animation:pageEnter_420ms_var(--ease-out)] [transform-origin:center_top]">
       <div className="cards-rail" aria-hidden="true">
         {/* The same title CardsSidebar draws, so the sets do not shift down the
             moment the real rail replaces these outlines. Below 1000px this pane
@@ -106,11 +115,11 @@ export default function Loading() {
           Below 1000px only, the same as the real one, and the same trick
           /favorites/[kind]/loading.tsx uses: the fallback and the page share
           chrome so a colour arrives rather than a layout moving. */}
-      <div className="tabbar-fade cards-tabbar-fade" aria-hidden="true" />
-      <nav className="tabbar cards-tabbar" aria-hidden="true">
-        <div className="tabbar-pages">
+      <div className={`${tabbarFadeClassName} cards-tabbar-fade`} aria-hidden="true" />
+      <nav className={`${tabbarClassName} cards-tabbar`} aria-hidden="true">
+        <div className={tabbarPagesClassName}>
           {Array.from({ length: 4 }, (_, i) => (
-            <span key={i} className="tabbar-item" />
+            <span key={i} className={tabbarItemClassName} />
           ))}
         </div>
       </nav>

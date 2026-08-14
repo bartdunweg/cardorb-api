@@ -1,0 +1,1 @@
+- Migrated the floating tab bar and its mobile layout rules from hand-written CSS to Tailwind. No visual change intended.

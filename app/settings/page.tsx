@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SettingsRowBlurb, SettingsRowTitle, settingsRowClassName } from "../components/SettingsPanel";
 
 /**
  * The index, and a real screen rather than a redirect.
@@ -35,12 +36,12 @@ const SECTIONS = [
 
 export default function SettingsIndex() {
   return (
-    <ul className="settings-list" role="list">
+    <ul className="list-none m-0 p-0 grid gap-2" role="list">
       {SECTIONS.map((s) => (
         <li key={s.href}>
-          <Link href={s.href} className="settings-row">
-            <span className="settings-row-title">{s.title}</span>
-            <span className="settings-row-blurb">{s.blurb}</span>
+          <Link href={s.href} className={settingsRowClassName}>
+            <SettingsRowTitle>{s.title}</SettingsRowTitle>
+            <SettingsRowBlurb>{s.blurb}</SettingsRowBlurb>
           </Link>
         </li>
       ))}

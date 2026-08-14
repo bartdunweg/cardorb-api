@@ -3,6 +3,7 @@ import { currentViewer } from "../../lib/api/viewer";
 import { forGrid } from "../../lib/core/cards";
 import { getCards } from "../../lib/core/collection";
 import AppShell from "./AppShell";
+import { pageCardsClassName } from "../components/cardsPageClasses";
 // Everything that draws a collection, once for every screen in the shell.
 //
 // On the layout rather than on each page, which is the difference between this
@@ -58,7 +59,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const sets = forGrid(await getCards(viewer.userId));
 
   return (
-    <section className="page-cards">
+    <section className={pageCardsClassName}>
       <Preconnect to={["https://assets.tcgdex.net", "https://images.pokemontcg.io"]} />
       <AppShell viewer={{ username: viewer.username, email: viewer.email }} sets={sets}>
         {children}

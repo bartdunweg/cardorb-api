@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
+import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
+import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
 
 /**
  * One field, and one sentence afterwards that is the same whatever happened.
@@ -34,26 +36,28 @@ export default function ForgottenForm() {
   if (sent) {
     return (
       <>
-        <p className="cards-profile-note">
+        <FormNote>
           If that address has an account here, a link to set a new password is on its way. It
           expires in an hour.
-        </p>
-        <p className="signin-links">
-          <Link href="/login">Back to sign in</Link>
-        </p>
+        </FormNote>
+        <SigninLinks>
+          <Link href="/login" className={signinLinkClassName}>
+            Back to sign in
+          </Link>
+        </SigninLinks>
       </>
     );
   }
 
   return (
     <>
-      <p className="cards-profile-note">
+      <FormNote>
         Type the address you signed up with and we will send you a link to set a new one.
-      </p>
-      <form className="cards-profile-form" onSubmit={submit}>
-        <label className="cards-profile-field">
-          <span className="cards-profile-label">Email</span>
-          <input
+      </FormNote>
+      <FormForm layout="column" onSubmit={submit}>
+        <FormField layout="column">
+          <FormLabel>Email</FormLabel>
+          <FormInput
             type="email"
             name="email"
             autoComplete="username"
@@ -63,19 +67,21 @@ export default function ForgottenForm() {
             disabled={busy}
             required
           />
-        </label>
-        <button type="submit" className="btn btn--primary signin-submit" disabled={busy}>
+        </FormField>
+        <button
+          type="submit"
+          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          disabled={busy}
+        >
           {busy ? "Sending…" : "Send me a link"}
         </button>
-      </form>
-      {error && (
-        <p className="cards-profile-error" role="alert">
-          {error}
-        </p>
-      )}
-      <p className="signin-links">
-        <Link href="/login">Back to sign in</Link>
-      </p>
+      </FormForm>
+      {error && <FormError role="alert">{error}</FormError>}
+      <SigninLinks>
+        <Link href="/login" className={signinLinkClassName}>
+          Back to sign in
+        </Link>
+      </SigninLinks>
     </>
   );
 }

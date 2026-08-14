@@ -1,5 +1,6 @@
 import Link from "next/link";
-import Card from "./components/Card";
+import SigninShell, { SigninOr, signinWideButtonClassName } from "./components/SigninShell";
+import { FormNote } from "./components/FormField";
 import { APP_NAME } from "../lib/core/config";
 
 /**
@@ -17,20 +18,15 @@ import { APP_NAME } from "../lib/core/config";
  */
 export default function NotFound() {
   return (
-    <section className="page-signin">
-      <Card className="signin-card">
-        <h1 className="page-title">Not found</h1>
-        <p className="signin-note">
-          That address does not lead anywhere. It may have been a card that is no longer in the
-          collection.
-        </p>
-        <p aria-hidden="true" className="signin-or">
-          or
-        </p>
-        <Link href="/" className="btn signin-public">
-          Go to {APP_NAME}
-        </Link>
-      </Card>
-    </section>
+    <SigninShell title="Not found">
+      <FormNote>
+        That address does not lead anywhere. It may have been a card that is no longer in the
+        collection.
+      </FormNote>
+      <SigninOr aria-hidden="true">or</SigninOr>
+      <Link href="/" className={`btn ${signinWideButtonClassName}`}>
+        Go to {APP_NAME}
+      </Link>
+    </SigninShell>
   );
 }

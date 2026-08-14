@@ -10,7 +10,8 @@
    Every colour is one declaration with two answers. light-dark() reads
    color-scheme, which :root sets to 'light dark' — so a visitor who has chosen
    nothing gets their machine's preference before any JavaScript runs, and a
-   pair updated on one side only is not expressible.
+   pair updated on one side only is not expressible. Radii have no theme to
+   answer to and are a single value each.
 
    The reasoning for each value lives in lib/design/tokens.ts, beside the
    number, where the tests that assert it can read it too. */
@@ -33,6 +34,13 @@
   --color-glass-solid: light-dark(rgba(255, 255, 255, 0.9), rgb(37, 37, 39));
   --color-tint: #007aff;
   --color-tint-label: light-dark(#0066cc, #007aff);
+  --color-danger: #d7263d;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-btn: 999px;
+  --radius-pill: 14px;
 }
 
 /* 'dark:' follows the attribute this app already sets, not the OS.
@@ -65,4 +73,11 @@
   --color-glass-solid: light-dark(rgba(255, 255, 255, 0.9), rgb(37, 37, 39));
   --color-tint: #007aff;
   --color-tint-label: light-dark(#0066cc, #007aff);
+  --color-danger: #d7263d;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-btn: 999px;
+  --radius-pill: 14px;
 }

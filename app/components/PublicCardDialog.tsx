@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import CardDetail from "./CardDetail";
+import { FormError } from "./FormField";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSwipe } from "../hooks/useSwipe";
 import type { CardDetail as Detail, OwnedCard } from "../../lib/core/cards";
@@ -150,7 +151,7 @@ export default function PublicCardDialog({
             }
           />
         ) : null}
-        {failed && <p className="cards-profile-error">That card would not load. Try again.</p>}
+        {failed && <FormError>That card would not load. Try again.</FormError>}
       </div>
     </Modal>
   );

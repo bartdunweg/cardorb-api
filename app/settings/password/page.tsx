@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PasswordForm from "../../components/PasswordForm";
-import Card from "../../components/Card";
+import SigninShell from "../../components/SigninShell";
+import { FormNote } from "../../components/FormField";
 import { currentViewer } from "../../../lib/api/viewer";
 
 /**
@@ -24,12 +25,9 @@ export default async function SetPassword() {
   if (!viewer) redirect("/login?error=That+link+has+expired.+Ask+for+a+new+one.");
 
   return (
-    <section className="page-signin">
-      <Card className="signin-card">
-        <h1 className="page-title">Set a new password</h1>
-        <p className="cards-profile-note">Signed in as {viewer.email}.</p>
-        <PasswordForm />
-      </Card>
-    </section>
+    <SigninShell title="Set a new password">
+      <FormNote>Signed in as {viewer.email}.</FormNote>
+      <PasswordForm />
+    </SigninShell>
   );
 }

@@ -17,23 +17,53 @@
  * contents against its own border. The same check runs the other way too, and
  * reports nothing used but undefined.
  *
- * Order is not cosmetic: tokens has to come first because every rule below
- * reads its custom properties, and the rest keeps the source's sequence,
- * because later sheets deliberately override earlier ones. card-shell.css sits
- * where the portfolio's about.css did, for that reason.
+ * card-shell.css, errors.css, form.css (mostly), signin.css, settings.css,
+ * modal.css, tabbar.css and layout.css are gone from here: their rules moved
+ * onto the components that used them (Card.tsx/CardsDashboard.tsx/
+ * layout.tsx, RouteError.tsx, FormField.tsx/SigninShell.tsx/
+ * SettingsPanel.tsx/Modal.tsx/CardsTabBar.tsx/tabbarClasses.ts and their
+ * callers) as Tailwind utility classes — the Tailwind migration, still in
+ * progress. See docs/decisions/.
+ *
+ * Order is not cosmetic: tailwind.generated.css comes first because it's also
+ * Tailwind's entry point (@import "tailwindcss" + @theme) — its preflight
+ * reset has to land before every hand-written rule below so those rules can
+ * still override it, the way they already override each other. Reached
+ * through collection.css before, which meant only the four routes that draw a
+ * collection had Tailwind utilities at all; every other route — login,
+ * settings, the landing page — had none. tokens comes next because every rule
+ * below reads its custom properties, and the rest keeps the source's
+ * sequence, because later sheets deliberately override earlier ones.
+ *
+ * Every hand-written sheet below imports into the "legacy" layer, positioned
+ * between Tailwind's base and components/utilities layers. Found the hard
+ * way, mid Tailwind migration: an unlayered rule beats a layered one
+ * regardless of specificity or which comes later in the file — CSS Cascade
+ * Layers says so explicitly — and every hand-written sheet here was unlayered
+ * while Tailwind wraps its own output in @layer utilities. The practical
+ * effect was every `p-*`/`m-*` (anything margin/padding, which tokens.css's
+ * own `*{margin:0;padding:0}` reset also touches) Tailwind class added
+ * anywhere in this migration silently losing to that reset — `gap-*`
+ * utilities were unaffected, which is why screenshots looked fine at a
+ * glance.
+ *
+ * Putting "legacy" first (before theme/base) was the first attempt and it
+ * overcorrected: .btn's background/border then lost to Tailwind's own
+ * Preflight (`@layer base`), which resets a bare <button>'s background and
+ * border as part of normalizing form elements — .btn needs to keep beating
+ * *that*, the way unlayered CSS always did. "legacy" sits after base and
+ * before components/utilities instead: hand-written CSS still overrides
+ * Preflight, and a Tailwind utility class added anywhere in this migration
+ * still overrides hand-written CSS, matching the mental model every chunk so
+ * far assumed was already true.
  */
-@import "./styles/tokens.css";
+@layer theme, base, legacy, components, utilities;
+@import "./styles/tailwind.generated.css";
+@import "./styles/tokens.css" layer(legacy);
 
-@import "./styles/base.css";
-@import "./styles/modal.css";
-@import "./styles/tabbar.css";
-@import "./styles/layout.css";
-@import "./styles/components.css";
-@import "./styles/card-shell.css";
-@import "./styles/pages.css";
-@import "./styles/errors.css";
-@import "./styles/form.css";
-/* After cards.css: the login reuses its form rules and then places them. */
-@import "./styles/signin.css";
+@import "./styles/base.css" layer(legacy);
+@import "./styles/components.css" layer(legacy);
+@import "./styles/pages.css" layer(legacy);
+@import "./styles/form.css" layer(legacy);
 /* The landing page, which places .about-card and .btn and adds nothing else. */
-@import "./styles/landing.css";
+@import "./styles/landing.css" layer(legacy);

@@ -1,34 +1,9 @@
-/* /cards: the whole card collection, one card per set. */
-
-/* Full width, two panes, no padding of its own: the rail runs to the window
-   edge on every side and the inset belongs to what sits inside. The negative
-   top margin takes back --main-pad-top, which reserves 160px for a tab bar this
-   route deliberately does not have.
-
-   This is the database half of the pair with /fifa. The two wear the
-   same design system and are separate products, so these rules live here rather
-   than in a shell both routes share: a database wants overview, sorting and
-   filters in reach, a media player wants the one thing playing now. */
-.page-cards {
-  margin: calc(-1 * var(--main-pad-top)) auto 0;
-  padding: 0 0 var(--page-pad-bottom);
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
-  align-items: start;
-  /* One surface under both panes, the rail's. The body is --color-bg-grouped,
-     which left the results sitting on a grey the rail was not, so the divider
-     read as a change of page rather than as an edge. */
-  background: var(--glass-bg-solid);
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-@media (max-width: 1000px) {
-  /* A 300px rail beside a grid of scans is two cramped columns. Above it
-     instead, where it reads as a list of sets with the filters under it. */
-  .page-cards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* /cards: the whole card collection, one card per set.
+ *
+ * .page-cards migrated to app/components/cardsPageClasses.ts during the
+ * Tailwind migration — see app/(app)/layout.tsx and
+ * app/user/[username]/page.tsx.
+ */
 
 /* ── The rail ── */
 
@@ -411,11 +386,8 @@
     flex: 0 0 auto;
     width: var(--control-h);
   }
-  /* --page-pad-bottom is 64px here, which the bar sits in. This is the room
-     the bar actually takes plus the same air the phone gets. */
-  .page-cards {
-    padding-bottom: calc(var(--space-6) + var(--tabbar-pill-h) + var(--space-10));
-  }
+  /* .page-cards's matching padding-bottom (64px is the room the bar takes
+     plus the same air the phone gets) now lives in cardsPageClasses.ts. */
 }
 
 /* The rail is back beside the cards, so the bar has nothing left to do. */
@@ -1553,12 +1525,6 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 640px) {
-  .page-cards {
-    margin-top: 0;
-  }
-}
-
 /* ─── ONE CARD (app/cards/[id]) ─── */
 
 /* An ordinary page of this site: the tab bar is above it, so it keeps the top
@@ -1710,34 +1676,11 @@
   margin-top: var(--space-6);
 }
 
-/* The scan and the name are the link; the tags below it are not. Display
-   contents, so the anchor adds no box of its own and the item's own flex column
-   still governs the layout it always did. */
-.cards-item-link {
-  display: contents;
-  /* A <button> on the public link, where a card has no URL to go to, and a
-     button centres its text by browser default. That put every name and every
-     number in the middle of its column while the anchor version had them flush
-     left, which is where the eye scans a list of names. */
-  text-align: left;
-  color: inherit;
-  text-decoration: none;
-}
-/* No underline on hover. A grid of sixteen hundred names is a page where the
-   pointer is always over one of them, so the line was flickering on and off as
-   you scanned rather than telling you anything you did not know: the whole
-   card is the link, and it has been since the scan and the name were wrapped
-   together. */
-/* display:contents removes the box a focus ring would draw, so the ring goes on
-   the scan, which is the part you are actually pointing at. */
-.cards-item-link:focus-visible {
-  outline: none;
-}
-.cards-item-link:focus-visible .cards-scan {
-  outline: 2px solid var(--color-label);
-  outline-offset: 3px;
-  border-radius: 2px;
-}
+/* .cards-item-link (the scan+name link wrapper) migrated to CardItem.tsx's
+ * CardLink during the Tailwind migration — display:contents plus the
+ * focus-visible ring on .cards-scan are now `group`/`group-focus-visible:`
+ * classes there.
+ */
 
 /* The same card in a dialog, opened from the list. Everything inside it is the
    route's own markup: only the box around it is different, and the margin the

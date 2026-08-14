@@ -3,6 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  SettingsHint,
+  SettingsInput,
+  SettingsPanel,
+  SettingsPanelTitle,
+  SettingsPanels,
+  SettingsSaid,
+  dangerButtonClassName,
+  settingsHintClassName,
+} from "./SettingsPanel";
 
 /**
  * The account, and the two ways out of it.
@@ -86,13 +96,12 @@ export default function AccountSettings({ email, username }: { email: string; us
   }
 
   return (
-    <div className="settings-panels">
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">Email address</h2>
-        <p className="settings-hint">Currently {email}.</p>
+    <SettingsPanels>
+      <SettingsPanel>
+        <SettingsPanelTitle>Email address</SettingsPanelTitle>
+        <SettingsHint>Currently {email}.</SettingsHint>
         <form onSubmit={changeEmail}>
-          <input
-            className="settings-input"
+          <SettingsInput
             type="email"
             autoComplete="email"
             placeholder="new@example.com"
@@ -102,56 +111,55 @@ export default function AccountSettings({ email, username }: { email: string; us
           <button className="btn" type="submit" disabled={busy === "email" || !newEmail.trim()}>
             {busy === "email" ? "Sending…" : "Change address"}
           </button>
-          {said.email && <p className="settings-said">{said.email}</p>}
+          {said.email && <SettingsSaid>{said.email}</SettingsSaid>}
         </form>
-      </section>
+      </SettingsPanel>
 
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">Password</h2>
-        <p className="settings-hint">
+      <SettingsPanel>
+        <SettingsPanelTitle>Password</SettingsPanelTitle>
+        <SettingsHint>
           Setting a new one takes effect immediately and does not sign out your
           other devices.
-        </p>
+        </SettingsHint>
         <Link className="btn" href="/settings/password">
           Change password
         </Link>
-      </section>
+      </SettingsPanel>
 
-      <section className="settings-panel">
-        <h2 className="settings-panel-title">Sign out</h2>
-        <p className="settings-hint">On this device only.</p>
+      <SettingsPanel>
+        <SettingsPanelTitle>Sign out</SettingsPanelTitle>
+        <SettingsHint>On this device only.</SettingsHint>
         <button className="btn" type="button" onClick={signOut} disabled={busy === "signout"}>
           {busy === "signout" ? "Signing out…" : "Sign out"}
         </button>
-      </section>
+      </SettingsPanel>
 
-      <section className="settings-panel settings-panel--danger">
-        <h2 className="settings-panel-title">Delete this account</h2>
-        <p className="settings-hint">
+      <SettingsPanel danger>
+        <SettingsPanelTitle>Delete this account</SettingsPanelTitle>
+        <SettingsHint>
           Every card, every import and your link go with it, immediately and for
           good. There is no undo and no copy kept.
-        </p>
-        <label className="settings-hint" htmlFor="confirm-delete">
+        </SettingsHint>
+        <label className={settingsHintClassName} htmlFor="confirm-delete">
           Type <strong>{username}</strong> to confirm.
         </label>
-        <input
+        <SettingsInput
           id="confirm-delete"
-          className="settings-input"
           value={confirm}
           autoComplete="off"
           spellCheck={false}
           onChange={(e) => setConfirm(e.target.value)}
         />
         <button
-          className="btn btn--danger"
+          className={`btn ${dangerButtonClassName}`}
           type="button"
           onClick={deleteAccount}
           disabled={busy === "delete" || confirm !== username}
         >
           {busy === "delete" ? "Deleting…" : "Delete everything"}
         </button>
-        {said.delete && <p className="settings-said">{said.delete}</p>}
-      </section>
-    </div>
+        {said.delete && <SettingsSaid>{said.delete}</SettingsSaid>}
+      </SettingsPanel>
+    </SettingsPanels>
   );
 }

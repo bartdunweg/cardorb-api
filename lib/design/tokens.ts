@@ -103,6 +103,21 @@ export const colour = {
    * floor so it stays.
    */
   tintLabel: { light: "#0066cc", dark: "#007aff" },
+
+  /**
+   * Warning / destructive: the delete-account panel border and button — the
+   * only place in the app that uses a warning colour. Used to be a literal
+   * `#d7263d` written directly in app/styles/settings.css, with a comment
+   * arguing it belonged there rather than as a token "nothing else would
+   * use". Moved here once that literal moved into a .tsx file and
+   * sources.test.ts stopped allowing a hex outside this file — the argument
+   * for keeping it un-tokenised was about discoverability, not about the
+   * value being safe to duplicate.
+   *
+   * Same value in both themes, deliberately: like tint, a colour that means
+   * "this is destructive" should not soften when the lights go out.
+   */
+  danger: { light: "#d7263d", dark: "#d7263d" },
 } satisfies Record<string, ColourPair>;
 
 /**
@@ -113,6 +128,27 @@ export const colour = {
  * surface, not on a flat hex, and forgetting one is how the next one gets
  * missed.
  */
+/**
+ * Corner radius scale.
+ *
+ * Moved here from tokens.css once the Tailwind migration needed to generate
+ * `rounded-*` utilities from these values — colour crossed the same line
+ * first, for the same reason (see the file header). Two control shapes worth
+ * reading carefully: `btn` is the pill, a 40px control with fully round ends,
+ * what every labelled button on the site wears. `pill` is not a pill despite
+ * the name, it is the rounded rectangle: the glass hover-pill on rows, and the
+ * filter-bar controls on /cards, where a round end beside a search field reads
+ * as loose. The name stays because thirty rules answer to it.
+ */
+export const radius = {
+  xs: "6px",
+  sm: "8px", // buttons, covers
+  md: "16px", // small cards, photos
+  lg: "24px", // bento cards / panels
+  btn: "999px",
+  pill: "14px", // glass hover-pill (connect rows, tab pills, FAQ)
+} satisfies Record<string, string>;
+
 export const surfaces = {
   light: {
     page: colour.bgGrouped.light,

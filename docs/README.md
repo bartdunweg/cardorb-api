@@ -20,4 +20,13 @@ root `CLAUDE.md` for how and when to write to it.
   `decisions/0005-split-cardsview.md` — the `lib/core`/`CardsView` refactor.
 - `decisions/0006-generated-username-at-signup.md` — why signup generates a username
   instead of asking for one.
+- `decisions/0007-shared-form-components-over-css-classes.md`,
+  `decisions/0009-settings-modal-tailwind-notes.md` through
+  `decisions/0013-tailwind-entry-point-scope.md` — the Tailwind CSS migration.
+  `decisions/0012-cascade-layers-fix.md` is **worth reading first**: a cascade-layers
+  bug meant every margin/padding Tailwind class added since the migration started was
+  silently losing to legacy CSS; screenshots looked fine because `gap` was unaffected.
+- `decisions/0008-per-variant-inventory-fields-and-bearer-rls-fix.md` — per-variant
+  inventory fields, and the bearer-token/row-level-security bug the iOS client's
+  extension work uncovered.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

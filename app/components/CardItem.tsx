@@ -38,9 +38,13 @@ function CardLink({
   children: React.ReactNode;
 }) {
   if (!id) return <>{children}</>;
+  // "group": the focus-visible ring lands on the child .cards-scan, not the
+  // link itself — display:contents removes the box a ring would draw on the
+  // link, so the ring goes on the part you are actually pointing at instead.
+  const linkClassName = "group contents text-left text-inherit no-underline";
   if (onPick) {
     return (
-      <button type="button" className="cards-item-link" onClick={onPick}>
+      <button type="button" className={linkClassName} onClick={onPick}>
         {children}
       </button>
     );
@@ -51,7 +55,7 @@ function CardLink({
     // dialog mounts: the grid behind the modal jumped to the first row, the
     // modal locked the page there, and closing it put you somewhere else than
     // where you clicked.
-    <Link href={`/cards/${id}`} className="cards-item-link" scroll={false}>
+    <Link href={`/cards/${id}`} className={linkClassName} scroll={false}>
       {children}
     </Link>
   );
@@ -155,6 +159,15 @@ const CardItem = memo(function CardItem({
   const scanImg = scan ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      className={
+        // The wishlist override replaces the filter entirely (one drop-shadow
+        // layer plus grayscale) rather than adding to the owned filter (two
+        // layers, no grayscale) — kept as two full arbitrary values rather
+        // than composing them, to match exactly.
+        card.owned
+          ? "w-full h-full object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.12))_drop-shadow(0_8px_18px_rgba(0,0,0,0.2))]"
+          : "w-full h-full object-contain opacity-55 [filter:grayscale(0.4)_drop-shadow(0_2px_4px_rgba(0,0,0,0.12))]"
+      }
       // The larger file once the grid is drawing cards that want it, and only
       // where TCGdex has one. The attribute is swapped on the element that is
       // already showing rather than the element being replaced, which is what
@@ -204,23 +217,49 @@ const CardItem = memo(function CardItem({
     // A card with no scan anywhere keeps its slot, and says which card it is
     // rather than sitting there as a grey rectangle. Not aria-hidden any more:
     // it carries the only text there is for this card in the grid.
-    <span className="cards-scan-missing">
-      <span className="cards-scan-missing-frame" aria-hidden="true" />
-      <span className="cards-scan-missing-name">{card.name}</span>
-      {card.number && <span className="cards-scan-missing-number">{card.number}</span>}
+    <span
+      className="flex flex-col items-center justify-center gap-1 relative w-full h-full p-3
+        rounded-[4.5%/3.2%] overflow-hidden text-center
+        [background:radial-gradient(120%_90%_at_50%_0%,color-mix(in_srgb,var(--color-label)_9%,transparent),transparent_70%),color-mix(in_srgb,var(--color-label)_5%,transparent)]"
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-[6%] border border-[color-mix(in_srgb,var(--color-label)_12%,transparent)] rounded-[3%/2.2%]"
+      />
+      <span
+        className="relative [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]
+          [line-height:var(--lh-snug)] text-label-secondary line-clamp-2"
+      >
+        {card.name}
+      </span>
+      {card.number && (
+        <span className="relative [font-family:var(--font-body)] [font-size:var(--fs-tiny)] text-label-tertiary tabular-nums">
+          {card.number}
+        </span>
+      )}
       <span className="sr-only">No picture available</span>
     </span>
   );
 
   return (
-    <li className={`cards-item${card.owned ? "" : " is-wishlist"}`} data-view={view}>
+    <li
+      className={`cards-item flex flex-col gap-[2px] min-w-0
+        data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-md
+        data-[view=list]:flex-row data-[view=list]:items-center data-[view=list]:gap-4
+        data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-[var(--color-border)]
+        data-[view=list]:last:border-b-0${card.owned ? "" : " is-wishlist"}`}
+      data-view={view}
+    >
       {/* Only the cards TCGdex matched have a page: the id is what addresses it,
           and an unmatched row has none. The rest stay exactly as they were
           rather than becoming a link to nowhere. The tags sit outside the link:
           they are what the card is, not somewhere to go. */}
       <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined}>
         <span
-          className="cards-scan"
+          className="cards-scan block relative aspect-[245/342] mb-2
+            data-[view=list]:w-11 data-[view=list]:shrink-0 data-[view=list]:mb-0
+            group-focus-visible:outline-2 group-focus-visible:[outline-color:var(--color-label)]
+            group-focus-visible:[outline-offset:3px] group-focus-visible:rounded-[2px]"
           // Arming rather than tilting: the effect is mounted for this one card
           // and stays mounted, so a card upgrades once and never again.
           onPointerEnter={tilt && !tilted ? arm : undefined}

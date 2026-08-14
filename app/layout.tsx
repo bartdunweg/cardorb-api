@@ -103,7 +103,14 @@ export default function RootLayout({
   modal: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${satoshi.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      // scrollbar-gutter:stable — Safari paints the rubber-band overscroll
+      // area from html's own background, and html+body have to agree on it
+      // or the top/bottom bands show a seam. See body's classes below.
+      className={`${inter.variable} ${satoshi.variable} bg-bg-grouped text-base antialiased [scrollbar-gutter:stable]`}
+    >
       <head>
         {/* Only the choice. The machine is the stylesheet's job now.
             This used to read the OS preference too and write an attribute
@@ -124,12 +131,26 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
+      <body className="bg-bg-grouped text-label [font-family:var(--font-main)] min-h-screen text-pretty">
         <ThemeProvider>
           <a href="#main-content" className="skip-link">
             Skip to content
           </a>
-          <main id="main-content">{children}</main>
+          {/* ml-0 + pt-[var(--main-pad-top)] used to live in tabbar.css's own
+              #main-content rule: the bar pads this to clear itself, on
+              desktop where it's centred at the top (see tokens.css's
+              responsive step for --main-pad-top). The 640px override
+              (originally card-shell.css) cancels that below 640px, where the
+              nav moves to the bottom — otherwise a grey strip of page colour
+              shows above the content. Exact 640px arbitrary media query
+              rather than Tailwind's max-sm (which is <640px, not <=640px)
+              to match the boundary tabbar.css/tokens.css's 641px split used. */}
+          <main
+            id="main-content"
+            className="ml-0 pt-[var(--main-pad-top)] [@media(max-width:640px)]:pt-0"
+          >
+            {children}
+          </main>
           {modal}
         </ThemeProvider>
         {/* In production this serves itself from /_vercel/insights on this

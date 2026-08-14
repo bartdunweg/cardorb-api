@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentViewer } from "../../lib/api/viewer";
-import "../styles/settings.css";
 
 /**
  * Settings, outside the collection shell on purpose.
@@ -21,13 +20,19 @@ export default async function SettingsLayout({ children }: { children: ReactNode
   if (!viewer) redirect("/login?next=/settings");
 
   return (
-    <div className="settings">
-      <header className="settings-head">
-        <Link href="/dashboard" className="settings-back">
+    <div className="max-w-[640px] mx-auto px-4 pt-6 pb-[var(--page-pad-bottom)]">
+      {/* No wrapper class here: the original .settings-head never had a CSS
+          rule (an orphan class, never styled), so there was no layout to carry
+          forward — just the three children in document order. */}
+      <header>
+        <Link
+          href="/dashboard"
+          className="inline-block text-label-secondary no-underline mb-4 hover:text-label [font-size:var(--fs-small)]"
+        >
           ← Card Orb
         </Link>
-        <h1 className="settings-title">Settings</h1>
-        <p className="settings-who">{viewer.email}</p>
+        <h1 className="m-0 [font-size:var(--fs-h2)] font-semibold text-label">Settings</h1>
+        <p className="mt-1 mb-6 [font-size:var(--fs-small)] text-label-tertiary">{viewer.email}</p>
       </header>
       {children}
     </div>

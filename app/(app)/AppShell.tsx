@@ -7,6 +7,7 @@ import AppSidebar from "../components/AppSidebar";
 import AppTabBar from "../components/AppTabBar";
 import CardAddDialog from "../components/CardAddDialog";
 import { CollectionProvider, type CollectionValue } from "./CollectionContext";
+import { cardsMainClassName } from "../components/cardsPageClasses";
 
 /**
  * The furniture around every signed-in screen.
@@ -78,7 +79,7 @@ export default function AppShell({
 
       <AppSidebar />
       {/* The sibling. Nothing may come between these two. */}
-      <section className="cards-main">{children}</section>
+      <section className={cardsMainClassName}>{children}</section>
       <AppTabBar />
 
       <CardAddDialog

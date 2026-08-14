@@ -5,6 +5,14 @@ import type { LucideProps } from "lucide-react";
 // plain <span> (when it sits inside a parent link, e.g. a clickable card).
 const ICON = { size: 16, strokeWidth: 1.75 } as const;
 
+// .btn and its modifiers (--primary/--icon/--center/--back) stay CSS, in
+// what's left of app/styles/components.css, rather than moving into this
+// component: ~20 files render a raw `<button className="btn">` outside this
+// component entirely, most of them in the not-yet-migrated cards.css family
+// (CardNav, CardsSidebar, FilterSheet, ViewSheet, CardAddDialog, ...).
+// Porting .btn to Tailwind properly means touching all of them together —
+// scope for a future chunk, not this one.
+
 type ButtonProps = {
   children: React.ReactNode;
   /* ComponentType rather than LucideIcon, so ExternalArrow can be handed in

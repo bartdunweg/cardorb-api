@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "../hooks/useSession";
 import { MIN_PASSWORD } from "../../lib/core/account";
+import { FormError, FormField, FormForm, FormHint, FormInput, FormLabel } from "./FormField";
+import { signinWideButtonClassName } from "./SigninShell";
 
 /**
  * Setting a new password, for somebody already holding a session.
@@ -43,10 +45,10 @@ export default function PasswordForm() {
 
   return (
     <>
-      <form className="cards-profile-form" onSubmit={submit}>
-        <label className="cards-profile-field">
-          <span className="cards-profile-label">New password</span>
-          <input
+      <FormForm layout="column" onSubmit={submit}>
+        <FormField layout="column">
+          <FormLabel>New password</FormLabel>
+          <FormInput
             type={show ? "text" : "password"}
             name="new-password"
             autoComplete="new-password"
@@ -57,10 +59,8 @@ export default function PasswordForm() {
             required
             aria-describedby="password-hint"
           />
-          <span className="cards-profile-hint" id="password-hint">
-            At least {MIN_PASSWORD} characters.
-          </span>
-        </label>
+          <FormHint id="password-hint">At least {MIN_PASSWORD} characters.</FormHint>
+        </FormField>
 
         {/* A button rather than a checkbox: it does something now rather than
             recording a preference, and aria-pressed is what says which it is. */}
@@ -73,15 +73,15 @@ export default function PasswordForm() {
           {show ? "Hide password" : "Show password"}
         </button>
 
-        <button type="submit" className="btn btn--primary signin-submit" disabled={busy || done}>
+        <button
+          type="submit"
+          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          disabled={busy || done}
+        >
           {busy ? "Saving…" : "Save password"}
         </button>
-      </form>
-      {error && (
-        <p className="cards-profile-error" role="alert">
-          {error}
-        </p>
-      )}
+      </FormForm>
+      {error && <FormError role="alert">{error}</FormError>}
     </>
   );
 }
