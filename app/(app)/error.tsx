@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * The collection's error boundary, and it lives here now for a reason worth
+ * knowing about.
+ *
+ * It used to sit in app/cards/, which became a one-line redirect to /collection
+ * when the screens got addresses. redirect() works by throwing, and an error
+ * boundary is a thing that catches throws — so /cards stopped redirecting and
+ * started rendering this instead. An address that is in bookmarks and in the
+ * iOS client answered 200 with an error page, which is worse than a 404 because
+ * nothing about it says the address moved.
+ *
+ * Boundaries belong with the screen they are the boundary for. This one now
+ * wraps the shell, which is where the collection actually renders.
+ */
+
 import RouteError from "../components/RouteError";
 
 /**

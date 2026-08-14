@@ -125,35 +125,49 @@ export type CardsMode = "owner" | "public";
 
 export default function CardsView({
   sets,
-  signedIn = false,
-  chrome = true,
+  variant = "owner",
   scope,
-  mode = "owner",
   username,
 }: {
   sets: CardSet[];
-  /** Read from the session cookie on the server, so the first paint is right. */
-  signedIn?: boolean;
-  mode?: CardsMode;
+  /**
+   * Which of the two screens this is, and it is one word because there were
+   * only ever two answers.
+   *
+   * It was three props — mode, signedIn and chrome — and every combination of
+   * them typechecked while only two meant anything. "public and signed in",
+   * "owner drawing its own rail": both expressible, neither real. Since /cards
+   * became a redirect there is exactly one caller of each, so the prop names
+   * the screen rather than describing three facts that were never independent.
+   *
+   * public draws the rail, the bar and .cards-main, because that page is all of
+   * it. owner returns the body alone: the signed-in shell owns the furniture,
+   * and a second .cards-main inside the first would put a container-type in a
+   * container-type and halve every card in the grid.
+   */
+  variant?: CardsMode;
+  /** Which part of the collection to show, for the routed owner screens. */
+  scope?: string;
   /** Whose collection this is. Public only, and only to address its API by. */
   username?: string;
-  /**
-   * Whether to draw the furniture: the rail, the bar, and .cards-main itself.
-   *
-   * True on /user/<name>, which is one screen that owns all of it. False inside
-   * the signed-in shell, where the layout owns them and this is handed in as
-   * children — nesting a second .cards-main inside the first would put a
-   * container-type inside a container-type and quietly halve every card.
-   */
-  chrome?: boolean;
-  /**
-   * Which part of the collection this is, when the address decides rather than
-   * a press. Undefined leaves the old behaviour: internal state, changed by the
-   * rail.
-   */
-  scope?: string;
 }) {
-  const isPublic = mode === "public";
+  /**
+   * Owner or public, and the two answers now arrive as one word.
+   *
+   * There used to be three props for this — `mode`, `signedIn` and `chrome` —
+   * and every combination of them was expressible while only two were real.
+   * "public and signed in", "owner rendering its own rail": both compiled, both
+   * meaningless. Since /cards became a redirect there is exactly one caller of
+   * each variant, so the prop says which one rather than describing three
+   * independent facts that were never independent.
+   *
+   * public draws its own rail and bar, because that page is the whole screen.
+   * owner returns the body alone: the signed-in shell owns the furniture, and a
+   * second .cards-main nested inside the first would put a container-type in a
+   * container-type and halve every card in the grid.
+   */
+  const isPublic = variant === "public";
+  const signedIn = !isPublic;
   /**
    * The card the public link has open, if any. Signed in this is a URL and an
    * intercepted route; here it is state, because /cards is behind the proxy
@@ -254,7 +268,7 @@ export default function CardsView({
    * rather than in the bar: it is opened from the toolbar above 1000px too,
    * where the bar is not on screen at all.
    *
-   * `signedIn` is a prop rather than something this hook reports, because the
+   * `signedIn` is derived from the variant rather than passed in, because the
    * session is a cookie the server reads. That is what keeps the plus from
    * appearing a frame after everything else.
    */
@@ -1504,7 +1518,7 @@ export default function CardsView({
     </>
   );
 
-  if (!chrome) return main;
+  if (!isPublic) return main;
 
   return (
     <>
@@ -1529,7 +1543,7 @@ export default function CardsView({
         selected={selected}
         pane={pane}
         onSelect={openPane}
-        signedIn={signedIn && !isPublic}
+        signedIn={signedIn}
         isPublic={isPublic}
         onAdd={() => setAdding(true)}
         brokenLogos={brokenLogos}
@@ -1542,7 +1556,7 @@ export default function CardsView({
           fixed, so where it sits in the document costs it nothing. */}
       <CardsTabBar
         active={activeTab}
-        signedIn={signedIn && !isPublic}
+        signedIn={signedIn}
         isPublic={isPublic}
         onSelect={(tab) =>
           tab === "sets"
