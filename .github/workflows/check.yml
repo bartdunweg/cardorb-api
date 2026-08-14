@@ -20,8 +20,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Matches the Node the app is developed and deployed on.
-          node-version: 20
+          # Matches the Node Vercel actually runs this on, which is 24.x —
+          # checked rather than assumed, because CI testing a version nobody
+          # deploys is CI testing the wrong thing.
+          #
+          # It was 20 until the Supabase client arrived: @supabase/auth-js
+          # declares node >=22, and Node 20 had gone out of maintenance in
+          # April anyway. That floor is in package.json's engines; this line is
+          # the ceiling, and the two are different numbers on purpose.
+          node-version: 24
           cache: npm
 
       - run: npm ci
