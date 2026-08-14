@@ -89,6 +89,13 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   owned: true,
   excluded: false,
   acquiredAt: null,
+  quantity: 1,
+  condition: null,
+  grade: null,
+  purchasePrice: null,
+  purchaseDate: null,
+  notes: null,
+  isFavorite: false,
   ...over,
 });
 
@@ -106,24 +113,58 @@ afterEach(() => {
 });
 
 describe("buildCollection", () => {
+  /** A Variant as buildCollection() produces one, id and inventory defaults included. */
+  const variant = (over: Partial<{ id: string | null; rarity: string | null; owned: boolean }>) => ({
+    id: null,
+    rarity: null,
+    owned: true,
+    quantity: 1,
+    condition: null,
+    grade: null,
+    purchasePrice: null,
+    purchaseDate: null,
+    notes: null,
+    isFavorite: false,
+    ...over,
+  });
+
   it("folds two printings of one card into one card with two variants", async () => {
     // 317 cards in the real collection are held both normally and as a reverse
     // holo. Shown twice they read as a duplicate; the rarities are meant to
     // become two tags under a single scan.
     const sets = await buildCollection([
-      row({ rarity: "Rare Holo" }),
-      row({ rarity: "Reverse Holo" }),
+      row({ id: "a", rarity: "Rare Holo" }),
+      row({ id: "b", rarity: "Reverse Holo" }),
     ]);
     expect(sets).toHaveLength(1);
     expect(sets[0]!.cards).toHaveLength(1);
     expect(sets[0]!.cards[0]!.variants).toEqual([
-      { rarity: "Rare Holo", owned: true },
-      { rarity: "Reverse Holo", owned: true },
+      variant({ id: "a", rarity: "Rare Holo" }),
+      variant({ id: "b", rarity: "Reverse Holo" }),
     ]);
   });
 
-  it("says the same rarity once, however many rows carry it", async () => {
-    const [set] = await buildCollection([row({ rarity: "Rare Holo" }), row({ rarity: "Rare Holo" })]);
+  it("keeps two rows that share a rarity as two variants — each is its own printing", async () => {
+    // The old rule collapsed rows sharing (rarity, owned) into one variant,
+    // which silently dropped the second row's own quantity/condition/price the
+    // moment the inventory fields existed to carry them. Deduping on id
+    // instead means two distinct rows always stay two distinct, independently
+    // editable variants — even if they happen to agree on rarity.
+    const [set] = await buildCollection([
+      row({ id: "a", rarity: "Rare Holo" }),
+      row({ id: "b", rarity: "Rare Holo" }),
+    ]);
+    expect(set!.cards[0]!.variants).toHaveLength(2);
+  });
+
+  it("still folds the same row into one variant if it is read twice", async () => {
+    // What the old dedup was actually protecting against: a paginated fetch
+    // handing back one row on two pages. That row has one id, so it is the
+    // same variant however many times it arrives.
+    const [set] = await buildCollection([
+      row({ id: "a", rarity: "Rare Holo" }),
+      row({ id: "a", rarity: "Rare Holo" }),
+    ]);
     expect(set!.cards[0]!.variants).toHaveLength(1);
   });
 
@@ -131,13 +172,13 @@ describe("buildCollection", () => {
     // The wishlist and the binder can name the same card: wanting a reverse
     // holo of something you already own does not make the card unowned.
     const [set] = await buildCollection([
-      row({ rarity: "Reverse Holo", owned: false }),
-      row({ rarity: "Rare Holo", owned: true }),
+      row({ id: "a", rarity: "Reverse Holo", owned: false }),
+      row({ id: "b", rarity: "Rare Holo", owned: true }),
     ]);
     expect(set!.cards[0]!.owned).toBe(true);
     expect(set!.cards[0]!.variants).toEqual([
-      { rarity: "Reverse Holo", owned: false },
-      { rarity: "Rare Holo", owned: true },
+      variant({ id: "a", rarity: "Reverse Holo", owned: false }),
+      variant({ id: "b", rarity: "Rare Holo", owned: true }),
     ]);
   });
 

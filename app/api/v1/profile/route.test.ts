@@ -14,12 +14,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * each control on its own.
  */
 
-const currentViewer = vi.fn();
+const requestViewer = vi.fn();
 const updateProfile = vi.fn();
 const ownProfile = vi.fn();
 
-vi.mock("../../../../lib/api/viewer", () => ({ currentViewer: () => currentViewer() }));
-vi.mock("../../../../lib/storage/supabase", () => ({ serverClient: async () => ({}) }));
+vi.mock("../../../../lib/api/viewer", () => ({
+  requestViewer: (req: Request) => requestViewer(req),
+  bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
+}));
+vi.mock("../../../../lib/storage/supabase", () => ({
+  serverClient: async () => ({}),
+  userClient: () => ({}),
+}));
 vi.mock("../../../../lib/storage/postgres", () => ({
   updateProfile: (...a: unknown[]) => updateProfile(...a),
   ownProfile: (...a: unknown[]) => ownProfile(...a),
@@ -40,7 +46,7 @@ const patch = (body: unknown, origin = "https://cardorb.com") =>
   );
 
 beforeEach(() => {
-  currentViewer.mockResolvedValue(VIEWER);
+  requestViewer.mockResolvedValue(VIEWER);
   updateProfile.mockResolvedValue(undefined);
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://x.supabase.co");
 });
@@ -57,9 +63,25 @@ describe("PATCH /api/v1/profile", () => {
   });
 
   it("refuses when nobody is signed in", async () => {
-    currentViewer.mockResolvedValue(null);
+    requestViewer.mockResolvedValue(null);
     expect((await patch({ isPublic: true })).status).toBe(401);
     expect(updateProfile).not.toHaveBeenCalled();
+  });
+
+  it("saves for a bearer caller — the iOS app, which has no cookie at all", async () => {
+    // requestViewer() replaced currentViewer() precisely so this works: a
+    // cookie-only lookup refused every bearer-token request regardless of how
+    // good the token was.
+    const res = await PATCH(
+      new Request("https://cardorb.com/api/v1/profile", {
+        method: "PATCH",
+        headers: { host: "cardorb.com", "content-type": "application/json", authorization: "Bearer t.o.k.e.n" },
+        body: JSON.stringify({ isPublic: true }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(requestViewer).toHaveBeenCalled();
+    expect(updateProfile).toHaveBeenCalledWith({}, "me-uuid", { isPublic: true });
   });
 
   it("saves the switch for the signed-in person and nobody else", async () => {

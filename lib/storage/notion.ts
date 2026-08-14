@@ -129,6 +129,16 @@ export function rowFromPage(page: NotionPage): CollectionRow | null {
     owned: props.Collection?.checkbox !== false,
     excluded: props.Excluded?.checkbox === true,
     acquiredAt: page.created_time ?? null,
+    // Notion has no columns for these — see docs/decisions/0006. Same
+    // defaults a fresh Postgres row gets, so a row's shape does not announce
+    // which store it came from.
+    quantity: 1,
+    condition: null,
+    grade: null,
+    purchasePrice: null,
+    purchaseDate: null,
+    notes: null,
+    isFavorite: false,
   };
 }
 

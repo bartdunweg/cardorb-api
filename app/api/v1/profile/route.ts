@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "../../../../lib/api/guard";
-import { currentViewer } from "../../../../lib/api/viewer";
-import { serverClient } from "../../../../lib/storage/supabase";
+import { bearer, requestViewer } from "../../../../lib/api/viewer";
+import { serverClient, userClient } from "../../../../lib/storage/supabase";
 import { ownProfile, updateProfile } from "../../../../lib/storage/postgres";
 
 /**
@@ -17,11 +17,18 @@ import { ownProfile, updateProfile } from "../../../../lib/storage/postgres";
  *
  * PATCH rather than PUT: a body that mentions one field must not clear the
  * other. The screen has two controls that save independently.
+ *
+ * requestViewer() rather than currentViewer(): the latter only ever reads a
+ * cookie, which the iOS app never carries, so this route refused every
+ * bearer-token caller regardless of how good their token was. sameOrigin()
+ * already passes a request with no Origin header, i.e. curl and the app, so
+ * the only thing standing between iOS and its own settings screen was this
+ * one cookie-only lookup.
  */
 export async function PATCH(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const viewer = await currentViewer();
+  const viewer = await requestViewer(req);
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
   let body: Record<string, unknown>;
@@ -55,7 +62,12 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Nothing to change." }, { status: 400 });
   }
 
-  const db = await serverClient();
+  // A token if the caller sent one, cookies otherwise — the same rule as
+  // every Postgres write below the accounts migration, and for the same
+  // reason: profiles_write is `using (id = auth.uid())`, and auth.uid() comes
+  // from whichever connection actually asks.
+  const token = bearer(req);
+  const db = token ? userClient(token) : await serverClient();
   if (!db) {
     return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
   }
@@ -78,11 +90,12 @@ export async function PATCH(req: Request) {
 }
 
 /** What the settings screen renders from. */
-export async function GET() {
-  const viewer = await currentViewer();
+export async function GET(req: Request) {
+  const viewer = await requestViewer(req);
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
-  const db = await serverClient();
+  const token = bearer(req);
+  const db = token ? userClient(token) : await serverClient();
   if (!db) {
     return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
   }

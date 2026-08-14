@@ -56,6 +56,22 @@ export type CollectionRow = {
    * knowing the difference.
    */
   acquiredAt: string | null;
+  /**
+   * The nine — not eight — inventory facts added for per-printing detail
+   * (2026-08-14 card-inventory-fields migration). Postgres-only: the Notion
+   * adapter has no columns for these and defaults them the same way a fresh
+   * Postgres row would (quantity 1, isFavorite false, the rest null), rather
+   * than gaining columns in a database this project does not otherwise write
+   * to. See docs/decisions/0006-per-variant-inventory-fields.md.
+   */
+  quantity: number;
+  condition: string | null;
+  grade: string | null;
+  purchasePrice: number | null;
+  /** ISO date (no time — a purchase is a day, not a moment). */
+  purchaseDate: string | null;
+  notes: string | null;
+  isFavorite: boolean;
 };
 
 /**
@@ -80,7 +96,7 @@ export const CARDS_TAG = "collection-rows";
  */
 export const cardsTag = (userId: string) => `cards:${userId}`;
 
-/** The eight columns the database actually has, as the form sees them. */
+/** The columns the database actually has, as the form sees them. */
 export type CardDraft = {
   name: string;
   number: string;
@@ -92,6 +108,13 @@ export type CardDraft = {
   collection: boolean;
   /** Kept out of the "latest pull" on bartdunweg.com. */
   excluded: boolean;
+  quantity: number;
+  condition: string | null;
+  grade: string | null;
+  purchasePrice: number | null;
+  purchaseDate: string | null;
+  notes: string | null;
+  isFavorite: boolean;
 };
 
 /**
@@ -118,8 +141,12 @@ export type CardFields = {
  * constraint, which is the least useful error this app could produce.
  *
  * A card called anything near this is a paste accident, not a card.
+ *
+ * `conditionOrGrade` and `notes` match the check constraints the inventory
+ * migration put on condition/grade (40) and notes (2000) — the same
+ * must-agree rule as the rest of this list.
  */
-export const MAX = { name: 200, number: 40, option: 120, types: 10 };
+export const MAX = { name: 200, number: 40, option: 120, types: 10, conditionOrGrade: 40, notes: 2000 };
 
 /**
  * One line, whatever arrived.
@@ -161,7 +188,20 @@ export function validateCardDraft(body: unknown): CardValidation {
     types = [],
     collection = true,
     excluded = false,
+    quantity = 1,
+    condition = null,
+    grade = null,
+    purchasePrice = null,
+    purchaseDate = null,
+    notes = null,
+    isFavorite = false,
   } = (body ?? {}) as Record<string, unknown>;
+
+  const optionalText = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null;
+    const cleaned = cleanText(String(value));
+    return cleaned || null;
+  };
 
   const draft: CardDraft = {
     name: cleanText(String(name)),
@@ -175,6 +215,16 @@ export function validateCardDraft(body: unknown): CardValidation {
       .slice(0, MAX.types),
     collection: collection !== false,
     excluded: excluded === true,
+    quantity: Number.isFinite(Number(quantity)) ? Math.trunc(Number(quantity)) : 1,
+    condition: optionalText(condition),
+    grade: optionalText(grade),
+    purchasePrice:
+      purchasePrice === null || purchasePrice === undefined || purchasePrice === ""
+        ? null
+        : Number(purchasePrice),
+    purchaseDate: optionalText(purchaseDate),
+    notes: optionalText(notes),
+    isFavorite: isFavorite === true,
   };
 
   if (!draft.name) return { kind: "invalid", error: "A card needs a name." };
@@ -184,6 +234,23 @@ export function validateCardDraft(body: unknown): CardValidation {
     return { kind: "invalid", error: "That number is too long." };
   for (const value of [draft.set, draft.rarity, draft.gen, ...draft.types]) {
     if (value.length > MAX.option) return { kind: "invalid", error: "That value is too long." };
+  }
+  if (!Number.isInteger(draft.quantity) || draft.quantity < 1) {
+    return { kind: "invalid", error: "Quantity must be a whole number of at least 1." };
+  }
+  for (const value of [draft.condition, draft.grade]) {
+    if (value && value.length > MAX.conditionOrGrade) {
+      return { kind: "invalid", error: "That value is too long." };
+    }
+  }
+  if (draft.notes && draft.notes.length > MAX.notes) {
+    return { kind: "invalid", error: "That note is too long." };
+  }
+  if (draft.purchasePrice !== null && (!Number.isFinite(draft.purchasePrice) || draft.purchasePrice < 0)) {
+    return { kind: "invalid", error: "That purchase price is not valid." };
+  }
+  if (draft.purchaseDate !== null && Number.isNaN(Date.parse(draft.purchaseDate))) {
+    return { kind: "invalid", error: "That purchase date is not valid." };
   }
 
   return { kind: "ok", draft };
@@ -208,5 +275,118 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     types: draft.types,
     owned: draft.collection,
     excluded: draft.excluded,
+    quantity: draft.quantity,
+    condition: draft.condition,
+    grade: draft.grade,
+    purchasePrice: draft.purchasePrice,
+    purchaseDate: draft.purchaseDate,
+    notes: draft.notes,
+    isFavorite: draft.isFavorite,
   };
+}
+
+/**
+ * What a PATCH to one printing may change: the two facts that already existed
+ * outside the draft (owned, excluded — moving a card between the binder and
+ * the wishlist, or toggling the portfolio's own exclusion) plus the seven
+ * inventory fields. Not name/number/set/rarity/gen/types: those identify
+ * which printing this is, and changing them is closer to deleting one row and
+ * creating another than to editing one.
+ */
+export type CardPatch = Partial<{
+  owned: boolean;
+  excluded: boolean;
+  quantity: number;
+  condition: string | null;
+  grade: string | null;
+  purchasePrice: number | null;
+  purchaseDate: string | null;
+  notes: string | null;
+  isFavorite: boolean;
+}>;
+
+export type CardPatchValidation =
+  | { kind: "invalid"; error: string }
+  | { kind: "ok"; patch: CardPatch };
+
+/**
+ * The body of a PATCH, checked the same way a draft is: only the keys present
+ * are touched (see postgres.ts's updateRow(), which builds its update from
+ * exactly this object), so this only validates what was actually sent rather
+ * than filling in defaults for fields the caller never mentioned.
+ */
+export function validateCardPatch(body: unknown): CardPatchValidation {
+  const b = (body ?? {}) as Record<string, unknown>;
+  const patch: CardPatch = {};
+
+  if ("owned" in b) {
+    if (typeof b.owned !== "boolean") return { kind: "invalid", error: "owned must be true or false." };
+    patch.owned = b.owned;
+  }
+  if ("excluded" in b) {
+    if (typeof b.excluded !== "boolean")
+      return { kind: "invalid", error: "excluded must be true or false." };
+    patch.excluded = b.excluded;
+  }
+  if ("quantity" in b) {
+    const q = Number(b.quantity);
+    if (!Number.isInteger(q) || q < 1) {
+      return { kind: "invalid", error: "Quantity must be a whole number of at least 1." };
+    }
+    patch.quantity = q;
+  }
+  if ("isFavorite" in b) {
+    if (typeof b.isFavorite !== "boolean")
+      return { kind: "invalid", error: "isFavorite must be true or false." };
+    patch.isFavorite = b.isFavorite;
+  }
+  for (const key of ["condition", "grade"] as const) {
+    if (key in b) {
+      const value = b[key];
+      if (value !== null && typeof value !== "string") {
+        return { kind: "invalid", error: `${key} must be text or null.` };
+      }
+      const cleaned = value === null ? null : cleanText(value) || null;
+      if (cleaned && cleaned.length > MAX.conditionOrGrade) {
+        return { kind: "invalid", error: "That value is too long." };
+      }
+      patch[key] = cleaned;
+    }
+  }
+  if ("notes" in b) {
+    const value = b.notes;
+    if (value !== null && typeof value !== "string") {
+      return { kind: "invalid", error: "notes must be text or null." };
+    }
+    const cleaned = value === null ? null : value.trim() || null;
+    if (cleaned && cleaned.length > MAX.notes) {
+      return { kind: "invalid", error: "That note is too long." };
+    }
+    patch.notes = cleaned;
+  }
+  if ("purchasePrice" in b) {
+    const value = b.purchasePrice;
+    if (value === null) {
+      patch.purchasePrice = null;
+    } else {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n < 0) {
+        return { kind: "invalid", error: "That purchase price is not valid." };
+      }
+      patch.purchasePrice = n;
+    }
+  }
+  if ("purchaseDate" in b) {
+    const value = b.purchaseDate;
+    if (value !== null && typeof value !== "string") {
+      return { kind: "invalid", error: "purchaseDate must be a date string or null." };
+    }
+    if (value !== null && Number.isNaN(Date.parse(value))) {
+      return { kind: "invalid", error: "That purchase date is not valid." };
+    }
+    patch.purchaseDate = value;
+  }
+
+  if (!Object.keys(patch).length) return { kind: "invalid", error: "Nothing to change." };
+  return { kind: "ok", patch };
 }

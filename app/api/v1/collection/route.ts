@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCards } from "../../../../lib/core/collection";
 import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
+import { bearer } from "../../../../lib/api/viewer";
 
 /**
  * The whole collection, grouped by set. This is the endpoint every client
@@ -33,8 +34,9 @@ export async function GET(req: Request) {
 
   // Whose collection, which is the whole of what changed here. It used to be
   // the collection, singular, and the endpoint could not have said whose if it
-  // had been asked.
-  const sets = await getCards(who.userId);
+  // had been asked. The token, not just the id: getCards() needs the caller's
+  // own connection to satisfy row level security, see its own comment.
+  const sets = await getCards(who.userId, bearer(req) ?? undefined);
 
   // "An empty collection is never true" used to live here, and it threw. It was
   // right: there was one collection, it had sixteen hundred cards in it, and an

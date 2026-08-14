@@ -36,6 +36,15 @@ describe("rowFromPage", () => {
       owned: true,
       excluded: false,
       acquiredAt: "2019-04-02T10:00:00.000Z",
+      // Notion has no columns for these; every row gets the same defaults a
+      // fresh Postgres row would. See docs/decisions/0006.
+      quantity: 1,
+      condition: null,
+      grade: null,
+      purchasePrice: null,
+      purchaseDate: null,
+      notes: null,
+      isFavorite: false,
     });
   });
 
@@ -113,6 +122,13 @@ describe("cardProperties", () => {
     types: ["Fire,Water"],
     collection: true,
     excluded: false,
+    quantity: 1,
+    condition: null,
+    grade: null,
+    purchasePrice: null,
+    purchaseDate: null,
+    notes: null,
+    isFavorite: false,
   };
 
   it("takes commas out of the selects on the way to Notion", () => {

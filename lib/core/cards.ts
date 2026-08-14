@@ -48,12 +48,32 @@ export { highScan } from "./artwork";
  * One printing of a card: a rarity, and whether that printing is in the binder
  * or on the wishlist. The same card is often held twice, normally and as a
  * reverse holo, and those are two of these rather than two cards.
+ *
+ * `id` is the row it came from (lib/core/collection-row.ts's CollectionRow.id)
+ * — a Postgres row id or a Notion page id, both real and stable once a row is
+ * written; null only in the moment before that (a draft has none yet). It is
+ * what makes a variant editable and deletable on its own: PATCH/DELETE
+ * /v1/cards/[id] act on exactly this id, not on the card's derived `key`,
+ * which several variants can share.
+ *
+ * The six inventory fields below it are per-row for the same reason acquired_at
+ * always was: two printings of the same card can be different copies, bought
+ * at different times for different prices in different condition. See
+ * docs/decisions/0006-per-variant-inventory-fields.md.
  */
 export type Variant = {
+  id: string | null;
   /** "Non-holo", "Reversed Holo", "Illustration Rare". */
   rarity: string | null;
   /** Notion's Collection checkbox: false means it is wanted, not held. */
   owned: boolean;
+  quantity: number;
+  condition: string | null;
+  grade: string | null;
+  purchasePrice: number | null;
+  purchaseDate: string | null;
+  notes: string | null;
+  isFavorite: boolean;
 };
 
 /**
@@ -368,6 +388,17 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
         tcgId: matched?.id ?? null,
         rarity: row.rarity,
         owned: row.owned,
+        // The row's own id and inventory facts, carried through untouched so
+        // the merge below can build one Variant per row. See Variant's own
+        // comment for why these travel this far.
+        id: row.id,
+        quantity: row.quantity,
+        condition: row.condition,
+        grade: row.grade,
+        purchasePrice: row.purchasePrice,
+        purchaseDate: row.purchaseDate,
+        notes: row.notes,
+        isFavorite: row.isFavorite,
       };
     });
 
@@ -388,15 +419,30 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
     // printings, not two cards. 317 of them in this collection, and shown twice
     // they read as a duplicate rather than as something worth knowing. The
     // rarities become tags under a single scan.
+    //
+    // Deduped on the row's own id rather than on (rarity, owned): two rows
+    // sharing both used to collapse into one Variant, silently dropping the
+    // second row's own acquired_at and, now, its own quantity/condition/price/
+    // notes — exactly the facts the per-variant inventory fields exist to
+    // keep separate. An id is unique per row by construction, so this is
+    // strictly more precise, not just differently precise.
     const merged = new Map<string, OwnedCard>();
     for (const p of printings) {
       const existing = merged.get(p.key);
-      const variant = { rarity: p.rarity, owned: p.owned };
+      const variant: Variant = {
+        id: p.id,
+        rarity: p.rarity,
+        owned: p.owned,
+        quantity: p.quantity,
+        condition: p.condition,
+        grade: p.grade,
+        purchasePrice: p.purchasePrice,
+        purchaseDate: p.purchaseDate,
+        notes: p.notes,
+        isFavorite: p.isFavorite,
+      };
       if (existing) {
-        // A collection can hold the same rarity twice; the tag only needs saying once.
-        if (
-          !existing.variants.some((v) => v.rarity === variant.rarity && v.owned === variant.owned)
-        )
+        if (variant.id === null || !existing.variants.some((v) => v.id === variant.id))
           existing.variants.push(variant);
         existing.owned ||= p.owned;
         // The first row of a card may be the one with no artwork, and the same
