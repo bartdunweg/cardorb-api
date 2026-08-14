@@ -208,7 +208,19 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+#
+# Two is the local development value and it does not belong on a project that
+# sends real mail: two is one sign-up and one password reset, in an hour, for
+# everybody together. It was pushed here by accident and found the honest way —
+# sign-up started failing with a generic error because the confirmation could
+# not be sent, which looks like a broken account system rather than a full
+# quota.
+#
+# Thirty is Supabase's own default for hosted projects. Worth knowing what sits
+# above it: Resend's free tier allows a hundred a day, so this ceiling is high
+# enough to never be the thing that stops a real person and low enough that a
+# loop cannot spend a month's allowance in an afternoon.
+email_sent = 30
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
