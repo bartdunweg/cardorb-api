@@ -1,0 +1,93 @@
+import { describe, expect, it } from "vitest";
+import { latestPull } from "./cards";
+import type { CardSet, OwnedCard, Variant } from "./cards";
+
+const variant = (over: Partial<Variant> = {}): Variant => ({
+  id: null,
+  rarity: null,
+  owned: true,
+  quantity: 1,
+  condition: null,
+  grade: null,
+  purchasePrice: null,
+  purchaseDate: null,
+  notes: null,
+  isFavorite: false,
+  acquiredAt: null,
+  excluded: false,
+  ...over,
+});
+
+const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
+  key: over.name ?? "c",
+  name: "Pikachu",
+  number: "001",
+  type: null,
+  gen: null,
+  image: null,
+  imageHigh: null,
+  imageSize: null,
+  speciesId: null,
+  variants: [variant()],
+  owned: true,
+  price: null,
+  tcgId: null,
+  ...over,
+});
+
+const set = (name: string, cards: OwnedCard[]): CardSet => ({
+  name,
+  title: name,
+  logo: null,
+  logoSize: null,
+  releaseDate: null,
+  total: null,
+  cards,
+});
+
+describe("latestPull", () => {
+  it("returns null for an empty collection", () => {
+    expect(latestPull([])).toBeNull();
+  });
+
+  it("returns null when every printing is excluded", () => {
+    const s = set("A", [
+      card({ key: "1", variants: [variant({ acquiredAt: "2026-01-01T00:00:00.000Z", excluded: true })] }),
+    ]);
+    expect(latestPull([s])).toBeNull();
+  });
+
+  it("returns null when no printing has an acquiredAt", () => {
+    const s = set("A", [card({ key: "1", variants: [variant({ acquiredAt: null })] })]);
+    expect(latestPull([s])).toBeNull();
+  });
+
+  it("picks the newest acquiredAt across sets", () => {
+    const older = card({
+      key: "older",
+      name: "Bulbasaur",
+      variants: [variant({ acquiredAt: "2025-06-01T00:00:00.000Z", rarity: "Common" })],
+    });
+    const newer = card({
+      key: "newer",
+      name: "Charizard",
+      number: "004",
+      variants: [variant({ acquiredAt: "2026-08-10T12:00:00.000Z", rarity: "Rare Holo" })],
+    });
+    const excludedButNewest = card({
+      key: "excluded",
+      name: "Mewtwo",
+      variants: [variant({ acquiredAt: "2026-08-15T00:00:00.000Z", excluded: true })],
+    });
+
+    const result = latestPull([set("Base", [older]), set("New", [newer, excludedButNewest])]);
+
+    expect(result).toMatchObject({
+      name: "Charizard",
+      number: "004",
+      rarity: "Rare Holo",
+      setName: "New",
+      acquiredAt: "2026-08-10T12:00:00.000Z",
+    });
+  });
+});

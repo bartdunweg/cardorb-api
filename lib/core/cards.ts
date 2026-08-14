@@ -74,6 +74,10 @@ export type Variant = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** ISO date, when this printing joined the collection. See CollectionRow.acquiredAt. */
+  acquiredAt: string | null;
+  /** Kept out of the "latest pull" on the portfolio site. See CollectionRow.excluded. */
+  excluded: boolean;
 };
 
 /**
@@ -263,6 +267,60 @@ export function stripPrices(sets: CardSet[]): CardSet[] {
   }));
 }
 
+/** The single card most recently acquired, for a portfolio's "latest pull". */
+export type LatestPull = {
+  name: string;
+  number: string;
+  image: string | null;
+  imageHigh: string | null;
+  rarity: string | null;
+  speciesId: number | null;
+  tcgId: string | null;
+  setName: string;
+  setTitle: string;
+  acquiredAt: string;
+};
+
+/**
+ * The newest, non-excluded printing in the collection, or null when there is
+ * none — an empty collection, or one where every printing has been marked
+ * `excluded`.
+ *
+ * A deliberately curated shape rather than the raw `OwnedCard`/`Variant`: this
+ * is what a public, cross-origin endpoint hands back, and price, purchase
+ * price, condition, grade, notes and quantity have no business leaving the
+ * server for that. Same reasoning as stripPrices()/forGrid() above, just for a
+ * different audience.
+ */
+export function latestPull(sets: CardSet[]): LatestPull | null {
+  let best: { set: CardSet; card: OwnedCard; variant: Variant & { acquiredAt: string } } | null =
+    null;
+  for (const set of sets) {
+    for (const card of set.cards) {
+      for (const variant of card.variants) {
+        if (variant.excluded || !variant.acquiredAt) continue;
+        if (!best || variant.acquiredAt > best.variant.acquiredAt) {
+          best = { set, card, variant: { ...variant, acquiredAt: variant.acquiredAt } };
+        }
+      }
+    }
+  }
+  if (!best) return null;
+  const { set, card, variant } = best;
+  return {
+    name: card.name,
+    number: card.number,
+    image: card.image,
+    imageHigh: card.imageHigh,
+    rarity: variant.rarity,
+    speciesId: card.speciesId,
+    tcgId: card.tcgId,
+    setName: set.name,
+    setTitle: set.title,
+    acquiredAt: variant.acquiredAt,
+  };
+}
+
 /**
  * Rows in, a collection out. The whole of what this module is for.
  *
@@ -399,6 +457,8 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
         purchaseDate: row.purchaseDate,
         notes: row.notes,
         isFavorite: row.isFavorite,
+        acquiredAt: row.acquiredAt,
+        excluded: row.excluded,
       };
     });
 
@@ -440,6 +500,8 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
         purchaseDate: p.purchaseDate,
         notes: p.notes,
         isFavorite: p.isFavorite,
+        acquiredAt: p.acquiredAt,
+        excluded: p.excluded,
       };
       if (existing) {
         if (variant.id === null || !existing.variants.some((v) => v.id === variant.id))

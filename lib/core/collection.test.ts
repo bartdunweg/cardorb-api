@@ -125,6 +125,8 @@ describe("buildCollection", () => {
     purchaseDate: null,
     notes: null,
     isFavorite: false,
+    acquiredAt: null,
+    excluded: false,
     ...over,
   });
 

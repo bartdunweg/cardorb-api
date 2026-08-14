@@ -49,6 +49,17 @@ Settings' existing username-change flow (`ProfileSettings.tsx`, `POST
 `docs/changelog.d/2026-08-14-generated-username-signup.md` record it.
 `npm run check` is green.
 
+Since then, in this session: a public "latest pull" endpoint for the portfolio
+site. `CollectionRow.acquiredAt`/`excluded` (already stored, already sorted on
+in `listRows()`) now flow through `buildCollection()` onto `Variant`
+(`lib/core/cards.ts`), a new `latestPull(sets)` picks the newest non-excluded
+printing and returns a curated (price-free, purchase-data-free) shape, and
+`GET /api/v1/public/[username]/latest-pull` serves it with a hard-coded
+`Access-Control-Allow-Origin: *` (independent of `guard.ts`'s allowlist, since
+this route has no auth/cookies to protect). `docs/decisions/0014-public-latest-pull-endpoint.md`
+and `docs/changelog.d/2026-08-15-public-latest-pull-endpoint.md` record it.
+`npm run check` is green.
+
 ## Open
 
 Nothing flagged from this session's own work. Worth knowing for whoever
@@ -61,6 +72,12 @@ The generated-username signup flow also hasn't been exercised in a running
 `npm run dev` + browser session (no `NOTION_TOKEN`/Supabase credentials
 confirmed in this workspace) — only `npm run check` and code inspection
 verified it. Worth a real signup-and-confirm pass before shipping.
+
+The new `/api/v1/public/[username]/latest-pull` endpoint is unit-tested with
+mocked `getCards`/`ownerOf` but hasn't hit real Notion/Postgres data via
+`npm run dev` (same credentials gap). Worth a real `curl -i` against a live
+collection — including marking a card `excluded` and confirming it drops out —
+before the portfolio site is pointed at it.
 
 ## Next session
 
