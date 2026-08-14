@@ -41,13 +41,24 @@ import { listRows, publicProfile } from "../storage/collection";
 import { PUBLIC_USERNAME } from "./config";
 
 /**
- * Whose collection, while there is only one.
+ * Whose collection, on the one store that cannot say.
  *
- * A constant standing in for a user id, so that every cache key, every tag and
- * every call site is already the shape it needs to be when accounts land. The
- * change then is what this resolves to, not where it is threaded — and threading
- * an argument through six pages is the part that would otherwise be done under
- * time pressure on the day the second account appears.
+ * It was written as a stand-in for a user id, so that "every cache key, every
+ * tag and every call site is already the shape it needs to be when accounts
+ * land — the change then is what this resolves to, not where it is threaded".
+ *
+ * Half of that came true and the wrong half is worth keeping written down,
+ * because it cost a real bug. A *default argument* is not a thread. It is a
+ * place the argument can silently fail to arrive, and it did: two card pages
+ * and the modal called getCards() with nothing, got "owner" where Postgres
+ * wanted a uuid, and every one of them answered "no, you do not hold this
+ * card" to the person holding 1,968 of them. The query failed, the fail-soft
+ * catch turned it into an empty collection, and an empty collection is a
+ * perfectly ordinary-looking answer.
+ *
+ * So the default is gone and this is now only what it always honestly was: the
+ * name the Notion reader understands, on a deployment that has one collection
+ * and no notion of whose. It dies with COLLECTION_SOURCE=notion.
  */
 export const OWNER = "owner";
 
@@ -88,7 +99,7 @@ const cachedRows = (userId: string) =>
  * here remembers it — so the next request tries again and finds most of the
  * work already in a cache.
  */
-export const getCards = cache(async (userId: string = OWNER): Promise<CardSet[]> => {
+export const getCards = cache(async (userId: string): Promise<CardSet[]> => {
   try {
     return await buildCollection(await cachedRows(userId));
   } catch (err) {

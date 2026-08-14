@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import CardModal from "../../../components/CardModal";
 import CardDetail from "../../../components/CardDetail";
 import CardNav from "../../../components/CardNav";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../lib/core/cards";
+import { currentViewer } from "../../../../lib/api/viewer";
 import { getCards } from "../../../../lib/core/collection";
 import "../../../styles/collection.css";
 
@@ -43,8 +44,8 @@ import "../../../styles/collection.css";
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-async function owned(id: string): Promise<{ card: OwnedCard; setName: string } | null> {
-  const sets = await getCards();
+async function owned(id: string, userId: string): Promise<{ card: OwnedCard; setName: string } | null> {
+  const sets = await getCards(userId);
   for (const set of sets) {
     const card = set.cards.find((c) => c.tcgId === id);
     if (card) return { card, setName: set.name };
@@ -56,7 +57,18 @@ export default async function CardModalPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   // getCards() is cached per request, so asking a third time here costs
   // a map lookup rather than another walk of the collection.
-  const [card, mine, sets] = await Promise.all([getCardDetail(id), owned(id), getCards()]);
+  // The lock, not the proxy. proxy.ts only checks that a session cookie is
+  // present; this is where it is verified, and it has to happen before the
+  // collection is asked for, because the collection is now a question about a
+  // person rather than a thing the deployment has.
+  const viewer = await currentViewer();
+  if (!viewer) redirect(`/login?next=/cards/${encodeURIComponent(id)}`);
+
+  const [card, mine, sets] = await Promise.all([
+    getCardDetail(id),
+    owned(id, viewer.userId),
+    getCards(viewer.userId),
+  ]);
   const { prev, next } = cardNeighbours(sets, id);
   if (!card) notFound();
 

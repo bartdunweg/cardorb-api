@@ -60,7 +60,6 @@ export default async function CardsPage() {
   // Derivable fields off before the collection crosses into a client
   // component. See forGrid in lib/core/cards.ts.
   const sets = forGrid(await getCards(viewer.userId));
-  const signedIn = true;
 
   return (
     <section className="page-cards">
@@ -69,7 +68,7 @@ export default async function CardsPage() {
           search engines, and this app ships noindex (see app/layout.tsx), so
           it would be markup written for a reader that never arrives. */}
       <Preconnect to={["https://assets.tcgdex.net", "https://images.pokemontcg.io"]} />
-      <CardsView sets={sets} signedIn={signedIn} />
+      <CardsView sets={sets} signedIn />
     </section>
   );
 }
