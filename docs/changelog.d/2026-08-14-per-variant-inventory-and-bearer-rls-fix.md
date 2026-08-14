@@ -1,5 +1,5 @@
 - Fixed every Postgres-backed account being unable to read its own collection or add a card through the API when authenticated by bearer token (the iOS app, curl) — row level security was correctly refusing a client that never carried the caller's session.
 - Fixed account sign-up failing for any client that doesn't send a username at sign-up (the iOS app included) — the server-side fallback username was too long for its own constraint.
-- Added quantity, condition, grade, purchase price, purchase date, notes and a favourite flag to each printing in the collection, with `PATCH`/`DELETE /api/v1/cards/{id}` to edit or remove one.
+- Added quantity, condition, grade, purchase price, purchase date, notes and a favourite flag to each printing in the collection, with `PATCH`/`DELETE /api/v1/collection/items/{id}` to edit or remove one.
 - Added `GET /api/v1/catalog/search?set=&query=` to find a card by name within a chosen set.
 - `PATCH /api/v1/profile` and `GET /api/v1/profile` now accept a bearer token, not just a browser session.

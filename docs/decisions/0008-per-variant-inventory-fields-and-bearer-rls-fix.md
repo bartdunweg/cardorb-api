@@ -46,9 +46,13 @@ redesign of it.
   instead: an id is unique per row by construction, so this is strictly more
   precise, and it stops silently dropping a second row's own quantity/
   condition/price the moment two rows agree on rarity.
-- **`app/api/v1/cards/[id]/route.ts`** (new): `PATCH`/`DELETE`, guarded like
+- **`app/api/v1/collection/items/[id]/route.ts`** (new): `PATCH`/`DELETE`, guarded like
   the existing `POST /v1/cards` — `authoriseWrite`, an 8KB→4KB (smaller
-  payload) body ceiling, the same cache revalidation. `postgres.deleteRow()`
+  payload) body ceiling, the same cache revalidation. Not `/v1/cards/[id]`:
+  Next refuses two dynamic routes at one path with differently-named
+  segments, and `/v1/cards/[tcgId]` already exists there for the public,
+  ownership-free catalogue lookup — a different id space entirely from this
+  private, RLS-owned row id. `postgres.deleteRow()`
   existed since the accounts migration with no caller anywhere in the app;
   this is that caller.
 - **`app/api/v1/catalog/search/route.ts`** (new): `GET`, requires a `set`
@@ -125,7 +129,7 @@ and row were removed afterward.
 `npm run check` (typecheck + 313 tests + lint — one pre-existing, unrelated
 lint failure in `app/signup/page.tsx` from concurrent work on this branch, not
 touched by this change) passes. New route tests for
-`app/api/v1/cards/[id]/route.ts` and `app/api/v1/catalog/search/route.ts`
+`app/api/v1/collection/items/[id]/route.ts` and `app/api/v1/catalog/search/route.ts`
 follow `profile/route.test.ts`'s pattern: authorisation refusal, and — the one
 that matters most — that a body cannot spoof which row is touched. The
 bearer/RLS fix and the signup fix were both confirmed live, as described

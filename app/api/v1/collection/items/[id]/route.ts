@@ -1,19 +1,27 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { CARDS_TAG, cardsTag, validateCardPatch } from "../../../../../lib/core/collection-row";
-import { updateRow, deleteRow } from "../../../../../lib/storage/collection";
-import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "../../../../../lib/api/guard";
-import { bearer } from "../../../../../lib/api/viewer";
+import { CARDS_TAG, cardsTag, validateCardPatch } from "../../../../../../lib/core/collection-row";
+import { updateRow, deleteRow } from "../../../../../../lib/storage/collection";
+import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "../../../../../../lib/api/guard";
+import { bearer } from "../../../../../../lib/api/viewer";
 
 /**
  * One printing, changed or removed.
+ *
+ * At /v1/collection/items/[id] rather than /v1/cards/[id]: Next refuses two
+ * dynamic routes at the same path whose segments are named differently, and
+ * /v1/cards/[tcgId] already exists — a public, unauthenticated-by-ownership
+ * catalogue lookup by TCGdex id. This id is a private Postgres row id,
+ * addressed by RLS to its owner; giving the two a shared path would have
+ * meant naming one segment two things or quietly overloading what it means,
+ * neither of which is worth it to save a URL segment.
  *
  * The sibling POST /v1/cards never had these, because nothing below it could
  * do them: cards_update and cards_delete existed in the accounts migration
  * from the start, but the storage layer only ever exposed list/write/options,
  * and Postgres's own deleteRow() had no caller anywhere in the app. See
- * docs/decisions/0006-per-variant-inventory-fields.md for why a printing
- * rather than a card is what this addresses — the same id
+ * docs/decisions/0008-per-variant-inventory-fields-and-bearer-rls-fix.md for
+ * why a printing rather than a card is what this addresses — the same id
  * OwnedCard.variants[].id carries.
  *
  * Same guard as POST /v1/cards, same body-size ceiling, same cache
