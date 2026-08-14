@@ -1,0 +1,1 @@
+- New public endpoint `GET /api/v1/public/[username]/latest-pull` returns the most recently added, non-excluded card (no price or purchase data), open cross-origin for the portfolio site. Cards marked "excluded" in the add-card dialog are left out.
