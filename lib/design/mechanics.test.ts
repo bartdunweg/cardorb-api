@@ -1,0 +1,203 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+
+/**
+ * Not a style test. A test that some lines still exist.
+ *
+ * This is an unusual thing to write and it earns its place for one reason:
+ * every rule below was a bug once, and every one of them looks removable to
+ * anybody who did not see the bug. A negative margin of exactly −10px, −20px,
+ * −26px reads as a hack. A rule that says `height: 1px` reads as a spacer
+ * somebody forgot to delete. `container-type: inline-size` on a box with no
+ * visible container query beside it reads as a leftover.
+ *
+ * The stylesheets explain all of it, at length, and that was the whole defence
+ * until now — and the two test files those comments cite are gone from the
+ * repo, so the defence had already failed once without anyone noticing.
+ *
+ * A CSS rebuild is coming. During it, thousands of lines move between files by
+ * hand. This is the net under that: if one of these disappears, CI says which
+ * one and why it mattered, in the words of whoever paid for it.
+ *
+ * When a rule legitimately moves to a new file, change the path here. When one
+ * is legitimately deleted, delete its case — and the deletion will be visible
+ * in review, which is the point. What must not happen is a rule quietly
+ * evaporating in a diff of two thousand lines.
+ */
+
+const read = (path: string) => readFileSync(path, "utf8");
+
+/** Whitespace-insensitive, so reformatting is not a failure. */
+const has = (css: string, pattern: RegExp) => pattern.test(css.replace(/\s+/g, " "));
+
+describe("the grid measures its own column, not the window", () => {
+  const css = read("app/styles/cards.css");
+
+  it("keeps container-type on .cards-main", () => {
+    expect(
+      has(css, /\.cards-main\s*\{[^}]*container-type:\s*inline-size/),
+      "Every card-grid breakpoint is measured against this box rather than the " +
+        "viewport, because at 1000px and at 660px the grid has almost exactly " +
+        "the same width and the old viewport rules gave them different tiles.",
+    ).toBe(true);
+  });
+
+  it("keeps both container queries that answer to it", () => {
+    // They are anonymous — they resolve against .cards-main by ancestry alone.
+    // Put container-type on the wrong box and these silently become
+    // viewport-ish again, which is the failure that has no error message.
+    const queries = css.match(/@container\s*\(max-width:\s*560px\)/g) ?? [];
+    expect(queries.length, "the grid and the Pokédex each answer to .cards-main").toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("paint containment does not slice the shadows off the scans", () => {
+  const css = read("app/styles/cards.css");
+
+  it("keeps content-visibility paired with the bleed it forced", () => {
+    // content-visibility brings paint containment with it, and paint
+    // containment clips to the padding box — so the scans' drop-shadow, which
+    // reaches 18px sideways and 26 below, was sliced in a straight line down
+    // both edges of the grid and along the bottom of every row. The negative
+    // margin and the padding that answers it are one fix, measured against the
+    // drop-shadow. If either moves, both move.
+    expect(
+      has(css, /content-visibility:\s*auto/),
+      "the one cheap thing that helps a phone through 1,900 cards",
+    ).toBe(true);
+    expect(
+      has(css, /margin:\s*-10px -20px -26px;\s*padding:\s*10px 20px 26px/),
+      "the bleed pair that keeps paint containment from clipping the scans' shadow",
+    ).toBe(true);
+  });
+});
+
+describe("the scans land in a box that was already the right shape", () => {
+  const css = read("app/styles/cards.css");
+
+  it("keeps the real scan ratio", () => {
+    // 245/342 is TCGdex's actual scan dimension. Fixed by ratio rather than by
+    // content because the scans stream in lazily, and without a box to land in
+    // every arrival would reflow the rows below it.
+    expect(has(css, /aspect-ratio:\s*245\s*\/\s*342/), "the lazy-loading reflow guard").toBe(true);
+  });
+
+  it("keeps the two-value percentage radius on the placeholder", () => {
+    // The corner radius of a real card is a percentage of its width, so at
+    // every size in the grid the empty slot stays the same shape as the scans
+    // beside it. There is no fixed radius that does this.
+    expect(has(css, /border-radius:\s*4\.5%\s*\/\s*3\.2%/), "placeholder matches a real card").toBe(
+      true,
+    );
+  });
+});
+
+describe("the things that would look like leftovers", () => {
+  const cards = read("app/styles/cards.css");
+
+  it("keeps the IntersectionObserver tripwire at exactly 1px", () => {
+    // An element of zero height has no box for an IntersectionObserver to
+    // intersect with once it is the last child of a flex column. Delete this
+    // and the infinite build-out stops — with no error, the grid simply ends.
+    // Deliberately not on the spacing scale: it is not a spacer and must never
+    // read as one.
+    expect(has(cards, /\.cards-more\s*\{[^}]*height:\s*1px/), "the build-out tripwire").toBe(true);
+  });
+
+  it("keeps a stated width on the set logos", () => {
+    // A loading fix wearing the clothes of a layout preference: with
+    // `width: auto` the box is zero wide until the file loads, and the file
+    // never loads, so none of them ever appeared.
+    expect(has(cards, /\.cards-set-logo\s*\{[^}]*width:\s*160px/), "logos load at all").toBe(true);
+  });
+
+  it("keeps display:contents on the narrow/wide pair", () => {
+    // The SSR-correctness device. Rendering one of them from a measured window
+    // would mean the server picks wrong and the browser corrects it a frame
+    // later, in the toolbar, in front of you. `contents` rather than `block`
+    // is what keeps the flex row intact.
+    expect(has(cards, /\.only-(narrow|wide)[^{]*\{[^}]*display:\s*contents/), "no layout flash").toBe(
+      true,
+    );
+  });
+});
+
+describe("the fixed bar does not flinch when a modal opens", () => {
+  const tabbar = read("app/styles/tabbar.css");
+
+  it("keeps the --lock-vw consumers", () => {
+    // A position:fixed element measures itself against the viewport, not
+    // against the body the modal just pinned. So the bar along the bottom lost
+    // four pixels the moment a card was opened and got them back when it
+    // closed: a flinch under your thumb. Modal.tsx publishes the pre-lock
+    // width; this is the half that reads it.
+    expect(has(tabbar, /var\(--lock-vw/), "the bar keeps its width while a modal is open").toBe(
+      true,
+    );
+  });
+});
+
+describe("the Safari fixes, which look like superstition and are not", () => {
+  it("keeps the tab bar on its own layer", () => {
+    // Overscroll makes the bar flicker, because it rasterises together with
+    // .tabbar-fade's backdrop-filter. This is a fix rather than a look.
+    expect(
+      has(read("app/styles/tabbar.css"), /\.tabbar\s*\{[^}]*translateZ\(0\)/),
+      "no flicker on overscroll in Safari",
+    ).toBe(true);
+  });
+
+  it("keeps the background on html as well as body", () => {
+    // Safari paints the rubber-band area past the top and bottom of the page
+    // from the canvas, so body alone leaves a pale strip at the edges.
+    const base = read("app/styles/base.css");
+    expect(has(base, /html\s*,?[^{]*\{[^}]*background/), "the rubber-band area is painted").toBe(
+      true,
+    );
+  });
+
+  it("keeps the scrollbar gutter stable", () => {
+    // Otherwise the centred bottom bar shifts between a route that scrolls and
+    // one that does not.
+    expect(has(read("app/styles/base.css"), /scrollbar-gutter:\s*stable/), "no shift").toBe(true);
+  });
+});
+
+describe("motion stops rather than flickering", () => {
+  it("keeps the iteration-count reset in the reduced-motion block", () => {
+    // The subtlety, and the one sanctioned !important in the codebase: an
+    // infinite animation shortened to 0.01ms flickers instead of stopping.
+    const pages = read("app/styles/pages.css");
+    expect(
+      has(pages, /animation-iteration-count:\s*1\s*!important/),
+      "infinite animations stop rather than strobe",
+    ).toBe(true);
+  });
+});
+
+describe("the foil is left alone", () => {
+  const holo = read("app/styles/poke-holo.css");
+
+  it("keeps the shadow-DOM piercing that is the only way in", () => {
+    // hover-tilt writes its variables inline on an element inside its shadow
+    // root, and an inline declaration there beats anything set on the host. So
+    // ::part() is not a preference; it is the only reachable surface.
+    expect(has(holo, /::part\(/), "the join between the tilt and the foil").toBe(true);
+  });
+
+  it("keeps the blend recipe", () => {
+    // Three stacked gradients, two blend modes and a filter. There is no
+    // utility-class expression of this, which is exactly why the file is
+    // excluded from the rebuild rather than converted by it.
+    expect(has(holo, /mix-blend-mode:\s*color-dodge/), "the foil").toBe(true);
+    expect(has(holo, /background-blend-mode:\s*hue,\s*hard-light/), "the foil").toBe(true);
+  });
+
+  it("keeps the descender fix on the host", () => {
+    // The host was 5px taller than the card it holds, and the 5px is a
+    // descender.
+    expect(has(holo, /\.poke-tilt\s*\{[^}]*line-height:\s*0/), "no 5px gap under every card").toBe(
+      true,
+    );
+  });
+});
