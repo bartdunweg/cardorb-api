@@ -1,4 +1,4 @@
-# 0001 — Split lib/core/cards.ts by concern
+# 0003 — Split lib/core/cards.ts by concern
 
 - Status: accepted
 - Date: 2026-08-14

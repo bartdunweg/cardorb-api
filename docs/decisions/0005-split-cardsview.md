@@ -1,4 +1,4 @@
-# 0003 — Split CardItem and Segmented out of CardsView.tsx
+# 0005 — Split CardItem and Segmented out of CardsView.tsx
 
 - Status: accepted
 - Date: 2026-08-14

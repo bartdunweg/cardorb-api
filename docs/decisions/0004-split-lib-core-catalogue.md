@@ -1,4 +1,4 @@
-# 0002 — Split lib/core/catalogue.ts's HTTP client out
+# 0004 — Split lib/core/catalogue.ts's HTTP client out
 
 - Status: accepted
 - Date: 2026-08-14
