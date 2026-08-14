@@ -2,12 +2,8 @@ import { notFound } from "next/navigation";
 import CardModal from "../../../components/CardModal";
 import CardDetail from "../../../components/CardDetail";
 import CardNav from "../../../components/CardNav";
-import {
-  cardNeighbours,
-  getCardDetail,
-  getCards,
-  type OwnedCard,
-} from "../../../../lib/core/cards";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../lib/core/cards";
+import { getCards } from "../../../../lib/core/collection";
 import "../../../styles/collection.css";
 
 /**
@@ -23,49 +19,29 @@ import "../../../styles/collection.css";
  * sort and the set of scans it has learnt are broken; a plain navigation threw
  * all of that away and returned you to the top of an unfiltered grid.
  */
-export const revalidate = 3600;
 
 /**
- * On demand, like the route it intercepts.
+ * Per request, like the route it intercepts, and for the same reason: it
+ * renders `owned(id)`, which is a question about who is asking, and an ISR
+ * entry keyed by path alone would answer it once for everybody. The longer
+ * version of that argument is on app/cards/[id]/page.tsx.
  *
- * This is the half that made the old arrangement expensive rather than merely
- * cautious: the same 1,603 ids were prerendered here as well, so every card in
- * the collection was built twice per deploy.
+ * Two things this file used to say are worth recording as no longer true. It
+ * prerendered all 1,603 ids, which meant every card in the collection was built
+ * twice per deploy — once here and once on the real route — for 175 MB and most
+ * of the build time, on pages one person opens a handful of. And the reason
+ * given for that was that a dynamic dialog is expensive, because `owned()`
+ * walked the whole collection and the Notion query behind it is a POST, which
+ * Next does not put in its fetch cache: opening a card meant re-reading
+ * nineteen hundred rows before a single pixel could be sent. That was the "it
+ * takes a moment", and it was not the animation.
+ *
+ * Neither holds now. The rows are cached per person and the catalogue is cached
+ * for everybody (lib/core/collection.ts, lib/core/catalogue.ts), so what a
+ * dynamic render pays for is the join.
  */
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
-
-/**
- * Every card, prerendered, exactly like the page it stands in for.
- *
- * Without this the dialog was the one dynamic route on /cards, and dynamic here
- * is not cheap: `owned()` below walks the whole collection, and the Notion query
- * behind it is a POST, which Next does not put in its fetch cache. So opening a
- * card meant a server render that re-read nineteen hundred rows out of Notion
- * before a single pixel of the dialog could be sent. That is the "it takes a
- * moment": it was not the animation, it was a database.
- *
- * The ids come from the same place the real route's do, so the two lists cannot
- * drift, and the build cost is one more render per card over data it has already
- * fetched and cached for that build.
- */
-export async function generateStaticParams() {
-  // Nothing up front, everything on demand.
-  //
-  // This used to list every id, and the reasoning was sound in the repo it came
-  // from: there, a card page was indexed, and with dynamicParams on a
-  // notFound() inside a revalidating segment answers 200 with the not-found
-  // body — a soft 404, which is a real problem for a page a crawler reads.
-  //
-  // Neither half of that is true here. These pages are noindex and sit behind
-  // the proxy, so nothing crawls them and the only visitor who can reach a
-  // bad id is the owner typing one. What the listing cost instead was 1,603
-  // pages built twice — this route and the intercepting modal — for 175 MB and
-  // most of the build, all of it for pages one person opens a handful of.
-  //
-  // ISR still caches each page for an hour after its first request, so the
-  // second visitor pays nothing either way.
-  return [];
-}
 
 async function owned(id: string): Promise<{ card: OwnedCard; setName: string } | null> {
   const sets = await getCards();
@@ -78,7 +54,7 @@ async function owned(id: string): Promise<{ card: OwnedCard; setName: string } |
 
 export default async function CardModalPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // getCards() is memoised for the process, so asking a third time here costs
+  // getCards() is cached per request, so asking a third time here costs
   // a map lookup rather than another walk of the collection.
   const [card, mine, sets] = await Promise.all([getCardDetail(id), owned(id), getCards()]);
   const { prev, next } = cardNeighbours(sets, id);

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { createCard, validateCardDraft } from "../../../../lib/core/cards-add";
-import { CARDS_TAG, forgetCollection } from "../../../../lib/core/cards";
+import { CARDS_TAG, cardsTag, validateCardDraft } from "../../../../lib/core/collection-row";
+import { OWNER } from "../../../../lib/core/collection";
+import { createRow } from "../../../../lib/storage/collection";
 import { refuseWrite, readHeaders } from "../../../../lib/api/guard";
 
 /**
@@ -46,27 +47,36 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error }, { status: 400, headers: readHeaders(req) });
   }
 
-  const token = process.env.NOTION_TOKEN;
-  if (!token) {
-    console.error("NOTION_TOKEN is not set");
+  let id: string;
+  try {
+    id = await createRow(result.draft);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "The collection did not answer.";
+    console.error("Adding a card failed:", message);
+    // Told apart on the message rather than on a type, because there is one
+    // shape of failure the store raises before it has tried anything: a
+    // deployment with no store configured. That is a 503 — nothing is wrong,
+    // this instance simply cannot write — where a refusal from the store it
+    // does have is a 502.
+    const unconfigured = /not connected|not wired up/.test(message);
     return NextResponse.json(
-      { error: "Notion is not connected here." },
-      { status: 503, headers: readHeaders(req) },
+      { error: message },
+      { status: unconfigured ? 503 : 502, headers: readHeaders(req) },
     );
   }
 
-  let id: string;
-  try {
-    id = await createCard(result.draft, token);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Notion did not answer.";
-    console.error("Adding a card failed:", message);
-    return NextResponse.json({ error: message }, { status: 502, headers: readHeaders(req) });
-  }
-
-  // Two caches stand between the row and /v1/collection. The tag drops the
-  // Notion query; forgetCollection() drops the walk memoised in this process
-  // (see MEMO_TTL in lib/core/cards.ts for the instances it cannot reach).
+  // Two caches stand between the row and /v1/collection, and they are two
+  // because the store is fetched over HTTP: CARDS_TAG drops the store's own
+  // query, cardsTag() drops the rows this deployment had cached for the person
+  // who wrote. Both, because dropping only one leaves the other answering.
+  //
+  // There used to be a third — a promise memoised in this process, cleared here
+  // by forgetCollection(). It is gone, and with it the whole read-your-own-write
+  // problem its ten-minute TTL existed to bound: a per-process slot could not be
+  // reached in the instances that were not serving this request, so the card
+  // just added could be missing from the page it was added on for up to ten
+  // minutes. Nothing is per-process any more, so a tag reaches all of it. That
+  // simplification is the refactor paying for itself.
   //
   // `{ expire: 0 }` rather than a named profile: a profile means
   // stale-while-revalidate, so the next reader would be handed the collection
@@ -74,7 +84,7 @@ export async function POST(req: Request) {
   // zero is what makes the card the writer's own write rather than the one
   // after it.
   revalidateTag(CARDS_TAG, { expire: 0 });
-  forgetCollection();
+  revalidateTag(cardsTag(OWNER), { expire: 0 });
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });
 }

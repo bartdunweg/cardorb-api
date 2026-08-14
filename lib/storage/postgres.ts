@@ -1,0 +1,238 @@
+/**
+ * The collection in Postgres, through PostgREST.
+ *
+ * The same three verbs the Notion adapter beside this one offers, against a
+ * table instead of a database-shaped document. Two things are different in kind
+ * rather than in detail, and both are worth knowing before reading the code.
+ *
+ * **There is no user_id anywhere below.** Not in the selects, not in the
+ * inserts. That is not an omission: the client carries the caller and the
+ * policies in the accounts migration apply them, and `cards.user_id` defaults
+ * to `auth.uid()`. Adding a WHERE clause here would be a second, weaker copy of
+ * a rule the database already enforces — and the day the two disagree, the copy
+ * in the application is the one that will be wrong.
+ *
+ * **The options question changed shape.** Notion could be asked what its select
+ * columns *offer*, because a Notion select has a schema. A text column does not,
+ * so collection_options() answers with what is *in use* instead. Mostly the same
+ * answer, with two differences worth expecting: an option nobody uses stops
+ * being offered, and a brand new account opens the add dialog with four empty
+ * lists.
+ */
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { CardDraft, CardFields, CollectionRow } from "../core/collection-row";
+
+/** The row as the table has it, before it is turned into the shape above. */
+type CardRecord = {
+  id: string;
+  name: string;
+  number: string;
+  set_name: string;
+  rarity: string | null;
+  gen: string | null;
+  types: string[] | null;
+  owned: boolean;
+  excluded: boolean;
+  acquired_at: string;
+};
+
+const COLUMNS = "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at";
+
+/**
+ * Supabase caps a response at a thousand rows and says so only by handing over
+ * a thousand rows.
+ *
+ * This page size has to be at or under that cap, and the first version of this
+ * file got it wrong in the most instructive way: it asked for two thousand at a
+ * time and stopped when a page came back shorter than asked for. The server
+ * capped the first page at a thousand, "shorter than asked for" was true
+ * immediately, and the loop exited having read half the collection. A 1,968
+ * card binder rendered as 836 cards across 41 of its 52 sets, and nothing
+ * anywhere reported an error — it simply looked like a smaller collection.
+ *
+ * So: page at the cap, and do not infer completeness from the shape of a
+ * response. The count below is asked for explicitly and the loop runs until it
+ * has that many rows, which is the only version of this that stays correct if
+ * the cap ever changes.
+ */
+const PAGE = 1_000;
+const MAX_PAGES = 100;
+
+const toRow = (r: CardRecord): CollectionRow => ({
+  id: r.id,
+  name: r.name,
+  number: r.number ?? "",
+  setName: r.set_name,
+  rarity: r.rarity,
+  gen: r.gen,
+  types: r.types ?? [],
+  owned: r.owned,
+  excluded: r.excluded,
+  acquiredAt: r.acquired_at ?? null,
+});
+
+/**
+ * Everything the caller is allowed to see, which for a signed-in person is
+ * their own collection and for a public page is one that has said it is public.
+ *
+ * Ordered newest first, matching what the Notion query asked for, because that
+ * is the order the value snapshot script reads and the order a wishlist reads
+ * best in. The sort is on acquired_at rather than created_at for the reason
+ * that column exists at all.
+ */
+export async function listRows(db: SupabaseClient, userId?: string): Promise<CollectionRow[]> {
+  const rows: CollectionRow[] = [];
+  let total = Number.POSITIVE_INFINITY;
+
+  for (let page = 0; page < MAX_PAGES && rows.length < total; page++) {
+    let q = db
+      .from("cards")
+      // Counted once, on the first page, so the loop below knows what finished
+      // looks like rather than guessing from the size of a response.
+      .select(COLUMNS, page === 0 ? { count: "exact" } : {})
+      .order("acquired_at", { ascending: false })
+      // The tiebreak, and it is load-bearing rather than tidy. acquired_at is
+      // not unique — a pack opened in one sitting gives dozens of rows the same
+      // timestamp — and paging an unstable order means the database is free to
+      // return a row on two pages and another on none. Sorting by something
+      // unique after it makes the order total, and the pages disjoint.
+      .order("id", { ascending: true })
+      .range(page * PAGE, page * PAGE + PAGE - 1);
+
+    // Only ever narrows what the policies already allow. Needed for the public
+    // page, which reads somebody else's collection through a client that is not
+    // them: without it the policy would hand over their own rows as well.
+    if (userId) q = q.eq("user_id", userId);
+
+    const { data, error, count } = await q;
+    // Thrown rather than broken out of, for the same reason the Notion cursor
+    // throws: a truncated binder is not a collection, it is an outage wearing
+    // one, and the caller above knows how to fail soft.
+    if (error) throw new Error(`Reading the collection failed: ${error.message}`);
+    if (page === 0 && typeof count === "number") total = count;
+
+    const batch = (data ?? []) as CardRecord[];
+    // An empty page before the count is reached means the two disagree, and
+    // continuing would spin. Fall through to the check below, which says so.
+    if (!batch.length) break;
+    rows.push(...batch.map(toRow));
+  }
+
+  // Loud rather than short. A collection that is missing a third of itself and
+  // says nothing is the failure this whole function is written against: it
+  // renders as a smaller binder, which is indistinguishable from having sold
+  // some cards.
+  if (Number.isFinite(total) && rows.length < total) {
+    throw new Error(`Read ${rows.length} of ${total} cards: the collection came back truncated.`);
+  }
+
+  return rows;
+}
+
+/**
+ * Writes one card and hands back its id.
+ *
+ * acquired_at is left to the column default, which is now(). That is right for
+ * a card being added by hand — you are adding it because you just pulled it —
+ * and wrong for an import, which is why createRows() below takes the date
+ * explicitly instead.
+ */
+export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<string> {
+  const { data, error } = await db
+    .from("cards")
+    .insert({
+      name: draft.name,
+      number: draft.number,
+      set_name: draft.set,
+      rarity: draft.rarity || null,
+      gen: draft.gen || null,
+      types: draft.types,
+      owned: draft.collection,
+      excluded: draft.excluded,
+      source: "manual",
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(`The card could not be saved: ${error.message}`);
+  return (data as { id: string }).id;
+}
+
+export type InsertResult = { added: number; skipped: number };
+
+/**
+ * Many rows at once, for an import.
+ *
+ * Chunked, because a single insert of sixteen hundred rows is one request that
+ * either works or loses all of it, and because PostgREST has opinions about
+ * body size that are easier to stay under than to discover.
+ *
+ * `ignoreDuplicates` against the partial unique index on
+ * (user_id, source, source_id) is the whole of what makes an import idempotent:
+ * run it again next month and only the pages that are new arrive. It is also
+ * why the count below is a subtraction rather than a length — Postgres will not
+ * tell you what it declined to insert, only what it inserted.
+ */
+export async function createRows(
+  db: SupabaseClient,
+  rows: CollectionRow[],
+  source: "csv" | "notion",
+  chunk = 500,
+): Promise<InsertResult> {
+  let added = 0;
+
+  for (let i = 0; i < rows.length; i += chunk) {
+    const batch = rows.slice(i, i + chunk).map((r) => ({
+      name: r.name,
+      number: r.number,
+      set_name: r.setName,
+      rarity: r.rarity,
+      gen: r.gen,
+      types: r.types,
+      owned: r.owned,
+      excluded: r.excluded,
+      // The one field an import must carry and a manual add must not. Null
+      // falls back to the column default, which is now(), and the import says
+      // out loud when that happened.
+      ...(r.acquiredAt ? { acquired_at: r.acquiredAt } : {}),
+      source,
+      source_id: r.id,
+    }));
+
+    const { data, error } = await db
+      .from("cards")
+      .upsert(batch, { onConflict: "user_id,source,source_id", ignoreDuplicates: true })
+      .select("id");
+
+    if (error) throw new Error(`Importing rows ${i}–${i + batch.length} failed: ${error.message}`);
+    added += (data ?? []).length;
+  }
+
+  return { added, skipped: rows.length - added };
+}
+
+export async function deleteRow(db: SupabaseClient, id: string): Promise<void> {
+  const { error } = await db.from("cards").delete().eq("id", id);
+  if (error) throw new Error(`The card could not be removed: ${error.message}`);
+}
+
+/**
+ * What the form should offer, from the rows rather than from a schema.
+ *
+ * An RPC because PostgREST cannot express SELECT DISTINCT, and a single one
+ * rather than four because four round trips to answer one dialog is three too
+ * many. See collection_options() in the accounts migration.
+ */
+export async function optionsFor(db: SupabaseClient): Promise<CardFields> {
+  const { data, error } = await db.rpc("collection_options");
+  if (error) throw new Error(`The options could not be read: ${error.message}`);
+
+  const out = (data ?? {}) as Partial<CardFields>;
+  return {
+    sets: out.sets ?? [],
+    rarities: out.rarities ?? [],
+    gens: out.gens ?? [],
+    types: out.types ?? [],
+  };
+}
