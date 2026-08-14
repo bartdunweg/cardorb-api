@@ -50,6 +50,37 @@ const CHECKS: Check[] = [
     without: "canonicals and the sitemap use Vercel's project URL",
   },
   { name: "ALLOWED_ORIGINS", required: false, without: "only this app's own origin may post" },
+
+  // ─── The database that is arriving ───────────────────────────────────────
+  //
+  // Optional for now, and that is the whole shape of the migration: the tables
+  // exist, nothing reads them yet, and a deployment without these behaves
+  // exactly as it did before. They move up to required on the day
+  // COLLECTION_SOURCE stops defaulting to notion — see the README.
+  //
+  // Warned about rather than silent even while optional, because the failure
+  // they cause is the one this file exists for: a URL without a key, or a key
+  // without a URL, is a deployment that looks configured and answers nothing.
+  {
+    name: "NEXT_PUBLIC_SUPABASE_URL",
+    required: false,
+    without: "the collection stays on Notion and no account can be created",
+  },
+  {
+    name: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    required: false,
+    without: "the database is unreachable even where its URL is known",
+  },
+  {
+    name: "SUPABASE_SERVICE_ROLE_KEY",
+    required: false,
+    without: "the import and account-deletion scripts cannot run; the app itself does not need it",
+  },
+  {
+    name: "SECRETS_KEY",
+    required: false,
+    without: "a Notion connection cannot be stored, because its token could only be stored in clear",
+  },
 ];
 
 export function checkEnv() {

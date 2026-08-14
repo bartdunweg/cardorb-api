@@ -62,10 +62,64 @@ documents:
 set it explicitly the moment a custom domain is attached, or a canonical link can point at
 the wrong address.
 
+## Accounts, and the database under them
+
+This is being taken from one passcode to real accounts. The migration is in
+`supabase/migrations/`, and it is deliberately something you turn on rather than
+something you have to finish: the tables are additive, `COLLECTION_SOURCE`
+defaults to `notion`, and until it says `postgres` nothing below is load-bearing.
+Flipping it back is the whole rollback plan.
+
+| | required | |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | once migrated | public by design; RLS is what stops a stranger, not secrecy |
+| `SUPABASE_SERVICE_ROLE_KEY` | scripts only | bypasses every policy, so it never reaches the browser |
+| `SECRETS_KEY` | for Notion connections | 32 bytes of hex; AES-256-GCM over somebody else's Notion token |
+| `COLLECTION_SOURCE` | no | `notion` (default) or `postgres` — the cutover switch |
+| `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
+
+Four things have to be set up once, and each of them fails in a way that looks
+like something else if it is left until the day it is needed.
+
+**Custom SMTP, before open signup.** Supabase's built-in mail is a handful of
+messages an hour and, on a new project, only to team addresses. Sign-up
+confirmation and password reset both go through it, and the failure the user sees
+is "check your email" followed by nothing. Resend's free tier is enough; the
+sending domain is `cardorb.com` and its DNS is already at Cloudflare. Set SPF,
+DKIM and DMARC while you are there — confirmation mail in a spam folder is
+exactly as broken as no confirmation mail.
+
+**A keepalive, before the link is shared.** Free Supabase projects pause after
+about a week of quiet and the public page 500s. `GET /api/v1/health` exists to be
+hit by a daily Vercel cron, which keeps the project awake and doubles as the
+monitor. Development runs against a local `supabase start` rather than a second
+cloud project, because a second cloud project is precisely the one that would sit
+quiet long enough to pause.
+
+**Asymmetric JWT signing keys, before the guard reads a token.** With them, a
+token is verified locally against the project's JWKS; without them, every
+authorised request costs a round trip to Supabase. That is the difference between
+microseconds and tens of milliseconds on every API call, and it is a setting
+(Project Settings → JWT Keys), not a rewrite.
+
+**`scripts/rls-check.mjs`, before each of the phases that widens access.** Row
+level security is the wall here and it cannot be unit tested — CI has no secrets
+and should keep having none. So it is a script: two users on a scratch project,
+each trying to read, update and delete the other's rows, asserting that every
+attempt comes back empty. Run it by hand and read the output.
+
+`CATALOGUE_SET_PRICING_MAX` is a bet worth leaving unmade for now. The catalogue
+is cached per set and shared by everyone who owns a card from it, so pricing a
+whole set once is cheaper than pricing each owner's holdings separately — but
+only once a set has more than one owner. At `0` it prices only what is held,
+which is what this always did. Set it to `400` when there is a second account,
+and measure rather than assume.
+
 ## Shape
 
 ```
 lib/core/       the domain layer. No React, no routes. This is the part worth having.
+lib/storage/    where the collection is kept, and the only part that knows.
 lib/api/        who may write, and how often.
 app/api/v1/     the four endpoints.
 app/api/cover/  a same-origin passthrough for the one host that sends no CORS headers.
@@ -106,7 +160,7 @@ those paths resolve on one domain only, so an iOS client would have been handed 
 thousand broken pictures. Here the scans come from the catalogues directly. When
 Card Orb wants its own artwork in-house, `util.ts` is the one file that changes.
 
-`TRADING_DATABASE` in `lib/core/notion.ts` is also written down in the
+`TRADING_DATABASE` in `lib/storage/notion.ts` is also written down in the
 portfolio's own `lib/notion.ts`, which reads one row out of the same database for
 the card on its about page. Two copies of an id is how two projects end up
 pointed at two different databases six months apart, so if it ever moves, it
