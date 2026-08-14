@@ -406,3 +406,19 @@
   line-height: var(--lh-normal);
   white-space: nowrap;
 }
+
+/* A button that is working, or one there is nothing to do with yet.
+   Matched to the disabled field styling in form.css: dimmed rather than
+   redrawn, and the hover lift suppressed so a pointer over it does not promise
+   something it will not do. */
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn:disabled:hover,
+.btn[aria-disabled="true"]:hover {
+  box-shadow: var(--shadow-card);
+  transform: none;
+}

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import PasswordForm from "../../components/PasswordForm";
 import Card from "../../components/Card";
 import { currentViewer } from "../../../lib/api/viewer";
-import "../../styles/signin.css";
 
 /**
  * Setting a new password.

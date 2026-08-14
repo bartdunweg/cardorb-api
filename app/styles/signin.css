@@ -113,7 +113,7 @@
   margin-block-start: 1rem;
   text-align: center;
   font-size: 0.875rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--color-text-tertiary);
 }
 
 .signin-links a {
@@ -123,7 +123,7 @@
 }
 
 .signin-links a:hover {
-  color: var(--text, inherit);
+  color: var(--color-text-primary);
 }
 
 /* What a field expects, said before it is typed in rather than after it is
@@ -133,5 +133,24 @@
   display: block;
   margin-block-start: 0.35rem;
   font-size: 0.8125rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--color-text-tertiary);
+}
+
+/* Why you are on this screen when it was not your idea: an expired recovery
+   link, mostly. Above the form, because it is context for what you are about to
+   do rather than a reaction to what you just did.
+
+   Not styled as an error. Nothing in this app colours a failure red — see
+   .cards-profile-error, which is plain primary text — and a notice explaining a
+   link has run out is the mildest thing on that scale anyway. It is set apart
+   by a surface and a rule instead. */
+.signin-notice {
+  margin: 0;
+  padding: var(--space-3) var(--space-3-5);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-subtle);
+  color: var(--color-text-secondary);
+  font-size: var(--fs-body-s);
+  line-height: var(--lh-relaxed);
 }

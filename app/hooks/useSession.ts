@@ -142,5 +142,15 @@ export function useSession() {
     [router],
   );
 
-  return { signIn, signOut, signUp, requestReset, setPassword, pending, error };
+  /**
+   * Forget the last failure.
+   *
+   * Needed because the error outlives the attempt that produced it. Move
+   * between the sign-in and sign-up forms, or reopen the profile panel, and the
+   * previous screen's "that email or password is not right" is still sitting
+   * there under a form nobody has submitted yet.
+   */
+  const clearError = useCallback(() => setError(null), []);
+
+  return { signIn, signOut, signUp, requestReset, setPassword, clearError, pending, error };
 }

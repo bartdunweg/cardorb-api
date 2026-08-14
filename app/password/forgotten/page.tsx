@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import ForgottenForm from "../../components/ForgottenForm";
 import Card from "../../components/Card";
 import { APP_NAME } from "../../../lib/core/config";
-import "../../styles/signin.css";
 
 /**
  * Asking for a way back in.

@@ -33,7 +33,7 @@ export const dynamic = "force-dynamic";
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const params = await searchParams;
   // Only a path within this app, never an absolute URL. `next` arrives in the
@@ -44,7 +44,28 @@ export default async function Login({
   const next =
     params.next?.startsWith("/") && !params.next.startsWith("//") ? params.next : "/cards";
 
+  // Somebody already signed in has no business on a login, and sending them
+  // where they were aiming is kinder than a form that would refuse their own
+  // address. Read before the notice below is built, so a signed-in visitor
+  // following a stale link is not shown a warning about it on their way past.
   if (await currentViewer()) redirect(next);
+
+  /**
+   * Why you are looking at this screen, when it was not your idea.
+   *
+   * /auth/confirm and /settings/password both send somebody here with a
+   * sentence when their link has expired, and until now this page silently
+   * dropped it: the person whose recovery link had run out got an ordinary
+   * login with no explanation, which is the worst moment in the whole flow to
+   * say nothing.
+   *
+   * Above the form rather than below it. A message under a form is a reaction
+   * to what you just did; this one is context for what you are about to do.
+   * Length-capped and rendered as text — it arrives in a query string, which is
+   * to say from anywhere, and a sentence someone else chose is not something to
+   * hand to a page unbounded.
+   */
+  const notice = params.error?.slice(0, 200) || null;
 
   return (
     <section className="page-signin">
@@ -54,6 +75,16 @@ export default async function Login({
             sign in to add to the collection — a title that named the product
             and a subtitle doing the title's job. One line says both. */}
         <h1 className="page-title">Sign in to {APP_NAME}</h1>
+
+        {/* role="status" and not "alert": this is here as the page loads rather
+            than in response to anything, and alert interrupts a screen reader
+            for something the reader is already on their way to. */}
+        {notice && (
+          <p className="signin-notice" role="status">
+            {notice}
+          </p>
+        )}
+
         <SignInForm redirectTo={next} />
 
         {/* Something for the people this login is not for. Without it this

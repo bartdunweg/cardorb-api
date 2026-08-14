@@ -4,7 +4,6 @@ import SignUpForm from "../components/SignUpForm";
 import Card from "../components/Card";
 import { currentViewer } from "../../lib/api/viewer";
 import { APP_NAME } from "../../lib/core/config";
-import "../styles/signin.css";
 
 /**
  * Making an account.
