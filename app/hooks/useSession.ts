@@ -33,6 +33,8 @@ export function useSession() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  /** Whether the last refusal was "confirm your address first". */
+  const [unconfirmed, setUnconfirmed] = useState(false);
 
   const signIn = useCallback(
     async (email: string, value: string): Promise<boolean> => {
@@ -43,10 +45,18 @@ export function useSession() {
         body: JSON.stringify({ email, password: value }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          unconfirmed?: boolean;
+        };
         setError(body.error ?? "That email or password is not right.");
+        // Kept apart from the message, because the form does something with it
+        // rather than only saying it: an unconfirmed account is the one refusal
+        // with a way out, and the way out is a button.
+        setUnconfirmed(body.unconfirmed === true);
         return false;
       }
+      setUnconfirmed(false);
       // Only the refresh, so the server re-renders knowing about the cookie.
       // Where to go next is the caller's question: on /cards you are already
       // there, and on /login there is a redirect waiting that a refresh alone
@@ -160,5 +170,29 @@ export function useSession() {
    */
   const clearError = useCallback(() => setError(null), []);
 
-  return { signIn, signOut, signUp, requestReset, setPassword, clearError, pending, error };
+  /**
+   * Another confirmation link. Always reports success, because the route always
+   * answers success — whether an address has an account is not a thing this app
+   * tells whoever asks.
+   */
+  const resendConfirmation = useCallback(async (email: string): Promise<void> => {
+    await fetch("/api/v1/confirmation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    }).catch(() => {});
+  }, []);
+
+  return {
+    signIn,
+    signOut,
+    signUp,
+    requestReset,
+    setPassword,
+    resendConfirmation,
+    clearError,
+    pending,
+    error,
+    unconfirmed,
+  };
 }

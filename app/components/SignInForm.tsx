@@ -48,11 +48,13 @@ export default function SignInForm({
   note?: string;
 }) {
   const router = useRouter();
-  const { signIn, error } = useSession();
+  const { signIn, error, unconfirmed, resendConfirmation } = useSession();
   const [email, setEmail] = useState("");
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [offline, setOffline] = useState<string | null>(null);
+  /** Set once another confirmation link has been asked for, so it is not asked twice. */
+  const [resent, setResent] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +126,30 @@ export default function SignInForm({
       {message && (
         <p className="cards-profile-error" id="sign-in-error" role="alert">
           {message}
+        </p>
+      )}
+
+      {/* The one refusal with a way out, and the way out has to be here.
+          /auth/confirm answers a spent link with "ask for a new one", and until
+          this existed there was nowhere to ask: signing in fails, and a password
+          reset does not help because the password was never the problem. */}
+      {unconfirmed && !resent && (
+        <p className="cards-profile-note">
+          <button
+            type="button"
+            className="btn"
+            onClick={async () => {
+              setResent(true);
+              await resendConfirmation(email.trim());
+            }}
+          >
+            Send a new confirmation link
+          </button>
+        </p>
+      )}
+      {resent && (
+        <p className="cards-profile-note" role="status">
+          A new link is on its way to {email.trim()}. It replaces the old one.
         </p>
       )}
 

@@ -135,20 +135,28 @@ export default function Home() {
         </h1>
         <p className="landing-lede">{APP_TAGLINE}</p>
 
-        {/* The two ways forward, in the order they matter. Sign in is filled
-            because it is what this page is for; the demo is the same size and
-            unfilled, because it is the honest option for everyone who cannot
-            sign in — which, today, is everybody but one person. */}
+        {/* The two ways forward, in the order they matter — and they swapped
+            round the day sign-up opened. Making an account is what this page is
+            for now; before that it was signing in, because everybody but one
+            person was being turned away and the demo was the only honest offer.
+            Signing in moves to a line underneath: people who already have an
+            account do not need it competing for the same attention. */}
         <div className="landing-actions">
-          <Link href={SIGN_IN_HREF} className="btn btn--primary landing-action">
-            Sign in
+          <Link href="/signup" className="btn btn--primary landing-action">
+            Start your collection
           </Link>
           <Link href={DEMO_HREF} className="btn landing-action">
             See a real collection
           </Link>
         </div>
         <p className="landing-note">
-          No account yet — {OWNER_NAME}&rsquo;s collection is public, and it is the same screen.
+          {/* Free, said once and plainly. It is the first question anybody has
+              about a tool like this, and answering it here costs a line;
+              answering it after they have typed an address costs their trust.
+              No "free forever" — that is a promise about a future nobody can
+              make, and this is only a statement about what it costs today. */}
+          Free, and no card needed. Already have an account?{" "}
+          <Link href={SIGN_IN_HREF}>Sign in</Link>.
         </p>
       </header>
 
@@ -168,7 +176,17 @@ export default function Home() {
 
       <footer className="landing-footer">
         <p>
-          Built for one collection, and open to look at:{" "}
+          {/* The European bit, and it is a fact rather than a slogan. Nearly
+              every tool in this corner prices from TCGplayer in dollars, which
+              is the wrong marketplace and the wrong currency for anyone buying
+              in Europe: the number is not what they would pay and not what they
+              could sell for. Cardmarket is where these cards actually change
+              hands here, so that is where the prices come from. */}
+          Prices come from Cardmarket, in euros — the market these cards are
+          actually traded on in Europe.
+        </p>
+        <p>
+          Open to look at, no account needed:{" "}
           <Link href={DEMO_HREF}>{OWNER_NAME}&rsquo;s cards</Link>.
         </p>
       </footer>
