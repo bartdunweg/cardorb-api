@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:24px;background:#fbfbfb;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a">
+    <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #ececec;border-radius:12px;padding:32px">
+      <p style="margin:0 0 24px;font-weight:600;font-size:18px">Card Orb</p>
+
+      <p style="margin:0 0 16px">A Card Orb account is being moved to <strong>{{ .NewEmail }}</strong>. Confirm it to finish the change.</p>
+
+      <p style="margin:0 0 28px">
+        <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change&next=/settings"
+           style="display:inline-block;background:#1a1a1a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:500">
+          Confirm the new address
+        </a>
+      </p>
+
+      <p style="margin:0;color:#666;font-size:14px">If you did not ask for this, ignore it and tell us — the address on the account stays as it is until both sides are confirmed.</p>
+    </div>
+    <p style="max-width:520px;margin:16px auto 0;color:#999;font-size:12px">Sent by Card Orb because an address change was requested. This mailbox is not monitored.</p>
+  </body>
+</html>
