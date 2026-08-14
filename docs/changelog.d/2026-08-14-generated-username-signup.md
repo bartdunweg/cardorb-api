@@ -1,0 +1,1 @@
+- Signup no longer asks for a username — a friendly one is generated automatically, and you can pick your own later from Settings.
