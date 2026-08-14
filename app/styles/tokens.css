@@ -54,27 +54,46 @@
      light with the site set to dark, everything the browser paints itself stays
      light. That is the pale strip along the bottom of the window, and it comes
      and goes because the scrollbar it belongs to does. */
-  color-scheme: light;
+  /* Both, and neither leading. An absent [data-theme] now means "ask the
+     machine" and the answer arrives in CSS — before any script runs, and for
+     somebody with JavaScript off, who used to get light whatever their machine
+     said.
+
+     Worth knowing what actually ships: Next's Lightning CSS does not send
+     light-dark() to the browser. It downlevels every pair into
+
+       var(--lightningcss-light, #737373) var(--lightningcss-dark, #8c8c8c)
+
+     and sets one of those two to `initial` and the other to empty depending on
+     the used color-scheme, so the substitution collapses to one value. The
+     result is correct and it works further back than native support does.
+
+     One consequence, and it is the reason ThemeProvider stopped reading a
+     token by name: the *computed value* of a paired custom property is that
+     token stream, not a colour. Ask for --color-left-bg through
+     getComputedStyle and you get something no meta tag can carry. Ask the body
+     what it is painted and you get rgb(). */
+  color-scheme: light dark;
 
   /* Surfaces */
-  --color-bg: #ffffff;
-  --color-left-bg: #fafafa;
+  --color-bg: light-dark(#ffffff, #101010);
+  --color-left-bg: light-dark(#fafafa, #181818);
 
   /* Text colour tiers (one tier per role: keep same-role text on the same tier):
        primary   → titles, headings, strong, interactive labels/links
        secondary → body copy / paragraphs (and tag chips)
        tertiary  → meta, dates, eyebrows, captions, de-emphasised labels */
-  --color-text-primary: #111111;
-  --color-text-secondary: #666666;
+  --color-text-primary: light-dark(#111111, #ffffff);
+  --color-text-secondary: light-dark(#666666, #959595);
   /* 4.54:1 on pure white, but this tier renders on the glass cards
      (rgba(254,254,254,.78) over #fafafa = #fdfdfd) and on the #fafafa page
      background, where #767676 measured 4.47:1 and 4.35:1, just under AA.
      #737373 is the lightest value that clears 4.5:1 on all three. */
-  --color-text-tertiary: #737373;
+  --color-text-tertiary: light-dark(#737373, #8c8c8c);
   /* Client logos: lighter than any text tier, they sit behind the content, but
      not below the 3:1 that WCAG asks of a graphic carrying information. #b0b0b0
      measured 2.3:1 on the glass; this is 3.1:1 and still reads as a backdrop. */
-  --color-logo: #949494;
+  --color-logo: light-dark(#949494, #676767);
 
   /* ── Globe (the travel card) ──
      Five tones, and every one of them is a token because MapLibre paints onto a
@@ -91,17 +110,17 @@
      to keep two visited neighbours apart. */
 
   /* Borders */
-  --color-border: #f0f0f0;
-  --color-border-subtle: rgba(0, 0, 0, 0.05);
-  --color-border-active: rgba(0, 0, 0, 0.16);
-  --color-border-hover: rgba(0, 0, 0, 0.14);
-  --color-surface-subtle: rgba(0, 0, 0, 0.03);
+  --color-border: light-dark(#f0f0f0, rgba(255, 255, 255, 0.08));
+  --color-border-subtle: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+  --color-border-active: light-dark(rgba(0, 0, 0, 0.16), rgba(255, 255, 255, 0.16));
+  --color-border-hover: light-dark(rgba(0, 0, 0, 0.14), rgba(255, 255, 255, 0.14));
+  --color-surface-subtle: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.04));
   /* Case marker tick: a touch darker than the timeline dashes so it reads as a
      marker, but still close to them (not a hard accent). */
 
   /* Buttons */
-  --btn-primary-bg: #111111;
-  --btn-primary-text: #ffffff;
+  --btn-primary-bg: light-dark(#111111, #ffffff);
+  --btn-primary-text: light-dark(#ffffff, #101010);
 
   /* Text on a surface that is dark in both themes: tooltips, the label over a
      cover or a dock image, the play count on a still. Deliberately absent from
@@ -111,7 +130,7 @@
   --color-on-dark: #ffffff;
 
   /* Brand / status (extracted from hardcoded literals) */
-  --color-placeholder: #e2e2e2;
+  --color-placeholder: light-dark(#e2e2e2, #303030);
   /* The disc behind the About card photograph. The photograph is a cutout with
      no background of its own, so this is the backdrop rather than a tint over
      one: pick it too pale and the black t-shirt is the only thing left of the
@@ -150,7 +169,7 @@
      belonging to nothing else on the page. */
 
   /* Glass panel surface: shared by every card/panel (single source of truth) */
-  --glass-bg: rgba(254, 254, 254, 0.78);
+  --glass-bg: light-dark(rgba(254, 254, 254, 0.78), rgba(37, 37, 40, 0.38));
   --glass-border: rgba(255, 255, 255, 0.9);
   /* The card's edge with a pointer on it. Only the edge: a hover never repaints
      the surface, in either theme, so the card you are pointing at is the same
@@ -398,7 +417,7 @@
   --fw-button: 700;
 
   /* Solid glass surface: .btn, .theme-toggle, .tabbar-pages (more opaque than --glass-bg) */
-  --glass-bg-solid: rgba(254, 254, 254, 0.9);
+  --glass-bg-solid: light-dark(rgba(254, 254, 254, 0.9), rgba(37, 37, 40, 0.66));
 
   /* Border radius additions.
      Two control shapes, and the names are worth reading carefully, because for
@@ -413,7 +432,7 @@
   --radius-pill: 14px; /* glass hover-pill (connect rows, tab pills, FAQ) */
 
   /* Tooltip chrome: intentionally always-dark (not inverted in dark mode) */
-  --color-tooltip-bg: rgba(30, 30, 30, 0.85);
+  --color-tooltip-bg: light-dark(rgba(30, 30, 30, 0.85), rgba(60, 60, 60, 0.9));
   /* Off the type scale on purpose, and fixed rather than stepped: tooltips wore
      --fs-small, which is 13px on desktop and 12px on mobile, so an aside changed
      size with the window. 12 is the size, and at 13 it competed with the label
@@ -493,11 +512,8 @@
 
 /* ─── DARK MODE ─── */
 [data-theme="dark"] {
-  color-scheme: dark;
 
   /* Surfaces */
-  --color-bg: #101010;
-  --color-left-bg: #181818;
 
   /* Text: the same three tiers, at the same distance from their surface that
      light mode puts them at. Not an inversion, which is what these were and is
@@ -510,20 +526,16 @@
      Primary stays pure white, and that is the measured answer rather than a
      dodge: light's #111111 is 18.56:1 and white on this card is 16.84:1, so the
      tier is already the quieter of the two and there is nothing above white to
-     reach for. */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #959595; /* 5.62:1 on the card, light's is 5.64 */
+     reach for. */ /* 5.62:1 on the card, light's is 5.64 */
   /* Derived at 4.69 on the card and then raised, for exactly the reason the
      light tier one line up from here was: the card is not the lightest thing
      this lands on. The counts in the /cards rail sit on --glass-bg-solid, which
      is rgb(37,37,39), and #878787 measured 4.26 there and failed axe. This is
      the lightest grey that clears 4.5 on all three surfaces the tier touches:
      5.28 on the page, 5.01 on a card, 4.55 on the control glass. */
-  --color-text-tertiary: #8c8c8c;
   /* Backdrop, not text, so WCAG wants 3:1 of it and no more. 2.98:1 here and
      2.98 in light, where #7a7a7a was 3.83 and the logos sat forward of the work
      they are meant to sit behind. */
-  --color-logo: #676767;
 
   /* The same four, turned over: a near-black ocean, land a step out of it, and
      the visited countries in the page's dark-mode ink. The order is the design
@@ -565,17 +577,12 @@
      same separation from it that #4a4a4a keeps from #1a1a1a. */
 
   /* Borders */
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.05);
-  --color-border-active: rgba(255, 255, 255, 0.16);
   /* Under active, not over it, which is the order light has run in all along:
      0.14 against 0.16 there, and 0.18 against 0.16 here. Pointing at something
      drew a harder line than selecting it, so the two states argued about which
      was the stronger, and only in this theme. Nothing above --color-border is a
      mirror of light's, whose --color-border is an opaque #f0f0f0 rather than an
      alpha: the mechanisms differ, so only the rungs' order is comparable. */
-  --color-border-hover: rgba(255, 255, 255, 0.14);
-  --color-surface-subtle: rgba(255, 255, 255, 0.04);
   /* Both a rung fainter than their light counterparts rather than louder, which
      is the one direction nobody expects to find in a dark theme: on the card,
      light's dashes measure 1.41 and its marker 1.79, and these measured 1.19 and
@@ -583,11 +590,8 @@
      note beside the light pair asks for. */
 
   /* Buttons */
-  --btn-primary-bg: #ffffff;
-  --btn-primary-text: #101010;
 
-  /* Brand / status (dark) */
-  --color-placeholder: #303030; /* 1.28:1 on the card, light's #e2e2e2 is 1.27 */
+  /* Brand / status (dark) */ /* 1.28:1 on the card, light's #e2e2e2 is 1.27 */
   /* Does not go dark. The photograph was lit against a pale backdrop and the
      shirt in it is black, so a dark disc would eat the shoulders and leave a
      head floating on the card. The pair steps down from light's instead, which
@@ -613,10 +617,8 @@
      way, page 250, card 253, button 254, each one a step up from what it lies
      on. Same colour and more of it puts the button at rgb(34,34,37), 2.53 dL*
      above its card where it was 2.57 below. */
-  --glass-bg-solid: rgba(37, 37, 40, 0.66);
 
   /* Tooltip chrome (dark: slightly lighter than light-mode value) */
-  --color-tooltip-bg: rgba(60, 60, 60, 0.9);
 
   /* Glass panel surface (dark): border matches resume-image border (--color-border-subtle) */
   /* The alpha is where this theme's depth is set, and the colour is shared with
@@ -627,7 +629,6 @@
      its own step rather than sinking into the card. Light's card is 1.04 dL* off
      its page, which is the shape being copied, not the number: a step that small
      is invisible this far down the range. */
-  --glass-bg: rgba(37, 37, 40, 0.38);
   --glass-border: var(--color-border-subtle);
   /* Hover, and dark mode needs its own answer rather than the light one.
      .bento-card:hover lifts a card two ways, and on a #101010 page neither one
@@ -683,6 +684,32 @@
   --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.28), 0 16px 40px -12px rgba(0, 0, 0, 0.39);
   /* Soft lift behind free-standing images (dark) */
   --shadow-image: 0 1px 2px rgba(0, 0, 0, 0.18), 0 4px 12px -10px rgba(0, 0, 0, 0.28);
+}
+/* The two halves light-dark() cannot carry, and why they are here rather than
+   folded in above.
+   A light-dark() value is one colour with two answers. These six are not that:
+   the shadows have three layers in light and two in dark, because a black
+   shadow on a near-black page does nothing and the work is done by the borders
+   instead. Different shape, not a different value, so they stay a declaration
+   that is replaced rather than one that resolves.
+   Which means they need saying twice — once for somebody who chose dark, and
+   once for somebody who chose nothing and whose machine did. Everything above
+   gets the second case free from color-scheme; these do not. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --glass-border: var(--color-border-subtle);
+    --glass-border-hover: var(--color-border);
+    --glass-border-control: rgba(255, 255, 255, 0.03);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.21), 0 8px 24px -8px rgba(0, 0, 0, 0.28);
+    --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.28), 0 16px 40px -12px rgba(0, 0, 0, 0.39);
+    --shadow-image: 0 1px 2px rgba(0, 0, 0, 0.18), 0 4px 12px -10px rgba(0, 0, 0, 0.28);
+  }
 }
 
 /* ── Responsive token steps ──

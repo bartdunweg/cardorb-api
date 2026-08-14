@@ -130,29 +130,47 @@ describe("the accent is split because one value cannot do both jobs", () => {
 
 describe("this file and tokens.css have not parted company", () => {
   /**
-   * The transition guard. Two copies of a value is a value that can drift, and
-   * this one exists on purpose for the length of the rebuild — tokens.css is
-   * still what the browser reads. This asserts they agree, so the day one of
-   * them changes alone is the day CI says so rather than the day somebody
-   * notices a shade is off.
+   * The transition guard, and it got stronger when the CSS changed shape.
+   *
+   * It used to read the light value out of the :root block and compare one
+   * half of the pair, because the dark half lived in a separate block a long
+   * way down the file. The tokens are light-dark() pairs now, so both values
+   * sit in one declaration and both can be checked — which is the version this
+   * always should have been. The dark palette had no guard at all until now.
+   *
+   * Two copies of a value is a value that can drift, and this one exists on
+   * purpose for the length of the rebuild: tokens.css is still what the browser
+   * reads. This is what makes the day one of them changes alone the day CI says
+   * so, rather than the day somebody notices a shade is off.
    */
   const css = readFileSync("app/styles/tokens.css", "utf8");
 
-  const pairs: [string, string][] = [
-    ["--color-text-primary", colour.label.light],
-    ["--color-text-secondary", colour.labelSecondary.light],
-    ["--color-text-tertiary", colour.labelTertiary.light],
-    ["--color-logo", colour.labelQuaternary.light],
-    ["--color-bg", colour.bgSurface.light],
-    ["--color-left-bg", colour.bgGrouped.light],
-    ["--color-accent", colour.tint.light],
+  const pairs: [string, { light: string; dark: string }][] = [
+    ["--color-text-primary", colour.label],
+    ["--color-text-secondary", colour.labelSecondary],
+    ["--color-text-tertiary", colour.labelTertiary],
+    ["--color-logo", colour.labelQuaternary],
+    ["--color-bg", colour.bgSurface],
+    ["--color-left-bg", colour.bgGrouped],
   ];
 
-  for (const [name, value] of pairs) {
-    it(`${name} still reads ${value}`, () => {
-      // The first occurrence is the light block; the dark override comes later.
-      const found = css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1]?.trim();
-      expect(found, `${name} in tokens.css`).toBe(value);
+  for (const [name, expected] of pairs) {
+    it(`${name} still reads ${expected.light} / ${expected.dark}`, () => {
+      const value = css.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1]?.trim();
+      expect(value, `${name} is missing from tokens.css`).toBeDefined();
+
+      const both = value!.match(/^light-dark\(\s*([^,]+),\s*(.+)\s*\)$/);
+      expect(both, `${name} is no longer a light-dark() pair: ${value}`).not.toBeNull();
+      expect(both![1]!.trim(), `${name} light`).toBe(expected.light);
+      expect(both![2]!.trim(), `${name} dark`).toBe(expected.dark);
     });
   }
+
+  it("the accent is a single value in both themes, on purpose", () => {
+    // The one colour that should not shift when the lights go out: it is the
+    // only one carrying "this is the thing you chose".
+    const value = css.match(/--color-accent:\s*([^;]+);/)?.[1]?.trim();
+    expect(value).toBe(colour.tint.light);
+    expect(colour.tint.light).toBe(colour.tint.dark);
+  });
 });

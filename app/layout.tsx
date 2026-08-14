@@ -105,17 +105,22 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${satoshi.variable}`}>
       <head>
-        {/* tokens.css puts its dark values behind [data-theme="dark"], so
-            something has to set that attribute or every visitor gets the light
-            palette. Blocking and in <head> on purpose: done after paint, the
-            page flashes white first. Reads the saved choice before the OS
-            preference, because CardsProfile offers a toggle and a stored
-            preference that loses to the system on every reload is not a
-            preference. Mirrored by ThemeProvider, which observes the attribute
-            rather than owning it. */}
+        {/* Only the choice. The machine is the stylesheet's job now.
+            This used to read the OS preference too and write an attribute
+            either way, because tokens.css kept its dark values behind
+            [data-theme="dark"] and somebody had to set it or every visitor got
+            the light palette. The tokens are light-dark() pairs under
+            color-scheme: light dark now, so an absent attribute already means
+            "ask the machine" — answered in CSS, before this runs, and for
+            somebody with JavaScript off, who used to get light whatever their
+            machine said.
+            What is left is the one thing CSS cannot know: that this person
+            chose. Blocking and in <head> on purpose — done after paint, a dark
+            reader gets a white flash first. Mirrored by ThemeProvider, which
+            observes the attribute rather than owning it. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem("theme");var d=s==="dark"||s==="light"?s:window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.setAttribute("data-theme",d);}catch(e){}})();`,
+            __html: `(function(){try{var s=localStorage.getItem("theme");if(s==="dark"||s==="light")document.documentElement.setAttribute("data-theme",s);}catch(e){}})();`,
           }}
         />
       </head>
