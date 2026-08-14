@@ -46,7 +46,6 @@
    Deliberately NOT in this list: .exp-panel (needs no backdrop-filter, see the
    note in pages.css) and the hover pills, which use --blur-glass-pill and their
    own inset geometry. */
-.bento-card,
 .about-card {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
@@ -79,8 +78,6 @@
 .btn,
 .modal-close,
 .cards-search,
-.cards-select,
-.cards-size,
 .card-add-field input,
 .cards-profile-field input,
 .filter-menu > summary,
@@ -106,8 +103,6 @@
    and the hover lift that cards.css:536 says it takes from here. */
 .btn,
 .cards-search,
-.cards-select,
-.cards-size,
 .card-add-field input,
 .cards-profile-field input,
 .filter-menu > summary {
@@ -138,8 +133,6 @@
    so the shape has a name on the day one is needed, rather than a hardcoded
    14px appearing next to the search field. */
 .cards-search,
-.cards-select,
-.cards-size,
 .card-add-field input,
 .cards-profile-field input,
 .filter-menu > summary {
@@ -148,8 +141,6 @@
 /* Lift on hover, the same on all of them. It was a border-colour change on the
    two /cards controls and a shadow on every button elsewhere. */
 .cards-search:hover,
-.cards-select:hover,
-.cards-size:hover,
 .filter-menu > summary:hover {
   box-shadow: var(--shadow-elevated);
 }
@@ -159,7 +150,6 @@
    .tabbar-fade's gradient and mask. A shadow on it drew a hard band the full
    width of the window, which turned a bar that dissolves into the page into a
    fixed glass strip. The pill inside it is the control. */
-.theme-toggle,
 .tabbar-pages {
   box-shadow: var(--shadow-elevated);
 }
@@ -182,8 +172,6 @@
 [data-theme="dark"] .btn,
 [data-theme="dark"] .modal-close,
 [data-theme="dark"] .cards-search,
-[data-theme="dark"] .cards-select,
-[data-theme="dark"] .cards-size,
 [data-theme="dark"] .card-add-field input,
 [data-theme="dark"] .cards-profile-field input,
 [data-theme="dark"] .filter-menu > summary,
@@ -338,40 +326,6 @@
      8px gap sat between the icon and it and the arrow on the binder card came
      out four pixels left of the middle of its circle. */
   gap: 0;
-}
-/* The controls that carry one. Each is the element the pointer actually lands
-   on, which is never the span itself: on a "Find me online" row that is the
-   whole row, and the arrow is a 16px box at the end of it.
-   .play-badge is deliberately not here. It fades in on hover of the artwork
-   underneath it, so the flight would run while the badge was still arriving,
-   and nobody would see either of them properly. */
-@media (hover: hover) and (pointer: fine) {
-  :is(.card-external, .connect-item, .btn):hover .external-arrow > svg:first-child {
-    transform: translate(160%, -160%);
-  }
-  :is(.card-external, .connect-item, .btn):hover .external-arrow > svg:last-child {
-    transform: translate(0, 0);
-  }
-}
-/* The same list again, and it cannot share the block above. :hover has to sit
-   behind the pointer query, because a tap on a touch screen fires a hover that
-   then sticks and leaves the arrow parked outside its button. :focus-visible
-   must not, or keyboard users on those same devices lose the effect entirely. */
-:is(.card-external, .connect-item, .btn):focus-visible .external-arrow > svg:first-child {
-  transform: translate(160%, -160%);
-}
-:is(.card-external, .connect-item, .btn):focus-visible .external-arrow > svg:last-child {
-  transform: translate(0, 0);
-}
-/* One arrow, standing still. The second copy is only ever the far end of a
-   movement, so with the movement gone there is nothing for it to say. */
-@media (prefers-reduced-motion: reduce) {
-  .external-arrow > svg {
-    transition: none;
-  }
-  .external-arrow > svg:last-child {
-    display: none;
-  }
 }
 /* Same correction as the play triangle below, for the other glyph on this site
    that is symmetrical on paper and not to the eye.

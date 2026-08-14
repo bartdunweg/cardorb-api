@@ -109,11 +109,6 @@
 .modal-scroll::-webkit-scrollbar {
   display: none;
 }
-.modal--connect .modal-scroll {
-  overflow-y: auto;
-  height: 100%;
-  padding: var(--space-10) var(--space-4) var(--space-4);
-}
 
 @media (max-width: 640px) {
 /* Connect modal: flush to edges on phones, sheet-style */
@@ -121,17 +116,6 @@
     padding: 0;
     align-items: flex-end;
     justify-content: stretch;
-  }
-/* The sheet is height:auto here, and a percentage height against an auto
-     parent resolves to auto: the scroller grew to its full content, the sheet
-     stopped it at 92svh with overflow:hidden, and the drawer was a fixed
-     window onto a list it would not move. The cap belongs on the box that
-     scrolls. Contained, so reaching the end of the list does not hand the
-     scroll to the page underneath the sheet. */
-.modal--connect .modal-scroll {
-    height: auto;
-    max-height: 92svh;
-    overscroll-behavior: contain;
   }
 
   /* Chat modal: cap at 90% of visual viewport so footer stays visible */

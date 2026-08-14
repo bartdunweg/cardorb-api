@@ -94,33 +94,7 @@ button,
   /* No will-change: transform: it leaves a persistent containing block that
      breaks position: sticky (the Experience case labels). */
 }
-/* Every page opens on the same line. The card padding sets the side inset, but
-   a page's own heading wants more room above it than the copy beside it does,
-   and once --card-pad steps down on a phone the title sat almost on the card's
-   top edge while Resume's, which carries its own 32px, sat well clear. This is
-   the difference, so all four routes land in the same place. Named panels
-   rather than :first-child, which would reach the Resume heading too and it
-   already has its spacing from the timeline. */
-@media (max-width: 640px) {
-  .blog-panel > .page-title,
-  /* Three classes, because .about-card .about-title zeroes this margin from
-     about.css, which loads after this file. */
-  .about-content.about-card > .about-title {
-    margin-top: calc(var(--space-8) - var(--card-pad));
-  }
-}
 /* On Resume the heading sits in the timeline as its own row (see CvTimeline),
    so its left edge comes from the same column widths as the cases and follows
    them through every breakpoint. *//* The gap under the heading matches the one on Articles. The cases carry their
-   own top spacing, so this only has to make up the difference. *//* Both classes, so it beats the 64px every .case carries in resume.css, which
-   loads after this file. */
-.case.case--heading {
-  margin-bottom: var(--space-8);
-}
-/* Stacked, .case puts a --space-4 gap between the meta row and the content. On
-   a real case that separates the client label from its image; here the meta is
-   empty, so the gap was 16 invisible pixels pushing the page heading lower than
-   the heading on every other route. */
-.case.case--heading {
-  gap: 0;
-}
+   own top spacing, so this only has to make up the difference. */

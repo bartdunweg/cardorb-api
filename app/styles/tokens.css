@@ -89,11 +89,6 @@
      cut-out lying on the globe rather than part of it. The seam is a step off
      the ink instead, dark enough to disappear against the land and light enough
      to keep two visited neighbours apart. */
-  --globe-ocean: #fbfbfb;
-  --globe-land: #e4e4e4;
-  --globe-visited: #1a1a1a;
-  --globe-border: #cfcfcf;
-  --globe-seam: #4a4a4a;
 
   /* Borders */
   --color-border: #f0f0f0;
@@ -101,10 +96,8 @@
   --color-border-active: rgba(0, 0, 0, 0.16);
   --color-border-hover: rgba(0, 0, 0, 0.14);
   --color-surface-subtle: rgba(0, 0, 0, 0.03);
-  --color-timeline: #d7d7d7;
   /* Case marker tick: a touch darker than the timeline dashes so it reads as a
      marker, but still close to them (not a hard accent). */
-  --color-timeline-marker: #c0c0c0;
 
   /* Buttons */
   --btn-primary-bg: #111111;
@@ -118,8 +111,6 @@
   --color-on-dark: #ffffff;
 
   /* Brand / status (extracted from hardcoded literals) */
-
-  --color-status-online: #22c55e;
   --color-placeholder: #e2e2e2;
   /* The disc behind the About card photograph. The photograph is a cutout with
      no background of its own, so this is the backdrop rather than a tint over
@@ -157,7 +148,6 @@
      hairline in about.css is most of what holds the circle. That is the trade
      this was set to, over a flat #ececec that was easier to see and was a grey
      belonging to nothing else on the page. */
-  --color-avatar-bg: var(--color-left-bg);
 
   /* Glass panel surface: shared by every card/panel (single source of truth) */
   --glass-bg: rgba(254, 254, 254, 0.78);
@@ -215,7 +205,6 @@
      the movement is the whole point and 280ms was still quick enough that you
      saw the ends and not the journey. Reach for it only when something is
      travelling, never to make an ordinary transition more relaxed. */
-  --dur-travel: 450ms;
 
   /* Corner radius scale */
   --radius-sm: 8px; /* buttons, covers */
@@ -333,7 +322,6 @@
      site is built for: still two lines, with room to 34 before it becomes
      three. Do not reach for this anywhere else. A second heading that grows on
      small screens is not an exception, it is a scale with two directions. */
-  --fs-hero: clamp(28px, -0.77vw + 34.92px, 30px);
   /* The three years under "Who I am". A step down from where they were: 28 is
      --fs-h2, the size a page heading takes, and three four-digit numbers set at
      it were the loudest thing on a card whose job is a sentence about someone.
@@ -342,7 +330,6 @@
      Still its own token rather than --fs-card itself, because of the other end:
      on a phone the three of them and their dividers share one card width, and
      the floor stays at 22 where --fs-card's is 20. */
-  --fs-figure: clamp(22px, 0.34vw + 20.9px, 24px);
   --fs-card: clamp(20px, 1.54vw + 10.2px, 24px);
   /* 17 on a phone, not 16: --fs-body-l floors at 16 and a sub-head that is the
      same size as the lede under it is not a sub-head. */
@@ -431,7 +418,6 @@
      --fs-small, which is 13px on desktop and 12px on mobile, so an aside changed
      size with the window. 12 is the size, and at 13 it competed with the label
      it was explaining. Argued at length above .tooltip in components.css. */
-  --fs-tooltip: 12px;
 
   /* ── Spacing scale (4px base) ──
      On-grid spacing for padding / margin / gap. Off-grid optical tweaks
@@ -575,13 +561,8 @@
      outside where the shading reaches: light puts the ocean 1.071 off its card
      and this had drifted to 1.139, which is the same step drawn at twice the
      size. It is 1.065 now. */
-  --globe-ocean: #1d1d1d;
-  --globe-land: #2d2d2d;
-  --globe-visited: #f8f8f8;
-  --globe-border: #222222;
   /* And the seam turned over with them: a step down off the light ink, at the
      same separation from it that #4a4a4a keeps from #1a1a1a. */
-  --globe-seam: #b8b8b8;
 
   /* Borders */
   --color-border: rgba(255, 255, 255, 0.08);
@@ -600,8 +581,6 @@
      light's dashes measure 1.41 and its marker 1.79, and these measured 1.19 and
      1.55. The marker still sits a step ahead of the dashes, which is what the
      note beside the light pair asks for. */
-  --color-timeline: #373737;
-  --color-timeline-marker: #464646;
 
   /* Buttons */
   --btn-primary-bg: #ffffff;
@@ -624,7 +603,6 @@
      replaced, so the disc carries the same weight on the page as it did rather
      than jumping to either of the old ends: at the top stop it would have been
      brighter than the ramp ever read, and at the bottom stop darker. */
-  --color-avatar-bg: #d3d3d3;
 
   /* Solid glass surface (dark): the panel glass at a higher alpha, which is
      exactly the relationship light mode has (rgba(254,254,254) at .78 and .9).
