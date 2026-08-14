@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Heart, LayoutDashboard, Layers, List, Plus, Search } from "lucide-react";
+import { Settings, Heart, LayoutDashboard, Layers, List, Plus, Search } from "lucide-react";
 import { useSlidingPill } from "../hooks/useSlidingPill";
 
 /**
@@ -41,7 +41,20 @@ import { useSlidingPill } from "../hooks/useSlidingPill";
  * front of the two screens anyone followed the link to see. Sets keeps a slot
  * for what it is actually for, picking one.
  */
-export type CardsTab = "dashboard" | "collection" | "wishlist" | "sets" | "search";
+/**
+ * The slots. "settings" joined and "search" left on the day the app got
+ * addresses.
+ *
+ * Sets and Pokédex are not here any more either, and that is the same decision
+ * twice: they are two ways of looking at the collection rather than two places,
+ * so they belong at the head of that screen and not in a bar that reports which
+ * screen you are on. Search went for a related reason — it was a slot that
+ * scrolled you to a field, which is a shortcut wearing a destination's clothes.
+ *
+ * Four is also as many as this bar can carry beside the plus without the labels
+ * colliding on a narrow phone, which is the practical half of the argument.
+ */
+export type CardsTab = "dashboard" | "collection" | "wishlist" | "settings" | "sets" | "search";
 
 const ICON = { size: 20, strokeWidth: 1.75 } as const;
 
@@ -83,6 +96,7 @@ export default function CardsTabBar({
     // list of set names to pick from. Layers belongs to Collection, which is
     // the cards themselves.
     sets: { key: "sets", label: "Sets", icon: <List {...ICON} aria-hidden="true" /> },
+    settings: { key: "settings", label: "Settings", icon: <Settings {...ICON} aria-hidden="true" /> },
     search: { key: "search", label: "Search", icon: <Search {...ICON} aria-hidden="true" /> },
   };
 
@@ -93,7 +107,7 @@ export default function CardsTabBar({
       // dashboard into the cards with the caret in the field; the public link
       // opens on the cards, so there is nothing to jump out of.
       ["collection", "wishlist", "sets"]
-    : ["dashboard", "collection", "sets", "search"];
+    : ["dashboard", "collection", "wishlist", "settings"];
   const shown = order.map((k) => all[k]!);
 
   // The plus sits in the middle, which is why the list is split rather than

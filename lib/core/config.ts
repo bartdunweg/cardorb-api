@@ -34,6 +34,22 @@ export const APP_TAGLINE =
   "Track your Pokémon card collection set by set — what you own, what it is worth, and what is still missing.";
 
 /**
+ * The same sentence, cut at the clause, for the places that have room for one
+ * line and not four.
+ *
+ * A second string on purpose rather than a copy that drifts. It was living
+ * hand-typed inside the OG image, which is how two sentences that are supposed
+ * to say the same thing end up disagreeing: one gets edited and nobody thinks
+ * to look inside a picture. Named here, beside the long one, so a change to
+ * either is a change made while looking at both.
+ *
+ * Why it exists at all: a link preview is not somewhere anyone reads four
+ * lines, and the full sentence sets to four at the size that card is drawn.
+ */
+export const APP_TAGLINE_SHORT =
+  "Set by set — what you own, what it is worth, what is missing.";
+
+/**
  * The locale every number and every sort in here is answered in.
  *
  * Dutch, because Bart is, and because it decides two visible things: how a

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { colour } from "../lib/design/tokens";
 import { APP_NAME, APP_TAGLINE } from "../lib/core/config";
 
 /**
@@ -32,8 +33,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: APP_TAGLINE,
     start_url: "/",
     display: "standalone",
-    background_color: "#fafafa",
-    theme_color: "#fafafa",
+    background_color: colour.bgGrouped.light,
+    theme_color: colour.bgGrouped.light,
     // No icons. There used to be two generated ones here, and the entries have
     // to go with them: a manifest that names /icon and /apple-icon after those
     // routes are deleted is a manifest pointing at two 404s, which is worse

@@ -1,0 +1,2 @@
+- Rebuilt the public homepage as a premium product landing page with a static public-collection preview.
+- Clarified that Card Orb is completely free and surfaced Cardmarket prices in euros as collector context.

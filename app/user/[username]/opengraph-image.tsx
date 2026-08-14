@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { colour } from "../../../lib/design/tokens";
 import { APP_NAME, OWNER_NAME } from "../../../lib/core/config";
 import { stripPrices } from "../../../lib/core/cards";
 import { getCards, ownerOf } from "../../../lib/core/collection";
@@ -91,7 +92,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#fafafa",
+          background: colour.bgGrouped.light,
           padding: 72,
           fontFamily: "sans-serif",
         }}
@@ -101,11 +102,11 @@ export default async function Image({ params }: { params: Promise<{ username: st
             child and no display throws, and the failure is the whole image
             500ing rather than a layout that looks off. */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", fontSize: 30, color: "#767676" }}>{APP_NAME}</div>
-          <div style={{ display: "flex", fontSize: 68, color: "#101010", fontWeight: 700 }}>
+          <div style={{ display: "flex", fontSize: 30, color: colour.labelTertiary.light }}>{APP_NAME}</div>
+          <div style={{ display: "flex", fontSize: 68, color: colour.label.light, fontWeight: 700 }}>
             {OWNER_NAME}&rsquo;s collection
           </div>
-          <div style={{ display: "flex", fontSize: 34, color: "#4a4a4a" }}>
+          <div style={{ display: "flex", fontSize: 34, color: colour.labelSecondary.light }}>
             {held.toLocaleString("en-GB")} cards across {withHeld} sets
           </div>
         </div>

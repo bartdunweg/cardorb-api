@@ -8,8 +8,26 @@ import {
   ReactNode,
 } from "react";
 
-const ThemeContext = createContext<{ theme: string; toggle: () => void }>({
+/**
+ * What somebody chose, which is not the same as what they see.
+ *
+ * "system" is the absence of a choice, and it is stored as the absence of the
+ * key rather than as the word — two representations of one state is how they
+ * drift.
+ */
+export type Mode = "system" | "light" | "dark";
+
+const ThemeContext = createContext<{
+  /** What is on screen: "light" or "dark", never "system". */
+  theme: string;
+  /** What was chosen. "system" means the machine decides. */
+  mode: Mode;
+  setMode: (next: Mode) => void;
+  toggle: () => void;
+}>({
   theme: "light",
+  mode: "system",
+  setMode: () => {},
   toggle: () => {},
 });
 
@@ -24,26 +42,46 @@ function readSavedTheme(): string | null {
     return null;
   }
 }
-function saveTheme(next: string) {
-  try {
-    localStorage.setItem("theme", next);
-  } catch {}
-}
 
 // The data-theme attribute (set before paint by the blocking script in
 // layout.tsx) is the single source of truth; React only mirrors it. Reading it
 // through useSyncExternalStore keeps hydration safe: the server snapshot
 // ("light") matches the server HTML, and React swaps in the real value right
 // after hydration instead of reporting an unfixable attribute mismatch.
+/**
+ * Two things can change what is on screen, so both are subscribed to.
+ *
+ * The attribute, when somebody picks. And the machine, when nobody has —
+ * because an absent attribute no longer means light, it means "the stylesheet
+ * is answering the OS through color-scheme". Without the second subscription
+ * React would go on believing it was light while the page had gone dark
+ * underneath it, which matters for anything drawn from `theme` rather than
+ * from CSS.
+ */
 function subscribeToThemeAttr(onChange: () => void) {
   const observer = new MutationObserver(onChange);
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-theme"],
   });
-  return () => observer.disconnect();
+  const mql = window.matchMedia("(prefers-color-scheme: dark)");
+  mql.addEventListener("change", onChange);
+  return () => {
+    observer.disconnect();
+    mql.removeEventListener("change", onChange);
+  };
 }
-const readThemeAttr = () => document.documentElement.getAttribute("data-theme") ?? "light";
+
+/**
+ * What is actually on screen.
+ *
+ * The attribute if there is one, and otherwise the machine's answer — which is
+ * what the stylesheet is already doing. This is React catching up to CSS
+ * rather than deciding anything.
+ */
+const readThemeAttr = () =>
+  document.documentElement.getAttribute("data-theme") ??
+  (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 const serverTheme = () => "light";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -80,9 +118,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // bottom bar until something else makes it repaint. If it still lags after
   // this, it lags on a tag that says the right thing.
   useEffect(() => {
-    const bg = getComputedStyle(document.documentElement)
-      .getPropertyValue("--color-left-bg")
-      .trim();
+    // The used value, not the token. It used to read --color-left-bg by name,
+    // which was right until two things: the token is being renamed, and under
+    // light-dark() an unregistered custom property hands back the literal token
+    // stream — "light-dark(#fafafa, #181818)" — which is not a colour a meta
+    // tag can carry.
+    //
+    // Asking the body what it is painted is the same intent the old comment
+    // stated ("whatever tokens.css says body is, the chrome is") enforced by
+    // the browser rather than by a name matching. It survives the rename, it
+    // survives light-dark(), and it survives whatever paints body next.
+    const bg = getComputedStyle(document.body).backgroundColor;
     if (!bg) return;
     for (const el of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
       el.removeAttribute("media");
@@ -90,23 +136,53 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
-  useEffect(() => {
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    // Follow OS theme changes only while the visitor hasn't picked a theme.
-    const onChange = (e: MediaQueryListEvent) => {
-      if (!readSavedTheme()) apply(e.matches ? "dark" : "light");
-    };
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [apply]);
+  // The listener that used to live here is gone, and its absence is the point.
+  // It followed OS changes while nothing was stored, which is exactly what
+  // `color-scheme: light dark` plus light-dark() now do in CSS — before any
+  // JavaScript runs, and for somebody with JavaScript off. A whole class of
+  // "React and the stylesheet disagree about which theme it is" went with it.
 
+  /**
+   * Three answers, and the third is the one that was unreachable.
+   *
+   * The stored vocabulary was "dark" | "light", so the moment anybody pressed
+   * the toggle once, "follow my machine" stopped being an option they could
+   * get back to — a door that only goes one way. Absent still means system, so
+   * every browser holding a "light" or a "dark" from before carries on
+   * unchanged and there is nothing to migrate.
+   *
+   * Clearing the key is what selects system: there is no "system" written to
+   * storage, because the absence *is* the state, and storing a word for it
+   * would mean two representations of one answer.
+   */
+  const setMode = useCallback(
+    (next: Mode) => {
+      try {
+        if (next === "system") localStorage.removeItem("theme");
+        else localStorage.setItem("theme", next);
+      } catch {}
+      // Removing the attribute is the whole of "follow my machine": the
+      // stylesheet answers the OS on its own from there, and the observer above
+      // tells React what it decided.
+      if (next === "system") document.documentElement.removeAttribute("data-theme");
+      else apply(next);
+    },
+    [apply],
+  );
+
+  /** The shell's two-state switch, kept for the control that still uses it. */
   const toggle = useCallback(() => {
-    const next = readThemeAttr() === "dark" ? "light" : "dark";
-    saveTheme(next);
-    apply(next);
-  }, [apply]);
+    setMode(readThemeAttr() === "dark" ? "light" : "dark");
+  }, [setMode]);
 
-  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>;
+  const saved = readSavedTheme();
+  const mode: Mode = saved === "light" || saved === "dark" ? saved : "system";
+
+  return (
+    <ThemeContext.Provider value={{ theme, mode, setMode, toggle }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

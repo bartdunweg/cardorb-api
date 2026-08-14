@@ -318,17 +318,6 @@
    history entry, because on a route with no per-set URL the phone's own back
    gesture would then sometimes leave the site and sometimes close a pane. */
 
-/* The floating theme toggle stands down on this route, and the room it was
-   holding goes to the bar. It is a circle in the bottom right corner of every
-   other page, which is where this page put its own controls: on a phone it sat
-   in the bar's row, and layout.css had to reserve its footprint on both sides
-   so the pill could still be centred, which is 128px of a 390px screen. The
-   switch is on the profile screen instead (see CardsProfile), where it is two
-   named choices rather than a sun that means the opposite of what it shows. */
-body:has(.page-cards) .theme-toggle {
-  display: none;
-}
-
 /* The track fills the bar and the slots divide it, rather than each slot
    sizing itself: five items at their own width overflow a 360px phone, and
    .tabbar-item does not shrink. Divided, the bar gets narrower instead of
@@ -587,73 +576,6 @@ body:has(.page-cards) .theme-toggle {
 }
 .cards-search button:hover {
   color: var(--color-text-primary);
-}
-
-/* How big the scans are drawn, in the same glass and at the same height as the
-   search field beside it (components.css). The two squares are the ends of the
-   range rather than buttons, so they are aria-hidden and the label is on the
-   input. */
-.cards-size {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  /* Never grows: it is a setting, not a field, and the width below is enough
-     for the whole range to be reachable in one drag. */
-  flex: 0 0 auto;
-  padding: 0 var(--space-3);
-  color: var(--color-text-tertiary);
-}
-.cards-size svg {
-  flex-shrink: 0;
-}
-.cards-size input {
-  appearance: none;
-  width: 84px;
-  height: 100%;
-  margin: 0;
-  background: none;
-  cursor: ew-resize;
-}
-/* The two vendor tracks and the two vendor thumbs cannot be grouped: a selector
-   a browser does not recognise invalidates the whole rule, so each engine's
-   pseudo-element needs its own copy. */
-.cards-size input::-webkit-slider-runnable-track {
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-border-active);
-}
-.cards-size input::-moz-range-track {
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-border-active);
-}
-.cards-size input::-webkit-slider-thumb {
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  /* Centred on a 3px track by hand: WebKit lays the thumb out from the top of
-     the track rather than on its centre line, which Firefox does for us. */
-  margin-top: -4.5px;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-text-primary);
-}
-.cards-size input::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-text-primary);
-}
-/* The ring goes round the control, not round the input: the input is 84px of
-   track inside a 40px pill, and an outline on it drew a rectangle through the
-   two squares. Same move as .cards-select above. */
-.cards-size input:focus-visible {
-  outline: none;
-}
-.cards-size:has(input:focus-visible) {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: 2px;
 }
 
 .cards-count {
@@ -1328,56 +1250,6 @@ body:has(.page-cards) .theme-toggle {
     width: 92px;
     height: 34px;
   }
-}
-
-/* ── Era tabs, layout toggle, active filters ── */
-
-/* A track holding buttons. The glass and the border come from the shared
-   control; this is the shape it holds them in. */
-
-/* The ownership dropdown on the Pokédex.
-
-   A real <select>, so the list is the platform's own: it opens on touch, reads
-   on a screen reader, and needs no keyboard handling. The wrapper carries the
-   surface and the shape (see components.css, where it sits with the search
-   field and the Filter button), the select itself is stripped bare inside it,
-   and the chevron is drawn beside it because appearance: none takes the native
-   one away. */
-.cards-select {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-4);
-  cursor: pointer;
-  transition:
-    box-shadow var(--dur-fast) var(--ease-smooth),
-    border-color var(--dur-fast) var(--ease-smooth);
-}
-
-.cards-select select {
-  appearance: none;
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  color: inherit;
-  font: inherit;
-}
-
-.cards-select select:focus-visible {
-  outline: none;
-}
-
-.cards-select:has(select:focus-visible) {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: 2px;
-}
-
-.cards-select svg {
-  flex-shrink: 0;
-  pointer-events: none;
-  color: var(--color-text-secondary);
 }
 
 .cards-segmented {
@@ -2804,16 +2676,8 @@ button.cards-dex-body:focus-visible::after {
   gap: var(--space-2);
 }
 .view-menu-panel .cards-segmented,
-.view-menu-panel .cards-views,
-.view-menu-panel .cards-size {
+.view-menu-panel .cards-views {
   width: 100%;
-}
-/* The track takes what the two icons beside it leave, rather than sitting at
-   its intrinsic width with the panel's spare room to its right. */
-.view-menu-panel .cards-size input[type="range"],
-.sheet .cards-size input[type="range"] {
-  flex: 1 1 auto;
-  min-width: 0;
 }
 
 /* A short facet, shown open at the top of the filter panel instead of behind a
