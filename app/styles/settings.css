@@ -179,3 +179,20 @@
   border-color: transparent;
 }
 .btn--danger:disabled { opacity: 0.5; }
+
+/* Import: the preview lists. Monospace-ish numbers so the line numbers in a
+   skipped-rows list line up with each other rather than drifting. */
+.settings-sample,
+.settings-skipped,
+.settings-runs {
+  list-style: none;
+  margin: var(--space-3) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--fs-small);
+  color: var(--color-label-secondary);
+}
+.settings-sample strong { color: var(--color-label); font-weight: 500; }
+.settings-skipped { color: var(--color-label-tertiary); font-variant-numeric: tabular-nums; }
+.settings-runs { font-variant-numeric: tabular-nums; }

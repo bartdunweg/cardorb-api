@@ -176,11 +176,35 @@ export type InsertResult = { added: number; skipped: number };
  */
 export async function createRows(
   db: SupabaseClient,
+  userId: string,
   rows: CollectionRow[],
   source: "csv" | "notion",
   chunk = 500,
 ): Promise<InsertResult> {
-  let added = 0;
+  /**
+   * Counted before and after, not from what the insert returns.
+   *
+   * The obvious version — .select("id") on the upsert, count the rows — reports
+   * zero for a run that inserted two thousand cards. ignoreDuplicates sends
+   * `Prefer: resolution=ignore-duplicates`, and PostgREST then hands back no
+   * representation at all. This function was written that way and never called,
+   * so the bug had never fired; scripts/import-notion.mjs hit exactly this and
+   * had to be fixed the same way.
+   *
+   * It is not a cosmetic count either. "0 cards added" after a successful
+   * import reads as a failed import, and the next thing anybody does is run it
+   * again.
+   */
+  const count = async () => {
+    const { count: n, error } = await db
+      .from("cards")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (error) throw new Error(`Counting the collection failed: ${error.message}`);
+    return n ?? 0;
+  };
+
+  const before = await count();
 
   for (let i = 0; i < rows.length; i += chunk) {
     const batch = rows.slice(i, i + chunk).map((r) => ({
@@ -200,15 +224,14 @@ export async function createRows(
       source_id: r.id,
     }));
 
-    const { data, error } = await db
+    const { error } = await db
       .from("cards")
-      .upsert(batch, { onConflict: "user_id,source,source_id", ignoreDuplicates: true })
-      .select("id");
+      .upsert(batch, { onConflict: "user_id,source,source_id", ignoreDuplicates: true });
 
     if (error) throw new Error(`Importing rows ${i}–${i + batch.length} failed: ${error.message}`);
-    added += (data ?? []).length;
   }
 
+  const added = (await count()) - before;
   return { added, skipped: rows.length - added };
 }
 
