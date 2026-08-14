@@ -97,8 +97,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // dark page. Rewritten here so the two always agree.
   //
   // Read off the document rather than stated, because the colour it has to
-  // match is a token and the pair had already drifted: this said --color-bg,
-  // the card colour, while body is painted --color-left-bg. On iOS Safari that
+  // match is a token and the pair had already drifted: this said --color-bg-surface,
+  // the card colour, while body is painted --color-bg-grouped. On iOS Safari that
   // is the tint of the bars above and below the page, so both sat a step off
   // the page itself. Whatever tokens.css says body is, the chrome is.
   //
@@ -118,7 +118,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // bottom bar until something else makes it repaint. If it still lags after
   // this, it lags on a tag that says the right thing.
   useEffect(() => {
-    // The used value, not the token. It used to read --color-left-bg by name,
+    // The used value, not the token. It used to read --color-bg-grouped by name,
     // which was right until two things: the token is being renamed, and under
     // light-dark() an unregistered custom property hands back the literal token
     // stream — "light-dark(#fafafa, #181818)" — which is not a colour a meta

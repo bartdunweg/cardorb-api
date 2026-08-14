@@ -15,7 +15,7 @@
 
 .landing-brand,
 .landing-footer > span {
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-label);
   font-weight: var(--fw-button);
@@ -30,7 +30,7 @@
 }
 
 .landing-nav a:not(.landing-brand) {
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   text-decoration: none;
@@ -38,7 +38,7 @@
 }
 
 .landing-nav a:not(.landing-brand):hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .landing-nav-signin {
@@ -63,7 +63,7 @@
 
 .landing-eyebrow {
   margin: 0;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-eyebrow);
   font-weight: var(--fw-eyebrow);
@@ -78,7 +78,7 @@
 .landing-share h2,
 .landing-closing h2 {
   margin: 0;
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-weight: var(--fw-title);
   letter-spacing: -0.045em;
@@ -96,7 +96,7 @@
 .landing-share p,
 .landing-closing > p {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-l);
   line-height: var(--lh-relaxed);
@@ -120,7 +120,7 @@
 
 .landing-note {
   margin: 0;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
 }
@@ -151,7 +151,7 @@
 
 .landing-preview:hover {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 10%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-label) 10%, transparent),
     var(--shadow-elevated);
   transform: rotate(0deg) translateY(-4px);
 }
@@ -162,7 +162,7 @@
   inset: 0;
   background: linear-gradient(
     120deg,
-    color-mix(in srgb, var(--color-bg) 74%, transparent),
+    color-mix(in srgb, var(--color-bg-surface) 74%, transparent),
     transparent 45%
   );
   content: "";
@@ -186,7 +186,7 @@
   min-height: 42px;
   padding: 0 var(--space-4);
   border-bottom: 1px solid var(--color-border-subtle);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-tiny);
 }
@@ -225,13 +225,13 @@
 .landing-preview-kicker,
 .landing-preview-intro > span,
 .landing-preview-stats span {
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
 }
 
 .landing-preview-intro strong {
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-card);
   font-weight: var(--fw-title);
@@ -250,7 +250,7 @@
 }
 
 .landing-preview-stats b {
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-body);
   font-weight: var(--fw-title);
@@ -282,7 +282,7 @@
   display: block;
   padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--color-border-subtle);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-tiny);
 }
@@ -360,13 +360,13 @@
   place-items: center;
   border: 1px solid var(--color-border-subtle);
   border-radius: 50%;
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .landing-feature h3,
 .landing-workflow-card h3 {
   margin: var(--space-1) 0 0;
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-sub);
   font-weight: var(--fw-title);
@@ -377,7 +377,7 @@
 .landing-feature p,
 .landing-workflow-card p {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body);
   line-height: var(--lh-normal);
@@ -409,7 +409,7 @@
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body);
   line-height: var(--lh-normal);
@@ -418,7 +418,7 @@
 .landing-workflow-copy li svg {
   flex: 0 0 auto;
   margin-top: 2px;
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .landing-workflow-card {
@@ -431,7 +431,7 @@
   position: absolute;
   top: var(--space-8);
   right: var(--space-8);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-small);
 }
@@ -453,14 +453,25 @@
   bottom: 78px;
   left: var(--space-8);
   height: 1px;
-  background: repeating-linear-gradient(90deg, var(--color-timeline) 0 4px, transparent 4px 10px);
+  /* --color-timeline used to live here and was removed with the portfolio's
+     timeline, which this dashed rule is not: it is the connector on the
+     workflow card and it is still on screen. Without the token the whole
+     declaration was invalid and dropped, so the line has been invisible since.
+     --color-border-active is the same colour by another name — rgba(0,0,0,.16)
+     resolves to #d6d6d6 on white where the old token was #d7d7d7 — so this is
+     the value restored rather than a new one chosen. */
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-border-active) 0 4px,
+    transparent 4px 10px
+  );
 }
 
 .landing-workflow-label {
   position: absolute;
   bottom: var(--space-8);
   left: var(--space-8);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
 }
@@ -473,7 +484,7 @@
   max-width: 1040px;
   padding: clamp(var(--space-8), 7vw, 88px);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+  background: color-mix(in srgb, var(--color-label) 4%, transparent);
 }
 
 .landing-share h2 {
@@ -485,7 +496,7 @@
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-6);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-body);
   font-weight: var(--fw-button);
@@ -515,14 +526,14 @@
 }
 
 .landing-share-link small {
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
 }
 
 .landing-share-link strong {
   overflow: hidden;
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-family: var(--font-main), sans-serif;
   font-size: var(--fs-body);
   font-weight: var(--fw-title);
@@ -560,7 +571,7 @@
   align-items: start;
   padding-top: var(--space-5);
   border-top: 1px solid var(--color-border-subtle);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
 }

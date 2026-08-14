@@ -16,7 +16,7 @@
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
   line-height: var(--lh-relaxed);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .cards-profile-form {
   display: flex;
@@ -38,14 +38,14 @@
   font-family: var(--font-main);
   font-size: var(--fs-small);
   font-weight: var(--fw-eyebrow);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .cards-profile-error {
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-weight: var(--fw-eyebrow);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .cards-profile-field input {
@@ -53,7 +53,7 @@
   min-width: 0;
   padding: 0 var(--space-3-5);
   outline: none;
-  color: var(--color-text-primary);
+  color: var(--color-label);
   /* Never under 16px: below it iOS zooms the page the moment the field takes
      focus, which is what --fs-control exists for. */
   font-family: var(--font-body), sans-serif;
@@ -62,7 +62,7 @@
 }
 .card-add-field input::placeholder,
 .cards-profile-field input::placeholder {
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .card-add-field input:focus-visible,
 .cards-profile-field input:focus-visible {

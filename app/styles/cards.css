@@ -15,7 +15,7 @@
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   align-items: start;
-  /* One surface under both panes, the rail's. The body is --color-left-bg,
+  /* One surface under both panes, the rail's. The body is --color-bg-grouped,
      which left the results sitting on a grey the rail was not, so the divider
      read as a change of page rather than as an edge. */
   background: var(--glass-bg-solid);
@@ -153,7 +153,7 @@
     font-weight: var(--fw-title);
     font-size: var(--fs-h2);
     line-height: var(--lh-tight);
-    color: var(--color-text-primary);
+    color: var(--color-label);
   }
 }
 
@@ -192,14 +192,14 @@
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-weight: var(--fw-title);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .cards-nav-era:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .cards-nav-era.is-active {
-  color: var(--color-text-primary);
-  background: var(--color-left-bg);
+  color: var(--color-label);
+  background: var(--color-bg-grouped);
 }
 .cards-nav-era:first-child {
   margin-top: 0;
@@ -207,7 +207,7 @@
 /* The site's own row hover, the one the connect lists and the article rows
    wear: a glass pill that fades in under the row. The recipe lives in
    components.css; the inset and the radius are this list's business. It used to
-   be a flat --color-left-bg fill, which is a hover state this site does not use
+   be a flat --color-bg-grouped fill, which is a hover state this site does not use
    anywhere else. */
 .cards-nav-item {
   position: relative;
@@ -235,7 +235,7 @@
 /* Held, not hovered: the pill is a pointer following you around, and where you
    are has to still be legible once the pointer moves on. */
 .cards-nav-item.is-active {
-  background: var(--color-left-bg);
+  background: var(--color-bg-grouped);
 }
 .cards-nav-art {
   flex-shrink: 0;
@@ -256,7 +256,7 @@
   width: 100%;
   height: 100%;
   border-radius: var(--radius-sm);
-  background: var(--color-left-bg);
+  background: var(--color-bg-grouped);
 }
 .cards-nav-name {
   flex: 1;
@@ -264,7 +264,7 @@
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-small);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -276,7 +276,7 @@
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-variant-numeric: lining-nums tabular-nums;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 /* ── The results pane ── */
@@ -364,7 +364,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--color-tint);
   color: var(--color-on-dark);
   cursor: pointer;
   /* Above the pill, which shares this track and is positioned into it. */
@@ -385,9 +385,9 @@
     bottom: 0;
     background: linear-gradient(
       to top,
-      var(--color-left-bg) 20%,
-      color-mix(in srgb, var(--color-left-bg) 80%, transparent) 50%,
-      color-mix(in srgb, var(--color-left-bg) 0%, transparent) 100%
+      var(--color-bg-grouped) 20%,
+      color-mix(in srgb, var(--color-bg-grouped) 80%, transparent) 50%,
+      color-mix(in srgb, var(--color-bg-grouped) 0%, transparent) 100%
     );
     -webkit-mask-image: linear-gradient(to top, #000 60%, transparent 100%);
     mask-image: linear-gradient(to top, #000 60%, transparent 100%);
@@ -505,7 +505,7 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-h2);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .cards-tools {
@@ -551,10 +551,10 @@
      this field zoomed the page on iOS the moment it took focus, which
      .chat-input had already been fixed for. See --fs-control. */
   font-size: var(--fs-control);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .cards-search input::placeholder {
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 /* The engine's own clear affordance would sit beside ours. */
 .cards-search input::-webkit-search-cancel-button {
@@ -571,18 +571,18 @@
   border: none;
   border-radius: 50%;
   background: none;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   cursor: pointer;
 }
 .cards-search button:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .cards-count {
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -592,7 +592,7 @@
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
   line-height: var(--lh-relaxed);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 
 /* ── A set ── */
@@ -650,13 +650,13 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-card);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .cards-set-meta {
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -827,10 +827,10 @@
   background:
     radial-gradient(
       120% 90% at 50% 0%,
-      color-mix(in srgb, var(--color-text-primary) 9%, transparent),
+      color-mix(in srgb, var(--color-label) 9%, transparent),
       transparent 70%
     ),
-    color-mix(in srgb, var(--color-text-primary) 5%, transparent);
+    color-mix(in srgb, var(--color-label) 5%, transparent);
   overflow: hidden;
   text-align: center;
 }
@@ -839,7 +839,7 @@
 .cards-scan-missing-frame {
   position: absolute;
   inset: 6%;
-  border: 1px solid color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-label) 12%, transparent);
   border-radius: 3% / 2.2%;
 }
 .cards-scan-missing-name {
@@ -848,7 +848,7 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-small);
   line-height: var(--lh-snug);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   /* Two lines, then stop: some trainer names are longer than the card is wide. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -859,7 +859,7 @@
   position: relative;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-tiny);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -869,7 +869,7 @@
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-weight: var(--fw-eyebrow);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-variant-numeric: lining-nums tabular-nums;
   margin-top: 2px;
 }
@@ -879,7 +879,7 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-small);
   line-height: var(--lh-snug);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   /* Two lines at most: a long trainer name should not push the row below it. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -897,7 +897,7 @@
   gap: 2px var(--space-2);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .cards-item-number {
   font-variant-numeric: lining-nums tabular-nums;
@@ -912,7 +912,7 @@
   white-space: nowrap;
 }
 /* The type used to sit at opacity 0.72 to separate it from the number and the
-   rarity. On text already at --color-text-tertiary that took it under the AA
+   rarity. On text already at --color-label-tertiary that took it under the AA
    threshold, and axe caught it. The separation now comes from a divider
    instead, which costs no contrast at all. */
 /* The dot belongs between two facts, not in front of one. It used to hang off
@@ -1047,12 +1047,12 @@
   border-radius: var(--radius-sm);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
 }
 .filter-menu-panel label:hover {
-  background: var(--color-left-bg);
-  color: var(--color-text-primary);
+  background: var(--color-bg-grouped);
+  color: var(--color-label);
 }
 /* The native box sits at the browser's own grey, which on this surface is
    near enough to the background that ticked and unticked look alike at a
@@ -1075,11 +1075,11 @@
     border-color var(--dur-fast) var(--ease-smooth);
 }
 .filter-menu-panel label:hover input {
-  border-color: var(--color-text-primary);
+  border-color: var(--color-label);
 }
 .filter-menu-panel input:checked {
-  background: var(--color-text-primary);
-  border-color: var(--color-text-primary);
+  background: var(--color-label);
+  border-color: var(--color-label);
 }
 /* The tick, drawn rather than a glyph so it keeps its weight at any size. */
 .filter-menu-panel input:checked::after {
@@ -1088,7 +1088,7 @@
   width: 4px;
   height: 8px;
   margin: 1px auto 0;
-  border: solid var(--color-bg);
+  border: solid var(--color-bg-surface);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -1102,7 +1102,7 @@
 .filter-menu-panel .facet-count {
   flex-shrink: 0;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-variant-numeric: lining-nums tabular-nums;
 }
 .filter-menu-panel .facet-clear {
@@ -1114,13 +1114,13 @@
   background: none;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   text-align: left;
   cursor: pointer;
 }
 .filter-menu-panel .facet-clear:hover {
-  color: var(--color-text-primary);
-  background: var(--color-left-bg);
+  color: var(--color-label);
+  background: var(--color-bg-grouped);
 }
 
 .cards-reset {
@@ -1132,11 +1132,11 @@
   font-family: var(--font-main);
   font-size: var(--fs-small);
   font-weight: var(--fw-button);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   cursor: pointer;
 }
 .cards-reset:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 /* ── Loading outlines (app/cards/loading.tsx) ── */
@@ -1270,14 +1270,14 @@
   font-family: var(--font-main);
   font-size: var(--fs-control-label);
   font-weight: var(--fw-button);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
   transition:
     color var(--dur-fast) var(--ease-smooth),
     background var(--dur-fast) var(--ease-smooth);
 }
 .cards-segment:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .cards-segment.is-active {
   background: var(--btn-primary-bg);
@@ -1302,14 +1302,14 @@
   /* Same correction as .cards-segment above. */
   border-radius: calc(var(--radius-pill) - 4px);
   background: none;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   cursor: pointer;
   transition:
     color var(--dur-fast) var(--ease-smooth),
     background var(--dur-fast) var(--ease-smooth);
 }
 .cards-view:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .cards-view.is-active {
   background: var(--btn-primary-bg);
@@ -1335,7 +1335,7 @@
   background: none;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-smooth),
@@ -1359,13 +1359,13 @@
   background: none;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
 }
 .filter-chips-clear:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 /* ── Rarity tags, wishlist, list view ── */
@@ -1385,16 +1385,16 @@
 /* Dense: these sit in a grid of scans, several to a card. Shape comes from
    .tag; this is only what /cards does differently. */
 .cards-tag {
-  background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+  background: color-mix(in srgb, var(--color-label) 7%, transparent);
   font-size: var(--fs-tiny);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 /* Wanted rather than held: an outline instead of a fill, so the difference
    survives being read in greyscale as well as in colour. */
 .cards-tag--want {
   background: none;
   border: 1px dashed var(--color-border-active);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 /* A card that is only wanted sits back from the ones actually in the binder. */
 .cards-item.is-wishlist .cards-scan img {
@@ -1506,12 +1506,12 @@
   text-align: left;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
 }
 .filter-menu-panel .facet-row:hover {
-  background: var(--color-left-bg);
-  color: var(--color-text-primary);
+  background: var(--color-bg-grouped);
+  color: var(--color-label);
 }
 .filter-menu-panel .facet-row svg:last-child {
   flex-shrink: 0;
@@ -1525,7 +1525,7 @@
   gap: 3px;
   flex-shrink: 0;
   font-size: var(--fs-small);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -1543,11 +1543,11 @@
   font-family: var(--font-main);
   font-size: var(--fs-small);
   font-weight: var(--fw-button);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   cursor: pointer;
 }
 .filter-menu-panel .facet-back:hover {
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .filter-menu > summary svg:first-of-type {
   flex-shrink: 0;
@@ -1627,7 +1627,7 @@
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .card-detail-title {
   margin: var(--space-1) 0 0;
@@ -1635,21 +1635,21 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-h2);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .card-detail-price {
   margin: var(--space-4) 0 0;
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-card);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-variant-numeric: lining-nums tabular-nums;
 }
 .card-detail-price-avg {
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-weight: var(--fw-regular);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 /* A definition list, two columns, so the labels line up down the left. */
@@ -1667,13 +1667,13 @@
 .card-detail-facts dt {
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .card-detail-facts dd {
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .card-detail-mine {
@@ -1685,7 +1685,7 @@
   margin: 0 0 var(--space-3);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .card-detail-mine ul {
   margin: 0;
@@ -1703,7 +1703,7 @@
 .card-detail-mine-state {
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 .card-detail-cm {
@@ -1734,7 +1734,7 @@
   outline: none;
 }
 .cards-item-link:focus-visible .cards-scan {
-  outline: 2px solid var(--color-text-primary);
+  outline: 2px solid var(--color-label);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -1841,7 +1841,7 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-card);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .card-add-field {
   display: flex;
@@ -1861,7 +1861,7 @@
   font-family: var(--font-main);
   font-size: var(--fs-small);
   font-weight: var(--fw-eyebrow);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   /* A legend sits in the fieldset's border by default, which puts the group's
      name half a line above where every other label on this form sits. */
   padding: 0;
@@ -1885,12 +1885,12 @@
   font-family: var(--font-main);
   font-size: var(--fs-control-label);
   font-weight: var(--fw-button);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
 }
 .card-add-chip:hover {
   border-color: var(--color-border-hover);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .card-add-chip.is-on {
   border-color: transparent;
@@ -1905,14 +1905,14 @@
   gap: var(--space-3);
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   cursor: pointer;
 }
 .card-add-check input {
   /* The platform's own box, at the size the platform draws it: a checkbox is
      the one control here nobody gains anything from us redrawing. */
   margin: 2px 0 0;
-  accent-color: var(--color-accent);
+  accent-color: var(--color-tint);
 }
 .card-add-check span {
   display: flex;
@@ -1921,7 +1921,7 @@
 }
 .card-add-hint {
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 .card-add-actions {
@@ -1937,10 +1937,10 @@
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .card-add-error {
-  color: var(--color-text-primary);
+  color: var(--color-label);
   font-weight: var(--fw-eyebrow);
 }
 
@@ -1979,7 +1979,7 @@
   font-weight: var(--fw-title);
   font-size: var(--fs-card);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 /* ── The dashboard ──
@@ -2022,14 +2022,14 @@
 .cards-kpi-label {
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .cards-kpi-value {
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-h2);
   line-height: var(--lh-tight);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   /* Proportional figures, deliberately: tabular-nums gives every digit the width
      of a zero, which reads loose at display sizes. Tabular is for columns that
      have to line up, which is the table below rather than this. */
@@ -2050,14 +2050,14 @@
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-card);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 .cards-dash-sub {
   margin: 0 0 var(--space-3);
   max-width: 60ch;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 /* ── Value over time ──
    Full width of the dashboard column rather than sharing a row with anything,
@@ -2080,7 +2080,7 @@
 
 .cards-value-line {
   fill: none;
-  stroke: var(--color-text-primary);
+  stroke: var(--color-label);
   stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -2096,8 +2096,8 @@
 /* Drawn as a ring rather than a disc, so the line reads as passing through the
    reading rather than stopping at it. */
 .cards-value-dot {
-  fill: var(--color-bg);
-  stroke: var(--color-text-primary);
+  fill: var(--color-bg-surface);
+  stroke: var(--color-label);
   stroke-width: 2px;
 }
 
@@ -2107,7 +2107,7 @@
   margin: var(--space-2) 0 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 /* Two distributions side by side while there is room for both. */
@@ -2126,7 +2126,7 @@
   padding: var(--space-2) var(--space-3) var(--space-2) 0;
 }
 .cards-dash-table a {
-  color: var(--color-text-primary);
+  color: var(--color-label);
   text-decoration: none;
 }
 /* Same as the grid: the card name is a title, not a piece of prose with a link
@@ -2145,7 +2145,7 @@
   height: 30px;
   border-radius: 3px;
   overflow: hidden;
-  background: var(--color-left-bg);
+  background: var(--color-bg-grouped);
 }
 .cards-dash-thumb img {
   width: 100%;
@@ -2157,7 +2157,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  background: var(--color-left-bg);
+  background: var(--color-bg-grouped);
 }
 .cards-dash-num {
   text-align: right;
@@ -2186,7 +2186,7 @@
   text-align: left;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2200,7 +2200,7 @@
 .cards-bar-fill {
   display: block;
   height: 100%;
-  background: var(--color-accent);
+  background: var(--color-tint);
   /* Square where it leaves the baseline, rounded at the data end, so the tip
      reads as the value and the start reads as zero. */
   border-radius: 0 4px 4px 0;
@@ -2211,7 +2211,7 @@
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 /* ─── THE POKÉDEX ─── */
@@ -2249,7 +2249,7 @@
   border: 1px solid var(--color-border);
   border-radius: 50%;
   background: var(--glass-bg-solid);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-smooth);
@@ -2266,7 +2266,7 @@
   opacity: 1;
 }
 .cards-dex-step:hover {
-  color: var(--color-text-primary);
+  color: var(--color-label);
   border-color: var(--color-border-active);
 }
 /* A touch screen has no hover to reveal them with, so there they simply are. */
@@ -2377,13 +2377,13 @@ button.cards-dex-body:focus-visible::after {
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-tiny);
   font-variant-numeric: lining-nums tabular-nums;
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 .cards-dex-name {
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-small);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2391,14 +2391,14 @@ button.cards-dex-body:focus-visible::after {
 /* The ones with nothing in them recede, but stay legible: a Pokédex is read for
    its gaps as much as for its hits. */
 .cards-dex-slot.is-empty .cards-dex-name {
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
 }
 
 .cards-dex-empty {
   margin: 0;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 
 /* Same question, same box: see the note on .cards-main. */
@@ -2444,7 +2444,7 @@ button.cards-dex-body:focus-visible::after {
      in the light theme and 0.66 in the dark one, so a sheet wearing it read as
      the same frosted layer as the blur behind it and every row was a word over
      whatever card art happened to be there. A list you read needs a surface. */
-  background: var(--color-bg);
+  background: var(--color-bg-surface);
 }
 .modal--sheet .modal-scroll {
   height: auto;
@@ -2478,7 +2478,7 @@ button.cards-dex-body:focus-visible::after {
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-sub);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .sheet .facet-back {
@@ -2491,7 +2491,7 @@ button.cards-dex-body:focus-visible::after {
   font-family: var(--font-main);
   font-weight: var(--fw-title);
   font-size: var(--fs-sub);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   cursor: pointer;
 }
 
@@ -2501,7 +2501,7 @@ button.cards-dex-body:focus-visible::after {
   background: none;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   cursor: pointer;
 }
 
@@ -2538,7 +2538,7 @@ button.cards-dex-body:focus-visible::after {
 .sheet .facet-inline-label {
   font-family: var(--font-main);
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .sheet .facet-inline .cards-segmented {
   width: 100%;
@@ -2564,7 +2564,7 @@ button.cards-dex-body:focus-visible::after {
   background: none;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-body-s);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   text-align: left;
   cursor: pointer;
 }
@@ -2578,7 +2578,7 @@ button.cards-dex-body:focus-visible::after {
 }
 .sheet .facet-count {
   font-size: var(--fs-small);
-  color: var(--color-text-tertiary);
+  color: var(--color-label-tertiary);
   font-variant-numeric: tabular-nums;
 }
 .sheet .facet-on {
@@ -2586,7 +2586,7 @@ button.cards-dex-body:focus-visible::after {
   align-items: center;
   gap: 2px;
   font-size: var(--fs-small);
-  color: var(--color-text-primary);
+  color: var(--color-label);
 }
 
 .sheet-field {
@@ -2596,7 +2596,7 @@ button.cards-dex-body:focus-visible::after {
 }
 .sheet-label {
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 
 /* Below the scroller, so it is reachable without scrolling to the end of six
@@ -2695,7 +2695,7 @@ button.cards-dex-body:focus-visible::after {
 .filter-menu-panel .facet-inline-label {
   font-family: var(--font-main);
   font-size: var(--fs-small);
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
 }
 .filter-menu-panel .facet-inline .cards-segmented {
   width: 100%;
@@ -2734,7 +2734,7 @@ button.cards-dex-body:focus-visible::after {
   min-height: 28px;
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
-  color: var(--color-text-primary);
+  color: var(--color-label);
   cursor: pointer;
 }
 
@@ -2810,11 +2810,118 @@ button.cards-dex-body:focus-visible::after {
   font-family: var(--font-body), sans-serif;
   font-size: var(--fs-small);
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
+  color: var(--color-label-secondary);
   cursor: pointer;
 }
 .cards-count-option.is-active {
   border-color: transparent;
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
+}
+
+/* ── The set index ─────────────────────────────────────────────────────────
+   The screen that replaced the pane swap. Written against the generated
+   colour roles rather than the old names, so it is also the first thing here
+   that reads the tokens the iOS app will read.
+
+   Auto-fill rather than a column count: the tile has a natural width and the
+   row takes as many as fit. A fixed count needs a breakpoint per step, and
+   this grid sits inside .cards-main, which is a container — so the query it
+   would need is a container query, and none of that is necessary when the
+   browser can divide. */
+.set-index {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding-bottom: var(--page-pad-bottom);
+}
+
+.set-index-era-title {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  color: var(--color-label);
+  margin: 0 0 var(--space-4);
+}
+
+.set-index-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.set-index-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+/* Hover only where hovering is a thing. On a touch screen :hover sticks after
+   a tap, so the tile you last opened stays raised until something else is
+   pressed — which reads as the page having failed to let go. */
+@media (hover: hover) {
+  .set-index-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+.set-index-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Reserved before the logo lands, so a lazy image does not shunt the name
+     and the count down the moment it decodes. Same reason the card scans
+     carry an aspect-ratio. */
+  height: 44px;
+}
+
+.set-index-logo img {
+  max-height: 100%;
+  max-width: 70%;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.set-index-logo-fallback {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--color-label-tertiary);
+}
+
+.set-index-name {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--color-label);
+}
+
+.set-index-count {
+  font-size: var(--fs-small);
+  color: var(--color-label-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.set-index-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-surface-subtle);
+  overflow: hidden;
+}
+
+.set-index-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-tint);
 }
