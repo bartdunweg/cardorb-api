@@ -45,6 +45,11 @@ const CHECKS: Check[] = [
     without: "canonicals and the sitemap use Vercel's project URL",
   },
   { name: "ALLOWED_ORIGINS", required: false, without: "only this app's own origin may post" },
+  {
+    name: "POKEMONTCG_API_KEY",
+    required: false,
+    without: "the add-card search calls pokemontcg.io unauthenticated, at a lower rate limit",
+  },
 
   // Warned about rather than silent, because the failure they cause is the
   // one this file exists for: a URL without a key, or a key without a URL, is

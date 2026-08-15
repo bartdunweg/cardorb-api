@@ -354,7 +354,37 @@ facet as their example (`CardsView.tsx`'s "long tick-lists" comment,
 `docs/changelog.d/2026-08-15-remove-pokemon-name-filter.md` record it.
 `npm run check` is green.
 
-## Open
+Since then, in this session: the add-card dialog (`CardAddDialog.tsx`) was
+rebuilt twice, the second time correcting the first within the same
+session. First pass (ADR-0030, now superseded): Set reordered above Name, a
+debounced live thumbnail preview scoped to the typed set, via TCGdex's
+existing-but-unused `/api/v1/catalog/search`. Immediate correction from
+Bart — "1 invoerveld voor alles" (FB-0005) — wanted one search bar,
+matching name/number/set/type at once, no "pick a set first" gate. That
+gate existed for a real reason (TCGdex only resolves one set at a time), so
+meeting the correction meant a different data source, not just relaxing
+the client check: `/api/v1/catalog/search` now runs on pokemontcg.io
+instead (`lib/core/ptcg-search.ts`, new), one query across name/number/
+set.name/types with the term escaped against Lucene injection. A live
+probe against the real API during this session confirmed the query shape
+works but also found it genuinely fragile unauthenticated — ten rapid
+requests produced five 500/502s — so a new optional `POKEMONTCG_API_KEY`
+env var was added (sent as `X-Api-Key` when set; not yet obtained, since
+getting one means Bart signing up at pokemontcg.io himself) alongside a
+retry, a 5-minute per-query cache, and, the real mitigation, a persistent
+"Enter it by hand" fallback to the classic Name/Number/Set fields — a card
+pokemontcg.io hasn't indexed can still be added, unconditionally.
+`CardAddDialog.tsx` is now a four-state flow (search → live results →
+selected-match summary, or → manual fields), with explicit focus
+management between states (an accessibility pass found focus silently
+dropping to `<body>` on every transition, since fixed via refs) and a
+single persistent `role="status"` region for "Searching…"/"No matches"
+(previously two conditionally-mounted nodes, which some screen readers
+would not reliably announce). `docs/decisions/0031-add-card-single-search-bar.md`
+(supersedes `0030`), `docs/feedback/0005-add-card-should-be-one-search-bar.md`,
+and `docs/changelog.d/2026-08-15-add-card-single-search-bar.md` record it.
+`npm run check` is green throughout. Not exercised with a real click-through
+in this session — same signed-in-browser gap as everything else below.
 
 - **Card detail, avatar upload, and signup still need a real signed-in
   browser pass** (earlier session's work) — see above; unchanged by the
@@ -363,6 +393,53 @@ facet as their example (`CardsView.tsx`'s "long tick-lists" comment,
   Dashboard-title work also needs a real signed-in browser pass** at
   ≤1000px, for the same reason (no credentials available to browser
   automation in this workspace) — see above for the specific routes.
+
+Since then, in this session: a quick correctness fix, caught by Bart asking
+"'charizard 151' zou dan ook moeten werken toch?" — it didn't yet.
+`buildQuery()` in `lib/core/ptcg-search.ts` was treating the whole typed
+string as one wildcarded phrase, which pokemontcg.io's own query parser
+splits on whitespace regardless, so a two-word search didn't mean what it
+looked like it meant. Now each word gets its own name/number/set/type OR
+clause and the clauses are joined by a bare space, which a live check
+against the real API confirmed pokemontcg.io's parser treats as AND
+between parenthesised groups — "charizard 151" narrows from 108
+name-matched Charizards down to exactly the 3 printed in the set named
+"151". Capped at 6 words. `npm run check` is green.
+
+Since then, in this session: a second correction, immediate again — "enter
+it by hand moet geen optie zijn, het is meer gebruik advanced filters"
+(FB-0006). The "Enter it by hand" manual fallback from the previous entry
+is gone entirely: there is no path left in `CardAddDialog.tsx` that writes
+a name/set nobody confirmed against the catalogue. In its place, "Advanced
+filters" — Name/Number/Set/Type as their own fields, still a live search
+(`lib/core/ptcg-search.ts` gained `buildFilterQuery()`/`SearchFilters`
+alongside the quick-search `buildQuickQuery()`; `/api/v1/catalog/search`
+switches into filter mode whenever any of those four params is present).
+Explicitly accepted, not softened: a card pokemontcg.io has not indexed can
+no longer be added through this dialog at all — the exact consequence
+ADR-0031 had named as a reason to keep a fallback, chosen anyway.
+`docs/decisions/0032-add-card-advanced-filters-not-manual-entry.md`
+(supersedes `0031`'s fallback design, not its pokemontcg.io backend choice),
+`docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md`, and
+`docs/changelog.d/2026-08-15-add-card-search-and-advanced-filters.md`
+record it. A follow-up accessibility check confirmed focus still moves
+correctly on the new quick/advanced toggle and found no label collisions.
+`npm run check` is green.
+
+- **A `POKEMONTCG_API_KEY` would meaningfully derisk the new add-card
+  search, and matters more than it did — there is no manual-entry fallback
+  left.** The unauthenticated pokemontcg.io rate limit was observed failing
+  under a rapid burst this session, and since ADR-0032 a search that can't
+  reach pokemontcg.io means a card genuinely can't be added, not just
+  "search is a bit less convenient." The app has no key yet. Getting one
+  needs Bart himself (account creation on a third-party site).
+- **Card detail, avatar upload, signup, and the new add-card search all
+  still need a real signed-in browser pass.** (Card detail/avatar/signup
+  from an earlier session; the add-card preview is this session's own.) See
+  above for what each needs; the add-card preview specifically needs: pick
+  a real set, type a partial name, confirm thumbnails render and a click
+  fills Number and highlights, confirm the highlight clears on further
+  edits.
 - The Notion-connections-table drop and the profile-avatar migration are
   both confirmed applied to the live database (checked directly via
   `supabase db query --linked` for the former, `supabase migration list`

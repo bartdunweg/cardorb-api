@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
-const setCatalogue = vi.fn();
+const searchCards = vi.fn();
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
 // wholesale rather than importOriginal()-ed.
@@ -10,7 +10,9 @@ vi.mock("../../../../../lib/api/guard", () => ({
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
 }));
-vi.mock("../../../../../lib/core/catalogue", () => ({ setCatalogue: (...a: unknown[]) => setCatalogue(...a) }));
+vi.mock("../../../../../lib/core/ptcg-search", () => ({
+  searchCards: (...a: unknown[]) => searchCards(...a),
+}));
 
 const { GET } = await import("./route");
 
@@ -21,49 +23,65 @@ const search = (query: URLSearchParams) =>
 
 beforeEach(() => {
   authorise.mockResolvedValue(VIEWER);
-  setCatalogue.mockResolvedValue({
-    byNumber: {
-      "1": { id: "base1-1", localId: "1", name: "Alakazam", image: "https://img/base1/1" },
-      "01": { id: "base1-1", localId: "1", name: "Alakazam", image: "https://img/base1/1" },
-      "4": { id: "base1-4", localId: "4", name: "Charizard", image: "https://img/base1/4" },
+  searchCards.mockResolvedValue([
+    {
+      id: "base1-4",
+      number: "4",
+      name: "Charizard",
+      setName: "Base",
+      image: "https://img/base1/4/small",
+      imageHigh: "https://img/base1/4/large",
+      rarity: "Rare Holo",
+      types: ["Fire"],
     },
-    assetBase: "https://img/base1",
-    setHasScans: true,
-  });
+  ]);
 });
-afterEach(() => setCatalogue.mockClear());
+afterEach(() => searchCards.mockClear());
 
 describe("GET /api/v1/catalog/search", () => {
-  it("refuses without a set to search in", async () => {
-    const res = await search(new URLSearchParams({ query: "char" }));
+  it("refuses a query shorter than two characters", async () => {
+    const res = await search(new URLSearchParams({ query: "c" }));
     expect(res.status).toBe(400);
-    expect(setCatalogue).not.toHaveBeenCalled();
+    expect(searchCards).not.toHaveBeenCalled();
+  });
+
+  it("refuses a missing query the same way", async () => {
+    const res = await search(new URLSearchParams());
+    expect(res.status).toBe(400);
+    expect(searchCards).not.toHaveBeenCalled();
   });
 
   it("refuses when authorisation refuses", async () => {
     authorise.mockResolvedValue({ status: 401, error: "Sign in to see this." });
-    const res = await search(new URLSearchParams({ set: "Base" }));
+    const res = await search(new URLSearchParams({ query: "char" }));
     expect(res.status).toBe(401);
+    expect(searchCards).not.toHaveBeenCalled();
   });
 
-  it("dedupes the same card reached through two number forms", async () => {
-    const res = await search(new URLSearchParams({ set: "Base" }));
-    const { cards } = await res.json();
-    expect(cards).toHaveLength(2);
-    expect(cards.map((c: { id: string }) => c.id).sort()).toEqual(["base1-1", "base1-4"]);
-  });
-
-  it("filters by name, case-insensitively", async () => {
-    const res = await search(new URLSearchParams({ set: "Base", query: "char" }));
+  it("passes the trimmed query through and returns what it finds", async () => {
+    const res = await search(new URLSearchParams({ query: "  char  " }));
+    expect(searchCards).toHaveBeenCalledWith("char");
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
-    expect(cards[0].name).toBe("Charizard");
+    expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", rarity: "Rare Holo" });
   });
 
-  it("resolves an image URL from the catalogue's asset base", async () => {
-    const res = await search(new URLSearchParams({ set: "Base", query: "char" }));
+  it("switches to filter mode when any filter field is present, ignoring query", async () => {
+    const res = await search(new URLSearchParams({ name: "char", query: "should be ignored" }));
+    expect(searchCards).toHaveBeenCalledWith({ name: "char", number: "", set: "", type: "" });
     const { cards } = await res.json();
-    expect(cards[0].image).toContain("base1/4/low.webp");
-    expect(cards[0].imageHigh).toContain("base1/4/high.webp");
+    expect(cards).toHaveLength(1);
+  });
+
+  it("does not require two characters in filter mode", async () => {
+    const res = await search(new URLSearchParams({ number: "6" }));
+    expect(res.status).toBe(200);
+    expect(searchCards).toHaveBeenCalledWith({ name: "", number: "6", set: "", type: "" });
+  });
+
+  it("trims filter fields before checking whether any are present", async () => {
+    const res = await search(new URLSearchParams({ name: "   " }));
+    expect(res.status).toBe(400);
+    expect(searchCards).not.toHaveBeenCalled();
   });
 });

@@ -1,25 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search, X } from "lucide-react";
 import Modal from "./Modal";
-import type { CardFields } from "../../lib/core/collection-row";
+import { MAX, type CardFields } from "../../lib/core/collection-row";
+import type { CatalogueMatch } from "../../lib/core/ptcg-search";
 import { modalCardAddClassName } from "./cardModalClasses";
 
 /**
- * The form behind the plus: one card, eight columns, straight into Postgres.
+ * The form behind the plus: one search box first, a few extra fields once a
+ * card is found.
  *
- * The suggestions come from the database rather than from a list written down
- * beside it, so a set added this morning is offered here this afternoon and a
- * renamed rarity does not leave the form offering the old name. They are
- * fetched when the dialog opens, with the same request the profile screen
- * signs in with.
+ * "1 invoerveld voor alles" (docs/feedback/0005-add-card-should-be-one-search-bar.md):
+ * typing a name, a number, a set, or a type into the same box shows matching
+ * cards live, via /api/v1/catalog/search (pokemontcg.io underneath — see
+ * lib/core/ptcg-search.ts for why). Picking one fills Name, Number, Set,
+ * Rarity and Type from the catalogue; only Generation and the two toggles are
+ * still typed by hand, because nothing indexes them.
  *
- * Set, Rarity and Gen are inputs over a datalist rather than selects, and that
- * is the point of them: forty sets exist and the one you have just opened a
- * pack of may not be one of them. A text column has no fixed set of values, so
- * typing a new set name is how a set released this morning gets a row at all.
- * Type is chips, because seven stable options are not worth typing.
+ * A card the quick box can't find gets "Advanced filters" — Name, Number,
+ * Set and Type as their own fields, still searched, never a way to skip
+ * search and write an unmatched row. That used to be an "Enter it by hand"
+ * escape hatch; see docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md
+ * for why it was replaced rather than kept: a card pokemontcg.io has not
+ * indexed genuinely cannot be added through this dialog any more, a
+ * deliberate, known tradeoff (ADR-0032), not an oversight.
  */
 
 /** The eight columns as the form holds them. */
@@ -50,6 +56,15 @@ const cardAddInputClassName =
   "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
 
+/** The one big field this dialog opens on — taller and louder than the rest. */
+const cardAddSearchClassName =
+  "h-14 w-full pl-11 pr-11 border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-2xl " +
+  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label outline-none " +
+  "[font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-button)] " +
+  "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
+  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
+  "[&::-webkit-search-cancel-button]:hidden";
+
 const EMPTY: Draft = {
   name: "",
   number: "",
@@ -60,6 +75,9 @@ const EMPTY: Draft = {
   collection: true,
   excluded: false,
 };
+
+/** How long to let someone keep typing before a search is worth a request. */
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function CardAddDialog({
   open,
@@ -78,9 +96,40 @@ export default function CardAddDialog({
   const [added, setAdded] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const [query, setQuery] = useState("");
+  const [matches, setMatches] = useState<CatalogueMatch[]>([]);
+  const [searching, setSearching] = useState(false);
+  /** The match a click confirmed, replacing the search area with a summary. */
+  const [selected, setSelected] = useState<CatalogueMatch | null>(null);
+  /** Quick is the one box; advanced is Name/Number/Set/Type as their own
+   *  fields — a more precise search, never a way to skip search. */
+  const [mode, setMode] = useState<"quick" | "advanced">("quick");
+  const [filters, setFilters] = useState({ name: "", number: "", set: "", type: "" });
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const advancedNameRef = useRef<HTMLInputElement>(null);
+  const changeButtonRef = useRef<HTMLButtonElement>(null);
+
   const set = useCallback(<K extends keyof Draft>(field: K, value: Draft[K]) => {
     setDraft((d) => ({ ...d, [field]: value }));
   }, []);
+  const setFilter = useCallback((field: keyof typeof filters, value: string) => {
+    setFilters((f) => ({ ...f, [field]: value }));
+  }, []);
+
+  // Every state change in this dialog swaps out whatever DOM node held focus
+  // — a result button, "Change", the search box — for a different one.
+  // Without this, React drops focus to <body> on each transition, silently
+  // ejecting keyboard and screen-reader users from the flow.
+  useEffect(() => {
+    if (open && !selected && mode === "quick") searchInputRef.current?.focus();
+  }, [open, selected, mode]);
+  useEffect(() => {
+    if (open && !selected && mode === "advanced") advancedNameRef.current?.focus();
+  }, [open, selected, mode]);
+  useEffect(() => {
+    if (open && selected) changeButtonRef.current?.focus();
+  }, [open, selected]);
 
   useEffect(() => {
     if (!open) return;
@@ -110,6 +159,97 @@ export default function CardAddDialog({
     };
   }, [open, onUnauthorised]);
 
+  useEffect(() => {
+    if (!open) return;
+    const term = query.trim();
+    const hasFilters = Object.values(filters).some((v) => v.trim());
+    // No search once a card is picked (nothing left to find). Both branches,
+    // and the "too short"/"no filters" one below, go through the same timer
+    // as the real request so every setState here happens from inside it
+    // rather than synchronously from the effect body.
+    const active = !selected && (mode === "quick" ? term.length >= 2 : hasFilters);
+    let cancelled = false;
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => {
+        if (!active) {
+          setMatches([]);
+          setSearching(false);
+          return;
+        }
+        setSearching(true);
+        const params = new URLSearchParams();
+        if (mode === "quick") {
+          params.set("query", term);
+        } else {
+          for (const [key, value] of Object.entries(filters)) {
+            if (value.trim()) params.set(key, value.trim());
+          }
+        }
+        fetch(`/api/v1/catalog/search?${params}`, { signal: controller.signal })
+          .then(async (res) => {
+            if (cancelled) return;
+            if (res.status === 401) {
+              onUnauthorised();
+              return;
+            }
+            if (!res.ok) {
+              setMatches([]);
+              return;
+            }
+            const body = (await res.json()) as { cards: CatalogueMatch[] };
+            setMatches(body.cards ?? []);
+          })
+          // A live search is convenience, not a requirement to add a card —
+          // the same reasoning the /api/v1/fields fetch above is built on.
+          .catch(() => {
+            if (!cancelled) setMatches([]);
+          })
+          .finally(() => {
+            if (!cancelled) setSearching(false);
+          });
+      },
+      active ? SEARCH_DEBOUNCE_MS : 0,
+    );
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [open, query, filters, mode, selected, onUnauthorised]);
+
+  function selectMatch(match: CatalogueMatch) {
+    setDraft((d) => ({
+      ...d,
+      name: match.name,
+      number: match.number,
+      set: match.setName,
+      rarity: match.rarity ?? d.rarity,
+      types: match.types.length ? match.types.slice(0, MAX.types) : d.types,
+    }));
+    setSelected(match);
+    setMatches([]);
+  }
+
+  function clearSelection() {
+    setSelected(null);
+    setQuery("");
+    setFilters({ name: "", number: "", set: "", type: "" });
+    setDraft((d) => ({ ...d, name: "", number: "", set: "", rarity: "", types: [] }));
+  }
+
+  function enterAdvanced() {
+    setMode("advanced");
+    setMatches([]);
+    setFilters((f) => ({ ...f, name: f.name || query.trim() }));
+  }
+
+  function backToQuick() {
+    setMode("quick");
+    setMatches([]);
+    setQuery((q) => q || filters.name.trim());
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -132,9 +272,14 @@ export default function CardAddDialog({
         return;
       }
       setAdded(draft.name);
-      // Set and Gen survive, the rest does not. Cards arrive by the pack, and
-      // retyping the set nine times is the form fighting the way it is used.
-      setDraft({ ...EMPTY, set: draft.set, gen: draft.gen });
+      setSelected(null);
+      setQuery("");
+      setFilters({ name: "", number: "", set: "", type: "" });
+      setMatches([]);
+      // No "current set" to keep across submissions any more: every card
+      // comes from picking a fresh match, which brings its own Set. Only Gen
+      // (never catalogue-derived) is worth carrying to the next one.
+      setDraft((d) => ({ ...EMPTY, gen: d.gen }));
       // The row exists; the page in front of it is still the one from before.
       // The route has already dropped the caches behind it, so this is what
       // asks for the new render.
@@ -155,182 +300,365 @@ export default function CardAddDialog({
       </datalist>
     ) : null;
 
+  // Any type a picked match carried in, even one nobody has typed before,
+  // still needs a chip to show as on — see selectMatch().
+  const typeOptions = Array.from(new Set([...(fields?.types ?? []), ...draft.types]));
+
+  const ready = selected !== null;
+  const hasFilters = Object.values(filters).some((v) => v.trim());
+
   return (
     <Modal open={open} onClose={onClose} label="Add a card" className={modalCardAddClassName}>
-      <form
-        className="card-add grid grid-cols-2 gap-4
-          [@media(max-width:480px)]:grid-cols-1"
-        onSubmit={submit}
-      >
+      <form className="card-add flex flex-col gap-4" onSubmit={submit}>
         <h2
-          className="col-span-full m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
+          className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
             [font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-label"
         >
           Add a card
         </h2>
-        {/* The order a card is read off its face: what it is, then where it is
-            from, then what kind of printing. */}
-        <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Name</span>
-          <input
-            className={cardAddInputClassName}
-            value={draft.name}
-            onChange={(e) => set("name", e.target.value)}
-            required
-            autoComplete="off"
-            placeholder="Charizard ex"
-          />
-        </label>
 
-        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Number</span>
-          <input
-            className={cardAddInputClassName}
-            value={draft.number}
-            onChange={(e) => set("number", e.target.value)}
-            autoComplete="off"
-            // Zero-padded, because that is how the rest of the database is
-            // written and how the artwork lookup finds a scan first time.
-            placeholder="006"
-          />
-        </label>
-
-        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Set</span>
-          <input
-            className={cardAddInputClassName}
-            value={draft.set}
-            onChange={(e) => set("set", e.target.value)}
-            required
-            list="card-add-sets"
-            autoComplete="off"
-            placeholder="151"
-          />
-        </label>
-        {suggest("card-add-sets", fields?.sets)}
-
-        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Rarity</span>
-          <input
-            className={cardAddInputClassName}
-            value={draft.rarity}
-            onChange={(e) => set("rarity", e.target.value)}
-            list="card-add-rarities"
-            autoComplete="off"
-            placeholder="Holo"
-          />
-        </label>
-        {suggest("card-add-rarities", fields?.rarities)}
-
-        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Generation</span>
-          <input
-            className={cardAddInputClassName}
-            value={draft.gen}
-            onChange={(e) => set("gen", e.target.value)}
-            list="card-add-gens"
-            autoComplete="off"
-            placeholder="Scarlet &amp; Violet"
-          />
-        </label>
-        {suggest("card-add-gens", fields?.gens)}
-
-        {/* A group rather than a label: the name below belongs to the set of
-            chips, not to any one of them. */}
-        {fields?.types?.length ? (
-          <fieldset className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-            <legend className={cardAddLabelClassName}>Type</legend>
-            <div className="flex flex-wrap gap-2">
-              {fields.types.map((type) => {
-                const on = draft.types.includes(type);
-                return (
+        {!ready && (
+          <>
+            {mode === "quick" ? (
+              <div className="relative">
+                <Search
+                  size={18}
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-label-tertiary"
+                />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  className={cardAddSearchClassName}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  autoComplete="off"
+                  placeholder="Charizard, 006, 151, or Fire…"
+                  aria-label="Search for a card by name, number, set or type"
+                />
+                {query && (
                   <button
-                    key={type}
                     type="button"
-                    className={
-                      "h-[var(--control-h)] px-[var(--space-3-5)] rounded-pill [font-family:var(--font-main)]" +
-                      " [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] cursor-pointer" +
-                      (on
-                        ? " border border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
-                        : " border border-[var(--color-border)] bg-transparent text-label-secondary" +
-                          " hover:border-[var(--color-border-hover)] hover:text-label")
-                    }
-                    aria-pressed={on}
-                    onClick={() =>
-                      set(
-                        "types",
-                        on ? draft.types.filter((t) => t !== type) : [...draft.types, type],
-                      )
-                    }
+                    onClick={() => setQuery("")}
+                    aria-label="Clear the search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center
+                      w-7 h-7 rounded-full text-label-tertiary hover:text-label cursor-pointer"
                   >
-                    {type}
+                    <X size={16} strokeWidth={1.75} />
                   </button>
-                );
-              })}
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 [@media(max-width:480px)]:grid-cols-1">
+                <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Name</span>
+                  <input
+                    ref={advancedNameRef}
+                    className={cardAddInputClassName}
+                    value={filters.name}
+                    onChange={(e) => setFilter("name", e.target.value)}
+                    autoComplete="off"
+                    placeholder="Charizard"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Number</span>
+                  <input
+                    className={cardAddInputClassName}
+                    value={filters.number}
+                    onChange={(e) => setFilter("number", e.target.value)}
+                    autoComplete="off"
+                    placeholder="006"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Set</span>
+                  <input
+                    className={cardAddInputClassName}
+                    value={filters.set}
+                    onChange={(e) => setFilter("set", e.target.value)}
+                    list="card-add-sets"
+                    autoComplete="off"
+                    placeholder="151"
+                  />
+                </label>
+                {suggest("card-add-sets", fields?.sets)}
+                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Type</span>
+                  <input
+                    className={cardAddInputClassName}
+                    value={filters.type}
+                    onChange={(e) => setFilter("type", e.target.value)}
+                    list="card-add-filter-types"
+                    autoComplete="off"
+                    placeholder="Fire"
+                  />
+                </label>
+                {suggest("card-add-filter-types", fields?.types)}
+              </div>
+            )}
+
+            {/* Always mounted, text swapped rather than the node appearing
+                and disappearing: some screen readers miss a role="status"
+                region that arrives and changes content in the same tick,
+                and "no matches" needs announcing exactly as much as
+                "searching" does. */}
+            <p className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-label-tertiary" role="status">
+              {searching && matches.length === 0
+                ? "Searching…"
+                : !searching &&
+                    matches.length === 0 &&
+                    (mode === "quick" ? query.trim().length >= 2 : hasFilters)
+                  ? mode === "quick"
+                    ? `No matches for "${query.trim()}".`
+                    : "No matches for these filters."
+                  : null}
+            </p>
+
+            {matches.length > 0 && (
+              <div
+                className="grid grid-cols-3 gap-3 [@media(min-width:480px)]:grid-cols-4"
+                role="group"
+                aria-label="Cards matching your search"
+              >
+                {matches.map((match) => (
+                  <button
+                    key={match.id}
+                    type="button"
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg border border-transparent
+                      text-center cursor-pointer hover:border-[var(--color-border)]"
+                    // The image alt is decorative context, not the whole
+                    // story: a card with no scan renders no img at all, so
+                    // the button needs its own name rather than depending on
+                    // optional alt text.
+                    aria-label={`${match.name}, ${match.setName}, number ${match.number}`}
+                    onClick={() => selectMatch(match)}
+                  >
+                    {match.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        className="w-full aspect-[245/342] object-contain
+                          [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.15))]"
+                        src={match.image}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        // Same low-then-high retry CardItem.tsx uses for the
+                        // main grid, at thumbnail scale.
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (img.dataset.retried || !match.imageHigh) return;
+                          img.dataset.retried = "1";
+                          img.src = match.imageHigh;
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      className="[font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-label
+                        line-clamp-1 w-full"
+                    >
+                      {match.name}
+                    </span>
+                    <span className="[font-size:var(--fs-tiny)] text-label-tertiary tabular-nums truncate w-full">
+                      {match.setName} · #{match.number}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="m-0 [font-size:var(--fs-small)] text-label-tertiary">
+              {mode === "quick" ? (
+                <>
+                  Looking for something specific?{" "}
+                  <button
+                    type="button"
+                    onClick={enterAdvanced}
+                    className="underline cursor-pointer text-label-secondary hover:text-label"
+                  >
+                    Advanced filters
+                  </button>
+                  .
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={backToQuick}
+                  className="underline cursor-pointer text-label-secondary hover:text-label"
+                >
+                  Back to quick search
+                </button>
+              )}
+            </p>
+          </>
+        )}
+
+        {selected && (
+          <div className="flex items-center gap-3">
+            {selected.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="w-16 aspect-[245/342] object-contain shrink-0
+                  [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.15))]"
+                src={selected.image}
+                alt=""
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.dataset.retried || !selected.imageHigh) return;
+                  img.dataset.retried = "1";
+                  img.src = selected.imageHigh;
+                }}
+              />
+            ) : null}
+            <div className="flex flex-col gap-[2px] min-w-0 flex-1">
+              <span
+                className="[font-family:var(--font-main)] [font-weight:var(--fw-title)]
+                  [font-size:var(--fs-body-s)] text-label truncate"
+              >
+                {selected.name}
+              </span>
+              <span className="[font-size:var(--fs-small)] text-label-tertiary truncate">
+                {selected.setName} · #{selected.number}
+              </span>
             </div>
-          </fieldset>
-        ) : null}
+            <button
+              ref={changeButtonRef}
+              type="button"
+              className="btn shrink-0"
+              onClick={clearSelection}
+            >
+              Change
+            </button>
+          </div>
+        )}
 
-        <label
-          className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-            [font-size:var(--fs-body-s)] text-label cursor-pointer"
-        >
-          <input
-            className="mt-[2px] [accent-color:var(--color-tint)]"
-            type="checkbox"
-            checked={draft.collection}
-            onChange={(e) => set("collection", e.target.checked)}
-          />
-          <span className="flex flex-col gap-[2px]">
-            In the binder
-            <span className="[font-size:var(--fs-small)] text-label-tertiary">
-              Off means it is wanted rather than held.
-            </span>
-          </span>
-        </label>
+        {ready && (
+          <div className="grid grid-cols-2 gap-4 [@media(max-width:480px)]:grid-cols-1">
+            <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+              <span className={cardAddLabelClassName}>Rarity</span>
+              <input
+                className={cardAddInputClassName}
+                value={draft.rarity}
+                onChange={(e) => set("rarity", e.target.value)}
+                list="card-add-rarities"
+                autoComplete="off"
+                placeholder="Holo"
+              />
+            </label>
+            {suggest("card-add-rarities", fields?.rarities)}
 
-        <label
-          className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-            [font-size:var(--fs-body-s)] text-label cursor-pointer"
-        >
-          <input
-            className="mt-[2px] [accent-color:var(--color-tint)]"
-            type="checkbox"
-            checked={draft.excluded}
-            onChange={(e) => set("excluded", e.target.checked)}
-          />
-          <span className="flex flex-col gap-[2px]">
-            Excluded
-            <span className="[font-size:var(--fs-small)] text-label-tertiary">
-              Keeps it out of the latest pull on the about page.
-            </span>
-          </span>
-        </label>
+            <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+              <span className={cardAddLabelClassName}>Generation</span>
+              <input
+                className={cardAddInputClassName}
+                value={draft.gen}
+                onChange={(e) => set("gen", e.target.value)}
+                list="card-add-gens"
+                autoComplete="off"
+                placeholder="Scarlet &amp; Violet"
+              />
+            </label>
+            {suggest("card-add-gens", fields?.gens)}
 
-        <div className="col-span-full flex justify-end">
-          <button
-            type="submit"
-            className="btn btn--primary"
-            disabled={busy || !draft.name.trim() || !draft.set.trim()}
-          >
-            {busy ? "Adding" : "Add to the collection"}
-          </button>
-        </div>
+            {/* A group rather than a label: the name below belongs to the
+                set of chips, not to any one of them. */}
+            {typeOptions.length ? (
+              <fieldset className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                <legend className={cardAddLabelClassName}>Type</legend>
+                <div className="flex flex-wrap gap-2">
+                  {typeOptions.map((type) => {
+                    const on = draft.types.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        className={
+                          "h-[var(--control-h)] px-[var(--space-3-5)] rounded-pill [font-family:var(--font-main)]" +
+                          " [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] cursor-pointer" +
+                          (on
+                            ? " border border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
+                            : " border border-[var(--color-border)] bg-transparent text-label-secondary" +
+                              " hover:border-[var(--color-border-hover)] hover:text-label")
+                        }
+                        aria-pressed={on}
+                        onClick={() =>
+                          set(
+                            "types",
+                            on ? draft.types.filter((t) => t !== type) : [...draft.types, type],
+                          )
+                        }
+                      >
+                        {type}
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ) : null}
 
-        {/* Both live in the same polite region, so the outcome of a submit is
-            announced whichever way it went, and neither pushes the form around
-            when it arrives. */}
-        <p
-          className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
-            [font-size:var(--fs-small)] text-label-secondary"
-          role="status"
-        >
-          {error ? (
-            <span className="text-label [font-weight:var(--fw-eyebrow)]">{error}</span>
-          ) : added ? (
-            <span>{added} added. The page catches up in a moment.</span>
-          ) : null}
-        </p>
+            <label
+              className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
+                [font-size:var(--fs-body-s)] text-label cursor-pointer"
+            >
+              <input
+                className="mt-[2px] [accent-color:var(--color-tint)]"
+                type="checkbox"
+                checked={draft.collection}
+                onChange={(e) => set("collection", e.target.checked)}
+              />
+              <span className="flex flex-col gap-[2px]">
+                In the binder
+                <span className="[font-size:var(--fs-small)] text-label-tertiary">
+                  Off means it is wanted rather than held.
+                </span>
+              </span>
+            </label>
+
+            <label
+              className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
+                [font-size:var(--fs-body-s)] text-label cursor-pointer"
+            >
+              <input
+                className="mt-[2px] [accent-color:var(--color-tint)]"
+                type="checkbox"
+                checked={draft.excluded}
+                onChange={(e) => set("excluded", e.target.checked)}
+              />
+              <span className="flex flex-col gap-[2px]">
+                Excluded
+                <span className="[font-size:var(--fs-small)] text-label-tertiary">
+                  Keeps it out of the latest pull on the about page.
+                </span>
+              </span>
+            </label>
+
+            <div className="col-span-full flex justify-end">
+              <button
+                type="submit"
+                className="btn btn--primary"
+                disabled={busy || !draft.name.trim() || !draft.set.trim()}
+              >
+                {busy ? "Adding" : "Add to the collection"}
+              </button>
+            </div>
+
+            {/* Both live in the same polite region, so the outcome of a
+                submit is announced whichever way it went, and neither pushes
+                the form around when it arrives. */}
+            <p
+              className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
+                [font-size:var(--fs-small)] text-label-secondary"
+              role="status"
+            >
+              {error ? (
+                <span className="text-label [font-weight:var(--fw-eyebrow)]">{error}</span>
+              ) : added ? (
+                <span>{added} added. The page catches up in a moment.</span>
+              ) : null}
+            </p>
+          </div>
+        )}
       </form>
     </Modal>
   );
