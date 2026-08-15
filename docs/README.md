@@ -70,4 +70,13 @@ root `CLAUDE.md` for how and when to write to it.
   (`docs/feedback/0005-add-card-should-be-one-search-bar.md`,
   `docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md`): kept for the
   record, but their manual-entry-fallback design is not what the app does now.
+- `decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md` — a second,
+  unrelated `0030`, left doubled up rather than renumbered (the same collision
+  `0014` and `0021`/`0023` already had, per `STATE.md`): why rarity and type
+  stop being hand-typed/Notion-descended facts. The existing
+  collection was backfilled from TCGdex (`scripts/backfill-rarity-types.mjs`);
+  going forward, rarity and type in `CardAddDialog.tsx` are read-only, filled
+  in from whichever match the search above (pokemontcg.io) picked, not typed —
+  the same "no manual entry" principle `0032` already established for the
+  card's identity, applied to these two fields specifically.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

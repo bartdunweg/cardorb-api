@@ -224,30 +224,69 @@
 
    Upstream keys fifteen separate recipes off `data-rarity`, one per printing,
    each its own file. This carries one recipe at three strengths, off the same
-   attribute, filled from the Rarity column in Notion (see PullScan). Three,
-   because that is what the binder actually holds: 560 non-holos, 314 reversed
-   holos and 262 rare holos, and 649 of the illustration, ultra and hyper rares
-   between them.
+   attribute, filled from `cards.rarity` — TCGdex's own rarity string for the
+   row rather than typed by hand, see
+   docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md.
 
-   The tiers are the real thing, not taste. A non-holo has no foil in the hand
-   at all and gets none here: it keeps the tilt, the glare and the shadow, which
-   is what a printed card does under a lamp. A reversed or rare holo is foiled
-   in a window rather than corner to corner, so it catches less. A full-art and
-   anything above it is foil across the whole face, which is what the recipe in
-   this file draws, and it is the only tier that gets it at full strength. */
-.poke-card[data-rarity="non-holo"],
+   That backfill is also why the selectors below are TCGdex's tier names
+   ("Common", "Rare Holo EX", "Illustration rare", ...) rather than the three
+   words this file used to key on ("non-holo", "holo", "reversed holo"). Those
+   were never TCGdex's vocabulary: they were which foil variant a printing sits
+   in a binder — whether the owner's physical copy happens to be a reverse holo
+   or a plain one, a fact TCGdex has no field for at all. Rerunning the backfill
+   against the real collection turned up every single matched row disagreeing
+   for exactly that reason, and applying it anyway (the owner's call, TCGdex
+   over what a Notion column once said) means this file lost the ability to
+   tell a reverse holo Common from a plain one. What it gained is a `data-rarity`
+   that is never a typo and is filled in for cards that had no rarity typed in
+   at all before — 649 rows this collection had recorded as illustration, ultra
+   or hyper rare kept that tier; the "578 rows recorded as some flavour of holo"
+   this comment used to cite is the fact this migration traded away.
+
+   Matched with substrings rather than an exhaustive list, for two reasons at
+   once. TCGdex's own vocabulary has one string per era for "this is
+   holographic" — Rare Holo, Rare Holo EX/GX/V/VMAX/VSTAR, Reverse Holo, and
+   older ones this collection does not happen to hold yet. And `cards.rarity`
+   is no longer only TCGdex's word for it: `CardAddDialog.tsx`'s search runs
+   against pokemontcg.io now (docs/decisions/0032-add-card-advanced-filters-not-manual-entry.md),
+   which spells some of the same tiers differently ("Rare Ultra" rather than
+   "Ultra Rare", "Rare Secret" rather than "Secret Rare"). A card added
+   tomorrow, from either source, should still foil at roughly the right
+   strength rather than silently falling through to the flattest tier for
+   want of an exact-string entry here.
+
+   The tiers are the real thing, not taste. Common and Uncommon carry no foil
+   in the hand and get none here: they keep the tilt, the glare and the shadow,
+   which is what a printed card does under a lamp. A holo of any era, or a
+   Rare/Double rare pull, is foiled in a window rather than corner to corner,
+   so it catches less. A full-art tier and anything above it is foil across the
+   whole face, which is what the recipe in this file draws, and it is the only
+   tier that gets it at full strength. */
+.poke-card[data-rarity="common"],
+.poke-card[data-rarity="uncommon"],
 .poke-card[data-rarity="promo"] {
   --poke-foil: 0;
 }
-.poke-card[data-rarity="holo"],
-.poke-card[data-rarity="rare holo"],
-.poke-card[data-rarity="reversed holo"],
-.poke-card[data-rarity="reverse holo"] {
+.poke-card[data-rarity="rare"],
+.poke-card[data-rarity="double rare"],
+.poke-card[data-rarity*="holo"],
+.poke-card[data-rarity="amazing rare"],
+.poke-card[data-rarity="radiant rare"],
+.poke-card[data-rarity="rare break"],
+.poke-card[data-rarity="rare prime"],
+.poke-card[data-rarity="rare shiny"],
+.poke-card[data-rarity="rare ace"],
+.poke-card[data-rarity="rare prism star"] {
   --poke-foil: 0.22;
 }
-.poke-card[data-rarity="illustration rare"],
-.poke-card[data-rarity="special illustration rare"],
-.poke-card[data-rarity="ultra rare"],
-.poke-card[data-rarity="hyper rare"] {
+.poke-card[data-rarity*="illustration"],
+.poke-card[data-rarity*="ultra"],
+.poke-card[data-rarity*="hyper"],
+.poke-card[data-rarity*="secret"],
+.poke-card[data-rarity*="rainbow"],
+.poke-card[data-rarity*="shiny"],
+.poke-card[data-rarity="ace spec rare"],
+.poke-card[data-rarity="legend"],
+.poke-card[data-rarity="classic collection"] {
   --poke-foil: 0.5;
 }

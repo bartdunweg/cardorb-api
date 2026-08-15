@@ -468,6 +468,95 @@ correctly on the new quick/advanced toggle and found no label collisions.
   shared rows) and ADR-0013-style conditionally-overridden properties.
   Nothing further identified as migratable.
 
+Since then, in this session: rarity and type stop being Notion-descended,
+hand-typed facts and become catalogue-sourced (`docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md`).
+
+This session's first version built its own TCGdex set-picker → search →
+detail flow for `CardAddDialog.tsx`, with two new routes
+(`GET /api/v1/catalog/sets`, `GET /api/v1/catalog/cards/[id]`). Merging with
+`main` surfaced that a parallel session had, the same day, already rebuilt the
+same dialog around a single pokemontcg.io-backed search box (ADR-0030/0031/0032
+on `main`, superseding each other within that session per direct feedback —
+`docs/feedback/0005`/`0006`: "1 invoerveld voor alles", "enter it by hand
+should not be an option") — a materially better UX (search across
+name/number/set/type at once, an "Advanced filters" fallback, no manual-entry
+escape hatch) than this session's set-first TCGdex flow. Flagged to Bart
+rather than force-merged; his answer was to resolve the conflict rather than
+pick a side. Resolution: `main`'s dialog and its pokemontcg.io search
+(`lib/core/ptcg-search.ts`) won outright; this session's set-picker routes and
+the `getCardDetail()` `localId` addition were deleted as redundant. What
+survived from this session's version, applied on top of `main`'s dialog:
+Rarity and Type are no longer an editable input/toggle chips once a match is
+picked — they are shown, sourced strictly from `selected.rarity`/`.types`,
+matching the "no manual entry" principle `docs/feedback/0006` already
+established for the card's identity fields, extended here to these two.
+`selectMatch()` was also fixed to stop falling back to a previous pick's
+`draft.rarity` when a new match has none — a leftover from when the field was
+still editable, which would have shown a stale value next to a "read-only"
+label.
+
+`scripts/backfill-rarity-types.mjs` **has been run against the live database**
+(`--user 3fe9b080-2279-480b-a6ec-4fa58611c8cb --write`, Bart's explicit
+go-ahead): 978 rows updated, 22 written to
+`docs/rarity-type-backfill-corrections.md` for having no confident TCGdex
+match. Its first version tried to resolve a row to a TCGdex id by reading a
+running build's `/cards` flight payload the way `snapshot-collection-value.mjs`
+does — but that page now requires a real signed-in session cookie (`/cards`
+itself now just redirects to `/collection`, and the app shell's auth check is
+cookie-only, not the legacy `x-cards-key` header), which this session could
+not obtain. Rewritten to call the same matching primitives
+`buildCollection()` uses directly — `resolveSetIds`/`fetchSet`/`numberForms`
+from `lib/core/catalogue.ts`/`tcgdex-client.ts`/`util.ts`, `sameCard()` from
+`lib/core/matching.ts` — run via `tsx` (Node 22+; `@supabase/supabase-js`
+needs a native `WebSocket`, absent on this machine's default Node 20, so the
+script must run under the `v24.19.0` nvm install). Deliberately not routed
+through `setCatalogue()`: that wraps the same walk in `unstable_cache`, which
+throws ("incrementalCache missing") outside a running Next.js request —
+confirmed by trying it directly. This turned out to be a better shape for a
+one-off script than the flight-payload approach anyway: no build, no server,
+no session needed.
+
+**The dry run surfaced a real finding, not a rubber stamp**: all 978 matched
+rows differed from TCGdex, not a handful. `cards.rarity` had been doing double
+duty — for chase cards it held TCGdex-shaped tiers ("Illustration Rare",
+"Ultra Rare"), but for ordinary cards it held which *foil variant* the owner's
+physical copy was ("Non-holo", "Holo", "Reversed Holo"), a fact TCGdex has no
+field for at all. Overwriting blind would have both destroyed that variant
+information and broken `poke-holo.css`'s foil effect, whose selectors were
+keyed on exactly those three words. Flagged to Bart before writing anything;
+his answer was explicit — TCGdex is the source of truth, apply it fully, the
+foil-variant fact is an accepted casualty. `poke-holo.css`'s `data-rarity`
+selectors were rewritten to the tier vocabulary both catalogues broadly share
+(`common`/`uncommon`/`promo` → no foil; `rare`/`double rare`/anything
+containing `holo`/`amazing rare`/etc. → the middle tier; anything containing
+`illustration`/`ultra`/`hyper`/`secret`/`rainbow`/`shiny`/etc. → full
+strength), matched by substring rather than an exact string per tier —
+partly for future TCGdex tiers this collection doesn't hold yet, partly
+because the merge below means new cards' rarity now comes from pokemontcg.io
+instead, which spells some of the same tiers differently ("Rare Ultra" vs.
+"Ultra Rare"). Verified after writing: `npm run check` green; a direct
+Postgres read confirmed a sample (`White Flare` #001–#003) landed correctly.
+
+**Not verified in a real browser** — no Chrome extension connected in this
+workspace, same gap earlier sessions (including the parallel one merged in
+below) hit. Neither the read-only Rarity/Type summary nor the rest of
+`CardAddDialog.tsx` has been exercised live this session.
+
 ## Next session
 
-Ask what's next. The Tailwind migration is complete.
+- **`CardAddDialog.tsx` needs a real signed-in browser pass**: search, pick a
+  result, confirm Rarity/Type show as read-only text matching the picked
+  card, submit, confirm the row lands correctly. Not exercised live this
+  session (no browser extension connected) — true of both the pokemontcg.io
+  search itself (already merged from the parallel session) and this
+  session's read-only Rarity/Type change on top of it.
+- **`docs/rarity-type-backfill-corrections.md`** lists 22 rows the backfill
+  could not confidently match to a TCGdex id — the same worklist shape
+  `trainer-gallery-row-corrections.md` used for artwork. Worth checking
+  whether any of these are the same 23 Trainer Gallery rows that worklist
+  already covers.
+- **`poke-holo.css`'s substring-matched tiers are a best guess, not verified
+  against pokemontcg.io's actual rarity strings** — this session confirmed
+  TCGdex's vocabulary against the live API (via the backfill) but not
+  pokemontcg.io's. Worth spot-checking a newly-added card's `data-rarity`
+  against the foil effect it gets once the browser pass above is possible.

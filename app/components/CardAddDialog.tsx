@@ -26,6 +26,13 @@ import { modalCardAddClassName } from "./cardModalClasses";
  * for why it was replaced rather than kept: a card pokemontcg.io has not
  * indexed genuinely cannot be added through this dialog any more, a
  * deliberate, known tradeoff (ADR-0032), not an oversight.
+ *
+ * Rarity and Type stop being editable once a match is picked (see
+ * docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md): they
+ * used to be a text input and toggle chips a person could override, which is
+ * how they ended up carrying whatever a Notion column once said rather than
+ * what the card actually is. They are shown, not asked for, sourced strictly
+ * from `selected` — the same catalogue match that filled Name/Number/Set.
  */
 
 /** The eight columns as the form holds them. */
@@ -219,13 +226,17 @@ export default function CardAddDialog({
   }, [open, query, filters, mode, selected, onUnauthorised]);
 
   function selectMatch(match: CatalogueMatch) {
+    // Rarity and types mirror the match exactly, not a fallback onto whatever
+    // a previous pick left in `d` — they are read-only now (see the top-of-
+    // file comment), so what gets submitted has to be what the summary below
+    // actually shows, not a stale leftover from an earlier card this session.
     setDraft((d) => ({
       ...d,
       name: match.name,
       number: match.number,
       set: match.setName,
-      rarity: match.rarity ?? d.rarity,
-      types: match.types.length ? match.types.slice(0, MAX.types) : d.types,
+      rarity: match.rarity ?? "",
+      types: match.types.slice(0, MAX.types),
     }));
     setSelected(match);
     setMatches([]);
@@ -299,10 +310,6 @@ export default function CardAddDialog({
         ))}
       </datalist>
     ) : null;
-
-  // Any type a picked match carried in, even one nobody has typed before,
-  // still needs a chip to show as on — see selectMatch().
-  const typeOptions = Array.from(new Set([...(fields?.types ?? []), ...draft.types]));
 
   const ready = selected !== null;
   const hasFilters = Object.values(filters).some((v) => v.trim());
@@ -535,20 +542,24 @@ export default function CardAddDialog({
 
         {ready && (
           <div className="grid grid-cols-2 gap-4 [@media(max-width:480px)]:grid-cols-1">
-            <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+            {/* Shown, not asked for — see the top-of-file comment. Both come
+                straight off `selected`, the same match Name/Number/Set did,
+                so there is nothing here to type around any more. */}
+            <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Rarity</span>
-              <input
-                className={cardAddInputClassName}
-                value={draft.rarity}
-                onChange={(e) => set("rarity", e.target.value)}
-                list="card-add-rarities"
-                autoComplete="off"
-                placeholder="Holo"
-              />
-            </label>
-            {suggest("card-add-rarities", fields?.rarities)}
+              <p className="m-0 [font-size:var(--fs-control-label)] text-label">
+                {selected?.rarity ?? "Unknown"}
+              </p>
+            </div>
 
-            <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+            <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
+              <span className={cardAddLabelClassName}>Type</span>
+              <p className="m-0 [font-size:var(--fs-control-label)] text-label">
+                {selected?.types.length ? selected.types.join(", ") : "Unknown"}
+              </p>
+            </div>
+
+            <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
               <span className={cardAddLabelClassName}>Generation</span>
               <input
                 className={cardAddInputClassName}
@@ -560,42 +571,6 @@ export default function CardAddDialog({
               />
             </label>
             {suggest("card-add-gens", fields?.gens)}
-
-            {/* A group rather than a label: the name below belongs to the
-                set of chips, not to any one of them. */}
-            {typeOptions.length ? (
-              <fieldset className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-                <legend className={cardAddLabelClassName}>Type</legend>
-                <div className="flex flex-wrap gap-2">
-                  {typeOptions.map((type) => {
-                    const on = draft.types.includes(type);
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        className={
-                          "h-[var(--control-h)] px-[var(--space-3-5)] rounded-pill [font-family:var(--font-main)]" +
-                          " [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] cursor-pointer" +
-                          (on
-                            ? " border border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
-                            : " border border-[var(--color-border)] bg-transparent text-label-secondary" +
-                              " hover:border-[var(--color-border-hover)] hover:text-label")
-                        }
-                        aria-pressed={on}
-                        onClick={() =>
-                          set(
-                            "types",
-                            on ? draft.types.filter((t) => t !== type) : [...draft.types, type],
-                          )
-                        }
-                      >
-                        {type}
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
-            ) : null}
 
             <label
               className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
