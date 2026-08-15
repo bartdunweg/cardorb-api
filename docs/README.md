@@ -55,4 +55,7 @@ root `CLAUDE.md` for how and when to write to it.
   in a later audit: CardAddDialog's inputs had silently lost their
   glass-control styling because the class they read had gone dead — a caution
   about verification blind spots on routes that need a signed-in session.
+- `decisions/0021-remove-notion-integration.md` — why the Notion integration
+  was deleted outright, now that Postgres is confirmed as the real store,
+  rather than kept as a dormant fallback.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

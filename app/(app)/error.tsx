@@ -18,10 +18,11 @@
 import RouteError from "../components/RouteError";
 
 /**
- * The collection comes out of a Notion database, which is a service that can be
- * down, rate-limited or reachable with a token that has expired. lib/cards.ts
- * fails soft where it can, so this catches what is left: a shape Notion changed
- * under us, or a render that threw on the way through fifteen hundred rows.
+ * The collection comes out of Postgres, which is a service that can be down,
+ * rate-limited or unreachable through row level security misconfigured under
+ * us. lib/cards.ts fails soft where it can, so this catches what is left: a
+ * shape the database changed under us, or a render that threw on the way
+ * through fifteen hundred rows.
  *
  * A boundary on the segment rather than at the root means the failure stays the
  * size of the thing that failed. Without it this route's 500 is the site's 500.

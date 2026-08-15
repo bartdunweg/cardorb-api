@@ -45,10 +45,9 @@ describe("validateCardDraft", () => {
     expect(ok({ name: "P", number: "0\r\n88", set: "Base" }).number).toBe("0 88");
   });
 
-  it("lets a comma through, because that is Notion's rule and not a card's", () => {
+  it("lets a comma through, because that was Notion's rule and not a card's", () => {
     // This used to be stripped here, which meant a set genuinely named
-    // "Sun & Moon, Promos" could not be typed in. The rule moved to
-    // cardProperties() in lib/storage/notion.ts, where it is true.
+    // "Sun & Moon, Promos" could not be typed in. The rule left with Notion.
     expect(ok({ name: "P", set: "Sun & Moon, Promos" }).set).toBe("Sun & Moon, Promos");
     expect(ok({ name: "P", set: "B", types: ["Fire,Water"] }).types).toEqual(["Fire,Water"]);
   });

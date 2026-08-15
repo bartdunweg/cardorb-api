@@ -3,8 +3,8 @@
  * lib/collection-value.generated.json.
  *
  *   npm run build && npx next start -p 3111    # in another shell
- *   node scripts/snapshot-collection-value.mjs
- *   node scripts/snapshot-collection-value.mjs --seed   # add the archived points too
+ *   node scripts/snapshot-collection-value.mjs --user <uuid>
+ *   node scripts/snapshot-collection-value.mjs --user <uuid> --seed   # add the archived points too
  *
  * Why a snapshot rather than a lookup: nobody publishes the history. Cardmarket's
  * API answers with today's price plus its own 1, 7 and 30 day averages and no
@@ -23,7 +23,7 @@
  *
  * Two things are being combined, and both are needed for the question to mean
  * anything. The prices come from the guide. *Which cards were in the binder on
- * that date* comes from Notion's created_time, because valuing today's 1,622
+ * that date* comes from acquired_at in Postgres, because valuing today's 1,622
  * cards at 2024 prices would answer a question nobody asked: 92% of the
  * collection already existed a year ago, so over recent months the series is
  * almost entirely market movement, and over the earlier ones it is almost
@@ -31,8 +31,8 @@
  *
  * It reads the running production build for the one thing neither source has, a
  * card's TCGdex id, the same way scripts/localise-images.mjs reads the built site
- * rather than reimplementing what it already does. Notion knows a card as a set
- * name and a number; Cardmarket knows it as an idProduct; TCGdex is the only
+ * rather than reimplementing what it already does. Postgres knows a card as a
+ * set name and a number; Cardmarket knows it as an idProduct; TCGdex is the only
  * thing that joins them, and lib/cards.ts already does that matching properly,
  * subsets and zero-padding and all. Doing it a second time here would be a second
  * source of truth that goes wrong quietly.
@@ -40,6 +40,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { createClient } from "@supabase/supabase-js";
 import { priceOf, shownPrice } from "../lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -47,9 +48,28 @@ const OUT = join(ROOT, "lib", "core", "collection-value.generated.json");
 /** tcgId -> Cardmarket idProduct. Cached because it costs 1,553 requests and never moves. */
 const IDS = join(ROOT, "lib", "core", "cardmarket-ids.generated.json");
 
+// .env.local, read by hand. The script is run with plain node, which does not
+// load it, and adding a dotenv dependency for a handful of lines would be the
+// first runtime dependency this project took on for a convenience.
+for (const file of [".env.local", ".env"]) {
+  const path = `${ROOT}${file}`;
+  if (!existsSync(path)) continue;
+  for (const line of readFileSync(path, "utf8").split("\n")) {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$/);
+    if (!m) continue;
+    const value = m[2].trim().replace(/^["']|["']$/g, "");
+    if (value && !process.env[m[1]]) process.env[m[1]] = value;
+  }
+}
+
 const BASE = process.env.SITE ?? "http://127.0.0.1:3111";
 const SEED = process.argv.includes("--seed");
-const NOTION_DB = "cfae17e0-bdab-4ca0-9b27-d3baac32b2ae";
+const args = process.argv.slice(2);
+const userId = args[args.indexOf("--user") + 1];
+if (!userId) {
+  console.error("\n  --user <uuid> is required — whose acquired_at dates to read.\n");
+  process.exit(1);
+}
 
 /** 6 is Pokémon in Cardmarket's game table. Public, no login, rebuilt nightly. */
 const GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json";
@@ -101,54 +121,39 @@ async function cardsFromBuild() {
 /**
  * When each card first appeared in the binder, and whether it is held or wanted.
  *
- * created_time is Notion's own, not a field Bart fills in, which is exactly why
- * it is trustworthy here: it is the moment the row was made, and rows get made
- * when a pack is opened. Spread over 26 months, so it is a real timeline rather
- * than one bulk import.
+ * acquired_at is deliberately not created_at — see the column's own comment in
+ * supabase/migrations/20260814062300_accounts_and_cards.sql — so it is
+ * trustworthy here for the same reason a Notion page's created_time used to
+ * be: it is when the card entered the binder, not when this row happened to
+ * be written.
  *
  * Keyed the way lib/cards.ts keys a card, set name and number, so a card held
  * twice (normal and reverse holo) is one entry. Its date is the earlier of the
  * two rows: the card entered the binder when the first copy did.
  */
-async function fromNotion() {
-  const token = process.env.NOTION_TOKEN;
-  if (!token) throw new Error("NOTION_TOKEN is not set, so there is no telling when anything arrived");
-  const rows = [];
-  let cursor;
-  for (let page = 0; page < 30; page++) {
-    const r = await fetch(`https://api.notion.com/v1/databases/${NOTION_DB}/query`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) }),
-    });
-    if (!r.ok) throw new Error(`Notion query: ${r.status}`);
-    const body = await r.json();
-    rows.push(...(body.results ?? []));
-    if (!body.has_more || !body.next_cursor) break;
-    cursor = body.next_cursor;
-  }
+async function fromPostgres() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
+  const db = createClient(url, key, { auth: { persistSession: false } });
 
-  const text = (p) => (p?.title ?? p?.rich_text ?? []).map((t) => t.plain_text).join("").trim();
+  const { data, error } = await db
+    .from("cards")
+    .select("set_name,number,name,owned,acquired_at")
+    .eq("user_id", userId);
+  if (error) throw new Error(`Postgres query: ${error.message}`);
+
   const cards = new Map();
-  for (const row of rows) {
-    const props = row.properties ?? {};
-    const set = props.Set?.select?.name;
-    const number = text(props.Number);
-    const name = text(props.Name);
-    if (!set) continue;
-    const key = `${set}-${number || name}`;
-    const acquired = row.created_time.slice(0, 10);
-    const owned = props.Collection?.checkbox !== false;
+  for (const row of data) {
+    if (!row.set_name) continue;
+    const key = `${row.set_name}-${row.number || row.name}`;
+    const acquired = row.acquired_at.slice(0, 10);
     const prev = cards.get(key);
     if (prev) {
       if (acquired < prev.acquired) prev.acquired = acquired;
-      prev.owned ||= owned;
+      prev.owned ||= row.owned;
     } else {
-      cards.set(key, { acquired, owned });
+      cards.set(key, { acquired, owned: row.owned });
     }
   }
   return cards;
@@ -228,8 +233,8 @@ const guideFrom = async (url, what) => {
 
 const cards = await cardsFromBuild();
 console.log(`/cards: ${cards.size} cards with a TCGdex id`);
-const acquisitions = await fromNotion();
-console.log(`Notion: ${acquisitions.size} cards with a date`);
+const acquisitions = await fromPostgres();
+console.log(`Postgres: ${acquisitions.size} cards with a date`);
 const ids = await cardmarketIds([...cards.values()]);
 
 const guides = [await guideFrom(GUIDE, "Cardmarket price guide, today")];

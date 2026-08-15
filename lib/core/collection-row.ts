@@ -58,11 +58,9 @@ export type CollectionRow = {
   acquiredAt: string | null;
   /**
    * The nine — not eight — inventory facts added for per-printing detail
-   * (2026-08-14 card-inventory-fields migration). Postgres-only: the Notion
-   * adapter has no columns for these and defaults them the same way a fresh
-   * Postgres row would (quantity 1, isFavorite false, the rest null), rather
-   * than gaining columns in a database this project does not otherwise write
-   * to. See docs/decisions/0006-per-variant-inventory-fields.md.
+   * (2026-08-14 card-inventory-fields migration): quantity 1, isFavorite
+   * false, the rest null by default. See
+   * docs/decisions/0006-per-variant-inventory-fields.md.
    */
   quantity: number;
   condition: string | null;
@@ -158,8 +156,8 @@ export const MAX = { name: 200, number: 40, option: 120, types: 10, conditionOrG
  * "Sun & Moon, Promos" could not be typed in, in an app that might never write
  * to Notion again.
  *
- * So it moved to where it is true — cardProperties() in lib/storage/notion.ts,
- * which is the only code that has to care. Postgres takes the name as given.
+ * That rule left with the code that needed it, when Notion did. Postgres
+ * takes the name as given.
  */
 const cleanText = (s: string) => s.replace(/[\r\n]+/g, " ").trim();
 

@@ -11,7 +11,7 @@ import { SITE_URL } from "../lib/core/config";
  * and they say different things on purpose.
  *
  * /api is disallowed because there is nothing there for a reader and every
- * endpoint costs a Notion walk to answer. /cards is disallowed because the
+ * endpoint costs a database walk to answer. /cards is disallowed because the
  * proxy bounces an anonymous request to the login anyway, and a crawler
  * that follows it would index the login under the collection's URL. /login is
  * disallowed for the same reason from the other end: it is a password field,

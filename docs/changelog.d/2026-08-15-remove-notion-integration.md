@@ -1,0 +1,1 @@
+- Removed the Notion integration entirely — the collection now lives only in Postgres. Settings > Import no longer offers "From Notion"; only a spreadsheet import remains.

@@ -11,8 +11,8 @@ import { bearer } from "../../../../lib/api/viewer";
  *
  * It does not get to fail soft. Reading fails into an empty state and nobody
  * loses anything; a write that fails quietly loses the card that was just
- * pulled. Every refusal comes back as a message a client can show, in Notion's
- * own words where Notion is the one refusing.
+ * pulled. Every refusal comes back as a message a client can show, in the
+ * store's own words where the store is the one refusing.
  */
 
 /** A card is eight short fields. Anything near this is a paste accident. */

@@ -1344,7 +1344,7 @@ export default function CardsView({
           <CardsDashboard stats={stats} />
         ) : (
           <>
-            {/* No token, a Notion outage or an empty collection all land here. Saying
+            {/* A database outage or an empty collection both land here. Saying
           so beats an empty page that looks like something failed to paint. */}
             {sets.length === 0 ? (
               <Card className="cards-empty">

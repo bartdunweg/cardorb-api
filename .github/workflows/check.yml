@@ -39,6 +39,7 @@ jobs:
       - run: npm run check
 
       # Needs no secrets: getCards() fails soft and returns an empty collection
-      # without NOTION_TOKEN, which is enough to compile every route. The pages
-      # that prerender card detail get an empty list and build zero of them.
+      # without a configured Supabase client, which is enough to compile every
+      # route. The pages that prerender card detail get an empty list and
+      # build zero of them.
       - run: npm run build

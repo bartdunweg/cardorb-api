@@ -13,17 +13,7 @@ export default async function ImportPage() {
   if (!viewer) redirect("/login?next=/settings/import");
 
   const db = await serverClient();
-  const [conn, history] = db
-    ? await Promise.all([
-        db.from("connections").select("database_id,last_import_at,last_error").eq("kind", "notion").maybeSingle(),
-        recentImports(db, 5),
-      ])
-    : [{ data: null }, []];
+  const history = db ? await recentImports(db, 5) : [];
 
-  return (
-    <ImportSettings
-      connection={(conn as { data: unknown }).data as never}
-      history={history as never}
-    />
-  );
+  return <ImportSettings history={history as never} />;
 }

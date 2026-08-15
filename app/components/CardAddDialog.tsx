@@ -7,19 +7,19 @@ import type { CardFields } from "../../lib/core/collection-row";
 import { modalCardAddClassName } from "./cardModalClasses";
 
 /**
- * The form behind the plus: one card, eight columns, straight into Notion.
+ * The form behind the plus: one card, eight columns, straight into Postgres.
  *
  * The suggestions come from the database rather than from a list written down
- * beside it, so a set added in Notion this morning is offered here this
- * afternoon and a renamed rarity does not leave the form offering the old name.
- * They are fetched when the dialog opens, with the same request the profile
- * screen signs in with.
+ * beside it, so a set added this morning is offered here this afternoon and a
+ * renamed rarity does not leave the form offering the old name. They are
+ * fetched when the dialog opens, with the same request the profile screen
+ * signs in with.
  *
  * Set, Rarity and Gen are inputs over a datalist rather than selects, and that
  * is the point of them: forty sets exist and the one you have just opened a
- * pack of may not be one of them. Notion creates a select option it has not
- * seen, so typing a new set name is how a set released this morning gets a row
- * at all. Type is chips, because seven stable options are not worth typing.
+ * pack of may not be one of them. A text column has no fixed set of values, so
+ * typing a new set name is how a set released this morning gets a row at all.
+ * Type is chips, because seven stable options are not worth typing.
  */
 
 /** The eight columns as the form holds them. */

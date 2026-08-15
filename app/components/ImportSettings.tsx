@@ -13,16 +13,16 @@ import {
 } from "./SettingsPanel";
 
 /**
- * Bringing a collection in, from a spreadsheet or from Notion.
+ * Bringing a collection in from a spreadsheet.
  *
- * Both paths are two steps, and the first step writes nothing. That is not
- * caution for its own sake: the column mapping for a CSV is a *guess*, and an
- * import that acted on a guess without showing it would file two thousand cards
- * under the wrong set and look like it worked. The preview is where the guess
- * is checked by the only party who can check it.
+ * Two steps, and the first writes nothing. That is not caution for its own
+ * sake: the column mapping for a CSV is a *guess*, and an import that acted
+ * on a guess without showing it would file two thousand cards under the
+ * wrong set and look like it worked. The preview is where the guess is
+ * checked by the only party who can check it.
  *
- * Both are also idempotent, and the screen says so, because "what happens if I
- * press it twice" is the question that stops people pressing it once.
+ * Idempotent, and the screen says so, because "what happens if I press it
+ * twice" is the question that stops people pressing it once.
  */
 
 type Preview = {
@@ -45,25 +45,15 @@ type Run = {
   started_at: string;
 };
 
-export default function ImportSettings({
-  connection,
-  history,
-}: {
-  connection: { database_id: string; last_import_at: string | null; last_error: string | null } | null;
-  history: Run[];
-}) {
+export default function ImportSettings({ history }: { history: Run[] }) {
   const router = useRouter();
   const file = useRef<HTMLInputElement>(null);
 
   const [csv, setCsv] = useState<string | null>(null);
   const [csvName, setCsvName] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
-  const [source, setSource] = useState<"csv" | "notion" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [said, setSaid] = useState<string | null>(null);
-
-  const [token, setToken] = useState("");
-  const [database, setDatabase] = useState("");
 
   const n = (v: number) => v.toLocaleString(LOCALE);
 
@@ -76,28 +66,20 @@ export default function ImportSettings({
     return { res, data: (await res.json().catch(() => ({}))) as Record<string, unknown> };
   }
 
-  async function look(kind: "csv" | "notion") {
-    setBusy(kind);
+  async function look() {
+    setBusy("csv");
     setSaid(null);
     setPreview(null);
-    const { res, data } = await post(
-      kind === "csv" ? "/api/v1/import/csv" : "/api/v1/import/notion",
-      kind === "csv" ? { csv } : {},
-    );
+    const { res, data } = await post("/api/v1/import/csv", { csv });
     setBusy(null);
     if (!res.ok) return setSaid((data.error as string) ?? "That could not be read.");
-    setSource(kind);
     setPreview(data as unknown as Preview);
   }
 
   async function run() {
-    if (!source) return;
     setBusy("commit");
     setSaid(null);
-    const { res, data } = await post(
-      source === "csv" ? "/api/v1/import/csv" : "/api/v1/import/notion",
-      source === "csv" ? { csv, commit: true } : { commit: true },
-    );
+    const { res, data } = await post("/api/v1/import/csv", { csv, commit: true });
     setBusy(null);
     if (!res.ok) return setSaid((data.error as string) ?? "That import did not finish.");
     const added = data.added as number;
@@ -142,78 +124,10 @@ export default function ImportSettings({
           className="btn"
           type="button"
           disabled={!csv || busy === "csv"}
-          onClick={() => look("csv")}
+          onClick={look}
         >
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
         </button>
-      </SettingsPanel>
-
-      <SettingsPanel>
-        <SettingsPanelTitle>From Notion</SettingsPanelTitle>
-
-        {connection ? (
-          <>
-            <SettingsHint>
-              Connected to <code>{connection.database_id.slice(0, 8)}…</code>
-              {connection.last_import_at
-                ? ` — last imported ${new Date(connection.last_import_at).toLocaleDateString(LOCALE)}.`
-                : " — not imported yet."}
-            </SettingsHint>
-            {connection.last_error && <SettingsSaid>Last attempt failed: {connection.last_error}</SettingsSaid>}
-            <SettingsHint>
-              Running it again only brings in pages that are not here yet, so it
-              is safe to press whenever you have added cards over there.
-            </SettingsHint>
-            <button className="btn" type="button" disabled={busy === "notion"} onClick={() => look("notion")}>
-              {busy === "notion" ? "Reading…" : "Check for new cards"}
-            </button>{" "}
-            <button
-              className="btn"
-              type="button"
-              onClick={async () => {
-                await fetch("/api/v1/connections/notion", { method: "DELETE" });
-                router.refresh();
-              }}
-            >
-              Disconnect
-            </button>
-          </>
-        ) : (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setBusy("connect");
-              setSaid(null);
-              const { res, data } = await post("/api/v1/connections/notion", { token, database });
-              setBusy(null);
-              if (!res.ok) return setSaid((data.error as string) ?? "That could not be connected.");
-              setToken("");
-              router.refresh();
-            }}
-          >
-            <SettingsHint>
-              Create an integration at notion.so/my-integrations, share your card
-              database with it, then paste the token and the database link here.
-              The token is encrypted before it is stored.
-            </SettingsHint>
-            <SettingsInput
-              type="password"
-              placeholder="ntn_…"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              autoComplete="off"
-            />
-            <SettingsInput
-              placeholder="https://notion.so/…"
-              value={database}
-              onChange={(e) => setDatabase(e.target.value)}
-              autoComplete="off"
-            />
-            <button className="btn" type="submit" disabled={busy === "connect" || !token || !database}>
-              {busy === "connect" ? "Checking…" : "Connect"}
-            </button>
-          </form>
-        )}
       </SettingsPanel>
 
       {preview && (

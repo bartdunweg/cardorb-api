@@ -126,7 +126,37 @@ this route has no auth/cookies to protect). `docs/decisions/0014-public-latest-p
 and `docs/changelog.d/2026-08-15-public-latest-pull-endpoint.md` record it.
 `npm run check` is green.
 
+Since then, in this session: the Notion integration was removed entirely —
+the collection is Postgres/Supabase-only now, no dormant fallback. Deleted
+`lib/storage/notion.ts` + test, `lib/storage/secrets.ts` + test (existed only
+to encrypt a stored Notion token), `app/api/v1/connections/notion/route.ts`,
+`app/api/v1/import/notion/route.ts`, `scripts/import-notion.mjs`.
+`lib/storage/collection.ts` lost its `Source`/`source()` switch and talks to
+Postgres unconditionally; `lib/core/env.ts` dropped the `NOTION_TOKEN`/
+`SECRETS_KEY` checks and promoted `NEXT_PUBLIC_SUPABASE_URL`/
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` to required. Settings > Import lost its "From
+Notion" panel (`ImportSettings.tsx`, `app/settings/import/page.tsx`) — CSV
+only now. `scripts/snapshot-collection-value.mjs`, which read Notion's
+`created_time` for acquisition dates, was rewritten to read `acquired_at`
+from Postgres directly (needs `--user <uuid>` now). A new migration,
+`supabase/migrations/20260815120000_drop_notion_connections.sql`, drops the
+now-unused `public.connections` table — **written but not yet applied to the
+live database**; that needs `supabase db push` (or equivalent) run
+deliberately against production. `docs/decisions/0021-remove-notion-integration.md`
+and `docs/changelog.d/2026-08-15-remove-notion-integration.md` record it.
+`npm run check` is green; a `npm run dev` boot confirmed the `[env]` warnings
+now cover only the Supabase vars (this workspace still has none configured).
+
 ## Open
+
+- **Apply `supabase/migrations/20260815120000_drop_notion_connections.sql`**
+  to the live database — not done yet, deliberately left for an explicit
+  go-ahead since it drops a production table.
+- This workspace's `.env.local` has `CARDS_TOKEN`/`OWNER_EMAIL` filled in but
+  still needs real `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  (and `SUPABASE_SERVICE_ROLE_KEY` for the account-deletion path) pasted in
+  by hand — not something to put in chat. Until then the app boots but the
+  collection is empty and no account can be created.
 
 - `cards.css` is now 1,365 lines (from 2,927 at the start of the migration),
   holding only cross-file selector hooks (GLASS CONTROL/CONTROL recipe,

@@ -1,8 +1,8 @@
 # Card Orb
 
-A Pokémon card collection: 1,600-odd cards kept in Notion, matched against three
-card catalogues, priced, and served as an API that a web tool and an iOS app both
-read.
+A Pokémon card collection: 1,600-odd cards kept in Postgres (Supabase), matched
+against three card catalogues, priced, and served as an API that a web tool and
+an iOS app both read.
 
 It began as `/cards` on [bartdunweg.com](https://bartdunweg.com), which is why
 the first commit is not a scaffold. Two years of work sit in `lib/core`: matching
@@ -73,7 +73,7 @@ request rather than a failed card.
 
 ```
 npm install
-cp .env.example .env.local   # then fill in NOTION_TOKEN and CARDS_TOKEN
+cp .env.example .env.local   # then fill in the Supabase vars and CARDS_TOKEN
 npm run dev
 curl localhost:3000/api/v1/collection | jq '.sets | length'
 ```
@@ -84,17 +84,18 @@ curl localhost:3000/api/v1/collection | jq '.sets | length'
 
 Deployed on Vercel, DNS on Cloudflare (DNS-only, not proxied — Cloudflare in front of
 Vercel would break `x-forwarded-host`, which `sameOrigin()` in `lib/api/guard.ts` reads).
-Seven env vars, matching what `lib/core/env.ts` checks at boot and `.env.example`
-documents:
+Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` documents:
 
 | | required | |
 | --- | --- | --- |
-| `NOTION_TOKEN` | yes | reads and writes the card database |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | the collection's database; public by design, RLS is what stops a stranger, not secrecy |
 | `CARDS_TOKEN` | yes | the one passcode that may write |
 | `OWNER_EMAIL` | yes | the address the login checks against |
+| `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
 | `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — canonicals, `og:url`, the sitemap and `robots.txt` all read this |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
 | `PUBLIC_USERNAME`, `OWNER_NAME` | no | whose collection `/user/<name>` shows |
+| `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
 
 `NEXT_PUBLIC_SITE_URL` matters more than its "recommended" tag suggests: without it,
 `SITE_URL` falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, which is whichever
@@ -102,21 +103,11 @@ documents:
 set it explicitly the moment a custom domain is attached, or a canonical link can point at
 the wrong address.
 
-## Accounts, and the database under them
+## The database
 
-This is being taken from one passcode to real accounts. The migration is in
-`supabase/migrations/`, and it is deliberately something you turn on rather than
-something you have to finish: the tables are additive, `COLLECTION_SOURCE`
-defaults to `notion`, and until it says `postgres` nothing below is load-bearing.
-Flipping it back is the whole rollback plan.
-
-| | required | |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | once migrated | public by design; RLS is what stops a stranger, not secrecy |
-| `SUPABASE_SERVICE_ROLE_KEY` | scripts only | bypasses every policy, so it never reaches the browser |
-| `SECRETS_KEY` | for Notion connections | 32 bytes of hex; AES-256-GCM over somebody else's Notion token |
-| `COLLECTION_SOURCE` | no | `notion` (default) or `postgres` — the cutover switch |
-| `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
+The collection lives in Postgres (Supabase); it started in Notion and was
+migrated over — see `docs/decisions/` for why and when. The schema is in
+`supabase/migrations/`.
 
 Four things have to be set up once, and each of them fails in a way that looks
 like something else if it is left until the day it is needed.
@@ -200,9 +191,3 @@ Two things in `lib/core` are deliberately hollow. `localise()` and `measure()` i
 those paths resolve on one domain only, so an iOS client would have been handed a
 thousand broken pictures. Here the scans come from the catalogues directly. When
 Card Orb wants its own artwork in-house, `util.ts` is the one file that changes.
-
-`TRADING_DATABASE` in `lib/storage/notion.ts` is also written down in the
-portfolio's own `lib/notion.ts`, which reads one row out of the same database for
-the card on its about page. Two copies of an id is how two projects end up
-pointed at two different databases six months apart, so if it ever moves, it
-moves in both.

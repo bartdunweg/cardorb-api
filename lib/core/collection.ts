@@ -40,29 +40,6 @@ import { buildCollection, type CardSet } from "./cards";
 import { cardsTag } from "./collection-row";
 import { listRows, publicProfile } from "../storage/collection";
 import { serverClient, userClient } from "../storage/supabase";
-import { PUBLIC_USERNAME } from "./config";
-
-/**
- * Whose collection, on the one store that cannot say.
- *
- * It was written as a stand-in for a user id, so that "every cache key, every
- * tag and every call site is already the shape it needs to be when accounts
- * land — the change then is what this resolves to, not where it is threaded".
- *
- * Half of that came true and the wrong half is worth keeping written down,
- * because it cost a real bug. A *default argument* is not a thread. It is a
- * place the argument can silently fail to arrive, and it did: two card pages
- * and the modal called getCards() with nothing, got "owner" where Postgres
- * wanted a uuid, and every one of them answered "no, you do not hold this
- * card" to the person holding 1,968 of them. The query failed, the fail-soft
- * catch turned it into an empty collection, and an empty collection is a
- * perfectly ordinary-looking answer.
- *
- * So the default is gone and this is now only what it always honestly was: the
- * name the Notion reader understands, on a deployment that has one collection
- * and no notion of whose. It dies with COLLECTION_SOURCE=notion.
- */
-export const OWNER = "owner";
 
 /**
  * The rows, cached across requests, dropped the moment their owner writes.
@@ -155,18 +132,8 @@ export const getCards = cache(async (userId: string, token?: string): Promise<Ca
 
 /**
  * Whose collection /user/<name> shows, or null where nobody's is.
- *
- * Two answers behind one question, because there are two stores. Postgres looks
- * the name up and refuses one that is not shared. Notion has one collection and
- * no idea whose, so it falls back to the environment variable that has stood in
- * for a profile table all along — and returns the placeholder user id, which is
- * the only one that store's reader understands.
  */
 export async function ownerOf(username: string): Promise<string | null> {
   const profile = await publicProfile(username);
-  if (profile) return profile.id;
-  // The Notion path, where publicProfile() answers null by design.
-  const { source } = await import("../storage/collection");
-  if (source() === "notion" && username === PUBLIC_USERNAME) return OWNER;
-  return null;
+  return profile ? profile.id : null;
 }

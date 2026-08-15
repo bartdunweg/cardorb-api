@@ -6,15 +6,13 @@ import { createRows } from "./postgres";
 /**
  * Running an import, and writing down that it ran.
  *
- * Shared by both sources because the shape is the same either way: read rows
- * from somewhere, count what was there, write, count again, record it. Only the
- * reading differs, so only the reading is passed in.
+ * The `imports` table also holds `kind: "notion"` rows from the one-time
+ * Notion→Postgres migration, which is why the database column still allows
+ * that value even though nothing writes it anymore.
  *
- * The `imports` table has been in the schema since the accounts migration with
- * nothing writing to it. It is worth having for one reason: an import is the
- * only operation in this app that can be surprising after the fact. "It says
- * 1,204 added and I have 1,600 cards" is a question that needs an answer, and
- * the answer is a row with counts on it.
+ * An import is the only operation in this app that can be surprising after
+ * the fact. "It says 1,204 added and I have 1,600 cards" is a question that
+ * needs an answer, and the answer is a row with counts on it.
  */
 
 export type ImportOutcome = {
@@ -44,7 +42,7 @@ export function preview(rows: CollectionRow[], skipped: number): ImportOutcome {
 export async function commit(
   db: SupabaseClient,
   userId: string,
-  kind: "csv" | "notion",
+  kind: "csv",
   rows: CollectionRow[],
   skippedCount: number,
 ): Promise<ImportOutcome> {
