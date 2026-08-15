@@ -1,0 +1,1 @@
+- Add a card: when the card search can't reach pokemontcg.io, the dialog now says "Search is temporarily unavailable" with a "Try again" button, instead of silently showing no results. A "Show more results" button also appears under broad searches (like a common Pokémon name) instead of stopping at 20.

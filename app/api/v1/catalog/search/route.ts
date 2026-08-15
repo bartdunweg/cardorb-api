@@ -20,6 +20,17 @@ import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
  * docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md for why the
  * alternative to the quick box is a more precise search rather than a way to
  * skip search and add an unmatched row.
+ *
+ * `page` (default 1) forwards straight to pokemontcg.io's own pagination, so
+ * a broad query (a common name across a hundred printings) can be paged
+ * through from the dialog's "Show more results" instead of capping out at
+ * one page silently.
+ *
+ * A `searchCards()` failure answers 502, not the 400 used for "you typed
+ * nothing useful" — the two are different problems for the dialog to show
+ * differently (a request worth retrying vs. one that needs a different
+ * query), and conflating them is exactly the bug that prompted this: see
+ * docs/decisions/0033-add-card-search-failure-and-paging.md.
  */
 export const dynamic = "force-dynamic";
 
@@ -37,20 +48,28 @@ export async function GET(req: Request) {
     type: url.searchParams.get("type")?.trim() ?? "",
   };
   const usingFilters = Object.values(filters).some(Boolean);
+  const pageParam = Number(url.searchParams.get("page"));
+  const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  if (usingFilters) {
-    const cards = await searchCards(filters);
-    return NextResponse.json({ cards }, { headers: readHeaders(req) });
+  if (!usingFilters) {
+    const query = (url.searchParams.get("query") ?? "").trim();
+    if (query.length < 2) {
+      return NextResponse.json(
+        { error: "Type at least two characters to search." },
+        { status: 400, headers: readHeaders(req) },
+      );
+    }
   }
 
-  const query = (url.searchParams.get("query") ?? "").trim();
-  if (query.length < 2) {
+  try {
+    const cards = usingFilters
+      ? await searchCards(filters, page)
+      : await searchCards((url.searchParams.get("query") ?? "").trim(), page);
+    return NextResponse.json({ cards }, { headers: readHeaders(req) });
+  } catch {
     return NextResponse.json(
-      { error: "Type at least two characters to search." },
-      { status: 400, headers: readHeaders(req) },
+      { error: "search-unavailable" },
+      { status: 502, headers: readHeaders(req) },
     );
   }
-
-  const cards = await searchCards(query);
-  return NextResponse.json({ cards }, { headers: readHeaders(req) });
 }

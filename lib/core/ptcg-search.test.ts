@@ -125,13 +125,13 @@ describe("searchCards", () => {
     expect(calls[0]!.headers ?? {}).not.toHaveProperty("X-Api-Key");
   });
 
-  it("retries once and gives up quietly on repeated failure", async () => {
+  it("retries three times total, then throws rather than returning empty", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     installFetch(502, "nope");
     const { searchCards } = await load();
 
-    expect(await searchCards("char")).toEqual([]);
-    expect(calls).toHaveLength(2);
+    await expect(searchCards("char")).rejects.toThrow();
+    expect(calls).toHaveLength(3);
   });
 
   it("targets each filter field precisely, AND'd together", async () => {
@@ -167,6 +167,17 @@ describe("searchCards", () => {
 
     expect(await searchCards({})).toEqual([]);
     expect(calls).toHaveLength(0);
+  });
+
+  it("defaults to page 1 and forwards an explicit page number", async () => {
+    installFetch(200, { data: [] });
+    const { searchCards } = await load();
+
+    await searchCards("char");
+    expect(new URL(calls[0]!.url).searchParams.get("page")).toBe("1");
+
+    await searchCards("char", 3);
+    expect(new URL(calls[1]!.url).searchParams.get("page")).toBe("3");
   });
 
   it("succeeds on a retry after one failure", async () => {

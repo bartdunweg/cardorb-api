@@ -60,7 +60,7 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("passes the trimmed query through and returns what it finds", async () => {
     const res = await search(new URLSearchParams({ query: "  char  " }));
-    expect(searchCards).toHaveBeenCalledWith("char");
+    expect(searchCards).toHaveBeenCalledWith("char", 1);
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
     expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", rarity: "Rare Holo" });
@@ -68,7 +68,7 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("switches to filter mode when any filter field is present, ignoring query", async () => {
     const res = await search(new URLSearchParams({ name: "char", query: "should be ignored" }));
-    expect(searchCards).toHaveBeenCalledWith({ name: "char", number: "", set: "", type: "" });
+    expect(searchCards).toHaveBeenCalledWith({ name: "char", number: "", set: "", type: "" }, 1);
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
   });
@@ -76,12 +76,33 @@ describe("GET /api/v1/catalog/search", () => {
   it("does not require two characters in filter mode", async () => {
     const res = await search(new URLSearchParams({ number: "6" }));
     expect(res.status).toBe(200);
-    expect(searchCards).toHaveBeenCalledWith({ name: "", number: "6", set: "", type: "" });
+    expect(searchCards).toHaveBeenCalledWith({ name: "", number: "6", set: "", type: "" }, 1);
   });
 
   it("trims filter fields before checking whether any are present", async () => {
     const res = await search(new URLSearchParams({ name: "   " }));
     expect(res.status).toBe(400);
     expect(searchCards).not.toHaveBeenCalled();
+  });
+
+  it("forwards an explicit page number", async () => {
+    await search(new URLSearchParams({ query: "char", page: "3" }));
+    expect(searchCards).toHaveBeenCalledWith("char", 3);
+  });
+
+  it("falls back to page 1 for an invalid page value", async () => {
+    await search(new URLSearchParams({ query: "char", page: "not-a-number" }));
+    expect(searchCards).toHaveBeenCalledWith("char", 1);
+
+    await search(new URLSearchParams({ query: "char", page: "-1" }));
+    expect(searchCards).toHaveBeenCalledWith("char", 1);
+  });
+
+  it("answers 502 with a distinct error, not 400, when searchCards fails", async () => {
+    searchCards.mockRejectedValueOnce(new Error("pokemontcg.io search unavailable"));
+    const res = await search(new URLSearchParams({ query: "char" }));
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.error).toBe("search-unavailable");
   });
 });
