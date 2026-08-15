@@ -58,8 +58,8 @@ export function Sheet({
           {headExtra}
         </div>
 
-        {/* The one part that scrolls. Several hundred Pokémon in one facet,
-            and the head and the foot have to stay where a thumb left them.
+        {/* The one part that scrolls. A facet's tick-list can run long (Rarity,
+            for one), and the head and the foot have to stay where a thumb left them.
             `sheet` and `sheet-body` stay as literal classes: FilterOptions.tsx
             styles its own rows differently depending on which ancestor they
             land in (see FilterOptions.tsx's own comment on that). */}
