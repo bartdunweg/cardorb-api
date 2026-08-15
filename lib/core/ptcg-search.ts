@@ -30,7 +30,8 @@ export type CatalogueMatch = {
   types: string[];
 };
 
-const MAX_RESULTS = 20;
+/** Also read by the dialog, to know whether a full page means more might exist. */
+export const MAX_RESULTS = 20;
 
 /**
  * Lucene special characters, escaped so a typed `"`, `:` or `*` cannot change
@@ -106,12 +107,15 @@ type PtcgCard = {
 /**
  * Live, so it has to survive a host that answers 500 and 502 more than it
  * should (see ptcg.ts's own note on the same host) without costing the
- * person typing a multi-second stall. One retry, a short backoff — not the
- * three-attempt, DAY-scoped pattern used for a fallback resolved once per
- * build, because this runs once per keystroke and has to fail fast if it is
- * going to fail at all. A short cache still helps: the same partial word
- * typed twice in one session, or by anyone else that session, costs one
- * request rather than two.
+ * person typing a multi-second stall. Three attempts, a short backoff — not
+ * the DAY-scoped pattern used for a fallback resolved once per build, because
+ * this runs once per keystroke and has to fail fast if it is going to fail at
+ * all. Measured directly against the real host, unauthenticated: 5 failures
+ * out of 10 rapid requests, which is why this is 3 attempts rather than 2 —
+ * two out of three failing in a row is a real event worth surfacing, not
+ * something to retry away indefinitely. A short cache still helps: the same
+ * partial word typed twice in one session, or by anyone else that session,
+ * costs one request rather than two.
  *
  * Sends an API key when POKEMONTCG_API_KEY is set (see lib/core/env.ts) —
  * unauthenticated requests are rate-limited hard enough that a few keystrokes
@@ -123,17 +127,29 @@ type PtcgCard = {
  * two things to combine. A caller with filters wants the caller with a term
  * to be a strictly separate mode, which is also why the dialog above this
  * never shows both at once.
+ *
+ * Throws once every attempt is exhausted, rather than returning `[]` — a
+ * search that failed and a search that genuinely matched nothing used to be
+ * the same shape, which meant a card add-card dialog now depends on entirely
+ * (there is no manual-entry fallback any more, see
+ * docs/decisions/0032-add-card-advanced-filters-not-manual-entry.md) could
+ * fail silently. The caller decides what "unavailable" looks like; this
+ * function's only job is to not lie about which one happened.
  */
-export async function searchCards(input: string | SearchFilters): Promise<CatalogueMatch[]> {
+export async function searchCards(
+  input: string | SearchFilters,
+  page: number = 1,
+): Promise<CatalogueMatch[]> {
   const q = typeof input === "string" ? buildQuickQuery(input) : buildFilterQuery(input);
   if (!q) return [];
   const url =
     `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}` +
-    `&pageSize=${MAX_RESULTS}&select=id,number,name,rarity,types,set,images`;
+    `&page=${page}&pageSize=${MAX_RESULTS}&select=id,number,name,rarity,types,set,images`;
   const headers: Record<string, string> = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const ATTEMPTS = 3;
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     try {
       const res = await fetch(url, { headers, next: { revalidate: 300 } });
       if (!res.ok) throw new Error(String(res.status));
@@ -151,16 +167,15 @@ export async function searchCards(input: string | SearchFilters): Promise<Catalo
           types: c.types ?? [],
         }));
     } catch (err) {
-      if (attempt === 0) {
+      if (attempt < ATTEMPTS - 1) {
         await new Promise((r) => setTimeout(r, 200));
         continue;
       }
-      // A search that fails is a search box that shows nothing, not an
-      // error — the same "assistance is optional" posture as the rest of
-      // this dialog. There is no fallback catalogue to try underneath it.
       console.error("pokemontcg.io search unavailable:", err);
-      return [];
+      throw new Error("pokemontcg.io search unavailable", { cause: err });
     }
   }
-  return [];
+  // Unreachable — the loop above always returns or throws — but TypeScript
+  // can't see that from the `for` shape, so this satisfies the return type.
+  throw new Error("pokemontcg.io search unavailable");
 }

@@ -440,6 +440,48 @@ record it. A follow-up accessibility check confirmed focus still moves
 correctly on the new quick/advanced toggle and found no label collisions.
 `npm run check` is green.
 
+Since then, in a later session: Bart reported searching "Charizard" in the
+shipped dialog returned no results — a query independently verified against
+the live pokemontcg.io API, repeatedly, to return 100+ real prints. Live
+reproduction wasn't captured (tailed Vercel's production logs across two
+windows; nothing came through in either, and no browser session was
+available), but the code had a sufficient, confirmed explanation regardless:
+`searchCards()` (`lib/core/ptcg-search.ts`) retried once and then returned
+`[]` on exhausted retries — identical in shape to a genuine zero-match
+search — against a host measurably flaky unauthenticated (5 failures out of
+10 rapid requests, measured earlier the same day). Investigated first via a
+research/design agent pair rather than guessing straight into code: one
+Explore pass confirmed the failure/empty-result collapse and the theming
+system (no dark-mode bug found in the dialog's code, contrary to a separate
+report — needs a screenshot if it recurs), one Plan pass worked out the
+fix's tradeoffs (throw vs. richer return shape; dedicated `loadingMore`
+state) before anything was written.
+
+Fixed: `searchCards()` now retries 3 times (was 2) and throws once
+exhausted, instead of returning `[]`. The route
+(`app/api/v1/catalog/search/route.ts`) catches that and answers `502` with
+`{ error: "search-unavailable" }`, distinct from the existing `400`.
+`CardAddDialog.tsx` gets a `searchFailed` flag (true only on an actual
+failure) shown as "Search is temporarily unavailable." plus a "Try again"
+button. Also added, from the same conversation: pagination —
+`searchCards()`/the route/the dialog all pass a `page` number
+(live-verified against the real API before relying on it), and a "Show more
+results" button appends further pages under a broad query instead of
+capping at 20, staying inside the existing modal (a separate results page
+was explicitly considered and rejected). Two ideas from the same
+conversation were deliberately deferred, not built: a one-click instant-add
+from a search thumbnail (kept as click-to-fill-then-confirm, preserving the
+review-before-write posture ADR-0022/0032 already established), and a
+"browse a whole set including unowned cards" catalogue feature (a real,
+separate piece of work — `/collection/sets` today only ever shows sets the
+collection already has a card in).
+`docs/decisions/0033-add-card-search-failure-and-paging.md` and
+`docs/changelog.d/2026-08-16-add-card-search-failure-and-paging.md` record
+it. `npm run check` is green. Still not confirmed against a real signed-in
+browser session — ask Bart to search "Charizard" again next time the
+dialog is open, and check whether the new failure message appears instead
+of silence if pokemontcg.io is still flaky.
+
 - **A `POKEMONTCG_API_KEY` would meaningfully derisk the new add-card
   search, and matters more than it did — there is no manual-entry fallback
   left.** The unauthenticated pokemontcg.io rate limit was observed failing

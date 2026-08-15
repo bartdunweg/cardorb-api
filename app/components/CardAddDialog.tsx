@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import Modal from "./Modal";
 import { MAX, type CardFields } from "../../lib/core/collection-row";
-import type { CatalogueMatch } from "../../lib/core/ptcg-search";
+import { MAX_RESULTS, type CatalogueMatch } from "../../lib/core/ptcg-search";
 import { modalCardAddClassName } from "./cardModalClasses";
 
 /**
@@ -106,6 +106,16 @@ export default function CardAddDialog({
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<CatalogueMatch[]>([]);
   const [searching, setSearching] = useState(false);
+  /** True only when the request itself failed — never for a genuine zero
+   *  matches — so the two stop looking identical to whoever is typing. See
+   *  docs/decisions/0033-add-card-search-failure-and-paging.md. */
+  const [searchFailed, setSearchFailed] = useState(false);
+  /** Bumped by "Try again" to force the search effect to re-run without a
+   *  new keystroke — nothing else reads its value. */
+  const [retryTick, setRetryTick] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   /** The match a click confirmed, replacing the search area with a summary. */
   const [selected, setSelected] = useState<CatalogueMatch | null>(null);
   /** Quick is the one box; advanced is Name/Number/Set/Type as their own
@@ -166,6 +176,22 @@ export default function CardAddDialog({
     };
   }, [open, onUnauthorised]);
 
+  const buildParams = useCallback(
+    (forPage: number) => {
+      const params = new URLSearchParams();
+      if (mode === "quick") {
+        params.set("query", query.trim());
+      } else {
+        for (const [key, value] of Object.entries(filters)) {
+          if (value.trim()) params.set(key, value.trim());
+        }
+      }
+      params.set("page", String(forPage));
+      return params;
+    },
+    [mode, query, filters],
+  );
+
   useEffect(() => {
     if (!open) return;
     const term = query.trim();
@@ -182,35 +208,44 @@ export default function CardAddDialog({
         if (!active) {
           setMatches([]);
           setSearching(false);
+          setSearchFailed(false);
+          setHasMore(false);
+          setPage(1);
           return;
         }
         setSearching(true);
-        const params = new URLSearchParams();
-        if (mode === "quick") {
-          params.set("query", term);
-        } else {
-          for (const [key, value] of Object.entries(filters)) {
-            if (value.trim()) params.set(key, value.trim());
-          }
-        }
-        fetch(`/api/v1/catalog/search?${params}`, { signal: controller.signal })
+        setSearchFailed(false);
+        // A retry or a fresh keystroke both start over at page 1 — "Show
+        // more results" is the only thing allowed to move past it.
+        fetch(`/api/v1/catalog/search?${buildParams(1)}`, { signal: controller.signal })
           .then(async (res) => {
             if (cancelled) return;
             if (res.status === 401) {
               onUnauthorised();
               return;
             }
+            // 502 is searchCards() itself failing (pokemontcg.io down or
+            // rate-limited), distinct from the 400 this dialog never sends
+            // once `active` is true — see the route's own comment. Both used
+            // to render as an empty grid; that was the bug.
             if (!res.ok) {
+              setSearchFailed(true);
               setMatches([]);
+              setHasMore(false);
               return;
             }
             const body = (await res.json()) as { cards: CatalogueMatch[] };
-            setMatches(body.cards ?? []);
+            const cards = body.cards ?? [];
+            setMatches(cards);
+            setPage(1);
+            setHasMore(cards.length === MAX_RESULTS);
           })
-          // A live search is convenience, not a requirement to add a card —
-          // the same reasoning the /api/v1/fields fetch above is built on.
           .catch(() => {
-            if (!cancelled) setMatches([]);
+            if (!cancelled) {
+              setSearchFailed(true);
+              setMatches([]);
+              setHasMore(false);
+            }
           })
           .finally(() => {
             if (!cancelled) setSearching(false);
@@ -223,7 +258,39 @@ export default function CardAddDialog({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [open, query, filters, mode, selected, onUnauthorised]);
+    // retryTick isn't read inside — it exists purely to force this effect to
+    // run again on "Try again", without a new keystroke changing anything else.
+  }, [open, query, filters, mode, selected, onUnauthorised, retryTick, buildParams]);
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const res = await fetch(`/api/v1/catalog/search?${buildParams(nextPage)}`);
+      if (res.status === 401) {
+        onUnauthorised();
+        return;
+      }
+      if (!res.ok) {
+        // A later page failing doesn't invalidate the results already on
+        // screen — leave them, leave the button, so a click can just retry.
+        return;
+      }
+      const body = (await res.json()) as { cards: CatalogueMatch[] };
+      const cards = body.cards ?? [];
+      setMatches((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        return [...prev, ...cards.filter((c) => !seen.has(c.id))];
+      });
+      setPage(nextPage);
+      setHasMore(cards.length === MAX_RESULTS);
+    } catch {
+      // Same posture as above: stay put, let another click retry.
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   function selectMatch(match: CatalogueMatch) {
     // Rarity and types mirror the match exactly, not a fallback onto whatever
@@ -247,17 +314,27 @@ export default function CardAddDialog({
     setQuery("");
     setFilters({ name: "", number: "", set: "", type: "" });
     setDraft((d) => ({ ...d, name: "", number: "", set: "", rarity: "", types: [] }));
+    setMatches([]);
+    setSearchFailed(false);
+    setHasMore(false);
+    setPage(1);
   }
 
   function enterAdvanced() {
     setMode("advanced");
     setMatches([]);
+    setSearchFailed(false);
+    setHasMore(false);
+    setPage(1);
     setFilters((f) => ({ ...f, name: f.name || query.trim() }));
   }
 
   function backToQuick() {
     setMode("quick");
     setMatches([]);
+    setSearchFailed(false);
+    setHasMore(false);
+    setPage(1);
     setQuery((q) => q || filters.name.trim());
   }
 
@@ -287,6 +364,9 @@ export default function CardAddDialog({
       setQuery("");
       setFilters({ name: "", number: "", set: "", type: "" });
       setMatches([]);
+      setSearchFailed(false);
+      setHasMore(false);
+      setPage(1);
       // No "current set" to keep across submissions any more: every card
       // comes from picking a fresh match, which brings its own Set. Only Gen
       // (never catalogue-derived) is worth carrying to the next one.
@@ -410,17 +490,33 @@ export default function CardAddDialog({
                 and disappearing: some screen readers miss a role="status"
                 region that arrives and changes content in the same tick,
                 and "no matches" needs announcing exactly as much as
-                "searching" does. */}
+                "searching" does. searchFailed takes priority over every
+                other message here — it is never true at the same time as a
+                genuine "no matches", see the search effect. */}
             <p className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-label-tertiary" role="status">
-              {searching && matches.length === 0
-                ? "Searching…"
-                : !searching &&
-                    matches.length === 0 &&
-                    (mode === "quick" ? query.trim().length >= 2 : hasFilters)
-                  ? mode === "quick"
-                    ? `No matches for "${query.trim()}".`
-                    : "No matches for these filters."
-                  : null}
+              {searchFailed ? (
+                <>
+                  Search is temporarily unavailable.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setRetryTick((t) => t + 1)}
+                    className="underline cursor-pointer text-label-secondary hover:text-label"
+                  >
+                    Try again
+                  </button>
+                  .
+                </>
+              ) : searching && matches.length === 0 ? (
+                "Searching…"
+              ) : !searching &&
+                matches.length === 0 &&
+                (mode === "quick" ? query.trim().length >= 2 : hasFilters) ? (
+                mode === "quick" ? (
+                  `No matches for "${query.trim()}".`
+                ) : (
+                  "No matches for these filters."
+                )
+              ) : null}
             </p>
 
             {matches.length > 0 && (
@@ -473,6 +569,19 @@ export default function CardAddDialog({
                   </button>
                 ))}
               </div>
+            )}
+
+            {hasMore && !searching && !searchFailed && (
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="self-center [font-size:var(--fs-small)] text-label-secondary underline
+                  cursor-pointer hover:text-label disabled:cursor-default disabled:no-underline
+                  disabled:text-label-tertiary"
+              >
+                {loadingMore ? "Loading more…" : "Show more results"}
+              </button>
             )}
 
             <p className="m-0 [font-size:var(--fs-small)] text-label-tertiary">

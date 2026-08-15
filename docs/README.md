@@ -55,6 +55,11 @@ root `CLAUDE.md` for how and when to write to it.
   in a later audit: CardAddDialog's inputs had silently lost their
   glass-control styling because the class they read had gone dead — a caution
   about verification blind spots on routes that need a signed-in session.
+- `decisions/0033-add-card-search-failure-and-paging.md` — a search that failed
+  and a search that genuinely matched nothing used to look identical in
+  `CardAddDialog.tsx`; now `searchCards()` throws instead of swallowing, and
+  the dialog shows a distinct "Search is temporarily unavailable" with retry,
+  plus a "Show more results" button instead of a hard 20-result cap.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.
