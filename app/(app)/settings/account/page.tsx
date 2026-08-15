@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { currentViewer } from "../../../lib/api/viewer";
-import AccountSettings from "../../components/AccountSettings";
+import { currentViewer } from "../../../../lib/api/viewer";
+import AccountSettings from "../../../components/AccountSettings";
 
 export const metadata: Metadata = { title: "Account" };
 export const dynamic = "force-dynamic";

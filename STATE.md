@@ -276,13 +276,81 @@ pill, already black), one for what you can do" distinction. Documented
 inline in `cards.css` rather than a full ADR, since it's a straightforward
 colour swap with the tradeoff spelled out in the same comment.
 
-`npm run check` is green throughout both threads.
+Since then, in this session: mobile tab bar refinement, in one thread of
+back-and-forth feedback, all recorded in `ADR-0030`:
+
+- The last slot ("Settings", gear icon) is now "You", showing the account's
+  avatar (or initial, matching `CardsSidebar`'s footer pattern) instead —
+  wired up in `AppTabBar.tsx`, the actual signed-in mobile bar (`CardsView`'s
+  own inline `CardsTabBar` is dead for owners; it early-returns before
+  reaching that markup).
+- Fixed the active-tab pill, then the bar itself, reading flush against the
+  screen's edges on narrow phones instead of matching their own padding: a
+  fourth *and* fifth instance of the `ADR-0012`/`0017`/`0028` cascade-layer
+  pattern in the same file. First, `min-w-max` on `tabbarPagesClassName` so
+  the mobile width cap can't squeeze the track narrower than its content.
+  That alone didn't fully fix it — the bar's own `<=640px` side padding was
+  still reserving ~64px per side for a theme toggle this route never
+  renders (`cards.css`'s attempt to cancel that reservation loses the same
+  cascade fight), so forcing the track to its full content width was then
+  pushing it past the nav's own shrunk available space, sometimes past the
+  viewport. Fixed by baking the correct (`space-4`, not
+  `space-3+control-h+space-3`) padding/cap directly into `tabbarClasses.ts`
+  instead of relying on `cards.css`'s losing override.
+- Every tab is now a fixed, equal width (was sized to its own label). Two
+  static pixel guesses (`w-16`, then a computed `w-[72px]`) both still
+  clipped "Dashboard" to "Dashbo…" — caught by a real screenshot the user
+  sent. Stopped guessing: `CardsTabBar.tsx` now measures every label's real
+  `scrollWidth` in a `useLayoutEffect` and sets the widest as a `--tab-w`
+  CSS var the slots all read, re-measured on `document.fonts.ready` (same
+  pattern `useSlidingPill` already used). Label truncation stays as a safety
+  net, not the primary mechanism. The same screenshot also showed the active
+  pill touching the add circle beside it directly — the track's flex
+  children had no gap between them at all — fixed with `gap-1` on
+  `tabbarPagesClassName`. Two more rounds after that: first a (wrong-
+  direction) guess that the leftmost/rightmost slot needed *more* horizontal
+  padding than vertical (`py-2 px-3`) to beat the capsule's rounded corner
+  visually eating into the inset; then the actual ask — one equal amount of
+  space everywhere (edges, inter-item gap, and the item's own vertical
+  inset) — settled by using `p-2` **and** `gap-2` together (both 8px).
+- **Settings now lives inside the app shell** (`app/settings/**` moved to
+  `app/(app)/settings/**`, except `password/`, kept standalone — see below):
+  sidebar and tab bar stay on screen there now, matching `/dashboard`,
+  `/collection`, `/wishlist`. This completes something `app/(app)/layout.tsx`
+  and `AppSidebar.tsx` already assumed ("/dashboard, /collection and
+  /settings share one shell") but `app/settings/layout.tsx` never actually
+  did — it was its own separate, unwrapped layout the whole time.
+  `app/settings/password/page.tsx` was deliberately left where it was: it
+  renders the same `SigninShell` chrome as `/login`/`/signup` and is reached
+  from an unauthenticated password-recovery link as well as a signed-in
+  action, so nesting it under `AppShell` would have doubled up chrome and
+  swallowed its own expired-link error message.
+- `CardsDashboard.tsx` and `SetIndex.tsx` (`/collection/sets`) had no visible
+  page title anywhere (both the shell's and `CardsView`'s own `<h1>`s are
+  `sr-only`) — added one to each. Landed twice: first as ad-hoc Tailwind
+  classes eyeballed to match Settings' own new heading, then switched (both,
+  plus Settings) to the literal `.cards-main-title` class (`cards.css`) once
+  asked to make it consistent with the rest of the app — that's the one style
+  `CardsView`'s own `<MainTitle>` already uses for Collection/Wishlist/set/
+  era, so this stopped being a second, close-but-not-quite copy of it.
+
+Not yet confirmed with a live signed-in screenshot — browser automation in
+this workspace can't sign in, so this whole thread needs a human pass at
+≤1000px on `/dashboard`, `/collection`, `/wishlist`, `/settings` (and its
+subpages), and a check that `/settings/password` still looks right reached
+both signed in and via a recovery link.
+
+`npm run check` is green throughout all three threads.
 
 ## Open
 
 - **Card detail, avatar upload, and signup still need a real signed-in
-  browser pass** (this session's work) — see above; unchanged by the
+  browser pass** (earlier session's work) — see above; unchanged by the
   security-review merge.
+- **This session's tabbar/"You" tab/equal-width-tabs/Settings-in-shell/
+  Dashboard-title work also needs a real signed-in browser pass** at
+  ≤1000px, for the same reason (no credentials available to browser
+  automation in this workspace) — see above for the specific routes.
 - The Notion-connections-table drop and the profile-avatar migration are
   both confirmed applied to the live database (checked directly via
   `supabase db query --linked` for the former, `supabase migration list`

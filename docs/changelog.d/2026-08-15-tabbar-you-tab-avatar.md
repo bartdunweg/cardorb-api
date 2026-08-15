@@ -1,0 +1,3 @@
+- Mobile tab bar: the "Settings" tab is now "You" and shows your avatar (or your initial) instead of a gear icon, and every tab is now the same width without clipping its label. Fixed the active-tab highlight and the bar itself sometimes touching the screen's edges on narrow phones instead of matching its own padding, and fixed it touching the add button directly with no gap.
+- Settings now stays inside the app's sidebar/tab bar like every other screen, instead of dropping to a bare page — pressing "You" no longer feels like leaving the app.
+- Dashboard and Sets now have a visible page title at the top, matching the style Collection/Wishlist/Settings already use.
