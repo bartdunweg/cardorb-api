@@ -967,11 +967,12 @@ export default function CardsView({
       ? "sets"
       : onDashboard
         ? "dashboard"
-        : // Searching is a state rather than a place: the slot is lit while
-          // there is something in the field, and goes out when it is cleared.
-          // The profile has no slot at all and so lights none.
-          query.trim() && !isPublic
-          ? "search"
+        : onProfile
+          ? "profile"
+          : // Searching is a state rather than a place: the slot is lit while
+            // there is something in the field, and goes out when it is cleared.
+            query.trim() && !isPublic
+            ? "search"
           : // Only where the bar carries them. Signed in these two are rail
             // rows with no slot to light, and pointing the pill at a slot
             // that is not there leaves it parked on whatever was last. The

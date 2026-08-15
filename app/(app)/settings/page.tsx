@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SettingsRowBlurb, SettingsRowTitle, settingsRowClassName } from "../components/SettingsPanel";
+import { SettingsRowBlurb, SettingsRowTitle, settingsRowClassName } from "../../components/SettingsPanel";
 
 /**
  * The index, and a real screen rather than a redirect.

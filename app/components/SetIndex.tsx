@@ -34,14 +34,20 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
 
   if (!sets.length) {
     return (
-      <p className="cards-empty">
-        No sets yet. Add a card and the set it came from appears here.
-      </p>
+      <>
+        <h1 className="cards-main-title mb-4">Sets</h1>
+        <p className="cards-empty">
+          No sets yet. Add a card and the set it came from appears here.
+        </p>
+      </>
     );
   }
 
   return (
     <div className="flex flex-col gap-10 pb-[var(--page-pad-bottom)]">
+      {/* .cards-main-title, the same page-title style Dashboard/Settings/
+          Collection/Wishlist all share — this screen had none at all before. */}
+      <h1 className="cards-main-title">Sets</h1>
       {groups.map((group) => (
         <section key={group.era}>
           <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">{group.label}</h2>

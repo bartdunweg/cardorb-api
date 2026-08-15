@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { currentViewer } from "../../../lib/api/viewer";
-import { serverClient } from "../../../lib/storage/supabase";
-import { ownProfile } from "../../../lib/storage/postgres";
-import ProfileSettings from "../../components/ProfileSettings";
-import { SettingsHint } from "../../components/SettingsPanel";
+import { currentViewer } from "../../../../lib/api/viewer";
+import { serverClient } from "../../../../lib/storage/supabase";
+import { ownProfile } from "../../../../lib/storage/postgres";
+import ProfileSettings from "../../../components/ProfileSettings";
+import { SettingsHint } from "../../../components/SettingsPanel";
 
 /**
  * Read on the server, edited on the client.
