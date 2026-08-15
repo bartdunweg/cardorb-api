@@ -193,11 +193,13 @@
   padding: 0;
 }
 
-/* The one thing in the bar that is not a place: it does something. The pill
-   behind the selection is already the darkest ink here, so a second filled
-   black circle would read as a second selected tab. Accent instead, which is
-   this site's colour for an action and is nowhere else in this bar, so it ends
-   up with one ink for where you are and one for what you can do. */
+/* Was --color-tint (an accent, deliberately not this bar's black) precisely
+   because the selected-tab pill behind it is bg-[var(--btn-primary-bg)] —
+   the same black .btn--primary now uses everywhere else an action is
+   primary (the sidebar's add button, landing page CTAs). Changed to match
+   on explicit instruction, which does trade away the old "one ink for
+   where you are, one for what you can do" distinction — the pill and this
+   button are both black now, told apart only by position in the bar. */
 .cards-tabbar-add {
   display: flex;
   align-items: center;
@@ -210,8 +212,8 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--color-tint);
-  color: var(--color-on-dark);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   cursor: pointer;
   /* Above the pill, which shares this track and is positioned into it. */
   z-index: 1;
