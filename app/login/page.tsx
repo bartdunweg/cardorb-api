@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import SignInForm from "../components/SignInForm";
-import SigninShell, {
-  SigninNotice,
-  SigninOr,
-  signinWideButtonClassName,
-} from "../components/SigninShell";
+import SigninShell, { SigninNotice } from "../components/SigninShell";
 import { currentViewer } from "../../lib/api/viewer";
-import { APP_NAME, PUBLIC_USERNAME } from "../../lib/core/config";
+import { APP_NAME } from "../../lib/core/config";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -83,27 +78,6 @@ export default async function Login({
       {notice && <SigninNotice role="status">{notice}</SigninNotice>}
 
       <SignInForm redirectTo={next} layout="column" />
-
-      {/* Something for the people this login is not for. Without it this
-          address is a locked door with no sign, which is a strange thing to
-          find at the end of a link someone shared.
-
-          Inside the card now, under a rule. Floating below it, it read as an
-          afterthought about the card rather than the second of two ways in;
-          the rule says they are alternatives without a word like "or" doing
-          the work. No icon: it is the only thing on this line and the label
-          already says what it does.
-
-          The plain .btn and not .btn--primary, because signing in is what
-          this page is for and two filled buttons is a page asking twice. */}
-      {/* Not aria-hidden, unlike a bare rule would be: "or" is the word that
-          says these are two ways in rather than a step and then another. The
-          lines beside it are drawn by the stylesheet, so what a screen reader
-          gets is the word alone. */}
-      <SigninOr>or</SigninOr>
-      <Link href={`/user/${PUBLIC_USERNAME}`} className={`btn ${signinWideButtonClassName}`}>
-        Public demo
-      </Link>
     </SigninShell>
   );
 }

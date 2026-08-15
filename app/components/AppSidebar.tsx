@@ -26,6 +26,7 @@ function selectedFrom(pathname: string): string {
   if (pathname.startsWith("/dashboard")) return "dashboard";
   if (pathname.startsWith("/wishlist")) return "wishlist";
   if (pathname.startsWith("/settings")) return "profile";
+  if (pathname.startsWith("/collection/sets")) return "sets";
 
   const set = pathname.match(/^\/collection\/set\/([^/]+)/)?.[1];
   if (set) return `set:${set}`;
@@ -38,7 +39,7 @@ function selectedFrom(pathname: string): string {
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { sets, setGroups, brokenLogos, onBrokenLogo, onAdd } = useCollection();
+  const { sets, setGroups, brokenLogos, onBrokenLogo, onAdd, viewer } = useCollection();
 
   const selected = selectedFrom(pathname);
 
@@ -53,6 +54,7 @@ export default function AppSidebar() {
     if (value === "wishlist") return router.push("/wishlist");
     if (value === "profile") return router.push("/settings");
     if (value === "all") return router.push("/collection");
+    if (value === "sets") return router.push("/collection/sets");
 
     if (value.startsWith("era:")) {
       const slug = slugify(value.slice(4));
@@ -88,6 +90,10 @@ export default function AppSidebar() {
       onAdd={onAdd}
       brokenLogos={brokenLogos}
       onBrokenLogo={onBrokenLogo}
+      // The full era-grouped list is /collection/sets now (SetIndex.tsx) — a
+      // real page, not a rail-only view — so the rail collapses it to one row.
+      setsAsRow
+      viewer={{ name: viewer.username, avatarUrl: viewer.avatarUrl }}
     />
   );
 }

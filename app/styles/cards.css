@@ -29,23 +29,16 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--color-border-subtle);
-  /* Sideways, because the only edge you can see is the right one: a shadow with
-     a vertical offset would spill down the page and never fall where the rail
-     actually meets the results. */
-  box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.16);
+  /* No box-shadow: the border-right above is the only separation from the
+     results now. A directional shadow lived here twice (first at 16%/43%
+     black, then reduced to 10%/40%) and read as "too much" both times, so
+     it is gone rather than tuned a third time. */
   position: sticky;
   top: 0;
   /* The whole window, edge to edge. */
   height: 100vh;
   height: 100dvh;
   overflow-y: auto;
-}
-/* Dark mode carries its shadows heavier, the way --shadow-card and
-   --shadow-elevated do: 16% black over a near-black page is nothing at all.
-   That still holds, and this is still four times what a light-mode shadow would
-   be. */
-[data-theme="dark"] .cards-rail {
-  box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.43);
 }
 @media (max-width: 1000px) {
   .cards-rail {

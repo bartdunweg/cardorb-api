@@ -19,14 +19,22 @@
  * that generic desktop behaviour was written for a site-wide nav bar this
  * app never renders bare. Every consumer is CardsTabBar.tsx, always combined
  * with "cards-tabbar"/"cards-tabbar-fade" (still legacy-CSS, not yet
- * migrated), whose own 641-1000px rules already put it back at the bottom
- * and whose >=1001px rule hides it outright once the rail returns. Porting
- * the dead branch forward would have been fine while cascade layers were
- * broken (legacy CSS always won regardless), but once the layer fix (see
- * globals.css) let Tailwind utilities win as intended, this exact override
- * would have fought the still-CSS .cards-tabbar rule and put the bar at the
- * top of the screen at 641-1000px — caught visually, not by a type or a
- * test. Left out rather than fixed to keep it losing on purpose.
+ * migrated), whose 641-1000px rules put it back at the bottom.
+ *
+ * Its >=1001px rule does NOT hide the bar, though — a previous version of
+ * this comment claimed it did, and that was wrong: `@layer theme, base,
+ * legacy, components, utilities;` (globals.css) puts `legacy` before
+ * `utilities`, so `.cards-tabbar`'s `display: none` there can never beat
+ * this file's unconditional `flex` below, at any width, media query or not
+ * — a later layer always wins over an earlier one once both rules match,
+ * regardless of which is more specific to the viewport. The bar stayed
+ * visible above 1000px, next to the rail, until this was found by hand. The
+ * `[@media(min-width:1001px)]:!hidden` below fixes it in this file instead
+ * of cards.css, so the override lives in the same (winning) `utilities`
+ * layer as the `flex` it has to beat; `!` forces `!important` rather than
+ * trusting generation order between two differently-named utilities (`flex`
+ * vs `hidden`) on an arbitrary, non-Tailwind-scale breakpoint, which is not
+ * a documented guarantee the way ascending sm:/md:/lg: order is.
  */
 
 export const tabbarFadeClassName =
@@ -40,7 +48,8 @@ export const tabbarClassName =
   "[padding:var(--space-6)_var(--space-4)_calc(var(--space-6)+env(safe-area-inset-bottom,0px))] " +
   "pointer-events-none [&>*]:pointer-events-auto " +
   "[@media(max-width:640px)]:gap-2 " +
-  "[@media(max-width:640px)]:[padding:var(--space-4)_calc(var(--space-3)+var(--control-h)+var(--space-3))_calc(var(--space-4)+env(safe-area-inset-bottom,0px))_calc(var(--space-3)+var(--control-h)+var(--space-3))]";
+  "[@media(max-width:640px)]:[padding:var(--space-4)_calc(var(--space-3)+var(--control-h)+var(--space-3))_calc(var(--space-4)+env(safe-area-inset-bottom,0px))_calc(var(--space-3)+var(--control-h)+var(--space-3))] " +
+  "[@media(min-width:1001px)]:!hidden";
 
 export const tabbarPagesClassName =
   "tabbar-pages relative flex items-center justify-center w-auto p-2 " +

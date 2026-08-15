@@ -33,13 +33,14 @@ import {
 export default function ProfileSettings({
   initial,
 }: {
-  initial: { username: string; displayName: string | null; isPublic: boolean };
+  initial: { username: string; displayName: string | null; isPublic: boolean; avatarUrl: string | null };
 }) {
   const router = useRouter();
 
   const [isPublic, setIsPublic] = useState(initial.isPublic);
   const [displayName, setDisplayName] = useState(initial.displayName ?? "");
   const [username, setUsername] = useState(initial.username);
+  const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl);
 
   const [saying, setSaying] = useState<Record<string, string | null>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -98,10 +99,112 @@ export default function ProfileSettings({
     }
   }
 
+  /**
+   * A picked file, drawn onto a canvas at avatar size and read back out as a
+   * PNG data URL. Resizing before it ever reaches the network is what keeps
+   * a phone photo (routinely 4000px, several MB) under the route's 2MB cap
+   * without the server needing an image-processing dependency just to reject
+   * or shrink one.
+   */
+  async function pickAvatar(file: File) {
+    setBusy("avatar");
+    say("avatar", null);
+    try {
+      const bitmap = await createImageBitmap(file);
+      const size = 256;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("no canvas context");
+      // Cover-crop to a square: the shorter side fills the frame, the longer
+      // side's overflow is cut evenly from both edges, so a rectangular photo
+      // does not get squashed into a circle later.
+      const side = Math.min(bitmap.width, bitmap.height);
+      const sx = (bitmap.width - side) / 2;
+      const sy = (bitmap.height - side) / 2;
+      ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, size, size);
+      const dataUrl = canvas.toDataURL("image/png");
+
+      const res = await fetch("/api/v1/profile/avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; avatarUrl?: string };
+      if (!res.ok) {
+        say("avatar", data.error ?? "That image could not be saved.");
+        return;
+      }
+      setAvatarUrl(data.avatarUrl ?? null);
+      say("avatar", "Saved.");
+      router.refresh();
+    } catch {
+      say("avatar", "That image could not be read.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const link = `${SITE_URL}/user/${initial.username}`;
 
   return (
     <SettingsPanels>
+      <SettingsPanel>
+        <SettingsPanelTitle>Avatar</SettingsPanelTitle>
+        <div className="flex items-center gap-4">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
+            <img
+              src={avatarUrl}
+              alt="Your avatar"
+              width={56}
+              height={56}
+              className="w-14 h-14 rounded-full object-cover border border-[var(--color-border-subtle)]"
+            />
+          ) : (
+            <span
+              className="grid place-items-center w-14 h-14 rounded-full bg-[var(--color-bg-grouped)]
+                border border-[var(--color-border-subtle)] text-label-tertiary
+                [font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-title)]"
+              aria-hidden="true"
+            >
+              {(displayName || initial.username).charAt(0).toUpperCase()}
+            </span>
+          )}
+          <div>
+            {/* The input is sr-only, so its own :focus-visible outline lands
+                on a clipped 1px box — invisible. group on the label,
+                group-has-[:focus-visible] on the visible span (same pattern
+                as AppearanceSettings.tsx/SettingsPanel.tsx's other
+                hidden-input controls — Tailwind's group-has-* variant is a
+                descendant selector, so it has to land on a child of .group,
+                not .group itself) puts the ring where a keyboard user can
+                actually see it. */}
+            <label className="group cursor-pointer">
+              <span
+                className={`btn group-has-[:focus-visible]:[outline:2px_solid_var(--color-label)]
+                  group-has-[:focus-visible]:[outline-offset:2px]${busy === "avatar" ? " opacity-55 cursor-not-allowed" : ""}`}
+              >
+                {busy === "avatar" ? "Saving…" : avatarUrl ? "Change" : "Upload"}
+              </span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                disabled={busy === "avatar"}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) void pickAvatar(file);
+                }}
+              />
+            </label>
+            {saying.avatar && <SettingsSaid>{saying.avatar}</SettingsSaid>}
+          </div>
+        </div>
+      </SettingsPanel>
+
       <SettingsPanel>
         <SettingsPanelTitle>Your link</SettingsPanelTitle>
 

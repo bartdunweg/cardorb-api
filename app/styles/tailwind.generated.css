@@ -28,7 +28,7 @@
   --color-label-secondary: light-dark(#666666, #959595);
   --color-label-tertiary: light-dark(#737373, #8c8c8c);
   --color-label-quaternary: light-dark(#949494, #676767);
-  --color-bg-grouped: light-dark(#fafafa, #181818);
+  --color-bg-grouped: light-dark(#ffffff, #181818);
   --color-bg-surface: light-dark(#ffffff, #101010);
   --color-glass: light-dark(rgba(254, 254, 254, 0.78), rgba(37, 37, 40, 0.38));
   --color-glass-solid: light-dark(rgba(255, 255, 255, 0.9), rgb(37, 37, 39));
@@ -67,7 +67,7 @@
   --color-label-secondary: light-dark(#666666, #959595);
   --color-label-tertiary: light-dark(#737373, #8c8c8c);
   --color-label-quaternary: light-dark(#949494, #676767);
-  --color-bg-grouped: light-dark(#fafafa, #181818);
+  --color-bg-grouped: light-dark(#ffffff, #181818);
   --color-bg-surface: light-dark(#ffffff, #101010);
   --color-glass: light-dark(rgba(254, 254, 254, 0.78), rgba(37, 37, 40, 0.38));
   --color-glass-solid: light-dark(rgba(255, 255, 255, 0.9), rgb(37, 37, 39));

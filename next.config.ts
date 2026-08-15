@@ -13,9 +13,28 @@ const isDev = process.env.NODE_ENV !== "production";
  * on the page and loudly in the devtools. The portfolio's own history is the
  * warning: one missing entry blocked every picture on a page whose whole
  * subject was pictures. Adding a fourth source means adding it here first.
+ *
+ * The Supabase project's own storage host joins them for the same reason,
+ * once there is a picture that comes from it: avatars
+ * (app/api/v1/profile/avatar/route.ts) are public objects in Storage, served
+ * directly from `<project>.supabase.co/storage/v1/object/public/...`. Read
+ * from NEXT_PUBLIC_SUPABASE_URL rather than hard-coded, since the project
+ * differs between environments and next.config.ts runs at build/start where
+ * that variable is already available (lib/storage/supabase.ts reads the same
+ * one). Falls out of the policy entirely, same as every other source here,
+ * when the variable is unset — a CI build with no Supabase project configured
+ * has nothing to allow.
  */
+const supabaseHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").origin;
+  } catch {
+    return "";
+  }
+})();
 const IMG_SRC =
-  "img-src 'self' data: blob: https://assets.tcgdex.net https://images.pokemontcg.io https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com";
+  `img-src 'self' data: blob: https://assets.tcgdex.net https://images.pokemontcg.io ` +
+  `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com${supabaseHost ? ` ${supabaseHost}` : ""}`;
 
 /**
  * The whole policy, and every route gets the same one.

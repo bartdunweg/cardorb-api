@@ -27,7 +27,7 @@ const {
   SESSION_COOKIE,
 } = await import("./guard");
 
-const SOMEBODY: Viewer = { userId: "user-1", email: "a@example.com", username: "a" };
+const SOMEBODY: Viewer = { userId: "user-1", email: "a@example.com", username: "a", avatarUrl: null };
 
 /**
  * The whole of who may read and write.

@@ -1,15 +1,30 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, Check, Layers, Search, Share2, Wallet } from "lucide-react";
+import {
+  ArrowUpRight,
+  BookOpen,
+  Camera,
+  Check,
+  Download,
+  Layers,
+  Plus,
+  Search,
+  Share2,
+  Smartphone,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import Card from "./components/Card";
-import { APP_NAME, APP_TAGLINE, OWNER_NAME, PUBLIC_USERNAME, SITE_URL } from "../lib/core/config";
+import Navbar from "./components/Navbar";
+import ThemeToggle from "./components/ThemeToggle";
+import { APP_NAME, APP_TAGLINE, OWNER_NAME, SITE_URL } from "../lib/core/config";
+import { currentViewer } from "../lib/api/viewer";
 
 const SIGN_IN_HREF = "/login";
-const DEMO_HREF = `/user/${PUBLIC_USERNAME}`;
+const DASHBOARD_HREF = "/dashboard";
 
 export const metadata: Metadata = {
-  title: { absolute: `${APP_NAME} — your Pokémon card collection, sorted` },
+  title: { absolute: APP_NAME },
   description: APP_TAGLINE,
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
@@ -23,12 +38,33 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: APP_NAME,
-    title: `${APP_NAME} — your Pokémon card collection, sorted`,
+    title: APP_NAME,
     description: APP_TAGLINE,
     locale: "en_GB",
   },
   twitter: { card: "summary_large_image", title: APP_NAME, description: APP_TAGLINE },
 };
+
+const STATS = [
+  { value: "1,600+", label: "cards tracked" },
+  { value: "3", label: "catalogues matched" },
+  { value: "Cardmarket, live", label: "pricing" },
+];
+
+const FAQ = [
+  {
+    q: "Is this collection really free to use?",
+    a: "Yes. There is no paid tier, no card limit and no credit card at signup — free is the only plan there is.",
+  },
+  {
+    q: "Can I track my own collection too?",
+    a: "Yes — sign up, and everything from here on tracks your cards, not the demo's.",
+  },
+  {
+    q: "Where do the prices come from?",
+    a: "Cardmarket, in euros, kept current as the market moves.",
+  },
+];
 
 const FEATURES = [
   {
@@ -46,16 +82,37 @@ const FEATURES = [
     title: "The card you mean, quickly",
     body: "Search by name or narrow by set, rarity, type and era — whether it is owned or still on the wishlist.",
   },
+  {
+    icon: Plus,
+    title: "Add a card in seconds",
+    body: "Type a name, pick the print, and it is in the binder — no barcode and no hunting through menus.",
+  },
+  {
+    icon: BookOpen,
+    title: "Every Pokémon, indexed",
+    body: "A living Pokédex beside the binder: what is owned for each Pokémon, and what is still missing.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Value over time",
+    body: "Every snapshot of the collection's worth is kept, so you can see the total move, not just where it stands.",
+  },
+  {
+    icon: Camera,
+    title: "Scan to add, on the way",
+    body: "Point a phone at a card and let it find the match.",
+    comingSoon: "iOS & Android",
+  },
+  {
+    icon: Download,
+    title: "Take it with you",
+    body: "Export the whole collection to CSV whenever you want it outside Card Orb.",
+    comingSoon: true,
+  },
 ];
 
-const PREVIEW_CARDS = [
-  "/landing/collection-preview/base-set-001.webp",
-  "/landing/collection-preview/base-set-004.webp",
-  "/landing/collection-preview/base-set-006.webp",
-  "/landing/collection-preview/base-set-025.webp",
-];
-
-export default function Home() {
+export default async function Home() {
+  const viewer = await currentViewer();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -70,12 +127,16 @@ export default function Home() {
 
   // Shared recipes, each used by several elements below — kept as named
   // strings rather than components since every consumer is on this one page.
+  // No margin-bottom baked in: the hero's eyebrow sits in a flex column that
+  // already spaces its children with gap, so a second, competing bottom
+  // margin there would stack on top of the gap instead of matching every
+  // other eyebrow's plain mb-4. Each consumer states its own bottom margin.
   const eyebrow =
-    "m-0 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-eyebrow)] " +
+    "mt-0 mx-0 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-eyebrow)] " +
     "[font-weight:var(--fw-eyebrow)] tracking-[0.08em] uppercase";
   const sectionHeading =
     "m-0 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
-    "tracking-[-0.045em] leading-[0.98] [font-size:var(--fs-display)]";
+    "tracking-[-0.045em] [line-height:var(--lh-tight)] [font-size:var(--fs-display)]";
   const sectionBody =
     "m-0 text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body-l)] leading-relaxed";
   const featureIcon =
@@ -86,194 +147,154 @@ export default function Home() {
   const cardBody = "m-0 text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal";
 
   return (
-    <section className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:var(--space-6)_var(--page-pad-x)_var(--page-pad-bottom)] [@media(max-width:640px)]:pt-4">
+    // The layout reserves room at the top for a floating tab bar this route
+    // does not have — see SigninShell.tsx, which cancels it the same way.
+    // Navbar sits outside the padded/max-width section below so it can go
+    // sticky and full-bleed (its own inner wrapper re-applies the 1180px cap);
+    // nested inside that section it would inherit the max-width and stick at
+    // 1180px wide floating in the middle of a wider viewport instead of
+    // spanning it.
+    <div className="-mt-[var(--main-pad-top)]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
-      <nav
-        className="grid grid-cols-[1fr_auto_1fr] items-center gap-6 min-h-[var(--control-h)]
-          [@media(max-width:640px)]:grid-cols-[1fr_auto]"
-        aria-label="Primary navigation"
-      >
-        <Link
-          href="/"
-          className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline"
-          aria-label={`${APP_NAME} home`}
-        >
-          {APP_NAME}
-        </Link>
-        <div className="flex items-center gap-5 [@media(max-width:640px)]:hidden">
-          <a
-            href="#organise"
-            className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-          >
-            How it works
-          </a>
-          <a
-            href="#share"
-            className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-          >
-            Public collections
-          </a>
-        </div>
-        <Link href={SIGN_IN_HREF} className="justify-self-end">
-          Sign in
-        </Link>
-      </nav>
-
-      <header
-        className="grid grid-cols-[minmax(0,0.88fr)_minmax(440px,1.12fr)] items-center [gap:clamp(var(--space-10),7vw,88px)]
-          min-h-[620px] [padding-block:clamp(72px,10vw,128px)]
-          [@media(max-width:800px)]:grid-cols-1 [@media(max-width:800px)]:gap-10 [@media(max-width:800px)]:min-h-0
-          [@media(max-width:800px)]:[padding-block:88px_96px]"
-      >
-        <div className="flex flex-col items-start gap-5 [@media(max-width:800px)]:items-center [@media(max-width:800px)]:text-center">
-          <p className={eyebrow}>Made for the collector, not the spreadsheet.</p>
-          <h1
-            className="max-w-[9ch] [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
-              [font-weight:var(--fw-title)] tracking-[-0.045em] leading-[0.98]
-              [@media(max-width:800px)]:max-w-[12ch] [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
-          >
-            Your Pokémon card collection, in its proper place.
-          </h1>
-          <p className={`max-w-[34ch] ${sectionBody}`}>
-            Track every card set by set, see what it is worth, and keep the next one in view.
-          </p>
-          <div className="flex flex-wrap gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
+      <Navbar
+        center={
+          <>
+            <a
+              href="#organise"
+              className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
+            >
+              How it works
+            </a>
+            <a
+              href="#share"
+              className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
+            >
+              Public collections
+            </a>
+            <a
+              href="#faq"
+              className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
+            >
+              FAQ
+            </a>
+          </>
+        }
+        right={
+          viewer ? (
             <Link
-              href="/signup"
-              className="btn btn--primary justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
+              href={DASHBOARD_HREF}
+              className="flex items-center gap-2 min-w-0 text-label no-underline whitespace-nowrap
+                overflow-hidden text-ellipsis [font-family:var(--font-body)] [font-size:var(--fs-small)]"
             >
-              Start your collection
-              <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-            </Link>
-            <Link
-              href={DEMO_HREF}
-              className="btn justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
-            >
-              Explore a real collection
-            </Link>
-          </div>
-          <p className="m-0 text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-            Completely free. Already collecting?{" "}
-            <Link href={SIGN_IN_HREF} className="text-inherit underline [text-underline-offset:3px]">
-              Sign in
-            </Link>
-            .
-          </p>
-        </div>
-
-        <Link
-          href={DEMO_HREF}
-          aria-label={`Explore ${OWNER_NAME}'s public collection`}
-          className="relative block min-w-0 overflow-hidden border border-[var(--glass-border)] rounded-lg
-            bg-[var(--glass-bg-solid)] [box-shadow:var(--shadow-elevated)] text-inherit no-underline
-            [transform:rotate(1.5deg)] [transition:transform_var(--dur-normal)_var(--ease-smooth),box-shadow_var(--dur-normal)_var(--ease-smooth)]
-            hover:[transform:rotate(0deg)_translateY(-4px)]
-            hover:[box-shadow:0_0_0_1px_color-mix(in_srgb,var(--color-label)_10%,transparent),var(--shadow-elevated)]
-            before:absolute before:z-[1] before:inset-0 before:pointer-events-none before:content-['']
-            before:[background:linear-gradient(120deg,color-mix(in_srgb,var(--color-bg-surface)_74%,transparent),transparent_45%)]
-            [@media(max-width:800px)]:w-[min(100%,600px)] [@media(max-width:800px)]:mx-auto
-            [@media(max-width:640px)]:[transform:none]"
-        >
-          <span
-            className="relative z-[2] flex items-center gap-2 min-h-[42px] px-4
-              border-b border-[var(--color-border-subtle)] text-label-tertiary
-              [font-family:var(--font-body)] [font-size:var(--fs-tiny)] [&>svg]:ml-auto"
-          >
-            <span className="inline-flex gap-[5px]" aria-hidden="true">
-              <i className="w-[6px] h-[6px] rounded-full bg-[var(--color-border-active)]" />
-              <i className="w-[6px] h-[6px] rounded-full bg-[var(--color-border-active)]" />
-              <i className="w-[6px] h-[6px] rounded-full bg-[var(--color-border-active)]" />
-            </span>
-            <span>cardorb.com/user/{PUBLIC_USERNAME}</span>
-            <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
-          </span>
-          <span
-            className="relative z-[2] grid grid-cols-[1fr_auto] gap-8 min-h-[420px] [padding:clamp(var(--space-5),4vw,var(--space-8))]
-              [@media(max-width:640px)]:min-h-[360px] [@media(max-width:640px)]:gap-5"
-          >
-            <span className="flex flex-col items-start gap-2">
-              <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                Public collection
-              </span>
-              <strong className="text-label [font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-title)] tracking-[-0.035em]">
-                {OWNER_NAME}&rsquo;s binder
-              </strong>
-              <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                1,600+ cards, held and wanted.
-              </span>
-            </span>
-            <span
-              className="flex gap-5 [@media(max-width:640px)]:gap-3"
-              aria-hidden="true"
-            >
-              <span className="flex flex-col gap-1">
-                <b className="text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
-                  1,600+
-                </b>
-                <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                  cards
-                </span>
-              </span>
-              <span className="flex flex-col gap-1">
-                <b className="text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
-                  Set by set
-                </b>
-                <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                  organised
-                </span>
-              </span>
-            </span>
-            <span
-              className="col-span-full self-end grid grid-cols-4 items-end [gap:clamp(6px,1.2vw,var(--space-3))]
-                [padding-inline:clamp(var(--space-2),2vw,var(--space-5))] [@media(max-width:640px)]:px-0"
-              aria-hidden="true"
-            >
-              {PREVIEW_CARDS.map((src, index) => (
-                <Image
-                  key={src}
-                  src={src}
+              {viewer.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
+                <img
+                  src={viewer.avatarUrl}
                   alt=""
-                  width={245}
-                  height={337}
-                  sizes="(max-width: 800px) 20vw, 12vw"
-                  priority={index === 0}
-                  className={`w-full h-auto rounded-xs [box-shadow:var(--shadow-card)] ${
-                    index === 1 || index === 3 ? "translate-y-[var(--space-4)]" : ""
-                  }`}
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 rounded-full object-cover border border-[var(--color-border-subtle)]"
                 />
-              ))}
-            </span>
-          </span>
-          <span
-            className="relative z-[2] block px-4 py-3 border-t border-[var(--color-border-subtle)]
-              text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]"
+              ) : (
+                // No avatar uploaded yet — a circle with the first letter of
+                // the name, same fallback as settings/profile.
+                <span
+                  className="grid place-items-center w-6 h-6 rounded-full bg-[var(--color-bg-grouped)]
+                    border border-[var(--color-border-subtle)] text-label-tertiary
+                    [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
+                  aria-hidden="true"
+                >
+                  {OWNER_NAME.charAt(0)}
+                </span>
+              )}
+              Signed in as {OWNER_NAME}
+            </Link>
+          ) : (
+            <>
+              <Link
+                href={SIGN_IN_HREF}
+                className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
+              >
+                Log in
+              </Link>
+              <Link href="/signup" className="btn btn--primary">
+                Sign up
+              </Link>
+            </>
+          )
+        }
+      />
+
+      <section className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
+      <header
+        className="flex flex-col items-center gap-5 text-center mx-auto max-w-[640px]
+          min-h-[480px] justify-center [padding-block:clamp(72px,10vw,128px)]"
+      >
+        <span
+          className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
+            border border-[var(--color-border-subtle)] text-label-tertiary
+            [font-family:var(--font-body)] [font-size:var(--fs-tiny)]"
+        >
+          <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
+          iOS &amp; Android — coming soon
+        </span>
+        <h1
+          className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
+            [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
+            [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
+        >
+          Track your Pokémon card collection.
+        </h1>
+        <p className={`max-w-[34ch] mx-auto ${sectionBody}`}>
+          See every set, what it is worth, and what is still missing.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
+          <Link
+            href="/signup"
+            className="btn btn--primary justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
           >
-            A live Card Orb collection, captured for this preview.
-          </span>
-        </Link>
+            Start your collection
+          </Link>
+        </div>
+        <ul className="flex flex-wrap justify-center gap-x-8 gap-y-3 mt-4 m-0 p-0 list-none" role="list">
+          {STATS.map(({ value, label }) => (
+            <li key={label} className="flex flex-col items-center gap-0.5">
+              <b className="text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
+                {value}
+              </b>
+              <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+                {label}
+              </span>
+            </li>
+          ))}
+        </ul>
       </header>
 
       <section
         className="mx-auto max-w-[670px] text-center [padding-block:clamp(96px,12vw,160px)] [@media(max-width:640px)]:[padding-block:96px]"
         aria-labelledby="landing-intro-title"
       >
-        <p className={eyebrow}>The collection, considered</p>
+        <p className={`${eyebrow} mb-4`}>What it does</p>
         <h2 id="landing-intro-title" className={sectionHeading}>
-          A better home for the cards you care about.
+          A clear view of your collection.
         </h2>
         <p className={`max-w-[57ch] mx-auto mt-5 ${sectionBody}`}>
-          Card Orb turns the information around a collection into something you can actually enjoy
-          using — clean enough for the everyday, detailed enough for the long haul.
+          Card Orb shows what you own, what it is worth, and what is missing — without a
+          spreadsheet.
         </p>
       </section>
 
-      <section id="organise" className="mx-auto max-w-[1040px]" aria-labelledby="features-title">
+      <section
+        id="organise"
+        className="mx-auto max-w-[1040px] [padding-block:clamp(104px,14vw,180px)]"
+        aria-labelledby="features-title"
+      >
         <div className="max-w-[600px] mb-8">
-          <p className={`mb-4 ${eyebrow}`}>Built around the binder</p>
+          <p className={`${eyebrow} mb-4`}>Features</p>
           <h2 id="features-title" className={sectionHeading}>
             Know what you have. Notice what is missing.
           </h2>
@@ -282,11 +303,21 @@ export default function Home() {
           className="grid grid-cols-3 gap-4 m-0 p-0 list-none [@media(max-width:800px)]:grid-cols-1"
           role="list"
         >
-          {FEATURES.map(({ icon: Icon, title, body }) => (
+          {FEATURES.map(({ icon: Icon, title, body, comingSoon }) => (
             <li key={title} className="flex">
               <Card className="flex flex-1 flex-col items-start gap-3">
-                <span className={featureIcon}>
-                  <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
+                <span className="flex items-center justify-between w-full">
+                  <span className={featureIcon}>
+                    <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
+                  </span>
+                  {comingSoon && (
+                    <span
+                      className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+                        uppercase tracking-[0.06em]"
+                    >
+                      Coming soon{typeof comingSoon === "string" ? ` · ${comingSoon}` : ""}
+                    </span>
+                  )}
                 </span>
                 <h3 className={cardHeading}>{title}</h3>
                 <p className={cardBody}>{body}</p>
@@ -303,26 +334,26 @@ export default function Home() {
         aria-labelledby="workflow-title"
       >
         <div>
-          <p className={eyebrow}>A calmer way to collect</p>
+          <p className={`${eyebrow} mb-4`}>How it works</p>
           <h2 id="workflow-title" className={sectionHeading}>
-            The details stay connected.
+            Everything in one place.
           </h2>
           <p className={`mt-5 ${sectionBody}`}>
-            A card belongs to a set, an era and a story. Card Orb keeps that context close, so the
-            next session starts exactly where the last one ended.
+            Every card stays linked to its set and era, so the next session picks up exactly
+            where the last one left off.
           </p>
           <ul className="grid gap-3 mt-6 mb-0 p-0 list-none" role="list">
             <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
               <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
-              Track owned cards and your wishlist together.
+              Owned cards and your wishlist, in one view.
             </li>
             <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
               <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
-              Move naturally between the overview, sets and Pokédex.
+              Move between the overview, sets and Pokédex.
             </li>
             <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
               <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
-              Keep collection value visible without making it the point.
+              Collection value, visible but not the focus.
             </li>
           </ul>
         </div>
@@ -336,12 +367,11 @@ export default function Home() {
           <span className="absolute top-8 right-8 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]">
             01
           </span>
-          <h3 className={`max-w-[11ch] mt-8 [font-size:var(--fs-card)] ${cardHeading}`}>
-            From the first card to the last gap.
+          <h3 className={`max-w-[13ch] mt-8 [font-size:var(--fs-card)] ${cardHeading}`}>
+            Every card, tracked.
           </h3>
           <p className={`max-w-[28ch] mt-4 ${cardBody}`}>
-            One collection view for the cards already in the binder and the cards still waiting to
-            find their way there.
+            One view for the cards you own and the cards on your wishlist.
           </p>
           {/* --color-timeline used to live here and was removed with the portfolio's
               timeline, which this dashed rule is not: it is the connector on the
@@ -369,23 +399,14 @@ export default function Home() {
         aria-labelledby="share-title"
       >
         <div>
-          <p className={eyebrow}>Share, on your terms</p>
-          <h2 id="share-title" className={`max-w-[12ch] ${sectionHeading}`}>
-            A collection worth showing can have its own address.
+          <p className={`${eyebrow} mb-4`}>Sharing</p>
+          <h2 id="share-title" className={`max-w-[15ch] ${sectionHeading}`}>
+            Share a public link to your collection.
           </h2>
           <p className={`mt-5 ${sectionBody}`}>
-            Turn on a public collection when you want to share it. It is a clean link to the cards —
-            not your value data, and never a profile you did not choose to make public.
+            Turn it on when you want to share it. A clean link to the cards — not your value data,
+            and never a profile you did not choose to make public.
           </p>
-          <Link
-            href={DEMO_HREF}
-            className="inline-flex items-center gap-2 mt-6 text-label [font-family:var(--font-main)]
-              [font-size:var(--fs-body)] [font-weight:var(--fw-button)] no-underline
-              hover:underline hover:[text-underline-offset:3px]"
-          >
-            See how a public collection looks{" "}
-            <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
-          </Link>
         </div>
         <div
           className="flex gap-4 items-center p-5 border border-[var(--glass-border)] rounded-md
@@ -407,18 +428,47 @@ export default function Home() {
       </section>
 
       <section
+        id="faq"
+        className="mx-auto max-w-[1040px] [padding-block:clamp(112px,15vw,200px)]"
+        aria-labelledby="faq-title"
+      >
+        <div className="max-w-[600px] mb-8">
+          <p className={`${eyebrow} mb-4`}>Before you start</p>
+          <h2 id="faq-title" className={sectionHeading}>
+            A few things worth knowing.
+          </h2>
+        </div>
+        <ul
+          className="grid grid-cols-2 gap-4 m-0 p-0 list-none [@media(max-width:800px)]:grid-cols-1"
+          role="list"
+        >
+          {FAQ.map(({ q, a }) => (
+            <li key={q} className="flex">
+              <Card className="flex flex-1 flex-col items-start gap-2">
+                <h3 className={`${cardHeading} mt-0`}>{q}</h3>
+                <p className={cardBody}>{a}</p>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section
         className="flex flex-col items-center mx-auto max-w-[680px] text-center
           [padding-block:clamp(112px,15vw,200px)]"
         aria-labelledby="closing-title"
       >
-        <p className={eyebrow}>Make room for the next one</p>
-        <h2 id="closing-title" className={`max-w-[12ch] ${sectionHeading}`}>
+        <p className={`${eyebrow} mb-4`}>Get started</p>
+        <h2 id="closing-title" className={`max-w-[22ch] ${sectionHeading}`}>
           Start with the collection you have.
         </h2>
         <p className={`max-w-[42ch] mt-5 ${sectionBody}`}>
-          It is completely free, takes a moment to set up, and grows with every card you add.
+          Free, no credit card, takes a minute to set up.
         </p>
-        <Link href="/signup" className="btn btn--primary mt-6">
+        {/* self-center: .btn sets align-self: flex-start for toolbars, which
+            beats this column's items-center and left-pins the one button that
+            is not inside its own centering wrapper (the hero's is). */}
+        <Link href="/signup" className="btn btn--primary self-center mt-6">
           Create your free collection
           <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
         </Link>
@@ -434,13 +484,11 @@ export default function Home() {
           {APP_NAME}
         </span>
         <p className="m-0 text-center">Prices come from Cardmarket, in euros — the market collectors recognise.</p>
-        <Link
-          href={DEMO_HREF}
-          className="justify-self-end text-inherit underline [text-underline-offset:3px] [@media(max-width:640px)]:justify-self-center"
-        >
-          Explore {OWNER_NAME}&rsquo;s collection
-        </Link>
+        <div className="flex items-center justify-self-end [@media(max-width:640px)]:justify-self-center">
+          <ThemeToggle />
+        </div>
       </footer>
-    </section>
+      </section>
+    </div>
   );
 }

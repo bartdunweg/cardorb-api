@@ -32,6 +32,9 @@ export type Viewer = {
   email: string;
   /** The name in /user/<name>. Always present: a trigger makes one. */
   username: string;
+  /** The avatars bucket's public URL for this account, or null until one is
+   *  uploaded. See app/api/v1/profile/avatar/route.ts. */
+  avatarUrl: string | null;
 };
 
 /**
@@ -72,10 +75,11 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
 
   const { data: profile } = await db
     .from("profiles")
-    .select("username")
+    .select("username,avatar_url")
     .eq("id", sub)
     .maybeSingle();
 
+  const p = profile as { username?: string; avatar_url?: string | null } | null;
   return {
     userId: sub,
     email: email ?? "",
@@ -84,7 +88,8 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
     // this fallback is not a supported state, it is a way of not crashing in
     // one. The empty string never resolves as a username, which is the correct
     // outcome for an account that has no name yet.
-    username: (profile as { username?: string } | null)?.username ?? "",
+    username: p?.username ?? "",
+    avatarUrl: p?.avatar_url ?? null,
   };
 }
 

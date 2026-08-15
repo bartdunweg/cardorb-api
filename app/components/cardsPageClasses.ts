@@ -3,13 +3,21 @@
  * shared by app/(app)/layout.tsx (owner) and app/user/[username]/page.tsx
  * (public). The negative top margin takes back --main-pad-top, which
  * reserves room for a tab bar this route deliberately does not have.
+ *
+ * No bottom padding here any more — it moved onto .cards-main
+ * (cardsMainClassName) alone. On the container, it sat *below* both grid
+ * tracks rather than inside either one, so the sticky rail (constrained to
+ * its own track) fell short of it: scrolled to the end, that padding showed
+ * as a full-width gap with no rail border through it, reading as "the
+ * sidebar does not reach the bottom." Giving the main column its own
+ * trailing space instead keeps that breathing room without the rail's track
+ * ending early.
  */
 export const pageCardsClassName =
   "grid grid-cols-[300px_minmax(0,1fr)] items-start bg-[var(--glass-bg-solid)] min-h-screen min-h-dvh " +
-  "[margin:calc(-1*var(--main-pad-top))_auto_0] [padding:0_0_var(--page-pad-bottom)] " +
+  "[margin:calc(-1*var(--main-pad-top))_auto_0] " +
   "[@media(max-width:1000px)]:grid-cols-[minmax(0,1fr)] " +
-  "[@media(max-width:640px)]:[margin-top:0] " +
-  "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(var(--space-6)+var(--tabbar-pill-h)+var(--space-10))]";
+  "[@media(max-width:640px)]:[margin-top:0]";
 
 /**
  * .cards-main from cards.css. The class name stays (not just the Tailwind
@@ -29,8 +37,9 @@ export const pageCardsClassName =
  */
 export const cardsMainClassName =
   "cards-main @container min-w-0 gap-5 " +
-  "[padding:var(--space-8)_var(--page-pad-x)_0_var(--space-6)] " +
-  "[@media(max-width:1000px)]:[padding:var(--space-5)_var(--page-pad-x)_0]";
+  "[padding:var(--space-8)_var(--page-pad-x)_var(--page-pad-bottom)_var(--space-6)] " +
+  "[@media(max-width:1000px)]:[padding:var(--space-5)_var(--page-pad-x)_var(--page-pad-bottom)] " +
+  "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(var(--space-6)+var(--tabbar-pill-h)+var(--space-10))]";
 
 /**
  * The same three controls twice, and never both on screen: a panel where the

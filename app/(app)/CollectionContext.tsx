@@ -26,7 +26,7 @@ export type CollectionValue = {
   sets: CardSet[];
   /** Only the sets something is actually held from, grouped by era, for the rail. */
   setGroups: EraGroup[];
-  viewer: { username: string; email: string };
+  viewer: { username: string; email: string; avatarUrl: string | null };
 
   /** Scans and logos that answered 404, so nothing asks twice. */
   brokenScans: Set<string>;

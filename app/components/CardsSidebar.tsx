@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
-import { OWNER_NAME } from "../../lib/core/config";
+import { APP_NAME, OWNER_NAME } from "../../lib/core/config";
 import { LOCALE } from "../../lib/core/config";
 
 /**
@@ -34,11 +35,13 @@ export default function CardsSidebar({
   onAdd,
   brokenLogos,
   onBrokenLogo,
+  setsAsRow = false,
+  viewer,
 }: {
   sets: CardSet[];
   /** The same sets, under the era each one belongs to. */
   setGroups: { era: string; label: string; sets: CardSet[] }[];
-  /** "dashboard", "pokedex", "profile", "all", or a set name. */
+  /** "dashboard", "pokedex", "profile", "all", "sets", or a set name. */
   selected: string;
   /** Which of the two panes is showing, below the width they both fit at.
       Undefined until one has been chosen, which is the results. */
@@ -51,6 +54,17 @@ export default function CardsSidebar({
   onAdd: () => void;
   brokenLogos: Set<string>;
   onBrokenLogo: (name: string) => void;
+  /** AppSidebar's collection routes have their own set index at
+   *  /collection/sets (SetIndex.tsx) — a real page, linkable and reachable at
+   *  every width. There the fifty-one-set era list below would just be a
+   *  second copy of that page stuffed into the rail, so this collapses it to
+   *  one "Sets" row that opens it instead. The legacy /cards route has no such
+   *  page, so it leaves this false and keeps the full list. */
+  setsAsRow?: boolean;
+  /** Shown pinned to the bottom of the rail, above 1000px only — the same
+   *  destination as the Profile row (onSelect("profile")), reached a second
+   *  way. Optional: the legacy /cards route has no avatar to show. */
+  viewer?: { name: string; avatarUrl: string | null };
 }) {
   // Held and wanted are two destinations now, so the rail counts them apart.
   // A single total over both was the number that made "My collection" read as
@@ -107,10 +121,17 @@ export default function CardsSidebar({
           Below 1000px this whole head is gone. The bar along the bottom carries
           the plus. */}
       {signedIn && (
-        <div className="flex items-center gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
+        <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
+          <Link
+            href="/"
+            className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline"
+            aria-label={`${APP_NAME} home`}
+          >
+            {APP_NAME}
+          </Link>
           <button
             type="button"
-            className="btn btn--icon flex-none"
+            className="btn btn--icon btn--primary flex-none"
             onClick={onAdd}
             aria-label="Add a card"
             title="Add a card"
@@ -190,60 +211,112 @@ export default function CardsSidebar({
             aria-hidden="true"
             className={`block h-px m-2 bg-[var(--color-border-subtle)]${isPublic ? " cards-nav-elsewhere" : ""}`}
           />
-          {/* Fifty-one sets in one run is a wall. Under the era they belong to
-              it is a handful of short lists, and the label is the thing a
-              collector already sorts by. */}
-          {setGroups.map((group, i) => (
-            <li key={group.era}>
-              {/* A hairline between one era and the next, the same one that
-                  separates the sets from the two rows above them. The label
-                  alone had to carry the break on its own, which at --fs-small
-                  and tertiary is not a line anyone reads as one. */}
-              {i > 0 && (
-                <span aria-hidden="true" className="block h-px m-2 bg-[var(--color-border-subtle)]" />
-              )}
-              {/* The label is the selection for the whole era, which is what the
-                  Era facet used to be. One control instead of two: a heading you
-                  can press beats the same list of eras repeated as tick boxes
-                  further down the rail. */}
-              <button
-                type="button"
-                className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
-                  border-0 rounded-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
-                  [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-label-tertiary
-                  hover:text-label first:mt-0
-                  ${selected === `era:${group.era}` ? "text-label bg-bg-grouped" : ""}`}
-                onClick={() => onSelect(`era:${group.era}`)}
-                aria-pressed={selected === `era:${group.era}`}
-              >
-                {group.label}
-              </button>
-              <ul className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
-                {group.sets.map((set) => (
-                  <li key={set.name}>
-                    <NavItem
-                      active={selected === set.name}
-                      onClick={() => onSelect(set.name)}
-                      // The label is the catalogue's name; everything that
-                      // selects, keys or remembers is still set.name. The two
-                      // are different questions and this row asks both.
-                      name={set.title}
-                      // How many are held, beside the name rather than under
-                      // it. "12 of 84 cards" on a second line turned a list of
-                      // fifty-one sets into a wall of two-line rows for a fact
-                      // the set's own header states in full anyway.
-                      count={set.cards.length}
-                      logo={set.logo && !brokenLogos.has(set.name) ? set.logo : null}
-                      logoSize={set.logoSize}
-                      onBrokenLogo={() => onBrokenLogo(set.name)}
-                    />
-                  </li>
-                ))}
-              </ul>
+          {setsAsRow ? (
+            <li>
+              <NavItem
+                // A specific set or era (anything not one of the rail's own
+                // fixed rows) is still "Sets", just one screen deeper — the
+                // individual rows that used to carry that highlight are gone
+                // now that setsAsRow collapses them, so this row has to answer
+                // for all of it or nothing lights up while looking at a set.
+                active={
+                  selected === "sets" ||
+                  !["dashboard", "all", "wishlist", "profile"].includes(selected)
+                }
+                onClick={() => onSelect("sets")}
+                name="Sets"
+                count={sets.length}
+                icon={Layers}
+              />
             </li>
-          ))}
+          ) : (
+            // Fifty-one sets in one run is a wall. Under the era they belong to
+            // it is a handful of short lists, and the label is the thing a
+            // collector already sorts by.
+            setGroups.map((group, i) => (
+              <li key={group.era}>
+                {/* A hairline between one era and the next, the same one that
+                    separates the sets from the two rows above them. The label
+                    alone had to carry the break on its own, which at --fs-small
+                    and tertiary is not a line anyone reads as one. */}
+                {i > 0 && (
+                  <span aria-hidden="true" className="block h-px m-2 bg-[var(--color-border-subtle)]" />
+                )}
+                {/* The label is the selection for the whole era, which is what the
+                    Era facet used to be. One control instead of two: a heading you
+                    can press beats the same list of eras repeated as tick boxes
+                    further down the rail. */}
+                <button
+                  type="button"
+                  className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
+                    border-0 rounded-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
+                    [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-label-tertiary
+                    hover:text-label first:mt-0
+                    ${selected === `era:${group.era}` ? "text-label bg-bg-grouped" : ""}`}
+                  onClick={() => onSelect(`era:${group.era}`)}
+                  aria-pressed={selected === `era:${group.era}`}
+                >
+                  {group.label}
+                </button>
+                <ul className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
+                  {group.sets.map((set) => (
+                    <li key={set.name}>
+                      <NavItem
+                        active={selected === set.name}
+                        onClick={() => onSelect(set.name)}
+                        // The label is the catalogue's name; everything that
+                        // selects, keys or remembers is still set.name. The two
+                        // are different questions and this row asks both.
+                        name={set.title}
+                        // How many are held, beside the name rather than under
+                        // it. "12 of 84 cards" on a second line turned a list of
+                        // fifty-one sets into a wall of two-line rows for a fact
+                        // the set's own header states in full anyway.
+                        count={set.cards.length}
+                        logo={set.logo && !brokenLogos.has(set.name) ? set.logo : null}
+                        logoSize={set.logoSize}
+                        onBrokenLogo={() => onBrokenLogo(set.name)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))
+          )}
         </ul>
       </nav>
+
+      {signedIn && viewer && (
+        <button
+          type="button"
+          onClick={() => onSelect("profile")}
+          className="cards-nav-item mt-auto flex items-center gap-3 w-full p-2 border-0 rounded-md
+            bg-transparent text-left cursor-pointer text-inherit [@media(max-width:1000px)]:hidden"
+        >
+          {viewer.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
+            <img
+              src={viewer.avatarUrl}
+              alt=""
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-full object-cover border border-[var(--color-border-subtle)]"
+            />
+          ) : (
+            <span
+              className="grid place-items-center w-7 h-7 rounded-full bg-[var(--color-bg-grouped)]
+                border border-[var(--color-border-subtle)] text-label-tertiary
+                [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
+              aria-hidden="true"
+            >
+              {viewer.name.charAt(0).toUpperCase()}
+            </span>
+          )}
+          <span className="flex-1 min-w-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)] text-label truncate">
+            {viewer.name}
+          </span>
+        </button>
+      )}
     </div>
   );
 }
