@@ -477,10 +477,20 @@ separate piece of work — `/collection/sets` today only ever shows sets the
 collection already has a card in).
 `docs/decisions/0033-add-card-search-failure-and-paging.md` and
 `docs/changelog.d/2026-08-16-add-card-search-failure-and-paging.md` record
-it. `npm run check` is green. Still not confirmed against a real signed-in
-browser session — ask Bart to search "Charizard" again next time the
-dialog is open, and check whether the new failure message appears instead
-of silence if pokemontcg.io is still flaky.
+it. `npm run check` is green. Deployed and immediately real-world tested by
+Bart (first live browser test this whole thread has actually gotten) — he
+caught a second, genuine bug within a minute: typing showed "no matches"
+almost instantly, before a request could possibly have gone out. Cause:
+`searching` only flipped `true` inside the *debounced* fetch's own
+`setTimeout` callback, so for the whole `SEARCH_DEBOUNCE_MS` (300ms) window
+between a keystroke and the request actually firing, `searching` was still
+`false` and any leftover `matches` from a moment ago was still `[]` — which
+is exactly the "no matches" condition. Fixed by adding a second, `0ms`
+timer in the same effect that flips `searching` (or resets everything, if
+the query became inactive) on the very next tick, independent of the
+debounced fetch timer — still not a synchronous `setState` in the effect
+body (the lint rule this whole file's search effect is built around), just
+a much shorter deferred one. `npm run check` is green; redeployed.
 
 - **A `POKEMONTCG_API_KEY` would meaningfully derisk the new add-card
   search, and matters more than it did — there is no manual-entry fallback

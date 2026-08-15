@@ -197,66 +197,73 @@ export default function CardAddDialog({
     const term = query.trim();
     const hasFilters = Object.values(filters).some((v) => v.trim());
     // No search once a card is picked (nothing left to find). Both branches,
-    // and the "too short"/"no filters" one below, go through the same timer
-    // as the real request so every setState here happens from inside it
-    // rather than synchronously from the effect body.
+    // and the "too short"/"no filters" one below, go through a timer so
+    // every setState here happens from inside it rather than synchronously
+    // from the effect body.
     const active = !selected && (mode === "quick" ? term.length >= 2 : hasFilters);
     let cancelled = false;
     const controller = new AbortController();
-    const timer = setTimeout(
-      () => {
-        if (!active) {
-          setMatches([]);
-          setSearching(false);
-          setSearchFailed(false);
-          setHasMore(false);
-          setPage(1);
-          return;
-        }
-        setSearching(true);
+    // Flips `searching` on the very next tick, well before the debounced
+    // fetch below actually goes out. Without this, `searching` stayed
+    // false — and any leftover `matches` from a moment ago stayed put — for
+    // the whole SEARCH_DEBOUNCE_MS window, which is long enough that "no
+    // matches for X" rendered before a request had even been sent for X.
+    const immediate = setTimeout(() => {
+      if (!active) {
+        setMatches([]);
+        setSearching(false);
         setSearchFailed(false);
-        // A retry or a fresh keystroke both start over at page 1 — "Show
-        // more results" is the only thing allowed to move past it.
-        fetch(`/api/v1/catalog/search?${buildParams(1)}`, { signal: controller.signal })
-          .then(async (res) => {
-            if (cancelled) return;
-            if (res.status === 401) {
-              onUnauthorised();
-              return;
-            }
-            // 502 is searchCards() itself failing (pokemontcg.io down or
-            // rate-limited), distinct from the 400 this dialog never sends
-            // once `active` is true — see the route's own comment. Both used
-            // to render as an empty grid; that was the bug.
-            if (!res.ok) {
-              setSearchFailed(true);
-              setMatches([]);
-              setHasMore(false);
-              return;
-            }
-            const body = (await res.json()) as { cards: CatalogueMatch[] };
-            const cards = body.cards ?? [];
-            setMatches(cards);
-            setPage(1);
-            setHasMore(cards.length === MAX_RESULTS);
-          })
-          .catch(() => {
-            if (!cancelled) {
-              setSearchFailed(true);
-              setMatches([]);
-              setHasMore(false);
-            }
-          })
-          .finally(() => {
-            if (!cancelled) setSearching(false);
-          });
-      },
-      active ? SEARCH_DEBOUNCE_MS : 0,
-    );
+        setHasMore(false);
+        setPage(1);
+        return;
+      }
+      setSearching(true);
+      setSearchFailed(false);
+    }, 0);
+    const timer = !active
+      ? null
+      : setTimeout(() => {
+          // A retry or a fresh keystroke both start over at page 1 — "Show
+          // more results" is the only thing allowed to move past it.
+          fetch(`/api/v1/catalog/search?${buildParams(1)}`, { signal: controller.signal })
+            .then(async (res) => {
+              if (cancelled) return;
+              if (res.status === 401) {
+                onUnauthorised();
+                return;
+              }
+              // 502 is searchCards() itself failing (pokemontcg.io down or
+              // rate-limited), distinct from the 400 this dialog never sends
+              // once `active` is true — see the route's own comment. Both
+              // used to render as an empty grid; that was the bug.
+              if (!res.ok) {
+                setSearchFailed(true);
+                setMatches([]);
+                setHasMore(false);
+                return;
+              }
+              const body = (await res.json()) as { cards: CatalogueMatch[] };
+              const cards = body.cards ?? [];
+              setMatches(cards);
+              setPage(1);
+              setHasMore(cards.length === MAX_RESULTS);
+            })
+            .catch(() => {
+              if (!cancelled) {
+                setSearchFailed(true);
+                setMatches([]);
+                setHasMore(false);
+              }
+            })
+            .finally(() => {
+              if (!cancelled) setSearching(false);
+            });
+        }, SEARCH_DEBOUNCE_MS);
     return () => {
       cancelled = true;
       controller.abort();
-      clearTimeout(timer);
+      clearTimeout(immediate);
+      if (timer) clearTimeout(timer);
     };
     // retryTick isn't read inside — it exists purely to force this effect to
     // run again on "Try again", without a new keystroke changing anything else.
