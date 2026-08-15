@@ -373,22 +373,32 @@ function NavItem({
   logo?: string | null;
   /** Threaded down beside the URL so the rail reserves the space. See lib/cards.ts. */
   logoSize?: ImageSize;
-  icon?: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }>;
+  icon?: React.ComponentType<{
+    size?: number;
+    strokeWidth?: number;
+    fill?: string;
+    "aria-hidden"?: boolean;
+  }>;
   onBrokenLogo?: () => void;
 }) {
   return (
     <button
       type="button"
+      // The active row's own background is gone: it now just leaves the
+      // hover pill (.cards-nav-item::after, components.css) permanently on
+      // via .is-active, the same surface a row lifts onto when pointed at
+      // rather than a second, flatter treatment of its own — see the
+      // tabbar's matching change (CardsTabBar.tsx/tabbarClasses.ts), the
+      // two are meant to read as one visual language now.
       className={`cards-nav-item [--pill-radius:var(--radius-md)] relative flex items-center gap-3
-        w-full p-2 border-0 rounded-md bg-transparent text-left cursor-pointer text-inherit
-        [&.is-active]:bg-[var(--color-bg-grouped)]${active ? " is-active" : ""}`}
+        w-full p-2 border-0 rounded-md bg-transparent text-left cursor-pointer text-inherit${active ? " is-active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
     >
       {(logo !== undefined || Icon) && (
         <span className="flex-shrink-0 flex items-center justify-center w-9 h-7">
           {Icon ? (
-            <Icon size={18} strokeWidth={1.75} aria-hidden={true} />
+            <Icon size={18} strokeWidth={1.75} fill={active ? "currentColor" : "none"} aria-hidden={true} />
           ) : logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

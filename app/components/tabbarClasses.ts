@@ -57,28 +57,44 @@ export const tabbarPagesClassName =
   "[box-shadow:var(--shadow-elevated)] [backdrop-filter:blur(var(--blur-glass))] " +
   "[@media(max-width:640px)]:max-w-[calc(100vw-2*(var(--space-3)+var(--control-h)+var(--space-3)))]";
 
-/** Include the literal "is-active" class alongside this when the tab is selected. */
+/**
+ * Classic bottom-tab shape now: icon over a label, both always shown, on
+ * every slot rather than only the active one. Was icon-only with the label
+ * collapsed to nothing and faded in on .is-active alone ("five icons and no
+ * words is a bar you learn rather than read" — the old comment's own
+ * argument for it), changed on explicit instruction. flex-col replaces the
+ * old row layout; the active-only width expansion this needed (the label
+ * used to grow the slot when it appeared) is gone since every slot is
+ * already sized for its label now, active or not.
+ *
+ * Include the literal "is-active" class alongside this when the tab is
+ * selected.
+ */
 export const tabbarItemClassName =
-  "tabbar-item group relative z-[1] flex items-center justify-center flex-none min-w-0 h-10 px-4 " +
-  "border border-transparent rounded-btn bg-transparent cursor-pointer text-label no-underline " +
-  "[transition:color_var(--dur-fast)_var(--ease-in-out),flex-grow_var(--dur-normal)_var(--ease-in-out)] " +
-  "[&.is-active]:text-[var(--btn-primary-text)] [&:not(.is-active):hover]:opacity-70 " +
-  "[@media(max-width:640px)]:px-[10px] " +
-  "[@media(max-width:640px)]:[&.is-active]:min-w-[114px] [@media(max-width:640px)]:[&.is-active]:px-4";
+  "tabbar-item group relative z-[1] flex flex-col items-center justify-center gap-0.5 flex-none min-w-[56px] " +
+  "px-2 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-label no-underline " +
+  "[transition:color_var(--dur-fast)_var(--ease-in-out)] [&:not(.is-active):hover]:opacity-70";
 
 export const tabbarIconClassName = "flex shrink-0";
 
-/** Requires the ancestor .tabbar-item to also carry Tailwind's `group` class (tabbarItemClassName does). */
-export const tabbarLabelClassName =
-  "tabbar-label " +
-  "[@media(max-width:640px)]:max-w-0 [@media(max-width:640px)]:opacity-0 [@media(max-width:640px)]:ml-0 " +
-  "[@media(max-width:640px)]:[transition:opacity_var(--dur-fast)_var(--ease-smooth)] " +
-  "[@media(max-width:640px)]:group-[.is-active]:max-w-[160px] [@media(max-width:640px)]:group-[.is-active]:opacity-100 " +
-  "[@media(max-width:640px)]:group-[.is-active]:ml-2";
+/** Always visible now, under the icon — no longer collapsed for anything but
+ *  the active tab. Requires the ancestor .tabbar-item to also carry
+ *  Tailwind's `group` class (tabbarItemClassName does), kept even though
+ *  nothing here reads `group-[...]` any more: CardsTabBar.tsx's `item()`
+ *  still applies "group" unconditionally and there is no reason to make
+ *  that conditional for one class that stopped needing it. */
+export const tabbarLabelClassName = "tabbar-label [font-size:var(--fs-tiny)] leading-none";
 
-/** Include "is-ready"/"is-animated" alongside this as the pill's placement settles. */
+/** The same glass-lift surface the sidebar's rows use for hover/active
+ *  (.cards-nav-item::after, components.css) — was solid black
+ *  (bg-[var(--btn-primary-bg)]), changed on explicit instruction so the
+ *  sidebar and the tabbar read as the same visual language rather than the
+ *  sidebar's rows lifting onto glass and the active tab sitting on a filled
+ *  black pill. Include "is-ready"/"is-animated" alongside this as the
+ *  pill's placement settles. */
 export const tabbarPillClassName =
-  "tabbar-pill absolute left-0 top-0 z-0 rounded-btn bg-[var(--btn-primary-bg)] " +
+  "tabbar-pill absolute left-0 top-0 z-0 rounded-btn bg-[var(--glass-bg)] " +
+  "border border-[var(--glass-border)] [backdrop-filter:blur(var(--blur-glass-pill))] " +
   "[box-shadow:var(--shadow-card)] opacity-0 pointer-events-none " +
   "[&.is-ready]:opacity-100 " +
   "[&.is-animated]:[transition:transform_0.38s_var(--ease-smooth),width_0.38s_var(--ease-smooth),height_0.38s_var(--ease-smooth)]";

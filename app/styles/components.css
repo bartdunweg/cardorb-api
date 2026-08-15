@@ -136,7 +136,8 @@
     transform var(--dur-fast) var(--ease-smooth);
 }
 .cards-nav-item:hover::after,
-.cards-nav-item:focus-visible::after {
+.cards-nav-item:focus-visible::after,
+.cards-nav-item.is-active::after {
   opacity: 1;
   transform: scale(1);
 }
