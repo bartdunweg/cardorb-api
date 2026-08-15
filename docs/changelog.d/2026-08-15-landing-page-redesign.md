@@ -1,0 +1,4 @@
+- Landing page: hero simplified to a single centred column, sign-in state now reflected in the nav ("Signed in as {name}" with an avatar), stats row and an FAQ section added, no more links to the public collection demo anywhere on the marketing pages or `/login`.
+- Landing/login nav is now one shared, sticky component with a light/dark toggle in the footer instead of a floating button.
+- Sidebar (`/collection/*`): shadow reduced, wordmark added to the header with the add-card button aligned opposite it (now filled black), the full set list collapsed to a single "Sets" row linking to the existing `/collection/sets` page.
+- Fixed: the bottom tab bar was showing on desktop next to the sidebar instead of hiding above 1000px.

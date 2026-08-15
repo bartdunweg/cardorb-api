@@ -65,9 +65,10 @@ export const colour = {
   labelQuaternary: { light: "#949494", dark: "#676767" },
 
   /** The page. Painted on body, and what the browser chrome is tinted from. */
-  bgGrouped: { light: "#fafafa", dark: "#181818" },
+  bgGrouped: { light: "#ffffff", dark: "#181818" },
 
-  /** A card. Above the page in light, below it in dark — Apple's relationship. */
+  /** A card. Equal to the page in light (cards read by border/shadow alone,
+   *  not colour), below the page in dark — Apple's relationship there still. */
   bgSurface: { light: "#ffffff", dark: "#101010" },
 
   /**

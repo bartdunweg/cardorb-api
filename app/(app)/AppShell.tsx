@@ -36,7 +36,7 @@ export default function AppShell({
   sets,
   children,
 }: {
-  viewer: { username: string; email: string };
+  viewer: { username: string; email: string; avatarUrl: string | null };
   sets: CardSet[];
   children: React.ReactNode;
 }) {

@@ -1,30 +1,32 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import Card from "./Card";
+import Navbar from "./Navbar";
 
 /**
  * The shell every door screen shares: the login at /login, /signup,
  * /password/forgotten, /settings/password (setting a new one) and the 404 —
- * a short column in the middle of the page, one card, one heading. Used to be
- * app/styles/signin.css's `.page-signin`/`.signin-card`/`.page-title`; kept as
- * one component for the same reason FormField.tsx exists, so the five screens
- * cannot drift apart by hand.
+ * a short column in the middle of the page, one heading, no card around it.
+ * Used to be app/styles/signin.css's `.page-signin`/`.signin-card`/`.page-title`;
+ * kept as one component for the same reason FormField.tsx exists, so the five
+ * screens cannot drift apart by hand.
+ *
+ * Navbar (wordmark only, no center/right) is the way back to `/` — sticky,
+ * same as app/page.tsx's.
  */
 export default function SigninShell({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section
+    <div
       // The layout reserves room at the top for a nav bar this route does not
       // have, and a form centred in what is left sits visibly high.
-      className="min-h-screen flex flex-col items-center justify-center gap-5 -mt-[var(--main-pad-top)] p-[var(--page-pad-x)]"
+      className="-mt-[var(--main-pad-top)]"
     >
-      <Card
-        // Clips, and nothing here escapes its edges; kept explicit because the
-        // form's focus ring sits right against the padding.
-        className="w-full max-w-[380px] flex flex-col gap-6 overflow-visible"
-      >
-        <h1 className="m-0 [font-size:var(--fs-card)] text-label text-center">{title}</h1>
-        {children}
-      </Card>
-    </section>
+      <Navbar />
+      <div className="flex flex-col items-center justify-center gap-5 min-h-screen p-[var(--page-pad-x)]">
+        <div className="w-full max-w-[380px] flex flex-col gap-6">
+          <h1 className="m-0 [font-size:var(--fs-card)] text-label text-center">{title}</h1>
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -15,5 +15,8 @@ import CardsView from "./CardsView";
  */
 export default function CollectionScreen({ scope }: { scope: string }) {
   const { sets } = useCollection();
-  return <CardsView sets={sets} variant="owner" scope={scope} />;
+  // /collection/card, not /cards: a card opened from here should stay inside
+  // the (app) shell — sidebar, navbar and all — rather than landing on the
+  // older, separate /cards/[id] page outside it.
+  return <CardsView sets={sets} variant="owner" scope={scope} basePath="/collection/card" />;
 }

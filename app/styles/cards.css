@@ -29,23 +29,16 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--color-border-subtle);
-  /* Sideways, because the only edge you can see is the right one: a shadow with
-     a vertical offset would spill down the page and never fall where the rail
-     actually meets the results. */
-  box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.16);
+  /* No box-shadow: the border-right above is the only separation from the
+     results now. A directional shadow lived here twice (first at 16%/43%
+     black, then reduced to 10%/40%) and read as "too much" both times, so
+     it is gone rather than tuned a third time. */
   position: sticky;
   top: 0;
   /* The whole window, edge to edge. */
   height: 100vh;
   height: 100dvh;
   overflow-y: auto;
-}
-/* Dark mode carries its shadows heavier, the way --shadow-card and
-   --shadow-elevated do: 16% black over a near-black page is nothing at all.
-   That still holds, and this is still four times what a light-mode shadow would
-   be. */
-[data-theme="dark"] .cards-rail {
-  box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.43);
 }
 @media (max-width: 1000px) {
   .cards-rail {
@@ -200,11 +193,13 @@
   padding: 0;
 }
 
-/* The one thing in the bar that is not a place: it does something. The pill
-   behind the selection is already the darkest ink here, so a second filled
-   black circle would read as a second selected tab. Accent instead, which is
-   this site's colour for an action and is nowhere else in this bar, so it ends
-   up with one ink for where you are and one for what you can do. */
+/* Was --color-tint (an accent, deliberately not this bar's black) precisely
+   because the selected-tab pill behind it is bg-[var(--btn-primary-bg)] —
+   the same black .btn--primary now uses everywhere else an action is
+   primary (the sidebar's add button, landing page CTAs). Changed to match
+   on explicit instruction, which does trade away the old "one ink for
+   where you are, one for what you can do" distinction — the pill and this
+   button are both black now, told apart only by position in the bar. */
 .cards-tabbar-add {
   display: flex;
   align-items: center;
@@ -217,8 +212,8 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--color-tint);
-  color: var(--color-on-dark);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   cursor: pointer;
   /* Above the pill, which shares this track and is positioned into it. */
   z-index: 1;

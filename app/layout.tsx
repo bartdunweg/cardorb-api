@@ -2,32 +2,21 @@ import type { Metadata, Viewport } from "next";
 import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
-import localFont from "next/font/local";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { APP_NAME, APP_TAGLINE, OWNER_NAME, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
 /**
- * The two families tokens.css asks for: --font-main is Satoshi and --font-body
- * is Inter. Both are loaded here because a variable with nothing behind it
- * falls through to the system stack, and the collection then renders in a font
- * that is close enough to look like a mistake rather than a choice.
+ * The one family tokens.css asks for: both --font-main and --font-body resolve
+ * to Inter now. Loaded here because a variable with nothing behind it falls
+ * through to the system stack, and the collection then renders in a font that
+ * is close enough to look like a mistake rather than a choice.
  */
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
   variable: "--font-inter",
-});
-
-const satoshi = localFont({
-  src: [
-    { path: "./fonts/satoshi-regular.woff2", weight: "400" },
-    { path: "./fonts/satoshi-medium.woff2", weight: "500" },
-    { path: "./fonts/satoshi-bold.woff2", weight: "700" },
-  ],
-  display: "swap",
-  variable: "--font-satoshi",
 });
 
 export const viewport: Viewport = {
@@ -109,7 +98,7 @@ export default function RootLayout({
       // scrollbar-gutter:stable — Safari paints the rubber-band overscroll
       // area from html's own background, and html+body have to agree on it
       // or the top/bottom bands show a seam. See body's classes below.
-      className={`${inter.variable} ${satoshi.variable} bg-bg-grouped text-base antialiased [scrollbar-gutter:stable]`}
+      className={`${inter.variable} bg-bg-grouped text-base antialiased [scrollbar-gutter:stable]`}
     >
       <head>
         {/* Only the choice. The machine is the stylesheet's job now.

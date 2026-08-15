@@ -61,7 +61,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <section className={pageCardsClassName}>
       <Preconnect to={["https://assets.tcgdex.net", "https://images.pokemontcg.io"]} />
-      <AppShell viewer={{ username: viewer.username, email: viewer.email }} sets={sets}>
+      <AppShell
+        viewer={{ username: viewer.username, email: viewer.email, avatarUrl: viewer.avatarUrl }}
+        sets={sets}
+      >
         {children}
       </AppShell>
     </section>

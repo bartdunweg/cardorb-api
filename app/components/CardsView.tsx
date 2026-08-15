@@ -129,6 +129,7 @@ export default function CardsView({
   variant = "owner",
   scope,
   username,
+  basePath = "/cards",
 }: {
   sets: CardSet[];
   /**
@@ -151,6 +152,11 @@ export default function CardsView({
   scope?: string;
   /** Whose collection this is. Public only, and only to address its API by. */
   username?: string;
+  /** Forwarded to CardItem/CardLink. /cards by default (the original,
+   *  standalone detail route); CollectionScreen.tsx passes /collection/card
+   *  so a card opened from the (app) shell stays inside it — sidebar, navbar
+   *  and all — instead of landing on a bare page outside the shell. */
+  basePath?: string;
 }) {
   /**
    * Owner or public, and the two answers now arrive as one word.
@@ -1398,6 +1404,7 @@ export default function CardsView({
                         onPick={
                           isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
                         }
+                        basePath={basePath}
                       />
                     )),
                   )}
@@ -1486,6 +1493,7 @@ export default function CardsView({
                         onPick={
                           isPublic ? (card, setName) => setOpenCard({ card, setName }) : undefined
                         }
+                        basePath={basePath}
                       />
                     ))}
                   </ul>

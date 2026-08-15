@@ -253,7 +253,7 @@
   /* Fonts: custom first, then system fallbacks so content renders
      immediately even if the web font is still loading */
   /* Loaded via next/font/local in layout.tsx (woff2 + automatic fallback metrics) */
-  --font-main: var(--font-satoshi, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --font-main: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   --font-body: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   /* Code: the article's inline code, the error digest, the token names on
      /design. Three files were writing this exact stack out by hand, which is

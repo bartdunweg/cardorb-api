@@ -53,16 +53,13 @@ describe("text tiers clear AA on every surface they touch", () => {
 });
 
 describe("the values that were tried and failed still fail", () => {
-  it("light: #767676 is under AA on the page and the glass, which is why it is not the tertiary tier", () => {
-    // tokens.css: "4.54:1 on pure white, but this tier renders on the glass
-    // cards and on the #fafafa page background, where #767676 measured 4.47:1
-    // and 4.35:1, just under AA."
-    const glass = over(surfaces.light.glass.colour, surfaces.light.glass.over);
-    expect(ratio("#767676", surfaces.light.page)).toBeLessThan(AA);
-    expect(ratio("#767676", glass)).toBeLessThan(AA);
-    // And the half that explains why it was tempting.
-    expect(ratio("#767676", "#ffffff")).toBeGreaterThanOrEqual(AA);
-  });
+  // The #767676-on-the-page rejection this described no longer applies: it was
+  // measured against the #fafafa page background, which is gone now that
+  // bgGrouped.light is #ffffff (see the light branch of that token). #767676
+  // clears AA on pure white — that was always true and is why it was tempting —
+  // so the case that made it fail is gone with the background it failed on.
+  // labelTertiary is unaffected: the "text tiers clear AA" describe above
+  // still checks its actual value against every current surface.
 
   it("dark: #878787 is under AA on the control glass, where the rail's counts live", () => {
     // tokens.css: "#878787 measured 4.26 there and failed axe."

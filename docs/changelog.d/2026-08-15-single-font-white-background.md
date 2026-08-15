@@ -1,0 +1,1 @@
+- Site-wide: one typeface (Inter) instead of Satoshi for headings and Inter for body text; the page background is now white instead of off-white in light mode.

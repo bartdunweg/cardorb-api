@@ -6,6 +6,7 @@ import type { CardSet } from "../../lib/core/cards";
 import { eraYears, groupByEra, eraLabel } from "../../lib/core/eras";
 import { slugify } from "../../lib/core/slug";
 import { LOCALE } from "../../lib/core/config";
+import { retryAsPng } from "./CardsSidebar";
 
 /**
  * Every set, as a screen rather than as a column.
@@ -88,6 +89,12 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                           loading="lazy"
                           decoding="async"
                           className="max-h-full max-w-[70%] object-contain object-left"
+                          // A set as new as Pitch Black only has logo.png —
+                          // TCGdex has not published a .webp for it yet — so
+                          // the first request 404s. See retryAsPng's own
+                          // comment (CardsSidebar.tsx), which this page had
+                          // never carried a copy of.
+                          onError={(e) => retryAsPng(e.currentTarget)}
                         />
                       ) : (
                         <span className="[font-size:var(--fs-small)] font-semibold text-label-tertiary">

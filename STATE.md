@@ -147,60 +147,155 @@ and `docs/changelog.d/2026-08-15-remove-notion-integration.md` record it.
 `npm run check` is green; a `npm run dev` boot confirmed the `[env]` warnings
 now cover only the Supabase vars (this workspace still has none configured).
 
-Since then, in this session: a full security review of the platform (auth/guard logic,
-every `app/api/` route, secrets/config/dependencies via three parallel Explore sweeps).
-Overall posture held up well — constant-time token comparison, RLS as the real
-authorization layer, parameterized queries throughout, a real CSP/HSTS/Permissions-Policy
-header set, anti-enumeration on login/signup/password-reset, no leaked secrets in git
-history. Three concrete gaps fixed: `GET /api/v1/public/[username]/collection` had no
-rate limiter (the one public route without one, and the most expensive); `email`/
-`password` settings routes had none either, unlike shape-identical `session`/`signup`;
-and `recentImports()` relied solely on RLS with no `user_id` filter in the query itself,
-unlike every other function in that file. `docs/decisions/0023-security-review-rate-limit-gaps.md`
-and `docs/changelog.d/2026-08-15-security-review-rate-limit-gaps.md` record it. Several
-other findings were left as documented, accepted tradeoffs rather than fixed — see the
-ADR for the list (verbatim Postgres error messages to clients, CSP `unsafe-inline`, the
-legacy `CARDS_TOKEN` path, in-memory rate limiting, `x-forwarded-host` trust). `npm run
-check` is green.
+Since then, in this session: a long, iterative pass on the landing page and
+the signed-in app shell, driven by a live back-and-forth rather than a single
+brief — see ADRs 0023-0028 for the reasoning behind each. In short:
+
+- **Landing page** (`app/page.tsx`): hero cut back to a single centred
+  column (a two-column "value card" version was tried and explicitly
+  reverted); every link to the public collection demo removed from the
+  landing page and `/login` (ADR-0023); a stats row and an FAQ section
+  added, informed by a competitive look at BindeX and Collectr's landing
+  pages and `/pro` tier, filtered through this app's existing
+  "premium personal collection, not a trading/social platform" positioning
+  (`docs/decisions/0001-premium-personal-collection-landing.md`) — Trade
+  Analyzer/Social/Marketplace-style features were deliberately not chased;
+  a `comingSoon` tag on `FEATURES` entries not yet built (mobile scan, CSV
+  export); copy tightened throughout at Bart's request ("nog een beetje
+  cheesy... mag meer to the point").
+- **Typography and colour** (ADR-0024): one font (Inter) instead of
+  Satoshi+Inter, and the page background is white instead of `#fafafa` in
+  light mode — both explicit instructions, both required follow-up fixes
+  (heading line-height was tuned for Satoshi and clipped accents under
+  Inter; several `max-w-[Nch]` headings wrapped a line longer than intended;
+  one now-obsolete contrast-regression test removed).
+- **Navbar** (ADR-0026): `app/components/Navbar.tsx`, sticky, shared by the
+  landing page and the door screens (`SigninShell.tsx`), replacing two
+  separate padding conventions and a `fixed` wordmark link with one
+  component.
+- **Sidebar** (ADR-0027, ADR-0028): the signed-in rail's fifty-plus-set
+  inline list collapses to one "Sets" row linking to the `/collection/sets`
+  page that already existed for this (`setsAsRow` prop, opt-in, legacy
+  `/cards` unaffected); the rail's shadow reduced; a wordmark + black
+  circular add button added to its header. Separately, found and fixed a
+  real bug: the bottom tab bar was never actually hiding above 1000px — a
+  third occurrence of the cascade-layers class of bug ADR-0012/0017 already
+  documented, this time in a file whose own comment incorrectly claimed the
+  old rule still worked.
+- **Sign-in door screens**: `SigninShell.tsx` lost its `Card` wrapper (plain
+  layout now); a two-column "cards drifting past" visual
+  (`SigninVisual.tsx`) was built for `/login`/`/signup`, fixed (viewport
+  height, real card scans instead of Pokédex sprites, styling), then
+  explicitly removed again in the same session ("we houden het wel gewoon
+  even in deze MVP heel minimaal") — the component and its keyframe were
+  deleted rather than left dead.
+- **Profile avatars** (ADR-0025, new): `profiles.avatar_url`, a public
+  `avatars` Supabase Storage bucket, an upload route
+  (`app/api/v1/profile/avatar/route.ts`) taking a client-resized 256×256
+  PNG as a base64 data URL (matching `ImportSettings.tsx`'s existing
+  JSON-body convention rather than introducing `multipart/form-data`), and
+  an upload panel in `ProfileSettings.tsx`. Shown next to "Signed in as
+  {name}" on the landing nav, falling back to an initial when unset.
+  **Not applied to the live database** and not exercised against a real
+  upload — same posture as the Notion-table drop below, and this
+  workspace still has no working Supabase credentials.
+
+`npm run check` is green throughout this pass.
+
+Since then, in this session: `.env.local` gained real
+`NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`/
+`SUPABASE_SERVICE_ROLE_KEY` (filled in outside the chat, as instructed
+above), so this workspace now has a working connection to the live "Card
+Orb" Supabase project (`fprjroupecdhosfdrqhv`) for the first time. On
+Bart's explicit go-ahead, both outstanding migrations were applied with
+`supabase link --project-ref fprjroupecdhosfdrqhv` then `supabase db
+push`: `20260815120000_drop_notion_connections.sql` (already applied
+earlier, confirmed) and `20260815130000_profile_avatar.sql` (applied this
+pass). `supabase migration list` confirms all six local migrations now
+match remote.
+
+Since then, in this session: a card opened from `/collection` now stays
+inside the `(app)` shell as a real page instead of falling through to the
+older, separate `/cards/[id]` page outside it (`docs/decisions/0029-collection-card-detail-stays-in-shell.md`).
+New route `app/(app)/collection/card/[id]/page.tsx`, near-identical to
+`/cards/[id]/page.tsx` (same `CardDetail`, same data-fetching), reached via
+a new optional `basePath` prop threaded through `CardNav.tsx` →
+`CardItem.tsx`/`CardLink` → `CardsView.tsx` → `CollectionScreen.tsx` (the
+one caller that sets it to `/collection/card`; every other caller keeps
+the `/cards` default, so `/cards/[id]` and its intercepted modal are
+unchanged for old bookmarks/links). No dialog for this route at any
+width — a plain page every time, per the explicit ask. `npm run check`
+green; not exercised signed-in with real data via a live browser in this
+workspace.
 
 ## Open
 
-- ~~Apply `supabase/migrations/20260815120000_drop_notion_connections.sql`
-  to the live database~~ — done. Checked the live database directly
-  (`supabase db query --linked`): `public.connections` no longer exists,
-  `public.cards` does, and holds 1,969 rows — the collection was never in
-  the table that got dropped, and it's untouched.
-- This workspace's `.env.local` has `CARDS_TOKEN`/`OWNER_EMAIL` filled in but
-  still needs real `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  (and `SUPABASE_SERVICE_ROLE_KEY` for the account-deletion path) pasted in
-  by hand — not something to put in chat. Until then the app boots but the
-  collection is empty and no account can be created.
+- **Card detail, avatar upload, and signup still need a real signed-in
+  browser pass.** `/api/v1/public/[username]/latest-pull` was confirmed
+  live this session (`curl -i` against the running dev server, real data:
+  returned an actual card, "Zarude", with the CDN-image proxy and CORS
+  header both correct) — that one is done. The rest need an authenticated
+  session, which this session could not create: no browser extension
+  connected in this workspace, and entering a password on the user's
+  behalf is out of scope regardless. `OWNER_USER_ID` (the legacy
+  `x-cards-key` compatibility path in `guard.ts`) is also unset in
+  `.env.local`, so there was no way to authenticate a `curl` request
+  either. Needs a human pass: sign in, click through `/collection/card/[id]`
+  with a real card, upload an avatar in Settings > Profile, and run a real
+  signup once.
 
+Since then, on `main` (merged from a parallel branch, not this session's own
+work): a full security review of the platform (auth/guard logic, every
+`app/api/` route, secrets/config/dependencies via three parallel Explore
+sweeps). Overall posture held up well — constant-time token comparison, RLS
+as the real authorization layer, parameterized queries throughout, a real
+CSP/HSTS/Permissions-Policy header set, anti-enumeration on
+login/signup/password-reset, no leaked secrets in git history. Three
+concrete gaps fixed: `GET /api/v1/public/[username]/collection` had no rate
+limiter (the one public route without one, and the most expensive); `email`/
+`password` settings routes had none either, unlike shape-identical
+`session`/`signup`; and `recentImports()` relied solely on RLS with no
+`user_id` filter in the query itself, unlike every other function in that
+file. `docs/decisions/0023-security-review-rate-limit-gaps.md` and
+`docs/changelog.d/2026-08-15-security-review-rate-limit-gaps.md` record it —
+note this session also has its own, unrelated `0023` (landing page,
+`0023-landing-drops-public-collection-links.md`); the two arrived on
+parallel branches and collided the same way `0014` and `0021` already had
+before this, so the number was left doubled up rather than renumbering
+seven cross-referencing files against a moving target. Several other
+security findings were left as documented, accepted tradeoffs rather than
+fixed — see that ADR for the list (verbatim Postgres error messages to
+clients, CSP `unsafe-inline`, the legacy `CARDS_TOKEN` path, in-memory rate
+limiting, `x-forwarded-host` trust).
+
+Since then, in this session: the tabbar's mobile add button changed from an
+accent-coloured circle to the same black `--btn-primary-bg` the sidebar's
+add button and every other primary action use, on explicit instruction —
+trading away the original design's "one ink for where you are (the selected
+pill, already black), one for what you can do" distinction. Documented
+inline in `cards.css` rather than a full ADR, since it's a straightforward
+colour swap with the tradeoff spelled out in the same comment.
+
+`npm run check` is green throughout both threads.
+
+## Open
+
+- **Card detail, avatar upload, and signup still need a real signed-in
+  browser pass** (this session's work) — see above; unchanged by the
+  security-review merge.
+- The Notion-connections-table drop and the profile-avatar migration are
+  both confirmed applied to the live database (checked directly via
+  `supabase db query --linked` for the former, `supabase migration list`
+  for the latter) — nothing outstanding on the migrations front.
+- This workspace's `.env.local` now has working
+  `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`/
+  `SUPABASE_SERVICE_ROLE_KEY` — the credentials gap earlier sessions
+  recorded here is resolved.
 - `cards.css` is now 1,365 lines (from 2,927 at the start of the migration),
   holding only cross-file selector hooks (GLASS CONTROL/CONTROL recipe,
   `.sheet`/`.filter-menu-panel` ancestor styling for `FilterOptions.tsx`'s
   shared rows) and ADR-0013-style conditionally-overridden properties.
   Nothing further identified as migratable.
-- Two background-agent worktrees from an earlier, session-limit-interrupted
-  run are still on disk with no real changes in them:
-  `.claude/worktrees/agent-a568e0bdb54c88794`,
-  `.claude/worktrees/agent-ae477e6a88902e074`. Not cleaned up yet — ask
-  before removing.
-- This workspace has no `NOTION_TOKEN`/Postgres credentials, so the live
-  verification this session did (browser screenshots, `getComputedStyle`
-  checks) exercised the shell/toolbar/dialogs but never the real card grid
-  with real data — worth a pass with credentials at some point.
-
-The generated-username signup flow also hasn't been exercised in a running
-`npm run dev` + browser session (no `NOTION_TOKEN`/Supabase credentials
-confirmed in this workspace) — only `npm run check` and code inspection
-verified it. Worth a real signup-and-confirm pass before shipping.
-
-The new `/api/v1/public/[username]/latest-pull` endpoint is unit-tested with
-mocked `getCards`/`ownerOf` but hasn't hit real Notion/Postgres data via
-`npm run dev` (same credentials gap). Worth a real `curl -i` against a live
-collection — including marking a card `excluded` and confirming it drops out —
-before the portfolio site is pointed at it.
 
 ## Next session
 

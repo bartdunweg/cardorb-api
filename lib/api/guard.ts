@@ -220,7 +220,7 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
       return { status: 503, error: "This deployment has no account configured." };
     }
     console.warn("[deprecated] CARDS_TOKEN was used; move this client to an account token");
-    return { userId: owner, email: process.env.OWNER_EMAIL ?? "", username: "" };
+    return { userId: owner, email: process.env.OWNER_EMAIL ?? "", username: "", avatarUrl: null };
   }
 
   const viewer = await requestViewer(req);

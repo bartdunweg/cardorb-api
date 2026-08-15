@@ -357,6 +357,7 @@ export type OwnProfile = {
   username: string;
   displayName: string | null;
   isPublic: boolean;
+  avatarUrl: string | null;
 };
 
 /**
@@ -374,15 +375,25 @@ export type OwnProfile = {
 export async function ownProfile(db: SupabaseClient, userId: string): Promise<OwnProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("username,display_name,is_public")
+    .select("username,display_name,is_public,avatar_url")
     .eq("id", userId)
     .maybeSingle();
 
   if (error) throw new Error(`Reading your profile failed: ${error.message}`);
   if (!data) return null;
 
-  const row = data as { username: string; display_name: string | null; is_public: boolean };
-  return { username: row.username, displayName: row.display_name, isPublic: row.is_public };
+  const row = data as {
+    username: string;
+    display_name: string | null;
+    is_public: boolean;
+    avatar_url: string | null;
+  };
+  return {
+    username: row.username,
+    displayName: row.display_name,
+    isPublic: row.is_public,
+    avatarUrl: row.avatar_url,
+  };
 }
 
 /**
@@ -401,11 +412,12 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
 export async function updateProfile(
   db: SupabaseClient,
   userId: string,
-  patch: { displayName?: string | null; isPublic?: boolean },
+  patch: { displayName?: string | null; isPublic?: boolean; avatarUrl?: string | null },
 ): Promise<void> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("displayName" in patch) row.display_name = patch.displayName;
   if ("isPublic" in patch) row.is_public = patch.isPublic;
+  if ("avatarUrl" in patch) row.avatar_url = patch.avatarUrl;
 
   const { error } = await db.from("profiles").update(row).eq("id", userId);
   if (error) throw new Error(`That change could not be saved: ${error.message}`);

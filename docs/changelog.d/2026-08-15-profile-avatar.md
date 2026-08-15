@@ -1,0 +1,1 @@
+- Profile picture: upload one in Settings > Profile, shown next to your name wherever the app already showed "Signed in as {name}". Falls back to your initial until you set one.
