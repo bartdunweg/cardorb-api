@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import Card from "../../../../components/Card";
 import CardDetail from "../../../../components/CardDetail";
 import CardNav from "../../../../components/CardNav";
 import Button from "../../../../components/Button";
@@ -70,12 +69,16 @@ export default async function CollectionCardPage({ params }: { params: Promise<{
   if (!card) notFound();
 
   return (
-    <Card className="flex flex-col items-start">
+    // No Card wrapper: this already sits inside the (app) shell next to the
+    // sidebar, and a bordered/shadowed card of its own there reads as a card
+    // inside a card. /cards/[id]/page.tsx (outside the shell) still wants
+    // one; this route does not.
+    <div className="flex flex-col items-start">
       <Button href="/collection" icon={ChevronLeft} iconPosition="left" className="btn--back">
         Collection
       </Button>
 
       <CardDetail card={card} mine={mine} nav={<CardNav prev={prev} next={next} basePath="/collection/card" />} />
-    </Card>
+    </div>
   );
 }
