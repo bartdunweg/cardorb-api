@@ -167,15 +167,7 @@ const CardItem = memo(function CardItem({
   const scanImg = scan ? (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      className={
-        // The wishlist override replaces the filter entirely (one drop-shadow
-        // layer plus grayscale) rather than adding to the owned filter (two
-        // layers, no grayscale) — kept as two full arbitrary values rather
-        // than composing them, to match exactly.
-        card.owned
-          ? "w-full h-full object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.12))_drop-shadow(0_8px_18px_rgba(0,0,0,0.2))]"
-          : "w-full h-full object-contain opacity-55 [filter:grayscale(0.4)_drop-shadow(0_2px_4px_rgba(0,0,0,0.12))]"
-      }
+      className="w-full h-full object-contain [filter:drop-shadow(0_2px_4px_rgba(0,0,0,0.12))_drop-shadow(0_8px_18px_rgba(0,0,0,0.2))]"
       // The larger file once the grid is drawing cards that want it, and only
       // where TCGdex has one. The attribute is swapped on the element that is
       // already showing rather than the element being replaced, which is what
@@ -255,7 +247,7 @@ const CardItem = memo(function CardItem({
         data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-md
         data-[view=list]:flex-row data-[view=list]:items-center data-[view=list]:gap-4
         data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-[var(--color-border)]
-        data-[view=list]:last:border-b-0${card.owned ? "" : " is-wishlist"}`}
+        data-[view=list]:last:border-b-0`}
       data-view={view}
     >
       {/* Only the cards TCGdex matched have a page: the id is what addresses it,

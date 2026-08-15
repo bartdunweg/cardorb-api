@@ -18,6 +18,10 @@ export type ViewOptionsProps = {
   /** How the same cards are arranged: as the sets, or against the Pokédex. */
   group: "set" | "flat" | "year" | "dex";
   onGroup: (g: "set" | "flat" | "year" | "dex") => void;
+  /** How cards are ordered within their set. Hidden where there's no price to order by. */
+  sort: "set" | "value" | "value-asc";
+  onSort: (s: "set" | "value" | "value-asc") => void;
+  showSort: boolean;
   /** Which optional facts a tile carries, and the toggle for one of them. */
   fields: ReadonlySet<CardField>;
   onField: (f: CardField) => void;
@@ -53,6 +57,9 @@ export default function ViewOptions({
   onView,
   group,
   onGroup,
+  sort,
+  onSort,
+  showSort,
   fields,
   onField,
   cols,
@@ -92,6 +99,37 @@ export default function ViewOptions({
           ))}
         </div>
       </div>
+
+      {/* How cards are ordered within their set. Two of the three orders are
+          by price, and on the public link there are no prices to order by:
+          that leaves one option, and a control with one option is
+          furniture. */}
+      {showSort && (
+        <div className={fieldClassName}>
+          <span className={labelClassName} id="view-sort">
+            Sort
+          </span>
+          <div className={cardsSegmentedClassName} role="group" aria-labelledby="view-sort">
+            {(
+              [
+                ["set", "By set"],
+                ["value", "Priciest"],
+                ["value-asc", "Cheapest"],
+              ] as const
+            ).map(([key, text]) => (
+              <button
+                key={key}
+                type="button"
+                className={cardsSegmentClassName(sort === key)}
+                aria-pressed={sort === key}
+                onClick={() => onSort(key)}
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Nothing to lay out or to size when the page is a dex: that shelf draws
           its own slots. */}
