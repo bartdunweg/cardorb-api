@@ -55,8 +55,9 @@ A task without a memory write is not done.
 
 # Card Orb
 
-A Pokémon card collection (~1,600 cards) kept in Notion, matched against three card
-catalogues, priced, and served as an API that a web tool and an iOS app both read.
+A Pokémon card collection (~1,600 cards) kept in Postgres (Supabase), matched against
+three card catalogues, priced, and served as an API that a web tool and an iOS app
+both read.
 
 - Profile: production
 - Stage: live
@@ -74,7 +75,7 @@ catalogues, priced, and served as an API that a web tool and an iOS app both rea
 ## Architecture
 
 - `app/` — Next.js routes: `api/v1/*` (public collection API), `cards/`, `user/`, auth pages
-- `lib/core/` — matching a hand-kept Notion database against TCGdex, Limitless, pokemontcg.io;
+- `lib/core/` — matching a hand-kept collection against TCGdex, Limitless, pokemontcg.io;
   artwork resolution; Cardmarket pricing
 - `lib/api/` — request guards (e.g. `guard.ts` reads `x-forwarded-host` for `sameOrigin()`)
 - `lib/storage/` — persistence helpers

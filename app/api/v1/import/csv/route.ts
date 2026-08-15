@@ -10,10 +10,8 @@ import { commit, preview } from "../../../../../lib/storage/imports";
 /**
  * A spreadsheet, previewed or committed.
  *
- * One endpoint with a flag rather than two, mirroring `--commit` in
- * scripts/import-notion.mjs. That script is the reference implementation for
- * this whole feature and its shape is already the one people trust: show me
- * what you would do, then do it.
+ * One endpoint with a flag rather than two: show me what you would do, then
+ * do it.
  *
  * A preview writes nothing and opens no transaction. It exists because a
  * destructive-looking operation with no preview is a trap — and because the

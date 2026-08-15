@@ -25,7 +25,7 @@ const SECTIONS = [
   {
     href: "/settings/import",
     title: "Import",
-    blurb: "Bring a collection in from a spreadsheet or from Notion.",
+    blurb: "Bring a collection in from a spreadsheet.",
   },
   {
     href: "/settings/appearance",

@@ -48,7 +48,7 @@ export default function CardsProfile({
           <>
             <FormNote>
               The session is a cookie on this device, so the plus stays in the bar until you sign
-              out or thirty days pass. Adding a card writes a row to the Notion database the rest of
+              out or thirty days pass. Adding a card writes a row to the same database the rest of
               this page reads.
             </FormNote>
             <button type="button" className="btn" onClick={onSignOut}>

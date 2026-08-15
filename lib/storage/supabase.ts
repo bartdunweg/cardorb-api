@@ -120,10 +120,9 @@ export async function serverClient(): Promise<SupabaseClient | null> {
 /**
  * The service role, which is not a caller and answers to nobody.
  *
- * Two callers only: scripts/import-notion.mjs and, when it exists, account
- * deletion. Everything else in this app must go through one of the two above,
- * because everything else in this app is acting on behalf of somebody and this
- * client cannot represent that.
+ * One caller only: account deletion. Everything else in this app must go
+ * through a client that names its caller, because everything else in this app
+ * is acting on behalf of somebody and this client cannot represent that.
  *
  * It reads a key that is deliberately not NEXT_PUBLIC_, so this returns null in
  * any context where the browser bundle could have reached it.

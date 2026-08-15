@@ -1,20 +1,16 @@
 /**
- * Where the collection is kept, and the one place that decides.
+ * Where the collection is kept.
  *
- * Three verbs, and every store has to offer the same three: list the rows,
- * write one, say what the options are. Above this nothing knows which store
- * answered — lib/core/cards.ts takes rows and matches them against three
- * catalogues, and it would do the same work if they arrived by carrier pigeon.
+ * Three verbs: list the rows, write one, say what the options are. Above
+ * this nothing knows how they were answered — lib/core/cards.ts takes rows
+ * and matches them against three catalogues regardless of where they came
+ * from.
  *
- * COLLECTION_SOURCE is what picks, and it defaults to notion, which is the
- * whole shape of this migration: a deployment that has not moved yet does not
- * have to say anything, and moving is one variable rather than a release. The
- * rollback is the same variable, which is why it is a variable at all.
- *
- * Fails soft on the read, like everything else that faces the page: no token
- * and there is no collection, which renders an empty state rather than an
- * error. The write does not get that: a read that fails loses nothing and a
- * write that fails quietly loses the card somebody just pulled.
+ * Fails soft on the read, like everything else that faces the page: no
+ * database connection and there is no collection, which renders an empty
+ * state rather than an error. The write does not get that: a read that
+ * fails loses nothing and a write that fails quietly loses the card
+ * somebody just pulled.
  *
  * ── Which Postgres client, and why every verb below takes one ─────────────
  *
@@ -44,27 +40,12 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CardDraft, CardFields, CardPatch, CollectionRow } from "../core/collection-row";
-import * as notion from "./notion";
 import * as postgres from "./postgres";
 import { readClient, serverClient, userClient } from "./supabase";
-
-export type Source = "notion" | "postgres";
 
 /** The right Postgres client for this caller: their own, or nobody's. */
 async function clientFor(token?: string): Promise<SupabaseClient | null> {
   return token ? userClient(token) : serverClient();
-}
-
-/**
- * Which store is authoritative right now.
- *
- * Read per call rather than resolved at import, because a module-level constant
- * is a constant for the life of the process and this is the switch that gets
- * flipped while something is watching. Reading it costs nothing and means the
- * flip does not need a redeploy to be observed.
- */
-export function source(): Source {
-  return process.env.COLLECTION_SOURCE?.trim() === "postgres" ? "postgres" : "notion";
 }
 
 /**
@@ -75,23 +56,14 @@ export function source(): Source {
  * to the anonymous readClient(), which combined with an explicit `userId`
  * filter is what the public page wants: cards_read's `is_public` branch is
  * the only thing standing between an anonymous client and a private
- * collection, filter or no filter. It is ignored on Notion, where there is
- * one collection and no such question.
+ * collection, filter or no filter.
  */
 export async function listRows(userId?: string, db?: SupabaseClient | null): Promise<CollectionRow[]> {
-  if (source() === "postgres") {
-    const client = db ?? readClient();
-    // Same fail-soft as a missing Notion token: a deployment either has a
-    // database or it does not, and this is what keeps CI building with no
-    // secrets at all.
-    if (!client) return [];
-    return postgres.listRows(client, userId);
-  }
-  const token = process.env.NOTION_TOKEN;
-  // Not a failure, and the one empty worth remembering: a deployment either has
-  // the token or it does not, and it will not acquire one mid-process.
-  if (!token) return [];
-  return notion.listRows(token);
+  const client = db ?? readClient();
+  // A deployment either has a database or it does not, and this is what
+  // keeps CI building with no secrets at all.
+  if (!client) return [];
+  return postgres.listRows(client, userId);
 }
 
 /**
@@ -104,31 +76,20 @@ export async function listRows(userId?: string, db?: SupabaseClient | null): Pro
  * caller to be authorised as and cards_insert refuses it, correctly.
  */
 export async function createRow(draft: CardDraft, token?: string): Promise<string> {
-  if (source() === "postgres") {
-    const db = await clientFor(token);
-    if (!db) throw new Error("No database is connected here.");
-    return postgres.createRow(db, draft);
-  }
-  const notionToken = process.env.NOTION_TOKEN;
-  if (!notionToken) throw new Error("Notion is not connected here.");
-  return notion.createRow(draft, notionToken);
+  const db = await clientFor(token);
+  if (!db) throw new Error("No database is connected here.");
+  return postgres.createRow(db, draft);
 }
 
-/** Changes one card's owner-facing fields. Postgres only — see updateRow's own doc. */
+/** Changes one card's owner-facing fields. */
 export async function updateRow(id: string, patch: CardPatch, token?: string): Promise<CollectionRow> {
-  if (source() !== "postgres") {
-    throw new Error("Editing a card is not supported on this storage backend.");
-  }
   const db = await clientFor(token);
   if (!db) throw new Error("No database is connected here.");
   return postgres.updateRow(db, id, patch);
 }
 
-/** Removes one card. Postgres only, for the reason updateRow() gives. */
+/** Removes one card. */
 export async function deleteRow(id: string, token?: string): Promise<void> {
-  if (source() !== "postgres") {
-    throw new Error("Deleting a card is not supported on this storage backend.");
-  }
   const db = await clientFor(token);
   if (!db) throw new Error("No database is connected here.");
   return postgres.deleteRow(db, id);
@@ -144,24 +105,13 @@ export async function deleteRow(id: string, token?: string): Promise<void> {
  * emptier than the collection actually is.
  */
 export async function optionsFor(token?: string): Promise<CardFields> {
-  if (source() === "postgres") {
-    const db = await clientFor(token);
-    if (!db) throw new Error("No database is connected here.");
-    return postgres.optionsFor(db);
-  }
-  const notionToken = process.env.NOTION_TOKEN;
-  if (!notionToken) throw new Error("Notion is not connected here.");
-  return notion.optionsFor(notionToken);
+  const db = await clientFor(token);
+  if (!db) throw new Error("No database is connected here.");
+  return postgres.optionsFor(db);
 }
 
-/**
- * Who /user/<name> belongs to, when the store can answer that.
- *
- * Null on Notion, which has one collection and no notion of whose: that
- * deployment falls back to PUBLIC_USERNAME, which is what it always did.
- */
+/** Who /user/<name> belongs to. */
 export async function publicProfile(username: string) {
-  if (source() !== "postgres") return null;
   const db = await serverClient();
   if (!db) return null;
   return postgres.profileByUsername(db, username);

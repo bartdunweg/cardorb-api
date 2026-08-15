@@ -240,7 +240,7 @@ export async function createRows(
   db: SupabaseClient,
   userId: string,
   rows: CollectionRow[],
-  source: "csv" | "notion",
+  source: "csv",
   chunk = 500,
 ): Promise<InsertResult> {
   /**
@@ -249,9 +249,7 @@ export async function createRows(
    * The obvious version — .select("id") on the upsert, count the rows — reports
    * zero for a run that inserted two thousand cards. ignoreDuplicates sends
    * `Prefer: resolution=ignore-duplicates`, and PostgREST then hands back no
-   * representation at all. This function was written that way and never called,
-   * so the bug had never fired; scripts/import-notion.mjs hit exactly this and
-   * had to be fixed the same way.
+   * representation at all.
    *
    * It is not a cosmetic count either. "0 cards added" after a successful
    * import reads as a failed import, and the next thing anybody does is run it
