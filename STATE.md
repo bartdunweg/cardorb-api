@@ -230,42 +230,24 @@ workspace.
 
 ## Open
 
-- **Card detail route not exercised with real data**: `/collection/card/[id]`
-  was verified for its typecheck/lint/test surface and its signed-out
-  redirect (`curl`), but not clicked through signed in with a real
-  collection — worth a real pass now that this workspace has live
-  Supabase credentials.
-- The generated-username signup flow, the `/api/v1/public/[username]/latest-pull`
-  endpoint, and the profile avatar upload are all still only verified by
-  `npm run check` and code inspection, not a real browser session — this
-  workspace's newly-working credentials make that possible now and it
-  hasn't been done yet.
-
+- **Card detail, avatar upload, and signup still need a real signed-in
+  browser pass.** `/api/v1/public/[username]/latest-pull` was confirmed
+  live this session (`curl -i` against the running dev server, real data:
+  returned an actual card, "Zarude", with the CDN-image proxy and CORS
+  header both correct) — that one is done. The rest need an authenticated
+  session, which this session could not create: no browser extension
+  connected in this workspace, and entering a password on the user's
+  behalf is out of scope regardless. `OWNER_USER_ID` (the legacy
+  `x-cards-key` compatibility path in `guard.ts`) is also unset in
+  `.env.local`, so there was no way to authenticate a `curl` request
+  either. Needs a human pass: sign in, click through `/collection/card/[id]`
+  with a real card, upload an avatar in Settings > Profile, and run a real
+  signup once.
 - `cards.css` is now 1,365 lines (from 2,927 at the start of the migration),
   holding only cross-file selector hooks (GLASS CONTROL/CONTROL recipe,
   `.sheet`/`.filter-menu-panel` ancestor styling for `FilterOptions.tsx`'s
   shared rows) and ADR-0013-style conditionally-overridden properties.
   Nothing further identified as migratable.
-- Two background-agent worktrees from an earlier, session-limit-interrupted
-  run are still on disk with no real changes in them:
-  `.claude/worktrees/agent-a568e0bdb54c88794`,
-  `.claude/worktrees/agent-ae477e6a88902e074`. Not cleaned up yet — ask
-  before removing.
-- This workspace has no `NOTION_TOKEN`/Postgres credentials, so the live
-  verification this session did (browser screenshots, `getComputedStyle`
-  checks) exercised the shell/toolbar/dialogs but never the real card grid
-  with real data — worth a pass with credentials at some point.
-
-The generated-username signup flow also hasn't been exercised in a running
-`npm run dev` + browser session (no `NOTION_TOKEN`/Supabase credentials
-confirmed in this workspace) — only `npm run check` and code inspection
-verified it. Worth a real signup-and-confirm pass before shipping.
-
-The new `/api/v1/public/[username]/latest-pull` endpoint is unit-tested with
-mocked `getCards`/`ownerOf` but hasn't hit real Notion/Postgres data via
-`npm run dev` (same credentials gap). Worth a real `curl -i` against a live
-collection — including marking a card `excluded` and confirming it drops out —
-before the portfolio site is pointed at it.
 
 ## Next session
 
