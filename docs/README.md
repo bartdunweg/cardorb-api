@@ -22,14 +22,29 @@ root `CLAUDE.md` for how and when to write to it.
   instead of asking for one.
 - `decisions/0007-shared-form-components-over-css-classes.md`,
   `decisions/0009-settings-modal-tailwind-notes.md` through
-  `decisions/0013-tailwind-entry-point-scope.md` — the Tailwind CSS migration.
-  `decisions/0012-cascade-layers-fix.md` is **worth reading first**: a cascade-layers
-  bug meant every margin/padding Tailwind class added since the migration started was
-  silently losing to legacy CSS; screenshots looked fine because `gap` was unaffected.
+  `decisions/0013-tailwind-entry-point-scope.md` — the Tailwind CSS migration's
+  first phase (forms, settings, modal, tab bar, base components, the entry-point
+  fix). `decisions/0012-cascade-layers-fix.md` is **worth reading first**: a
+  cascade-layers bug meant every margin/padding Tailwind class added since the
+  migration started was silently losing to legacy CSS; screenshots looked fine
+  because `gap` was unaffected.
 - `decisions/0008-per-variant-inventory-fields-and-bearer-rls-fix.md` — per-variant
   inventory fields, and the bearer-token/row-level-security bug the iOS client's
   extension work uncovered.
 - `decisions/0014-cache-assembled-collection.md` — why the assembled collection is
   cached across requests, not just its rows and catalogue inputs, and the Vercel
   Fluid CPU cost that surfaced it.
+- `decisions/0014-public-latest-pull-endpoint.md` — the public "latest pull"
+  endpoint for the portfolio site.
+- `decisions/0017-cards-rail-pane-swap-fix.md` through
+  `decisions/0020-card-add-input-styling-regression.md` — the Tailwind
+  migration's second phase, finishing `cards.css` and `landing.css`.
+  `0017` is a follow-up bug from `0012`: an unconditional Tailwind property beat
+  a still-CSS conditional reset (rail/main pane toggle) — the rule to avoid it
+  for the rest of the migration. `0018` is the same failure mode found again:
+  a class can have consumers beyond the "obvious primary" file (loading
+  skeletons, duplicate render branches). `0020` is a genuine regression found
+  in a later audit: CardAddDialog's inputs had silently lost their
+  glass-control styling because the class they read had gone dead — a caution
+  about verification blind spots on routes that need a signed-in session.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

@@ -2,6 +2,7 @@
 import { useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
+import { modalCardClassName } from "./cardModalClasses";
 
 /**
  * The dialog the card detail is shown in when it is opened from the list.
@@ -16,7 +17,7 @@ export default function CardModal({ label, children }: { label: string; children
   const close = useCallback(() => router.back(), [router]);
 
   return (
-    <Modal open onClose={close} label={label} className="modal--card">
+    <Modal open onClose={close} label={label} className={modalCardClassName}>
       {children}
     </Modal>
   );

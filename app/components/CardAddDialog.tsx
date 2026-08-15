@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import type { CardFields } from "../../lib/core/collection-row";
+import { modalCardAddClassName } from "./cardModalClasses";
 
 /**
  * The form behind the plus: one card, eight columns, straight into Notion.
@@ -32,6 +33,22 @@ type Draft = {
   collection: boolean;
   excluded: boolean;
 };
+
+const cardAddLabelClassName =
+  "[font-family:var(--font-main)] [font-size:var(--fs-small)] [font-weight:var(--fw-eyebrow)]" +
+  " text-label-secondary p-0 [float:none]";
+
+// The GLASS CONTROL / CONTROL recipe .card-add-field input used to read from
+// components.css's grouped selectors, alongside .btn/.cards-search/
+// .filter-menu > summary. This is the Tailwind copy, kept in sync by hand the
+// same way FormField.tsx's FormInput carries its own copy of the same idea
+// for a different control.
+const cardAddInputClassName =
+  "h-[var(--control-h)] border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-pill " +
+  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label " +
+  "[font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] " +
+  "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
+  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
 
 const EMPTY: Draft = {
   name: "",
@@ -139,14 +156,24 @@ export default function CardAddDialog({
     ) : null;
 
   return (
-    <Modal open={open} onClose={onClose} label="Add a card" className="modal--card-add">
-      <form className="card-add" onSubmit={submit}>
-        <h2 className="card-add-title">Add a card</h2>
+    <Modal open={open} onClose={onClose} label="Add a card" className={modalCardAddClassName}>
+      <form
+        className="card-add grid grid-cols-2 gap-4
+          [@media(max-width:480px)]:grid-cols-1"
+        onSubmit={submit}
+      >
+        <h2
+          className="col-span-full m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
+            [font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-label"
+        >
+          Add a card
+        </h2>
         {/* The order a card is read off its face: what it is, then where it is
             from, then what kind of printing. */}
-        <label className="card-add-field card-add-field--wide">
-          <span className="card-add-label">Name</span>
+        <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+          <span className={cardAddLabelClassName}>Name</span>
           <input
+            className={cardAddInputClassName}
             value={draft.name}
             onChange={(e) => set("name", e.target.value)}
             required
@@ -155,9 +182,10 @@ export default function CardAddDialog({
           />
         </label>
 
-        <label className="card-add-field">
-          <span className="card-add-label">Number</span>
+        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+          <span className={cardAddLabelClassName}>Number</span>
           <input
+            className={cardAddInputClassName}
             value={draft.number}
             onChange={(e) => set("number", e.target.value)}
             autoComplete="off"
@@ -167,9 +195,10 @@ export default function CardAddDialog({
           />
         </label>
 
-        <label className="card-add-field">
-          <span className="card-add-label">Set</span>
+        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+          <span className={cardAddLabelClassName}>Set</span>
           <input
+            className={cardAddInputClassName}
             value={draft.set}
             onChange={(e) => set("set", e.target.value)}
             required
@@ -180,9 +209,10 @@ export default function CardAddDialog({
         </label>
         {suggest("card-add-sets", fields?.sets)}
 
-        <label className="card-add-field">
-          <span className="card-add-label">Rarity</span>
+        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+          <span className={cardAddLabelClassName}>Rarity</span>
           <input
+            className={cardAddInputClassName}
             value={draft.rarity}
             onChange={(e) => set("rarity", e.target.value)}
             list="card-add-rarities"
@@ -192,9 +222,10 @@ export default function CardAddDialog({
         </label>
         {suggest("card-add-rarities", fields?.rarities)}
 
-        <label className="card-add-field">
-          <span className="card-add-label">Generation</span>
+        <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+          <span className={cardAddLabelClassName}>Generation</span>
           <input
+            className={cardAddInputClassName}
             value={draft.gen}
             onChange={(e) => set("gen", e.target.value)}
             list="card-add-gens"
@@ -207,16 +238,23 @@ export default function CardAddDialog({
         {/* A group rather than a label: the name below belongs to the set of
             chips, not to any one of them. */}
         {fields?.types?.length ? (
-          <fieldset className="card-add-field card-add-field--wide card-add-types">
-            <legend className="card-add-label">Type</legend>
-            <div className="card-add-chips">
+          <fieldset className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+            <legend className={cardAddLabelClassName}>Type</legend>
+            <div className="flex flex-wrap gap-2">
               {fields.types.map((type) => {
                 const on = draft.types.includes(type);
                 return (
                   <button
                     key={type}
                     type="button"
-                    className={`card-add-chip${on ? " is-on" : ""}`}
+                    className={
+                      "h-[var(--control-h)] px-[var(--space-3-5)] rounded-pill [font-family:var(--font-main)]" +
+                      " [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] cursor-pointer" +
+                      (on
+                        ? " border border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
+                        : " border border-[var(--color-border)] bg-transparent text-label-secondary" +
+                          " hover:border-[var(--color-border-hover)] hover:text-label")
+                    }
                     aria-pressed={on}
                     onClick={() =>
                       set(
@@ -233,33 +271,43 @@ export default function CardAddDialog({
           </fieldset>
         ) : null}
 
-        <label className="card-add-check">
+        <label
+          className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
+            [font-size:var(--fs-body-s)] text-label cursor-pointer"
+        >
           <input
+            className="mt-[2px] [accent-color:var(--color-tint)]"
             type="checkbox"
             checked={draft.collection}
             onChange={(e) => set("collection", e.target.checked)}
           />
-          <span>
+          <span className="flex flex-col gap-[2px]">
             In the binder
-            <span className="card-add-hint">Off means it is wanted rather than held.</span>
+            <span className="[font-size:var(--fs-small)] text-label-tertiary">
+              Off means it is wanted rather than held.
+            </span>
           </span>
         </label>
 
-        <label className="card-add-check">
+        <label
+          className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
+            [font-size:var(--fs-body-s)] text-label cursor-pointer"
+        >
           <input
+            className="mt-[2px] [accent-color:var(--color-tint)]"
             type="checkbox"
             checked={draft.excluded}
             onChange={(e) => set("excluded", e.target.checked)}
           />
-          <span>
+          <span className="flex flex-col gap-[2px]">
             Excluded
-            <span className="card-add-hint">
+            <span className="[font-size:var(--fs-small)] text-label-tertiary">
               Keeps it out of the latest pull on the about page.
             </span>
           </span>
         </label>
 
-        <div className="card-add-actions">
+        <div className="col-span-full flex justify-end">
           <button
             type="submit"
             className="btn btn--primary"
@@ -272,9 +320,13 @@ export default function CardAddDialog({
         {/* Both live in the same polite region, so the outcome of a submit is
             announced whichever way it went, and neither pushes the form around
             when it arrives. */}
-        <p className="card-add-status" role="status">
+        <p
+          className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
+            [font-size:var(--fs-small)] text-label-secondary"
+          role="status"
+        >
           {error ? (
-            <span className="card-add-error">{error}</span>
+            <span className="text-label [font-weight:var(--fw-eyebrow)]">{error}</span>
           ) : added ? (
             <span>{added} added. The page catches up in a moment.</span>
           ) : null}

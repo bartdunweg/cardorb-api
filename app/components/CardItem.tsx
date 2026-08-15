@@ -243,7 +243,7 @@ const CardItem = memo(function CardItem({
 
   return (
     <li
-      className={`cards-item flex flex-col gap-[2px] min-w-0
+      className={`cards-item group/item flex flex-col gap-[2px] min-w-0
         data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-md
         data-[view=list]:flex-row data-[view=list]:items-center data-[view=list]:gap-4
         data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-[var(--color-border)]
@@ -257,7 +257,7 @@ const CardItem = memo(function CardItem({
       <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined}>
         <span
           className="cards-scan block relative aspect-[245/342] mb-2
-            data-[view=list]:w-11 data-[view=list]:shrink-0 data-[view=list]:mb-0
+            group-data-[view=list]/item:w-11 group-data-[view=list]/item:shrink-0 group-data-[view=list]/item:mb-0
             group-focus-visible:outline-2 group-focus-visible:[outline-color:var(--color-label)]
             group-focus-visible:[outline-offset:3px] group-focus-visible:rounded-[2px]"
           // Arming rather than tilting: the effect is mounted for this one card
@@ -284,11 +284,20 @@ const CardItem = memo(function CardItem({
             scanImg
           )}
         </span>
-        <span className="cards-item-text">
-          <span className="cards-item-name">{card.name}</span>
-          <span className="cards-item-meta">
+        <span className="cards-item-text flex flex-col gap-[2px] min-w-0 group-data-[view=list]/item:flex-1">
+          <span
+            className="cards-item-name [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]
+              [line-height:var(--lh-snug)] text-label line-clamp-2
+              group-data-[view=list]/item:[font-size:var(--fs-body-s)] group-data-[view=list]/item:line-clamp-1"
+          >
+            {card.name}
+          </span>
+          <span
+            className="cards-item-meta flex items-baseline flex-nowrap overflow-hidden gap-x-2 gap-y-[2px]
+              [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary"
+          >
             {fields.has("number") && card.number && (
-              <span className="cards-item-number">
+              <span className="tabular-nums shrink-0">
                 {/* The hash is the difference between "085" as this card's
                     place in its set and "085" as any other number on a tile
                     that can now also carry a year. */}
@@ -296,15 +305,13 @@ const CardItem = memo(function CardItem({
                 {card.number}
               </span>
             )}
-            {fields.has("type") && card.type && (
-              <span className="cards-item-type">{card.type}</span>
-            )}
-            {fields.has("set") && <span className="cards-item-set">{setTitle}</span>}
-            {fields.has("year") && setYear && <span className="cards-item-year">{setYear}</span>}
+            {fields.has("type") && card.type && <span className="min-w-0 truncate">{card.type}</span>}
+            {fields.has("set") && <span className="truncate">{setTitle}</span>}
+            {fields.has("year") && setYear && <span>{setYear}</span>}
             {/* The era's name on its own. label() appends the years it spans,
                 which is worth a heading in the rail and is noise on a tile that
                 can also be showing the set's year right beside it. */}
-            {fields.has("era") && card.gen && <span className="cards-item-gen">{card.gen}</span>}
+            {fields.has("era") && card.gen && <span>{card.gen}</span>}
           </span>
           {/* What the card costs, in euros, as one figure: the middle of the
               Near Mint range, which is what an English Near Mint copy is listed
@@ -316,7 +323,8 @@ const CardItem = memo(function CardItem({
               zero. */}
           {fields.has("price") && card.price && euroShown(card.price) && (
             <span
-              className="cards-item-price"
+              className="[font-family:var(--font-body)] [font-size:var(--fs-small)] [font-weight:var(--fw-eyebrow)]
+                text-label tabular-nums mt-[2px]"
               title={
                 card.price.nm
                   ? `About ${euroWhole(card.price.nm.low)} to ${euroWhole(card.price.nm.high)} for an English Near Mint copy · ${euro(card.price.market!)} on Cardmarket`
@@ -329,11 +337,17 @@ const CardItem = memo(function CardItem({
           {/* One tag per printing. Holding a card normally and as a reverse holo
               is two tags under one scan, not two cards. */}
           {fields.has("rarity") && (
-            <span className="cards-item-tags">
+            <span className="flex flex-wrap gap-1 mt-1">
               {card.variants.map((v) => (
                 <Tag
                   key={`${v.rarity}-${v.owned}`}
-                  className={`cards-tag${v.owned ? "" : " cards-tag--want"}`}
+                  className={
+                    v.owned
+                      ? "[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] [font-size:var(--fs-tiny)] text-label-secondary"
+                      : // Wanted rather than held: an outline instead of a fill, so
+                        // the difference survives being read in greyscale too.
+                        "bg-transparent border border-dashed border-[var(--color-border-active)] [font-size:var(--fs-tiny)] text-label-tertiary"
+                  }
                 >
                   {v.rarity ?? "Unknown"}
                   {!v.owned && <span className="sr-only"> (on the wishlist)</span>}

@@ -17,13 +17,13 @@
  * contents against its own border. The same check runs the other way too, and
  * reports nothing used but undefined.
  *
- * card-shell.css, errors.css, form.css (mostly), signin.css, settings.css,
- * modal.css, tabbar.css and layout.css are gone from here: their rules moved
- * onto the components that used them (Card.tsx/CardsDashboard.tsx/
+ * card-shell.css, errors.css, form.css, signin.css, settings.css, modal.css,
+ * tabbar.css, layout.css and landing.css are gone from here: their rules
+ * moved onto the components that used them (Card.tsx/CardsDashboard.tsx/
  * layout.tsx, RouteError.tsx, FormField.tsx/SigninShell.tsx/
- * SettingsPanel.tsx/Modal.tsx/CardsTabBar.tsx/tabbarClasses.ts and their
- * callers) as Tailwind utility classes — the Tailwind migration, still in
- * progress. See docs/decisions/.
+ * SettingsPanel.tsx/Modal.tsx/CardsTabBar.tsx/tabbarClasses.ts/page.tsx and
+ * their callers) as Tailwind utility classes. See docs/decisions/ for the
+ * Tailwind migration's ADRs (0006–0015).
  *
  * Order is not cosmetic: tailwind.generated.css comes first because it's also
  * Tailwind's entry point (@import "tailwindcss" + @theme) — its preflight
@@ -64,6 +64,3 @@
 @import "./styles/base.css" layer(legacy);
 @import "./styles/components.css" layer(legacy);
 @import "./styles/pages.css" layer(legacy);
-@import "./styles/form.css" layer(legacy);
-/* The landing page, which places .about-card and .btn and adds nothing else. */
-@import "./styles/landing.css" layer(legacy);

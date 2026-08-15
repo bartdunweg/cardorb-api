@@ -5,6 +5,7 @@ import {
   tabbarItemClassName,
   tabbarPagesClassName,
 } from "../components/tabbarClasses";
+import { cardsMainClassName, pageCardsClassName } from "../components/cardsPageClasses";
 
 /**
  * What /cards shows while the collection is on its way.
@@ -38,39 +39,65 @@ export default function Loading() {
     // [animation:...]/[transform-origin:...] used to be #main-content
     // > .is-fallback in base.css — the direct-child selector only ever
     // matched this one element, so it's a direct class now.
-    <section className="page-cards [animation:pageEnter_420ms_var(--ease-out)] [transform-origin:center_top]">
-      <div className="cards-rail" aria-hidden="true">
+    <section
+      className={`${pageCardsClassName} [animation:pageEnter_420ms_var(--ease-out)] [transform-origin:center_top]`}
+    >
+      <div
+        className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
+          bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]"
+        aria-hidden="true"
+      >
         {/* The same title CardsSidebar draws, so the sets do not shift down the
             moment the real rail replaces these outlines. Below 1000px this pane
             is off screen on arrival and only the press that opens it brings the
             two together, by which time the fallback is long gone; it is here so
             the two files describe the same rail rather than for that. */}
-        <p className="cards-rail-title" aria-hidden="true">
+        <p
+          className="hidden [@media(max-width:1000px)]:block [@media(max-width:1000px)]:mb-4
+            [@media(max-width:1000px)]:p-2 [@media(max-width:1000px)]:[font-family:var(--font-main)]
+            [@media(max-width:1000px)]:[font-weight:var(--fw-title)] [@media(max-width:1000px)]:[font-size:var(--fs-h2)]
+            [@media(max-width:1000px)]:[line-height:var(--lh-tight)] [@media(max-width:1000px)]:text-label"
+          aria-hidden="true"
+        >
           Cards
         </p>
-        <div className="cards-nav">
+        <div className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]">
           {Array.from({ length: RAIL }, (_, i) => (
-            <span key={i} className="skeleton cards-skeleton cards-skeleton--nav" />
+            // One row in the rail: a set logo beside a single line of text,
+            // which is the 28px art plus the --space-2 padding a
+            // .cards-nav-item is built from.
+            <span key={i} className="skeleton h-11 rounded-md" />
           ))}
         </div>
       </div>
 
-      <section className="cards-main">
+      <section className={cardsMainClassName}>
         <header className="cards-head">
           {/* Real, not an outline: the heading is the one thing on this page
               that does not come from Notion. */}
           <h1 className="cards-main-title">Cards</h1>
+          {/* Matches .cards-count, which sits under the heading with the same
+              gap. Height is the line box of a --fs-small paragraph, not the
+              font size — smaller below 640px, where the real count wraps to
+              one line instead of sitting beside the heading. */}
           <span
-            className="skeleton cards-skeleton cards-skeleton--count"
+            className="skeleton w-[150px] h-4 mt-2 [@media(max-width:640px)]:h-[var(--fs-small)]"
             aria-hidden="true"
             role="presentation"
           />
           <div className="cards-tools" aria-hidden="true">
-            <span className="skeleton cards-skeleton cards-skeleton--search" />
-            <span className="skeleton cards-skeleton cards-skeleton--segmented" />
-            <span className="skeleton cards-skeleton cards-skeleton--segmented" />
-            <span className="skeleton cards-skeleton cards-skeleton--filter" />
-            <span className="skeleton cards-skeleton cards-skeleton--views" />
+            {/* Not greedy: it took the whole leftover width and dwarfed the
+                controls beside it, when the collection is mostly browsed by
+                filter. */}
+            <span className="skeleton flex-[0_1_260px] min-w-[180px] h-[var(--control-h)] rounded-pill" />
+            {/* The real .cards-segmented goes full width below 640px, so its
+                outline has to as well: a fixed 232px both missed the
+                geometry it is standing in for and was wider than the card on
+                a 320px screen. */}
+            <span className="skeleton w-[232px] h-[var(--control-h)] rounded-pill [@media(max-width:640px)]:w-full" />
+            <span className="skeleton w-[232px] h-[var(--control-h)] rounded-pill [@media(max-width:640px)]:w-full" />
+            <span className="skeleton w-[104px] h-[var(--control-h)] rounded-pill" />
+            <span className="skeleton w-[74px] h-[var(--control-h)] rounded-pill" />
           </div>
         </header>
 
@@ -84,20 +111,30 @@ export default function Loading() {
         {SETS.map((count, i) => (
           <Card key={i} className="cards-set" aria-hidden="true">
             <div className="cards-set-head">
-              <span className="skeleton cards-skeleton cards-skeleton--logo" />
+              <span className="skeleton w-[120px] h-11 flex-shrink-0 [@media(max-width:640px)]:w-[92px] [@media(max-width:640px)]:h-[34px]" />
               <div className="cards-set-text">
-                <span className="skeleton cards-skeleton cards-skeleton--title" />
-                <span className="skeleton cards-skeleton cards-skeleton--meta" />
+                <span className="skeleton w-[180px] h-[var(--fs-card)]" />
+                <span className="skeleton w-[110px] h-[var(--fs-small)] mt-1" />
               </div>
             </div>
             <div className="cards-grid">
               {Array.from({ length: count }, (_, j) => (
-                <span key={j} className="cards-item">
-                  <span className="cards-scan">
-                    <span className="skeleton cards-skeleton cards-skeleton--scan" />
+                <span
+                  key={j}
+                  className="cards-item flex flex-col gap-[2px] min-w-0 relative p-2 rounded-md"
+                >
+                  <span className="cards-scan block relative aspect-[245/342] mb-2">
+                    {/* Fills the slot the scan will land in, so the grid is
+                        already the right height and the rows below do not
+                        move. No sweep on this one: a band of light travelling
+                        across a 40px text bar reads as loading; the same band
+                        across a dozen card-sized blocks reads as the page
+                        flickering. The small bars below keep the sweep, this
+                        one just sits there and waits. */}
+                    <span className="skeleton w-full h-full rounded-xs after:content-none" />
                   </span>
-                  <span className="skeleton cards-skeleton cards-skeleton--name" />
-                  <span className="skeleton cards-skeleton cards-skeleton--tag" />
+                  <span className="skeleton w-[70%] h-[var(--fs-small)]" />
+                  <span className="skeleton w-14 h-[17px] mt-1 rounded-pill" />
                 </span>
               ))}
             </div>

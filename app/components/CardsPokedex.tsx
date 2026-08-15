@@ -52,7 +52,7 @@ export default function CardsPokedex({
 
   if (!shown.length) {
     return (
-      <p className="cards-dex-empty">
+      <p className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-label-secondary">
         {owned === "missing"
           ? "Nothing missing in there. Every one of them is in the binder."
           : owned === "owned"
@@ -65,7 +65,11 @@ export default function CardsPokedex({
   }
 
   return (
-    <ol className="cards-dex" role="list">
+    <ol
+      className="list-none m-0 p-0 grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(132px,1fr))]
+        @max-[560px]:gap-2 @max-[560px]:[grid-template-columns:repeat(auto-fill,minmax(104px,1fr))]"
+      role="list"
+    >
       {shown.map((entry) => (
         <Slot key={entry.id} entry={entry} onPick={onPick} />
       ))}
@@ -90,11 +94,19 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
   // anyone wants to walk to the end of and find a dead control.
   const step = (by: number) => setAt((i) => (i + by + entry.cards.length) % entry.cards.length);
 
+  const empty = entry.cards.length === 0;
+
   const art = (
-    <span className="cards-dex-art">
+    <span
+      className={
+        "relative flex items-center justify-center aspect-[245/342] mb-2" +
+        (empty ? " rounded-xs border border-dashed border-[var(--color-border-subtle)]" : "")
+      }
+    >
       {card?.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          className="w-full h-full object-contain rounded-xs"
           src={card.image}
           alt=""
           loading="lazy"
@@ -108,7 +120,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
         // question a dex is read with.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          className="cards-dex-ghost"
+          className="w-16 h-16 object-contain opacity-50"
           src={`/artwork/pokedex/${entry.id}.png`}
           alt=""
           loading="lazy"
@@ -127,7 +139,11 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
         />
       )}
       {many && (
-        <span className="cards-dex-count">
+        <span
+          className="absolute right-[2px] bottom-[2px] min-w-[18px] h-[18px] px-[5px] inline-flex
+            items-center justify-center rounded-pill bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]
+            [font-family:var(--font-body)] [font-size:var(--fs-tiny)] [font-variant-numeric:lining-nums_tabular-nums]"
+        >
           {at + 1}/{entry.cards.length}
           <span className="sr-only"> cards</span>
         </span>
@@ -138,17 +154,50 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
   const body = (
     <>
       {art}
-      <span className="cards-dex-no">#{String(entry.id).padStart(4, "0")}</span>
-      <span className="cards-dex-name">{entry.name}</span>
+      <span
+        className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+          [font-variant-numeric:lining-nums_tabular-nums] text-label-tertiary"
+      >
+        #{String(entry.id).padStart(4, "0")}
+      </span>
+      <span
+        className={
+          "[font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]" +
+          " overflow-hidden text-ellipsis whitespace-nowrap " +
+          (empty ? "text-label-tertiary" : "text-label")
+        }
+      >
+        {entry.name}
+      </span>
     </>
   );
 
+  // Two shapes deep on purpose, matching cards.css's old .cards-dex-art img
+  // vs .cards-dex-art .cards-dex-ghost: a bare `img` selector previously beat
+  // a single class, so the two images needed different rules to not collide.
+  // Tailwind classes on each `<img>` directly avoid that trap entirely.
+  const baseBodyClassName =
+    "flex flex-col w-full p-2 border-0 rounded-md bg-transparent text-left [color:inherit] [font:inherit]" +
+    " relative [--pill-radius:var(--radius-md)]";
+  // The hover pill and its cursor are button-only in cards.css
+  // (`button.cards-dex-body`) — the empty-slot span never got either, since
+  // it isn't a control.
+  const buttonBodyClassName =
+    baseBodyClassName +
+    " cursor-pointer [&>*]:relative [&>*]:z-1" +
+    " after:content-[''] after:absolute after:inset-0 after:z-0 after:rounded-md" +
+    " after:bg-[var(--glass-bg)] after:border after:border-[var(--glass-border)] after:shadow-[var(--shadow-card)]" +
+    " after:opacity-0 after:scale-[0.98] after:pointer-events-none" +
+    " after:transition-[opacity,transform] after:duration-[var(--dur-fast)] after:ease-[var(--ease-smooth)]" +
+    " hover:after:opacity-100 hover:after:scale-100" +
+    " focus-visible:after:opacity-100 focus-visible:after:scale-100";
+
   return (
-    <li className={`cards-dex-slot${entry.cards.length ? "" : " is-empty"}`}>
+    <li className="group relative min-w-0">
       {entry.cards.length ? (
         <button
           type="button"
-          className="cards-dex-body"
+          className={buttonBodyClassName}
           onClick={() => onPick(entry.name)}
           aria-label={`${entry.name}, ${entry.cards.length} ${
             entry.cards.length === 1 ? "card" : "cards"
@@ -157,14 +206,14 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
           {body}
         </button>
       ) : (
-        <span className="cards-dex-body">{body}</span>
+        <span className={baseBodyClassName}>{body}</span>
       )}
 
       {many && (
         <>
           <button
             type="button"
-            className="cards-dex-step cards-dex-step--back"
+            className={`${cardsDexStepClassName} left-0`}
             onClick={() => step(-1)}
             aria-label={`Previous card of ${entry.name}`}
           >
@@ -172,7 +221,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
           </button>
           <button
             type="button"
-            className="cards-dex-step cards-dex-step--next"
+            className={`${cardsDexStepClassName} right-0`}
             onClick={() => step(1)}
             aria-label={`Next card of ${entry.name}`}
           >
@@ -183,3 +232,10 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
     </li>
   );
 }
+
+const cardsDexStepClassName =
+  "absolute top-[calc(var(--space-2)+33%)] flex items-center justify-center w-6 h-6 p-0" +
+  " border border-[var(--color-border)] rounded-full bg-[var(--glass-bg-solid)] text-label-secondary" +
+  " cursor-pointer opacity-0 transition-opacity duration-[var(--dur-fast)] ease-[var(--ease-smooth)] z-2" +
+  " group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" +
+  " hover:text-label hover:border-[var(--color-border-active)]";

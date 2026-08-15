@@ -41,7 +41,12 @@ export default function CardNav({ prev, next }: { prev: string | null; next: str
   );
 
   return (
-    <div className="card-detail-move" {...swipe}>
+    // CardDetail.tsx wraps this in its own .card-detail-move div for
+    // positioning; this inner one carries the flex/justify-between that
+    // actually spaces the two buttons apart (PublicCardDialog.tsx passes a
+    // bare fragment instead of this component, so that positioning has to
+    // live one level up — see the comment in CardDetail.tsx).
+    <div className="card-detail-move flex justify-between pointer-events-none" {...swipe}>
       {prev ? (
         <Link href={`/cards/${prev}`} scroll={false} className="btn btn--icon" aria-label="Previous card">
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />

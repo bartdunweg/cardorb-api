@@ -4,9 +4,50 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
-Memory system adopted (`docs/decisions/0000-adopt-memory-system.md`). A
-refactor pass followed, working through every candidate from the original
-survey:
+Full Tailwind CSS migration completed. All 13 hand-written CSS files under
+`app/styles/` that could be migrated have been: `card-shell.css`,
+`errors.css`, `form.css`, `signin.css`, `settings.css`, `modal.css`,
+`layout.css`, `tabbar.css`, `base.css`, `components.css` (slimmed to `.btn`
+and the shared "GLASS CONTROL"/"CONTROL" recipe), `cards.css` (2,624 → ~1,470
+lines, holding only cross-file selector hooks and ADR-0013-style
+conditionally-overridden properties), and `landing.css` (deleted entirely,
+692 lines, single consumer `app/page.tsx`). `poke-holo.css` and the
+`pages.css` reduced-motion kill-switch are documented, permanent exceptions.
+
+Key new shared components/helpers from the `cards.css` pass:
+`FormField.tsx`, `SigninShell.tsx`, `SettingsPanel.tsx`, `tabbarClasses.ts`,
+`cardsPageClasses.ts`, `segmentedClasses.ts`/`trackClasses.ts`,
+`MenuDetails.tsx` (dropdown shell for `FilterMenu`/`ViewMenu`), `Sheet.tsx`
+(bottom-sheet shell for `FilterSheet`/`ViewSheet`), `cardModalClasses.ts`.
+
+Two structural bugs were found and fixed mid-migration, both documented as
+ADRs and worth reading before touching this area again:
+- **ADR-0012**: a cascade-layers ordering bug meant every Tailwind
+  margin/padding utility added since the migration started was silently
+  losing to legacy CSS (`gap`-based spacing was unaffected, which is why it
+  wasn't visible in screenshots). Fixed by `@layer theme, base, legacy,
+  components, utilities;` in `globals.css`.
+- **ADR-0013**: an unconditional Tailwind utility can beat a still-legacy-CSS
+  conditional override (a media query or ancestor selector) regardless of
+  specificity, because Tailwind utilities always win the cascade-layer
+  contest. Found twice (tabbar dead branch, cards-rail/cards-main pane-swap)
+  and became a standing checklist item for the rest of the migration: audit
+  every property for a conditional override elsewhere before making it an
+  unconditional Tailwind class.
+- **ADR-0014**: a class can have consumers beyond the "obvious primary" file
+  (loading skeletons, duplicate render branches for owner/public variants) —
+  grep the whole app for every migrated-away class name before considering
+  it done.
+- **ADR-0015**: `FilterOptions.tsx`/`ViewOptions.tsx`'s shared `facet-*` rows
+  deliberately stay CSS-styled by ancestor (dropdown vs. sheet) rather than
+  gaining a Tailwind variant prop — that split was already the right design,
+  documented in the component's own top-of-file comment.
+
+`build-quality` (Interface/Accessibility/SEO/Performance) run against this
+session's work: all four Approve, no findings.
+
+A refactor pass preceded the Tailwind work, working through every candidate
+from the original survey:
 
 1. Mechanical dedup in `lib/api/guard.ts` and the `/v1` auth routes.
 2. `lib/core/cards.ts` split by concern into `matching.ts`/`artwork.ts`/
@@ -62,11 +103,20 @@ and `docs/changelog.d/2026-08-15-public-latest-pull-endpoint.md` record it.
 
 ## Open
 
-Nothing flagged from this session's own work. Worth knowing for whoever
-picks this up: the merge with the app-shell/Tailwind work was done via
-`npm run check` plus a static-render smoke test only (no `NOTION_TOKEN` in
-this workspace) — exercising the new `app/(app)/` shell and `CardsView`'s
-`chrome={false}` path with real data and a browser hasn't happened yet.
+- `cards.css` is now 1,365 lines (from 2,927 at the start of the migration),
+  holding only cross-file selector hooks (GLASS CONTROL/CONTROL recipe,
+  `.sheet`/`.filter-menu-panel` ancestor styling for `FilterOptions.tsx`'s
+  shared rows) and ADR-0013-style conditionally-overridden properties.
+  Nothing further identified as migratable.
+- Two background-agent worktrees from an earlier, session-limit-interrupted
+  run are still on disk with no real changes in them:
+  `.claude/worktrees/agent-a568e0bdb54c88794`,
+  `.claude/worktrees/agent-ae477e6a88902e074`. Not cleaned up yet — ask
+  before removing.
+- This workspace has no `NOTION_TOKEN`/Postgres credentials, so the live
+  verification this session did (browser screenshots, `getComputedStyle`
+  checks) exercised the shell/toolbar/dialogs but never the real card grid
+  with real data — worth a pass with credentials at some point.
 
 The generated-username signup flow also hasn't been exercised in a running
 `npm run dev` + browser session (no `NOTION_TOKEN`/Supabase credentials
@@ -81,4 +131,4 @@ before the portfolio site is pointed at it.
 
 ## Next session
 
-Ask what's next.
+Ask what's next. The Tailwind migration is complete.

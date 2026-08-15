@@ -40,12 +40,21 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
   }
 
   return (
-    <div className="set-index">
+    <div className="flex flex-col gap-10 pb-[var(--page-pad-bottom)]">
       {groups.map((group) => (
-        <section key={group.era} className="set-index-era">
-          <h2 className="set-index-era-title">{group.label}</h2>
+        <section key={group.era}>
+          <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">{group.label}</h2>
 
-          <ul className="set-index-grid" role="list">
+          {/* Auto-fill rather than a column count: the tile has a natural
+              width and the row takes as many as fit. A fixed count needs a
+              breakpoint per step, and this grid sits inside .cards-main,
+              which is a container — so the query it would need is a container
+              query, and none of that is necessary when the browser can
+              divide. */}
+          <ul
+            className="grid [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))] gap-3 m-0 p-0 list-none"
+            role="list"
+          >
             {group.sets.map((set) => {
               const held = set.cards.filter((c) => c.owned).length;
               // The set's own total where the catalogue knows it. Without one
@@ -59,23 +68,39 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                 <li key={set.name}>
                   <Link
                     href={`/collection/set/${slugify(set.name)}`}
-                    className="set-index-tile"
+                    className="flex flex-col gap-2 p-4 rounded-lg bg-[var(--color-bg-surface)]
+                      [box-shadow:var(--shadow-card)] no-underline text-inherit
+                      [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
+                      hover:-translate-y-0.5 hover:[box-shadow:var(--shadow-elevated)]"
                   >
                     {/* The logo carries the recognition, so it goes first and
                         large. A set is remembered by its wordmark long before
-                        its name is read. */}
-                    <span className="set-index-logo">
+                        its name is read. Height reserved before the logo
+                        lands, so a lazy image does not shunt the name and the
+                        count down the moment it decodes. Same reason the card
+                        scans carry an aspect-ratio. */}
+                    <span className="flex items-center justify-start h-11">
                       {set.logo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={set.logo} alt="" loading="lazy" decoding="async" />
+                        <img
+                          src={set.logo}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="max-h-full max-w-[70%] object-contain object-left"
+                        />
                       ) : (
-                        <span className="set-index-logo-fallback">{set.title ?? set.name}</span>
+                        <span className="[font-size:var(--fs-small)] font-semibold text-label-tertiary">
+                          {set.title ?? set.name}
+                        </span>
                       )}
                     </span>
 
-                    <span className="set-index-name">{set.title ?? set.name}</span>
+                    <span className="[font-size:var(--fs-body)] font-semibold text-label">
+                      {set.title ?? set.name}
+                    </span>
 
-                    <span className="set-index-count">
+                    <span className="[font-size:var(--fs-small)] text-label-secondary tabular-nums">
                       {total ? `${n(held)} of ${n(total)}` : `${n(held)} ${held === 1 ? "card" : "cards"}`}
                     </span>
 
@@ -84,8 +109,14 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                          <progress> announces itself as a live task. The number
                          above it is the accessible answer, so the bar is
                          decorative and hidden from the accessibility tree. */
-                      <span className="set-index-bar" aria-hidden="true">
-                        <span className="set-index-bar-fill" style={{ width: `${pct}%` }} />
+                      <span
+                        className="h-[3px] rounded-[2px] bg-[var(--color-surface-subtle)] overflow-hidden"
+                        aria-hidden="true"
+                      >
+                        <span
+                          className="block h-full rounded-[inherit] bg-[var(--color-tint)]"
+                          style={{ width: `${pct}%` }}
+                        />
                       </span>
                     )}
                   </Link>

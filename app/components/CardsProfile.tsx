@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import SignInForm from "./SignInForm";
 import { useTheme } from "./ThemeProvider";
 import { FormNote } from "./FormField";
+import { cardsSegmentClassName, cardsSegmentedClassName } from "./trackClasses";
 
 /**
  * Where the password is typed, and the only screen on /cards that is about the
@@ -26,6 +27,10 @@ import { FormNote } from "./FormField";
  * own panels; this one is a short column of settings, and a panel drawn around
  * it made a phone-sized screen look like a receipt in an empty room.
  */
+const cardsProfileTitleClassName =
+  "m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)]" +
+  " [line-height:var(--lh-tight)] text-label";
+
 export default function CardsProfile({
   signedIn,
   onSignOut,
@@ -36,9 +41,9 @@ export default function CardsProfile({
   const { theme, toggle } = useTheme();
 
   return (
-    <div className="cards-profile">
-      <section className="cards-profile-block">
-        <h3 className="cards-profile-title">{signedIn ? "Signed in" : "Sign in"}</h3>
+    <div className="flex flex-col items-start gap-10 max-w-[52ch]">
+      <section className="flex flex-col items-start gap-4 w-full">
+        <h3 className={cardsProfileTitleClassName}>{signedIn ? "Signed in" : "Sign in"}</h3>
         {signedIn ? (
           <>
             <FormNote>
@@ -62,9 +67,9 @@ export default function CardsProfile({
           (see .theme-toggle in cards.css) and this is where it went. Two named
           choices rather than one button that means the opposite of what it
           shows, which is what a lone sun icon always is. */}
-      <section className="cards-profile-block">
-        <h3 className="cards-profile-title">Appearance</h3>
-        <div className="cards-segmented" role="group" aria-label="Appearance">
+      <section className="flex flex-col items-start gap-4 w-full">
+        <h3 className={cardsProfileTitleClassName}>Appearance</h3>
+        <div className={cardsSegmentedClassName} role="group" aria-label="Appearance">
           {(
             [
               ["light", "Light"],
@@ -77,7 +82,7 @@ export default function CardsProfile({
                 key={key}
                 type="button"
                 aria-pressed={on}
-                className={`cards-segment${on ? " is-active" : ""}`}
+                className={cardsSegmentClassName(on)}
                 // One toggle rather than a setter, because that is what the
                 // provider exposes: pressing the side you are already on is
                 // the one press that must do nothing.

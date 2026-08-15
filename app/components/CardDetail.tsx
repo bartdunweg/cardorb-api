@@ -51,13 +51,32 @@ export default function CardDetail({
   ];
 
   return (
-    <div className="card-detail-body">
-      <div className="card-detail-scan">
+    <div
+      // margin-top stays in cards.css: .modal--card overrides it to 0 for the
+      // dialog variant, an unconditional Tailwind mt-* would always win over that.
+      className="card-detail-body grid grid-cols-[minmax(0,5fr)_minmax(0,6fr)] gap-8 w-full
+        [@media(max-width:640px)]:grid-cols-[minmax(0,1fr)] [@media(max-width:640px)]:gap-6"
+    >
+      <div
+        className="card-detail-scan relative
+          [@media(max-width:640px)]:w-[min(240px,62%)] [@media(max-width:640px)]:mx-auto"
+      >
         {/* Inside the scan, not beside it. As a child of the body it was
             absolutely positioned against the dialog, which put the arrows on
             the window's edges with a stretch of empty card between them and the
-            picture they move. */}
-        {nav && <div className="card-detail-move">{nav}</div>}
+            picture they move. Half on the picture and half off it, at the
+            scan's own edges (rather than the dialog's, which on a phone put
+            them against the window with a stretch of empty card between them
+            and what they move). */}
+        {nav && (
+          <div
+            className="card-detail-move absolute z-2 top-1/2 [transform:translateY(-50%)]
+              flex justify-between pointer-events-none
+              [left:calc(-1*var(--space-4))] [right:calc(-1*var(--space-4))]"
+          >
+            {nav}
+          </div>
+        )}
         {card.image ? (
           // The full-size scan: this is the one place on the site where the
           // artwork is the point, so it gets `high` where the grid takes `low`.
@@ -86,13 +105,25 @@ export default function CardDetail({
             />
           </TiltScan>
         ) : (
-          <span className="cards-scan-missing" aria-hidden="true" />
+          <span
+            className="flex flex-col items-center justify-center gap-1 relative w-full h-full p-3
+              rounded-[4.5%/3.2%] overflow-hidden text-center aspect-[245/342]
+              [background:radial-gradient(120%_90%_at_50%_0%,color-mix(in_srgb,var(--color-label)_9%,transparent),transparent_70%),color-mix(in_srgb,var(--color-label)_5%,transparent)]"
+            aria-hidden="true"
+          />
         )}
       </div>
 
-      <div className="card-detail-text">
-        <p className="card-detail-eyebrow">{mine?.setName ?? card.set?.name}</p>
-        <Title className="card-detail-title">{card.name}</Title>
+      <div className="card-detail-text min-w-0">
+        <p className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+          {mine?.setName ?? card.set?.name}
+        </p>
+        <Title
+          className="mt-1 mb-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
+            [font-size:var(--fs-h2)] [line-height:var(--lh-tight)] text-label"
+        >
+          {card.name}
+        </Title>
 
         {/* The range first where there is one, because it answers the question a
             collector actually asks: what an English Near Mint copy is listed at.
@@ -100,11 +131,17 @@ export default function CardDetail({
             figure and this is calibrated rather than fetched. Under €5 there is
             no range and the market price stands on its own. */}
         {price != null && (
-          <p className="card-detail-price">
+          <p
+            className="mt-4 mb-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
+              [font-size:var(--fs-card)] text-label [font-variant-numeric:lining-nums_tabular-nums]"
+          >
             {card.price?.nm ? (
               <>
                 {euroWhole(card.price.nm.low)} – {euroWhole(card.price.nm.high)}
-                <span className="card-detail-price-avg">
+                <span
+                  className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+                    [font-weight:var(--fw-regular)] text-label-tertiary"
+                >
                   {" "}
                   estimated for an English Near Mint copy · {euro(price)} on Cardmarket
                 </span>
@@ -112,31 +149,45 @@ export default function CardDetail({
             ) : (
               <>
                 {euro(price)}
-                <span className="card-detail-price-avg"> on Cardmarket</span>
+                <span
+                  className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+                    [font-weight:var(--fw-regular)] text-label-tertiary"
+                >
+                  {" "}
+                  on Cardmarket
+                </span>
               </>
             )}
           </p>
         )}
 
-        <dl className="card-detail-facts">
+        <dl className="mt-6 mb-0 grid gap-2">
           {facts
             .filter(([, v]) => v)
             .map(([k, v]) => (
-              <div key={k}>
-                <dt>{k}</dt>
-                <dd>{v}</dd>
+              <div key={k} className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 items-baseline">
+                <dt className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+                  {k}
+                </dt>
+                <dd className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-label">
+                  {v}
+                </dd>
               </div>
             ))}
         </dl>
 
         {mine && (
-          <div className="card-detail-mine">
-            <p className="card-detail-mine-title">In the binder</p>
-            <ul>
+          <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
+            <p className="m-0 mb-3 [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+              In the binder
+            </p>
+            <ul className="m-0 p-0 list-none flex flex-col gap-2">
               {mine.card.variants.map((v, i) => (
-                <li key={i}>
-                  <Tag className="cards-tag">{v.rarity ?? "Unknown printing"}</Tag>
-                  <span className="card-detail-mine-state">
+                <li key={i} className="flex items-center gap-3">
+                  <Tag className="[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] [font-size:var(--fs-tiny)] text-label-secondary">
+                    {v.rarity ?? "Unknown printing"}
+                  </Tag>
+                  <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
                     {v.owned ? "Owned" : "On the wishlist"}
                   </span>
                 </li>
@@ -162,7 +213,7 @@ export default function CardDetail({
             It is now the card's own page, at the path generated by
             scripts/cardmarket-links.mjs. See cardmarketUrl in lib/cards.ts for
             the two cards in forty that still fall back to a search. */}
-        <Button href={card.cmUrl} external icon={ExternalLink} className="card-detail-cm">
+        <Button href={card.cmUrl} external icon={ExternalLink} className="mt-6">
           Find it on Cardmarket
         </Button>
       </div>

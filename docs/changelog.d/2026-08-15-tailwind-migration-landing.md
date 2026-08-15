@@ -1,0 +1,1 @@
+- Migrated the landing page (`landing.css`, 692 lines, single consumer `app/page.tsx`) to Tailwind utility classes and deleted the file. No visual or behavioural change intended.

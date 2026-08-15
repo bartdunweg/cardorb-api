@@ -16,22 +16,23 @@
 
    It holds the sets and nothing else. Everything that filters lives in the bar
    above the results (.cards-tools). */
+/* gap/padding/background/backdrop-blur moved to Tailwind classes in
+ * CardsSidebar.tsx. Everything else here (display, border-right, box-shadow,
+ * position, height, overflow) stays CSS on purpose: every one of them is
+ * conditionally reset by the <=1000px pane-swap block below (and the
+ * display toggle is the pane-swap mechanism itself), so an unconditional
+ * Tailwind utility for any of them would outrank this reset regardless of
+ * the reset's specificity (see ADR-0012's cascade-layers fix) — caught
+ * live when a first attempt at this migrated the rail unconditionally and
+ * it stopped hiding on a narrow phone. */
 .cards-rail {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  padding: var(--space-4) var(--space-3);
-  background: var(--glass-bg-solid);
-  /* The divider is --color-border-subtle, not --glass-border: the glass one is
-     white at 90% in light mode, so against a near-white page the rail had no
-     visible edge at all. Same call .cards-search documents below. */
   border-right: 1px solid var(--color-border-subtle);
   /* Sideways, because the only edge you can see is the right one: a shadow with
      a vertical offset would spill down the page and never fall where the rail
      actually meets the results. */
   box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.16);
-  -webkit-backdrop-filter: blur(var(--blur-glass-card));
-  backdrop-filter: blur(var(--blur-glass-card));
   position: sticky;
   top: 0;
   /* The whole window, edge to edge. */
@@ -42,13 +43,18 @@
 /* Dark mode carries its shadows heavier, the way --shadow-card and
    --shadow-elevated do: 16% black over a near-black page is nothing at all.
    That still holds, and this is still four times what a light-mode shadow would
-   be. The alpha came down by the same 0.71 those two took, for the same
-   measured reason: sampled at 1440 beside the rail, at 0.6 this dipped 3.0 dL*
-   below the background where a button on a card dips 2.56, so the one shadow on
-   the site with no light-mode counterpart at all was also the heaviest thing in
-   the theme. */
+   be. */
 [data-theme="dark"] .cards-rail {
   box-shadow: 6px 0 24px -12px rgba(0, 0, 0, 0.43);
+}
+@media (max-width: 1000px) {
+  .cards-rail {
+    position: static;
+    height: auto;
+    overflow: visible;
+    border-right: 0;
+    box-shadow: none;
+  }
 }
 @media (max-width: 1000px) {
   /* One pane at a time.
@@ -100,37 +106,10 @@
     animation: none;
   }
 }
-@media (max-width: 1000px) {
-  .cards-rail {
-    position: static;
-    /* The whole screen, scrolling with the page: there is nothing under it to
-       be in the way of any more, so neither the cap nor the inner scrollbar nor
-       the hairline that separated the two has anything left to do. */
-    height: auto;
-    overflow: visible;
-    border-right: 0;
-    box-shadow: none;
-  }
-}
 
-/* The page's name over the rail, drawn only where the rail is a screen rather
-   than a column beside the results. Above 1000px the heading over the results
-   is on view and this would be the page's name printed twice. */
-.cards-rail-title {
-  display: none;
-}
-@media (max-width: 1000px) {
-  .cards-rail-title {
-    display: block;
-    margin: 0 0 var(--space-4);
-    padding: var(--space-2);
-    font-family: var(--font-main);
-    font-weight: var(--fw-title);
-    font-size: var(--fs-h2);
-    line-height: var(--lh-tight);
-    color: var(--color-label);
-  }
-}
+/* .cards-rail-title had no consumer left: the rail's title is a plain <p>
+ * with its own Tailwind classes in CardsSidebar.tsx. Dead since that
+ * migration, removed on the final cards.css sweep (see ADR-0014). */
 
 .cards-nav {
   list-style: none;
@@ -144,61 +123,17 @@
    display:block because it is a span inside the era's list item as well as a
    list item of its own, and an inline box takes neither the height nor the
    background. */
-.cards-nav-rule {
-  display: block;
-  height: 1px;
-  margin: var(--space-2);
-  background: var(--color-border-subtle);
-}
-/* The era each run of sets belongs to. Sticky, so the label of the group you are
-   scrolling through stays visible in a rail this long. */
-.cards-nav-era {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  width: 100%;
-  margin: var(--space-4) 0 var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg-solid);
-  text-align: left;
-  cursor: pointer;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-weight: var(--fw-title);
-  color: var(--color-label-tertiary);
-}
-.cards-nav-era:hover {
-  color: var(--color-label);
-}
-.cards-nav-era.is-active {
-  color: var(--color-label);
-  background: var(--color-bg-grouped);
-}
-.cards-nav-era:first-child {
-  margin-top: 0;
-}
-/* The site's own row hover, the one the connect lists and the article rows
-   wear: a glass pill that fades in under the row. The recipe lives in
-   components.css; the inset and the radius are this list's business. It used to
-   be a flat --color-bg-grouped fill, which is a hover state this site does not use
-   anywhere else. */
-.cards-nav-item {
-  position: relative;
-  --pill-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-2);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
+/* .cards-nav-rule had no consumer left: the hairline is a plain <li> with its
+ * own Tailwind classes in CardsSidebar.tsx. Dead since that migration,
+ * removed on the final cards.css sweep (see ADR-0014). */
+/* .cards-nav-era, .cards-nav-art(+img), .cards-nav-blank, .cards-nav-name,
+ * .cards-nav-count, and most of .cards-nav-item all moved to Tailwind
+ * classes in CardsSidebar.tsx during the migration. .cards-nav-item stays as
+ * a class name: the hover-pill pseudo-element (its recipe in components.css,
+ * ::after inset here) and the child z-index lift below still reach it —
+ * left as CSS rather than a `group-hover:after:` chain, the same call made
+ * for the grid tile's own hover pill.
+ */
 /* Above the pill, which is positioned and would otherwise paint over them. */
 .cards-nav-item > * {
   position: relative;
@@ -207,74 +142,17 @@
 .cards-nav-item::after {
   inset: 0;
 }
-/* Held, not hovered: the pill is a pointer following you around, and where you
-   are has to still be legible once the pointer moves on. */
-.cards-nav-item.is-active {
-  background: var(--color-bg-grouped);
-}
-.cards-nav-art {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 28px;
-}
-.cards-nav-art img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-.cards-nav-blank {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-grouped);
-}
-.cards-nav-name {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-small);
-  color: var(--color-label);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* The count, at the end of the row rather than on a line of its own under the
-   name. Tabular figures so a column of fifty-one of them lines up. */
-.cards-nav-count {
-  flex-shrink: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-variant-numeric: lining-nums tabular-nums;
-  color: var(--color-label-tertiary);
-}
 
 /* ── The results pane ── */
 
-/* The rail owns the window's edge now, so the results carry the top and side
-   room the page used to hold for both of them. */
+/* min-width/container-type/gap/padding (+ its <=1000px override) moved to
+ * cardsPageClasses.ts's cardsMainClassName. display/flex-direction stay
+ * here: display is what the pane-swap sibling selector above toggles to
+ * none, and an unconditional Tailwind utility for it would outrank this
+ * rule regardless of specificity (ADR-0012). */
 .cards-main {
-  min-width: 0;
-  /* The box both grids answer to. How small a scan may be drawn is a question
-     about the room this column has, and this column is the window minus a 300px
-     rail above 1000px and the whole window below it, so the viewport is a poor
-     proxy for it: at 1000px and at 660px the grid has almost exactly the same
-     width and the old rules gave them different tiles. */
-  container-type: inline-size;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  padding: var(--space-8) var(--page-pad-x) 0 var(--space-6);
-}
-@media (max-width: 1000px) {
-  .cards-main {
-    padding: var(--space-5) var(--page-pad-x) 0;
-  }
 }
 
 /* ── The bar along the bottom (CardsTabBar) ──
@@ -419,24 +297,11 @@
 
    Below 1000px the bar carries both and this is gone: a rail you have to open is
    not a place to keep a field you reach for. */
-.cards-rail-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-4) var(--space-4);
-}
-.cards-rail-head .cards-search {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.cards-rail-add {
-  flex: 0 0 auto;
-}
-@media (max-width: 1000px) {
-  .cards-rail-head {
-    display: none;
-  }
-}
+/* .cards-rail-head and .cards-rail-add had no consumer left: CardsSidebar.tsx
+ * draws the rail's add button with its own Tailwind classes and the rail no
+ * longer carries a copy of the search field at all (see the note just below).
+ * Dead since that migration, removed on the final cards.css sweep (see
+ * ADR-0014). */
 /* The other half of that: the toolbar's own copy of the field is the one for
    below 1000px, and above it the rail has it. Two fields, one query, and never
    both on screen. */
@@ -737,24 +602,12 @@
   transform: scale(1);
 }
 
-/* Fixed by ratio rather than by content: the scans stream in lazily, and
-   without a box to land in every arrival would reflow the rows below it. */
-.cards-scan {
-  display: block;
-  position: relative;
-  aspect-ratio: 245 / 342;
-  margin-bottom: var(--space-2);
-}
-.cards-scan img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  /* The scans come with their own rounded, transparent corners, so the shadow
-     goes on the artwork where it follows the alpha. A box shadow would show
-     straight through those corners as a pale triangle. Same treatment the
-     hobbies card gives a card scan. */
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12)) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.2));
-}
+/* .cards-scan's own box (ratio, margin) and .cards-scan img's filter, plus
+ * the grid/list data-view variants, moved to CardItem.tsx Tailwind classes
+ * during the migration. .cards-scan stays as a class name: the two rules
+ * below still reach it by name for the poke-holo.css integration.
+ */
+
 /* The trading-card effect, once a card has been pointed at and is drawn large
    enough for it (TILT_FROM in CardsView). Everything it is made of lives in
    poke-holo.css, which is written for the single card on /about: that one stands
@@ -775,118 +628,19 @@
   height: 100%;
 }
 
-/* Nothing found at either source: the slot keeps the card's shape in the page's
-   own ink, the way the hobbies card marks an empty cover. */
-/* The stand-in for a card no catalogue has a picture of.
-   It was a flat grey rectangle at 6% — honest, and indistinguishable from a
-   scan that had failed to load, which is the one thing it is not. This says so
-   instead: the card's own shape, its name and its number, drawn as the back of
-   a card rather than as an absence. Roughly 1% of the collection. */
-.cards-scan-missing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-  position: relative;
-  width: 100%;
-  height: 100%;
-  padding: var(--space-3);
-  border-radius: 4.5% / 3.2%;
-  /* The corner radius of a real card is a percentage of its width, which is why
-     this is a two-value ratio rather than a pixel: at every size in the slider
-     it stays the same shape as the scans beside it. */
-  background:
-    radial-gradient(
-      120% 90% at 50% 0%,
-      color-mix(in srgb, var(--color-label) 9%, transparent),
-      transparent 70%
-    ),
-    color-mix(in srgb, var(--color-label) 5%, transparent);
-  overflow: hidden;
-  text-align: center;
-}
-/* A hairline inset from the edge, the way a card's border sits inside its trim.
-   Enough to read as a card back at a glance without drawing anything literal. */
-.cards-scan-missing-frame {
-  position: absolute;
-  inset: 6%;
-  border: 1px solid color-mix(in srgb, var(--color-label) 12%, transparent);
-  border-radius: 3% / 2.2%;
-}
-.cards-scan-missing-name {
-  position: relative;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-small);
-  line-height: var(--lh-snug);
-  color: var(--color-label-secondary);
-  /* Two lines, then stop: some trainer names are longer than the card is wide. */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.cards-scan-missing-number {
-  position: relative;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-tiny);
-  color: var(--color-label-tertiary);
-  font-variant-numeric: tabular-nums;
-}
+/* .cards-scan-missing moved to CardDetail.tsx Tailwind classes — it was the
+ * last consumer, CardItem.tsx's own "no scan" placeholder already moved.
+ * .cards-scan-missing-frame/-name/-number were dropped earlier: neither
+ * placeholder ever rendered them.
+ */
 
-/* The price, in the meta tier the number and the type sit in, but in full ink:
-   it is the one number on the card you might actually be looking for. */
-.cards-item-price {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-weight: var(--fw-eyebrow);
-  color: var(--color-label);
-  font-variant-numeric: lining-nums tabular-nums;
-  margin-top: 2px;
-}
-
-.cards-item-name {
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-small);
-  line-height: var(--lh-snug);
-  color: var(--color-label);
-  /* Two lines at most: a long trainer name should not push the row below it. */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.cards-item-meta {
-  display: flex;
-  align-items: baseline;
-  /* One line, so a dot can never end up at the start of a wrapped one. What
-     does not fit is cut rather than moved down: these are the small facts, and
-     the card's name above them is the one that must always be whole. */
-  flex-wrap: nowrap;
-  overflow: hidden;
-  gap: 2px var(--space-2);
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-.cards-item-number {
-  font-variant-numeric: lining-nums tabular-nums;
-  flex-shrink: 0;
-}
-/* Long enough to wrap on a narrow column ("Special Illustration Rare"), so both
-   clamp to one line rather than pushing the row below them out of alignment. */
-.cards-item-type {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* The type used to sit at opacity 0.72 to separate it from the number and the
-   rarity. On text already at --color-label-tertiary that took it under the AA
-   threshold, and axe caught it. The separation now comes from a divider
-   instead, which costs no contrast at all. */
+/* .cards-item-price/-name/-meta/-number/-type moved to CardItem.tsx Tailwind
+ * classes. .cards-item-meta stays as a class name: the separator rule below
+ * still reaches it, keyed on child position rather than a class on the dot
+ * (there is no dot element — it's a ::before on every non-first child), which
+ * is exactly the kind of DOM-order-dependent CSS not worth replicating in
+ * React.
+ */
 /* The dot belongs between two facts, not in front of one. It used to hang off
    .cards-item-type and .cards-item-gen, which meant it appeared whenever either
    of those was drawn — including as the first thing on the line, when Number
@@ -944,63 +698,16 @@
 
 /* ── Tick-list dropdowns ── */
 
-.filter-menu {
-  position: relative;
-}
-/* A button, and built like one: everything but the layout comes from .btn's own
-   surface and shape in components.css. */
-.filter-menu > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-4);
-  cursor: pointer;
-  white-space: nowrap;
-  list-style: none;
-  transition:
-    box-shadow var(--dur-fast) var(--ease-smooth),
-    border-color var(--dur-fast) var(--ease-smooth);
-}
+/* .filter-menu's own position, .filter-menu > summary's layout, .filter-menu >
+ * summary > span, .filter-menu-badge, and .filter-menu-panel's own shell
+ * (position/size/border/background/blur/shadow) all moved to Tailwind classes
+ * in the shared MenuDetails.tsx (FilterMenu.tsx and ViewMenu.tsx both use it).
+ * The class names stay: .filter-menu > summary is also a "GLASS CONTROL"/
+ * "CONTROL" hook in components.css, and everything below still styles
+ * FilterOptions.tsx's/ViewOptions.tsx's shared markup by landing context. */
 /* Safari draws its own disclosure triangle otherwise. */
 .filter-menu > summary::-webkit-details-marker {
   display: none;
-}
-.filter-menu > summary > span {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-/* No rotate-on-open any more: the chevron it turned is gone, and the rule was
-   written against every svg in the summary rather than that one, so what was
-   left of it would have spun the Plus and the sliders instead. */
-.filter-menu-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: var(--radius-pill);
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  font-size: var(--fs-tiny);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-
-.filter-menu-panel {
-  position: absolute;
-  z-index: 5;
-  top: calc(100% + var(--space-2));
-  left: 0;
-  width: 280px;
-  max-width: min(280px, calc(100vw - 2 * var(--page-pad-x)));
-  padding: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--glass-bg-solid);
-  box-shadow: var(--shadow-elevated);
-  -webkit-backdrop-filter: blur(var(--blur-glass));
-  backdrop-filter: blur(var(--blur-glass));
 }
 .filter-menu-panel ul {
   /* Several hundred Pokémon, so the panel scrolls rather than the page. */
@@ -1111,270 +818,41 @@
   color: var(--color-label);
 }
 
-/* ── Loading outlines (app/cards/loading.tsx) ── */
+/* .cards-skeleton--* (app/(app)/loading.tsx's outline sizes) moved to
+ * Tailwind classes directly on that file's elements — the look and the sweep
+ * still come from .skeleton (components.css). */
 
-/* Sizes only; the look and the sweep come from .skeleton (components.css). */
-
-/* The toolbar outlines carry the real controls' geometry, so the row wraps the
-   same way and nothing jumps when they are replaced. */
-.cards-skeleton--search {
-  /* Not greedy: it took the whole leftover width and dwarfed the controls
-     beside it, when the collection is mostly browsed by filter. */
-  flex: 0 1 260px;
-  min-width: 180px;
-  height: var(--control-h);
-  border-radius: var(--radius-pill);
-}
-.cards-skeleton--filter {
-  width: 104px;
-  height: var(--control-h);
-  border-radius: var(--radius-pill);
-}
-/* Matches .cards-count, which sits under the heading with the same gap. */
-.cards-skeleton--count {
-  width: 150px;
-  /* The line box of a --fs-small paragraph, not the font size. */
-  height: 16px;
-  margin-top: var(--space-2);
-}
-/* One row in the rail: a set logo beside a single line of text, which is the
-   28px art plus the --space-2 padding a .cards-nav-item is built from. */
-.cards-skeleton--nav {
-  height: 44px;
-  border-radius: var(--radius-md);
-}
-.cards-skeleton--segmented {
-  width: 232px;
-  height: var(--control-h);
-  border-radius: var(--radius-pill);
-}
-.cards-skeleton--views {
-  width: 74px;
-  height: var(--control-h);
-  border-radius: var(--radius-pill);
-}
-.cards-skeleton--tag {
-  width: 56px;
-  height: 17px;
-  margin-top: var(--space-1);
-  border-radius: var(--radius-pill);
-}
-.cards-skeleton--logo {
-  width: 120px;
-  height: 44px;
-  flex-shrink: 0;
-}
-.cards-skeleton--title {
-  width: 180px;
-  height: var(--fs-card);
-}
-.cards-skeleton--meta {
-  width: 110px;
-  height: var(--fs-small);
-  margin-top: var(--space-1);
-}
-/* Fills the slot the scan will land in, so the grid is already the right height
-   and the rows below do not move.
-   No sweep on these. A band of light travelling across a 40px text bar reads as
-   loading; the same band across a dozen card-sized blocks reads as the page
-   flickering, staggered or not. The small bars keep it, the images just sit
-   there and wait. */
-.cards-skeleton--scan {
-  width: 100%;
-  height: 100%;
-  /* The corner the artwork itself has: a scan is 245px wide with a ~12px
-     radius, so at the grid's 132px that lands on 6px, which is --radius-xs. */
-  border-radius: var(--radius-xs);
-}
-.cards-skeleton--scan::after {
-  content: none;
-}
-.cards-skeleton--name {
-  width: 70%;
-  height: var(--fs-small);
-}
-
-@media (max-width: 640px) {
-  .cards-skeleton--count {
-    width: 150px;
-    height: var(--fs-small);
-  }
-  /* The real .cards-segmented goes full width here, so its outline has to as well:
-     a fixed 232px both missed the geometry it is standing in for and was wider
-     than the card on a 320px screen. */
-  .cards-skeleton--segmented {
-    width: 100%;
-    height: var(--control-h);
-    border-radius: var(--radius-pill);
-  }
-  .cards-skeleton--views {
-    width: 74px;
-    height: var(--control-h);
-    border-radius: var(--radius-pill);
-  }
-  .cards-skeleton--tag {
-    width: 56px;
-    height: 17px;
-    margin-top: var(--space-1);
-    border-radius: var(--radius-pill);
-  }
-  .cards-skeleton--logo {
-    width: 92px;
-    height: 34px;
-  }
-}
-
-.cards-segmented {
-  display: flex;
-  gap: var(--space-1);
-  padding: 3px;
-  border-radius: var(--radius-pill);
-}
+/* display/gap/padding/border-radius on .cards-segmented, and every
+ * .cards-segment property except padding, moved to Tailwind classes on
+ * Segmented.tsx. width (.cards-segmented) and padding/flex (.cards-segment)
+ * stay here: several ancestor contexts override them and an unconditional
+ * Tailwind utility would always beat that (see ADR-0013). */
 .cards-segment {
   padding: 0 var(--space-4);
-  height: 32px;
-  border: none;
-  /* Concentric with the track around it, not the same number as it.
-     --radius-pill is 14px, and the track adds a 1px border and 3px of padding
-     on every side, so an inner corner at 14 is 4px too round against it. */
-  border-radius: calc(var(--radius-pill) - 4px);
-  background: none;
-  font-family: var(--font-main);
-  font-size: var(--fs-control-label);
-  font-weight: var(--fw-button);
-  color: var(--color-label-secondary);
-  cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease-smooth),
-    background var(--dur-fast) var(--ease-smooth);
-}
-.cards-segment:hover {
-  color: var(--color-label);
-}
-.cards-segment.is-active {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
 }
 
-/* In the row with the other controls, not pushed to the far end of it, and made
-   of the same track as the segmented switches beside it. */
-.cards-views {
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: var(--radius-pill);
-}
-.cards-view {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: none;
-  /* Same correction as .cards-segment above. */
-  border-radius: calc(var(--radius-pill) - 4px);
-  background: none;
-  color: var(--color-label-tertiary);
-  cursor: pointer;
-  transition:
-    color var(--dur-fast) var(--ease-smooth),
-    background var(--dur-fast) var(--ease-smooth);
-}
-.cards-view:hover {
-  color: var(--color-label);
-}
-.cards-view.is-active {
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
+/* display/gap/padding/border-radius on .cards-views, and every .cards-view
+ * property, moved to Tailwind classes in ViewOptions.tsx (trackClasses.ts).
+ * .cards-views' width stays here: .view-menu-panel sets it to 100% and an
+ * unconditional Tailwind utility would always beat that (see ADR-0013). */
 
-.filter-chips {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  width: 100%;
-  margin-top: var(--space-4);
-}
-.filter-chips-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 28px;
-  padding: 0 var(--space-2) 0 var(--space-3);
-  border: 1px solid var(--color-border-active);
-  border-radius: var(--radius-pill);
-  background: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label);
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-smooth),
-    color var(--dur-fast) var(--ease-smooth);
-}
-.filter-chips-chip:hover {
-  background: var(--btn-primary-bg);
-  border-color: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-.filter-chips-chip svg {
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-.filter-chips-chip:hover svg {
-  opacity: 1;
-}
-.filter-chips-clear {
-  padding: 0 var(--space-2);
-  border: none;
-  background: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.filter-chips-clear:hover {
-  color: var(--color-label);
-}
+/* .filter-chips/-chip/-clear moved to Tailwind classes in FilterChips.tsx. */
 
 /* ── Rarity tags, wishlist, list view ── */
 
-.cards-item-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.cards-item-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-top: var(--space-1);
-}
-/* Dense: these sit in a grid of scans, several to a card. Shape comes from
-   .tag; this is only what /cards does differently. */
-.cards-tag {
-  background: color-mix(in srgb, var(--color-label) 7%, transparent);
-  font-size: var(--fs-tiny);
-  color: var(--color-label-secondary);
-}
-/* Wanted rather than held: an outline instead of a fill, so the difference
-   survives being read in greyscale as well as in colour. */
-.cards-tag--want {
-  background: none;
-  border: 1px dashed var(--color-border-active);
-  color: var(--color-label-tertiary);
-}
-/* A card that is only wanted sits back from the ones actually in the binder. */
-.cards-item.is-wishlist .cards-scan img {
-  opacity: 0.55;
-  filter: grayscale(0.4) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
-}
+/* .cards-item-text's own layout, .cards-item-tags, .cards-tag/-want and the
+ * wishlist scan dimming all moved to CardItem.tsx Tailwind classes.
+ * .cards-item-text stays as a class name: the grid-view z-index rule below
+ * (keeping it above the hover pill) still reaches it by name.
+ */
 
-/* List view: one row per card, the scan shrunk to a thumbnail beside it. */
+/* List view: one row per card, the scan shrunk to a thumbnail beside it.
+ * Left in CSS alongside .cards-grid below rather than split into a Tailwind
+ * class: mechanics.test.ts locks .cards-grid's content-visibility/negative-
+ * margin pair to this file by an exact-string assertion (moving it would mean
+ * updating that test's own reference, not just the rule), and CardsView.tsx
+ * switches between the two class names with one ternary — symmetric CSS is
+ * simpler than half of that switch being Tailwind and half a literal class. */
 .cards-rows {
   display: flex;
   flex-direction: column;
@@ -1384,43 +862,12 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 600px;
 }
-.cards-item[data-view="list"] {
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-.cards-rows > .cards-item:last-child {
-  border-bottom: none;
-}
-.cards-item[data-view="list"] .cards-scan {
-  width: 44px;
-  flex-shrink: 0;
-  margin-bottom: 0;
-}
-/* A row has one line to give a name, where a tile in the grid has two, so the
-   name is set larger and clamped harder here.
-
-   Every rule in this block is scoped to the row. They were not: a comment sat
-   between `.cards-item[data-view="list"]` and the selector under it, and a
-   comment is whitespace, so the two became one descendant selector and the
-   three rules that followed were left loose. The one that mattered was
-   .cards-item-name, which beat the grid's own rule further up the file and set
-   every tile's name in one line of --fs-body-s instead of two of --fs-small. */
-.cards-item[data-view="list"] .cards-item-name {
-  font-size: var(--fs-body-s);
-  -webkit-line-clamp: 1;
-}
-.cards-item[data-view="list"] .cards-item-text {
-  flex: 1;
-}
-.cards-item-gen {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* This whole list-view override block (.cards-item[data-view="list"] and its
+ * .cards-scan/.cards-item-name/.cards-item-text descendants,
+ * .cards-rows > .cards-item:last-child, and .cards-item-gen) moved to
+ * CardItem.tsx as group-data-[view=list]/item: Tailwind variants during the
+ * migration.
+ */
 
 @media (max-width: 640px) {
   .cards-segmented {
@@ -1530,149 +977,18 @@
 /* An ordinary page of this site: the tab bar is above it, so it keeps the top
    room #main-content reserves instead of pulling back through it the way the
    full-bleed list does. */
-.page-card {
-  max-width: calc(var(--content-max) + 2 * var(--page-pad-x));
-  margin: 0 auto;
-  padding: 0 var(--page-pad-x) var(--page-pad-bottom);
-}
-
-.card-detail {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
+/* .page-card and .card-detail both moved to Tailwind classes directly in
+ * app/cards/[id]/page.tsx — neither had another consumer or an ancestor
+ * override to keep in CSS for. */
 
 /* The scan beside the facts, and the scan is the point: it takes the wider
    column. Stacks on a phone, where a two-column split would leave the artwork
    the size it is in the grid. */
+/* display/grid-template-columns/gap/width, and the phone-width scan cap,
+   migrated to Tailwind classes on CardDetail.tsx's own elements. margin-top
+   stays here: .modal--card overrides it to 0 for the dialog variant below, and
+   an unconditional Tailwind mt-* utility would always beat that override. */
 .card-detail-body {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  gap: var(--space-8);
-  width: 100%;
-  margin-top: var(--space-6);
-}
-@media (max-width: 640px) {
-  .card-detail-body {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-6);
-  }
-  /* Capped, and centred in the column it no longer fills.
-     Beside the facts on a laptop the scan takes five twelfths of a 920px box;
-     stacked above them on a phone it took the full width of the dialog, which
-     since that dialog went full screen is the whole device. A card printed
-     larger than life, with everything it says about itself pushed under the
-     fold. 240px is about the size it is in the hand. */
-  .card-detail-scan {
-    width: min(240px, 62%);
-    margin-inline: auto;
-  }
-}
-
-/* The artwork carries its own rounded, transparent corners, so the shadow goes
-   on the alpha rather than on a box behind it, the same call the grid makes. */
-.card-detail-scan img {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.14)) drop-shadow(0 16px 32px rgba(0, 0, 0, 0.22));
-  /* The small scan the grid already has, standing in until the big one lands.
-     CardDetail sets the URL; these are the rules that make it fit the box. */
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-.card-detail-scan .cards-scan-missing {
-  aspect-ratio: 245 / 342;
-}
-
-.card-detail-text {
-  min-width: 0;
-}
-.card-detail-eyebrow {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-.card-detail-title {
-  margin: var(--space-1) 0 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-h2);
-  line-height: var(--lh-tight);
-  color: var(--color-label);
-}
-.card-detail-price {
-  margin: var(--space-4) 0 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-card);
-  color: var(--color-label);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.card-detail-price-avg {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-weight: var(--fw-regular);
-  color: var(--color-label-tertiary);
-}
-
-/* A definition list, two columns, so the labels line up down the left. */
-.card-detail-facts {
-  margin: var(--space-6) 0 0;
-  display: grid;
-  gap: var(--space-2);
-}
-.card-detail-facts > div {
-  display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: var(--space-3);
-  align-items: baseline;
-}
-.card-detail-facts dt {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-.card-detail-facts dd {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  color: var(--color-label);
-}
-
-.card-detail-mine {
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--color-border);
-}
-.card-detail-mine-title {
-  margin: 0 0 var(--space-3);
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-.card-detail-mine ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.card-detail-mine li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.card-detail-mine-state {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-
-.card-detail-cm {
   margin-top: var(--space-6);
 }
 
@@ -1693,14 +1009,11 @@
    svh and not dvh for the reason .modal--connect states: dvh follows the bars in
    and out, and a sheet that resizes while you are reading it moves under your
    thumb. svh is the smallest it can be, so the sheet is drawn once and stays. */
-.modal--card {
-  width: min(920px, calc(100vw - 2 * var(--space-6)));
-  max-height: calc(100svh - 2 * var(--space-6));
-  border-radius: var(--radius-lg);
-  padding: 0;
-  overflow: hidden;
-  box-shadow: var(--shadow-elevated);
-}
+/* .modal--card's own width/max-height/border-radius/padding/overflow/shadow,
+ * including the max-width:640px full-screen override, moved to Tailwind
+ * classes (modalCardClassName in cardModalClasses.ts). The class name stays:
+ * the two rules below target Modal.tsx's own internal markup, which a
+ * className prop can't reach. */
 .modal--card .modal-scroll {
   overflow-y: auto;
   max-height: calc(100svh - 2 * var(--space-6));
@@ -1714,20 +1027,10 @@
 .modal--card .card-detail-body {
   margin-top: 0;
 }
-/* Full screen on a phone, not a sheet stopping short of the top.
-   A card is the one thing on this site worth the whole screen: it is a picture
-   with small print on it, and eight percent of the height went to a strip of
-   blurred grid nobody was reading. Corners squared off and the edge-to-edge
-   height taken, so the scan is as large as the device can draw it. */
+/* .modal--card's own max-width:640px override moved to Tailwind classes too
+ * (modalCardClassName). Only the scroll padding below stays: same reason as
+ * above. */
 @media (max-width: 640px) {
-  .modal--card {
-    width: 100%;
-    height: 100svh;
-    max-height: 100svh;
-    border-radius: 0;
-    border: none;
-    align-self: stretch;
-  }
   .modal--card .modal-scroll {
     max-height: 100svh;
     /* Clear of the notch above and the home indicator below. */
@@ -1743,14 +1046,11 @@
    The sheet treatment on a phone is the same one .modal--card takes, and for
    the same reason: a dialog opened from a bar at the bottom of the screen
    should arrive from the bottom of the screen. */
-.modal--card-add {
-  width: min(560px, calc(100vw - 2 * var(--space-6)));
-  max-height: calc(100svh - 2 * var(--space-6));
-  border-radius: var(--radius-lg);
-  padding: 0;
-  overflow: hidden;
-  box-shadow: var(--shadow-elevated);
-}
+/* .modal--card-add's own shell (width/max-height/border-radius/padding/
+ * overflow/shadow, including the max-width:640px override) moved to Tailwind
+ * classes (modalCardAddClassName in cardModalClasses.ts). The class name and
+ * the two rules below stay: they target Modal.tsx's own internal
+ * .modal-scroll, which a className prop can't reach. */
 .modal--card-add .modal-scroll {
   overflow-y: auto;
   max-height: calc(100svh - 2 * var(--space-6));
@@ -1758,140 +1058,13 @@
   padding: var(--space-10) var(--card-pad) var(--card-pad);
 }
 @media (max-width: 640px) {
-  .modal--card-add {
-    width: 100%;
-    max-height: 92svh;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    align-self: flex-end;
-  }
   .modal--card-add .modal-scroll {
     max-height: 92svh;
   }
 }
 
-/* Two columns, because the fields are short and a card is read in pairs:
-   number and set, rarity and generation. Name and the type chips take the whole
-   row. One column below 480px, where two would be two half-fields. */
-.card-add {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-.card-add-title {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-card);
-  line-height: var(--lh-tight);
-  color: var(--color-label);
-}
-.card-add-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-  /* A fieldset carries a border and padding of its own that no other field
-     here has, and the type chips are one of these. */
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-.card-add-field--wide {
-  grid-column: 1 / -1;
-}
-.card-add-label {
-  font-family: var(--font-main);
-  font-size: var(--fs-small);
-  font-weight: var(--fw-eyebrow);
-  color: var(--color-label-secondary);
-  /* A legend sits in the fieldset's border by default, which puts the group's
-     name half a line above where every other label on this form sits. */
-  padding: 0;
-  float: none;
-}
-.card-add-field input,
-
-.card-add-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-/* The same pill the filter chips wear, pressed rather than dismissed: seven
-   fixed options are a row of things to turn on, not a field to type into. */
-.card-add-chip {
-  height: var(--control-h);
-  padding: 0 var(--space-3-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: none;
-  font-family: var(--font-main);
-  font-size: var(--fs-control-label);
-  font-weight: var(--fw-button);
-  color: var(--color-label-secondary);
-  cursor: pointer;
-}
-.card-add-chip:hover {
-  border-color: var(--color-border-hover);
-  color: var(--color-label);
-}
-.card-add-chip.is-on {
-  border-color: transparent;
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
-
-.card-add-check {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  color: var(--color-label);
-  cursor: pointer;
-}
-.card-add-check input {
-  /* The platform's own box, at the size the platform draws it: a checkbox is
-     the one control here nobody gains anything from us redrawing. */
-  margin: 2px 0 0;
-  accent-color: var(--color-tint);
-}
-.card-add-check span {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.card-add-hint {
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-
-.card-add-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: flex-end;
-}
-/* Always in the document, empty or not, so an answer arriving does not push
-   the button it arrived from. */
-.card-add-status {
-  grid-column: 1 / -1;
-  min-height: var(--space-5);
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-}
-.card-add-error {
-  color: var(--color-label);
-  font-weight: var(--fw-eyebrow);
-}
-
-@media (max-width: 480px) {
-  .card-add {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* .card-add and its whole family (title/field/label/chips/check/actions/
+ * status/error) moved to Tailwind classes in CardAddDialog.tsx. */
 
 /* ── The profile (CardsProfile) ──
 
@@ -1902,28 +1075,8 @@
 
    Measured rather than chosen: 52ch is where the two paragraphs on it stop
    running the full width of a laptop pane. */
-.cards-profile {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-10);
-  max-width: 52ch;
-}
-.cards-profile-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
-  width: 100%;
-}
-.cards-profile-title {
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-card);
-  line-height: var(--lh-tight);
-  color: var(--color-label);
-}
+/* .cards-profile/-block/-title moved to Tailwind classes in
+ * CardsProfile.tsx. */
 
 /* ── The dashboard ──
    Where /cards opens. Four headline numbers, the priciest cards as a table, and
@@ -1934,423 +1087,20 @@
    legend because the heading already names what is plotted. Every label and
    value wears a text token; the colour lives in the mark alone. */
 
-.cards-dash {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
+/* .cards-dash/-kpis/-kpi/-kpi-label/-kpi-value/-block/-title/-sub moved to
+ * Tailwind classes in CardsDashboard.tsx. */
 
-.cards-kpis {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-4);
-}
-/* The site's card, at the size a number wants: .about-card brings the surface,
-   the radius and the shadow, and the tile overrides only the padding, which at
-   --card-pad would be 32px around a two-line stat. The dashboard used to invent
-   its own tile here, one hairline and one grey that appear nowhere else. */
-.cards-kpi {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-5);
-}
-/* Secondary, not tertiary. Tertiary is #737373, and these sit on the tile's own
-   --color-surface-subtle rather than on the page, which lands the pair at
-   4.27:1 against the 4.5 that 13px text has to clear. Caught by the axe run in
-   e2e/a11y.spec.ts. */
-.cards-kpi-label {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-}
-.cards-kpi-value {
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-h2);
-  line-height: var(--lh-tight);
-  color: var(--color-label);
-  /* Proportional figures, deliberately: tabular-nums gives every digit the width
-     of a zero, which reads loose at display sizes. Tabular is for columns that
-     have to line up, which is the table below rather than this. */
-}
-/* Same reason as the label above: on the tile's surface, tertiary does not
-   clear the contrast floor. */
+/* .cards-value-chart/-svg/-line/-fill/-dot/-axis moved to Tailwind classes in
+ * CollectionValueCard.tsx. */
 
-/* Each block is one of the site's cards, the same as a set on the results pane.
-   They were bare sections floating on the page, which on the new white surface
-   left the dashboard with nothing to sit on. */
-.cards-dash-block {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.cards-dash-title {
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-card);
-  color: var(--color-label);
-}
-.cards-dash-sub {
-  margin: 0 0 var(--space-3);
-  max-width: 60ch;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-/* ── Value over time ──
-   Full width of the dashboard column rather than sharing a row with anything,
-   because the x axis is time and a line needs the room to be a line. Beside
-   another block this is around 420px for twenty months, and the gap between the
-   two archived readings, which is the widest fact on the chart, collapses to
-   nothing. It is the same reason .cards-dash-table is not in the pair below. */
-.cards-value-chart {
-  margin-top: var(--space-5);
-}
+/* .cards-dash-pair/-table th,td,a/-card/-thumb/-thumb-blank/-num, and
+ * .cards-bars/-bar-row/-bar-label/-bar-track/-bar-fill/-bar-value, moved to
+ * Tailwind classes in CardsDashboard.tsx. .cards-dash-table itself stays: the
+ * shared data-table recipe (border-collapse, its own th rule) lives in
+ * components.css. */
 
-.cards-value-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  /* The rings on the first and last reading sit on the edge of the viewBox and
-     their stroke would otherwise be clipped in half. */
-  overflow: visible;
-}
-
-.cards-value-line {
-  fill: none;
-  stroke: var(--color-label);
-  stroke-width: 2px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* Palette rather than artwork: it is the page's own surface tint under the
-   line, and it has to follow the theme like every other surface here. */
-.cards-value-fill {
-  fill: var(--color-surface-subtle);
-  stroke: none;
-}
-
-/* Drawn as a ring rather than a disc, so the line reads as passing through the
-   reading rather than stopping at it. */
-.cards-value-dot {
-  fill: var(--color-bg-surface);
-  stroke: var(--color-label);
-  stroke-width: 2px;
-}
-
-.cards-value-axis {
-  display: flex;
-  justify-content: space-between;
-  margin: var(--space-2) 0 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-}
-
-/* Two distributions side by side while there is room for both. */
-.cards-dash-pair {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-8) var(--space-6);
-}
-
-/* Surface and type come from the shared data-table recipe in components.css.
-   Flush left, because this table starts at the card's own padding edge. */
-.cards-dash-table th {
-  padding: 0 var(--space-3) var(--space-2) 0;
-}
-.cards-dash-table td {
-  padding: var(--space-2) var(--space-3) var(--space-2) 0;
-}
-.cards-dash-table a {
-  color: var(--color-label);
-  text-decoration: none;
-}
-/* Same as the grid: the card name is a title, not a piece of prose with a link
-   buried in it, and it does not need a line under it to say so. */
-/* The scan beside the name, small on purpose: it is there to be recognised at a
-   glance, not to be looked at. The name is what the row is about. */
-.cards-dash-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.cards-dash-thumb {
-  flex-shrink: 0;
-  display: block;
-  width: 22px;
-  height: 30px;
-  border-radius: 3px;
-  overflow: hidden;
-  background: var(--color-bg-grouped);
-}
-.cards-dash-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.cards-dash-thumb-blank {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: var(--color-bg-grouped);
-}
-.cards-dash-num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.cards-bars {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.cards-bar-row {
-  display: grid;
-  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-}
-.cards-bar-label {
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cards-bar-track {
-  height: 10px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-subtle);
-  overflow: hidden;
-}
-.cards-bar-fill {
-  display: block;
-  height: 100%;
-  background: var(--color-tint);
-  /* Square where it leaves the baseline, rounded at the data end, so the tip
-     reads as the value and the start reads as zero. */
-  border-radius: 0 4px 4px 0;
-}
-/* The value at the tip, which is what a bar chart labels: the axis is implied by
-   the shared track, so a tick scale would be ink for something already known. */
-.cards-bar-value {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-label-tertiary);
-}
-
-/* ─── THE POKÉDEX ─── */
-
-/* Small tiles, a lot of them: a thousand and twenty-five entries is a wall
-   however it is drawn, so the job is to make one slot readable at a glance and
-   let the wall be the point. */
-.cards-dex {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: var(--space-3);
-}
-.cards-dex-slot {
-  position: relative;
-  min-width: 0;
-}
-
-/* Page through the cards of one Pokémon without leaving the dex. Held back
-   until the slot is pointed at or tabbed into: a thousand slots with two arrows
-   each, all visible at once, is a page of arrows with a dex behind it. */
-.cards-dex-step {
-  position: absolute;
-  /* Centred on the artwork, which is the part being paged, rather than on the
-     slot: the number and the name below it do not move. */
-  top: calc(var(--space-2) + 33%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: var(--glass-bg-solid);
-  color: var(--color-label-secondary);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-smooth);
-  z-index: 2;
-}
-.cards-dex-step--back {
-  left: 0;
-}
-.cards-dex-step--next {
-  right: 0;
-}
-.cards-dex-slot:hover .cards-dex-step,
-.cards-dex-slot:focus-within .cards-dex-step {
-  opacity: 1;
-}
-.cards-dex-step:hover {
-  color: var(--color-label);
-  border-color: var(--color-border-active);
-}
-/* A touch screen has no hover to reveal them with, so there they simply are. */
-@media (hover: none) {
-  .cards-dex-step {
-    opacity: 1;
-  }
-}
-.cards-dex-body {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: var(--space-2);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: none;
-  text-align: left;
-  color: inherit;
-  font: inherit;
-  position: relative;
-  --pill-radius: var(--radius-md);
-}
-/* The same row hover the rail wears, for the same reason: it is the site's. */
-button.cards-dex-body {
-  cursor: pointer;
-}
-button.cards-dex-body > * {
-  position: relative;
-  z-index: 1;
-}
-button.cards-dex-body::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: var(--radius-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-card);
-  opacity: 0;
-  transform: scale(0.98);
-  transition:
-    opacity var(--dur-fast) var(--ease-smooth),
-    transform var(--dur-fast) var(--ease-smooth);
-  pointer-events: none;
-}
-button.cards-dex-body:hover::after,
-button.cards-dex-body:focus-visible::after {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* The scan, in the shape of a card, so a filled slot is recognisable before any
-   of the words are read. */
-.cards-dex-art {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 245 / 342;
-  margin-bottom: var(--space-2);
-}
-.cards-dex-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: var(--radius-xs);
-}
-/* The Pokémon rather than a card of it: the official artwork, small, held back
-   so a filled slot still reads as the filled one at a glance. Not greyed out:
-   knowing which Pokémon is missing is the whole reason it is drawn. */
-/* 64px in a box that is about 95 by 132, so it sits as a small mark in the
-   middle of an empty slot rather than filling it like a card would. The stored
-   file stays 120px: that is the 2x asset for this, and shrinking it further
-   would save four megabytes and cost every retina screen the sharpness. */
-/* Two classes deep on purpose: `.cards-dex-art img` above is a class and a type,
-   so a single class here loses to it and the ghost quietly filled the whole
-   slot like a scan. */
-.cards-dex-art .cards-dex-ghost {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  opacity: 0.5;
-}
-.cards-dex-slot.is-empty .cards-dex-art {
-  border-radius: var(--radius-xs);
-  border: 1px dashed var(--color-border-subtle);
-}
-/* How many cards there are of it, when there is more than one. */
-.cards-dex-count {
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-pill);
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-tiny);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.cards-dex-no {
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-tiny);
-  font-variant-numeric: lining-nums tabular-nums;
-  color: var(--color-label-tertiary);
-}
-.cards-dex-name {
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-small);
-  color: var(--color-label);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* The ones with nothing in them recede, but stay legible: a Pokédex is read for
-   its gaps as much as for its hits. */
-.cards-dex-slot.is-empty .cards-dex-name {
-  color: var(--color-label-tertiary);
-}
-
-.cards-dex-empty {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  color: var(--color-label-secondary);
-}
-
-/* Same question, same box: see the note on .cards-main. */
-@container (max-width: 560px) {
-  .cards-dex {
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-    gap: var(--space-2);
-  }
-}
+/* .cards-dex and its whole family (slot/step/body/art/ghost/count/no/name/empty)
+ * moved to Tailwind classes in CardsPokedex.tsx. */
 
 /* ─── SHEETS (below 640px) ─── */
 
@@ -2358,17 +1108,8 @@ button.cards-dex-body:focus-visible::after {
    are both in the markup at every width, and this is what decides: rendering
    one of them from a measured window would mean the server picks wrong and the
    browser corrects it a frame later, in the toolbar, in front of you. */
-.only-narrow {
-  display: none;
-}
-@media (max-width: 640px) {
-  .only-wide {
-    display: none;
-  }
-  .only-narrow {
-    display: contents;
-  }
-}
+/* .only-wide and .only-narrow moved to Tailwind classes
+ * (onlyWideClassName/onlyNarrowClassName in cardsPageClasses.ts). */
 
 /* The sheet borrows the drawer Modal already animates up from the bottom on a
    phone (see the note on enterFrom in Modal). What it needs of its own is the
@@ -2378,17 +1119,10 @@ button.cards-dex-body:focus-visible::after {
    content — so without this the sheet came up as a column three quarters of the
    way across the screen with the page showing beside it, which is a drawer that
    happens to be at the bottom rather than a sheet. */
-.modal--sheet {
-  width: 100%;
-  max-width: none;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  border-bottom: none;
-  /* Opaque, and not --glass-bg-solid, which is solid only by name: it is 0.9
-     in the light theme and 0.66 in the dark one, so a sheet wearing it read as
-     the same frosted layer as the blur behind it and every row was a word over
-     whatever card art happened to be there. A list you read needs a surface. */
-  background: var(--color-bg-surface);
-}
+/* .modal--sheet's own width/border-radius/border-bottom/background moved to
+ * Tailwind classes on Sheet.tsx's `className` prop to Modal. The class name
+ * itself stays, because the two rules below target Modal.tsx's own internal
+ * markup, which Sheet.tsx can't reach with a className prop. */
 .modal--sheet .modal-scroll {
   height: auto;
   max-height: 88svh;
@@ -2401,29 +1135,12 @@ button.cards-dex-body:focus-visible::after {
   display: none;
 }
 
-.sheet {
-  display: flex;
-  flex-direction: column;
-  max-height: 88svh;
-}
-
-.sheet-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.sheet-title {
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-sub);
-  color: var(--color-label);
-}
-
+/* display/flex-direction/max-height on .sheet, all of .sheet-head and
+ * .sheet-title, and .sheet-clear moved to Tailwind classes in Sheet.tsx. The
+ * `sheet` class name itself stays: the rules below target FilterOptions.tsx's
+ * shared markup by ancestor, styling it differently depending on whether it
+ * landed in this sheet or in .filter-menu-panel's dropdown (see
+ * FilterOptions.tsx's own comment on that split). */
 .sheet .facet-back {
   display: flex;
   align-items: center;
@@ -2438,31 +1155,8 @@ button.cards-dex-body:focus-visible::after {
   cursor: pointer;
 }
 
-.sheet-clear {
-  padding: 0;
-  border: none;
-  background: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  cursor: pointer;
-}
-
-/* The one part that scrolls. Several hundred Pokémon in one facet, and the head
-   and the foot have to stay where a thumb left them. */
-.sheet-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-.sheet-body--pad {
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
+/* .sheet-body's own flex/overflow properties, and .sheet-body--pad, moved to
+ * Tailwind classes in Sheet.tsx. */
 
 /* The short facets, inline, which the sheet did not use to have.
    They came with the merge: Era is two answers, and going a level in to tick
@@ -2532,32 +1226,11 @@ button.cards-dex-body:focus-visible::after {
   color: var(--color-label);
 }
 
-.sheet-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.sheet-label {
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-}
+/* .sheet-field and .sheet-label moved to Tailwind classes in ViewOptions.tsx
+ * (the only remaining consumer — FilterSheet/FilterMenu never used them). */
 
-/* Below the scroller, so it is reachable without scrolling to the end of six
-   hundred Pokémon first, and clear of the home indicator. */
-.sheet-foot {
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--color-border);
-}
-.sheet-foot .btn {
-  flex: 1 1 0;
-  justify-content: center;
-  align-self: auto;
-}
-.sheet-apply {
-  flex: 2 1 0;
-}
+/* .sheet-foot, its .btn children's flex/justify/align, and .sheet-apply's
+ * flex-grow all moved to Tailwind classes in Sheet.tsx. */
 
 /* One row on a phone: search, View, Filter.
  *
@@ -2608,16 +1281,8 @@ button.cards-dex-body:focus-visible::after {
    same shell, same position, same outside-click — and only differs in what is
    inside: three labelled controls in a column rather than a scrolling list of
    options. */
-.view-menu-panel {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  width: 260px;
-  padding: var(--space-4);
-}
-.view-menu-panel .sheet-field {
-  gap: var(--space-2);
-}
+/* .view-menu-panel's own display/flex-direction/gap/width/padding moved to
+ * Tailwind classes on ViewMenu.tsx's panelClassName prop. */
 .view-menu-panel .cards-segmented,
 .view-menu-panel .cards-views {
   width: 100%;
@@ -2659,36 +1324,11 @@ button.cards-dex-body:focus-visible::after {
   flex: 1 1 auto;
 }
 
-/* Which facts a tile carries. Two columns, because six checkboxes in one run is
-   a panel twice as tall as the controls above it for the least important of the
-   three questions it asks. */
-.view-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-1) var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.view-field {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 28px;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label);
-  cursor: pointer;
-}
+/* .view-fields and .view-field moved to Tailwind classes in ViewOptions.tsx. */
 
-/* The set name on a tile, which is only there when it has been asked for: in
-   the flat grouping there is no heading above the card saying which set it came
-   from, and that is exactly when it is worth the line. */
-.cards-item-set {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* .cards-item-set (the set name on a tile) moved to a Tailwind `truncate`
+ * class directly in CardItem.tsx.
+ */
 
 /* The segments inside a panel, rather than in the toolbar they were sized for.
    .cards-segment carries 16px of its own padding, which in a 246px track put
@@ -2702,20 +1342,10 @@ button.cards-dex-body:focus-visible::after {
   padding: 0 var(--space-2);
 }
 
-/* Previous and next, over the scan. Pinned to its sides rather than placed
-   under it: the arrows belong to the picture, and on a phone the picture is the
-   half of the dialog a thumb can reach. */
-.card-detail-move {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
+/* position/z-index/top/flex/transform/pointer-events/left/right on
+ * .card-detail-move, and position:relative on .card-detail-scan, moved to
+ * Tailwind classes in CardDetail.tsx. The two rules below stay: they target
+ * children of the `nav` slot CardDetail.tsx doesn't own the markup of. */
 .card-detail-move > * {
   pointer-events: auto;
 }
@@ -2723,148 +1353,13 @@ button.cards-dex-body:focus-visible::after {
   opacity: 0.35;
   pointer-events: none;
 }
-.card-detail-scan {
-  position: relative;
-}
-/* Half on the picture and half off it, at the scan's own edges. They were
-   pushed out to the dialog's edges on a phone, which put them against the
-   window with a stretch of empty card between them and the thing they move —
-   and on a 240px scan centred in a full-screen dialog that is a long way. */
-.card-detail-move {
-  left: calc(-1 * var(--space-4));
-  right: calc(-1 * var(--space-4));
-}
 
-/* How many cards across. A row of numbers rather than a slider: the answer is a
-   small whole number and there are never more than eight of them, so picking
-   one directly beats dragging until the grid happens to land on it. */
-.cards-count-picker {
-  display: flex;
-  gap: var(--space-1);
-  width: 100%;
-}
-.cards-count-option {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 32px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-label-secondary);
-  cursor: pointer;
-}
-.cards-count-option.is-active {
-  border-color: transparent;
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-}
+/* .cards-count-picker and .cards-count-option moved to Tailwind classes in
+ * ViewOptions.tsx. */
 
 /* ── The set index ─────────────────────────────────────────────────────────
    The screen that replaced the pane swap. Written against the generated
    colour roles rather than the old names, so it is also the first thing here
-   that reads the tokens the iOS app will read.
-
-   Auto-fill rather than a column count: the tile has a natural width and the
-   row takes as many as fit. A fixed count needs a breakpoint per step, and
-   this grid sits inside .cards-main, which is a container — so the query it
-   would need is a container query, and none of that is necessary when the
-   browser can divide. */
-.set-index {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-10);
-  padding-bottom: var(--page-pad-bottom);
-}
-
-.set-index-era-title {
-  font-size: var(--fs-h2);
-  font-weight: 600;
-  color: var(--color-label);
-  margin: 0 0 var(--space-4);
-}
-
-.set-index-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.set-index-tile {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-surface);
-  box-shadow: var(--shadow-card);
-  text-decoration: none;
-  color: inherit;
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease;
-}
-
-/* Hover only where hovering is a thing. On a touch screen :hover sticks after
-   a tap, so the tile you last opened stays raised until something else is
-   pressed — which reads as the page having failed to let go. */
-@media (hover: hover) {
-  .set-index-tile:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-elevated);
-  }
-}
-
-.set-index-logo {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  /* Reserved before the logo lands, so a lazy image does not shunt the name
-     and the count down the moment it decodes. Same reason the card scans
-     carry an aspect-ratio. */
-  height: 44px;
-}
-
-.set-index-logo img {
-  max-height: 100%;
-  max-width: 70%;
-  object-fit: contain;
-  object-position: left center;
-}
-
-.set-index-logo-fallback {
-  font-size: var(--fs-small);
-  font-weight: 600;
-  color: var(--color-label-tertiary);
-}
-
-.set-index-name {
-  font-size: var(--fs-body);
-  font-weight: 600;
-  color: var(--color-label);
-}
-
-.set-index-count {
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.set-index-bar {
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-surface-subtle);
-  overflow: hidden;
-}
-
-.set-index-bar-fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--color-tint);
-}
+   that reads the tokens the iOS app will read. */
+/* Every .set-index* rule moved to Tailwind classes in SetIndex.tsx — no
+ * ancestor or media override touched any of them, so nothing had to stay. */

@@ -1,3 +1,5 @@
+import { cardsSegmentClassName, cardsSegmentedClassName } from "./trackClasses";
+
 /**
  * A row of choices with one of them on: the era switch and the sort order.
  *
@@ -17,13 +19,13 @@ export default function Segmented<T extends string>({
   options: readonly (readonly [T, string])[];
 }) {
   return (
-    <div className="cards-segmented" role="group" aria-label={label}>
+    <div className={cardsSegmentedClassName} role="group" aria-label={label}>
       {options.map(([key, text]) => (
         <button
           key={key}
           type="button"
           aria-pressed={value === key}
-          className={`cards-segment${value === key ? " is-active" : ""}`}
+          className={cardsSegmentClassName(value === key)}
           onClick={() => onChange(key)}
         >
           {text}

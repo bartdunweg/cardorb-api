@@ -22,12 +22,21 @@ export default function FilterChips({
   if (!filters.length) return null;
 
   return (
-    <div className="filter-chips" role="group" aria-label="Active filters">
+    <div
+      className="flex items-center flex-wrap gap-2 w-full mt-4"
+      role="group"
+      aria-label="Active filters"
+    >
       {filters.map((f) => (
         <button
           key={`${f.group}-${f.value}`}
           type="button"
-          className="filter-chips-chip"
+          className="inline-flex items-center gap-2 h-7 [padding:0_var(--space-2)_0_var(--space-3)]
+            border border-[var(--color-border-active)] rounded-pill bg-transparent
+            [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label cursor-pointer
+            transition-colors duration-[var(--dur-fast)] ease-[var(--ease-smooth)]
+            hover:bg-[var(--btn-primary-bg)] hover:border-[var(--btn-primary-bg)] hover:text-[var(--btn-primary-text)]
+            [&_svg]:flex-shrink-0 [&_svg]:opacity-60 hover:[&_svg]:opacity-100"
           onClick={f.onRemove}
           // The group is in the label but not on screen: "Rarity: Holo" reads
           // as clutter in a row of eight, and is exactly what a screen reader
@@ -38,7 +47,12 @@ export default function FilterChips({
           <X size={13} strokeWidth={1.75} aria-hidden="true" />
         </button>
       ))}
-      <button type="button" className="filter-chips-clear" onClick={onClearAll}>
+      <button
+        type="button"
+        className="px-2 border-none bg-transparent [font-family:var(--font-body)] [font-size:var(--fs-small)]
+          text-label-tertiary underline [text-underline-offset:3px] cursor-pointer hover:text-label"
+        onClick={onClearAll}
+      >
         Clear all
       </button>
     </div>

@@ -20,8 +20,25 @@ export const pageCardsClassName =
  * `.cards-rail[data-pane="rail"] + .cards-main` — remove the name and both
  * break silently. AppShell.tsx's own comment calls this out: the rail and
  * .cards-main must stay literal siblings, in that order.
+ *
+ * No `flex`/`flex-col` here on purpose, even though the base rule sets them:
+ * `display` is exactly the property the pane-swap sibling selector toggles
+ * to `none`, and an unconditional Tailwind utility for it would outrank that
+ * CSS regardless of the CSS's specificity (ADR-0012). display/flex-direction
+ * stay in cards.css; only the properties nothing ever resets are Tailwind.
  */
 export const cardsMainClassName =
-  "cards-main @container min-w-0 flex flex-col gap-5 " +
+  "cards-main @container min-w-0 gap-5 " +
   "[padding:var(--space-8)_var(--page-pad-x)_0_var(--space-6)] " +
   "[@media(max-width:1000px)]:[padding:var(--space-5)_var(--page-pad-x)_0]";
+
+/**
+ * The same three controls twice, and never both on screen: a panel where the
+ * page is visible around it (ViewMenu/FilterMenu), a sheet where it is not
+ * (ViewSheet/FilterSheet). Swapped in the stylesheet rather than by measuring
+ * the window, so the server renders one markup and the browser does not
+ * correct it after hydration — hence a display toggle rather than a
+ * conditional render, in CardsView.tsx.
+ */
+export const onlyWideClassName = "[@media(max-width:640px)]:hidden";
+export const onlyNarrowClassName = "hidden [@media(max-width:640px)]:contents";

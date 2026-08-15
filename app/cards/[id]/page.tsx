@@ -116,11 +116,11 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
   if (!card) notFound();
 
   return (
-    <section className="page-card">
+    <section className="max-w-[calc(var(--content-max)+2*var(--page-pad-x))] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
       {/* The portfolio built a Product node with the market price here, plus a
           breadcrumb. Both are search-engine markup and this app ships noindex,
           so they came out with the rest of the JSON-LD. */}
-      <Card className="card-detail">
+      <Card className="flex flex-col items-start">
         <Button href="/cards" icon={ChevronLeft} iconPosition="left" className="btn--back">
           Cards
         </Button>

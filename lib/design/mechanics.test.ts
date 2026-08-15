@@ -34,8 +34,12 @@ describe("the grid measures its own column, not the window", () => {
   const css = read("app/styles/cards.css");
 
   it("keeps container-type on .cards-main", () => {
+    // Moved from cards.css's own rule to cardsPageClasses.ts's Tailwind
+    // `@container` class (which is exactly `container-type: inline-size`)
+    // during the Tailwind migration (ADR-0012's follow-up fixes).
+    const classes = read("app/components/cardsPageClasses.ts");
     expect(
-      has(css, /\.cards-main\s*\{[^}]*container-type:\s*inline-size/),
+      has(classes, /cards-main[^"]*@container/) || has(classes, /@container[^"]*cards-main/),
       "Every card-grid breakpoint is measured against this box rather than the " +
         "viewport, because at 1000px and at 660px the grid has almost exactly " +
         "the same width and the old viewport rules gave them different tiles.",
@@ -46,8 +50,17 @@ describe("the grid measures its own column, not the window", () => {
     // They are anonymous — they resolve against .cards-main by ancestry alone.
     // Put container-type on the wrong box and these silently become
     // viewport-ish again, which is the failure that has no error message.
-    const queries = css.match(/@container\s*\(max-width:\s*560px\)/g) ?? [];
-    expect(queries.length, "the grid and the Pokédex each answer to .cards-main").toBeGreaterThanOrEqual(2);
+    // The grid's own query is still a raw CSS @container rule; the Pokédex's
+    // moved to a Tailwind @max-[560px]: variant in CardsPokedex.tsx during
+    // the Tailwind migration — both still resolve against the same
+    // .cards-main ancestor container.
+    const cssQueries = css.match(/@container\s*\(max-width:\s*560px\)/g) ?? [];
+    const pokedex = read("app/components/CardsPokedex.tsx");
+    const tailwindQueries = pokedex.match(/@max-\[560px\]:/g) ?? [];
+    expect(
+      cssQueries.length + tailwindQueries.length,
+      "the grid and the Pokédex each answer to .cards-main",
+    ).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -73,20 +86,32 @@ describe("paint containment does not slice the shadows off the scans", () => {
 });
 
 describe("the scans land in a box that was already the right shape", () => {
-  const css = read("app/styles/cards.css");
-
   it("keeps the real scan ratio", () => {
     // 245/342 is TCGdex's actual scan dimension. Fixed by ratio rather than by
     // content because the scans stream in lazily, and without a box to land in
-    // every arrival would reflow the rows below it.
-    expect(has(css, /aspect-ratio:\s*245\s*\/\s*342/), "the lazy-loading reflow guard").toBe(true);
+    // every arrival would reflow the rows below it. Every consumer moved to a
+    // Tailwind aspect-[245/342] class during the migration: the grid tile
+    // (CardItem.tsx), the detail-page scan and its missing-scan placeholder
+    // (CardDetail.tsx), and the Pokédex slot's artwork (CardsPokedex.tsx).
+    for (const path of [
+      "app/components/CardItem.tsx",
+      "app/components/CardDetail.tsx",
+      "app/components/CardsPokedex.tsx",
+    ]) {
+      expect(has(read(path), /aspect-\[245\/342\]/), `the lazy-loading reflow guard in ${path}`).toBe(
+        true,
+      );
+    }
   });
 
   it("keeps the two-value percentage radius on the placeholder", () => {
     // The corner radius of a real card is a percentage of its width, so at
     // every size in the grid the empty slot stays the same shape as the scans
     // beside it. There is no fixed radius that does this.
-    expect(has(css, /border-radius:\s*4\.5%\s*\/\s*3\.2%/), "placeholder matches a real card").toBe(
+    // Moved to a Tailwind rounded-[4.5%/3.2%] class on CardDetail.tsx's
+    // missing-scan placeholder — the last consumer of .cards-scan-missing.
+    const cardDetail = read("app/components/CardDetail.tsx");
+    expect(has(cardDetail, /rounded-\[4\.5%\/3\.2%\]/), "placeholder matches a real card").toBe(
       true,
     );
   });
@@ -116,7 +141,11 @@ describe("the things that would look like leftovers", () => {
     // would mean the server picks wrong and the browser corrects it a frame
     // later, in the toolbar, in front of you. `contents` rather than `block`
     // is what keeps the flex row intact.
-    expect(has(cards, /\.only-(narrow|wide)[^{]*\{[^}]*display:\s*contents/), "no layout flash").toBe(
+    //
+    // Moved to onlyNarrowClassName in cardsPageClasses.ts during the Tailwind
+    // migration — cards.css no longer defines .only-narrow/.only-wide at all.
+    const cardsPageClasses = read("app/components/cardsPageClasses.ts");
+    expect(has(cardsPageClasses, /onlyNarrowClassName\s*=\s*"[^"]*\bcontents\b/), "no layout flash").toBe(
       true,
     );
   });

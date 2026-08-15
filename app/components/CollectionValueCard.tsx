@@ -86,35 +86,41 @@ export default function CollectionValueCard() {
   const under = `${line} L${points.at(-1)!.x.toFixed(1)} ${H} L${points[0]!.x.toFixed(1)} ${H} Z`;
 
   return (
-    <Card className="cards-dash-block cards-value">
-      <h2 className="cards-dash-title">Value over time</h2>
+    <Card className="flex flex-col gap-2">
+      <h2 className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)] text-label">
+        Value over time
+      </h2>
       {/* The caption carries the change rather than the total, because the total
           is already the fourth tile above and repeating it here would be the
           page saying one thing twice in two sizes. "Since December 2024" is the
           honest frame: it is where the record starts, not where the collecting
           did. */}
-      <p className="cards-dash-sub">
+      <p className="[margin:0_0_var(--space-3)_0] max-w-[60ch] [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
         {grew >= 0 ? "Up" : "Down"} {euroWhole(Math.abs(grew))} since {monthYear(first.date)},
         across {last.cards.toLocaleString(LOCALE)} cards.
       </p>
 
-      <div className="cards-value-chart">
+      <div className="mt-5">
         {/* aria-hidden with the same figures written out below it, rather than a
             role="img" and a label trying to say a line in one sentence. A chart
             read aloud as "line chart trending up" is not the data; the list is.
             The same call the two bar charts on this page make. */}
         <svg
-          className="cards-value-svg"
+          className="block w-full h-auto overflow-visible"
           viewBox={`0 0 ${W} ${H}`}
           aria-hidden="true"
           focusable="false"
         >
-          <path className="cards-value-fill" d={under} />
+          <path className="fill-[var(--color-surface-subtle)] stroke-none" d={under} />
           {/* non-scaling-stroke so the line keeps its weight at whatever width
               the card ends up: the viewBox is 640 wide and the card is rarely
               that, so without it the stroke is scaled down with everything else
               and draws thin. */}
-          <path className="cards-value-line" d={line} vectorEffect="non-scaling-stroke" />
+          <path
+            className="fill-none stroke-[var(--color-label)] [stroke-width:2px] [stroke-linecap:round] [stroke-linejoin:round]"
+            d={line}
+            vectorEffect="non-scaling-stroke"
+          />
           {/* One mark per reading, and they are not decoration. Three points
               spread over twenty months drawn as a smooth line reads as a
               continuous record; the dots are what says there are three
@@ -123,7 +129,7 @@ export default function CollectionValueCard() {
           {points.map((p) => (
             <circle
               key={p.date}
-              className="cards-value-dot"
+              className="fill-[var(--color-bg-surface)] stroke-[var(--color-label)] [stroke-width:2px]"
               cx={p.x}
               cy={p.y}
               r={5}
@@ -134,7 +140,10 @@ export default function CollectionValueCard() {
         {/* Outside the SVG rather than as <text>, so the labels are real type at
             the page's own size and inherit the theme like everything else,
             instead of being scaled with the drawing. */}
-        <p className="cards-value-axis">
+        <p
+          className="flex justify-between mt-2 mb-0 [font-family:var(--font-body)]
+            [font-size:var(--fs-small)] text-label-tertiary"
+        >
           <span>{shortMonth(first.date)}</span>
           <span>{shortMonth(last.date)}</span>
         </p>

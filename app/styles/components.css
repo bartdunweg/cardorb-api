@@ -8,16 +8,16 @@
  *
  * What remains is .btn and its four modifiers, plus the "GLASS CONTROL"/
  * "CONTROL"/pill-radius groups' cards.css-family members — .cards-search,
- * .card-add-field input, .filter-menu > summary, .cards-segmented,
- * .cards-views, .cards-nav-item's hover pill, .cards-dash-table, and
- * .skeleton. All of these are either read by ~20 files that render a raw
- * `<button className="btn">` outside the Button.tsx component, or belong to
- * the cards.css family (CardsView, FilterSheet, CardAddDialog, ...), which
- * is its own much larger migration chunk. .cards-profile-field input is
- * gone from the grouped selectors below — that class no longer exists
- * anywhere (see FormField.tsx's FormInput, which now carries the same
- * recipe directly). .tabbar-pages's shadow-elevated rule is gone too —
- * tabbarClasses.ts already carries it.
+ * .filter-menu > summary, .cards-segmented, .cards-views, .cards-nav-item's
+ * hover pill, .cards-dash-table, and .skeleton. All of these are either read
+ * by ~20 files that render a raw `<button className="btn">` outside the
+ * Button.tsx component, or are cards.css-family classes still styled by
+ * ancestor/sibling context per ADR-0013/ADR-0015. .cards-profile-field input
+ * and .card-add-field input are both gone from the grouped selectors below —
+ * neither class exists in the DOM anymore (see FormField.tsx's FormInput and
+ * CardAddDialog.tsx's cardAddInputClassName, which each carry their own
+ * Tailwind copy of the recipe now). .tabbar-pages's shadow-elevated rule is
+ * gone too — tabbarClasses.ts already carries it.
  */
 
 /* Glass pill button: one shared component (Button.tsx) used everywhere, and
@@ -61,7 +61,6 @@
 .btn,
 .modal-close,
 .cards-search,
-.card-add-field input,
 .filter-menu > summary,
 .cards-segmented,
 .cards-views {
@@ -75,7 +74,6 @@
 /* ─── CONTROL ─── */
 .btn,
 .cards-search,
-.card-add-field input,
 .filter-menu > summary {
   height: var(--control-h);
   font-family: var(--font-main);
@@ -86,7 +84,6 @@
   border-radius: var(--radius-btn);
 }
 .cards-search,
-.card-add-field input,
 .filter-menu > summary {
   border-radius: var(--radius-pill);
 }
@@ -97,7 +94,6 @@
 [data-theme="dark"] .btn,
 [data-theme="dark"] .modal-close,
 [data-theme="dark"] .cards-search,
-[data-theme="dark"] .card-add-field input,
 [data-theme="dark"] .filter-menu > summary,
 [data-theme="dark"] .cards-segmented,
 [data-theme="dark"] .cards-views {
