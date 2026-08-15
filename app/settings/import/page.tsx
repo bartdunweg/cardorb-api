@@ -13,7 +13,7 @@ export default async function ImportPage() {
   if (!viewer) redirect("/login?next=/settings/import");
 
   const db = await serverClient();
-  const history = db ? await recentImports(db, 5) : [];
+  const history = db ? await recentImports(db, viewer.userId, 5) : [];
 
   return <ImportSettings history={history as never} />;
 }

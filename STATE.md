@@ -243,6 +243,54 @@ workspace.
   either. Needs a human pass: sign in, click through `/collection/card/[id]`
   with a real card, upload an avatar in Settings > Profile, and run a real
   signup once.
+
+Since then, on `main` (merged from a parallel branch, not this session's own
+work): a full security review of the platform (auth/guard logic, every
+`app/api/` route, secrets/config/dependencies via three parallel Explore
+sweeps). Overall posture held up well — constant-time token comparison, RLS
+as the real authorization layer, parameterized queries throughout, a real
+CSP/HSTS/Permissions-Policy header set, anti-enumeration on
+login/signup/password-reset, no leaked secrets in git history. Three
+concrete gaps fixed: `GET /api/v1/public/[username]/collection` had no rate
+limiter (the one public route without one, and the most expensive); `email`/
+`password` settings routes had none either, unlike shape-identical
+`session`/`signup`; and `recentImports()` relied solely on RLS with no
+`user_id` filter in the query itself, unlike every other function in that
+file. `docs/decisions/0023-security-review-rate-limit-gaps.md` and
+`docs/changelog.d/2026-08-15-security-review-rate-limit-gaps.md` record it —
+note this session also has its own, unrelated `0023` (landing page,
+`0023-landing-drops-public-collection-links.md`); the two arrived on
+parallel branches and collided the same way `0014` and `0021` already had
+before this, so the number was left doubled up rather than renumbering
+seven cross-referencing files against a moving target. Several other
+security findings were left as documented, accepted tradeoffs rather than
+fixed — see that ADR for the list (verbatim Postgres error messages to
+clients, CSP `unsafe-inline`, the legacy `CARDS_TOKEN` path, in-memory rate
+limiting, `x-forwarded-host` trust).
+
+Since then, in this session: the tabbar's mobile add button changed from an
+accent-coloured circle to the same black `--btn-primary-bg` the sidebar's
+add button and every other primary action use, on explicit instruction —
+trading away the original design's "one ink for where you are (the selected
+pill, already black), one for what you can do" distinction. Documented
+inline in `cards.css` rather than a full ADR, since it's a straightforward
+colour swap with the tradeoff spelled out in the same comment.
+
+`npm run check` is green throughout both threads.
+
+## Open
+
+- **Card detail, avatar upload, and signup still need a real signed-in
+  browser pass** (this session's work) — see above; unchanged by the
+  security-review merge.
+- The Notion-connections-table drop and the profile-avatar migration are
+  both confirmed applied to the live database (checked directly via
+  `supabase db query --linked` for the former, `supabase migration list`
+  for the latter) — nothing outstanding on the migrations front.
+- This workspace's `.env.local` now has working
+  `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`/
+  `SUPABASE_SERVICE_ROLE_KEY` — the credentials gap earlier sessions
+  recorded here is resolved.
 - `cards.css` is now 1,365 lines (from 2,927 at the start of the migration),
   holding only cross-file selector hooks (GLASS CONTROL/CONTROL recipe,
   `.sheet`/`.filter-menu-panel` ancestor styling for `FilterOptions.tsx`'s
