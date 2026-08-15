@@ -4,6 +4,31 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+The public "latest pull" endpoint is fit for the portfolio site to embed. It
+never needed an API key — a key shipped in a public site's JavaScript is not a
+secret — but it was answering with the wrong card: `latestPull()` gated on
+`excluded` and `acquiredAt` but not on `owned`, so a wishlist row counted as a
+pull. Production was announcing an Umbreon that had never been bought and that
+no catalogue has a scan for. Fixed, plus a rate limit, an `OPTIONS` handler and
+a README section with a copy-paste snippet (ADR-0021).
+
+**Open, and the one thing worth picking up next:
+`docs/trainer-gallery-row-corrections.md`.** Auditing the artwork behind that
+endpoint turned up 26 owned cards with no scan, 23 of them Trainer Gallery
+cards whose rows are simply wrong — 21 filed under a number that belongs to a
+different card, 2 under a reversed name. Both catalogues agree with each other
+and with the printed card against the collection, so this is a data fix, not a
+matching bug. The file lists every row and what it should say. Correcting them
+restores each card's price, detail page and prev/next navigation as well as its
+picture.
+
+The code half of that is done (ADR-0022): gallery numbers now reach
+pokemontcg.io, which publishes the galleries as sets of their own, and the
+number is verified against that set's card list before the scan is believed —
+so a wrong row keeps its empty slot instead of showing another Pokémon. It
+changes nothing visible until the rows are corrected, by design. Limitless is
+still never asked for a gallery number; that offset is still not guessable.
+
 Full Tailwind CSS migration completed. All 13 hand-written CSS files under
 `app/styles/` that could be migrated have been: `card-shell.css`,
 `errors.css`, `form.css`, `signin.css`, `settings.css`, `modal.css`,
