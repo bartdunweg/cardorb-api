@@ -84,11 +84,19 @@ export async function commit(
   }
 }
 
-/** The last few runs, for the screen that asks what happened. */
-export async function recentImports(db: SupabaseClient, limit = 10) {
+/**
+ * The last few runs, for the screen that asks what happened.
+ *
+ * `imports_own` RLS already restricts this to the caller's own rows; the
+ * `.eq("user_id", ...)` here is belt-and-braces, matching the rest of this
+ * file, so a dropped or misconfigured policy fails closed instead of quietly
+ * returning everyone's history.
+ */
+export async function recentImports(db: SupabaseClient, userId: string, limit = 10) {
   const { data, error } = await db
     .from("imports")
     .select("id,kind,status,rows_seen,rows_added,rows_skipped,error,started_at,finished_at")
+    .eq("user_id", userId)
     .order("started_at", { ascending: false })
     .limit(limit);
 

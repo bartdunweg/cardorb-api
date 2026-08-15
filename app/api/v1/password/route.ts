@@ -3,6 +3,15 @@ import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../lib/api/guard";
 import { currentViewer } from "../../../../lib/api/viewer";
 import { serverClient } from "../../../../lib/storage/supabase";
 import { MIN_PASSWORD } from "../../../../lib/core/account";
+import { createRateLimiter } from "../../../../lib/api/rate-limit";
+
+/** Requires a session already, so this only bounds an account hammering its own Auth calls. */
+const byAddress = createRateLimiter(15 * 60_000, 10);
+
+const addressOf = (req: Request) =>
+  req.headers.get("x-real-ip")?.trim() ||
+  req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  "unknown";
 
 /**
  * Setting a new password, for somebody who is already holding a session.
@@ -19,6 +28,7 @@ import { MIN_PASSWORD } from "../../../../lib/core/account";
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (byAddress(addressOf(req))) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
   const viewer = await currentViewer();
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
