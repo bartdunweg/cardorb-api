@@ -1,0 +1,1 @@
+- Opening a card from `/collection` now stays inside the app (sidebar and nav still visible) as a real page, instead of landing on the older standalone `/cards/[id]` page. The old address still works for existing links/bookmarks.

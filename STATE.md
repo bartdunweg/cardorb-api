@@ -202,19 +202,44 @@ brief — see ADRs 0023-0028 for the reasoning behind each. In short:
 
 `npm run check` is green throughout this pass.
 
+Since then, in this session: `.env.local` gained real
+`NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`/
+`SUPABASE_SERVICE_ROLE_KEY` (filled in outside the chat, as instructed
+above), so this workspace now has a working connection to the live "Card
+Orb" Supabase project (`fprjroupecdhosfdrqhv`) for the first time. On
+Bart's explicit go-ahead, both outstanding migrations were applied with
+`supabase link --project-ref fprjroupecdhosfdrqhv` then `supabase db
+push`: `20260815120000_drop_notion_connections.sql` (already applied
+earlier, confirmed) and `20260815130000_profile_avatar.sql` (applied this
+pass). `supabase migration list` confirms all six local migrations now
+match remote.
+
+Since then, in this session: a card opened from `/collection` now stays
+inside the `(app)` shell as a real page instead of falling through to the
+older, separate `/cards/[id]` page outside it (`docs/decisions/0029-collection-card-detail-stays-in-shell.md`).
+New route `app/(app)/collection/card/[id]/page.tsx`, near-identical to
+`/cards/[id]/page.tsx` (same `CardDetail`, same data-fetching), reached via
+a new optional `basePath` prop threaded through `CardNav.tsx` →
+`CardItem.tsx`/`CardLink` → `CardsView.tsx` → `CollectionScreen.tsx` (the
+one caller that sets it to `/collection/card`; every other caller keeps
+the `/cards` default, so `/cards/[id]` and its intercepted modal are
+unchanged for old bookmarks/links). No dialog for this route at any
+width — a plain page every time, per the explicit ask. `npm run check`
+green; not exercised signed-in with real data via a live browser in this
+workspace.
+
 ## Open
 
-- **Apply `supabase/migrations/20260815130000_profile_avatar.sql`** to the
-  live database — new this session, not applied yet, same deliberate-
-  go-ahead posture as the migration below.
-- **Apply `supabase/migrations/20260815120000_drop_notion_connections.sql`**
-  to the live database — not done yet, deliberately left for an explicit
-  go-ahead since it drops a production table.
-- This workspace's `.env.local` has `CARDS_TOKEN`/`OWNER_EMAIL` filled in but
-  still needs real `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  (and `SUPABASE_SERVICE_ROLE_KEY` for the account-deletion path) pasted in
-  by hand — not something to put in chat. Until then the app boots but the
-  collection is empty and no account can be created.
+- **Card detail route not exercised with real data**: `/collection/card/[id]`
+  was verified for its typecheck/lint/test surface and its signed-out
+  redirect (`curl`), but not clicked through signed in with a real
+  collection — worth a real pass now that this workspace has live
+  Supabase credentials.
+- The generated-username signup flow, the `/api/v1/public/[username]/latest-pull`
+  endpoint, and the profile avatar upload are all still only verified by
+  `npm run check` and code inspection, not a real browser session — this
+  workspace's newly-working credentials make that possible now and it
+  hasn't been done yet.
 
 - `cards.css` is now 1,365 lines (from 2,927 at the start of the migration),
   holding only cross-file selector hooks (GLASS CONTROL/CONTROL recipe,

@@ -19,7 +19,19 @@ import { useSwipe } from "../hooks/useSwipe";
  * The arrow keys and a swipe do the same thing. Both are registered here rather
  * than in the dialog, so a card opened as a full page answers to them too.
  */
-export default function CardNav({ prev, next }: { prev: string | null; next: string | null }) {
+export default function CardNav({
+  prev,
+  next,
+  /** Defaults to /cards, the original and only route this ever pointed at.
+   *  app/(app)/collection/card/[id]/page.tsx passes /collection/card so
+   *  prev/next stay inside the collection shell instead of jumping out to
+   *  the older, separate /cards route. */
+  basePath = "/cards",
+}: {
+  prev: string | null;
+  next: string | null;
+  basePath?: string;
+}) {
   const router = useRouter();
 
   useEffect(() => {
@@ -28,16 +40,16 @@ export default function CardNav({ prev, next }: { prev: string | null; next: str
       // field both live on pages this can be open over.
       const el = document.activeElement;
       if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return;
-      if (e.key === "ArrowLeft" && prev) router.push(`/cards/${prev}`, { scroll: false });
-      if (e.key === "ArrowRight" && next) router.push(`/cards/${next}`, { scroll: false });
+      if (e.key === "ArrowLeft" && prev) router.push(`${basePath}/${prev}`, { scroll: false });
+      if (e.key === "ArrowRight" && next) router.push(`${basePath}/${next}`, { scroll: false });
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [prev, next, router]);
+  }, [prev, next, router, basePath]);
 
   const swipe = useSwipe(
-    () => next && router.push(`/cards/${next}`, { scroll: false }),
-    () => prev && router.push(`/cards/${prev}`, { scroll: false }),
+    () => next && router.push(`${basePath}/${next}`, { scroll: false }),
+    () => prev && router.push(`${basePath}/${prev}`, { scroll: false }),
   );
 
   return (
@@ -48,7 +60,7 @@ export default function CardNav({ prev, next }: { prev: string | null; next: str
     // live one level up — see the comment in CardDetail.tsx).
     <div className="card-detail-move flex justify-between pointer-events-none" {...swipe}>
       {prev ? (
-        <Link href={`/cards/${prev}`} scroll={false} className="btn btn--icon" aria-label="Previous card">
+        <Link href={`${basePath}/${prev}`} scroll={false} className="btn btn--icon" aria-label="Previous card">
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       ) : (
@@ -57,7 +69,7 @@ export default function CardNav({ prev, next }: { prev: string | null; next: str
         </span>
       )}
       {next ? (
-        <Link href={`/cards/${next}`} scroll={false} className="btn btn--icon" aria-label="Next card">
+        <Link href={`${basePath}/${next}`} scroll={false} className="btn btn--icon" aria-label="Next card">
           <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       ) : (

@@ -30,11 +30,16 @@ const euroShown = (price: { market: number | null; nm: { mid: number } | null })
 function CardLink({
   id,
   onPick,
+  basePath = "/cards",
   children,
 }: {
   id: string | null;
   /** Set on the public link, where a card has no URL to go to. */
   onPick?: () => void;
+  /** /cards by default, the original route; CollectionScreen.tsx passes
+   *  /collection/card so a card opened from the (app) shell stays in it
+   *  instead of exiting to the older, separate /cards route. */
+  basePath?: string;
   children: React.ReactNode;
 }) {
   if (!id) return <>{children}</>;
@@ -55,7 +60,7 @@ function CardLink({
     // dialog mounts: the grid behind the modal jumped to the first row, the
     // modal locked the page there, and closing it put you somewhere else than
     // where you clicked.
-    <Link href={`/cards/${id}`} className={linkClassName} scroll={false}>
+    <Link href={`${basePath}/${id}`} className={linkClassName} scroll={false}>
       {children}
     </Link>
   );
@@ -96,6 +101,7 @@ const CardItem = memo(function CardItem({
   onPick,
   fields,
   setYear,
+  basePath,
 }: {
   card: OwnedCard;
   /** What this card's set is called for matching: keys, broken-scan sets. */
@@ -110,6 +116,8 @@ const CardItem = memo(function CardItem({
   fields: ReadonlySet<CardField>;
   /** Opens the card in place. Only on the public link; elsewhere it is a URL. */
   onPick?: (card: OwnedCard, setName: string) => void;
+  /** Forwarded to CardLink. See its own comment. */
+  basePath?: string;
   /** Whether this card still has a scan worth trying. */
   scan: boolean;
   /** Whether this card is drawn large enough for the foil. See TILT_FROM. */
@@ -254,7 +262,7 @@ const CardItem = memo(function CardItem({
           and an unmatched row has none. The rest stay exactly as they were
           rather than becoming a link to nowhere. The tags sit outside the link:
           they are what the card is, not somewhere to go. */}
-      <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined}>
+      <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined} basePath={basePath}>
         <span
           className="cards-scan block relative aspect-[245/342] mb-2
             group-data-[view=list]/item:w-11 group-data-[view=list]/item:shrink-0 group-data-[view=list]/item:mb-0
