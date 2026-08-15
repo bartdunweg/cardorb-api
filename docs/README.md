@@ -58,9 +58,25 @@ root `CLAUDE.md` for how and when to write to it.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.
-- `decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md` — rarity and
-  type stop being hand-typed/Notion-descended facts and are resolved from
-  TCGdex instead: a one-time backfill for existing rows, and a search-and-select
-  add-card flow going forward. Builds directly on the audit/worklist pattern
-  `0022` used for artwork.
+- `decisions/0032-add-card-advanced-filters-not-manual-entry.md` — **read this
+  one, not `0030` or `0031`.** The add-card dialog opens on one search bar
+  (name/number/set/type at once, via pokemontcg.io — `lib/core/ptcg-search.ts`);
+  the fallback for a hard-to-phrase search is "Advanced filters" (explicit
+  Name/Number/Set/Type fields, still a search), not manual unmatched entry —
+  a card pokemontcg.io hasn't indexed genuinely can't be added through this
+  dialog, a known, explicit tradeoff. Both `decisions/0030-add-card-live-catalogue-preview.md`
+  and `decisions/0031-add-card-single-search-bar.md` were superseded within the
+  same session, each per direct correction
+  (`docs/feedback/0005-add-card-should-be-one-search-bar.md`,
+  `docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md`): kept for the
+  record, but their manual-entry-fallback design is not what the app does now.
+- `decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md` — a second,
+  unrelated `0030`, left doubled up rather than renumbered (the same collision
+  `0014` and `0021`/`0023` already had, per `STATE.md`): why rarity and type
+  stop being hand-typed/Notion-descended facts. The existing
+  collection was backfilled from TCGdex (`scripts/backfill-rarity-types.mjs`);
+  going forward, rarity and type in `CardAddDialog.tsx` are read-only, filled
+  in from whichever match the search above (pokemontcg.io) picked, not typed —
+  the same "no manual entry" principle `0032` already established for the
+  card's identity, applied to these two fields specifically.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

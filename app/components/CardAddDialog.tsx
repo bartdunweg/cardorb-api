@@ -1,34 +1,48 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search, X } from "lucide-react";
 import Modal from "./Modal";
-import type { CardFields } from "../../lib/core/collection-row";
-import type { CardDetail } from "../../lib/core/cards";
+import { MAX, type CardFields } from "../../lib/core/collection-row";
+import type { CatalogueMatch } from "../../lib/core/ptcg-search";
 import { modalCardAddClassName } from "./cardModalClasses";
 
 /**
- * The form behind the plus: find the printing on TCGdex, then a handful of
- * facts about how it is held.
+ * The form behind the plus: one search box first, a few extra fields once a
+ * card is found.
  *
- * Name, number, rarity and type used to be typed by hand, which is how they
- * ended up carrying whatever a Notion column once said rather than what the
- * card actually is (see docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md).
- * They come from the picked TCGdex card now and are not editable here — a
- * card TCGdex has never heard of cannot be added through this dialog, which
- * is the accepted trade for not being able to type around a wrong rarity
- * again.
+ * "1 invoerveld voor alles" (docs/feedback/0005-add-card-should-be-one-search-bar.md):
+ * typing a name, a number, a set, or a type into the same box shows matching
+ * cards live, via /api/v1/catalog/search (pokemontcg.io underneath — see
+ * lib/core/ptcg-search.ts for why). Picking one fills Name, Number, Set,
+ * Rarity and Type from the catalogue; only Generation and the two toggles are
+ * still typed by hand, because nothing indexes them.
  *
- * Generation stays a text input over a datalist: it is a shelf the owner
- * built, not a fact TCGdex has an opinion on.
+ * A card the quick box can't find gets "Advanced filters" — Name, Number,
+ * Set and Type as their own fields, still searched, never a way to skip
+ * search and write an unmatched row. That used to be an "Enter it by hand"
+ * escape hatch; see docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md
+ * for why it was replaced rather than kept: a card pokemontcg.io has not
+ * indexed genuinely cannot be added through this dialog any more, a
+ * deliberate, known tradeoff (ADR-0032), not an oversight.
+ *
+ * Rarity and Type stop being editable once a match is picked (see
+ * docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md): they
+ * used to be a text input and toggle chips a person could override, which is
+ * how they ended up carrying whatever a Notion column once said rather than
+ * what the card actually is. They are shown, not asked for, sourced strictly
+ * from `selected` — the same catalogue match that filled Name/Number/Set.
  */
 
-type SetOption = { id: string; name: string };
-type SearchResult = { id: string; number: string; name: string; setName: string; image: string | null };
-
-/** What the form still asks for, once a card has been picked. */
+/** The eight columns as the form holds them. */
 type Draft = {
+  name: string;
+  number: string;
+  set: string;
+  rarity: string;
   gen: string;
+  types: string[];
   collection: boolean;
   excluded: boolean;
 };
@@ -47,10 +61,30 @@ const cardAddInputClassName =
   "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label " +
   "[font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] " +
   "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
-  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
-  "disabled:opacity-60 disabled:cursor-not-allowed";
+  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
 
-const EMPTY: Draft = { gen: "", collection: true, excluded: false };
+/** The one big field this dialog opens on — taller and louder than the rest. */
+const cardAddSearchClassName =
+  "h-14 w-full pl-11 pr-11 border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-2xl " +
+  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label outline-none " +
+  "[font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-button)] " +
+  "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
+  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
+  "[&::-webkit-search-cancel-button]:hidden";
+
+const EMPTY: Draft = {
+  name: "",
+  number: "",
+  set: "",
+  rarity: "",
+  gen: "",
+  types: [],
+  collection: true,
+  excluded: false,
+};
+
+/** How long to let someone keep typing before a search is worth a request. */
+const SEARCH_DEBOUNCE_MS = 300;
 
 export default function CardAddDialog({
   open,
@@ -65,157 +99,171 @@ export default function CardAddDialog({
   const router = useRouter();
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [fields, setFields] = useState<CardFields | null>(null);
-  const [sets, setSets] = useState<SetOption[] | null>(null);
-  const [setQuery, setSetQuery] = useState("");
-  const [cardQuery, setCardQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[] | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [picked, setPicked] = useState<CardDetail | null>(null);
-  const [pickBusy, setPickBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const searchToken = useRef(0);
-  const cardQueryRef = useRef<HTMLInputElement>(null);
-  const focusCardQueryNext = useRef(false);
+
+  const [query, setQuery] = useState("");
+  const [matches, setMatches] = useState<CatalogueMatch[]>([]);
+  const [searching, setSearching] = useState(false);
+  /** The match a click confirmed, replacing the search area with a summary. */
+  const [selected, setSelected] = useState<CatalogueMatch | null>(null);
+  /** Quick is the one box; advanced is Name/Number/Set/Type as their own
+   *  fields — a more precise search, never a way to skip search. */
+  const [mode, setMode] = useState<"quick" | "advanced">("quick");
+  const [filters, setFilters] = useState({ name: "", number: "", set: "", type: "" });
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const advancedNameRef = useRef<HTMLInputElement>(null);
   const changeButtonRef = useRef<HTMLButtonElement>(null);
 
   const set = useCallback(<K extends keyof Draft>(field: K, value: Draft[K]) => {
     setDraft((d) => ({ ...d, [field]: value }));
   }, []);
-
-  const resetPick = useCallback(() => {
-    setPicked(null);
-    setResults(null);
-    setCardQuery("");
+  const setFilter = useCallback((field: keyof typeof filters, value: string) => {
+    setFilters((f) => ({ ...f, [field]: value }));
   }, []);
 
-  // "Change" removes the picked-card summary and brings the search input
-  // back — focus would otherwise be left on a button that just unmounted.
-  // A ref rather than state: nothing needs to re-render off this, only the
-  // effect below, once the input it targets exists again.
-  const changePick = useCallback(() => {
-    resetPick();
-    focusCardQueryNext.current = true;
-  }, [resetPick]);
-
-  // The result <button> a pick came from unmounts the moment the summary
-  // below replaces the results list, so without this the browser drops focus
-  // to <body> — disorienting for anyone not using a mouse. Same fix, both
-  // directions: land on the one interactive thing the newly-shown block adds.
+  // Every state change in this dialog swaps out whatever DOM node held focus
+  // — a result button, "Change", the search box — for a different one.
+  // Without this, React drops focus to <body> on each transition, silently
+  // ejecting keyboard and screen-reader users from the flow.
   useEffect(() => {
-    if (focusCardQueryNext.current && cardQueryRef.current) {
-      cardQueryRef.current.focus();
-      focusCardQueryNext.current = false;
-    } else if (picked) {
-      changeButtonRef.current?.focus();
-    }
-  }, [picked]);
+    if (open && !selected && mode === "quick") searchInputRef.current?.focus();
+  }, [open, selected, mode]);
+  useEffect(() => {
+    if (open && !selected && mode === "advanced") advancedNameRef.current?.focus();
+  }, [open, selected, mode]);
+  useEffect(() => {
+    if (open && selected) changeButtonRef.current?.focus();
+  }, [open, selected]);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     // The portfolio served both of these off one /api/cards; here the read and
-    // the write are separate endpoints. /v1/fields still supplies Generation's
-    // suggestions; /v1/catalog/sets is TCGdex's own index, for the set picker.
+    // the write are separate endpoints, so the suggestions come from /v1/fields.
     //
     // No x-cards-key header any more: the session cookie is httpOnly, so this
     // page cannot read the key to send it, and does not have to. Same-origin
     // fetch sends the cookie on its own, and the guard accepts either.
-    Promise.all([fetch("/api/v1/fields"), fetch("/api/v1/catalog/sets")])
-      .then(async ([fieldsRes, setsRes]) => {
+    fetch("/api/v1/fields")
+      .then(async (res) => {
         if (cancelled) return;
-        if (fieldsRes.status === 401 || setsRes.status === 401) {
+        if (res.status === 401) {
           onUnauthorised();
           return;
         }
-        if (fieldsRes.ok) setFields((await fieldsRes.json()) as CardFields);
-        if (setsRes.ok) setSets(((await setsRes.json()) as { sets: SetOption[] }).sets);
+        if (!res.ok) return;
+        setFields((await res.json()) as CardFields);
       })
+      // A dialog with no suggestions is a dialog you can still type a card
+      // into, so a failure here is not worth a message. Every field is free
+      // text; only the convenience is missing.
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, [open, onUnauthorised]);
 
-  // A set is "chosen" once what's typed matches a TCGdex set name exactly,
-  // case aside — searching needs the set TCGdex actually resolves it to, not
-  // whatever case the user happened to type. Derived rather than tracked in
-  // its own state, so there is nothing to keep in sync with setQuery.
-  const chosenSet = useMemo(
-    () => sets?.find((s) => s.name.toLowerCase() === setQuery.trim().toLowerCase()) ?? null,
-    [sets, setQuery],
-  );
+  useEffect(() => {
+    if (!open) return;
+    const term = query.trim();
+    const hasFilters = Object.values(filters).some((v) => v.trim());
+    // No search once a card is picked (nothing left to find). Both branches,
+    // and the "too short"/"no filters" one below, go through the same timer
+    // as the real request so every setState here happens from inside it
+    // rather than synchronously from the effect body.
+    const active = !selected && (mode === "quick" ? term.length >= 2 : hasFilters);
+    let cancelled = false;
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => {
+        if (!active) {
+          setMatches([]);
+          setSearching(false);
+          return;
+        }
+        setSearching(true);
+        const params = new URLSearchParams();
+        if (mode === "quick") {
+          params.set("query", term);
+        } else {
+          for (const [key, value] of Object.entries(filters)) {
+            if (value.trim()) params.set(key, value.trim());
+          }
+        }
+        fetch(`/api/v1/catalog/search?${params}`, { signal: controller.signal })
+          .then(async (res) => {
+            if (cancelled) return;
+            if (res.status === 401) {
+              onUnauthorised();
+              return;
+            }
+            if (!res.ok) {
+              setMatches([]);
+              return;
+            }
+            const body = (await res.json()) as { cards: CatalogueMatch[] };
+            setMatches(body.cards ?? []);
+          })
+          // A live search is convenience, not a requirement to add a card —
+          // the same reasoning the /api/v1/fields fetch above is built on.
+          .catch(() => {
+            if (!cancelled) setMatches([]);
+          })
+          .finally(() => {
+            if (!cancelled) setSearching(false);
+          });
+      },
+      active ? SEARCH_DEBOUNCE_MS : 0,
+    );
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [open, query, filters, mode, selected, onUnauthorised]);
 
-  // Clears the search below whenever the resolved set changes underneath it.
-  // Adjusted here, during render, rather than in an effect — see
-  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes.
-  const [trackedSetId, setTrackedSetId] = useState<string | null>(null);
-  const nextSetId = chosenSet?.id ?? null;
-  if (trackedSetId !== nextSetId) {
-    setTrackedSetId(nextSetId);
-    if (picked || results || cardQuery) {
-      setPicked(null);
-      setResults(null);
-      setCardQuery("");
-    }
+  function selectMatch(match: CatalogueMatch) {
+    // Rarity and types mirror the match exactly, not a fallback onto whatever
+    // a previous pick left in `d` — they are read-only now (see the top-of-
+    // file comment), so what gets submitted has to be what the summary below
+    // actually shows, not a stale leftover from an earlier card this session.
+    setDraft((d) => ({
+      ...d,
+      name: match.name,
+      number: match.number,
+      set: match.setName,
+      rarity: match.rarity ?? "",
+      types: match.types.slice(0, MAX.types),
+    }));
+    setSelected(match);
+    setMatches([]);
   }
 
-  // Debounced search inside the chosen set. An empty query lists the set, so
-  // opening a set with a handful of cards is one less thing to type.
-  useEffect(() => {
-    if (!chosenSet) return;
-    const token = ++searchToken.current;
-    const timer = setTimeout(() => {
-      setSearching(true);
-      fetch(`/api/v1/catalog/search?set=${encodeURIComponent(chosenSet.name)}&query=${encodeURIComponent(cardQuery)}`)
-        .then(async (res) => {
-          if (searchToken.current !== token) return;
-          if (res.status === 401) {
-            onUnauthorised();
-            return;
-          }
-          if (!res.ok) {
-            setResults([]);
-            return;
-          }
-          setResults(((await res.json()) as { cards: SearchResult[] }).cards);
-        })
-        .catch(() => {
-          if (searchToken.current === token) setResults([]);
-        })
-        .finally(() => {
-          if (searchToken.current === token) setSearching(false);
-        });
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [chosenSet, cardQuery, onUnauthorised]);
+  function clearSelection() {
+    setSelected(null);
+    setQuery("");
+    setFilters({ name: "", number: "", set: "", type: "" });
+    setDraft((d) => ({ ...d, name: "", number: "", set: "", rarity: "", types: [] }));
+  }
 
-  async function pick(result: SearchResult) {
-    setPickBusy(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/catalog/cards/${encodeURIComponent(result.id)}`);
-      if (res.status === 401) {
-        onUnauthorised();
-        return;
-      }
-      if (!res.ok) {
-        setError("Could not read that card from TCGdex.");
-        return;
-      }
-      const { card } = (await res.json()) as { card: CardDetail };
-      setPicked(card);
-    } catch {
-      setError("No answer from TCGdex. Try again.");
-    } finally {
-      setPickBusy(false);
-    }
+  function enterAdvanced() {
+    setMode("advanced");
+    setMatches([]);
+    setFilters((f) => ({ ...f, name: f.name || query.trim() }));
+  }
+
+  function backToQuick() {
+    setMode("quick");
+    setMatches([]);
+    setQuery((q) => q || filters.name.trim());
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy || !picked || !chosenSet) return;
+    if (busy) return;
     setBusy(true);
     setError(null);
     setAdded(null);
@@ -223,16 +271,7 @@ export default function CardAddDialog({
       const res = await fetch("/api/v1/cards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: picked.name,
-          number: picked.localId ?? "",
-          set: chosenSet.name,
-          rarity: picked.rarity ?? "",
-          types: picked.types,
-          gen: draft.gen,
-          collection: draft.collection,
-          excluded: draft.excluded,
-        }),
+        body: JSON.stringify(draft),
       });
       if (res.status === 401) {
         onUnauthorised();
@@ -243,13 +282,15 @@ export default function CardAddDialog({
         setError(body.error ?? "The card was not added.");
         return;
       }
-      setAdded(picked.name);
-      // The set survives, Gen survives, the pick does not. Cards arrive by
-      // the pack: staying inside the same set is the form fighting the way
-      // it is used, but the exact printing is not something the next card in
-      // the pack shares.
-      resetPick();
-      setDraft((d) => ({ ...d, collection: EMPTY.collection, excluded: EMPTY.excluded }));
+      setAdded(draft.name);
+      setSelected(null);
+      setQuery("");
+      setFilters({ name: "", number: "", set: "", type: "" });
+      setMatches([]);
+      // No "current set" to keep across submissions any more: every card
+      // comes from picking a fresh match, which brings its own Set. Only Gen
+      // (never catalogue-derived) is worth carrying to the next one.
+      setDraft((d) => ({ ...EMPTY, gen: d.gen }));
       // The row exists; the page in front of it is still the one from before.
       // The route has already dropped the caches behind it, so this is what
       // asks for the new render.
@@ -270,203 +311,329 @@ export default function CardAddDialog({
       </datalist>
     ) : null;
 
+  const ready = selected !== null;
+  const hasFilters = Object.values(filters).some((v) => v.trim());
+
   return (
     <Modal open={open} onClose={onClose} label="Add a card" className={modalCardAddClassName}>
-      <form
-        className="card-add grid grid-cols-2 gap-4
-          [@media(max-width:480px)]:grid-cols-1"
-        onSubmit={submit}
-      >
+      <form className="card-add flex flex-col gap-4" onSubmit={submit}>
         <h2
-          className="col-span-full m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
+          className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
             [font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-label"
         >
           Add a card
         </h2>
 
-        <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Set</span>
-          <input
-            className={cardAddInputClassName}
-            value={setQuery}
-            onChange={(e) => setSetQuery(e.target.value)}
-            list="card-add-sets"
-            autoComplete="off"
-            placeholder="Obsidian Flames"
-            disabled={!!picked}
-          />
-        </label>
-        {suggest(
-          "card-add-sets",
-          sets?.map((s) => s.name),
-        )}
-        {/* The only feedback a set name that doesn't (yet) match one of
-            TCGdex's gets — otherwise typing stops and nothing visibly
-            happens, which reads as broken rather than as "keep typing". */}
-        {sets && setQuery.trim() && !chosenSet && !picked ? (
-          <p className="col-span-full m-0 [font-size:var(--fs-small)] text-label-tertiary">
-            Pick a set from the list to search its cards.
-          </p>
-        ) : null}
+        {!ready && (
+          <>
+            {mode === "quick" ? (
+              <div className="relative">
+                <Search
+                  size={18}
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-label-tertiary"
+                />
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  className={cardAddSearchClassName}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  autoComplete="off"
+                  placeholder="Charizard, 006, 151, or Fire…"
+                  aria-label="Search for a card by name, number, set or type"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    aria-label="Clear the search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center
+                      w-7 h-7 rounded-full text-label-tertiary hover:text-label cursor-pointer"
+                  >
+                    <X size={16} strokeWidth={1.75} />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 [@media(max-width:480px)]:grid-cols-1">
+                <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Name</span>
+                  <input
+                    ref={advancedNameRef}
+                    className={cardAddInputClassName}
+                    value={filters.name}
+                    onChange={(e) => setFilter("name", e.target.value)}
+                    autoComplete="off"
+                    placeholder="Charizard"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Number</span>
+                  <input
+                    className={cardAddInputClassName}
+                    value={filters.number}
+                    onChange={(e) => setFilter("number", e.target.value)}
+                    autoComplete="off"
+                    placeholder="006"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Set</span>
+                  <input
+                    className={cardAddInputClassName}
+                    value={filters.set}
+                    onChange={(e) => setFilter("set", e.target.value)}
+                    list="card-add-sets"
+                    autoComplete="off"
+                    placeholder="151"
+                  />
+                </label>
+                {suggest("card-add-sets", fields?.sets)}
+                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+                  <span className={cardAddLabelClassName}>Type</span>
+                  <input
+                    className={cardAddInputClassName}
+                    value={filters.type}
+                    onChange={(e) => setFilter("type", e.target.value)}
+                    list="card-add-filter-types"
+                    autoComplete="off"
+                    placeholder="Fire"
+                  />
+                </label>
+                {suggest("card-add-filter-types", fields?.types)}
+              </div>
+            )}
 
-        {chosenSet && !picked ? (
-          <div className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0">
-            <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-              <span className={cardAddLabelClassName}>Find the card</span>
-              <input
-                ref={cardQueryRef}
-                className={cardAddInputClassName}
-                value={cardQuery}
-                onChange={(e) => setCardQuery(e.target.value)}
-                autoComplete="off"
-                placeholder="Charizard, or a number"
-              />
-            </label>
-            {/* The list below can be read visually as it changes; a screen
-                reader only hears this line, so it is the one place the
-                result count (not just the empty/searching edge cases) is
-                actually announced. */}
-            <p className="sr-only" role="status">
-              {searching
+            {/* Always mounted, text swapped rather than the node appearing
+                and disappearing: some screen readers miss a role="status"
+                region that arrives and changes content in the same tick,
+                and "no matches" needs announcing exactly as much as
+                "searching" does. */}
+            <p className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-label-tertiary" role="status">
+              {searching && matches.length === 0
                 ? "Searching…"
-                : results?.length
-                  ? `${results.length} card${results.length === 1 ? "" : "s"} found.`
-                  : results
-                    ? "No cards found in this set."
-                    : ""}
+                : !searching &&
+                    matches.length === 0 &&
+                    (mode === "quick" ? query.trim().length >= 2 : hasFilters)
+                  ? mode === "quick"
+                    ? `No matches for "${query.trim()}".`
+                    : "No matches for these filters."
+                  : null}
             </p>
-            <ul className="flex flex-col gap-1 max-h-[240px] overflow-y-auto m-0 p-0 list-none">
-              {results?.length ? (
-                results.map((r) => (
-                  <li key={r.id}>
-                    <button
-                      type="button"
-                      className="w-full flex items-center gap-3 p-2 rounded-md border border-transparent
-                        bg-transparent text-left cursor-pointer hover:border-[var(--color-border)]
-                        hover:bg-[var(--glass-bg-solid)] disabled:cursor-wait disabled:opacity-60"
-                      onClick={() => pick(r)}
-                      disabled={pickBusy}
-                    >
-                      {r.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- a search result thumbnail, not a page image worth Next's pipeline
-                        <img
-                          src={r.image}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="w-8 h-11 object-contain shrink-0"
-                        />
-                      ) : (
-                        <span className="w-8 h-11 shrink-0" />
-                      )}
-                      <span className="flex flex-col min-w-0">
-                        <span className="text-label truncate">{r.name}</span>
-                        <span className="text-label-tertiary [font-size:var(--fs-small)]">#{r.number}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))
-              ) : (
-                <li aria-hidden="true" className="text-label-tertiary [font-size:var(--fs-small)] p-2">
-                  {searching ? "Searching…" : "No cards found in this set."}
-                </li>
-              )}
-            </ul>
-          </div>
-        ) : null}
 
-        {picked ? (
-          <div
-            className="col-span-full flex items-center gap-3 p-3 rounded-md border border-[var(--glass-border)]
-              bg-[var(--glass-bg-solid)]"
-          >
-            {picked.image ? (
-              // eslint-disable-next-line @next/next/no-img-element -- a small confirmation thumbnail
-              <img src={picked.image} alt="" className="w-10 h-14 object-contain shrink-0" />
+            {matches.length > 0 && (
+              <div
+                className="grid grid-cols-3 gap-3 [@media(min-width:480px)]:grid-cols-4"
+                role="group"
+                aria-label="Cards matching your search"
+              >
+                {matches.map((match) => (
+                  <button
+                    key={match.id}
+                    type="button"
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg border border-transparent
+                      text-center cursor-pointer hover:border-[var(--color-border)]"
+                    // The image alt is decorative context, not the whole
+                    // story: a card with no scan renders no img at all, so
+                    // the button needs its own name rather than depending on
+                    // optional alt text.
+                    aria-label={`${match.name}, ${match.setName}, number ${match.number}`}
+                    onClick={() => selectMatch(match)}
+                  >
+                    {match.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        className="w-full aspect-[245/342] object-contain
+                          [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.15))]"
+                        src={match.image}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        // Same low-then-high retry CardItem.tsx uses for the
+                        // main grid, at thumbnail scale.
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (img.dataset.retried || !match.imageHigh) return;
+                          img.dataset.retried = "1";
+                          img.src = match.imageHigh;
+                        }}
+                      />
+                    ) : null}
+                    <span
+                      className="[font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-label
+                        line-clamp-1 w-full"
+                    >
+                      {match.name}
+                    </span>
+                    <span className="[font-size:var(--fs-tiny)] text-label-tertiary tabular-nums truncate w-full">
+                      {match.setName} · #{match.number}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="m-0 [font-size:var(--fs-small)] text-label-tertiary">
+              {mode === "quick" ? (
+                <>
+                  Looking for something specific?{" "}
+                  <button
+                    type="button"
+                    onClick={enterAdvanced}
+                    className="underline cursor-pointer text-label-secondary hover:text-label"
+                  >
+                    Advanced filters
+                  </button>
+                  .
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={backToQuick}
+                  className="underline cursor-pointer text-label-secondary hover:text-label"
+                >
+                  Back to quick search
+                </button>
+              )}
+            </p>
+          </>
+        )}
+
+        {selected && (
+          <div className="flex items-center gap-3">
+            {selected.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="w-16 aspect-[245/342] object-contain shrink-0
+                  [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.15))]"
+                src={selected.image}
+                alt=""
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.dataset.retried || !selected.imageHigh) return;
+                  img.dataset.retried = "1";
+                  img.src = selected.imageHigh;
+                }}
+              />
             ) : null}
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-label">{picked.name}</span>
-              <span className="text-label-tertiary [font-size:var(--fs-small)]">
-                {[picked.localId && `#${picked.localId}`, chosenSet?.name, picked.rarity, picked.types.join(", ")]
-                  .filter(Boolean)
-                  .join(" · ")}
+            <div className="flex flex-col gap-[2px] min-w-0 flex-1">
+              <span
+                className="[font-family:var(--font-main)] [font-weight:var(--fw-title)]
+                  [font-size:var(--fs-body-s)] text-label truncate"
+              >
+                {selected.name}
+              </span>
+              <span className="[font-size:var(--fs-small)] text-label-tertiary truncate">
+                {selected.setName} · #{selected.number}
               </span>
             </div>
-            <button ref={changeButtonRef} type="button" className="btn" onClick={changePick}>
+            <button
+              ref={changeButtonRef}
+              type="button"
+              className="btn shrink-0"
+              onClick={clearSelection}
+            >
               Change
             </button>
           </div>
-        ) : null}
+        )}
 
-        <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-          <span className={cardAddLabelClassName}>Generation</span>
-          <input
-            className={cardAddInputClassName}
-            value={draft.gen}
-            onChange={(e) => set("gen", e.target.value)}
-            list="card-add-gens"
-            autoComplete="off"
-            placeholder="Scarlet &amp; Violet"
-          />
-        </label>
-        {suggest("card-add-gens", fields?.gens)}
+        {ready && (
+          <div className="grid grid-cols-2 gap-4 [@media(max-width:480px)]:grid-cols-1">
+            {/* Shown, not asked for — see the top-of-file comment. Both come
+                straight off `selected`, the same match Name/Number/Set did,
+                so there is nothing here to type around any more. */}
+            <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
+              <span className={cardAddLabelClassName}>Rarity</span>
+              <p className="m-0 [font-size:var(--fs-control-label)] text-label">
+                {selected?.rarity ?? "Unknown"}
+              </p>
+            </div>
 
-        <label
-          className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-            [font-size:var(--fs-body-s)] text-label cursor-pointer"
-        >
-          <input
-            className="mt-[2px] [accent-color:var(--color-tint)]"
-            type="checkbox"
-            checked={draft.collection}
-            onChange={(e) => set("collection", e.target.checked)}
-          />
-          <span className="flex flex-col gap-[2px]">
-            In the binder
-            <span className="[font-size:var(--fs-small)] text-label-tertiary">
-              Off means it is wanted rather than held.
-            </span>
-          </span>
-        </label>
+            <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
+              <span className={cardAddLabelClassName}>Type</span>
+              <p className="m-0 [font-size:var(--fs-control-label)] text-label">
+                {selected?.types.length ? selected.types.join(", ") : "Unknown"}
+              </p>
+            </div>
 
-        <label
-          className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-            [font-size:var(--fs-body-s)] text-label cursor-pointer"
-        >
-          <input
-            className="mt-[2px] [accent-color:var(--color-tint)]"
-            type="checkbox"
-            checked={draft.excluded}
-            onChange={(e) => set("excluded", e.target.checked)}
-          />
-          <span className="flex flex-col gap-[2px]">
-            Excluded
-            <span className="[font-size:var(--fs-small)] text-label-tertiary">
-              Keeps it out of the latest pull on the about page.
-            </span>
-          </span>
-        </label>
+            <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+              <span className={cardAddLabelClassName}>Generation</span>
+              <input
+                className={cardAddInputClassName}
+                value={draft.gen}
+                onChange={(e) => set("gen", e.target.value)}
+                list="card-add-gens"
+                autoComplete="off"
+                placeholder="Scarlet &amp; Violet"
+              />
+            </label>
+            {suggest("card-add-gens", fields?.gens)}
 
-        <div className="col-span-full flex justify-end">
-          <button type="submit" className="btn btn--primary" disabled={busy || !picked}>
-            {busy ? "Adding" : "Add to the collection"}
-          </button>
-        </div>
+            <label
+              className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
+                [font-size:var(--fs-body-s)] text-label cursor-pointer"
+            >
+              <input
+                className="mt-[2px] [accent-color:var(--color-tint)]"
+                type="checkbox"
+                checked={draft.collection}
+                onChange={(e) => set("collection", e.target.checked)}
+              />
+              <span className="flex flex-col gap-[2px]">
+                In the binder
+                <span className="[font-size:var(--fs-small)] text-label-tertiary">
+                  Off means it is wanted rather than held.
+                </span>
+              </span>
+            </label>
 
-        {/* Both live in the same polite region, so the outcome of a submit is
-            announced whichever way it went, and neither pushes the form around
-            when it arrives. */}
-        <p
-          className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
-            [font-size:var(--fs-small)] text-label-secondary"
-          role="status"
-        >
-          {error ? (
-            <span className="text-label [font-weight:var(--fw-eyebrow)]">{error}</span>
-          ) : added ? (
-            <span>{added} added. The page catches up in a moment.</span>
-          ) : null}
-        </p>
+            <label
+              className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
+                [font-size:var(--fs-body-s)] text-label cursor-pointer"
+            >
+              <input
+                className="mt-[2px] [accent-color:var(--color-tint)]"
+                type="checkbox"
+                checked={draft.excluded}
+                onChange={(e) => set("excluded", e.target.checked)}
+              />
+              <span className="flex flex-col gap-[2px]">
+                Excluded
+                <span className="[font-size:var(--fs-small)] text-label-tertiary">
+                  Keeps it out of the latest pull on the about page.
+                </span>
+              </span>
+            </label>
+
+            <div className="col-span-full flex justify-end">
+              <button
+                type="submit"
+                className="btn btn--primary"
+                disabled={busy || !draft.name.trim() || !draft.set.trim()}
+              >
+                {busy ? "Adding" : "Add to the collection"}
+              </button>
+            </div>
+
+            {/* Both live in the same polite region, so the outcome of a
+                submit is announced whichever way it went, and neither pushes
+                the form around when it arrives. */}
+            <p
+              className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
+                [font-size:var(--fs-small)] text-label-secondary"
+              role="status"
+            >
+              {error ? (
+                <span className="text-label [font-weight:var(--fw-eyebrow)]">{error}</span>
+              ) : added ? (
+                <span>{added} added. The page catches up in a moment.</span>
+              ) : null}
+            </p>
+          </div>
+        )}
       </form>
     </Modal>
   );

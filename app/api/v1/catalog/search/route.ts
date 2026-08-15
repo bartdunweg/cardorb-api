@@ -1,28 +1,27 @@
 import { NextResponse } from "next/server";
-import { setCatalogue } from "../../../../../lib/core/catalogue";
-import { localise } from "../../../../../lib/core/util";
+import { searchCards } from "../../../../../lib/core/ptcg-search";
 import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
 
 /**
- * Finding a card to add, by name, inside one set.
+ * Finding a card to add, by anything: name, number, set, or type, in one box
+ * — or, precisely, by any combination of those four as separate filters.
  *
- * Scoped to a set on purpose, not a smaller version of a bigger feature still
- * to come. Nothing in this codebase can go from a typed name to candidate
- * cards across every set without fetching every set from TCGdex to find out —
- * setCatalogue() resolves one named set at a time, and that is the expensive
- * half this whole file (see catalogue.ts's own comment) exists to cache. A
- * global search would mean paying that cost, uncached, on every keystroke,
- * for a set of results no set-scoped search already gives the add-card form.
- * See docs/decisions/0006-per-variant-inventory-fields.md.
+ * Used to be scoped to one set at a time (see git history / ADR-0030), on the
+ * reasoning that a global search meant fetching every TCGdex set uncached per
+ * keystroke. That reasoning was sound and the UX it produced was wrong —
+ * "als je op plus klikt... 1 invoerveld voor alles" (see
+ * docs/feedback/0005-add-card-should-be-one-search-bar.md) — so this asks
+ * pokemontcg.io instead, which already indexes every card across every set
+ * behind one query. See lib/core/ptcg-search.ts for the query shape and why
+ * it lives apart from ptcg.ts's narrower artwork-fallback job.
  *
- * The image/imageHigh construction below is the same one buildCollection()
- * uses for a matched row (lib/core/cards.ts) — a card found here and a card
- * already in the collection resolve to the identical URL, because they are
- * the identical printing.
+ * `name`/`number`/`set`/`type` are a second, separate mode from `query`
+ * (advanced filters rather than the quick search box) — see
+ * docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md for why the
+ * alternative to the quick box is a more precise search rather than a way to
+ * skip search and add an unmatched row.
  */
 export const dynamic = "force-dynamic";
-
-const MAX_RESULTS = 60;
 
 export async function GET(req: Request) {
   const who = await authorise(req);
@@ -31,45 +30,27 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  const set = url.searchParams.get("set")?.trim() ?? "";
-  const query = url.searchParams.get("query")?.trim().toLowerCase() ?? "";
+  const filters = {
+    name: url.searchParams.get("name")?.trim() ?? "",
+    number: url.searchParams.get("number")?.trim() ?? "",
+    set: url.searchParams.get("set")?.trim() ?? "",
+    type: url.searchParams.get("type")?.trim() ?? "",
+  };
+  const usingFilters = Object.values(filters).some(Boolean);
 
-  if (!set) {
+  if (usingFilters) {
+    const cards = await searchCards(filters);
+    return NextResponse.json({ cards }, { headers: readHeaders(req) });
+  }
+
+  const query = (url.searchParams.get("query") ?? "").trim();
+  if (query.length < 2) {
     return NextResponse.json(
-      { error: "Search needs a set to look in." },
+      { error: "Type at least two characters to search." },
       { status: 400, headers: readHeaders(req) },
     );
   }
 
-  const cat = await setCatalogue(set);
-
-  // byNumber holds every form of a localId ("77", "077", "77a") pointing at
-  // the same card, so this dedupes on id before it counts toward the limit —
-  // otherwise one popular card in a small set could be the whole page.
-  const seen = new Set<string>();
-  const cards = Object.values(cat.byNumber)
-    .filter((c) => {
-      if (seen.has(c.id)) return false;
-      if (query && !c.name.toLowerCase().includes(query) && !c.localId.toLowerCase().includes(query)) {
-        return false;
-      }
-      seen.add(c.id);
-      return true;
-    })
-    .slice(0, MAX_RESULTS)
-    .map((c) => {
-      const tcgBase = !cat.setHasScans
-        ? null
-        : (c.image ?? (c.localId && cat.assetBase ? `${cat.assetBase}/${c.localId}` : null));
-      return {
-        id: c.id,
-        number: c.localId,
-        name: c.name,
-        setName: set,
-        image: tcgBase ? localise(`${tcgBase}/low.webp`) : null,
-        imageHigh: tcgBase ? localise(`${tcgBase}/high.webp`) : null,
-      };
-    });
-
+  const cards = await searchCards(query);
   return NextResponse.json({ cards }, { headers: readHeaders(req) });
 }

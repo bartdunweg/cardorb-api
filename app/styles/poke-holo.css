@@ -243,12 +243,17 @@
    or hyper rare kept that tier; the "578 rows recorded as some flavour of holo"
    this comment used to cite is the fact this migration traded away.
 
-   Matched with substrings rather than an exhaustive list, because TCGdex's own
-   vocabulary has one string per era for "this is holographic" — Rare Holo,
-   Rare Holo EX/GX/V/VMAX/VSTAR, Reverse Holo, and older ones this collection
-   does not happen to hold yet — and a card added tomorrow from a set not in
-   the binder today should still foil correctly rather than silently falling
-   through to the flattest tier for want of an exact-string entry here.
+   Matched with substrings rather than an exhaustive list, for two reasons at
+   once. TCGdex's own vocabulary has one string per era for "this is
+   holographic" — Rare Holo, Rare Holo EX/GX/V/VMAX/VSTAR, Reverse Holo, and
+   older ones this collection does not happen to hold yet. And `cards.rarity`
+   is no longer only TCGdex's word for it: `CardAddDialog.tsx`'s search runs
+   against pokemontcg.io now (docs/decisions/0032-add-card-advanced-filters-not-manual-entry.md),
+   which spells some of the same tiers differently ("Rare Ultra" rather than
+   "Ultra Rare", "Rare Secret" rather than "Secret Rare"). A card added
+   tomorrow, from either source, should still foil at roughly the right
+   strength rather than silently falling through to the flattest tier for
+   want of an exact-string entry here.
 
    The tiers are the real thing, not taste. Common and Uncommon carry no foil
    in the hand and get none here: they keep the tilt, the glare and the shadow,
@@ -274,13 +279,12 @@
 .poke-card[data-rarity="rare prism star"] {
   --poke-foil: 0.22;
 }
-.poke-card[data-rarity*="illustration rare"],
-.poke-card[data-rarity="ultra rare"],
-.poke-card[data-rarity="hyper rare"],
-.poke-card[data-rarity="secret rare"],
-.poke-card[data-rarity="shiny rare"],
-.poke-card[data-rarity="shiny ultra rare"],
-.poke-card[data-rarity="rare rainbow"],
+.poke-card[data-rarity*="illustration"],
+.poke-card[data-rarity*="ultra"],
+.poke-card[data-rarity*="hyper"],
+.poke-card[data-rarity*="secret"],
+.poke-card[data-rarity*="rainbow"],
+.poke-card[data-rarity*="shiny"],
 .poke-card[data-rarity="ace spec rare"],
 .poke-card[data-rarity="legend"],
 .poke-card[data-rarity="classic collection"] {

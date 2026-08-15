@@ -276,13 +276,184 @@ pill, already black), one for what you can do" distinction. Documented
 inline in `cards.css` rather than a full ADR, since it's a straightforward
 colour swap with the tradeoff spelled out in the same comment.
 
-`npm run check` is green throughout both threads.
+Since then, in this session: mobile tab bar refinement, in one thread of
+back-and-forth feedback, all recorded in `ADR-0030`:
 
-## Open
+- The last slot ("Settings", gear icon) is now "You", showing the account's
+  avatar (or initial, matching `CardsSidebar`'s footer pattern) instead —
+  wired up in `AppTabBar.tsx`, the actual signed-in mobile bar (`CardsView`'s
+  own inline `CardsTabBar` is dead for owners; it early-returns before
+  reaching that markup).
+- Fixed the active-tab pill, then the bar itself, reading flush against the
+  screen's edges on narrow phones instead of matching their own padding: a
+  fourth *and* fifth instance of the `ADR-0012`/`0017`/`0028` cascade-layer
+  pattern in the same file. First, `min-w-max` on `tabbarPagesClassName` so
+  the mobile width cap can't squeeze the track narrower than its content.
+  That alone didn't fully fix it — the bar's own `<=640px` side padding was
+  still reserving ~64px per side for a theme toggle this route never
+  renders (`cards.css`'s attempt to cancel that reservation loses the same
+  cascade fight), so forcing the track to its full content width was then
+  pushing it past the nav's own shrunk available space, sometimes past the
+  viewport. Fixed by baking the correct (`space-4`, not
+  `space-3+control-h+space-3`) padding/cap directly into `tabbarClasses.ts`
+  instead of relying on `cards.css`'s losing override.
+- Every tab is now a fixed, equal width (was sized to its own label). Two
+  static pixel guesses (`w-16`, then a computed `w-[72px]`) both still
+  clipped "Dashboard" to "Dashbo…" — caught by a real screenshot the user
+  sent. Stopped guessing: `CardsTabBar.tsx` now measures every label's real
+  `scrollWidth` in a `useLayoutEffect` and sets the widest as a `--tab-w`
+  CSS var the slots all read, re-measured on `document.fonts.ready` (same
+  pattern `useSlidingPill` already used). Label truncation stays as a safety
+  net, not the primary mechanism. The same screenshot also showed the active
+  pill touching the add circle beside it directly — the track's flex
+  children had no gap between them at all — fixed with `gap-1` on
+  `tabbarPagesClassName`. Two more rounds after that: first a (wrong-
+  direction) guess that the leftmost/rightmost slot needed *more* horizontal
+  padding than vertical (`py-2 px-3`) to beat the capsule's rounded corner
+  visually eating into the inset; then the actual ask — one equal amount of
+  space everywhere (edges, inter-item gap, and the item's own vertical
+  inset) — settled by using `p-2` **and** `gap-2` together (both 8px).
+- **Settings now lives inside the app shell** (`app/settings/**` moved to
+  `app/(app)/settings/**`, except `password/`, kept standalone — see below):
+  sidebar and tab bar stay on screen there now, matching `/dashboard`,
+  `/collection`, `/wishlist`. This completes something `app/(app)/layout.tsx`
+  and `AppSidebar.tsx` already assumed ("/dashboard, /collection and
+  /settings share one shell") but `app/settings/layout.tsx` never actually
+  did — it was its own separate, unwrapped layout the whole time.
+  `app/settings/password/page.tsx` was deliberately left where it was: it
+  renders the same `SigninShell` chrome as `/login`/`/signup` and is reached
+  from an unauthenticated password-recovery link as well as a signed-in
+  action, so nesting it under `AppShell` would have doubled up chrome and
+  swallowed its own expired-link error message.
+- `CardsDashboard.tsx` and `SetIndex.tsx` (`/collection/sets`) had no visible
+  page title anywhere (both the shell's and `CardsView`'s own `<h1>`s are
+  `sr-only`) — added one to each. Landed twice: first as ad-hoc Tailwind
+  classes eyeballed to match Settings' own new heading, then switched (both,
+  plus Settings) to the literal `.cards-main-title` class (`cards.css`) once
+  asked to make it consistent with the rest of the app — that's the one style
+  `CardsView`'s own `<MainTitle>` already uses for Collection/Wishlist/set/
+  era, so this stopped being a second, close-but-not-quite copy of it.
+
+The measured-width fix above still clipped "Dashboard" once more on a real
+device, root cause not conclusively pinned down. Rather than keep guessing:
+added a `ResizeObserver` on the labels as a third trigger alongside mount +
+`document.fonts.ready`, and — the part that actually guarantees the visible
+symptom can't recur regardless of whether any JS path fires correctly —
+widened `tabbarItemClassName`'s static fallback from a tight 72px estimate
+to a deliberately generous 104px, so a device where none of the three JS
+triggers work still doesn't clip the label.
+
+The tabbar/Settings/Dashboard-title work was merged and deployed as PR #41
+on explicit instruction ("oke fixen dan denk ik" — merge before the label
+clipping was actually confirmed fixed, since it wasn't yet), and the
+label-width hardening above followed as PR #43 off the same branch once the
+clipping was confirmed still happening post-merge. Not yet confirmed with a
+live signed-in screenshot after PR #43 — browser
+automation in this workspace can't sign in, so this whole thread still needs
+a human pass at ≤1000px on `/dashboard`, `/collection`, `/wishlist`,
+`/settings` (and its subpages), and a check that `/settings/password` still
+looks right reached both signed in and via a recovery link.
+
+`npm run check` is green throughout all three threads.
+
+Since then, in this session: the "Pokémon" tick-list filter facet was
+removed from `CardsView.tsx` (state, tally, filter check, its entry in
+`facets` and `activeFilters`) — search already covers finding cards by
+Pokémon name, so the facet was redundant UI over a several-hundred-row list.
+`CardsPokedex`'s "jump to this Pokémon" already went through the search
+query, not this facet, so it needed no change. Two comments that named the
+facet as their example (`CardsView.tsx`'s "long tick-lists" comment,
+`Sheet.tsx`'s scroll-design comment) were reworded.
+`docs/decisions/0030-remove-pokemon-name-filter.md` and
+`docs/changelog.d/2026-08-15-remove-pokemon-name-filter.md` record it.
+`npm run check` is green.
+
+Since then, in this session: the add-card dialog (`CardAddDialog.tsx`) was
+rebuilt twice, the second time correcting the first within the same
+session. First pass (ADR-0030, now superseded): Set reordered above Name, a
+debounced live thumbnail preview scoped to the typed set, via TCGdex's
+existing-but-unused `/api/v1/catalog/search`. Immediate correction from
+Bart — "1 invoerveld voor alles" (FB-0005) — wanted one search bar,
+matching name/number/set/type at once, no "pick a set first" gate. That
+gate existed for a real reason (TCGdex only resolves one set at a time), so
+meeting the correction meant a different data source, not just relaxing
+the client check: `/api/v1/catalog/search` now runs on pokemontcg.io
+instead (`lib/core/ptcg-search.ts`, new), one query across name/number/
+set.name/types with the term escaped against Lucene injection. A live
+probe against the real API during this session confirmed the query shape
+works but also found it genuinely fragile unauthenticated — ten rapid
+requests produced five 500/502s — so a new optional `POKEMONTCG_API_KEY`
+env var was added (sent as `X-Api-Key` when set; not yet obtained, since
+getting one means Bart signing up at pokemontcg.io himself) alongside a
+retry, a 5-minute per-query cache, and, the real mitigation, a persistent
+"Enter it by hand" fallback to the classic Name/Number/Set fields — a card
+pokemontcg.io hasn't indexed can still be added, unconditionally.
+`CardAddDialog.tsx` is now a four-state flow (search → live results →
+selected-match summary, or → manual fields), with explicit focus
+management between states (an accessibility pass found focus silently
+dropping to `<body>` on every transition, since fixed via refs) and a
+single persistent `role="status"` region for "Searching…"/"No matches"
+(previously two conditionally-mounted nodes, which some screen readers
+would not reliably announce). `docs/decisions/0031-add-card-single-search-bar.md`
+(supersedes `0030`), `docs/feedback/0005-add-card-should-be-one-search-bar.md`,
+and `docs/changelog.d/2026-08-15-add-card-single-search-bar.md` record it.
+`npm run check` is green throughout. Not exercised with a real click-through
+in this session — same signed-in-browser gap as everything else below.
 
 - **Card detail, avatar upload, and signup still need a real signed-in
-  browser pass** (this session's work) — see above; unchanged by the
+  browser pass** (earlier session's work) — see above; unchanged by the
   security-review merge.
+- **This session's tabbar/"You" tab/equal-width-tabs/Settings-in-shell/
+  Dashboard-title work also needs a real signed-in browser pass** at
+  ≤1000px, for the same reason (no credentials available to browser
+  automation in this workspace) — see above for the specific routes.
+
+Since then, in this session: a quick correctness fix, caught by Bart asking
+"'charizard 151' zou dan ook moeten werken toch?" — it didn't yet.
+`buildQuery()` in `lib/core/ptcg-search.ts` was treating the whole typed
+string as one wildcarded phrase, which pokemontcg.io's own query parser
+splits on whitespace regardless, so a two-word search didn't mean what it
+looked like it meant. Now each word gets its own name/number/set/type OR
+clause and the clauses are joined by a bare space, which a live check
+against the real API confirmed pokemontcg.io's parser treats as AND
+between parenthesised groups — "charizard 151" narrows from 108
+name-matched Charizards down to exactly the 3 printed in the set named
+"151". Capped at 6 words. `npm run check` is green.
+
+Since then, in this session: a second correction, immediate again — "enter
+it by hand moet geen optie zijn, het is meer gebruik advanced filters"
+(FB-0006). The "Enter it by hand" manual fallback from the previous entry
+is gone entirely: there is no path left in `CardAddDialog.tsx` that writes
+a name/set nobody confirmed against the catalogue. In its place, "Advanced
+filters" — Name/Number/Set/Type as their own fields, still a live search
+(`lib/core/ptcg-search.ts` gained `buildFilterQuery()`/`SearchFilters`
+alongside the quick-search `buildQuickQuery()`; `/api/v1/catalog/search`
+switches into filter mode whenever any of those four params is present).
+Explicitly accepted, not softened: a card pokemontcg.io has not indexed can
+no longer be added through this dialog at all — the exact consequence
+ADR-0031 had named as a reason to keep a fallback, chosen anyway.
+`docs/decisions/0032-add-card-advanced-filters-not-manual-entry.md`
+(supersedes `0031`'s fallback design, not its pokemontcg.io backend choice),
+`docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md`, and
+`docs/changelog.d/2026-08-15-add-card-search-and-advanced-filters.md`
+record it. A follow-up accessibility check confirmed focus still moves
+correctly on the new quick/advanced toggle and found no label collisions.
+`npm run check` is green.
+
+- **A `POKEMONTCG_API_KEY` would meaningfully derisk the new add-card
+  search, and matters more than it did — there is no manual-entry fallback
+  left.** The unauthenticated pokemontcg.io rate limit was observed failing
+  under a rapid burst this session, and since ADR-0032 a search that can't
+  reach pokemontcg.io means a card genuinely can't be added, not just
+  "search is a bit less convenient." The app has no key yet. Getting one
+  needs Bart himself (account creation on a third-party site).
+- **Card detail, avatar upload, signup, and the new add-card search all
+  still need a real signed-in browser pass.** (Card detail/avatar/signup
+  from an earlier session; the add-card preview is this session's own.) See
+  above for what each needs; the add-card preview specifically needs: pick
+  a real set, type a partial name, confirm thumbnails render and a click
+  fills Number and highlights, confirm the highlight clears on further
+  edits.
 - The Notion-connections-table drop and the profile-avatar migration are
   both confirmed applied to the live database (checked directly via
   `supabase db query --linked` for the former, `supabase migration list`
@@ -298,20 +469,31 @@ colour swap with the tradeoff spelled out in the same comment.
   Nothing further identified as migratable.
 
 Since then, in this session: rarity and type stop being Notion-descended,
-hand-typed facts and become TCGdex-sourced (`docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md`).
-Two new routes, `GET /api/v1/catalog/sets` (TCGdex's own set index, cached the
-same way `catalogue.ts`'s `loadSetCatalogue` already fetches it) and
-`GET /api/v1/catalog/cards/[id]` (a thin wrapper over `getCardDetail()`,
-which now also returns `localId`). `CardAddDialog.tsx` was reworked from
-free-text `set`/`rarity`/`gen`/`types` inputs to: pick a set from TCGdex's
-index → search within it via the existing `/api/v1/catalog/search` → click a
-result → the card's name/number/set/rarity/type populate from
-`/catalog/cards/[id]` as read-only facts, not editable text. Generation stays
-free text (it's a shelf the owner built, not a TCGdex fact). Two React-hooks
-lint errors (`react-hooks/set-state-in-effect`) came out of the first version
-of this component — fixed by deriving the chosen set with `useMemo` instead
-of state+effect, and by moving `setSearching(true)` inside the debounce
-timer's callback instead of calling it synchronously in the effect body.
+hand-typed facts and become catalogue-sourced (`docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md`).
+
+This session's first version built its own TCGdex set-picker → search →
+detail flow for `CardAddDialog.tsx`, with two new routes
+(`GET /api/v1/catalog/sets`, `GET /api/v1/catalog/cards/[id]`). Merging with
+`main` surfaced that a parallel session had, the same day, already rebuilt the
+same dialog around a single pokemontcg.io-backed search box (ADR-0030/0031/0032
+on `main`, superseding each other within that session per direct feedback —
+`docs/feedback/0005`/`0006`: "1 invoerveld voor alles", "enter it by hand
+should not be an option") — a materially better UX (search across
+name/number/set/type at once, an "Advanced filters" fallback, no manual-entry
+escape hatch) than this session's set-first TCGdex flow. Flagged to Bart
+rather than force-merged; his answer was to resolve the conflict rather than
+pick a side. Resolution: `main`'s dialog and its pokemontcg.io search
+(`lib/core/ptcg-search.ts`) won outright; this session's set-picker routes and
+the `getCardDetail()` `localId` addition were deleted as redundant. What
+survived from this session's version, applied on top of `main`'s dialog:
+Rarity and Type are no longer an editable input/toggle chips once a match is
+picked — they are shown, sourced strictly from `selected.rarity`/`.types`,
+matching the "no manual entry" principle `docs/feedback/0006` already
+established for the card's identity fields, extended here to these two.
+`selectMatch()` was also fixed to stop falling back to a previous pick's
+`draft.rarity` when a new match has none — a leftover from when the field was
+still editable, which would have shown a stale value next to a "read-only"
+label.
 
 `scripts/backfill-rarity-types.mjs` **has been run against the live database**
 (`--user 3fe9b080-2279-480b-a6ec-4fa58611c8cb --write`, Bart's explicit
@@ -344,26 +526,37 @@ information and broken `poke-holo.css`'s foil effect, whose selectors were
 keyed on exactly those three words. Flagged to Bart before writing anything;
 his answer was explicit — TCGdex is the source of truth, apply it fully, the
 foil-variant fact is an accepted casualty. `poke-holo.css`'s `data-rarity`
-selectors were rewritten to TCGdex's own tier vocabulary (`common`/`uncommon`/
-`promo` → no foil; `rare`/`double rare`/anything containing `holo`/`amazing
-rare`/etc. → the middle tier; `illustration rare`/`ultra rare`/`hyper rare`/
-etc. → full strength), matched by substring for the `*holo*` family so a
-future set's own "Rare Holo GX"-style tier still foils correctly without an
-exact-string entry. Verified after writing: `npm run check` green; a direct
+selectors were rewritten to the tier vocabulary both catalogues broadly share
+(`common`/`uncommon`/`promo` → no foil; `rare`/`double rare`/anything
+containing `holo`/`amazing rare`/etc. → the middle tier; anything containing
+`illustration`/`ultra`/`hyper`/`secret`/`rainbow`/`shiny`/etc. → full
+strength), matched by substring rather than an exact string per tier —
+partly for future TCGdex tiers this collection doesn't hold yet, partly
+because the merge below means new cards' rarity now comes from pokemontcg.io
+instead, which spells some of the same tiers differently ("Rare Ultra" vs.
+"Ultra Rare"). Verified after writing: `npm run check` green; a direct
 Postgres read confirmed a sample (`White Flare` #001–#003) landed correctly.
 
 **Not verified in a real browser** — no Chrome extension connected in this
-workspace, same gap earlier sessions hit. `CardAddDialog.tsx`'s
-search-and-select flow has not been exercised live.
+workspace, same gap earlier sessions (including the parallel one merged in
+below) hit. Neither the read-only Rarity/Type summary nor the rest of
+`CardAddDialog.tsx` has been exercised live this session.
 
 ## Next session
 
-- **The reworked `CardAddDialog.tsx` needs a real signed-in browser pass**:
-  open the dialog, pick a set, search, click a result, confirm the derived
-  summary is right, submit, confirm the row lands correctly. Not exercised
-  live in this session (no browser extension connected).
+- **`CardAddDialog.tsx` needs a real signed-in browser pass**: search, pick a
+  result, confirm Rarity/Type show as read-only text matching the picked
+  card, submit, confirm the row lands correctly. Not exercised live this
+  session (no browser extension connected) — true of both the pokemontcg.io
+  search itself (already merged from the parallel session) and this
+  session's read-only Rarity/Type change on top of it.
 - **`docs/rarity-type-backfill-corrections.md`** lists 22 rows the backfill
   could not confidently match to a TCGdex id — the same worklist shape
   `trainer-gallery-row-corrections.md` used for artwork. Worth checking
   whether any of these are the same 23 Trainer Gallery rows that worklist
   already covers.
+- **`poke-holo.css`'s substring-matched tiers are a best guess, not verified
+  against pokemontcg.io's actual rarity strings** — this session confirmed
+  TCGdex's vocabulary against the live API (via the backfill) but not
+  pokemontcg.io's. Worth spot-checking a newly-added card's `data-rarity`
+  against the foil effect it gets once the browser pass above is possible.

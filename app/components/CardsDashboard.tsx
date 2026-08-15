@@ -26,6 +26,18 @@ import { euro } from "../../lib/core/format";
 export default function CardsDashboard({ stats }: { stats: CardsStats }) {
   return (
     <div className="flex flex-col gap-8">
+      {/* Visible, unlike CardsView's own <h1>: that one is sr-only because the
+          rail/tabbar already says which screen you're on, twice over. Neither
+          exists above this content on its own — the (app) shell's own <h1> is
+          sr-only too — so this is the only place "Dashboard" is actually
+          written on the page. The literal .cards-main-title class (cards.css),
+          not an equivalent Tailwind rebuild of it: that's the one page-title
+          style already shared by Collection, Wishlist, Sets and every other
+          screen CardsView draws (its own <MainTitle>), so reusing the class
+          is what keeps this one in step with them rather than a second,
+          similar-looking style drifting beside it. */}
+      <h1 className="cards-main-title">Dashboard</h1>
+
       {/* Four numbers rather than four one-bar charts: a headline value is a
           stat tile, and a bar chart of unrelated totals compares things that do
           not belong on one scale. */}

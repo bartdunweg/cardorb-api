@@ -573,8 +573,6 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
 export type CardDetail = {
   id: string;
   name: string;
-  /** The printed number, e.g. "77" or "TG04" — null where TCGdex has none. */
-  localId: string | null;
   image: string | null;
   rarity: string | null;
   illustrator: string | null;
@@ -608,7 +606,6 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
   try {
     card = (await json(`https://api.tcgdex.net/v2/en/cards/${id}`, `card ${id}`)) as {
       id?: string;
-      localId?: string;
       name?: string;
       image?: string;
       rarity?: string;
@@ -638,7 +635,6 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
   return {
     id: card.id,
     name: card.name,
-    localId: card.localId ?? null,
     image: card.image ?? null,
     rarity: card.rarity ?? null,
     illustrator: card.illustrator ?? null,

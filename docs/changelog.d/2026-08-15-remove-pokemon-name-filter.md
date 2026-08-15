@@ -1,0 +1,1 @@
+- Removed the "Pokémon" tick-list filter from the collection's Filter menu/sheet — the search box already filters by Pokémon name, and now it's the only way to.

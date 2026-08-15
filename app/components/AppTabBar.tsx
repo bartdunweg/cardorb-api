@@ -23,7 +23,7 @@ import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 function tabFrom(pathname: string): CardsTab {
   if (pathname.startsWith("/dashboard")) return "dashboard";
   if (pathname.startsWith("/wishlist")) return "wishlist";
-  if (pathname.startsWith("/settings")) return "settings";
+  if (pathname.startsWith("/settings")) return "profile";
   // Every /collection/* screen — the grid, the set index, one set, one era, the
   // Pokédex — is the collection. Lighting a different slot for each would make
   // the bar report where you are inside a screen rather than which screen.
@@ -33,24 +33,27 @@ function tabFrom(pathname: string): CardsTab {
 /**
  * Partial on purpose. "sets" and "search" are still in CardsTab because the
  * public link's bar carries them, and that bar is not this one — this adapter
- * only ever hands back the four slots it renders.
+ * only ever hands back the four slots it renders. "profile" still goes to
+ * /settings, not a dedicated /profile route — the tab wears the account's
+ * name and picture now, but there is nowhere else for it to open.
  */
 const HREF: Partial<Record<CardsTab, string>> = {
   dashboard: "/dashboard",
   collection: "/collection",
   wishlist: "/wishlist",
-  settings: "/settings",
+  profile: "/settings",
 };
 
 export default function AppTabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { onAdd } = useCollection();
+  const { onAdd, viewer } = useCollection();
 
   return (
     <CardsTabBar
       active={tabFrom(pathname)}
       signedIn
+      viewer={{ name: viewer.username, avatarUrl: viewer.avatarUrl }}
       onSelect={(tab) => {
         const href = HREF[tab];
         if (href) router.push(href);

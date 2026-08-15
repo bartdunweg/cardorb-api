@@ -45,9 +45,13 @@ We will do option 3. Existing rows are backfilled from TCGdex per-card detail, g
 the same `numberForms`/`sameCard` match `buildCollection()` already trusts for artwork,
 with a worklist doc for anything that doesn't confidently match — the same pattern
 ADR-0022 used for artwork, rather than guessing at a rarity/type for an uncertain match.
-The add-card dialog changes from free-text rarity/type inputs to a TCGdex
-search-and-select flow, where all catalogue-known properties (name, number, set,
-rarity, types) come from the picked card, with no manual override.
+
+Going forward, rarity and type stop being editable in `CardAddDialog.tsx`: they are shown,
+not asked for, sourced strictly from whatever catalogue match the dialog's own search
+resolved. Which catalogue that search calls out to is a separate, parallel decision — see
+ADR-0032 — settled independently in favour of pokemontcg.io for the search itself (it
+indexes every set behind one query; TCGdex only resolves one set at a time). This ADR is
+about what happens to rarity/type once a match exists, not which service finds it.
 
 Chosen because TCGdex's bulk/list endpoint used during collection matching carries no
 rarity or types field — only its single-card detail endpoint does. Option 2 would add
@@ -68,13 +72,17 @@ should come from the clicked catalogue result, not typed around it.
   instead of a one-time Notion export nobody can re-check.
 - Good, because the read path (collection assembly, the public API) is unchanged — no
   new Vercel cost, consistent with ADR-0014.
-- Bad, because a card TCGdex has no record of at all cannot be added through the new
-  flow — there is no catalogue result to click. This is an accepted edge case, not
-  solved here.
+- Bad, because a card no catalogue has indexed cannot be added through the dialog at all
+  — there is no match to click, per ADR-0032. This is an accepted edge case, not solved
+  here.
 - Bad, because the backfill overwrites ~1,600 rows in one pass; a wrong TCGdex match
   (however unlikely given the `sameCard()` gate) becomes a wrong write, not just a wrong
   read. Mitigated by logging every diff and routing unmatched/uncertain rows to a
   worklist instead of writing them.
+- Bad, because the backfill (TCGdex) and the add-card flow going forward (pokemontcg.io,
+  per ADR-0032) are two different catalogues, which spell some of the same rarity tiers
+  differently ("Ultra Rare" vs. "Rare Ultra"). `poke-holo.css`'s foil-effect selectors
+  match on substrings for exactly this reason, rather than an exact string per tier.
 - Neutral, because CSV import is left untouched and still accepts manually-typed
   rarity/type columns — out of scope for this decision, revisit separately if it should
   also be locked to catalogue values.
@@ -85,9 +93,9 @@ should come from the clicked catalogue result, not typed around it.
   against production data.
 - After backfill, a handful of cards' rarity/type are spot-checked against TCGdex's own
   site.
-- The reworked add-card flow is exercised end-to-end in the browser: pick a set, search,
-  click a result, confirm rarity/type/name/number/set populate from that card and the
-  row saves correctly.
+- The add-card flow is exercised end-to-end in the browser: search, pick a result, confirm
+  rarity and type are shown (not editable) and match the picked card, and the row saves
+  correctly.
 
 ## Related
 
@@ -95,4 +103,5 @@ should come from the clicked catalogue result, not typed around it.
 - Code: `lib/core/cards.ts` (`getCardDetail`, `buildCollection` matching), `lib/core/catalogue.ts`,
   `app/components/CardAddDialog.tsx`, `scripts/backfill-rarity-types.mjs`
 - See also: ADR-0021 (Notion removal), ADR-0022 (artwork's catalogue-source-of-truth
-  precedent and audit/worklist pattern), ADR-0014 (per-request catalogue cost)
+  precedent and audit/worklist pattern), ADR-0014 (per-request catalogue cost), ADR-0032
+  (why the add-card search itself calls pokemontcg.io rather than TCGdex)
