@@ -334,11 +334,23 @@ back-and-forth feedback, all recorded in `ADR-0030`:
   `CardsView`'s own `<MainTitle>` already uses for Collection/Wishlist/set/
   era, so this stopped being a second, close-but-not-quite copy of it.
 
-Not yet confirmed with a live signed-in screenshot — browser automation in
-this workspace can't sign in, so this whole thread needs a human pass at
-≤1000px on `/dashboard`, `/collection`, `/wishlist`, `/settings` (and its
-subpages), and a check that `/settings/password` still looks right reached
-both signed in and via a recovery link.
+The measured-width fix above still clipped "Dashboard" once more on a real
+device, root cause not conclusively pinned down. Rather than keep guessing:
+added a `ResizeObserver` on the labels as a third trigger alongside mount +
+`document.fonts.ready`, and — the part that actually guarantees the visible
+symptom can't recur regardless of whether any JS path fires correctly —
+widened `tabbarItemClassName`'s static fallback from a tight 72px estimate
+to a deliberately generous 104px, so a device where none of the three JS
+triggers work still doesn't clip the label.
+
+This was merged and deployed (PR #41 to `main`) on explicit instruction —
+"oke fixen dan denk ik" landed as a follow-up commit on the same branch
+rather than reopening the PR, since #41 was already merged. Not yet
+confirmed with a live signed-in screenshot after this specific fix — browser
+automation in this workspace can't sign in, so this whole thread still needs
+a human pass at ≤1000px on `/dashboard`, `/collection`, `/wishlist`,
+`/settings` (and its subpages), and a check that `/settings/password` still
+looks right reached both signed in and via a recovery link.
 
 `npm run check` is green throughout all three threads.
 

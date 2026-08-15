@@ -163,6 +163,19 @@ not a bigger horizontal number.
   of the same "every slot already sized for its label" intent
   `tabbarItemClassName`'s own comment described for the icon-over-label
   change, just applied across slots instead of within one.
+- The measured-width fix still shipped a clipped "Dashboard" on a real
+  device once more, root cause not conclusively identified (font load
+  timing, a Turbopack HMR staleness during rapid iteration, something else —
+  the measurement logic itself checks out under static reading and the
+  scrollWidth technique is standard). Rather than keep guessing at the exact
+  failure, hardened on two fronts instead of one: added a `ResizeObserver`
+  on the labels alongside the existing mount + `document.fonts.ready`
+  triggers (`CardsTabBar.tsx`), and — the part that actually guarantees the
+  symptom can't recur regardless of whether any JS trigger fires correctly
+  on a given device — widened `tabbarItemClassName`'s *static fallback* from
+  a tight 72px estimate to a deliberately generous 104px. The measured value
+  still wins once/if it runs; the fallback is what the user actually sees if
+  it doesn't.
 - `tabbarPagesClassName` gained `gap-1`: the track's flex children (tab
   items, add circle) had no gap between them at all, so an active pill —
   sized to match its own item's bounding box, `useSlidingPill` — read as

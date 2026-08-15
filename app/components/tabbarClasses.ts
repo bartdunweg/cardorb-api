@@ -119,24 +119,30 @@ export const tabbarPagesClassName =
  * Include the literal "is-active" class alongside this when the tab is
  * selected.
  *
- * w-[var(--tab-w,72px)], not min-w: every slot the same width regardless of
+ * w-[var(--tab-w,104px)], not min-w: every slot the same width regardless of
  * its own label ("Dashboard" vs "You"), so the pill sliding between them
  * changes position without also changing size.
  *
  * --tab-w is set on the track (CardsTabBar.tsx, .tabbar-pages) from the
- * actually-measured widest label, not guessed: a first pass hard-coded 72px
- * from an estimate at --fs-tiny (11px) and "Dashboard" still clipped to
- * "Dashbo…" on a real phone — font metrics in practice ran wider than the
- * estimate. `label.scrollWidth` reports a `.tabbar-label`'s true content
- * width even while `truncate` is visually clipping it, so the measurement
- * doesn't need truncation turned off first. 72px stays as the fallback
- * value (the CSS var's default) for the one paint before that effect runs.
- * `min-w-[56px]` beneath it exists for the same reason `tabbarLabelClassName`
- * still carries `truncate`: a safety floor, not the primary mechanism.
+ * actually-measured widest label, not guessed — a first pass hard-coded
+ * 72px from an estimate at --fs-tiny (11px), and "Dashboard" still clipped
+ * to "Dashbo…" on a real phone, twice, including once *after* the
+ * measurement effect landed (never fully root-caused which part of that
+ * chain — font load timing, a Turbopack HMR staleness, something else —
+ * failed on the device it was tested on; see CardsTabBar.tsx's own comment
+ * on the effect for what it now does to be harder to get wrong). So the
+ * *fallback* itself — the CSS var's default, used before that effect can
+ * run and however it behaves once it does — stopped being a tight estimate
+ * and became a deliberately generous 104px instead: comfortably past even a
+ * pessimistic reading of what "Dashboard" needs, so the visible symptom
+ * (clipping) can't recur even if the measurement never fires correctly on
+ * some device. `min-w-[56px]` beneath it exists for the same reason
+ * `tabbarLabelClassName` still carries `truncate`: a safety floor under a
+ * safety net, not the primary mechanism either way.
  */
 export const tabbarItemClassName =
   "tabbar-item group relative z-[1] flex flex-col items-center justify-center gap-0.5 flex-none " +
-  "w-[var(--tab-w,72px)] min-w-[56px] " +
+  "w-[var(--tab-w,104px)] min-w-[56px] " +
   "px-2 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-label no-underline " +
   "[transition:color_var(--dur-fast)_var(--ease-in-out)] [&:not(.is-active):hover]:opacity-70";
 

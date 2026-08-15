@@ -136,11 +136,21 @@ export default function CardsTabBar({
   /**
    * Every slot's width, read off the widest label rather than guessed: a
    * hard-coded pixel estimate (see tabbarClasses.ts's history of one)
-   * clipped "Dashboard" on a real phone the first time. scrollWidth reports
-   * a label's true content width even while `truncate` is visually clipping
-   * it, so this doesn't need to fight the CSS to measure it. Set on the
-   * track as a CSS var rather than per-button inline styles, since every
-   * slot reads the same one value.
+   * clipped "Dashboard" on a real phone. scrollWidth reports a label's true
+   * content width even while `truncate` is visually clipping it, so this
+   * doesn't need to fight the CSS to measure it. Set on the track as a CSS
+   * var rather than per-button inline styles, since every slot reads the
+   * same one value.
+   *
+   * Three ways to trigger a (re-)measurement, not one, after a first version
+   * of this (mount + document.fonts.ready only) still shipped a clipped
+   * label on a real device without a clear enough reason why: a plain
+   * ResizeObserver on the track, matching the pattern useSlidingPill already
+   * uses for the same category of problem (content whose size isn't known
+   * until the browser has actually laid it out) instead of trying to
+   * enumerate every event that could change it by name. tabbarItemClassName
+   * also carries a deliberately generous static fallback now, so even a
+   * device where none of these three fire correctly doesn't clip.
    */
   useLayoutEffect(() => {
     const track = trackRef.current;
@@ -158,8 +168,11 @@ export default function CardsTabBar({
     document.fonts?.ready.then(() => {
       if (!cancelled) measure();
     });
+    const ro = new ResizeObserver(measure);
+    track.querySelectorAll(".tabbar-label").forEach((label) => ro.observe(label));
     return () => {
       cancelled = true;
+      ro.disconnect();
     };
     // Labels are static text per key; only which keys are shown can change
     // (isPublic), not their wording, so that's the one real dependency.
