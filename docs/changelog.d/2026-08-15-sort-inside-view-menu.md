@@ -1,0 +1,1 @@
+- Sorting (By set / Priciest / Cheapest) moved from its own toolbar control into the View button, alongside Group by, Layout, Show on card and Per row. No change to what the sort options do, only where the control lives.

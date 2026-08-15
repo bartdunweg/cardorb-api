@@ -21,7 +21,6 @@ import CardsSidebar, { retryAsPng } from "./CardsSidebar";
 import CardsTabBar, { type CardsTab } from "./CardsTabBar";
 import FilterMenu, { type Facet } from "./FilterMenu";
 import FilterSheet from "./FilterSheet";
-import Segmented from "./Segmented";
 import ViewSheet from "./ViewSheet";
 import ViewMenu from "./ViewMenu";
 import FilterChips, { type ActiveFilter } from "./FilterChips";
@@ -1242,6 +1241,12 @@ export default function CardsView({
                       onView={setView}
                       group={group}
                       onGroup={setGroup}
+                      sort={sort}
+                      onSort={(v) => {
+                        leaveDashboard();
+                        setSort(v);
+                      }}
+                      showSort={!isPublic}
                       fields={fields}
                       onField={(f) =>
                         setFields((prev) => {
@@ -1262,6 +1267,12 @@ export default function CardsView({
                       onView={setView}
                       group={group}
                       onGroup={setGroup}
+                      sort={sort}
+                      onSort={(v) => {
+                        leaveDashboard();
+                        setSort(v);
+                      }}
+                      showSort={!isPublic}
                       fields={fields}
                       onField={(f) =>
                         setFields((prev) => {
@@ -1277,26 +1288,6 @@ export default function CardsView({
                     />
                   </span>
                 </>
-              )}
-
-              {/* Sorting is an answer about a list of cards, so it is only offered
-                where one is being shown. Two of the three orders are by price,
-                and on the public link there are no prices to order by: that
-                leaves one option, and a control with one option is furniture. */}
-              {!onPokedex && !onDashboard && !isPublic && (
-                <Segmented
-                  label="Sort"
-                  value={sort}
-                  onChange={(value) => {
-                    leaveDashboard();
-                    setSort(value);
-                  }}
-                  options={[
-                    ["set", "By set"],
-                    ["value", "Priciest"],
-                    ["value-asc", "Cheapest"],
-                  ]}
-                />
               )}
 
               {/* The long tick-lists (Pokémon, rarity, value, type, owned)
