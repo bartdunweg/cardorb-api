@@ -193,7 +193,12 @@ export default function CardsSidebar({
               />
             </li>
           )}
-          {!isPublic && (
+          {/* Only where there is no avatar footer to reach Profile from
+              instead (below) — the legacy /cards route, which passes no
+              viewer. Where there is one, a second way to the same place in
+              the list above it is a row answering a question the footer
+              already answers. */}
+          {!isPublic && !viewer && (
             <li>
               <NavItem
                 active={selected === "profile"}
@@ -287,11 +292,19 @@ export default function CardsSidebar({
       </nav>
 
       {signedIn && viewer && (
+        // sticky bottom-0 rather than mt-auto: mt-auto only reaches the
+        // viewport edge when the rest of the rail's content is shorter than
+        // the rail itself, which stopped being reliably true once setsAsRow
+        // (ADR-0027) made the content's height depend on how many rows are
+        // signed-in-only vs public. Sticky keeps this pinned to the visible
+        // bottom of the scrollable rail either way — its own background is
+        // needed so content scrolled underneath does not show through.
         <button
           type="button"
           onClick={() => onSelect("profile")}
-          className="cards-nav-item mt-auto flex items-center gap-3 w-full p-2 border-0 rounded-md
-            bg-transparent text-left cursor-pointer text-inherit [@media(max-width:1000px)]:hidden"
+          className="cards-nav-item sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2
+            border-0 rounded-md bg-[var(--glass-bg-solid)] text-left cursor-pointer text-inherit
+            [@media(max-width:1000px)]:hidden"
         >
           {viewer.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
@@ -300,11 +313,11 @@ export default function CardsSidebar({
               alt=""
               width={28}
               height={28}
-              className="w-7 h-7 rounded-full object-cover border border-[var(--color-border-subtle)]"
+              className="w-7 h-7 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
             />
           ) : (
             <span
-              className="grid place-items-center w-7 h-7 rounded-full bg-[var(--color-bg-grouped)]
+              className="grid place-items-center w-7 h-7 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
                 border border-[var(--color-border-subtle)] text-label-tertiary
                 [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
               aria-hidden="true"

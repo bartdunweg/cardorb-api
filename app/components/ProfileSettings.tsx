@@ -160,11 +160,11 @@ export default function ProfileSettings({
               alt="Your avatar"
               width={56}
               height={56}
-              className="w-14 h-14 rounded-full object-cover border border-[var(--color-border-subtle)]"
+              className="w-14 h-14 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
             />
           ) : (
             <span
-              className="grid place-items-center w-14 h-14 rounded-full bg-[var(--color-bg-grouped)]
+              className="grid place-items-center w-14 h-14 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
                 border border-[var(--color-border-subtle)] text-label-tertiary
                 [font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-title)]"
               aria-hidden="true"

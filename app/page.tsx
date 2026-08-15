@@ -197,13 +197,13 @@ export default async function Home() {
                   alt=""
                   width={24}
                   height={24}
-                  className="w-6 h-6 rounded-full object-cover border border-[var(--color-border-subtle)]"
+                  className="w-6 h-6 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
                 />
               ) : (
                 // No avatar uploaded yet — a circle with the first letter of
                 // the name, same fallback as settings/profile.
                 <span
-                  className="grid place-items-center w-6 h-6 rounded-full bg-[var(--color-bg-grouped)]
+                  className="grid place-items-center w-6 h-6 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
                     border border-[var(--color-border-subtle)] text-label-tertiary
                     [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
                   aria-hidden="true"
