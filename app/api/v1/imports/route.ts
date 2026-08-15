@@ -11,5 +11,5 @@ export async function GET() {
   const db = await serverClient();
   if (!db) return NextResponse.json({ error: "No database configured." }, { status: 503 });
 
-  return NextResponse.json({ imports: await recentImports(db) });
+  return NextResponse.json({ imports: await recentImports(db, viewer.userId) });
 }

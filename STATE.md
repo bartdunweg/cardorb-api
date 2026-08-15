@@ -147,6 +147,22 @@ and `docs/changelog.d/2026-08-15-remove-notion-integration.md` record it.
 `npm run check` is green; a `npm run dev` boot confirmed the `[env]` warnings
 now cover only the Supabase vars (this workspace still has none configured).
 
+Since then, in this session: a full security review of the platform (auth/guard logic,
+every `app/api/` route, secrets/config/dependencies via three parallel Explore sweeps).
+Overall posture held up well — constant-time token comparison, RLS as the real
+authorization layer, parameterized queries throughout, a real CSP/HSTS/Permissions-Policy
+header set, anti-enumeration on login/signup/password-reset, no leaked secrets in git
+history. Three concrete gaps fixed: `GET /api/v1/public/[username]/collection` had no
+rate limiter (the one public route without one, and the most expensive); `email`/
+`password` settings routes had none either, unlike shape-identical `session`/`signup`;
+and `recentImports()` relied solely on RLS with no `user_id` filter in the query itself,
+unlike every other function in that file. `docs/decisions/0023-security-review-rate-limit-gaps.md`
+and `docs/changelog.d/2026-08-15-security-review-rate-limit-gaps.md` record it. Several
+other findings were left as documented, accepted tradeoffs rather than fixed — see the
+ADR for the list (verbatim Postgres error messages to clients, CSP `unsafe-inline`, the
+legacy `CARDS_TOKEN` path, in-memory rate limiting, `x-forwarded-host` trust). `npm run
+check` is green.
+
 ## Open
 
 - **Apply `supabase/migrations/20260815120000_drop_notion_connections.sql`**
