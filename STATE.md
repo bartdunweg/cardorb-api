@@ -343,10 +343,12 @@ widened `tabbarItemClassName`'s static fallback from a tight 72px estimate
 to a deliberately generous 104px, so a device where none of the three JS
 triggers work still doesn't clip the label.
 
-This was merged and deployed (PR #41 to `main`) on explicit instruction —
-"oke fixen dan denk ik" landed as a follow-up commit on the same branch
-rather than reopening the PR, since #41 was already merged. Not yet
-confirmed with a live signed-in screenshot after this specific fix — browser
+The tabbar/Settings/Dashboard-title work was merged and deployed as PR #41
+on explicit instruction ("oke fixen dan denk ik" — merge before the label
+clipping was actually confirmed fixed, since it wasn't yet), and the
+label-width hardening above followed as PR #43 off the same branch once the
+clipping was confirmed still happening post-merge. Not yet confirmed with a
+live signed-in screenshot after PR #43 — browser
 automation in this workspace can't sign in, so this whole thread still needs
 a human pass at ≤1000px on `/dashboard`, `/collection`, `/wishlist`,
 `/settings` (and its subpages), and a check that `/settings/password` still
