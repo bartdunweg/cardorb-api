@@ -165,9 +165,11 @@ check` is green.
 
 ## Open
 
-- **Apply `supabase/migrations/20260815120000_drop_notion_connections.sql`**
-  to the live database — not done yet, deliberately left for an explicit
-  go-ahead since it drops a production table.
+- ~~Apply `supabase/migrations/20260815120000_drop_notion_connections.sql`
+  to the live database~~ — done. Checked the live database directly
+  (`supabase db query --linked`): `public.connections` no longer exists,
+  `public.cards` does, and holds 1,969 rows — the collection was never in
+  the table that got dropped, and it's untouched.
 - This workspace's `.env.local` has `CARDS_TOKEN`/`OWNER_EMAIL` filled in but
   still needs real `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
   (and `SUPABASE_SERVICE_ROLE_KEY` for the account-deletion path) pasted in
