@@ -7,6 +7,7 @@ import { FormError } from "./FormField";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSwipe } from "../hooks/useSwipe";
 import type { CardDetail as Detail, OwnedCard } from "../../lib/core/cards";
+import { modalCardClassName } from "./cardModalClasses";
 
 /**
  * A card on the public link, opened in place.
@@ -115,7 +116,7 @@ export default function PublicCardDialog({
       open={card != null}
       onClose={onClose}
       label={card?.name ?? "Card"}
-      className="modal--card"
+      className={modalCardClassName}
     >
       <div {...swipe}>
         {card ? (

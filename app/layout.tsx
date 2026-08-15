@@ -133,7 +133,12 @@ export default function RootLayout({
       </head>
       <body className="bg-bg-grouped text-label [font-family:var(--font-main)] min-h-screen text-pretty">
         <ThemeProvider>
-          <a href="#main-content" className="skip-link">
+          <a
+            href="#main-content"
+            className="absolute -top-full left-4 [padding:var(--space-2)_var(--space-4)]
+              bg-label text-bg-surface rounded-sm [font-size:var(--fs-small)]
+              [z-index:var(--z-skip)] no-underline focus:top-4"
+          >
             Skip to content
           </a>
           {/* ml-0 + pt-[var(--main-pad-top)] used to live in tabbar.css's own

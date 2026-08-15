@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import Modal from "./Modal";
+import { Sheet, sheetApplyButtonClassName, sheetClearButtonClassName, sheetFootButtonClassName } from "./Sheet";
 import FilterOptions from "./FilterOptions";
 import type { Facet } from "./cards-fields";
 
@@ -68,62 +68,56 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
         {total > 0 && <span className="cards-filter-badge">{total}</span>}
       </button>
 
-      <Modal
+      <Sheet
         open={open}
         onClose={() => setOpen(false)}
         label="Filter the collection"
-        variant="right"
-        className="modal--sheet"
-      >
-        <div className="sheet">
-          <div className="sheet-head">
-            <h2 className="sheet-title">Filter</h2>
-            {/* Clears the draft, not the page. Nothing is undone until Apply,
-                which is the whole point of staging: this is a big destructive
-                button and here it costs nothing until you agree to it. */}
-            {staged > 0 && (
-              <button
-                type="button"
-                className="sheet-clear"
-                onClick={() => setDraft(Object.fromEntries(facets.map((f) => [f.key, new Set()])))}
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-
-          <div className="sheet-body">
-            <FilterOptions
-              facets={facets}
-              openFacet={openFacet}
-              onOpenFacet={setOpenFacet}
-              // The draft, not the facet. This is the whole difference between
-              // the two wrappers, and it is three lines.
-              selected={(f) => draft[f.key] ?? new Set()}
-              onToggle={(f, value) =>
-                setDraft((d) => {
-                  const next = new Set(d[f.key] ?? []);
-                  if (!next.delete(value)) next.add(value);
-                  return { ...d, [f.key]: next };
-                })
-              }
-              onReplace={(f, next) => setDraft((d) => ({ ...d, [f.key]: next }))}
-            />
-          </div>
-
-          {/* Under the thumb, and both halves of the decision side by side: a
-              sheet whose only way out is Apply is a sheet that makes you undo
-              what you were only looking at. */}
-          <div className="sheet-foot">
-            <button type="button" className="btn" onClick={() => setOpen(false)}>
+        title="Filter"
+        headExtra={
+          // Clears the draft, not the page. Nothing is undone until Apply,
+          // which is the whole point of staging: this is a big destructive
+          // button and here it costs nothing until you agree to it.
+          staged > 0 && (
+            <button
+              type="button"
+              className={sheetClearButtonClassName}
+              onClick={() => setDraft(Object.fromEntries(facets.map((f) => [f.key, new Set()])))}
+            >
+              Clear all
+            </button>
+          )
+        }
+        footer={
+          // Under the thumb, and both halves of the decision side by side: a
+          // sheet whose only way out is Apply is a sheet that makes you undo
+          // what you were only looking at.
+          <>
+            <button type="button" className={`btn ${sheetFootButtonClassName}`} onClick={() => setOpen(false)}>
               Cancel
             </button>
-            <button type="button" className="btn btn--primary sheet-apply" onClick={apply}>
+            <button type="button" className={`btn btn--primary ${sheetApplyButtonClassName}`} onClick={apply}>
               {staged > 0 ? `Apply ${staged}` : "Apply"}
             </button>
-          </div>
-        </div>
-      </Modal>
+          </>
+        }
+      >
+        <FilterOptions
+          facets={facets}
+          openFacet={openFacet}
+          onOpenFacet={setOpenFacet}
+          // The draft, not the facet. This is the whole difference between
+          // the two wrappers, and it is three lines.
+          selected={(f) => draft[f.key] ?? new Set()}
+          onToggle={(f, value) =>
+            setDraft((d) => {
+              const next = new Set(d[f.key] ?? []);
+              if (!next.delete(value)) next.add(value);
+              return { ...d, [f.key]: next };
+            })
+          }
+          onReplace={(f, next) => setDraft((d) => ({ ...d, [f.key]: next }))}
+        />
+      </Sheet>
     </>
   );
 }

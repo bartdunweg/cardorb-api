@@ -9,37 +9,10 @@
   padding: 0;
 }
 
-/* ─── SKIP LINK ─── */
-.skip-link {
-  position: absolute;
-  top: -100%;
-  left: 16px;
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-label);
-  color: var(--color-bg-surface);
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-small);
-  z-index: var(--z-skip);
-  text-decoration: none;
-}
-
-.skip-link:focus {
-  top: 16px;
-}
-
-/* ─── VISUALLY HIDDEN ─── */
-/* Present for screen readers and the document outline, invisible on screen. */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
+/* .skip-link moved to app/layout.tsx as Tailwind classes. .sr-only is gone
+ * entirely — it was a byte-for-byte duplicate of Tailwind's own built-in
+ * sr-only utility, which every consumer already resolves to (that utility is
+ * generated because the literal string is in ~10 components' classNames). */
 
 /* ─── FOCUS STYLES ─── */
 :focus-visible {

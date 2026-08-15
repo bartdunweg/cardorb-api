@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Settings2 } from "lucide-react";
-import Modal from "./Modal";
+import { Sheet, sheetApplyButtonClassName } from "./Sheet";
 import ViewOptions, { type ViewOptionsProps } from "./ViewOptions";
 
 /**
@@ -39,33 +39,24 @@ export default function ViewSheet(props: ViewOptionsProps) {
         <span>View</span>
       </button>
 
-      <Modal
+      <Sheet
         open={open}
         onClose={() => setOpen(false)}
         label="View options"
-        variant="right"
-        className="modal--sheet"
+        title="View"
+        padBody
+        footer={
+          <button
+            type="button"
+            className={`btn btn--primary ${sheetApplyButtonClassName}`}
+            onClick={() => setOpen(false)}
+          >
+            Done
+          </button>
+        }
       >
-        <div className="sheet">
-          <div className="sheet-head">
-            <h2 className="sheet-title">View</h2>
-          </div>
-
-          <div className="sheet-body sheet-body--pad">
-            <ViewOptions {...props} />
-          </div>
-
-          <div className="sheet-foot">
-            <button
-              type="button"
-              className="btn btn--primary sheet-apply"
-              onClick={() => setOpen(false)}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      </Modal>
+        <ViewOptions {...props} />
+      </Sheet>
     </>
   );
 }

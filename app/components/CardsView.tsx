@@ -33,6 +33,7 @@ import { type CardField, type DexOwned } from "./cards-fields";
 import type { CardSet, OwnedCard } from "../../lib/core/cards";
 import { eraLabel, eraYears, groupByEra } from "../../lib/core/eras";
 import { LOCALE, OWNER_NAME } from "../../lib/core/config";
+import { cardsMainClassName, onlyNarrowClassName, onlyWideClassName } from "./cardsPageClasses";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
 function releasedIn(iso: string | null) {
@@ -1229,7 +1230,7 @@ export default function CardsView({
                       it is not. Swapped in the stylesheet rather than by
                       measuring the window, so the server renders one markup and
                       the browser does not correct it after hydration. */}
-                  <span className="only-wide">
+                  <span className={onlyWideClassName}>
                     <ViewMenu
                       view={view}
                       onView={setView}
@@ -1249,7 +1250,7 @@ export default function CardsView({
                       max={range.max}
                     />
                   </span>
-                  <span className="only-narrow">
+                  <span className={onlyNarrowClassName}>
                     <ViewSheet
                       view={view}
                       onView={setView}
@@ -1305,10 +1306,10 @@ export default function CardsView({
                 to correct it after hydration. */}
               {!onPokedex && (
                 <>
-                  <span className="only-wide">
+                  <span className={onlyWideClassName}>
                     <FilterMenu facets={facets} />
                   </span>
-                  <span className="only-narrow">
+                  <span className={onlyNarrowClassName}>
                     <FilterSheet facets={facets} />
                   </span>
                 </>
@@ -1550,7 +1551,7 @@ export default function CardsView({
         onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}
       />
 
-      <section className="cards-main">{main}</section>
+      <section className={cardsMainClassName}>{main}</section>
 
       {/* Last, so Tab reaches the collection before the bar under it. It is
           fixed, so where it sits in the document costs it nothing. */}

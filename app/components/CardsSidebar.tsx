@@ -63,7 +63,18 @@ export default function CardsSidebar({
     // On the rail rather than on .page-cards, which is a server component two
     // files up: .cards-main is this element's next sibling, so one attribute
     // here is enough for the stylesheet to hide either side.
-    <div className="cards-rail" data-pane={pane}>
+    <div
+      // Only gap/padding/background/blur are Tailwind here — display,
+      // position, height, overflow, border-right and box-shadow all stay CSS
+      // (still ".cards-rail"): every one of them is conditionally reset by
+      // the <=1000px pane-swap block below, and an unconditional Tailwind
+      // utility for any of them would now beat that reset (Tailwind utilities
+      // outrank legacy CSS regardless of the legacy rule's specificity, see
+      // ADR-0012) — caught live: the rail stopped hiding on a narrow phone.
+      className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
+        bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]"
+      data-pane={pane}
+    >
       {/* What this screen is, and only on the widths where the rail is a screen
           of its own: without it you arrive at fifty sets with nothing saying
           what they are a list of. Above 1000px the heading over the results is
@@ -77,7 +88,13 @@ export default function CardsSidebar({
           aria-hidden, and not a heading: the h1 in CardsView already named the
           page and it is in the document whichever pane is up. This is the same
           fact drawn for anyone who can see the layout. */}
-      <p className="cards-rail-title" aria-hidden="true">
+      <p
+        className="hidden [@media(max-width:1000px)]:block [@media(max-width:1000px)]:mb-4
+          [@media(max-width:1000px)]:p-2 [@media(max-width:1000px)]:[font-family:var(--font-main)]
+          [@media(max-width:1000px)]:[font-weight:var(--fw-title)] [@media(max-width:1000px)]:[font-size:var(--fs-h2)]
+          [@media(max-width:1000px)]:[line-height:var(--lh-tight)] [@media(max-width:1000px)]:text-label"
+        aria-hidden="true"
+      >
         Sets
       </p>
 
@@ -90,10 +107,10 @@ export default function CardsSidebar({
           Below 1000px this whole head is gone. The bar along the bottom carries
           the plus. */}
       {signedIn && (
-        <div className="cards-rail-head">
+        <div className="flex items-center gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
           <button
             type="button"
-            className="btn btn--icon cards-rail-add"
+            className="btn btn--icon flex-none"
             onClick={onAdd}
             aria-label="Add a card"
             title="Add a card"
@@ -104,7 +121,7 @@ export default function CardsSidebar({
       )}
 
       <nav aria-label="Collection">
-        <ul className="cards-nav" role="list">
+        <ul className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
           {/* Not sets, but the places the sets are not: without them the
               dashboard is unreachable the moment you open one.
 
@@ -171,7 +188,7 @@ export default function CardsSidebar({
               sake. */}
           <li
             aria-hidden="true"
-            className={`cards-nav-rule${isPublic ? " cards-nav-elsewhere" : ""}`}
+            className={`block h-px m-2 bg-[var(--color-border-subtle)]${isPublic ? " cards-nav-elsewhere" : ""}`}
           />
           {/* Fifty-one sets in one run is a wall. Under the era they belong to
               it is a handful of short lists, and the label is the thing a
@@ -182,20 +199,26 @@ export default function CardsSidebar({
                   separates the sets from the two rows above them. The label
                   alone had to carry the break on its own, which at --fs-small
                   and tertiary is not a line anyone reads as one. */}
-              {i > 0 && <span aria-hidden="true" className="cards-nav-rule" />}
+              {i > 0 && (
+                <span aria-hidden="true" className="block h-px m-2 bg-[var(--color-border-subtle)]" />
+              )}
               {/* The label is the selection for the whole era, which is what the
                   Era facet used to be. One control instead of two: a heading you
                   can press beats the same list of eras repeated as tick boxes
                   further down the rail. */}
               <button
                 type="button"
-                className={`cards-nav-era${selected === `era:${group.era}` ? " is-active" : ""}`}
+                className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
+                  border-0 rounded-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
+                  [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-label-tertiary
+                  hover:text-label first:mt-0
+                  ${selected === `era:${group.era}` ? "text-label bg-bg-grouped" : ""}`}
                 onClick={() => onSelect(`era:${group.era}`)}
                 aria-pressed={selected === `era:${group.era}`}
               >
                 {group.label}
               </button>
-              <ul className="cards-nav" role="list">
+              <ul className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
                 {group.sets.map((set) => (
                   <li key={set.name}>
                     <NavItem
@@ -270,17 +293,20 @@ function NavItem({
   return (
     <button
       type="button"
-      className={`cards-nav-item${active ? " is-active" : ""}`}
+      className={`cards-nav-item [--pill-radius:var(--radius-md)] relative flex items-center gap-3
+        w-full p-2 border-0 rounded-md bg-transparent text-left cursor-pointer text-inherit
+        [&.is-active]:bg-[var(--color-bg-grouped)]${active ? " is-active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
     >
       {(logo !== undefined || Icon) && (
-        <span className="cards-nav-art">
+        <span className="flex-shrink-0 flex items-center justify-center w-9 h-7">
           {Icon ? (
             <Icon size={18} strokeWidth={1.75} aria-hidden={true} />
           ) : logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
+              className="max-w-full max-h-full object-contain block"
               src={logo}
               alt=""
               loading="lazy"
@@ -290,13 +316,15 @@ function NavItem({
               onError={(e) => retryAsPng(e.currentTarget, onBrokenLogo)}
             />
           ) : (
-            <span className="cards-nav-blank" aria-hidden="true" />
+            <span className="block w-full h-full rounded-sm bg-bg-grouped" aria-hidden="true" />
           )}
         </span>
       )}
-      <span className="cards-nav-name">{name}</span>
+      <span className="flex-1 min-w-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)] text-label truncate">
+        {name}
+      </span>
       {count != null && (
-        <span className="cards-nav-count">
+        <span className="flex-shrink-0 [font-family:var(--font-body)] [font-size:var(--fs-small)] tabular-nums text-label-tertiary">
           {count.toLocaleString(LOCALE)}
           {/* The bare number is enough to look at and not enough to hear. */}
           <span className="sr-only"> cards</span>

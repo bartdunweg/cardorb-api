@@ -25,11 +25,14 @@ import { euro } from "../../lib/core/format";
  */
 export default function CardsDashboard({ stats }: { stats: CardsStats }) {
   return (
-    <div className="cards-dash">
+    <div className="flex flex-col gap-8">
       {/* Four numbers rather than four one-bar charts: a headline value is a
           stat tile, and a bar chart of unrelated totals compares things that do
           not belong on one scale. */}
-      <ul className="cards-kpis" role="list">
+      <ul
+        className="list-none m-0 p-0 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]"
+        role="list"
+      >
         <Kpi label="In the binder" value={stats.owned.toLocaleString(LOCALE)} />
         <Kpi label="On the wishlist" value={stats.wishlist.toLocaleString(LOCALE)} />
         <Kpi label="Sets" value={String(stats.sets)} />
@@ -47,9 +50,9 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
       <CollectionValueCard />
 
       {stats.top.length > 0 && (
-        <Card className="cards-dash-block">
-          <h2 className="cards-dash-title">Priciest cards</h2>
-          <p className="cards-dash-sub">
+        <Card className="flex flex-col gap-2">
+          <h2 className={cardsDashTitleClassName}>Priciest cards</h2>
+          <p className={cardsDashSubClassName}>
             The ten worth the most, at what an English Near Mint copy is listed at.
           </p>
           {/* A table, not a chart: ten named things whose identity is the point,
@@ -57,11 +60,20 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
           <table className="cards-dash-table">
             <thead>
               <tr>
-                <th scope="col">Card</th>
-                <th scope="col" className="cards-dash-set">
+                <th scope="col" className="[padding:0_var(--space-3)_var(--space-2)_0]">
+                  Card
+                </th>
+                <th
+                  scope="col"
+                  className="[padding:0_var(--space-3)_var(--space-2)_0] [@media(max-width:640px)]:hidden"
+                >
                   Set
                 </th>
-                <th scope="col" className="cards-dash-num">
+                <th
+                  scope="col"
+                  className="[padding:0_var(--space-3)_var(--space-2)_0] text-right
+                    [font-variant-numeric:tabular-nums] whitespace-nowrap"
+                >
                   Value
                 </th>
               </tr>
@@ -69,15 +81,19 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
             <tbody>
               {stats.top.map(({ card, set }) => (
                 <tr key={card.key}>
-                  <td className="cards-dash-card">
+                  <td
+                    className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0]
+                      flex items-center gap-3"
+                  >
                     {/* The scan, small. A list of the priciest cards is a list of
                         things you recognise by looking at them. */}
-                    <span className="cards-dash-thumb">
+                    <span className="flex-shrink-0 block w-[22px] h-[30px] rounded-[3px] overflow-hidden bg-[var(--color-bg-grouped)]">
                       {card.image ? (
                         // Already a full URL: lib/cards.ts appends /low.webp
                         // when it builds this, so the size is settled there.
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
+                          className="w-full h-full object-cover block"
                           src={card.image}
                           alt=""
                           loading="lazy"
@@ -86,21 +102,38 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
                           height={card.imageSize?.height}
                         />
                       ) : (
-                        <span className="cards-dash-thumb-blank" aria-hidden="true" />
+                        <span
+                          className="block w-full h-full bg-[var(--color-bg-grouped)]"
+                          aria-hidden="true"
+                        />
                       )}
                     </span>
                     {card.tcgId ? (
                       // Same reason as the grid: a dialog over the page, so
                       // the page underneath should not move. See CardsView.
-                      <Link href={`/cards/${card.tcgId}`} scroll={false}>
+                      <Link
+                        href={`/cards/${card.tcgId}`}
+                        scroll={false}
+                        className="text-label no-underline"
+                      >
                         {card.name}
                       </Link>
                     ) : (
                       card.name
                     )}
                   </td>
-                  <td className="cards-dash-set">{set}</td>
-                  <td className="cards-dash-num">{euro(shownPrice(card.price) ?? 0)}</td>
+                  <td
+                    className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0]
+                      [@media(max-width:640px)]:hidden"
+                  >
+                    {set}
+                  </td>
+                  <td
+                    className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0] text-right
+                      [font-variant-numeric:tabular-nums] whitespace-nowrap"
+                  >
+                    {euro(shownPrice(card.price) ?? 0)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -108,7 +141,7 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
         </Card>
       )}
 
-      <div className="cards-dash-pair">
+      <div className="grid gap-x-6 gap-y-8 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
         <Bars title="By era" caption="Cards per era, held and wanted." rows={stats.byEra} />
         <Bars title="By type" caption="Cards per type, held and wanted." rows={stats.byType} />
       </div>
@@ -116,14 +149,27 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
   );
 }
 
+const cardsDashTitleClassName =
+  "m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)] text-label";
+const cardsDashSubClassName =
+  "[margin:0_0_var(--space-3)_0] max-w-[60ch] [font-family:var(--font-body)]" +
+  " [font-size:var(--fs-small)] text-label-tertiary";
+
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <li className={`cards-kpi ${aboutCardClassName}`}>
-      <span className="cards-kpi-label">{label}</span>
+    <li className={`flex flex-col gap-1 p-5 ${aboutCardClassName}`}>
+      <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary">
+        {label}
+      </span>
       {/* Proportional figures on purpose: tabular-nums gives every digit the
           width of a zero, which reads loose at this size. Tabular is for columns
           that have to line up, which is the table above, not this. */}
-      <span className="cards-kpi-value">{value}</span>
+      <span
+        className="[font-family:var(--font-main)] [font-weight:var(--fw-title)]
+          [font-size:var(--fs-h2)] [line-height:var(--lh-tight)] text-label"
+      >
+        {value}
+      </span>
     </li>
   );
 }
@@ -143,17 +189,33 @@ function Bars({
   // still visible: these are magnitudes next to each other, not shares of a whole.
   const max = Math.max(...rows.map((r) => r.count));
   return (
-    <Card className="cards-dash-block">
-      <h2 className="cards-dash-title">{title}</h2>
-      <p className="cards-dash-sub">{caption}</p>
-      <ul className="cards-bars" role="list">
+    <Card className="flex flex-col gap-2">
+      <h2 className={cardsDashTitleClassName}>{title}</h2>
+      <p className={cardsDashSubClassName}>{caption}</p>
+      <ul className="list-none m-0 p-0 flex flex-col gap-2" role="list">
         {rows.map((row) => (
-          <li key={row.value} className="cards-bar-row">
-            <span className="cards-bar-label">{row.value}</span>
-            <span className="cards-bar-track">
-              <span className="cards-bar-fill" style={{ width: `${(row.count / max) * 100}%` }} />
+          <li
+            key={row.value}
+            className="grid items-center gap-3 [grid-template-columns:minmax(0,8rem)_minmax(0,1fr)_auto]"
+          >
+            <span
+              className="p-0 border-0 bg-transparent text-left [font-family:var(--font-body)]
+                [font-size:var(--fs-small)] text-label-secondary overflow-hidden text-ellipsis whitespace-nowrap"
+            >
+              {row.value}
             </span>
-            <span className="cards-bar-value">{row.count}</span>
+            <span className="h-[10px] rounded-sm bg-[var(--color-surface-subtle)] overflow-hidden">
+              <span
+                className="block h-full bg-[var(--color-tint)] [border-radius:0_4px_4px_0]"
+                style={{ width: `${(row.count / max) * 100}%` }}
+              />
+            </span>
+            <span
+              className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+                [font-variant-numeric:tabular-nums] text-label-tertiary"
+            >
+              {row.count}
+            </span>
           </li>
         ))}
       </ul>

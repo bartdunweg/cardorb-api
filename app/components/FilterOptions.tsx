@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import type { Facet } from "./cards-fields";
+import { cardsSegmentClassName, cardsSegmentedClassName } from "./trackClasses";
 
 /**
  * How many answers a facet may have before it goes behind a row of its own.
@@ -112,13 +113,13 @@ export default function FilterOptions({
         return (
           <div key={f.key} className="facet-inline">
             <span className="facet-inline-label">{f.label}</span>
-            <div className="cards-segmented" role="group" aria-label={f.label}>
+            <div className={cardsSegmentedClassName} role="group" aria-label={f.label}>
               {/* Ticking nothing is an answer, and on a facet of two it is the
                   commonest one — so it gets a word rather than being the state
                   you reach by unticking whatever is on. */}
               <button
                 type="button"
-                className={`cards-segment${on.size === 0 ? " is-active" : ""}`}
+                className={cardsSegmentClassName(on.size === 0)}
                 aria-pressed={on.size === 0}
                 onClick={() => onReplace(f, new Set())}
               >
@@ -128,7 +129,7 @@ export default function FilterOptions({
                 <button
                   key={o.value}
                   type="button"
-                  className={`cards-segment${on.has(o.value) ? " is-active" : ""}`}
+                  className={cardsSegmentClassName(on.has(o.value))}
                   aria-pressed={on.has(o.value)}
                   onClick={() => onToggle(f, o.value)}
                 >

@@ -2,6 +2,15 @@
 
 import { LayoutGrid, Rows3 } from "lucide-react";
 import { CARD_FIELDS, type CardField } from "./cards-fields";
+import {
+  cardsSegmentClassName,
+  cardsSegmentedClassName,
+  cardsViewClassName,
+  cardsViewsClassName,
+} from "./trackClasses";
+
+const fieldClassName = "flex flex-col gap-2";
+const labelClassName = "[font-size:var(--fs-small)] text-label-secondary";
 
 export type ViewOptionsProps = {
   view: "grid" | "list";
@@ -58,11 +67,11 @@ export default function ViewOptions({
       {/* First, because it is the bigger of the two choices: it decides what
           the page is a list of before anything decides how the rows are
           drawn. */}
-      <div className="sheet-field">
-        <span className="sheet-label" id="view-group">
+      <div className={fieldClassName}>
+        <span className={labelClassName} id="view-group">
           Group by
         </span>
-        <div className="cards-segmented" role="group" aria-labelledby="view-group">
+        <div className={cardsSegmentedClassName} role="group" aria-labelledby="view-group">
           {(
             [
               ["flat", "None"],
@@ -74,7 +83,7 @@ export default function ViewOptions({
             <button
               key={key}
               type="button"
-              className={`cards-segment${group === key ? " is-active" : ""}`}
+              className={cardsSegmentClassName(group === key)}
               aria-pressed={group === key}
               onClick={() => onGroup(key)}
             >
@@ -87,9 +96,9 @@ export default function ViewOptions({
       {/* Nothing to lay out or to size when the page is a dex: that shelf draws
           its own slots. */}
       {!dex && (
-        <div className="sheet-field">
-          <span className="sheet-label">Layout</span>
-          <div className="cards-views" role="group" aria-label="Layout">
+        <div className={fieldClassName}>
+          <span className={labelClassName}>Layout</span>
+          <div className={cardsViewsClassName} role="group" aria-label="Layout">
             {(
               [
                 ["grid", LayoutGrid, "Grid"],
@@ -99,7 +108,7 @@ export default function ViewOptions({
               <button
                 key={key}
                 type="button"
-                className={`cards-view${view === key ? " is-active" : ""}`}
+                className={cardsViewClassName(view === key)}
                 aria-pressed={view === key}
                 aria-label={`${text} view`}
                 onClick={() => onView(key)}
@@ -113,14 +122,19 @@ export default function ViewOptions({
 
       {/* Which facts a tile carries. Checkboxes rather than a segmented row:
           these are independent answers, not one choice among several, and there
-          are seven of them. */}
+          are seven of them. Two columns, because six checkboxes in one run is a
+          panel twice as tall as the controls above it for the least important
+          of the three questions it asks. */}
       {!dex && (
-        <div className="sheet-field">
-          <span className="sheet-label">Show on card</span>
-          <ul className="view-fields" role="list">
+        <div className={fieldClassName}>
+          <span className={labelClassName}>Show on card</span>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1 m-0 p-0 list-none" role="list">
             {CARD_FIELDS.map(([key, text]) => (
               <li key={key}>
-                <label className="view-field">
+                <label
+                  className="flex items-center gap-2 min-h-7 [font-family:var(--font-body)]
+                    [font-size:var(--fs-small)] text-label cursor-pointer"
+                >
                   <input type="checkbox" checked={fields.has(key)} onChange={() => onField(key)} />
                   <span>{text}</span>
                 </label>
@@ -130,17 +144,26 @@ export default function ViewOptions({
         </div>
       )}
 
+      {/* How many cards across. A row of numbers rather than a slider: the
+          answer is a small whole number and there are never more than eight of
+          them, so picking one directly beats dragging until the grid happens to
+          land on it. */}
       {!dex && view === "grid" && (
-        <div className="sheet-field">
-          <span className="sheet-label" id="view-size">
+        <div className={fieldClassName}>
+          <span className={labelClassName} id="view-size">
             Per row
           </span>
-          <div className="cards-count-picker" role="group" aria-label="Cards per row">
+          <div className="flex gap-1 w-full" role="group" aria-label="Cards per row">
             {Array.from({ length: max - min + 1 }, (_, i) => min + i).map((n) => (
               <button
                 key={n}
                 type="button"
-                className={`cards-count-option${cols === n ? " is-active" : ""}`}
+                className={`flex-1 min-w-0 h-8 rounded-sm [font-family:var(--font-body)] [font-size:var(--fs-small)]
+                  tabular-nums cursor-pointer ${
+                    cols === n
+                      ? "border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
+                      : "border border-[var(--color-border)] bg-transparent text-label-secondary"
+                  }`}
                 aria-pressed={cols === n}
                 onClick={() => onCols(n)}
               >

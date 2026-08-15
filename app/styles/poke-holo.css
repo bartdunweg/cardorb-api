@@ -24,7 +24,17 @@
       what made this read as several effects at once on a picture 113px wide.
    3. Its full-art recipe layers a texture (img/illusion.png, 50KB) under the
       gradients. Skipped: a hover effect on one card is not worth 50KB on every
-      view of /about, and the gradients carry it on their own. */
+      view of /about, and the gradients carry it on their own.
+
+   PERMANENT EXCEPTION to the Tailwind migration (see docs/decisions/, the
+   Tailwind ADR series starting at 0006): this file is not scheduled to move.
+   It is a vendored copy of a third party's own CSS, kept byte-for-byte
+   comparable to its upstream source so a future diff against
+   pokemon-cards-css stays legible. Translating it into Tailwind utility
+   classes would obscure that provenance for no benefit — nothing else in the
+   app reaches into these rules by name, and there is no cross-file coupling
+   here to untangle the way there was everywhere else this migration
+   touched. */
 
 /* The custom element is inline by default and would not take the picture's
    shape. The radius is here rather than on the card because hover-tilt's own

@@ -1,0 +1,2 @@
+- Fixed a real regression from an earlier migration pass: the Add Card dialog's inputs had lost their glass-control styling (border, background, height, focus ring) entirely, because the CSS class they read no longer existed anywhere in the DOM. Restored as Tailwind classes on `CardAddDialog.tsx`.
+- Deleted `form.css` (fully redundant after the fix above) and `tokens.css`'s dead `.sr-only` rule (a byte-for-byte duplicate of Tailwind's own built-in utility). Migrated `.skip-link` to Tailwind classes in `app/layout.tsx`.
