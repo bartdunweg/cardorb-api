@@ -297,6 +297,73 @@ colour swap with the tradeoff spelled out in the same comment.
   shared rows) and ADR-0013-style conditionally-overridden properties.
   Nothing further identified as migratable.
 
+Since then, in this session: rarity and type stop being Notion-descended,
+hand-typed facts and become TCGdex-sourced (`docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md`).
+Two new routes, `GET /api/v1/catalog/sets` (TCGdex's own set index, cached the
+same way `catalogue.ts`'s `loadSetCatalogue` already fetches it) and
+`GET /api/v1/catalog/cards/[id]` (a thin wrapper over `getCardDetail()`,
+which now also returns `localId`). `CardAddDialog.tsx` was reworked from
+free-text `set`/`rarity`/`gen`/`types` inputs to: pick a set from TCGdex's
+index → search within it via the existing `/api/v1/catalog/search` → click a
+result → the card's name/number/set/rarity/type populate from
+`/catalog/cards/[id]` as read-only facts, not editable text. Generation stays
+free text (it's a shelf the owner built, not a TCGdex fact). Two React-hooks
+lint errors (`react-hooks/set-state-in-effect`) came out of the first version
+of this component — fixed by deriving the chosen set with `useMemo` instead
+of state+effect, and by moving `setSearching(true)` inside the debounce
+timer's callback instead of calling it synchronously in the effect body.
+
+`scripts/backfill-rarity-types.mjs` **has been run against the live database**
+(`--user 3fe9b080-2279-480b-a6ec-4fa58611c8cb --write`, Bart's explicit
+go-ahead): 978 rows updated, 22 written to
+`docs/rarity-type-backfill-corrections.md` for having no confident TCGdex
+match. Its first version tried to resolve a row to a TCGdex id by reading a
+running build's `/cards` flight payload the way `snapshot-collection-value.mjs`
+does — but that page now requires a real signed-in session cookie (`/cards`
+itself now just redirects to `/collection`, and the app shell's auth check is
+cookie-only, not the legacy `x-cards-key` header), which this session could
+not obtain. Rewritten to call the same matching primitives
+`buildCollection()` uses directly — `resolveSetIds`/`fetchSet`/`numberForms`
+from `lib/core/catalogue.ts`/`tcgdex-client.ts`/`util.ts`, `sameCard()` from
+`lib/core/matching.ts` — run via `tsx` (Node 22+; `@supabase/supabase-js`
+needs a native `WebSocket`, absent on this machine's default Node 20, so the
+script must run under the `v24.19.0` nvm install). Deliberately not routed
+through `setCatalogue()`: that wraps the same walk in `unstable_cache`, which
+throws ("incrementalCache missing") outside a running Next.js request —
+confirmed by trying it directly. This turned out to be a better shape for a
+one-off script than the flight-payload approach anyway: no build, no server,
+no session needed.
+
+**The dry run surfaced a real finding, not a rubber stamp**: all 978 matched
+rows differed from TCGdex, not a handful. `cards.rarity` had been doing double
+duty — for chase cards it held TCGdex-shaped tiers ("Illustration Rare",
+"Ultra Rare"), but for ordinary cards it held which *foil variant* the owner's
+physical copy was ("Non-holo", "Holo", "Reversed Holo"), a fact TCGdex has no
+field for at all. Overwriting blind would have both destroyed that variant
+information and broken `poke-holo.css`'s foil effect, whose selectors were
+keyed on exactly those three words. Flagged to Bart before writing anything;
+his answer was explicit — TCGdex is the source of truth, apply it fully, the
+foil-variant fact is an accepted casualty. `poke-holo.css`'s `data-rarity`
+selectors were rewritten to TCGdex's own tier vocabulary (`common`/`uncommon`/
+`promo` → no foil; `rare`/`double rare`/anything containing `holo`/`amazing
+rare`/etc. → the middle tier; `illustration rare`/`ultra rare`/`hyper rare`/
+etc. → full strength), matched by substring for the `*holo*` family so a
+future set's own "Rare Holo GX"-style tier still foils correctly without an
+exact-string entry. Verified after writing: `npm run check` green; a direct
+Postgres read confirmed a sample (`White Flare` #001–#003) landed correctly.
+
+**Not verified in a real browser** — no Chrome extension connected in this
+workspace, same gap earlier sessions hit. `CardAddDialog.tsx`'s
+search-and-select flow has not been exercised live.
+
 ## Next session
 
-Ask what's next. The Tailwind migration is complete.
+- **The reworked `CardAddDialog.tsx` needs a real signed-in browser pass**:
+  open the dialog, pick a set, search, click a result, confirm the derived
+  summary is right, submit, confirm the row lands correctly. Not exercised
+  live in this session (no browser extension connected).
+- **`docs/rarity-type-backfill-corrections.md`** lists 22 rows the backfill
+  could not confidently match to a TCGdex id — the same worklist shape
+  `trainer-gallery-row-corrections.md` used for artwork. Worth checking
+  whether any of these are the same 23 Trainer Gallery rows that worklist
+  already covers.

@@ -67,6 +67,7 @@ export default function PublicCardDialog({
     ? {
         id: card.tcgId ?? "",
         name: card.name,
+        localId: card.number || null,
         image: card.image,
         rarity: card.variants[0]?.rarity ?? null,
         illustrator: null,

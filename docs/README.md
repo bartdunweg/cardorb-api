@@ -58,4 +58,9 @@ root `CLAUDE.md` for how and when to write to it.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.
+- `decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md` — rarity and
+  type stop being hand-typed/Notion-descended facts and are resolved from
+  TCGdex instead: a one-time backfill for existing rows, and a search-and-select
+  add-card flow going forward. Builds directly on the audit/worklist pattern
+  `0022` used for artwork.
 - Root `README.md` — what Card Orb is, the API surface, production environment.
