@@ -428,7 +428,7 @@ export default function CardAddDialog({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   autoComplete="off"
-                  placeholder="Charizard, 006, 151, or Fire…"
+                  placeholder="Search for a card"
                   aria-label="Search for a card by name, number, set or type"
                 />
                 {query && (

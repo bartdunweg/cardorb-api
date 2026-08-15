@@ -1,0 +1,1 @@
+- Add a card: the search bar's placeholder now says "Search for a card" instead of a list of example queries.
