@@ -7,6 +7,10 @@
     {
       "path": "/api/v1/health",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/v1/cron/catalogue-refresh",
+      "schedule": "0 5 * * 0"
     }
   ]
 }

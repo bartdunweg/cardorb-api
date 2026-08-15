@@ -1,0 +1,1 @@
+- `GET /api/v1/catalog/search` no longer requires `set`: without it, results now search the whole catalogue by name/number instead of one set at a time, backed by a weekly-refreshed index rather than a live TCGdex walk.

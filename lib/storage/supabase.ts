@@ -120,10 +120,17 @@ export async function serverClient(): Promise<SupabaseClient | null> {
 /**
  * The service role, which is not a caller and answers to nobody.
  *
- * Two callers only: scripts/import-notion.mjs and, when it exists, account
- * deletion. Everything else in this app must go through one of the two above,
- * because everything else in this app is acting on behalf of somebody and this
- * client cannot represent that.
+ * Three callers: scripts/import-notion.mjs, account deletion when it exists,
+ * and refreshCatalogueIndex() (lib/core/catalogue-index.ts), writing to
+ * public.catalogue_cards from the weekly catalogue-refresh cron. All three
+ * share the same shape: a job with no owner, writing rows that belong to
+ * nobody in particular. Everything else in this app must go through one of
+ * the callers above, because everything else is acting on behalf of somebody
+ * and this client cannot represent that. Reads of catalogue_cards go through
+ * readClient() instead, even though the data is the same either way — that
+ * table's own RLS policy already allows public reads, and answering it with
+ * the client that bypasses RLS would make that policy not the one place the
+ * permission is decided.
  *
  * It reads a key that is deliberately not NEXT_PUBLIC_, so this returns null in
  * any context where the browser bundle could have reached it.

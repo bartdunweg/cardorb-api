@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
 const setCatalogue = vi.fn();
+const searchCatalogue = vi.fn();
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
 // wholesale rather than importOriginal()-ed.
@@ -11,6 +12,9 @@ vi.mock("../../../../../lib/api/guard", () => ({
   readHeaders: () => ({}),
 }));
 vi.mock("../../../../../lib/core/catalogue", () => ({ setCatalogue: (...a: unknown[]) => setCatalogue(...a) }));
+vi.mock("../../../../../lib/core/catalogue-index", () => ({
+  searchCatalogue: (...a: unknown[]) => searchCatalogue(...a),
+}));
 
 const { GET } = await import("./route");
 
@@ -31,12 +35,35 @@ beforeEach(() => {
     setHasScans: true,
   });
 });
-afterEach(() => setCatalogue.mockClear());
+afterEach(() => {
+  setCatalogue.mockClear();
+  searchCatalogue.mockClear();
+});
 
 describe("GET /api/v1/catalog/search", () => {
-  it("refuses without a set to search in", async () => {
-    const res = await search(new URLSearchParams({ query: "char" }));
+  it("refuses a set-less search with too short a query", async () => {
+    const res = await search(new URLSearchParams({ query: "c" }));
     expect(res.status).toBe(400);
+    expect(setCatalogue).not.toHaveBeenCalled();
+    expect(searchCatalogue).not.toHaveBeenCalled();
+  });
+
+  it("refuses a set-less search with no query at all", async () => {
+    const res = await search(new URLSearchParams());
+    expect(res.status).toBe(400);
+    expect(searchCatalogue).not.toHaveBeenCalled();
+  });
+
+  it("searches across every set when no set is given", async () => {
+    searchCatalogue.mockResolvedValue([
+      { id: "base1-4", number: "4", name: "Charizard", setName: "Base", image: null, imageHigh: null },
+      { id: "swsh1-4", number: "4", name: "Charizard", setName: "Sword & Shield", image: null, imageHigh: null },
+    ]);
+    const res = await search(new URLSearchParams({ query: "char" }));
+    expect(res.status).toBe(200);
+    expect(searchCatalogue).toHaveBeenCalledWith("char", { limit: 60 });
+    const { cards } = await res.json();
+    expect(cards.map((c: { setName: string }) => c.setName)).toEqual(["Base", "Sword & Shield"]);
     expect(setCatalogue).not.toHaveBeenCalled();
   });
 

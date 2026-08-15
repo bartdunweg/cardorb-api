@@ -60,6 +60,20 @@ this route has no auth/cookies to protect). `docs/decisions/0014-public-latest-p
 and `docs/changelog.d/2026-08-15-public-latest-pull-endpoint.md` record it.
 `npm run check` is green.
 
+Since then, in this session: `GET /api/v1/catalog/search` no longer requires
+`set`. A new `public.catalogue_cards` table
+(`supabase/migrations/20260815090000_catalogue_cards.sql`) holds every
+TCGdex card across every set, populated weekly by
+`app/api/v1/cron/catalogue-refresh/route.ts` (`CRON_SECRET`-gated) calling
+`refreshCatalogueIndex()` in the new `lib/core/catalogue-index.ts`; the
+search route's no-set path reads it via the new `searchCatalogue()`. The
+set-scoped path is unchanged (still `setCatalogue()`, still a day old at
+most). `docs/decisions/0015-cross-set-catalogue-search.md` and
+`docs/changelog.d/2026-08-15-cross-set-catalogue-search.md` record it, and
+also fix a stale `docs/decisions/0006-per-variant-inventory-fields.md`
+cross-reference in the route's header comment (that file doesn't exist; the
+real rationale was always 0008). `npm run check` is green.
+
 ## Open
 
 Nothing flagged from this session's own work. Worth knowing for whoever
@@ -78,6 +92,15 @@ mocked `getCards`/`ownerOf` but hasn't hit real Notion/Postgres data via
 `npm run dev` (same credentials gap). Worth a real `curl -i` against a live
 collection — including marking a card `excluded` and confirming it drops out —
 before the portfolio site is pointed at it.
+
+The cross-set catalogue search added this session (`catalogue_cards`, the
+weekly refresh cron, `searchCatalogue()`) is unverified against a live
+Supabase project — no credentials in this workspace. Before it ships: run the
+migration, trigger `GET /api/v1/cron/catalogue-refresh` with `CRON_SECRET`
+set, confirm rows land and RLS behaves (anon can `select`, cannot
+`insert`/`update`), then `curl` both search paths. The iOS client
+(`CardOrbAPI.swift`, `CardLookupView`) also still needs updating to actually
+use the new no-set path — that's a separate repo, not touched here.
 
 ## Next session
 

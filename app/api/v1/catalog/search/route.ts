@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server";
 import { setCatalogue } from "../../../../../lib/core/catalogue";
+import { searchCatalogue } from "../../../../../lib/core/catalogue-index";
 import { localise } from "../../../../../lib/core/util";
 import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
 
 /**
- * Finding a card to add, by name, inside one set.
+ * Finding a card to add, by name or number, inside one set or across all of
+ * them.
  *
- * Scoped to a set on purpose, not a smaller version of a bigger feature still
- * to come. Nothing in this codebase can go from a typed name to candidate
- * cards across every set without fetching every set from TCGdex to find out —
- * setCatalogue() resolves one named set at a time, and that is the expensive
- * half this whole file (see catalogue.ts's own comment) exists to cache. A
- * global search would mean paying that cost, uncached, on every keystroke,
- * for a set of results no set-scoped search already gives the add-card form.
- * See docs/decisions/0006-per-variant-inventory-fields.md.
+ * Two paths, because they pay for freshness differently. With `set`, this
+ * still calls setCatalogue() directly — a day-old cache at most, cheap to
+ * keep that fresh because resolving and walking one set is a query, not a
+ * texture on the app's expensive corner. Without `set`, it reads
+ * public.catalogue_cards instead (lib/core/catalogue-index.ts), a table
+ * populated by the weekly catalogue-refresh cron rather than fetched here —
+ * going from a typed name to candidates across every set live would mean
+ * fetching every set from TCGdex per keystroke, which is exactly the cost
+ * decision 0008 (docs/decisions/0008-per-variant-inventory-fields-and-bearer-rls-fix.md,
+ * "What this does not do") ruled out doing on the request path. That
+ * reasoning still holds for why cross-set results are up to a week old
+ * instead of a day; it no longer rules out cross-set search existing at all.
  *
  * The image/imageHigh construction below is the same one buildCollection()
  * uses for a matched row (lib/core/cards.ts) — a card found here and a card
@@ -23,6 +29,10 @@ import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
 export const dynamic = "force-dynamic";
 
 const MAX_RESULTS = 60;
+// 3, not 2: pg_trgm indexes 3-character trigrams, so a shorter query gets
+// little benefit from catalogue_cards' GIN index and degrades toward a full
+// scan of a table with no per-set boundary to shrink it first.
+const MIN_QUERY_LENGTH = 3;
 
 export async function GET(req: Request) {
   const who = await authorise(req);
@@ -35,10 +45,14 @@ export async function GET(req: Request) {
   const query = url.searchParams.get("query")?.trim().toLowerCase() ?? "";
 
   if (!set) {
-    return NextResponse.json(
-      { error: "Search needs a set to look in." },
-      { status: 400, headers: readHeaders(req) },
-    );
+    if (query.length < MIN_QUERY_LENGTH) {
+      return NextResponse.json(
+        { error: `Search needs at least ${MIN_QUERY_LENGTH} characters without a set to look in.` },
+        { status: 400, headers: readHeaders(req) },
+      );
+    }
+    const cards = await searchCatalogue(query, { limit: MAX_RESULTS });
+    return NextResponse.json({ cards }, { headers: readHeaders(req) });
   }
 
   const cat = await setCatalogue(set);
