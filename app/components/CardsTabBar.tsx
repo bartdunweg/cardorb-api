@@ -65,7 +65,7 @@ import {
  */
 export type CardsTab = "dashboard" | "collection" | "wishlist" | "settings" | "sets" | "search";
 
-const ICON = { size: 20, strokeWidth: 1.75 } as const;
+const ICON_SIZE = { size: 20, strokeWidth: 1.75 } as const;
 
 export default function CardsTabBar({
   active,
@@ -89,24 +89,20 @@ export default function CardsTabBar({
     style: pillStyle,
   } = useSlidingPill(trackRef, ".tabbar-item.is-active", [active, signedIn, isPublic]);
 
-  const all: Record<string, { key: CardsTab; label: string; icon: React.ReactNode }> = {
-    dashboard: {
-      key: "dashboard",
-      label: "Dashboard",
-      icon: <LayoutDashboard {...ICON} aria-hidden="true" />,
-    },
-    collection: {
-      key: "collection",
-      label: "Collection",
-      icon: <Layers {...ICON} aria-hidden="true" />,
-    },
-    wishlist: { key: "wishlist", label: "Wishlist", icon: <Heart {...ICON} aria-hidden="true" /> },
+  // The component itself, not a pre-built element: the active tab renders
+  // its icon filled (fill="currentColor" instead of lucide's default
+  // fill="none"), which has to be decided per render against `active`, not
+  // once up front here.
+  const all: Record<string, { key: CardsTab; label: string; icon: typeof LayoutDashboard }> = {
+    dashboard: { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    collection: { key: "collection", label: "Collection", icon: Layers },
+    wishlist: { key: "wishlist", label: "Wishlist", icon: Heart },
     // A list rather than boxes: what this slot opens is the rail, which is a
     // list of set names to pick from. Layers belongs to Collection, which is
     // the cards themselves.
-    sets: { key: "sets", label: "Sets", icon: <List {...ICON} aria-hidden="true" /> },
-    settings: { key: "settings", label: "Settings", icon: <Settings {...ICON} aria-hidden="true" /> },
-    search: { key: "search", label: "Search", icon: <Search {...ICON} aria-hidden="true" /> },
+    sets: { key: "sets", label: "Sets", icon: List },
+    settings: { key: "settings", label: "Settings", icon: Settings },
+    search: { key: "search", label: "Search", icon: Search },
   };
 
   const order = isPublic
@@ -129,6 +125,7 @@ export default function CardsTabBar({
 
   const item = (tab: (typeof shown)[number]) => {
     const on = tab.key === active;
+    const Icon = tab.icon;
     return (
       <button
         key={tab.key}
@@ -139,13 +136,11 @@ export default function CardsTabBar({
         title={tab.label}
         onClick={() => onSelect(tab.key)}
       >
-        <span className={tabbarIconClassName}>{tab.icon}</span>
-        {/* The name, beside the icon, on the one slot that is lit. The
-            stylesheet has collapsed this to nothing and faded it in on
-            .is-active since the portfolio; there was simply never a label here
-            to collapse, because this bar was written with the names on
-            aria-label alone. Five icons and no words is a bar you learn rather
-            than read. */}
+        <span className={tabbarIconClassName}>
+          <Icon {...ICON_SIZE} fill={on ? "currentColor" : "none"} aria-hidden="true" />
+        </span>
+        {/* Icon and label both always on, every slot — see tabbarLabelClassName's
+            own comment for what this replaced. */}
         <span className={tabbarLabelClassName}>{tab.label}</span>
       </button>
     );

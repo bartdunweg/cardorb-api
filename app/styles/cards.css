@@ -204,7 +204,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1 1 0;
+  /* flex: 1 1 0 (equal share with the tab slots) is why this stopped being a
+     circle: flex-basis: 0 with grow: 1 sizes a flex item by distributing the
+     row's free space, and a plain `width` on a flex item is not a
+     constraint the algorithm honours over that — so this stretched to
+     whatever equal share the bar gave it instead of the min() below.
+     flex: 0 0 auto lets width/height (both --control-h) actually decide it. */
+  flex: 0 0 auto;
   /* min(), because below about 340px the slot is narrower than the circle and
      a fixed width would push the bar wider than the screen. */
   width: min(var(--control-h), 100%);
