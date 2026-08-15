@@ -183,9 +183,13 @@
   }
 }
 /* .is-active restated, and only to beat layout.css, which pins the active tab
-   at 114px so the site's four labels cannot make the bar jump. This bar draws
-   no labels at any width, for the same reason the slots are divided: there is
-   no room for five. The names are on aria-label and title. */
+   at 114px so the site's four labels cannot make the bar jump — stale now
+   that every tab wears its label (tabbarItemClassName's own flex-none/
+   min-w-[56px]/px-2 py-1.5 correctly beat this rule's flex/min-width/padding
+   regardless, being in the later `utilities` layer; left in place rather
+   than deleted since .tabbar-pages's full-width track division above still
+   depends on flex-basis being 0 somewhere in the cascade for the slots that
+   don't set their own). */
 .cards-tabbar .tabbar-item,
 .cards-tabbar .tabbar-item.is-active {
   flex: 1 1 0;
@@ -1254,29 +1258,14 @@
   }
 }
 
-/* Only the lit slot says its name, at every width this bar exists.
-   layout.css collapses .tabbar-label below 640px and the bar is drawn up to
-   1000, so between the two every tab wore its label and the row was a wall of
-   words. Restated here rather than edited into layout.css, which is a copy kept
-   comparable with its source. */
-@media (max-width: 1000px) {
-  .cards-tabbar .tabbar-label {
-    max-width: 0;
-    opacity: 0;
-    margin-left: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    transition: opacity var(--dur-fast) var(--ease-smooth);
-  }
-  .cards-tabbar .tabbar-item.is-active .tabbar-label {
-    max-width: 160px;
-    opacity: 1;
-    margin-left: var(--space-2);
-    /* A step up from --fs-control-label, which is sized for a field's caption.
-       This is the one word on the bar and it names where you are. */
-    font-size: var(--fs-body-s);
-  }
-}
+/* Every slot wears its label now, at every width this bar exists — this used
+   to collapse every label but the active one's (opacity/max-width, restated
+   here to beat layout.css's below-640px collapse of the same class), which
+   is exactly what CardsTabBar.tsx/tabbarClasses.ts stopped doing on explicit
+   instruction. Nothing there competes with this rule's opacity/max-width any
+   more — tabbarLabelClassName dropped those utilities along with the
+   behaviour — so this legacy block kept winning unopposed instead of losing
+   the way it used to. Removed rather than restated once more. */
 
 /* The view dropdown. It borrows .filter-menu's button and panel wholesale —
    same shell, same position, same outside-click — and only differs in what is
