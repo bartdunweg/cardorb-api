@@ -1,0 +1,1 @@
+- Wishlist card scans no longer render dimmed and greyscale. That styling existed to tell wishlist cards apart from owned ones when both appeared mixed in the same view; the wishlist now has its own page, so the distinction is no longer needed.
