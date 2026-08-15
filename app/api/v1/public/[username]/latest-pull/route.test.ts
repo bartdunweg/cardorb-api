@@ -51,10 +51,17 @@ vi.mock("../../../../../../lib/core/collection", () => ({
   ownerOf: (...args: unknown[]) => ownerOf(...args),
 }));
 
-const { GET } = await import("./route");
+const { GET, OPTIONS } = await import("./route");
 
 const params = (username: string) => ({ params: Promise.resolve({ username }) });
-const req = () => new Request("https://cardorb.example/api/v1/public/owner/latest-pull");
+
+// The rate limiter is module-level and keyed by address, so every test gets its
+// own so one cannot spend another's budget.
+let addresses = 0;
+const req = (ip = `10.0.0.${++addresses}`) =>
+  new Request("https://cardorb.example/api/v1/public/owner/latest-pull", {
+    headers: { "x-real-ip": ip },
+  });
 
 beforeEach(() => {
   ownerOf.mockResolvedValue("owner-1");
@@ -98,5 +105,39 @@ describe("GET /api/v1/public/[username]/latest-pull", () => {
   it("404s when there is nothing eligible to show", async () => {
     getCards.mockResolvedValue([]);
     expect((await GET(req(), params("owner"))).status).toBe(404);
+  });
+
+  it("skips a wishlist card, however recently it was added", async () => {
+    const base = sets[0]!;
+    const owned = base.cards[0]!;
+    // A wanted card, added to the store after the last real pull — and with no
+    // artwork, the way a just-announced promo arrives.
+    const wanted = {
+      ...owned,
+      key: "umbreon",
+      name: "Umbreon",
+      owned: false,
+      variants: [{ ...owned.variants[0]!, owned: false, acquiredAt: "2026-08-14T00:00:00.000Z" }],
+    };
+    getCards.mockResolvedValue([{ ...base, cards: [...base.cards, wanted] }]);
+
+    const body = await (await GET(req(), params("owner"))).json();
+    expect(body.latestPull.name).toBe("Charizard");
+  });
+
+  it("429s past the per-address limit, still cross-origin", async () => {
+    const ip = "10.9.9.9";
+    let last = await GET(req(ip), params("owner"));
+    for (let i = 0; i < 60 && last.status !== 429; i++) last = await GET(req(ip), params("owner"));
+
+    expect(last.status).toBe(429);
+    expect(last.headers.get("Access-Control-Allow-Origin")).toBe("*");
+  });
+
+  it("answers a preflight", async () => {
+    const res = await OPTIONS();
+    expect(res.status).toBe(204);
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    expect(res.headers.get("Access-Control-Allow-Methods")).toContain("GET");
   });
 });

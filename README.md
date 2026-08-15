@@ -28,6 +28,41 @@ Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
 `GET /api/v1/value-history`, `GET /api/v1/public/:username/collection`, and
 `DELETE /api/v1/account`. The public collection response never contains prices.
 
+### The latest pull, for another site
+
+```
+GET https://cardorb.com/api/v1/public/bartdunweg/latest-pull
+```
+
+The one route meant to be read from a different domain, so it is the one route that
+sends `Access-Control-Allow-Origin: *`. **No key**: a key shipped in a public site's
+JavaScript is not a secret, only an extra thing to keep in sync, and this route carries
+no auth, no cookies and no prices. Rate-limited at 60/minute per address and cached for
+five minutes at the CDN, so a widget should fetch it and not think about it.
+
+```js
+const res = await fetch("https://cardorb.com/api/v1/public/bartdunweg/latest-pull");
+if (res.ok) {
+  const { latestPull } = await res.json();
+  // name, number, image, imageHigh, rarity, speciesId, tcgId, setName, setTitle, acquiredAt
+}
+```
+
+Three things to know before you render it:
+
+- **`image` can be relative.** A scan that comes from Limitless is served through this
+  app's CORS proxy as `/api/cover?url=…`, so prefix anything starting with `/` with
+  `https://cardorb.com`. It can also be `null` — see `docs/decisions/0022`.
+- **`imageHigh` is only set for TCGdex scans**, `null` for everything else. Never rely
+  on it alone. `rarity`, `speciesId` and `tcgId` are nullable too.
+- **404 means nothing to show** — `{"error":"No card found."}` for an empty or entirely
+  excluded collection, `{"error":"No such collection."}` for an unknown username. There
+  is no `latestPull` key on either, so branch on `res.ok`.
+
+The card is the newest printing that is owned, dated, and not marked `excluded` in the
+card dialog — that checkbox is how you keep one out of this. Wishlist rows never appear
+(`docs/decisions/0021`).
+
 `GET /v1/fields` is behind the key on purpose: it is the cheapest thing a client
 can call to find out whether the key it holds still works, so signing in is one
 request rather than a failed card.

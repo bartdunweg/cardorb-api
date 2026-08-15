@@ -257,8 +257,12 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // galleries carry theirs as "ASR:TG", which is not a path segment, and
   // Limitless files those cards under the parent's numbering instead. Working
   // out that offset would mean guessing, and an off-by-one there shows a
-  // confidently wrong card, so gallery cards TCGdex has no scan for keep their
-  // empty slot.
+  // confidently wrong card, so this code is never used for a gallery number.
+  //
+  // That still holds for Limitless. What has changed since is where those cards
+  // come from instead: pokemontcg.io publishes the galleries as sets of their
+  // own, addressed by the printed number, so there is no offset to guess there
+  // and ptcgScan() picks them up. See docs/decisions/0022.
   const code = detail?.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null;
 
   /**

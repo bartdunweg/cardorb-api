@@ -62,6 +62,49 @@ describe("latestPull", () => {
     expect(latestPull([s])).toBeNull();
   });
 
+  it("returns null when every printing is on the wishlist", () => {
+    const s = set("A", [
+      card({
+        key: "1",
+        variants: [variant({ acquiredAt: "2026-01-01T00:00:00.000Z", owned: false })],
+      }),
+    ]);
+    expect(latestPull([s])).toBeNull();
+  });
+
+  it("skips a newer wishlist printing for an older owned one", () => {
+    const owned = card({
+      key: "owned",
+      name: "Charizard",
+      variants: [variant({ acquiredAt: "2026-01-01T00:00:00.000Z" })],
+    });
+    // A wanted card, added to the store more recently than the last real pull.
+    const wanted = card({
+      key: "wanted",
+      name: "Umbreon",
+      variants: [variant({ acquiredAt: "2026-07-25T00:00:00.000Z", owned: false })],
+    });
+
+    expect(latestPull([set("A", [owned, wanted])])).toMatchObject({ name: "Charizard" });
+  });
+
+  it("picks the owned printing of a card that is also on the wishlist", () => {
+    // Same card, two rows: one in the binder, one wanted in another rarity.
+    const both = card({
+      key: "both",
+      name: "Pikachu",
+      variants: [
+        variant({ acquiredAt: "2026-02-01T00:00:00.000Z", rarity: "Common" }),
+        variant({ acquiredAt: "2026-06-01T00:00:00.000Z", rarity: "Illustration Rare", owned: false }),
+      ],
+    });
+
+    expect(latestPull([set("A", [both])])).toMatchObject({
+      rarity: "Common",
+      acquiredAt: "2026-02-01T00:00:00.000Z",
+    });
+  });
+
   it("picks the newest acquiredAt across sets", () => {
     const older = card({
       key: "older",

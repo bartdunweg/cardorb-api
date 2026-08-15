@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCards, ownerOf } from "../../../../../../lib/core/collection";
 import { latestPull } from "../../../../../../lib/core/cards";
+import { createRateLimiter } from "../../../../../../lib/api/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +10,40 @@ export const dynamic = "force-dynamic";
  * different domain is meant to fetch client-side. Safe to leave wide open
  * because it carries no auth, no cookies, and — per latestPull()'s curated
  * shape — no price or purchase data either.
+ *
+ * Allow-Methods/-Headers are here for the OPTIONS answer below rather than for
+ * the GET: a plain fetch() of this URL is a simple request and never preflights,
+ * but the day the portfolio adds a header it would otherwise fail with nothing
+ * on the wire to explain why.
  */
-const CORS_HEADERS = { "Access-Control-Allow-Origin": "*" };
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type",
+};
 
-export async function GET(_req: Request, { params }: { params: Promise<{ username: string }> }) {
+/**
+ * The public routes never go through authorise(), so this is the only throttle
+ * in front of them. Generous on purpose: one widget behind the five-minute CDN
+ * cache below should never come near 60, and anything that does is not a
+ * portfolio page.
+ */
+const byAddress = createRateLimiter(60_000, 60);
+
+const addressOf = (req: Request) =>
+  // x-real-ip first: x-forwarded-for is client-spoofable. Same order as guard.ts.
+  req.headers.get("x-real-ip")?.trim() ||
+  req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  "unknown";
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
+export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
+  if (byAddress(addressOf(req)))
+    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: CORS_HEADERS });
+
   const { username } = await params;
   const owner = await ownerOf(username);
   if (!owner)

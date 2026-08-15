@@ -282,9 +282,15 @@ export type LatestPull = {
 };
 
 /**
- * The newest, non-excluded printing in the collection, or null when there is
- * none — an empty collection, or one where every printing has been marked
- * `excluded`.
+ * The newest printing in the collection that is owned, not excluded and dated,
+ * or null when there is none — an empty collection, or one where every printing
+ * fails one of those three gates.
+ *
+ * All three matter, and `owned` is the one that is easy to forget: the store
+ * holds wishlist rows alongside the binder, and a wanted card is not a pull.
+ * Left out, this endpoint announced a card that had never been bought — and
+ * because a wishlist row is typically a just-announced promo, one no catalogue
+ * had a scan for either, so it arrived with `image: null` as well.
  *
  * A deliberately curated shape rather than the raw `OwnedCard`/`Variant`: this
  * is what a public, cross-origin endpoint hands back, and price, purchase
@@ -298,7 +304,7 @@ export function latestPull(sets: CardSet[]): LatestPull | null {
   for (const set of sets) {
     for (const card of set.cards) {
       for (const variant of card.variants) {
-        if (variant.excluded || !variant.acquiredAt) continue;
+        if (!variant.owned || variant.excluded || !variant.acquiredAt) continue;
         if (!best || variant.acquiredAt > best.variant.acquiredAt) {
           best = { set, card, variant: { ...variant, acquiredAt: variant.acquiredAt } };
         }
@@ -404,17 +410,22 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
           (matched?.localId && assetBase ? `${assetBase}/${matched.localId}` : null));
       let image = tcgBase ? localise(`${tcgBase}/low.webp`) : null;
       let imageHigh = tcgBase ? localise(`${tcgBase}/high.webp`) : null;
-      // Skip the gallery numbers: their scans are not under this code.
-      if (!image && number && !/^[A-Za-z]/.test(number) && fallbacks > 0) {
+      if (!image && number && fallbacks > 0) {
         fallbacks--;
         // Limitless first, where the set has a code there. Not every set does,
         // and the second catalogue does not need one: it is asked by set name.
-        if (code) image = await limitlessScan(code, number);
+        //
+        // Never for a gallery number, though: Limitless renumbers those into the
+        // parent set's run, so TG04 would be asked for under the parent's 04 and
+        // answer with a different card. That is the offset lib/core/catalogue.ts
+        // declines to guess, and it is why this line keeps the letter check the
+        // one below no longer needs.
+        if (code && !/^[A-Za-z]/.test(number)) image = await limitlessScan(code, number);
         // The last resort, for the cards neither TCGdex nor Limitless has. This
         // is the one that finds the €440 Pikachu with the grey felt hat, the
         // most expensive card in the binder and the only one on the dashboard
         // with an empty square where its picture goes.
-        image ??= await ptcgScan(setName, number);
+        image ??= await ptcgScan(setName, number, name);
         // A fallback scan is one file, so there is no larger version of it to
         // offer and the grid keeps drawing the one it has.
         imageHigh = null;

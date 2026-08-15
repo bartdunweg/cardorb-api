@@ -35,7 +35,15 @@ root `CLAUDE.md` for how and when to write to it.
   cached across requests, not just its rows and catalogue inputs, and the Vercel
   Fluid CPU cost that surfaced it.
 - `decisions/0014-public-latest-pull-endpoint.md` — the public "latest pull"
-  endpoint for the portfolio site.
+  endpoint for the portfolio site, and `decisions/0021-latest-pull-owned-only.md`
+  — why it has no API key (a key in a public site's JavaScript is not a secret)
+  and why it was answering with a wishlist card.
+- `decisions/0022-gallery-artwork-via-pokemontcg.md` — **worth reading before
+  trusting a card number.** Trainer Gallery scans now come from pokemontcg.io,
+  but the audit behind it found that 23 gallery rows in the collection are filed
+  under a number belonging to a different card. The lookup is name-checked for
+  exactly that reason. `trainer-gallery-row-corrections.md` beside this file is
+  the worklist, and should be deleted once those rows are fixed.
 - `decisions/0017-cards-rail-pane-swap-fix.md` through
   `decisions/0020-card-add-input-styling-regression.md` — the Tailwind
   migration's second phase, finishing `cards.css` and `landing.css`.
