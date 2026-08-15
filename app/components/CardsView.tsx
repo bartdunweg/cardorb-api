@@ -283,7 +283,6 @@ export default function CardsView({
   const { signOut } = useSession();
   const [adding, setAdding] = useState(false);
 
-  const [pickedNames, setPickedNames] = useState<Set<string>>(new Set());
   const [pickedRarities, setPickedRarities] = useState<Set<string>>(new Set());
   const [pickedTypes, setPickedTypes] = useState<Set<string>>(new Set());
   const [pickedOwnership, setPickedOwnership] = useState<Set<string>>(new Set());
@@ -442,7 +441,6 @@ export default function CardsView({
   // Built from the whole collection rather than from what is currently shown,
   // so the lists do not shuffle and shrink underneath the pointer as boxes are
   // ticked. The count beside each option is the collection total.
-  const nameOptions = useMemo(() => tally(all.map((c) => c.name)), [all]);
   const rarityOptions = useMemo(
     () => tally(all.flatMap((c) => c.variants.map((v) => v.rarity))),
     [all],
@@ -528,7 +526,6 @@ export default function CardsView({
   );
 
   const picked = [
-    pickedNames,
     pickedRarities,
     pickedTypes,
     pickedOwnership,
@@ -539,7 +536,6 @@ export default function CardsView({
 
   const reset = useCallback(() => {
     setQuery("");
-    setPickedNames(new Set());
     setPickedRarities(new Set());
     setPickedTypes(new Set());
     setPickedOwnership(new Set());
@@ -601,7 +597,6 @@ export default function CardsView({
             const isVintage = c.gen ? vintageEras.has(c.gen) : false;
             if (!pickedEras.has(isVintage ? "Vintage" : "Modern")) return false;
           }
-          if (pickedNames.size && !pickedNames.has(c.name)) return false;
           if (pickedTypes.size && !pickedTypes.has(c.type ?? "")) return false;
           if (!matchesOwnership(c)) return false;
           if (!matchesValue(c)) return false;
@@ -643,7 +638,6 @@ export default function CardsView({
     selected,
     vintageEras,
     pickedEras,
-    pickedNames,
     pickedRarities,
     pickedTypes,
     matchesOwnership,
@@ -833,15 +827,6 @@ export default function CardsView({
   const facets = useMemo(
     (): Facet[] => [
       {
-        key: "name",
-        label: "Pokémon",
-        options: nameOptions,
-        selected: pickedNames,
-        onToggle: toggle(setPickedNames),
-        onClear: () => setPickedNames(new Set()),
-        onReplace: (next: Set<string>) => setPickedNames(next),
-      },
-      {
         key: "era",
         label: "Era",
         options: eraOptions,
@@ -900,7 +885,6 @@ export default function CardsView({
     ],
     [
       isPublic,
-      nameOptions,
       rarityOptions,
       typeOptions,
       ownershipOptions,
@@ -908,7 +892,6 @@ export default function CardsView({
       eraOptions,
       pickedEras,
       pickedValues,
-      pickedNames,
       pickedRarities,
       pickedTypes,
       pickedOwnership,
@@ -919,7 +902,6 @@ export default function CardsView({
   /** Every tick that is on, flattened, so the bar can list and undo them. */
   const activeFilters = useMemo((): ActiveFilter[] => {
     const groups: [string, Set<string>, React.Dispatch<React.SetStateAction<Set<string>>>][] = [
-      ["Pokémon", pickedNames, setPickedNames],
       ["Rarity", pickedRarities, setPickedRarities],
       ["Type", pickedTypes, setPickedTypes],
       ["Ownership", pickedOwnership, setPickedOwnership],
@@ -941,7 +923,7 @@ export default function CardsView({
       out.unshift({ group: "Search", value: `“${query.trim()}”`, onRemove: () => setQuery("") });
     }
     return out;
-  }, [query, pickedNames, pickedRarities, pickedTypes, pickedOwnership, pickedEras]);
+  }, [query, pickedRarities, pickedTypes, pickedOwnership, pickedEras]);
 
   // Never on the public link, which has no dashboard to be on. Guarded here
   // rather than trusting the initial state: `selected` is also written by the
@@ -1290,7 +1272,7 @@ export default function CardsView({
                 </>
               )}
 
-              {/* The long tick-lists (Pokémon, rarity, value, type, owned)
+              {/* The long tick-lists (rarity, value, type, owned)
                 behind one button, because a facet nobody is filtering by does
                 not need a permanent control. What is on shows up as chips
                 under the bar. */}

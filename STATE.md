@@ -278,6 +278,18 @@ colour swap with the tradeoff spelled out in the same comment.
 
 `npm run check` is green throughout both threads.
 
+Since then, in this session: the "Pokémon" tick-list filter facet was
+removed from `CardsView.tsx` (state, tally, filter check, its entry in
+`facets` and `activeFilters`) — search already covers finding cards by
+Pokémon name, so the facet was redundant UI over a several-hundred-row list.
+`CardsPokedex`'s "jump to this Pokémon" already went through the search
+query, not this facet, so it needed no change. Two comments that named the
+facet as their example (`CardsView.tsx`'s "long tick-lists" comment,
+`Sheet.tsx`'s scroll-design comment) were reworded.
+`docs/decisions/0030-remove-pokemon-name-filter.md` and
+`docs/changelog.d/2026-08-15-remove-pokemon-name-filter.md` record it.
+`npm run check` is green.
+
 ## Open
 
 - **Card detail, avatar upload, and signup still need a real signed-in
