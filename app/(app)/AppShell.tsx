@@ -34,10 +34,14 @@ import { cardsMainClassName } from "../components/cardsPageClasses";
 export default function AppShell({
   viewer,
   sets,
+  failed = false,
   children,
 }: {
   viewer: { username: string; email: string; avatarUrl: string | null };
   sets: CardSet[];
+  /** Whether the fetch behind `sets` gave up. An empty collection and an
+   *  unreachable one arrive here as the same empty array otherwise. */
+  failed?: boolean;
   children: React.ReactNode;
 }) {
   const [adding, setAdding] = useState(false);
@@ -65,8 +69,18 @@ export default function AppShell({
   const onAdd = useCallback(() => setAdding(true), []);
 
   const value = useMemo<CollectionValue>(
-    () => ({ sets, setGroups, viewer, brokenScans, brokenLogos, onBrokenScan, onBrokenLogo, onAdd }),
-    [sets, setGroups, viewer, brokenScans, brokenLogos, onBrokenScan, onBrokenLogo, onAdd],
+    () => ({
+      sets,
+      setGroups,
+      viewer,
+      failed,
+      brokenScans,
+      brokenLogos,
+      onBrokenScan,
+      onBrokenLogo,
+      onAdd,
+    }),
+    [sets, setGroups, viewer, failed, brokenScans, brokenLogos, onBrokenScan, onBrokenLogo, onAdd],
   );
 
   return (

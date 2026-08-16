@@ -118,6 +118,30 @@ describe("PATCH /api/v1/profile", () => {
     expect(updateProfile).not.toHaveBeenCalled();
   });
 
+  it("stamps the welcome flow as done", async () => {
+    await patch({ onboarded: true });
+    const [, , written] = updateProfile.mock.calls[0] as [unknown, string, { onboardedAt?: string }];
+    expect(typeof written.onboardedAt).toBe("string");
+    expect(Number.isNaN(Date.parse(written.onboardedAt as string))).toBe(false);
+  });
+
+  it("takes the time from the server rather than from the body", async () => {
+    // A client-supplied timestamp is a client-supplied fact about when an
+    // account was set up. There is no reason to accept one and one obvious
+    // reason not to.
+    await patch({ onboarded: true, onboardedAt: "1999-01-01T00:00:00.000Z" });
+    const [, , written] = updateProfile.mock.calls[0] as [unknown, string, { onboardedAt?: string }];
+    expect(written.onboardedAt).not.toBe("1999-01-01T00:00:00.000Z");
+  });
+
+  it("never un-onboards an account", async () => {
+    // One way only: nothing in the app puts somebody back in front of the
+    // welcome flow, so `false` is not an instruction, it is nothing to do.
+    const res = await patch({ onboarded: false });
+    expect(res.status).toBe(400);
+    expect(updateProfile).not.toHaveBeenCalled();
+  });
+
   it("refuses a body with nothing in it rather than writing an empty update", async () => {
     const res = await patch({ nothing: "here" });
     expect(res.status).toBe(400);

@@ -7,7 +7,7 @@ import { ownProfile, updateProfile } from "../../../../lib/storage/postgres";
 import { MAX_DISPLAY_NAME } from "../../../../lib/core/account";
 
 /**
- * The two things about a profile its owner may change.
+ * The things about a profile its owner may change.
  *
  * is_public is the one that matters. It defaults to false — the migration
  * argues that sharing "is something you do, not something that happens to you"
@@ -17,7 +17,9 @@ import { MAX_DISPLAY_NAME } from "../../../../lib/core/account";
  * profile lookup, stripPrices, the OG image, the JSON-LD.
  *
  * PATCH rather than PUT: a body that mentions one field must not clear the
- * other. The screen has two controls that save independently.
+ * others. The screen has controls that save independently, and the welcome
+ * flow (app/components/Onboarding.tsx) saves each of its steps on its own for
+ * the same reason.
  *
  * requestViewer() rather than currentViewer(): the latter only ever reads a
  * cookie, which the iOS app never carries, so this route refused every
@@ -39,7 +41,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const patch: { displayName?: string | null; isPublic?: boolean } = {};
+  const patch: { displayName?: string | null; isPublic?: boolean; onboardedAt?: string } = {};
 
   if ("displayName" in body) {
     const raw = typeof body.displayName === "string" ? body.displayName.trim() : "";
@@ -57,6 +59,14 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
     patch.isPublic = body.isPublic;
+  }
+
+  // One way only. `onboarded: true` stamps the clock; nothing else is
+  // accepted, so no body — stray, replayed or hostile — can put an account
+  // back in front of the welcome flow, and the timestamp of the first time
+  // through survives every later PATCH.
+  if (body.onboarded === true) {
+    patch.onboardedAt = new Date().toISOString();
   }
 
   if (!Object.keys(patch).length) {

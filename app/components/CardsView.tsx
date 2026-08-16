@@ -131,6 +131,8 @@ export default function CardsView({
   username,
   ownerName,
   basePath = "/cards",
+  emptyReason = "outage",
+  onAdd,
 }: {
   sets: CardSet[];
   /**
@@ -168,6 +170,20 @@ export default function CardsView({
    *  so a card opened from the (app) shell stays inside it — sidebar, navbar
    *  and all — instead of landing on a bare page outside the shell. */
   basePath?: string;
+  /**
+   * What an empty collection means here.
+   *
+   * "outage" is the safe reading and stays the default: the public page has no
+   * way of knowing, and a stranger who is told a collection is empty when the
+   * store was merely unreachable has been told something false about somebody
+   * else. The owner screens know, because the layout's fetch reports whether it
+   * gave up (see getCollection in lib/core/collection.ts), and a new account
+   * whose first screen claims an outage is the other half of the same bug.
+   */
+  emptyReason?: "outage" | "nothing-yet";
+  /** Opens the add dialog, which on the signed-in screens belongs to the shell.
+   *  Absent on the public page, which has nothing to add to. */
+  onAdd?: () => void;
 }) {
   /**
    * Owner or public, and the two answers now arrive as one word.
@@ -1339,11 +1355,28 @@ export default function CardsView({
           <CardsDashboard stats={stats} />
         ) : (
           <>
-            {/* A database outage or an empty collection both land here. Saying
-          so beats an empty page that looks like something failed to paint. */}
+            {/* Nothing to draw, and two quite different reasons for it — see
+                the emptyReason prop. Either way it says so, which beats an
+                empty page that looks like something failed to paint. */}
             {sets.length === 0 ? (
               <Card className="cards-empty">
-                <p>The collection is not available right now. It should be back shortly.</p>
+                {emptyReason === "nothing-yet" ? (
+                  <>
+                    <p>
+                      No cards yet. Add the first one, or bring a collection in from a spreadsheet
+                      under Settings.
+                    </p>
+                    {onAdd && (
+                      <p>
+                        <button type="button" className="btn" onClick={onAdd}>
+                          Add a card
+                        </button>
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p>The collection is not available right now. It should be back shortly.</p>
+                )}
               </Card>
             ) : filtered.length === 0 ? (
               <Card className="cards-empty">
