@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { APP_NAME } from "../../lib/core/config";
+import Wordmark from "./Wordmark";
 
 /**
  * The one navbar every top-level page opens with — the landing page with its
@@ -30,13 +29,11 @@ export default function Navbar({ center, right }: { center?: ReactNode; right?: 
         className="grid grid-cols-[1fr_auto_1fr] items-center gap-6 w-[min(100%,1180px)] mx-auto
           min-h-[var(--control-h)] [@media(max-width:640px)]:grid-cols-[1fr_auto]"
       >
-        <Link
-          href="/"
-          className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline"
-          aria-label={`${APP_NAME} home`}
-        >
-          {APP_NAME}
-        </Link>
+        {/* justify-self-start so the link is the size of the mark and the name.
+            As a grid item it stretched across the whole 1fr column, which was
+            invisible while it was a word and is a lot of dead clickable space
+            once there is an image to aim at. */}
+        <Wordmark href="/" className="justify-self-start" />
         {center ? (
           <div className="flex items-center gap-9 justify-self-center [@media(max-width:640px)]:hidden">
             {center}

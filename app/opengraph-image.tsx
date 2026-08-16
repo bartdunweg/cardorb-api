@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { colour } from "../lib/design/tokens";
 import { APP_NAME, APP_TAGLINE_SHORT, APP_TAGLINE } from "../lib/core/config";
@@ -19,6 +21,23 @@ export const alt = `${APP_NAME} — ${APP_TAGLINE}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/**
+ * The mark, inlined.
+ *
+ * Satori has no filesystem — a `src="/brand/..."` is a path it cannot resolve
+ * and an absolute URL would make this route fetch itself, so the bytes have to
+ * be in the markup. Read once at module scope rather than per request, which
+ * costs nothing here: this route takes no data and is built once (see the note
+ * on `alt` above, and ADR-0035 for why what renders when matters on OG routes).
+ *
+ * PNG rather than the AVIF beside it. Everywhere else the AVIF is the one to
+ * serve, but Satori does not decode AVIF and the failure is a blank space in
+ * the card rather than an error anyone would notice.
+ */
+const ORB = `data:image/png;base64,${readFileSync(
+  join(process.cwd(), "public/brand/orb-shadow-256.png"),
+).toString("base64")}`;
+
 export default function Image() {
   return new ImageResponse(
     <div
@@ -26,10 +45,15 @@ export default function Image() {
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
+        // A row now, with the mark on the right. It was a column of three text
+        // blocks centred in the frame; the words still are, and the orb takes
+        // the space to their right that was empty.
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 56,
         background: colour.bgGrouped.light,
-        padding: 96,
+        padding: 80,
         fontFamily: "sans-serif",
       }}
     >
@@ -37,7 +61,12 @@ export default function Image() {
             single child. Satori has no default: a div with more than one child
             and no display throws, and the failure is the whole image 500ing
             rather than a layout that looks slightly off. */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      {/* An explicit width, not flexGrow. Satori sizes a flexible column from
+            its content, and the 76px heading's longest word made that column
+            wider than the frame — the orb was pushed off the right edge and the
+            card looked, from the outside, exactly like one that had not changed.
+            700 + 56 + 264 is the 1040 that fits inside the padding. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 28, width: 700 }}>
         <div
           style={{
             display: "flex",
@@ -67,6 +96,15 @@ export default function Image() {
           {APP_TAGLINE_SHORT}
         </div>
       </div>
+      {/* Not next/image: this renders inside ImageResponse, which is Satori and
+            not the browser, and only understands a plain img — same note as the
+            collection's own card one directory over.
+
+            The shadowed cut, because this sits on the flat grouped background
+            with nothing else to give it depth, and no alt: the words beside it
+            already say the name, and this file's `alt` export is what a screen
+            reader is actually handed for the card as a whole. */}
+      <img src={ORB} width={264} height={264} alt="" style={{ flexShrink: 0 }} />
     </div>,
     size,
   );

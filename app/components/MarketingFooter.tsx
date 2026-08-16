@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ThemeToggle from "./ThemeToggle";
-import { APP_NAME } from "../../lib/core/config";
 import { navLink } from "./marketingClasses";
+import Wordmark from "./Wordmark";
 
 /**
  * The footer both public pages end on.
@@ -30,9 +30,7 @@ export default function MarketingFooter() {
         [font-family:var(--font-body)] [font-size:var(--fs-small)]
         [@media(max-width:640px)]:grid-cols-1 [@media(max-width:640px)]:text-center"
     >
-      <span className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline">
-        {APP_NAME}
-      </span>
+      <Wordmark />
       <div className="grid gap-2 justify-items-center">
         <p className="m-0 text-center">
           Prices come from Cardmarket, in euros — the market collectors recognise.
@@ -41,10 +39,18 @@ export default function MarketingFooter() {
             fourth column, which would have squeezed the Cardmarket line onto
             two lines. Both are also reachable from the FAQ and the signup
             form; a footer is where a link goes to not be read, and these two
-            still have to be somewhere permanent. */}
-        <div className="flex items-center justify-center gap-4">
+            still have to be somewhere permanent.
+
+            /brand is here for a stronger version of that reason: it is
+            noindex and in no sitemap, so this row is the only way anybody
+            arrives at it who was not handed the URL. A page nobody can reach
+            is a page that stops being true. */}
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <Link href="/app/ios" className={navLink}>
             iPhone app
+          </Link>
+          <Link href="/brand" className={navLink}>
+            Brand
           </Link>
           <Link href="/privacy" className={navLink}>
             Privacy

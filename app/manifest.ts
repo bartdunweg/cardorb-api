@@ -35,15 +35,29 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: colour.bgGrouped.light,
     theme_color: colour.bgGrouped.light,
-    // No icons. There used to be two generated ones here, and the entries have
-    // to go with them: a manifest that names /icon and /apple-icon after those
-    // routes are deleted is a manifest pointing at two 404s, which is worse
-    // than saying nothing — Android would fetch both and fail on install.
-    //
-    // The cost of the omission is real and worth writing down: without an icon
-    // in here, Chrome on Android will not offer to install the app at all, so
-    // `display: "standalone"` above only takes effect for whoever adds it to a
-    // home screen by hand. iOS still will, and screenshots its own thumbnail.
-    // Put an `icons` array back the day this gets a mark of its own.
+    /**
+     * The mark, at the two sizes an installable web app is asked for.
+     *
+     * This array was empty for a long time and the comment that stood here said
+     * why: there was no mark, and a manifest naming icons that 404 is worse
+     * than one naming none — Android fetches both and fails the install. There
+     * is a mark now (ADR-0047), so the cost that comment recorded is paid off:
+     * Chrome on Android will offer to install this, and `display: "standalone"`
+     * above stops being something only a hand-added home screen icon sees.
+     *
+     * Deliberately /brand/… and not /icon, which is the route app/icon.png
+     * generates. Next fingerprints that URL in production, so hard-coding it
+     * here would rebuild exactly the 404 the old comment warned about — with
+     * the extra cruelty of working perfectly in dev. public/ is served
+     * verbatim, so these two paths are the ones that cannot drift.
+     *
+     * The tiled cut rather than the transparent one: this icon is composited
+     * onto a home screen whose colour nobody here chooses, and the orb is a
+     * pale, glossy sphere that would vanish into a light wallpaper.
+     */
+    icons: [
+      { src: "/brand/orb-tile-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/orb-tile-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    ],
   };
 }

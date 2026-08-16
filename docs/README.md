@@ -170,4 +170,19 @@ root `CLAUDE.md` for how and when to write to it.
   no screen has ever shown — which is what `docs/feedback/0010-...` reported.
   Anything route-specific goes in that route's own `loading.tsx` or nowhere. Read
   it with `0018`, which is this same file drifting once before.
+- `decisions/0047-the-orb-mark-on-the-web.md` — **read before touching anything
+  that shows the product's name or its icon.** The name is `<Wordmark />`
+  (`app/components/Wordmark.tsx`) rather than type, in all four places it
+  appears, and there is a `/brand` page that is the source of truth for how the
+  mark is used on the web — though not for the mark itself, which is *generated*
+  by `Tools/GenerateAppIcon.swift` in the separate `cardorb-ios` repository and
+  handed over as files. The record also has the two counter-intuitive bits: the
+  manifest's icons point at `public/brand/` rather than at the `app/icon.png`
+  route, because Next fingerprints that URL in production and works fine in dev.
+  `decisions/0048-favicon-is-the-circle-not-the-tile.md` **amends it** (0047 is
+  not superseded, only its favicon clause) and carries the rule for picking a
+  cut: the tile goes where something else rounds it off — an iOS home screen, an
+  Android launcher — and the plain circle goes where the file is drawn as given,
+  which is a browser tab. It also has the measurement behind the wordmark's
+  `translate-y-[6.05%]`, and why the word beside it needs no matching nudge.
 - Root `README.md` — what Card Orb is, the API surface, production environment.
