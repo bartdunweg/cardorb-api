@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme, type Mode } from "./ThemeProvider";
-import { SettingsHint, SettingsPanel, SettingsPanelTitle } from "./SettingsPanel";
+import { SettingsHint, SettingsPanel } from "./SettingsPanel";
 
 /**
  * Three answers, and the third was unreachable until now.
@@ -28,9 +28,13 @@ export default function AppearanceSettings() {
 
   return (
     <SettingsPanel>
-      <SettingsPanelTitle>Appearance</SettingsPanelTitle>
-
-      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Appearance">
+      {/* No panel title: this is the only panel in the Appearance group, and
+          the group's own heading already says the word once. */}
+      <div
+        className="grid grid-cols-3 gap-2 max-w-[26rem]"
+        role="radiogroup"
+        aria-label="Appearance"
+      >
         {OPTIONS.map((o) => (
           <label key={o.value} className="group">
             <input

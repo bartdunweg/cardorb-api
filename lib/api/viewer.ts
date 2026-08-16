@@ -32,6 +32,10 @@ export type Viewer = {
   email: string;
   /** The name in /user/<name>. Always present: a trigger makes one. */
   username: string;
+  /** What this person chose to be called, or null if they never set one.
+   *  Anything that greets somebody should prefer this over `username` and
+   *  fall back to it — see displayNameOf() below. */
+  displayName: string | null;
   /** The avatars bucket's public URL for this account, or null until one is
    *  uploaded. See app/api/v1/profile/avatar/route.ts. */
   avatarUrl: string | null;
@@ -75,11 +79,18 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
 
   const { data: profile } = await db
     .from("profiles")
-    .select("username,avatar_url")
+    // display_name rides along on the query that was already being made: a
+    // screen that greets somebody by name should not cost a second round trip
+    // to find out what their name is.
+    .select("username,display_name,avatar_url")
     .eq("id", sub)
     .maybeSingle();
 
-  const p = profile as { username?: string; avatar_url?: string | null } | null;
+  const p = profile as {
+    username?: string;
+    display_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
   return {
     userId: sub,
     email: email ?? "",
@@ -89,8 +100,30 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
     // one. The empty string never resolves as a username, which is the correct
     // outcome for an account that has no name yet.
     username: p?.username ?? "",
+    displayName: p?.display_name ?? null,
     avatarUrl: p?.avatar_url ?? null,
   };
+}
+
+/**
+ * What to call this person on screen.
+ *
+ * One function rather than `viewer.displayName || viewer.username` written out
+ * at each call site, because the fallback chain is the part that is easy to get
+ * subtly different: a display name of "   " is not a name, and an account whose
+ * profile row is missing (see above) has no username either.
+ *
+ * Not OWNER_NAME. The landing page used to greet every signed-in visitor with
+ * the deployment's owner name — correct exactly once, for one person, and
+ * wrong for everybody else who signs up.
+ */
+export function displayNameOf(viewer: Pick<Viewer, "displayName" | "username" | "email">): string {
+  const chosen = viewer.displayName?.trim();
+  if (chosen) return chosen;
+  if (viewer.username) return viewer.username;
+  // Last resort, and only reachable in the unsupported profile-less state:
+  // the part of the address before the @, which is at least theirs.
+  return viewer.email.split("@")[0] || "your account";
 }
 
 /**

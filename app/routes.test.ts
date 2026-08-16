@@ -94,7 +94,11 @@ describe("internal links", () => {
     // Guards the guard: a walk that silently matches nothing would pass every
     // assertion above while checking none of them.
     expect(known).toContain("/dashboard");
-    expect(known).toContain("/settings/profile");
+    // /settings is one page now; /settings/password is the one sub-route left,
+    // and the one this walk would most easily miss (it lives outside the
+    // (app) group, under app/settings/).
+    expect(known).toContain("/settings");
+    expect(known).toContain("/settings/password");
     expect(known.length).toBeGreaterThan(15);
   });
 });

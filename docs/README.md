@@ -60,6 +60,16 @@ root `CLAUDE.md` for how and when to write to it.
   `CardAddDialog.tsx`; now `searchCards()` throws instead of swallowing, and
   the dialog shows a distinct "Search is temporarily unavailable" with retry,
   plus a "Show more results" button instead of a hard 20-result cap.
+- `decisions/0034-settings-one-page-not-an-index.md` — why `/settings` stopped
+  being an index of four sub-routes and became one full-width page with every
+  section stacked. Read it before adding a settings section: there is no
+  sub-route to add one to, and `/settings/*` (except `password`) is a set of
+  permanent redirects in `next.config.ts`.
+- `decisions/0035-viewer-carries-a-display-name.md` — `Viewer` carries a
+  display name and `displayNameOf()` is how a screen names the person looking
+  at it. **`OWNER_NAME` is still wrong on the public collection** (title, OG
+  image, `CardsView`/`CardsSidebar`) — that half is untouched and open on
+  `feedback/0008-signed-in-greeting-uses-the-owner-name.md`.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.

@@ -1,0 +1,2 @@
+- The landing page now greets you by your own name when you are signed in — your profile name, or your username if you have not set one — instead of the site owner's.
+- Settings: deleting your account is now its own section at the bottom of the page, rather than a red card in the middle of the Account section.

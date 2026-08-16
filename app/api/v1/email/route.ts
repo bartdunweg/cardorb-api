@@ -53,7 +53,10 @@ export async function POST(req: Request) {
 
   const { error } = await db.auth.updateUser(
     { email },
-    { emailRedirectTo: `${SITE_URL}/auth/confirm?next=/settings/account` },
+    // /settings, not /settings/account: settings is one page now. Mails sent
+    // before that change still say /settings/account, which next.config.ts
+    // redirects here.
+    { emailRedirectTo: `${SITE_URL}/auth/confirm?next=/settings` },
   );
 
   if (error) {

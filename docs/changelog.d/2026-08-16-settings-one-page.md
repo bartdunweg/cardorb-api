@@ -1,0 +1,1 @@
+- Settings is one page: Profile, Account, Import and Appearance are all on screen at once, full width like the other screens, instead of four cards you had to open one at a time. Old links such as `/settings/appearance` redirect to it.

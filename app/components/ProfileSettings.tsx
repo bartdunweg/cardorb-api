@@ -257,6 +257,9 @@ export default function ProfileSettings({
             maxLength={60}
             placeholder={initial.username}
             onChange={(e) => setDisplayName(e.target.value)}
+            // The panel's heading is what sighted people read as this field's
+            // name; a heading is not an accessible name, so it is said again.
+            aria-label="Display name"
             aria-describedby="display-name-hint"
           />
           <SettingsHint id="display-name-hint">
@@ -277,6 +280,7 @@ export default function ProfileSettings({
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
             spellCheck={false}
             autoCapitalize="none"
+            aria-label="Username"
             aria-describedby="username-hint"
           />
           <SettingsHint id="username-hint">

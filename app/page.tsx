@@ -18,7 +18,7 @@ import Card from "./components/Card";
 import Navbar from "./components/Navbar";
 import ThemeToggle from "./components/ThemeToggle";
 import { APP_NAME, APP_TAGLINE, OWNER_NAME, SITE_URL } from "../lib/core/config";
-import { currentViewer } from "../lib/api/viewer";
+import { currentViewer, displayNameOf } from "../lib/api/viewer";
 
 const SIGN_IN_HREF = "/login";
 const DASHBOARD_HREF = "/dashboard";
@@ -113,6 +113,7 @@ const FEATURES = [
 
 export default async function Home() {
   const viewer = await currentViewer();
+  const signedInAs = viewer ? displayNameOf(viewer) : "";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -208,10 +209,13 @@ export default async function Home() {
                     [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
                   aria-hidden="true"
                 >
-                  {OWNER_NAME.charAt(0)}
+                  {signedInAs.charAt(0).toUpperCase()}
                 </span>
               )}
-              Signed in as {OWNER_NAME}
+              {/* The person looking at the page, not the person the deployment
+                  is named after — this said "Signed in as Bart" to everybody
+                  who signed up. */}
+              Signed in as {signedInAs}
             </Link>
           ) : (
             <>

@@ -14,6 +14,35 @@ export function SettingsPanels({ className, ...rest }: HTMLAttributes<HTMLDivEle
   return <div className={cx("grid gap-4", className)} {...rest} />;
 }
 
+/**
+ * One group of panels on the single Settings screen — Profile, Account,
+ * Import, Appearance — with the heading that used to be a link row on an
+ * index page. Every group is on the page at once now, so the heading is what
+ * you scan instead of a list of four places to go.
+ *
+ * The <h2> style is SetIndex.tsx's group heading, the same one the era groups
+ * on /collection/sets use, rather than a second heading style that looks
+ * nearly like it.
+ */
+export function SettingsSection({
+  title,
+  id,
+  children,
+}: {
+  title: string;
+  id: string;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby={`${id}-heading`}>
+      <h2 id={`${id}-heading`} className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
 export function SettingsPanel({
   danger,
   className,
@@ -33,9 +62,10 @@ export function SettingsPanel({
   );
 }
 
+/** An <h3>: every panel now sits under a SettingsSection's <h2>. */
 export function SettingsPanelTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h2
+    <h3
       className={cx("m-0 mb-3 [font-size:var(--fs-body)] font-semibold text-label", className)}
       {...rest}
     />
@@ -59,7 +89,10 @@ export const SettingsInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HT
       <input
         ref={ref}
         className={cx(
-          "w-full py-2 px-3 rounded-btn border border-[var(--color-border-active)]",
+          // Capped: the panels span the whole pane now that Settings is a
+          // full-width page, and a 900px-wide email field is a field you have
+          // to aim at rather than read.
+          "w-full max-w-[26rem] py-2 px-3 rounded-btn border border-[var(--color-border-active)]",
           "bg-bg-grouped text-label text-base", // 16px: iOS Safari zooms a smaller field on focus and never zooms back
           "focus-visible:[outline:2px_solid_var(--color-tint)] focus-visible:[outline-offset:1px]",
           className,
@@ -77,22 +110,10 @@ export function SettingsLink({ className, ...rest }: HTMLAttributes<HTMLParagrap
 /** Applied to the <a> inside SettingsLink. */
 export const settingsLinkAnchorClassName = "text-tint-label";
 
-/** Pass to next/link's Link — always a Link here, never a plain <a>. */
-export const settingsRowClassName =
-  "block p-4 rounded-lg bg-bg-surface [box-shadow:var(--shadow-card)] no-underline";
-
-export function SettingsRowTitle({ className, ...rest }: HTMLAttributes<HTMLSpanElement>) {
-  return <span className={cx("block font-semibold text-label", className)} {...rest} />;
-}
-
-export function SettingsRowBlurb({ className, ...rest }: HTMLAttributes<HTMLSpanElement>) {
-  return (
-    <span
-      className={cx("block [font-size:var(--fs-small)] text-label-secondary mt-[2px]", className)}
-      {...rest}
-    />
-  );
-}
+/* SettingsRowTitle/SettingsRowBlurb/settingsRowClassName were the four link
+   rows of the /settings index. There is no index any more — every section is
+   on the one page — so they went with it rather than staying as unused
+   primitives that read like a pattern to follow. */
 
 /** .btn--danger, applied alongside the shared .btn class. */
 export const dangerButtonClassName = "bg-danger text-white border-transparent disabled:opacity-50";

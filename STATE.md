@@ -594,8 +594,58 @@ workspace, same gap earlier sessions (including the parallel one merged in
 below) hit. Neither the read-only Rarity/Type summary nor the rest of
 `CardAddDialog.tsx` has been exercised live this session.
 
+## Settings became one page (2026-08-16, workspace `edinburgh`)
+
+`/settings` was an index of four link rows leading to four sub-routes. Bart:
+"niet iedere keer vier cards die je per card moet open klikken … dat moet
+gewoon in één keer zichtbaar zijn," plus "een pagina zoals de andere." It is
+now a single full-width page — `app/(app)/settings/page.tsx` fetches viewer,
+profile and import history (the last two in one `Promise.all`) and stacks
+Profile / Account / Import / Appearance under a `<h2>` each, using the new
+`SettingsSection` in `SettingsPanel.tsx`. `SettingsPanelTitle` became an
+`<h3>`; the index's row primitives were deleted with the index;
+`app/(app)/settings/layout.tsx` and its `max-w-[640px]` clamp are gone
+(header folded into the page). The four sub-routes are deleted and redirected
+permanently to `/settings` from `next.config.ts` — a confirmation email
+already in an inbox points at `/settings/account`, and
+`app/api/v1/email/route.ts` now sends new ones to `/settings`.
+`/settings/password` is untouched and still standalone. Panels span the pane,
+so `SettingsInput` and the Appearance radio row are capped at `max-w-[26rem]`.
+A `build-quality` pass also gave four inputs an accessible name they never had
+(display name, username, new email, CSV file) — a panel heading is not a name.
+FB-0007 and ADR-0034 record it. `npm run check` green; the four redirects
+verified live (308) against `npm run dev`.
+
+Two follow-ups in the same session, both on Bart's instruction:
+
+- **Deleting the account is its own section at the bottom of the page**
+  (`DeleteAccountSettings.tsx`), not the fourth panel in Account. In one long
+  scroll it sat between an email field and a theme picker.
+  `AccountSettings.tsx` lost its `username` prop with it.
+- **"Signed in as Bart" was shown to everybody** on the landing page's navbar
+  (`app/page.tsx` rendered `OWNER_NAME`, a deployment constant). `Viewer` now
+  carries `displayName`, read from the profile select it was already making,
+  and `displayNameOf()` (`lib/api/viewer.ts`, tested) gives the fallback order:
+  chosen name → username → the email's local part. FB-0008 and ADR-0035.
+  **Half of this is deliberately not fixed**: the public collection still says
+  "Bart's collection" whoever's it is (`/user/[username]` title and OG image,
+  `CardsView.tsx:939`, `CardsSidebar.tsx:72`) — open on FB-0008.
+
 ## Next session
 
+- **`/settings` has not been seen signed in.** No session in this workspace and
+  browser automation can't create one — the same gap the tabbar thread above
+  hit. Needs: all four groups on screen at once, one control exercised per
+  group (theme, public-link switch, CSV picker, email field), and the widths at
+  ≥1000px / 641–1000px / ≤640px. This subsumes the older "verify `/settings`
+  and its subpages" item — there are no subpages any more. The landing page's
+  new "Signed in as <your name>" needs the same look, and for the same reason:
+  it only renders signed in.
+- **The public collection still carries `OWNER_NAME`** — FB-0008's open half.
+  `/user/[username]`'s title, its OG image, `CardsView.tsx:939` and
+  `CardsSidebar.tsx:72` all say "Bart's collection" regardless of whose
+  collection is on screen. Needs the profile's display name threaded from the
+  public page into both components and into `generateMetadata`.
 - **`CardAddDialog.tsx` needs a real signed-in browser pass**: search, pick a
   result, confirm Rarity/Type show as read-only text matching the picked
   card, submit, confirm the row lands correctly. Not exercised live this
