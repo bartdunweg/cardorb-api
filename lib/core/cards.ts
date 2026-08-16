@@ -395,7 +395,31 @@ export function latestPull(sets: CardSet[]): LatestPull | null {
  * lib/core/collection.ts does both, because caching a collection is a question
  * about whose it is, and nothing here knows.
  */
-export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]> {
+export type BuildOptions = {
+  /**
+   * Whether to resolve what each card is worth. On by default, because every
+   * screen that draws a collection shows prices.
+   *
+   * Off is for a caller that already has prices from somewhere cheaper, and
+   * there is exactly one: the weekly snapshot, which downloads Cardmarket's
+   * whole price guide in a single request and needs this function only for the
+   * matching. With CATALOGUE_SET_PRICING_MAX at 0 — the default — pricing here
+   * means one TCGdex request per matched card, so a batch job that priced this
+   * way would make sixteen hundred requests to arrive at numbers it already had
+   * in one file.
+   *
+   * It only skips the fetching. Whatever the set catalogue happened to
+   * pre-price is still ignored too, so `price` is null on every card rather
+   * than null on most of them — a caller that asked not to be given prices
+   * should not have to wonder which ones it got anyway.
+   */
+  prices?: boolean;
+};
+
+export async function buildCollection(
+  rows: CollectionRow[],
+  { prices = true }: BuildOptions = {},
+): Promise<CardSet[]> {
   if (!rows.length) return [];
 
   // Group first, so each set is only resolved once however many cards came from
@@ -540,10 +564,10 @@ export async function buildCollection(rows: CollectionRow[]): Promise<CardSet[]>
     // here. With pre-pricing off — which is the default — that is every matched
     // card, exactly as before. With it on, this list is usually empty.
     const wanted = [...new Set(printings.map((p) => p.tcgId).filter(Boolean))] as string[];
-    const missing = wanted.filter((id) => !(id in cat.prices));
+    const missing = prices ? wanted.filter((id) => !(id in cat.prices)) : [];
     const fetched = missing.length ? await pricesFor(missing) : new Map<string, Price>();
     const priceOfId = (id: string | null) =>
-      (id && (fetched.get(id) ?? cat.prices[id])) || null;
+      (prices && id && (fetched.get(id) ?? cat.prices[id])) || null;
 
     // Holding a card normally and again as a reverse holo is one card with two
     // printings, not two cards. 317 of them in this collection, and shown twice

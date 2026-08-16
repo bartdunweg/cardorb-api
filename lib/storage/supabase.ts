@@ -120,9 +120,25 @@ export async function serverClient(): Promise<SupabaseClient | null> {
 /**
  * The service role, which is not a caller and answers to nobody.
  *
- * One caller only: account deletion. Everything else in this app must go
- * through a client that names its caller, because everything else in this app
- * is acting on behalf of somebody and this client cannot represent that.
+ * Two callers now. This said "one caller only: account deletion", and the
+ * weekly snapshot cron is the second — so the rule is worth stating as what it
+ * always meant rather than as a count, because a count is a thing people
+ * increment.
+ *
+ * The rule: this client cannot represent the person it acts for, so it may only
+ * be used where there is no such person.
+ *
+ *  - **Account deletion** removes an auth row. That is an act *on* an account
+ *    rather than on its behalf, and the account is being taken away while it
+ *    runs.
+ *  - **The snapshot cron** acts for everybody at once. Nobody is signed in when
+ *    it fires, and a job that recorded only the collections whose owners
+ *    happened to have a live session would record almost nothing.
+ *
+ * The test that still holds: if there is a person this could be acting *as*,
+ * this is the wrong client. Anything that arrived as a request with a cookie or
+ * a bearer token has one — see the note at the top of lib/storage/collection.ts
+ * for what it cost to learn that.
  *
  * It reads a key that is deliberately not NEXT_PUBLIC_, so this returns null in
  * any context where the browser bundle could have reached it.

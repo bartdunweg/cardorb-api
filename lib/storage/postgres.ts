@@ -201,6 +201,52 @@ export async function listValueSnapshots(
 }
 
 /**
+ * Everyone with an account, for the weekly snapshot.
+ *
+ * Only the cron calls this, through the service role, because it is the one
+ * operation with no person behind it — see adminClient() in ./supabase.ts.
+ *
+ * `profiles` rather than `select distinct user_id from cards`, which is the
+ * more precise question: PostgREST has no DISTINCT, so asking it that way means
+ * paging every card row to learn a handful of ids. Profiles is the small,
+ * bounded table and one request answers it. The cost is that an account with an
+ * empty collection is visited and skipped; the saving is that a sixteen-hundred
+ * row read is not made to find that out.
+ */
+export async function listAccountIds(db: SupabaseClient): Promise<string[]> {
+  const { data, error } = await db.from("profiles").select("id");
+  if (error) throw new Error(`Listing accounts failed: ${error.message}`);
+  return ((data ?? []) as { id: string }[]).map((r) => r.id);
+}
+
+/**
+ * One reading, written where it belongs.
+ *
+ * Upserted on (user_id, snapshot_date) so a cron that runs twice in a day —
+ * a retry, a manual trigger beside the schedule — corrects the point rather
+ * than being refused by the unique index. Euros in, cents stored: the rounding
+ * happens here, at the boundary, and only here.
+ */
+export async function writeValueSnapshot(
+  db: SupabaseClient,
+  userId: string,
+  point: ValueSnapshot,
+): Promise<void> {
+  const { error } = await db.from("collection_value_snapshots").upsert(
+    {
+      user_id: userId,
+      snapshot_date: point.date,
+      value_cents: Math.round(point.value * 100),
+      cards: point.cards,
+      priced: point.priced,
+      unpriced: point.unpriced,
+    },
+    { onConflict: "user_id,snapshot_date" },
+  );
+  if (error) throw new Error(`Writing a snapshot failed: ${error.message}`);
+}
+
+/**
  * Writes one card and hands back its id.
  *
  * acquired_at is left to the column default, which is now(). That is right for
