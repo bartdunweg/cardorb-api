@@ -206,5 +206,30 @@
     "notes": null,
     "is_favorite": false,
     "finish": null
+  },
+  {
+    "id": "8e694ae6-aa99-4af3-b4ad-a191787d5fc0",
+    "user_id": "3fe9b080-2279-480b-a6ec-4fa58611c8cb",
+    "name": "Zarude",
+    "number": "088",
+    "set_name": "MEP Black Star Promos",
+    "rarity": "Illustration Rare",
+    "gen": "Mega Evolution",
+    "types": [],
+    "owned": true,
+    "excluded": false,
+    "acquired_at": "2026-07-25T09:02:00+00:00",
+    "source": "notion",
+    "source_id": "3a85c873-e817-8048-9d12-c579a9250060",
+    "created_at": "2026-08-14T06:34:26.501144+00:00",
+    "updated_at": "2026-08-14T06:34:26.501144+00:00",
+    "quantity": 1,
+    "condition": null,
+    "grade": null,
+    "purchase_price": null,
+    "purchase_date": null,
+    "notes": null,
+    "is_favorite": false,
+    "finish": null
   }
 ]

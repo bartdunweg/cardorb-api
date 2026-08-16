@@ -19,6 +19,7 @@
 > | Silver Tempest | #TG12 Blaziken | **#TG14 Blaziken V** |
 > | Chilling Reign | #165 Chansey | **#183 Blissey V** (alt art; Bart identified the card) |
 > | Wizard Black Star Promos | Ancient Mew | **Miscellaneous Promos #001** — set was wrong, not the number |
+> | XY Black Star Promos | #223 Venusaur | **#XY28 Venusaur EX** — the €128 one, not the €9 one |
 >
 > That last one was not in the broken list: it *matched*, to Kricketune V, which
 > is why it never surfaced. A wrong match is worse than no match — it prices your
@@ -161,25 +162,31 @@ the app.
 
 ---
 
-## Still open — 2 rows
+## Still open — nothing
 
-Both are the catalogue's problem rather than the collection's, and neither is
-worth acting on yet.
+All thirteen are settled. Twelve rows were corrected; one — `MEP Black Star
+Promos #088 Zarude` — was removed at Bart's request until TCGdex indexes that
+set, and is kept in `wishlist-promos-removed-2026-08-16.json` beside the eight
+unreleased wishlist promos, so all nine cards waiting on the catalogue are in one
+place.
 
-| set | # | name | state |
-| --- | --- | --- | --- |
-| MEP Black Star Promos | 088 | Zarude | Too new. TCGdex has `mep` indexed to #080; it will match when they catch up. |
-| XY Black Star Promos | 223 | Venusaur | **#223 does not exist** in that set. TCGdex indexes 216 cards and holds exactly two Venusaurs, both called "Venusaur EX": **#XY28** and **#XY123**. |
+`Black Bolt #085 Professor's Research (Juniper)` is deliberately left as it is:
+the row is right and the name check is right, and reconciling them means teaching
+`sameCard()` to ignore a parenthesised suffix — a change to matching that wants
+measuring across the whole collection first.
 
-The Venusaur needs one look at the card, because the two are not close in value
-and the usual tiebreak does not apply here — the higher number is the cheaper
-card:
+## What will not be visible immediately
 
-| | trend |
-| --- | --- |
-| `#XY28` Venusaur EX | **€128.31** |
-| `#XY123` Venusaur EX | €9.24 |
+These edits were written straight to Postgres, so they did not pass through the
+app and could not invalidate its cache. `getCollection()` holds an assembled
+collection for an hour under `cardsTag(userId)` and only a write *through the
+API* drops it. Right after this run the site still reported all thirteen as
+unmatched, from a cache built before the corrections.
 
-Both are filed by TCGdex as rarity "Promo", so nothing in the catalogue
-distinguishes them further. Ancient Mew resolved the same way and is a useful
-precedent: the number was never the problem, the set name was.
+It resolves itself within the hour, or immediately if any card is edited through
+the app. Worth knowing before concluding that a correction did not take: check
+Postgres, not the page.
+
+**One follow-up.** `scripts/backfill-finish.mjs` should be re-run once the cache
+has turned over — twelve cards that match now had no `finish` assigned, because
+they matched nothing when it last ran.
