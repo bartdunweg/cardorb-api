@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Card Orb">
+  <defs>
+    
+    <filter id="orbShadowBlur" x="-60%" y="-300%" width="220%" height="700%">
+      <feGaussianBlur stdDeviation="51.228 11.137"/>
+    </filter>
+    <radialGradient id="orbBody" gradientUnits="userSpaceOnUse"
+      cx="190.074"
+      cy="31.381"
+      r="409.600">
+      <stop offset="0.000" stop-color="#D6C2FF"/>
+      <stop offset="0.031" stop-color="#F5E0FF"/>
+      <stop offset="0.062" stop-color="#FFFFFF"/>
+      <stop offset="0.094" stop-color="#FFFFFF"/>
+      <stop offset="0.125" stop-color="#FFFFFF"/>
+      <stop offset="0.156" stop-color="#FFFFFF"/>
+      <stop offset="0.188" stop-color="#FFFFFF"/>
+      <stop offset="0.219" stop-color="#FFFFFF"/>
+      <stop offset="0.250" stop-color="#ECFFFF"/>
+      <stop offset="0.281" stop-color="#D7FFFF"/>
+      <stop offset="0.312" stop-color="#D7FFFF"/>
+      <stop offset="0.344" stop-color="#E9FFFF"/>
+      <stop offset="0.375" stop-color="#F9FFFF"/>
+      <stop offset="0.406" stop-color="#FFFFFF"/>
+      <stop offset="0.438" stop-color="#FFFFE8"/>
+      <stop offset="0.469" stop-color="#FFFFC7"/>
+      <stop offset="0.500" stop-color="#FFECE0"/>
+      <stop offset="0.531" stop-color="#FFB9EA"/>
+      <stop offset="0.562" stop-color="#C9A1D4"/>
+      <stop offset="0.594" stop-color="#928DC6"/>
+      <stop offset="0.625" stop-color="#818DBA"/>
+      <stop offset="0.656" stop-color="#78B2C7"/>
+      <stop offset="0.688" stop-color="#83DBE6"/>
+      <stop offset="0.719" stop-color="#9DF6F0"/>
+      <stop offset="0.750" stop-color="#A7F5DC"/>
+      <stop offset="0.781" stop-color="#9ADCBE"/>
+      <stop offset="0.812" stop-color="#86BCA2"/>
+      <stop offset="0.844" stop-color="#78A991"/>
+      <stop offset="0.875" stop-color="#709F8B"/>
+      <stop offset="0.906" stop-color="#669F9A"/>
+      <stop offset="0.938" stop-color="#6CA7BA"/>
+      <stop offset="0.969" stop-color="#BD8DBE"/>
+      <stop offset="1.000" stop-color="#77B194"/>
+    </radialGradient>
+    <linearGradient id="orbEdge" gradientUnits="userSpaceOnUse"
+      x1="321.926" y1="419.179"
+      x2="190.074" y2="31.381">
+      <stop offset="0.000" stop-color="#6279A0"/>
+      <stop offset="0.031" stop-color="#60A4A1"/>
+      <stop offset="0.062" stop-color="#74B094"/>
+      <stop offset="0.094" stop-color="#82B08E"/>
+      <stop offset="0.125" stop-color="#97AD80"/>
+      <stop offset="0.156" stop-color="#A3A875"/>
+      <stop offset="0.188" stop-color="#A6A26D"/>
+      <stop offset="0.219" stop-color="#A49C68"/>
+      <stop offset="0.250" stop-color="#9F9865"/>
+      <stop offset="0.281" stop-color="#999463"/>
+      <stop offset="0.312" stop-color="#909063"/>
+      <stop offset="0.344" stop-color="#878D64"/>
+      <stop offset="0.375" stop-color="#7D8C68"/>
+      <stop offset="0.406" stop-color="#748E6E"/>
+      <stop offset="0.438" stop-color="#6D9276"/>
+      <stop offset="0.469" stop-color="#69987F"/>
+      <stop offset="0.500" stop-color="#6A9E86"/>
+      <stop offset="0.531" stop-color="#6EA58E"/>
+      <stop offset="0.562" stop-color="#6FAD9B"/>
+      <stop offset="0.594" stop-color="#6FB5AB"/>
+      <stop offset="0.625" stop-color="#6EBDBC"/>
+      <stop offset="0.656" stop-color="#6DC5CD"/>
+      <stop offset="0.688" stop-color="#6FCDDA"/>
+      <stop offset="0.719" stop-color="#75D1E2"/>
+      <stop offset="0.750" stop-color="#7FCBE7"/>
+      <stop offset="0.781" stop-color="#89BFEA"/>
+      <stop offset="0.812" stop-color="#92B0EA"/>
+      <stop offset="0.844" stop-color="#98A3E8"/>
+      <stop offset="0.875" stop-color="#9B9AE6"/>
+      <stop offset="0.906" stop-color="#9A97E3"/>
+      <stop offset="0.938" stop-color="#9C94DD"/>
+      <stop offset="0.969" stop-color="#9F8FD3"/>
+      <stop offset="1.000" stop-color="#A186C2"/>
+    </linearGradient>
+    <radialGradient id="orbEdgeFade" gradientUnits="userSpaceOnUse"
+      cx="256.000" cy="225.280" r="204.800">
+      <stop offset="0.000" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.031" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.062" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.094" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.125" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.156" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.188" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.219" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.250" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.281" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.312" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.344" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.375" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.406" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.438" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.469" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.500" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.531" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.562" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.594" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.625" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.656" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.688" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.719" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.750" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.781" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.812" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.844" stop-color="#FFFFFF" stop-opacity="0.000"/>
+      <stop offset="0.875" stop-color="#FFFFFF" stop-opacity="0.032"/>
+      <stop offset="0.906" stop-color="#FFFFFF" stop-opacity="0.255"/>
+      <stop offset="0.938" stop-color="#FFFFFF" stop-opacity="0.580"/>
+      <stop offset="0.969" stop-color="#FFFFFF" stop-opacity="0.873"/>
+      <stop offset="1.000" stop-color="#FFFFFF" stop-opacity="1.000"/>
+    </radialGradient>
+    <mask id="orbEdgeMask">
+      <circle cx="256.000" cy="225.280" r="204.800" fill="url(#orbEdgeFade)"/>
+    </mask>
+    <radialGradient id="orbSpec" gradientUnits="userSpaceOnUse"
+      cx="196.712" cy="156.871" r="28.963">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="orbClip">
+      <circle cx="256.000" cy="225.280" r="204.800"/>
+    </clipPath>
+  </defs>
+  
+  
+  <ellipse cx="256.000" cy="425.984"
+      rx="116.818" ry="25.395"
+      fill="#2A2A33" fill-opacity="0.300"
+      filter="url(#orbShadowBlur)"/>
+  <g clip-path="url(#orbClip)">
+    <circle cx="256.000" cy="225.280" r="204.800" fill="url(#orbBody)"/>
+    <circle cx="256.000" cy="225.280" r="204.800"
+      fill="url(#orbEdge)" mask="url(#orbEdgeMask)"/>
+    <circle cx="196.712" cy="156.871"
+      r="28.963" fill="url(#orbSpec)"/>
+  </g>
+  
+</svg>
