@@ -1,5 +1,5 @@
 ---
-id: ADR-0034
+id: ADR-0035
 title: A skippable welcome flow for new accounts
 status: accepted
 date: 2026-08-16

@@ -116,3 +116,21 @@ export async function publicProfile(username: string) {
   if (!db) return null;
   return postgres.profileByUsername(db, username);
 }
+
+/**
+ * Which /user/<name> pages there are to list.
+ *
+ * Fails soft to nothing, unlike its neighbours, because the one caller is the
+ * sitemap: a store that is unreachable for a minute should cost a crawler the
+ * profile entries for that minute, not a 500 on /sitemap.xml.
+ */
+export async function publicUsernames(): Promise<string[]> {
+  const db = await serverClient();
+  if (!db) return [];
+  try {
+    return await postgres.publicUsernames(db);
+  } catch (err) {
+    console.error("Listing public profiles for the sitemap failed:", err);
+    return [];
+  }
+}

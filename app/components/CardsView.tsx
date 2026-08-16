@@ -31,7 +31,8 @@ import { shownPrice } from "../../lib/core/cards";
 import { type CardField, type DexOwned } from "./cards-fields";
 import type { CardSet, OwnedCard } from "../../lib/core/cards";
 import { eraLabel, eraYears, groupByEra } from "../../lib/core/eras";
-import { LOCALE, OWNER_NAME } from "../../lib/core/config";
+import { LOCALE } from "../../lib/core/config";
+import { possessive } from "../../lib/core/owner";
 import { cardsMainClassName, onlyNarrowClassName, onlyWideClassName } from "./cardsPageClasses";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
@@ -128,6 +129,7 @@ export default function CardsView({
   variant = "owner",
   scope,
   username,
+  ownerName,
   basePath = "/cards",
   emptyReason = "outage",
   onAdd,
@@ -153,6 +155,16 @@ export default function CardsView({
   scope?: string;
   /** Whose collection this is. Public only, and only to address its API by. */
   username?: string;
+  /**
+   * What to call the person whose collection this is. Public only.
+   *
+   * Passed in rather than read from a constant. It used to be OWNER_NAME out of
+   * the environment, which was one name for the whole deployment, so a second
+   * account's public page called its own cards somebody else's. The server
+   * resolves it with ownerLabel() (lib/core/owner.ts) from the profile the page
+   * looked up anyway, and falls back to the username when no name was given.
+   */
+  ownerName?: string;
   /** Forwarded to CardItem/CardLink. /cards by default (the original,
    *  standalone detail route); CollectionScreen.tsx passes /collection/card
    *  so a card opened from the (app) shell stays inside it — sidebar, navbar
@@ -951,8 +963,11 @@ export default function CardsView({
       page rather than being repeated over the grid below. */
   const currentSet = useMemo(() => sets.find((s) => s.name === selected) ?? null, [sets, selected]);
   const onProfile = selected === "profile" && !isPublic;
-  // Whose it is. On the link you hand to somebody else it is not theirs.
-  const collectionName = isPublic ? `${OWNER_NAME}'s collection` : "My collection";
+  // Whose it is. On the link you hand to somebody else it is not theirs — and
+  // the name is the owner's own, not the deployment's. ownerName is only absent
+  // on the owner screen, where the answer does not depend on it.
+  const collectionName =
+    isPublic && ownerName ? `${possessive(ownerName)} collection` : "My collection";
 
   /**
    * The dex's own ownership control, read off the collection's Owned facet.
@@ -1323,7 +1338,7 @@ export default function CardsView({
         </header>
 
         {onProfile ? (
-          <CardsProfile signedIn={signedIn} onSignOut={signOut} />
+          <CardsProfile onSignOut={signOut} />
         ) : onPokedex ? (
           <CardsPokedex
             entries={dexShown}
@@ -1561,6 +1576,7 @@ export default function CardsView({
         onSelect={openPane}
         signedIn={signedIn}
         isPublic={isPublic}
+        ownerName={ownerName}
         onAdd={() => setAdding(true)}
         brokenLogos={brokenLogos}
         onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}

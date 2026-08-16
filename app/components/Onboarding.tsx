@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_URL } from "../../lib/core/config";
-import { validateUsername } from "../../lib/core/account";
+import { MAX_DISPLAY_NAME, validateUsername } from "../../lib/core/account";
 import AvatarPicker from "./AvatarPicker";
 import { useUsernameCheck, usernameSays } from "./useUsernameCheck";
 import { FormError, FormField, FormForm, FormHint, FormInput, FormLabel, FormNote } from "./FormField";
@@ -59,9 +59,11 @@ export default function Onboarding({
   const at = ORDER.indexOf(step);
 
   const [username, setUsername] = useState(initial.username);
-  // Empty rather than the generated username the signup route seeded into the
-  // column: the placeholder already says what an empty box means, and a box
-  // pre-filled with `swift-magnemite-4821` invites you to keep it.
+  // A name given at signup is shown back, because it was given. What is not
+  // shown back is a display name that is only a copy of the username: signup
+  // stopped seeding that (ADR-0034), but rows written before it did still hold
+  // one, and a box pre-filled with `swift-magnemite-4821` invites you to keep
+  // it. The placeholder already says what an empty box means.
   const [displayName, setDisplayName] = useState(
     initial.displayName && initial.displayName !== initial.username ? initial.displayName : "",
   );
@@ -213,7 +215,7 @@ export default function Onboarding({
             <FormLabel>Display name</FormLabel>
             <FormInput
               value={displayName}
-              maxLength={60}
+              maxLength={MAX_DISPLAY_NAME}
               placeholder={wanted || initial.username}
               onChange={(e) => setDisplayName(e.target.value)}
               disabled={busy}

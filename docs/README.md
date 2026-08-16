@@ -19,7 +19,7 @@ root `CLAUDE.md` for how and when to write to it.
 - `decisions/0003-split-lib-core-cards.md`, `decisions/0004-split-lib-core-catalogue.md`,
   `decisions/0005-split-cardsview.md` — the `lib/core`/`CardsView` refactor.
 - `decisions/0006-generated-username-at-signup.md` — why signup generates a username
-  instead of asking for one. `decisions/0034-welcome-flow-for-new-accounts.md`
+  instead of asking for one. `decisions/0035-welcome-flow-for-new-accounts.md`
   closes the consequence it left open: a four-step, every-step-skippable welcome
   flow at `/welcome` (name, avatar, sharing, first cards), gated on a new
   `profiles.onboarded_at` column. It also explains why "what do you collect" is
@@ -65,6 +65,15 @@ root `CLAUDE.md` for how and when to write to it.
   `CardAddDialog.tsx`; now `searchCards()` throws instead of swallowing, and
   the dialog shows a distinct "Search is temporarily unavailable" with retry,
   plus a "Show more results" button instead of a hard 20-result cap.
+- `decisions/0034-collection-named-after-its-owner.md` — **read before adding
+  anything that names a person.** `OWNER_NAME`/`PUBLIC_USERNAME` are gone; whose
+  a collection is and what to call them come from the profile being rendered,
+  via `ownerOf()` (`lib/core/collection.ts`, now returning the whole profile) and
+  `ownerLabel()`/`collectionTitle()` (`lib/core/owner.ts`). The app had been
+  multi-user for a while with one env var still titling every public page after
+  the deployment's owner — production had a second public profile served under
+  the wrong name. Also: signup now asks for a name, optionally, and
+  `display_name` stopped being seeded with the generated username.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.

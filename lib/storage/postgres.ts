@@ -352,6 +352,30 @@ export async function profileByUsername(
   return { id: row.id, username: row.username, displayName: row.display_name };
 }
 
+/**
+ * Every collection that has opted into being found, for the sitemap.
+ *
+ * Names only: a sitemap needs a URL and a nothing else, and the fewer columns
+ * this reads the less there is to leak if the policy behind it ever loosens.
+ * The is_public filter is stated here as well as enforced by RLS, so the query
+ * says what it means without a reader having to go and check the policy.
+ *
+ * Capped, because a sitemap is not a paginated resource and a very large one is
+ * worse than a slightly short one — 50,000 URLs is the format's own ceiling and
+ * this app is a long way below it either way.
+ */
+export async function publicUsernames(db: SupabaseClient): Promise<string[]> {
+  const { data, error } = await db
+    .from("profiles")
+    .select("username")
+    .eq("is_public", true)
+    .order("username")
+    .limit(50_000);
+
+  if (error) throw new Error(`Listing public profiles failed: ${error.message}`);
+  return ((data ?? []) as { username: string }[]).map((row) => row.username);
+}
+
 /** A profile as its owner sees it, which is more than a stranger gets. */
 export type OwnProfile = {
   username: string;

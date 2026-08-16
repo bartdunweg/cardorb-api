@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../lib/api/guard";
 import { createRateLimiter } from "../../../../lib/api/rate-limit";
 import { serverClient } from "../../../../lib/storage/supabase";
-import { MIN_PASSWORD, generateUsername } from "../../../../lib/core/account";
+import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "../../../../lib/core/account";
 
 /**
  * Making an account.
@@ -12,10 +12,20 @@ import { MIN_PASSWORD, generateUsername } from "../../../../lib/core/account";
  * have to think about: what to do when two people want the same name.
  *
  * The username is not asked for. Signup only needs an address and a password;
- * a name is generated here (generateUsername, in lib/core/account.ts) so the
+ * a handle is generated here (generateUsername, in lib/core/account.ts) so the
  * form has one fewer decision in front of it, and the person can pick their
  * own later from Settings, where changing it is a much smaller thing to do
  * than typing the first one under pressure.
+ *
+ * A *name* is asked for, and is optional. These are two different things and
+ * conflating them is what this route used to do: it set display_name to the
+ * generated username, so every account's name was "swift-eevee-4821" and there
+ * was no way to tell a name somebody chose from one nobody did. Now an omitted
+ * name is null, the public page falls back to the username (ownerLabel, in
+ * lib/core/owner.ts), and Settings shows the same fallback as its placeholder.
+ * One field rather than first and last: this app has no billing and no
+ * shipping, so a split would buy nothing and would ask people whose name does
+ * not divide in two to pretend it does.
  *
  * The username is claimed by a trigger, not by this route. handle_new_user()
  * inserts the profile in the same transaction as the account, so a name that is
@@ -58,10 +68,12 @@ export async function POST(req: Request) {
 
   let email = "";
   let password = "";
+  let name = "";
   try {
     const body = (await req.json()) as Record<string, unknown>;
     if (typeof body.email === "string") email = body.email.trim();
     if (typeof body.password === "string") password = body.password;
+    if (typeof body.name === "string") name = body.name.trim();
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -74,6 +86,15 @@ export async function POST(req: Request) {
   if (password.length < MIN_PASSWORD) {
     return NextResponse.json(
       { error: `A password needs at least ${MIN_PASSWORD} characters.` },
+      { status: 400 },
+    );
+  }
+  // The only rule a name has. It is optional, so no length floor and no shape:
+  // the ceiling exists because the column has one, and a form that accepted
+  // sixty-one characters would turn into a 500 from a check constraint.
+  if (name.length > MAX_DISPLAY_NAME) {
+    return NextResponse.json(
+      { error: `A name can be at most ${MAX_DISPLAY_NAME} characters.` },
       { status: 400 },
     );
   }
@@ -108,7 +129,13 @@ export async function POST(req: Request) {
     // this into a profile. Nothing else reads it, and nothing should: metadata
     // is user-writable, so it is an input to the trigger and never a source of
     // truth afterwards.
-    options: { data: { username, display_name: username } },
+    //
+    // display_name is the name if one was given and absent if not. The trigger
+    // already does nullif(... ->> 'display_name', ''), so both an empty string
+    // and a missing key land as null, which is what "no name yet" means
+    // everywhere downstream. It used to be set to `username`, which is how
+    // every account ended up named after its own generated handle.
+    options: { data: { username, display_name: name || undefined } },
   });
 
   if (error) {

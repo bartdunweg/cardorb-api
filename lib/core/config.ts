@@ -58,29 +58,17 @@ export const APP_TAGLINE_SHORT =
  */
 export const LOCALE = "nl-NL";
 
-/**
- * Whose collection /user/<name> shows.
+/*
+ * PUBLIC_USERNAME and OWNER_NAME used to live here.
  *
- * One name, from the environment, because there is one person here. It is a
- * variable rather than a constant so the public URL can be changed without a
- * code change, and it is read in exactly one place (app/user/[username]) so
- * that when accounts arrive there is a single lookup to replace rather than a
- * string to hunt for.
+ * Both were env vars with a default — one naming the collection at /user/<name>,
+ * the other naming its owner — and both were written with a note saying they
+ * would become a lookup on the day accounts arrived. Accounts arrived; the
+ * lookups are ownerOf() in lib/core/collection.ts and ownerLabel() in
+ * lib/core/owner.ts, and a name that belongs to a person has no business being
+ * deployment configuration. Nothing reads either variable now, so setting one
+ * in an environment does nothing.
  */
-export const PUBLIC_USERNAME = process.env.PUBLIC_USERNAME ?? "bartdunweg";
-
-/**
- * Whose collection the public link is showing.
- *
- * "My collection" is right on the screen you sign in to and wrong on the one
- * you hand to somebody else: there it is not theirs. A first name rather than
- * the username, because "bartdunweg's collection" reads like a handle and this
- * line is the page saying who it belongs to.
- *
- * An env var with a default, like PUBLIC_USERNAME beside it, and it becomes a
- * lookup on the same day that one does.
- */
-export const OWNER_NAME = process.env.OWNER_NAME ?? "Bart";
 
 /**
  * Where this app lives, absolutely.

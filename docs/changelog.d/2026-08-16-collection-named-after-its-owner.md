@@ -1,0 +1,4 @@
+- Every collection is now named after the person it belongs to. A shared link reads "Pikachu's Pokémon card collection" for Pikachu's collection, on the page, in the browser tab, and in the preview image — it used to say "Bart's" for everybody.
+- Signing up now asks for your name, optionally. Skip it and your collection is named after your username until you fill it in; Settings' "Display name" panel is now "Your name" and shows you exactly what your page will be called.
+- Fixed: opening a card from somebody else's public collection answered "no such collection". Only the first account's cards could be opened this way.
+- The sitemap now lists every collection that has been made public, instead of only the first one.

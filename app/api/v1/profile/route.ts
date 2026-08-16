@@ -4,6 +4,7 @@ import { sameOrigin } from "../../../../lib/api/guard";
 import { bearer, requestViewer } from "../../../../lib/api/viewer";
 import { serverClient, userClient } from "../../../../lib/storage/supabase";
 import { ownProfile, updateProfile } from "../../../../lib/storage/postgres";
+import { MAX_DISPLAY_NAME } from "../../../../lib/core/account";
 
 /**
  * The things about a profile its owner may change.
@@ -47,7 +48,7 @@ export async function PATCH(req: Request) {
     // Emptied means "use my username", which is a null in the column rather
     // than an empty string: the public page falls back on null, and "" would
     // render as a heading with nothing in it.
-    if (raw.length > 60) {
+    if (raw.length > MAX_DISPLAY_NAME) {
       return NextResponse.json({ error: "That name is too long." }, { status: 400 });
     }
     patch.displayName = raw || null;

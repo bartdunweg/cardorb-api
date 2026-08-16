@@ -32,6 +32,15 @@ export type Viewer = {
   email: string;
   /** The name in /user/<name>. Always present: a trigger makes one. */
   username: string;
+  /**
+   * The name this person gave for themselves, or null if they have not.
+   *
+   * Never read on its own: pass the viewer to ownerLabel() (lib/core/owner.ts),
+   * which falls back to the username. Nullable because it genuinely is — signup
+   * used to seed it with the generated username, which made "no name given"
+   * indistinguishable from a name, and stopped doing so.
+   */
+  displayName: string | null;
   /** The avatars bucket's public URL for this account, or null until one is
    *  uploaded. See app/api/v1/profile/avatar/route.ts. */
   avatarUrl: string | null;
@@ -80,12 +89,13 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
 
   const { data: profile } = await db
     .from("profiles")
-    .select("username,avatar_url,onboarded_at")
+    .select("username,display_name,avatar_url,onboarded_at")
     .eq("id", sub)
     .maybeSingle();
 
   const p = profile as {
     username?: string;
+    display_name?: string | null;
     avatar_url?: string | null;
     onboarded_at?: string | null;
   } | null;
@@ -98,6 +108,7 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
     // one. The empty string never resolves as a username, which is the correct
     // outcome for an account that has no name yet.
     username: p?.username ?? "",
+    displayName: p?.display_name ?? null,
     avatarUrl: p?.avatar_url ?? null,
     // A profile row this lookup could not read is not a reason to send anybody
     // through the welcome flow, but there is no row to write the answer to

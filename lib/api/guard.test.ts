@@ -31,6 +31,7 @@ const SOMEBODY: Viewer = {
   userId: "user-1",
   email: "a@example.com",
   username: "a",
+  displayName: null,
   avatarUrl: null,
   onboardedAt: "2026-08-16T00:00:00.000Z",
 };

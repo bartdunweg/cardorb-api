@@ -22,6 +22,17 @@ const SHAPE = /^[a-z0-9][a-z0-9-]{1,29}$/;
 /** Long enough to be worth having, matching minimum_password_length in config.toml. */
 export const MIN_PASSWORD = 10;
 
+/**
+ * The ceiling on a display name — what a person is called, not their handle.
+ *
+ * The same sixty as `check (length(display_name) <= 60)` on profiles, and for
+ * the same reason SHAPE above is written twice: SQL cannot import. Every place
+ * that offers the field reads this, so the signup form, the settings form and
+ * the two routes behind them cannot drift apart from each other or from the
+ * column.
+ */
+export const MAX_DISPLAY_NAME = 60;
+
 export type NameCheck = { ok: true } | { ok: false; error: string };
 
 /**
