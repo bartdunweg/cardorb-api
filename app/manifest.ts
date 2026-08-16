@@ -35,15 +35,19 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: colour.bgGrouped.light,
     theme_color: colour.bgGrouped.light,
-    // No icons. There used to be two generated ones here, and the entries have
-    // to go with them: a manifest that names /icon and /apple-icon after those
-    // routes are deleted is a manifest pointing at two 404s, which is worse
-    // than saying nothing — Android would fetch both and fail on install.
+    // The mark exists now, so these come back — the comment they replace said to
+    // put them here the day it did. They point into /public rather than at the
+    // /icon route, because a manifest is fetched by an installer outside the page
+    // and a stable path is worth more here than Next's hashed one.
     //
-    // The cost of the omission is real and worth writing down: without an icon
-    // in here, Chrome on Android will not offer to install the app at all, so
-    // `display: "standalone"` above only takes effect for whoever adds it to a
-    // home screen by hand. iOS still will, and screenshots its own thumbnail.
-    // Put an `icons` array back the day this gets a mark of its own.
+    // Both are the app icon including its off-white tile, so they carry their own
+    // background — a transparent icon on an Android launcher is a floating smear.
+    // `maskable` is safe because the tile is full-bleed and the orb sits well
+    // inside the safe zone, so a circular or squircle crop takes only tile.
+    icons: [
+      { src: "/brand/orb-tile-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/orb-tile-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/orb-tile-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
   };
 }
