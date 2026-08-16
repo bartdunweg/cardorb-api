@@ -17,6 +17,8 @@
 > | Lost Origin | #TG17 Eternatus | **#TG21 Eternatus V** |
 > | Silver Tempest | #TG14 Corviknight | **#TG18 Corviknight V** |
 > | Silver Tempest | #TG12 Blaziken | **#TG14 Blaziken V** |
+> | Chilling Reign | #165 Chansey | **#183 Blissey V** (alt art; Bart identified the card) |
+> | Wizard Black Star Promos | Ancient Mew | **Miscellaneous Promos #001** — set was wrong, not the number |
 >
 > That last one was not in the broken list: it *matched*, to Kricketune V, which
 > is why it never surfaced. A wrong match is worse than no match — it prices your
@@ -155,3 +157,29 @@ the app.
 | 108 | Espeon | Special Illustration Rare |
 | 109 | Pikachu | Special Illustration Rare |
 | 110 | Umbreon | Special Illustration Rare |
+
+
+---
+
+## Still open — 2 rows
+
+Both are the catalogue's problem rather than the collection's, and neither is
+worth acting on yet.
+
+| set | # | name | state |
+| --- | --- | --- | --- |
+| MEP Black Star Promos | 088 | Zarude | Too new. TCGdex has `mep` indexed to #080; it will match when they catch up. |
+| XY Black Star Promos | 223 | Venusaur | **#223 does not exist** in that set. TCGdex indexes 216 cards and holds exactly two Venusaurs, both called "Venusaur EX": **#XY28** and **#XY123**. |
+
+The Venusaur needs one look at the card, because the two are not close in value
+and the usual tiebreak does not apply here — the higher number is the cheaper
+card:
+
+| | trend |
+| --- | --- |
+| `#XY28` Venusaur EX | **€128.31** |
+| `#XY123` Venusaur EX | €9.24 |
+
+Both are filed by TCGdex as rarity "Promo", so nothing in the catalogue
+distinguishes them further. Ancient Mew resolved the same way and is a useful
+precedent: the number was never the problem, the set name was.
