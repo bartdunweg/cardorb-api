@@ -184,6 +184,66 @@ describe("getCardsStats", () => {
     ]);
   });
 
+  it("prices the wishlist per card, not per copy, and leaves the binder out", () => {
+    const s = getCardsStats([
+      set("A", [
+        card({ key: "held", price: { low: 5, market: 5, avg30: 5, nm: null } }),
+        card({
+          key: "want",
+          owned: false,
+          price: { low: 30, market: 30, avg30: 30, nm: null },
+          // Two wanted printings of one card is still one card to buy.
+          variants: [variant({ id: "a", owned: false }), variant({ id: "b", owned: false })],
+        }),
+      ]),
+    ]);
+    expect(s.wishlistValue).toBe(30);
+    expect(s.wishlistPriced).toBe(1);
+    // And the held card is not in it.
+    expect(s.value).toBe(5);
+  });
+
+  describe("movement", () => {
+    const at = (market: number, avg30: number | null) => ({ low: 1, market, avg30, nm: null });
+
+    it("compares market against the 30-day average, over copies held", () => {
+      const s = getCardsStats([
+        set("A", [
+          card({ key: "1", price: at(110, 100), variants: [variant({ quantity: 2 })] }),
+          card({ key: "2", price: at(90, 100) }),
+        ]),
+      ]);
+      // 220 now against 200 then, plus 90 against 100: 310 / 300.
+      expect(s.movement).toMatchObject({ now: 310, avg30: 300, cards: 2 });
+      expect(s.movement!.pct).toBeCloseTo(310 / 300 - 1);
+    });
+
+    it("never compares the Near Mint estimate against a raw average", () => {
+      // shownPrice() answers with nm.mid, which is market times a band. If that
+      // fed the comparison, a market sitting exactly on its average would
+      // report a permanent premium that never moves. Same number both sides:
+      // the honest answer is zero.
+      const s = getCardsStats([set("A", [card({ price: { low: 1, market: 100, avg30: 100, nm: { low: 105, mid: 115, high: 125 } } })])]);
+      expect(s.movement!.pct).toBe(0);
+      // The value tile still uses the Near Mint estimate — that part is right.
+      expect(s.value).toBe(115);
+    });
+
+    it("counts only cards that carry both figures", () => {
+      const s = getCardsStats([
+        set("A", [card({ key: "1", price: at(110, 100) }), card({ key: "2", price: at(50, null) })]),
+      ]);
+      expect(s.movement).toMatchObject({ now: 110, avg30: 100, cards: 1 });
+    });
+
+    it("is absent rather than zero when nothing can be compared", () => {
+      // A binder nobody could price has not held steady — it is unknown, and
+      // the two read the same on a page unless one of them is missing.
+      expect(getCardsStats([set("A", [card({ price: null })])]).movement).toBeNull();
+      expect(getCardsStats([set("A", [card({ owned: false, price: at(9, 9) })])]).movement).toBeNull();
+    });
+  });
+
   it("survives an empty collection", () => {
     const s = getCardsStats([]);
     expect(s).toMatchObject({ cards: 0, owned: 0, wishlist: 0, sets: 0, value: 0, priced: 0 });
