@@ -52,33 +52,41 @@ matching, so it wants measuring against the whole collection before it ships.
 says #172 and TCGdex says #172 is that card, so this may be the same card typed
 loosely rather than the wrong number. Check the physical card.
 
-## 2. Trainer Gallery — 4 rows, and the fix is the set, not just the number
+## 2. Trainer Gallery — 4 rows, and the number really is the only problem
 
-**These need `set_name` changed as well as `number`.** TCGdex files the Trainer
-Gallery as its own set — `Lost Origin Trainer Gallery` (`swsh11.5tg`) and
-`Silver Tempest Trainer Gallery` (`swsh12.5tg`), thirty cards each — so a row
-filed under `Lost Origin` cannot match a TG card at any number. Correcting the
-number alone will not help.
+**Correction.** An earlier version of this file said these needed `set_name`
+changed to "Lost Origin Trainer Gallery" as well as the number, because TCGdex
+files the gallery as its own set. The first half is true and the conclusion was
+wrong: the app already resolves a `TG` number filed under the base set to the
+gallery set. Checked against the live collection — 69 of this binder's 73
+Trainer Gallery cards match `swsh11.5tg-TG…` and `swsh12.5tg-TG…` today, from
+rows whose `set_name` says plainly "Lost Origin" or "Silver Tempest". The subset
+resolution in `lib/core/cards.ts` has been doing this the whole time.
 
-That is also why these carry no price today. ADR-0022 worked around the missing
-*artwork* by reading Trainer Gallery scans from pokemontcg.io; the TCGdex match
-was never repaired, so the price is still absent. Moving the set fixes both.
+So there are four broken rows, not seventy-four, and Bart's original reading was
+right both times: the name is his, the number is wrong, and nothing else needs
+touching.
 
-The names look right and the numbers are cross-wired — the same finding ADR-0022
-made about 23 gallery rows, which are very likely the same problem as these.
-Recorded TG12 is Centiskorch, but TG12 is Orbeetle; recorded TG15 is Orbeetle,
-but TG15 is Centiskorch. The two pairs are swapped.
+They are broken for the reason the lookup is name-checked. `TG12` in Lost Origin
+is Orbeetle V; the row says Centiskorch, so the match is refused rather than
+silently taking the wrong card. The numbers are cross-wired in pairs — recorded
+TG12 is Centiskorch but TG12 is Orbeetle, recorded TG15 is Orbeetle but TG15 is
+Centiskorch.
 
-Each name is still two cards — the V and the VMAX — and nothing recorded says
-which. That needs the physical card; the recorded rarity is "Rare Holo" on all
-four, which is the pre-backfill vocabulary and does not distinguish them.
+Each name is still two cards, the V and the VMAX, and nothing recorded chooses
+between them: all four carry "Rare Holo", the pre-backfill vocabulary they kept
+*because* they never matched. That needs the physical card.
 
-| recorded set | recorded # | name | correct set | correct # |
-| --- | --- | --- | --- | --- |
-| Lost Origin | TG12 | Centiskorch | Lost Origin Trainer Gallery | **TG14** (V) or **TG15** (VMAX) |
-| Lost Origin | TG15 | Orbeetle | Lost Origin Trainer Gallery | **TG12** (V) or **TG13** (VMAX) |
-| Lost Origin | TG17 | Eternatus | Lost Origin Trainer Gallery | **TG21** (V) or **TG22** (VMAX) |
-| Silver Tempest | TG14 | Corviknight | Silver Tempest Trainer Gallery | **TG18** (V) or **TG19** (VMAX) |
+| set | recorded # | name | correct # |
+| --- | --- | --- | --- |
+| Lost Origin | TG12 | Centiskorch | **TG14** (V) or **TG15** (VMAX) |
+| Lost Origin | TG15 | Orbeetle | **TG12** (V) or **TG13** (VMAX) |
+| Lost Origin | TG17 | Eternatus | **TG21** (V) or **TG22** (VMAX) |
+| Silver Tempest | TG14 | Corviknight | **TG18** (V) or **TG19** (VMAX) |
+
+One more row has the same shape but already matches, so it is not in the list
+above and is worth knowing about anyway: **Silver Tempest TG12 "Blaziken"** —
+TG12 there is Kricketune V, and Blaziken is TG14 (V) / TG15 (VMAX).
 
 ## 3. Genuinely not in the catalogue — 3 rows
 
