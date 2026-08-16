@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { Compass, Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
-import { APP_NAME } from "../../lib/core/config";
 import { LOCALE } from "../../lib/core/config";
+import Wordmark from "./Wordmark";
 import { possessive } from "../../lib/core/owner";
 
 /**
@@ -128,13 +127,7 @@ export default function CardsSidebar({
           the plus. */}
       {signedIn && (
         <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
-          <Link
-            href="/"
-            className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline"
-            aria-label={`${APP_NAME} home`}
-          >
-            {APP_NAME}
-          </Link>
+          <Wordmark href="/" />
           <button
             type="button"
             className="btn btn--icon btn--primary flex-none"

@@ -6,6 +6,7 @@ import {
 } from "../components/tabbarClasses";
 import { APP_NAME } from "../../lib/core/config";
 import { cardsMainClassName, pageCardsClassName } from "../components/cardsPageClasses";
+import Wordmark from "../components/Wordmark";
 
 /**
  * What every signed-in screen shows while the shell is on its way.
@@ -89,16 +90,17 @@ export default function Loading() {
             below it sat that far above the row it was standing in for, which
             is the one thing a fallback is supposed to get right.
 
-            The wordmark is the real word rather than an outline — it is a
-            constant, and a constant drawn as a grey bar is a shape fading into
-            itself. Not a <Link>: there is nothing to navigate to yet and a
-            fallback should not be pressable. The add button beside it is an
-            outline, because it is a control and drawing a dead one invites the
-            press it cannot answer. */}
+            The wordmark is the real mark and the real word rather than an
+            outline — it is a constant, and a constant drawn as a grey bar is a
+            shape fading into itself. It has to be the same <Wordmark /> the
+            rail lands on, orb included: drawn as bare text it would be the
+            right height and the wrong width, and the name would slide left by
+            the width of the orb at the moment the page arrived. Passed no
+            `href`, so it is not pressable — there is nothing to navigate to yet.
+            The add button beside it is an outline, because it is a control and
+            drawing a dead one invites the press it cannot answer. */}
         <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
-          <span className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em]">
-            {APP_NAME}
-          </span>
+          <Wordmark />
           <span className="skeleton flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full" />
         </div>
 

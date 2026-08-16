@@ -1,0 +1,4 @@
+- Card Orb has a picture of itself. The orb from the iPhone app's icon now sits next to the name in the nav bar, the sidebar and the footer, so the website and the app are recognisably the same product.
+- Tabs and bookmarks show the orb instead of the browser's blank page glyph — the round one, with no box around it, since nothing rounds off a favicon for you. Saving the site to a phone's home screen gives it the app icon on its tile, which is what a home screen expects. On Android, Chrome will now offer to install it at all, which it would not do before.
+- A link to Card Orb shared in a chat or on social now previews with the orb beside the headline.
+- New page at `/brand`: the mark in both its versions, the colours, the rules for using it, and direct downloads. Linked from the footer.

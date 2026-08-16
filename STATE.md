@@ -4,6 +4,61 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**Card Orb has a mark on the web (ADR-0048 and ADR-0049,** workspace
+`djibouti`**).** The orb from the iPhone app's icon is now the site's mark.
+
+**Read the warning in ADR-0048 before starting anything else here.** Two
+workspaces did this task from the same prompt, about twenty minutes apart.
+PR #68 (`orb-brand-assets`) landed `public/brand/`, `app/icon.png`,
+`app/apple-icon.png` and the manifest icons and merged at 21:13. This branch was
+cut from the commit *before* that merge, rebuilt the same asset copy from
+scratch, and only found out at merge time — by which point `origin/main` had
+gained four merges. Nothing failed loudly: the two brand directories were
+byte-identical where they overlapped, so it surfaced as two conflicted files
+rather than a broken build. **Re-fetch `origin/main` before writing anything
+that claims something does not exist yet.**
+
+What this branch adds on top of #68: `app/components/Wordmark.tsx` (orb + name,
+one component, four call sites — Navbar, CardsSidebar, MarketingFooter,
+`(app)/loading.tsx`), the orb on the social card, and **`/brand`** — the mark,
+the colours read live from `lib/design/tokens.ts`, the usage rules and direct
+downloads, linked from the marketing footer. `app/manifest.ts` is #68's version,
+kept whole: it has a `maskable` entry this branch had missed.
+
+Three things worth carrying forward:
+
+- **The generator stays in cardorb-ios.** `Tools/GenerateAppIcon.swift` renders
+  the orb; that is the source and a Swift toolchain does not belong here. This
+  repo owns everything downstream — the served files, the colours, the rules.
+  cardorb-ios can now drop its committed copies of everything except
+  `AppIcon.appiconset`; **that cleanup has not been done and is a separate PR in
+  that repository.**
+- **Three icon surfaces, three different files, and the rule that sorts them
+  (ADR-0049).** The tile goes where something else will round it off — the iOS
+  home screen (which masks it and fills alpha with black) and the Android
+  manifest. The plain circle goes where the file is drawn as given, which is the
+  browser tab: `app/icon.png` is `orb-256.png`. **PR #68 had shipped the square
+  tile as the favicon and it was live**; ADR-0049 corrects that one file and
+  leaves the rest of #68 alone. Both workspaces independently made the same
+  wrong call, which is worth knowing: the generator's README groups "favicons,
+  touch icons" in one row, and those two do not behave the same.
+- **The wordmark's orb carries `translate-y-[6.05%]` and that number is
+  measured.** In `orb-shadow-*` the sphere's body runs y 11–214 of a 256 box —
+  the rest is room for the contact shadow — so `items-center` centres the file
+  and leaves the ball 1.2px high at 24px. Verified in the page afterwards: ball
+  centre against text ink centre is 0.24px. Re-running the icon generator with
+  different padding would silently invalidate the constant.
+- **Manifest icons point at `/brand/…`, not at `/icon.png`.** Verified in the
+  rendered head: Next fingerprints that route (`/icon.png?icon.2k7t0-jdxaiax.png`),
+  so naming it in a manifest would 404 in production and work in dev.
+
+Measured, not asserted: Lighthouse on `/brand` scores a11y 100 / best-practices
+100, with `is-crawlable` the single failure and that is the intended noindex; a
+trace of `/` gives **CLS 0.00**; `/brand` fetches four images totalling ~36 KB.
+One **pre-existing** contrast failure remains on the landing page's `#share`
+section (`p.mt-0`, `text-label-tertiary`) — untouched by this work, not fixed,
+and worth a look.
+
 **Every value figure is per-user now, and counts copies (ADR-0044,** workspace
 `kuala-lumpur`**).** Asked whether the collection's value is computed per user
 from that user's cards. The "Collection value" tile always was. The **"Value
