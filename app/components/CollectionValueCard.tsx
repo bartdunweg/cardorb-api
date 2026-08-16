@@ -1,26 +1,34 @@
 import Card from "./Card";
-import data from "../../lib/core/collection-value.generated.json";
 import { LOCALE } from "../../lib/core/config";
 import { euroWhole } from "../../lib/core/format";
+import { chartPoints } from "../../lib/core/value-chart";
+import type { ValueSnapshot } from "../../lib/core/value-snapshot";
 
 /**
- * What the collection has been worth, as a line, on the /cards dashboard.
+ * What your collection has been worth, as a line, on the dashboard.
  *
  * It sits under the four headline numbers because it is the one of them that has
  * a history: "Collection value €39,887" is the last reading of this chart, and
  * the chart is the only thing on the page that says whether that number is
  * remarkable. So no figure of its own and no link out. The tile above says what
  * the binder is worth now, this says how it got there, and the reader is already
- * on /cards.
+ * on their own dashboard.
  *
  * The series is recorded rather than fetched, because no free feed publishes the
  * history: scripts/snapshot-collection-value.mjs argues that at length and is the
- * thing that adds a point. So this reads a committed file and asks nobody
- * anything at render time.
+ * thing that adds a point.
  *
- * Three points today, and more every time the script runs. Everything below is
- * written for the second case rather than the first: nothing assumes three, and
- * the shape it draws is whatever it is handed.
+ * It is handed the readings rather than importing them. It used to import
+ * lib/core/collection-value.generated.json, one committed file generated for one
+ * account, which every account on the deployment then read as its own — see
+ * lib/core/value-history.ts for what that looked like and why it is a table now.
+ * The page above resolves whose these are; this file draws whatever it is given
+ * and nothing else.
+ *
+ * Nothing assumes how many points there are. Fewer than two and it renders
+ * nothing at all, which is the right answer for an account that has never been
+ * snapshotted: one reading is a fact about today, not a history, and there is
+ * no empty state worth writing for a chart.
  */
 
 /**
@@ -50,40 +58,16 @@ const H = 150;
 /** Room on every side so a dot on the edge is not half outside the viewBox. */
 const PAD = 8;
 
-export default function CollectionValueCard() {
-  const snapshots = data.snapshots;
-  const last = snapshots.at(-1);
-  const first = snapshots[0];
+export default function CollectionValueCard({ snapshots }: { snapshots: ValueSnapshot[] }) {
+  // The geometry lives in lib/core/value-chart.ts so it can be tested; null is
+  // "fewer than two readings", which is an account with no history yet.
+  const chart = chartPoints(snapshots, { w: W, h: H, pad: PAD });
+  if (!chart) return null;
 
-  // A line needs two points and a change needs two dates. One point is a fact
-  // about today, not a history, and the card says only what it can.
-  if (!last || !first || snapshots.length < 2) return null;
-
+  const { points, line, under } = chart;
+  const first = snapshots[0]!;
+  const last = snapshots.at(-1)!;
   const grew = last.value - first.value;
-
-  /**
-   * X is time, not position in the array.
-   *
-   * The points are nowhere near evenly spaced: the archive gave up December 2024
-   * and June 2026 and nothing between them, and from here on they arrive weekly.
-   * Spacing them evenly would draw a year and a half of silence the same width
-   * as a week and make the collection look like it grew in steady steps. The gap
-   * is part of what the chart knows.
-   */
-  const t = (iso: string) => new Date(iso).getTime();
-  const span = t(last.date) - t(first.date) || 1;
-  /** Zero at the bottom, because this is a value rather than a deviation, and a
-      line that starts at the lowest reading turns any wobble into a cliff. */
-  const top = Math.max(...snapshots.map((s) => s.value));
-  const points = snapshots.map((s) => ({
-    ...s,
-    x: PAD + ((t(s.date) - t(first.date)) / span) * (W - PAD * 2),
-    y: PAD + (1 - s.value / top) * (H - PAD * 2),
-  }));
-  const line = points
-    .map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join(" ");
-  const under = `${line} L${points.at(-1)!.x.toFixed(1)} ${H} L${points[0]!.x.toFixed(1)} ${H} Z`;
 
   return (
     <Card className="flex flex-col gap-2">

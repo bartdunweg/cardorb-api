@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { listRows } from "./postgres";
+import { listRows, listValueSnapshots } from "./postgres";
 
 /**
  * Whose rows, asked out loud.
@@ -29,19 +29,24 @@ import { listRows } from "./postgres";
  * whose range() returns a promise breaks on a method the promise does not have.
  * Awaiting is the last thing that happens, so `then` is where the answer lives.
  */
-function fakeDb() {
+function fakeDb(data: unknown[] = []) {
   const calls: { column: string; value: unknown }[] = [];
+  const orders: { column: string; ascending: boolean | undefined }[] = [];
   const chain: Record<string, unknown> = {
     select: () => chain,
-    order: () => chain,
+    order: (column: string, opts?: { ascending?: boolean }) => {
+      orders.push({ column, ascending: opts?.ascending });
+      return chain;
+    },
     range: () => chain,
     eq: (column: string, value: unknown) => {
       calls.push({ column, value });
       return chain;
     },
-    then: (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null, count: 0 }),
+    then: (resolve: (v: unknown) => unknown) =>
+      resolve({ data, error: null, count: data.length }),
   };
-  return { db: { from: () => chain } as unknown as SupabaseClient, calls };
+  return { db: { from: () => chain } as unknown as SupabaseClient, calls, orders };
 }
 
 describe("listRows", () => {
@@ -71,5 +76,58 @@ describe("listRows", () => {
     await listRows(b.db, "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
     expect(a.calls[0]?.value).toBe("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     expect(b.calls[0]?.value).toBe("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+  });
+});
+
+const snapshot = (over: Record<string, unknown> = {}) => ({
+  snapshot_date: "2026-08-06",
+  value_cents: 3_988_700,
+  cards: 1524,
+  priced: 1211,
+  unpriced: 313,
+  ...over,
+});
+
+describe("listValueSnapshots", () => {
+  /**
+   * The same assertion the block above exists for, on the table where getting
+   * it wrong is worse. cards_read has a public branch, so a query that forgets
+   * to say whose can only ever return a collection somebody chose to publish.
+   * value_snapshots_own has no such branch, so the only thing standing between
+   * two accounts' net worth is the policy — and this line, which is the
+   * application saying it out loud rather than trusting the wall.
+   */
+  it("narrows to the person it was given", async () => {
+    const { db, calls } = fakeDb([snapshot()]);
+    await listValueSnapshots(db, "11111111-1111-1111-1111-111111111111");
+    expect(calls).toContainEqual({
+      column: "user_id",
+      value: "11111111-1111-1111-1111-111111111111",
+    });
+  });
+
+  it("asks for them oldest first", async () => {
+    // The card treats snapshots[0] as where the record starts — "since December
+    // 2024" is that row's date — and reverses nothing.
+    const { db, orders } = fakeDb([snapshot()]);
+    await listValueSnapshots(db, "u");
+    expect(orders).toEqual([{ column: "snapshot_date", ascending: true }]);
+  });
+
+  it("hands back whole euros, not the cents the table keeps", async () => {
+    const { db } = fakeDb([
+      snapshot({ snapshot_date: "2024-12-30", value_cents: 1_563_449 }),
+      snapshot(),
+    ]);
+    const out = await listValueSnapshots(db, "u");
+    expect(out).toEqual([
+      { date: "2024-12-30", value: 15_634, cards: 1524, priced: 1211, unpriced: 313 },
+      { date: "2026-08-06", value: 39_887, cards: 1524, priced: 1211, unpriced: 313 },
+    ]);
+  });
+
+  it("answers with nothing for an account that has never been snapshotted", async () => {
+    const { db } = fakeDb();
+    expect(await listValueSnapshots(db, "u")).toEqual([]);
   });
 });
