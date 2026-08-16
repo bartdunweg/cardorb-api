@@ -1464,6 +1464,9 @@
   "mep-080": [
     "holo"
   ],
+  "miscp-001": [
+    "holo"
+  ],
   "sm10-192": [
     "normal"
   ],
@@ -3014,6 +3017,9 @@
   "sv07-155": [
     "holo"
   ],
+  "sv07-167": [
+    "holo"
+  ],
   "sv07-169": [
     "holo"
   ],
@@ -3156,6 +3162,9 @@
     "holo"
   ],
   "sv09-170": [
+    "holo"
+  ],
+  "sv09-172": [
     "holo"
   ],
   "sv09-173": [
@@ -4668,6 +4677,12 @@
   "swsh11.5tg-TG11": [
     "holo"
   ],
+  "swsh11.5tg-TG12": [
+    "holo"
+  ],
+  "swsh11.5tg-TG14": [
+    "holo"
+  ],
   "swsh11.5tg-TG16": [
     "holo"
   ],
@@ -4677,10 +4692,16 @@
   "swsh11.5tg-TG20": [
     "holo"
   ],
+  "swsh11.5tg-TG21": [
+    "holo"
+  ],
   "swsh12-177": [
     "holo"
   ],
   "swsh12-181": [
+    "holo"
+  ],
+  "swsh12-184": [
     "holo"
   ],
   "swsh12-186": [
@@ -4896,16 +4917,25 @@
   "swsh12.5tg-TG13": [
     "holo"
   ],
+  "swsh12.5tg-TG14": [
+    "holo"
+  ],
   "swsh12.5tg-TG16": [
     "holo"
   ],
   "swsh12.5tg-TG17": [
     "holo"
   ],
+  "swsh12.5tg-TG18": [
+    "holo"
+  ],
   "swsh12.5tg-TG22": [
     "holo"
   ],
   "swsh5-146": [
+    "holo"
+  ],
+  "swsh5-151": [
     "holo"
   ],
   "swsh5-153": [
@@ -4936,6 +4966,9 @@
     "holo"
   ],
   "swsh6-179": [
+    "holo"
+  ],
+  "swsh6-183": [
     "holo"
   ],
   "swsh6-185": [
@@ -5149,6 +5182,9 @@
     "normal"
   ],
   "xyp-XY186": [
+    "normal"
+  ],
+  "xyp-XY28": [
     "normal"
   ],
   "xyp-XY67a": [
