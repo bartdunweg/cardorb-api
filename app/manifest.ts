@@ -35,29 +35,19 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: colour.bgGrouped.light,
     theme_color: colour.bgGrouped.light,
-    /**
-     * The mark, at the two sizes an installable web app is asked for.
-     *
-     * This array was empty for a long time and the comment that stood here said
-     * why: there was no mark, and a manifest naming icons that 404 is worse
-     * than one naming none — Android fetches both and fails the install. There
-     * is a mark now (ADR-0047), so the cost that comment recorded is paid off:
-     * Chrome on Android will offer to install this, and `display: "standalone"`
-     * above stops being something only a hand-added home screen icon sees.
-     *
-     * Deliberately /brand/… and not /icon, which is the route app/icon.png
-     * generates. Next fingerprints that URL in production, so hard-coding it
-     * here would rebuild exactly the 404 the old comment warned about — with
-     * the extra cruelty of working perfectly in dev. public/ is served
-     * verbatim, so these two paths are the ones that cannot drift.
-     *
-     * The tiled cut rather than the transparent one: this icon is composited
-     * onto a home screen whose colour nobody here chooses, and the orb is a
-     * pale, glossy sphere that would vanish into a light wallpaper.
-     */
+    // The mark exists now, so these come back — the comment they replace said to
+    // put them here the day it did. They point into /public rather than at the
+    // /icon route, because a manifest is fetched by an installer outside the page
+    // and a stable path is worth more here than Next's hashed one.
+    //
+    // Both are the app icon including its off-white tile, so they carry their own
+    // background — a transparent icon on an Android launcher is a floating smear.
+    // `maskable` is safe because the tile is full-bleed and the orb sits well
+    // inside the safe zone, so a circular or squircle crop takes only tile.
     icons: [
       { src: "/brand/orb-tile-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/brand/orb-tile-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/orb-tile-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

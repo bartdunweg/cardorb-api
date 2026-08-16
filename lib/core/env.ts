@@ -2,8 +2,9 @@
  * What this deployment needs, checked once, out loud.
  *
  * Every consumer reads process.env directly and degrades on its own: no
- * CARDS_TOKEN and every request is refused with a 503, no OWNER_EMAIL and
- * signing in cannot succeed. Each of those failures is sensible in isolation
+ * CARDS_TOKEN and every request is refused with a 503, no
+ * NEXT_PUBLIC_SUPABASE_URL and the collection is empty everywhere. Each of
+ * those failures is sensible in isolation
  * and together they are the same symptom — a site that looks like it works
  * and answers nothing — with the cause a layer away in a log nobody is
  * reading yet.
@@ -28,14 +29,30 @@ const CHECKS: Check[] = [
     required: true,
     without: "every API request answers 503 and nobody can sign in",
   },
+  // OWNER_EMAIL was required here, and said so with "the sign-in form refuses
+  // every address, including the right one". That stopped being true when
+  // accounts arrived: /api/v1/session hands the address and password to
+  // Supabase auth and never looks at this variable. Signing in works fine
+  // without it.
+  //
+  // Its only reader now is guard.ts's deprecated x-cards-key path, which
+  // fabricates a viewer for a passcode that names nobody and needs an email to
+  // put on it. That path already refuses without OWNER_USER_ID, so this one is
+  // cosmetic — hence a warning rather than an error, and a `without` that says
+  // what actually happens.
+  //
+  // Left in rather than deleted, because a variable that is set in production
+  // and read by nothing is worth naming out loud. It goes when the legacy
+  // passcode path does.
   {
     name: "OWNER_EMAIL",
-    required: true,
-    without: "the sign-in form refuses every address, including the right one",
+    required: false,
+    without: "the deprecated x-cards-key path reports an empty email; signing in is unaffected",
   },
   // PUBLIC_USERNAME and OWNER_NAME were here. Both named one person for a whole
   // deployment; both are now lookups against the profile being rendered. See
-  // lib/core/config.ts, where the constants were.
+  // lib/core/config.ts, where the constants were. Both can be deleted from any
+  // .env file they are still sitting in: nothing reads them.
   {
     name: "NEXT_PUBLIC_SITE_URL",
     required: false,
@@ -64,7 +81,16 @@ const CHECKS: Check[] = [
   {
     name: "SUPABASE_SERVICE_ROLE_KEY",
     required: false,
-    without: "the account-deletion path cannot run; the app itself does not need it",
+    without: "account deletion and the weekly value snapshot cannot run; no page needs it",
+  },
+  // Warned rather than required, and the route agrees: without this the weekly
+  // snapshot refuses to run at all rather than running unauthenticated. A
+  // deployment that has not set it loses a chart, which is the cheap failure;
+  // the expensive one would be an open write endpoint.
+  {
+    name: "CRON_SECRET",
+    required: false,
+    without: "the weekly value snapshot refuses to run, so no new points are recorded",
   },
 ];
 

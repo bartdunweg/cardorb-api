@@ -1,22 +1,26 @@
 ---
-id: ADR-0048
+id: ADR-0049
 title: The favicon is the circle, not the tile — and the wordmark's orb is optically centred
 status: accepted
 date: 2026-08-16
 scope: repo
 deciders: [Bart]
 superseded-by: null
-amends: ADR-0047
+amends: ADR-0048
 tags: [brand, favicon, icons, wordmark, optical-alignment]
 ---
 
 # The favicon is the circle, not the tile — and the wordmark's orb is optically centred
 
-Amends **ADR-0047**, which stands except for the favicon half of its "which cut"
-section. ADR-0047 is not superseded: the tile is still right for `apple-icon`
-and for the manifest, and its reasoning about iOS compositing transparency onto
-black is still the reason those two exist. What it got wrong is that it treated
-"favicon" and "touch icon" as one case.
+Corrects a choice that **shipped to production** in PR #68
+(`bartdunweg/orb-brand-assets`), which set `app/icon.png` to `orb-tile-192.png`
+— the square tile. The reasoning behind that choice is preserved below and is
+still right for the surfaces it was really about; it is wrong for a browser tab,
+and a browser tab is what a favicon is.
+
+The rest of PR #68 stands untouched: `apple-icon` and both manifest entries keep
+the tile, and its manifest comment about a transparent icon on an Android
+launcher being "a floating smear" is exactly right.
 
 ## Context and problem statement
 
@@ -30,10 +34,17 @@ the bounding box of a file as if it were the shape of the mark.
 
 ### The favicon
 
-ADR-0047 grouped `app/icon.png` with `app/apple-icon.png` and the manifest
-entries and gave all four the tiled cut, on the argument that a pale glossy
-sphere composited onto an unknown background is a smudge. That argument is
-sound — for the surfaces where something *else* does the compositing:
+PR #68 grouped `app/icon.png` with `app/apple-icon.png` and the manifest entries
+and gave all four the tiled cut, on the argument that a transparent icon on a
+launcher is "a floating smear". A second workspace, working from the same
+generator README, reached the identical conclusion independently — which is
+worth recording, because two people making the same call is usually evidence it
+is right. Here it is evidence that the README's own table ("favicons, touch
+icons, anywhere it needs its own background") groups two things that behave
+differently.
+
+The argument is sound for the surfaces where something *else* does the
+compositing:
 
 - **iOS home screen** applies its own squircle mask and fills alpha with black.
   It needs an opaque square and will round it itself.
@@ -74,7 +85,9 @@ Chosen over the two alternatives that were on the table:
   pixels under the ball, which is mud rather than depth, and it costs the same
   fifth of the box for nothing.
 
-`app/apple-icon.png` and both manifest entries keep the tile, per ADR-0047. The
+`app/apple-icon.png` and all three manifest entries keep the tile, as PR #68
+shipped them — including its `maskable` entry, which is correct and which the
+parallel branch had missed. The
 three intentionally disagree, and it is worth saying why in one line: **the tile
 is for anything that will round it off for you; the circle is for anything that
 draws it as given.**

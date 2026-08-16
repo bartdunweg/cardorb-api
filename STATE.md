@@ -4,21 +4,26 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
-**Card Orb has a mark on the web (ADR-0047,** workspace `djibouti`**).** The
-site had no picture of itself at all: no favicon, no touch icon, an `icons`
-array in `app/manifest.ts` deliberately left empty with a comment saying what it
-cost, and the name set as bare type in four files. A complete generated asset
-set had been sitting in **`bartdunweg/cardorb-ios` under `brand/`** the whole
-time, with a README section titled *"Putting it on the website"* naming this
-repository and saying the hand-off is manual. Both sides of the gap were written
-down, in two repositories, describing each other, and nothing moved for months.
+**Card Orb has a mark on the web (ADR-0048 and ADR-0049,** workspace
+`djibouti`**).** The orb from the iPhone app's icon is now the site's mark.
 
-What landed: `app/components/Wordmark.tsx` (orb + name, one component, four call
-sites — Navbar, CardsSidebar, MarketingFooter, `(app)/loading.tsx`),
-`app/icon.png` and `app/apple-icon.png`, the manifest icons restored, the orb on
-the social card, and **`/brand`** — the mark, the colours read live from
-`lib/design/tokens.ts`, the usage rules and direct downloads, linked from the
-marketing footer.
+**Read the warning in ADR-0048 before starting anything else here.** Two
+workspaces did this task from the same prompt, about twenty minutes apart.
+PR #68 (`orb-brand-assets`) landed `public/brand/`, `app/icon.png`,
+`app/apple-icon.png` and the manifest icons and merged at 21:13. This branch was
+cut from the commit *before* that merge, rebuilt the same asset copy from
+scratch, and only found out at merge time — by which point `origin/main` had
+gained four merges. Nothing failed loudly: the two brand directories were
+byte-identical where they overlapped, so it surfaced as two conflicted files
+rather than a broken build. **Re-fetch `origin/main` before writing anything
+that claims something does not exist yet.**
+
+What this branch adds on top of #68: `app/components/Wordmark.tsx` (orb + name,
+one component, four call sites — Navbar, CardsSidebar, MarketingFooter,
+`(app)/loading.tsx`), the orb on the social card, and **`/brand`** — the mark,
+the colours read live from `lib/design/tokens.ts`, the usage rules and direct
+downloads, linked from the marketing footer. `app/manifest.ts` is #68's version,
+kept whole: it has a `maskable` entry this branch had missed.
 
 Three things worth carrying forward:
 
@@ -29,12 +34,14 @@ Three things worth carrying forward:
   `AppIcon.appiconset`; **that cleanup has not been done and is a separate PR in
   that repository.**
 - **Three icon surfaces, three different files, and the rule that sorts them
-  (ADR-0048).** The tile goes where something else will round it off — the iOS
+  (ADR-0049).** The tile goes where something else will round it off — the iOS
   home screen (which masks it and fills alpha with black) and the Android
   manifest. The plain circle goes where the file is drawn as given, which is the
-  browser tab: `app/icon.png` is `orb-256.png`. ADR-0047 had grouped all four
-  under the tile and was wrong about the favicon half of it; 0048 amends that
-  clause and 0047 stands otherwise.
+  browser tab: `app/icon.png` is `orb-256.png`. **PR #68 had shipped the square
+  tile as the favicon and it was live**; ADR-0049 corrects that one file and
+  leaves the rest of #68 alone. Both workspaces independently made the same
+  wrong call, which is worth knowing: the generator's README groups "favicons,
+  touch icons" in one row, and those two do not behave the same.
 - **The wordmark's orb carries `translate-y-[6.05%]` and that number is
   measured.** In `orb-shadow-*` the sphere's body runs y 11–214 of a 256 box —
   the rest is room for the contact shadow — so `items-center` centres the file

@@ -53,7 +53,17 @@ export default function CardsDashboard({
         role="list"
       >
         <Kpi label="In the binder" value={stats.owned.toLocaleString(LOCALE)} />
-        <Kpi label="On the wishlist" value={stats.wishlist.toLocaleString(LOCALE)} />
+        <Kpi
+          label="On the wishlist"
+          value={stats.wishlist.toLocaleString(LOCALE)}
+          // What the list would cost, on the tile that says how long it is —
+          // the obvious next question, and the one the wishlist screen cannot
+          // answer without adding money to a page that deliberately has none.
+          // Absent rather than €0 where nothing on the list has a price.
+          note={
+            stats.wishlistPriced > 0 ? `${euro(stats.wishlistValue)} to buy` : undefined
+          }
+        />
         <Kpi label="Sets" value={String(stats.sets)} />
         <Kpi
           // What the collection is worth, said in the plainest words there are.
@@ -61,6 +71,12 @@ export default function CardsDashboard({
           // not at all what anyone looking for it would scan for.
           label="Collection value"
           value={euro(stats.value)}
+          // Where it sits against its own thirty-day average. This is the one
+          // thing the tile could not say on its own — a number with no sense of
+          // whether it is high — and unlike the chart below it needs no history
+          // at all: Cardmarket publishes the average beside the price, so a
+          // brand-new account gets this on its first day.
+          note={movementNote(stats.movement)}
         />
       </ul>
 
@@ -175,7 +191,27 @@ const cardsDashSubClassName =
   "[margin:0_0_var(--space-3)_0] max-w-[60ch] [font-family:var(--font-body)]" +
   " [font-size:var(--fs-small)] text-label-tertiary";
 
-function Kpi({ label, value }: { label: string; value: string }) {
+/**
+ * "2.1% above its 30-day average", or nothing at all.
+ *
+ * Nothing, rather than "0.0%", below a tenth of a percent: at that size the
+ * figure is rounding in Cardmarket's own averages rather than the market
+ * moving, and a tile that reports noise every day teaches people to stop
+ * reading it.
+ *
+ * The direction is a word, not a colour or an arrow. Up is not good news here —
+ * it is good if you are selling and bad if you are still buying, and the same
+ * screen carries a wishlist. Green with a triangle would decide that for the
+ * reader.
+ */
+function movementNote(m: CardsStats["movement"]): string | undefined {
+  if (!m) return undefined;
+  const pct = m.pct * 100;
+  if (Math.abs(pct) < 0.1) return "level with its 30-day average";
+  return `${Math.abs(pct).toFixed(1)}% ${pct > 0 ? "above" : "below"} its 30-day average`;
+}
+
+function Kpi({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <li className={`flex flex-col gap-1 p-5 ${aboutCardClassName}`}>
       <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary">
@@ -190,6 +226,16 @@ function Kpi({ label, value }: { label: string; value: string }) {
       >
         {value}
       </span>
+      {/* Under the figure rather than beside it, at the label's size and in the
+          tertiary tone: it qualifies the number above and must not compete with
+          it. The tiles are a grid of equal cells, so a note on two of four
+          leaves the other two shorter — which is fine, because they are boxes
+          on their own rows of a grid, not columns that have to line up. */}
+      {note && (
+        <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+          {note}
+        </span>
+      )}
     </li>
   );
 }

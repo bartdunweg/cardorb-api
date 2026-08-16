@@ -17,13 +17,13 @@ import { APP_NAME } from "../../lib/core/config";
  * everything downstream of it: the files as served, the colours, and the rules
  * for using them.
  *
- * That split is not tidiness. Until now the rules existed only as a README in a
- * repository nobody opens to build a web page, and the consequence was
- * visible — the site shipped for months with no favicon, no touch icon, no
- * manifest icons and a wordmark that was the word alone, while a complete set
- * of assets sat one repository over with a section addressed to this one. A
- * hand-off that depends on somebody remembering is a hand-off that does not
- * happen; a URL is a hand-off that does.
+ * That split is not tidiness. The rules used to exist only as `brand/README.md`
+ * in a repository nobody opens to build a web page — and that file is now
+ * served verbatim at /brand/README.md, which makes the point rather than fixing
+ * it: it is a generator's hand-off note, addressed to whoever copies the files,
+ * not to somebody who wants to use the logo. This page is the one written for a
+ * reader. It is also the reason the favicon here disagrees with what that README
+ * recommends; see ADR-0049.
  *
  * It also makes the duplication go away in the right direction. cardorb-ios
  * commits its own copy of these files; after this it needs only the one the app
@@ -36,7 +36,7 @@ import { APP_NAME } from "../../lib/core/config";
  * wrong for a page whose subject is images side by side. Its *type scale* is
  * reused, which is the part that would otherwise drift.
  *
- * See docs/decisions/0047-the-orb-mark-on-the-web.md.
+ * See docs/decisions/0048-the-orb-mark-on-the-web.md.
  */
 
 export const metadata: Metadata = {
