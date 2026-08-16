@@ -1,4 +1,4 @@
-<!-- DEV-STANDARDS:BEGIN v0.3.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- DEV-STANDARDS:BEGIN v0.4.0 — generated from dev-standards. Do not edit by hand. -->
 
 # Codex adapter
 

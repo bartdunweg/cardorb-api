@@ -42,7 +42,15 @@ page is a few hundred of them, so the difference is megabytes, not kilobytes.
 Native clients authenticate with a Supabase access token in `Authorization: Bearer <jwt>`.
 Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
 `GET /api/v1/value-history`, `GET /api/v1/public/:username/collection`, and
-`DELETE /api/v1/account`. The public collection response never contains prices.
+`DELETE /api/v1/account`. The public collection response carries no prices and no
+inventory: of each printing it publishes the rarity and whether it is owned, and
+nothing else — not what was paid, the condition, the grade, the notes, or how
+many (ADR-0045).
+
+`GET /api/v1/value-history` answers with **the caller's own** series, oldest
+reading first (ADR-0044). It needs a bearer token: the deprecated `x-cards-key`
+header is a passcode rather than an identity, so it carries no session for row
+level security to judge and that path answers with an empty series.
 
 ### The latest pull, for another site
 

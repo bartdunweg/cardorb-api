@@ -4,7 +4,140 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
-**The signed-in loading fallback draws shared chrome only now (ADR-0044,
+**Every value figure is per-user now, and counts copies (ADR-0044,** workspace
+`kuala-lumpur`**).** Asked whether the collection's value is computed per user
+from that user's cards. The "Collection value" tile always was. The **"Value
+over time" chart under it was not**: `CollectionValueCard.tsx` imported
+`lib/core/collection-value.generated.json`, one committed file generated for one
+account, so every signed-in account saw the seed owner's line — a new signup with
+three cards read "Collection value €12" with "Up €24,253 across 1,524 cards"
+directly beneath. `/api/v1/value-history` served the same file to any
+authenticated caller. There is a `public.collection_value_snapshots` table now,
+own-rows-only with **no public branch** (unlike `cards_read` — a value series is
+nothing but money and cannot be `stripPrices()`d), read through
+`getValueHistory()` in `lib/core/collection.ts`.
+
+Two things found on the way. **`scripts/snapshot-collection-value.mjs` had been
+broken for everyone, including the owner**, since `/cards` became a redirect to
+`/collection`: it scraped that page's RSC payload, an unauthenticated fetch
+landed on `/login`, and it threw on zero cards. It asks `/api/v1/collection`
+(with `--token <jwt>`) or the public endpoint now, and no longer needs a
+production build on :3111 — `SITE` can point anywhere. And **the value never
+counted per-variant `quantity`**: a card held three times was worth one of it, in
+the tile and in the series both. `copiesHeld()` in `lib/core/cards-stats.ts` is
+the one definition; "Priciest cards" deliberately still ranks per single copy.
+
+**This is applied, seeded and finished.** `supabase db push` ran against
+`fprjroupecdhosfdrqhv` on 2026-08-16, and the snapshot script wrote all three
+points for `bartdunweg` (`3fe9b080`):
+
+```
+2024-12-30  €16,134.81  1,188 copies,   993 priced, 33 unpriced
+2026-06-17  €40,287.53  1,910 copies, 1,542 priced, 44 unpriced
+2026-08-16  €41,615.97  1,921 copies, 1,553 priced, 44 unpriced
+```
+
+All higher than the old JSON file's figures (€15,634 / €38,000-ish / €39,887),
+which is the copies change landing, and `cards` is a copy count now rather than a
+card count. RLS confirmed from outside the app: an anonymous PostgREST client
+reads **0 rows** and its insert is refused **401**.
+
+**`lib/core/collection-value.generated.json` is deleted.** Both points that could
+never be regenerated — the two Internet Archive captures — are in the table. The
+file's third point, 2026-08-06, is gone and deliberately so: Cardmarket's live
+guide only serves today, so that date cannot be re-derived, and it was computed
+before copies counted, so restoring it would draw a dip that never happened.
+Today's reading is its equivalent.
+
+**Running the script found two more bugs in it, both fixed, and one of them was
+the dangerous kind.** `fromPostgres()` did a single unpaged select, so PostgREST's
+thousand-row cap handed it 1,000 of 1,643 rows — folding to 886 distinct cards —
+and it would have written that down as what the binder is worth. Exactly the
+failure `listRows()` in `lib/storage/postgres.ts` has an essay about, in a file
+that had not copied the lesson. It pages now, with an explicit count, and throws
+on a short read. Separately, the upsert crashed on `ON CONFLICT DO UPDATE command
+cannot affect row a second time`: two guides can report the same date, and the
+`byDate` Map that used to dedupe them was lost in the move from a JSON file to
+rows. Restored, and it now warns rather than silently keeping the last one.
+
+**A third bug, and the one worth remembering: `id_` vs `if_` on the Wayback
+Machine.** Asked for the June 2026 capture at `…20260617212111id_/…`,
+web.archive.org answers **302 to the December 2024 capture**, and `fetch` follows
+it. So the script received a perfectly valid price guide for the wrong day, whose
+own `createdAt` then reported 2024-12-30, and two guides collided on one date.
+`if_` at the same timestamp returns 200 and the real bytes. Verified against the
+CDX index first, which lists both captures with different digests and sizes
+(1.03 MB vs 1.42 MB), so they are genuinely two files.
+
+The modifier is the fix; the **date assertion is the guard**. `archivedGuide()`
+now refuses any capture whose `createdAt` is not the date asked for, because a
+modifier that works today is not a promise and this failure is silent by
+construction — the archive hands over real data, just from the wrong day.
+
+Still not seen in a browser: `/dashboard` with the chart drawn, and a fresh
+second account confirming there is no chart and no gap where it was. Needs two
+real sessions — the standing verification gap in this repo.
+
+**Node: the repo already pins it and the trap is a shell that ignores that.**
+`.nvmrc` says 24 and `engines.node` says `>=22`; this session's shell was on
+Node 20, where `@supabase/supabase-js` throws "native WebSocket not found" before
+the script does anything. Every check in this branch was re-run on Node 24 after
+that was noticed. `nvm use` in the repo root is enough.
+
+Known and accepted: the deprecated `x-cards-key` path answers
+`{"snapshots":[]}` (a passcode is not a session, so `auth.uid()` is null and the
+policy correctly refuses); a fresh reading can be up to an hour late on the
+dashboard (nothing invalidates the cache, the script writes out of band, the
+3600s TTL is what buys freshness); and snapshotting is still manual and one
+account per run, with nothing scheduling it.
+
+**A public collection stopped publishing the owner's inventory (ADR-0045).**
+Found in the code next to the above, not in it. `stripPrices()` nulled
+`card.price` and left `card.variants` whole, so `/user/<name>` and
+`/api/v1/public/:username/collection` were sending **what the owner paid for
+every card, when, in what condition, graded how, their private notes, and how
+many they hold** — on the API and inside the profile page's own HTML, since
+ADR-0008 added those fields. The page never showed any of it: the public path
+reads exactly `rarity` and `owned`. It is `forPublic()` now, an allow-list of
+those two, so a new column on `cards` is excluded by default rather than
+published by default. `Variant.quantity` became `number | null` as part of it.
+
+Two things to know: **this is a breaking change for any out-of-repo consumer of
+the public collection endpoint that read those fields** — the iOS app's source
+is not in this repo and could not be checked — and **nobody has loaded
+`/user/<name>` and read the RSC payload out of the served HTML since the
+change.** `lib/core/cards-public.test.ts` asserts it field by field and also
+that none of the values appear anywhere in the serialised payload, but that is
+a unit test, not the page.
+
+**The shared standards are refreshed to v0.4.0** (`/apply-standards`, workspace
+`houston`). Only the generated marker regions moved — `CLAUDE.md`'s
+`STANDARDS:BEGIN…END` and `AGENTS.md`'s `DEV-STANDARDS:BEGIN…END`, both copied
+verbatim from `~/dev-standards/templates/`. The PRODUCT region and the
+`next dev`-written Next.js block below it were not touched. `CLAUDE.md` is 118
+lines.
+
+Four things changed in the standard itself, and the first two change how every
+response reads:
+
+- **Language is split in two.** Everything that lands on disk is still English;
+  the *answer* is now in the language Bart writes in — Dutch in, Dutch back.
+  Plus an "explain simply" rule: name the trade-off, don't walk through the
+  reasoning.
+- **Every response ends with a `## Samenvatting` block**, Dutch, scannable, with
+  a `| Was | Nu |` table when something changed. Nothing comes after it.
+  Assumptions and open questions live inside it, which replaces the old
+  `Assumptions I made` list.
+- **Definition of Done gained Security** — a `build-quality` report now has to
+  cover Interface, A11y, SEO, Performance *and* Security, or say why one does
+  not apply.
+
+No new decision record: a template version bump is not a choice between
+alternatives, and ADR-0000 already records why this repo has the system at all.
+Nothing user-visible changed, so no changelog fragment either. The git history
+here is substantial and a future `backfill` workflow could reconstruct rationale
+from it — not done, and it should stay opt-in.
+**The signed-in loading fallback draws shared chrome only now (ADR-0046,
 FB-0010).** Bart reported that the skeleton showed "an interface I don't
 recognise", and it did: `app/(app)/loading.tsx` was written for the old
 single-page `/cards` route — toolbar, two set panels, twenty card tiles, a
@@ -943,6 +1076,21 @@ picked up the same complaint within an hour of each other.
 
 ## Next session
 
+- **Re-run `--seed` on another day to recover the 2026-06-17 point**, then delete
+  `lib/core/collection-value.generated.json`. The migration and the first two
+  points are already in (see "Now"); this is only about the middle reading, which
+  the Internet Archive refused to serve correctly on 2026-08-16. Until it lands,
+  that file is the only copy of it — do not delete it, and do not hand-insert the
+  value from it (computed before copies counted).
+- **`/dashboard` has not been seen with the new value figure.** Collection value
+  now multiplies by copies held, so the number moves up by whatever the
+  duplicates are worth. Worth one look that it still fits its tile — it is
+  rendered with proportional figures at `--fs-h2`, and a five-digit euro amount
+  was already the widest thing in that row.
+- **Check a real `/user/<name>` payload after the ADR-0045 change.** Load the
+  page, read the RSC payload out of the served HTML, and confirm no purchase
+  price, note, condition or quantity is in it. Then the same on
+  `curl $SITE/api/v1/public/<name>/collection`. Unit-tested, not seen.
 - **The new loading fallback has not been seen in a signed-in browser.** No
   session in this workspace, `chrome-devtools` was blocked by another
   automation Chrome holding its profile, and the Chrome extension was not

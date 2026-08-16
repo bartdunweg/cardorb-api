@@ -67,7 +67,12 @@ export type Variant = {
   rarity: string | null;
   /** Notion's Collection checkbox: false means it is wanted, not held. */
   owned: boolean;
-  quantity: number;
+  /**
+   * How many of this printing. Null on a public payload rather than absent —
+   * see forPublic(), which nulls it because how many of a card somebody has is
+   * theirs to know. Every path that builds a Variant from a row sets a number.
+   */
+  quantity: number | null;
   condition: string | null;
   grade: string | null;
   purchasePrice: number | null;
@@ -260,10 +265,64 @@ export function forGrid(sets: CardSet[]): CardSet[] {
   }));
 }
 
-export function stripPrices(sets: CardSet[]): CardSet[] {
+/**
+ * Everything a stranger may see of somebody's collection, and nothing else.
+ *
+ * This was stripPrices(), and it did half the job. It nulled `card.price`,
+ * which is what /user/<name> is about — the page shows the cards without saying
+ * what they are worth — and left `card.variants` whole. Variants carry the
+ * per-printing inventory fields, so a public profile was publishing what its
+ * owner paid for every card, in what condition, graded how, with their private
+ * notes attached, and how many of each they hold. Both on the API and, because
+ * page.tsx hands the same objects to a client component, inside the HTML of the
+ * profile page itself.
+ *
+ * Nothing wanted them. Traced through every component the public variant
+ * reaches, exactly two variant fields are read: `rarity`, for the tags under a
+ * scan and the rarity filter, and `owned`, which is what draws a wishlist tag
+ * as an outline rather than a fill. The rest is nulled here.
+ *
+ * `id` goes too. It is the row's own id, the handle PATCH/DELETE
+ * /v1/cards/[id] act on, and while the policies would refuse a stranger there
+ * is no reason to hand out a list of the identifiers to try.
+ *
+ * `isFavorite` and `excluded` are set false rather than nulled: they are
+ * booleans with a neutral value, and false is "no opinion recorded" for both.
+ * The distinction is not worth a nullable type.
+ *
+ * Renamed rather than extended in place, because "strip prices" had become a
+ * name that described a third of what the function needed to do — and the gap
+ * between the name and the job is how the variants got missed for as long as
+ * they did. It still sits beside forGrid() rather than inside it, for the
+ * reason forGrid's own comment gives: one asks what a visitor may see, the
+ * other what is worth sending, and the owner's page wants the second without
+ * the first.
+ *
+ * latestPull() reads `owned`, `excluded` and `acquiredAt` to pick a card, so it
+ * must run on the raw sets, before this. It does: the latest-pull route builds
+ * its own curated shape straight from getCards().
+ */
+export function forPublic(sets: CardSet[]): CardSet[] {
   return sets.map((set) => ({
     ...set,
-    cards: set.cards.map((card) => ({ ...card, price: null })),
+    cards: set.cards.map((card) => ({
+      ...card,
+      price: null,
+      variants: card.variants.map((v) => ({
+        rarity: v.rarity,
+        owned: v.owned,
+        id: null,
+        quantity: null,
+        condition: null,
+        grade: null,
+        purchasePrice: null,
+        purchaseDate: null,
+        notes: null,
+        isFavorite: false,
+        acquiredAt: null,
+        excluded: false,
+      })),
+    })),
   }));
 }
 

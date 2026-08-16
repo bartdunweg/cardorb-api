@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { getCardsStats } from "./cards-stats";
-import type { CardSet, OwnedCard } from "./cards";
+import { copiesHeld, getCardsStats } from "./cards-stats";
+import type { CardSet, OwnedCard, Variant } from "./cards";
 
+const variant = (over: Partial<Variant> = {}): Variant => ({
+  id: "row-1",
+  rarity: null,
+  owned: true,
+  quantity: 1,
+  condition: null,
+  grade: null,
+  purchasePrice: null,
+  purchaseDate: null,
+  notes: null,
+  isFavorite: false,
+  acquiredAt: null,
+  excluded: false,
+  ...over,
+});
+
+/**
+ * One printing, held once, unless a test says otherwise.
+ *
+ * The default used to be `variants: []`, which was harmless while the value was
+ * counted per card and became a lie the moment it was counted per copy: a card
+ * with no printings is held zero times, so every fixture here was worth nothing.
+ * The default matching `owned: true` is what keeps the two fields honest.
+ */
 const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   key: over.name ?? "c",
   name: "Pikachu",
@@ -12,7 +36,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   imageHigh: null,
   imageSize: null,
   speciesId: null,
-  variants: [],
+  variants: [variant({ owned: over.owned ?? true })],
   owned: true,
   price: null,
   tcgId: null,
@@ -27,6 +51,33 @@ const set = (name: string, cards: OwnedCard[], total: number | null = null): Car
   releaseDate: null,
   total,
   cards,
+});
+
+describe("copiesHeld", () => {
+  it("sums the owned printings and ignores the wanted ones", () => {
+    const c = card({
+      variants: [
+        variant({ id: "a", quantity: 2 }),
+        variant({ id: "b", quantity: 3 }),
+        // Wanted three times over is still nothing in the binder.
+        variant({ id: "c", owned: false, quantity: 3 }),
+      ],
+    });
+    expect(copiesHeld(c)).toBe(5);
+  });
+
+  it("still counts a printing kept out of the latest pull", () => {
+    // `excluded` is about the portfolio site's feed, not about ownership. A
+    // valuation that dropped these would be quietly low.
+    expect(copiesHeld(card({ variants: [variant({ excluded: true, quantity: 4 })] }))).toBe(4);
+  });
+
+  it("refuses to let a negative quantity subtract from the total", () => {
+    const c = card({
+      variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b", quantity: -5 })],
+    });
+    expect(copiesHeld(c)).toBe(2);
+  });
 });
 
 describe("getCardsStats", () => {
@@ -54,6 +105,38 @@ describe("getCardsStats", () => {
     ]);
     expect(s.value).toBe(10);
     expect(s.priced).toBe(1);
+  });
+
+  it("values every copy held, not one per card", () => {
+    const s = getCardsStats([
+      set("A", [
+        card({
+          key: "1",
+          price: { low: 10, market: 10, avg30: 12, nm: null },
+          variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b", quantity: 1 })],
+        }),
+      ]),
+    ]);
+    expect(s.value).toBe(30);
+    // Coverage, not holdings: one card had a price, however many of it there is.
+    expect(s.priced).toBe(1);
+  });
+
+  it("ranks the priciest cards per copy, so a stack of commons cannot outrank a chase", () => {
+    const s = getCardsStats([
+      set("A", [
+        card({
+          key: "bulk",
+          name: "Bulk",
+          price: { low: 1, market: 1, avg30: 1, nm: null },
+          variants: [variant({ quantity: 500 })],
+        }),
+        card({ key: "chase", name: "Chase", price: { low: 90, market: 90, avg30: 90, nm: null } }),
+      ]),
+    ]);
+    expect(s.top.map((t) => t.card.name)).toEqual(["Chase", "Bulk"]);
+    // The value tile still knows about the stack, though.
+    expect(s.value).toBe(590);
   });
 
   it("ranks the priciest held cards and leaves the wishlist out", () => {

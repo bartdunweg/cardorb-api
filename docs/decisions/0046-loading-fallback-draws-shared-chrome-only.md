@@ -1,5 +1,5 @@
 ---
-id: ADR-0044
+id: ADR-0046
 title: The (app) loading fallback draws shared chrome only, never a page's shape
 status: accepted
 date: 2026-08-16

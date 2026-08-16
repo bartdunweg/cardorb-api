@@ -66,7 +66,7 @@ route-specific belongs in that route's own `loading.tsx` or nowhere.
 
 ## Action
 
-- [x] `app/(app)/loading.tsx` rewritten to shared chrome only. See ADR-0044.
+- [x] `app/(app)/loading.tsx` rewritten to shared chrome only. See ADR-0046.
 - [x] Fixed alongside it: the tab bar's collapsed slot height, the rail's
       missing head row and avatar footer, and a rail title carrying the wrong
       word inside markup that could never be displayed.
@@ -75,10 +75,10 @@ route-specific belongs in that route's own `loading.tsx` or nowhere.
       which was citing it as the cause of a live soft-404 diagnosis.
 - [ ] Not done: streaming the collection behind a Suspense boundary inside
       `AppShell`, which would delete the fallback entirely and is the better end
-      state. Recorded as the rejected-for-now option in ADR-0044; the trigger to
+      state. Recorded as the rejected-for-now option in ADR-0046; the trigger to
       revisit is anyone touching AppShell's props for another reason.
 
 ## Related
 
-- Decision: ADR-0044
+- Decision: ADR-0046
 - Precedent: ADR-0018, the first time this file drifted from what it stands in for
