@@ -47,8 +47,18 @@ direct question: API **and** a web screen, signed-in only, with owned + wishlist
   deliberately keeps its pokemontcg.io logos; read ADR-0038's option 5 before
   "fixing" that, the maths is the other way round there.
 
-**Two things to watch.** `POKEMONTCG_API_KEY` is still unset, and this makes
-that host load-bearing for a second feature — a key should be set now. And
+**Two things to watch.** `POKEMONTCG_API_KEY` stays unset and **that is now a
+decision, not an omission** (FB-0009, ADR-0039): cost is a hard constraint on
+this project, and the earlier advice in ADR-0037/0038 to "set a key" is
+withdrawn. It was calibrated to the wrong endpoint. Measured unauthenticated
+today: 9 failures in 12 *rapid search-shaped* requests, but only 1 in 6
+*whole-set browse-shaped* ones — and browse asks once per set per day behind a
+DAY cache, so its real exposure is under 1% per cold set, degrading to a
+retryable 502. Search's flakiness is real, pre-existing and unaddressed. Also
+recorded there: pokemontcg.io's free V2 tier is announced as going away in
+favour of the paid Scrydex, **with no published date**, and the escape route is
+TCGdex at the cost of the rarity line (ADR-0030). Do not deepen the
+pokemontcg.io dependency without reading ADR-0039. And
 none of it has been seen in a signed-in browser (the standing gap below); the
 worthwhile manual pass is `/collection/browse` → 151, checked against
 `/collection/set/151`, plus one gallery set and one promo set, where the
