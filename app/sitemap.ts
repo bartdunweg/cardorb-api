@@ -3,8 +3,8 @@ import { SITE_URL } from "../lib/core/config";
 import { publicUsernames } from "../lib/storage/collection";
 
 /**
- * The landing page, the two legal pages, and every collection that has asked to
- * be found.
+ * The landing page, the iPhone app's page, the two legal pages, and every
+ * collection that has asked to be found.
  *
  * Everything else is either behind a password or a redirect to it. The landing
  * page is first because it is the address anyone would type; the profiles below
@@ -35,19 +35,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
+      // The iPhone app's page. Listed by hand because it is a static route,
+      // unlike the profiles below, and worth listing separately because
+      // "Pokémon collection app" is a search the landing page does not answer
+      // and this page does.
+      url: `${SITE_URL}/app/ios`,
+      changeFrequency: "monthly" as const,
+      // Below the front door, above nothing. It will earn more when there is
+      // a download behind it.
+      priority: 0.7,
+    },
+    {
       url: `${SITE_URL}/privacy`,
       // It changes when the policy changes, which is to say almost never and
       // never on a schedule. Listed rather than left to the crawler because
       // App Store Connect points at this URL and a legal page that is only
       // reachable from a footer is a legal page nobody finds.
-      changeFrequency: "yearly",
-      // Below both the front door and a collection: it is a page you go to
-      // deliberately, not one anybody searches for.
+      changeFrequency: "yearly" as const,
+      // Below the front door, the app's page and a collection: it is a page you
+      // go to deliberately, not one anybody searches for.
       priority: 0.3,
     },
     {
       url: `${SITE_URL}/terms`,
-      changeFrequency: "yearly",
+      changeFrequency: "yearly" as const,
       priority: 0.3,
     },
     ...usernames.map((username) => ({

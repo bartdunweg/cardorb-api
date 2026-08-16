@@ -120,10 +120,20 @@ root `CLAUDE.md` for how and when to write to it.
   in from whichever match the search above (pokemontcg.io) picked, not typed —
   the same "no manual entry" principle `0032` already established for the
   card's identity, applied to these two fields specifically.
-- `decisions/0042-one-privacy-policy-for-app-and-site.md` — **read before adding
-  a public page, or before answering "what do we send to whom".** `/privacy` is
-  the third route allowed to be indexed (the root layout `noindex`s everything
-  by default), and the record lists what each third party actually receives —
+- `decisions/0042-ios-app-page.md` — **read before touching `/app/ios` or the
+  landing page's shared parts.** The iPhone app has its own page now, and its
+  download button is deliberately inert (`aria-disabled`, with a visible note)
+  because the app is not on the App Store — not a bug, and the record says
+  exactly what to change on shipping day. Also: why `/app` is a *temporary*
+  redirect, why the JSON-LD carries no `offers`, and the two extractions out of
+  `app/page.tsx` (`components/marketingClasses.ts`, `components/MarketingFooter.tsx`)
+  that both public pages now share.
+- `decisions/0042-one-privacy-policy-for-app-and-site.md` — a second, unrelated
+  `0042`, left doubled up rather than renumbered, as `0014`, `0021`, `0023`,
+  `0030` and `0034` already are. **Read before adding a public page, or before
+  answering "what do we send to whom".** `/privacy` and `/terms` are two of the
+  five routes allowed to be indexed (the root layout `noindex`s everything by
+  default), and the record lists what each third party actually receives —
   including that the website runs Vercel Web Analytics while the iOS app runs
   none, which a draft written from the iOS side got backwards.
   `decisions/0043-terms-of-use.md` is its follow-up: `/terms`, written for the

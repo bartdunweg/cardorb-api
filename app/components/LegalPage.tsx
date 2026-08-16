@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Footer from "./Footer";
+import MarketingFooter from "./MarketingFooter";
 import Navbar from "./Navbar";
 
 /**
@@ -53,7 +53,7 @@ export default function LegalPage({
           {children}
         </article>
 
-        <Footer />
+        <MarketingFooter />
       </section>
     </div>
   );

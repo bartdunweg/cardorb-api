@@ -70,6 +70,36 @@ are the clauses whose exact wording decides whether they work. Both are honest
 about what the software does; the controller block and the legal basis are as
 supplied.
 
+**A footer was extracted twice, on the same day, by two workspaces.** This
+branch pulled `app/page.tsx`'s inline footer out as `Footer.tsx` so the legal
+pages could carry the link; `hamburg` pulled the same markup out as
+`MarketingFooter.tsx` so `/app/ios` could. Merging kept **`MarketingFooter.tsx`**
+— it arrived first and already had somewhere to put links — and deleted
+`Footer.tsx` whole rather than leaving two footers side by side, the same
+resolution ADR-0034 records for `displayNameOf()`. `LegalPage.tsx` renders it
+now, and the Privacy/Terms links sit beside "iPhone app" in its middle column.
+ADR-**0042 is doubled up** (ios-app-page and one-privacy-policy), left that way
+per the precedent already set by 0014, 0021, 0023, 0030 and 0034. Third time
+this repo has had two workspaces solve the same problem within an hour; worth
+noticing as a process fact rather than a merge.
+**The iPhone app has a page: `/app/ios` (ADR-0042, workspace `hamburg`).** Asked
+for by Bart — a page that says what the app is, what it does, and how to
+download it. The awkward part is the last one: the app is not on the App Store,
+has no TestFlight build and no date, all confirmed with Bart in the same
+exchange. So the download button **ships deliberately inert** —
+`aria-disabled="true"` (not `disabled`, so it stays reachable by keyboard and
+can explain itself) with a visible note beneath it, and a live "Start on the
+web" link next to it. Shipping day is a one-line change to `<Button href
+external>`. Screenshots are visible dashed placeholders rather than mock-ups,
+to be dropped into `public/app/ios/` later.
+
+Two pure extractions came out of `app/page.tsx` to make a second marketing page
+possible without a copy: `app/components/marketingClasses.ts` (the six class
+recipes, whose own comment said they stayed local "since every consumer is on
+this one page" — this is what ended that) and `app/components/MarketingFooter.tsx`.
+`/app` redirects to `/app/ios` **temporarily on purpose**, so it can become the
+index of both platforms when Android lands.
+
 **The collection has been audited against TCGdex and 21 rows corrected
 (ADR-0040).** Browse made the old `trainer-gallery-row-corrections.md` visible
 rather than merely true — a gallery grid showed two grey slots where one owned
@@ -886,6 +916,21 @@ picked up the same complaint within an hour of each other.
 
 ## Next session
 
+- **`/app/ios` has never been looked at.** It was verified over HTTP only —
+  status, metadata, heading order, sitemap, the `/app` redirect, `.sr-only`
+  present in the served CSS — because the Chrome extension was not connected
+  again this session. Needs: the hero at ≥1000px / 641–1000px / ≤640px, the
+  three placeholder frames collapsing to one column at 800px, and a tab
+  through the hero confirming the inert download button takes focus and shows
+  its ring. Same gap as the two items below; it is now three threads deep.
+- **The inert download button's contrast is exempt, not good.**
+  `.btn[aria-disabled="true"]` is `opacity: .55`, which on `.btn--primary` in
+  light mode composites to roughly white on `#7c7c7c` — about 4.2:1, under AA.
+  WCAG 1.4.3 exempts inactive components so this is not a violation, and the
+  state is also carried by the visible note (not colour alone), so it was left
+  alone rather than special-cased: the rule is shared with ~20 other call
+  sites and changing it globally is its own piece of work. Worth a look once
+  the page has been seen.
 - **`/settings` has not been seen signed in.** No session in this workspace and
   browser automation can't create one — the same gap the tabbar thread above
   hit. Needs: all four groups on screen at once, one control exercised per
