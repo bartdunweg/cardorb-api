@@ -1,0 +1,3 @@
+- A page for the iPhone app, at `/app/ios`. What it is, what it does, what it looks like, and what you need for it — reachable from the landing page's hero badge, its navigation and the footer. `/app` sends you there too.
+- The download button on it is deliberately not pressable yet: the app is not on the App Store, and rather than a dead link or a greyed-out mystery it says so in a line underneath. It stays reachable by keyboard so it can explain itself.
+- No release date is claimed anywhere on the page, and the screenshots are visibly empty slots until there are real ones to put in them.

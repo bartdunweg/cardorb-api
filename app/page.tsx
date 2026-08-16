@@ -15,8 +15,18 @@ import {
   Wallet,
 } from "lucide-react";
 import Card from "./components/Card";
+import MarketingFooter from "./components/MarketingFooter";
 import Navbar from "./components/Navbar";
-import ThemeToggle from "./components/ThemeToggle";
+// ThemeToggle moved with the footer into MarketingFooter.
+import {
+  cardBody,
+  cardHeading,
+  eyebrow,
+  featureIcon,
+  navLink,
+  sectionBody,
+  sectionHeading,
+} from "./components/marketingClasses";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import { currentViewer } from "../lib/api/viewer";
 import { ownerLabel } from "../lib/core/owner";
@@ -149,26 +159,9 @@ export default async function Home() {
     publisher: { "@type": "Organization", name: APP_NAME },
   };
 
-  // Shared recipes, each used by several elements below — kept as named
-  // strings rather than components since every consumer is on this one page.
-  // No margin-bottom baked in: the hero's eyebrow sits in a flex column that
-  // already spaces its children with gap, so a second, competing bottom
-  // margin there would stack on top of the gap instead of matching every
-  // other eyebrow's plain mb-4. Each consumer states its own bottom margin.
-  const eyebrow =
-    "mt-0 mx-0 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-eyebrow)] " +
-    "[font-weight:var(--fw-eyebrow)] tracking-[0.08em] uppercase";
-  const sectionHeading =
-    "m-0 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
-    "tracking-[-0.045em] [line-height:var(--lh-tight)] [font-size:var(--fs-display)]";
-  const sectionBody =
-    "m-0 text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body-l)] leading-relaxed";
-  const featureIcon =
-    "inline-grid w-[42px] h-[42px] place-items-center border border-[var(--color-border-subtle)] rounded-full text-label";
-  const cardHeading =
-    "mt-1 mb-0 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
-    "tracking-[-0.03em] [line-height:var(--lh-snug)] [font-size:var(--fs-sub)]";
-  const cardBody = "m-0 text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal";
+  // The shared recipes live in ./components/marketingClasses now — they were
+  // local consts here while this was the only page in this visual language,
+  // and /app/ios ended that.
 
   return (
     // The layout reserves room at the top for a floating tab bar this route
@@ -187,25 +180,19 @@ export default async function Home() {
       <Navbar
         center={
           <>
-            <a
-              href="#organise"
-              className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-            >
+            <a href="#organise" className={navLink}>
               How it works
             </a>
-            <a
-              href="#share"
-              className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-            >
+            <a href="#share" className={navLink}>
               {/* "Public collections" read as a directory of other people's
                   collections to browse. There is no such directory: the
                   section it jumps to is about turning your own link on. */}
               Sharing
             </a>
-            <a
-              href="#faq"
-              className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-            >
+            <Link href="/app/ios" className={navLink}>
+              iPhone app
+            </Link>
+            <a href="#faq" className={navLink}>
               FAQ
             </a>
           </>
@@ -261,14 +248,21 @@ export default async function Home() {
         className="flex flex-col items-center gap-5 text-center mx-auto max-w-[640px]
           min-h-[480px] justify-center [padding-block:clamp(72px,10vw,128px)]"
       >
-        <span
+        {/* A badge that stated a fact and then stopped. It said "iOS & Android
+            — coming soon" and was an inert <span>, so the one question it
+            raised — what app, and when — had nowhere to go. It is a link to
+            /app/ios now, and names only the platform that has a page. */}
+        <Link
+          href="/app/ios"
           className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
-            border border-[var(--color-border-subtle)] text-label-tertiary
-            [font-family:var(--font-body)] [font-size:var(--fs-tiny)]"
+            border border-[var(--color-border-subtle)] text-label-tertiary no-underline
+            [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+            [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
         >
           <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
-          iOS &amp; Android — coming soon
-        </span>
+          The iPhone app is on its way
+          <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
+        </Link>
         <h1
           className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
             [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
@@ -501,20 +495,7 @@ export default async function Home() {
         </Link>
       </section>
 
-      <footer
-        className="grid grid-cols-[1fr_minmax(0,1.6fr)_1fr] gap-4 items-start pt-5
-          border-t border-[var(--color-border-subtle)] text-label-tertiary
-          [font-family:var(--font-body)] [font-size:var(--fs-small)]
-          [@media(max-width:640px)]:grid-cols-1 [@media(max-width:640px)]:text-center"
-      >
-        <span className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline">
-          {APP_NAME}
-        </span>
-        <p className="m-0 text-center">Prices come from Cardmarket, in euros — the market collectors recognise.</p>
-        <div className="flex items-center justify-self-end [@media(max-width:640px)]:justify-self-center">
-          <ThemeToggle />
-        </div>
-      </footer>
+      <MarketingFooter />
       </section>
     </div>
   );
