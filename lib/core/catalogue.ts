@@ -298,7 +298,12 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   let prices: Record<string, Price> = {};
   if (max > 0 && total !== null && total <= max) {
     const ids = [...new Set(Object.values(byNumber).map((c) => c.id))];
-    prices = Object.fromEntries(await pricesFor(ids));
+    // The normal printing only. This Record has one slot per card and the foil
+    // price needs a second, which is a wider change than this one — see
+    // holoOfId() in cards.ts, where a pre-priced card therefore falls back to
+    // the normal price for its foil. Invisible while pre-pricing is off, which
+    // it is by default.
+    prices = Object.fromEntries([...(await pricesFor(ids))].map(([id, p]) => [id, p.price]));
   }
 
   return {

@@ -8,7 +8,7 @@
  * notices by looking at it.
  */
 
-import { shownPrice } from "./cards";
+import { shownPrice, variantPrice } from "./cards";
 import { LOCALE } from "./config";
 import type { CardSet, OwnedCard } from "./cards";
 
@@ -38,6 +38,27 @@ import type { CardSet, OwnedCard } from "./cards";
  */
 export const copiesHeld = (card: OwnedCard): number =>
   card.variants.reduce((n, v) => n + (v.owned ? Math.max(0, v.quantity ?? 0) : 0), 0);
+
+/**
+ * What the copies of this card are worth, added up printing by printing.
+ *
+ * Not `shownPrice(card.price) * copiesHeld(card)`, which is what this used to
+ * be and what was wrong once a copy could say it was a foil: Cardmarket prices
+ * the reverse holo separately, at a median of twice the normal printing, and a
+ * card held both ways has two copies worth different amounts. See
+ * variantPrice().
+ *
+ * Null-safe on both sides. A card with no price at all contributes nothing, and
+ * a variant with no quantity contributes nothing, and neither is the same as
+ * contributing zero euros — the caller decides how to say "unpriced", which is
+ * what `priced` beside `value` is for.
+ */
+export const heldValue = (card: OwnedCard): number =>
+  card.variants.reduce((sum, v) => {
+    if (!v.owned) return sum;
+    const each = shownPrice(variantPrice(card, v));
+    return each == null ? sum : sum + each * Math.max(0, v.quantity ?? 0);
+  }, 0);
 
 export type Tally = { value: string; count: number };
 
@@ -174,7 +195,7 @@ export function getCardsStats(sets: CardSet[], topCount = 10): CardsStats {
     owned: owned.length,
     wishlist: all.length - owned.length,
     sets: sets.length,
-    value: priced.reduce((sum, x) => sum + (shownPrice(x.card.price) ?? 0) * copiesHeld(x.card), 0),
+    value: priced.reduce((sum, x) => sum + heldValue(x.card), 0),
     priced: priced.length,
     wishlistValue: wanted.reduce((sum, c) => sum + (shownPrice(c.price) ?? 0), 0),
     wishlistPriced: wanted.length,

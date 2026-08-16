@@ -6,6 +6,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   id: "row-1",
   rarity: null,
   owned: true,
+  finish: null,
   quantity: 1,
   condition: null,
   grade: null,
@@ -39,6 +40,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   variants: [variant({ owned: over.owned ?? true })],
   owned: true,
   price: null,
+  priceHolo: null,
   tcgId: null,
   ...over,
 });
@@ -77,6 +79,70 @@ describe("copiesHeld", () => {
       variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b", quantity: -5 })],
     });
     expect(copiesHeld(c)).toBe(2);
+  });
+});
+
+describe("heldValue with a foil printing", () => {
+  const NORMAL = { low: 1, market: 10, avg30: 10, nm: null };
+  const FOIL = { low: 2, market: 20, avg30: 20, nm: null };
+
+  it("prices a reverse holo as a reverse holo, and its normal twin as normal", () => {
+    // The whole reason the finish column exists: one card, two copies, two
+    // prices. This used to come to 20 — the normal price, twice.
+    const s = getCardsStats([
+      set("A", [
+        card({
+          price: NORMAL,
+          priceHolo: FOIL,
+          variants: [
+            variant({ id: "a", finish: "normal" }),
+            variant({ id: "b", finish: "reverse-holo" }),
+          ],
+        }),
+      ]),
+    ]);
+    expect(s.value).toBe(30);
+  });
+
+  it("treats a holo rare the same way as a reverse holo", () => {
+    // Cardmarket files both under the one -holo price, which is why Finish has
+    // three values and the lookup has two.
+    const s = getCardsStats([
+      set("A", [card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: "holo" })] })]),
+    ]);
+    expect(s.value).toBe(20);
+  });
+
+  it("falls back to the normal price where Cardmarket has no foil listing", () => {
+    // 865 of this collection's 1,526 products are in exactly this position.
+    // The copy really is a reverse holo; there is simply no separate price.
+    const s = getCardsStats([
+      set("A", [card({ price: NORMAL, priceHolo: null, variants: [variant({ finish: "reverse-holo" })] })]),
+    ]);
+    expect(s.value).toBe(10);
+  });
+
+  it("prices an unclassified copy as normal", () => {
+    // null is "nobody has said", which is every row in this collection until
+    // somebody fills it in. It must not be worth nothing, and it must not
+    // silently claim the foil price either.
+    const s = getCardsStats([
+      set("A", [card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: null })] })]),
+    ]);
+    expect(s.value).toBe(10);
+  });
+
+  it("multiplies the foil price by that printing's own quantity", () => {
+    const s = getCardsStats([
+      set("A", [
+        card({
+          price: NORMAL,
+          priceHolo: FOIL,
+          variants: [variant({ id: "a", finish: "reverse-holo", quantity: 3 })],
+        }),
+      ]),
+    ]);
+    expect(s.value).toBe(60);
   });
 });
 

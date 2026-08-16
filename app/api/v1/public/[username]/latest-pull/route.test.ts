@@ -22,12 +22,14 @@ const sets: CardSet[] = [
         speciesId: null,
         owned: true,
         price: { low: 200, market: 210, avg30: 205, nm: null },
+        priceHolo: null,
         tcgId: "base1-4",
         variants: [
           {
             id: "a",
             rarity: "Rare Holo",
             owned: true,
+            finish: null,
             quantity: 1,
             condition: null,
             grade: null,

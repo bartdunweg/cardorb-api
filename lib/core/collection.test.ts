@@ -56,8 +56,20 @@ const empty = (): SetCatalogue => ({
 });
 
 const setCatalogue = vi.fn(async (name: string) => KNOWN[name] ?? empty());
+/**
+ * Both printings, matching what the real pricesFor() answers with since
+ * Cardmarket's `-holo` fields were wired up: the normal price and the foil's,
+ * where there is one. `holo` is null here because most cards have no separate
+ * foil listing — 865 of this collection's 1,526 products — and the fallback to
+ * the normal price is the path worth exercising by default.
+ */
 const pricesFor = vi.fn(async (ids: string[]) =>
-  new Map(ids.map((id) => [id, { low: 1, market: 4.5, avg30: 4.2, nm: { low: 4, mid: 5, high: 6 } }])),
+  new Map(
+    ids.map((id) => [
+      id,
+      { price: { low: 1, market: 4.5, avg30: 4.2, nm: { low: 4, mid: 5, high: 6 } }, holo: null },
+    ]),
+  ),
 );
 
 vi.mock("./catalogue", () => ({
@@ -89,6 +101,7 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   owned: true,
   excluded: false,
   acquiredAt: null,
+  finish: null,
   quantity: 1,
   condition: null,
   grade: null,
@@ -118,6 +131,7 @@ describe("buildCollection", () => {
     id: null,
     rarity: null,
     owned: true,
+    finish: null,
     quantity: 1,
     condition: null,
     grade: null,

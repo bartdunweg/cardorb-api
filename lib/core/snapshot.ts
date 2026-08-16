@@ -27,7 +27,7 @@
  */
 
 import { copiesHeld } from "./cards-stats";
-import { priceOf, shownPrice } from "./price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice } from "./price-basis.mjs";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 
@@ -37,6 +37,10 @@ export type GuideRow = {
   low?: number | null;
   trend?: number | null;
   avg30?: number | null;
+  /** The foil printing, priced separately. Often 0, which is not a price. */
+  "low-holo"?: number | null;
+  "trend-holo"?: number | null;
+  "avg30-holo"?: number | null;
 };
 
 export type PriceGuide = {
@@ -79,14 +83,32 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
 
       const product = card.tcgId ? ids[card.tcgId] : null;
       const row = product == null ? undefined : byProduct.get(product);
-      const p = row && priceOf({ low: row.low, trend: row.trend, avg30: row.avg30 });
-      const each = p && shownPrice(p);
-      if (each == null) {
+      const normal = row ? priceOf(row) : null;
+      const foil = row ? holoPriceOf(row) : null;
+      if (!normal && !foil) {
         unpriced++;
         continue;
       }
-      value += each * held;
-      priced++;
+
+      /**
+       * Printing by printing, exactly as heldValue() does it on the page.
+       *
+       * The two have to agree: this is the chart and that is the tile above it.
+       * The shape differs because the source does — here the two prices come
+       * out of one guide row rather than off the card — but the rule is the
+       * same one, and variantPrice() is the sentence it is written in.
+       */
+      let any = false;
+      for (const v of card.variants) {
+        if (!v.owned) continue;
+        const isFoil = v.finish === "reverse-holo" || v.finish === "holo";
+        const each = shownPrice((isFoil && foil) || normal);
+        if (each == null) continue;
+        value += each * Math.max(0, v.quantity ?? 0);
+        any = true;
+      }
+      if (any) priced++;
+      else unpriced++;
     }
   }
 
