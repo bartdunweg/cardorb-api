@@ -1,38 +1,66 @@
-import Card from "../components/Card";
 import {
   tabbarClassName,
   tabbarFadeClassName,
   tabbarItemClassName,
   tabbarPagesClassName,
 } from "../components/tabbarClasses";
+import { APP_NAME } from "../../lib/core/config";
 import { cardsMainClassName, pageCardsClassName } from "../components/cardsPageClasses";
 
 /**
- * What /cards shows while the collection is on its way.
+ * What every signed-in screen shows while the shell is on its way.
  *
- * This is the only route in the site with one, and the exception is deliberate.
- * A fallback blanks the current page for a few hundred milliseconds, which on a
- * small fast route reads as a flash for no reason (see the note in TabBar).
- * This route is the heavy one: nineteen hundred cards, and 200 to 550 ms
- * between the press and the first set depending on the connection. In that gap
- * nothing acknowledged the press at all, which is what a dead button looks
- * like.
+ * This is the Suspense fallback for the whole (app) route group — /dashboard,
+ * /collection/*, /wishlist, /settings, all of it — because the slow await is in
+ * the group's layout, not in any page: force-dynamic, currentViewer() and then
+ * nineteen hundred cards out of getCollection(). 200 to 550 ms between the press
+ * and the first pixel, in which nothing acknowledged the press at all.
  *
- * So it is not a spinner. It is the real page's frame: the rail on the left,
- * the heading and toolbar on the right, with an outline anywhere the shape has
- * to come from Notion. Nothing moves when the real page arrives; the outlines
- * fill in.
+ * **The rule this file exists to keep: it draws only what is identical on every
+ * route in the group.** The frame, the rail, the bar. Nothing inside .cards-main
+ * except an outline where the heading lands, because that is the only thing
+ * every screen in here agrees on.
+ *
+ * It used to draw a great deal more — a five-control toolbar, two set panels and
+ * twenty card tiles — because it was written for the old single-page /cards
+ * route and never re-scoped when the group grew around it. /dashboard renders no
+ * toolbar and no set grids, /settings renders neither plus no card anything, and
+ * the heading here said "Cards", which is a word no screen in the app has ever
+ * had at the top of it. So the commonest thing anyone saw was the skeleton of a
+ * page that does not exist. See ADR-0044, and ADR-0018 for the same file drifting
+ * once before.
+ *
+ * If a route wants its own shape outlined, it gets its own loading.tsx. It does
+ * not get added here.
  */
 
-// Enough sets to reach the bottom of a laptop rail, and the list scrolls
-// anyway, so there is nothing to gain from standing in for all fifty-one.
-const RAIL = 9;
-// Two sets is enough to read as "a page of cards is coming" on a laptop, and
-// the second is already below the fold on a phone.
-const SETS = [12, 8];
+/**
+ * The signed-in rail above 1000px: Dashboard, My collection, Wishlist, a
+ * hairline, then Sets and Browse — CardsSidebar.tsx's setsAsRow mode, which is
+ * the only mode anything in this group renders. Three and two rather than a run
+ * of nine identical outlines, so the rows land where they are drawn.
+ *
+ * Wishlist is drawn even though the real rail hides it when nothing is wanted
+ * (CardsSidebar's `wanted > 0`). A collection with a wishlist is the ordinary
+ * case, and it is one row of movement either way.
+ */
+const RAIL_ABOVE = 3;
+const RAIL_BELOW = 2;
+
+/** The hairline between the destinations and the sets. Same markup as the one
+ *  in CardsSidebar.tsx, so the rows either side of it are not off by 20px. */
+function RailDivider() {
+  return <span className="block h-px m-2 bg-[var(--color-border-subtle)]" />;
+}
+
+function RailRow() {
+  // One .cards-nav-item: 28px of logo/icon slot plus the --space-2 padding
+  // either side of it.
+  return <span className="skeleton h-11 rounded-md" />;
+}
 
 export default function Loading() {
-  // The same wrapper page.tsx uses. Without it the fallback is not inside
+  // The same wrapper the layout uses. Without it the fallback is not inside
   // .page-cards at all, so it ignored the two-pane grid and the outlines ran
   // the full width of the window before snapping into place.
   return (
@@ -42,124 +70,180 @@ export default function Loading() {
     <section
       className={`${pageCardsClassName} [animation:pageEnter_420ms_var(--ease-out)] [transform-origin:center_top]`}
     >
+      {/* The same heading AppShell renders, word for word and in the same
+          position, so the document has exactly one h1 throughout the load
+          rather than none until the page lands. It is .sr-only and therefore
+          position:absolute, which is why it can sit here without becoming a
+          third item in .page-cards's two-column grid — and why the rail and
+          .cards-main below it are still literal siblings, which cards.css's
+          pane-swap selector requires (see AppShell.tsx). */}
+      <h1 className="sr-only">{APP_NAME}</h1>
+
       <div
         className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
           bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]"
         aria-hidden="true"
       >
-        {/* The same title CardsSidebar draws, so the sets do not shift down the
-            moment the real rail replaces these outlines. Below 1000px this pane
-            is off screen on arrival and only the press that opens it brings the
-            two together, by which time the fallback is long gone; it is here so
-            the two files describe the same rail rather than for that. */}
-        <p
-          className="hidden [@media(max-width:1000px)]:block [@media(max-width:1000px)]:mb-4
-            [@media(max-width:1000px)]:p-2 [@media(max-width:1000px)]:[font-family:var(--font-main)]
-            [@media(max-width:1000px)]:[font-weight:var(--fw-title)] [@media(max-width:1000px)]:[font-size:var(--fs-h2)]
-            [@media(max-width:1000px)]:[line-height:var(--lh-tight)] [@media(max-width:1000px)]:text-label"
-          aria-hidden="true"
-        >
-          Cards
-        </p>
+        {/* The rail's head, above 1000px only, exactly where CardsSidebar puts
+            it. It was missing, and it is 60-odd pixels tall: every outline
+            below it sat that far above the row it was standing in for, which
+            is the one thing a fallback is supposed to get right.
+
+            The wordmark is the real word rather than an outline — it is a
+            constant, and a constant drawn as a grey bar is a shape fading into
+            itself. Not a <Link>: there is nothing to navigate to yet and a
+            fallback should not be pressable. The add button beside it is an
+            outline, because it is a control and drawing a dead one invites the
+            press it cannot answer. */}
+        <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
+          <span className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em]">
+            {APP_NAME}
+          </span>
+          <span className="skeleton flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full" />
+        </div>
+
+        {/* No "Sets" title here, unlike CardsSidebar. Below 1000px cards.css
+            hides `.cards-rail:not([data-pane="rail"])` outright and this rail
+            has no data-pane to set — the title could never be seen, and the
+            copy this file used to carry for it ("Cards") was the sidebar's
+            wrong word anyway. */}
         <div className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]">
-          {Array.from({ length: RAIL }, (_, i) => (
-            // One row in the rail: a set logo beside a single line of text,
-            // which is the 28px art plus the --space-2 padding a
-            // .cards-nav-item is built from.
-            <span key={i} className="skeleton h-11 rounded-md" />
+          {Array.from({ length: RAIL_ABOVE }, (_, i) => (
+            <RailRow key={`a${i}`} />
+          ))}
+          <RailDivider />
+          {Array.from({ length: RAIL_BELOW }, (_, i) => (
+            <RailRow key={`b${i}`} />
           ))}
         </div>
+
+        {/* The avatar footer, pinned to the bottom the same way the real one is
+            (CardsSidebar.tsx) — otherwise it arrives out of nowhere at the end
+            of the load. Above 1000px only, like the head. */}
+        <span
+          className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-md
+            bg-[var(--glass-bg-solid)] [@media(max-width:1000px)]:hidden"
+        >
+          <span className="skeleton flex-none w-7 h-7 rounded-full" />
+          <span className="skeleton flex-1 h-[var(--fs-small)]" />
+        </span>
       </div>
 
       <section className={cardsMainClassName}>
         <header className="cards-head">
-          {/* Real, not an outline: the heading is the one thing on this page
-              that does not come from Notion. */}
-          <h1 className="cards-main-title">Cards</h1>
-          {/* Matches .cards-count, which sits under the heading with the same
-              gap. Height is the line box of a --fs-small paragraph, not the
-              font size — smaller below 640px, where the real count wraps to
-              one line instead of sitting beside the heading. */}
+          {/* The one thing every screen in this group has: an h1. What it says
+              is the screen's own business — "Dashboard", "Settings", a set
+              name, somebody's collection — so it is an outline and not a word.
+              Sized to .cards-main-title's line box (cards.css), not to its
+              font size. */}
           <span
-            className="skeleton w-[150px] h-4 mt-2 [@media(max-width:640px)]:h-[var(--fs-small)]"
+            className="skeleton w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-xs"
             aria-hidden="true"
             role="presentation"
           />
-          <div className="cards-tools" aria-hidden="true">
-            {/* Not greedy: it took the whole leftover width and dwarfed the
-                controls beside it, when the collection is mostly browsed by
-                filter. */}
-            <span className="skeleton flex-[0_1_260px] min-w-[180px] h-[var(--control-h)] rounded-pill" />
-            {/* The real .cards-segmented goes full width below 640px, so its
-                outline has to as well: a fixed 232px both missed the
-                geometry it is standing in for and was wider than the card on
-                a 320px screen. */}
-            <span className="skeleton w-[232px] h-[var(--control-h)] rounded-pill [@media(max-width:640px)]:w-full" />
-            <span className="skeleton w-[232px] h-[var(--control-h)] rounded-pill [@media(max-width:640px)]:w-full" />
-            <span className="skeleton w-[104px] h-[var(--control-h)] rounded-pill" />
-            <span className="skeleton w-[74px] h-[var(--control-h)] rounded-pill" />
-          </div>
         </header>
 
-        {/* One live region for the whole thing rather than a label on every
-            outline: a screen reader should hear that the collection is loading
-            once, not twenty times. */}
-        <p className="sr-only" role="status">
-          Loading the collection
-        </p>
+        {/* Where the screen lands. One region and not a layout: the count, the
+            toolbar and the card grids that used to be here are shapes that
+            exist on some screens in this group and not others, and every one of
+            them was wrong more often than it was right. This claims the only
+            thing all of them share — that something fills this pane, starting
+            here — and says nothing about what is in it.
 
-        {SETS.map((count, i) => (
-          <Card key={i} className="cards-set" aria-hidden="true">
-            <div className="cards-set-head">
-              <span className="skeleton w-[120px] h-11 flex-shrink-0 [@media(max-width:640px)]:w-[92px] [@media(max-width:640px)]:h-[34px]" />
-              <div className="cards-set-text">
-                <span className="skeleton w-[180px] h-[var(--fs-card)]" />
-                <span className="skeleton w-[110px] h-[var(--fs-small)] mt-1" />
-              </div>
-            </div>
-            <div className="cards-grid">
-              {Array.from({ length: count }, (_, j) => (
-                <span
-                  key={j}
-                  className="cards-item flex flex-col gap-[2px] min-w-0 relative p-2 rounded-md"
-                >
-                  <span className="cards-scan block relative aspect-[245/342] mb-2">
-                    {/* Fills the slot the scan will land in, so the grid is
-                        already the right height and the rows below do not
-                        move. No sweep on this one: a band of light travelling
-                        across a 40px text bar reads as loading; the same band
-                        across a dozen card-sized blocks reads as the page
-                        flickering. The small bars below keep the sweep, this
-                        one just sits there and waits. */}
-                    <span className="skeleton w-full h-full rounded-xs after:content-none" />
-                  </span>
-                  <span className="skeleton w-[70%] h-[var(--fs-small)]" />
-                  <span className="skeleton w-14 h-[17px] mt-1 rounded-pill" />
-                </span>
-              ))}
-            </div>
-          </Card>
-        ))}
+            Sized in vh rather than to a content guess, and capped, so it reads
+            as a region on a laptop without becoming a full page of grey on a
+            tall monitor. It is the only element here whose height is arbitrary,
+            which is the honest description of a placeholder for an unknown.
+
+            No sweep on this one, for the reason the old file gave for card
+            scans and which applies with more force to a single large block: a
+            band of light travelling across 40px of text bar reads as loading,
+            the same band across half the window reads as the page flickering. */}
+        <span
+          className="skeleton block w-full h-[min(420px,52vh)] rounded-lg after:content-none"
+          aria-hidden="true"
+          role="presentation"
+        />
+
+        {/* One live region for the whole thing rather than a label on every
+            outline: a screen reader should hear this once, not six times. The
+            word is bare because this stands in for /settings as readily as for
+            the collection. */}
+        <p className="sr-only" role="status">
+          Loading
+        </p>
       </section>
 
-      {/* The bar, drawn rather than outlined: it is the site's own chrome and
-          none of it comes from Notion, so an outline here would be a shape
-          fading into itself. No pill and no plus, which are the two things
-          that depend on where you are and whether you are signed in: the
-          fallback knows neither, and guessing at either is the fallback
-          changing its mind while you watch.
+      {/* The bar, drawn rather than outlined where it can be: it is the site's
+          own chrome and an outline of a constant is a shape fading into itself.
 
-          Below 1000px only, the same as the real one, and the same trick
-          /favorites/[kind]/loading.tsx uses: the fallback and the page share
-          chrome so a colour arrives rather than a layout moving. */}
+          Four slots and the add circle, which is the signed-in bar
+          (CardsTabBar.tsx). The plus used to be left out, on the grounds that
+          the fallback could not know whether anyone was signed in — true on
+          /cards, not true here: this group's layout redirects a viewerless
+          request before it can ever reach this file, so signed-in is a fact and
+          not a guess.
+
+          Each slot carries an icon-sized and a label-sized outline rather than
+          being empty. Empty, the slots collapsed to about 12px against a real
+          slot's 45 and the whole bar changed height the moment it loaded, which
+          is exactly the layout movement this file claims not to do.
+
+          Still no sliding pill: which slot it belongs under is the one thing
+          here that genuinely depends on where you are going. */}
       <div className={`${tabbarFadeClassName} cards-tabbar-fade`} aria-hidden="true" />
       <nav className={`${tabbarClassName} cards-tabbar`} aria-hidden="true">
-        <div className={tabbarPagesClassName}>
-          {Array.from({ length: 4 }, (_, i) => (
-            <span key={i} className={tabbarItemClassName} />
+        <div
+          className={tabbarPagesClassName}
+          /**
+           * --tab-w, which tabbarItemClassName reads for every slot's width,
+           * computed rather than left at its 104px default.
+           *
+           * The default is deliberately generous (see tabbarClasses.ts: a tight
+           * estimate clipped "Dashboard" on a real phone) and the real bar can
+           * afford it, because CardsTabBar measures the widest label on mount
+           * and writes a smaller value back. This file has no effect and no
+           * labels to measure, so it would sit at 104px forever: four slots at
+           * 104 plus the 40px circle plus the gaps needs 512px, and a 500px
+           * window gives the track 466 — the two end slots hang out of it.
+           *
+           * So: divide what is actually left between the four, and never go
+           * above the default. The 56px is the five gap-2 gaps plus the track's
+           * own p-2. min-w-[56px] on the slot floors it, and above roughly
+           * 620px the min() picks 104 and nothing here applies at all.
+           */
+          style={
+            {
+              "--tab-w":
+                "min(104px, calc((100vw - 2*var(--space-4) - var(--control-h) - 56px) / 4))",
+            } as React.CSSProperties
+          }
+        >
+          {Array.from({ length: 2 }, (_, i) => (
+            <TabSlot key={`l${i}`} />
+          ))}
+          {/* !cursor-default on this and on every slot: both the shared class
+              and .cards-tabbar-add carry cursor:pointer for the real, pressable
+              bar, and the track sets pointer-events:auto on its children — so
+              without this the fallback's dead shapes offer a pointer to a
+              press they cannot answer. */}
+          <span className="cards-tabbar-add !cursor-default" />
+          {Array.from({ length: 2 }, (_, i) => (
+            <TabSlot key={`r${i}`} />
           ))}
         </div>
       </nav>
     </section>
+  );
+}
+
+/** One slot's footprint: the 20px icon and the --fs-tiny label under it that
+ *  every slot carries, whether or not it is the active one. */
+function TabSlot() {
+  return (
+    <span className={`${tabbarItemClassName} !cursor-default`}>
+      <span className="skeleton w-5 h-5 rounded-xs" />
+      <span className="skeleton w-12 h-[var(--fs-tiny)] rounded-xs" />
+    </span>
   );
 }

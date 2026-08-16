@@ -37,9 +37,12 @@ export const dynamicParams = true;
  * A missing card answers 200 with the not-found page in the body — a soft 404,
  * and it is not fixed here. Two things were tried: rendering per request
  * instead of caching, and adding the root not-found boundary that was missing.
- * Neither changed the status, because app/cards/loading.tsx makes this route
- * stream: the headers are on their way before the component gets far enough to
- * call notFound().
+ * Neither changed the status. The cause named at the time was app/cards/loading.tsx
+ * making this route stream — the headers on their way before the component gets
+ * far enough to call notFound(). That file no longer exists and this route is
+ * outside the (app) group, so it does not inherit that group's fallback either:
+ * whatever is producing the soft 404 today has not been re-checked, and the
+ * sentence above should not be read as a live diagnosis.
  *
  * Left as it is, deliberately. The only thing a wrong status costs is a
  * crawler's understanding, and this route is noindex and behind the proxy, so

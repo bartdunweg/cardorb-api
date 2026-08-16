@@ -137,6 +137,32 @@ alternatives, and ADR-0000 already records why this repo has the system at all.
 Nothing user-visible changed, so no changelog fragment either. The git history
 here is substantial and a future `backfill` workflow could reconstruct rationale
 from it — not done, and it should stay opt-in.
+**The signed-in loading fallback draws shared chrome only now (ADR-0046,
+FB-0010).** Bart reported that the skeleton showed "an interface I don't
+recognise", and it did: `app/(app)/loading.tsx` was written for the old
+single-page `/cards` route — toolbar, two set panels, twenty card tiles, a
+hardcoded `<h1>Cards</h1>` — and became the Suspense fallback for the whole
+`(app)` group without being re-scoped, because the slow await sits in the group's
+layout. So it stood in for `/dashboard` (no toolbar, no set grids) and
+`/settings` (nothing in common at all).
+
+**The rule now, and the one thing to hold on to: that file may only draw what is
+identical on every route in the group.** Frame, rail, bar, plus one outline where
+the heading lands. Anything route-specific belongs in that route's own
+`loading.tsx` or nowhere. This is ADR-0018's lesson again — a skeleton is a
+hand-maintained second copy of a layout — enforced by scope rather than by
+remembering to grep.
+
+Fixed alongside: the tab bar's slots were empty and rendered ~12px tall against a
+real ~45px, so the bar changed height on every load; the rail was missing its
+head row and avatar footer, so every outline in it sat ~60px high. The add circle
+is now drawn (signed-in is a fact inside this group, not a guess); the sliding
+pill still is not. Below the heading sits **one** full-width region block —
+asked for after a first pass left the pane empty — and the line it must not
+cross is subdividing: three blocks, or a block with a bar over it, is guessing
+at a layout again. Deferred, and the better end state: streaming the collection
+behind a Suspense boundary inside `AppShell`, which would delete the fallback
+entirely — revisit when `AppShell`'s props are being changed anyway.
 
 **There is a privacy policy, at `/privacy` (ADR-0042).** The iOS app cannot be
 submitted without one, and App Store Connect asks for a *URL*, so it had to be a
@@ -1065,6 +1091,37 @@ picked up the same complaint within an hour of each other.
   page, read the RSC payload out of the served HTML, and confirm no purchase
   price, note, condition or quantity is in it. Then the same on
   `curl $SITE/api/v1/public/<name>/collection`. Unit-tested, not seen.
+- **The new loading fallback has not been seen in a signed-in browser.** No
+  session in this workspace, `chrome-devtools` was blocked by another
+  automation Chrome holding its profile, and the Chrome extension was not
+  connected — the same gap as the three items below. It was verified by
+  rendering the fallback on a throwaway public route and screenshotting it
+  headless at 1440/900/375 (route deleted again), so the markup and the
+  geometry are right in isolation. What is **not** verified is the thing that
+  matters: hard-load `/dashboard`, `/settings` and `/collection/sets` with the
+  collection slowed down, and confirm nothing moves between the fallback and
+  the real page — specifically that the rail's rows land on the same
+  y-position and the tab bar does not change height.
+- **Nothing in this repo has been rendered below 500px this session, or in
+  several.** Chrome headless clamps its window to a 500px minimum on macOS, so
+  a `--window-size=375` screenshot lays the page out at 500 and crops the image
+  to 375 — which looks exactly like a horizontal overflow bug and is not one.
+  This cost a wrong finding before it was caught by measuring
+  `document.documentElement.scrollWidth` instead of looking at the picture.
+  **Measure, do not read screenshots, for anything narrower than 500px.**
+- **`--tab-w` is now computed in `app/(app)/loading.tsx` and inherited in
+  `CardsTabBar.tsx`.** The slot width's 104px default is only safe because
+  `CardsTabBar` measures the widest label on mount and writes a smaller value
+  back; a fallback has no effect, so it held 104 and the end slots hung out of
+  the capsule below ~620px (ADR-0044). Anything else that ever draws this bar
+  without `CardsTabBar` behind it needs the same formula. The formula's
+  behaviour below 500px is arithmetic, not measured.
+- **`app/cards/[id]/page.tsx`'s soft-404 explanation is now marked unverified.**
+  It blamed `app/cards/loading.tsx` for making the route stream; that file does
+  not exist and the route is outside the `(app)` group, so it does not inherit
+  that group's fallback either. Whatever produces the soft 404 today has not
+  been re-checked. Low stakes (the route is noindex and behind the proxy) but
+  the comment should not be trusted as a diagnosis.
 - **`/app/ios` has never been looked at.** It was verified over HTTP only —
   status, metadata, heading order, sitemap, the `/app` redirect, `.sr-only`
   present in the served CSS — because the Chrome extension was not connected
