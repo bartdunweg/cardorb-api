@@ -79,6 +79,11 @@ root `CLAUDE.md` for how and when to write to it.
   the deployment's owner — production had a second public profile served under
   the wrong name. Also: signup now asks for a name, optionally, and
   `display_name` stopped being seeded with the generated username.
+- `decisions/0035-og-image-is-dynamic-not-revalidated.md` — a 500 that only
+  production could show: `revalidate` on a route that reads cookies cannot be
+  rendered statically, and one hardcoded `generateStaticParams` entry had been
+  hiding it. Read it before trusting a green `npm run build` on anything whose
+  static-vs-dynamic rendering matters.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.

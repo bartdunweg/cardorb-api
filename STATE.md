@@ -44,6 +44,17 @@ generated username. Two single-owner leftovers went with it: the public
 card-detail route 404'd every account but the first, and the sitemap listed one
 hardcoded profile.
 
+Merged (#49) and deployed. One 500 followed it straight to production and is
+fixed (#52, ADR-0035): the OG image had always been misconfigured —
+`revalidate = 3600` on a route that reads cookies — and the page's
+`generateStaticParams`, returning one hardcoded username, had been hiding it.
+Worth remembering how it was found: `npm run check` and `npm run build` were
+green, and a local production build served the image at 200. Only fetching the
+deployed URL caught it, and `vercel logs` diagnosed it in one step. **GitHub
+Actions is not running** — every workflow fails with "recent account payments
+have failed or your spending limit needs to be increased", so `check.yml` is
+not a gate right now and its steps have to be run locally before a merge.
+
 **Open, and needed before this is fully live:** the backfill migration
 `supabase/migrations/20260816120000_display_name_is_a_person_not_a_username.sql`
 has **not** been applied. It nulls `display_name` where it is a copy of the
