@@ -62,7 +62,7 @@
      for both.
 
      :not([data-pane="rail"]) rather than [data-pane="main"], so the skeleton in
-     app/cards/loading.tsx, which renders neither, lands on the results too. A
+     app/(app)/loading.tsx, which renders neither, lands on the results too. A
      fallback that outlines a rail and then hands over a dashboard is a page
      that changed its mind while you watched. */
   .cards-rail:not([data-pane="rail"]) {

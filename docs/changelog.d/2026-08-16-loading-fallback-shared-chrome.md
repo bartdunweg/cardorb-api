@@ -1,0 +1,3 @@
+- The loading state no longer draws a page that does not exist. While a signed-in screen is on its way you now see the sidebar, the bottom bar and an outline where the heading lands — instead of a toolbar, two set panels and twenty card outlines under a heading reading "Cards", which is what it showed on the dashboard, on settings and everywhere else.
+- The bottom bar no longer changes height when a screen finishes loading, and the sidebar's rows no longer jump: its wordmark row and the account button at the bottom are part of the loading state now, so nothing shifts on arrival.
+- On a narrow window the bottom bar's outer slots no longer hang outside the bar while a screen is loading; the slots divide the space that is actually there.

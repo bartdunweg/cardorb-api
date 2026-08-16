@@ -141,4 +141,13 @@ root `CLAUDE.md` for how and when to write to it.
   not advice" and "not affiliated with The Pokémon Company" sections exist at
   all. Both pages share `app/components/LegalPage.tsx`; read it before adding a
   third long-form page.
+- `decisions/0044-loading-fallback-draws-shared-chrome-only.md` — **read before
+  adding anything to `app/(app)/loading.tsx`.** It is the Suspense fallback for
+  every signed-in route, because the slow await is in the group's layout, and it
+  may therefore only draw what is identical on all of them: the frame, the rail,
+  the bar, and one outline where the heading lands. It used to draw the old
+  `/cards` page — a toolbar, two set panels, twenty card tiles and an `<h1>Cards</h1>`
+  no screen has ever shown — which is what `docs/feedback/0010-...` reported.
+  Anything route-specific goes in that route's own `loading.tsx` or nowhere. Read
+  it with `0018`, which is this same file drifting once before.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

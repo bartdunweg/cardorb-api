@@ -258,7 +258,7 @@ export default function CardsView({
    *
    * Undefined until something is pressed, which renders no attribute at all,
    * and that is the landing state for both the real page and the skeleton in
-   * app/cards/loading.tsx: the stylesheet reads it as the results, which is why
+   * app/(app)/loading.tsx: the stylesheet reads it as the results, which is why
    * its selector is written as :not([data-pane="rail"]). It also means the
    * pane-swap animation has nothing to match on the way in, so the dashboard
    * does not perform an arrival on every page load.
