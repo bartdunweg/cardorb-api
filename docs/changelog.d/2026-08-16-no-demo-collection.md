@@ -1,0 +1,1 @@
+- The landing page no longer talks about a demo collection: the FAQ answers questions about your own cards, "Public collections" in the header is now "Sharing", and the "1,600+ cards tracked" figure — one person's binder — is now "No limit, cards per collection".

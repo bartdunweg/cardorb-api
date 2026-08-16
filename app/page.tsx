@@ -46,20 +46,36 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: APP_NAME, description: APP_TAGLINE },
 };
 
+/**
+ * Facts about the app, not about anybody's collection.
+ *
+ * "1,600+ cards tracked" used to sit first here. It was the size of the
+ * deployment owner's binder, printed as though it were a product number —
+ * true of one person and of nothing else, and it read as a demo collection
+ * being shown off. What is left is what the app does for whoever signs up.
+ */
 const STATS = [
-  { value: "1,600+", label: "cards tracked" },
+  { value: "No limit", label: "cards per collection" },
   { value: "3", label: "catalogues matched" },
   { value: "Cardmarket, live", label: "pricing" },
 ];
 
+/**
+ * Written when this page was one person's collection with a signup attached,
+ * and rewritten when it stopped being that. There is no demo collection here
+ * and no showcase account: every collection belongs to whoever made it, some
+ * of them are public because their owner turned the link on, and the copy is
+ * not allowed to imply otherwise. "Can I track my own collection too?" was the
+ * clearest tell — "too" alongside somebody else's.
+ */
 const FAQ = [
   {
-    q: "Is this collection really free to use?",
+    q: "Is Card Orb really free to use?",
     a: "Yes. There is no paid tier, no card limit and no credit card at signup — free is the only plan there is.",
   },
   {
-    q: "Can I track my own collection too?",
-    a: "Yes — sign up, and everything from here on tracks your cards, not the demo's.",
+    q: "Can other people see my cards?",
+    a: "Only if you turn on a public link, and only the cards — what your collection is worth stays yours.",
   },
   {
     q: "Where do the prices come from?",
@@ -181,7 +197,10 @@ export default async function Home() {
               href="#share"
               className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
             >
-              Public collections
+              {/* "Public collections" read as a directory of other people's
+                  collections to browse. There is no such directory: the
+                  section it jumps to is about turning your own link on. */}
+              Sharing
             </a>
             <a
               href="#faq"
