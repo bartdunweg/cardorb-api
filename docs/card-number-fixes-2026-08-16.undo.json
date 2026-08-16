@@ -106,5 +106,32 @@
       "name": "Blaziken V"
     },
     "why": "geen VMAX in deze lijst, dus de V"
+  },
+  {
+    "id": "6ffa3474-78cb-4c68-bdfc-8f229248ffb4",
+    "from": {
+      "number": "165",
+      "name": "Chansey",
+      "set_name": "Chilling Reign"
+    },
+    "to": {
+      "number": "183",
+      "name": "Blissey V"
+    },
+    "why": "Bart: het is een Blissey. #183 is de alternate art (Ultra Rare), #182 de full art, #119 de gewone"
+  },
+  {
+    "id": "bbbd8057-acdd-4f8d-be9b-4ac761e5862c",
+    "from": {
+      "number": "",
+      "name": "Ancient Mew",
+      "set_name": "Wizard Black Star Promos"
+    },
+    "to": {
+      "number": "001",
+      "name": "Ancient Mew",
+      "set_name": "Miscellaneous Promos"
+    },
+    "why": "TCGdex kent hem wel, alleen onder Miscellaneous Promos #001"
   }
 ]
