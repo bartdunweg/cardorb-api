@@ -4,6 +4,58 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The value history now records itself, and the collection can say what moved
+(workspace `kuala-lumpur`, 2026-08-16).** Six things shipped in one session, all
+merged and live. ADR numbers 0046-0050, and 0048/0049/0050 are each doubled with
+another workspace's records — the same collision `0014`, `0021`, `0030`, `0034`
+and `0042` already have.
+
+- **ADR-0046** — `GET /api/v1/cron/snapshot`, Mondays 04:00, beside the health
+  ping. `CRON_SECRET` is set in Vercel production; the route fails closed
+  without it. Uses the service role because a cron has nobody to act as, which
+  rewrote `adminClient()`'s "one caller only" comment into the rule it always
+  meant. **Its first real run is the Monday after this.**
+- **ADR-0047** — the wishlist tile says what the list would cost, and the value
+  tile says where it sits against its own 30-day average. Both from data already
+  on every card; no storage, no cron.
+- **ADR-0048/0049** — `cards.finish` records whether a copy is normal, reverse
+  holo or holo, and the reverse holo is priced from Cardmarket's `-holo` fields.
+  1,904 rows classified from TCGdex's own `variants`, which is what made the
+  original hand-kept answers unnecessary to recover.
+- **ADR-0050** — `card_prices`, one row per card per day, **no `user_id`**,
+  feeding a risers/fallers list on the dashboard.
+
+**Twelve card rows were corrected** against the catalogue, and the collection is
+1,959 rows (was 1,968): nine unreleased or unindexed promos were removed and are
+kept verbatim in `docs/wishlist-promos-removed-2026-08-16.json`. Value went
+€39,887 → **€42,130**, almost none of it market: copies now count, reverse holos
+are priced as reverse holos, and eleven cards that could not be valued at all can
+be. See `docs/unmatched-collection-cards.md` for what is left — one card, the
+`Professor's Research (Juniper)` whose row is right and whose name check is also
+right.
+
+### The one thing shipped and known to be wrong
+
+**The movers list will report noise as movement, and this was measured after it
+shipped.** Cardmarket's `trend` is itself a rolling average and jitters around
+its own means: across these 1,536 cards the median gap between `trend` and
+`avg7` is **8.9%**, and against `avg30` **9.7%** — nearly the same, which means
+it is noise rather than drift. The 10-cent floor in `moversOf()` does not catch
+it: 9% of a €40 card is €3.60.
+
+The fix is not the cron's frequency, it is which figure is compared. `avg30` is
+in the same guide row and is the smoothed one; storing it and ranking movers on
+it removes most of this. **Not done** — offered and not yet taken up.
+
+The same measurement says something useful about frequency, if it comes up:
+per-card noise is ~9% but the *aggregate* is stable, with the collection's
+`trend` total within **0.5%** of its `avg7` total. So the value chart would
+genuinely gain from daily readings (more resolution, no more noise, and a live
+chart after a week rather than two months), while the movers list would not gain
+anything until it compares on a smoothed figure. Vercel Hobby caps crons at once
+a day, and the price guide is rebuilt nightly, so daily is the ceiling worth
+having either way.
+
 **The tab bar's slots fit the screen they are on (ADR-0050, FB-0011,** workspace
 `tegucigalpa`**).** Fifth report against `CardsTabBar`, third described as a
 missing margin, and the first one measured before anything was changed. The
