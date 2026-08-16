@@ -30,6 +30,7 @@ import { copiesHeld } from "./cards-stats";
 import { priceOf, holoPriceOf, shownPrice } from "./price-basis.mjs";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
+import type { CardPricePoint } from "./movers";
 
 /** One row of Cardmarket's public price guide, as much of it as is read. */
 export type GuideRow = {
@@ -67,6 +68,46 @@ export type ProductIds = Record<string, number | null>;
  * script needs the filter because it prices a 2024 guide against a collection
  * that has grown since.
  */
+/**
+ * Every card's price on this day, for the cards this collection actually holds.
+ *
+ * Separate from snapshotOf() because it answers a different question and is
+ * written to a different table: this is about cards, that is about a person.
+ * Deduped on tcgId — two people, or two printings, are one card and one price.
+ *
+ * Only cards that are held: pricing the whole catalogue weekly would be a
+ * hundred thousand rows a week to answer questions about sixteen hundred cards.
+ */
+export function cardPricesOf(
+  sets: CardSet[],
+  guide: PriceGuide,
+  ids: ProductIds,
+): CardPricePoint[] {
+  const byProduct = new Map(guide.priceGuides.map((r) => [r.idProduct, r]));
+  const date = guide.createdAt.slice(0, 10);
+  const seen = new Map<string, CardPricePoint>();
+
+  for (const set of sets) {
+    for (const card of set.cards) {
+      if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
+      const product = ids[card.tcgId];
+      const row = product == null ? undefined : byProduct.get(product);
+      if (!row) continue;
+      const normal = priceOf(row);
+      const foil = holoPriceOf(row);
+      // A card Cardmarket published nothing for is not a reading of zero.
+      if (!normal?.market && !foil?.market) continue;
+      seen.set(card.tcgId, {
+        tcgId: card.tcgId,
+        date,
+        market: normal?.market ?? null,
+        holo: foil?.market ?? null,
+      });
+    }
+  }
+  return [...seen.values()];
+}
+
 export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds): ValueSnapshot {
   const byProduct = new Map(guide.priceGuides.map((r) => [r.idProduct, r]));
 

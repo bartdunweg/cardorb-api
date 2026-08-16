@@ -23,6 +23,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isFinish, type CardDraft, type CardFields, type CardPatch, type CollectionRow } from "../core/collection-row";
 import type { ValueSnapshot } from "../core/value-snapshot";
+import type { CardPricePoint } from "../core/movers";
 
 /** The row as the table has it, before it is turned into the shape above. */
 type CardRecord = {
@@ -249,6 +250,78 @@ export async function writeValueSnapshot(
     { onConflict: "user_id,snapshot_date" },
   );
   if (error) throw new Error(`Writing a snapshot failed: ${error.message}`);
+}
+
+/** One dated price for one card, as the table has it. */
+type PriceRecord = {
+  tcg_id: string;
+  snapshot_date: string;
+  market_cents: number | null;
+  holo_cents: number | null;
+};
+
+/**
+ * Every reading for these cards since a date, oldest first.
+ *
+ * Chunked over the ids because a URL has a length and a collection has sixteen
+ * hundred cards: PostgREST takes `in.(…)` as a query parameter, and one list of
+ * that size is a request nothing will accept. Two hundred at a time keeps each
+ * URL well inside any limit and costs eight requests for a whole binder.
+ *
+ * No user_id, and here that is not an omission to be justified — see the
+ * 20260816220000 migration. A price is a fact about a card.
+ */
+export async function listCardPrices(
+  db: SupabaseClient,
+  tcgIds: string[],
+  since: string,
+): Promise<CardPricePoint[]> {
+  const out: CardPricePoint[] = [];
+  for (let i = 0; i < tcgIds.length; i += 200) {
+    const chunk = tcgIds.slice(i, i + 200);
+    const { data, error } = await db
+      .from("card_prices")
+      .select("tcg_id,snapshot_date,market_cents,holo_cents")
+      .in("tcg_id", chunk)
+      .gte("snapshot_date", since)
+      .order("snapshot_date", { ascending: true });
+    if (error) throw new Error(`Reading card prices failed: ${error.message}`);
+    for (const r of (data ?? []) as PriceRecord[]) {
+      out.push({
+        tcgId: r.tcg_id,
+        date: r.snapshot_date,
+        market: r.market_cents == null ? null : r.market_cents / 100,
+        holo: r.holo_cents == null ? null : r.holo_cents / 100,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * A week's prices, written in one go.
+ *
+ * Chunked for body size rather than URL length, the same reason createRows()
+ * chunks. Upserted on the primary key so a re-run corrects the day instead of
+ * being refused.
+ */
+export async function writeCardPrices(
+  db: SupabaseClient,
+  points: CardPricePoint[],
+  chunk = 500,
+): Promise<void> {
+  for (let i = 0; i < points.length; i += chunk) {
+    const { error } = await db.from("card_prices").upsert(
+      points.slice(i, i + chunk).map((p) => ({
+        tcg_id: p.tcgId,
+        snapshot_date: p.date,
+        market_cents: p.market == null ? null : Math.round(p.market * 100),
+        holo_cents: p.holo == null ? null : Math.round(p.holo * 100),
+      })),
+      { onConflict: "tcg_id,snapshot_date" },
+    );
+    if (error) throw new Error(`Writing card prices failed: ${error.message}`);
+  }
 }
 
 /**

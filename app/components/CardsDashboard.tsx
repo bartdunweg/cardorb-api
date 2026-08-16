@@ -6,6 +6,7 @@ import type { CardsStats } from "../../lib/core/cards-stats";
 import { LOCALE } from "../../lib/core/config";
 import { euro } from "../../lib/core/format";
 import type { ValueSnapshot } from "../../lib/core/value-snapshot";
+import type { Mover } from "../../lib/core/movers";
 
 /**
  * The collection at a glance, and where /cards opens.
@@ -27,9 +28,11 @@ import type { ValueSnapshot } from "../../lib/core/value-snapshot";
 export default function CardsDashboard({
   stats,
   snapshots,
+  movers = { up: [], down: [] },
 }: {
   stats: CardsStats;
   snapshots: ValueSnapshot[];
+  movers?: { up: Mover[]; down: Mover[] };
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -84,6 +87,8 @@ export default function CardsDashboard({
           of them. Renders nothing until this account has two readings, which
           for every account but a snapshotted one is always. */}
       <CollectionValueCard snapshots={snapshots} />
+
+      <Movers up={movers.up} down={movers.down} />
 
       {stats.top.length > 0 && (
         <Card className="flex flex-col gap-2">
@@ -239,6 +244,76 @@ function Kpi({ label, value, note }: { label: string; value: string; note?: stri
     </li>
   );
 }
+
+/**
+ * What moved, both ways, since the earliest reading each card has.
+ *
+ * Under the chart because it answers the question the chart raises: the line
+ * says the collection is up, this says which cards did it. Renders nothing
+ * until there are two weeks of readings, which for a new account is a month —
+ * the same rule as the chart, and for the same reason. One reading is not a
+ * movement.
+ *
+ * Risers and fallers side by side rather than one list sorted through zero. A
+ * collection usually has both, and a single list would bury whichever direction
+ * was smaller that week under the other.
+ */
+function Movers({ up, down }: { up: Mover[]; down: Mover[] }) {
+  if (!up.length && !down.length) return null;
+  return (
+    <div className="grid gap-x-6 gap-y-8 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
+      <MoverList title="Gone up" rows={up} />
+      <MoverList title="Gone down" rows={down} />
+    </div>
+  );
+}
+
+function MoverList({ title, rows }: { title: string; rows: Mover[] }) {
+  if (!rows.length) return null;
+  const span = rows[0]!;
+  return (
+    <Card className="flex flex-col gap-2">
+      <h2 className={cardsDashTitleClassName}>{title}</h2>
+      <p className={cardsDashSubClassName}>
+        {/* The window is stated rather than assumed: each card is compared
+            against its own earliest reading, and a card added last month has
+            less history than one that has been here since the table did. */}
+        Since {formatMonthDay(span.from)}, by what it did to the total.
+      </p>
+      <ul className="list-none m-0 p-0 flex flex-col gap-2" role="list">
+        {rows.map((m) => (
+          <li key={m.card.key} className="flex items-baseline justify-between gap-3">
+            <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label overflow-hidden text-ellipsis whitespace-nowrap">
+              {m.card.tcgId ? (
+                <Link href={`/cards/${m.card.tcgId}`} scroll={false} className="text-label no-underline">
+                  {m.card.name}
+                </Link>
+              ) : (
+                m.card.name
+              )}{" "}
+              <span className="text-label-tertiary">{m.set}</span>
+            </span>
+            {/* Tabular here, unlike the tiles: these are a column of figures
+                meant to be compared down the page. The sign is written out
+                because a minus alone at this size is a hyphen. */}
+            <span
+              className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+                [font-variant-numeric:tabular-nums] whitespace-nowrap text-label-secondary"
+            >
+              {m.change > 0 ? "+" : "−"}
+              {euro(Math.abs(m.change))}
+              <span className="text-label-tertiary"> ({Math.abs(Math.round(m.pct * 100))}%)</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
+/** "12 May" — the month is the honest unit for a weekly series. */
+const formatMonthDay = (iso: string) =>
+  new Date(iso).toLocaleDateString(LOCALE, { day: "numeric", month: "long" });
 
 /** One distribution: a label, a bar, and its count at the tip. */
 function Bars({

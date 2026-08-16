@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { buildCollection } from "../../../../../lib/core/cards";
-import { snapshotOf, type PriceGuide, type ProductIds } from "../../../../../lib/core/snapshot";
+import { cardPricesOf, snapshotOf, type PriceGuide, type ProductIds } from "../../../../../lib/core/snapshot";
 import { valueHistoryTag } from "../../../../../lib/core/value-snapshot";
 import { revalidateTag } from "next/cache";
-import { listAccountIds, listRows, writeValueSnapshot } from "../../../../../lib/storage/postgres";
+import { listAccountIds, listRows, writeCardPrices, writeValueSnapshot } from "../../../../../lib/storage/postgres";
 import { adminClient } from "../../../../../lib/storage/supabase";
 import IDS from "../../../../../lib/core/cardmarket-ids.generated.json";
 
@@ -86,6 +86,8 @@ export async function GET(req: Request) {
   const ids = IDS as ProductIds;
   const written: { user: string; value: number; cards: number }[] = [];
   const failed: string[] = [];
+  /** Card prices, gathered across every account and written once at the end. */
+  const prices = new Map<string, ReturnType<typeof cardPricesOf>[number]>();
 
   for (const userId of await listAccountIds(db)) {
     try {
@@ -103,6 +105,11 @@ export async function GET(req: Request) {
       // exist. Here it does, so the new point is on the dashboard immediately.
       revalidateTag(valueHistoryTag(userId), { expire: 0 });
 
+      // Every held card's own price, for the movers list. Deduped across
+      // accounts as it goes: two people holding the same card is one price, and
+      // writing it twice would only make the two able to disagree.
+      for (const p of cardPricesOf(sets, guide, ids)) prices.set(p.tcgId, p);
+
       written.push({ user: userId, value: Math.round(point.value), cards: point.cards });
     } catch (err) {
       // One account's failure is not the others'. Logged with the id so it can
@@ -113,8 +120,21 @@ export async function GET(req: Request) {
     }
   }
 
+  // After the loop, not inside it: the same card held by two people is one
+  // row, and one upsert of the union beats one per account.
+  if (prices.size) {
+    try {
+      await writeCardPrices(db, [...prices.values()]);
+    } catch (err) {
+      // A failure here costs the movers list, not the value history, and the
+      // per-account snapshots above are already committed.
+      console.error("[cron] writing card prices failed:", err);
+      failed.push("card-prices");
+    }
+  }
+
   return NextResponse.json(
-    { ok: failed.length === 0, date: guide.createdAt.slice(0, 10), written: written.length, failed },
+    { ok: failed.length === 0, date: guide.createdAt.slice(0, 10), written: written.length, prices: prices.size, failed },
     { status: failed.length ? 207 : 200, headers: { "Cache-Control": "no-store" } },
   );
 }
