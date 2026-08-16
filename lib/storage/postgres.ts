@@ -21,7 +21,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CardDraft, CardFields, CardPatch, CollectionRow } from "../core/collection-row";
+import { isFinish, type CardDraft, type CardFields, type CardPatch, type CollectionRow } from "../core/collection-row";
 import type { ValueSnapshot } from "../core/value-snapshot";
 
 /** The row as the table has it, before it is turned into the shape above. */
@@ -36,6 +36,7 @@ type CardRecord = {
   owned: boolean;
   excluded: boolean;
   acquired_at: string;
+  finish: string | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -46,7 +47,7 @@ type CardRecord = {
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,quantity,condition,grade,purchase_price,purchase_date,notes,is_favorite";
+  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,quantity,condition,grade,purchase_price,purchase_date,notes,is_favorite";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -79,6 +80,10 @@ const toRow = (r: CardRecord): CollectionRow => ({
   owned: r.owned,
   excluded: r.excluded,
   acquiredAt: r.acquired_at ?? null,
+  // Whatever the column holds that is not one of the three reads as "not
+  // recorded", which is also what a row written before this column existed
+  // gives back.
+  finish: isFinish(r.finish) ? r.finish : null,
   quantity: r.quantity ?? 1,
   condition: r.condition,
   grade: r.grade,
@@ -266,6 +271,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       types: draft.types,
       owned: draft.collection,
       excluded: draft.excluded,
+      finish: draft.finish,
       quantity: draft.quantity,
       condition: draft.condition,
       grade: draft.grade,
@@ -303,6 +309,7 @@ export async function updateRow(db: SupabaseClient, id: string, patch: CardPatch
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("owned" in patch) row.owned = patch.owned;
   if ("excluded" in patch) row.excluded = patch.excluded;
+  if ("finish" in patch) row.finish = patch.finish;
   if ("quantity" in patch) row.quantity = patch.quantity;
   if ("condition" in patch) row.condition = patch.condition;
   if ("grade" in patch) row.grade = patch.grade;

@@ -33,13 +33,14 @@
 
 import { localise, mapLimit, measure, numberForms } from "./util";
 import { json, pricesFor, setCatalogue } from "./catalogue";
+import type { CardPrices } from "./tcgdex-client";
 import { speciesOf } from "./pokedex";
 import { LOCALE } from "./config";
 import { limitlessScan } from "./artwork";
 import { cardmarketUrl } from "./cardmarket";
 import { sameCard } from "./matching";
 import { ptcgScan } from "./ptcg";
-import type { CollectionRow } from "./collection-row";
+import type { CollectionRow, Finish } from "./collection-row";
 
 export { sameCard } from "./matching";
 export { highScan } from "./artwork";
@@ -67,6 +68,15 @@ export type Variant = {
   rarity: string | null;
   /** Notion's Collection checkbox: false means it is wanted, not held. */
   owned: boolean;
+  /**
+   * Which printing this copy is, or null where nobody has said.
+   *
+   * The field that makes `priceHolo` on the card usable: Cardmarket prices the
+   * foil separately, but only the copy knows whether it is one. Null is priced
+   * as normal — see the 20260816200000 migration for why that is not the same
+   * as being told it is normal.
+   */
+  finish: Finish | null;
   /**
    * How many of this printing. Null on a public payload rather than absent —
    * see forPublic(), which nulls it because how many of a card somebody has is
@@ -110,7 +120,7 @@ export type Variant = {
  * calibration comments moved with it; that file is where they are now.
  */
 import { priceOf } from "./price-basis.mjs";
-export { priceOf, shownPrice } from "./price-basis.mjs";
+export { priceOf, holoPriceOf, shownPrice } from "./price-basis.mjs";
 export type { Price } from "./price-basis.mjs";
 import type { Price } from "./price-basis.mjs";
 
@@ -159,6 +169,19 @@ export type OwnedCard = {
   owned: boolean;
   /** Null when TCGdex has no match for it, or no price for the match. */
   price: Price | null;
+  /**
+   * The same card's foil printing, where Cardmarket prices one separately.
+   *
+   * A second price on one card rather than a second card, because that is how
+   * Cardmarket files it: one idProduct, two sets of figures. Null for the 865
+   * of this collection's 1,526 products that have no foil listing at all — and
+   * null rather than zero, which is what the feeds actually publish and what
+   * would otherwise value a reverse holo at nothing.
+   *
+   * Which of the two a copy is worth is a question about the copy, so it is
+   * answered per variant. See variantPrice() below.
+   */
+  priceHolo: Price | null;
   /**
    * TCGdex's id for the printing this row matched ("sv03-125"), or null when
    * nothing matched. It is the only stable, URL-safe handle a card has, because `key`
@@ -258,6 +281,27 @@ export function cardNeighbours(
  * together would mean the owner's page could not have the second without the
  * first.
  */
+/**
+ * What one copy of this printing is worth.
+ *
+ * The foil price where the copy is a foil and Cardmarket publishes one, the
+ * normal price otherwise. Both fallbacks matter and they are different
+ * failures: a copy nobody has classified is priced as normal because that is
+ * the commoner printing and a guess has to go somewhere, while a reverse holo
+ * of a card with no foil listing is priced as normal because Cardmarket does
+ * not distinguish it — 865 of this collection's 1,526 products are in that
+ * position.
+ *
+ * Per variant rather than per card, which is the whole point: a card held
+ * normally and again as a reverse holo is one OwnedCard whose two copies are
+ * worth different amounts, and valuing both at the card's price was the
+ * approximation this replaces.
+ */
+export function variantPrice(card: OwnedCard, variant: Variant): Price | null {
+  const foil = variant.finish === "reverse-holo" || variant.finish === "holo";
+  return (foil && card.priceHolo) || card.price;
+}
+
 export function forGrid(sets: CardSet[]): CardSet[] {
   return sets.map((set) => ({
     ...set,
@@ -308,10 +352,16 @@ export function forPublic(sets: CardSet[]): CardSet[] {
     cards: set.cards.map((card) => ({
       ...card,
       price: null,
+      priceHolo: null,
       variants: card.variants.map((v) => ({
         rarity: v.rarity,
         owned: v.owned,
         id: null,
+        // Not published. It is a fact about somebody's copy rather than about
+        // the card, it is the key to a price nobody public is shown, and the
+        // allow-list here is meant to be argued past rather than added to by
+        // habit.
+        finish: null,
         quantity: null,
         condition: null,
         grade: null,
@@ -544,6 +594,7 @@ export async function buildCollection(
         // the merge below can build one Variant per row. See Variant's own
         // comment for why these travel this far.
         id: row.id,
+        finish: row.finish,
         quantity: row.quantity,
         condition: row.condition,
         grade: row.grade,
@@ -565,9 +616,21 @@ export async function buildCollection(
     // card, exactly as before. With it on, this list is usually empty.
     const wanted = [...new Set(printings.map((p) => p.tcgId).filter(Boolean))] as string[];
     const missing = prices ? wanted.filter((id) => !(id in cat.prices)) : [];
-    const fetched = missing.length ? await pricesFor(missing) : new Map<string, Price>();
+    const fetched = missing.length ? await pricesFor(missing) : new Map<string, CardPrices>();
     const priceOfId = (id: string | null) =>
-      (prices && id && (fetched.get(id) ?? cat.prices[id])) || null;
+      (prices && id && (fetched.get(id)?.price ?? cat.prices[id])) || null;
+    /**
+     * The foil price, where the fetch found one.
+     *
+     * Only from the fetch, never from cat.prices: the set catalogue pre-prices
+     * a whole set into a Record<string, Price> and has no second slot, so a
+     * pre-priced card has no foil figure and falls back to the normal one.
+     * That is invisible today — pre-pricing ships off (CATALOGUE_SET_PRICING_MAX
+     * defaults to 0) — and is the reason this is a lookup rather than a field
+     * on that Record: widening the catalogue's shape is a bigger change than
+     * the one this is part of, and it would want its own cache version bump.
+     */
+    const holoOfId = (id: string | null) => (prices && id && fetched.get(id)?.holo) || null;
 
     // Holding a card normally and again as a reverse holo is one card with two
     // printings, not two cards. 317 of them in this collection, and shown twice
@@ -587,6 +650,7 @@ export async function buildCollection(
         id: p.id,
         rarity: p.rarity,
         owned: p.owned,
+        finish: p.finish,
         quantity: p.quantity,
         condition: p.condition,
         grade: p.grade,
@@ -606,6 +670,7 @@ export async function buildCollection(
         // its rows TCGdex matched is the one that knows what it is worth.
         existing.image ??= p.image;
         existing.price ??= priceOfId(p.tcgId);
+        existing.priceHolo ??= holoOfId(p.tcgId);
         existing.tcgId ??= p.tcgId;
         continue;
       }
@@ -620,6 +685,7 @@ export async function buildCollection(
         imageSize: p.imageSize,
         speciesId: p.speciesId,
         price: priceOfId(p.tcgId),
+        priceHolo: holoOfId(p.tcgId),
         tcgId: p.tcgId,
         variants: [variant],
         owned: p.owned,

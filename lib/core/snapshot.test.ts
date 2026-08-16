@@ -15,6 +15,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   id: "row-1",
   rarity: null,
   owned: true,
+  finish: null,
   quantity: 1,
   condition: null,
   grade: null,
@@ -44,6 +45,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   // the source. If a test passes because a price leaked in here, it is testing
   // the wrong path.
   price: null,
+  priceHolo: null,
   tcgId: "sv03-125",
   ...over,
 });

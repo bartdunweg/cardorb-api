@@ -9,7 +9,7 @@
  * This file only ever runs inside a call that one of those two already cached.
  */
 import { DAY, mapLimit } from "./util";
-import { priceOf } from "./price-basis.mjs";
+import { priceOf, holoPriceOf } from "./price-basis.mjs";
 import type { Price } from "./price-basis.mjs";
 
 export type TcgSet = { id: string; name: string };
@@ -84,18 +84,36 @@ export async function fetchSet(id: string): Promise<TcgSetDetail | null> {
  * because the second one hits the HTTP cache rather than TCGdex. Pre-pricing a
  * whole set is an optimisation on top of that, not a replacement for it.
  */
-export async function pricesFor(ids: string[]): Promise<Map<string, Price>> {
-  const out = new Map<string, Price>();
+/**
+ * Both printings, because Cardmarket prices both and TCGdex passes both on.
+ *
+ * `holo` is the foil — the reverse holo, and the holo rare on older sets —
+ * which arrives in the same object under `-holo` keys and is null far more
+ * often than not. holoPriceOf() is what turns the zeros those fields carry into
+ * null; see its comment for why reading them raw would value a reverse holo at
+ * nothing.
+ */
+export type CardPrices = { price: Price; holo: Price | null };
+
+export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>> {
+  const out = new Map<string, CardPrices>();
   await mapLimit(ids, 8, async (id) => {
     const card = (await json(`https://api.tcgdex.net/v2/en/cards/${id}`, `card ${id}`)) as {
       pricing?: {
-        cardmarket?: { low?: number | null; trend?: number | null; avg30?: number | null };
+        cardmarket?: {
+          low?: number | null;
+          trend?: number | null;
+          avg30?: number | null;
+          "low-holo"?: number | null;
+          "trend-holo"?: number | null;
+          "avg30-holo"?: number | null;
+        };
       };
     } | null;
     const cm = card?.pricing?.cardmarket;
     if (!cm) return;
     const price = priceOf(cm);
-    if (price) out.set(id, price);
+    if (price) out.set(id, { price, holo: holoPriceOf(cm) });
   });
   return out;
 }

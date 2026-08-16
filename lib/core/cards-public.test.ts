@@ -22,6 +22,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   id: "row-1",
   rarity: "Illustration Rare",
   owned: true,
+  finish: "reverse-holo",
   quantity: 3,
   condition: "Near Mint",
   grade: "PSA 10",
@@ -47,6 +48,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   variants: [variant()],
   owned: true,
   price: PRICE,
+  priceHolo: PRICE,
   tcgId: "sv03-125",
   ...over,
 });

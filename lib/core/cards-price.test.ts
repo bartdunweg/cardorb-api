@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { priceOf, shownPrice } from "./cards";
+import { holoPriceOf, priceOf, shownPrice } from "./cards";
 
 /** label, Cardmarket's own low/trend/avg30, and the English Near Mint "From" on the page. */
 const MEASURED = [
@@ -99,5 +99,31 @@ describe("priceOf", () => {
   // A card TCGdex knows but has never seen listed is unknown, not free.
   it("is null where Cardmarket has published nothing", () => {
     expect(priceOf({ low: null, trend: null, avg30: null })).toBeNull();
+  });
+});
+
+describe("holoPriceOf", () => {
+  it("reads the foil fields, not the plain ones", () => {
+    const p = holoPriceOf({ low: 1, trend: 2, avg30: 2, "low-holo": 10, "trend-holo": 20, "avg30-holo": 20 });
+    expect(p?.market).toBe(20);
+    expect(p?.low).toBe(10);
+  });
+
+  it("treats zero as no price rather than as free", () => {
+    // The trap this function exists for. 865 of this collection's 1,526
+    // products answer `trend-holo: 0`, which is Cardmarket saying it has no
+    // foil listing. Read literally it values a reverse holo at nothing, which
+    // is worse than the approximation it was meant to replace.
+    expect(holoPriceOf({ "low-holo": 0, "trend-holo": 0, "avg30-holo": 0 })).toBeNull();
+  });
+
+  it("is null where the foil fields are absent altogether", () => {
+    expect(holoPriceOf({ low: 5, trend: 5, avg30: 5 })).toBeNull();
+  });
+
+  it("ignores a zero on one field without discarding a real price on another", () => {
+    const p = holoPriceOf({ "low-holo": 0, "trend-holo": 12, "avg30-holo": 12 });
+    expect(p?.market).toBe(12);
+    expect(p?.low).toBeNull();
   });
 });

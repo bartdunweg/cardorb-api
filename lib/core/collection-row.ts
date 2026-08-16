@@ -16,6 +16,21 @@
  */
 
 /**
+ * Which printing a copy is.
+ *
+ * Three values and not more: this is the distinction Cardmarket prices, which
+ * publishes one plain set of figures and one `-holo` set per product. "holo"
+ * covers the older Holo Rare and "reverse-holo" the modern reverse — they share
+ * a price, so they share a lookup, but they are different things to own and a
+ * collector would not thank us for merging them into "foil".
+ */
+export const FINISHES = ["normal", "reverse-holo", "holo"] as const;
+export type Finish = (typeof FINISHES)[number];
+
+export const isFinish = (v: unknown): v is Finish =>
+  typeof v === "string" && (FINISHES as readonly string[]).includes(v);
+
+/**
  * The eight facts about a card that are actually somebody's.
  *
  * Worth saying how short this list is, because it is the whole argument for the
@@ -56,6 +71,19 @@ export type CollectionRow = {
    * knowing the difference.
    */
   acquiredAt: string | null;
+  /**
+   * Which printing this copy is: "normal", "reverse-holo", "holo", or null.
+   *
+   * Null is "nobody has said", not "normal", and the two are kept apart on
+   * purpose — see the 20260816200000 migration. It is priced as normal either
+   * way; what null buys is that a later import can fill blanks without
+   * overwriting a judgement somebody made.
+   *
+   * This used to live in `rarity`, which the ADR-0030 backfill replaced with
+   * TCGdex's vocabulary. That vocabulary describes the card; this describes the
+   * copy, and the two were never the same question.
+   */
+  finish: Finish | null;
   /**
    * The nine — not eight — inventory facts added for per-printing detail
    * (2026-08-14 card-inventory-fields migration): quantity 1, isFavorite
@@ -106,6 +134,8 @@ export type CardDraft = {
   collection: boolean;
   /** Kept out of the "latest pull" on bartdunweg.com. */
   excluded: boolean;
+  /** Which printing this copy is, or null where the person adding it did not say. */
+  finish: Finish | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -186,6 +216,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     types = [],
     collection = true,
     excluded = false,
+    finish = null,
     quantity = 1,
     condition = null,
     grade = null,
@@ -213,6 +244,11 @@ export function validateCardDraft(body: unknown): CardValidation {
       .slice(0, MAX.types),
     collection: collection !== false,
     excluded: excluded === true,
+    // Anything that is not one of the three is "not recorded" rather than an
+    // error: this arrives from a form, an import and a future Notion sync, and
+    // refusing a card because its finish was spelled oddly would lose the card
+    // to save a field that is allowed to be empty.
+    finish: isFinish(finish) ? finish : null,
     quantity: Number.isFinite(Number(quantity)) ? Math.trunc(Number(quantity)) : 1,
     condition: optionalText(condition),
     grade: optionalText(grade),
@@ -273,6 +309,7 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     types: draft.types,
     owned: draft.collection,
     excluded: draft.excluded,
+    finish: draft.finish,
     quantity: draft.quantity,
     condition: draft.condition,
     grade: draft.grade,
@@ -294,6 +331,8 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
 export type CardPatch = Partial<{
   owned: boolean;
   excluded: boolean;
+  /** null clears it back to "not recorded", which is a thing somebody may mean. */
+  finish: Finish | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -320,6 +359,16 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
   if ("owned" in b) {
     if (typeof b.owned !== "boolean") return { kind: "invalid", error: "owned must be true or false." };
     patch.owned = b.owned;
+  }
+  if ("finish" in b) {
+    // null is allowed and meaningful: it puts the row back to "nobody has
+    // said", which is not the same as calling it normal. Anything else that is
+    // not one of the three is refused here, unlike on a draft — a PATCH is
+    // somebody editing one field on purpose, so a typo should be told rather
+    // than quietly turned into a blank.
+    if (b.finish !== null && !isFinish(b.finish))
+      return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
+    patch.finish = b.finish as Finish | null;
   }
   if ("excluded" in b) {
     if (typeof b.excluded !== "boolean")
