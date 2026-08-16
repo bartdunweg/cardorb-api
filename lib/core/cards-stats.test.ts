@@ -104,13 +104,15 @@ describe("heldValue with a foil printing", () => {
     expect(s.value).toBe(30);
   });
 
-  it("treats a holo rare the same way as a reverse holo", () => {
-    // Cardmarket files both under the one -holo price, which is why Finish has
-    // three values and the lookup has two.
+  it("prices a plain holo from the plain fields, not the foil ones", () => {
+    // Measured, not assumed. On a card that exists only as a holo, Cardmarket's
+    // plain fields already describe the holo — there is no other printing — and
+    // its -holo fields are a thinner market at 0.47x. Treating a holo like a
+    // reverse holo dropped this collection by €2,488.
     const s = getCardsStats([
       set("A", [card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: "holo" })] })]),
     ]);
-    expect(s.value).toBe(20);
+    expect(s.value).toBe(10);
   });
 
   it("falls back to the normal price where Cardmarket has no foil listing", () => {
