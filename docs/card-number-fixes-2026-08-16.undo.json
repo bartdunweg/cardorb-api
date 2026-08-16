@@ -1,0 +1,110 @@
+[
+  {
+    "id": "fbb62dd3-ab12-484e-8321-66b2da58665a",
+    "from": {
+      "number": "170",
+      "name": "Hydrapple"
+    },
+    "to": {
+      "number": "167",
+      "name": "Hydrapple ex"
+    },
+    "why": "#167 is Special illustration rare, exact de rariteit die genoteerd stond"
+  },
+  {
+    "id": "c1d6469e-967b-4b45-a478-4ae08ac6898e",
+    "from": {
+      "number": "178",
+      "name": "Regidrago"
+    },
+    "to": {
+      "number": "184",
+      "name": "Regidrago V"
+    },
+    "why": "hoogste niet-VSTAR; #183/#184 zijn de alternate arts (Ultra Rare)"
+  },
+  {
+    "id": "6b3a34b3-3d79-4cd9-81e9-0723e1fad5d4",
+    "from": {
+      "number": "172",
+      "name": "Iono’s Lillbolt"
+    },
+    "to": {
+      "number": "172",
+      "name": "Iono's Bellibolt ex"
+    },
+    "why": "nummer klopte al; alleen de naam was een typefout"
+  },
+  {
+    "id": "41a9e2d5-e920-4448-b45a-ef4ee0e68ad3",
+    "from": {
+      "number": "154",
+      "name": "Single Strike Urshifu"
+    },
+    "to": {
+      "number": "151",
+      "name": "Single Strike Urshifu V"
+    },
+    "why": "alternate art Ultra Rare; #167/#168 zijn de gouden secret rares, uitgesloten"
+  },
+  {
+    "id": "8f16bad8-1e3c-41b8-907a-e72b74a23cbe",
+    "from": {
+      "number": "TG12",
+      "name": "Centiskorch"
+    },
+    "to": {
+      "number": "TG14",
+      "name": "Centiskorch V"
+    },
+    "why": "geen VMAX in deze lijst, dus de V"
+  },
+  {
+    "id": "e668d6e5-e21b-423d-8593-18b7f805c5ec",
+    "from": {
+      "number": "TG15",
+      "name": "Orbeetle"
+    },
+    "to": {
+      "number": "TG12",
+      "name": "Orbeetle V"
+    },
+    "why": "geen VMAX in deze lijst, dus de V"
+  },
+  {
+    "id": "ac014bcd-bf2f-466d-9fb3-ddaf1e9a3c43",
+    "from": {
+      "number": "TG17",
+      "name": "Eternatus"
+    },
+    "to": {
+      "number": "TG21",
+      "name": "Eternatus V"
+    },
+    "why": "geen VMAX in deze lijst, dus de V"
+  },
+  {
+    "id": "f5c1f7c6-9dbd-4183-a1fe-24a073b6574b",
+    "from": {
+      "number": "TG14",
+      "name": "Corviknight"
+    },
+    "to": {
+      "number": "TG18",
+      "name": "Corviknight V"
+    },
+    "why": "geen VMAX in deze lijst, dus de V"
+  },
+  {
+    "id": "f1cd0741-a079-4d37-8d46-ba74331cdf5c",
+    "from": {
+      "number": "TG12",
+      "name": "Blaziken"
+    },
+    "to": {
+      "number": "TG14",
+      "name": "Blaziken V"
+    },
+    "why": "geen VMAX in deze lijst, dus de V"
+  }
+]

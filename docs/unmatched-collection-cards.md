@@ -1,5 +1,35 @@
 # Held cards the catalogue does not match
 
+> **Eight rows were corrected on 16 August 2026** — see
+> `card-number-fixes-2026-08-16.undo.json` beside this file for the before and
+> after of each. Bart settled the three things the API could not: these are
+> illustration/alternate-art cards, not gold or rainbow secret rares, and none of
+> them is a VMAX. That reduced every remaining candidate list to one card.
+>
+> | set | was | now |
+> | --- | --- | --- |
+> | Stellar Crown | #170 Hydrapple | **#167 Hydrapple ex** (Special illustration rare) |
+> | Silver Tempest | #178 Regidrago | **#184 Regidrago V** (alternate art) |
+> | Battle Styles | #154 Single Strike Urshifu | **#151 Single Strike Urshifu V** (alt art, not the #167/#168 golds) |
+> | Journey Together | #172 Iono's Lillbolt | **#172 Iono's Bellibolt ex** (number was already right) |
+> | Lost Origin | #TG12 Centiskorch | **#TG14 Centiskorch V** |
+> | Lost Origin | #TG15 Orbeetle | **#TG12 Orbeetle V** |
+> | Lost Origin | #TG17 Eternatus | **#TG21 Eternatus V** |
+> | Silver Tempest | #TG14 Corviknight | **#TG18 Corviknight V** |
+> | Silver Tempest | #TG12 Blaziken | **#TG14 Blaziken V** |
+>
+> That last one was not in the broken list: it *matched*, to Kricketune V, which
+> is why it never surfaced. A wrong match is worse than no match — it prices your
+> card as somebody else's — and it was found only by counting TG rows rather than
+> unmatched ones. Worth remembering as a way to look.
+>
+> **One near-miss, recorded because it nearly went wrong.** The first pass matched
+> rows by set and number alone, and Silver Tempest #TG12 held *two* rows: the
+> mis-numbered Blaziken and a perfectly correct Kricketune V. Both were rewritten.
+> The Kricketune was restored from the journal within the minute. Match on the
+> name as well as the number when rewriting rows.
+
+
 A worklist, not a decision. 13 of the 1,610 cards in the binder resolve to no
 TCGdex id, which means no scan, no price and no entry in a value snapshot. Every
 one was checked against TCGdex by set and number on 16 August 2026, so the
