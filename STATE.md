@@ -27,23 +27,51 @@ counted per-variant `quantity`**: a card held three times was worth one of it, i
 the tile and in the series both. `copiesHeld()` in `lib/core/cards-stats.ts` is
 the one definition; "Priciest cards" deliberately still ranks per single copy.
 
-Three things are **not done and need live credentials**:
+**This is applied and seeded.** `supabase db push` ran against
+`fprjroupecdhosfdrqhv` on 2026-08-16, and the snapshot script wrote two points
+for `bartdunweg` (`3fe9b080`):
 
-1. **Nothing has been written to the new table.** Run
-   `node scripts/snapshot-collection-value.mjs --user <owner-uuid> --seed`
-   against a running site. Until then the owner's dashboard has no chart either.
-2. **`lib/core/collection-value.generated.json` is still in the tree, imported by
-   nothing, and should be deleted — but only after that seed run reproduces its
-   three points.** Both historical points come from Internet Archive captures of
-   Cardmarket's price guide; those are single points of failure and that file is
-   currently the only other copy of December 2024. Expect `value` to come out
-   *higher* than the old figures now that copies count, while
-   `cards`/`priced`/`unpriced` should line up.
-3. **The RLS check has not been made.** Confirm a second account reads zero rows
-   from `collection_value_snapshots` while the owner reads theirs, and that
-   `/dashboard` on a fresh account shows the tiles and both bar charts with **no**
-   "Value over time" card and no gap where it was. That is the whole bug, and it
-   needs two real sessions — the standing verification gap in this repo.
+```
+2024-12-30  €16,134.81  1,188 copies, 993 priced,   33 unpriced
+2026-08-16  €41,615.97  1,921 copies, 1,553 priced, 44 unpriced
+```
+
+Both higher than the old JSON file's figures (€15,634 and €39,887), which is the
+copies change landing, and `cards` is a copy count now rather than a card count.
+RLS confirmed from outside the app: an anonymous PostgREST client reads **0 rows**
+and its insert is refused **401**.
+
+**Running the script found two more bugs in it, both fixed, and one of them was
+the dangerous kind.** `fromPostgres()` did a single unpaged select, so PostgREST's
+thousand-row cap handed it 1,000 of 1,643 rows — folding to 886 distinct cards —
+and it would have written that down as what the binder is worth. Exactly the
+failure `listRows()` in `lib/storage/postgres.ts` has an essay about, in a file
+that had not copied the lesson. It pages now, with an explicit count, and throws
+on a short read. Separately, the upsert crashed on `ON CONFLICT DO UPDATE command
+cannot affect row a second time`: two guides can report the same date, and the
+`byDate` Map that used to dedupe them was lost in the move from a JSON file to
+rows. Restored, and it now warns rather than silently keeping the last one.
+
+**Two of three historical points, not three.** `web.archive.org` answered 503 on
+the first run and, on the second, served the *December 2024* capture when asked
+for the June 2026 one — so that guide's own `createdAt` was not the date
+requested and both collapsed onto `2024-12-30`. The script survives this now
+(three tries, then a loud skip) instead of aborting.
+
+Consequence: **`lib/core/collection-value.generated.json` must NOT be deleted
+yet.** It is imported by nothing, but it is still the only copy anywhere of the
+2026-06-17 reading. Re-run `--seed` on another day; if the archive serves the
+right capture, that point lands and the file can go. Do not hand-insert it from
+the file — its value was computed before copies counted, so it would draw as a
+dip between two points that were not.
+
+Still not seen in a browser: `/dashboard` with the chart, and a fresh second
+account confirming there is no chart and no gap where it was. Needs two real
+sessions — the standing verification gap in this repo.
+
+Also worth knowing: **the snapshot script needs Node 22+.** On Node 20
+`@supabase/supabase-js` throws "native WebSocket not found" before it does
+anything. `nvm use 24`.
 
 Known and accepted: the deprecated `x-cards-key` path answers
 `{"snapshots":[]}` (a passcode is not a session, so `auth.uid()` is null and the
@@ -983,12 +1011,12 @@ picked up the same complaint within an hour of each other.
 
 ## Next session
 
-- **Seed the value snapshots, then delete
-  `lib/core/collection-value.generated.json`.** The three steps are spelled out
-  under "Now" (ADR-0044). Nothing has been written to
-  `collection_value_snapshots` yet, so *every* dashboard currently draws no
-  chart — including the owner's. This is the one item that leaves a shipped
-  feature blank until it is done.
+- **Re-run `--seed` on another day to recover the 2026-06-17 point**, then delete
+  `lib/core/collection-value.generated.json`. The migration and the first two
+  points are already in (see "Now"); this is only about the middle reading, which
+  the Internet Archive refused to serve correctly on 2026-08-16. Until it lands,
+  that file is the only copy of it — do not delete it, and do not hand-insert the
+  value from it (computed before copies counted).
 - **`/dashboard` has not been seen with the new value figure.** Collection value
   now multiplies by copies held, so the number moves up by whatever the
   duplicates are worth. Worth one look that it still fits its tile — it is

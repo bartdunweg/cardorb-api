@@ -205,14 +205,44 @@ function adminDb() {
  * working the same way whether --token was given or not.
  */
 async function fromPostgres(db) {
-  const { data, error } = await db
-    .from("cards")
-    .select("set_name,number,name,owned,quantity,acquired_at")
-    .eq("user_id", userId);
-  if (error) throw new Error(`Postgres query: ${error.message}`);
+  /**
+   * Paged, and not for tidiness.
+   *
+   * PostgREST caps a response at a thousand rows and says so only by handing
+   * over a thousand rows. This function used to ask for the lot in one go, and
+   * on a 1,622 card collection it silently received 1,000 of them — which folded
+   * to 886 distinct cards and would have been written down as what the binder was
+   * worth. A snapshot that is quietly missing a third of the collection is worse
+   * than no snapshot: it draws as the day the owner sold half their cards.
+   *
+   * The count is asked for explicitly and the loop runs until it has that many,
+   * rather than stopping when a page comes back short — the same rule, and the
+   * same reasoning, as listRows() in lib/storage/postgres.ts, which has the whole
+   * story on its own PAGE constant. Ordered by id so the pages are disjoint:
+   * paging an unstable order lets the database return one row twice and another
+   * never.
+   */
+  const PAGE = 1000;
+  const rows = [];
+  let total = Number.POSITIVE_INFINITY;
+  for (let page = 0; page < 100 && rows.length < total; page++) {
+    const { data, error, count } = await db
+      .from("cards")
+      .select("set_name,number,name,owned,quantity,acquired_at", page === 0 ? { count: "exact" } : {})
+      .eq("user_id", userId)
+      .order("id", { ascending: true })
+      .range(page * PAGE, page * PAGE + PAGE - 1);
+    if (error) throw new Error(`Postgres query: ${error.message}`);
+    if (page === 0 && typeof count === "number") total = count;
+    if (!data.length) break;
+    rows.push(...data);
+  }
+  if (Number.isFinite(total) && rows.length < total) {
+    throw new Error(`Read ${rows.length} of ${total} rows: the collection came back truncated.`);
+  }
 
   const cards = new Map();
-  for (const row of data) {
+  for (const row of rows) {
     if (!row.set_name) continue;
     const key = `${row.set_name}-${row.number || row.name}`;
     if (!cards.has(key)) cards.set(key, []);
@@ -315,6 +345,34 @@ const guideFrom = async (url, what) => {
 };
 
 /**
+ * The same, for the archived captures, which are allowed to be unavailable.
+ *
+ * web.archive.org answers 503 under load often enough that a single attempt is
+ * not a verdict, and today's reading should not be lost because a capture from
+ * 2024 is briefly out of reach. So: three tries with a growing wait, then give
+ * up on that one point and carry on with the rest.
+ *
+ * Loudly, though. A missing historical point is a real loss — there is no daily
+ * archive of this file anywhere, so these two captures are all the past there
+ * is — and a run that quietly wrote one point instead of three would look
+ * exactly like a successful one.
+ */
+async function archivedGuide(url, what) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      return await guideFrom(url, attempt === 1 ? what : `${what} (try ${attempt})`);
+    } catch (err) {
+      if (attempt === 3) {
+        console.warn(`\n  !! ${what} is unavailable (${err.message}).`);
+        console.warn(`     That point is NOT being recorded. Re-run --seed later to add it.\n`);
+        return null;
+      }
+      await new Promise((r) => setTimeout(r, attempt * 5000));
+    }
+  }
+}
+
+/**
  * The points, into the table, one row per person per day.
  *
  * Upserted on (user_id, snapshot_date) so running this twice in a morning
@@ -349,10 +407,41 @@ const ids = await cardmarketIds([...cards.values()]);
 
 const guides = [await guideFrom(GUIDE, "Cardmarket price guide, today")];
 if (SEED) {
-  for (const url of ARCHIVED) guides.push(await guideFrom(url, `archived: ${url.slice(28, 42)}`));
+  for (const url of ARCHIVED) {
+    const guide = await archivedGuide(url, `archived: ${url.slice(28, 42)}`);
+    if (guide) guides.push(guide);
+  }
 }
 
-const points = guides.map((guide) => valueAt(guide, cards, ids, acquisitions));
+/**
+ * One point per date, because two guides can claim the same day.
+ *
+ * The upsert below targets (user_id, snapshot_date), and Postgres refuses a
+ * batch that hits the same conflict target twice — "ON CONFLICT DO UPDATE
+ * command cannot affect row a second time" — so this is load-bearing rather
+ * than tidy. The version of this that wrote a JSON file had the same Map for
+ * the same reason; it was lost in the move to rows and the database caught it.
+ *
+ * It happens for a real reason worth seeing rather than smoothing over: asked
+ * for a capture it cannot serve, web.archive.org will hand back a *different*
+ * one, and the guide's own createdAt is then not the date that was asked for.
+ * Twice through this loop with one date means one of the two archived readings
+ * is not what it claims, so say so instead of quietly keeping whichever came
+ * last.
+ */
+const byDate = new Map();
+for (const guide of guides) {
+  const point = valueAt(guide, cards, ids, acquisitions);
+  if (byDate.has(point.date)) {
+    console.warn(
+      `  !! two guides both report ${point.date} — the archive served a capture other than the one asked for.`,
+    );
+    console.warn(`     Keeping one. That other point is NOT recorded; re-run --seed later to try again.`);
+  }
+  byDate.set(point.date, point);
+}
+const points = [...byDate.values()];
+
 for (const p of [...points].sort((a, b) => a.date.localeCompare(b.date))) {
   console.log(
     `${p.date}  €${Math.round(p.value).toLocaleString("en-GB")}  ${p.priced} of ${p.priced + p.unpriced} cards priced, ${p.cards.toLocaleString("en-GB")} copies`,
