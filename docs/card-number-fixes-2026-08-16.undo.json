@@ -133,5 +133,18 @@
       "set_name": "Miscellaneous Promos"
     },
     "why": "TCGdex kent hem wel, alleen onder Miscellaneous Promos #001"
+  },
+  {
+    "id": "c48a3662-51ff-4114-8e61-7cbf33037739",
+    "from": {
+      "number": "223",
+      "name": "Venusaur",
+      "set_name": "XY Black Star Promos"
+    },
+    "to": {
+      "number": "XY28",
+      "name": "Venusaur EX"
+    },
+    "why": "Bart: het is de dure. XY28 = EUR 128,31, XY123 = EUR 9,24"
   }
 ]
