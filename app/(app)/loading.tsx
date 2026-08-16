@@ -1,4 +1,5 @@
 import {
+  tabbarAddClassName,
   tabbarClassName,
   tabbarFadeClassName,
   tabbarItemClassName,
@@ -195,43 +196,25 @@ export default function Loading() {
           here that genuinely depends on where you are going. */}
       <div className={`${tabbarFadeClassName} cards-tabbar-fade`} aria-hidden="true" />
       <nav className={`${tabbarClassName} cards-tabbar`} aria-hidden="true">
-        <div
-          className={tabbarPagesClassName}
-          /**
-           * --tab-w, which tabbarItemClassName reads for every slot's width,
-           * computed rather than left at its 104px default.
-           *
-           * The default is deliberately generous (see tabbarClasses.ts: a tight
-           * estimate clipped "Dashboard" on a real phone) and the real bar can
-           * afford it, because CardsTabBar measures the widest label on mount
-           * and writes a smaller value back. This file has no effect and no
-           * labels to measure, so it would sit at 104px forever: four slots at
-           * 104 plus the 40px circle plus the gaps needs 512px, and a 500px
-           * window gives the track 466 — the two end slots hang out of it.
-           *
-           * So: divide what is actually left between the four, and never go
-           * above the default. The 56px is the five gap-2 gaps plus the track's
-           * own p-2. min-w-[56px] on the slot floors it, and above roughly
-           * 620px the min() picks 104 and nothing here applies at all.
-           */
-          style={
-            {
-              "--tab-w":
-                "min(104px, calc((100vw - 2*var(--space-4) - var(--control-h) - 56px) / 4))",
-            } as React.CSSProperties
-          }
-        >
-          {Array.from({ length: 2 }, (_, i) => (
-            <TabSlot key={`l${i}`} />
+        {/* No --tab-w here any more. This used to hand the track a
+            hand-computed slot width, because every slot was one fixed size and
+            this file had no labels to measure one from. Slots size themselves
+            to their content now (ADR-0050), so the formula is gone along with
+            the var — and good riddance: it was a second copy of the bar's
+            layout arithmetic, in a file that per ADR-0046 may only draw the
+            chrome every route shares. */}
+        <div className={tabbarPagesClassName}>
+          {LABEL_WIDTHS.slice(0, 2).map((w, i) => (
+            <TabSlot key={`l${i}`} labelWidth={w} />
           ))}
-          {/* !cursor-default on this and on every slot: both the shared class
-              and .cards-tabbar-add carry cursor:pointer for the real, pressable
-              bar, and the track sets pointer-events:auto on its children — so
-              without this the fallback's dead shapes offer a pointer to a
-              press they cannot answer. */}
-          <span className="cards-tabbar-add !cursor-default" />
-          {Array.from({ length: 2 }, (_, i) => (
-            <TabSlot key={`r${i}`} />
+          {/* !cursor-default on this and on every slot: both shared classes
+              carry cursor:pointer for the real, pressable bar, and the track
+              sets pointer-events:auto on its children — so without this the
+              fallback's dead shapes offer a pointer to a press they cannot
+              answer. */}
+          <span className={`${tabbarAddClassName} !cursor-default`} />
+          {LABEL_WIDTHS.slice(2).map((w, i) => (
+            <TabSlot key={`r${i}`} labelWidth={w} />
           ))}
         </div>
       </nav>
@@ -239,13 +222,26 @@ export default function Loading() {
   );
 }
 
+/**
+ * The four slots' label widths, in the bar's own order: Dashboard,
+ * Collection, [the add circle], Wishlist, You. Measured at --fs-tiny (11px
+ * Inter), which is what the real bar renders them at.
+ *
+ * Four identical placeholders would do while every slot was one fixed width.
+ * Now that a slot is as wide as its label (ADR-0050), identical placeholders
+ * would make the capsule a different width from the real one and it would
+ * visibly resize the moment the bar loaded — the same layout movement this
+ * file's slots already carry an icon and a label outline to avoid vertically.
+ */
+const LABEL_WIDTHS = ["w-[57px]", "w-[52px]", "w-[41px]", "w-[20px]"];
+
 /** One slot's footprint: the 20px icon and the --fs-tiny label under it that
  *  every slot carries, whether or not it is the active one. */
-function TabSlot() {
+function TabSlot({ labelWidth }: { labelWidth: string }) {
   return (
     <span className={`${tabbarItemClassName} !cursor-default`}>
       <span className="skeleton w-5 h-5 rounded-xs" />
-      <span className="skeleton w-12 h-[var(--fs-tiny)] rounded-xs" />
+      <span className={`skeleton ${labelWidth} h-[var(--fs-tiny)] rounded-xs`} />
     </span>
   );
 }

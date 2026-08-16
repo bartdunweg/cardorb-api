@@ -4,6 +4,34 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The tab bar's slots fit the screen they are on (ADR-0050, FB-0011,** workspace
+`tegucigalpa`**).** Fifth report against `CardsTabBar`, third described as a
+missing margin, and the first one measured before anything was changed. The
+active tab's pill was not short of a margin — it was drawn *outside* the
+capsule: at 360px the row of slots was 352px inside a 342px capsule, so the
+first slot started at x = −2 and the last ended at 362.
+
+Two causes, both proven by experiment and both worth knowing before touching
+this file again:
+
+1. Slots were `flex-none` at one fixed `--tab-w`, so a row that did not fit
+   overflowed out of both ends of a `justify-center` track.
+2. `min-w-max` on the track under-reserved by exactly the add circle's 40px,
+   because `.cards-tabbar-add` was `width: min(var(--control-h), 100%)` and
+   **a percentage contributes nothing to intrinsic sizing**. Giving it a plain
+   width proved this and immediately produced cause 1 in pure form: the capsule
+   became correctly 382px wide on a 360px phone and hung off both screen edges.
+
+Now: `flex-initial min-w-0` slots sized to their own labels, `min-w-0` and no
+`max-w` on the track, `--tab-w` and its measuring effect deleted, and
+`.cards-tabbar-add` moved out of `cards.css` into `tabbarAddClassName` (that
+CSS block was live and wrong; the sizing rules around it were dead and right —
+`legacy` losing to `utilities` for the fifth time, this time hiding a comment
+that described the actual bug). The pill changes width as it slides now, which
+reverses ADR-0030's fixed-width choice on Bart's explicit pick between three
+options. Verified by measurement at 320 / 360 / 375 / 390 / 800px, every tab:
+9px inset on all four sides, no overflow, labels full down to ~340px.
+
 **Card Orb has a mark on the web (ADR-0048 and ADR-0049,** workspace
 `djibouti`**).** The orb from the iPhone app's icon is now the site's mark.
 
@@ -1151,6 +1179,14 @@ picked up the same complaint within an hour of each other.
 
 ## Next session
 
+- **The tab bar's fix has not been seen in a real signed-in session.** ADR-0050's
+  numbers are real measurements against the dev build, but of the *public*
+  profile bar with the signed-in shape (four labelled slots plus the add circle)
+  injected into it by script — the same no-session gap as every item below. What
+  a human should still do: sign in on a phone, tap between all four tabs and
+  watch the pill both slide and resize in one motion, and confirm the skeleton's
+  capsule does not visibly change width when the real bar replaces it (its four
+  placeholder labels are hard-coded to the real labels' widths for exactly that).
 - **Re-run `--seed` on another day to recover the 2026-06-17 point**, then delete
   `lib/core/collection-value.generated.json`. The migration and the first two
   points are already in (see "Now"); this is only about the middle reading, which

@@ -164,74 +164,22 @@
    history entry, because on a route with no per-set URL the phone's own back
    gesture would then sometimes leave the site and sometimes close a pane. */
 
-/* The track fills the bar and the slots divide it, rather than each slot
-   sizing itself: five items at their own width overflow a 360px phone, and
-   .tabbar-item does not shrink. Divided, the bar gets narrower instead of
-   broken. */
-.cards-tabbar .tabbar-pages {
-  width: 100%;
-}
-/* Both undo layout.css, which reserves the theme toggle's footprint on either
-   side of the bar and caps the track to what is left. There is no toggle on
-   this route to reserve for. */
-@media (max-width: 640px) {
-  .cards-tabbar {
-    padding-inline: var(--space-4);
-  }
-  .cards-tabbar .tabbar-pages {
-    max-width: none;
-  }
-}
-/* .is-active restated, and only to beat layout.css, which pins the active tab
-   at 114px so the site's four labels cannot make the bar jump — stale now
-   that every tab wears its label (tabbarItemClassName's own flex-none/
-   min-w-[56px]/px-2 py-1.5 correctly beat this rule's flex/min-width/padding
-   regardless, being in the later `utilities` layer; left in place rather
-   than deleted since .tabbar-pages's full-width track division above still
-   depends on flex-basis being 0 somewhere in the cascade for the slots that
-   don't set their own). */
-.cards-tabbar .tabbar-item,
-.cards-tabbar .tabbar-item.is-active {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 0;
-}
+/* Nothing here sizes the bar any more, and that is ADR-0050. This file used
+   to divide the track between equal slots (.tabbar-pages width:100%,
+   .tabbar-item flex:1 1 0) and to give the add circle a
+   width: min(var(--control-h), 100%) so it could squeeze on a narrow phone.
 
-/* Was --color-tint (an accent, deliberately not this bar's black) precisely
-   because the selected-tab pill behind it is bg-[var(--btn-primary-bg)] —
-   the same black .btn--primary now uses everywhere else an action is
-   primary (the sidebar's add button, landing page CTAs). Changed to match
-   on explicit instruction, which does trade away the old "one ink for
-   where you are, one for what you can do" distinction — the pill and this
-   button are both black now, told apart only by position in the bar. */
-.cards-tabbar-add {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* flex: 1 1 0 (equal share with the tab slots) is why this stopped being a
-     circle: flex-basis: 0 with grow: 1 sizes a flex item by distributing the
-     row's free space, and a plain `width` on a flex item is not a
-     constraint the algorithm honours over that — so this stretched to
-     whatever equal share the bar gave it instead of the min() below.
-     flex: 0 0 auto lets width/height (both --control-h) actually decide it. */
-  flex: 0 0 auto;
-  /* min(), because below about 340px the slot is narrower than the circle and
-     a fixed width would push the bar wider than the screen. */
-  width: min(var(--control-h), 100%);
-  height: var(--control-h);
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  cursor: pointer;
-  /* Above the pill, which shares this track and is positioned into it. */
-  z-index: 1;
-}
-.cards-tabbar-add:hover {
-  opacity: 0.9;
-  box-shadow: var(--shadow-elevated);
-}
+   Every one of those rules was in the `legacy` layer and lost to the Tailwind
+   utilities that replaced them (ADR-0012/0017/0018/0028, the same fact for
+   the fifth time) — so the division they describe had not been happening for
+   some time, and the slots really were overflowing the bar exactly as the old
+   comment here warned they would. The circle's min() was worse than dead: it
+   was live, and its unresolvable percentage made the track's min-w-max
+   under-reserve by the circle's whole 40px.
+
+   The bar's sizing lives in app/components/tabbarClasses.ts now, in one
+   layer, where a rule that is written is a rule that applies. Only the
+   641-1000px placement below is still this file's business. */
 
 /* Between 641 and 1000px, tabbar.css has already moved the bar to the top of
    the window, which is right for a bar that is the site's navigation and wrong
@@ -255,20 +203,9 @@
     bottom: 0;
     padding: var(--space-6) var(--space-4);
   }
-  /* There is room here, so the slots hug their icons again rather than
-     dividing a track that is wider than the bar needs. */
-  .cards-tabbar .tabbar-pages {
-    width: auto;
-  }
-  .cards-tabbar .tabbar-item,
-  .cards-tabbar .tabbar-item.is-active {
-    flex: 0 0 auto;
-    padding: 0 var(--space-4);
-  }
-  .cards-tabbar-add {
-    flex: 0 0 auto;
-    width: var(--control-h);
-  }
+  /* No slot sizing here either: "there is room, so the slots hug their icons
+     again" is what every slot does at every width now, so the three rules
+     that said it for this range only were saying nothing. */
   /* .page-cards's matching padding-bottom (64px is the room the bar takes
      plus the same air the phone gets) now lives in cardsPageClasses.ts. */
 }

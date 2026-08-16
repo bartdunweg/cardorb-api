@@ -57,9 +57,13 @@ export const tabbarFadeClassName =
  * `space-3 + control-h + space-3` reserved for a control this route never
  * has. That reservation (roughly 130px on top of the actual content) was
  * squeezing the track's available width far below what four labelled slots
- * plus the add circle need, which is what min-w-max below then had to force
- * back out past — sometimes past the viewport itself, since the missing
- * width was never really about the content.
+ * plus the add circle need, which is what the track's since-removed
+ * min-w-max then had to force back out past — sometimes past the viewport
+ * itself, since the missing width was never really about the content.
+ *
+ * This padding is the whole outer margin now: the track below shrinks to fit
+ * rather than insisting on its content's width, so what it is given is what
+ * it takes (ADR-0050).
  */
 export const tabbarClassName =
   "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 z-[var(--z-tabpage)] [transform:translateZ(0)] " +
@@ -71,24 +75,31 @@ export const tabbarClassName =
   "[@media(min-width:1001px)]:!hidden";
 
 /**
- * min-w-max, kept as a safety net now that the cap below is sized to the
- * route's real content instead of a phantom toggle reservation — without it,
- * a device where the 72px-per-slot estimate (tabbarItemClassName) still
- * undershoots would silently go back to squeezing the track below its
- * content, the exact symptom this whole fix chased. A conflicting min-width
- * always wins over max-width by spec, so this can only ever widen the track
- * past the cap, never let the cap shrink it below its slots.
+ * min-w-0, where this used to say min-w-max and a `<=640px` max-w cap. Both
+ * are gone, and the reason is ADR-0050: the pill was drawn *outside* the
+ * capsule's left and right edges, not short of a margin inside them.
  *
- * The cap itself: `calc(100vw - 2*var(--space-4))`, matching the plain
- * `var(--space-4)` side padding tabbarClassName now reserves above — not the
- * old `space-3 + control-h + space-3` formula, which reserved room for a
- * theme toggle this route never renders (see tabbarClassName's own comment).
- * That phantom reservation was the actual cause of the pill/edge-inset bug
- * this file already fixed once with min-w-max alone: forcing the track past
- * an artificially small cap could put it past the viewport's own width too,
- * which reads as "no space at the edges" from the other direction — the
- * capsule overflowing off-screen symmetrically rather than being squeezed
- * inside it.
+ * min-w-max was meant to widen the capsule to whatever its slots need, so the
+ * row could never overflow. It under-reserved by exactly the add circle's
+ * 40px: `width: min(var(--control-h), 100%)` (as .cards-tabbar-add was) makes
+ * a percentage the browser cannot resolve while computing an intrinsic size,
+ * so the circle counted as roughly zero towards max-content. Measured: the
+ * track's min-width resolved to 352.586px where its content needed 390.
+ * Giving the circle a plain width fixed *that*, and immediately produced the
+ * other half of the same bug — a capsule now correctly 382px wide on a 360px
+ * phone, hanging 11px off both edges of the screen instead.
+ *
+ * So neither knob was ever the answer: a track that is allowed to be wider
+ * than the bar has room for will overflow somewhere, and with justify-center
+ * it overflows symmetrically out of both ends. min-w-0 lets it shrink, the
+ * slots below shrink with it (flex-initial min-w-0), and the <nav>'s own
+ * var(--space-4) side padding is then the only thing deciding the outer
+ * margin — which is what it looked like it was doing all along.
+ *
+ * No max-w either: w-auto hugs the content, and the nav's padding caps it.
+ * The old `calc(100vw - 2*var(--space-4))` said the same thing in a second
+ * place, in viewport units that quietly include a scrollbar between 641 and
+ * 1000px where this bar is still shown.
  */
 /**
  * One value — p-2, and gap-2 to match — for every gap this track has:
@@ -99,12 +110,15 @@ export const tabbarClassName =
  * into a smaller horizontal inset) and not a smaller inter-item gap than the
  * edges (gap-1) — one number, applied everywhere a gap exists here, so nine
  * seemingly-independent spacing bugs can't reopen this file nine more times.
+ *
+ * Untouched by ADR-0050, and worth saying why: p-2 was never what was wrong.
+ * It was applying correctly the whole time — the slots were simply being laid
+ * out past it.
  */
 export const tabbarPagesClassName =
-  "tabbar-pages relative flex items-center justify-center gap-2 w-auto min-w-max p-2 " +
+  "tabbar-pages relative flex items-center justify-center gap-2 w-auto min-w-0 p-2 " +
   "bg-[var(--glass-bg-solid)] border border-[var(--glass-border)] rounded-btn " +
-  "[box-shadow:var(--shadow-elevated)] [backdrop-filter:blur(var(--blur-glass))] " +
-  "[@media(max-width:640px)]:max-w-[calc(100vw-2*var(--space-4))]";
+  "[box-shadow:var(--shadow-elevated)] [backdrop-filter:blur(var(--blur-glass))]";
 
 /**
  * Classic bottom-tab shape now: icon over a label, both always shown, on
@@ -119,31 +133,36 @@ export const tabbarPagesClassName =
  * Include the literal "is-active" class alongside this when the tab is
  * selected.
  *
- * w-[var(--tab-w,104px)], not min-w: every slot the same width regardless of
- * its own label ("Dashboard" vs "You"), so the pill sliding between them
- * changes position without also changing size.
+ * flex-initial min-w-0: each slot is as wide as its own label ("Dashboard"
+ * wider than "You"), and every slot may shrink. This replaces a fixed
+ * `flex-none w-[var(--tab-w,104px)] min-w-[56px]`, where --tab-w was measured
+ * from the widest label by an effect in CardsTabBar.tsx (now deleted with it)
+ * so that every slot came out the same width and the pill kept one size as it
+ * slid. ADR-0050 reverses that on instruction, because equal-width slots are
+ * what made the row wider than the bar: four fixed slots plus the add circle
+ * need 390px, a 360px phone gives the track 328, and slots that cannot shrink
+ * simply overflow — out of both ends of the capsule, since the track centres
+ * them, which is what "the pill has no margin left or right" actually was.
  *
- * --tab-w is set on the track (CardsTabBar.tsx, .tabbar-pages) from the
- * actually-measured widest label, not guessed — a first pass hard-coded
- * 72px from an estimate at --fs-tiny (11px), and "Dashboard" still clipped
- * to "Dashbo…" on a real phone, twice, including once *after* the
- * measurement effect landed (never fully root-caused which part of that
- * chain — font load timing, a Turbopack HMR staleness, something else —
- * failed on the device it was tested on; see CardsTabBar.tsx's own comment
- * on the effect for what it now does to be harder to get wrong). So the
- * *fallback* itself — the CSS var's default, used before that effect can
- * run and however it behaves once it does — stopped being a tight estimate
- * and became a deliberately generous 104px instead: comfortably past even a
- * pessimistic reading of what "Dashboard" needs, so the visible symptom
- * (clipping) can't recur even if the measurement never fires correctly on
- * some device. `min-w-[56px]` beneath it exists for the same reason
- * `tabbarLabelClassName` still carries `truncate`: a safety floor under a
- * safety net, not the primary mechanism either way.
+ * The pill therefore changes width as it moves now. useSlidingPill already
+ * transitions width and height alongside transform, so it resizes and slides
+ * in one motion; that was written for this and never used.
+ *
+ * min-w-0 is the part that is easy to drop and load-bearing: without it a
+ * flex item's automatic minimum is its min-content width, a nowrap label is
+ * as wide min-content as max-content, and the row would go back to
+ * overflowing below about 340px instead of letting `truncate`
+ * (tabbarLabelClassName) do its job. The icon's own shrink-0 keeps a slot
+ * from collapsing past its icon, which is the real floor `min-w-[56px]` used
+ * to be.
+ *
+ * px-1.5, not px-2: the four full labels are 3px too wide for a 360px phone
+ * at 8px, and fit at 6px. It also makes the pill's own inner padding equal on
+ * all four sides, py-1.5 being what it already was.
  */
 export const tabbarItemClassName =
-  "tabbar-item group relative z-[1] flex flex-col items-center justify-center gap-0.5 flex-none " +
-  "w-[var(--tab-w,104px)] min-w-[56px] " +
-  "px-2 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-label no-underline " +
+  "tabbar-item group relative z-[1] flex flex-col items-center justify-center gap-0.5 flex-initial min-w-0 " +
+  "px-1.5 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-label no-underline " +
   "[transition:color_var(--dur-fast)_var(--ease-in-out)] [&:not(.is-active):hover]:opacity-70";
 
 export const tabbarIconClassName = "flex shrink-0";
@@ -154,9 +173,11 @@ export const tabbarIconClassName = "flex shrink-0";
  *  nothing here reads `group-[...]` any more: CardsTabBar.tsx's `item()`
  *  still applies "group" unconditionally and there is no reason to make
  *  that conditional for one class that stopped needing it. */
-/** max-w-full + truncate, now that the slot is a fixed w-16 rather than
- *  sized to fit whichever label is longest — "Dashboard" would otherwise
- *  overflow a slot sized for "You". */
+/** max-w-full + truncate: the slot is sized to this label now
+ *  (tabbarItemClassName), so on a wide enough screen these never fire. They
+ *  are what happens below roughly 340px, where the slots have to give up
+ *  width to keep the capsule on the screen: "Dashboa…" is the price of a bar
+ *  that still fits, and it is paid by the label rather than by the layout. */
 export const tabbarLabelClassName =
   "tabbar-label max-w-full truncate [font-size:var(--fs-tiny)] leading-none";
 
@@ -173,3 +194,36 @@ export const tabbarPillClassName =
   "[box-shadow:var(--shadow-card)] opacity-0 pointer-events-none " +
   "[&.is-ready]:opacity-100 " +
   "[&.is-animated]:[transition:transform_0.38s_var(--ease-smooth),width_0.38s_var(--ease-smooth),height_0.38s_var(--ease-smooth)]";
+
+/**
+ * The plus in the middle of the track. Was `.cards-tabbar-add` in cards.css
+ * and moved here by ADR-0050, because one line of it was half of the bug:
+ * `width: min(var(--control-h), 100%)`, written so the circle could squeeze
+ * on a phone narrower than its slot. A percentage inside that min() is
+ * something the browser cannot resolve while it computes an intrinsic width,
+ * so the circle counted as ~0 towards the track's max-content and the
+ * track's min-w-max under-reserved by exactly these 40px. A plain
+ * w-[var(--control-h)] instead: the slots beside it shrink now, so nothing
+ * needs this one to.
+ *
+ * flex-none for the reason the old comment gave and is worth keeping: with
+ * flex: 1 1 0 this stopped being a circle at all, because a plain width on a
+ * flex item is not a constraint the algorithm honours over a grown basis.
+ *
+ * No literal "cards-tabbar-add" class alongside it, unlike tabbar-pages /
+ * tabbar-item / tabbar-label, which cards.css and useSlidingPill still reach
+ * by name: with the CSS block gone nothing selects this one any more, and a
+ * hook name left behind for no reader is how the next pass ends up editing a
+ * rule that cannot apply.
+ *
+ * The colour is --btn-primary-bg, the same black every other primary action
+ * uses, on explicit instruction; it was --color-tint, an accent deliberately
+ * not this bar's black. That does trade away "one ink for where you are, one
+ * for what you can do": the pill and this button are both dark now, told
+ * apart by position.
+ */
+export const tabbarAddClassName =
+  "grid place-items-center flex-none z-[1] " +
+  "w-[var(--control-h)] h-[var(--control-h)] p-0 border-0 rounded-full cursor-pointer " +
+  "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] " +
+  "hover:opacity-90 hover:[box-shadow:var(--shadow-elevated)]";

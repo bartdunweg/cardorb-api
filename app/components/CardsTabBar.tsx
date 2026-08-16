@@ -1,9 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useRef } from "react";
 import { Heart, LayoutDashboard, Layers, List, Plus, Search, UserRound } from "lucide-react";
 import { useSlidingPill } from "../hooks/useSlidingPill";
 import {
+  tabbarAddClassName,
   tabbarClassName,
   tabbarFadeClassName,
   tabbarIconClassName,
@@ -28,11 +29,13 @@ import {
  * route has a URL per shelf and this one has no URL per set, so there is no
  * href to honour and nothing for a middle click to open.
  *
- * No labels at any width. With the theme toggle's footprint reserved on both
- * sides (layout.css), a 360px phone leaves about 214px of track, and five
- * labelled slots do not fit it. So only the active one says its name: the rest
- * carry it on aria-label and title, and the stylesheet fades the word in beside
- * whichever icon is lit (see .tabbar-label in layout.css).
+ * Every slot says its name, at every width — this used to read "no labels at
+ * any width", on the arithmetic that a 360px phone left about 214px of track
+ * once the theme toggle's footprint was reserved on both sides. That
+ * reservation was for a control this route does not have and is gone
+ * (tabbarClasses.ts), which leaves 328px, and four labelled slots plus the
+ * add circle fit it with room to spare. Below roughly 340px the labels
+ * truncate rather than the bar overflowing (ADR-0050).
  */
 
 /**
@@ -134,49 +137,15 @@ export default function CardsTabBar({
   const right = shown.slice(half);
 
   /**
-   * Every slot's width, read off the widest label rather than guessed: a
-   * hard-coded pixel estimate (see tabbarClasses.ts's history of one)
-   * clipped "Dashboard" on a real phone. scrollWidth reports a label's true
-   * content width even while `truncate` is visually clipping it, so this
-   * doesn't need to fight the CSS to measure it. Set on the track as a CSS
-   * var rather than per-button inline styles, since every slot reads the
-   * same one value.
-   *
-   * Three ways to trigger a (re-)measurement, not one, after a first version
-   * of this (mount + document.fonts.ready only) still shipped a clipped
-   * label on a real device without a clear enough reason why: a plain
-   * ResizeObserver on the track, matching the pattern useSlidingPill already
-   * uses for the same category of problem (content whose size isn't known
-   * until the browser has actually laid it out) instead of trying to
-   * enumerate every event that could change it by name. tabbarItemClassName
-   * also carries a deliberately generous static fallback now, so even a
-   * device where none of these three fire correctly doesn't clip.
+   * No slot-width measurement here any more, and deliberately none: a
+   * --tab-w var was computed from the widest label on mount, on
+   * document.fonts.ready and on every ResizeObserver tick, so that every
+   * slot could be given that one fixed width. ADR-0050 removed the fixed
+   * width — each slot is as wide as its own label now (tabbarItemClassName)
+   * — and with it the whole measuring apparatus, which existed only to feed
+   * a number the layout no longer asks for. The browser was always going to
+   * be better at this than three JavaScript hooks racing a font load.
    */
-  useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const measure = () => {
-      let max = 0;
-      track.querySelectorAll<HTMLElement>(".tabbar-label").forEach((label) => {
-        max = Math.max(max, label.scrollWidth);
-      });
-      // 16px either side of the label — tabbarItemClassName's own px-2.
-      if (max > 0) track.style.setProperty("--tab-w", `${max + 16}px`);
-    };
-    measure();
-    let cancelled = false;
-    document.fonts?.ready.then(() => {
-      if (!cancelled) measure();
-    });
-    const ro = new ResizeObserver(measure);
-    track.querySelectorAll(".tabbar-label").forEach((label) => ro.observe(label));
-    return () => {
-      cancelled = true;
-      ro.disconnect();
-    };
-    // Labels are static text per key; only which keys are shown can change
-    // (isPublic), not their wording, so that's the one real dependency.
-  }, [isPublic]);
 
   const item = (tab: (typeof shown)[number]) => {
     const on = tab.key === active;
@@ -240,7 +209,12 @@ export default function CardsTabBar({
           />
           {left.map(item)}
           {signedIn && (
-            <button type="button" className="cards-tabbar-add" onClick={onAdd} title="Add a card">
+            <button
+              type="button"
+              className={tabbarAddClassName}
+              onClick={onAdd}
+              title="Add a card"
+            >
               <Plus size={20} strokeWidth={2} aria-hidden="true" />
               <span className="sr-only">Add a card</span>
             </button>
