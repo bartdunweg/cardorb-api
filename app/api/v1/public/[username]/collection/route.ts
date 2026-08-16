@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const owner = await ownerOf(username);
   if (!owner) return NextResponse.json({ error: "No such collection." }, { status: 404 });
   return NextResponse.json(
-    { sets: forGrid(stripPrices(await getCards(owner))) },
+    { sets: forGrid(stripPrices(await getCards(owner.id))) },
     { headers: { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" } },
   );
 }

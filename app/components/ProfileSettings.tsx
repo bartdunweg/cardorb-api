@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_URL } from "../../lib/core/config";
+import { MAX_DISPLAY_NAME } from "../../lib/core/account";
+import { ownerLabel } from "../../lib/core/owner";
 import {
   SettingsHint,
   SettingsInput,
@@ -245,25 +247,36 @@ export default function ProfileSettings({
       </SettingsPanel>
 
       <SettingsPanel>
-        <SettingsPanelTitle>Display name</SettingsPanelTitle>
+        <SettingsPanelTitle>Your name</SettingsPanelTitle>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             await patch("displayName", { displayName });
           }}
         >
+          {/* The placeholder is the fallback, not a suggestion: ownerLabel()
+              in lib/core/owner.ts resolves an empty name to exactly this, so
+              the field previews what the public page will say. */}
           <SettingsInput
             value={displayName}
-            maxLength={60}
+            maxLength={MAX_DISPLAY_NAME}
             placeholder={initial.username}
             onChange={(e) => setDisplayName(e.target.value)}
             // The panel's heading is what sighted people read as this field's
             // name; a heading is not an accessible name, so it is said again.
-            aria-label="Display name"
+            aria-label="Your name"
             aria-describedby="display-name-hint"
           />
+          {/* Built from `initial`, not from the live field. This element is the
+              input's aria-describedby, and a description that changes on every
+              keystroke is one a screen reader may read back on every keystroke.
+              So it shows what the page is called now and the placeholder above
+              shows what an empty field falls back to; neither moves while
+              somebody is typing into the box they describe. */}
           <SettingsHint id="display-name-hint">
-            What the public page calls you. Empty means your username.
+            What your collection is called: &ldquo;
+            {ownerLabel(initial)}&rsquo;s Pok&eacute;mon card collection&rdquo;. Empty means your
+            username.
           </SettingsHint>
           <button className="btn" type="submit" disabled={busy === "displayName"}>
             {busy === "displayName" ? "Saving…" : "Save"}

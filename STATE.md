@@ -4,6 +4,33 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**Every collection is now named after its own owner (ADR-0034).** The app had
+been multi-user for a while — accounts, `profiles`, per-user rows, RLS — while a
+single env var, `OWNER_NAME`, still titled every public page "Bart's Pokémon card
+collection". Production had a live instance of this: `/user/pikachu` served that
+account's collection under Bart's name, in the title, the OG image and the
+JSON-LD. `OWNER_NAME` and `PUBLIC_USERNAME` are deleted; the name comes from the
+profile being rendered (`ownerOf()` now returns the whole profile, and
+`lib/core/owner.ts` decides what to call it, falling back to the username).
+Signup asks for a name, optionally, and no longer seeds `display_name` with the
+generated username. Two single-owner leftovers went with it: the public
+card-detail route 404'd every account but the first, and the sitemap listed one
+hardcoded profile.
+
+**Open, and needed before this is fully live:** the backfill migration
+`supabase/migrations/20260816120000_display_name_is_a_person_not_a_username.sql`
+has **not** been applied. It nulls `display_name` where it is a copy of the
+username — safe and narrow (only exact, case-insensitive matches), but it is the
+production database, so it is Bart's to run. Nothing breaks without it; accounts
+just keep showing a generated handle as though it were a chosen name.
+
+Still unverified in a browser, and the same gap as before: the Settings "Your
+name" panel and the landing header's "Signed in as …" both need a real signed-in
+session, and the Chrome extension was not connected this session. Everything
+reachable without signing in was checked live against production data — both
+public pages' titles and headings, both OG images, the sitemap, and the
+card-detail route for both accounts.
+
 The public "latest pull" endpoint is fit for the portfolio site to embed. It
 never needed an API key — a key shipped in a public site's JavaScript is not a
 secret — but it was answering with the wrong card: `latestPull()` gated on
@@ -616,20 +643,24 @@ A `build-quality` pass also gave four inputs an accessible name they never had
 FB-0007 and ADR-0034 record it. `npm run check` green; the four redirects
 verified live (308) against `npm run dev`.
 
-Two follow-ups in the same session, both on Bart's instruction:
+One follow-up in the same session, on Bart's instruction: **deleting the
+account is its own section at the bottom of the page**
+(`DeleteAccountSettings.tsx`), not the fourth panel in Account. In one long
+scroll it sat between an email field and a theme picker. `AccountSettings.tsx`
+lost its `username` prop with it.
 
-- **Deleting the account is its own section at the bottom of the page**
-  (`DeleteAccountSettings.tsx`), not the fourth panel in Account. In one long
-  scroll it sat between an email field and a theme picker.
-  `AccountSettings.tsx` lost its `username` prop with it.
-- **"Signed in as Bart" was shown to everybody** on the landing page's navbar
-  (`app/page.tsx` rendered `OWNER_NAME`, a deployment constant). `Viewer` now
-  carries `displayName`, read from the profile select it was already making,
-  and `displayNameOf()` (`lib/api/viewer.ts`, tested) gives the fallback order:
-  chosen name → username → the email's local part. FB-0008 and ADR-0035.
-  **Half of this is deliberately not fixed**: the public collection still says
-  "Bart's collection" whoever's it is (`/user/[username]` title and OG image,
-  `CardsView.tsx:939`, `CardsSidebar.tsx:72`) — open on FB-0008.
+**Built twice, resolved in favour of the other branch.** Bart also reported the
+landing navbar greeting everybody with "Signed in as Bart", and this branch
+fixed it — `Viewer.displayName` plus a `displayNameOf()` helper in
+`lib/api/viewer.ts`, with FB-0008 and ADR-0035 to match. Merging `origin/main`
+before the PR landed brought in PR #49, which had solved the same problem more
+thoroughly the same day (`ownerLabel()` in `lib/core/owner.ts`, `OWNER_NAME` and
+`PUBLIC_USERNAME` deleted outright, ADR-0034-collection-named-after-its-owner).
+This branch's version was deleted whole — helper, test, both records, the
+changelog fragment — rather than merged alongside it: two functions answering
+"what is this person called" is exactly the drift `lib/core/owner.ts` exists to
+prevent. Worth noticing as a process fact, not just a merge: two workspaces
+picked up the same complaint within an hour of each other.
 
 ## Next session
 
@@ -638,14 +669,7 @@ Two follow-ups in the same session, both on Bart's instruction:
   hit. Needs: all four groups on screen at once, one control exercised per
   group (theme, public-link switch, CSV picker, email field), and the widths at
   ≥1000px / 641–1000px / ≤640px. This subsumes the older "verify `/settings`
-  and its subpages" item — there are no subpages any more. The landing page's
-  new "Signed in as <your name>" needs the same look, and for the same reason:
-  it only renders signed in.
-- **The public collection still carries `OWNER_NAME`** — FB-0008's open half.
-  `/user/[username]`'s title, its OG image, `CardsView.tsx:939` and
-  `CardsSidebar.tsx:72` all say "Bart's collection" regardless of whose
-  collection is on screen. Needs the profile's display name threaded from the
-  public page into both components and into `generateMetadata`.
+  and its subpages" item — there are no subpages any more.
 - **`CardAddDialog.tsx` needs a real signed-in browser pass**: search, pick a
   result, confirm Rarity/Type show as read-only text matching the picked
   card, submit, confirm the row lands correctly. Not exercised live this

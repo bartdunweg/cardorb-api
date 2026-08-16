@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
-import { APP_NAME, OWNER_NAME } from "../../lib/core/config";
+import { APP_NAME } from "../../lib/core/config";
 import { LOCALE } from "../../lib/core/config";
+import { possessive } from "../../lib/core/owner";
 
 /**
  * The left rail on /cards: where you are, and nothing else.
@@ -32,6 +33,7 @@ export default function CardsSidebar({
   onSelect,
   signedIn,
   isPublic = false,
+  ownerName,
   onAdd,
   brokenLogos,
   onBrokenLogo,
@@ -51,6 +53,9 @@ export default function CardsSidebar({
   signedIn: boolean;
   /** On the public link there is no Profile row: there is nothing to sign into. */
   isPublic?: boolean;
+  /** What to call the owner in the rail heading. Public only, resolved by the
+   *  server from the profile this page belongs to — see CardsView's own prop. */
+  ownerName?: string;
   onAdd: () => void;
   brokenLogos: Set<string>;
   onBrokenLogo: (name: string) => void;
@@ -69,7 +74,8 @@ export default function CardsSidebar({
   // Held and wanted are two destinations now, so the rail counts them apart.
   // A single total over both was the number that made "My collection" read as
   // 1,645 while the collection is 1,612 and the other 33 are a shopping list.
-  const collectionName = isPublic ? `${OWNER_NAME}'s collection` : "My collection";
+  const collectionName =
+    isPublic && ownerName ? `${possessive(ownerName)} collection` : "My collection";
   const held = sets.reduce((n, s) => n + s.cards.filter((c) => c.owned).length, 0);
   const wanted = sets.reduce((n, s) => n + s.cards.filter((c) => !c.owned).length, 0);
 

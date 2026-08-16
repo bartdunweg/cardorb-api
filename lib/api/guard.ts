@@ -220,6 +220,9 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
       return { status: 503, error: "This deployment has no account configured." };
     }
     console.warn("[deprecated] CARDS_TOKEN was used; move this client to an account token");
+    // No username and no name: this path never read the profile, and a
+    // passcode standing in for an account is not a person to call anything.
+    // The empty username never resolves as one, which is the correct outcome.
     return {
       userId: owner,
       email: process.env.OWNER_EMAIL ?? "",

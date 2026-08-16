@@ -9,8 +9,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * "no prices anywhere". If it ever answers with a price, the whole point of
  * /user/<name> is gone and nothing else in the app would notice.
  *
- * getCardDetail is stubbed, because what is under test is the stripping and the
- * name check rather than TCGdex.
+ * getCardDetail and ownerOf are both stubbed, because what is under test is the
+ * stripping and the name check rather than TCGdex or Postgres.
+ *
+ * The name check used to be `username !== PUBLIC_USERNAME`, an env var, so this
+ * file read that constant to know what name to pass. It is a profile lookup
+ * now — the same one the page and the two sibling routes make — so "a name that
+ * is not the public one" means "a name with no public collection behind it"
+ * rather than "a name that is not this deployment's owner".
  */
 
 const detail = {
@@ -34,17 +40,24 @@ const detail = {
 const getCardDetail = vi.fn();
 vi.mock("../../../../../../../lib/core/cards", () => ({ getCardDetail: () => getCardDetail() }));
 
+const ownerOf = vi.fn();
+vi.mock("../../../../../../../lib/core/collection", () => ({
+  ownerOf: (...args: unknown[]) => ownerOf(...args),
+}));
+
 const { GET } = await import("./route");
-// Read rather than stubbed: lib/core/config resolves this at import time, so an
-// env stub set afterwards would arrive too late and every request would 404 on
-// the wrong name for the wrong reason.
-const { PUBLIC_USERNAME } = await import("../../../../../../../lib/core/config");
+
+/** Any name with a public collection behind it. */
+const PUBLIC_USERNAME = "somebody";
 
 const params = (username: string, tcgId = "sv03-125") => ({ params: Promise.resolve({ username, tcgId }) });
 const req = () => new Request("https://cardorb.example/api/v1/public/owner/cards/sv03-125");
 
 beforeEach(() => {
   getCardDetail.mockResolvedValue(detail);
+  ownerOf.mockImplementation(async (username: string) =>
+    username === PUBLIC_USERNAME ? { id: "owner-1", username, displayName: null } : null,
+  );
 });
 
 afterEach(() => {
@@ -82,7 +95,7 @@ describe("GET /api/v1/public/[username]/cards/[tcgId]", () => {
     expect(body.set.name).toBe("Obsidian Flames");
   });
 
-  it("refuses a name that is not the public one", async () => {
+  it("refuses a name with no public collection behind it", async () => {
     const res = await GET(req(), params("someone-else"));
     expect(res.status).toBe(404);
     // And never even asks: an unknown name should not be a way to make this

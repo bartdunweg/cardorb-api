@@ -65,11 +65,15 @@ root `CLAUDE.md` for how and when to write to it.
   section stacked. Read it before adding a settings section: there is no
   sub-route to add one to, and `/settings/*` (except `password`) is a set of
   permanent redirects in `next.config.ts`.
-- `decisions/0035-viewer-carries-a-display-name.md` — `Viewer` carries a
-  display name and `displayNameOf()` is how a screen names the person looking
-  at it. **`OWNER_NAME` is still wrong on the public collection** (title, OG
-  image, `CardsView`/`CardsSidebar`) — that half is untouched and open on
-  `feedback/0008-signed-in-greeting-uses-the-owner-name.md`.
+- `decisions/0034-collection-named-after-its-owner.md` — **read before adding
+  anything that names a person.** `OWNER_NAME`/`PUBLIC_USERNAME` are gone; whose
+  a collection is and what to call them come from the profile being rendered,
+  via `ownerOf()` (`lib/core/collection.ts`, now returning the whole profile) and
+  `ownerLabel()`/`collectionTitle()` (`lib/core/owner.ts`). The app had been
+  multi-user for a while with one env var still titling every public page after
+  the deployment's owner — production had a second public profile served under
+  the wrong name. Also: signup now asks for a name, optionally, and
+  `display_name` stopped being seeded with the generated username.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.
