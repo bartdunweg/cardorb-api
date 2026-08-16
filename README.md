@@ -41,11 +41,20 @@ page is a few hundred of them, so the difference is megabytes, not kilobytes.
 
 Native clients authenticate with a Supabase access token in `Authorization: Bearer <jwt>`.
 Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
-`GET /api/v1/value-history`, `GET /api/v1/public/:username/collection`, and
-`DELETE /api/v1/account`. The public collection response carries no prices and no
-inventory: of each printing it publishes the rarity and whether it is owned, and
-nothing else — not what was paid, the condition, the grade, the notes, or how
-many (ADR-0045).
+`PATCH/DELETE /api/v1/collection/items/:id`, `GET /api/v1/catalog/*`,
+`GET /api/v1/value-history` and `DELETE /api/v1/account` — checked against
+`bartdunweg/cardorb-ios`, not assumed.
+
+**Native clients do not call `/api/v1/public/:username/collection`.** This line
+used to say they did, which is worth correcting rather than deleting: that one
+wrong sentence is the only reason ADR-0045 shipped with "we may have broken the
+iOS app" beside it. The public routes are for a browser and for the portfolio
+site; the app is signed in and reads `/api/v1/collection`, which carries the
+inventory fields as it always has.
+
+The public collection response carries no prices and no inventory: of each
+printing it publishes the rarity and whether it is owned, and nothing else — not
+what was paid, the condition, the grade, the notes, or how many (ADR-0045).
 
 `GET /api/v1/value-history` answers with **the caller's own** series, oldest
 reading first (ADR-0044). It needs a bearer token: the deprecated `x-cards-key`

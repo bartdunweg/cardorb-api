@@ -115,9 +115,20 @@ just in a unit test:
   `x-cards-key` path answers "Sign in to see this." — the documented consequence,
   not a regression.
 
-Still true: **this is a breaking change for any out-of-repo consumer of the
-public collection endpoint that read those fields.** The iOS app's source is not
-in this repo and could not be checked.
+**The iOS app is not affected, and this was checked rather than reasoned about.**
+`bartdunweg/cardorb-ios` was cloned and read: across 44 Swift files there is not
+one reference to `/api/v1/public/`. The app is signed in and reads
+`/api/v1/collection`, which was not touched and still carries the inventory
+fields. It does read `/value-history`, and its `ValueSnapshot` matches the
+response exactly — `date`/`value`/`cards`/`priced`/`unpriced`, the last three via
+`decodeIfPresent ?? 0`. Even on the public payload it would survive: `quantity`
+decodes as `decodeIfPresent(Int.self) ?? 1`, and Swift treats a JSON `null` the
+same as an absent key.
+
+The reason this shipped as an unknown at all was **one wrong line in
+`README.md`**, which listed `/api/v1/public/:username/collection` among the
+routes native clients use. Corrected there, with the correction written down
+rather than the line quietly removed.
 
 **The shared standards are refreshed to v0.4.0** (`/apply-standards`, workspace
 `houston`). Only the generated marker regions moved — `CLAUDE.md`'s
@@ -1099,8 +1110,8 @@ picked up the same complaint within an hour of each other.
 - ~~Check a real `/user/<name>` payload after the ADR-0045 change.~~ **Done** on
   production, 2026-08-16 — see "Now". Both the page's RSC payload and the public
   API were read and carry no purchase price, note, condition or quantity.
-  What is still unchecked there is the **iOS app**, whose source is not in this
-  repo: if it read any of those fields, this broke it.
+  The **iOS app** was checked too, by cloning `bartdunweg/cardorb-ios`: it never
+  calls the public endpoint, so it is unaffected. Nothing outstanding here.
 - **The new loading fallback has not been seen in a signed-in browser.** No
   session in this workspace, `chrome-devtools` was blocked by another
   automation Chrome holding its profile, and the Chrome extension was not
