@@ -14,11 +14,36 @@ import { ownerLabel } from "../../../lib/core/owner";
  *
  * Drawn rather than a static file, so it carries the real count. A collection
  * that says "1,612 cards across 49 sets" is a reason to open the link; a logo
- * is not. It is rebuilt on the same hourly revalidate as the page, so it never
- * disagrees with what you land on.
+ * is not.
  */
 export const runtime = "nodejs";
-export const revalidate = 3600;
+
+/**
+ * Dynamic, for the same reason the page beside it is, and it took a production
+ * 500 to make that explicit.
+ *
+ * This used to say `revalidate = 3600` and nothing else, which asks Next to
+ * render the image statically. It cannot be: ownerOf() reads a profile through
+ * a cookie-bound Supabase client, and a static render has no cookies to give
+ * it — "couldn't be rendered statically because it used `cookies`", every
+ * request, once the page's generateStaticParams stopped supplying a
+ * prerenderable username to paper over it. The config was wrong before that
+ * change; the change is what stopped hiding it.
+ *
+ * The freshness argument is the page's argument. /user/<name> is force-dynamic
+ * so that turning sharing off takes effect on the next request rather than on
+ * the next revalidate, and an image that outlived that switch by an hour would
+ * be the same leak in a different file.
+ *
+ * The cost of that is real and small: force-dynamic makes Next answer
+ * `no-store`, overriding any Cache-Control set on the response (tried, and
+ * measured — it does not survive), so the picture is drawn per request. What is
+ * expensive here is the collection, and that is still cached across requests by
+ * getCards()'s own unstable_cache; what is left is Satori drawing a header and
+ * five scans, for a scraper rather than for a person, on a route nothing
+ * renders in the critical path.
+ */
+export const dynamic = "force-dynamic";
 /**
  * Deliberately nameless, unlike the picture itself.
  *
