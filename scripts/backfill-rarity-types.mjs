@@ -70,13 +70,34 @@ function serviceClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+/**
+ * Every row, paged.
+ *
+ * This used to be a bare `.select()`, and PostgREST caps a response at 1000
+ * rows without saying so — on a 1,968-row collection it silently backfilled
+ * half of it and reported success. lib/storage/postgres.ts has carried this
+ * loop and its "throw if short" check from the start, for exactly this reason;
+ * scripts/audit-collection.mjs hit the same wall and now carries it too.
+ */
 async function rowsFromPostgres(db) {
-  const { data, error } = await db
-    .from("cards")
-    .select("id,set_name,number,name,rarity,types")
-    .eq("user_id", userId);
-  if (error) throw new Error(`Postgres query: ${error.message}`);
-  return data;
+  const PAGE = 1000;
+  const out = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error, count } = await db
+      .from("cards")
+      .select("id,set_name,number,name,rarity,types", { count: "exact" })
+      .eq("user_id", userId)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`Postgres query: ${error.message}`);
+    out.push(...data);
+    if (out.length >= (count ?? 0) || !data.length) {
+      if (out.length < (count ?? 0)) {
+        throw new Error(`Postgres returned ${out.length} of ${count} rows — refusing to backfill a partial collection`);
+      }
+      return out;
+    }
+  }
 }
 
 /** byNumber for one set, the same shape and the same two passes loadSetCatalogue() builds it in. */

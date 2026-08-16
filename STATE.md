@@ -4,6 +4,41 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The collection has been audited against TCGdex and 21 rows corrected
+(ADR-0040).** Browse made the old `trainer-gallery-row-corrections.md` visible
+rather than merely true — a gallery grid showed two grey slots where one owned
+card should be — and Bart widened the fix from "those 23 rows" to a principle:
+*"Wat we gebruiken als API's, dat is de source of truth."*
+
+So `scripts/audit-collection.mjs` reconciles every row against TCGdex, using
+`buildCollection()`'s own matching imported from `lib/core`, and sorts them into
+fixable (misspelling; wrong number with exactly one candidate) and not (several
+candidates; unplaceable). Dry run by default, undo journal before every write.
+Result: 1,917 → **1,938 of 1,968 rows agreeing**, zero left in the auto-fixable
+classes. On Silver Tempest its 13 proposals were identical to the hand-compiled
+worklist, including which two it refused to decide. The old worklist is deleted;
+`docs/collection-audit-corrections.md` is now a build output. **30 rows still
+need a person** — 12 are "is this the V or the VMAX", which only the card
+answers.
+
+Two traps found by the dry run and worth not re-stepping in:
+- **The card-type suffix is house style.** This collection writes "Pikachu"
+  where TCGdex writes "Pikachu ex"; `matching.ts` was widened for it years ago.
+  The first version compared full names and proposed 179 "corrections" that were
+  all suffix — a fifth of the collection rewritten into a convention nobody
+  chose.
+- **PostgREST caps at 1000 rows silently.** The first run audited 1,000 of 1,968
+  and called the rest clean. `lib/storage/postgres.ts` has always had the paging
+  loop; `backfill-rarity-types.mjs` did not, and had been backfilling half this
+  collection since it was written. Both scripts have it now.
+
+**Left open on purpose:** with that bug fixed, `backfill-rarity-types.mjs` wants
+to change **956 of 1,938 rows**, and some are downgrades — `"Special
+Illustration Rare"` → `"Ultra Rare"` loses a real distinction, `"Illustration
+Rare"` → `"Illustration rare"` is only casing. Not run. It needs a product
+decision about which rarity vocabulary the app wants (ADR-0040's last
+consequence).
+
 **You can browse the whole catalogue now, not just what you own (ADR-0037).**
 This closes the item further down that was explicitly deferred as "a real,
 separate piece of work". Asked for by Bart for the iOS app; scope confirmed by
@@ -47,8 +82,18 @@ direct question: API **and** a web screen, signed-in only, with owned + wishlist
   deliberately keeps its pokemontcg.io logos; read ADR-0038's option 5 before
   "fixing" that, the maths is the other way round there.
 
-**Two things to watch.** `POKEMONTCG_API_KEY` is still unset, and this makes
-that host load-bearing for a second feature — a key should be set now. And
+**Two things to watch.** `POKEMONTCG_API_KEY` stays unset and **that is now a
+decision, not an omission** (FB-0009, ADR-0039): cost is a hard constraint on
+this project, and the earlier advice in ADR-0037/0038 to "set a key" is
+withdrawn. It was calibrated to the wrong endpoint. Measured unauthenticated
+today: 9 failures in 12 *rapid search-shaped* requests, but only 1 in 6
+*whole-set browse-shaped* ones — and browse asks once per set per day behind a
+DAY cache, so its real exposure is under 1% per cold set, degrading to a
+retryable 502. Search's flakiness is real, pre-existing and unaddressed. Also
+recorded there: pokemontcg.io's free V2 tier is announced as going away in
+favour of the paid Scrydex, **with no published date**, and the escape route is
+TCGdex at the cost of the rarity line (ADR-0030). Do not deepen the
+pokemontcg.io dependency without reading ADR-0039. And
 none of it has been seen in a signed-in browser (the standing gap below); the
 worthwhile manual pass is `/collection/browse` → 151, checked against
 `/collection/set/151`, plus one gallery set and one promo set, where the
