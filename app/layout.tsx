@@ -3,7 +3,7 @@ import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { APP_NAME, APP_TAGLINE, OWNER_NAME, SITE_URL } from "../lib/core/config";
+import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
 /**
@@ -50,8 +50,9 @@ export const metadata: Metadata = {
    *
    * A template rather than a bare string, so a title bar and a search result
    * both say which product they belong to without every route repeating the
-   * word: /login is "Sign in · Card Orb", the public collection is "Bart's
-   * Pokémon card collection · Card Orb". The two pages that are mostly the
+   * word: /login is "Sign in · Card Orb", a public collection is "Bart’s
+   * Pokémon card collection · Card Orb" for Bart and somebody else's name for
+   * somebody else (see lib/core/owner.ts). The two pages that are mostly the
    * name itself opt out with `title.absolute`, which is what that field is for.
    *
    * `default` is required alongside a template and is what a child with no
@@ -63,7 +64,10 @@ export const metadata: Metadata = {
   },
   description: APP_TAGLINE,
   applicationName: APP_NAME,
-  authors: [{ name: OWNER_NAME }],
+  // No `authors`. It named one person for the whole site, which was true while
+  // there was one person here and became a claim over everybody else's pages
+  // the moment there were accounts. Site-wide metadata is about the product;
+  // whose a collection is belongs on that collection's own route.
   /**
    * noindex is the default here, and it is still the right default: almost
    * every route in this app is a tool behind a password, and a tool has nothing

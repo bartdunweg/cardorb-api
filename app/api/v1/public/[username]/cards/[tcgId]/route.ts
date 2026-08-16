@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCardDetail } from "../../../../../../../lib/core/cards";
-import { PUBLIC_USERNAME } from "../../../../../../../lib/core/config";
+import { ownerOf } from "../../../../../../../lib/core/collection";
 
 /**
  * One card, for the public link, without a price on it.
@@ -12,9 +12,12 @@ import { PUBLIC_USERNAME } from "../../../../../../../lib/core/config";
  * turned a visitor's tap on a scan into the login screen.
  *
  * Addressed by username rather than left open at /v1/public/cards/<id>, so the
- * route says whose collection it is answering for. Today there is one name and
- * it comes from an env var; when there are accounts, this is already the shape
- * that asks the right question, and the check below becomes a lookup.
+ * route says whose collection it is answering for. The check below is the
+ * lookup this comment promised: it used to compare against a single username
+ * from the environment, which 404'd every other account's cards long after
+ * accounts existed, while both sibling routes here had already moved to
+ * ownerOf(). The card itself is catalogue data and the same for everybody; the
+ * name decides whether there is a public collection to open it from at all.
  *
  * Stripped here rather than in the client, for the same reason the page strips
  * before rendering: a number that is deleted after it arrives has still
@@ -29,7 +32,7 @@ export async function GET(
   { params }: { params: Promise<{ username: string; tcgId: string }> },
 ) {
   const { username, tcgId } = await params;
-  if (username !== PUBLIC_USERNAME) {
+  if (!(await ownerOf(username))) {
     return NextResponse.json({ error: "No such collection." }, { status: 404 });
   }
 

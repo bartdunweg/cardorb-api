@@ -68,7 +68,7 @@ describe("the matcher", () => {
   });
 
   it("leaves the public link alone, which is the whole point of it", () => {
-    expect(matches("/user/bartdunweg")).toBe(false);
+    expect(matches("/user/swift-eevee-4821")).toBe(false);
   });
 
   it("leaves the landing page, the login and the API alone", () => {

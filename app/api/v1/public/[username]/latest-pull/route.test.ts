@@ -64,7 +64,9 @@ const req = (ip = `10.0.0.${++addresses}`) =>
   });
 
 beforeEach(() => {
-  ownerOf.mockResolvedValue("owner-1");
+  // The whole profile, not just the id: the route needs getCards(owner.id) and
+  // the page beside it needs the name off the same lookup.
+  ownerOf.mockResolvedValue({ id: "owner-1", username: "owner", displayName: null });
   getCards.mockResolvedValue(sets);
 });
 

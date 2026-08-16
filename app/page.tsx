@@ -17,8 +17,9 @@ import {
 import Card from "./components/Card";
 import Navbar from "./components/Navbar";
 import ThemeToggle from "./components/ThemeToggle";
-import { APP_NAME, APP_TAGLINE, OWNER_NAME, SITE_URL } from "../lib/core/config";
+import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import { currentViewer } from "../lib/api/viewer";
+import { ownerLabel } from "../lib/core/owner";
 
 const SIGN_IN_HREF = "/login";
 const DASHBOARD_HREF = "/dashboard";
@@ -113,6 +114,10 @@ const FEATURES = [
 
 export default async function Home() {
   const viewer = await currentViewer();
+  // Whoever is actually signed in. This line used to read OWNER_NAME out of the
+  // environment, so the header greeted every visitor as the person who deployed
+  // the app.
+  const viewerName = viewer ? ownerLabel(viewer) : "";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -122,7 +127,10 @@ export default async function Home() {
     operatingSystem: "Any",
     inLanguage: "en",
     url: `${SITE_URL}/`,
-    author: { "@type": "Person", name: OWNER_NAME },
+    // The product's publisher, not a person. `author: Person` named whoever the
+    // deployment was configured for, which described the collections rather
+    // than the app and stopped being true of either once there were accounts.
+    publisher: { "@type": "Organization", name: APP_NAME },
   };
 
   // Shared recipes, each used by several elements below — kept as named
@@ -208,10 +216,10 @@ export default async function Home() {
                     [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
                   aria-hidden="true"
                 >
-                  {OWNER_NAME.charAt(0)}
+                  {viewerName.charAt(0)}
                 </span>
               )}
-              Signed in as {OWNER_NAME}
+              Signed in as {viewerName}
             </Link>
           ) : (
             <>

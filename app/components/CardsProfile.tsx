@@ -1,7 +1,6 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import SignInForm from "./SignInForm";
 import { useTheme } from "./ThemeProvider";
 import { FormNote } from "./FormField";
 import { cardsSegmentClassName, cardsSegmentedClassName } from "./trackClasses";
@@ -26,39 +25,33 @@ import { cardsSegmentClassName, cardsSegmentedClassName } from "./trackClasses";
  * Not on a card. Every other screen in this pane is a list or a grid with its
  * own panels; this one is a short column of settings, and a panel drawn around
  * it made a phone-sized screen look like a receipt in an empty room.
+ *
+ * There is no signed-out half any more. CardsView renders this only when
+ * `!isPublic`, and derives `signedIn` from the same expression — so the branch
+ * holding a SignInForm could not be reached from anywhere, and it was carrying
+ * the last piece of copy in the app that named the owner out loud ("The
+ * collection is Bart's to add to"), which is how it was found.
  */
 const cardsProfileTitleClassName =
   "m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)]" +
   " [line-height:var(--lh-tight)] text-label";
 
-export default function CardsProfile({
-  signedIn,
-  onSignOut,
-}: {
-  signedIn: boolean;
-  onSignOut: () => void;
-}) {
+export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
   const { theme, toggle } = useTheme();
 
   return (
     <div className="flex flex-col items-start gap-10 max-w-[52ch]">
       <section className="flex flex-col items-start gap-4 w-full">
-        <h3 className={cardsProfileTitleClassName}>{signedIn ? "Signed in" : "Sign in"}</h3>
-        {signedIn ? (
-          <>
-            <FormNote>
-              The session is a cookie on this device, so the plus stays in the bar until you sign
-              out or thirty days pass. Adding a card writes a row to the same database the rest of
-              this page reads.
-            </FormNote>
-            <button type="button" className="btn" onClick={onSignOut}>
-              <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
-              <span>Sign out</span>
-            </button>
-          </>
-        ) : (
-          <SignInForm note="The collection is Bart's to add to. Signed in, a plus appears in the bar and a card can be added from the page that shows it." />
-        )}
+        <h3 className={cardsProfileTitleClassName}>Signed in</h3>
+        <FormNote>
+          The session is a cookie on this device, so the plus stays in the bar until you sign out
+          or thirty days pass. Adding a card writes a row to the same database the rest of this
+          page reads.
+        </FormNote>
+        <button type="button" className="btn" onClick={onSignOut}>
+          <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
+          <span>Sign out</span>
+        </button>
       </section>
 
       {/* The site's own switch, spelled out. Everywhere else it is a circle

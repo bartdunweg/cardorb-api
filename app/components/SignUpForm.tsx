@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
-import { MIN_PASSWORD } from "../../lib/core/account";
+import { MAX_DISPLAY_NAME, MIN_PASSWORD } from "../../lib/core/account";
 import {
   FormError,
   FormField,
@@ -17,19 +17,31 @@ import {
 import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
 
 /**
- * Two fields.
+ * Two required fields and one that is not.
  *
- * An address and a password are what an account is. The username used to be
- * a third field here, asked for before there was anything to name — that
- * traded a simpler form for a decision made under no context at all. It is
- * generated instead (generateUsername, in lib/core/account.ts) so the account
- * exists with a working link the moment it is confirmed, and the person picks
- * their own name later from Settings, once there is a collection behind it
- * worth naming well.
+ * An address and a password are what an account is; a name is what a collection
+ * is called. The *username* used to be a third required field here, asked for
+ * before there was anything to name — a simpler form traded for a decision made
+ * under no context at all. It is generated instead (generateUsername, in
+ * lib/core/account.ts) so the account exists with a working link the moment it
+ * is confirmed, and the person picks their own handle later from Settings.
+ *
+ * The name asked for here is the other half of that, and the reason ADR-0006's
+ * "nobody's first choice" downside is smaller than it was: the public page is
+ * titled after this, so somebody who fills it in gets "Bart’s Pokémon card
+ * collection" without ever visiting Settings. Optional on purpose — it is the
+ * one field on this form nothing breaks without, and requiring it would put
+ * back the friction the username came out for. Left empty, the page falls back
+ * to the generated username and the field waits in Settings.
+ *
+ * One field, not first name and last name. There is no billing and no shipping
+ * here to need the halves separately, and a split asks anyone whose name does
+ * not divide in two to pretend that it does.
  */
 export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: string }) {
   const router = useRouter();
   const { signUp, error } = useSession();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -48,7 +60,7 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
 
     setBusy(true);
     try {
-      const result = await signUp(email.trim(), password);
+      const result = await signUp(email.trim(), password, name.trim());
       if (!result.ok) return;
       // Waiting on a confirmation link is a state, not a redirect. Sending them
       // to the collection would show an empty screen behind a door they have not
@@ -88,6 +100,32 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
   return (
     <>
       <FormForm layout="column" onSubmit={submit}>
+        {/* First, because it is the friendliest thing on the form and the only
+            one that is about the person rather than about the account. No
+            `required`: the hint below says what happens if it is skipped, and
+            skipping it has to stay a one-second decision. */}
+        <FormField layout="column">
+          {/* "(optional)" in the label rather than in the placeholder. A
+              placeholder is the only thing on a form that disappears the moment
+              somebody uses the field, and it is not reliably read out — so it
+              is the wrong place to keep the one fact that decides whether this
+              field can be skipped. */}
+          <FormLabel>Your name (optional)</FormLabel>
+          <FormInput
+            type="text"
+            name="name"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={MAX_DISPLAY_NAME}
+            disabled={busy}
+            aria-describedby="signup-name-hint"
+          />
+          <FormHint id="signup-name-hint">
+            What your collection is called. You can add or change it later in Settings.
+          </FormHint>
+        </FormField>
+
         <FormField layout="column">
           <FormLabel>Email</FormLabel>
           <FormInput

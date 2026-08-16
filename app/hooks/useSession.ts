@@ -91,12 +91,18 @@ export function useSession() {
    * them to a collection they cannot load.
    */
   const signUp = useCallback(
-    async (email: string, password: string): Promise<{ ok: boolean; pending?: boolean }> => {
+    async (
+      email: string,
+      password: string,
+      /** What to call them. Optional, and left out entirely when it is empty so
+       *  the account starts with no name rather than with an empty one. */
+      name?: string,
+    ): Promise<{ ok: boolean; pending?: boolean }> => {
       setError(null);
       const res = await fetch("/api/v1/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(name ? { email, password, name } : { email, password }),
       });
       const body = (await res.json().catch(() => ({}))) as {
         error?: string;

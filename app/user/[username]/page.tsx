@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
 import { forGrid, stripPrices } from "../../../lib/core/cards";
-import { getCards } from "../../../lib/core/collection";
-import { ownerOf } from "../../../lib/core/collection";
-import { APP_NAME, OWNER_NAME, PUBLIC_USERNAME } from "../../../lib/core/config";
+import { getCards, ownerOf } from "../../../lib/core/collection";
+import { collectionTitle, ownerLabel } from "../../../lib/core/owner";
+import { APP_NAME } from "../../../lib/core/config";
 import "../../styles/collection.css";
 import { pageCardsClassName } from "../../components/cardsPageClasses";
 
@@ -47,18 +47,16 @@ import { pageCardsClassName } from "../../components/cardsPageClasses";
 export const dynamic = "force-dynamic";
 
 /**
- * Roughly how big the collection is, for the description only.
+ * What this page is about, in one sentence, for every collection.
  *
- * Written down rather than counted, because generateMetadata runs before the
- * page body and counting would mean a second walk of the collection for one
- * number in a sentence. "Over sixteen hundred" stays true through a lot of
- * packs; when it stops being true, this line is the thing to change.
+ * There used to be a size in here — "Over sixteen hundred Pokémon cards" — from
+ * a constant, written down rather than counted because generateMetadata runs
+ * before the page body and counting would mean a second walk of the collection
+ * for one number in a sentence. That reasoning still holds; what stopped
+ * holding is the number, which was a fact about one person's binder printed on
+ * everybody's page. The count is drawn in the OG image, where it is real.
  */
-const SIZE_HINT = "Over sixteen hundred";
-
-export async function generateStaticParams() {
-  return [{ username: PUBLIC_USERNAME }];
-}
+const DESCRIPTION = "A Pokémon card collection, set by set, with what is still on the wishlist.";
 
 export async function generateMetadata({
   params,
@@ -66,8 +64,14 @@ export async function generateMetadata({
   params: Promise<{ username: string }>;
 }): Promise<Metadata> {
   const { username } = await params;
-  const title = `${OWNER_NAME}'s Pokémon card collection`;
-  const description = `${SIZE_HINT} Pokémon cards, set by set, with what is still on the wishlist.`;
+  // The same lookup the page body does, collapsed into one by cache() in
+  // ownerOf(). A profile that is private or absent gets no title worth
+  // indexing; the body below is what actually answers 404.
+  const owner = await ownerOf(username);
+  if (!owner) return { title: "Collection not found", robots: { index: false, follow: false } };
+
+  const title = collectionTitle(owner);
+  const description = DESCRIPTION;
   const path = `/user/${username}`;
 
   return {
@@ -111,7 +115,7 @@ export default async function PublicCollection({
 
   // Stripped before it is handed to a client component, so the prices are not
   // in the HTML and not in the props. See stripPrices in lib/core/cards.ts.
-  const sets = forGrid(stripPrices(await getCards(owner)));
+  const sets = forGrid(stripPrices(await getCards(owner.id)));
 
   const held = sets.reduce((n, set) => n + set.cards.filter((c) => c.owned).length, 0);
 
@@ -128,7 +132,7 @@ export default async function PublicCollection({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${OWNER_NAME}'s Pokémon card collection`,
+    name: collectionTitle(owner),
     description: `${held} Pokémon cards, organised by set.`,
     inLanguage: "en",
     mainEntity: {
@@ -148,14 +152,22 @@ export default async function PublicCollection({
       <link rel="preconnect" href="https://images.pokemontcg.io" crossOrigin="anonymous" />
       <script
         type="application/ld+json"
-        // The data is ours and contains no user input: set names come from
-        // Notion by way of TCGdex. The escape is for the one character that
-        // would end the script element early regardless of where it came from.
+        // This block now carries a name somebody typed into Settings, which it
+        // did not when the name came from an env var — so the escape below is
+        // load-bearing rather than belt-and-braces. `</` is the one sequence
+        // that can end the script element early, and JSON.stringify will not
+        // escape it on its own. The set names either side of it are still ours,
+        // by way of TCGdex.
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <CardsView sets={sets} variant="public" username={username} />
+      <CardsView
+        sets={sets}
+        variant="public"
+        username={username}
+        ownerName={ownerLabel(owner)}
+      />
     </section>
   );
 }
