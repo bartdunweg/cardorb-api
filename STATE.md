@@ -22,22 +22,32 @@ need a person** — 12 are "is this the V or the VMAX", which only the card
 answers.
 
 Two traps found by the dry run and worth not re-stepping in:
-- **The card-type suffix is house style.** This collection writes "Pikachu"
-  where TCGdex writes "Pikachu ex"; `matching.ts` was widened for it years ago.
-  The first version compared full names and proposed 179 "corrections" that were
-  all suffix — a fifth of the collection rewritten into a convention nobody
-  chose.
+- **The card-type suffix looked like house style, and was not** — see the
+  paragraph below, which reverses this. Worth keeping the shape of the mistake:
+  the first run proposed 179 "corrections" that were all suffix, and stripping
+  it before comparing was a guess about intent dressed up as a safety measure.
+  The right move was to ask, not to decide quietly in either direction.
 - **PostgREST caps at 1000 rows silently.** The first run audited 1,000 of 1,968
   and called the rest clean. `lib/storage/postgres.ts` has always had the paging
   loop; `backfill-rarity-types.mjs` did not, and had been backfilling half this
   collection since it was written. Both scripts have it now.
 
-**Left open on purpose:** with that bug fixed, `backfill-rarity-types.mjs` wants
-to change **956 of 1,938 rows**, and some are downgrades — `"Special
-Illustration Rare"` → `"Ultra Rare"` loses a real distinction, `"Illustration
-Rare"` → `"Illustration rare"` is only casing. Not run. It needs a product
-decision about which rarity vocabulary the app wants (ADR-0040's last
-consequence).
+**Both of those exceptions are now closed, against them (ADR-0041).** Bart:
+*"Als TCGdex 'Pikachu X' zegt, dan moeten wij dat ook zeggen"* and *"dat maar
+ook gewoon doen en tcgdex standaarden volgen"*. So: **293 names** and **956
+rarity/type pairs** written, both scripts re-run to zero differences. The suffix
+one is less of a reversal than it reads — nothing hand-types a name any more, so
+those rows predated the rule rather than upholding a convention.
+
+Two things worth keeping from that: `"Special Illustration Rare"` is **gone**,
+folded into `"Ultra Rare"` — knowingly spent, and only recoverable from a
+catalogue that draws the distinction, not from the rows. And checking the
+consequences turned up a real bug: `"Non-holo"` contains `"holo"`, so
+`poke-holo.css`'s substring selector would have foiled the two cards whose
+rarity is the word for not having one. Fixed with `:not()` — the first attempt
+used an earlier rule of identical specificity, which the later one still beats.
+ADR-0012's cascade trap, in miniature. Any change to the rarity vocabulary means
+re-checking every rarity-keyed selector.
 
 **You can browse the whole catalogue now, not just what you own (ADR-0037).**
 This closes the item further down that was explicitly deferred as "a real,
