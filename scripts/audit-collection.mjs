@@ -28,12 +28,14 @@
  *
  * ── The three classes ──────────────────────────────────────────────────────
  *
- * **A. The name is spelled wrong.** The number matched and sameCard() agreed,
- *    so this is definitely the same card — the row just says "Tyrantirar" where
- *    the catalogue says "Tyranitar". Twenty-two of these were found once before
- *    (see lib/core/matching.ts, which was widened to tolerate them rather than
- *    lose their artwork). Safe to fix: identity is already established, only
- *    the spelling moves.
+ * **A. The name does not match the catalogue's.** The number matched and
+ *    sameCard() agreed, so this is definitely the same card and only the way it
+ *    is written moves. Two kinds: a typo ("Tyrantirar" for Tyranitar — twenty-two
+ *    of those are in here, see lib/core/matching.ts, which was widened to
+ *    tolerate them rather than lose their artwork), and a missing card-type
+ *    suffix, where the row says "Pikachu" and the card says "Pikachu ex". Both
+ *    are corrected to exactly what the catalogue says: "Als TCGdex 'Pikachu X'
+ *    zegt, dan moeten wij dat ook zeggen."
  *
  * **B. The number is wrong.** The number resolves to a different card, but this
  *    card does exist in this set under another number. Fixed only when exactly
@@ -232,30 +234,31 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
 
     if (at?.name && sameCard(at.name, row.name)) {
       /**
-       * The number is right, so the only thing left that can be wrong is the
-       * spelling — but *only* the spelling, and that is a narrower thing than it
-       * first looks.
+       * The number is right, so the name is the only thing left that can be
+       * wrong — and the catalogue's name wins outright, suffix included.
        *
-       * Compared with the card-type suffix stripped from both sides, because
-       * this collection deliberately files "Pikachu" where TCGdex says
-       * "Pikachu ex". That is not an error, it is the house style, and
-       * matching.ts was widened to tolerate it years ago for exactly this
-       * reason ("Bart files a card as 'Venusaur' where TCGdex calls it
-       * 'Venusaur ex'"). The first version of this script compared the full
-       * names and proposed 179 "corrections" that were all suffix — it would
-       * have rewritten a fifth of the collection into a convention nobody asked
-       * for. What is left after stripping is the real thing: "Tyrantirar" for
-       * Tyranitar, "Mimikiyu" for Mimikyu, the twenty-two typos matching.ts
-       * already knows are in here.
+       * This was the other way round for one run of this script. The collection
+       * had years of "Pikachu" where TCGdex says "Pikachu ex", so the first
+       * version read the suffix as house style and compared with it stripped,
+       * which left 179 rows alone. Bart's call: "Als TCGdex 'Pikachu X' zegt,
+       * dan moeten wij dat ook zeggen." Which is only ADR-0040's own principle
+       * applied without an exception carved out of it — a card's name is a fact
+       * about the card, and the catalogue owns those.
+       *
+       * It also makes the old rows match the new ones. Nothing hand-types a
+       * name any more: the add dialog writes whatever the catalogue match said
+       * (ADR-0030, ADR-0032), suffix and all. So the 179 were not a convention
+       * being kept, they were rows predating the rule.
+       *
+       * Checked before running rather than after: speciesOf() finds a Pokémon
+       * by substring, longest first, so "pikachuex" still resolves to Pikachu
+       * and "mewtwoex" to Mewtwo rather than Mew. Twelve suffixed names,
+       * including the & GX pairs and the hyphenated -EX, all keep their Pokédex
+       * place. sameCard() strips the suffix from both sides, so matching is
+       * unaffected either way.
        */
-      const bare = (s) => norm(s.replace(TYPE_SUFFIX, ""));
-      if (bare(at.name) !== bare(row.name)) {
-        /* The correction keeps the row's own convention about the suffix: a row
-           written without one gets the catalogue's name without one, so fixing
-           "Tyrantirar" cannot smuggle in the " ex" the paragraph above just
-           established is not wanted. */
-        const to = TYPE_SUFFIX.test(row.name) ? at.name : at.name.replace(TYPE_SUFFIX, "");
-        misspelled.push({ row, to, localId: at.localId });
+      if (norm(at.name) !== norm(row.name)) {
+        misspelled.push({ row, to: at.name, localId: at.localId });
       } else fine++;
       continue;
     }
@@ -278,11 +281,7 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
     const words = (s) =>
       s.replace(TYPE_SUFFIX, "").toLowerCase().split(/\s+/).map(norm).filter(Boolean).sort().join("|");
     if (at?.name && words(at.name) === words(row.name) && bag(at.name) === bag(row.name)) {
-      misspelled.push({
-        row,
-        to: TYPE_SUFFIX.test(row.name) ? at.name : at.name.replace(TYPE_SUFFIX, ""),
-        localId: at.localId,
-      });
+      misspelled.push({ row, to: at.name, localId: at.localId });
       continue;
     }
 

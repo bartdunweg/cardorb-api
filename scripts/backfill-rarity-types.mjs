@@ -192,6 +192,19 @@ console.log(`${matched.length} rows matched a TCGdex id, ${unmatched.length} did
 
 const details = await detailsFor([...new Set(matched.map((m) => m.tcgId))]);
 
+/**
+ * Every previous value, written before anything is updated.
+ *
+ * scripts/audit-collection.mjs grew one of these for the same reason and this
+ * script is the more dangerous of the two: it rewrites a field on hundreds of
+ * rows at once, and TCGdex's rarity vocabulary is *coarser* than what some rows
+ * already hold — "Special Illustration Rare" becomes "Ultra Rare", which is a
+ * real distinction being spent, deliberately, in exchange for one vocabulary
+ * across the whole collection (ADR-0041). A decision like that is exactly the
+ * kind worth being able to take back.
+ */
+const undo = [];
+
 let changed = 0;
 for (const { row, tcgId } of matched) {
   const detail = details.get(tcgId);
@@ -206,12 +219,26 @@ for (const { row, tcgId } of matched) {
       `rarity ${JSON.stringify(row.rarity)} -> ${JSON.stringify(detail.rarity)}, ` +
       `types ${JSON.stringify(currentTypes)} -> ${JSON.stringify(detail.types)}`,
   );
-  if (WRITE) {
+  undo.push({
+    id: row.id,
+    set: row.set_name,
+    name: row.name,
+    from: { rarity: row.rarity ?? null, types: currentTypes },
+    to: { rarity: detail.rarity, types: detail.types },
+  });
+}
+
+if (WRITE && undo.length) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const journal = `${ROOT}docs/rarity-backfill-${stamp}.undo.json`;
+  writeFileSync(journal, JSON.stringify(undo, null, 2));
+  console.log(`\n  Undo journal: ${journal.replace(ROOT, "")}`);
+  for (const entry of undo) {
     const { error } = await db
       .from("cards")
-      .update({ rarity: detail.rarity, types: detail.types })
-      .eq("id", row.id);
-    if (error) console.error(`  failed to write ${row.id}: ${error.message}`);
+      .update({ rarity: entry.to.rarity, types: entry.to.types })
+      .eq("id", entry.id);
+    if (error) console.error(`  failed to write ${entry.id}: ${error.message}`);
   }
 }
 console.log(

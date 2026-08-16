@@ -43,9 +43,9 @@ bridge, or a genuinely unlisted card.
 | MEP Black Star Promos | Pikachu | `107` | no such number and no such name in this set |
 | MEP Black Star Promos | Umbreon | `110` | no such number and no such name in this set |
 | Chilling Reign | Chansey | `165` | #165 is Zeraora V, and no Chansey in this set |
+| Wizard Black Star Promos | Ancient Mew | `` | no such number and no such name in this set |
 | Scarlet & Violet Base | Sandygast | `222` | #222 is Skwovet, and no Sandygast in this set |
 | Scarlet & Violet Base | Tinkatink | `219` | #219 is Bombirdier, and no Tinkatink in this set |
 | Scarlet & Violet Base | Tinkatuff | `220` | #220 is Kingambit, and no Tinkatuff in this set |
 | Scarlet & Violet Base | Baxcalibur | `219` | #219 is Bombirdier, and no Baxcalibur in this set |
-| Wizard Black Star Promos | Ancient Mew | `` | no such number and no such name in this set |
 | Journey Together | Iono’s Lillbolt | `172` | #172 is Iono's Bellibolt ex, and no Iono’s Lillbolt in this set |

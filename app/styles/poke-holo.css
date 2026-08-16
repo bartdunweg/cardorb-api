@@ -264,12 +264,20 @@
    tier that gets it at full strength. */
 .poke-card[data-rarity="common"],
 .poke-card[data-rarity="uncommon"],
-.poke-card[data-rarity="promo"] {
+.poke-card[data-rarity="promo"],
+.poke-card[data-rarity="non-holo"] {
   --poke-foil: 0;
 }
 .poke-card[data-rarity="rare"],
 .poke-card[data-rarity="double rare"],
-.poke-card[data-rarity*="holo"],
+/* :not(), not merely an earlier rule. "Non-holo" contains "holo", so this
+   substring match would otherwise hand a foil to a card whose rarity is the
+   word for not having one — and the two selectors carry identical specificity,
+   so whichever is written last would win. That is the cascade trap ADR-0012 was
+   written about, in miniature. Excluding it here makes the rule order-proof.
+   Two rows, since the TCGdex rarity backfill landed this vocabulary
+   (ADR-0041). */
+.poke-card[data-rarity*="holo"]:not([data-rarity="non-holo"]),
 .poke-card[data-rarity="amazing rare"],
 .poke-card[data-rarity="radiant rare"],
 .poke-card[data-rarity="rare break"],

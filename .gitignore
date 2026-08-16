@@ -6,3 +6,4 @@ node_modules
 next-env.d.ts
 .vercel
 docs/collection-audit-*.undo.json
+docs/rarity-backfill-*.undo.json
