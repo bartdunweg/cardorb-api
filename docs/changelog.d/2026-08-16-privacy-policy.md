@@ -1,0 +1,2 @@
+- There is a privacy policy now, at `cardorb.com/privacy`, covering both the website and the iPhone app. It says what is stored, why, who else sees it, and how to get rid of it — including that a public collection never shows prices or purchase details, that card scanning happens on your own device, and that deleting your account takes the whole collection with it immediately.
+- Every page footer now links to it, and the signup form says so before you create an account.

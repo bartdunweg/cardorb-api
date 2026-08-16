@@ -120,4 +120,15 @@ root `CLAUDE.md` for how and when to write to it.
   in from whichever match the search above (pokemontcg.io) picked, not typed —
   the same "no manual entry" principle `0032` already established for the
   card's identity, applied to these two fields specifically.
+- `decisions/0042-one-privacy-policy-for-app-and-site.md` — **read before adding
+  a public page, or before answering "what do we send to whom".** `/privacy` is
+  the third route allowed to be indexed (the root layout `noindex`s everything
+  by default), and the record lists what each third party actually receives —
+  including that the website runs Vercel Web Analytics while the iOS app runs
+  none, which a draft written from the iOS side got backwards.
+  `decisions/0043-terms-of-use.md` is its follow-up: `/terms`, written for the
+  operator rather than for Apple, and the reason the "prices are information,
+  not advice" and "not affiliated with The Pokémon Company" sections exist at
+  all. Both pages share `app/components/LegalPage.tsx`; read it before adding a
+  third long-form page.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

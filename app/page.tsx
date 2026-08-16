@@ -15,8 +15,8 @@ import {
   Wallet,
 } from "lucide-react";
 import Card from "./components/Card";
+import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
-import ThemeToggle from "./components/ThemeToggle";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import { currentViewer } from "../lib/api/viewer";
 import { ownerLabel } from "../lib/core/owner";
@@ -80,6 +80,27 @@ const FAQ = [
   {
     q: "Where do the prices come from?",
     a: "Cardmarket, in euros, kept current as the market moves.",
+  },
+  {
+    // The landing page's way in to /privacy. The footer links there too, but a
+    // footer is where a link goes to not be read; somebody deciding whether to
+    // hand over an email address is deciding it here, among the other three
+    // questions they have. It also fills the fourth cell of a two-column grid
+    // that had been running with three.
+    q: "What happens to my data?",
+    a: (
+      <>
+        No advertising, no tracking and nothing sold. Delete your account and the whole
+        collection goes with it, straight away. The{" "}
+        <Link
+          href="/privacy"
+          className="text-label underline [text-underline-offset:2px] [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label-secondary"
+        >
+          privacy policy
+        </Link>{" "}
+        says exactly what is stored and who else sees it.
+      </>
+    ),
   },
 ];
 
@@ -501,20 +522,7 @@ export default async function Home() {
         </Link>
       </section>
 
-      <footer
-        className="grid grid-cols-[1fr_minmax(0,1.6fr)_1fr] gap-4 items-start pt-5
-          border-t border-[var(--color-border-subtle)] text-label-tertiary
-          [font-family:var(--font-body)] [font-size:var(--fs-small)]
-          [@media(max-width:640px)]:grid-cols-1 [@media(max-width:640px)]:text-center"
-      >
-        <span className="text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em] no-underline">
-          {APP_NAME}
-        </span>
-        <p className="m-0 text-center">Prices come from Cardmarket, in euros — the market collectors recognise.</p>
-        <div className="flex items-center justify-self-end [@media(max-width:640px)]:justify-self-center">
-          <ThemeToggle />
-        </div>
-      </footer>
+      <Footer />
       </section>
     </div>
   );
