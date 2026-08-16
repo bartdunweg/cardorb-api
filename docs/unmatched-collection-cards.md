@@ -162,7 +162,31 @@ the app.
 
 ---
 
-## Still open — nothing
+## One card will still be blank: Ancient Mew
+
+Matching and having something to show are two different things, and after all
+thirteen were settled exactly one card fails the second.
+
+Checked against both catalogues on 16 August 2026:
+
+| | TCGdex | pokemontcg.io |
+| --- | --- | --- |
+| the six ordinary corrections | scan + price | — (not needed) |
+| the five Trainer Gallery cards | **no scan**, price yes | scan yes |
+| **Ancient Mew** | **no scan, no price** | **not indexed at all** |
+
+The Trainer Gallery cards are fine: TCGdex has no artwork for that subset, which
+is the whole reason ADR-0022 reads gallery scans from pokemontcg.io, and it has
+all five. They also now carry prices — €6.39 to €35.75 — which they did not
+before, because they were not matching at all.
+
+Ancient Mew is the exception in both directions. TCGdex knows the card
+(`miscp-001`) but publishes no image and no Cardmarket product for it, and
+pokemontcg.io does not have it. So it will appear in the collection under the
+right name and stay a blank tile with no value, and there is nowhere left to look.
+A hand-supplied image is the only fix, which is a feature this app does not have.
+
+## Still open — nothing else
 
 All thirteen are settled. Twelve rows were corrected; one — `MEP Black Star
 Promos #088 Zarude` — was removed at Bart's request until TCGdex indexes that
