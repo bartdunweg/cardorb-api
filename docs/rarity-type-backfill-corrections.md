@@ -27,18 +27,20 @@ re-run this script. Delete this file once it is empty.
 | --- | --- | --- | --- |
 | 165 | Chansey | Rare Holo | V |
 
-## Cosmic Eclipse — 1 row
-
-| number | name | current rarity | current types |
-| --- | --- | --- | --- |
-| 143A | Togepi & Cleffa & Igglybuff | — | Tagteam |
-
 ## Journey Together — 2 rows
 
 | number | name | current rarity | current types |
 | --- | --- | --- | --- |
 | 165 | Wailord | Illustration Rare | — |
 | 172 | Iono’s Lillbolt | Special Illustration Rare | EX |
+
+## Lost Origin — 3 rows
+
+| number | name | current rarity | current types |
+| --- | --- | --- | --- |
+| TG12 | Centiskorch | Rare Holo | V, TG |
+| TG15 | Orbeetle | Rare Holo | V, TG |
+| TG17 | Eternatus | Rare Holo | V, TG |
 
 ## MEP Black Star Promos — 9 rows
 
@@ -54,11 +56,22 @@ re-run this script. Delete this file once it is empty.
 | 109 | Pikachu | Special Illustration Rare | EX |
 | 110 | Umbreon | Special Illustration Rare | EX |
 
-## Silver Tempest — 1 row
+## Scarlet & Violet Base — 4 rows
+
+| number | name | current rarity | current types |
+| --- | --- | --- | --- |
+| 219 | Tinkatink | Illustration Rare | — |
+| 219 | Baxcalibur | Illustration Rare | — |
+| 220 | Tinkatuff | Illustration Rare | — |
+| 222 | Sandygast | Illustration Rare | — |
+
+## Silver Tempest — 3 rows
 
 | number | name | current rarity | current types |
 | --- | --- | --- | --- |
 | 178 | Regidrago | Rare Holo | V |
+| TG12 | Blaziken | Rare Holo | V, TG |
+| TG14 | Corviknight | Rare Holo | TG |
 
 ## Stellar Crown — 1 row
 
@@ -70,8 +83,8 @@ re-run this script. Delete this file once it is empty.
 
 | number | name | current rarity | current types |
 | --- | --- | --- | --- |
-| 013 | Pansear | Reversed Holo | — |
 | 013 | Pansear | Non-holo | — |
+| 013 | Pansear | Reversed Holo | — |
 
 ## Wizard Black Star Promos — 1 row
 

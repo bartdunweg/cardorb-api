@@ -4,6 +4,41 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The collection has been audited against TCGdex and 21 rows corrected
+(ADR-0040).** Browse made the old `trainer-gallery-row-corrections.md` visible
+rather than merely true — a gallery grid showed two grey slots where one owned
+card should be — and Bart widened the fix from "those 23 rows" to a principle:
+*"Wat we gebruiken als API's, dat is de source of truth."*
+
+So `scripts/audit-collection.mjs` reconciles every row against TCGdex, using
+`buildCollection()`'s own matching imported from `lib/core`, and sorts them into
+fixable (misspelling; wrong number with exactly one candidate) and not (several
+candidates; unplaceable). Dry run by default, undo journal before every write.
+Result: 1,917 → **1,938 of 1,968 rows agreeing**, zero left in the auto-fixable
+classes. On Silver Tempest its 13 proposals were identical to the hand-compiled
+worklist, including which two it refused to decide. The old worklist is deleted;
+`docs/collection-audit-corrections.md` is now a build output. **30 rows still
+need a person** — 12 are "is this the V or the VMAX", which only the card
+answers.
+
+Two traps found by the dry run and worth not re-stepping in:
+- **The card-type suffix is house style.** This collection writes "Pikachu"
+  where TCGdex writes "Pikachu ex"; `matching.ts` was widened for it years ago.
+  The first version compared full names and proposed 179 "corrections" that were
+  all suffix — a fifth of the collection rewritten into a convention nobody
+  chose.
+- **PostgREST caps at 1000 rows silently.** The first run audited 1,000 of 1,968
+  and called the rest clean. `lib/storage/postgres.ts` has always had the paging
+  loop; `backfill-rarity-types.mjs` did not, and had been backfilling half this
+  collection since it was written. Both scripts have it now.
+
+**Left open on purpose:** with that bug fixed, `backfill-rarity-types.mjs` wants
+to change **956 of 1,938 rows**, and some are downgrades — `"Special
+Illustration Rare"` → `"Ultra Rare"` loses a real distinction, `"Illustration
+Rare"` → `"Illustration rare"` is only casing. Not run. It needs a product
+decision about which rarity vocabulary the app wants (ADR-0040's last
+consequence).
+
 **You can browse the whole catalogue now, not just what you own (ADR-0037).**
 This closes the item further down that was explicitly deferred as "a real,
 separate piece of work". Asked for by Bart for the iOS app; scope confirmed by
