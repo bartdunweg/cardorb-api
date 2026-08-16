@@ -348,6 +348,14 @@
   font-size: var(--fs-h2);
   line-height: var(--lh-tight);
   color: var(--color-label);
+  /* This heading used to hold only curated strings — set names, era labels, and
+     an owner name that came from an env var. On the public page it now holds
+     "<display name>’s collection", which is up to sixty characters somebody
+     typed, and a long unbroken one would have run past the edge of the pane.
+     The rail's own copy of this label already truncates (NavItem's min-w-0 +
+     truncate); a page heading should wrap rather than be cut off, so it breaks
+     the word instead. */
+  overflow-wrap: anywhere;
 }
 
 .cards-tools {

@@ -39,6 +39,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCollection, type CardSet } from "./cards";
 import { cardsTag } from "./collection-row";
 import { listRows, publicProfile } from "../storage/collection";
+import type { PublicProfile } from "../storage/postgres";
 import { serverClient, userClient } from "../storage/supabase";
 
 /**
@@ -132,8 +133,18 @@ export const getCards = cache(async (userId: string, token?: string): Promise<Ca
 
 /**
  * Whose collection /user/<name> shows, or null where nobody's is.
+ *
+ * The whole profile rather than just the id, because the page needs both halves
+ * of it: the id to fetch the cards, and the name to say whose they are. That
+ * name used to come from an env var (OWNER_NAME), which is how every account's
+ * public page ended up titled after the deployment's owner. publicProfile()
+ * already selects all three columns, so carrying the name out of here costs
+ * nothing and removes the reason to look it up anywhere else.
+ *
+ * cache()d for the same reason getCards() above is: generateMetadata and the
+ * page body are two calls in one render asking the identical question, and the
+ * route is force-dynamic so nothing else would collapse them.
  */
-export async function ownerOf(username: string): Promise<string | null> {
-  const profile = await publicProfile(username);
-  return profile ? profile.id : null;
-}
+export const ownerOf = cache(async (username: string): Promise<PublicProfile | null> =>
+  publicProfile(username),
+);

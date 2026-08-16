@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
 import { colour } from "../../../lib/design/tokens";
-import { APP_NAME, OWNER_NAME } from "../../../lib/core/config";
+import { APP_NAME } from "../../../lib/core/config";
 import { stripPrices } from "../../../lib/core/cards";
 import { getCards, ownerOf } from "../../../lib/core/collection";
+import { ownerLabel } from "../../../lib/core/owner";
 
 /**
  * What a shared link looks like before anyone clicks it.
@@ -18,7 +19,16 @@ import { getCards, ownerOf } from "../../../lib/core/collection";
  */
 export const runtime = "nodejs";
 export const revalidate = 3600;
-export const alt = `${OWNER_NAME}'s Pokémon card collection`;
+/**
+ * Deliberately nameless, unlike the picture itself.
+ *
+ * `alt` is a module-level export: Next reads it once to build the meta tag, so
+ * it cannot see which profile is being drawn. It used to name the deployment's
+ * owner, which made it wrong for everybody else rather than merely vague. The
+ * drawn image below does say whose collection it is, and that is the copy a
+ * person actually sees in a preview card.
+ */
+export const alt = "A Pokémon card collection";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -61,7 +71,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
   // Prices come off for the same reason they do on the page: this image is
   // public in a way even the page is not, since a preview is fetched and cached
   // by anything the link passes through.
-  const sets = owner ? stripPrices(await getCards(owner)) : [];
+  const sets = owner ? stripPrices(await getCards(owner.id)) : [];
   const held = sets.reduce((n, s) => n + s.cards.filter((c) => c.owned).length, 0);
   const withHeld = sets.filter((s) => s.cards.some((c) => c.owned)).length;
 
@@ -72,6 +82,15 @@ export default async function Image({ params }: { params: Promise<{ username: st
   // browser, and Satori refuses webp outright ("Unsupported image type"). The
   // whole image 500s on it rather than dropping the one picture, so the format
   // is not a preference here.
+  // Whose it is, drawn rather than configured. A display name is up to sixty
+  // characters and a username up to thirty, and either can be a good deal
+  // longer than "Bart" — so the heading steps down and is allowed to wrap onto
+  // a second line instead of running off the canvas. Two lines at 48px still
+  // clears the row of scans below; a third would not, and no name that fits the
+  // column reaches one.
+  const heading = `${ownerLabel(owner ?? { username, displayName: null })}’s collection`;
+  const headingSize = heading.length > 40 ? 40 : heading.length > 24 ? 48 : 68;
+
   const scans = sets
     .flatMap((s) => s.cards)
     .filter((c) => c.owned && c.image)
@@ -103,8 +122,15 @@ export default async function Image({ params }: { params: Promise<{ username: st
             500ing rather than a layout that looks off. */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", fontSize: 30, color: colour.labelTertiary.light }}>{APP_NAME}</div>
-          <div style={{ display: "flex", fontSize: 68, color: colour.label.light, fontWeight: 700 }}>
-            {OWNER_NAME}&rsquo;s collection
+          <div
+            style={{
+              display: "flex",
+              fontSize: headingSize,
+              color: colour.label.light,
+              fontWeight: 700,
+            }}
+          >
+            {heading}
           </div>
           <div style={{ display: "flex", fontSize: 34, color: colour.labelSecondary.light }}>
             {held.toLocaleString("en-GB")} cards across {withHeld} sets

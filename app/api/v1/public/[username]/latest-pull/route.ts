@@ -49,7 +49,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   if (!owner)
     return NextResponse.json({ error: "No such collection." }, { status: 404, headers: CORS_HEADERS });
 
-  const pull = latestPull(await getCards(owner));
+  const pull = latestPull(await getCards(owner.id));
   if (!pull) return NextResponse.json({ error: "No card found." }, { status: 404, headers: CORS_HEADERS });
 
   return NextResponse.json(

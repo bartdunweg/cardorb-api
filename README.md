@@ -94,7 +94,6 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
 | `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — canonicals, `og:url`, the sitemap and `robots.txt` all read this |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
-| `PUBLIC_USERNAME`, `OWNER_NAME` | no | whose collection `/user/<name>` shows |
 | `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
 
 `NEXT_PUBLIC_SITE_URL` matters more than its "recommended" tag suggests: without it,

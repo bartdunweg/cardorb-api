@@ -4,6 +4,33 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**Every collection is now named after its own owner (ADR-0034).** The app had
+been multi-user for a while — accounts, `profiles`, per-user rows, RLS — while a
+single env var, `OWNER_NAME`, still titled every public page "Bart's Pokémon card
+collection". Production had a live instance of this: `/user/pikachu` served that
+account's collection under Bart's name, in the title, the OG image and the
+JSON-LD. `OWNER_NAME` and `PUBLIC_USERNAME` are deleted; the name comes from the
+profile being rendered (`ownerOf()` now returns the whole profile, and
+`lib/core/owner.ts` decides what to call it, falling back to the username).
+Signup asks for a name, optionally, and no longer seeds `display_name` with the
+generated username. Two single-owner leftovers went with it: the public
+card-detail route 404'd every account but the first, and the sitemap listed one
+hardcoded profile.
+
+**Open, and needed before this is fully live:** the backfill migration
+`supabase/migrations/20260816120000_display_name_is_a_person_not_a_username.sql`
+has **not** been applied. It nulls `display_name` where it is a copy of the
+username — safe and narrow (only exact, case-insensitive matches), but it is the
+production database, so it is Bart's to run. Nothing breaks without it; accounts
+just keep showing a generated handle as though it were a chosen name.
+
+Still unverified in a browser, and the same gap as before: the Settings "Your
+name" panel and the landing header's "Signed in as …" both need a real signed-in
+session, and the Chrome extension was not connected this session. Everything
+reachable without signing in was checked live against production data — both
+public pages' titles and headings, both OG images, the sitemap, and the
+card-detail route for both accounts.
+
 The public "latest pull" endpoint is fit for the portfolio site to embed. It
 never needed an API key — a key shipped in a public site's JavaScript is not a
 secret — but it was answering with the wrong card: `latestPull()` gated on

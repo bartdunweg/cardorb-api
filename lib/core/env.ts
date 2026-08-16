@@ -33,12 +33,9 @@ const CHECKS: Check[] = [
     required: true,
     without: "the sign-in form refuses every address, including the right one",
   },
-  {
-    name: "PUBLIC_USERNAME",
-    required: false,
-    without: "the public link falls back to /user/bartdunweg",
-  },
-  { name: "OWNER_NAME", required: false, without: "the collection is titled after 'Bart'" },
+  // PUBLIC_USERNAME and OWNER_NAME were here. Both named one person for a whole
+  // deployment; both are now lookups against the profile being rendered. See
+  // lib/core/config.ts, where the constants were.
   {
     name: "NEXT_PUBLIC_SITE_URL",
     required: false,
