@@ -41,6 +41,17 @@ export const copiesHeld = (card: OwnedCard): number =>
 
 export type Tally = { value: string; count: number };
 
+/**
+ * Today's market against the last thirty days, over the copies held.
+ *
+ * `pct` is the part anyone reads; the two totals are kept beside it so the page
+ * can say what the comparison was over rather than presenting a percentage with
+ * nothing behind it. `cards` is how many carried both figures — a movement
+ * computed over a fifth of a binder is a different claim from one over all of
+ * it, and the page should be able to tell them apart.
+ */
+export type Movement = { now: number; avg30: number; pct: number; cards: number };
+
 export type CardsStats = {
   /** Every row, held or wanted. */
   cards: number;
@@ -76,6 +87,32 @@ export type CardsStats = {
    * worse than a badly-priced one with duplicates in it.
    */
   priced: number;
+  /**
+   * What the wishlist would cost to buy, in euros, over the cards that have a
+   * price.
+   *
+   * One copy per wanted card, unlike `value` above, which counts every copy
+   * held. A quantity on a wishlist row is a wish rather than a holding, and
+   * "you want three of these" is not a thing this app asks or a collector
+   * usually means; buying the list once is the question the number answers.
+   */
+  wishlistValue: number;
+  /** How many wanted cards carried a price, so the figure can say so. */
+  wishlistPriced: number;
+  /**
+   * Where the binder sits against its own recent past, or null when too little
+   * of it can be compared.
+   *
+   * Both sides are raw Cardmarket figures — `market` against `avg30` — and that
+   * is the only honest pairing available. `shownPrice()` answers with the Near
+   * Mint estimate, which is `market` multiplied by a band, so comparing it to
+   * `avg30` would report that same band as a market movement and show a
+   * permanent premium that never changes.
+   *
+   * Only cards carrying both are counted, on both sides, so the ratio is over
+   * one set of cards rather than two.
+   */
+  movement: Movement | null;
   /** Held cards, priciest first, each with the set it came out of. */
   top: { card: OwnedCard; set: string }[];
   byEra: Tally[];
@@ -107,6 +144,31 @@ export function getCardsStats(sets: CardSet[], topCount = 10): CardsStats {
   const owned = all.filter((c) => c.owned);
   const priced = withSet.filter((x) => x.card.owned && shownPrice(x.card.price) != null);
 
+  // Wanted rather than held. `owned` on the card is an OR across its printings,
+  // so this is "no printing of this is in the binder" — which is what a
+  // wishlist entry is.
+  const wanted = all.filter((c) => !c.owned && shownPrice(c.price) != null);
+
+  /**
+   * Both sides of the movement, over the same cards.
+   *
+   * A card counts only where Cardmarket published both a current figure and a
+   * thirty-day average; anything else would put a card in one total and not the
+   * other, which is a ratio between two different collections.
+   */
+  let now = 0;
+  let then = 0;
+  let compared = 0;
+  for (const card of owned) {
+    const p = card.price;
+    if (p?.market == null || p.avg30 == null || p.avg30 <= 0) continue;
+    const held = copiesHeld(card);
+    if (!held) continue;
+    now += p.market * held;
+    then += p.avg30 * held;
+    compared++;
+  }
+
   return {
     cards: all.length,
     owned: owned.length,
@@ -114,6 +176,12 @@ export function getCardsStats(sets: CardSet[], topCount = 10): CardsStats {
     sets: sets.length,
     value: priced.reduce((sum, x) => sum + (shownPrice(x.card.price) ?? 0) * copiesHeld(x.card), 0),
     priced: priced.length,
+    wishlistValue: wanted.reduce((sum, c) => sum + (shownPrice(c.price) ?? 0), 0),
+    wishlistPriced: wanted.length,
+    // Null rather than 0% where there is nothing to compare: a binder nobody
+    // could price has not held steady, it is unknown, and those read the same
+    // on a page unless one of them is absent.
+    movement: compared ? { now, avg30: then, pct: (now - then) / then, cards: compared } : null,
     // Only what is held: the wishlist is a list of cards Bart does not have, and
     // ranking them by price would be a table of things he wants, under a heading
     // that says these are his.
