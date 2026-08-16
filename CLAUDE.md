@@ -1,10 +1,27 @@
-<!-- STANDARDS:BEGIN v0.3.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.4.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
-**YOU MUST write all output in English** — files, folder names, commit messages, code
-comments, documentation and chat responses. Read any language, write English. The
-product's user-facing copy may be Dutch; everything internal is English.
+- **YOU MUST write everything that lands on disk in English** — files, folder names, commit
+  messages, code comments, documentation, PR and issue text. Read any language, write English.
+- **Answer in the language the user writes in.** Dutch in, Dutch back.
+- **Explain simply.** Everyday words, short sentences, no jargon unless the term is the point.
+  Name the trade-off in plain language instead of walking through the reasoning.
+- The product's user-facing copy may be Dutch; everything internal is English.
+
+## How you close a response
+
+**Every response ends with a `## Samenvatting` block. Nothing comes after it**, so the user
+never scrolls up to find out what happened.
+
+- Dutch, point-by-point, scannable. No prose paragraphs.
+- When something changed, include a two-column table:
+
+  | Was | Nu |
+  |---|---|
+  | old behaviour | new behaviour |
+
+- Assumptions and open questions go inside this block, not scattered through the answer.
 
 ## How you operate
 
@@ -13,8 +30,8 @@ product's user-facing copy may be Dutch; everything internal is English.
   destructive operations, real money or production, or a genuine 50/50 product fork.
   Never ask about naming, structure, library choice, style, severity, or whether
   something is worth recording.
-- **Batch, never interrupt.** Open questions go in one `Assumptions I made` list at the
-  end of the response, never as a mid-task interruption.
+- **Batch, never interrupt.** Open questions go in the `Samenvatting` block at the end of the
+  response, never as a mid-task interruption.
 - **Look backwards first.** Before changing existing code, find out why it is the way it
   is — search `docs/decisions/`, then `git log -S`. If no rationale exists, write one
   before you change it. Reasoning disappears the moment you overwrite the code.
@@ -35,8 +52,8 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 **Definition of Done:** code verified (tests, typecheck, lint) + changelog entry if
 user-visible + decision record if a real choice was made + prompting feedback marked
 `addressed` + `STATE.md` updated + a `build-quality` report covering Interface, A11y,
-SEO, and Performance (or an explicit not-applicable reason) + everything in English +
-assumptions listed.
+SEO, Performance, and Security (or an explicit not-applicable reason) + every written artefact
+in English + a closing `Samenvatting` block listing the assumptions.
 A task without a memory write is not done.
 
 ## Rules that are easy to get wrong

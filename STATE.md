@@ -4,6 +4,34 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The shared standards are refreshed to v0.4.0** (`/apply-standards`, workspace
+`houston`). Only the generated marker regions moved — `CLAUDE.md`'s
+`STANDARDS:BEGIN…END` and `AGENTS.md`'s `DEV-STANDARDS:BEGIN…END`, both copied
+verbatim from `~/dev-standards/templates/`. The PRODUCT region and the
+`next dev`-written Next.js block below it were not touched. `CLAUDE.md` is 118
+lines.
+
+Four things changed in the standard itself, and the first two change how every
+response reads:
+
+- **Language is split in two.** Everything that lands on disk is still English;
+  the *answer* is now in the language Bart writes in — Dutch in, Dutch back.
+  Plus an "explain simply" rule: name the trade-off, don't walk through the
+  reasoning.
+- **Every response ends with a `## Samenvatting` block**, Dutch, scannable, with
+  a `| Was | Nu |` table when something changed. Nothing comes after it.
+  Assumptions and open questions live inside it, which replaces the old
+  `Assumptions I made` list.
+- **Definition of Done gained Security** — a `build-quality` report now has to
+  cover Interface, A11y, SEO, Performance *and* Security, or say why one does
+  not apply.
+
+No new decision record: a template version bump is not a choice between
+alternatives, and ADR-0000 already records why this repo has the system at all.
+Nothing user-visible changed, so no changelog fragment either. The git history
+here is substantial and a future `backfill` workflow could reconstruct rationale
+from it — not done, and it should stay opt-in.
+
 **There is a privacy policy, at `/privacy` (ADR-0042).** The iOS app cannot be
 submitted without one, and App Store Connect asks for a *URL*, so it had to be a
 route here first. One policy covers the website and the app — Bart asked whether
