@@ -57,5 +57,9 @@ export const config = {
     "/wishlist",
     "/settings",
     "/settings/:path*",
+    // The first-run flow is a signed-in screen like the rest of these: the page
+    // verifies the session itself, this only saves a signed-out visitor the
+    // round trip through a screen built for somebody with an account.
+    "/welcome",
   ],
 };

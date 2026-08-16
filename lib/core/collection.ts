@@ -119,16 +119,32 @@ const cachedCollection = (userId: string, db: SupabaseClient | null) =>
  * so, rather than taking the route down. The empty lasts one render — nothing
  * here remembers it — so the next request tries again and finds most of the
  * work already in a cache.
+ *
+ * `failed` is what tells those two empties apart. They were the same value for
+ * as long as there was one account with sixteen hundred cards in it, and the
+ * screen said the collection was unavailable — which was right for an outage
+ * and, once accounts could be new, was the first sentence a new account read
+ * about its own empty collection. The distinction is here rather than guessed
+ * at by the caller because here is the only place that knows.
  */
-export const getCards = cache(async (userId: string, token?: string): Promise<CardSet[]> => {
-  try {
-    const db = token ? userClient(token) : await serverClient();
-    return await cachedCollection(userId, db);
-  } catch (err) {
-    console.error("Card collection walk failed, retrying on the next render:", err);
-    return [];
-  }
-});
+export const getCollection = cache(
+  async (userId: string, token?: string): Promise<{ sets: CardSet[]; failed: boolean }> => {
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      return { sets: await cachedCollection(userId, db), failed: false };
+    } catch (err) {
+      console.error("Card collection walk failed, retrying on the next render:", err);
+      return { sets: [], failed: true };
+    }
+  },
+);
+
+/**
+ * The collection alone, for the callers that have nothing different to say
+ * about an outage — every API route, which answers with a list either way.
+ */
+export const getCards = async (userId: string, token?: string): Promise<CardSet[]> =>
+  (await getCollection(userId, token)).sets;
 
 /**
  * Whose collection /user/<name> shows, or null where nobody's is.

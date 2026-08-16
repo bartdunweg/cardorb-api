@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentViewer } from "../../lib/api/viewer";
 import { forGrid } from "../../lib/core/cards";
-import { getCards } from "../../lib/core/collection";
+import { getCollection } from "../../lib/core/collection";
 import AppShell from "./AppShell";
 import { pageCardsClassName } from "../components/cardsPageClasses";
 // Everything that draws a collection, once for every screen in the shell.
@@ -54,9 +54,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const viewer = await currentViewer();
   if (!viewer) redirect("/login?next=/dashboard");
 
+  // An account that has never been set up goes to the welcome flow first, and
+  // before the fetch below rather than after it: a brand-new account's
+  // collection is empty by definition, and there is no reason to pay for a
+  // round trip whose answer nothing on the next screen reads.
+  //
+  // /welcome sits outside this route group on purpose — inside it, this line
+  // would redirect the wizard to itself.
+  if (!viewer.onboardedAt) redirect("/welcome");
+
   // Derivable fields off before the collection crosses into a client component.
   // See forGrid in lib/core/cards.ts.
-  const sets = forGrid(await getCards(viewer.userId));
+  //
+  // `failed` travels with it because no screen below can work it out: an empty
+  // list is a new account and an empty list is an outage, and the two need
+  // different sentences.
+  const { sets: all, failed } = await getCollection(viewer.userId);
+  const sets = forGrid(all);
 
   return (
     <section className={pageCardsClassName}>
@@ -64,6 +78,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <AppShell
         viewer={{ username: viewer.username, email: viewer.email, avatarUrl: viewer.avatarUrl }}
         sets={sets}
+        failed={failed}
       >
         {children}
       </AppShell>

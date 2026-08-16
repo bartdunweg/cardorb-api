@@ -19,7 +19,12 @@ root `CLAUDE.md` for how and when to write to it.
 - `decisions/0003-split-lib-core-cards.md`, `decisions/0004-split-lib-core-catalogue.md`,
   `decisions/0005-split-cardsview.md` — the `lib/core`/`CardsView` refactor.
 - `decisions/0006-generated-username-at-signup.md` — why signup generates a username
-  instead of asking for one.
+  instead of asking for one. `decisions/0034-welcome-flow-for-new-accounts.md`
+  closes the consequence it left open: a four-step, every-step-skippable welcome
+  flow at `/welcome` (name, avatar, sharing, first cards), gated on a new
+  `profiles.onboarded_at` column. It also explains why "what do you collect" is
+  deliberately not asked, and why an empty collection and an unreachable one
+  finally say different things.
 - `decisions/0007-shared-form-components-over-css-classes.md`,
   `decisions/0009-settings-modal-tailwind-notes.md` through
   `decisions/0013-tailwind-entry-point-scope.md` — the Tailwind CSS migration's

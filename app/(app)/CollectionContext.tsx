@@ -27,6 +27,10 @@ export type CollectionValue = {
   /** Only the sets something is actually held from, grouped by era, for the rail. */
   setGroups: EraGroup[];
   viewer: { username: string; email: string; avatarUrl: string | null };
+  /** Whether the fetch gave up rather than finding nothing. Empty means "add
+   *  your first card" to a new account and "we could not reach the store" after
+   *  an outage, and only the server can tell which happened. */
+  failed: boolean;
 
   /** Scans and logos that answered 404, so nothing asks twice. */
   brokenScans: Set<string>;

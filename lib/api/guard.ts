@@ -220,7 +220,17 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
       return { status: 503, error: "This deployment has no account configured." };
     }
     console.warn("[deprecated] CARDS_TOKEN was used; move this client to an account token");
-    return { userId: owner, email: process.env.OWNER_EMAIL ?? "", username: "", avatarUrl: null };
+    return {
+      userId: owner,
+      email: process.env.OWNER_EMAIL ?? "",
+      username: "",
+      avatarUrl: null,
+      // The passcode names an account that predates the welcome flow, and this
+      // path never renders a page anyway — an API caller has nothing to be
+      // onboarded to. A timestamp rather than null so nothing downstream reads
+      // this as an account that still needs setting up.
+      onboardedAt: new Date(0).toISOString(),
+    };
   }
 
   const viewer = await requestViewer(req);

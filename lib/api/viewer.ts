@@ -35,6 +35,11 @@ export type Viewer = {
   /** The avatars bucket's public URL for this account, or null until one is
    *  uploaded. See app/api/v1/profile/avatar/route.ts. */
   avatarUrl: string | null;
+  /** When this account finished (or skipped past) the welcome flow, null while
+   *  it has not. Read here rather than in a query of its own because the (app)
+   *  layout has to check it on every render, and it already pays for this
+   *  lookup. See app/welcome/page.tsx. */
+  onboardedAt: string | null;
 };
 
 /**
@@ -75,11 +80,15 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
 
   const { data: profile } = await db
     .from("profiles")
-    .select("username,avatar_url")
+    .select("username,avatar_url,onboarded_at")
     .eq("id", sub)
     .maybeSingle();
 
-  const p = profile as { username?: string; avatar_url?: string | null } | null;
+  const p = profile as {
+    username?: string;
+    avatar_url?: string | null;
+    onboarded_at?: string | null;
+  } | null;
   return {
     userId: sub,
     email: email ?? "",
@@ -90,6 +99,12 @@ async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | nu
     // outcome for an account that has no name yet.
     username: p?.username ?? "",
     avatarUrl: p?.avatar_url ?? null,
+    // A profile row this lookup could not read is not a reason to send anybody
+    // through the welcome flow, but there is no row to write the answer to
+    // either — the fallback above already says this is a state that should not
+    // happen, and null here means the flow runs rather than being skipped by
+    // an error. Better a wizard nobody needed than a setup silently missed.
+    onboardedAt: p?.onboarded_at ?? null,
   };
 }
 

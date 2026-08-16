@@ -4,6 +4,30 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**New accounts now have a first run.** `/welcome` is a four-step wizard —
+username and display name, avatar, sharing, and how to fill the collection —
+shown once, with every step skippable and skipping writing nothing (ADR-0034).
+It is gated on a new nullable `profiles.onboarded_at`
+(`supabase/migrations/20260816090000_profile_onboarded.sql`, which backfills
+existing accounts as already onboarded, so it ships invisible to the live one).
+`app/(app)/layout.tsx` redirects an account with a null there to `/welcome`,
+before the collection fetch; `/welcome` itself sits outside the `(app)` group
+so it does not redirect to itself or inherit the signed-in chrome.
+
+Two things came with it. `getCollection()` in `lib/core/collection.ts` now
+reports whether the fetch gave up, so an empty collection and an unreachable one
+stop being the same value: a new account reads "No cards yet" with a button that
+opens the add dialog, and the old "not available right now" is kept for real
+outages. And the avatar upload is one component now (`AvatarPicker.tsx` +
+`useAvatarUpload.ts`), shared by Settings > Profile and the wizard.
+
+**Not browser-verified.** Same standing gap as signup and avatar upload: no
+agent session here can hold a signed-in session, so the flow has been
+typechecked, tested at the route (`app/api/v1/profile/route.test.ts` covers the
+one-way `onboarded` stamp) and built, but never clicked. Manual pass: set
+`onboarded_at` to null for an account, load `/dashboard`, and walk all four
+steps plus Skip on each.
+
 The public "latest pull" endpoint is fit for the portfolio site to embed. It
 never needed an API key — a key shipped in a public site's JavaScript is not a
 secret — but it was answering with the wrong card: `latestPull()` gated on

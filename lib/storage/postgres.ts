@@ -358,6 +358,8 @@ export type OwnProfile = {
   displayName: string | null;
   isPublic: boolean;
   avatarUrl: string | null;
+  /** Null until the welcome flow has been finished or skipped past. */
+  onboardedAt: string | null;
 };
 
 /**
@@ -375,7 +377,7 @@ export type OwnProfile = {
 export async function ownProfile(db: SupabaseClient, userId: string): Promise<OwnProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("username,display_name,is_public,avatar_url")
+    .select("username,display_name,is_public,avatar_url,onboarded_at")
     .eq("id", userId)
     .maybeSingle();
 
@@ -387,12 +389,14 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     display_name: string | null;
     is_public: boolean;
     avatar_url: string | null;
+    onboarded_at: string | null;
   };
   return {
     username: row.username,
     displayName: row.display_name,
     isPublic: row.is_public,
     avatarUrl: row.avatar_url,
+    onboardedAt: row.onboarded_at,
   };
 }
 
@@ -412,12 +416,21 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
 export async function updateProfile(
   db: SupabaseClient,
   userId: string,
-  patch: { displayName?: string | null; isPublic?: boolean; avatarUrl?: string | null },
+  patch: {
+    displayName?: string | null;
+    isPublic?: boolean;
+    avatarUrl?: string | null;
+    onboardedAt?: string;
+  },
 ): Promise<void> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("displayName" in patch) row.display_name = patch.displayName;
   if ("isPublic" in patch) row.is_public = patch.isPublic;
   if ("avatarUrl" in patch) row.avatar_url = patch.avatarUrl;
+  // Never null: finishing the welcome flow is a thing that happened, and
+  // nothing in the app un-happens it. The route that sets this only ever
+  // accepts `onboarded: true`, so the type here has no null in it either.
+  if ("onboardedAt" in patch) row.onboarded_at = patch.onboardedAt;
 
   const { error } = await db.from("profiles").update(row).eq("id", userId);
   if (error) throw new Error(`That change could not be saved: ${error.message}`);

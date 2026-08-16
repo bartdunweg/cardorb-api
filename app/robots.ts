@@ -16,14 +16,16 @@ import { SITE_URL } from "../lib/core/config";
  * that follows it would index the login under the collection's URL. /login is
  * disallowed for the same reason from the other end: it is a password field,
  * and now that / is a page worth reading, a crawler that indexed the login
- * would be holding the wrong one of the two.
+ * would be holding the wrong one of the two. /welcome is disallowed on that
+ * same argument: it is the signed-in first-run flow, and anonymous is exactly
+ * what a crawler is, so following it lands on the login again.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/cards", "/cards/", "/login"],
+      disallow: ["/api/", "/cards", "/cards/", "/login", "/welcome"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
