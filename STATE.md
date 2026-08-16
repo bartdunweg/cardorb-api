@@ -102,13 +102,22 @@ reads exactly `rarity` and `owned`. It is `forPublic()` now, an allow-list of
 those two, so a new column on `cards` is excluded by default rather than
 published by default. `Variant.quantity` became `number | null` as part of it.
 
-Two things to know: **this is a breaking change for any out-of-repo consumer of
-the public collection endpoint that read those fields** — the iOS app's source
-is not in this repo and could not be checked — and **nobody has loaded
-`/user/<name>` and read the RSC payload out of the served HTML since the
-change.** `lib/core/cards-public.test.ts` asserts it field by field and also
-that none of the values appear anywhere in the serialised payload, but that is
-a unit test, not the page.
+**Verified on production**, 2026-08-16, after PR #63 merged and deployed — not
+just in a unit test:
+
+- `GET https://cardorb.com/api/v1/public/bartdunweg/collection` — 1,643 cards,
+  1,968 printings, and every one of `purchasePrice`, `purchaseDate`, `condition`,
+  `grade`, `notes`, `quantity`, `acquiredAt` is `null`. No `id`, no `price`.
+- `https://cardorb.com/user/bartdunweg` — the field *names* appear in the RSC
+  payload with `null` beside them; there is not one `"purchasePrice":<number>`
+  and not one `"market":<number>` in 4.6 MB of HTML.
+- `/api/v1/value-history` answers **401** unauthenticated, and the deprecated
+  `x-cards-key` path answers "Sign in to see this." — the documented consequence,
+  not a regression.
+
+Still true: **this is a breaking change for any out-of-repo consumer of the
+public collection endpoint that read those fields.** The iOS app's source is not
+in this repo and could not be checked.
 
 **The shared standards are refreshed to v0.4.0** (`/apply-standards`, workspace
 `houston`). Only the generated marker regions moved — `CLAUDE.md`'s
@@ -1087,10 +1096,11 @@ picked up the same complaint within an hour of each other.
   duplicates are worth. Worth one look that it still fits its tile — it is
   rendered with proportional figures at `--fs-h2`, and a five-digit euro amount
   was already the widest thing in that row.
-- **Check a real `/user/<name>` payload after the ADR-0045 change.** Load the
-  page, read the RSC payload out of the served HTML, and confirm no purchase
-  price, note, condition or quantity is in it. Then the same on
-  `curl $SITE/api/v1/public/<name>/collection`. Unit-tested, not seen.
+- ~~Check a real `/user/<name>` payload after the ADR-0045 change.~~ **Done** on
+  production, 2026-08-16 — see "Now". Both the page's RSC payload and the public
+  API were read and carry no purchase price, note, condition or quantity.
+  What is still unchecked there is the **iOS app**, whose source is not in this
+  repo: if it read any of those fields, this broke it.
 - **The new loading fallback has not been seen in a signed-in browser.** No
   session in this workspace, `chrome-devtools` was blocked by another
   automation Chrome holding its profile, and the Chrome extension was not
