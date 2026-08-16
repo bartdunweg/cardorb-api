@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import type { CardSet } from "../../lib/core/cards";
+import type { CatalogueMatch } from "../../lib/core/ptcg-search";
 import { groupByEra } from "../../lib/core/eras";
 import AppSidebar from "../components/AppSidebar";
 import AppTabBar from "../components/AppTabBar";
@@ -66,7 +67,27 @@ export default function AppShell({
   const onBrokenLogo = useCallback((name: string) => {
     setBrokenLogos((prev) => (prev.has(name) ? prev : new Set(prev).add(name)));
   }, []);
-  const onAdd = useCallback(() => setAdding(true), []);
+  /**
+   * The card the dialog should open already holding, when it was opened from
+   * somewhere that knows which card you meant — the browse grid, so far.
+   *
+   * Cleared by onAdd() rather than left standing: the plus button means "a card,
+   * I will tell you which", and inheriting the last one browsed would be the
+   * dialog answering a question nobody asked.
+   */
+  const [prefill, setPrefill] = useState<CatalogueMatch | null>(null);
+  /** How many times the dialog has been opened, so a prefilled one can be
+   *  remounted per opening. See the `key` on CardAddDialog below. */
+  const [opened, setOpened] = useState(0);
+  const onAdd = useCallback(() => {
+    setPrefill(null);
+    setAdding(true);
+  }, []);
+  const onAddCard = useCallback((match: CatalogueMatch) => {
+    setPrefill(match);
+    setOpened((n) => n + 1);
+    setAdding(true);
+  }, []);
 
   const value = useMemo<CollectionValue>(
     () => ({
@@ -79,8 +100,20 @@ export default function AppShell({
       onBrokenScan,
       onBrokenLogo,
       onAdd,
+      onAddCard,
     }),
-    [sets, setGroups, viewer, failed, brokenScans, brokenLogos, onBrokenScan, onBrokenLogo, onAdd],
+    [
+      sets,
+      setGroups,
+      viewer,
+      failed,
+      brokenScans,
+      brokenLogos,
+      onBrokenScan,
+      onBrokenLogo,
+      onAdd,
+      onAddCard,
+    ],
   );
 
   return (
@@ -97,7 +130,23 @@ export default function AppShell({
       <AppTabBar />
 
       <CardAddDialog
+        /**
+         * One instance for the plus button, a fresh one per prefilled opening.
+         *
+         * The dialog reads `prefill` in its initial state rather than in an
+         * effect — reacting to a prop with setState is a cascading render, and
+         * it would also overwrite anything typed after the first pass. Initial
+         * state only runs on mount, so a new card needs a new instance, and
+         * `opened` counts openings so that adding the same card twice in a row
+         * still gets a clean form the second time.
+         *
+         * The plus button deliberately keeps the constant key it always had:
+         * its state surviving a close and reopen is existing behaviour, and
+         * this change has no business altering it.
+         */
+        key={prefill ? `prefill-${opened}` : "blank"}
         open={adding}
+        prefill={prefill}
         onClose={() => setAdding(false)}
         // Signing out from under the dialog is the one failure it cannot
         // recover from on its own: the form would post into a 401 and say the

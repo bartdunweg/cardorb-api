@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
+import { Compass, Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
 import { APP_NAME } from "../../lib/core/config";
 import { LOCALE } from "../../lib/core/config";
@@ -232,7 +232,7 @@ export default function CardsSidebar({
                 // for all of it or nothing lights up while looking at a set.
                 active={
                   selected === "sets" ||
-                  !["dashboard", "all", "wishlist", "profile"].includes(selected)
+                  !["dashboard", "all", "wishlist", "profile", "browse"].includes(selected)
                 }
                 onClick={() => onSelect("sets")}
                 name="Sets"
@@ -240,7 +240,25 @@ export default function CardsSidebar({
                 icon={Layers}
               />
             </li>
-          ) : (
+          ) : null}
+          {/* The catalogue, next to the collection, and only where there is an
+              account to mark cards against — the public link has no viewer to
+              answer "do you have this one" for. It sits under Sets rather than
+              beside Dashboard because it is the same question one step wider:
+              your sets, then every set. No count, deliberately: the number of
+              sets that exist is a fact about the hobby, not about you, and a
+              174 in the rail would read as something of yours. */}
+          {setsAsRow && !isPublic && (
+            <li>
+              <NavItem
+                active={selected === "browse"}
+                onClick={() => onSelect("browse")}
+                name="Browse"
+                icon={Compass}
+              />
+            </li>
+          )}
+          {!setsAsRow && (
             // Fifty-one sets in one run is a wall. Under the era they belong to
             // it is a handful of short lists, and the label is the thing a
             // collector already sorts by.

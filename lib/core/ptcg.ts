@@ -16,22 +16,14 @@
 
 import { DAY, norm } from "./util";
 import { sameCard } from "./matching";
+import { isGalleryNumber, ptcgSetName } from "./set-aliases";
 
 type PtcgSet = { id: string; name: string; images?: { logo?: string } };
 
-/**
- * Where the two catalogues call the same set by different names.
- *
- * Only the promos, and only because the name here follows what the collection
- * calls them. Everything else in 174 sets matches on the name alone, which is
- * why this is three lines rather than a mapping table.
- */
-/* Keyed by the normalised name, which is what the lookup below has in hand:
-   norm() strips the spaces and the ampersand, so a key written out in words
-   would never match. */
-const ALIAS: Record<string, string> = {
-  svblackstarpromos: "Scarlet & Violet Black Star Promos",
-};
+/* Where the two catalogues call the same set by different names — three
+   entries, and they moved to set-aliases.ts once browse started asking the same
+   question in the opposite direction. See that file for why the table is short
+   and why it is not the one in catalogue.ts. */
 
 let index: Promise<Map<string, PtcgSet>> | null = null;
 
@@ -75,13 +67,15 @@ function sets(): Promise<Map<string, PtcgSet>> {
 
 const find = async (setName: string) => {
   const all = await sets();
-  const key = norm(setName);
-  const alias = ALIAS[key];
-  return (alias ? all.get(norm(alias)) : null) ?? all.get(key) ?? null;
+  const alias = ptcgSetName(setName);
+  return (alias ? all.get(norm(alias)) : null) ?? all.get(norm(setName)) ?? null;
 };
 
-/** A gallery number: Trainer Gallery's TG01 and up, Crown Zenith's GG01 and up. */
-export const isGalleryNumber = (number: string) => /^(TG|GG)\d/i.test(number.trim());
+/* A gallery number: Trainer Gallery's TG01 and up, Crown Zenith's GG01 and up.
+   Defined in set-aliases.ts beside the set-name half of the same rule, and
+   re-exported here because this is where it was written and where callers look
+   for it. */
+export { isGalleryNumber } from "./set-aliases";
 
 /**
  * The gallery subset of a set, when they file one.

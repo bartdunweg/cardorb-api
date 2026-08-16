@@ -36,8 +36,11 @@ export const MAX_RESULTS = 20;
 /**
  * Lucene special characters, escaped so a typed `"`, `:` or `*` cannot change
  * what the query means rather than just being searched for literally.
+ *
+ * Exported for ptcg-browse.ts, which builds a `set.id:` query against the same
+ * host and needs the identical escaping — one rule, not two.
  */
-function escapeTerm(term: string): string {
+export function escapeTerm(term: string): string {
   return term.replace(/[+\-&|!(){}[\]^"~*?:\\/]/g, "\\$&");
 }
 

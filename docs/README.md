@@ -84,6 +84,18 @@ root `CLAUDE.md` for how and when to write to it.
   rendered statically, and one hardcoded `generateStaticParams` entry had been
   hiding it. Read it before trusting a green `npm run build` on anything whose
   static-vs-dynamic rendering matters.
+- `decisions/0037-browse-the-whole-catalogue.md` — **read before touching
+  anything that lists sets or cards you do not own.** `/collection/browse`,
+  `/api/v1/catalog/sets` and `/api/v1/catalog/sets/:id` answer "what is in this
+  set" from pokemontcg.io (not TCGdex — its list endpoint has no rarity or
+  types), and mark ownership with a pure in-memory join in
+  `lib/core/ownership.ts` over raw rows, never `buildCollection()`. It also
+  explains why `/api/v1/catalog/sets` exists again after being deleted once, and
+  why `POKEMONTCG_API_KEY` should now be set.
+  `decisions/0038-browse-scans-come-from-tcgdex.md` is its follow-up and the
+  one with the numbers in it: browse's card scans are swapped to TCGdex's WebP
+  after the fact (198 kB PNG → 26 kB, a set goes 40 MB → 5 MB), the set logos
+  deliberately are not, and the measurement for both is written down.
 - `decisions/0021-remove-notion-integration.md` — why the Notion integration
   was deleted outright, now that Postgres is confirmed as the real store,
   rather than kept as a dormant fallback.

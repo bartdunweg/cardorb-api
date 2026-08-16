@@ -4,6 +4,56 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**You can browse the whole catalogue now, not just what you own (ADR-0037).**
+This closes the item further down that was explicitly deferred as "a real,
+separate piece of work". Asked for by Bart for the iOS app; scope confirmed by
+direct question: API **and** a web screen, signed-in only, with owned + wishlist
++ quantity per card.
+
+- `lib/core/ptcg-browse.ts` — `listSets()`, `findSet(id)`, `setCards(id)`
+  against **pokemontcg.io**, cached a DAY, retried three times, and **throwing**
+  when exhausted (ADR-0033's rule). Not TCGdex: its list endpoint carries no
+  rarity or types (ADR-0030), so a 207-card set would be 207 extra requests.
+  One request per set in practice — live-verified, `set.id:sv3pt5` → 207 of 207.
+- `lib/core/ownership.ts` — pure, no I/O. Joins raw rows to catalogue cards on
+  set name + canonical number, **name-checked with `sameCard()`** because
+  ADR-0022's 23 bad gallery numbers are still in the collection. It reads
+  `getRows()` (new, in `collection.ts`, reusing the existing `unstable_cache`d
+  rows) and deliberately never touches `buildCollection()` — that is the
+  per-request walk ADR-0014 exists to prevent.
+- `lib/core/set-aliases.ts` — the promo alias table lifted out of `ptcg.ts`,
+  now with a reverse index and the gallery-parent rule, so "Silver Tempest
+  Trainer Gallery" finds rows filed under "Silver Tempest".
+- Endpoints, both behind `authorise()`: `GET /api/v1/catalog/sets` and
+  `GET /api/v1/catalog/sets/[setId]` (paged, `page`/`pageSize`, 404 for an
+  unknown id, 502 `catalog-unavailable` when the host refused).
+  `/api/v1/catalog/search` keeps its shape and gains the same ownership fields.
+- Screens: `/collection/browse` and `/collection/browse/[setId]`, a "Browse"
+  row in the rail, cross-links with `/collection/sets`, and a `browse/error.tsx`
+  of its own so the catalogue's deliberate throw is not blamed on the database.
+- Adding from browse reuses the existing dialog: `onAddCard(match)` in
+  `CollectionContext`, a `prefill` prop on `CardAddDialog` read in **initial
+  state** (AppShell remounts it per opening via `key`) rather than in an effect.
+
+- `lib/core/browse-artwork.ts` (ADR-0038) — the answer to "gebruiken we niet te
+  veel data?", which was worth measuring rather than guessing: the API side is
+  117 kB per set and negligible, but pokemontcg.io's card scans are 198 kB PNGs
+  where TCGdex publishes the **same 245×342 picture as a 26 kB WebP**. So
+  `withTcgdexScans()` swaps the URLs card by card after the fact, using the same
+  `byNumber` + `sameCard()` rule `buildCollection()` already uses. Measured on
+  the real APIs: 151 goes 40.0 MB → 5.3 MB (207/207 matched), Silver Tempest
+  Trainer Gallery 5.8 → 0.8, SV Black Star Promos 38.7 → 5.1. It **fails soft**
+  — TCGdex silent means heavier pictures, not a broken page. The set index
+  deliberately keeps its pokemontcg.io logos; read ADR-0038's option 5 before
+  "fixing" that, the maths is the other way round there.
+
+**Two things to watch.** `POKEMONTCG_API_KEY` is still unset, and this makes
+that host load-bearing for a second feature — a key should be set now. And
+none of it has been seen in a signed-in browser (the standing gap below); the
+worthwhile manual pass is `/collection/browse` → 151, checked against
+`/collection/set/151`, plus one gallery set and one promo set, where the
+name/number join is weakest.
+
 **Settings is one page, and the landing page no longer has a demo collection.**
 `/settings` was an index of four link rows leading to four sub-routes; it is one
 full-width page now, sections stacked, with deleting the account last and on its
@@ -551,7 +601,8 @@ from a search thumbnail (kept as click-to-fill-then-confirm, preserving the
 review-before-write posture ADR-0022/0032 already established), and a
 "browse a whole set including unowned cards" catalogue feature (a real,
 separate piece of work — `/collection/sets` today only ever shows sets the
-collection already has a card in).
+collection already has a card in). **That second one is built now — see
+"Browse the whole catalogue" under Now, and ADR-0037.**
 `docs/decisions/0033-add-card-search-failure-and-paging.md` and
 `docs/changelog.d/2026-08-16-add-card-search-failure-and-paging.md` record
 it. `npm run check` is green. Deployed and immediately real-world tested by

@@ -23,6 +23,22 @@ system: one person edits this.
 | `GET /api/v1/fields` | the database's select options, key required |
 | `POST /api/v1/cards` | add a card, key required |
 
+Browsing the catalogue — every set and every card in it, not only what is owned —
+is a separate, signed-in surface. It reads pokemontcg.io rather than the
+database, and each answer carries the caller's own `owned` / `wishlist` /
+`quantity` for the cards in it. See ADR-0037.
+
+| | |
+| --- | --- |
+| `GET /api/v1/catalog/sets` | every set, with how much of each you hold |
+| `GET /api/v1/catalog/sets/:setId` | one whole set, `page` / `pageSize` |
+| `GET /api/v1/catalog/search` | find a card by name, number, set or type |
+
+Each card carries `image` and `imageHigh`. Use `image` in a grid and fetch
+`imageHigh` only where a card is drawn large — they are 26 kB and 87 kB where
+TCGdex has the card, and 198 kB and 674 kB on the pokemontcg.io fallback. A set
+page is a few hundred of them, so the difference is megabytes, not kilobytes.
+
 Native clients authenticate with a Supabase access token in `Authorization: Bearer <jwt>`.
 Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
 `GET /api/v1/value-history`, `GET /api/v1/public/:username/collection`, and

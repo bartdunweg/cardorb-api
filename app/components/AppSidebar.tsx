@@ -27,6 +27,10 @@ function selectedFrom(pathname: string): string {
   if (pathname.startsWith("/wishlist")) return "wishlist";
   if (pathname.startsWith("/settings")) return "profile";
   if (pathname.startsWith("/collection/sets")) return "sets";
+  /* Before the /collection/set/ match below, which /collection/browse does not
+     hit — but the set page it opens onto is /collection/browse/<id>, and this
+     has to claim that too or the rail lights Sets while you are browsing. */
+  if (pathname.startsWith("/collection/browse")) return "browse";
 
   const set = pathname.match(/^\/collection\/set\/([^/]+)/)?.[1];
   if (set) return `set:${set}`;
@@ -55,6 +59,7 @@ export default function AppSidebar() {
     if (value === "profile") return router.push("/settings");
     if (value === "all") return router.push("/collection");
     if (value === "sets") return router.push("/collection/sets");
+    if (value === "browse") return router.push("/collection/browse");
 
     if (value.startsWith("era:")) {
       const slug = slugify(value.slice(4));

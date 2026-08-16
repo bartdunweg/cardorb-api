@@ -37,7 +37,7 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCollection, type CardSet } from "./cards";
-import { cardsTag } from "./collection-row";
+import { cardsTag, type CollectionRow } from "./collection-row";
 import { listRows, publicProfile } from "../storage/collection";
 import type { PublicProfile } from "../storage/postgres";
 import { serverClient, userClient } from "../storage/supabase";
@@ -136,6 +136,37 @@ export const getCollection = cache(
     } catch (err) {
       console.error("Card collection walk failed, retrying on the next render:", err);
       return { sets: [], failed: true };
+    }
+  },
+);
+
+/**
+ * The rows themselves, joined to nothing.
+ *
+ * For the callers that want to know what somebody owns without wanting the
+ * collection built: browse marks a page of catalogue cards owned or not, which
+ * is one boolean per card and needs the name, number and set of every row and
+ * nothing else. Going through getCards() to get there would resolve artwork,
+ * prices and species for sixteen hundred rows against three catalogues to
+ * answer it — exactly the per-request cost ADR-0014 exists to stop paying.
+ *
+ * The same client resolution and the same soft failure as getCollection(),
+ * deliberately: a store outage on a browse screen should cost the ownership
+ * marks, not the catalogue behind them. `failed` is here for the same reason it
+ * is there — a collection with nothing in it and a collection that could not be
+ * read are different sentences.
+ */
+export const getRows = cache(
+  async (
+    userId: string,
+    token?: string,
+  ): Promise<{ rows: CollectionRow[]; failed: boolean }> => {
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      return { rows: await cachedRows(userId, db), failed: false };
+    } catch (err) {
+      console.error("Collection rows unavailable, retrying on the next render:", err);
+      return { rows: [], failed: true };
     }
   },
 );

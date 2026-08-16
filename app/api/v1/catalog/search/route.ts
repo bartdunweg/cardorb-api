@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { searchCards } from "../../../../../lib/core/ptcg-search";
+import { getRows } from "../../../../../lib/core/collection";
+import { markOwnership, ownershipIndex } from "../../../../../lib/core/ownership";
 import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
+import { bearer } from "../../../../../lib/api/viewer";
 
 /**
  * Finding a card to add, by anything: name, number, set, or type, in one box
@@ -31,6 +34,13 @@ import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
  * differently (a request worth retrying vs. one that needs a different
  * query), and conflating them is exactly the bug that prompted this: see
  * docs/decisions/0033-add-card-search-failure-and-paging.md.
+ *
+ * Every result now carries owned/wishlist/quantity for the caller, the same
+ * fields /api/v1/catalog/sets/[setId] attaches — added with browse, because the
+ * moment a search result is worth marking is the moment somebody is about to
+ * add a second copy of a card they already have without meaning to. The shape
+ * is additive: `{ cards }` is still `{ cards }`, and a client that ignores the
+ * new fields is unaffected.
  */
 export const dynamic = "force-dynamic";
 
@@ -65,7 +75,14 @@ export async function GET(req: Request) {
     const cards = usingFilters
       ? await searchCards(filters, page)
       : await searchCards((url.searchParams.get("query") ?? "").trim(), page);
-    return NextResponse.json({ cards }, { headers: readHeaders(req) });
+    /* After the search, not before: a search that is about to 502 should not
+       have cost a collection read. getRows() fails soft, so a store outage
+       leaves every result unmarked rather than taking the search down with it. */
+    const { rows } = await getRows(who.userId, bearer(req) ?? undefined);
+    return NextResponse.json(
+      { cards: markOwnership(ownershipIndex(rows), cards) },
+      { headers: readHeaders(req) },
+    );
   } catch {
     return NextResponse.json(
       { error: "search-unavailable" },

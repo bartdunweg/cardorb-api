@@ -32,6 +32,20 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
 
   const n = (v: number) => v.toLocaleString(LOCALE);
 
+  /* The way out of this screen when the answer to "which sets" is "none of
+     them yet", and the way to the wider question when it is not. /collection/
+     browse lists every set there is; this one lists the sets you have a card
+     in, and an empty version of this page used to be a dead end. */
+  const browseLink = (
+    <Link
+      href="/collection/browse"
+      className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary
+        underline underline-offset-2 hover:text-label"
+    >
+      Browse every set
+    </Link>
+  );
+
   if (!sets.length) {
     return (
       <>
@@ -39,6 +53,7 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
         <p className="cards-empty">
           No sets yet. Add a card and the set it came from appears here.
         </p>
+        <p className="mt-3">{browseLink}</p>
       </>
     );
   }
@@ -47,7 +62,10 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
     <div className="flex flex-col gap-10 pb-[var(--page-pad-bottom)]">
       {/* .cards-main-title, the same page-title style Dashboard/Settings/
           Collection/Wishlist all share — this screen had none at all before. */}
-      <h1 className="cards-main-title">Sets</h1>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h1 className="cards-main-title">Sets</h1>
+        {browseLink}
+      </div>
       {groups.map((group) => (
         <section key={group.era}>
           <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">{group.label}</h2>
