@@ -110,6 +110,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           ref={file}
           type="file"
           accept=".csv,text/csv"
+          aria-label="CSV file"
           onChange={async (e) => {
             const f = e.target.files?.[0];
             if (!f) return;

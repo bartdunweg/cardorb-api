@@ -65,6 +65,11 @@ root `CLAUDE.md` for how and when to write to it.
   `CardAddDialog.tsx`; now `searchCards()` throws instead of swallowing, and
   the dialog shows a distinct "Search is temporarily unavailable" with retry,
   plus a "Show more results" button instead of a hard 20-result cap.
+- `decisions/0034-settings-one-page-not-an-index.md` — why `/settings` stopped
+  being an index of four sub-routes and became one full-width page with every
+  section stacked. Read it before adding a settings section: there is no
+  sub-route to add one to, and `/settings/*` (except `password`) is a set of
+  permanent redirects in `next.config.ts`.
 - `decisions/0034-collection-named-after-its-owner.md` — **read before adding
   anything that names a person.** `OWNER_NAME`/`PUBLIC_USERNAME` are gone; whose
   a collection is and what to call them come from the profile being rendered,

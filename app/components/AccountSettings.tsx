@@ -10,12 +10,10 @@ import {
   SettingsPanelTitle,
   SettingsPanels,
   SettingsSaid,
-  dangerButtonClassName,
-  settingsHintClassName,
 } from "./SettingsPanel";
 
 /**
- * The account, and the two ways out of it.
+ * The account: the address, the password, and the way out of this device.
  *
  * Everything here already had a working endpoint and no button. Signing out,
  * changing a password, deleting an account: all built during the accounts work,
@@ -23,16 +21,13 @@ import {
  * existed the whole time with nothing linking to it — it is where a recovery
  * link lands, so it could only be reached by losing your password first.
  *
- * Deleting is last and looks like it. The confirmation is a typed word rather
- * than a second button, because a button asking "are you sure" is answered yes
- * by the same reflex that pressed the first one. Typing the username means
- * reading it.
+ * Deleting the account left this file when Settings became one page: it is the
+ * last section on that page now, in DeleteAccountSettings.tsx.
  */
-export default function AccountSettings({ email, username }: { email: string; username: string }) {
+export default function AccountSettings({ email }: { email: string }) {
   const router = useRouter();
 
   const [newEmail, setNewEmail] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [said, setSaid] = useState<Record<string, string | null>>({});
 
@@ -75,26 +70,6 @@ export default function AccountSettings({ email, username }: { email: string; us
     router.refresh();
   }
 
-  async function deleteAccount() {
-    if (confirm !== username) return;
-    setBusy("delete");
-    say("delete", null);
-    try {
-      const res = await fetch("/api/v1/account", { method: "DELETE" });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        say("delete", data.error ?? "That account could not be deleted.");
-        return;
-      }
-      router.push("/");
-      router.refresh();
-    } catch {
-      say("delete", "No answer from the server.");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   return (
     <SettingsPanels>
       <SettingsPanel>
@@ -105,6 +80,8 @@ export default function AccountSettings({ email, username }: { email: string; us
             type="email"
             autoComplete="email"
             placeholder="new@example.com"
+            // A placeholder disappears as you type and is not a name.
+            aria-label="New email address"
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
           />
@@ -134,32 +111,8 @@ export default function AccountSettings({ email, username }: { email: string; us
         </button>
       </SettingsPanel>
 
-      <SettingsPanel danger>
-        <SettingsPanelTitle>Delete this account</SettingsPanelTitle>
-        <SettingsHint>
-          Every card, every import and your link go with it, immediately and for
-          good. There is no undo and no copy kept.
-        </SettingsHint>
-        <label className={settingsHintClassName} htmlFor="confirm-delete">
-          Type <strong>{username}</strong> to confirm.
-        </label>
-        <SettingsInput
-          id="confirm-delete"
-          value={confirm}
-          autoComplete="off"
-          spellCheck={false}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
-        <button
-          className={`btn ${dangerButtonClassName}`}
-          type="button"
-          onClick={deleteAccount}
-          disabled={busy === "delete" || confirm !== username}
-        >
-          {busy === "delete" ? "Deleting…" : "Delete everything"}
-        </button>
-        {said.delete && <SettingsSaid>{said.delete}</SettingsSaid>}
-      </SettingsPanel>
+      {/* Deleting used to be the fourth panel here. It is its own section at
+          the bottom of the page now — see DeleteAccountSettings.tsx. */}
     </SettingsPanels>
   );
 }

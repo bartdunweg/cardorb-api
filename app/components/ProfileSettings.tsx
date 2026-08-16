@@ -179,6 +179,9 @@ export default function ProfileSettings({
             maxLength={MAX_DISPLAY_NAME}
             placeholder={initial.username}
             onChange={(e) => setDisplayName(e.target.value)}
+            // The panel's heading is what sighted people read as this field's
+            // name; a heading is not an accessible name, so it is said again.
+            aria-label="Your name"
             aria-describedby="display-name-hint"
           />
           {/* Built from `initial`, not from the live field. This element is the
@@ -207,6 +210,7 @@ export default function ProfileSettings({
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
             spellCheck={false}
             autoCapitalize="none"
+            aria-label="Username"
             aria-describedby="username-hint"
           />
           <SettingsHint id="username-hint">

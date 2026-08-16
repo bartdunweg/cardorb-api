@@ -648,8 +648,55 @@ workspace, same gap earlier sessions (including the parallel one merged in
 below) hit. Neither the read-only Rarity/Type summary nor the rest of
 `CardAddDialog.tsx` has been exercised live this session.
 
+## Settings became one page (2026-08-16, workspace `edinburgh`)
+
+`/settings` was an index of four link rows leading to four sub-routes. Bart:
+"niet iedere keer vier cards die je per card moet open klikken … dat moet
+gewoon in één keer zichtbaar zijn," plus "een pagina zoals de andere." It is
+now a single full-width page — `app/(app)/settings/page.tsx` fetches viewer,
+profile and import history (the last two in one `Promise.all`) and stacks
+Profile / Account / Import / Appearance under a `<h2>` each, using the new
+`SettingsSection` in `SettingsPanel.tsx`. `SettingsPanelTitle` became an
+`<h3>`; the index's row primitives were deleted with the index;
+`app/(app)/settings/layout.tsx` and its `max-w-[640px]` clamp are gone
+(header folded into the page). The four sub-routes are deleted and redirected
+permanently to `/settings` from `next.config.ts` — a confirmation email
+already in an inbox points at `/settings/account`, and
+`app/api/v1/email/route.ts` now sends new ones to `/settings`.
+`/settings/password` is untouched and still standalone. Panels span the pane,
+so `SettingsInput` and the Appearance radio row are capped at `max-w-[26rem]`.
+A `build-quality` pass also gave four inputs an accessible name they never had
+(display name, username, new email, CSV file) — a panel heading is not a name.
+FB-0007 and ADR-0034 record it. `npm run check` green; the four redirects
+verified live (308) against `npm run dev`.
+
+One follow-up in the same session, on Bart's instruction: **deleting the
+account is its own section at the bottom of the page**
+(`DeleteAccountSettings.tsx`), not the fourth panel in Account. In one long
+scroll it sat between an email field and a theme picker. `AccountSettings.tsx`
+lost its `username` prop with it.
+
+**Built twice, resolved in favour of the other branch.** Bart also reported the
+landing navbar greeting everybody with "Signed in as Bart", and this branch
+fixed it — `Viewer.displayName` plus a `displayNameOf()` helper in
+`lib/api/viewer.ts`, with FB-0008 and ADR-0035 to match. Merging `origin/main`
+before the PR landed brought in PR #49, which had solved the same problem more
+thoroughly the same day (`ownerLabel()` in `lib/core/owner.ts`, `OWNER_NAME` and
+`PUBLIC_USERNAME` deleted outright, ADR-0034-collection-named-after-its-owner).
+This branch's version was deleted whole — helper, test, both records, the
+changelog fragment — rather than merged alongside it: two functions answering
+"what is this person called" is exactly the drift `lib/core/owner.ts` exists to
+prevent. Worth noticing as a process fact, not just a merge: two workspaces
+picked up the same complaint within an hour of each other.
+
 ## Next session
 
+- **`/settings` has not been seen signed in.** No session in this workspace and
+  browser automation can't create one — the same gap the tabbar thread above
+  hit. Needs: all four groups on screen at once, one control exercised per
+  group (theme, public-link switch, CSV picker, email field), and the widths at
+  ≥1000px / 641–1000px / ≤640px. This subsumes the older "verify `/settings`
+  and its subpages" item — there are no subpages any more.
 - **`CardAddDialog.tsx` needs a real signed-in browser pass**: search, pick a
   result, confirm Rarity/Type show as read-only text matching the picked
   card, submit, confirm the row lands correctly. Not exercised live this

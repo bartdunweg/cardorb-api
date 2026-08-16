@@ -96,10 +96,30 @@ const SECURITY_HEADERS = [
   },
 ];
 
+/**
+ * Settings became one page, so its four sub-routes stopped existing.
+ *
+ * They are redirected rather than left to 404 because they were addresses
+ * people and machines already hold: a bookmark, and — the one that matters —
+ * the `next=` in a confirmation email sent before this change, which lands
+ * somebody on /settings/account after they confirm a new address.
+ *
+ * /settings/password is deliberately absent from this list: it is a real
+ * route still, outside the app shell, reached from password recovery.
+ */
+const SETTINGS_SECTIONS = ["profile", "account", "import", "appearance"];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   async headers() {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
+  },
+  async redirects() {
+    return SETTINGS_SECTIONS.map((section) => ({
+      source: `/settings/${section}`,
+      destination: "/settings",
+      permanent: true,
+    }));
   },
 };
 
