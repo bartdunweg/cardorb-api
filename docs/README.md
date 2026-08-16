@@ -120,4 +120,12 @@ root `CLAUDE.md` for how and when to write to it.
   in from whichever match the search above (pokemontcg.io) picked, not typed —
   the same "no manual entry" principle `0032` already established for the
   card's identity, applied to these two fields specifically.
+- `decisions/0042-ios-app-page.md` — **read before touching `/app/ios` or the
+  landing page's shared parts.** The iPhone app has its own page now, and its
+  download button is deliberately inert (`aria-disabled`, with a visible note)
+  because the app is not on the App Store — not a bug, and the record says
+  exactly what to change on shipping day. Also: why `/app` is a *temporary*
+  redirect, why the JSON-LD carries no `offers`, and the two extractions out of
+  `app/page.tsx` (`components/marketingClasses.ts`, `components/MarketingFooter.tsx`)
+  that both public pages now share.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

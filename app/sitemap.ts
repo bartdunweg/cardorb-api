@@ -3,7 +3,8 @@ import { SITE_URL } from "../lib/core/config";
 import { publicUsernames } from "../lib/storage/collection";
 
 /**
- * The landing page, and every collection that has asked to be found.
+ * The landing page, the iPhone app's page, and every collection that has asked
+ * to be found.
  *
  * Everything else is either behind a password or a redirect to it. The landing
  * page is first because it is the address anyone would type; the profiles below
@@ -32,6 +33,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // hand. Claiming anything faster asks a crawler back for nothing.
       changeFrequency: "monthly",
       priority: 1,
+    },
+    {
+      // The iPhone app's page. Listed by hand because it is a static route,
+      // unlike the profiles below, and worth listing separately because
+      // "Pokémon collection app" is a search the landing page does not answer
+      // and this page does.
+      url: `${SITE_URL}/app/ios`,
+      changeFrequency: "monthly" as const,
+      // Below the front door, above nothing. It will earn more when there is
+      // a download behind it.
+      priority: 0.7,
     },
     ...usernames.map((username) => ({
       url: `${SITE_URL}/user/${username}`,

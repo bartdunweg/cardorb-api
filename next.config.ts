@@ -115,11 +115,24 @@ const nextConfig: NextConfig = {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },
   async redirects() {
-    return SETTINGS_SECTIONS.map((section) => ({
-      source: `/settings/${section}`,
-      destination: "/settings",
-      permanent: true,
-    }));
+    return [
+      ...SETTINGS_SECTIONS.map((section) => ({
+        source: `/settings/${section}`,
+        destination: "/settings",
+        permanent: true,
+      })),
+      {
+        // /app is the address somebody types looking for the app page, and
+        // there is only one of those to send them to. Temporary, not
+        // permanent, and that is the whole point of the entry: when the
+        // Android page lands, /app should become the index of both, and a 308
+        // cached in every browser that ever followed it would make that
+        // change arrive weeks late for the people who had already been here.
+        source: "/app",
+        destination: "/app/ios",
+        permanent: false,
+      },
+    ];
   },
 };
 
