@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sameOrigin } from "../../../../lib/api/guard";
-import { currentViewer } from "../../../../lib/api/viewer";
-import { serverClient } from "../../../../lib/storage/supabase";
+import { bearer, requestViewer } from "../../../../lib/api/viewer";
+import { serverClient, userClient } from "../../../../lib/storage/supabase";
 import { claimUsername } from "../../../../lib/storage/postgres";
 import { validateUsername } from "../../../../lib/core/account";
 
@@ -16,11 +16,24 @@ import { validateUsername } from "../../../../lib/core/account";
  * Shape checked here before the round trip, so the common mistakes — capitals,
  * a leading hyphen, too short — are answered by a sentence about the mistake
  * rather than by a constraint violation the route has to translate.
+ *
+ * Bearer as well as cookie, since the iOS app has a settings screen and could
+ * not reach this at all. sameOrigin() was never what blocked it — a request
+ * with no Origin is not a browser and is allowed through — it was
+ * currentViewer(), which only ever reads cookies, answering "Sign in first."
+ * to a caller holding a perfectly good token.
+ *
+ * Both halves of that had to move, and the second is the one worth writing
+ * down: claim_username is `security definer` but keyed on auth.uid(), so the
+ * *connection* has to name the caller too. Resolving the viewer from a token
+ * and then claiming through the cookie-bound serverClient() would ask Postgres
+ * to act for somebody it never saw — auth.uid() would be null and the RPC
+ * would raise 'not signed in'. Same rule, same shape, as PATCH /v1/profile.
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const viewer = await currentViewer();
+  const viewer = await requestViewer(req);
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
   let wanted = "";
@@ -36,7 +49,8 @@ export async function POST(req: Request) {
   const shape = validateUsername(wanted);
   if (!shape.ok) return NextResponse.json({ error: shape.error }, { status: 400 });
 
-  const db = await serverClient();
+  const token = bearer(req);
+  const db = token ? userClient(token) : await serverClient();
   if (!db) {
     return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
   }
