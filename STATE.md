@@ -4,6 +4,18 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**Settings is one page, and the landing page no longer has a demo collection.**
+`/settings` was an index of four link rows leading to four sub-routes; it is one
+full-width page now, sections stacked, with deleting the account last and on its
+own (ADR-0034-settings-one-page, FB-0007). The sub-routes are permanent
+redirects in `next.config.ts` — `/settings/password` is the exception and stays
+standalone. Immediately after, the landing page's leftover demo framing went
+with it (FB-0008, ADR-0036): no "the demo's", no "Public collections" directory
+that never existed, and "1,600+ cards tracked" — one person's binder as a
+product number — is now "No limit / cards per collection". Both are deployed;
+production was checked live for the redirects and the copy. **Neither has been
+seen signed in**, same standing gap as everything below.
+
 **New accounts now have a first run (ADR-0035).** `/welcome` is a four-step wizard —
 username and display name, avatar, sharing, and how to fill the collection —
 shown once, with every step skippable and skipping writing nothing.
