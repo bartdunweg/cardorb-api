@@ -11,6 +11,13 @@ import { navLink } from "./marketingClasses";
  * second, and a second inline copy is how the two would drift — the same
  * argument Navbar.tsx already makes for itself one component over.
  *
+ * Two parallel branches reached this conclusion the same day and each
+ * extracted its own footer: this one for /app/ios, and a `Footer.tsx` for
+ * /privacy and /terms. This one won the merge on arriving first and on having
+ * somewhere to put links; the other was deleted whole rather than kept beside
+ * it, which is the same resolution ADR-0034 records for `displayNameOf()`.
+ * /privacy and /terms render it through LegalPage.tsx.
+ *
  * Three columns: the wordmark, the Cardmarket note, and the theme toggle. The
  * middle column carries the links now as well, because there is somewhere to
  * link to; below 640px the grid stacks and centres.
@@ -30,9 +37,22 @@ export default function MarketingFooter() {
         <p className="m-0 text-center">
           Prices come from Cardmarket, in euros — the market collectors recognise.
         </p>
-        <Link href="/app/ios" className={navLink}>
-          iPhone app
-        </Link>
+        {/* The legal pages join the iPhone app here rather than taking a
+            fourth column, which would have squeezed the Cardmarket line onto
+            two lines. Both are also reachable from the FAQ and the signup
+            form; a footer is where a link goes to not be read, and these two
+            still have to be somewhere permanent. */}
+        <div className="flex items-center justify-center gap-4">
+          <Link href="/app/ios" className={navLink}>
+            iPhone app
+          </Link>
+          <Link href="/privacy" className={navLink}>
+            Privacy
+          </Link>
+          <Link href="/terms" className={navLink}>
+            Terms
+          </Link>
+        </div>
       </div>
       <div className="flex items-center justify-self-end [@media(max-width:640px)]:justify-self-center">
         <ThemeToggle />

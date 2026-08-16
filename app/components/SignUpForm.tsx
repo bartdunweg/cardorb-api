@@ -166,6 +166,22 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
         >
           {busy ? "Creating your account…" : "Create account"}
         </button>
+
+        {/* Notice belongs where the collecting happens, and this is the only
+            screen in the app that asks for an email address. Not a tickbox:
+            the account is processed to perform a contract, not on consent, and
+            a checkbox would misdescribe the basis as well as add a step. */}
+        <p className="m-0 mt-1 text-center text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+          By creating an account you agree to our{" "}
+          <Link href="/terms" className={signinLinkClassName}>
+            terms of use
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className={signinLinkClassName}>
+            privacy policy
+          </Link>
+          .
+        </p>
       </FormForm>
 
       {message && <FormError role="alert">{message}</FormError>}

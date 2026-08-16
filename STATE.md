@@ -4,6 +4,84 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**There is a privacy policy, at `/privacy` (ADR-0042).** The iOS app cannot be
+submitted without one, and App Store Connect asks for a *URL*, so it had to be a
+route here first. One policy covers the website and the app — Bart asked whether
+it should be two, and the answer is that two documents describing one account
+system drift apart, starting with the third-party list.
+
+`app/privacy/page.tsx` is static, sets `robots: { index: true }` explicitly (the
+root layout `noindex`s the whole site by design, and this is the third page to
+opt out after `/` and `/user/<name>`), and is the first consumer of
+`--content-max`. The landing page's inline footer became
+`app/components/Footer.tsx` so both pages can carry the link, and
+`app/routes.test.ts` now guards it for free.
+
+**A draft written from the iOS side was wrong about this repo in four places**,
+which is the part worth remembering: it said "no analytics" while the *website*
+runs Vercel Web Analytics, and it credited the website with Sentry, which
+`instrumentation.ts` deliberately does not have. Both statements Bart made were
+true of different surfaces. The App Store privacy labels still say "no
+analytics" correctly, and still need **crash and diagnostic data** adding for
+Sentry.
+
+Two facts were looked up rather than assumed and are now written down: the
+Supabase project is **eu-west-1** (AWS Ireland), read from
+`supabase projects list`; and the controller is **BADU Ventures B.V., KVK
+76480801** — the screenshot supplied showed that same number and address under
+the name *Strakzat B.V.*, and Bart confirmed twice that both belong to BADU
+Ventures.
+
+Not seen in a browser — the standing gap below. It is a static document with no
+interactivity, so the exposure is layout only: worth one look at ≤640px, where
+the footer collapses to one centred column.
+
+**And there are terms of use, at `/terms` (ADR-0043).** Asked for straight
+after: *"dat hoeft dan niet specifiek voor Apple, maar gewoon voor überhaupt
+voor onszelf"* — which reframes it, because terms protect the operator where a
+privacy policy protects the user. Three sections carry the weight and none came
+from a template: **prices are information, not advice** (this app puts a euro
+figure beside every card and totals them, which is the shape of thing somebody
+treats as a valuation unless told otherwise); **not affiliated with The Pokémon
+Company, Nintendo, Game Freak or Creatures** (the other half of the
+Pokebinder → Card Orb rename recorded in `lib/core/config.ts`); and **it is
+free, so it can change or stop**, against a promise of notice and an export
+first.
+
+`app/components/LegalPage.tsx` came out of that — the shell plus a `legal`
+object of type class strings, extracted when there were two legal pages rather
+than after they had drifted. Each page keeps its own `metadata` export
+deliberately: `robots`/`canonical`/`openGraph` differ per route and the shell
+would hide the field that must not be wrong.
+
+**One claim was caught before it shipped**, and the shape of it is the lesson: a
+draft said "the CSV export is there for that". There is no CSV export — it is
+`comingSoon: true` on the landing page, and only *import* is built. A terms page
+is written in the register of fact, which turns an unchecked assumption into a
+promise.
+
+The landing page's way in to both is the FAQ's fourth entry, "What happens to my
+data?" — the footer links there too, but a footer is where a link goes to not be
+read, and it filled the empty fourth cell of a two-column grid running with
+three.
+
+**Not legal advice**, and it matters more for the terms than the policy: those
+are the clauses whose exact wording decides whether they work. Both are honest
+about what the software does; the controller block and the legal basis are as
+supplied.
+
+**A footer was extracted twice, on the same day, by two workspaces.** This
+branch pulled `app/page.tsx`'s inline footer out as `Footer.tsx` so the legal
+pages could carry the link; `hamburg` pulled the same markup out as
+`MarketingFooter.tsx` so `/app/ios` could. Merging kept **`MarketingFooter.tsx`**
+— it arrived first and already had somewhere to put links — and deleted
+`Footer.tsx` whole rather than leaving two footers side by side, the same
+resolution ADR-0034 records for `displayNameOf()`. `LegalPage.tsx` renders it
+now, and the Privacy/Terms links sit beside "iPhone app" in its middle column.
+ADR-**0042 is doubled up** (ios-app-page and one-privacy-policy), left that way
+per the precedent already set by 0014, 0021, 0023, 0030 and 0034. Third time
+this repo has had two workspaces solve the same problem within an hour; worth
+noticing as a process fact rather than a merge.
 **The iPhone app has a page: `/app/ios` (ADR-0042, workspace `hamburg`).** Asked
 for by Bart — a page that says what the app is, what it does, and how to
 download it. The awkward part is the last one: the app is not on the App Store,

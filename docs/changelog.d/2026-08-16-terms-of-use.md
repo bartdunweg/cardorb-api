@@ -1,0 +1,2 @@
+- There are terms of use now, at `cardorb.com/terms`, saying what Card Orb promises and what it does not — including, in as many words, that the prices it shows are what a market has been doing rather than a valuation of your cards, and that Card Orb is not connected to The Pokémon Company, Nintendo, Game Freak or Creatures.
+- The footer links to both the terms and the privacy policy, the landing page's FAQ answers "What happens to my data?", and the signup form names both before you create an account.

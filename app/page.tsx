@@ -91,6 +91,27 @@ const FAQ = [
     q: "Where do the prices come from?",
     a: "Cardmarket, in euros, kept current as the market moves.",
   },
+  {
+    // The landing page's way in to /privacy. The footer links there too, but a
+    // footer is where a link goes to not be read; somebody deciding whether to
+    // hand over an email address is deciding it here, among the other three
+    // questions they have. It also fills the fourth cell of a two-column grid
+    // that had been running with three.
+    q: "What happens to my data?",
+    a: (
+      <>
+        No advertising, no tracking and nothing sold. Delete your account and the whole collection
+        goes with it, straight away. The{" "}
+        <Link
+          href="/privacy"
+          className="text-label underline [text-underline-offset:2px] [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label-secondary"
+        >
+          privacy policy
+        </Link>{" "}
+        says exactly what is stored and who else sees it.
+      </>
+    ),
+  },
 ];
 
 const FEATURES = [
