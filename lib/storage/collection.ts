@@ -40,6 +40,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CardDraft, CardFields, CardPatch, CollectionRow } from "../core/collection-row";
+import type { ValueSnapshot } from "../core/value-snapshot";
 import * as postgres from "./postgres";
 import { readClient, serverClient, userClient } from "./supabase";
 
@@ -64,6 +65,26 @@ export async function listRows(userId?: string, db?: SupabaseClient | null): Pro
   // keeps CI building with no secrets at all.
   if (!client) return [];
   return postgres.listRows(client, userId);
+}
+
+/**
+ * One person's value readings, or none where this deployment has no store.
+ *
+ * `db` is required here, unlike listRows above, and that is the whole of the
+ * difference between the two tables. listRows may fall back to the anonymous
+ * readClient() because cards_read has an `is_public` branch for it to land in.
+ * collection_value_snapshots has no such branch on purpose — a value series is
+ * nothing but money and no public page wants it — so an anonymous client would
+ * be refused every row and answer with an empty history rather than an error.
+ * Offering that fallback would just be a tidy-looking way to get the wrong
+ * answer, so the caller has to have resolved a client that names them.
+ */
+export async function listSnapshots(
+  userId: string,
+  db: SupabaseClient | null,
+): Promise<ValueSnapshot[]> {
+  if (!db) return [];
+  return postgres.listValueSnapshots(db, userId);
 }
 
 /**

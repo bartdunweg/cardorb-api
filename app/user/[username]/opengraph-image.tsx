@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { colour } from "../../../lib/design/tokens";
 import { APP_NAME } from "../../../lib/core/config";
-import { stripPrices } from "../../../lib/core/cards";
+import { forPublic } from "../../../lib/core/cards";
 import { getCards, ownerOf } from "../../../lib/core/collection";
 import { ownerLabel } from "../../../lib/core/owner";
 
@@ -96,7 +96,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
   // Prices come off for the same reason they do on the page: this image is
   // public in a way even the page is not, since a preview is fetched and cached
   // by anything the link passes through.
-  const sets = owner ? stripPrices(await getCards(owner.id)) : [];
+  const sets = owner ? forPublic(await getCards(owner.id)) : [];
   const held = sets.reduce((n, s) => n + s.cards.filter((c) => c.owned).length, 0);
   const withHeld = sets.filter((s) => s.cards.some((c) => c.owned)).length;
 

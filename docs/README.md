@@ -141,4 +141,24 @@ root `CLAUDE.md` for how and when to write to it.
   not advice" and "not affiliated with The Pokémon Company" sections exist at
   all. Both pages share `app/components/LegalPage.tsx`; read it before adding a
   third long-form page.
+- `decisions/0044-value-is-per-user-and-counts-copies.md` — **read before
+  touching anything that puts a euro figure on screen.** The dashboard's
+  "Value over time" chart used to import one committed JSON file generated for
+  one account, so every signed-in account read the seed owner's history under
+  its own value tile; it is `public.collection_value_snapshots` now, own-rows-only
+  with no public branch, reached through `getValueHistory()` in
+  `lib/core/collection.ts`. The record also covers three things found on the way:
+  `scripts/snapshot-collection-value.mjs` had been broken for everyone since
+  `/cards` became a redirect, the value figure never counted per-variant
+  `quantity` (it does now, via `copiesHeld()`, and "Priciest cards" deliberately
+  still does not), and the deprecated `x-cards-key` path answers with an empty
+  series by design.
+- `decisions/0045-public-collection-carries-two-variant-fields.md` — its
+  follow-up, and **read it before adding a column to `cards`.** `stripPrices()`
+  is `forPublic()` now: it nulled the price and left `variants` whole, so a
+  public profile was publishing what its owner paid for every card, in what
+  condition, graded how, with their private notes and how many they hold — on
+  the API and inside the profile page's own HTML. The public path reads exactly
+  two variant fields, `rarity` and `owned`, so the new shape is an allow-list of
+  those two and a new column is excluded by default.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

@@ -22,6 +22,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CardDraft, CardFields, CardPatch, CollectionRow } from "../core/collection-row";
+import type { ValueSnapshot } from "../core/value-snapshot";
 
 /** The row as the table has it, before it is turned into the shape above. */
 type CardRecord = {
@@ -143,6 +144,60 @@ export async function listRows(db: SupabaseClient, userId?: string): Promise<Col
   }
 
   return rows;
+}
+
+/** The snapshot row as the table has it. See the 20260816140000 migration. */
+type SnapshotRecord = {
+  snapshot_date: string;
+  value_cents: number;
+  cards: number;
+  priced: number;
+  unpriced: number;
+};
+
+/**
+ * One person's value readings, oldest first.
+ *
+ * Oldest first because the card that draws them treats `snapshots[0]` as where
+ * the record starts — "since December 2024" is that row's date — and reverses
+ * nothing. The list is tens of rows even for a collection recorded weekly for
+ * years, so there is no paging loop here and no cap to page under.
+ *
+ * `.eq("user_id", userId)` is here even though this file's own header says there
+ * is no user_id anywhere below, and the exception is deliberate rather than an
+ * oversight in either direction. That rule holds where the policy alone gets it
+ * right; it was wrong once already, in exactly this shape — see the comment on
+ * cachedRows() in lib/core/collection.ts, where a brand new account asking for
+ * its own empty collection was handed a public one because the policy allowed
+ * the read and nothing had said whose. RLS is the wall against seeing what is
+ * private; it is not a substitute for the application naming the collection it
+ * wants.
+ *
+ * Cents become whole euros here, at the storage boundary, so nothing above this
+ * line has to know the table counts in cents.
+ */
+export async function listValueSnapshots(
+  db: SupabaseClient,
+  userId: string,
+): Promise<ValueSnapshot[]> {
+  const { data, error } = await db
+    .from("collection_value_snapshots")
+    .select("snapshot_date,value_cents,cards,priced,unpriced")
+    .eq("user_id", userId)
+    .order("snapshot_date", { ascending: true });
+
+  // Thrown rather than swallowed, for the same reason listRows throws: a series
+  // with holes in it draws as a collection that lost value, and the caller
+  // above knows how to fail soft without inventing a shape.
+  if (error) throw new Error(`Reading the value history failed: ${error.message}`);
+
+  return ((data ?? []) as SnapshotRecord[]).map((r) => ({
+    date: r.snapshot_date,
+    value: Math.round(r.value_cents / 100),
+    cards: r.cards,
+    priced: r.priced,
+    unpriced: r.unpriced,
+  }));
 }
 
 /**

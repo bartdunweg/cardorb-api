@@ -5,6 +5,7 @@ import { shownPrice } from "../../lib/core/cards";
 import type { CardsStats } from "../../lib/core/cards-stats";
 import { LOCALE } from "../../lib/core/config";
 import { euro } from "../../lib/core/format";
+import type { ValueSnapshot } from "../../lib/core/value-snapshot";
 
 /**
  * The collection at a glance, and where /cards opens.
@@ -23,7 +24,13 @@ import { euro } from "../../lib/core/format";
  * needs no legend. Values sit at the tip of each bar and every label wears a
  * text token, never the mark's colour.
  */
-export default function CardsDashboard({ stats }: { stats: CardsStats }) {
+export default function CardsDashboard({
+  stats,
+  snapshots,
+}: {
+  stats: CardsStats;
+  snapshots: ValueSnapshot[];
+}) {
   return (
     <div className="flex flex-col gap-8">
       {/* Visible, unlike CardsView's own <h1>: that one is sr-only because the
@@ -58,8 +65,9 @@ export default function CardsDashboard({ stats }: { stats: CardsStats }) {
       </ul>
 
       {/* Directly under the tiles, because it is the history of the last one
-          of them. */}
-      <CollectionValueCard />
+          of them. Renders nothing until this account has two readings, which
+          for every account but a snapshotted one is always. */}
+      <CollectionValueCard snapshots={snapshots} />
 
       {stats.top.length > 0 && (
         <Card className="flex flex-col gap-2">

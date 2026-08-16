@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { currentViewer } from "../../../lib/api/viewer";
+import { getValueHistory } from "../../../lib/core/collection";
 import DashboardScreen from "../../components/DashboardScreen";
 
 /**
@@ -17,6 +20,18 @@ import DashboardScreen from "../../components/DashboardScreen";
  */
 export const metadata: Metadata = { title: "Dashboard" };
 
-export default function DashboardPage() {
-  return <DashboardScreen />;
+/**
+ * The value history is fetched here rather than in the (app) layout beside the
+ * collection, and that is the difference between the two: seven screens share
+ * that layout and exactly one of them draws this. Fetching it up there would
+ * cost every screen a query for a chart only this page has.
+ *
+ * currentViewer() is cache()d, so asking again after the layout already asked
+ * is one query in one render, not two. The redirect is narrowing rather than a
+ * second lock — the layout has already turned a signed-out visitor away.
+ */
+export default async function DashboardPage() {
+  const viewer = await currentViewer();
+  if (!viewer) redirect("/login?next=/dashboard");
+  return <DashboardScreen snapshots={await getValueHistory(viewer.userId)} />;
 }

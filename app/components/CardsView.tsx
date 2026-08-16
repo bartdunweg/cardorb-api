@@ -1352,7 +1352,15 @@ export default function CardsView({
             }}
           />
         ) : onDashboard && stats ? (
-          <CardsDashboard stats={stats} />
+          // No value history here, deliberately. This branch is what is left of
+          // the old /cards dashboard — onDashboard is false for the public
+          // variant, and the owner variant reaches this file through
+          // CollectionScreen, which never names "dashboard" as its scope, so in
+          // practice nothing renders it. The live dashboard is
+          // app/(app)/dashboard/page.tsx, a server component that can read the
+          // viewer's own snapshots; this one is a client component with no way
+          // to ask, and an empty series draws no chart rather than a wrong one.
+          <CardsDashboard stats={stats} snapshots={[]} />
         ) : (
           <>
             {/* Nothing to draw, and two quite different reasons for it — see
