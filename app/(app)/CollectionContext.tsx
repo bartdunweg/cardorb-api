@@ -3,6 +3,7 @@
 import { createContext, useContext } from "react";
 import type { CardSet } from "../../lib/core/cards";
 import type { EraGroup } from "../../lib/core/eras";
+import type { CatalogueMatch } from "../../lib/core/ptcg-search";
 
 /**
  * The collection, once, for every screen inside the shell.
@@ -40,6 +41,19 @@ export type CollectionValue = {
 
   /** Opening the add dialog, which lives in the shell so every screen can. */
   onAdd: () => void;
+  /**
+   * The same dialog, opened on a card that has already been found.
+   *
+   * A second function rather than an argument to onAdd(), because onAdd is
+   * wired straight to onClick in three places (CardsSidebar, CardsTabBar,
+   * CardsView) and an optional first parameter would quietly receive a
+   * MouseEvent from every one of them.
+   *
+   * Browse is what needs it: a set page has already identified the card you are
+   * looking at, and making you type its name back into a search box to add it
+   * would be the dialog asking a question the screen has answered.
+   */
+  onAddCard: (match: CatalogueMatch) => void;
 };
 
 /**

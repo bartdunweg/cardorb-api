@@ -86,18 +86,56 @@ const EMPTY: Draft = {
 /** How long to let someone keep typing before a search is worth a request. */
 const SEARCH_DEBOUNCE_MS = 300;
 
+/**
+ * The five fields a catalogue match fills in, in one place.
+ *
+ * Read from two directions — a result clicked in the list (selectMatch) and a
+ * card the caller opened the dialog on (`prefill`) — and they have to agree
+ * exactly, because rarity and types are read-only now (ADR-0030): whatever this
+ * writes is what gets submitted, with no field left for anyone to correct it in.
+ */
+const draftFrom = (match: CatalogueMatch, base: Draft): Draft => ({
+  ...base,
+  name: match.name,
+  number: match.number,
+  set: match.setName,
+  rarity: match.rarity ?? "",
+  types: match.types.slice(0, MAX.types),
+});
+
 export default function CardAddDialog({
   open,
   onClose,
   onUnauthorised,
+  prefill = null,
 }: {
   open: boolean;
   onClose: () => void;
   /** The key stopped working: the page signs out rather than keep a dead one. */
   onUnauthorised: () => void;
+  /**
+   * A card the caller has already found, opened straight into the summary the
+   * search would have produced. Browse passes one; the plus button passes none.
+   *
+   * Not a way around search — it *is* a search result, one this dialog would
+   * have shown for the same card. ADR-0032's rule is that nothing writes a row
+   * the catalogue has not matched, and a prefilled CatalogueMatch is by
+   * construction matched. "Change" clears it back to the search box.
+   */
+  prefill?: CatalogueMatch | null;
 }) {
   const router = useRouter();
-  const [draft, setDraft] = useState<Draft>(EMPTY);
+  /**
+   * A prefilled dialog opens on the summary rather than on the search box, and
+   * it does so from the initial state rather than from an effect: setting state
+   * in an effect to react to a prop is the cascading render the lint rule is
+   * about, and it would also fight anything typed after the first render.
+   *
+   * That works because AppShell remounts this component for each prefilled
+   * opening — see the `key` there. The plus button keeps one instance and the
+   * state it always kept.
+   */
+  const [draft, setDraft] = useState<Draft>(prefill ? draftFrom(prefill, EMPTY) : EMPTY);
   const [fields, setFields] = useState<CardFields | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<string | null>(null);
@@ -116,8 +154,9 @@ export default function CardAddDialog({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  /** The match a click confirmed, replacing the search area with a summary. */
-  const [selected, setSelected] = useState<CatalogueMatch | null>(null);
+  /** The match a click confirmed, replacing the search area with a summary —
+   *  or the one the caller opened this dialog on. See `draft` above. */
+  const [selected, setSelected] = useState<CatalogueMatch | null>(prefill);
   /** Quick is the one box; advanced is Name/Number/Set/Type as their own
    *  fields — a more precise search, never a way to skip search. */
   const [mode, setMode] = useState<"quick" | "advanced">("quick");
@@ -304,14 +343,7 @@ export default function CardAddDialog({
     // a previous pick left in `d` — they are read-only now (see the top-of-
     // file comment), so what gets submitted has to be what the summary below
     // actually shows, not a stale leftover from an earlier card this session.
-    setDraft((d) => ({
-      ...d,
-      name: match.name,
-      number: match.number,
-      set: match.setName,
-      rarity: match.rarity ?? "",
-      types: match.types.slice(0, MAX.types),
-    }));
+    setDraft((d) => draftFrom(match, d));
     setSelected(match);
     setMatches([]);
   }
