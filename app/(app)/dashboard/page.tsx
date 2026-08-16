@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentViewer } from "../../../lib/api/viewer";
-import { getValueHistory } from "../../../lib/core/collection";
+import { getCardPrices, getCollection, getValueHistory } from "../../../lib/core/collection";
 import DashboardScreen from "../../components/DashboardScreen";
 
 /**
@@ -33,5 +33,16 @@ export const metadata: Metadata = { title: "Dashboard" };
 export default async function DashboardPage() {
   const viewer = await currentViewer();
   if (!viewer) redirect("/login?next=/dashboard");
-  return <DashboardScreen snapshots={await getValueHistory(viewer.userId)} />;
+
+  // getCollection() is cache()d and the (app) layout already called it this
+  // render, so this costs nothing: it is here only to know which cards to ask
+  // for prices about.
+  const { sets } = await getCollection(viewer.userId);
+  const tcgIds = [...new Set(sets.flatMap((s) => s.cards.map((c) => c.tcgId)).filter(Boolean))] as string[];
+
+  const [snapshots, prices] = await Promise.all([
+    getValueHistory(viewer.userId),
+    getCardPrices(viewer.userId, tcgIds),
+  ]);
+  return <DashboardScreen snapshots={snapshots} prices={prices} />;
 }

@@ -40,6 +40,8 @@ import { buildCollection, type CardSet } from "./cards";
 import { cardsTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { listRows, listSnapshots, publicProfile } from "../storage/collection";
+import { listCardPrices } from "../storage/postgres";
+import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../storage/postgres";
 import { serverClient, userClient } from "../storage/supabase";
 
@@ -244,6 +246,47 @@ export const getValueHistory = cache(
       return await cachedSnapshots(userId, db);
     } catch (err) {
       console.error("Value history unavailable, retrying on the next render:", err);
+      return [];
+    }
+  },
+);
+
+/**
+ * Every reading for the cards this person holds, over the last few months.
+ *
+ * Cached the way everything else here is, under a tag of its own: the price
+ * history changes when the cron runs, not when somebody edits a card, so it has
+ * no business being dropped by cardsTag(). An hour, and the cron revalidates
+ * this tag itself after it writes, so a fresh week's prices are on the
+ * dashboard immediately rather than up to an hour later.
+ *
+ * The window is ninety days rather than everything. Movers is a question about
+ * recent movement, the table will only grow, and reading two years of readings
+ * to compare the first with the last would get slower every week for an answer
+ * that does not change.
+ */
+export const cardPricesTag = (userId: string) => `card-prices:${userId}`;
+
+const WINDOW_DAYS = 90;
+
+export const getCardPrices = cache(
+  async (userId: string, tcgIds: string[], token?: string): Promise<CardPricePoint[]> => {
+    if (!tcgIds.length) return [];
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      if (!db) return [];
+      // Computed here rather than inside the cache callback: unstable_cache
+      // keys on the arguments, and a date built inside would be a new key
+      // every day *and* a stale window on a hit. Outside, it is part of the
+      // key, so the window moves with the day and the cache follows it.
+      const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+      return await unstable_cache(
+        () => listCardPrices(db, tcgIds, since),
+        ["card-prices", userId, since],
+        { revalidate: 3600, tags: [cardPricesTag(userId)] },
+      )();
+    } catch (err) {
+      console.error("Card price history unavailable, retrying on the next render:", err);
       return [];
     }
   },
