@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CardsView from "../../components/CardsView";
-import { forGrid, stripPrices } from "../../../lib/core/cards";
+import { forGrid, forPublic } from "../../../lib/core/cards";
 import { getCards, ownerOf } from "../../../lib/core/collection";
 import { collectionTitle, ownerLabel } from "../../../lib/core/owner";
 import { APP_NAME } from "../../../lib/core/config";
@@ -113,9 +113,10 @@ export default async function PublicCollection({
   const owner = await ownerOf(username);
   if (!owner) notFound();
 
-  // Stripped before it is handed to a client component, so the prices are not
-  // in the HTML and not in the props. See stripPrices in lib/core/cards.ts.
-  const sets = forGrid(stripPrices(await getCards(owner.id)));
+  // Curated before it is handed to a client component, so neither the prices
+  // nor the owner's own inventory — what they paid, condition, notes, how many
+  // — are in the HTML or in the props. See forPublic in lib/core/cards.ts.
+  const sets = forGrid(forPublic(await getCards(owner.id)));
 
   const held = sets.reduce((n, set) => n + set.cards.filter((c) => c.owned).length, 0);
 
