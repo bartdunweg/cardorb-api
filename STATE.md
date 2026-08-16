@@ -27,19 +27,27 @@ counted per-variant `quantity`**: a card held three times was worth one of it, i
 the tile and in the series both. `copiesHeld()` in `lib/core/cards-stats.ts` is
 the one definition; "Priciest cards" deliberately still ranks per single copy.
 
-**This is applied and seeded.** `supabase db push` ran against
-`fprjroupecdhosfdrqhv` on 2026-08-16, and the snapshot script wrote two points
-for `bartdunweg` (`3fe9b080`):
+**This is applied, seeded and finished.** `supabase db push` ran against
+`fprjroupecdhosfdrqhv` on 2026-08-16, and the snapshot script wrote all three
+points for `bartdunweg` (`3fe9b080`):
 
 ```
-2024-12-30  €16,134.81  1,188 copies, 993 priced,   33 unpriced
+2024-12-30  €16,134.81  1,188 copies,   993 priced, 33 unpriced
+2026-06-17  €40,287.53  1,910 copies, 1,542 priced, 44 unpriced
 2026-08-16  €41,615.97  1,921 copies, 1,553 priced, 44 unpriced
 ```
 
-Both higher than the old JSON file's figures (€15,634 and €39,887), which is the
-copies change landing, and `cards` is a copy count now rather than a card count.
-RLS confirmed from outside the app: an anonymous PostgREST client reads **0 rows**
-and its insert is refused **401**.
+All higher than the old JSON file's figures (€15,634 / €38,000-ish / €39,887),
+which is the copies change landing, and `cards` is a copy count now rather than a
+card count. RLS confirmed from outside the app: an anonymous PostgREST client
+reads **0 rows** and its insert is refused **401**.
+
+**`lib/core/collection-value.generated.json` is deleted.** Both points that could
+never be regenerated — the two Internet Archive captures — are in the table. The
+file's third point, 2026-08-06, is gone and deliberately so: Cardmarket's live
+guide only serves today, so that date cannot be re-derived, and it was computed
+before copies counted, so restoring it would draw a dip that never happened.
+Today's reading is its equivalent.
 
 **Running the script found two more bugs in it, both fixed, and one of them was
 the dangerous kind.** `fromPostgres()` did a single unpaged select, so PostgREST's
@@ -52,26 +60,29 @@ cannot affect row a second time`: two guides can report the same date, and the
 `byDate` Map that used to dedupe them was lost in the move from a JSON file to
 rows. Restored, and it now warns rather than silently keeping the last one.
 
-**Two of three historical points, not three.** `web.archive.org` answered 503 on
-the first run and, on the second, served the *December 2024* capture when asked
-for the June 2026 one — so that guide's own `createdAt` was not the date
-requested and both collapsed onto `2024-12-30`. The script survives this now
-(three tries, then a loud skip) instead of aborting.
+**A third bug, and the one worth remembering: `id_` vs `if_` on the Wayback
+Machine.** Asked for the June 2026 capture at `…20260617212111id_/…`,
+web.archive.org answers **302 to the December 2024 capture**, and `fetch` follows
+it. So the script received a perfectly valid price guide for the wrong day, whose
+own `createdAt` then reported 2024-12-30, and two guides collided on one date.
+`if_` at the same timestamp returns 200 and the real bytes. Verified against the
+CDX index first, which lists both captures with different digests and sizes
+(1.03 MB vs 1.42 MB), so they are genuinely two files.
 
-Consequence: **`lib/core/collection-value.generated.json` must NOT be deleted
-yet.** It is imported by nothing, but it is still the only copy anywhere of the
-2026-06-17 reading. Re-run `--seed` on another day; if the archive serves the
-right capture, that point lands and the file can go. Do not hand-insert it from
-the file — its value was computed before copies counted, so it would draw as a
-dip between two points that were not.
+The modifier is the fix; the **date assertion is the guard**. `archivedGuide()`
+now refuses any capture whose `createdAt` is not the date asked for, because a
+modifier that works today is not a promise and this failure is silent by
+construction — the archive hands over real data, just from the wrong day.
 
-Still not seen in a browser: `/dashboard` with the chart, and a fresh second
-account confirming there is no chart and no gap where it was. Needs two real
-sessions — the standing verification gap in this repo.
+Still not seen in a browser: `/dashboard` with the chart drawn, and a fresh
+second account confirming there is no chart and no gap where it was. Needs two
+real sessions — the standing verification gap in this repo.
 
-Also worth knowing: **the snapshot script needs Node 22+.** On Node 20
-`@supabase/supabase-js` throws "native WebSocket not found" before it does
-anything. `nvm use 24`.
+**Node: the repo already pins it and the trap is a shell that ignores that.**
+`.nvmrc` says 24 and `engines.node` says `>=22`; this session's shell was on
+Node 20, where `@supabase/supabase-js` throws "native WebSocket not found" before
+the script does anything. Every check in this branch was re-run on Node 24 after
+that was noticed. `nvm use` in the repo root is enough.
 
 Known and accepted: the deprecated `x-cards-key` path answers
 `{"snapshots":[]}` (a passcode is not a session, so `auth.uid()` is null and the

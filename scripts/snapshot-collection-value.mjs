@@ -105,13 +105,26 @@ if (!userId) {
 const GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json";
 
 /**
- * The only two copies of that file the Internet Archive has, checked with their
- * CDX index. `id_` in the path asks for the bytes as captured rather than the
- * archive's rewritten version.
+ * The only two copies of that file the Internet Archive has, checked against
+ * their CDX index (distinct digests and sizes, so they are genuinely two
+ * different captures rather than one served twice).
+ *
+ * `if_` and not `id_`, which is the whole of a bug that cost a historical point
+ * on the first real run. Both ask for the bytes as captured rather than the
+ * archive's rewritten version, and `id_` is the one the documentation points at
+ * — but for the June 2026 capture the Wayback Machine answers `id_` with a 302
+ * to the *December 2024* one. fetch follows redirects, so the script quietly
+ * received the wrong file, whose own createdAt then reported 2024-12-30, and
+ * two guides collided on one date. `if_` returns 200 and the real bytes
+ * (createdAt 2026-06-17, 75,404 products) for the same timestamp.
+ *
+ * The date check below is the real guard, though. A modifier that works today
+ * is not a promise, and the failure mode is silent by construction: the archive
+ * hands over a valid price guide, just not the one that was asked for.
  */
 const ARCHIVED = [
-  "https://web.archive.org/web/20241230185748id_/" + GUIDE,
-  "https://web.archive.org/web/20260617212111id_/" + GUIDE,
+  { at: "2024-12-30", url: "https://web.archive.org/web/20241230185748if_/" + GUIDE },
+  { at: "2026-06-17", url: "https://web.archive.org/web/20260617212111if_/" + GUIDE },
 ];
 
 const get = async (url, what, headers = {}) => {
@@ -357,10 +370,25 @@ const guideFrom = async (url, what) => {
  * is — and a run that quietly wrote one point instead of three would look
  * exactly like a successful one.
  */
-async function archivedGuide(url, what) {
+async function archivedGuide({ url, at }) {
+  const what = `archived: ${at}`;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      return await guideFrom(url, attempt === 1 ? what : `${what} (try ${attempt})`);
+      const guide = await guideFrom(url, attempt === 1 ? what : `${what} (try ${attempt})`);
+      /**
+       * The capture has to be the one that was asked for.
+       *
+       * Asked for a capture it will not serve, the Wayback Machine does not
+       * answer 404 — it redirects to a neighbouring one, and fetch follows it.
+       * So a wrong answer arrives as a perfectly valid price guide for a
+       * different day, and the only thing that gives it away is its own
+       * createdAt. Without this check that file is priced against the
+       * collection and written down under the date it claims, which is how a
+       * reading of the wrong year ends up on the chart.
+       */
+      const got = guide?.createdAt?.slice(0, 10);
+      if (got !== at) throw new Error(`served the ${got ?? "unknown"} capture, not ${at}`);
+      return guide;
     } catch (err) {
       if (attempt === 3) {
         console.warn(`\n  !! ${what} is unavailable (${err.message}).`);
@@ -407,8 +435,8 @@ const ids = await cardmarketIds([...cards.values()]);
 
 const guides = [await guideFrom(GUIDE, "Cardmarket price guide, today")];
 if (SEED) {
-  for (const url of ARCHIVED) {
-    const guide = await archivedGuide(url, `archived: ${url.slice(28, 42)}`);
+  for (const capture of ARCHIVED) {
+    const guide = await archivedGuide(capture);
     if (guide) guides.push(guide);
   }
 }
