@@ -284,22 +284,39 @@ export function cardNeighbours(
 /**
  * What one copy of this printing is worth.
  *
- * The foil price where the copy is a foil and Cardmarket publishes one, the
- * normal price otherwise. Both fallbacks matter and they are different
- * failures: a copy nobody has classified is priced as normal because that is
- * the commoner printing and a guess has to go somewhere, while a reverse holo
- * of a card with no foil listing is priced as normal because Cardmarket does
- * not distinguish it — 865 of this collection's 1,526 products are in that
- * position.
+ * Per variant rather than per card, which is the point: a card held normally
+ * and again as a reverse holo is one OwnedCard whose two copies are worth
+ * different amounts, and valuing both at the card's price was the approximation
+ * this replaces.
  *
- * Per variant rather than per card, which is the whole point: a card held
- * normally and again as a reverse holo is one OwnedCard whose two copies are
- * worth different amounts, and valuing both at the card's price was the
- * approximation this replaces.
+ * ── Only the reverse holo takes the foil price, and that is measured ───────
+ *
+ * The obvious rule — "any foil printing uses the `-holo` fields" — is wrong,
+ * and applying it dropped this collection's valuation by €2,488 before the
+ * number was checked. Cardmarket's `-holo` fields mean "the foil version of a
+ * card that also has a non-foil version". Against this collection's products on
+ * 16 August 2026:
+ *
+ *   cards that also have a normal printing   trend-holo / trend = 1.90x  (601)
+ *   cards that exist only as a holo          trend-holo / trend = 0.47x  ( 69)
+ *
+ * For a card that has no non-foil version — an Illustration Rare, a V, most of
+ * what a modern set calls a hit — the *plain* fields already describe the holo,
+ * because there is nothing else to describe. Whatever `-holo` holds there is a
+ * thinner, different market, and preferring it halves the card.
+ *
+ * So: `reverse-holo` reads the foil fields, `holo` does not. A holo-only card
+ * is priced by the plain fields, which is what they are. The imperfect case is
+ * a card printed as both holo and reverse holo with no plain version at all —
+ * five in a 210-card sample — where the holo copy takes the plain price. That
+ * is the same answer it got before this feature existed, so nothing regresses.
+ *
+ * Null-safe: a reverse holo of a card Cardmarket does not distinguish (865 of
+ * 1,526 products publish no foil price at all) falls back to the plain price,
+ * which is the honest answer rather than a missing one.
  */
 export function variantPrice(card: OwnedCard, variant: Variant): Price | null {
-  const foil = variant.finish === "reverse-holo" || variant.finish === "holo";
-  return (foil && card.priceHolo) || card.price;
+  return (variant.finish === "reverse-holo" && card.priceHolo) || card.price;
 }
 
 export function forGrid(sets: CardSet[]): CardSet[] {

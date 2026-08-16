@@ -69,7 +69,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { priceOf, shownPrice } from "../lib/core/price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice } from "../lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 /** tcgId -> Cardmarket idProduct. Cached because it costs 1,553 requests and never moves. */
@@ -241,7 +241,7 @@ async function fromPostgres(db) {
   for (let page = 0; page < 100 && rows.length < total; page++) {
     const { data, error, count } = await db
       .from("cards")
-      .select("set_name,number,name,owned,quantity,acquired_at", page === 0 ? { count: "exact" } : {})
+      .select("set_name,number,name,owned,quantity,acquired_at,finish", page === 0 ? { count: "exact" } : {})
       .eq("user_id", userId)
       .order("id", { ascending: true })
       .range(page * PAGE, page * PAGE + PAGE - 1);
@@ -262,6 +262,9 @@ async function fromPostgres(db) {
     cards.get(key).push({
       acquired: row.acquired_at.slice(0, 10),
       owned: row.owned,
+      // Which printing this copy is, so it can be priced as one. Null reads as
+      // normal, exactly as variantPrice() treats it on the page.
+      finish: row.finish ?? null,
       // Defaulted the way lib/storage/postgres.ts defaults it, and floored at
       // zero so a bad row cannot subtract from the total.
       quantity: Math.max(0, row.quantity ?? 1),
@@ -333,21 +336,32 @@ function valueAt(guide, cards, ids, acquisitions) {
     // A row acquired after the snapshot date did not exist yet, which is the
     // whole reason this reads acquired_at rather than valuing today's binder at
     // an old day's prices.
-    const copies = (acquisitions.get(key) ?? [])
-      .filter((r) => r.owned && r.acquired <= on)
-      .reduce((n, r) => n + r.quantity, 0);
+    const mine = (acquisitions.get(key) ?? []).filter((r) => r.owned && r.acquired <= on);
+    const copies = mine.reduce((n, r) => n + r.quantity, 0);
     if (!copies) continue;
     held += copies;
 
     const row = byProduct.get(ids[tcgId]);
-    const p = row && priceOf({ low: row.low, trend: row.trend, avg30: row.avg30 });
-    const n = p && shownPrice(p);
-    if (n == null) {
+    // Both printings, the same pair lib/core/snapshot.ts resolves for the cron.
+    // The two have to agree: this fills in history and that adds today's point,
+    // onto one chart.
+    const normal = row && priceOf(row);
+    const foil = row && holoPriceOf(row);
+    if (!normal && !foil) {
       unpriced++;
       continue;
     }
-    value += n * copies;
-    priced++;
+
+    let any = false;
+    for (const r of mine) {
+      // reverse-holo only — see variantPrice() in lib/core/cards.ts.
+      const each = shownPrice((r.finish === "reverse-holo" && foil) || normal);
+      if (each == null) continue;
+      value += each * r.quantity;
+      any = true;
+    }
+    if (any) priced++;
+    else unpriced++;
   }
   return { date: on, value, cards: held, priced, unpriced };
 }

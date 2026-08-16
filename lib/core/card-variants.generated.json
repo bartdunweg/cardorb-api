@@ -1,0 +1,5187 @@
+{
+  "base1-1": [
+    "holo"
+  ],
+  "base1-10": [
+    "holo"
+  ],
+  "base1-100": [
+    "normal"
+  ],
+  "base1-101": [
+    "normal"
+  ],
+  "base1-102": [
+    "normal"
+  ],
+  "base1-11": [
+    "holo"
+  ],
+  "base1-12": [
+    "holo"
+  ],
+  "base1-13": [
+    "holo"
+  ],
+  "base1-14": [
+    "holo"
+  ],
+  "base1-15": [
+    "holo"
+  ],
+  "base1-16": [
+    "holo"
+  ],
+  "base1-17": [
+    "normal"
+  ],
+  "base1-18": [
+    "normal"
+  ],
+  "base1-19": [
+    "normal"
+  ],
+  "base1-2": [
+    "holo"
+  ],
+  "base1-20": [
+    "normal"
+  ],
+  "base1-21": [
+    "normal"
+  ],
+  "base1-22": [
+    "normal"
+  ],
+  "base1-23": [
+    "normal"
+  ],
+  "base1-24": [
+    "normal"
+  ],
+  "base1-25": [
+    "normal"
+  ],
+  "base1-26": [
+    "normal"
+  ],
+  "base1-27": [
+    "normal"
+  ],
+  "base1-28": [
+    "normal"
+  ],
+  "base1-29": [
+    "normal"
+  ],
+  "base1-3": [
+    "holo"
+  ],
+  "base1-30": [
+    "normal"
+  ],
+  "base1-31": [
+    "normal"
+  ],
+  "base1-32": [
+    "normal"
+  ],
+  "base1-33": [
+    "normal"
+  ],
+  "base1-34": [
+    "normal"
+  ],
+  "base1-35": [
+    "normal"
+  ],
+  "base1-36": [
+    "normal"
+  ],
+  "base1-37": [
+    "normal"
+  ],
+  "base1-38": [
+    "normal"
+  ],
+  "base1-39": [
+    "normal"
+  ],
+  "base1-4": [
+    "holo"
+  ],
+  "base1-40": [
+    "normal"
+  ],
+  "base1-41": [
+    "normal"
+  ],
+  "base1-42": [
+    "normal"
+  ],
+  "base1-43": [
+    "normal"
+  ],
+  "base1-44": [
+    "normal"
+  ],
+  "base1-45": [
+    "normal"
+  ],
+  "base1-46": [
+    "normal"
+  ],
+  "base1-47": [
+    "normal"
+  ],
+  "base1-48": [
+    "normal"
+  ],
+  "base1-49": [
+    "normal"
+  ],
+  "base1-5": [
+    "holo"
+  ],
+  "base1-50": [
+    "normal"
+  ],
+  "base1-51": [
+    "normal"
+  ],
+  "base1-52": [
+    "normal"
+  ],
+  "base1-53": [
+    "normal"
+  ],
+  "base1-54": [
+    "normal"
+  ],
+  "base1-55": [
+    "normal"
+  ],
+  "base1-56": [
+    "normal"
+  ],
+  "base1-57": [
+    "normal"
+  ],
+  "base1-58": [
+    "normal"
+  ],
+  "base1-59": [
+    "normal"
+  ],
+  "base1-6": [
+    "holo"
+  ],
+  "base1-60": [
+    "normal"
+  ],
+  "base1-61": [
+    "normal"
+  ],
+  "base1-62": [
+    "normal"
+  ],
+  "base1-63": [
+    "normal"
+  ],
+  "base1-64": [
+    "normal"
+  ],
+  "base1-65": [
+    "normal"
+  ],
+  "base1-66": [
+    "normal"
+  ],
+  "base1-67": [
+    "normal"
+  ],
+  "base1-69": [
+    "normal"
+  ],
+  "base1-7": [
+    "holo"
+  ],
+  "base1-70": [
+    "normal"
+  ],
+  "base1-71": [
+    "normal"
+  ],
+  "base1-72": [
+    "normal"
+  ],
+  "base1-73": [
+    "normal"
+  ],
+  "base1-74": [
+    "normal"
+  ],
+  "base1-75": [
+    "normal"
+  ],
+  "base1-76": [
+    "normal"
+  ],
+  "base1-77": [
+    "normal"
+  ],
+  "base1-78": [
+    "normal"
+  ],
+  "base1-79": [
+    "normal"
+  ],
+  "base1-8": [
+    "holo"
+  ],
+  "base1-80": [
+    "normal"
+  ],
+  "base1-81": [
+    "normal"
+  ],
+  "base1-82": [
+    "normal"
+  ],
+  "base1-83": [
+    "normal"
+  ],
+  "base1-84": [
+    "normal"
+  ],
+  "base1-85": [
+    "normal"
+  ],
+  "base1-86": [
+    "normal"
+  ],
+  "base1-87": [
+    "normal"
+  ],
+  "base1-88": [
+    "normal"
+  ],
+  "base1-89": [
+    "normal"
+  ],
+  "base1-9": [
+    "holo"
+  ],
+  "base1-90": [
+    "normal"
+  ],
+  "base1-91": [
+    "normal"
+  ],
+  "base1-92": [
+    "normal"
+  ],
+  "base1-93": [
+    "normal"
+  ],
+  "base1-94": [
+    "normal"
+  ],
+  "base1-95": [
+    "normal"
+  ],
+  "base1-96": [
+    "normal"
+  ],
+  "base1-97": [
+    "normal"
+  ],
+  "base1-98": [
+    "normal"
+  ],
+  "base1-99": [
+    "normal"
+  ],
+  "base2-1": [
+    "holo"
+  ],
+  "base2-10": [
+    "holo"
+  ],
+  "base2-11": [
+    "holo"
+  ],
+  "base2-12": [
+    "holo"
+  ],
+  "base2-13": [
+    "holo"
+  ],
+  "base2-14": [
+    "holo"
+  ],
+  "base2-15": [
+    "holo"
+  ],
+  "base2-16": [
+    "holo"
+  ],
+  "base2-17": [
+    "normal"
+  ],
+  "base2-18": [
+    "normal"
+  ],
+  "base2-19": [
+    "normal"
+  ],
+  "base2-2": [
+    "holo"
+  ],
+  "base2-20": [
+    "normal"
+  ],
+  "base2-21": [
+    "normal"
+  ],
+  "base2-22": [
+    "normal"
+  ],
+  "base2-23": [
+    "normal"
+  ],
+  "base2-24": [
+    "normal"
+  ],
+  "base2-25": [
+    "normal"
+  ],
+  "base2-26": [
+    "normal"
+  ],
+  "base2-27": [
+    "normal"
+  ],
+  "base2-28": [
+    "normal"
+  ],
+  "base2-29": [
+    "normal"
+  ],
+  "base2-3": [
+    "holo"
+  ],
+  "base2-30": [
+    "normal"
+  ],
+  "base2-31": [
+    "normal"
+  ],
+  "base2-32": [
+    "normal"
+  ],
+  "base2-33": [
+    "normal"
+  ],
+  "base2-34": [
+    "normal"
+  ],
+  "base2-35": [
+    "normal"
+  ],
+  "base2-36": [
+    "normal"
+  ],
+  "base2-37": [
+    "normal"
+  ],
+  "base2-38": [
+    "normal"
+  ],
+  "base2-39": [
+    "normal"
+  ],
+  "base2-4": [
+    "holo"
+  ],
+  "base2-40": [
+    "normal"
+  ],
+  "base2-41": [
+    "normal"
+  ],
+  "base2-42": [
+    "normal"
+  ],
+  "base2-43": [
+    "normal"
+  ],
+  "base2-44": [
+    "normal"
+  ],
+  "base2-45": [
+    "normal"
+  ],
+  "base2-46": [
+    "normal"
+  ],
+  "base2-47": [
+    "normal"
+  ],
+  "base2-48": [
+    "normal"
+  ],
+  "base2-49": [
+    "normal"
+  ],
+  "base2-5": [
+    "holo"
+  ],
+  "base2-50": [
+    "normal"
+  ],
+  "base2-51": [
+    "normal"
+  ],
+  "base2-52": [
+    "normal"
+  ],
+  "base2-53": [
+    "normal"
+  ],
+  "base2-54": [
+    "normal"
+  ],
+  "base2-55": [
+    "normal"
+  ],
+  "base2-56": [
+    "normal"
+  ],
+  "base2-57": [
+    "normal"
+  ],
+  "base2-58": [
+    "normal"
+  ],
+  "base2-59": [
+    "normal"
+  ],
+  "base2-6": [
+    "holo"
+  ],
+  "base2-60": [
+    "normal"
+  ],
+  "base2-61": [
+    "normal"
+  ],
+  "base2-62": [
+    "normal"
+  ],
+  "base2-63": [
+    "normal"
+  ],
+  "base2-64": [
+    "normal"
+  ],
+  "base2-7": [
+    "holo"
+  ],
+  "base2-8": [
+    "holo"
+  ],
+  "base2-9": [
+    "holo"
+  ],
+  "base3-1": [
+    "holo"
+  ],
+  "base3-10": [
+    "holo"
+  ],
+  "base3-11": [
+    "holo"
+  ],
+  "base3-12": [
+    "holo"
+  ],
+  "base3-13": [
+    "holo"
+  ],
+  "base3-14": [
+    "holo"
+  ],
+  "base3-15": [
+    "holo"
+  ],
+  "base3-16": [
+    "normal"
+  ],
+  "base3-17": [
+    "normal"
+  ],
+  "base3-18": [
+    "normal"
+  ],
+  "base3-19": [
+    "normal"
+  ],
+  "base3-2": [
+    "holo"
+  ],
+  "base3-20": [
+    "normal"
+  ],
+  "base3-21": [
+    "normal"
+  ],
+  "base3-22": [
+    "normal"
+  ],
+  "base3-23": [
+    "normal"
+  ],
+  "base3-24": [
+    "normal"
+  ],
+  "base3-25": [
+    "normal"
+  ],
+  "base3-26": [
+    "normal"
+  ],
+  "base3-27": [
+    "normal"
+  ],
+  "base3-28": [
+    "normal"
+  ],
+  "base3-29": [
+    "normal"
+  ],
+  "base3-3": [
+    "holo"
+  ],
+  "base3-30": [
+    "normal"
+  ],
+  "base3-31": [
+    "normal"
+  ],
+  "base3-32": [
+    "normal"
+  ],
+  "base3-33": [
+    "normal"
+  ],
+  "base3-34": [
+    "normal"
+  ],
+  "base3-35": [
+    "normal"
+  ],
+  "base3-36": [
+    "normal"
+  ],
+  "base3-37": [
+    "normal"
+  ],
+  "base3-38": [
+    "normal"
+  ],
+  "base3-39": [
+    "normal"
+  ],
+  "base3-4": [
+    "holo"
+  ],
+  "base3-40": [
+    "normal"
+  ],
+  "base3-41": [
+    "normal"
+  ],
+  "base3-42": [
+    "normal"
+  ],
+  "base3-43": [
+    "normal"
+  ],
+  "base3-44": [
+    "normal"
+  ],
+  "base3-45": [
+    "normal"
+  ],
+  "base3-46": [
+    "normal"
+  ],
+  "base3-47": [
+    "normal"
+  ],
+  "base3-48": [
+    "normal"
+  ],
+  "base3-49": [
+    "normal"
+  ],
+  "base3-5": [
+    "holo"
+  ],
+  "base3-50": [
+    "normal"
+  ],
+  "base3-51": [
+    "normal"
+  ],
+  "base3-52": [
+    "normal"
+  ],
+  "base3-53": [
+    "normal"
+  ],
+  "base3-54": [
+    "normal"
+  ],
+  "base3-55": [
+    "normal"
+  ],
+  "base3-56": [
+    "normal"
+  ],
+  "base3-57": [
+    "normal"
+  ],
+  "base3-58": [
+    "normal"
+  ],
+  "base3-59": [
+    "normal"
+  ],
+  "base3-6": [
+    "holo"
+  ],
+  "base3-60": [
+    "normal"
+  ],
+  "base3-61": [
+    "normal"
+  ],
+  "base3-62": [
+    "normal"
+  ],
+  "base3-7": [
+    "holo"
+  ],
+  "base3-8": [
+    "holo"
+  ],
+  "base3-9": [
+    "holo"
+  ],
+  "base5-1": [
+    "holo"
+  ],
+  "base5-10": [
+    "holo"
+  ],
+  "base5-11": [
+    "holo"
+  ],
+  "base5-12": [
+    "holo"
+  ],
+  "base5-13": [
+    "holo"
+  ],
+  "base5-14": [
+    "holo"
+  ],
+  "base5-15": [
+    "holo"
+  ],
+  "base5-16": [
+    "holo"
+  ],
+  "base5-17": [
+    "holo"
+  ],
+  "base5-18": [
+    "normal"
+  ],
+  "base5-19": [
+    "normal"
+  ],
+  "base5-2": [
+    "holo"
+  ],
+  "base5-20": [
+    "normal"
+  ],
+  "base5-21": [
+    "normal"
+  ],
+  "base5-22": [
+    "normal"
+  ],
+  "base5-23": [
+    "normal"
+  ],
+  "base5-24": [
+    "normal"
+  ],
+  "base5-25": [
+    "normal"
+  ],
+  "base5-26": [
+    "normal"
+  ],
+  "base5-27": [
+    "normal"
+  ],
+  "base5-28": [
+    "normal"
+  ],
+  "base5-29": [
+    "normal"
+  ],
+  "base5-3": [
+    "holo"
+  ],
+  "base5-30": [
+    "normal"
+  ],
+  "base5-31": [
+    "normal"
+  ],
+  "base5-32": [
+    "normal"
+  ],
+  "base5-33": [
+    "normal"
+  ],
+  "base5-34": [
+    "normal"
+  ],
+  "base5-35": [
+    "normal"
+  ],
+  "base5-36": [
+    "normal"
+  ],
+  "base5-37": [
+    "normal"
+  ],
+  "base5-38": [
+    "normal"
+  ],
+  "base5-39": [
+    "normal"
+  ],
+  "base5-4": [
+    "holo"
+  ],
+  "base5-40": [
+    "normal"
+  ],
+  "base5-41": [
+    "normal"
+  ],
+  "base5-42": [
+    "normal"
+  ],
+  "base5-43": [
+    "normal"
+  ],
+  "base5-44": [
+    "normal"
+  ],
+  "base5-45": [
+    "normal"
+  ],
+  "base5-46": [
+    "normal"
+  ],
+  "base5-47": [
+    "normal"
+  ],
+  "base5-48": [
+    "normal"
+  ],
+  "base5-49": [
+    "normal"
+  ],
+  "base5-5": [
+    "holo"
+  ],
+  "base5-50": [
+    "normal"
+  ],
+  "base5-51": [
+    "normal"
+  ],
+  "base5-52": [
+    "normal"
+  ],
+  "base5-53": [
+    "normal"
+  ],
+  "base5-54": [
+    "normal"
+  ],
+  "base5-55": [
+    "normal"
+  ],
+  "base5-56": [
+    "normal"
+  ],
+  "base5-57": [
+    "normal"
+  ],
+  "base5-58": [
+    "normal"
+  ],
+  "base5-59": [
+    "normal"
+  ],
+  "base5-6": [
+    "holo"
+  ],
+  "base5-60": [
+    "normal"
+  ],
+  "base5-61": [
+    "normal"
+  ],
+  "base5-62": [
+    "normal"
+  ],
+  "base5-63": [
+    "normal"
+  ],
+  "base5-64": [
+    "normal"
+  ],
+  "base5-65": [
+    "normal"
+  ],
+  "base5-66": [
+    "normal"
+  ],
+  "base5-67": [
+    "normal"
+  ],
+  "base5-68": [
+    "normal"
+  ],
+  "base5-69": [
+    "normal"
+  ],
+  "base5-7": [
+    "holo"
+  ],
+  "base5-70": [
+    "normal"
+  ],
+  "base5-71": [
+    "normal"
+  ],
+  "base5-72": [
+    "normal"
+  ],
+  "base5-73": [
+    "normal"
+  ],
+  "base5-74": [
+    "normal"
+  ],
+  "base5-75": [
+    "normal"
+  ],
+  "base5-76": [
+    "normal"
+  ],
+  "base5-77": [
+    "normal"
+  ],
+  "base5-78": [
+    "normal"
+  ],
+  "base5-79": [
+    "normal"
+  ],
+  "base5-8": [
+    "holo"
+  ],
+  "base5-80": [
+    "normal"
+  ],
+  "base5-81": [
+    "normal"
+  ],
+  "base5-82": [
+    "normal"
+  ],
+  "base5-83": [
+    "holo"
+  ],
+  "base5-9": [
+    "holo"
+  ],
+  "basep-1": [
+    "normal"
+  ],
+  "basep-10": [
+    "holo"
+  ],
+  "basep-11": [
+    "normal",
+    "holo"
+  ],
+  "basep-12": [
+    "normal"
+  ],
+  "basep-13": [
+    "normal"
+  ],
+  "basep-14": [
+    "normal"
+  ],
+  "basep-15": [
+    "normal"
+  ],
+  "basep-16": [
+    "normal"
+  ],
+  "basep-17": [
+    "holo"
+  ],
+  "basep-18": [
+    "holo"
+  ],
+  "basep-2": [
+    "normal"
+  ],
+  "basep-20": [
+    "normal"
+  ],
+  "basep-21": [
+    "normal"
+  ],
+  "basep-22": [
+    "normal"
+  ],
+  "basep-23": [
+    "normal"
+  ],
+  "basep-3": [
+    "normal"
+  ],
+  "basep-4": [
+    "normal"
+  ],
+  "basep-5": [
+    "normal"
+  ],
+  "basep-6": [
+    "normal"
+  ],
+  "basep-7": [
+    "normal"
+  ],
+  "basep-8": [
+    "normal"
+  ],
+  "basep-9": [
+    "holo"
+  ],
+  "dc1-1": [
+    "normal"
+  ],
+  "dc1-10": [
+    "normal"
+  ],
+  "dc1-11": [
+    "normal"
+  ],
+  "dc1-12": [
+    "normal"
+  ],
+  "dc1-13": [
+    "normal"
+  ],
+  "dc1-14": [
+    "normal"
+  ],
+  "dc1-15": [
+    "normal"
+  ],
+  "dc1-16": [
+    "normal"
+  ],
+  "dc1-17": [
+    "normal"
+  ],
+  "dc1-18": [
+    "normal"
+  ],
+  "dc1-19": [
+    "normal"
+  ],
+  "dc1-2": [
+    "normal"
+  ],
+  "dc1-20": [
+    "normal"
+  ],
+  "dc1-21": [
+    "normal"
+  ],
+  "dc1-22": [
+    "normal"
+  ],
+  "dc1-23": [
+    "normal"
+  ],
+  "dc1-24": [
+    "normal"
+  ],
+  "dc1-25": [
+    "normal"
+  ],
+  "dc1-26": [
+    "normal"
+  ],
+  "dc1-27": [
+    "normal"
+  ],
+  "dc1-28": [
+    "normal"
+  ],
+  "dc1-29": [
+    "normal"
+  ],
+  "dc1-3": [
+    "normal"
+  ],
+  "dc1-30": [
+    "normal"
+  ],
+  "dc1-31": [
+    "normal"
+  ],
+  "dc1-32": [
+    "normal"
+  ],
+  "dc1-33": [
+    "normal"
+  ],
+  "dc1-34": [
+    "normal"
+  ],
+  "dc1-4": [
+    "normal"
+  ],
+  "dc1-5": [
+    "normal"
+  ],
+  "dc1-6": [
+    "normal"
+  ],
+  "dc1-7": [
+    "normal"
+  ],
+  "dc1-8": [
+    "normal"
+  ],
+  "dc1-9": [
+    "normal"
+  ],
+  "me01-133": [
+    "holo"
+  ],
+  "me01-134": [
+    "holo"
+  ],
+  "me01-135": [
+    "holo"
+  ],
+  "me01-136": [
+    "holo"
+  ],
+  "me01-137": [
+    "holo"
+  ],
+  "me01-138": [
+    "holo"
+  ],
+  "me01-139": [
+    "holo"
+  ],
+  "me01-140": [
+    "holo"
+  ],
+  "me01-141": [
+    "holo"
+  ],
+  "me01-142": [
+    "holo"
+  ],
+  "me01-143": [
+    "holo"
+  ],
+  "me01-144": [
+    "holo"
+  ],
+  "me01-145": [
+    "holo"
+  ],
+  "me01-146": [
+    "holo"
+  ],
+  "me01-147": [
+    "holo"
+  ],
+  "me01-148": [
+    "holo"
+  ],
+  "me01-149": [
+    "holo"
+  ],
+  "me01-150": [
+    "holo"
+  ],
+  "me01-151": [
+    "holo"
+  ],
+  "me01-152": [
+    "holo"
+  ],
+  "me01-153": [
+    "holo"
+  ],
+  "me01-154": [
+    "holo"
+  ],
+  "me02-095": [
+    "holo"
+  ],
+  "me02-096": [
+    "holo"
+  ],
+  "me02-097": [
+    "holo"
+  ],
+  "me02-098": [
+    "holo"
+  ],
+  "me02-099": [
+    "holo"
+  ],
+  "me02-100": [
+    "holo"
+  ],
+  "me02-101": [
+    "holo"
+  ],
+  "me02-102": [
+    "holo"
+  ],
+  "me02-103": [
+    "holo"
+  ],
+  "me02-104": [
+    "holo"
+  ],
+  "me02-105": [
+    "holo"
+  ],
+  "me02-106": [
+    "holo"
+  ],
+  "me02-107": [
+    "holo"
+  ],
+  "me02-126": [
+    "holo"
+  ],
+  "me02.5-218": [
+    "holo"
+  ],
+  "me02.5-219": [
+    "holo"
+  ],
+  "me02.5-220": [
+    "holo"
+  ],
+  "me02.5-221": [
+    "holo"
+  ],
+  "me02.5-222": [
+    "holo"
+  ],
+  "me02.5-223": [
+    "holo"
+  ],
+  "me02.5-224": [
+    "holo"
+  ],
+  "me02.5-225": [
+    "holo"
+  ],
+  "me02.5-226": [
+    "holo"
+  ],
+  "me02.5-227": [
+    "holo"
+  ],
+  "me02.5-228": [
+    "holo"
+  ],
+  "me02.5-229": [
+    "holo"
+  ],
+  "me02.5-230": [
+    "holo"
+  ],
+  "me02.5-231": [
+    "holo"
+  ],
+  "me02.5-232": [
+    "holo"
+  ],
+  "me02.5-233": [
+    "holo"
+  ],
+  "me02.5-234": [
+    "holo"
+  ],
+  "me02.5-235": [
+    "holo"
+  ],
+  "me02.5-236": [
+    "holo"
+  ],
+  "me02.5-237": [
+    "holo"
+  ],
+  "me02.5-238": [
+    "holo"
+  ],
+  "me02.5-239": [
+    "holo"
+  ],
+  "me02.5-240": [
+    "holo"
+  ],
+  "me02.5-241": [
+    "holo"
+  ],
+  "me02.5-242": [
+    "holo"
+  ],
+  "me02.5-243": [
+    "holo"
+  ],
+  "me02.5-244": [
+    "holo"
+  ],
+  "me02.5-245": [
+    "holo"
+  ],
+  "me02.5-246": [
+    "holo"
+  ],
+  "me02.5-247": [
+    "holo"
+  ],
+  "me02.5-248": [
+    "holo"
+  ],
+  "me02.5-249": [
+    "holo"
+  ],
+  "me02.5-250": [
+    "holo"
+  ],
+  "me02.5-276": [
+    "holo"
+  ],
+  "me02.5-279": [
+    "holo"
+  ],
+  "me02.5-280": [
+    "holo"
+  ],
+  "me02.5-281": [
+    "holo"
+  ],
+  "me02.5-286": [
+    "holo"
+  ],
+  "me02.5-287": [
+    "holo"
+  ],
+  "me02.5-288": [
+    "holo"
+  ],
+  "me02.5-289": [
+    "holo"
+  ],
+  "me03-089": [
+    "holo"
+  ],
+  "me03-090": [
+    "holo"
+  ],
+  "me03-091": [
+    "holo"
+  ],
+  "me03-092": [
+    "holo"
+  ],
+  "me03-093": [
+    "holo"
+  ],
+  "me03-094": [
+    "holo"
+  ],
+  "me03-095": [
+    "holo"
+  ],
+  "me03-096": [
+    "holo"
+  ],
+  "me03-097": [
+    "holo"
+  ],
+  "me03-098": [
+    "holo"
+  ],
+  "me03-099": [
+    "holo"
+  ],
+  "me03-121": [
+    "holo"
+  ],
+  "me04-087": [
+    "holo"
+  ],
+  "me04-088": [
+    "holo"
+  ],
+  "me04-089": [
+    "holo"
+  ],
+  "me04-090": [
+    "holo"
+  ],
+  "me04-091": [
+    "holo"
+  ],
+  "me04-092": [
+    "holo"
+  ],
+  "me04-093": [
+    "holo"
+  ],
+  "me04-094": [
+    "holo"
+  ],
+  "me04-095": [
+    "holo"
+  ],
+  "me04-096": [
+    "holo"
+  ],
+  "me04-097": [
+    "holo"
+  ],
+  "me04-119": [
+    "holo"
+  ],
+  "me05-085": [
+    "holo"
+  ],
+  "me05-086": [
+    "holo"
+  ],
+  "me05-087": [
+    "holo"
+  ],
+  "me05-088": [
+    "holo"
+  ],
+  "me05-089": [
+    "holo"
+  ],
+  "me05-090": [
+    "holo"
+  ],
+  "me05-091": [
+    "holo"
+  ],
+  "me05-092": [
+    "holo"
+  ],
+  "me05-093": [
+    "holo"
+  ],
+  "me05-094": [
+    "holo"
+  ],
+  "me05-095": [
+    "holo"
+  ],
+  "me05-117": [
+    "holo"
+  ],
+  "mep-009": [
+    "holo"
+  ],
+  "mep-010": [
+    "holo"
+  ],
+  "mep-022": [
+    "holo"
+  ],
+  "mep-024": [
+    "holo"
+  ],
+  "mep-026": [
+    "holo"
+  ],
+  "mep-027": [
+    "holo"
+  ],
+  "mep-031": [
+    "holo"
+  ],
+  "mep-070": [
+    "holo"
+  ],
+  "mep-080": [
+    "holo"
+  ],
+  "sm10-192": [
+    "normal"
+  ],
+  "sm10-197": [
+    "normal"
+  ],
+  "sm10-199": [
+    "normal"
+  ],
+  "sm10-201": [
+    "normal"
+  ],
+  "sm10-205": [
+    "normal"
+  ],
+  "sm11-215": [
+    "normal"
+  ],
+  "sm11-218": [
+    "normal"
+  ],
+  "sm11-221": [
+    "normal"
+  ],
+  "sm12-143": [
+    "normal"
+  ],
+  "sm12-211": [
+    "normal"
+  ],
+  "sm12-215": [
+    "normal"
+  ],
+  "sm12-216": [
+    "normal"
+  ],
+  "sm12-221": [
+    "normal"
+  ],
+  "sm12-222": [
+    "normal"
+  ],
+  "sm12-224": [
+    "normal"
+  ],
+  "sm12-227": [
+    "normal"
+  ],
+  "sm12-237": [
+    "normal"
+  ],
+  "sm12-238": [
+    "normal"
+  ],
+  "sm12-239": [
+    "normal"
+  ],
+  "sm12-240": [
+    "normal"
+  ],
+  "sm12-241": [
+    "normal"
+  ],
+  "sm12-242": [
+    "normal"
+  ],
+  "sm12-243": [
+    "normal"
+  ],
+  "sm12-244": [
+    "normal"
+  ],
+  "sm12-245": [
+    "normal"
+  ],
+  "sm12-246": [
+    "normal"
+  ],
+  "sm12-247": [
+    "normal"
+  ],
+  "sm12-248": [
+    "normal"
+  ],
+  "sm9-161": [
+    "normal"
+  ],
+  "sm9-165": [
+    "normal"
+  ],
+  "sm9-170": [
+    "normal"
+  ],
+  "smp-SM167": [
+    "normal"
+  ],
+  "smp-SM168": [
+    "normal"
+  ],
+  "smp-SM169": [
+    "normal"
+  ],
+  "smp-SM191": [
+    "normal"
+  ],
+  "smp-SM192": [
+    "normal"
+  ],
+  "smp-SM193": [
+    "normal"
+  ],
+  "smp-SM201": [
+    "normal"
+  ],
+  "smp-SM210": [
+    "normal"
+  ],
+  "smp-SM229": [
+    "normal"
+  ],
+  "smp-SM230": [
+    "normal"
+  ],
+  "smp-SM240": [
+    "normal"
+  ],
+  "smp-SM241": [
+    "normal"
+  ],
+  "sv01-199": [
+    "holo"
+  ],
+  "sv01-200": [
+    "holo"
+  ],
+  "sv01-201": [
+    "holo"
+  ],
+  "sv01-202": [
+    "holo"
+  ],
+  "sv01-203": [
+    "holo"
+  ],
+  "sv01-204": [
+    "holo"
+  ],
+  "sv01-205": [
+    "holo"
+  ],
+  "sv01-206": [
+    "holo"
+  ],
+  "sv01-207": [
+    "holo"
+  ],
+  "sv01-208": [
+    "holo"
+  ],
+  "sv01-209": [
+    "holo"
+  ],
+  "sv01-210": [
+    "holo"
+  ],
+  "sv01-211": [
+    "holo"
+  ],
+  "sv01-212": [
+    "holo"
+  ],
+  "sv01-213": [
+    "holo"
+  ],
+  "sv01-214": [
+    "holo"
+  ],
+  "sv01-215": [
+    "holo"
+  ],
+  "sv01-216": [
+    "holo"
+  ],
+  "sv01-217": [
+    "holo"
+  ],
+  "sv01-218": [
+    "holo"
+  ],
+  "sv01-219": [
+    "holo"
+  ],
+  "sv01-220": [
+    "holo"
+  ],
+  "sv01-221": [
+    "holo"
+  ],
+  "sv01-222": [
+    "holo"
+  ],
+  "sv01-223": [
+    "holo"
+  ],
+  "sv01-227": [
+    "holo"
+  ],
+  "sv01-228": [
+    "holo"
+  ],
+  "sv01-230": [
+    "holo"
+  ],
+  "sv01-231": [
+    "holo"
+  ],
+  "sv01-233": [
+    "holo"
+  ],
+  "sv02-194": [
+    "holo"
+  ],
+  "sv02-195": [
+    "holo"
+  ],
+  "sv02-196": [
+    "holo"
+  ],
+  "sv02-197": [
+    "holo"
+  ],
+  "sv02-198": [
+    "holo"
+  ],
+  "sv02-199": [
+    "holo"
+  ],
+  "sv02-200": [
+    "holo"
+  ],
+  "sv02-201": [
+    "holo"
+  ],
+  "sv02-202": [
+    "holo"
+  ],
+  "sv02-203": [
+    "holo"
+  ],
+  "sv02-204": [
+    "holo"
+  ],
+  "sv02-205": [
+    "holo"
+  ],
+  "sv02-206": [
+    "holo"
+  ],
+  "sv02-207": [
+    "holo"
+  ],
+  "sv02-208": [
+    "holo"
+  ],
+  "sv02-209": [
+    "holo"
+  ],
+  "sv02-211": [
+    "holo"
+  ],
+  "sv02-212": [
+    "holo"
+  ],
+  "sv02-213": [
+    "holo"
+  ],
+  "sv02-215": [
+    "holo"
+  ],
+  "sv02-218": [
+    "holo"
+  ],
+  "sv02-219": [
+    "holo"
+  ],
+  "sv02-220": [
+    "holo"
+  ],
+  "sv02-221": [
+    "holo"
+  ],
+  "sv02-222": [
+    "holo"
+  ],
+  "sv02-223": [
+    "holo"
+  ],
+  "sv02-224": [
+    "holo"
+  ],
+  "sv02-225": [
+    "holo"
+  ],
+  "sv02-226": [
+    "holo"
+  ],
+  "sv02-228": [
+    "holo"
+  ],
+  "sv02-229": [
+    "holo"
+  ],
+  "sv02-256": [
+    "holo"
+  ],
+  "sv02-257": [
+    "holo"
+  ],
+  "sv02-258": [
+    "holo"
+  ],
+  "sv02-259": [
+    "holo"
+  ],
+  "sv02-260": [
+    "holo"
+  ],
+  "sv02-261": [
+    "holo"
+  ],
+  "sv02-262": [
+    "holo"
+  ],
+  "sv02-263": [
+    "holo"
+  ],
+  "sv02-264": [
+    "holo"
+  ],
+  "sv03-198": [
+    "holo"
+  ],
+  "sv03-199": [
+    "holo"
+  ],
+  "sv03-200": [
+    "holo"
+  ],
+  "sv03-201": [
+    "holo"
+  ],
+  "sv03-202": [
+    "holo"
+  ],
+  "sv03-203": [
+    "holo"
+  ],
+  "sv03-204": [
+    "holo"
+  ],
+  "sv03-205": [
+    "holo"
+  ],
+  "sv03-206": [
+    "holo"
+  ],
+  "sv03-207": [
+    "holo"
+  ],
+  "sv03-208": [
+    "holo"
+  ],
+  "sv03-209": [
+    "holo"
+  ],
+  "sv03-222": [
+    "holo"
+  ],
+  "sv03-224": [
+    "holo"
+  ],
+  "sv03-225": [
+    "holo"
+  ],
+  "sv03.5-001": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-002": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-003": [
+    "holo"
+  ],
+  "sv03.5-004": [
+    "normal",
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-005": [
+    "normal",
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-006": [
+    "holo"
+  ],
+  "sv03.5-007": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-008": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-009": [
+    "holo"
+  ],
+  "sv03.5-010": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-011": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-012": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-013": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-014": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-015": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-016": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-017": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-018": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-019": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-020": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-021": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-022": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-023": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-024": [
+    "holo"
+  ],
+  "sv03.5-025": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-026": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-027": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-028": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-029": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-030": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-031": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-032": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-033": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-034": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-035": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-036": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-037": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-038": [
+    "holo"
+  ],
+  "sv03.5-039": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-040": [
+    "holo"
+  ],
+  "sv03.5-041": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-042": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-043": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-044": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-045": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-046": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-047": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-048": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-049": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-050": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-051": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-052": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-053": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-054": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-055": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-056": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-057": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-058": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-059": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-060": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-061": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-062": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-063": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-064": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-065": [
+    "holo"
+  ],
+  "sv03.5-066": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-067": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-068": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-069": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-070": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-071": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-072": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-073": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-074": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-075": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-076": [
+    "holo"
+  ],
+  "sv03.5-077": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-078": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-079": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-080": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-081": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-082": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-083": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-084": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-085": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-086": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-087": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-088": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-089": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-090": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-091": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-092": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-093": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-094": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-095": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-096": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-097": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-098": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-099": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-100": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-101": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-102": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-103": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-104": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-105": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-106": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-107": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-108": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-109": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-110": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-111": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-112": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-113": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-114": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-115": [
+    "holo"
+  ],
+  "sv03.5-116": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-117": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-118": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-119": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-120": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-121": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-122": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-123": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-124": [
+    "holo"
+  ],
+  "sv03.5-125": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-126": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-127": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-128": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-129": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-130": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-131": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-132": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-133": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-134": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-135": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-136": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-137": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-138": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-139": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-140": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-141": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-142": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-143": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-144": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-145": [
+    "holo"
+  ],
+  "sv03.5-146": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-147": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-148": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-149": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-150": [
+    "reverse",
+    "holo"
+  ],
+  "sv03.5-151": [
+    "holo"
+  ],
+  "sv03.5-152": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-153": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-154": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-155": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-156": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-157": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-158": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-159": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-160": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-161": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-162": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-163": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-164": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-165": [
+    "normal",
+    "reverse"
+  ],
+  "sv03.5-166": [
+    "holo"
+  ],
+  "sv03.5-167": [
+    "holo"
+  ],
+  "sv03.5-168": [
+    "holo"
+  ],
+  "sv03.5-169": [
+    "holo"
+  ],
+  "sv03.5-170": [
+    "holo"
+  ],
+  "sv03.5-171": [
+    "holo"
+  ],
+  "sv03.5-172": [
+    "holo"
+  ],
+  "sv03.5-173": [
+    "holo"
+  ],
+  "sv03.5-174": [
+    "holo"
+  ],
+  "sv03.5-175": [
+    "holo"
+  ],
+  "sv03.5-176": [
+    "holo"
+  ],
+  "sv03.5-177": [
+    "holo"
+  ],
+  "sv03.5-178": [
+    "holo"
+  ],
+  "sv03.5-179": [
+    "holo"
+  ],
+  "sv03.5-180": [
+    "holo"
+  ],
+  "sv03.5-181": [
+    "holo"
+  ],
+  "sv03.5-182": [
+    "holo"
+  ],
+  "sv03.5-183": [
+    "holo"
+  ],
+  "sv03.5-184": [
+    "holo"
+  ],
+  "sv03.5-185": [
+    "holo"
+  ],
+  "sv03.5-186": [
+    "holo"
+  ],
+  "sv03.5-187": [
+    "holo"
+  ],
+  "sv03.5-188": [
+    "holo"
+  ],
+  "sv03.5-189": [
+    "holo"
+  ],
+  "sv03.5-190": [
+    "holo"
+  ],
+  "sv03.5-191": [
+    "holo"
+  ],
+  "sv03.5-192": [
+    "holo"
+  ],
+  "sv03.5-193": [
+    "holo"
+  ],
+  "sv03.5-194": [
+    "holo"
+  ],
+  "sv03.5-195": [
+    "holo"
+  ],
+  "sv03.5-196": [
+    "holo"
+  ],
+  "sv03.5-197": [
+    "holo"
+  ],
+  "sv03.5-198": [
+    "holo"
+  ],
+  "sv03.5-199": [
+    "holo"
+  ],
+  "sv03.5-200": [
+    "holo"
+  ],
+  "sv03.5-201": [
+    "holo"
+  ],
+  "sv03.5-202": [
+    "holo"
+  ],
+  "sv03.5-203": [
+    "holo"
+  ],
+  "sv03.5-204": [
+    "holo"
+  ],
+  "sv03.5-205": [
+    "holo"
+  ],
+  "sv03.5-206": [
+    "holo"
+  ],
+  "sv03.5-207": [
+    "holo"
+  ],
+  "sv04-183": [
+    "holo"
+  ],
+  "sv04-184": [
+    "holo"
+  ],
+  "sv04-185": [
+    "holo"
+  ],
+  "sv04-186": [
+    "holo"
+  ],
+  "sv04-187": [
+    "holo"
+  ],
+  "sv04-188": [
+    "holo"
+  ],
+  "sv04-189": [
+    "holo"
+  ],
+  "sv04-190": [
+    "holo"
+  ],
+  "sv04-191": [
+    "holo"
+  ],
+  "sv04-192": [
+    "holo"
+  ],
+  "sv04-193": [
+    "holo"
+  ],
+  "sv04-194": [
+    "holo"
+  ],
+  "sv04-195": [
+    "holo"
+  ],
+  "sv04-196": [
+    "holo"
+  ],
+  "sv04-198": [
+    "holo"
+  ],
+  "sv04-199": [
+    "holo"
+  ],
+  "sv04-200": [
+    "holo"
+  ],
+  "sv04-201": [
+    "holo"
+  ],
+  "sv04-202": [
+    "holo"
+  ],
+  "sv04-203": [
+    "holo"
+  ],
+  "sv04-204": [
+    "holo"
+  ],
+  "sv04-205": [
+    "holo"
+  ],
+  "sv04-206": [
+    "holo"
+  ],
+  "sv04-207": [
+    "holo"
+  ],
+  "sv04-208": [
+    "holo"
+  ],
+  "sv04-209": [
+    "holo"
+  ],
+  "sv04-210": [
+    "holo"
+  ],
+  "sv04-211": [
+    "holo"
+  ],
+  "sv04-212": [
+    "holo"
+  ],
+  "sv04-213": [
+    "holo"
+  ],
+  "sv04-214": [
+    "holo"
+  ],
+  "sv04-215": [
+    "holo"
+  ],
+  "sv04-216": [
+    "holo"
+  ],
+  "sv04-232": [
+    "holo"
+  ],
+  "sv04-246": [
+    "holo"
+  ],
+  "sv04-247": [
+    "holo"
+  ],
+  "sv04-248": [
+    "holo"
+  ],
+  "sv04-249": [
+    "holo"
+  ],
+  "sv04-250": [
+    "holo"
+  ],
+  "sv04-251": [
+    "holo"
+  ],
+  "sv04-252": [
+    "holo"
+  ],
+  "sv04.5-211": [
+    "holo"
+  ],
+  "sv04.5-224": [
+    "holo"
+  ],
+  "sv04.5-225": [
+    "holo"
+  ],
+  "sv04.5-226": [
+    "holo"
+  ],
+  "sv04.5-232": [
+    "holo"
+  ],
+  "sv04.5-233": [
+    "holo"
+  ],
+  "sv05-163": [
+    "holo"
+  ],
+  "sv05-164": [
+    "holo"
+  ],
+  "sv05-165": [
+    "holo"
+  ],
+  "sv05-166": [
+    "holo"
+  ],
+  "sv05-167": [
+    "holo"
+  ],
+  "sv05-168": [
+    "holo"
+  ],
+  "sv05-169": [
+    "holo"
+  ],
+  "sv05-170": [
+    "holo"
+  ],
+  "sv05-171": [
+    "holo"
+  ],
+  "sv05-172": [
+    "holo"
+  ],
+  "sv05-173": [
+    "holo"
+  ],
+  "sv05-174": [
+    "holo"
+  ],
+  "sv05-175": [
+    "holo"
+  ],
+  "sv05-176": [
+    "holo"
+  ],
+  "sv05-177": [
+    "holo"
+  ],
+  "sv05-178": [
+    "holo"
+  ],
+  "sv05-179": [
+    "holo"
+  ],
+  "sv05-180": [
+    "holo"
+  ],
+  "sv05-181": [
+    "holo"
+  ],
+  "sv05-182": [
+    "holo"
+  ],
+  "sv05-183": [
+    "holo"
+  ],
+  "sv05-184": [
+    "holo"
+  ],
+  "sv05-203": [
+    "holo"
+  ],
+  "sv05-204": [
+    "holo"
+  ],
+  "sv05-205": [
+    "holo"
+  ],
+  "sv05-206": [
+    "holo"
+  ],
+  "sv05-207": [
+    "holo"
+  ],
+  "sv05-208": [
+    "holo"
+  ],
+  "sv06-168": [
+    "holo"
+  ],
+  "sv06-169": [
+    "holo"
+  ],
+  "sv06-170": [
+    "holo"
+  ],
+  "sv06-171": [
+    "holo"
+  ],
+  "sv06-172": [
+    "holo"
+  ],
+  "sv06-173": [
+    "holo"
+  ],
+  "sv06-174": [
+    "holo"
+  ],
+  "sv06-175": [
+    "holo"
+  ],
+  "sv06-176": [
+    "holo"
+  ],
+  "sv06-177": [
+    "holo"
+  ],
+  "sv06-178": [
+    "holo"
+  ],
+  "sv06-179": [
+    "holo"
+  ],
+  "sv06-180": [
+    "holo"
+  ],
+  "sv06-181": [
+    "holo"
+  ],
+  "sv06-182": [
+    "holo"
+  ],
+  "sv06-183": [
+    "holo"
+  ],
+  "sv06-184": [
+    "holo"
+  ],
+  "sv06-185": [
+    "holo"
+  ],
+  "sv06-186": [
+    "holo"
+  ],
+  "sv06-187": [
+    "holo"
+  ],
+  "sv06-188": [
+    "holo"
+  ],
+  "sv06-210": [
+    "holo"
+  ],
+  "sv06-216": [
+    "holo"
+  ],
+  "sv06.5-065": [
+    "holo"
+  ],
+  "sv06.5-066": [
+    "holo"
+  ],
+  "sv06.5-067": [
+    "holo"
+  ],
+  "sv06.5-068": [
+    "holo"
+  ],
+  "sv06.5-069": [
+    "holo"
+  ],
+  "sv06.5-070": [
+    "holo"
+  ],
+  "sv06.5-071": [
+    "holo"
+  ],
+  "sv06.5-072": [
+    "holo"
+  ],
+  "sv06.5-073": [
+    "holo"
+  ],
+  "sv06.5-074": [
+    "holo"
+  ],
+  "sv06.5-075": [
+    "holo"
+  ],
+  "sv06.5-076": [
+    "holo"
+  ],
+  "sv06.5-077": [
+    "holo"
+  ],
+  "sv06.5-078": [
+    "holo"
+  ],
+  "sv06.5-079": [
+    "holo"
+  ],
+  "sv06.5-090": [
+    "holo"
+  ],
+  "sv06.5-091": [
+    "holo"
+  ],
+  "sv06.5-092": [
+    "holo"
+  ],
+  "sv06.5-093": [
+    "holo"
+  ],
+  "sv07-143": [
+    "holo"
+  ],
+  "sv07-144": [
+    "holo"
+  ],
+  "sv07-145": [
+    "holo"
+  ],
+  "sv07-146": [
+    "holo"
+  ],
+  "sv07-147": [
+    "holo"
+  ],
+  "sv07-148": [
+    "holo"
+  ],
+  "sv07-149": [
+    "holo"
+  ],
+  "sv07-150": [
+    "holo"
+  ],
+  "sv07-151": [
+    "holo"
+  ],
+  "sv07-152": [
+    "holo"
+  ],
+  "sv07-153": [
+    "holo"
+  ],
+  "sv07-154": [
+    "holo"
+  ],
+  "sv07-155": [
+    "holo"
+  ],
+  "sv07-169": [
+    "holo"
+  ],
+  "sv08-192": [
+    "holo"
+  ],
+  "sv08-193": [
+    "holo"
+  ],
+  "sv08-194": [
+    "holo"
+  ],
+  "sv08-195": [
+    "holo"
+  ],
+  "sv08-196": [
+    "holo"
+  ],
+  "sv08-197": [
+    "holo"
+  ],
+  "sv08-198": [
+    "holo"
+  ],
+  "sv08-199": [
+    "holo"
+  ],
+  "sv08-200": [
+    "holo"
+  ],
+  "sv08-201": [
+    "holo"
+  ],
+  "sv08-202": [
+    "holo"
+  ],
+  "sv08-203": [
+    "holo"
+  ],
+  "sv08-204": [
+    "holo"
+  ],
+  "sv08-205": [
+    "holo"
+  ],
+  "sv08-206": [
+    "holo"
+  ],
+  "sv08-207": [
+    "holo"
+  ],
+  "sv08-208": [
+    "holo"
+  ],
+  "sv08-209": [
+    "holo"
+  ],
+  "sv08-210": [
+    "holo"
+  ],
+  "sv08-211": [
+    "holo"
+  ],
+  "sv08-212": [
+    "holo"
+  ],
+  "sv08-213": [
+    "holo"
+  ],
+  "sv08-214": [
+    "holo"
+  ],
+  "sv08-236": [
+    "holo"
+  ],
+  "sv08-237": [
+    "holo"
+  ],
+  "sv08-239": [
+    "holo"
+  ],
+  "sv08-241": [
+    "holo"
+  ],
+  "sv08.5-151": [
+    "holo"
+  ],
+  "sv08.5-154": [
+    "holo"
+  ],
+  "sv08.5-157": [
+    "holo"
+  ],
+  "sv08.5-158": [
+    "holo"
+  ],
+  "sv08.5-159": [
+    "holo"
+  ],
+  "sv08.5-162": [
+    "holo"
+  ],
+  "sv08.5-163": [
+    "holo"
+  ],
+  "sv08.5-164": [
+    "holo"
+  ],
+  "sv08.5-166": [
+    "holo"
+  ],
+  "sv08.5-168": [
+    "holo"
+  ],
+  "sv09-160": [
+    "holo"
+  ],
+  "sv09-161": [
+    "holo"
+  ],
+  "sv09-163": [
+    "holo"
+  ],
+  "sv09-164": [
+    "holo"
+  ],
+  "sv09-165": [
+    "holo"
+  ],
+  "sv09-166": [
+    "holo"
+  ],
+  "sv09-167": [
+    "holo"
+  ],
+  "sv09-168": [
+    "holo"
+  ],
+  "sv09-169": [
+    "holo"
+  ],
+  "sv09-170": [
+    "holo"
+  ],
+  "sv09-173": [
+    "holo"
+  ],
+  "sv09-176": [
+    "holo"
+  ],
+  "sv09-182": [
+    "holo"
+  ],
+  "sv09-185": [
+    "holo"
+  ],
+  "sv09-187": [
+    "holo"
+  ],
+  "sv10-183": [
+    "holo"
+  ],
+  "sv10-184": [
+    "holo"
+  ],
+  "sv10-185": [
+    "holo"
+  ],
+  "sv10-186": [
+    "holo"
+  ],
+  "sv10-187": [
+    "holo"
+  ],
+  "sv10-188": [
+    "holo"
+  ],
+  "sv10-189": [
+    "holo"
+  ],
+  "sv10-190": [
+    "holo"
+  ],
+  "sv10-191": [
+    "holo"
+  ],
+  "sv10-192": [
+    "holo"
+  ],
+  "sv10-193": [
+    "holo"
+  ],
+  "sv10-194": [
+    "holo"
+  ],
+  "sv10-195": [
+    "holo"
+  ],
+  "sv10-196": [
+    "holo"
+  ],
+  "sv10-197": [
+    "holo"
+  ],
+  "sv10-198": [
+    "holo"
+  ],
+  "sv10-199": [
+    "holo"
+  ],
+  "sv10-200": [
+    "holo"
+  ],
+  "sv10-201": [
+    "holo"
+  ],
+  "sv10-202": [
+    "holo"
+  ],
+  "sv10-203": [
+    "holo"
+  ],
+  "sv10-204": [
+    "holo"
+  ],
+  "sv10-228": [
+    "holo"
+  ],
+  "sv10-229": [
+    "holo"
+  ],
+  "sv10-230": [
+    "holo"
+  ],
+  "sv10-231": [
+    "holo"
+  ],
+  "sv10-232": [
+    "holo"
+  ],
+  "sv10-233": [
+    "holo"
+  ],
+  "sv10-234": [
+    "holo"
+  ],
+  "sv10-235": [
+    "holo"
+  ],
+  "sv10.5b-001": [
+    "normal",
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-002": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-003": [
+    "holo"
+  ],
+  "sv10.5b-004": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-005": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-006": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-007": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-008": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-009": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-010": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-011": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-012": [
+    "normal",
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-013": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-014": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-015": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-016": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-017": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-018": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-019": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-020": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-021": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-022": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-023": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-024": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-025": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-026": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-027": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-028": [
+    "holo"
+  ],
+  "sv10.5b-029": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-030": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-031": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-032": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-033": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-034": [
+    "holo"
+  ],
+  "sv10.5b-035": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-036": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-037": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-038": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-039": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-040": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-041": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-042": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-043": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-044": [
+    "holo"
+  ],
+  "sv10.5b-045": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-046": [
+    "holo"
+  ],
+  "sv10.5b-047": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-048": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-049": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-050": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-051": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-052": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-053": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-054": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-055": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-056": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-057": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-058": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-059": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-060": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-061": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-062": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-063": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-064": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-065": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-066": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5b-067": [
+    "holo"
+  ],
+  "sv10.5b-068": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-069": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-070": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-071": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-072": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-073": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-074": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-075": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-076": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-077": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-078": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-079": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-080": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-081": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-082": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-083": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-084": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-086": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5b-087": [
+    "holo"
+  ],
+  "sv10.5b-088": [
+    "holo"
+  ],
+  "sv10.5b-089": [
+    "holo"
+  ],
+  "sv10.5b-090": [
+    "holo"
+  ],
+  "sv10.5b-091": [
+    "holo"
+  ],
+  "sv10.5b-092": [
+    "holo"
+  ],
+  "sv10.5b-093": [
+    "holo"
+  ],
+  "sv10.5b-094": [
+    "holo"
+  ],
+  "sv10.5b-095": [
+    "holo"
+  ],
+  "sv10.5b-096": [
+    "holo"
+  ],
+  "sv10.5b-097": [
+    "holo"
+  ],
+  "sv10.5b-098": [
+    "holo"
+  ],
+  "sv10.5b-099": [
+    "holo"
+  ],
+  "sv10.5b-100": [
+    "holo"
+  ],
+  "sv10.5b-101": [
+    "holo"
+  ],
+  "sv10.5b-102": [
+    "holo"
+  ],
+  "sv10.5b-103": [
+    "holo"
+  ],
+  "sv10.5b-104": [
+    "holo"
+  ],
+  "sv10.5b-105": [
+    "holo"
+  ],
+  "sv10.5b-106": [
+    "holo"
+  ],
+  "sv10.5b-107": [
+    "holo"
+  ],
+  "sv10.5b-108": [
+    "holo"
+  ],
+  "sv10.5b-109": [
+    "holo"
+  ],
+  "sv10.5b-110": [
+    "holo"
+  ],
+  "sv10.5b-111": [
+    "holo"
+  ],
+  "sv10.5b-112": [
+    "holo"
+  ],
+  "sv10.5b-113": [
+    "holo"
+  ],
+  "sv10.5b-114": [
+    "holo"
+  ],
+  "sv10.5b-115": [
+    "holo"
+  ],
+  "sv10.5b-116": [
+    "holo"
+  ],
+  "sv10.5b-117": [
+    "holo"
+  ],
+  "sv10.5b-118": [
+    "holo"
+  ],
+  "sv10.5b-119": [
+    "holo"
+  ],
+  "sv10.5b-120": [
+    "holo"
+  ],
+  "sv10.5b-121": [
+    "holo"
+  ],
+  "sv10.5b-122": [
+    "holo"
+  ],
+  "sv10.5b-123": [
+    "holo"
+  ],
+  "sv10.5b-124": [
+    "holo"
+  ],
+  "sv10.5b-125": [
+    "holo"
+  ],
+  "sv10.5b-126": [
+    "holo"
+  ],
+  "sv10.5b-127": [
+    "holo"
+  ],
+  "sv10.5b-128": [
+    "holo"
+  ],
+  "sv10.5b-129": [
+    "holo"
+  ],
+  "sv10.5b-130": [
+    "holo"
+  ],
+  "sv10.5b-131": [
+    "holo"
+  ],
+  "sv10.5b-132": [
+    "holo"
+  ],
+  "sv10.5b-133": [
+    "holo"
+  ],
+  "sv10.5b-134": [
+    "holo"
+  ],
+  "sv10.5b-135": [
+    "holo"
+  ],
+  "sv10.5b-136": [
+    "holo"
+  ],
+  "sv10.5b-137": [
+    "holo"
+  ],
+  "sv10.5b-138": [
+    "holo"
+  ],
+  "sv10.5b-139": [
+    "holo"
+  ],
+  "sv10.5b-140": [
+    "holo"
+  ],
+  "sv10.5b-141": [
+    "holo"
+  ],
+  "sv10.5b-142": [
+    "holo"
+  ],
+  "sv10.5b-143": [
+    "holo"
+  ],
+  "sv10.5b-144": [
+    "holo"
+  ],
+  "sv10.5b-145": [
+    "holo"
+  ],
+  "sv10.5b-146": [
+    "holo"
+  ],
+  "sv10.5b-147": [
+    "holo"
+  ],
+  "sv10.5b-148": [
+    "holo"
+  ],
+  "sv10.5b-149": [
+    "holo"
+  ],
+  "sv10.5b-150": [
+    "holo"
+  ],
+  "sv10.5b-151": [
+    "holo"
+  ],
+  "sv10.5b-152": [
+    "holo"
+  ],
+  "sv10.5b-153": [
+    "holo"
+  ],
+  "sv10.5b-154": [
+    "holo"
+  ],
+  "sv10.5b-155": [
+    "holo"
+  ],
+  "sv10.5b-156": [
+    "holo"
+  ],
+  "sv10.5b-157": [
+    "holo"
+  ],
+  "sv10.5b-158": [
+    "holo"
+  ],
+  "sv10.5b-159": [
+    "holo"
+  ],
+  "sv10.5b-160": [
+    "holo"
+  ],
+  "sv10.5b-161": [
+    "holo"
+  ],
+  "sv10.5b-162": [
+    "holo"
+  ],
+  "sv10.5b-163": [
+    "holo"
+  ],
+  "sv10.5b-164": [
+    "holo"
+  ],
+  "sv10.5b-165": [
+    "holo"
+  ],
+  "sv10.5b-166": [
+    "holo"
+  ],
+  "sv10.5b-167": [
+    "holo"
+  ],
+  "sv10.5b-168": [
+    "holo"
+  ],
+  "sv10.5b-169": [
+    "holo"
+  ],
+  "sv10.5b-170": [
+    "holo"
+  ],
+  "sv10.5w-001": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-002": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-003": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-004": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-005": [
+    "holo"
+  ],
+  "sv10.5w-006": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-007": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-008": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-009": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-010": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-011": [
+    "normal",
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-012": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-013": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-014": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-015": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-016": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-017": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-018": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-019": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-020": [
+    "holo"
+  ],
+  "sv10.5w-021": [
+    "normal",
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-022": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-023": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-024": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-025": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-026": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-027": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-028": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-029": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-030": [
+    "holo"
+  ],
+  "sv10.5w-031": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-032": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-033": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-034": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-035": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-036": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-037": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-038": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-039": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-040": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-041": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-042": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-043": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-044": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-045": [
+    "holo"
+  ],
+  "sv10.5w-046": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-047": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-048": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-049": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-050": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-051": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-052": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-053": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-054": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-055": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-056": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-057": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-058": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-059": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-060": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-061": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-062": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-063": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-064": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-065": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-066": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-067": [
+    "holo"
+  ],
+  "sv10.5w-068": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-069": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-070": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-071": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-072": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-073": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-074": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-075": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-076": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-077": [
+    "holo"
+  ],
+  "sv10.5w-078": [
+    "reverse",
+    "holo"
+  ],
+  "sv10.5w-079": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-080": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-081": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-082": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-083": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-084": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-085": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-086": [
+    "normal",
+    "reverse"
+  ],
+  "sv10.5w-087": [
+    "holo"
+  ],
+  "sv10.5w-088": [
+    "holo"
+  ],
+  "sv10.5w-089": [
+    "holo"
+  ],
+  "sv10.5w-090": [
+    "holo"
+  ],
+  "sv10.5w-091": [
+    "holo"
+  ],
+  "sv10.5w-092": [
+    "holo"
+  ],
+  "sv10.5w-093": [
+    "holo"
+  ],
+  "sv10.5w-094": [
+    "holo"
+  ],
+  "sv10.5w-095": [
+    "holo"
+  ],
+  "sv10.5w-096": [
+    "holo"
+  ],
+  "sv10.5w-097": [
+    "holo"
+  ],
+  "sv10.5w-098": [
+    "holo"
+  ],
+  "sv10.5w-099": [
+    "holo"
+  ],
+  "sv10.5w-100": [
+    "holo"
+  ],
+  "sv10.5w-101": [
+    "holo"
+  ],
+  "sv10.5w-102": [
+    "holo"
+  ],
+  "sv10.5w-103": [
+    "holo"
+  ],
+  "sv10.5w-105": [
+    "holo"
+  ],
+  "sv10.5w-106": [
+    "holo"
+  ],
+  "sv10.5w-107": [
+    "holo"
+  ],
+  "sv10.5w-108": [
+    "holo"
+  ],
+  "sv10.5w-109": [
+    "holo"
+  ],
+  "sv10.5w-110": [
+    "holo"
+  ],
+  "sv10.5w-111": [
+    "holo"
+  ],
+  "sv10.5w-112": [
+    "holo"
+  ],
+  "sv10.5w-113": [
+    "holo"
+  ],
+  "sv10.5w-114": [
+    "holo"
+  ],
+  "sv10.5w-115": [
+    "holo"
+  ],
+  "sv10.5w-116": [
+    "holo"
+  ],
+  "sv10.5w-117": [
+    "holo"
+  ],
+  "sv10.5w-118": [
+    "holo"
+  ],
+  "sv10.5w-119": [
+    "holo"
+  ],
+  "sv10.5w-120": [
+    "holo"
+  ],
+  "sv10.5w-121": [
+    "holo"
+  ],
+  "sv10.5w-122": [
+    "holo"
+  ],
+  "sv10.5w-123": [
+    "holo"
+  ],
+  "sv10.5w-124": [
+    "holo"
+  ],
+  "sv10.5w-125": [
+    "holo"
+  ],
+  "sv10.5w-126": [
+    "holo"
+  ],
+  "sv10.5w-127": [
+    "holo"
+  ],
+  "sv10.5w-128": [
+    "holo"
+  ],
+  "sv10.5w-129": [
+    "holo"
+  ],
+  "sv10.5w-130": [
+    "holo"
+  ],
+  "sv10.5w-131": [
+    "holo"
+  ],
+  "sv10.5w-132": [
+    "holo"
+  ],
+  "sv10.5w-133": [
+    "holo"
+  ],
+  "sv10.5w-134": [
+    "holo"
+  ],
+  "sv10.5w-135": [
+    "holo"
+  ],
+  "sv10.5w-136": [
+    "holo"
+  ],
+  "sv10.5w-137": [
+    "holo"
+  ],
+  "sv10.5w-138": [
+    "holo"
+  ],
+  "sv10.5w-139": [
+    "holo"
+  ],
+  "sv10.5w-140": [
+    "holo"
+  ],
+  "sv10.5w-141": [
+    "holo"
+  ],
+  "sv10.5w-142": [
+    "holo"
+  ],
+  "sv10.5w-143": [
+    "holo"
+  ],
+  "sv10.5w-144": [
+    "holo"
+  ],
+  "sv10.5w-145": [
+    "holo"
+  ],
+  "sv10.5w-146": [
+    "holo"
+  ],
+  "sv10.5w-147": [
+    "holo"
+  ],
+  "sv10.5w-148": [
+    "holo"
+  ],
+  "sv10.5w-149": [
+    "holo"
+  ],
+  "sv10.5w-150": [
+    "holo"
+  ],
+  "sv10.5w-151": [
+    "holo"
+  ],
+  "sv10.5w-152": [
+    "holo"
+  ],
+  "sv10.5w-153": [
+    "holo"
+  ],
+  "sv10.5w-154": [
+    "holo"
+  ],
+  "sv10.5w-155": [
+    "holo"
+  ],
+  "sv10.5w-156": [
+    "holo"
+  ],
+  "sv10.5w-157": [
+    "holo"
+  ],
+  "sv10.5w-158": [
+    "holo"
+  ],
+  "sv10.5w-159": [
+    "holo"
+  ],
+  "sv10.5w-160": [
+    "holo"
+  ],
+  "sv10.5w-161": [
+    "holo"
+  ],
+  "sv10.5w-162": [
+    "holo"
+  ],
+  "sv10.5w-163": [
+    "holo"
+  ],
+  "sv10.5w-164": [
+    "holo"
+  ],
+  "sv10.5w-165": [
+    "holo"
+  ],
+  "sv10.5w-166": [
+    "holo"
+  ],
+  "sv10.5w-167": [
+    "holo"
+  ],
+  "sv10.5w-168": [
+    "holo"
+  ],
+  "sv10.5w-169": [
+    "holo"
+  ],
+  "sv10.5w-170": [
+    "holo"
+  ],
+  "sv10.5w-171": [
+    "holo"
+  ],
+  "svp-013": [
+    "holo"
+  ],
+  "svp-014": [
+    "holo"
+  ],
+  "svp-027": [
+    "holo"
+  ],
+  "svp-043": [
+    "holo"
+  ],
+  "svp-044": [
+    "holo"
+  ],
+  "svp-051": [
+    "holo"
+  ],
+  "svp-052": [
+    "holo"
+  ],
+  "svp-053": [
+    "holo"
+  ],
+  "svp-058": [
+    "holo"
+  ],
+  "svp-065": [
+    "holo"
+  ],
+  "svp-075": [
+    "holo"
+  ],
+  "svp-085": [
+    "normal"
+  ],
+  "svp-088": [
+    "holo"
+  ],
+  "svp-097": [
+    "holo"
+  ],
+  "svp-098": [
+    "holo"
+  ],
+  "svp-123": [
+    "holo"
+  ],
+  "svp-129": [
+    "holo"
+  ],
+  "svp-130": [
+    "holo"
+  ],
+  "svp-131": [
+    "holo"
+  ],
+  "svp-132": [
+    "holo"
+  ],
+  "svp-141": [
+    "holo"
+  ],
+  "svp-159": [
+    "holo"
+  ],
+  "svp-189": [
+    "holo"
+  ],
+  "svp-203": [
+    "holo"
+  ],
+  "svp-206": [
+    "holo"
+  ],
+  "svp-207": [
+    "holo"
+  ],
+  "svp-208": [
+    "holo"
+  ],
+  "svp-209": [
+    "holo"
+  ],
+  "svp-210": [
+    "holo"
+  ],
+  "svp-211": [
+    "holo"
+  ],
+  "svp-212": [
+    "holo"
+  ],
+  "swsh10-161": [
+    "holo"
+  ],
+  "swsh10-163": [
+    "holo"
+  ],
+  "swsh10-167": [
+    "holo"
+  ],
+  "swsh10-172": [
+    "holo"
+  ],
+  "swsh10-174": [
+    "holo"
+  ],
+  "swsh10-177": [
+    "holo"
+  ],
+  "swsh10.5-072": [
+    "holo"
+  ],
+  "swsh10.5-074": [
+    "holo"
+  ],
+  "swsh10.5tg-TG01": [
+    "holo"
+  ],
+  "swsh10.5tg-TG02": [
+    "holo"
+  ],
+  "swsh10.5tg-TG03": [
+    "holo"
+  ],
+  "swsh10.5tg-TG04": [
+    "holo"
+  ],
+  "swsh10.5tg-TG05": [
+    "holo"
+  ],
+  "swsh10.5tg-TG06": [
+    "holo"
+  ],
+  "swsh10.5tg-TG07": [
+    "holo"
+  ],
+  "swsh10.5tg-TG08": [
+    "holo"
+  ],
+  "swsh10.5tg-TG09": [
+    "holo"
+  ],
+  "swsh10.5tg-TG10": [
+    "holo"
+  ],
+  "swsh10.5tg-TG11": [
+    "holo"
+  ],
+  "swsh10.5tg-TG12": [
+    "holo"
+  ],
+  "swsh10.5tg-TG13": [
+    "holo"
+  ],
+  "swsh10.5tg-TG14": [
+    "holo"
+  ],
+  "swsh10.5tg-TG16": [
+    "holo"
+  ],
+  "swsh10.5tg-TG17": [
+    "holo"
+  ],
+  "swsh10.5tg-TG19": [
+    "holo"
+  ],
+  "swsh10.5tg-TG20": [
+    "holo"
+  ],
+  "swsh10.5tg-TG21": [
+    "holo"
+  ],
+  "swsh10.5tg-TG22": [
+    "holo"
+  ],
+  "swsh10.5tg-TG23": [
+    "holo"
+  ],
+  "swsh11-177": [
+    "holo"
+  ],
+  "swsh11-180": [
+    "holo"
+  ],
+  "swsh11-184": [
+    "holo"
+  ],
+  "swsh11-186": [
+    "holo"
+  ],
+  "swsh11.5tg-TG01": [
+    "holo"
+  ],
+  "swsh11.5tg-TG02": [
+    "holo"
+  ],
+  "swsh11.5tg-TG03": [
+    "holo"
+  ],
+  "swsh11.5tg-TG04": [
+    "holo"
+  ],
+  "swsh11.5tg-TG05": [
+    "holo"
+  ],
+  "swsh11.5tg-TG06": [
+    "holo"
+  ],
+  "swsh11.5tg-TG07": [
+    "holo"
+  ],
+  "swsh11.5tg-TG08": [
+    "holo"
+  ],
+  "swsh11.5tg-TG09": [
+    "holo"
+  ],
+  "swsh11.5tg-TG10": [
+    "holo"
+  ],
+  "swsh11.5tg-TG11": [
+    "holo"
+  ],
+  "swsh11.5tg-TG16": [
+    "holo"
+  ],
+  "swsh11.5tg-TG19": [
+    "holo"
+  ],
+  "swsh11.5tg-TG20": [
+    "holo"
+  ],
+  "swsh12-177": [
+    "holo"
+  ],
+  "swsh12-181": [
+    "holo"
+  ],
+  "swsh12-186": [
+    "holo"
+  ],
+  "swsh12.5-160": [
+    "holo"
+  ],
+  "swsh12.5gg-GG01": [
+    "holo"
+  ],
+  "swsh12.5gg-GG02": [
+    "holo"
+  ],
+  "swsh12.5gg-GG03": [
+    "holo"
+  ],
+  "swsh12.5gg-GG04": [
+    "holo"
+  ],
+  "swsh12.5gg-GG05": [
+    "holo"
+  ],
+  "swsh12.5gg-GG06": [
+    "holo"
+  ],
+  "swsh12.5gg-GG07": [
+    "holo"
+  ],
+  "swsh12.5gg-GG08": [
+    "holo"
+  ],
+  "swsh12.5gg-GG09": [
+    "holo"
+  ],
+  "swsh12.5gg-GG10": [
+    "holo"
+  ],
+  "swsh12.5gg-GG11": [
+    "holo"
+  ],
+  "swsh12.5gg-GG12": [
+    "holo"
+  ],
+  "swsh12.5gg-GG13": [
+    "holo"
+  ],
+  "swsh12.5gg-GG14": [
+    "holo"
+  ],
+  "swsh12.5gg-GG15": [
+    "holo"
+  ],
+  "swsh12.5gg-GG16": [
+    "holo"
+  ],
+  "swsh12.5gg-GG17": [
+    "holo"
+  ],
+  "swsh12.5gg-GG18": [
+    "holo"
+  ],
+  "swsh12.5gg-GG19": [
+    "holo"
+  ],
+  "swsh12.5gg-GG20": [
+    "holo"
+  ],
+  "swsh12.5gg-GG21": [
+    "holo"
+  ],
+  "swsh12.5gg-GG22": [
+    "holo"
+  ],
+  "swsh12.5gg-GG23": [
+    "holo"
+  ],
+  "swsh12.5gg-GG24": [
+    "holo"
+  ],
+  "swsh12.5gg-GG25": [
+    "holo"
+  ],
+  "swsh12.5gg-GG26": [
+    "holo"
+  ],
+  "swsh12.5gg-GG27": [
+    "holo"
+  ],
+  "swsh12.5gg-GG28": [
+    "holo"
+  ],
+  "swsh12.5gg-GG29": [
+    "holo"
+  ],
+  "swsh12.5gg-GG30": [
+    "holo"
+  ],
+  "swsh12.5gg-GG31": [
+    "holo"
+  ],
+  "swsh12.5gg-GG32": [
+    "holo"
+  ],
+  "swsh12.5gg-GG33": [
+    "holo"
+  ],
+  "swsh12.5gg-GG34": [
+    "holo"
+  ],
+  "swsh12.5gg-GG35": [
+    "holo"
+  ],
+  "swsh12.5gg-GG36": [
+    "holo"
+  ],
+  "swsh12.5gg-GG37": [
+    "holo"
+  ],
+  "swsh12.5gg-GG38": [
+    "holo"
+  ],
+  "swsh12.5gg-GG39": [
+    "holo"
+  ],
+  "swsh12.5gg-GG40": [
+    "holo"
+  ],
+  "swsh12.5gg-GG41": [
+    "holo"
+  ],
+  "swsh12.5gg-GG43": [
+    "holo"
+  ],
+  "swsh12.5gg-GG44": [
+    "holo"
+  ],
+  "swsh12.5gg-GG46": [
+    "holo"
+  ],
+  "swsh12.5gg-GG48": [
+    "holo"
+  ],
+  "swsh12.5gg-GG49": [
+    "holo"
+  ],
+  "swsh12.5gg-GG50": [
+    "holo"
+  ],
+  "swsh12.5gg-GG51": [
+    "holo"
+  ],
+  "swsh12.5gg-GG52": [
+    "holo"
+  ],
+  "swsh12.5gg-GG53": [
+    "holo"
+  ],
+  "swsh12.5gg-GG54": [
+    "holo"
+  ],
+  "swsh12.5gg-GG55": [
+    "holo"
+  ],
+  "swsh12.5gg-GG56": [
+    "holo"
+  ],
+  "swsh12.5gg-GG67": [
+    "holo"
+  ],
+  "swsh12.5gg-GG69": [
+    "holo"
+  ],
+  "swsh12.5gg-GG70": [
+    "holo"
+  ],
+  "swsh12.5tg-TG01": [
+    "holo"
+  ],
+  "swsh12.5tg-TG02": [
+    "holo"
+  ],
+  "swsh12.5tg-TG03": [
+    "holo"
+  ],
+  "swsh12.5tg-TG04": [
+    "holo"
+  ],
+  "swsh12.5tg-TG05": [
+    "holo"
+  ],
+  "swsh12.5tg-TG06": [
+    "holo"
+  ],
+  "swsh12.5tg-TG07": [
+    "holo"
+  ],
+  "swsh12.5tg-TG08": [
+    "holo"
+  ],
+  "swsh12.5tg-TG09": [
+    "holo"
+  ],
+  "swsh12.5tg-TG10": [
+    "holo"
+  ],
+  "swsh12.5tg-TG11": [
+    "holo"
+  ],
+  "swsh12.5tg-TG12": [
+    "holo"
+  ],
+  "swsh12.5tg-TG13": [
+    "holo"
+  ],
+  "swsh12.5tg-TG16": [
+    "holo"
+  ],
+  "swsh12.5tg-TG17": [
+    "holo"
+  ],
+  "swsh12.5tg-TG22": [
+    "holo"
+  ],
+  "swsh5-146": [
+    "holo"
+  ],
+  "swsh5-153": [
+    "holo"
+  ],
+  "swsh5-155": [
+    "holo"
+  ],
+  "swsh6-164": [
+    "holo"
+  ],
+  "swsh6-166": [
+    "holo"
+  ],
+  "swsh6-168": [
+    "holo"
+  ],
+  "swsh6-170": [
+    "holo"
+  ],
+  "swsh6-172": [
+    "holo"
+  ],
+  "swsh6-174": [
+    "holo"
+  ],
+  "swsh6-177": [
+    "holo"
+  ],
+  "swsh6-179": [
+    "holo"
+  ],
+  "swsh6-185": [
+    "holo"
+  ],
+  "swsh7-167": [
+    "holo"
+  ],
+  "swsh7-175": [
+    "holo"
+  ],
+  "swsh7-180": [
+    "holo"
+  ],
+  "swsh7-182": [
+    "holo"
+  ],
+  "swsh7-184": [
+    "holo"
+  ],
+  "swsh7-186": [
+    "holo"
+  ],
+  "swsh7-189": [
+    "holo"
+  ],
+  "swsh7-192": [
+    "holo"
+  ],
+  "swsh7-194": [
+    "holo"
+  ],
+  "swsh7-196": [
+    "holo"
+  ],
+  "swsh7-198": [
+    "holo"
+  ],
+  "swsh8-245": [
+    "holo"
+  ],
+  "swsh8-251": [
+    "holo"
+  ],
+  "swsh8-255": [
+    "holo"
+  ],
+  "swsh8-257": [
+    "holo"
+  ],
+  "swsh9-154": [
+    "holo"
+  ],
+  "swsh9-156": [
+    "holo"
+  ],
+  "swsh9-162": [
+    "holo"
+  ],
+  "swsh9-166": [
+    "holo"
+  ],
+  "swsh9.5tg-TG01": [
+    "holo"
+  ],
+  "swsh9.5tg-TG02": [
+    "holo"
+  ],
+  "swsh9.5tg-TG03": [
+    "holo"
+  ],
+  "swsh9.5tg-TG04": [
+    "holo"
+  ],
+  "swsh9.5tg-TG05": [
+    "holo"
+  ],
+  "swsh9.5tg-TG06": [
+    "holo"
+  ],
+  "swsh9.5tg-TG07": [
+    "holo"
+  ],
+  "swsh9.5tg-TG08": [
+    "holo"
+  ],
+  "swsh9.5tg-TG09": [
+    "holo"
+  ],
+  "swsh9.5tg-TG10": [
+    "holo"
+  ],
+  "swsh9.5tg-TG11": [
+    "holo"
+  ],
+  "swsh9.5tg-TG12": [
+    "holo"
+  ],
+  "swsh9.5tg-TG13": [
+    "holo"
+  ],
+  "swsh9.5tg-TG14": [
+    "holo"
+  ],
+  "swsh9.5tg-TG16": [
+    "holo"
+  ],
+  "swsh9.5tg-TG18": [
+    "holo"
+  ],
+  "swsh9.5tg-TG20": [
+    "holo"
+  ],
+  "swsh9.5tg-TG22": [
+    "holo"
+  ],
+  "swshp-SWSH020": [
+    "holo"
+  ],
+  "swshp-SWSH179": [
+    "normal"
+  ],
+  "swshp-SWSH181": [
+    "normal"
+  ],
+  "swshp-SWSH183": [
+    "normal"
+  ],
+  "swshp-SWSH260": [
+    "normal"
+  ],
+  "swshp-SWSH262": [
+    "normal"
+  ],
+  "swshp-SWSH282": [
+    "holo"
+  ],
+  "swshp-SWSH283": [
+    "holo"
+  ],
+  "swshp-SWSH284": [
+    "holo"
+  ],
+  "swshp-SWSH291": [
+    "normal"
+  ],
+  "xy10-125": [
+    "normal"
+  ],
+  "xy11-115": [
+    "normal"
+  ],
+  "xy11-116": [
+    "normal"
+  ],
+  "xy6-77a": [
+    "normal"
+  ],
+  "xy8-163": [
+    "normal"
+  ],
+  "xy8-164": [
+    "normal"
+  ],
+  "xy9-123": [
+    "normal"
+  ],
+  "xyp-XY110": [
+    "normal"
+  ],
+  "xyp-XY111": [
+    "normal"
+  ],
+  "xyp-XY112": [
+    "normal"
+  ],
+  "xyp-XY113": [
+    "normal"
+  ],
+  "xyp-XY114": [
+    "normal"
+  ],
+  "xyp-XY115": [
+    "normal"
+  ],
+  "xyp-XY117": [
+    "normal"
+  ],
+  "xyp-XY118": [
+    "normal"
+  ],
+  "xyp-XY119": [
+    "normal"
+  ],
+  "xyp-XY120": [
+    "normal"
+  ],
+  "xyp-XY121": [
+    "normal"
+  ],
+  "xyp-XY122": [
+    "normal"
+  ],
+  "xyp-XY124": [
+    "normal"
+  ],
+  "xyp-XY150a": [
+    "normal"
+  ],
+  "xyp-XY185": [
+    "normal"
+  ],
+  "xyp-XY186": [
+    "normal"
+  ],
+  "xyp-XY67a": [
+    "normal"
+  ],
+  "xyp-XY74": [
+    "normal"
+  ],
+  "xyp-XY75": [
+    "normal"
+  ],
+  "xyp-XY76": [
+    "normal"
+  ],
+  "xyp-XY77": [
+    "normal"
+  ],
+  "xyp-XY78": [
+    "normal"
+  ],
+  "xyp-XY79": [
+    "normal"
+  ],
+  "xyp-XY80": [
+    "normal"
+  ],
+  "xyp-XY81": [
+    "normal"
+  ],
+  "xyp-XY82": [
+    "normal"
+  ],
+  "xyp-XY83": [
+    "normal"
+  ]
+}

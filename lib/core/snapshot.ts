@@ -101,8 +101,10 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
       let any = false;
       for (const v of card.variants) {
         if (!v.owned) continue;
-        const isFoil = v.finish === "reverse-holo" || v.finish === "holo";
-        const each = shownPrice((isFoil && foil) || normal);
+        // reverse-holo only, never plain holo. See variantPrice() in cards.ts
+        // for the measurement behind that: on a holo-only card the -holo fields
+        // describe a different, thinner market at 0.47x the plain price.
+        const each = shownPrice((v.finish === "reverse-holo" && foil) || normal);
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
         any = true;
