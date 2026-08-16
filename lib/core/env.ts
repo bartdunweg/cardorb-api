@@ -81,7 +81,16 @@ const CHECKS: Check[] = [
   {
     name: "SUPABASE_SERVICE_ROLE_KEY",
     required: false,
-    without: "the account-deletion path cannot run; the app itself does not need it",
+    without: "account deletion and the weekly value snapshot cannot run; no page needs it",
+  },
+  // Warned rather than required, and the route agrees: without this the weekly
+  // snapshot refuses to run at all rather than running unauthenticated. A
+  // deployment that has not set it loses a chart, which is the cheap failure;
+  // the expensive one would be an open write endpoint.
+  {
+    name: "CRON_SECRET",
+    required: false,
+    without: "the weekly value snapshot refuses to run, so no new points are recorded",
   },
 ];
 
