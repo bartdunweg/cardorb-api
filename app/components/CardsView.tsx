@@ -33,7 +33,16 @@ import type { CardSet, OwnedCard } from "../../lib/core/cards";
 import { eraLabel, eraYears, groupByEra } from "../../lib/core/eras";
 import { LOCALE } from "../../lib/core/config";
 import { possessive } from "../../lib/core/owner";
-import { cardsMainClassName, onlyNarrowClassName, onlyWideClassName } from "./cardsPageClasses";
+import {
+  cardsMainClassName,
+  cardsSetHeadClassName,
+  cardsSetLogoClassName,
+  cardsSetMetaClassName,
+  cardsSetNameClassName,
+  cardsSetTextClassName,
+  onlyNarrowClassName,
+  onlyWideClassName,
+} from "./cardsPageClasses";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
 function releasedIn(iso: string | null) {
@@ -1437,7 +1446,7 @@ export default function CardsView({
                       and repeating them over the grid made the page look like
                       it had lost its place. */}
                 {selected !== set.name && (
-                  <div className="cards-set-head">
+                  <div className={cardsSetHeadClassName}>
                     {set.logo && !brokenLogos.has(set.name) && (
                       // The box is reserved in CSS, which is what makes the lazy
                       // attribute work at all here: the rule used to be `height:44px;
@@ -1449,7 +1458,7 @@ export default function CardsView({
                       <img
                         src={set.logo}
                         alt=""
-                        className="cards-set-logo"
+                        className={cardsSetLogoClassName}
                         loading="lazy"
                         width={set.logoSize?.width}
                         height={set.logoSize?.height}
@@ -1462,11 +1471,11 @@ export default function CardsView({
                         }
                       />
                     )}
-                    <div className="cards-set-text">
+                    <div className={cardsSetTextClassName}>
                       {/* One step down with the title above it: a set sits
                             inside the view rather than beside it. */}
-                      <h3 className="cards-set-name">{set.title}</h3>
-                      <p className="cards-set-meta">
+                      <h3 className={cardsSetNameClassName}>{set.title}</h3>
+                      <p className={cardsSetMetaClassName}>
                         {onYear
                           ? `${set.cards.length.toLocaleString(LOCALE)} ${set.cards.length === 1 ? "card" : "cards"}`
                           : setMeta(set)}

@@ -402,12 +402,6 @@
 .cards-more {
   height: 1px;
 }
-.cards-set-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
 /* Set logos are wordmarks of wildly different proportions, so the height is
    fixed and the width follows rather than the other way round. */
 /* A stated width, not `auto`. Two reasons, and the second is the bug: every set
@@ -415,37 +409,9 @@
    browser has a box to decide the image is worth fetching. With `width: auto`
    the box is zero wide until the file loads and the file never loads, so none
    of them ever appeared. object-fit keeps each logo its own shape inside it. */
-.cards-set-logo {
-  height: 44px;
-  width: 160px;
-  object-fit: contain;
-  object-position: left center;
-  flex-shrink: 0;
-}
 /* No recolouring in dark mode. These were assumed to be dark artwork on
    transparency, so they were flattened to white silhouettes; set logos are
    full-colour wordmarks and that destroyed them. They read fine as they are. */
-.cards-set-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.cards-set-name {
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-card);
-  line-height: var(--lh-tight);
-  color: var(--color-label);
-}
-.cards-set-meta {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  font-variant-numeric: lining-nums tabular-nums;
-}
 
 /* ── The grid ── */
 
@@ -623,13 +589,6 @@
 }
 
 @media (max-width: 640px) {
-  .cards-set-head {
-    margin-bottom: var(--space-5);
-  }
-  .cards-set-logo {
-    height: 34px;
-    width: 120px;
-  }
   /* The one in the h1 never stepped down with the one over each set, so at
      390px a 132px wordmark took a third of the row and left the set's name
      about 210px to be set at --fs-h2 in. */

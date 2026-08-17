@@ -134,7 +134,18 @@ describe("the things that would look like leftovers", () => {
     // A loading fix wearing the clothes of a layout preference: with
     // `width: auto` the box is zero wide until the file loads, and the file
     // never loads, so none of them ever appeared.
-    expect(has(cards, /\.cards-set-logo\s*\{[^}]*width:\s*160px/), "logos load at all").toBe(true);
+    //
+    // Moved to cardsSetLogoClassName in cardsPageClasses.ts with the set-header
+    // family (ADR-0051's first portion); cards.css no longer defines the class.
+    // `w-40` is 10rem, which is the same 160px — the guarantee did not change,
+    // only where it is written. This test finding the move is the point: it is
+    // the kind of second consumer ADR-0018 is about, and it is a *test* reading
+    // the stylesheet, which no grep for className would have turned up.
+    const cardsPageClasses = read("app/components/cardsPageClasses.ts");
+    expect(
+      has(cardsPageClasses, /cardsSetLogoClassName[\s\S]*?\bw-40\b/),
+      "logos load at all",
+    ).toBe(true);
   });
 
   it("keeps display:contents on the narrow/wide pair", () => {
