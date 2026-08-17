@@ -50,6 +50,26 @@ export default defineConfig({
   // that cannot be trusted on the first, and the whole point here is trust.
   retries: 0,
 
+  /**
+   * Two projects: one signs in, the other uses what it saved. Split because the
+   * sign-in mints a one-time link and must happen once per run, not once per
+   * screenshot — and because a public-only run is still useful when the service
+   * role key is not around.
+   */
+  projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    {
+      name: "public",
+      testMatch: /cards-css\.spec\.ts/,
+    },
+    {
+      name: "owner",
+      testMatch: /owner\.spec\.ts/,
+      dependencies: ["setup"],
+      use: { storageState: "visual/.auth/owner.json" },
+    },
+  ],
+
   expect: {
     toHaveScreenshot: {
       /**
