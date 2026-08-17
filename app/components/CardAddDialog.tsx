@@ -532,7 +532,10 @@ export default function CardAddDialog({
                 "searching" does. searchFailed takes priority over every
                 other message here — it is never true at the same time as a
                 genuine "no matches", see the search effect. */}
-            <p className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-label-tertiary" role="status">
+            <p
+              className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-label-tertiary"
+              role="status"
+            >
               {searchFailed ? (
                 <>
                   Search is temporarily unavailable.{" "}

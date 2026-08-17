@@ -297,10 +297,7 @@ export default async function IosApp() {
           </div>
         </header>
 
-        <section
-          className="[padding-block:clamp(40px,6vw,72px)]"
-          aria-labelledby="shots-title"
-        >
+        <section className="[padding-block:clamp(40px,6vw,72px)]" aria-labelledby="shots-title">
           <h2 id="shots-title" className="sr-only">
             What the app looks like
           </h2>
@@ -323,11 +320,7 @@ export default async function IosApp() {
                 >
                   {label}
                 </div>
-                <p
-                  className={`text-center ${cardBody} [font-size:var(--fs-small)]`}
-                >
-                  {caption}
-                </p>
+                <p className={`text-center ${cardBody} [font-size:var(--fs-small)]`}>{caption}</p>
               </li>
             ))}
           </ul>
@@ -391,15 +384,30 @@ export default async function IosApp() {
             </p>
             <ul className="grid gap-3 mt-6 mb-0 p-0 list-none" role="list">
               <li className={`flex gap-3 items-start ${cardBody}`}>
-                <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
+                <Check
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="flex-none mt-[2px] text-label"
+                />
                 One account, both places.
               </li>
               <li className={`flex gap-3 items-start ${cardBody}`}>
-                <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
+                <Check
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="flex-none mt-[2px] text-label"
+                />
                 Owned cards and wishlist, together.
               </li>
               <li className={`flex gap-3 items-start ${cardBody}`}>
-                <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
+                <Check
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="flex-none mt-[2px] text-label"
+                />
                 Your public link works the same from either.
               </li>
             </ul>
@@ -458,8 +466,8 @@ export default async function IosApp() {
             Build the collection now. Open it on your phone later.
           </h2>
           <p className={`max-w-[44ch] mt-5 ${sectionBody}`}>
-            Free, no credit card, takes a minute to set up — and the app opens on whatever you
-            have already added.
+            Free, no credit card, takes a minute to set up — and the app opens on whatever you have
+            already added.
           </p>
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
               beats this column's items-center. */}

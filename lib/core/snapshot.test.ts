@@ -82,8 +82,8 @@ describe("snapshotOf", () => {
   it("values every copy held", () => {
     const one = valueOf([set([card()])]);
     const three = valueOf([
-      set([card({ variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b" })] })])],
-    );
+      set([card({ variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b" })] })]),
+    ]);
     expect(three.value).toBeCloseTo(one.value * 3);
     expect(three.cards).toBe(3);
     // Coverage counts distinct cards, however many copies there are.
@@ -111,7 +111,10 @@ describe("snapshotOf", () => {
     // The guide is the source. A price left on the card — which should not
     // happen with { prices: false }, but might if a caller forgets — must not
     // quietly become the answer.
-    const s = valueOf([set([card({ price: { low: 999, market: 999, avg30: 999, nm: null } })])], guide([]));
+    const s = valueOf(
+      [set([card({ price: { low: 999, market: 999, avg30: 999, nm: null } })])],
+      guide([]),
+    );
     expect(s.value).toBe(0);
     expect(s.unpriced).toBe(1);
   });

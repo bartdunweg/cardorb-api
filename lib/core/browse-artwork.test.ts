@@ -74,7 +74,13 @@ describe("withTcgdexScans", () => {
 
   it("leaves everything else about the card alone", async () => {
     const [out] = await withTcgdexScans(set(), [card({ rarity: "Rare Holo", types: ["Fire"] })]);
-    expect(out).toMatchObject({ id: "sv3pt5-6", number: "6", name: "Charizard", rarity: "Rare Holo", types: ["Fire"] });
+    expect(out).toMatchObject({
+      id: "sv3pt5-6",
+      number: "6",
+      name: "Charizard",
+      rarity: "Rare Holo",
+      types: ["Fire"],
+    });
   });
 
   it("prefers the card's own image path when TCGdex gives one", async () => {
@@ -143,7 +149,12 @@ describe("withTcgdexScans", () => {
         assetBase: "https://assets.tcgdex.net/en/swsh/swsh12.5",
       }),
     );
-    const tg = card({ id: "swsh12tg-TG12", number: "TG12", name: "Zeraora", setName: "Silver Tempest Trainer Gallery" });
+    const tg = card({
+      id: "swsh12tg-TG12",
+      number: "TG12",
+      name: "Zeraora",
+      setName: "Silver Tempest Trainer Gallery",
+    });
     const [out] = await withTcgdexScans(set({ name: "Silver Tempest Trainer Gallery" }), [tg]);
 
     /* The parent, because TCGdex lists a gallery's cards with no image of their

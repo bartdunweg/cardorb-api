@@ -63,13 +63,14 @@ const setCatalogue = vi.fn(async (name: string) => KNOWN[name] ?? empty());
  * foil listing — 865 of this collection's 1,526 products — and the fallback to
  * the normal price is the path worth exercising by default.
  */
-const pricesFor = vi.fn(async (ids: string[]) =>
-  new Map(
-    ids.map((id) => [
-      id,
-      { price: { low: 1, market: 4.5, avg30: 4.2, nm: { low: 4, mid: 5, high: 6 } }, holo: null },
-    ]),
-  ),
+const pricesFor = vi.fn(
+  async (ids: string[]) =>
+    new Map(
+      ids.map((id) => [
+        id,
+        { price: { low: 1, market: 4.5, avg30: 4.2, nm: { low: 4, mid: 5, high: 6 } }, holo: null },
+      ]),
+    ),
 );
 
 vi.mock("./catalogue", () => ({
@@ -118,7 +119,10 @@ beforeEach(() => {
   // The per-card fallbacks (Limitless, pokemontcg.io) are the only thing left
   // that reaches the network, and they only run for a card the catalogue did
   // not match. Refused, so an unmatched card stays unmatched.
-  vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 404 }) as Response));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({ ok: false, status: 404 }) as Response),
+  );
 });
 
 afterEach(() => {
@@ -127,7 +131,9 @@ afterEach(() => {
 
 describe("buildCollection", () => {
   /** A Variant as buildCollection() produces one, id and inventory defaults included. */
-  const variant = (over: Partial<{ id: string | null; rarity: string | null; owned: boolean }>) => ({
+  const variant = (
+    over: Partial<{ id: string | null; rarity: string | null; owned: boolean }>,
+  ) => ({
     id: null,
     rarity: null,
     owned: true,
@@ -313,4 +319,3 @@ describe("buildCollection", () => {
     expect(set!.total).toBe(102);
   });
 });
-

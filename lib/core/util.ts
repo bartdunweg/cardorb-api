@@ -56,7 +56,9 @@ export const measure = (_image?: string | null): null => null;
  * catalogue indexes every form of every localId, and a row is looked up by
  * every form of its own number. Two copies of this would be two rules.
  */
-export const numberForms = (n: string) => [...new Set([n, n.replace(/^0+/, ""), n.padStart(3, "0")])];
+export const numberForms = (n: string) => [
+  ...new Set([n, n.replace(/^0+/, ""), n.padStart(3, "0")]),
+];
 
 /**
  * Runs `work` over `items` a few at a time.

@@ -71,6 +71,13 @@ fi
 # The design tokens are generated into app/styles/tailwind.generated.css. --check fails if the
 # committed file no longer matches the source, which is how a token edit that was never
 # regenerated gets caught before it reaches a page.
+# --check, never --write. A verify script that fixes what it finds reports a pass on a
+# working tree it just changed, which is how an unreviewed reformat rides along with a
+# feature commit. `npm run format` is the one that writes; this one only judges.
+#
+# Scope is set by .prettierignore, and the argument is there: this formats code, not
+# prose. Every .md in the repo is hand-wrapped and Prettier would reflow it.
+run "format"    npx prettier --check .
 run "tokens"    node scripts/gen-tokens.mjs --check
 run "typecheck" npm run typecheck
 run "test"      npm run test

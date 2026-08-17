@@ -2,7 +2,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { Sheet, sheetApplyButtonClassName, sheetClearButtonClassName, sheetFootButtonClassName } from "./Sheet";
+import {
+  Sheet,
+  sheetApplyButtonClassName,
+  sheetClearButtonClassName,
+  sheetFootButtonClassName,
+} from "./Sheet";
 import FilterOptions from "./FilterOptions";
 import type { Facet } from "./cards-fields";
 
@@ -37,10 +42,7 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
   );
 
   const total = useMemo(() => facets.reduce((n, f) => n + f.selected.size, 0), [facets]);
-  const staged = useMemo(
-    () => Object.values(draft).reduce((n, s) => n + s.size, 0),
-    [draft],
-  );
+  const staged = useMemo(() => Object.values(draft).reduce((n, s) => n + s.size, 0), [draft]);
 
   const apply = () => {
     for (const f of facets) f.onReplace(new Set(draft[f.key] ?? []));
@@ -92,10 +94,18 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
           // sheet whose only way out is Apply is a sheet that makes you undo
           // what you were only looking at.
           <>
-            <button type="button" className={`btn ${sheetFootButtonClassName}`} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className={`btn ${sheetFootButtonClassName}`}
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </button>
-            <button type="button" className={`btn btn--primary ${sheetApplyButtonClassName}`} onClick={apply}>
+            <button
+              type="button"
+              className={`btn btn--primary ${sheetApplyButtonClassName}`}
+              onClick={apply}
+            >
               {staged > 0 ? `Apply ${staged}` : "Apply"}
             </button>
           </>

@@ -35,7 +35,10 @@ export function SettingsSection({
 }) {
   return (
     <section aria-labelledby={`${id}-heading`}>
-      <h2 id={`${id}-heading`} className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">
+      <h2
+        id={`${id}-heading`}
+        className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4"
+      >
         {title}
       </h2>
       {children}

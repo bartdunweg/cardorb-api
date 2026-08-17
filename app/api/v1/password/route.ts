@@ -28,7 +28,8 @@ const addressOf = (req: Request) =>
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (byAddress(addressOf(req))) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (byAddress(addressOf(req)))
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
   const viewer = await currentViewer();
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });

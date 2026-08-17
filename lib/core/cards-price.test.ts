@@ -104,7 +104,14 @@ describe("priceOf", () => {
 
 describe("holoPriceOf", () => {
   it("reads the foil fields, not the plain ones", () => {
-    const p = holoPriceOf({ low: 1, trend: 2, avg30: 2, "low-holo": 10, "trend-holo": 20, "avg30-holo": 20 });
+    const p = holoPriceOf({
+      low: 1,
+      trend: 2,
+      avg30: 2,
+      "low-holo": 10,
+      "trend-holo": 20,
+      "avg30-holo": 20,
+    });
     expect(p?.market).toBe(20);
     expect(p?.low).toBe(10);
   });

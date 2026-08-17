@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
 import { buildCollection } from "../../../../../lib/core/cards";
-import { cardPricesOf, snapshotOf, type PriceGuide, type ProductIds } from "../../../../../lib/core/snapshot";
+import {
+  cardPricesOf,
+  snapshotOf,
+  type PriceGuide,
+  type ProductIds,
+} from "../../../../../lib/core/snapshot";
 import { valueHistoryTag } from "../../../../../lib/core/value-snapshot";
 import { revalidateTag } from "next/cache";
-import { listAccountIds, listRows, writeCardPrices, writeValueSnapshot } from "../../../../../lib/storage/postgres";
+import {
+  listAccountIds,
+  listRows,
+  writeCardPrices,
+  writeValueSnapshot,
+} from "../../../../../lib/storage/postgres";
 import { adminClient } from "../../../../../lib/storage/supabase";
 import IDS from "../../../../../lib/core/cardmarket-ids.generated.json";
 
@@ -76,7 +86,9 @@ export async function GET(req: Request) {
   const db = adminClient();
   if (!db) return NextResponse.json({ error: "No database is connected here." }, { status: 503 });
 
-  const guide = (await (await fetch(GUIDE, { headers: { "User-Agent": "cardorb.com" } })).json()) as PriceGuide;
+  const guide = (await (
+    await fetch(GUIDE, { headers: { "User-Agent": "cardorb.com" } })
+  ).json()) as PriceGuide;
   if (!guide?.priceGuides?.length || !guide.createdAt) {
     // Better to write nothing than to write a day where everything is unpriced:
     // that draws as the morning the collection became worthless.
@@ -134,7 +146,13 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json(
-    { ok: failed.length === 0, date: guide.createdAt.slice(0, 10), written: written.length, prices: prices.size, failed },
+    {
+      ok: failed.length === 0,
+      date: guide.createdAt.slice(0, 10),
+      written: written.length,
+      prices: prices.size,
+      failed,
+    },
     { status: failed.length ? 207 : 200, headers: { "Cache-Control": "no-store" } },
   );
 }

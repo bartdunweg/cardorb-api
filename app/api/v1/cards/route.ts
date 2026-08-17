@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "../../../../lib/core/collection-row";
 import { createRow } from "../../../../lib/storage/collection";
-import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "../../../../lib/api/guard";
+import {
+  authoriseWrite,
+  readHeaders,
+  refused,
+  storeErrorResponse,
+} from "../../../../lib/api/guard";
 import { bearer } from "../../../../lib/api/viewer";
 
 /**
@@ -21,11 +26,17 @@ const MAX_BODY_BYTES = 8_192;
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return NextResponse.json({ error: who.error }, { status: who.status, headers: readHeaders(req) });
+    return NextResponse.json(
+      { error: who.error },
+      { status: who.status, headers: readHeaders(req) },
+    );
 
   const declared = Number(req.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    return NextResponse.json({ error: "Payload too large" }, { status: 413, headers: readHeaders(req) });
+    return NextResponse.json(
+      { error: "Payload too large" },
+      { status: 413, headers: readHeaders(req) },
+    );
   }
 
   let body: unknown;
@@ -40,7 +51,10 @@ export async function POST(req: Request) {
     }
     body = JSON.parse(raw);
   } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: readHeaders(req) });
+    return NextResponse.json(
+      { error: "Invalid request" },
+      { status: 400, headers: readHeaders(req) },
+    );
   }
 
   const result = validateCardDraft(body);

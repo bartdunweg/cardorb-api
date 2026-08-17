@@ -37,7 +37,12 @@ import {
 export default function ProfileSettings({
   initial,
 }: {
-  initial: { username: string; displayName: string | null; isPublic: boolean; avatarUrl: string | null };
+  initial: {
+    username: string;
+    displayName: string | null;
+    isPublic: boolean;
+    avatarUrl: string | null;
+  };
 }) {
   const router = useRouter();
 
@@ -145,7 +150,9 @@ export default function ProfileSettings({
           <strong className="block text-label font-medium">
             Anyone with the link can see my collection
           </strong>
-          <SettingsHint>Prices are never shown on the public page, whatever this says.</SettingsHint>
+          <SettingsHint>
+            Prices are never shown on the public page, whatever this says.
+          </SettingsHint>
         </SettingsSwitch>
 
         {isPublic ? (
@@ -156,8 +163,8 @@ export default function ProfileSettings({
           </SettingsLink>
         ) : (
           <SettingsHint>
-            While this is off, that address answers 404 — the same answer as a
-            name nobody has taken, so it cannot be used to find out you are here.
+            While this is off, that address answers 404 — the same answer as a name nobody has
+            taken, so it cannot be used to find out you are here.
           </SettingsHint>
         )}
         {saying.isPublic && <SettingsSaid>{saying.isPublic}</SettingsSaid>}
@@ -214,8 +221,8 @@ export default function ProfileSettings({
             aria-describedby="username-hint"
           />
           <SettingsHint id="username-hint">
-            Two to thirty characters: lowercase letters, numbers and hyphens.
-            Changing it changes your link, and the old one stops working.
+            Two to thirty characters: lowercase letters, numbers and hyphens. Changing it changes
+            your link, and the old one stops working.
           </SettingsHint>
           {/* Whether the name is free, while it is still being typed — the same
               check the welcome flow makes, and for the same reason: being told

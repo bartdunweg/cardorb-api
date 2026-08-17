@@ -163,12 +163,7 @@ export default async function PublicCollection({
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      <CardsView
-        sets={sets}
-        variant="public"
-        username={username}
-        ownerName={ownerLabel(owner)}
-      />
+      <CardsView sets={sets} variant="public" username={username} ownerName={ownerLabel(owner)} />
     </section>
   );
 }

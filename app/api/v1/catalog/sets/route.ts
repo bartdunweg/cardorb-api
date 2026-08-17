@@ -30,7 +30,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who)) {
-    return NextResponse.json({ error: who.error }, { status: who.status, headers: readHeaders(req) });
+    return NextResponse.json(
+      { error: who.error },
+      { status: who.status, headers: readHeaders(req) },
+    );
   }
 
   let sets;

@@ -174,7 +174,14 @@ export type CardFields = {
  * migration put on condition/grade (40) and notes (2000) — the same
  * must-agree rule as the rest of this list.
  */
-export const MAX = { name: 200, number: 40, option: 120, types: 10, conditionOrGrade: 40, notes: 2000 };
+export const MAX = {
+  name: 200,
+  number: 40,
+  option: 120,
+  types: 10,
+  conditionOrGrade: 40,
+  notes: 2000,
+};
 
 /**
  * One line, whatever arrived.
@@ -280,7 +287,10 @@ export function validateCardDraft(body: unknown): CardValidation {
   if (draft.notes && draft.notes.length > MAX.notes) {
     return { kind: "invalid", error: "That note is too long." };
   }
-  if (draft.purchasePrice !== null && (!Number.isFinite(draft.purchasePrice) || draft.purchasePrice < 0)) {
+  if (
+    draft.purchasePrice !== null &&
+    (!Number.isFinite(draft.purchasePrice) || draft.purchasePrice < 0)
+  ) {
     return { kind: "invalid", error: "That purchase price is not valid." };
   }
   if (draft.purchaseDate !== null && Number.isNaN(Date.parse(draft.purchaseDate))) {
@@ -343,8 +353,7 @@ export type CardPatch = Partial<{
 }>;
 
 export type CardPatchValidation =
-  | { kind: "invalid"; error: string }
-  | { kind: "ok"; patch: CardPatch };
+  { kind: "invalid"; error: string } | { kind: "ok"; patch: CardPatch };
 
 /**
  * The body of a PATCH, checked the same way a draft is: only the keys present
@@ -357,7 +366,8 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
   const patch: CardPatch = {};
 
   if ("owned" in b) {
-    if (typeof b.owned !== "boolean") return { kind: "invalid", error: "owned must be true or false." };
+    if (typeof b.owned !== "boolean")
+      return { kind: "invalid", error: "owned must be true or false." };
     patch.owned = b.owned;
   }
   if ("finish" in b) {

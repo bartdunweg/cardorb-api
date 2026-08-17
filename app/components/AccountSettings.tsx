@@ -95,8 +95,7 @@ export default function AccountSettings({ email }: { email: string }) {
       <SettingsPanel>
         <SettingsPanelTitle>Password</SettingsPanelTitle>
         <SettingsHint>
-          Setting a new one takes effect immediately and does not sign out your
-          other devices.
+          Setting a new one takes effect immediately and does not sign out your other devices.
         </SettingsHint>
         <Link className="btn" href="/settings/password">
           Change password

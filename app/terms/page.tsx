@@ -54,9 +54,9 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of use" updated={UPDATED}>
       <p className={`${body} mt-6`}>
-        These are the terms you use {APP_NAME} under — the website at cardorb.com and the{" "}
-        {APP_NAME} app for iPhone and iPad. They are short on purpose. How your data is handled is
-        a separate document: the{" "}
+        These are the terms you use {APP_NAME} under — the website at cardorb.com and the {APP_NAME}{" "}
+        app for iPhone and iPad. They are short on purpose. How your data is handled is a separate
+        document: the{" "}
         <Link className={link} href="/privacy">
           privacy policy
         </Link>
@@ -75,8 +75,8 @@ export default function TermsPage() {
       <h2 className={h2}>What {APP_NAME} is</h2>
       <p className={body}>
         A tool for keeping a record of a Pokémon card collection: what you own, what it is worth on
-        the open market, and what is still missing from a set. It is free. There is no paid tier,
-        no card limit, and nothing to cancel.
+        the open market, and what is still missing from a set. It is free. There is no paid tier, no
+        card limit, and nothing to cancel.
       </p>
 
       <h2 className={h2}>Prices are information, not advice</h2>
@@ -84,9 +84,9 @@ export default function TermsPage() {
         This is the part worth reading twice. The prices shown come from Cardmarket and describe
         what cards have been selling for. They are an observation of a market, not a valuation of
         your cards, not an offer, and not financial or investment advice. A collection total is
-        arithmetic over those numbers, and it inherits every one of their limitations — a card&rsquo;s
-        condition, its edition, and what someone will actually pay for it on a given day are not in
-        it.
+        arithmetic over those numbers, and it inherits every one of their limitations — a
+        card&rsquo;s condition, its edition, and what someone will actually pay for it on a given
+        day are not in it.
       </p>
       <p className={body}>
         <strong className={strong}>
@@ -102,9 +102,7 @@ export default function TermsPage() {
           An account is for one person. Keep your password to yourself; anything done through your
           account is treated as done by you.
         </li>
-        <li>
-          You must be 16 or older, or have a parent or guardian involved if you are not.
-        </li>
+        <li>You must be 16 or older, or have a parent or guardian involved if you are not.</li>
         <li>
           Tell us at{" "}
           <a className={link} href="mailto:hello@bartdunweg.com">
@@ -119,8 +117,8 @@ export default function TermsPage() {
         Everything you put into {APP_NAME} — your cards, your notes, your purchase prices, your
         profile — stays yours. You give us permission to store it and show it back to you, and to
         show the parts you have chosen to make public, and nothing beyond that. We do not sell it,
-        we do not use it to train anything, and we do not show it to anyone you have not shown it
-        to yourself.
+        we do not use it to train anything, and we do not show it to anyone you have not shown it to
+        yourself.
       </p>
       <p className={body}>
         Switching your collection to public is you choosing to publish it. Prices and purchase
@@ -136,13 +134,13 @@ export default function TermsPage() {
           everyone else.
         </li>
         <li>
-          Bulk-download the catalogue or other people&rsquo;s public collections by automated
-          means. The documented public endpoints are there to be used at a reasonable rate; a
-          scraper is not that.
+          Bulk-download the catalogue or other people&rsquo;s public collections by automated means.
+          The documented public endpoints are there to be used at a reasonable rate; a scraper is
+          not that.
         </li>
         <li>
-          Put anything unlawful, abusive or infringing into a field other people can see — a
-          display name, a username, a note on a public collection.
+          Put anything unlawful, abusive or infringing into a field other people can see — a display
+          name, a username, a note on a public collection.
         </li>
       </ul>
 
@@ -155,16 +153,16 @@ export default function TermsPage() {
         catalogue identifies what is in it.
       </p>
       <p className={body}>
-        Card and set data comes from pokemontcg.io and TCGdex, and prices from Cardmarket. We
-        depend on them, we do not control them, and we cannot promise that what they say is
-        complete or correct.
+        Card and set data comes from pokemontcg.io and TCGdex, and prices from Cardmarket. We depend
+        on them, we do not control them, and we cannot promise that what they say is complete or
+        correct.
       </p>
 
       <h2 className={h2}>It is free, and it comes as it is</h2>
       <p className={body}>
-        {APP_NAME} is provided as it stands, without warranty of any kind. We do not promise it
-        will be available, that it will be free of faults, that a card will match, that a price will
-        be right, or that it will keep working the way it does today. Features can change or be
+        {APP_NAME} is provided as it stands, without warranty of any kind. We do not promise it will
+        be available, that it will be free of faults, that a card will match, that a price will be
+        right, or that it will keep working the way it does today. Features can change or be
         removed.
       </p>
       <p className={body}>
@@ -217,9 +215,8 @@ export default function TermsPage() {
       <h2 className={h2}>Which law, and which court</h2>
       <p className={body}>
         Dutch law applies, and disputes go to the competent court in Rotterdam, the Netherlands. If
-        you are a consumer resident elsewhere in the EU, this does not deprive you of the
-        protection of your own country&rsquo;s mandatory rules or of your right to bring a claim
-        there.
+        you are a consumer resident elsewhere in the EU, this does not deprive you of the protection
+        of your own country&rsquo;s mandatory rules or of your right to bring a claim there.
       </p>
 
       <h2 className={h2}>Contact</h2>

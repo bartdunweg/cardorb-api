@@ -43,8 +43,7 @@ function fakeDb(data: unknown[] = []) {
       calls.push({ column, value });
       return chain;
     },
-    then: (resolve: (v: unknown) => unknown) =>
-      resolve({ data, error: null, count: data.length }),
+    then: (resolve: (v: unknown) => unknown) => resolve({ data, error: null, count: data.length }),
   };
   return { db: { from: () => chain } as unknown as SupabaseClient, calls, orders };
 }

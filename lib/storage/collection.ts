@@ -59,7 +59,10 @@ async function clientFor(token?: string): Promise<SupabaseClient | null> {
  * the only thing standing between an anonymous client and a private
  * collection, filter or no filter.
  */
-export async function listRows(userId?: string, db?: SupabaseClient | null): Promise<CollectionRow[]> {
+export async function listRows(
+  userId?: string,
+  db?: SupabaseClient | null,
+): Promise<CollectionRow[]> {
   const client = db ?? readClient();
   // A deployment either has a database or it does not, and this is what
   // keeps CI building with no secrets at all.
@@ -103,7 +106,11 @@ export async function createRow(draft: CardDraft, token?: string): Promise<strin
 }
 
 /** Changes one card's owner-facing fields. */
-export async function updateRow(id: string, patch: CardPatch, token?: string): Promise<CollectionRow> {
+export async function updateRow(
+  id: string,
+  patch: CardPatch,
+  token?: string,
+): Promise<CollectionRow> {
   const db = await clientFor(token);
   if (!db) throw new Error("No database is connected here.");
   return postgres.updateRow(db, id, patch);

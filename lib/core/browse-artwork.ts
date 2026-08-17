@@ -97,6 +97,10 @@ export async function withTcgdexScans(
        pair possible at all: pokemontcg.io publishes two fixed files and a
        fallback scan publishes one. low for the grid, high for whatever draws a
        card larger — the same pair OwnedCard has carried since cards.ts. */
-    return { ...card, image: localise(`${base}/low.webp`), imageHigh: localise(`${base}/high.webp`) };
+    return {
+      ...card,
+      image: localise(`${base}/low.webp`),
+      imageHigh: localise(`${base}/high.webp`),
+    };
   });
 }

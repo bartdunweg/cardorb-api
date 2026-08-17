@@ -66,7 +66,8 @@ if (!userId) {
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
+  if (!url || !key)
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
@@ -93,7 +94,9 @@ async function rowsFromPostgres(db) {
     out.push(...data);
     if (out.length >= (count ?? 0) || !data.length) {
       if (out.length < (count ?? 0)) {
-        throw new Error(`Postgres returned ${out.length} of ${count} rows — refusing to backfill a partial collection`);
+        throw new Error(
+          `Postgres returned ${out.length} of ${count} rows — refusing to backfill a partial collection`,
+        );
       }
       return out;
     }

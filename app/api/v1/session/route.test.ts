@@ -23,22 +23,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 let signInFails = false;
-const signIn = vi.fn(async () => (signInFails ? { error: { message: "Invalid" } } : { error: null }));
+const signIn = vi.fn(async () =>
+  signInFails ? { error: { message: "Invalid" } } : { error: null },
+);
 const signOut = vi.fn(async () => ({ error: null }));
 let hasDatabase = true;
 
 vi.mock("../../../../lib/storage/supabase", () => ({
   configured: () => hasDatabase,
-  serverClient: async () => (hasDatabase ? { auth: { signInWithPassword: signIn, signOut } } : null),
+  serverClient: async () =>
+    hasDatabase ? { auth: { signInWithPassword: signIn, signOut } } : null,
 }));
 
 const { POST, DELETE } = await import("./route");
 
 /** A sign-in attempt from the app's own origin unless told otherwise. */
-function post(
-  body: unknown,
-  opts: { origin?: string | null; host?: string; ip?: string } = {},
-) {
+function post(body: unknown, opts: { origin?: string | null; host?: string; ip?: string } = {}) {
   const h = new Headers({ "content-type": "application/json" });
   if (opts.origin !== null) h.set("origin", opts.origin ?? "https://cardorb.example");
   h.set("host", opts.host ?? "cardorb.example");

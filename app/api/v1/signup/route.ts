@@ -81,7 +81,10 @@ export async function POST(req: Request) {
   // Said plainly and one at a time. A form that answers "invalid input" to
   // two fields has told you nothing about which one.
   if (!email.includes("@")) {
-    return NextResponse.json({ error: "That does not look like an email address." }, { status: 400 });
+    return NextResponse.json(
+      { error: "That does not look like an email address." },
+      { status: 400 },
+    );
   }
   if (password.length < MIN_PASSWORD) {
     return NextResponse.json(

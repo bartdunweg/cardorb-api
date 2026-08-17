@@ -26,7 +26,6 @@ export const CARD_FIELDS: readonly (readonly [CardField, string])[] = [
 
 export type Option = { value: string; count: number };
 
-
 export type Facet = {
   key: string;
   label: string;

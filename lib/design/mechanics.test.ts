@@ -98,9 +98,10 @@ describe("the scans land in a box that was already the right shape", () => {
       "app/components/CardDetail.tsx",
       "app/components/CardsPokedex.tsx",
     ]) {
-      expect(has(read(path), /aspect-\[245\/342\]/), `the lazy-loading reflow guard in ${path}`).toBe(
-        true,
-      );
+      expect(
+        has(read(path), /aspect-\[245\/342\]/),
+        `the lazy-loading reflow guard in ${path}`,
+      ).toBe(true);
     }
   });
 
@@ -145,9 +146,10 @@ describe("the things that would look like leftovers", () => {
     // Moved to onlyNarrowClassName in cardsPageClasses.ts during the Tailwind
     // migration — cards.css no longer defines .only-narrow/.only-wide at all.
     const cardsPageClasses = read("app/components/cardsPageClasses.ts");
-    expect(has(cardsPageClasses, /onlyNarrowClassName\s*=\s*"[^"]*\bcontents\b/), "no layout flash").toBe(
-      true,
-    );
+    expect(
+      has(cardsPageClasses, /onlyNarrowClassName\s*=\s*"[^"]*\bcontents\b/),
+      "no layout flash",
+    ).toBe(true);
   });
 });
 
@@ -195,10 +197,7 @@ describe("the Safari fixes, which look like superstition and are not", () => {
   it("keeps the scrollbar gutter stable", () => {
     // Otherwise the centred bottom bar shifts between a route that scrolls and
     // one that does not.
-    expect(
-      has(read("app/layout.tsx"), /\[scrollbar-gutter:stable\]/),
-      "no shift",
-    ).toBe(true);
+    expect(has(read("app/layout.tsx"), /\[scrollbar-gutter:stable\]/), "no shift").toBe(true);
   });
 });
 

@@ -95,7 +95,7 @@ describe("rowFromDraft", () => {
       owned: true,
       excluded: false,
       finish: null,
-  quantity: 1,
+      quantity: 1,
       condition: null,
       grade: null,
       purchasePrice: null,

@@ -47,7 +47,12 @@ const set = (cards: OwnedCard[]): CardSet => ({
   cards,
 });
 
-const at = (tcgId: string, date: string, market: number | null, holo: number | null = null): CardPricePoint => ({
+const at = (
+  tcgId: string,
+  date: string,
+  market: number | null,
+  holo: number | null = null,
+): CardPricePoint => ({
   tcgId,
   date,
   market,
@@ -60,7 +65,13 @@ describe("moversOf", () => {
       [set([card({ tcgId: "a" })])],
       [at("a", "2026-07-01", 10), at("a", "2026-07-08", 12), at("a", "2026-08-01", 15)],
     );
-    expect(up[0]).toMatchObject({ was: 10, now: 15, change: 5, from: "2026-07-01", to: "2026-08-01" });
+    expect(up[0]).toMatchObject({
+      was: 10,
+      now: 15,
+      change: 5,
+      from: "2026-07-01",
+      to: "2026-08-01",
+    });
     expect(up[0]!.pct).toBeCloseTo(0.5);
   });
 
@@ -68,10 +79,17 @@ describe("moversOf", () => {
     // A common that doubles from four cents is a bigger percentage and a
     // smaller event than a chase card that gains eight euros.
     const { up } = moversOf(
-      [set([card({ key: "bulk", tcgId: "bulk", name: "Bulk" }), card({ key: "chase", tcgId: "chase", name: "Chase" })])],
       [
-        at("bulk", "2026-07-01", 0.2), at("bulk", "2026-08-01", 0.5),
-        at("chase", "2026-07-01", 40), at("chase", "2026-08-01", 48),
+        set([
+          card({ key: "bulk", tcgId: "bulk", name: "Bulk" }),
+          card({ key: "chase", tcgId: "chase", name: "Chase" }),
+        ]),
+      ],
+      [
+        at("bulk", "2026-07-01", 0.2),
+        at("bulk", "2026-08-01", 0.5),
+        at("chase", "2026-07-01", 40),
+        at("chase", "2026-08-01", 48),
       ],
     );
     expect(up.map((m) => m.card.name)).toEqual(["Chase", "Bulk"]);
@@ -122,8 +140,10 @@ describe("moversOf", () => {
     const { down, up } = moversOf(
       [set([card({ key: "x", tcgId: "x", name: "X" }), card({ key: "y", tcgId: "y", name: "Y" })])],
       [
-        at("x", "2026-07-01", 20), at("x", "2026-08-01", 12),
-        at("y", "2026-07-01", 20), at("y", "2026-08-01", 18),
+        at("x", "2026-07-01", 20),
+        at("x", "2026-08-01", 12),
+        at("y", "2026-07-01", 20),
+        at("y", "2026-08-01", 18),
       ],
     );
     expect(up).toEqual([]);

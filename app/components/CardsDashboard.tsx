@@ -63,9 +63,7 @@ export default function CardsDashboard({
           // the obvious next question, and the one the wishlist screen cannot
           // answer without adding money to a page that deliberately has none.
           // Absent rather than €0 where nothing on the list has a price.
-          note={
-            stats.wishlistPriced > 0 ? `${euro(stats.wishlistValue)} to buy` : undefined
-          }
+          note={stats.wishlistPriced > 0 ? `${euro(stats.wishlistValue)} to buy` : undefined}
         />
         <Kpi label="Sets" value={String(stats.sets)} />
         <Kpi
@@ -285,7 +283,11 @@ function MoverList({ title, rows }: { title: string; rows: Mover[] }) {
           <li key={m.card.key} className="flex items-baseline justify-between gap-3">
             <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label overflow-hidden text-ellipsis whitespace-nowrap">
               {m.card.tcgId ? (
-                <Link href={`/cards/${m.card.tcgId}`} scroll={false} className="text-label no-underline">
+                <Link
+                  href={`/cards/${m.card.tcgId}`}
+                  scroll={false}
+                  className="text-label no-underline"
+                >
                   {m.card.name}
                 </Link>
               ) : (

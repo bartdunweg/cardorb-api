@@ -80,16 +80,18 @@ export function groupByEra(sets: CardSet[]): EraGroup[] {
     groups.set(era, [...(groups.get(era) ?? []), set]);
   }
 
-  return [...groups.entries()]
-    .map(([era, inEra]) => ({
-      era,
-      label: eraLabel(era, years),
-      // Newest set first inside the era, which is the order a collection is
-      // actually browsed: the last pack you opened is the one you want.
-      sets: [...inEra].sort((a, b) =>
-        (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "", LOCALE),
-      ),
-    }))
-    // Newest era first, for the same reason. Anything unlabelled sorts last.
-    .sort((a, b) => (years.get(b.era)?.[1] ?? -Infinity) - (years.get(a.era)?.[1] ?? -Infinity));
+  return (
+    [...groups.entries()]
+      .map(([era, inEra]) => ({
+        era,
+        label: eraLabel(era, years),
+        // Newest set first inside the era, which is the order a collection is
+        // actually browsed: the last pack you opened is the one you want.
+        sets: [...inEra].sort((a, b) =>
+          (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "", LOCALE),
+        ),
+      }))
+      // Newest era first, for the same reason. Anything unlabelled sorts last.
+      .sort((a, b) => (years.get(b.era)?.[1] ?? -Infinity) - (years.get(a.era)?.[1] ?? -Infinity))
+  );
 }

@@ -33,7 +33,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const viewer = await authorise(req);
   if (refused(viewer))
-    return NextResponse.json({ error: viewer.error }, { status: viewer.status, headers: readHeaders(req) });
+    return NextResponse.json(
+      { error: viewer.error },
+      { status: viewer.status, headers: readHeaders(req) },
+    );
 
   const snapshots = await getValueHistory(viewer.userId, bearer(req) ?? undefined);
   return NextResponse.json({ snapshots }, { headers: readHeaders(req) });

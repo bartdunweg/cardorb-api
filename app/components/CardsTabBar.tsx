@@ -209,12 +209,7 @@ export default function CardsTabBar({
           />
           {left.map(item)}
           {signedIn && (
-            <button
-              type="button"
-              className={tabbarAddClassName}
-              onClick={onAdd}
-              title="Add a card"
-            >
+            <button type="button" className={tabbarAddClassName} onClick={onAdd} title="Add a card">
               <Plus size={20} strokeWidth={2} aria-hidden="true" />
               <span className="sr-only">Add a card</span>
             </button>

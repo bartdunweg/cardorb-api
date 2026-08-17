@@ -158,7 +158,9 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                     onError={(e) => {
                       const img = e.currentTarget;
                       if (img.dataset.retried || !img.src.includes("/low.webp")) {
-                        setBroken((prev) => (prev.has(card.id) ? prev : new Set(prev).add(card.id)));
+                        setBroken((prev) =>
+                          prev.has(card.id) ? prev : new Set(prev).add(card.id),
+                        );
                         return;
                       }
                       img.dataset.retried = "1";

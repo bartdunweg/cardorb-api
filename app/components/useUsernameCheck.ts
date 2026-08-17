@@ -25,10 +25,7 @@ import { validateUsername } from "../../lib/core/account";
  * enumeration surface held open on purpose).
  */
 export type NameState =
-  | { kind: "idle" }
-  | { kind: "checking" }
-  | { kind: "free" }
-  | { kind: "taken"; reason: string };
+  { kind: "idle" } | { kind: "checking" } | { kind: "free" } | { kind: "taken"; reason: string };
 
 export function useUsernameCheck(typed: string, current: string): NameState {
   const wanted = typed.trim().toLowerCase();

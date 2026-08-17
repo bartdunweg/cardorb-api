@@ -181,7 +181,9 @@ describe("setCards", () => {
 
   it("pages until the total is reached", async () => {
     installFetch([
-      { body: { data: Array.from({ length: 250 }, (_, i) => card(String(i + 1))), totalCount: 300 } },
+      {
+        body: { data: Array.from({ length: 250 }, (_, i) => card(String(i + 1))), totalCount: 300 },
+      },
       {
         body: {
           data: Array.from({ length: 50 }, (_, i) => card(String(i + 251))),
@@ -197,9 +199,7 @@ describe("setCards", () => {
   });
 
   it("stops at the page cap rather than looping on a host that repeats itself", async () => {
-    installFetch([
-      { body: { data: [card("1")], totalCount: 10_000 } },
-    ]);
+    installFetch([{ body: { data: [card("1")], totalCount: 10_000 } }]);
     const { setCards } = await load();
 
     await setCards("sv3pt5");

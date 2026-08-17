@@ -34,7 +34,10 @@ const intParam = (raw: string | null, fallback: number, max: number) => {
 export async function GET(req: Request, { params }: { params: Promise<{ setId: string }> }) {
   const who = await authorise(req);
   if (refused(who)) {
-    return NextResponse.json({ error: who.error }, { status: who.status, headers: readHeaders(req) });
+    return NextResponse.json(
+      { error: who.error },
+      { status: who.status, headers: readHeaders(req) },
+    );
   }
 
   const { setId } = await params;

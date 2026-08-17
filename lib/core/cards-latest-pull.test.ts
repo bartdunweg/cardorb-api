@@ -54,7 +54,10 @@ describe("latestPull", () => {
 
   it("returns null when every printing is excluded", () => {
     const s = set("A", [
-      card({ key: "1", variants: [variant({ acquiredAt: "2026-01-01T00:00:00.000Z", excluded: true })] }),
+      card({
+        key: "1",
+        variants: [variant({ acquiredAt: "2026-01-01T00:00:00.000Z", excluded: true })],
+      }),
     ]);
     expect(latestPull([s])).toBeNull();
   });
@@ -97,7 +100,11 @@ describe("latestPull", () => {
       name: "Pikachu",
       variants: [
         variant({ acquiredAt: "2026-02-01T00:00:00.000Z", rarity: "Common" }),
-        variant({ acquiredAt: "2026-06-01T00:00:00.000Z", rarity: "Illustration Rare", owned: false }),
+        variant({
+          acquiredAt: "2026-06-01T00:00:00.000Z",
+          rarity: "Illustration Rare",
+          owned: false,
+        }),
       ],
     });
 

@@ -66,7 +66,10 @@ export const dynamic = "force-dynamic";
  * An empty collection is an ordinary-looking answer, which is why it went
  * unnoticed.
  */
-async function owned(id: string, userId: string): Promise<{ card: OwnedCard; setName: string } | null> {
+async function owned(
+  id: string,
+  userId: string,
+): Promise<{ card: OwnedCard; setName: string } | null> {
   const sets = await getCards(userId);
   for (const set of sets) {
     const card = set.cards.find((c) => c.tcgId === id);

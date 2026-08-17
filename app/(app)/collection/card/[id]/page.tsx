@@ -28,7 +28,10 @@ import "../../../../styles/collection.css";
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-async function owned(id: string, userId: string): Promise<{ card: OwnedCard; setName: string } | null> {
+async function owned(
+  id: string,
+  userId: string,
+): Promise<{ card: OwnedCard; setName: string } | null> {
   const sets = await getCards(userId);
   for (const set of sets) {
     const card = set.cards.find((c) => c.tcgId === id);
@@ -78,7 +81,11 @@ export default async function CollectionCardPage({ params }: { params: Promise<{
         Collection
       </Button>
 
-      <CardDetail card={card} mine={mine} nav={<CardNav prev={prev} next={next} basePath="/collection/card" />} />
+      <CardDetail
+        card={card}
+        mine={mine}
+        nav={<CardNav prev={prev} next={next} basePath="/collection/card" />}
+      />
     </div>
   );
 }

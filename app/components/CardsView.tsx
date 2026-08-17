@@ -553,13 +553,7 @@ export default function CardsView({
     [leaveDashboard],
   );
 
-  const picked = [
-    pickedRarities,
-    pickedTypes,
-    pickedOwnership,
-    pickedValues,
-    pickedEras,
-  ];
+  const picked = [pickedRarities, pickedTypes, pickedOwnership, pickedValues, pickedEras];
   const active = picked.some((s) => s.size > 0) || query.trim() !== "";
 
   const reset = useCallback(() => {
@@ -1004,15 +998,15 @@ export default function CardsView({
             // there is something in the field, and goes out when it is cleared.
             query.trim() && !isPublic
             ? "search"
-          : // Only where the bar carries them. Signed in these two are rail
-            // rows with no slot to light, and pointing the pill at a slot
-            // that is not there leaves it parked on whatever was last. The
-            // same reason the search test above is owner-only.
-            isPublic && onWishlist
-            ? "wishlist"
-            : isPublic && selected === "all"
-              ? "collection"
-              : null;
+            : // Only where the bar carries them. Signed in these two are rail
+              // rows with no slot to light, and pointing the pill at a slot
+              // that is not there leaves it parked on whatever was last. The
+              // same reason the search test above is owner-only.
+              isPublic && onWishlist
+              ? "wishlist"
+              : isPublic && selected === "all"
+                ? "collection"
+                : null;
 
   /**
    * The search field in the toolbar, so the bar's Search slot can put the caret
@@ -1109,43 +1103,43 @@ export default function CardsView({
    */
   const main = (
     <>
-        {/* The page's own heading, over the pane it names. It used to sit at the
+      {/* The page's own heading, over the pane it names. It used to sit at the
             top of the rail, which put the h1 over a list of sets rather than
             over what you are actually reading. */}
-        <header className="cards-head">
-          <div className="cards-head-title">
-            {/* The set's own wordmark, ahead of its name. */}
-            {currentSet?.logo && !brokenLogos.has(currentSet.name) && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={currentSet.logo}
-                alt=""
-                className="cards-head-logo"
-                width={currentSet.logoSize?.width}
-                height={currentSet.logoSize?.height}
-                decoding="async"
-                onError={(e) =>
-                  retryAsPng(e.currentTarget, () =>
-                    setBrokenLogos((b) => new Set(b).add(currentSet.name)),
-                  )
-                }
-              />
-            )}
-            {/* An h2 under the rail's h1, not the page's own heading. What it
+      <header className="cards-head">
+        <div className="cards-head-title">
+          {/* The set's own wordmark, ahead of its name. */}
+          {currentSet?.logo && !brokenLogos.has(currentSet.name) && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={currentSet.logo}
+              alt=""
+              className="cards-head-logo"
+              width={currentSet.logoSize?.width}
+              height={currentSet.logoSize?.height}
+              decoding="async"
+              onError={(e) =>
+                retryAsPng(e.currentTarget, () =>
+                  setBrokenLogos((b) => new Set(b).add(currentSet.name)),
+                )
+              }
+            />
+          )}
+          {/* An h2 under the rail's h1, not the page's own heading. What it
                 says is which part of the collection is on screen, and it
                 changes with the rail; the page is called Cards whatever it
                 says. It also could not stay the h1: below 1000px it is one of
                 two screens and the other one then had no heading at all. */}
-            {/* The screen's own name, not the page's. It said "Cards" over the
+          {/* The screen's own name, not the page's. It said "Cards" over the
                 dashboard, which is the one heading here that named the route
                 instead of what is under it: the sr-only h1 already says Cards
                 and it is in the document whichever pane is up. */}
-            {/* The screen, not the layout. It used to say "Pokédex" when the
+          {/* The screen, not the layout. It used to say "Pokédex" when the
                 dex was a destination; now that it is a way of arranging the
                 cards, saying it here would replace the name of the thing you
                 are actually looking at — the collection, the wishlist, or one
                 set — with the name of a control. */}
-            {/* An h1 on the public link and an h2 behind the login. The
+          {/* An h1 on the public link and an h2 behind the login. The
                 indexed page needs exactly one top-level heading and this is
                 the only thing on it that names the collection; the owner side
                 already has one in the sr-only line above.
@@ -1155,49 +1149,49 @@ export default function CardsView({
                 list of sets is on a screen whose h1 is not rendered. A crawler
                 is never in that state, and the rail is one press from the
                 screen that has it. */}
-            <MainTitle className="cards-main-title">
-              {onDashboard
-                ? "Dashboard"
-                : onProfile
-                  ? "Profile"
-                  : onWishlist
-                    ? "Wishlist"
-                    : selected === "all"
-                      ? collectionName
-                      : selected.startsWith("era:")
-                        ? eraLabel(selected.slice(4), years)
-                        : selected}
-            </MainTitle>
-          </div>
-          {/* What you are looking at, in numbers, announced politely so it
+          <MainTitle className="cards-main-title">
+            {onDashboard
+              ? "Dashboard"
+              : onProfile
+                ? "Profile"
+                : onWishlist
+                  ? "Wishlist"
+                  : selected === "all"
+                    ? collectionName
+                    : selected.startsWith("era:")
+                      ? eraLabel(selected.slice(4), years)
+                      : selected}
+          </MainTitle>
+        </div>
+        {/* What you are looking at, in numbers, announced politely so it
               reaches a screen reader as it changes rather than only being
               visible. It used to report the collection total under every
               heading, so a set of twelve cards was captioned "1,622 cards
               across 51 sets". */}
-          {/* Not on the profile: that screen is about the key, and a count of
+        {/* Not on the profile: that screen is about the key, and a count of
               the collection under it would be answering a question nobody on it
               is asking. */}
-          {total > 0 && !onProfile && (
-            <p className="cards-count" role="status">
-              {onPokedex
-                ? `${caught(dexShown).toLocaleString(LOCALE)} of ${dexShown.length.toLocaleString(LOCALE)} Pokémon in the binder`
-                : /* The dashboard is the one screen that speaks for the whole
+        {total > 0 && !onProfile && (
+          <p className="cards-count" role="status">
+            {onPokedex
+              ? `${caught(dexShown).toLocaleString(LOCALE)} of ${dexShown.length.toLocaleString(LOCALE)} Pokémon in the binder`
+              : /* The dashboard is the one screen that speaks for the whole
                      database, held and wanted together. Everywhere else the
                      count comes from what is actually on the page, which since
                      the split is either the collection or the wishlist and
                      never both; "1,645 across 52 sets" over a grid of 1,612
                      was the old line describing a page that no longer exists. */
-                  onDashboard
-                  ? `${total.toLocaleString(LOCALE)} cards across ${sets.length} sets`
-                  : currentSet && !active
-                    ? setMeta(currentSet)
-                    : filtered.length === 1
-                      ? `${shown.toLocaleString(LOCALE)} ${shown === 1 ? "card" : "cards"}`
-                      : `${shown.toLocaleString(LOCALE)} cards across ${filtered.length} sets`}
-            </p>
-          )}
+                onDashboard
+                ? `${total.toLocaleString(LOCALE)} cards across ${sets.length} sets`
+                : currentSet && !active
+                  ? setMeta(currentSet)
+                  : filtered.length === 1
+                    ? `${shown.toLocaleString(LOCALE)} ${shown === 1 ? "card" : "cards"}`
+                    : `${shown.toLocaleString(LOCALE)} cards across ${filtered.length} sets`}
+          </p>
+        )}
 
-          {/* Everything that narrows the collection, in one row above it, and
+        {/* Everything that narrows the collection, in one row above it, and
               only above the screens where there is something to narrow.
 
               It used to stand over the dashboard and the profile too, on the
@@ -1209,196 +1203,282 @@ export default function CardsView({
               bar below it. Neither is a place you have to find. What is left
               here is filtering, sorting and layout, which are answers about a
               list of cards and mean nothing over a summary or a key. */}
-          {!onProfile && !onDashboard && (
-            <div className="cards-tools">
-              {/* The same field as the one in the rail's head, and only ever
+        {!onProfile && !onDashboard && (
+          <div className="cards-tools">
+            {/* The same field as the one in the rail's head, and only ever
                   one of the two on screen: this is the copy for below 1000px,
                   where the rail is a screen you have to open rather than a
                   column you can see. The bar's Search slot lands here and puts
                   the caret in it. */}
-              <div className="cards-search">
-                <Search size={16} strokeWidth={1.75} aria-hidden="true" />
-                <input
-                  ref={searchRef}
-                  type="search"
-                  value={query}
-                  onChange={(e) => {
-                    leaveDashboard();
-                    setQuery(e.target.value);
-                  }}
-                  placeholder="Search"
-                  aria-label="Search the collection"
-                  autoComplete="off"
-                />
-                {query && (
-                  <button type="button" onClick={() => setQuery("")} aria-label="Clear the search">
-                    <X size={15} strokeWidth={1.75} />
-                  </button>
-                )}
-              </div>
+            <div className="cards-search">
+              <Search size={16} strokeWidth={1.75} aria-hidden="true" />
+              <input
+                ref={searchRef}
+                type="search"
+                value={query}
+                onChange={(e) => {
+                  leaveDashboard();
+                  setQuery(e.target.value);
+                }}
+                placeholder="Search"
+                aria-label="Search the collection"
+                autoComplete="off"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} aria-label="Clear the search">
+                  <X size={15} strokeWidth={1.75} />
+                </button>
+              )}
+            </div>
 
-              {/* Next to the search rather than at the end of the row. Grid or
+            {/* Next to the search rather than at the end of the row. Grid or
                 list is the shape of the answer, and the field is where the
                 question goes in, so the two belong together; down at the end
                 it was the last thing on a row that wraps, which on a phone put
                 it alone on a line of its own. */}
-              {!onDashboard && !onPokedex && (
-                <>
-                  {/* The same three controls twice, and never both on screen:
+            {!onDashboard && !onPokedex && (
+              <>
+                {/* The same three controls twice, and never both on screen:
                       a panel where the page is visible around it, a sheet where
                       it is not. Swapped in the stylesheet rather than by
                       measuring the window, so the server renders one markup and
                       the browser does not correct it after hydration. */}
-                  <span className={onlyWideClassName}>
-                    <ViewMenu
-                      view={view}
-                      onView={setView}
-                      group={group}
-                      onGroup={setGroup}
-                      sort={sort}
-                      onSort={(v) => {
-                        leaveDashboard();
-                        setSort(v);
-                      }}
-                      showSort={!isPublic}
-                      fields={fields}
-                      onField={(f) =>
-                        setFields((prev) => {
-                          const next = new Set(prev);
-                          if (!next.delete(f)) next.add(f);
-                          return next;
-                        })
-                      }
-                      cols={shownCols}
-                      onCols={setCols}
-                      min={range.min}
-                      max={range.max}
-                    />
-                  </span>
-                  <span className={onlyNarrowClassName}>
-                    <ViewSheet
-                      view={view}
-                      onView={setView}
-                      group={group}
-                      onGroup={setGroup}
-                      sort={sort}
-                      onSort={(v) => {
-                        leaveDashboard();
-                        setSort(v);
-                      }}
-                      showSort={!isPublic}
-                      fields={fields}
-                      onField={(f) =>
-                        setFields((prev) => {
-                          const next = new Set(prev);
-                          if (!next.delete(f)) next.add(f);
-                          return next;
-                        })
-                      }
-                      cols={shownCols}
-                      onCols={setCols}
-                      min={range.min}
-                      max={range.max}
-                    />
-                  </span>
-                </>
-              )}
+                <span className={onlyWideClassName}>
+                  <ViewMenu
+                    view={view}
+                    onView={setView}
+                    group={group}
+                    onGroup={setGroup}
+                    sort={sort}
+                    onSort={(v) => {
+                      leaveDashboard();
+                      setSort(v);
+                    }}
+                    showSort={!isPublic}
+                    fields={fields}
+                    onField={(f) =>
+                      setFields((prev) => {
+                        const next = new Set(prev);
+                        if (!next.delete(f)) next.add(f);
+                        return next;
+                      })
+                    }
+                    cols={shownCols}
+                    onCols={setCols}
+                    min={range.min}
+                    max={range.max}
+                  />
+                </span>
+                <span className={onlyNarrowClassName}>
+                  <ViewSheet
+                    view={view}
+                    onView={setView}
+                    group={group}
+                    onGroup={setGroup}
+                    sort={sort}
+                    onSort={(v) => {
+                      leaveDashboard();
+                      setSort(v);
+                    }}
+                    showSort={!isPublic}
+                    fields={fields}
+                    onField={(f) =>
+                      setFields((prev) => {
+                        const next = new Set(prev);
+                        if (!next.delete(f)) next.add(f);
+                        return next;
+                      })
+                    }
+                    cols={shownCols}
+                    onCols={setCols}
+                    min={range.min}
+                    max={range.max}
+                  />
+                </span>
+              </>
+            )}
 
-              {/* The long tick-lists (rarity, value, type, owned)
+            {/* The long tick-lists (rarity, value, type, owned)
                 behind one button, because a facet nobody is filtering by does
                 not need a permanent control. What is on shows up as chips
                 under the bar. */}
-              {/* Nothing behind this on the dex: rarity and type are facts about
+            {/* Nothing behind this on the dex: rarity and type are facts about
                 cards, and that view is a list of Pokémon. */}
-              {/* The same facets twice, and never both on screen: the dropdown
+            {/* The same facets twice, and never both on screen: the dropdown
                 where the page is visible around it, the sheet where it is not.
                 Swapped in the stylesheet rather than by measuring the window,
                 so the server renders one markup and the browser does not have
                 to correct it after hydration. */}
-              {!onPokedex && (
-                <>
-                  <span className={onlyWideClassName}>
-                    <FilterMenu facets={facets} />
-                  </span>
-                  <span className={onlyNarrowClassName}>
-                    <FilterSheet facets={facets} />
-                  </span>
-                </>
-              )}
+            {!onPokedex && (
+              <>
+                <span className={onlyWideClassName}>
+                  <FilterMenu facets={facets} />
+                </span>
+                <span className={onlyNarrowClassName}>
+                  <FilterSheet facets={facets} />
+                </span>
+              </>
+            )}
 
-              {active && (
-                <button type="button" className="cards-reset" onClick={reset}>
-                  Reset
-                </button>
-              )}
-            </div>
-          )}
+            {active && (
+              <button type="button" className="cards-reset" onClick={reset}>
+                Reset
+              </button>
+            )}
+          </div>
+        )}
 
-          {activeFilters.length > 0 && <FilterChips filters={activeFilters} onClearAll={reset} />}
-        </header>
+        {activeFilters.length > 0 && <FilterChips filters={activeFilters} onClearAll={reset} />}
+      </header>
 
-        {onProfile ? (
-          <CardsProfile onSignOut={signOut} />
-        ) : onPokedex ? (
-          <CardsPokedex
-            entries={dexShown}
-            query={query}
-            owned={dexOwned}
-            // Straight to that Pokémon's cards: the dex says what you have, and
-            // this is the only question anyone has after reading it.
-            onPick={(name) => {
-              setQuery(name);
-              setSelected("all");
-            }}
-          />
-        ) : onDashboard && stats ? (
-          // No value history here, deliberately. This branch is what is left of
-          // the old /cards dashboard — onDashboard is false for the public
-          // variant, and the owner variant reaches this file through
-          // CollectionScreen, which never names "dashboard" as its scope, so in
-          // practice nothing renders it. The live dashboard is
-          // app/(app)/dashboard/page.tsx, a server component that can read the
-          // viewer's own snapshots; this one is a client component with no way
-          // to ask, and an empty series draws no chart rather than a wrong one.
-          <CardsDashboard stats={stats} snapshots={[]} />
-        ) : (
-          <>
-            {/* Nothing to draw, and two quite different reasons for it — see
+      {onProfile ? (
+        <CardsProfile onSignOut={signOut} />
+      ) : onPokedex ? (
+        <CardsPokedex
+          entries={dexShown}
+          query={query}
+          owned={dexOwned}
+          // Straight to that Pokémon's cards: the dex says what you have, and
+          // this is the only question anyone has after reading it.
+          onPick={(name) => {
+            setQuery(name);
+            setSelected("all");
+          }}
+        />
+      ) : onDashboard && stats ? (
+        // No value history here, deliberately. This branch is what is left of
+        // the old /cards dashboard — onDashboard is false for the public
+        // variant, and the owner variant reaches this file through
+        // CollectionScreen, which never names "dashboard" as its scope, so in
+        // practice nothing renders it. The live dashboard is
+        // app/(app)/dashboard/page.tsx, a server component that can read the
+        // viewer's own snapshots; this one is a client component with no way
+        // to ask, and an empty series draws no chart rather than a wrong one.
+        <CardsDashboard stats={stats} snapshots={[]} />
+      ) : (
+        <>
+          {/* Nothing to draw, and two quite different reasons for it — see
                 the emptyReason prop. Either way it says so, which beats an
                 empty page that looks like something failed to paint. */}
-            {sets.length === 0 ? (
-              <Card className="cards-empty">
-                {emptyReason === "nothing-yet" ? (
-                  <>
+          {sets.length === 0 ? (
+            <Card className="cards-empty">
+              {emptyReason === "nothing-yet" ? (
+                <>
+                  <p>
+                    No cards yet. Add the first one, or bring a collection in from a spreadsheet
+                    under Settings.
+                  </p>
+                  {onAdd && (
                     <p>
-                      No cards yet. Add the first one, or bring a collection in from a spreadsheet
-                      under Settings.
+                      <button type="button" className="btn" onClick={onAdd}>
+                        Add a card
+                      </button>
                     </p>
-                    {onAdd && (
-                      <p>
-                        <button type="button" className="btn" onClick={onAdd}>
-                          Add a card
-                        </button>
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p>The collection is not available right now. It should be back shortly.</p>
-                )}
-              </Card>
-            ) : filtered.length === 0 ? (
-              <Card className="cards-empty">
-                <p>
-                  Nothing matches that combination. Try fewer filters, or a different Pokémon or
-                  set.
-                </p>
-              </Card>
-            ) : onFlat ? (
-              <section className="cards-set">
-                {/* One grid over every set that survived the filters. The
+                  )}
+                </>
+              ) : (
+                <p>The collection is not available right now. It should be back shortly.</p>
+              )}
+            </Card>
+          ) : filtered.length === 0 ? (
+            <Card className="cards-empty">
+              <p>
+                Nothing matches that combination. Try fewer filters, or a different Pokémon or set.
+              </p>
+            </Card>
+          ) : onFlat ? (
+            <section className="cards-set">
+              {/* One grid over every set that survived the filters. The
                       cards keep their own set name for the dialog they open,
                       which is what setName is for; what goes is the heading
                       between them. */}
+              <ul
+                className={view === "grid" ? "cards-grid" : "cards-rows"}
+                style={
+                  view === "grid"
+                    ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
+                    : undefined
+                }
+              >
+                {visibleSets.flatMap((set) =>
+                  set.cards.map((card) => (
+                    <CardItem
+                      key={card.key}
+                      card={card}
+                      setName={set.name}
+                      setTitle={set.title}
+                      view={view}
+                      // The same three conditions the by-set branch below
+                      // uses. This one only checked the first, so a card
+                      // with no scan at all, or one from a set already
+                      // condemned as broken, still tried to draw a picture
+                      // — and this is the branch the public link opens on.
+                      // Two copies of one expression is exactly how that
+                      // happens; they are still two, and that is the split
+                      // this refactor round is for.
+                      scan={!!card.image && !brokenScans.has(card.key) && !brokenSets.has(set.name)}
+                      tilt={view === "grid" && shownCols <= TILT_UNDER}
+                      big={view === "grid" && shownCols <= TILT_UNDER}
+                      onScanBroken={onScanBroken}
+                      fields={fields}
+                      setYear={set.releaseDate?.slice(0, 4) ?? null}
+                      onPick={isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined}
+                      basePath={basePath}
+                    />
+                  )),
+                )}
+              </ul>
+            </section>
+          ) : (
+            visibleSets.map((set) => (
+              <section key={set.name} className="cards-set">
+                {/* Nothing at all when the set is what you picked: its logo,
+                      its name and its facts are the page's own heading by then,
+                      and repeating them over the grid made the page look like
+                      it had lost its place. */}
+                {selected !== set.name && (
+                  <div className="cards-set-head">
+                    {set.logo && !brokenLogos.has(set.name) && (
+                      // The box is reserved in CSS, which is what makes the lazy
+                      // attribute work at all here: the rule used to be `height:44px;
+                      // width:auto`, so before the file arrived the box was 44 tall
+                      // and *zero* wide, and a browser never lazy-loads a zero-width
+                      // image. No width until it loads, never loads without a width:
+                      // every set logo on this page was permanently blank.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={set.logo}
+                        alt=""
+                        className="cards-set-logo"
+                        loading="lazy"
+                        width={set.logoSize?.width}
+                        height={set.logoSize?.height}
+                        // A set too new for TCGdex to have converted its logo
+                        // publishes only a PNG. See retryAsPng.
+                        onError={(e) =>
+                          retryAsPng(e.currentTarget, () =>
+                            setBrokenLogos((b) => new Set(b).add(set.name)),
+                          )
+                        }
+                      />
+                    )}
+                    <div className="cards-set-text">
+                      {/* One step down with the title above it: a set sits
+                            inside the view rather than beside it. */}
+                      <h3 className="cards-set-name">{set.title}</h3>
+                      <p className="cards-set-meta">
+                        {onYear
+                          ? `${set.cards.length.toLocaleString(LOCALE)} ${set.cards.length === 1 ? "card" : "cards"}`
+                          : setMeta(set)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {/* The chosen width as a custom property rather than as a
+                      grid-template-columns of our own, so the auto-fill, the
+                      gaps and the container query stay in the stylesheet where
+                      the rest of the grid is. Nothing at all until the slider is
+                      moved: see scanSize. */}
                 <ul
                   className={view === "grid" ? "cards-grid" : "cards-rows"}
                   style={
@@ -1407,130 +1487,37 @@ export default function CardsView({
                       : undefined
                   }
                 >
-                  {visibleSets.flatMap((set) =>
-                    set.cards.map((card) => (
-                      <CardItem
-                        key={card.key}
-                        card={card}
-                        setName={set.name}
-                        setTitle={set.title}
-                        view={view}
-                        // The same three conditions the by-set branch below
-                        // uses. This one only checked the first, so a card
-                        // with no scan at all, or one from a set already
-                        // condemned as broken, still tried to draw a picture
-                        // — and this is the branch the public link opens on.
-                        // Two copies of one expression is exactly how that
-                        // happens; they are still two, and that is the split
-                        // this refactor round is for.
-                        scan={
-                          !!card.image && !brokenScans.has(card.key) && !brokenSets.has(set.name)
-                        }
-                        tilt={view === "grid" && shownCols <= TILT_UNDER}
-                        big={view === "grid" && shownCols <= TILT_UNDER}
-                        onScanBroken={onScanBroken}
-                        fields={fields}
-                        setYear={set.releaseDate?.slice(0, 4) ?? null}
-                        onPick={
-                          isPublic ? (c, n) => setOpenCard({ card: c, setName: n }) : undefined
-                        }
-                        basePath={basePath}
-                      />
-                    )),
-                  )}
+                  {set.cards.map((card) => (
+                    <CardItem
+                      key={card.key}
+                      card={card}
+                      setName={set.name}
+                      setTitle={set.title}
+                      view={view}
+                      // Resolved here rather than handed the two Sets, so the
+                      // item's props only change when the answer for that card
+                      // changes. See the note on CardItem.
+                      scan={!!card.image && !brokenScans.has(card.key) && !brokenSets.has(set.name)}
+                      // Resolved here for the same reason `scan` is: one
+                      // boolean the item can compare, rather than the size
+                      // itself, which would be a changed prop on all 1,622
+                      // items for every step of the slider.
+                      tilt={view === "grid" && shownCols <= TILT_UNDER}
+                      big={view === "grid" && shownCols <= TILT_UNDER}
+                      onScanBroken={onScanBroken}
+                      fields={fields}
+                      setYear={set.releaseDate?.slice(0, 4) ?? null}
+                      onPick={
+                        isPublic ? (card, setName) => setOpenCard({ card, setName }) : undefined
+                      }
+                      basePath={basePath}
+                    />
+                  ))}
                 </ul>
               </section>
-            ) : (
-              visibleSets.map((set) => (
-                <section key={set.name} className="cards-set">
-                  {/* Nothing at all when the set is what you picked: its logo,
-                      its name and its facts are the page's own heading by then,
-                      and repeating them over the grid made the page look like
-                      it had lost its place. */}
-                  {selected !== set.name && (
-                    <div className="cards-set-head">
-                      {set.logo && !brokenLogos.has(set.name) && (
-                        // The box is reserved in CSS, which is what makes the lazy
-                        // attribute work at all here: the rule used to be `height:44px;
-                        // width:auto`, so before the file arrived the box was 44 tall
-                        // and *zero* wide, and a browser never lazy-loads a zero-width
-                        // image. No width until it loads, never loads without a width:
-                        // every set logo on this page was permanently blank.
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={set.logo}
-                          alt=""
-                          className="cards-set-logo"
-                          loading="lazy"
-                          width={set.logoSize?.width}
-                          height={set.logoSize?.height}
-                          // A set too new for TCGdex to have converted its logo
-                          // publishes only a PNG. See retryAsPng.
-                          onError={(e) =>
-                            retryAsPng(e.currentTarget, () =>
-                              setBrokenLogos((b) => new Set(b).add(set.name)),
-                            )
-                          }
-                        />
-                      )}
-                      <div className="cards-set-text">
-                        {/* One step down with the title above it: a set sits
-                            inside the view rather than beside it. */}
-                        <h3 className="cards-set-name">{set.title}</h3>
-                        <p className="cards-set-meta">
-                          {onYear
-                            ? `${set.cards.length.toLocaleString(LOCALE)} ${set.cards.length === 1 ? "card" : "cards"}`
-                            : setMeta(set)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {/* The chosen width as a custom property rather than as a
-                      grid-template-columns of our own, so the auto-fill, the
-                      gaps and the container query stay in the stylesheet where
-                      the rest of the grid is. Nothing at all until the slider is
-                      moved: see scanSize. */}
-                  <ul
-                    className={view === "grid" ? "cards-grid" : "cards-rows"}
-                    style={
-                      view === "grid"
-                        ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
-                        : undefined
-                    }
-                  >
-                    {set.cards.map((card) => (
-                      <CardItem
-                        key={card.key}
-                        card={card}
-                        setName={set.name}
-                        setTitle={set.title}
-                        view={view}
-                        // Resolved here rather than handed the two Sets, so the
-                        // item's props only change when the answer for that card
-                        // changes. See the note on CardItem.
-                        scan={
-                          !!card.image && !brokenScans.has(card.key) && !brokenSets.has(set.name)
-                        }
-                        // Resolved here for the same reason `scan` is: one
-                        // boolean the item can compare, rather than the size
-                        // itself, which would be a changed prop on all 1,622
-                        // items for every step of the slider.
-                        tilt={view === "grid" && shownCols <= TILT_UNDER}
-                        big={view === "grid" && shownCols <= TILT_UNDER}
-                        onScanBroken={onScanBroken}
-                        fields={fields}
-                        setYear={set.releaseDate?.slice(0, 4) ?? null}
-                        onPick={
-                          isPublic ? (card, setName) => setOpenCard({ card, setName }) : undefined
-                        }
-                        basePath={basePath}
-                      />
-                    ))}
-                  </ul>
-                </section>
-              ))
-            )}
-            {/* Nothing to see and nothing to announce: the sets it stands for are
+            ))
+          )}
+          {/* Nothing to see and nothing to announce: the sets it stands for are
                 built before anyone scrolls this far, so a "loading more" line
                 would flash a state the reader never waits in. aria-hidden keeps
                 it out of the reading order, and the count above it already says
@@ -1549,11 +1536,11 @@ export default function CardsView({
                 The counter rather than the count itself, because a reset from
                 six back to six is exactly the case that has to remount and is
                 the one a count cannot see. */}
-            {hasMore && (
-              <div key={generation} ref={moreRef} className="cards-more" aria-hidden="true" />
-            )}
-          </>
-        )}
+          {hasMore && (
+            <div key={generation} ref={moreRef} className="cards-more" aria-hidden="true" />
+          )}
+        </>
+      )}
     </>
   );
 
@@ -1648,4 +1635,3 @@ export default function CardsView({
     </>
   );
 }
-
