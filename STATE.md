@@ -4,25 +4,34 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
-**cards.css is still 1,300 lines and its Tailwind migration is not finished.**
-Found while clearing out two abandoned agent worktrees on 17 August. One of them
-held an uncommitted extraction of seventeen more class constants into
-`app/components/cardsPageClasses.ts` — `cardsHeadClassName`,
-`cardsSearchClassName`, `cardsGridClassName` and the rest — none of which exists
-on main, which has four.
+**cards.css is 1,300 lines and should stay that way** — corrected from an
+earlier note in this file that called its Tailwind migration unfinished. That was
+the wrong conclusion from the right number, and it would have sent somebody on a
+risky errand.
 
-The work was rescued to a branch, judged, and then dropped, and the judgement is
-the part worth keeping. The idea is real: `.cards-head`, `.cards-search`,
-`.cards-count`, `.cards-set-head` and `.cards-grid` are still CSS, still in
-`cards.css`, and still referenced by `CardsView.tsx` and `(app)/loading.tsx`. The
-*patch* was worthless: `CardsView.tsx` has moved 770 lines since that worktree
-was made, so anyone finishing this starts from today's component, not from a
-two-day-old extraction of a file that no longer looks like that.
+Measured on 17 August: 1,300 lines is **35 classes**, all thirty-five still used,
+**zero dead**. 258 of those lines are comments, which is this repo's style rather
+than weight. What is left is thirteen media queries, `prefers-reduced-motion`, a
+`@keyframes`, a `@container`, `:has()`, and twelve `::before`/`::after` rules —
+the part CSS expresses better than utility classes do.
 
-So it is a note rather than a branch. Read ADR-0017 and ADR-0018 before picking
-it up — both are about this exact migration going wrong in the same way, an
-unconditional Tailwind property beating a still-CSS conditional reset, and
-`loading.tsx` being a second consumer nobody remembers.
+Four decision records already describe this migration breaking: ADR-0012 (cascade
+layers, where every Tailwind margin silently lost to legacy CSS and screenshots
+looked fine), ADR-0017 (an unconditional Tailwind property beating a still-CSS
+conditional reset), ADR-0018 (a class with a second consumer nobody remembered),
+ADR-0020 (a dialog's inputs silently losing their styling). Finishing it is not
+tidying; it is a fifth attempt at the thing that has broken four times, for no
+dead code removed.
+
+The live hazard is unchanged and worth knowing before adding a Tailwind class to
+any element that also carries one of these thirty-five: read ADR-0012 and
+ADR-0017 first. That is the whole of the remaining risk, and it is a reading
+instruction rather than a task.
+
+An abandoned agent worktree from 15 August held an uncommitted extraction of
+seventeen more of these into `cardsPageClasses.ts`. It was rescued, judged and
+dropped — `CardsView.tsx` had moved 770 lines underneath it, and the measurement
+above says the extraction was not wanted anyway.
 
 **The shared standards are at v0.5.3, and the Definition of Done now has a gate
 rather than a description (workspace `kuala-lumpur`, 2026-08-16).** The change of
