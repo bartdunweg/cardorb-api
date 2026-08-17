@@ -26,7 +26,8 @@ const addressOf = (req: Request) =>
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (byAddress(addressOf(req))) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (byAddress(addressOf(req)))
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
   const viewer = await currentViewer();
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
@@ -40,7 +41,10 @@ export async function POST(req: Request) {
   }
 
   if (!email.includes("@")) {
-    return NextResponse.json({ error: "That does not look like an email address." }, { status: 400 });
+    return NextResponse.json(
+      { error: "That does not look like an email address." },
+      { status: 400 },
+    );
   }
   if (email.toLowerCase() === viewer.email.toLowerCase()) {
     return NextResponse.json({ error: "That is already your address." }, { status: 400 });
@@ -48,7 +52,10 @@ export async function POST(req: Request) {
 
   const db = await serverClient();
   if (!db) {
-    return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
+    return NextResponse.json(
+      { error: "This deployment has no database configured." },
+      { status: 503 },
+    );
   }
 
   const { error } = await db.auth.updateUser(

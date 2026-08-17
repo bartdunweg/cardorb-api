@@ -83,7 +83,8 @@ if (!userId) {
 const db = (() => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
+  if (!url || !key)
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
   return createClient(url, key, { auth: { persistSession: false } });
 })();
 
@@ -110,7 +111,8 @@ async function cardsFor() {
   if (!res.ok) throw new Error(`${url}: ${res.status}`);
   const { sets } = await res.json();
   const out = new Map();
-  for (const set of sets ?? []) for (const c of set.cards ?? []) if (c.tcgId) out.set(c.key, c.tcgId);
+  for (const set of sets ?? [])
+    for (const c of set.cards ?? []) if (c.tcgId) out.set(c.key, c.tcgId);
   if (!out.size) throw new Error(`${url} returned no cards with a TCGdex id.`);
   return out;
 }
@@ -226,14 +228,20 @@ const counts = {};
 for (const p of changing) counts[p.finish] = (counts[p.finish] ?? 0) + 1;
 
 console.log(`\n${byKey.size} held cards, ${rows.length} rows`);
-console.log(`  would set: ${changing.length} rows — ${Object.entries(counts).map(([k, v]) => `${k}=${v}`).join(", ") || "nothing"}`);
+console.log(
+  `  would set: ${changing.length} rows — ${
+    Object.entries(counts)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(", ") || "nothing"
+  }`,
+);
 console.log(`  left null: ${unresolved.length} cards`);
 
 if (unresolved.length) {
   const lines = [
     "# Finish backfill: cards the catalogue could not settle",
     "",
-    "Left null, which still means \"nobody has said\" — see ADR-0048. Fix by hand,",
+    'Left null, which still means "nobody has said" — see ADR-0048. Fix by hand,',
     "or wait for an import that knows. Delete this file once it is empty.",
     "",
     "| card | why | copies held |",

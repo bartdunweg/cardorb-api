@@ -46,8 +46,7 @@ export const APP_TAGLINE =
  * Why it exists at all: a link preview is not somewhere anyone reads four
  * lines, and the full sentence sets to four at the size that card is drawn.
  */
-export const APP_TAGLINE_SHORT =
-  "Set by set — what you own, what it is worth, what is missing.";
+export const APP_TAGLINE_SHORT = "Set by set — what you own, what it is worth, what is missing.";
 
 /**
  * The locale every number and every sort in here is answered in.

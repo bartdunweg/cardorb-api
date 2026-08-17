@@ -43,10 +43,6 @@ const cacheLeash = {
   },
 };
 
-const config = [
-  { ignores: [".next/**", "node_modules/**", "next-env.d.ts"] },
-  ...next,
-  cacheLeash,
-];
+const config = [{ ignores: [".next/**", "node_modules/**", "next-env.d.ts"] }, ...next, cacheLeash];
 
 export default config;

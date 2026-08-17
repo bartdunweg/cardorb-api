@@ -128,56 +128,56 @@ export default async function Image({ params }: { params: Promise<{ username: st
     .map((c) => ({ key: c.key, src: c.image!.replace(/\.webp$/, ".png") }));
 
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          background: colour.bgGrouped.light,
-          padding: 72,
-          fontFamily: "sans-serif",
-        }}
-      >
-        {/* Every one of these carries an explicit display, including the ones
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        background: colour.bgGrouped.light,
+        padding: 72,
+        fontFamily: "sans-serif",
+      }}
+    >
+      {/* Every one of these carries an explicit display, including the ones
             with a single child. Satori has no default: a div with more than one
             child and no display throws, and the failure is the whole image
             500ing rather than a layout that looks off. */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", fontSize: 30, color: colour.labelTertiary.light }}>{APP_NAME}</div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: headingSize,
-              color: colour.label.light,
-              fontWeight: 700,
-            }}
-          >
-            {heading}
-          </div>
-          <div style={{ display: "flex", fontSize: 34, color: colour.labelSecondary.light }}>
-            {held.toLocaleString("en-GB")} cards across {withHeld} sets
-          </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", fontSize: 30, color: colour.labelTertiary.light }}>
+          {APP_NAME}
         </div>
-
-        <div style={{ display: "flex", gap: 20 }}>
-          {scans.map((c) => (
-            // Not next/image: this renders inside ImageResponse, which is
-            // Satori and not the browser, and only understands a plain img.
-            <img
-              key={c.key}
-              src={c.src}
-              alt=""
-              width={196}
-              height={274}
-              style={{ borderRadius: 12 }}
-            />
-          ))}
+        <div
+          style={{
+            display: "flex",
+            fontSize: headingSize,
+            color: colour.label.light,
+            fontWeight: 700,
+          }}
+        >
+          {heading}
+        </div>
+        <div style={{ display: "flex", fontSize: 34, color: colour.labelSecondary.light }}>
+          {held.toLocaleString("en-GB")} cards across {withHeld} sets
         </div>
       </div>
-    ),
+
+      <div style={{ display: "flex", gap: 20 }}>
+        {scans.map((c) => (
+          // Not next/image: this renders inside ImageResponse, which is
+          // Satori and not the browser, and only understands a plain img.
+          <img
+            key={c.key}
+            src={c.src}
+            alt=""
+            width={196}
+            height={274}
+            style={{ borderRadius: 12 }}
+          />
+        ))}
+      </div>
+    </div>,
     size,
   );
 }

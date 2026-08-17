@@ -84,7 +84,8 @@ export default function RouteError({
             className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
               text-label-tertiary mt-2"
           >
-            Reference <code className="[font-family:var(--font-mono)] select-all">{error.digest}</code>
+            Reference{" "}
+            <code className="[font-family:var(--font-mono)] select-all">{error.digest}</code>
           </p>
         )}
       </div>

@@ -73,7 +73,11 @@ function buildQuickQuery(term: string): string {
 
 /** One filter field, targeted rather than checked against all four —
  *  the point of asking for Name specifically instead of one guessed word. */
-function fieldClause(field: string, value: string, { wrap, titleCase }: { wrap: boolean; titleCase?: boolean }) {
+function fieldClause(
+  field: string,
+  value: string,
+  { wrap, titleCase }: { wrap: boolean; titleCase?: boolean },
+) {
   const escaped = escapeTerm(value.trim());
   const v = titleCase ? escaped.charAt(0).toUpperCase() + escaped.slice(1) : escaped;
   return wrap ? `${field}:*${v}*` : `${field}:${v}*`;
@@ -93,7 +97,8 @@ function buildFilterQuery(filters: SearchFilters): string {
   if (filters.name?.trim()) clauses.push(fieldClause("name", filters.name, { wrap: true }));
   if (filters.number?.trim()) clauses.push(fieldClause("number", filters.number, { wrap: false }));
   if (filters.set?.trim()) clauses.push(fieldClause("set.name", filters.set, { wrap: true }));
-  if (filters.type?.trim()) clauses.push(fieldClause("types", filters.type, { wrap: false, titleCase: true }));
+  if (filters.type?.trim())
+    clauses.push(fieldClause("types", filters.type, { wrap: false, titleCase: true }));
   return clauses.join(" ");
 }
 

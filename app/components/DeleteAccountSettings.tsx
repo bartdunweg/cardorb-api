@@ -58,8 +58,8 @@ export default function DeleteAccountSettings({ username }: { username: string }
     <SettingsPanels>
       <SettingsPanel danger>
         <SettingsHint>
-          Every card, every import and your link go with it, immediately and for
-          good. There is no undo and no copy kept.
+          Every card, every import and your link go with it, immediately and for good. There is no
+          undo and no copy kept.
         </SettingsHint>
         <label className={settingsHintClassName} htmlFor="confirm-delete">
           Type <strong>{username}</strong> to confirm.

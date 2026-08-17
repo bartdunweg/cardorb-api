@@ -118,8 +118,7 @@ if (process.argv.includes("--check")) {
   const current = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
   if (current !== css) {
     console.error(
-      `\n  ${OUT} does not match lib/design/tokens.ts.\n` +
-        `  Run: node scripts/gen-tokens.mjs\n`,
+      `\n  ${OUT} does not match lib/design/tokens.ts.\n` + `  Run: node scripts/gen-tokens.mjs\n`,
     );
     process.exit(1);
   }

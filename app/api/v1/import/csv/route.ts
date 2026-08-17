@@ -49,9 +49,13 @@ export async function POST(req: Request) {
   }
 
   const grid = parseCsv(csv);
-  if (!grid.length) return NextResponse.json({ error: "Nothing could be read from that file." }, { status: 400 });
+  if (!grid.length)
+    return NextResponse.json({ error: "Nothing could be read from that file." }, { status: 400 });
   if (grid.length > MAX_ROWS + 1) {
-    return NextResponse.json({ error: `That file has more than ${MAX_ROWS} rows.` }, { status: 413 });
+    return NextResponse.json(
+      { error: `That file has more than ${MAX_ROWS} rows.` },
+      { status: 413 },
+    );
   }
 
   const header = grid[0]!;
@@ -73,12 +77,20 @@ export async function POST(req: Request) {
   const { rows, skipped } = rowsFrom(grid, guessed as ColumnMap);
 
   if (!doCommit) {
-    return NextResponse.json({ ...preview(rows, skipped.length), header, guessed, skippedRows: skipped.slice(0, 20) });
+    return NextResponse.json({
+      ...preview(rows, skipped.length),
+      header,
+      guessed,
+      skippedRows: skipped.slice(0, 20),
+    });
   }
 
   const db = await serverClient();
   if (!db) {
-    return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
+    return NextResponse.json(
+      { error: "This deployment has no database configured." },
+      { status: 503 },
+    );
   }
 
   try {

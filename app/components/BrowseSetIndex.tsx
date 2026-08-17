@@ -64,8 +64,8 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       </div>
 
       <p className="[font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-label-secondary m-0 max-w-[60ch]">
-        Every set in the catalogue, including the ones you have nothing from yet.
-        Open one to see all its cards and which of them are already yours.
+        Every set in the catalogue, including the ones you have nothing from yet. Open one to see
+        all its cards and which of them are already yours.
       </p>
 
       {/* type="search" rather than text: it gets the clear affordance and the
@@ -104,7 +104,9 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       ) : (
         groups.map((group) => (
           <section key={group.series} className="flex flex-col gap-4">
-            <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0">{group.series}</h2>
+            <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0">
+              {group.series}
+            </h2>
 
             {/* Auto-fill rather than a column count, for the reason SetIndex
                 gives: .cards-main is a container, so a fixed count would need

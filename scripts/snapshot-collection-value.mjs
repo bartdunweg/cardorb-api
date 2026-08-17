@@ -150,8 +150,16 @@ const get = async (url, what, headers = {}) => {
  */
 async function cardsFor(profile) {
   const from = TOKEN
-    ? { url: `${BASE}/api/v1/collection`, what: "/api/v1/collection", headers: { authorization: `Bearer ${TOKEN}` } }
-    : { url: `${BASE}/api/v1/public/${profile.username}/collection`, what: `/api/v1/public/${profile.username}/collection`, headers: {} };
+    ? {
+        url: `${BASE}/api/v1/collection`,
+        what: "/api/v1/collection",
+        headers: { authorization: `Bearer ${TOKEN}` },
+      }
+    : {
+        url: `${BASE}/api/v1/public/${profile.username}/collection`,
+        what: `/api/v1/public/${profile.username}/collection`,
+        headers: {},
+      };
 
   if (!TOKEN && !profile.is_public) {
     throw new Error(
@@ -170,7 +178,9 @@ async function cardsFor(profile) {
   // Zero is the failure, not "fewer than five hundred". That floor was a
   // constant about one collection and would have rejected any small account.
   if (!cards.size) {
-    throw new Error(`${from.what} returned no cards with a TCGdex id. Is ${BASE} serving this code?`);
+    throw new Error(
+      `${from.what} returned no cards with a TCGdex id. Is ${BASE} serving this code?`,
+    );
   }
   return cards;
 }
@@ -190,7 +200,8 @@ async function profileOf(db) {
 function adminDb() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
+  if (!url || !key)
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
@@ -241,7 +252,10 @@ async function fromPostgres(db) {
   for (let page = 0; page < 100 && rows.length < total; page++) {
     const { data, error, count } = await db
       .from("cards")
-      .select("set_name,number,name,owned,quantity,acquired_at,finish", page === 0 ? { count: "exact" } : {})
+      .select(
+        "set_name,number,name,owned,quantity,acquired_at,finish",
+        page === 0 ? { count: "exact" } : {},
+      )
       .eq("user_id", userId)
       .order("id", { ascending: true })
       .range(page * PAGE, page * PAGE + PAGE - 1);
@@ -301,7 +315,8 @@ async function cardmarketIds(tcgIds) {
   return cache;
 }
 
-const sortKeys = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
+const sortKeys = (o) =>
+  Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
 
 /**
  * One dated point: what the copies that were in the binder by then were worth at
@@ -478,7 +493,9 @@ for (const guide of guides) {
     console.warn(
       `  !! two guides both report ${point.date} — the archive served a capture other than the one asked for.`,
     );
-    console.warn(`     Keeping one. That other point is NOT recorded; re-run --seed later to try again.`);
+    console.warn(
+      `     Keeping one. That other point is NOT recorded; re-run --seed later to try again.`,
+    );
   }
   byDate.set(point.date, point);
 }
@@ -491,4 +508,6 @@ for (const p of [...points].sort((a, b) => a.date.localeCompare(b.date))) {
 }
 
 await writeSnapshots(db, points);
-console.log(`\n${points.length} point${points.length === 1 ? "" : "s"} written for ${profile.username}.`);
+console.log(
+  `\n${points.length} point${points.length === 1 ? "" : "s"} written for ${profile.username}.`,
+);

@@ -176,8 +176,8 @@ export default function BrandPage() {
           <h3 className={h3}>Beside the name</h3>
           <p className={body}>
             The shadowed cut at 24px, with a gap and the name in the heading face. This is the
-            lockup in the nav bar above and the footer below; it is one component, so it is the
-            same everywhere.
+            lockup in the nav bar above and the footer below; it is one component, so it is the same
+            everywhere.
           </p>
           <div
             className={`${panel} my-6`}
@@ -224,9 +224,9 @@ export default function BrandPage() {
 
           <h2 className={h2}>Colour</h2>
           <p className={body}>
-            Every colour is a pair — a light value and a dark one, neither of them the default.
-            Left half light, right half dark. These are read straight out of the design tokens, so
-            this page cannot drift from the product.
+            Every colour is a pair — a light value and a dark one, neither of them the default. Left
+            half light, right half dark. These are read straight out of the design tokens, so this
+            page cannot drift from the product.
           </p>
           <div className="grid grid-cols-3 gap-5 my-6 [@media(max-width:640px)]:grid-cols-2">
             {SWATCHES.map(([name, pair]) => (
@@ -252,8 +252,8 @@ export default function BrandPage() {
                 Give it <code>alt=&quot;&quot;</code> next to the name.
               </strong>{" "}
               Beside the words &ldquo;{APP_NAME}&rdquo; the orb is decorative, and a screen reader
-              announcing the name twice is worse than announcing it once. A real{" "}
-              <code>alt</code> only when it stands alone.
+              announcing the name twice is worse than announcing it once. A real <code>alt</code>{" "}
+              only when it stands alone.
             </li>
             <li>
               <strong className={strong}>Set width and height.</strong> Otherwise the page jumps

@@ -144,7 +144,12 @@ describe("GET /api/v1/catalog/search", () => {
     getRows.mockResolvedValue({ rows: [row({ quantity: 2 })], failed: false });
     const res = await search(new URLSearchParams({ query: "char" }));
     const { cards } = await res.json();
-    expect(cards[0]).toMatchObject({ owned: true, wishlist: false, quantity: 2, itemIds: ["row-1"] });
+    expect(cards[0]).toMatchObject({
+      owned: true,
+      wishlist: false,
+      quantity: 2,
+      itemIds: ["row-1"],
+    });
   });
 
   it("leaves a result unmarked when the viewer holds a different card at that number", async () => {

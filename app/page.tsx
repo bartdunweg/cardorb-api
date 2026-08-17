@@ -265,258 +265,276 @@ export default async function Home() {
       />
 
       <section className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
-      <header
-        className="flex flex-col items-center gap-5 text-center mx-auto max-w-[640px]
+        <header
+          className="flex flex-col items-center gap-5 text-center mx-auto max-w-[640px]
           min-h-[480px] justify-center [padding-block:clamp(72px,10vw,128px)]"
-      >
-        {/* A badge that stated a fact and then stopped. It said "iOS & Android
+        >
+          {/* A badge that stated a fact and then stopped. It said "iOS & Android
             — coming soon" and was an inert <span>, so the one question it
             raised — what app, and when — had nowhere to go. It is a link to
             /app/ios now, and names only the platform that has a page. */}
-        <Link
-          href="/app/ios"
-          className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
+          <Link
+            href="/app/ios"
+            className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
             border border-[var(--color-border-subtle)] text-label-tertiary no-underline
             [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
             [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-        >
-          <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
-          The iPhone app is on its way
-          <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
-        </Link>
-        <h1
-          className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
+          >
+            <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
+            The iPhone app is on its way
+            <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
+          </Link>
+          <h1
+            className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
             [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
             [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
-        >
-          Track your Pokémon card collection.
-        </h1>
-        <p className={`max-w-[34ch] mx-auto ${sectionBody}`}>
-          See every set, what it is worth, and what is still missing.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
-          <Link
-            href="/signup"
-            className="btn btn--primary justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
           >
-            Start your collection
-          </Link>
-        </div>
-        <ul className="flex flex-wrap justify-center gap-x-8 gap-y-3 mt-4 m-0 p-0 list-none" role="list">
-          {STATS.map(({ value, label }) => (
-            <li key={label} className="flex flex-col items-center gap-0.5">
-              <b className="text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
-                {value}
-              </b>
-              <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                {label}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </header>
-
-      <section
-        className="mx-auto max-w-[670px] text-center [padding-block:clamp(96px,12vw,160px)] [@media(max-width:640px)]:[padding-block:96px]"
-        aria-labelledby="landing-intro-title"
-      >
-        <p className={`${eyebrow} mb-4`}>What it does</p>
-        <h2 id="landing-intro-title" className={sectionHeading}>
-          A clear view of your collection.
-        </h2>
-        <p className={`max-w-[57ch] mx-auto mt-5 ${sectionBody}`}>
-          Card Orb shows what you own, what it is worth, and what is missing — without a
-          spreadsheet.
-        </p>
-      </section>
-
-      <section
-        id="organise"
-        className="mx-auto max-w-[1040px] [padding-block:clamp(104px,14vw,180px)]"
-        aria-labelledby="features-title"
-      >
-        <div className="max-w-[600px] mb-8">
-          <p className={`${eyebrow} mb-4`}>Features</p>
-          <h2 id="features-title" className={sectionHeading}>
-            Know what you have. Notice what is missing.
-          </h2>
-        </div>
-        <ul
-          className="grid grid-cols-3 gap-4 m-0 p-0 list-none [@media(max-width:800px)]:grid-cols-1"
-          role="list"
-        >
-          {FEATURES.map(({ icon: Icon, title, body, comingSoon }) => (
-            <li key={title} className="flex">
-              <Card className="flex flex-1 flex-col items-start gap-3">
-                <span className="flex items-center justify-between w-full">
-                  <span className={featureIcon}>
-                    <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
-                  </span>
-                  {comingSoon && (
-                    <span
-                      className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
-                        uppercase tracking-[0.06em]"
-                    >
-                      Coming soon{typeof comingSoon === "string" ? ` · ${comingSoon}` : ""}
-                    </span>
-                  )}
+            Track your Pokémon card collection.
+          </h1>
+          <p className={`max-w-[34ch] mx-auto ${sectionBody}`}>
+            See every set, what it is worth, and what is still missing.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
+            <Link
+              href="/signup"
+              className="btn btn--primary justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
+            >
+              Start your collection
+            </Link>
+          </div>
+          <ul
+            className="flex flex-wrap justify-center gap-x-8 gap-y-3 mt-4 m-0 p-0 list-none"
+            role="list"
+          >
+            {STATS.map(({ value, label }) => (
+              <li key={label} className="flex flex-col items-center gap-0.5">
+                <b className="text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
+                  {value}
+                </b>
+                <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+                  {label}
                 </span>
-                <h3 className={cardHeading}>{title}</h3>
-                <p className={cardBody}>{body}</p>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      </section>
+              </li>
+            ))}
+          </ul>
+        </header>
 
-      <section
-        className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(var(--space-10),10vw,140px)]
+        <section
+          className="mx-auto max-w-[670px] text-center [padding-block:clamp(96px,12vw,160px)] [@media(max-width:640px)]:[padding-block:96px]"
+          aria-labelledby="landing-intro-title"
+        >
+          <p className={`${eyebrow} mb-4`}>What it does</p>
+          <h2 id="landing-intro-title" className={sectionHeading}>
+            A clear view of your collection.
+          </h2>
+          <p className={`max-w-[57ch] mx-auto mt-5 ${sectionBody}`}>
+            Card Orb shows what you own, what it is worth, and what is missing — without a
+            spreadsheet.
+          </p>
+        </section>
+
+        <section
+          id="organise"
+          className="mx-auto max-w-[1040px] [padding-block:clamp(104px,14vw,180px)]"
+          aria-labelledby="features-title"
+        >
+          <div className="max-w-[600px] mb-8">
+            <p className={`${eyebrow} mb-4`}>Features</p>
+            <h2 id="features-title" className={sectionHeading}>
+              Know what you have. Notice what is missing.
+            </h2>
+          </div>
+          <ul
+            className="grid grid-cols-3 gap-4 m-0 p-0 list-none [@media(max-width:800px)]:grid-cols-1"
+            role="list"
+          >
+            {FEATURES.map(({ icon: Icon, title, body, comingSoon }) => (
+              <li key={title} className="flex">
+                <Card className="flex flex-1 flex-col items-start gap-3">
+                  <span className="flex items-center justify-between w-full">
+                    <span className={featureIcon}>
+                      <Icon size={21} strokeWidth={1.7} aria-hidden="true" />
+                    </span>
+                    {comingSoon && (
+                      <span
+                        className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+                        uppercase tracking-[0.06em]"
+                      >
+                        Coming soon{typeof comingSoon === "string" ? ` · ${comingSoon}` : ""}
+                      </span>
+                    )}
+                  </span>
+                  <h3 className={cardHeading}>{title}</h3>
+                  <p className={cardBody}>{body}</p>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section
+          className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(var(--space-10),10vw,140px)]
           max-w-[960px] [padding-block:clamp(104px,14vw,180px)]
           [@media(max-width:800px)]:grid-cols-1 [@media(max-width:800px)]:gap-8"
-        aria-labelledby="workflow-title"
-      >
-        <div>
-          <p className={`${eyebrow} mb-4`}>How it works</p>
-          <h2 id="workflow-title" className={sectionHeading}>
-            Everything in one place.
-          </h2>
-          <p className={`mt-5 ${sectionBody}`}>
-            Every card stays linked to its set and era, so the next session picks up exactly
-            where the last one left off.
-          </p>
-          <ul className="grid gap-3 mt-6 mb-0 p-0 list-none" role="list">
-            <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
-              <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
-              Owned cards and your wishlist, in one view.
-            </li>
-            <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
-              <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
-              Move between the overview, sets and Pokédex.
-            </li>
-            <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
-              <Check size={17} strokeWidth={2} aria-hidden="true" className="flex-none mt-[2px] text-label" />
-              Collection value, visible but not the focus.
-            </li>
-          </ul>
-        </div>
-        <Card
-          className="relative min-h-[430px] [padding:clamp(var(--space-6),4vw,var(--space-10))]
-            [@media(max-width:640px)]:min-h-[370px]"
+          aria-labelledby="workflow-title"
         >
-          <span className={featureIcon}>
-            <BookOpen size={22} strokeWidth={1.7} aria-hidden="true" />
-          </span>
-          <span className="absolute top-8 right-8 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]">
-            01
-          </span>
-          <h3 className={`max-w-[13ch] mt-8 [font-size:var(--fs-card)] ${cardHeading}`}>
-            Every card, tracked.
-          </h3>
-          <p className={`max-w-[28ch] mt-4 ${cardBody}`}>
-            One view for the cards you own and the cards on your wishlist.
-          </p>
-          {/* --color-timeline used to live here and was removed with the portfolio's
+          <div>
+            <p className={`${eyebrow} mb-4`}>How it works</p>
+            <h2 id="workflow-title" className={sectionHeading}>
+              Everything in one place.
+            </h2>
+            <p className={`mt-5 ${sectionBody}`}>
+              Every card stays linked to its set and era, so the next session picks up exactly where
+              the last one left off.
+            </p>
+            <ul className="grid gap-3 mt-6 mb-0 p-0 list-none" role="list">
+              <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+                <Check
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="flex-none mt-[2px] text-label"
+                />
+                Owned cards and your wishlist, in one view.
+              </li>
+              <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+                <Check
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="flex-none mt-[2px] text-label"
+                />
+                Move between the overview, sets and Pokédex.
+              </li>
+              <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+                <Check
+                  size={17}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className="flex-none mt-[2px] text-label"
+                />
+                Collection value, visible but not the focus.
+              </li>
+            </ul>
+          </div>
+          <Card
+            className="relative min-h-[430px] [padding:clamp(var(--space-6),4vw,var(--space-10))]
+            [@media(max-width:640px)]:min-h-[370px]"
+          >
+            <span className={featureIcon}>
+              <BookOpen size={22} strokeWidth={1.7} aria-hidden="true" />
+            </span>
+            <span className="absolute top-8 right-8 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]">
+              01
+            </span>
+            <h3 className={`max-w-[13ch] mt-8 [font-size:var(--fs-card)] ${cardHeading}`}>
+              Every card, tracked.
+            </h3>
+            <p className={`max-w-[28ch] mt-4 ${cardBody}`}>
+              One view for the cards you own and the cards on your wishlist.
+            </p>
+            {/* --color-timeline used to live here and was removed with the portfolio's
               timeline, which this dashed rule is not: it is the connector on the
               workflow card and it is still on screen. --color-border-active is the
               same colour by another name — rgba(0,0,0,.16) resolves to #d6d6d6 on
               white where the old token was #d7d7d7 — so this is the value restored
               rather than a new one chosen. */}
-          <span
-            aria-hidden="true"
-            className="absolute right-8 bottom-[78px] left-8 h-px
+            <span
+              aria-hidden="true"
+              className="absolute right-8 bottom-[78px] left-8 h-px
               [background:repeating-linear-gradient(90deg,var(--color-border-active)_0_4px,transparent_4px_10px)]"
-          />
-          <span className="absolute bottom-8 left-8 text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-            Your collection, in order
-          </span>
-        </Card>
-      </section>
+            />
+            <span className="absolute bottom-8 left-8 text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+              Your collection, in order
+            </span>
+          </Card>
+        </section>
 
-      <section
-        id="share"
-        className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
+        <section
+          id="share"
+          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
           max-w-[1040px] [padding:clamp(var(--space-8),7vw,88px)] rounded-lg bg-[color-mix(in_srgb,var(--color-label)_4%,transparent)]
           [@media(max-width:800px)]:grid-cols-1
           [@media(max-width:640px)]:mx-[calc(-1*var(--space-2))] [@media(max-width:640px)]:p-6"
-        aria-labelledby="share-title"
-      >
-        <div>
-          <p className={`${eyebrow} mb-4`}>Sharing</p>
-          <h2 id="share-title" className={`max-w-[15ch] ${sectionHeading}`}>
-            Share a public link to your collection.
-          </h2>
-          <p className={`mt-5 ${sectionBody}`}>
-            Turn it on when you want to share it. A clean link to the cards — not your value data,
-            and never a profile you did not choose to make public.
-          </p>
-        </div>
-        <div
-          className="flex gap-4 items-center p-5 border border-[var(--glass-border)] rounded-md
+          aria-labelledby="share-title"
+        >
+          <div>
+            <p className={`${eyebrow} mb-4`}>Sharing</p>
+            <h2 id="share-title" className={`max-w-[15ch] ${sectionHeading}`}>
+              Share a public link to your collection.
+            </h2>
+            <p className={`mt-5 ${sectionBody}`}>
+              Turn it on when you want to share it. A clean link to the cards — not your value data,
+              and never a profile you did not choose to make public.
+            </p>
+          </div>
+          <div
+            className="flex gap-4 items-center p-5 border border-[var(--glass-border)] rounded-md
             bg-[var(--glass-bg)] [box-shadow:var(--shadow-card)]
             [@media(max-width:800px)]:max-w-[430px]"
-        >
-          <span className={featureIcon}>
-            <Share2 size={20} strokeWidth={1.7} aria-hidden="true" />
-          </span>
-          <span className="grid gap-1 min-w-0">
-            <small className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-              Your collection link
-            </small>
-            <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)] tracking-[-0.02em]">
-              cardorb.com/user/yourname
-            </strong>
-          </span>
-        </div>
-      </section>
+          >
+            <span className={featureIcon}>
+              <Share2 size={20} strokeWidth={1.7} aria-hidden="true" />
+            </span>
+            <span className="grid gap-1 min-w-0">
+              <small className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+                Your collection link
+              </small>
+              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)] tracking-[-0.02em]">
+                cardorb.com/user/yourname
+              </strong>
+            </span>
+          </div>
+        </section>
 
-      <section
-        id="faq"
-        className="mx-auto max-w-[1040px] [padding-block:clamp(112px,15vw,200px)]"
-        aria-labelledby="faq-title"
-      >
-        <div className="max-w-[600px] mb-8">
-          <p className={`${eyebrow} mb-4`}>Before you start</p>
-          <h2 id="faq-title" className={sectionHeading}>
-            A few things worth knowing.
-          </h2>
-        </div>
-        <ul
-          className="grid grid-cols-2 gap-4 m-0 p-0 list-none [@media(max-width:800px)]:grid-cols-1"
-          role="list"
+        <section
+          id="faq"
+          className="mx-auto max-w-[1040px] [padding-block:clamp(112px,15vw,200px)]"
+          aria-labelledby="faq-title"
         >
-          {FAQ.map(({ q, a }) => (
-            <li key={q} className="flex">
-              <Card className="flex flex-1 flex-col items-start gap-2">
-                <h3 className={`${cardHeading} mt-0`}>{q}</h3>
-                <p className={cardBody}>{a}</p>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      </section>
+          <div className="max-w-[600px] mb-8">
+            <p className={`${eyebrow} mb-4`}>Before you start</p>
+            <h2 id="faq-title" className={sectionHeading}>
+              A few things worth knowing.
+            </h2>
+          </div>
+          <ul
+            className="grid grid-cols-2 gap-4 m-0 p-0 list-none [@media(max-width:800px)]:grid-cols-1"
+            role="list"
+          >
+            {FAQ.map(({ q, a }) => (
+              <li key={q} className="flex">
+                <Card className="flex flex-1 flex-col items-start gap-2">
+                  <h3 className={`${cardHeading} mt-0`}>{q}</h3>
+                  <p className={cardBody}>{a}</p>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-      <section
-        className="flex flex-col items-center mx-auto max-w-[680px] text-center
+        <section
+          className="flex flex-col items-center mx-auto max-w-[680px] text-center
           [padding-block:clamp(112px,15vw,200px)]"
-        aria-labelledby="closing-title"
-      >
-        <p className={`${eyebrow} mb-4`}>Get started</p>
-        <h2 id="closing-title" className={`max-w-[22ch] ${sectionHeading}`}>
-          Start with the collection you have.
-        </h2>
-        <p className={`max-w-[42ch] mt-5 ${sectionBody}`}>
-          Free, no credit card, takes a minute to set up.
-        </p>
-        {/* self-center: .btn sets align-self: flex-start for toolbars, which
+          aria-labelledby="closing-title"
+        >
+          <p className={`${eyebrow} mb-4`}>Get started</p>
+          <h2 id="closing-title" className={`max-w-[22ch] ${sectionHeading}`}>
+            Start with the collection you have.
+          </h2>
+          <p className={`max-w-[42ch] mt-5 ${sectionBody}`}>
+            Free, no credit card, takes a minute to set up.
+          </p>
+          {/* self-center: .btn sets align-self: flex-start for toolbars, which
             beats this column's items-center and left-pins the one button that
             is not inside its own centering wrapper (the hero's is). */}
-        <Link href="/signup" className="btn btn--primary self-center mt-6">
-          Create your free collection
-          <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-        </Link>
-      </section>
+          <Link href="/signup" className="btn btn--primary self-center mt-6">
+            Create your free collection
+            <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
+          </Link>
+        </section>
 
-      <MarketingFooter />
+        <MarketingFooter />
       </section>
     </div>
   );

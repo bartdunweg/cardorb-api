@@ -82,7 +82,12 @@ describe("GET /api/v1/catalog/sets", () => {
 
     expect(res.status).toBe(200);
     expect(body.sets).toHaveLength(1);
-    expect(body.sets[0]).toMatchObject({ id: "base1", total: 102, ownedCount: 1, wishlistCount: 1 });
+    expect(body.sets[0]).toMatchObject({
+      id: "base1",
+      total: 102,
+      ownedCount: 1,
+      wishlistCount: 1,
+    });
   });
 
   it("returns zero counts for a set nothing is filed under", async () => {

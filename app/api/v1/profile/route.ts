@@ -80,7 +80,10 @@ export async function PATCH(req: Request) {
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
+    return NextResponse.json(
+      { error: "This deployment has no database configured." },
+      { status: 503 },
+    );
   }
 
   try {
@@ -108,7 +111,10 @@ export async function GET(req: Request) {
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return NextResponse.json({ error: "This deployment has no database configured." }, { status: 503 });
+    return NextResponse.json(
+      { error: "This deployment has no database configured." },
+      { status: 503 },
+    );
   }
 
   const profile = await ownProfile(db, viewer.userId);

@@ -21,7 +21,13 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isFinish, type CardDraft, type CardFields, type CardPatch, type CollectionRow } from "../core/collection-row";
+import {
+  isFinish,
+  type CardDraft,
+  type CardFields,
+  type CardPatch,
+  type CollectionRow,
+} from "../core/collection-row";
 import type { ValueSnapshot } from "../core/value-snapshot";
 import type { CardPricePoint } from "../core/movers";
 
@@ -378,7 +384,11 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
  * `.single()` is what turns that into the "not found" a wrong id or somebody
  * else's row should read as.
  */
-export async function updateRow(db: SupabaseClient, id: string, patch: CardPatch): Promise<CollectionRow> {
+export async function updateRow(
+  db: SupabaseClient,
+  id: string,
+  patch: CardPatch,
+): Promise<CollectionRow> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("owned" in patch) row.owned = patch.owned;
   if ("excluded" in patch) row.excluded = patch.excluded;
@@ -391,12 +401,7 @@ export async function updateRow(db: SupabaseClient, id: string, patch: CardPatch
   if ("notes" in patch) row.notes = patch.notes;
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
 
-  const { data, error } = await db
-    .from("cards")
-    .update(row)
-    .eq("id", id)
-    .select(COLUMNS)
-    .single();
+  const { data, error } = await db.from("cards").update(row).eq("id", id).select(COLUMNS).single();
 
   if (error) throw new Error(`That card could not be updated: ${error.message}`);
   return toRow(data as CardRecord);

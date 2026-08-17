@@ -254,7 +254,11 @@ const CardItem = memo(function CardItem({
           and an unmatched row has none. The rest stay exactly as they were
           rather than becoming a link to nowhere. The tags sit outside the link:
           they are what the card is, not somewhere to go. */}
-      <CardLink id={card.tcgId} onPick={onPick ? () => onPick(card, setName) : undefined} basePath={basePath}>
+      <CardLink
+        id={card.tcgId}
+        onPick={onPick ? () => onPick(card, setName) : undefined}
+        basePath={basePath}
+      >
         <span
           className="cards-scan block relative aspect-[245/342] mb-2
             group-data-[view=list]/item:w-11 group-data-[view=list]/item:shrink-0 group-data-[view=list]/item:mb-0
@@ -305,7 +309,9 @@ const CardItem = memo(function CardItem({
                 {card.number}
               </span>
             )}
-            {fields.has("type") && card.type && <span className="min-w-0 truncate">{card.type}</span>}
+            {fields.has("type") && card.type && (
+              <span className="min-w-0 truncate">{card.type}</span>
+            )}
             {fields.has("set") && <span className="truncate">{setTitle}</span>}
             {fields.has("year") && setYear && <span>{setYear}</span>}
             {/* The era's name on its own. label() appends the years it spans,

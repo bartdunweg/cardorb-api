@@ -86,12 +86,12 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
       <div className={formNoteClassName} role="status">
         <p style={{ margin: "0 0 8px", fontWeight: 500 }}>Check your email</p>
         <p style={{ margin: "0 0 8px" }}>
-          A confirmation link is on its way to <strong>{sent}</strong>. Open it and your
-          collection is ready.
+          A confirmation link is on its way to <strong>{sent}</strong>. Open it and your collection
+          is ready.
         </p>
         <p style={{ margin: 0, opacity: 0.75 }}>
-          Nothing happens until you do — the account cannot be used before it is confirmed. If
-          the message has not arrived in a few minutes, look in your spam folder.
+          Nothing happens until you do — the account cannot be used before it is confirmed. If the
+          message has not arrived in a few minutes, look in your spam folder.
         </p>
       </div>
     );
@@ -187,7 +187,10 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
       {message && <FormError role="alert">{message}</FormError>}
 
       <SigninLinks>
-        Already have an account? <Link href="/login" className={signinLinkClassName}>Sign in</Link>
+        Already have an account?{" "}
+        <Link href="/login" className={signinLinkClassName}>
+          Sign in
+        </Link>
       </SigninLinks>
     </>
   );

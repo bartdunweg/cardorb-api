@@ -108,7 +108,9 @@ export default function CardDetail({
                 height={1024}
                 fetchPriority="high"
                 decoding="async"
-                style={mine?.card.image ? { backgroundImage: `url("${mine.card.image}")` } : undefined}
+                style={
+                  mine?.card.image ? { backgroundImage: `url("${mine.card.image}")` } : undefined
+                }
               />
             </TiltScan>
           ) : (

@@ -44,9 +44,9 @@ export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
       <section className="flex flex-col items-start gap-4 w-full">
         <h3 className={cardsProfileTitleClassName}>Signed in</h3>
         <FormNote>
-          The session is a cookie on this device, so the plus stays in the bar until you sign out
-          or thirty days pass. Adding a card writes a row to the same database the rest of this
-          page reads.
+          The session is a cookie on this device, so the plus stays in the bar until you sign out or
+          thirty days pass. Adding a card writes a row to the same database the rest of this page
+          reads.
         </FormNote>
         <button type="button" className="btn" onClick={onSignOut}>
           <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />

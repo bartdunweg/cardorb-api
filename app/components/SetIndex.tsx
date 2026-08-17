@@ -68,7 +68,9 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
       </div>
       {groups.map((group) => (
         <section key={group.era}>
-          <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">{group.label}</h2>
+          <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">
+            {group.label}
+          </h2>
 
           {/* Auto-fill rather than a column count: the tile has a natural
               width and the row takes as many as fit. A fixed count needs a
@@ -132,7 +134,9 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                     </span>
 
                     <span className="[font-size:var(--fs-small)] text-label-secondary tabular-nums">
-                      {total ? `${n(held)} of ${n(total)}` : `${n(held)} ${held === 1 ? "card" : "cards"}`}
+                      {total
+                        ? `${n(held)} of ${n(total)}`
+                        : `${n(held)} ${held === 1 ? "card" : "cards"}`}
                     </span>
 
                     {pct !== null && (

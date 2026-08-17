@@ -20,9 +20,12 @@ vi.mock("../../../../../../lib/api/guard", () => ({
   authoriseWrite: (...a: unknown[]) => authoriseWrite(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
-  storeErrorResponse: (err: unknown) => Response.json({ error: (err as Error).message }, { status: 502 }),
+  storeErrorResponse: (err: unknown) =>
+    Response.json({ error: (err as Error).message }, { status: 502 }),
 }));
-vi.mock("../../../../../../lib/api/viewer", () => ({ bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null }));
+vi.mock("../../../../../../lib/api/viewer", () => ({
+  bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
+}));
 vi.mock("../../../../../../lib/storage/collection", () => ({
   updateRow: (...a: unknown[]) => updateRow(...a),
   deleteRow: (...a: unknown[]) => deleteRow(...a),

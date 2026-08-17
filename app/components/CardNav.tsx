@@ -60,7 +60,12 @@ export default function CardNav({
     // live one level up — see the comment in CardDetail.tsx).
     <div className="card-detail-move flex justify-between pointer-events-none" {...swipe}>
       {prev ? (
-        <Link href={`${basePath}/${prev}`} scroll={false} className="btn btn--icon" aria-label="Previous card">
+        <Link
+          href={`${basePath}/${prev}`}
+          scroll={false}
+          className="btn btn--icon"
+          aria-label="Previous card"
+        >
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       ) : (
@@ -69,7 +74,12 @@ export default function CardNav({
         </span>
       )}
       {next ? (
-        <Link href={`${basePath}/${next}`} scroll={false} className="btn btn--icon" aria-label="Next card">
+        <Link
+          href={`${basePath}/${next}`}
+          scroll={false}
+          className="btn btn--icon"
+          aria-label="Next card"
+        >
           <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       ) : (

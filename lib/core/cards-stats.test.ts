@@ -119,7 +119,9 @@ describe("heldValue with a foil printing", () => {
     // 865 of this collection's 1,526 products are in exactly this position.
     // The copy really is a reverse holo; there is simply no separate price.
     const s = getCardsStats([
-      set("A", [card({ price: NORMAL, priceHolo: null, variants: [variant({ finish: "reverse-holo" })] })]),
+      set("A", [
+        card({ price: NORMAL, priceHolo: null, variants: [variant({ finish: "reverse-holo" })] }),
+      ]),
     ]);
     expect(s.value).toBe(10);
   });
@@ -291,7 +293,13 @@ describe("getCardsStats", () => {
       // fed the comparison, a market sitting exactly on its average would
       // report a permanent premium that never moves. Same number both sides:
       // the honest answer is zero.
-      const s = getCardsStats([set("A", [card({ price: { low: 1, market: 100, avg30: 100, nm: { low: 105, mid: 115, high: 125 } } })])]);
+      const s = getCardsStats([
+        set("A", [
+          card({
+            price: { low: 1, market: 100, avg30: 100, nm: { low: 105, mid: 115, high: 125 } },
+          }),
+        ]),
+      ]);
       expect(s.movement!.pct).toBe(0);
       // The value tile still uses the Near Mint estimate — that part is right.
       expect(s.value).toBe(115);
@@ -299,7 +307,10 @@ describe("getCardsStats", () => {
 
     it("counts only cards that carry both figures", () => {
       const s = getCardsStats([
-        set("A", [card({ key: "1", price: at(110, 100) }), card({ key: "2", price: at(50, null) })]),
+        set("A", [
+          card({ key: "1", price: at(110, 100) }),
+          card({ key: "2", price: at(50, null) }),
+        ]),
       ]);
       expect(s.movement).toMatchObject({ now: 110, avg30: 100, cards: 1 });
     });
@@ -308,7 +319,9 @@ describe("getCardsStats", () => {
       // A binder nobody could price has not held steady — it is unknown, and
       // the two read the same on a page unless one of them is missing.
       expect(getCardsStats([set("A", [card({ price: null })])]).movement).toBeNull();
-      expect(getCardsStats([set("A", [card({ owned: false, price: at(9, 9) })])]).movement).toBeNull();
+      expect(
+        getCardsStats([set("A", [card({ owned: false, price: at(9, 9) })])]).movement,
+      ).toBeNull();
     });
   });
 

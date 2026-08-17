@@ -38,7 +38,9 @@ export default async function DashboardPage() {
   // render, so this costs nothing: it is here only to know which cards to ask
   // for prices about.
   const { sets } = await getCollection(viewer.userId);
-  const tcgIds = [...new Set(sets.flatMap((s) => s.cards.map((c) => c.tcgId)).filter(Boolean))] as string[];
+  const tcgIds = [
+    ...new Set(sets.flatMap((s) => s.cards.map((c) => c.tcgId)).filter(Boolean)),
+  ] as string[];
 
   const [snapshots, prices] = await Promise.all([
     getValueHistory(viewer.userId),

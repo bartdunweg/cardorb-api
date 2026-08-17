@@ -106,7 +106,8 @@ if (!userId) {
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
+  if (!url || !key)
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set");
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
@@ -182,7 +183,9 @@ async function allRows(db) {
     out.push(...data);
     if (out.length >= (count ?? 0) || !data.length) {
       if (out.length < (count ?? 0)) {
-        throw new Error(`Postgres returned ${out.length} of ${count} rows — refusing to audit a partial collection`);
+        throw new Error(
+          `Postgres returned ${out.length} of ${count} rows — refusing to audit a partial collection`,
+        );
       }
       return out;
     }
@@ -279,7 +282,14 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
      */
     const bag = (s) => norm(s.replace(TYPE_SUFFIX, "")).split("").sort().join("");
     const words = (s) =>
-      s.replace(TYPE_SUFFIX, "").toLowerCase().split(/\s+/).map(norm).filter(Boolean).sort().join("|");
+      s
+        .replace(TYPE_SUFFIX, "")
+        .toLowerCase()
+        .split(/\s+/)
+        .map(norm)
+        .filter(Boolean)
+        .sort()
+        .join("|");
     if (at?.name && words(at.name) === words(row.name) && bag(at.name) === bag(row.name)) {
       misspelled.push({ row, to: at.name, localId: at.localId });
       continue;
@@ -308,7 +318,12 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
      * assumption does not hold for this row, so the unfiltered list is what
      * gets reported rather than a smaller wrong answer.
      */
-    const prefixOf = (n) => (String(n).trim().match(/^[A-Za-z]+/)?.[0] ?? "").toUpperCase();
+    const prefixOf = (n) =>
+      (
+        String(n)
+          .trim()
+          .match(/^[A-Za-z]+/)?.[0] ?? ""
+      ).toUpperCase();
     const sameRun = candidates.filter((c) => prefixOf(c.localId) === prefixOf(row.number));
     const narrowed = sameRun.length === 1 ? sameRun : candidates;
 
@@ -319,7 +334,9 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
     } else {
       unresolved.push({
         row,
-        why: at?.name ? `#${row.number} is ${at.name}, and no ${row.name} in this set` : "no such number and no such name in this set",
+        why: at?.name
+          ? `#${row.number} is ${at.name}, and no ${row.name} in this set`
+          : "no such number and no such name in this set",
       });
     }
   }
@@ -335,7 +352,9 @@ console.log(`
 `);
 
 for (const { row, to } of misspelled) {
-  console.log(`  A  ${row.set_name} #${row.number} ${JSON.stringify(row.name)} -> ${JSON.stringify(to)}`);
+  console.log(
+    `  A  ${row.set_name} #${row.number} ${JSON.stringify(row.name)} -> ${JSON.stringify(to)}`,
+  );
 }
 for (const { row, to, at } of misnumbered) {
   console.log(
@@ -382,15 +401,21 @@ if (ambiguous.length || unresolved.length) {
     "",
     "| set | name | filed at | why |",
     "| --- | --- | --- | --- |",
-    ...unresolved.map(({ row, why }) => `| ${row.set_name} | ${row.name} | \`${row.number}\` | ${why} |`),
+    ...unresolved.map(
+      ({ row, why }) => `| ${row.set_name} | ${row.name} | \`${row.number}\` | ${why} |`,
+    ),
     "",
   ];
   writeFileSync(WORKLIST, lines.join("\n"));
-  console.log(`\n  ${ambiguous.length + unresolved.length} rows written to docs/collection-audit-corrections.md`);
+  console.log(
+    `\n  ${ambiguous.length + unresolved.length} rows written to docs/collection-audit-corrections.md`,
+  );
 }
 
 if (!WRITE) {
-  console.log(`\n  Dry run — nothing written. Pass --write to apply the ${misspelled.length + misnumbered.length} safe fixes.\n`);
+  console.log(
+    `\n  Dry run — nothing written. Pass --write to apply the ${misspelled.length + misnumbered.length} safe fixes.\n`,
+  );
   process.exit(0);
 }
 
@@ -448,4 +473,6 @@ for (const { row, to } of misnumbered) {
   else written++;
 }
 console.log(`  ${written} rows updated.`);
-console.log(`  Run again to confirm they now agree, and open /collection to see the artwork fill in.\n`);
+console.log(
+  `  Run again to confirm they now agree, and open /collection to see the artwork fill in.\n`,
+);

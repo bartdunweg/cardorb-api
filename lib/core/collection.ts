@@ -163,10 +163,7 @@ export const getCollection = cache(
  * read are different sentences.
  */
 export const getRows = cache(
-  async (
-    userId: string,
-    token?: string,
-  ): Promise<{ rows: CollectionRow[]; failed: boolean }> => {
+  async (userId: string, token?: string): Promise<{ rows: CollectionRow[]; failed: boolean }> => {
     try {
       const db = token ? userClient(token) : await serverClient();
       return { rows: await cachedRows(userId, db), failed: false };

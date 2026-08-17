@@ -23,7 +23,13 @@ const SRC =
 /** 9 is English in PokéAPI's language table. */
 const ENGLISH = "9";
 
-const out = join(dirname(fileURLToPath(import.meta.url)), "..", "lib", "core", "pokedex.generated.json");
+const out = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "lib",
+  "core",
+  "pokedex.generated.json",
+);
 
 const res = await fetch(SRC);
 if (!res.ok) throw new Error(`PokéAPI CSV: ${res.status}`);

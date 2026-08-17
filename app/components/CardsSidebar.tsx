@@ -251,7 +251,7 @@ export default function CardsSidebar({
               />
             </li>
           )}
-          {!setsAsRow && (
+          {!setsAsRow &&
             // Fifty-one sets in one run is a wall. Under the era they belong to
             // it is a handful of short lists, and the label is the thing a
             // collector already sorts by.
@@ -262,7 +262,10 @@ export default function CardsSidebar({
                     alone had to carry the break on its own, which at --fs-small
                     and tertiary is not a line anyone reads as one. */}
                 {i > 0 && (
-                  <span aria-hidden="true" className="block h-px m-2 bg-[var(--color-border-subtle)]" />
+                  <span
+                    aria-hidden="true"
+                    className="block h-px m-2 bg-[var(--color-border-subtle)]"
+                  />
                 )}
                 {/* The label is the selection for the whole era, which is what the
                     Era facet used to be. One control instead of two: a heading you
@@ -303,8 +306,7 @@ export default function CardsSidebar({
                   ))}
                 </ul>
               </li>
-            ))
-          )}
+            ))}
         </ul>
       </nav>
 
@@ -415,7 +417,12 @@ function NavItem({
       {(logo !== undefined || Icon) && (
         <span className="flex-shrink-0 flex items-center justify-center w-9 h-7">
           {Icon ? (
-            <Icon size={18} strokeWidth={1.75} fill={active ? "currentColor" : "none"} aria-hidden={true} />
+            <Icon
+              size={18}
+              strokeWidth={1.75}
+              fill={active ? "currentColor" : "none"}
+              aria-hidden={true}
+            />
           ) : logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

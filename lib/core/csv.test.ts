@@ -66,7 +66,8 @@ describe("guessColumns", () => {
 });
 
 describe("rowsFrom", () => {
-  const grid = (...lines: string[]) => parseCsv(["name,set,number,owned,types,acquired", ...lines].join("\n"));
+  const grid = (...lines: string[]) =>
+    parseCsv(["name,set,number,owned,types,acquired", ...lines].join("\n"));
 
   it("treats a missing owned value as owned", () => {
     // The most important line in the file. The column defaults to true in

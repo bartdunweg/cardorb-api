@@ -69,7 +69,12 @@ export async function commit(
         .eq("id", id);
     }
 
-    return { seen: rows.length + skippedCount, added, skipped: rows.length - added + skippedCount, sample: [] };
+    return {
+      seen: rows.length + skippedCount,
+      added,
+      skipped: rows.length - added + skippedCount,
+      sample: [],
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (id) {

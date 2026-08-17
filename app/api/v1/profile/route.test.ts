@@ -75,7 +75,11 @@ describe("PATCH /api/v1/profile", () => {
     const res = await PATCH(
       new Request("https://cardorb.com/api/v1/profile", {
         method: "PATCH",
-        headers: { host: "cardorb.com", "content-type": "application/json", authorization: "Bearer t.o.k.e.n" },
+        headers: {
+          host: "cardorb.com",
+          "content-type": "application/json",
+          authorization: "Bearer t.o.k.e.n",
+        },
         body: JSON.stringify({ isPublic: true }),
       }),
     );
@@ -120,7 +124,11 @@ describe("PATCH /api/v1/profile", () => {
 
   it("stamps the welcome flow as done", async () => {
     await patch({ onboarded: true });
-    const [, , written] = updateProfile.mock.calls[0] as [unknown, string, { onboardedAt?: string }];
+    const [, , written] = updateProfile.mock.calls[0] as [
+      unknown,
+      string,
+      { onboardedAt?: string },
+    ];
     expect(typeof written.onboardedAt).toBe("string");
     expect(Number.isNaN(Date.parse(written.onboardedAt as string))).toBe(false);
   });
@@ -130,7 +138,11 @@ describe("PATCH /api/v1/profile", () => {
     // account was set up. There is no reason to accept one and one obvious
     // reason not to.
     await patch({ onboarded: true, onboardedAt: "1999-01-01T00:00:00.000Z" });
-    const [, , written] = updateProfile.mock.calls[0] as [unknown, string, { onboardedAt?: string }];
+    const [, , written] = updateProfile.mock.calls[0] as [
+      unknown,
+      string,
+      { onboardedAt?: string },
+    ];
     expect(written.onboardedAt).not.toBe("1999-01-01T00:00:00.000Z");
   });
 

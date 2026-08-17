@@ -29,7 +29,13 @@ type Preview = {
   seen: number;
   added: number;
   skipped: number;
-  sample: { name: string; number: string; setName: string; rarity: string | null; owned: boolean }[];
+  sample: {
+    name: string;
+    number: string;
+    setName: string;
+    rarity: string | null;
+    owned: boolean;
+  }[];
   header?: string[];
   skippedRows?: { line: number; why: string }[];
 };
@@ -101,9 +107,9 @@ export default function ImportSettings({ history }: { history: Run[] }) {
       <SettingsPanel>
         <SettingsPanelTitle>From a spreadsheet</SettingsPanelTitle>
         <SettingsHint>
-          A CSV with a column for the card name and one for the set. Anything
-          else — number, rarity, types, the date you got it — is used if it is
-          there. A row with no “owned” column counts as owned.
+          A CSV with a column for the card name and one for the set. Anything else — number, rarity,
+          types, the date you got it — is used if it is there. A row with no “owned” column counts
+          as owned.
         </SettingsHint>
 
         <SettingsInput
@@ -121,12 +127,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           }}
         />
 
-        <button
-          className="btn"
-          type="button"
-          disabled={!csv || busy === "csv"}
-          onClick={look}
-        >
+        <button className="btn" type="button" disabled={!csv || busy === "csv"} onClick={look}>
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
         </button>
       </SettingsPanel>
@@ -136,8 +137,8 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           <SettingsPanelTitle>What this would bring in</SettingsPanelTitle>
           <SettingsHint>
             {n(preview.seen)} rows read
-            {preview.skipped ? `, ${n(preview.skipped)} skipped` : ""}. Nothing has
-            been written yet.
+            {preview.skipped ? `, ${n(preview.skipped)} skipped` : ""}. Nothing has been written
+            yet.
           </SettingsHint>
 
           {preview.skippedRows?.length ? (
@@ -160,7 +161,12 @@ export default function ImportSettings({ history }: { history: Run[] }) {
             ))}
           </ul>
 
-          <button className="btn btn--primary" type="button" disabled={busy === "commit"} onClick={run}>
+          <button
+            className="btn btn--primary"
+            type="button"
+            disabled={busy === "commit"}
+            onClick={run}
+          >
             {busy === "commit" ? "Importing…" : "Import these"}
           </button>
         </SettingsPanel>

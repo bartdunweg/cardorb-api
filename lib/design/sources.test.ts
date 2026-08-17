@@ -44,18 +44,14 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe("colours are not written down twice", () => {
-  const files = [...walk("app"), ...walk("lib")].filter(
-    (f) => !ALLOWED.some((a) => f.endsWith(a)),
-  );
+  const files = [...walk("app"), ...walk("lib")].filter((f) => !ALLOWED.some((a) => f.endsWith(a)));
 
   for (const file of files) {
     const source = readFileSync(file, "utf8");
     // Only in code. A hex inside a comment is usually the *history* of a value
     // — "while it said #ffffff the chrome was a shade off" — and deleting that
     // sentence would remove the reason the current value is what it is.
-    const code = source
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/^\s*\/\/.*$/gm, "");
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     const found = code.match(/#[0-9a-fA-F]{6}\b/g);
 
     if (found) {

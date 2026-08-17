@@ -6,7 +6,15 @@ import { SITE_URL } from "../../lib/core/config";
 import { MAX_DISPLAY_NAME, validateUsername } from "../../lib/core/account";
 import AvatarPicker from "./AvatarPicker";
 import { useUsernameCheck, usernameSays } from "./useUsernameCheck";
-import { FormError, FormField, FormForm, FormHint, FormInput, FormLabel, FormNote } from "./FormField";
+import {
+  FormError,
+  FormField,
+  FormForm,
+  FormHint,
+  FormInput,
+  FormLabel,
+  FormNote,
+} from "./FormField";
 import SigninShell, { signinWideButtonClassName } from "./SigninShell";
 import { SettingsHint, SettingsSwitch } from "./SettingsPanel";
 
@@ -48,7 +56,12 @@ const TITLES: Record<Step, string> = {
 export default function Onboarding({
   initial,
 }: {
-  initial: { username: string; displayName: string | null; isPublic: boolean; avatarUrl: string | null };
+  initial: {
+    username: string;
+    displayName: string | null;
+    isPublic: boolean;
+    avatarUrl: string | null;
+  };
 }) {
   const router = useRouter();
   // The step itself rather than an index into ORDER: an index has states that
@@ -117,7 +130,11 @@ export default function Onboarding({
           }
         }
         const typed = displayName.trim();
-        if (typed && typed !== (initial.displayName ?? "") && !(await patch({ displayName: typed }))) {
+        if (
+          typed &&
+          typed !== (initial.displayName ?? "") &&
+          !(await patch({ displayName: typed }))
+        ) {
           return;
         }
       }
@@ -184,8 +201,8 @@ export default function Onboarding({
           }}
         >
           <FormNote>
-            You have a name already — we made one up so you would have a link from the first
-            minute. This is where you change it to yours.
+            You have a name already — we made one up so you would have a link from the first minute.
+            This is where you change it to yours.
           </FormNote>
 
           <FormField layout="column">

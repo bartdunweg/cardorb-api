@@ -109,7 +109,9 @@ export function moversOf(
       // Sorted here rather than trusted from the query: this is a pure
       // function and a caller that hands them over shuffled should still get
       // the right answer.
-      const series = (byId.get(card.tcgId) ?? []).slice().sort((a, b) => a.date.localeCompare(b.date));
+      const series = (byId.get(card.tcgId) ?? [])
+        .slice()
+        .sort((a, b) => a.date.localeCompare(b.date));
       if (series.length < 2) continue;
 
       const first = series[0]!;
@@ -141,6 +143,9 @@ export function moversOf(
   const byTotal = [...movers].sort((a, b) => b.total - a.total);
   return {
     up: byTotal.filter((m) => m.total > 0).slice(0, top),
-    down: byTotal.filter((m) => m.total < 0).reverse().slice(0, top),
+    down: byTotal
+      .filter((m) => m.total < 0)
+      .reverse()
+      .slice(0, top),
   };
 }
