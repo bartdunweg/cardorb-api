@@ -875,6 +875,35 @@ width — a plain page every time, per the explicit ask. `npm run check`
 green; not exercised signed-in with real data via a live browser in this
 workspace.
 
+## The signed-in navbar is a pill (2026-08-17, workspace `castries`)
+
+`/` and `/app/ios` used to greet a signed-in visitor with the sentence "Signed in
+as {name}" in the navbar's right slot, in duplicated JSX. It is one component now
+— `app/components/ViewerPill.tsx` — drawing an avatar and the name inside a
+rounded `--color-border` pill, with "Signed in as … — open dashboard" moved into
+`aria-label`. Feedback FB-0012.
+
+Two things worth carrying forward:
+
+- **A long name used to push the pill off a phone.** A display name is allowed 60
+  characters and `Navbar.tsx`'s right column was a plain `1fr`, which will not go
+  below its content. It is `minmax(0,1fr)` with `min-w-0` on the slot now, and the
+  name ellipsizes at `min(45vw,220px)`. Nothing else in that bar was long enough
+  to have found this.
+- **It was verified twice, and the second way is the one to copy.** First by
+  temporarily stubbing `currentViewer()` behind an env check (reverted, nothing
+  committed) — enough to measure light/dark and both avatar branches, not enough
+  to prove a session reaches it. Then properly, with the `visual/auth.setup.ts`
+  storage state that landed on `main` the same afternoon: a real session against
+  a production build showed the pill on both pages at 1280 and 390, with
+  `document.scrollWidth` equal to the viewport, so nothing overflows.
+- **Watch the port when using that harness from a worktree.** `playwright.config.ts`
+  has `reuseExistingServer: true` on 3210, and a parallel worktree
+  (`kuala-lumpur`) was already serving *its* build there — the first run
+  photographed the other checkout and failed for the right reason by luck.
+  `VISUAL_BASE_URL=http://127.0.0.1:<own port>` against your own `next start` is
+  the way to be sure whose app you are looking at.
+
 ## Open
 
 - **Card detail, avatar upload, and signup still need a real signed-in
