@@ -35,9 +35,11 @@ import { LOCALE } from "../../lib/core/config";
 import { possessive } from "../../lib/core/owner";
 import {
   cardsCountClassName,
+  cardsHeadClassName,
   cardsHeadLogoClassName,
   cardsHeadTitleClassName,
   cardsMainClassName,
+  cardsMainTitleClassName,
   cardsMoreClassName,
   cardsSetClassName,
   cardsSetHeadClassName,
@@ -1121,7 +1123,7 @@ export default function CardsView({
       {/* The page's own heading, over the pane it names. It used to sit at the
             top of the rail, which put the h1 over a list of sets rather than
             over what you are actually reading. */}
-      <header className="cards-head">
+      <header className={cardsHeadClassName}>
         <div className={cardsHeadTitleClassName}>
           {/* The set's own wordmark, ahead of its name. */}
           {currentSet?.logo && !brokenLogos.has(currentSet.name) && (
@@ -1164,7 +1166,7 @@ export default function CardsView({
                 list of sets is on a screen whose h1 is not rendered. A crawler
                 is never in that state, and the rail is one press from the
                 screen that has it. */}
-          <MainTitle className="cards-main-title">
+          <MainTitle className={cardsMainTitleClassName}>
             {onDashboard
               ? "Dashboard"
               : onProfile

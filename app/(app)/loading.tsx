@@ -6,7 +6,11 @@ import {
   tabbarPagesClassName,
 } from "../components/tabbarClasses";
 import { APP_NAME } from "../../lib/core/config";
-import { cardsMainClassName, pageCardsClassName } from "../components/cardsPageClasses";
+import {
+  cardsHeadClassName,
+  cardsMainClassName,
+  pageCardsClassName,
+} from "../components/cardsPageClasses";
 import Wordmark from "../components/Wordmark";
 
 /**
@@ -110,7 +114,7 @@ export default function Loading() {
             has no data-pane to set — the title could never be seen, and the
             copy this file used to carry for it ("Cards") was the sidebar's
             wrong word anyway. */}
-        <div className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]">
+        <div className="list-none m-0 p-0 flex flex-col gap-[2px]">
           {Array.from({ length: RAIL_ABOVE }, (_, i) => (
             <RailRow key={`a${i}`} />
           ))}
@@ -133,11 +137,11 @@ export default function Loading() {
       </div>
 
       <section className={cardsMainClassName}>
-        <header className="cards-head">
+        <header className={cardsHeadClassName}>
           {/* The one thing every screen in this group has: an h1. What it says
               is the screen's own business — "Dashboard", "Settings", a set
               name, somebody's collection — so it is an outline and not a word.
-              Sized to .cards-main-title's line box (cards.css), not to its
+              Sized to cardsMainTitleClassName's line box, not to its
               font size. */}
           <span
             className="skeleton w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-xs"

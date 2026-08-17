@@ -145,3 +145,26 @@ export const cardsMoreClassName = "cards-more h-px";
 
 /** Hidden below 1000px, where the rail collapses and these links move into the bar. */
 export const cardsNavElsewhereClassName = "cards-nav-elsewhere max-[1000px]:hidden";
+
+/**
+ * The signed-in chrome — the last portion, and the one that needed a session
+ * before it could be moved at all. See ADR-0051 for why, and ADR-0020 for the
+ * bug that hid on exactly these routes.
+ */
+
+/** Lifted above the cards below it: each of those is its own stacking context
+ *  (backdrop-filter), so without this a later sibling paints over an open
+ *  filter panel however high that panel's own z-index is. */
+export const cardsHeadClassName = "cards-head relative z-[2] flex flex-col items-start";
+
+/**
+ * `overflow-wrap: anywhere` is the load-bearing part and the reason this is not
+ * just a font declaration. The heading used to hold curated strings — set names,
+ * era labels. On a public profile it holds "<display name>’s collection", up to
+ * sixty characters somebody typed, and one long unbroken word ran past the edge
+ * of the pane. The rail's copy of the same label truncates; a page heading
+ * should wrap instead, so it breaks the word.
+ */
+export const cardsMainTitleClassName =
+  "cards-main-title m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
+  "[font-size:var(--fs-h2)] [line-height:var(--lh-tight)] text-label [overflow-wrap:anywhere]";

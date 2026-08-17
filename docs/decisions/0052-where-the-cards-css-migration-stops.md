@@ -53,13 +53,32 @@ off it.
   two systems is the "two places to look" cost this migration is meant to remove,
   paid twice.
 
-**And ten classes are untouched for a different reason: they render behind a
-login the harness has no session for** — `cards-rail`, `cards-nav`,
-`cards-nav-item`, `cards-main`, `cards-main-title`, `cards-head`, `cards-search`,
-`filter-menu` among them. ADR-0020 is precisely a bug that hid behind a login.
-These are not judged either way; they are unverifiable, and moving CSS that
-nothing can check is how the previous four attempts went wrong. A stored session
-for a test account is the one change that would let them be judged at all.
+**Update, same day.** The harness gained a signed-in session (see ADR-0051's
+amended consequences), and a fourth portion then moved four more classes:
+`cards-head`, `cards-main-title`, `cards-nav` and `cards-nav-item`'s pseudo-
+element. cards.css is 1,169 lines.
+
+Two of those four were not migrations at all but **deletions of duplicated CSS**:
+`cards-nav` and `cards-nav-item` already carried their full Tailwind equivalent
+inline on the element, so the stylesheet rule was a second copy that could only
+ever drift. `.cards-rail` is in the same state — its width and padding live on
+the element in `CardsSidebar` — which is why an early attempt to prove the
+harness by changing the rail's `padding-top` did nothing at all.
+
+**What is still untouched, and now for one reason rather than two:** — `cards-rail`, `cards-main`,
+`cards-search` and the `filter-menu` family.
+
+`cards-rail` and `cards-main` are the pane swap: `[data-pane="rail"] + .cards-main`
+is an attribute selector reaching an adjacent sibling, plus a keyframe animation.
+ADR-0017 is the bug where an unconditional Tailwind property beat exactly this
+conditional reset. It is the one place in this file where the CSS is not a
+remnant but the mechanism.
+
+`cards-search` is six rules deep into its own children — `input`,
+`input::placeholder`, `input::-webkit-search-cancel-button`, `button`,
+`button:hover` — plus two breakpoints, and `filter-menu-panel` is the 118-line
+case above. Both are components with internal structure, and moving them means
+moving markup in two consumers each, one of which is the add-card dialog.
 
 ## Consequences
 

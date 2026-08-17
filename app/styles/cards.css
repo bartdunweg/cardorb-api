@@ -104,14 +104,6 @@
  * with its own Tailwind classes in CardsSidebar.tsx. Dead since that
  * migration, removed on the final cards.css sweep (see ADR-0014). */
 
-.cards-nav {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
 /* Between the two top rows and the sets, and between one era and the next.
    display:block because it is a span inside the era's list item as well as a
    list item of its own, and an inline box takes neither the height nor the
@@ -131,9 +123,6 @@
 .cards-nav-item > * {
   position: relative;
   z-index: 1;
-}
-.cards-nav-item::after {
-  inset: 0;
 }
 
 /* ── The results pane ── */
@@ -253,31 +242,8 @@
    Lifted, because every card below it carries a backdrop-filter and so is its
    own stacking context: without this, a later sibling paints over the open
    Filter panel however high that panel's own z-index is. */
-.cards-head {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
 /* The set's wordmark ahead of its name, so the page says which shelf you are
    standing at before it says anything else. */
-.cards-main-title {
-  margin: 0;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-h2);
-  line-height: var(--lh-tight);
-  color: var(--color-label);
-  /* This heading used to hold only curated strings — set names, era labels, and
-     an owner name that came from an env var. On the public page it now holds
-     "<display name>’s collection", which is up to sixty characters somebody
-     typed, and a long unbroken one would have run past the edge of the pane.
-     The rail's own copy of this label already truncates (NavItem's min-w-0 +
-     truncate); a page heading should wrap rather than be cut off, so it breaks
-     the word instead. */
-  overflow-wrap: anywhere;
-}
 
 /* Only what makes it a search field rather than a button: the surface, the
    height, the radius and the label come from the shared control in

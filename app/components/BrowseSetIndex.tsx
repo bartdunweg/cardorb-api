@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { cardsMainTitleClassName } from "./cardsPageClasses";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { LOCALE } from "../../lib/core/config";
@@ -53,7 +54,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
   return (
     <div className="flex flex-col gap-6 pb-[var(--page-pad-bottom)]">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h1 className="cards-main-title">Browse sets</h1>
+        <h1 className={cardsMainTitleClassName}>Browse sets</h1>
         <Link
           href="/collection/sets"
           className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary

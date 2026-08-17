@@ -142,7 +142,7 @@ export default function CardsSidebar({
       )}
 
       <nav aria-label="Collection">
-        <ul className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
+        <ul className="list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
           {/* Not sets, but the places the sets are not: without them the
               dashboard is unreachable the moment you open one.
 
@@ -284,7 +284,7 @@ export default function CardsSidebar({
                 >
                   {group.label}
                 </button>
-                <ul className="cards-nav list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
+                <ul className="list-none m-0 p-0 flex flex-col gap-[2px]" role="list">
                   {group.sets.map((set) => (
                     <li key={set.name}>
                       <NavItem
@@ -410,7 +410,7 @@ function NavItem({
       // rather than a second, flatter treatment of its own — see the
       // tabbar's matching change (CardsTabBar.tsx/tabbarClasses.ts), the
       // two are meant to read as one visual language now.
-      className={`cards-nav-item [--pill-radius:var(--radius-md)] relative flex items-center gap-3
+      className={`cards-nav-item after:inset-0 [--pill-radius:var(--radius-md)] relative flex items-center gap-3
         w-full p-2 border-0 rounded-md bg-transparent text-left cursor-pointer text-inherit${active ? " is-active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
