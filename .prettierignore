@@ -39,3 +39,4 @@ node_modules/
 visual/**/*-snapshots/
 test-results/
 playwright-report/
+visual/.auth/

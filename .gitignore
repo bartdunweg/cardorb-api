@@ -15,3 +15,4 @@ docs/rarity-backfill-*.undo.json
 visual/**/*-snapshots/
 test-results/
 playwright-report/
+visual/.auth/

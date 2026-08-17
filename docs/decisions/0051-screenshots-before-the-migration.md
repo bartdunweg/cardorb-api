@@ -78,13 +78,13 @@ currently lives in two places, and a reader has to check both.
   pages stayed green because they do not use that class. A harness nobody has
   seen fail is not a safety net.
 - Good, because it is cheap: 17 seconds for nine screenshots.
-- Bad, and this is the limitation to read before trusting it: **`/collection`,
-  `/dashboard` and the add-card dialog are not covered**, because they need a
-  session this harness has no credentials for. `/user/<name>` renders the same
-  `CardsView` publicly, so most of cards.css is exercised — but every owner-only
-  branch of that component is not. ADR-0020 is exactly a bug that hid behind a
-  login. A green run means "the public half did not move", not "the migration is
-  safe".
+- ~~Bad: `/collection`, `/dashboard` and the add-card dialog are not covered.~~
+  **Closed the same day** by `visual/auth.setup.ts`, which mints a session for
+  the owner account through Supabase's admin `generate_link` and the app's own
+  `/auth/confirm` route — no password, no email, nothing committed. The harness
+  is 23 screenshots now: 9 public, 13 owner, and the add-card dialog opened
+  rather than merely visited, because a closed dialog photographs nothing and
+  that dialog is what ADR-0020 was about.
 - Bad, because prices are masked, so a layout change *within* a price element is
   not compared. The alternative was a baseline with a one-day shelf life.
 - Neutral, because Playwright and one Chromium are now a dev dependency.
