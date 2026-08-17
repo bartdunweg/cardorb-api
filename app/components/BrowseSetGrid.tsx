@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { cardsMainTitleClassName } from "./cardsPageClasses";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import Segmented from "./Segmented";
@@ -69,7 +70,7 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
           />
         )}
         <div className="flex flex-col gap-1 min-w-0">
-          <h1 className="cards-main-title">{set.name}</h1>
+          <h1 className={cardsMainTitleClassName}>{set.name}</h1>
           <p className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary m-0 tabular-nums">
             {n(owned)} of {n(cards.length)} in your collection
             {/* The year alone, not the full date. It is what CardItem's Year

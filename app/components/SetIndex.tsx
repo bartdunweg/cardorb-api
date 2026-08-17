@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { cardsMainTitleClassName } from "./cardsPageClasses";
 import { useMemo } from "react";
 import type { CardSet } from "../../lib/core/cards";
 import { eraYears, groupByEra, eraLabel } from "../../lib/core/eras";
@@ -49,7 +50,7 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
   if (!sets.length) {
     return (
       <>
-        <h1 className="cards-main-title mb-4">Sets</h1>
+        <h1 className={`${cardsMainTitleClassName} mb-4`}>Sets</h1>
         <p className="cards-empty">
           No sets yet. Add a card and the set it came from appears here.
         </p>
@@ -60,10 +61,10 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
 
   return (
     <div className="flex flex-col gap-10 pb-[var(--page-pad-bottom)]">
-      {/* .cards-main-title, the same page-title style Dashboard/Settings/
+      {/* cardsMainTitleClassName, the same page-title style Dashboard/Settings/
           Collection/Wishlist all share — this screen had none at all before. */}
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
-        <h1 className="cards-main-title">Sets</h1>
+        <h1 className={cardsMainTitleClassName}>Sets</h1>
         {browseLink}
       </div>
       {groups.map((group) => (

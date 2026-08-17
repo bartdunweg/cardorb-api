@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cardsMainTitleClassName } from "../../components/cardsPageClasses";
 import { redirect } from "next/navigation";
 import { currentViewer } from "../../../lib/api/viewer";
 import { serverClient } from "../../../lib/storage/supabase";
@@ -48,10 +49,10 @@ export default async function SettingsPage() {
 
   return (
     <>
-      {/* .cards-main-title (cards.css), the same page-title style
+      {/* cardsMainTitleClassName, the same page-title style
           Dashboard/Collection/Wishlist/Sets all share — not a
           similar-looking rebuild of it. */}
-      <h1 className="cards-main-title">Settings</h1>
+      <h1 className={cardsMainTitleClassName}>Settings</h1>
       <p className="mt-1 mb-6 [font-size:var(--fs-small)] text-label-tertiary">{viewer.email}</p>
 
       {/* gap-8 between groups against the panels' own gap-4 inside them: the
