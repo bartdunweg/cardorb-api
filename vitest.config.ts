@@ -20,6 +20,10 @@ export default defineConfig({
       // The two that matter here, and the reason this file exists.
       "**/.claude/**",
       "**/.context/**",
+      // Playwright's specs, which call a test() that is not this one. Vitest
+      // collects them by extension and then fails with "Playwright Test did not
+      // expect test() to be called here" — two runners, one naming convention.
+      "visual/**",
     ],
   },
 });

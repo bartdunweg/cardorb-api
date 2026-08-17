@@ -36,3 +36,6 @@ node_modules/
 # Claude's worktrees live inside the checkout, each a whole copy of this repo.
 # Without this every tool reads the repo two or three times over.
 .claude/
+visual/**/*-snapshots/
+test-results/
+playwright-report/
