@@ -51,7 +51,7 @@ import {
   onlyNarrowClassName,
   onlyWideClassName,
 } from "./cardsPageClasses";
-import { buttonClassName, pillFieldClassName } from "./controlClasses";
+import { buttonClassName, glassClassName, pillControlClassName } from "./controlClasses";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
 function releasedIn(iso: string | null) {
@@ -1229,7 +1229,7 @@ export default function CardsView({
                   column you can see. The bar's Search slot lands here and puts
                   the caret in it. */}
             <div
-              className={`cards-search ${pillFieldClassName} flex items-center gap-2 flex-[0_1_260px] min-w-[180px] px-[var(--space-3-5)] focus-within:[border-color:var(--color-border-active)] [&_svg]:shrink-0`}
+              className={`cards-search ${glassClassName} ${pillControlClassName} flex items-center gap-2 flex-[0_1_260px] min-w-[180px] px-[var(--space-3-5)] focus-within:[border-color:var(--color-border-active)] [&_svg]:shrink-0`}
             >
               <Search size={16} strokeWidth={1.75} aria-hidden="true" />
               <input
