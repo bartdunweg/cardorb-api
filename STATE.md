@@ -890,14 +890,19 @@ Two things worth carrying forward:
   below its content. It is `minmax(0,1fr)` with `min-w-0` on the slot now, and the
   name ellipsizes at `min(45vw,220px)`. Nothing else in that bar was long enough
   to have found this.
-- **The signed-in verification gap this file has recorded for weeks was worked
-  around, not closed.** No session exists in this workspace, so the pill was
-  photographed by temporarily stubbing `currentViewer()` behind a
-  `VISUAL_FAKE_VIEWER` env check in both pages, screenshotting light/dark,
-  avatar/initial, 1280 and 390, then reverting the stub. Nothing of it is
-  committed. It proves the component renders and measures; it does not prove a
-  real session reaches it. The standing fix is still a test account's storage
-  state for `visual/`.
+- **It was verified twice, and the second way is the one to copy.** First by
+  temporarily stubbing `currentViewer()` behind an env check (reverted, nothing
+  committed) — enough to measure light/dark and both avatar branches, not enough
+  to prove a session reaches it. Then properly, with the `visual/auth.setup.ts`
+  storage state that landed on `main` the same afternoon: a real session against
+  a production build showed the pill on both pages at 1280 and 390, with
+  `document.scrollWidth` equal to the viewport, so nothing overflows.
+- **Watch the port when using that harness from a worktree.** `playwright.config.ts`
+  has `reuseExistingServer: true` on 3210, and a parallel worktree
+  (`kuala-lumpur`) was already serving *its* build there — the first run
+  photographed the other checkout and failed for the right reason by luck.
+  `VISUAL_BASE_URL=http://127.0.0.1:<own port>` against your own `next start` is
+  the way to be sure whose app you are looking at.
 
 ## Open
 
