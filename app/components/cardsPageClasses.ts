@@ -83,3 +83,45 @@ export const cardsSetNameClassName =
 export const cardsSetMetaClassName =
   "cards-set-meta m-0 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
   "text-label-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
+
+/**
+ * The heading row and the toolbar under it — second portion of the cards.css
+ * migration (ADR-0051).
+ *
+ * The spacing numbers are Tailwind's own scale rather than arbitrary values,
+ * because this project's tokens already agree with it: --space-2 through
+ * --space-6 are 8, 12, 16, 20 and 24px, which is `2`..`6` exactly. Where a
+ * value is off the scale — the logo's 132px and its 30px step-down — it stays
+ * arbitrary rather than being rounded to something that looks close.
+ */
+export const cardsHeadTitleClassName = "cards-head-title flex items-center gap-4 min-w-0";
+
+/** Fixed box for the same reason the set logo has one: `width: auto` is zero
+ *  wide until the file arrives. Stepped down under 640. */
+export const cardsHeadLogoClassName =
+  "cards-head-logo h-10 w-[132px] object-contain [object-position:left_center] shrink-0 " +
+  "max-sm:h-[30px] max-sm:w-24";
+
+/**
+ * `max-sm:[&_.btn]:flex-[0_0_auto]` is a descendant selector kept as one, and
+ * it is the first of the forty in this file to be translated rather than
+ * avoided.
+ *
+ * The alternative was putting `flex-none` on each button in the toolbar's
+ * markup. That looks tidier and is worse: `.btn` is shared across the whole app,
+ * the rule is scoped to *buttons inside this bar at this width*, and moving it
+ * onto the elements means every future button added here has to remember. The
+ * variant keeps the scope identical to what the CSS said.
+ */
+export const cardsToolsClassName =
+  "cards-tools flex items-center flex-wrap gap-3 w-full mt-5 " + "max-sm:[&_.btn]:flex-[0_0_auto]";
+
+/**
+ * Two rules in cards.css, merged here: the base, and a later top-level
+ * `margin-top` added when this moved from the toolbar up to the heading. Merged
+ * rather than kept apart because source order was the only thing making the
+ * second win, and that is not a thing to preserve.
+ */
+export const cardsCountClassName =
+  "cards-count m-0 mt-2 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
+  "text-label-tertiary [font-variant-numeric:lining-nums_tabular-nums]";

@@ -34,12 +34,16 @@ import { eraLabel, eraYears, groupByEra } from "../../lib/core/eras";
 import { LOCALE } from "../../lib/core/config";
 import { possessive } from "../../lib/core/owner";
 import {
+  cardsCountClassName,
+  cardsHeadLogoClassName,
+  cardsHeadTitleClassName,
   cardsMainClassName,
   cardsSetHeadClassName,
   cardsSetLogoClassName,
   cardsSetMetaClassName,
   cardsSetNameClassName,
   cardsSetTextClassName,
+  cardsToolsClassName,
   onlyNarrowClassName,
   onlyWideClassName,
 } from "./cardsPageClasses";
@@ -1116,14 +1120,14 @@ export default function CardsView({
             top of the rail, which put the h1 over a list of sets rather than
             over what you are actually reading. */}
       <header className="cards-head">
-        <div className="cards-head-title">
+        <div className={cardsHeadTitleClassName}>
           {/* The set's own wordmark, ahead of its name. */}
           {currentSet?.logo && !brokenLogos.has(currentSet.name) && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={currentSet.logo}
               alt=""
-              className="cards-head-logo"
+              className={cardsHeadLogoClassName}
               width={currentSet.logoSize?.width}
               height={currentSet.logoSize?.height}
               decoding="async"
@@ -1181,7 +1185,7 @@ export default function CardsView({
               the collection under it would be answering a question nobody on it
               is asking. */}
         {total > 0 && !onProfile && (
-          <p className="cards-count" role="status">
+          <p className={cardsCountClassName} role="status">
             {onPokedex
               ? `${caught(dexShown).toLocaleString(LOCALE)} of ${dexShown.length.toLocaleString(LOCALE)} Pokémon in the binder`
               : /* The dashboard is the one screen that speaks for the whole
@@ -1213,7 +1217,7 @@ export default function CardsView({
               here is filtering, sorting and layout, which are answers about a
               list of cards and mean nothing over a summary or a key. */}
         {!onProfile && !onDashboard && (
-          <div className="cards-tools">
+          <div className={cardsToolsClassName}>
             {/* The same field as the one in the rail's head, and only ever
                   one of the two on screen: this is the copy for below 1000px,
                   where the rail is a screen you have to open rather than a
