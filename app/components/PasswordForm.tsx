@@ -6,6 +6,7 @@ import { useSession } from "../hooks/useSession";
 import { MIN_PASSWORD } from "../../lib/core/account";
 import { FormError, FormField, FormForm, FormHint, FormInput, FormLabel } from "./FormField";
 import { signinWideButtonClassName } from "./SigninShell";
+import { buttonClassName } from "./controlClasses";
 
 /**
  * Setting a new password, for somebody already holding a session.
@@ -66,7 +67,7 @@ export default function PasswordForm() {
             recording a preference, and aria-pressed is what says which it is. */}
         <button
           type="button"
-          className="btn"
+          className={buttonClassName}
           onClick={() => setShow((v) => !v)}
           aria-pressed={show}
         >

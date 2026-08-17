@@ -18,6 +18,7 @@ import {
   SettingsSwitch,
   settingsLinkAnchorClassName,
 } from "./SettingsPanel";
+import { buttonClassName } from "./controlClasses";
 
 /**
  * The profile screen, and the switch that turns a whole feature on.
@@ -202,7 +203,7 @@ export default function ProfileSettings({
             {ownerLabel(initial)}&rsquo;s Pok&eacute;mon card collection&rdquo;. Empty means your
             username.
           </SettingsHint>
-          <button className="btn" type="submit" disabled={busy === "displayName"}>
+          <button className={buttonClassName} type="submit" disabled={busy === "displayName"}>
             {busy === "displayName" ? "Saving…" : "Save"}
           </button>
           {saying.displayName && <SettingsSaid>{saying.displayName}</SettingsSaid>}
@@ -232,7 +233,7 @@ export default function ProfileSettings({
               announces its changes rather than its insertion. */}
           <SettingsSaid aria-live="polite">{says ?? ""}</SettingsSaid>
           <button
-            className="btn"
+            className={buttonClassName}
             type="submit"
             disabled={busy === "username" || !nameChanged || name.kind === "taken"}
           >

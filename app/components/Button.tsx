@@ -8,7 +8,7 @@ const ICON = { size: 16, strokeWidth: 1.75 } as const;
 
 // .btn and its modifiers (--primary/--icon/--center/--back) stay CSS, in
 // what's left of app/styles/components.css, rather than moving into this
-// component: ~20 files render a raw `<button className="btn">` outside this
+// component: ~20 files render a raw `<button className={buttonClassName}>` outside this
 // component entirely, most of them in the not-yet-migrated cards.css family
 // (CardNav, CardsSidebar, FilterSheet, ViewSheet, CardAddDialog, ...).
 // Porting .btn to Tailwind properly means touching all of them together —
