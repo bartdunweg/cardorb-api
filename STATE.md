@@ -4,6 +4,31 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The shared standards are at v0.5.3, and the Definition of Done now has a gate
+rather than a description (workspace `kuala-lumpur`, 2026-08-16).** The change of
+substance is `scripts/verify.sh`: one command, one exit code, so nothing has to
+know whether this project uses npm or gradle. DoD is now "verify.sh exits 0"
+where it used to list tests, typecheck and lint by name, and `build-quality` must
+carry evidence per domain — a `pass` without it is reported `not measured`.
+
+`CLAUDE.md` is 127 lines and gained a `Platform: web` line, which is what
+`build-quality` reads to choose its domains. It was missing; the iOS client is a
+separate repo with its own standards and this one only serves it an API.
+
+The script runs the checks `npm run check` composes, but **split into separate
+steps on purpose**: that script chains with `&&` and stops at the first failure,
+which is the opposite of what verify.sh promises. It also guards the Node
+version, because every check in this repo was once run on Node 20 without
+noticing and `@supabase/supabase-js` throws before it does anything there.
+
+**`.gitleaks.toml` is new and worth understanding before trusting the scan.**
+`gitleaks dir` reads the working tree rather than git history — deliberately, so
+it catches a secret just typed rather than only one already committed — and it
+therefore also read `.env.local`, `.next/` and `node_modules/`. That is nine
+findings that cannot reach a commit and two minutes of a check meant to run on
+every change. All four allowlisted paths are in `.gitignore`, so nothing that
+could be pushed is exempt. The run is 3.4 seconds now.
+
 **The value history now records itself, and the collection can say what moved
 (workspace `kuala-lumpur`, 2026-08-16).** Six things shipped in one session, all
 merged and live. ADR numbers 0046-0050, and 0048/0049/0050 are each doubled with

@@ -1,0 +1,32 @@
+# What gitleaks may skip, and why each one is safe to skip.
+#
+# scripts/verify.sh runs `gitleaks dir`, which reads the working tree rather than git
+# history — deliberately, because the secret that matters during development is the one
+# just typed, not the one already committed. The cost is that it also reads everything
+# git ignores, and this repo has three kinds of that.
+#
+# Nothing here weakens the check on anything that could reach a commit. Every path below
+# is in .gitignore, so a secret in one of them cannot be pushed by definition; a secret
+# in a file that *is* tracked still fails the run.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Local environment files. This is where secrets are supposed to live: they are gitignored, they hold the real Supabase and Cardmarket keys by design, and flagging them means the check cries wolf on every run until nobody reads it."
+paths = [
+  '''^\.env$''',
+  '''^\.env\..*$''',
+]
+
+[[allowlists]]
+description = "Build output. .next/ carries fragments of whatever the app read at build time — prerender manifests, RSC cache entries — so it re-flags the same env values a second time. It is regenerated on every build and never committed."
+paths = ['''^\.next/''']
+
+[[allowlists]]
+description = "Dependencies. node_modules is 200 MB of other people's test fixtures and example keys; scanning it took two minutes of a check meant to run on every change, and a finding in it is a finding about a published package rather than about this repo."
+paths = ['''^node_modules/''']
+
+[[allowlists]]
+description = "Conductor's per-workspace scratch directory, gitignored and not part of the project."
+paths = ['''^\.context/''']
