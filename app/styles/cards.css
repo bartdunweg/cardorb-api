@@ -227,9 +227,6 @@
    On the public link: those, plus Collection and Wishlist, which have slots
    there because the plus and the dashboard do not. */
 @media (max-width: 1000px) {
-  .cards-nav-elsewhere {
-    display: none;
-  }
 }
 
 /* Searching and adding, at the head of the rail. Both belong to the whole page
@@ -356,10 +353,6 @@
 /* Not a card: a heading with a grid under it, on the page's own surface. The
    scans are the things on this page with edges, and putting a white panel
    around a grid of white-bordered cards drew a box around a box. */
-.cards-set {
-  display: flex;
-  flex-direction: column;
-}
 
 /* The tripwire under the last built set. See builtSets in CardsView: reaching it
    builds the next few, 800px before it is on screen.
@@ -368,9 +361,6 @@
    for an IntersectionObserver to intersect with once it is the last child of a
    flex column. Not on the spacing scale on purpose: this is not a spacer and
    must never read as one. */
-.cards-more {
-  height: 1px;
-}
 /* Set logos are wordmarks of wildly different proportions, so the height is
    fixed and the width follows rather than the other way round. */
 /* A stated width, not `auto`. Two reasons, and the second is the bug: every set
@@ -560,9 +550,6 @@
      the set beside it. The set is what goes: the scan and the name already say
      which card this is, and the price is what the table is ranked by. Dropping
      a column beats adding a second sideways scroller to this page. */
-  .cards-dash-set {
-    display: none;
-  }
 }
 
 /* ── Tick-list dropdowns ── */

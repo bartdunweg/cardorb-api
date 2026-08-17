@@ -125,3 +125,23 @@ export const cardsToolsClassName =
 export const cardsCountClassName =
   "cards-count m-0 mt-2 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
   "text-label-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
+
+/**
+ * The last of the simple ones — third and final portion under ADR-0051's
+ * harness. See ADR-0052 for where this migration stops and why.
+ */
+export const cardsSetClassName = "cards-set flex flex-col";
+
+/**
+ * One pixel, and it must stay exactly that.
+ *
+ * An element of zero height has no box for an IntersectionObserver to intersect
+ * with once it is the last child of a flex column, and the infinite build-out
+ * simply stops — with no error, the grid just ends. Deliberately not on the
+ * spacing scale: it is not a spacer and must never read as one.
+ * lib/design/mechanics.test.ts guards it.
+ */
+export const cardsMoreClassName = "cards-more h-px";
+
+/** Hidden below 1000px, where the rail collapses and these links move into the bar. */
+export const cardsNavElsewhereClassName = "cards-nav-elsewhere max-[1000px]:hidden";

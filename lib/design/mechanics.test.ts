@@ -119,7 +119,11 @@ describe("the scans land in a box that was already the right shape", () => {
 });
 
 describe("the things that would look like leftovers", () => {
-  const cards = read("app/styles/cards.css");
+  // No `read("app/styles/cards.css")` here any more, and that is the finding
+  // rather than a tidy-up: both guarantees this block protects — the build-out
+  // tripwire and the set logo's stated width — followed their classes out of
+  // the stylesheet during the migration. A describe named for CSS leftovers
+  // that reads no CSS is the migration having actually landed.
 
   it("keeps the IntersectionObserver tripwire at exactly 1px", () => {
     // An element of zero height has no box for an IntersectionObserver to
@@ -127,7 +131,17 @@ describe("the things that would look like leftovers", () => {
     // and the infinite build-out stops — with no error, the grid simply ends.
     // Deliberately not on the spacing scale: it is not a spacer and must never
     // read as one.
-    expect(has(cards, /\.cards-more\s*\{[^}]*height:\s*1px/), "the build-out tripwire").toBe(true);
+    //
+    // Moved to cardsMoreClassName in cardsPageClasses.ts with the last portion
+    // of the cards.css migration (ADR-0052). `h-px` is that same single pixel.
+    // The second design test in this file to follow a class out of the
+    // stylesheet, which is the argument for these tests existing: nothing else
+    // would have noticed the guarantee had changed address.
+    const cardsPageClasses = read("app/components/cardsPageClasses.ts");
+    expect(
+      has(cardsPageClasses, /cardsMoreClassName[\s\S]*?\bh-px\b/),
+      "the build-out tripwire",
+    ).toBe(true);
   });
 
   it("keeps a stated width on the set logos", () => {

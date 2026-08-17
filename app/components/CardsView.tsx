@@ -38,6 +38,8 @@ import {
   cardsHeadLogoClassName,
   cardsHeadTitleClassName,
   cardsMainClassName,
+  cardsMoreClassName,
+  cardsSetClassName,
   cardsSetHeadClassName,
   cardsSetLogoClassName,
   cardsSetMetaClassName,
@@ -1400,7 +1402,7 @@ export default function CardsView({
               </p>
             </Card>
           ) : onFlat ? (
-            <section className="cards-set">
+            <section className={cardsSetClassName}>
               {/* One grid over every set that survived the filters. The
                       cards keep their own set name for the dialog they open,
                       which is what setName is for; what goes is the heading
@@ -1550,7 +1552,7 @@ export default function CardsView({
                 six back to six is exactly the case that has to remount and is
                 the one a count cannot see. */}
           {hasMore && (
-            <div key={generation} ref={moreRef} className="cards-more" aria-hidden="true" />
+            <div key={generation} ref={moreRef} className={cardsMoreClassName} aria-hidden="true" />
           )}
         </>
       )}

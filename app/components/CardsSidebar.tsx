@@ -1,5 +1,6 @@
 "use client";
 
+import { cardsNavElsewhereClassName } from "./cardsPageClasses";
 import { Compass, Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
 import type { CardSet, ImageSize } from "../../lib/core/cards";
 import { LOCALE } from "../../lib/core/config";
@@ -155,7 +156,7 @@ export default function CardsSidebar({
               three tiles and two bar charts, which is not a destination. It
               opens on the collection instead. */}
           {!isPublic && (
-            <li className="cards-nav-elsewhere">
+            <li className={cardsNavElsewhereClassName}>
               <NavItem
                 active={selected === "dashboard"}
                 onClick={() => onSelect("dashboard")}
@@ -170,7 +171,7 @@ export default function CardsSidebar({
               come out of the rail and it becomes the list of sets its title
               says it is. Signed in the bar has no room for them — the plus and
               the dashboard have the slots — so there they stay. */}
-          <li className={isPublic ? "cards-nav-elsewhere" : undefined}>
+          <li className={isPublic ? cardsNavElsewhereClassName : undefined}>
             <NavItem
               active={selected === "all"}
               onClick={() => onSelect("all")}
@@ -182,7 +183,7 @@ export default function CardsSidebar({
           {/* Only where there is one. An empty wishlist is a row that answers a
               question nobody asked, and the count beside it would be a zero. */}
           {wanted > 0 && (
-            <li className={isPublic ? "cards-nav-elsewhere" : undefined}>
+            <li className={isPublic ? cardsNavElsewhereClassName : undefined}>
               <NavItem
                 active={selected === "wishlist"}
                 onClick={() => onSelect("wishlist")}
