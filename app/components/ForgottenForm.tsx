@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "../hooks/useSession";
 import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
 import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
+import { buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * One field, and one sentence afterwards that is the same whatever happened.
@@ -70,7 +71,7 @@ export default function ForgottenForm() {
         </FormField>
         <button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          className={`${buttonPrimaryClassName} ${signinWideButtonClassName} mt-2`}
           disabled={busy}
         >
           {busy ? "Sending…" : "Send me a link"}

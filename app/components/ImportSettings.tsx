@@ -11,7 +11,7 @@ import {
   SettingsPanels,
   SettingsSaid,
 } from "./SettingsPanel";
-import { buttonClassName } from "./controlClasses";
+import { buttonClassName, buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * Bringing a collection in from a spreadsheet.
@@ -168,7 +168,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           </ul>
 
           <button
-            className="btn btn--primary"
+            className={buttonPrimaryClassName}
             type="button"
             disabled={busy === "commit"}
             onClick={run}

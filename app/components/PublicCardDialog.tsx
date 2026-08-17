@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSwipe } from "../hooks/useSwipe";
 import type { CardDetail as Detail, OwnedCard } from "../../lib/core/cards";
 import { modalCardClassName } from "./cardModalClasses";
+import { buttonClassName, buttonIconClassName } from "./controlClasses";
 
 /**
  * A card on the public link, opened in place.
@@ -131,7 +132,7 @@ export default function PublicCardDialog({
                 <>
                   <button
                     type="button"
-                    className="btn btn--icon"
+                    className={`${buttonClassName} ${buttonIconClassName}`}
                     onClick={() => onGo(-1)}
                     disabled={!hasPrev}
                     aria-label="Previous card"
@@ -140,7 +141,7 @@ export default function PublicCardDialog({
                   </button>
                   <button
                     type="button"
-                    className="btn btn--icon"
+                    className={`${buttonClassName} ${buttonIconClassName}`}
                     onClick={() => onGo(1)}
                     disabled={!hasNext}
                     aria-label="Next card"

@@ -9,6 +9,7 @@ import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../lib/core
 import { currentViewer } from "../../../lib/api/viewer";
 import { getCards } from "../../../lib/core/collection";
 import "../../styles/collection.css";
+import { buttonBackClassName } from "../../components/controlClasses";
 
 /**
  * One card, in full.
@@ -127,7 +128,12 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           breadcrumb. Both are search-engine markup and this app ships noindex,
           so they came out with the rest of the JSON-LD. */}
       <Card className="flex flex-col items-start">
-        <Button href="/cards" icon={ChevronLeft} iconPosition="left" className="btn--back">
+        <Button
+          href="/cards"
+          icon={ChevronLeft}
+          iconPosition="left"
+          className={buttonBackClassName}
+        >
           Cards
         </Button>
 

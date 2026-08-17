@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSession } from "../hooks/useSession";
 import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
 import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
-import { buttonClassName } from "./controlClasses";
+import { buttonClassName, buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * An address and a password, which is now what those words mean.
@@ -127,7 +127,7 @@ export default function SignInForm({
             for one. Enter still works, from either field. */}
         <button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          className={`${buttonPrimaryClassName} ${signinWideButtonClassName} mt-2`}
           disabled={busy}
         >
           {busy ? "Signing in…" : "Sign in"}

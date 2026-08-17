@@ -6,7 +6,7 @@ import { useSession } from "../hooks/useSession";
 import { MIN_PASSWORD } from "../../lib/core/account";
 import { FormError, FormField, FormForm, FormHint, FormInput, FormLabel } from "./FormField";
 import { signinWideButtonClassName } from "./SigninShell";
-import { buttonClassName } from "./controlClasses";
+import { buttonClassName, buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * Setting a new password, for somebody already holding a session.
@@ -76,7 +76,7 @@ export default function PasswordForm() {
 
         <button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          className={`${buttonPrimaryClassName} ${signinWideButtonClassName} mt-2`}
           disabled={busy || done}
         >
           {busy ? "Saving…" : "Save password"}

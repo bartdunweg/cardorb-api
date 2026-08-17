@@ -7,6 +7,7 @@ import Modal from "./Modal";
 import { MAX, type CardFields } from "../../lib/core/collection-row";
 import { MAX_RESULTS, type CatalogueMatch } from "../../lib/core/ptcg-search";
 import { modalCardAddClassName } from "./cardModalClasses";
+import { buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * The form behind the plus: one search box first, a few extra fields once a
@@ -762,7 +763,7 @@ export default function CardAddDialog({
             <div className="col-span-full flex justify-end">
               <button
                 type="submit"
-                className="btn btn--primary"
+                className={buttonPrimaryClassName}
                 disabled={busy || !draft.name.trim() || !draft.set.trim()}
               >
                 {busy ? "Adding" : "Add to the collection"}

@@ -8,6 +8,7 @@ import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../../li
 import { currentViewer } from "../../../../../lib/api/viewer";
 import { getCards } from "../../../../../lib/core/collection";
 import "../../../../styles/collection.css";
+import { buttonBackClassName } from "../../../../components/controlClasses";
 
 /**
  * One card, in full — inside the (app) shell.
@@ -77,7 +78,12 @@ export default async function CollectionCardPage({ params }: { params: Promise<{
     // inside a card. /cards/[id]/page.tsx (outside the shell) still wants
     // one; this route does not.
     <div className="flex flex-col items-start">
-      <Button href="/collection" icon={ChevronLeft} iconPosition="left" className="btn--back">
+      <Button
+        href="/collection"
+        icon={ChevronLeft}
+        iconPosition="left"
+        className={buttonBackClassName}
+      >
         Collection
       </Button>
 

@@ -44,10 +44,9 @@ export const controlSizeClassName =
  * off and an <a> pretending to be are two mechanisms for one appearance, and
  * /app/ios's download link is the second kind.
  */
-export const buttonClassName = [
+export const buttonBaseClassName = [
   "inline-flex items-center gap-2 self-start no-underline cursor-pointer",
   "px-4 rounded-[var(--radius-btn)]",
-  glassClassName,
   controlSizeClassName,
   "[transition:box-shadow_var(--dur-fast)_var(--ease-smooth),border-color_var(--dur-fast)_var(--ease-smooth),transform_var(--dur-fast)_var(--ease-smooth)]",
   "hover:[box-shadow:var(--shadow-elevated)]",
@@ -55,6 +54,36 @@ export const buttonClassName = [
   "disabled:opacity-55 disabled:cursor-not-allowed",
   "aria-disabled:opacity-55 aria-disabled:cursor-not-allowed",
 ].join(" ");
+
+/** The ordinary button: base plus glass. Primary picks a different material
+ *  instead of layering over this one — see the note at the foot of this file. */
+export const buttonClassName = `${buttonBaseClassName} ${glassClassName}`;
+
+/** The pill shape plus the lift on hover that only the pill-shaped controls had. */
+export const pillControlClassName = "rounded-pill hover:[box-shadow:var(--shadow-elevated)]";
+
+/** A search field or a filter summary: glass, control-sized, pill. */
+export const pillFieldClassName = `${glassClassName} ${controlSizeClassName} ${pillControlClassName}`;
+
+/**
+ * The solid variant, as a whole material rather than an override. See the note
+ * at the bottom of this file for why layering it on the glass does not work.
+ */
+export const buttonPrimaryClassName = [
+  buttonBaseClassName,
+  "border border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]",
+  "hover:[box-shadow:var(--shadow-elevated)] hover:opacity-90",
+].join(" ");
+
+/** Square, round, control-sized: the icon-only button. The chevron rules are
+ *  optical centring for icons drawn off-centre in the set. */
+export const buttonIconClassName =
+  "w-[var(--control-h)] h-[var(--control-h)] flex items-center justify-center p-0 rounded-full gap-0 " +
+  "[&_>_.lucide-chevron-right]:relative [&_>_.lucide-chevron-right]:left-px " +
+  "[&_>_.lucide-chevron-left]:relative [&_>_.lucide-chevron-left]:-left-px";
+
+export const buttonCenterClassName = "self-center mt-[var(--space-3-5)]";
+export const buttonBackClassName = "mb-5";
 
 /**
  * ── Not migrated yet, and why ──────────────────────────────────────────────

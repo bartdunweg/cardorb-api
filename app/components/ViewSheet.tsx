@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Settings2 } from "lucide-react";
 import { Sheet, sheetApplyButtonClassName } from "./Sheet";
 import ViewOptions, { type ViewOptionsProps } from "./ViewOptions";
+import { buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * The same view options as a sheet, for a phone.
@@ -48,7 +49,7 @@ export default function ViewSheet(props: ViewOptionsProps) {
         footer={
           <button
             type="button"
-            className={`btn btn--primary ${sheetApplyButtonClassName}`}
+            className={`${buttonPrimaryClassName} ${sheetApplyButtonClassName}`}
             onClick={() => setOpen(false)}
           >
             Done

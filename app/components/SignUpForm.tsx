@@ -15,6 +15,7 @@ import {
   formNoteClassName,
 } from "./FormField";
 import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
+import { buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * Two required fields and one that is not.
@@ -161,7 +162,7 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
 
         <button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
+          className={`${buttonPrimaryClassName} ${signinWideButtonClassName} mt-2`}
           disabled={busy}
         >
           {busy ? "Creating your account…" : "Create account"}

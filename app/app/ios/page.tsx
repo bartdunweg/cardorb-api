@@ -28,6 +28,7 @@ import {
 import { APP_NAME, SITE_URL } from "../../../lib/core/config";
 import { currentViewer } from "../../../lib/api/viewer";
 import { ownerLabel } from "../../../lib/core/owner";
+import { buttonClassName, buttonPrimaryClassName } from "../../components/controlClasses";
 
 const SIGN_IN_HREF = "/login";
 const DASHBOARD_HREF = "/dashboard";
@@ -197,7 +198,7 @@ export default async function IosApp() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link href="/signup" className="btn btn--primary">
+              <Link href="/signup" className={buttonPrimaryClassName}>
                 Sign up
               </Link>
             </>
@@ -252,7 +253,7 @@ export default async function IosApp() {
               /* self-center: .btn sets align-self: flex-start for toolbars,
                  which beats this column's items-center and would left-pin
                  both of these buttons. */
-              className="btn btn--primary self-center justify-center min-w-[240px] [@media(max-width:640px)]:w-full"
+              className={`${buttonPrimaryClassName} self-center justify-center min-w-[240px] [@media(max-width:640px)]:w-full`}
             >
               <Download size={17} strokeWidth={1.8} aria-hidden="true" />
               Download on the App Store
@@ -265,7 +266,7 @@ export default async function IosApp() {
             </p>
             <Link
               href="/signup"
-              className="btn self-center [@media(max-width:640px)]:w-full [@media(max-width:640px)]:justify-center"
+              className={`${buttonClassName} self-center [@media(max-width:640px)]:w-full [@media(max-width:640px)]:justify-center`}
             >
               Start on the web
               <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
@@ -447,7 +448,7 @@ export default async function IosApp() {
           </p>
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
               beats this column's items-center. */}
-          <Link href="/signup" className="btn btn--primary self-center mt-6">
+          <Link href="/signup" className={`${buttonPrimaryClassName} self-center mt-6`}>
             Create your free collection
             <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
           </Link>

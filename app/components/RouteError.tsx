@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Button from "./Button";
+import { buttonCenterClassName, buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * The shell every error.tsx renders: the code, a heading, a line saying what
@@ -60,14 +61,14 @@ export default function RouteError({
         >
           {description}
         </p>
-        <Button onClick={reset} className="btn--primary btn--center">
+        <Button onClick={reset} className={`${buttonPrimaryClassName} ${buttonCenterClassName}`}>
           Try again
         </Button>
         {/* Second, and quieter: a route whose data source is down will fail the
             retry too, and then the only useful control on the page is the one
             that leaves. */}
         {backHref && (
-          <Button href={backHref} className="btn--center">
+          <Button href={backHref} className={buttonCenterClassName}>
             {backLabel ?? "Go home"}
           </Button>
         )}

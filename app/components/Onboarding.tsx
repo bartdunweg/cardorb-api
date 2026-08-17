@@ -17,6 +17,7 @@ import {
 } from "./FormField";
 import SigninShell, { signinWideButtonClassName } from "./SigninShell";
 import { SettingsHint, SettingsSwitch } from "./SettingsPanel";
+import { buttonClassName } from "./controlClasses";
 
 /**
  * The four things worth asking once, before the app.
@@ -289,7 +290,7 @@ export default function Onboarding({
           </FormNote>
           <button
             type="button"
-            className={`btn ${signinWideButtonClassName}`}
+            className={`${buttonClassName} ${signinWideButtonClassName}`}
             disabled={busy}
             onClick={() => void finish("/collection?add=1")}
           >
@@ -297,7 +298,7 @@ export default function Onboarding({
           </button>
           <button
             type="button"
-            className={`btn ${signinWideButtonClassName}`}
+            className={`${buttonClassName} ${signinWideButtonClassName}`}
             disabled={busy}
             onClick={() => void finish("/settings/import")}
           >
@@ -352,7 +353,7 @@ function Controls({
           happens on the change rather than on the insertion. */}
       <FormError aria-live="polite">{error ?? ""}</FormError>
       <button
-        className={`btn ${signinWideButtonClassName}`}
+        className={`${buttonClassName} ${signinWideButtonClassName}`}
         type={onContinue ? "button" : "submit"}
         disabled={busy || blocked}
         onClick={onContinue}

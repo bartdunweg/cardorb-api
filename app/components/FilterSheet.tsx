@@ -10,6 +10,7 @@ import {
 } from "./Sheet";
 import FilterOptions from "./FilterOptions";
 import type { Facet } from "./cards-fields";
+import { buttonClassName, buttonPrimaryClassName } from "./controlClasses";
 
 /**
  * The same facets as FilterMenu, as a sheet, for a phone.
@@ -96,14 +97,14 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
           <>
             <button
               type="button"
-              className={`btn ${sheetFootButtonClassName}`}
+              className={`${buttonClassName} ${sheetFootButtonClassName}`}
               onClick={() => setOpen(false)}
             >
               Cancel
             </button>
             <button
               type="button"
-              className={`btn btn--primary ${sheetApplyButtonClassName}`}
+              className={`${buttonPrimaryClassName} ${sheetApplyButtonClassName}`}
               onClick={apply}
             >
               {staged > 0 ? `Apply ${staged}` : "Apply"}

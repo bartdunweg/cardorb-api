@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSwipe } from "../hooks/useSwipe";
+import { buttonClassName, buttonIconClassName } from "./controlClasses";
 
 /**
  * The way to the card either side of this one, on the routes that have a URL
@@ -63,13 +64,16 @@ export default function CardNav({
         <Link
           href={`${basePath}/${prev}`}
           scroll={false}
-          className="btn btn--icon"
+          className={`${buttonClassName} ${buttonIconClassName}`}
           aria-label="Previous card"
         >
           <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       ) : (
-        <span className="btn btn--icon is-disabled" aria-hidden="true">
+        <span
+          className={`${buttonClassName} ${buttonIconClassName} is-disabled`}
+          aria-hidden="true"
+        >
           <ChevronLeft size={20} strokeWidth={1.75} />
         </span>
       )}
@@ -77,13 +81,16 @@ export default function CardNav({
         <Link
           href={`${basePath}/${next}`}
           scroll={false}
-          className="btn btn--icon"
+          className={`${buttonClassName} ${buttonIconClassName}`}
           aria-label="Next card"
         >
           <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
         </Link>
       ) : (
-        <span className="btn btn--icon is-disabled" aria-hidden="true">
+        <span
+          className={`${buttonClassName} ${buttonIconClassName} is-disabled`}
+          aria-hidden="true"
+        >
           <ChevronRight size={20} strokeWidth={1.75} />
         </span>
       )}
