@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LucideProps } from "lucide-react";
+import { buttonClassName } from "./controlClasses";
 
 // Shared glass-pill button. Renders as a Link, external <a>, <button>, or a
 // plain <span> (when it sits inside a parent link, e.g. a clickable card).
@@ -43,7 +44,7 @@ export default function Button({
   className = "",
   ...rest
 }: ButtonProps) {
-  const cls = ["btn", className].filter(Boolean).join(" ");
+  const cls = [buttonClassName, className].filter(Boolean).join(" ");
   const iconEl = Icon ? <Icon {...ICON} fill={iconFill ? "currentColor" : "none"} /> : null;
 
   const content = (
