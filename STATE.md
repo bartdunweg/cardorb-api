@@ -4,6 +4,26 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**cards.css is still 1,300 lines and its Tailwind migration is not finished.**
+Found while clearing out two abandoned agent worktrees on 17 August. One of them
+held an uncommitted extraction of seventeen more class constants into
+`app/components/cardsPageClasses.ts` — `cardsHeadClassName`,
+`cardsSearchClassName`, `cardsGridClassName` and the rest — none of which exists
+on main, which has four.
+
+The work was rescued to a branch, judged, and then dropped, and the judgement is
+the part worth keeping. The idea is real: `.cards-head`, `.cards-search`,
+`.cards-count`, `.cards-set-head` and `.cards-grid` are still CSS, still in
+`cards.css`, and still referenced by `CardsView.tsx` and `(app)/loading.tsx`. The
+*patch* was worthless: `CardsView.tsx` has moved 770 lines since that worktree
+was made, so anyone finishing this starts from today's component, not from a
+two-day-old extraction of a file that no longer looks like that.
+
+So it is a note rather than a branch. Read ADR-0017 and ADR-0018 before picking
+it up — both are about this exact migration going wrong in the same way, an
+unconditional Tailwind property beating a still-CSS conditional reset, and
+`loading.tsx` being a second consumer nobody remembers.
+
 **The shared standards are at v0.5.3, and the Definition of Done now has a gate
 rather than a description (workspace `kuala-lumpur`, 2026-08-16).** The change of
 substance is `scripts/verify.sh`: one command, one exit code, so nothing has to
