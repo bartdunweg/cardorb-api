@@ -7,3 +7,11 @@ next-env.d.ts
 .vercel
 docs/collection-audit-*.undo.json
 docs/rarity-backfill-*.undo.json
+
+# Visual-regression baselines. A working artefact of one migration sitting, not
+# a fact about the project: the pages photographed render live Cardmarket
+# prices, so a committed baseline is red by the next morning through nothing
+# anyone did. Take them, make the change, compare, throw away.
+visual/**/*-snapshots/
+test-results/
+playwright-report/

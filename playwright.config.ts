@@ -1,0 +1,93 @@
+import { defineConfig, devices } from "@playwright/test";
+
+/**
+ * Screenshots, for one job: making the Tailwind migration of cards.css safe.
+ *
+ * ── Why this exists ────────────────────────────────────────────────────────
+ *
+ * That migration has been attempted four times and gone wrong four times, and
+ * every failure was invisible to the checks this project already runs. ADR-0012
+ * is the clearest: a cascade-layers bug meant every Tailwind margin and padding
+ * added since the migration began was silently losing to legacy CSS, and it went
+ * unnoticed because `gap` was unaffected so the screenshots looked fine. ADR-0017,
+ * ADR-0018 and ADR-0020 are three more of the same shape. Tests, typecheck and
+ * lint pass through all of them: none of those tools can see a margin that
+ * stopped applying.
+ *
+ * So before moving another rule out of cards.css, there has to be something that
+ * can. That is all this is.
+ *
+ * ── What this is not ───────────────────────────────────────────────────────
+ *
+ * It is deliberately **not** part of scripts/verify.sh and not a CI gate. The
+ * pages it photographs render live prices from Cardmarket, which move every day,
+ * so a committed baseline would be red by tomorrow morning through nothing
+ * anyone did. Wiring that into the per-change gate would train everybody to
+ * ignore it inside a week, which is worse than not having it.
+ *
+ * It is a tool you point at a change: take baselines, make the change, compare.
+ * Baselines are gitignored for the same reason — they are a working artefact of
+ * one migration sitting, not a fact about the project.
+ *
+ *   npm run visual:baseline    # before touching anything
+ *   npm run visual             # after, to see what moved
+ *
+ * ── Widths ─────────────────────────────────────────────────────────────────
+ *
+ * Three, chosen to straddle the two breakpoints cards.css actually uses (640
+ * and 1000) rather than to match any device: one below both, one between them,
+ * one above. A migration that drops a media query is invisible at a width that
+ * never triggered it.
+ */
+export default defineConfig({
+  testDir: "./visual",
+  // One at a time: these share a single dev server and screenshot comparison is
+  // sensitive to the machine being busy.
+  workers: 1,
+  fullyParallel: false,
+  reporter: [["list"]],
+  // No retries. A screenshot that passes on the second attempt is a screenshot
+  // that cannot be trusted on the first, and the whole point here is trust.
+  retries: 0,
+
+  expect: {
+    toHaveScreenshot: {
+      /**
+       * Room for antialiasing and nothing else.
+       *
+       * A dropped margin moves thousands of pixels; a font rendering a hair
+       * differently moves a few dozen. 0.1% of a 1280×2000 page is ~2,500
+       * pixels, which is under a single line of shifted text and far under any
+       * layout change worth catching.
+       */
+      maxDiffPixelRatio: 0.001,
+      // Transitions and the pane-in keyframe would otherwise be caught
+      // mid-flight and differ every run.
+      animations: "disabled",
+      caret: "hide",
+      scale: "css",
+    },
+  },
+
+  use: {
+    baseURL: process.env.VISUAL_BASE_URL ?? "http://127.0.0.1:3210",
+    ...devices["Desktop Chrome"],
+    // Screenshots of a whole page, so a change below the fold still counts.
+    screenshot: "off",
+    trace: "off",
+  },
+
+  /**
+   * A production build, not `next dev`. Dev mode injects overlays and does not
+   * apply the same CSS pipeline, and this file exists precisely to catch a CSS
+   * pipeline problem.
+   */
+  webServer: process.env.VISUAL_BASE_URL
+    ? undefined
+    : {
+        command: "npm run build && npx next start -p 3210",
+        url: "http://127.0.0.1:3210/api/v1/health",
+        reuseExistingServer: true,
+        timeout: 240_000,
+      },
+});
