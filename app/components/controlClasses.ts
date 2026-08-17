@@ -55,3 +55,26 @@ export const buttonClassName = [
   "disabled:opacity-55 disabled:cursor-not-allowed",
   "aria-disabled:opacity-55 aria-disabled:cursor-not-allowed",
 ].join(" ");
+
+/**
+ * ── Not migrated yet, and why ──────────────────────────────────────────────
+ *
+ * `.btn--primary` and `.btn--icon` are still CSS, in components.css. An attempt
+ * to move them was reverted, and the reason is worth recording because it is
+ * not obvious and it will be met again by whoever picks this up.
+ *
+ * In CSS, `.btn--primary` *overrides* five declarations of the glass recipe and
+ * works only because its rule comes last at equal specificity — the stylesheet
+ * says so in its own comment. Tailwind gives no such guarantee: two `bg-*`
+ * utilities on one element are resolved by the order Tailwind emits them, which
+ * nothing in a className string controls. So a primary button cannot be
+ * "buttonClassName plus an override"; it has to be a material chosen instead of
+ * the glass, never layered on top of it.
+ *
+ * Rewriting it that way is straightforward. What is not yet settled is that the
+ * screenshots still differed afterwards on one page, localised to the single
+ * `aria-disabled` download button on /app/ios — the one ADR-0042 makes
+ * deliberately inert. That button is both primary and disabled, so it exercises
+ * two overrides at once, and it wants its own portion with its own screenshot
+ * rather than riding along with a sweep.
+ */
