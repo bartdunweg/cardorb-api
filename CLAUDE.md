@@ -1,4 +1,4 @@
-<!-- STANDARDS:BEGIN v0.4.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.5.3 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
@@ -44,17 +44,19 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 |---|---|
 | User reacts, criticises, or states a preference | Use the `log-feedback` workflow before acting |
 | A non-obvious choice between real alternatives | Use the `record-decision` workflow |
-| A user-visible change ships | Changelog entry + fragment in `docs/changelog.d/` |
-| Session starts on an existing project | Read that project's `STATE.md` first |
+| A user-visible change ships | Changelog entry + fragment in `docs/changelog.d/`, and refresh any outward-facing text it makes stale — README opening, repository description, topics |
+| Session starts on an existing project | Read `STATE.md` first |
 | Session ends | Update `STATE.md` so the next session starts oriented |
-| A build or code change is complete | Run `build-quality` and resolve or report every applicable quality finding |
+| A build or code change is complete | Run `scripts/verify.sh`, then `build-quality` |
 
-**Definition of Done:** code verified (tests, typecheck, lint) + changelog entry if
-user-visible + decision record if a real choice was made + prompting feedback marked
-`addressed` + `STATE.md` updated + a `build-quality` report covering Interface, A11y,
-SEO, Performance, and Security (or an explicit not-applicable reason) + every written artefact
-in English + a closing `Samenvatting` block listing the assumptions.
-A task without a memory write is not done.
+**Definition of Done:** `scripts/verify.sh` exits 0 + changelog entry if user-visible +
+decision record if a real choice was made + prompting feedback marked `addressed` +
+`STATE.md` updated + a `build-quality` report for this project's platform, where every domain
+carries evidence or is reported `not measured` + every written artefact in English + a closing
+`Samenvatting` block listing the assumptions.
+
+**A `pass` without evidence is not a pass.** Report `not measured` instead and say what would
+have produced the evidence. A task without a memory write is not done.
 
 ## Rules that are easy to get wrong
 
@@ -64,7 +66,8 @@ A task without a memory write is not done.
   Never present a guessed rationale as fact.
 - Creating new shared files is fine; **editing an existing shared file is the one case
   where you flag it first**, because a parallel worktree is probably editing it too.
-- Never hand-edit `docs/CHANGELOG.md`; add a fragment in `docs/changelog.d/`.
+- Never hand-edit `docs/CHANGELOG.md`; add a fragment in `docs/changelog.d/`. Projects that
+  ship no user-visible releases have neither, and that is correct — do not create them.
 
 <!-- STANDARDS:END -->
 
@@ -77,8 +80,14 @@ three card catalogues, priced, and served as an API that a web tool and an iOS a
 both read.
 
 - Profile: production
+- Platform: web
 - Stage: live
 - Users: one owner (single-passcode API), public read access at cardorb.com
+
+`Platform: web` is what `build-quality` reads to decide which domains apply, and it is
+the platform of *this repository* — a Next.js app on Vercel. The iOS client lives in
+`bartdunweg/cardorb-ios` and is a separate repo with its own standards; this one only
+serves it an API.
 
 ## Commands
 
