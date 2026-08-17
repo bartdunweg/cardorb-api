@@ -43,6 +43,16 @@ const cacheLeash = {
   },
 };
 
-const config = [{ ignores: [".next/**", "node_modules/**", "next-env.d.ts"] }, ...next, cacheLeash];
+const config = [
+  {
+    // .claude/** is not a slip: Claude's worktrees live inside the checkout,
+    // each a full copy of this repo including its .next/. Linting them means
+    // linting a two-day-old copy of the project and reporting its build output
+    // as this project's errors.
+    ignores: [".next/**", "node_modules/**", "next-env.d.ts", ".claude/**", ".context/**"],
+  },
+  ...next,
+  cacheLeash,
+];
 
 export default config;
