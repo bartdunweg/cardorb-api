@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSession } from "../hooks/useSession";
 import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
 import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
+import { buttonClassName } from "./controlClasses";
 
 /**
  * An address and a password, which is now what those words mean.
@@ -149,7 +150,7 @@ export default function SignInForm({
         <FormNote>
           <button
             type="button"
-            className="btn"
+            className={buttonClassName}
             onClick={async () => {
               setResent(true);
               await resendConfirmation(email.trim());

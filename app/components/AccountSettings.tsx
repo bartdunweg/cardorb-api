@@ -11,6 +11,7 @@ import {
   SettingsPanels,
   SettingsSaid,
 } from "./SettingsPanel";
+import { buttonClassName } from "./controlClasses";
 
 /**
  * The account: the address, the password, and the way out of this device.
@@ -85,7 +86,11 @@ export default function AccountSettings({ email }: { email: string }) {
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
           />
-          <button className="btn" type="submit" disabled={busy === "email" || !newEmail.trim()}>
+          <button
+            className={buttonClassName}
+            type="submit"
+            disabled={busy === "email" || !newEmail.trim()}
+          >
             {busy === "email" ? "Sending…" : "Change address"}
           </button>
           {said.email && <SettingsSaid>{said.email}</SettingsSaid>}
@@ -97,7 +102,7 @@ export default function AccountSettings({ email }: { email: string }) {
         <SettingsHint>
           Setting a new one takes effect immediately and does not sign out your other devices.
         </SettingsHint>
-        <Link className="btn" href="/settings/password">
+        <Link className={buttonClassName} href="/settings/password">
           Change password
         </Link>
       </SettingsPanel>
@@ -105,7 +110,12 @@ export default function AccountSettings({ email }: { email: string }) {
       <SettingsPanel>
         <SettingsPanelTitle>Sign out</SettingsPanelTitle>
         <SettingsHint>On this device only.</SettingsHint>
-        <button className="btn" type="button" onClick={signOut} disabled={busy === "signout"}>
+        <button
+          className={buttonClassName}
+          type="button"
+          onClick={signOut}
+          disabled={busy === "signout"}
+        >
           {busy === "signout" ? "Signing out…" : "Sign out"}
         </button>
       </SettingsPanel>

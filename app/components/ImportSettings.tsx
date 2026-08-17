@@ -11,6 +11,7 @@ import {
   SettingsPanels,
   SettingsSaid,
 } from "./SettingsPanel";
+import { buttonClassName } from "./controlClasses";
 
 /**
  * Bringing a collection in from a spreadsheet.
@@ -127,7 +128,12 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           }}
         />
 
-        <button className="btn" type="button" disabled={!csv || busy === "csv"} onClick={look}>
+        <button
+          className={buttonClassName}
+          type="button"
+          disabled={!csv || busy === "csv"}
+          onClick={look}
+        >
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
         </button>
       </SettingsPanel>

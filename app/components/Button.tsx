@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { LucideProps } from "lucide-react";
+import { buttonClassName } from "./controlClasses";
 
 // Shared glass-pill button. Renders as a Link, external <a>, <button>, or a
 // plain <span> (when it sits inside a parent link, e.g. a clickable card).
@@ -7,7 +8,7 @@ const ICON = { size: 16, strokeWidth: 1.75 } as const;
 
 // .btn and its modifiers (--primary/--icon/--center/--back) stay CSS, in
 // what's left of app/styles/components.css, rather than moving into this
-// component: ~20 files render a raw `<button className="btn">` outside this
+// component: ~20 files render a raw `<button className={buttonClassName}>` outside this
 // component entirely, most of them in the not-yet-migrated cards.css family
 // (CardNav, CardsSidebar, FilterSheet, ViewSheet, CardAddDialog, ...).
 // Porting .btn to Tailwind properly means touching all of them together —
@@ -43,7 +44,7 @@ export default function Button({
   className = "",
   ...rest
 }: ButtonProps) {
-  const cls = ["btn", className].filter(Boolean).join(" ");
+  const cls = [buttonClassName, className].filter(Boolean).join(" ");
   const iconEl = Icon ? <Icon {...ICON} fill={iconFill ? "currentColor" : "none"} /> : null;
 
   const content = (
