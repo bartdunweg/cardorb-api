@@ -17,6 +17,7 @@ import {
 import Card from "./components/Card";
 import MarketingFooter from "./components/MarketingFooter";
 import Navbar from "./components/Navbar";
+import ViewerPill from "./components/ViewerPill";
 // ThemeToggle moved with the footer into MarketingFooter.
 import {
   cardBody,
@@ -220,40 +221,10 @@ export default async function Home() {
         }
         right={
           viewer ? (
-            <Link
-              href={DASHBOARD_HREF}
-              className="flex items-center gap-2 min-w-0 text-label no-underline whitespace-nowrap
-                overflow-hidden text-ellipsis [font-family:var(--font-body)] [font-size:var(--fs-small)]"
-            >
-              {viewer.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
-                <img
-                  src={viewer.avatarUrl}
-                  alt=""
-                  width={24}
-                  height={24}
-                  className="w-6 h-6 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
-                />
-              ) : (
-                // No avatar uploaded yet — a circle with the first letter of
-                // the name, same fallback as settings/profile.
-                <span
-                  className="grid place-items-center w-6 h-6 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
-                    border border-[var(--color-border-subtle)] text-label-tertiary
-                    [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
-                  aria-hidden="true"
-                >
-                  {viewerName.charAt(0)}
-                </span>
-              )}
-              Signed in as {viewerName}
-            </Link>
+            <ViewerPill href={DASHBOARD_HREF} name={viewerName} avatarUrl={viewer.avatarUrl} />
           ) : (
             <>
-              <Link
-                href={SIGN_IN_HREF}
-                className="text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-              >
+              <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
               <Link href="/signup" className="btn btn--primary">

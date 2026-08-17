@@ -26,8 +26,8 @@ export default function Navbar({ center, right }: { center?: ReactNode; right?: 
       aria-label="Primary navigation"
     >
       <div
-        className="grid grid-cols-[1fr_auto_1fr] items-center gap-6 w-[min(100%,1180px)] mx-auto
-          min-h-[var(--control-h)] [@media(max-width:640px)]:grid-cols-[1fr_auto]"
+        className="grid grid-cols-[1fr_auto_minmax(0,1fr)] items-center gap-6 w-[min(100%,1180px)] mx-auto
+          min-h-[var(--control-h)] [@media(max-width:640px)]:grid-cols-[1fr_minmax(0,auto)]"
       >
         {/* justify-self-start so the link is the size of the mark and the name.
             As a grid item it stretched across the whole 1fr column, which was
@@ -41,7 +41,16 @@ export default function Navbar({ center, right }: { center?: ReactNode; right?: 
         ) : (
           <span />
         )}
-        {right ? <div className="flex items-center gap-4 justify-self-end">{right}</div> : <span />}
+        {/* min-w-0 here and minmax(0,1fr) on the column above, because the
+            right slot can hold a name: a display name is allowed 60 characters
+            and a plain 1fr column refuses to go below its content, so a long
+            one pushed the pill off the side of a phone instead of letting it
+            clip. Nothing else in this bar is long enough to have noticed. */}
+        {right ? (
+          <div className="flex items-center gap-4 justify-self-end min-w-0">{right}</div>
+        ) : (
+          <span />
+        )}
       </div>
     </nav>
   );

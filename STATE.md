@@ -875,6 +875,30 @@ width — a plain page every time, per the explicit ask. `npm run check`
 green; not exercised signed-in with real data via a live browser in this
 workspace.
 
+## The signed-in navbar is a pill (2026-08-17, workspace `castries`)
+
+`/` and `/app/ios` used to greet a signed-in visitor with the sentence "Signed in
+as {name}" in the navbar's right slot, in duplicated JSX. It is one component now
+— `app/components/ViewerPill.tsx` — drawing an avatar and the name inside a
+rounded `--color-border` pill, with "Signed in as … — open dashboard" moved into
+`aria-label`. Feedback FB-0012.
+
+Two things worth carrying forward:
+
+- **A long name used to push the pill off a phone.** A display name is allowed 60
+  characters and `Navbar.tsx`'s right column was a plain `1fr`, which will not go
+  below its content. It is `minmax(0,1fr)` with `min-w-0` on the slot now, and the
+  name ellipsizes at `min(45vw,220px)`. Nothing else in that bar was long enough
+  to have found this.
+- **The signed-in verification gap this file has recorded for weeks was worked
+  around, not closed.** No session exists in this workspace, so the pill was
+  photographed by temporarily stubbing `currentViewer()` behind a
+  `VISUAL_FAKE_VIEWER` env check in both pages, screenshotting light/dark,
+  avatar/initial, 1280 and 390, then reverting the stub. Nothing of it is
+  committed. It proves the component renders and measures; it does not prove a
+  real session reaches it. The standing fix is still a test account's storage
+  state for `visual/`.
+
 ## Open
 
 - **Card detail, avatar upload, and signup still need a real signed-in
