@@ -13,7 +13,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "check": "node scripts/gen-tokens.mjs --check && npm run typecheck && npm run test && npm run lint",
+    "check": "npx prettier --check . && node scripts/gen-tokens.mjs --check && npm run typecheck && npm run test && npm run lint",
     "tokens": "node scripts/gen-tokens.mjs"
   },
   "dependencies": {

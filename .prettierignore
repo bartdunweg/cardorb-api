@@ -1,0 +1,34 @@
+# What Prettier does not touch, and why.
+#
+# The rule: Prettier governs code, not prose and not generated files. It was
+# installed, never enforced, and 152 files had drifted from it — so the question
+# was not "which files does it already own" but "which files should it own".
+
+# --- Prose ---------------------------------------------------------------
+# Every markdown file here is hand-wrapped at about eighty columns and written
+# as prose: the decision records, the worklists, STATE.md, the instructions in
+# CLAUDE.md. Prettier reflows markdown, which would rewrite the line breaks of
+# ~60 documents whose paragraphs were shaped deliberately. Nothing is gained;
+# the diffs of every future edit get noisier.
+*.md
+
+# --- Generated ----------------------------------------------------------
+# Written by a script, checked by a script, never edited by hand. Formatting
+# them means the generator and the formatter can disagree, and the generator
+# wins every time it runs.
+*.generated.json
+*.undo.json
+# Rows lifted verbatim out of Postgres so they can be pasted back. Reformatting
+# them would be editing a record of what the database held.
+docs/*.json
+app/styles/tailwind.generated.css
+
+# --- Not ours -----------------------------------------------------------
+# Supabase's auth email templates are HTML that Supabase renders and its own
+# tooling round-trips; public/ holds assets generated in the iOS repo.
+supabase/templates/
+supabase/.temp/
+public/
+.next/
+node_modules/
+.context/
