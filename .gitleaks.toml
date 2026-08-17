@@ -30,3 +30,7 @@ paths = ['''^node_modules/''']
 [[allowlists]]
 description = "Conductor's per-workspace scratch directory, gitignored and not part of the project."
 paths = ['''^\.context/''']
+
+[[allowlists]]
+description = "Claude's own worktrees, which live *inside* the main checkout at .claude/worktrees/. Each is a full copy of the repo, so without this the scan reads every nested .next/ and node_modules/ as well as the top-level ones — which is how a checkout with nothing wrong in it reported three leaks from a build directory two levels down. Gitignored, and not this repo's code."
+paths = ['''^\.claude/''']
