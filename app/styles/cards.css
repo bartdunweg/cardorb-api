@@ -227,9 +227,6 @@
    On the public link: those, plus Collection and Wishlist, which have slots
    there because the plus and the dashboard do not. */
 @media (max-width: 1000px) {
-  .cards-nav-elsewhere {
-    display: none;
-  }
 }
 
 /* Searching and adding, at the head of the rail. Both belong to the whole page
@@ -265,19 +262,6 @@
 }
 /* The set's wordmark ahead of its name, so the page says which shelf you are
    standing at before it says anything else. */
-.cards-head-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  min-width: 0;
-}
-.cards-head-logo {
-  height: 40px;
-  width: 132px;
-  object-fit: contain;
-  object-position: left center;
-  flex-shrink: 0;
-}
 .cards-main-title {
   margin: 0;
   font-family: var(--font-main);
@@ -293,16 +277,6 @@
      truncate); a page heading should wrap rather than be cut off, so it breaks
      the word instead. */
   overflow-wrap: anywhere;
-}
-
-.cards-tools {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  /* 12px between every control in the bar. */
-  gap: var(--space-3);
-  width: 100%;
-  margin-top: var(--space-5);
 }
 
 /* Only what makes it a search field rather than a button: the surface, the
@@ -365,14 +339,6 @@
   color: var(--color-label);
 }
 
-.cards-count {
-  margin: 0;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-
 .cards-empty p {
   margin: 0;
   max-width: 52ch;
@@ -387,10 +353,6 @@
 /* Not a card: a heading with a grid under it, on the page's own surface. The
    scans are the things on this page with edges, and putting a white panel
    around a grid of white-bordered cards drew a box around a box. */
-.cards-set {
-  display: flex;
-  flex-direction: column;
-}
 
 /* The tripwire under the last built set. See builtSets in CardsView: reaching it
    builds the next few, 800px before it is on screen.
@@ -399,9 +361,6 @@
    for an IntersectionObserver to intersect with once it is the last child of a
    flex column. Not on the spacing scale on purpose: this is not a spacer and
    must never read as one. */
-.cards-more {
-  height: 1px;
-}
 /* Set logos are wordmarks of wildly different proportions, so the height is
    fixed and the width follows rather than the other way round. */
 /* A stated width, not `auto`. Two reasons, and the second is the bug: every set
@@ -568,11 +527,6 @@
   opacity: 0.5;
 }
 
-/* Sits with the heading now, not in the toolbar. */
-.cards-count {
-  margin-top: var(--space-2);
-}
-
 /* Only the gap here now.
    This used to set the columns as well, auto-filling against a minimum scan
    width — and it was the reason the per-row picker did nothing on a phone. It
@@ -592,17 +546,10 @@
   /* The one in the h1 never stepped down with the one over each set, so at
      390px a 132px wordmark took a third of the row and left the set's name
      about 210px to be set at --fs-h2 in. */
-  .cards-head-logo {
-    height: 30px;
-    width: 96px;
-  }
   /* Three columns and no minimum, so at 390px the card's name is squeezed by
      the set beside it. The set is what goes: the scan and the name already say
      which card this is, and the price is what the table is ranked by. Dropping
      a column beats adding a second sideways scroller to this page. */
-  .cards-dash-set {
-    display: none;
-  }
 }
 
 /* ── Tick-list dropdowns ── */
@@ -1156,9 +1103,6 @@
   .cards-search {
     flex: 1 1 0;
     min-width: 0;
-  }
-  .cards-tools .btn {
-    flex: 0 0 auto;
   }
 }
 
