@@ -5,7 +5,7 @@ Where this project stands, for whoever (human or agent) picks it up next.
 ## Now
 
 **The design system reaches the className now, and the number that made the
-case is 721 (ADR-0053, workspace `bangalore`, 2026-08-19).** Asked to set the
+case is 721 (ADR-0054, workspace `bangalore`, 2026-08-19).** Asked to set the
 design system up better. It was not obviously broken — token module, generator,
 drift check, contrast tests, screenshot harness — and the defect was in what it
 could *reach*: only a token inside Tailwind's `@theme` becomes a utility, and
@@ -107,7 +107,7 @@ Dutch — heading and contents follow whatever language the answer is in, though
 in practice that is still Dutch here.
 
 **The memory did not move.** v0.11.0 relocates a repository's memory from
-`docs/` to `.dev-standards/`; this repository keeps `docs/`, and ADR-0053 says
+`docs/` to `.dev-standards/`; this repository keeps `docs/`, and ADR-0054 says
 why — nothing publishes `docs/` here, the repository is private, and fifty-odd
 records are referenced by path from four places. `check-standards.sh` will warn
 about the layout on every run and that warning is expected. If GitHub Pages is

@@ -1,5 +1,5 @@
 ---
-id: ADR-0053
+id: ADR-0054
 title: The design system reaches the className, not just the stylesheet
 status: accepted
 date: 2026-08-19
