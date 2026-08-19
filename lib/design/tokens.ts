@@ -122,6 +122,59 @@ export const colour = {
 } satisfies Record<string, ColourPair>;
 
 /**
+ * Untitled UI's brand ramp, in Card Orb's blue.
+ *
+ * Untitled UI's semantic layer never names a colour directly — every one of its
+ * ~120 semantic variables points at a primitive, and 65 of them point into this
+ * eleven-step ramp. So the whole library takes this app's accent by replacing
+ * eleven values, which is the cheap half of ADR-0054 and why the semantic layer
+ * is left alone.
+ *
+ * ADR-0055 decides what may differ from Untitled UI at all: its value is the
+ * default, and ours needs either to be the identity or to be argued from a
+ * measurement. This ramp is both, and the two anchors are the measured half.
+ *
+ * ── How the eleven values were reached ─────────────────────────────────────
+ *
+ * Not by eye. Untitled UI's own ramp is a purple whose eleven steps have a
+ * deliberate lightness curve; that curve is design work worth keeping. So each
+ * step keeps Untitled UI's OKLCH *lightness*, takes the tint's *hue*, and has
+ * its chroma scaled by the tint's chroma over Untitled UI's at step 600. The
+ * derivation is in the commit message and reproducible from those two ramps.
+ *
+ * Three steps then override that derivation, because the derived value would be
+ * unmeasured and these three are load-bearing:
+ *
+ *   500 — `--color-border-brand`, which is the focus ring. `tint` below is
+ *         argued as exactly this ("a selected pill, a progress bar, a focus
+ *         ring") and measured past the 3:1 a graphic needs.
+ *   600 — `--color-bg-brand-solid`, the filled accent. Same value, same
+ *         argument. 500 and 600 being equal is not a slip: this app has one
+ *         accent, not a ramp of them.
+ *   700 — `--color-text-brand-secondary`, the accent *as a word*. `tintLabel`
+ *         exists because the fill fails AA as text — 4.02:1 on white, 3.87:1
+ *         on the page — so this is the darkened value that clears 4.5 on both.
+ *
+ * The eight remaining steps are backgrounds and subtle borders. They are
+ * derived, not measured, and any of them that ends up under text has to be
+ * measured on the glass before it is trusted — which is the failure
+ * gen-tokens.mjs's header already records happening once.
+ */
+export const brand = {
+  50: "#f1f8ff",
+  100: "#e2f1ff",
+  200: "#c6e2ff",
+  300: "#9eccff",
+  400: "#61a8ff",
+  500: colour.tint.light, // focus ring — measured ≥3:1 as a graphic
+  600: colour.tint.light, // filled accent — the same one accent
+  700: colour.tintLabel.light, // accent as text — measured ≥4.5:1
+  800: "#0048af",
+  900: "#003c8a",
+  950: "#002669",
+} satisfies Record<string, string>;
+
+/**
  * What the tiers are actually read against, per theme.
  *
  * Named rather than inlined into the test because these three are the whole
