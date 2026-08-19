@@ -1,4 +1,4 @@
-<!-- DEV-STANDARDS:BEGIN v0.5.3 — generated from dev-standards. Do not edit by hand. -->
+<!-- DEV-STANDARDS:BEGIN v0.11.0 — generated from dev-standards. Do not edit by hand. -->
 
 # Codex adapter
 
@@ -18,6 +18,15 @@ measurement, a trace, or a screenshot. A domain with no evidence is reported `no
 never `pass`.
 
 <!-- DEV-STANDARDS:END -->
+
+<!-- PRODUCT:BEGIN — product-specific. Edit freely; never overwritten by /apply-standards. -->
+
+## House style
+
+Rules that hold for this repository only, and that the generated block above does not cover.
+Anything written here survives a re-run of `/apply-standards`; anything written above it does not.
+
+<!-- PRODUCT:END -->
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -1,39 +1,37 @@
-<!-- STANDARDS:BEGIN v0.5.3 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.11.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
 - **YOU MUST write everything that lands on disk in English** — files, folder names, commit
   messages, code comments, documentation, PR and issue text. Read any language, write English.
-- **Answer in the language the user writes in.** Dutch in, Dutch back.
-- **Explain simply.** Everyday words, short sentences, no jargon unless the term is the point.
-  Name the trade-off in plain language instead of walking through the reasoning.
-- The product's user-facing copy may be Dutch; everything internal is English.
+- **Answer in the language the user writes in** — the chat only; every file you write is English.
+- **Explain simply, in bullets.** Short, common words and one idea per sentence — write as if the
+  reader is smart but new to the topic (ELI5 / simplified technical English). Avoid jargon; when a
+  technical term is unavoidable, say what it means. Default to bullets and small tables over prose.
+- The product's user-facing copy may be in any language; everything internal is English.
 
 ## How you close a response
 
-**Every response ends with a `## Samenvatting` block. Nothing comes after it**, so the user
-never scrolls up to find out what happened.
+**Every response ends with a summary block. Nothing comes after it**, so the user never scrolls
+up to find out what happened.
 
-- Dutch, point-by-point, scannable. No prose paragraphs.
-- When something changed, include a two-column table:
-
-  | Was | Nu |
-  |---|---|
-  | old behaviour | new behaviour |
-
+- **Heading and contents in the language you are answering in.**
+- Point-by-point, scannable. No prose paragraphs.
+- When something changed, include a two-column before/after table.
 - Assumptions and open questions go inside this block, not scattered through the answer.
 
 ## How you operate
 
-- **Decide, do not ask.** Pick the option a competent engineer would pick, write the
-  assumption down, report it in one line at the end, keep going. Stop only for
-  destructive operations, real money or production, or a genuine 50/50 product fork.
-  Never ask about naming, structure, library choice, style, severity, or whether
-  something is worth recording.
-- **Batch, never interrupt.** Open questions go in the `Samenvatting` block at the end of the
-  response, never as a mid-task interruption.
+- **Ask about the what and the how; decide only the trivial.** Where there is a real choice —
+  what to build, or the approach, structure, or library for it — say plainly what you mean to do,
+  then ask first: a few short multiple-choice questions, up front, and the same at each plan and
+  each real change; defining it through questions is faster and builds better. Decide silently
+  only what has no real alternative — formatting, an obvious name — then note it and report it.
+  Always stop for destructive or irreversible operations, real money, or production.
+- **Batch, never interrupt.** One upfront batch or a checkpoint, never scattered
+  mid-task; anything you did not ask, you decided — record it in the closing summary.
 - **Look backwards first.** Before changing existing code, find out why it is the way it
-  is — search `docs/decisions/`, then `git log -S`. If no rationale exists, write one
+  is — search the decision records, then `git log -S`. If no rationale exists, write one
   before you change it. Reasoning disappears the moment you overwrite the code.
 
 ## Memory system
@@ -44,7 +42,7 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 |---|---|
 | User reacts, criticises, or states a preference | Use the `log-feedback` workflow before acting |
 | A non-obvious choice between real alternatives | Use the `record-decision` workflow |
-| A user-visible change ships | Changelog entry + fragment in `docs/changelog.d/`, and refresh any outward-facing text it makes stale — README opening, repository description, topics |
+| A user-visible change ships | Changelog entry + fragment in `changelog.d/`, and refresh any outward-facing text it makes stale — README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md`, a brief, or a record |
 | Session starts on an existing project | Read `STATE.md` first |
 | Session ends | Update `STATE.md` so the next session starts oriented |
 | A build or code change is complete | Run `scripts/verify.sh`, then `build-quality` |
@@ -53,10 +51,19 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 decision record if a real choice was made + prompting feedback marked `addressed` +
 `STATE.md` updated + a `build-quality` report for this project's platform, where every domain
 carries evidence or is reported `not measured` + every written artefact in English + a closing
-`Samenvatting` block listing the assumptions.
+summary block listing the assumptions.
 
 **A `pass` without evidence is not a pass.** Report `not measured` instead and say what would
 have produced the evidence. A task without a memory write is not done.
+
+**`Visibility` decides how freely memory is written.** Where it is `private`, write bluntly —
+a carefully-worded feedback record is worthless, and that candour is the whole value. Where it
+is `public` or `may become public`, write nothing you would not publish on this project's own
+website: records are immutable and git history is public the moment the repository is, so there
+is no later redaction. Record the shape instead — *the budget ceiling was reached*, not the
+figure; *a customer on the enterprise plan*, not the name. **If keeping a record honest and
+keeping it publishable conflict, say so and stop**; the answer is to move the memory somewhere
+private, not to write a diplomatic record.
 
 ## Rules that are easy to get wrong
 
@@ -66,8 +73,9 @@ have produced the evidence. A task without a memory write is not done.
   Never present a guessed rationale as fact.
 - Creating new shared files is fine; **editing an existing shared file is the one case
   where you flag it first**, because a parallel worktree is probably editing it too.
-- Never hand-edit `docs/CHANGELOG.md`; add a fragment in `docs/changelog.d/`. Projects that
-  ship no user-visible releases have neither, and that is correct — do not create them.
+- Never hand-edit the changelog; add a fragment in `changelog.d/`. Projects that ship no
+  user-visible releases have neither, and that is correct — do not create them.
+- On React or Tailwind work, search Untitled UI (MCP) for the component before writing one.
 
 <!-- STANDARDS:END -->
 
@@ -83,6 +91,7 @@ both read.
 - Platform: web
 - Stage: live
 - Users: one owner (single-passcode API), public read access at cardorb.com
+- Visibility: private (the repository; the deployed site and its API are public)
 
 `Platform: web` is what `build-quality` reads to decide which domains apply, and it is
 the platform of *this repository* — a Next.js app on Vercel. The iOS client lives in
@@ -123,5 +132,8 @@ serves it an API.
 
 - Docs map: @docs/README.md
 - Decisions: @docs/decisions/
+- Feedback: `docs/feedback/`
+- Changelog fragments: `docs/changelog.d/` (the standard says `changelog.d/`; here it lives
+  under `docs/`, which is this repo's memory root and is not published anywhere)
 
 <!-- PRODUCT:END -->
