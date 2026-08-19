@@ -187,4 +187,8 @@ root `CLAUDE.md` for how and when to write to it.
   and the plain circle goes where the file is drawn as given, which is a browser
   tab. It also has the measurement behind the wordmark's `translate-y-[6.05%]`,
   and why the word beside it needs no matching nudge.
+- `decisions/0053-memory-stays-in-docs.md` — **read before moving anything in
+  this directory.** The shared standards keep a repository's memory in
+  `.dev-standards/` from v0.11.0 onwards; this repository deliberately keeps
+  `docs/`, and the record says why and what would void that choice.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

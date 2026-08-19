@@ -33,16 +33,51 @@ seventeen more of these into `cardsPageClasses.ts`. It was rescued, judged and
 dropped — `CardsView.tsx` had moved 770 lines underneath it, and the measurement
 above says the extraction was not wanted anyway.
 
-**The shared standards are at v0.5.3, and the Definition of Done now has a gate
-rather than a description (workspace `kuala-lumpur`, 2026-08-16).** The change of
-substance is `scripts/verify.sh`: one command, one exit code, so nothing has to
-know whether this project uses npm or gradle. DoD is now "verify.sh exits 0"
-where it used to list tests, typecheck and lint by name, and `build-quality` must
-carry evidence per domain — a `pass` without it is reported `not measured`.
+**The shared standards are at v0.11.0 as of 2026-08-19 (workspace `canberra`),
+and the biggest change is that agents now ask instead of deciding.** Where there
+is a real choice — what to build, or the approach, structure or library for it —
+the standard now says to put a few short multiple-choice questions up front, at
+each plan and each real change, rather than picking the sensible option and
+noting the assumption. Only what has no real alternative is decided silently.
+This is a reversal of the "Decide, do not ask" rule that governed this repository
+from v0.5.3 onwards, so earlier records were written under the opposite
+instruction — that is context for reading them, not a defect in them.
 
-`CLAUDE.md` is 127 lines and gained a `Platform: web` line, which is what
-`build-quality` reads to choose its domains. It was missing; the iOS client is a
-separate repo with its own standards and this one only serves it an API.
+Three smaller changes ride along. **Visibility** is now a field in `CLAUDE.md`
+and it decides how bluntly memory may be written: this repository is `private`,
+so records stay candid. Records in a public repository may not name figures or
+customers, because git history is public the moment the repository is and there
+is no later redaction. **Untitled UI (MCP) is searched before hand-writing a
+React or Tailwind component.** And the summary block is no longer hard-coded to
+Dutch — heading and contents follow whatever language the answer is in, though
+in practice that is still Dutch here.
+
+**The memory did not move.** v0.11.0 relocates a repository's memory from
+`docs/` to `.dev-standards/`; this repository keeps `docs/`, and ADR-0053 says
+why — nothing publishes `docs/` here, the repository is private, and fifty-odd
+records are referenced by path from four places. `check-standards.sh` will warn
+about the layout on every run and that warning is expected. If GitHub Pages is
+ever enabled, that record is void and the migration must run.
+
+The Definition of Done is unchanged in substance since v0.5.3: `scripts/verify.sh`
+is one command with one exit code, so nothing has to know whether this project
+uses npm or gradle, and `build-quality` must carry evidence per domain — a `pass`
+without it is reported `not measured`.
+
+`CLAUDE.md` is 139 lines. It carries `Platform: web`, which is what
+`build-quality` reads to choose its domains; the iOS client is a separate repo
+with its own standards and this one only serves it an API. `AGENTS.md` gained the
+`PRODUCT` region it was missing, so repository-only rules for Codex now have a
+place that survives the next refresh.
+
+**`scripts/verify.sh` was not touched and must not be regenerated.** The template
+version contains a deliberate `run "PLACEHOLDER" false`; this repository's script
+is the real one, with the Node-version guard and the split checks described below.
+
+Verified on 2026-08-19: `./scripts/verify.sh` exits 0 on Node v24.19.0 — secrets,
+node, format, tokens, typecheck, 478 tests in 41 files, lint and build all pass.
+On Node 20 it fails at the node step by design, which is what a shell that ignores
+`.nvmrc` will show.
 
 The script runs the checks `npm run check` composes, but **split into separate
 steps on purpose**: that script chains with `&&` and stops at the first failure,
