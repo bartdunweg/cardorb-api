@@ -22,16 +22,28 @@
  * pixel-identical.
  */
 
+/**
+ * ── Written in utilities, not in escape hatches ────────────────────────────
+ *
+ * Both recipes below used to be a row of `[property:var(--token)]` strings,
+ * because only colour and radius reached Tailwind's `@theme` and everything
+ * else in the design system was invisible to a className. The rest of the
+ * scales are generated into `@theme` now (ADR-0053), so `text-control-label`,
+ * `font-button`, `font-main`, `blur-glass`, `h-control`, `shadow-card` and
+ * `shadow-elevated` are ordinary classes.
+ *
+ * This file is the first consumer, chosen because it is the recipe the most
+ * elements on the site wear: if the tokens behind those classes were wrong, a
+ * screenshot of any page says so immediately.
+ */
+
 /** GLASS — the material. Border, fill, blur, shadow. */
 export const glassClassName =
   "border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] " +
-  "[backdrop-filter:blur(var(--blur-glass))] [-webkit-backdrop-filter:blur(var(--blur-glass))] " +
-  "[box-shadow:var(--shadow-card)] text-label dark:border-[var(--glass-border-control)]";
+  "backdrop-blur-glass shadow-card text-label dark:border-[var(--glass-border-control)]";
 
 /** CONTROL — the size and the type. */
-export const controlSizeClassName =
-  "h-[var(--control-h)] [font-family:var(--font-main)] " +
-  "[font-size:var(--fs-control-label)] [font-weight:var(--fw-button)]";
+export const controlSizeClassName = "h-control font-main text-control-label font-button";
 
 /**
  * A button, whole.
@@ -49,8 +61,8 @@ export const buttonClassName = [
   "px-4 rounded-[var(--radius-btn)]",
   glassClassName,
   controlSizeClassName,
-  "[transition:box-shadow_var(--dur-fast)_var(--ease-smooth),border-color_var(--dur-fast)_var(--ease-smooth),transform_var(--dur-fast)_var(--ease-smooth)]",
-  "hover:[box-shadow:var(--shadow-elevated)]",
+  "transition-[box-shadow,border-color,transform] duration-fast ease-smooth",
+  "hover:shadow-elevated",
   "[&_svg]:block [&_svg]:shrink-0",
   "disabled:opacity-55 disabled:cursor-not-allowed",
   "aria-disabled:opacity-55 aria-disabled:cursor-not-allowed",
