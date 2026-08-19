@@ -4,6 +4,60 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**The design system reaches the className now, and the number that made the
+case is 721 (ADR-0053, workspace `bangalore`, 2026-08-19).** Asked to set the
+design system up better. It was not obviously broken — token module, generator,
+drift check, contrast tests, screenshot harness — and the defect was in what it
+could *reach*: only a token inside Tailwind's `@theme` becomes a utility, and
+only colour and radius were there. Everything else was an ordinary custom
+property Tailwind cannot see, so a className reached it through the arbitrary-
+value escape hatch. **721 `var(--…)` references inside `.tsx`**, against ~200 in
+the stylesheets. `--fs-small` alone accounted for 77.
+
+The type scale, weights, line-heights, families, easing, durations, blur tiers
+and z-index scale are in `lib/design/tokens.ts` now and generated into `@theme`.
+`text-small`, `font-title`, `leading-tight`, `ease-smooth`, `blur-glass`,
+`h-control`, `shadow-card`, `duration-fast`, `z-modal` are ordinary classes.
+
+Four things worth knowing before touching this area:
+
+- **The shadows and the layout constants stay in `tokens.css` on purpose.** A
+  shadow is three layers in light and two in dark — a different *shape*, which
+  `light-dark()` cannot express because it is a colour function — and every
+  layout constant is redefined at a breakpoint. Both get a generated `@utility`
+  that *reads* the variable, listed in `tokens.ts` as `utilities` so the
+  generator is not what knows which parts of the system exist.
+- **`--fs-*`, `--fw-*` and `--lh-*` still work, as aliases.** Each is a `var()`
+  at the canonical name, never a copy, so the several hundred old call sites
+  resolve while they are migrated one portion at a time. **An empty alias block
+  is how this reports it is finished.** 706 escape hatches left; the sweep is
+  ADR-0052's rule, one portion with screenshots between.
+- **The spacing scale is already Tailwind's, step for step.** 4, 8, 12, 16, 20,
+  24, 28, 32, 40, 48 with half-steps at 10 and 14. `p-4` *is* `--space-4`, so
+  `[padding:var(--space-4)]` is a straight deletion and needs no token work.
+- **`--fs-label` is the one that did not move, and it is a trap not a
+  principle.** It would need the name `--text-label`, and `--color-label`
+  already owns the `text-label` class; Tailwind resolves one and says nothing.
+
+**Two things were found on the way, and one of them shipped a visible change.**
+`vars.test.ts` was only reading `app/styles` — the smaller half — so pointing it
+at `.tsx` immediately found `/brand` drawing its panels and swatches with
+`--radius-card` and `--radius-control`, **neither of which has ever existed**.
+Square corners on the page whose job is showing the shapes. And
+`leading-relaxed` moved 1.625 → 1.7: the token has always said 1.7 and three
+call sites wrote Tailwind's class believing it agreed. **Two live marketing
+pages re-typeset**, 69,901–87,377 pixels, all of it vertical re-registration
+below the first paragraph. Taken knowingly; the revert is one line in
+`tokens.ts`.
+
+**The harness was run the way it is meant to be run**, baselined against the
+pre-change tree (`git stash` → `--update-snapshots` → `stash pop` → compare) —
+and it caught the line-height on the first pass, six of nine. Setting
+`leading.relaxed` back to 1.625 made all nine pixel-identical, which is what
+proves the rest of the change — the whole token move and the button recipe
+rewrite — moved nothing. `scripts/verify.sh` exits 0 on Node 24. Nothing behind
+a login was photographed.
+
 **cards.css is 1,300 lines and should stay that way** — corrected from an
 earlier note in this file that called its Tailwind migration unfinished. That was
 the wrong conclusion from the right number, and it would have sent somebody on a
