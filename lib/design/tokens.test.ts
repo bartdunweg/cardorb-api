@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { over, ratio } from "./contrast";
-import { colour, radius, surfaces } from "./tokens";
+import { blur, colour, ease, font, fontWeight, leading, radius, surfaces, text } from "./tokens";
+
+/** camelCase → kebab-case, the same rule the generator writes the names with. */
+const kebab = (s: string) => s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
 
 /**
  * The test the stylesheets thought they had.
@@ -180,5 +183,79 @@ describe("this file and the stylesheet it generates agree", () => {
       const value = css.match(new RegExp(`--radius-${name}:\\s*([^;]+);`))?.[1]?.trim();
       expect(value, `--radius-${name} is missing from tailwind.generated.css`).toBe(expected);
     });
+  }
+
+  it("every scale reaches @theme, which is the only reason a utility exists", () => {
+    // Not a formality. A token emitted into :root but not into @theme is
+    // invisible to Tailwind: `text-small` silently does not exist, and a
+    // className carrying it renders at the inherited size with no error
+    // anywhere. That is the failure this whole change was made to remove, so it
+    // is the one assertion that has to outlive the change.
+    const theme = css.match(/@theme\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+    const expected = [
+      ...Object.keys(text).map((n) => `--text-${kebab(n)}`),
+      ...Object.keys(leading).map((n) => `--leading-${kebab(n)}`),
+      ...Object.keys(fontWeight).map((n) => `--font-weight-${kebab(n)}`),
+      ...Object.keys(font).map((n) => `--font-${kebab(n)}`),
+      ...Object.keys(ease).map((n) => `--ease-${kebab(n)}`),
+      ...Object.keys(blur).map((n) => `--blur-${kebab(n)}`),
+    ];
+    expect(expected.filter((name) => !theme.includes(`${name}:`))).toEqual([]);
+  });
+
+  it("every alias points at the canonical name rather than copying its value", () => {
+    // An alias that holds a value is a second source, and a second source is
+    // the drift this file exists to prevent. Each has to be a var().
+    for (const name of Object.keys(text)) {
+      const value = css.match(new RegExp(`--fs-${kebab(name)}:\\s*([^;]+);`))?.[1]?.trim();
+      expect(value, `--fs-${kebab(name)}`).toBe(`var(--text-${kebab(name)})`);
+    }
+  });
+});
+
+/**
+ * The ordering rule tokens.css claimed a test held, which no file held.
+ *
+ * Its comment read: "a floor is chosen against its neighbours, not against its
+ * own ceiling, and design-system.test.ts holds the ordering to it." That file is
+ * not in this repo and by the look of it never was — the same shape of gap the
+ * contrast comments had at the top of this file.
+ *
+ * The bug it describes is real and specific. The floors were once set by
+ * stepping the desktop scale down as a block, which works for the steps on that
+ * scale and quietly breaks the ones beside it: a step a rung above body on a
+ * desktop landed on the same 14px as body on a phone. So the largest thing on a
+ * card came out the size of the copy around it, at exactly the width where it
+ * mattered most.
+ */
+describe("the type scale keeps its order at both ends", () => {
+  /** `clamp(floor, slope, ceiling)` → the two numbers that are px. */
+  function ends(value: string): [number, number] | null {
+    const m = value.match(/^clamp\(\s*([\d.]+)px\s*,[^,]+,\s*([\d.]+)px\s*\)$/);
+    return m ? [Number(m[1]), Number(m[2])] : null;
+  }
+
+  const steps = Object.entries(text)
+    .map(([name, value]) => [name, ends(value)] as const)
+    .filter((s): s is readonly [string, [number, number]] => s[1] !== null);
+
+  it("is reading a real scale", () => {
+    // `control`, `controlLabel` and `tiny` are deliberately not clamps, so this
+    // guards against the regex quietly matching nothing at all.
+    expect(steps.length).toBeGreaterThan(6);
+  });
+
+  for (const [aName, [aFloor, aCeiling]] of steps) {
+    for (const [bName, [bFloor, bCeiling]] of steps) {
+      if (aCeiling <= bCeiling) continue;
+      it(`${aName} is above ${bName} on a phone too`, () => {
+        expect(
+          aFloor,
+          `${aName} is ${aCeiling}px to ${bName}'s ${bCeiling}px on a desktop, but ` +
+            `${aFloor}px to ${bFloor}px at 640. A floor is chosen against its ` +
+            `neighbours, not against its own ceiling.`,
+        ).toBeGreaterThanOrEqual(bFloor);
+      });
+    }
   }
 });

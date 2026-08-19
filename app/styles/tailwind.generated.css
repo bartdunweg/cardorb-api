@@ -10,8 +10,8 @@
    Every colour is one declaration with two answers. light-dark() reads
    color-scheme, which :root sets to 'light dark' — so a visitor who has chosen
    nothing gets their machine's preference before any JavaScript runs, and a
-   pair updated on one side only is not expressible. Radii have no theme to
-   answer to and are a single value each.
+   pair updated on one side only is not expressible. Every other scale here has
+   no theme to answer to and is a single value each.
 
    The reasoning for each value lives in lib/design/tokens.ts, beside the
    number, where the tests that assert it can read it too. */
@@ -41,6 +41,48 @@
   --radius-lg: 24px;
   --radius-btn: 999px;
   --radius-pill: 14px;
+  --text-display: clamp(34px, 3.08vw + 12.3px, 40px);
+  --text-h2: clamp(26px, 1.54vw + 14.2px, 28px);
+  --text-card: clamp(20px, 1.54vw + 10.2px, 24px);
+  --text-sub: clamp(17px, 1.15vw + 9.6px, 20px);
+  --text-body: clamp(14px, 0.38vw + 11.5px, 15px);
+  --text-body-s: clamp(14px, 0.38vw + 11.5px, 15px);
+  --text-body-l: clamp(16px, 0.38vw + 13.5px, 17px);
+  --text-small: clamp(12px, 0.38vw + 9.5px, 13px);
+  --text-eyebrow: clamp(12px, 0.38vw + 9.5px, 13px);
+  --text-control: max(16px, var(--text-body-s));
+  --text-control-label: calc(var(--text-control) - 2px);
+  --text-tiny: 11px;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+  --font-weight-regular: 400;
+  --font-weight-title: 500;
+  --font-weight-eyebrow: 600;
+  --font-weight-button: 700;
+  --font-main: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --font-body: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.17, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --blur-glass: 20px;
+  --blur-glass-card: 24px;
+  --blur-glass-pill: 16px;
+  --blur-scrim: 10px;
+  --blur-scrim-sm: 8px;
+  --dur-fast: 150ms;
+  --dur-normal: 200ms;
+  --dur-slow: 280ms;
+  --z-sticky: 200;
+  --z-tabbar: 899;
+  --z-tabpage: 900;
+  --z-controls: 950;
+  --z-modal: 1000;
+  --z-sheet: 1010;
+  --z-skip: 9999;
 }
 
 /* 'dark:' follows the attribute this app already sets, not the OS.
@@ -80,4 +122,167 @@
   --radius-lg: 24px;
   --radius-btn: 999px;
   --radius-pill: 14px;
+  --text-display: clamp(34px, 3.08vw + 12.3px, 40px);
+  --text-h2: clamp(26px, 1.54vw + 14.2px, 28px);
+  --text-card: clamp(20px, 1.54vw + 10.2px, 24px);
+  --text-sub: clamp(17px, 1.15vw + 9.6px, 20px);
+  --text-body: clamp(14px, 0.38vw + 11.5px, 15px);
+  --text-body-s: clamp(14px, 0.38vw + 11.5px, 15px);
+  --text-body-l: clamp(16px, 0.38vw + 13.5px, 17px);
+  --text-small: clamp(12px, 0.38vw + 9.5px, 13px);
+  --text-eyebrow: clamp(12px, 0.38vw + 9.5px, 13px);
+  --text-control: max(16px, var(--text-body-s));
+  --text-control-label: calc(var(--text-control) - 2px);
+  --text-tiny: 11px;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+  --font-weight-regular: 400;
+  --font-weight-title: 500;
+  --font-weight-eyebrow: 600;
+  --font-weight-button: 700;
+  --font-main: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --font-body: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.17, 1, 0.32, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --blur-glass: 20px;
+  --blur-glass-card: 24px;
+  --blur-glass-pill: 16px;
+  --blur-scrim: 10px;
+  --blur-scrim-sm: 8px;
+  --dur-fast: 150ms;
+  --dur-normal: 200ms;
+  --dur-slow: 280ms;
+  --z-sticky: 200;
+  --z-tabbar: 899;
+  --z-tabpage: 900;
+  --z-controls: 950;
+  --z-modal: 1000;
+  --z-sheet: 1010;
+  --z-skip: 9999;
+
+  /* ── The old names, as pointers ──
+     Aliases, never copies: each is a var() at the canonical name above, so the
+     two cannot disagree. They exist so the call sites still written as
+     [font-size:var(--fs-small)] keep resolving while they are migrated to
+     text-small one portion at a time. When this block is empty the migration
+     is over, which is the only progress report it needs. */
+  --fs-display: var(--text-display);
+  --fs-h2: var(--text-h2);
+  --fs-card: var(--text-card);
+  --fs-sub: var(--text-sub);
+  --fs-body: var(--text-body);
+  --fs-body-s: var(--text-body-s);
+  --fs-body-l: var(--text-body-l);
+  --fs-small: var(--text-small);
+  --fs-eyebrow: var(--text-eyebrow);
+  --fs-control: var(--text-control);
+  --fs-control-label: var(--text-control-label);
+  --fs-tiny: var(--text-tiny);
+  --fw-regular: var(--font-weight-regular);
+  --fw-title: var(--font-weight-title);
+  --fw-eyebrow: var(--font-weight-eyebrow);
+  --fw-button: var(--font-weight-button);
+  --lh-tight: var(--leading-tight);
+  --lh-snug: var(--leading-snug);
+  --lh-normal: var(--leading-normal);
+  --lh-relaxed: var(--leading-relaxed);
+}
+
+/* ── Classes over values that cannot live in @theme ──
+   A shadow is three layers in light and two in dark; a page gutter is 32, 24
+   or 16 depending on the viewport. Both keep their declaration in tokens.css
+   beside the [data-theme] or @media block that answers for them, and read it
+   here rather than inlining it, so the class stays correct when the block
+   changes. */
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-elevated {
+  box-shadow: var(--shadow-elevated);
+}
+
+@utility shadow-image {
+  box-shadow: var(--shadow-image);
+}
+
+@utility h-control {
+  height: var(--control-h);
+}
+
+@utility min-h-control {
+  min-height: var(--control-h);
+}
+
+@utility max-w-content {
+  max-width: var(--content-max);
+}
+
+@utility p-card {
+  padding: var(--card-pad);
+}
+
+@utility px-page {
+  padding-inline: var(--page-pad-x);
+}
+
+@utility pb-page {
+  padding-bottom: var(--page-pad-bottom);
+}
+
+@utility pt-main {
+  padding-top: var(--main-pad-top);
+}
+
+@utility h-tabbar-pill {
+  height: var(--tabbar-pill-h);
+}
+
+@utility duration-fast {
+  --tw-duration: var(--dur-fast);
+  transition-duration: var(--dur-fast);
+}
+
+@utility duration-normal {
+  --tw-duration: var(--dur-normal);
+  transition-duration: var(--dur-normal);
+}
+
+@utility duration-slow {
+  --tw-duration: var(--dur-slow);
+  transition-duration: var(--dur-slow);
+}
+
+@utility z-sticky {
+  z-index: var(--z-sticky);
+}
+
+@utility z-tabbar {
+  z-index: var(--z-tabbar);
+}
+
+@utility z-tabpage {
+  z-index: var(--z-tabpage);
+}
+
+@utility z-controls {
+  z-index: var(--z-controls);
+}
+
+@utility z-modal {
+  z-index: var(--z-modal);
+}
+
+@utility z-sheet {
+  z-index: var(--z-sheet);
+}
+
+@utility z-skip {
+  z-index: var(--z-skip);
 }

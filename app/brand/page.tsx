@@ -55,7 +55,7 @@ const { h2, h3, body, link, strong } = legal;
 /** The panel the marks are shown on: one light, one dark, side by side, so the
  *  chrome sphere can be judged against both without toggling the theme. */
 const panel =
-  "flex items-center justify-center gap-6 [padding:var(--space-6)] rounded-[var(--radius-card)] " +
+  "flex items-center justify-center gap-6 p-6 rounded-lg " +
   "border border-[var(--color-border-subtle)] min-h-[200px]";
 
 /**
@@ -79,7 +79,13 @@ function Sample({ file, alt, size = 128 }: { file: string; alt: string; size?: n
 function Swatch({ name, pair }: { name: string; pair: ColourPair }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex h-14 rounded-[var(--radius-control)] overflow-hidden border border-[var(--color-border-subtle)]">
+      {/* rounded-pill, which despite the name is the rounded rectangle rather
+          than the capsule — the shape every control on this site that sits
+          beside a field wears. It read rounded-[var(--radius-control)] until the
+          token guard was pointed at .tsx: no such token has ever existed, so
+          this and the panel above were drawing square corners on the one page
+          whose job is showing the shapes. */}
+      <div className="flex h-14 rounded-pill overflow-hidden border border-[var(--color-border-subtle)]">
         {/* Both halves of the pair at once. A swatch that showed only the
             current theme's value would make this page tell half the truth
             depending on when you opened it. */}

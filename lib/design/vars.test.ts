@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -19,9 +19,22 @@ import { join } from "node:path";
  * Only checks the tokens this project defines. A var() with a fallback is fine
  * by construction, and the ones Lightning CSS and Tailwind generate are not
  * ours to know about.
+ *
+ * ── It used to read the stylesheets only, and that was the smaller half ────
+ *
+ * Measured when the scales moved into `@theme` (ADR-0053): there are ~720
+ * `var(--token)` references inside `.tsx`, against ~200 in the sheets. Every one
+ * of them is an arbitrary-value class — `[font-size:var(--fs-small)]` — which
+ * Tailwind passes through to the browser verbatim without ever asking whether
+ * the name exists. So the larger half of this project's token references were
+ * the unchecked half, and they are the half being rewritten: renaming a token
+ * and missing a className is exactly the silent-inheritance failure above, at
+ * the moment it is most likely to happen.
  */
 
 const STYLES = "app/styles";
+/** Where the arbitrary-value classes are. */
+const CODE = ["app", "lib"];
 
 /** Everything declared anywhere in the stylesheets, generated ones included. */
 function declared(): Set<string> {
@@ -34,13 +47,35 @@ function declared(): Set<string> {
   return names;
 }
 
+/** Every `.ts`/`.tsx` under app/ and lib/, where the className strings are. */
+function code(dir: string, out: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    if (name === "node_modules" || name === ".next" || name.startsWith(".")) continue;
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) code(path, out);
+    else if (/\.(ts|tsx)$/.test(path)) out.push(path);
+  }
+  return out;
+}
+
 /** Every var() reference, minus the ones that carry their own fallback. */
 function referenced(): Map<string, string[]> {
   const uses = new Map<string, string[]>();
-  for (const file of readdirSync(STYLES)) {
-    if (!file.endsWith(".css")) continue;
-    const css = readFileSync(join(STYLES, file), "utf8");
-    for (const m of css.matchAll(/var\(\s*(--[a-z0-9-]+)\s*([,)])/gi)) {
+  const files = [
+    ...readdirSync(STYLES)
+      .filter((f) => f.endsWith(".css"))
+      .map((f) => join(STYLES, f)),
+    ...CODE.flatMap((dir) => code(dir)),
+  ];
+  for (const file of files) {
+    let source = readFileSync(file, "utf8");
+    // In code, only the code. A var() inside a comment is prose about a token —
+    // "renaming --colour-label one letter out inherits silently" — and the
+    // examples in that prose are deliberately names that do not exist.
+    if (/\.tsx?$/.test(file)) {
+      source = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+    }
+    for (const m of source.matchAll(/var\(\s*(--[a-z0-9-]+)\s*([,)])/gi)) {
       // A comma means a fallback follows, which is a deliberate "this may not
       // exist" and none of this test's business.
       if (m[2] === ",") continue;
@@ -71,9 +106,14 @@ describe("custom properties", () => {
     ).toEqual([]);
   });
 
-  it("is looking at a real stylesheet", () => {
+  it("is looking at a real stylesheet, and at the components too", () => {
     // Without this the suite passes when the glob breaks and nothing is read.
     expect(known.size).toBeGreaterThan(80);
     expect(used.size).toBeGreaterThan(40);
+    // And separately that the .tsx half is being reached at all: the first
+    // version of this test read only app/styles, and the components are where
+    // three quarters of the references are.
+    const inCode = [...used.values()].filter((files) => files.some((f) => /\.tsx?$/.test(f)));
+    expect(inCode.length).toBeGreaterThan(20);
   });
 });
