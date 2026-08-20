@@ -518,17 +518,6 @@
 
   /* ── Card Orb, from lib/design/tokens.ts ──────────────────────────────── */
 
-  --color-brand-50: #f1f8ff;
-  --color-brand-100: #e2f1ff;
-  --color-brand-200: #c6e2ff;
-  --color-brand-300: #9eccff;
-  --color-brand-400: #61a8ff;
-  --color-brand-500: #007aff;
-  --color-brand-600: #0066cc;
-  --color-brand-700: #0066cc;
-  --color-brand-800: #0048af;
-  --color-brand-900: #003c8a;
-  --color-brand-950: #002669;
   --color-label: light-dark(#111111, #ffffff);
   --color-label-secondary: light-dark(#666666, #959595);
   --color-label-tertiary: light-dark(#737373, #8c8c8c);

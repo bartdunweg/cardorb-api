@@ -105,6 +105,18 @@ export const colour = {
    */
   tintLabel: { light: "#0066cc", dark: "#007aff" },
 
+  /* ── On this pair, after the palette went purple (ADR-0060) ──────────────
+   *
+   * `tint` and `tintLabel` are no longer the app's accent. Untitled UI's brand
+   * ramp is, and these two are read only by what is left of the hand-written
+   * stylesheets. They stay until those do.
+   *
+   * The reasoning is kept because it is the general rule, not a fact about
+   * blue: a colour measured as a *graphic* (3:1) is not cleared for use under
+   * a *word* (4.5:1). That distinction put a 4.02:1 button on screen once
+   * (ADR-0057), and it is the check to run on any future palette — Untitled
+   * UI's purple happens to clear both, which is luck rather than diligence. */
+
   /**
    * Warning / destructive: the delete-account panel border and button — the
    * only place in the app that uses a warning colour. Used to be a literal
@@ -120,64 +132,6 @@ export const colour = {
    */
   danger: { light: "#d7263d", dark: "#d7263d" },
 } satisfies Record<string, ColourPair>;
-
-/**
- * Untitled UI's brand ramp, in Card Orb's blue.
- *
- * Untitled UI's semantic layer never names a colour directly — every one of its
- * ~120 semantic variables points at a primitive, and 65 of them point into this
- * eleven-step ramp. So the whole library takes this app's accent by replacing
- * eleven values, which is the cheap half of ADR-0054 and why the semantic layer
- * is left alone.
- *
- * ADR-0055 decides what may differ from Untitled UI at all: its value is the
- * default, and ours needs either to be the identity or to be argued from a
- * measurement. This ramp is both, and the two anchors are the measured half.
- *
- * ── How the eleven values were reached ─────────────────────────────────────
- *
- * Not by eye. Untitled UI's own ramp is a purple whose eleven steps have a
- * deliberate lightness curve; that curve is design work worth keeping. So each
- * step keeps Untitled UI's OKLCH *lightness*, takes the tint's *hue*, and has
- * its chroma scaled by the tint's chroma over Untitled UI's at step 600. The
- * derivation is in the commit message and reproducible from those two ramps.
- *
- * Three steps then override that derivation, because the derived value would be
- * unmeasured and these three are load-bearing:
- *
- *   500 — `--color-border-brand`, which is the focus ring. `tint` below is
- *         argued as exactly this ("a selected pill, a progress bar, a focus
- *         ring"). A graphic needs 3:1 and it measures 4.02:1 on white.
- *   600 — `--color-bg-brand-solid`, the filled accent — **and it carries a
- *         white label**, which is the whole reason this is `tintLabel` and not
- *         `tint`. Caught by the build-quality pass on /login, not by reasoning:
- *         the primary button was white on `tint` at 4.02:1, and its label is
- *         14px semibold, which is not WCAG large text and therefore wants 4.5.
- *         `tintLabel` gives 5.57:1. The mistake was reading "filled accent" as
- *         a fill question when the binding constraint was the word on top of
- *         it — exactly what `tint`'s own comment warns about two screens up.
- *   700 — `--color-text-brand-secondary`, the accent *as a word*. Same value,
- *         same measurement, and 600 and 700 being equal is not a slip: once a
- *         surface carries text, this app has one blue for it.
- *
- * The eight remaining steps are backgrounds and subtle borders. They are
- * derived, not measured, and any of them that ends up under text has to be
- * measured on the glass before it is trusted — which is the failure
- * gen-tokens.mjs's header already records happening once.
- */
-export const brand = {
-  50: "#f1f8ff",
-  100: "#e2f1ff",
-  200: "#c6e2ff",
-  300: "#9eccff",
-  400: "#61a8ff",
-  500: colour.tint.light, // focus ring — a graphic; 4.02:1 on white, needs 3
-  600: colour.tintLabel.light, // filled accent, and it carries a white label
-  700: colour.tintLabel.light, // accent as text — 5.57:1 on white
-  800: "#0048af",
-  900: "#003c8a",
-  950: "#002669",
-} satisfies Record<string, string>;
 
 /**
  * What the tiers are actually read against, per theme.
