@@ -33,6 +33,39 @@ seventeen more of these into `cardsPageClasses.ts`. It was rescued, judged and
 dropped — `CardsView.tsx` had moved 770 lines underneath it, and the measurement
 above says the extraction was not wanted anyway.
 
+**Untitled UI is in, and `/login` is the only screen using it (PR #102, branch
+`bartdunweg/untitled-ui`, 2026-08-19).** The direction is ADR-0055, corrected
+mid-session by FB-0013: **Untitled UI's value is the default**, and Card Orb's
+earns an exception only by being the identity (glass, orb, holo, the tint blue)
+or by being argued from a contrast ratio `lib/design/tokens.ts` can cite.
+Anything still even goes to Untitled UI without asking.
+
+Read ADR-0056 before adding any token. The proof screen came back with
+pill-shaped inputs because Tailwind v4's `@theme` *replaces* a scale rather than
+extending it: this project declared `--radius-lg: 24px`, so `rounded-lg` meant
+24px inside vendored components too. Nothing failed — not tsc, not eslint, not
+478 tests, not the build — and the screenshot looked plausible. That is ADR-0012
+and ADR-0017 a third time, and the first from outside the repo. Card Orb's four
+Tailwind-named radius steps are `orb-xs`…`orb-lg` now; `btn` and `pill` were
+never Tailwind's and kept their names. **The rule it leaves behind: do not name a
+token what Tailwind names one unless replacing Tailwind's app-wide is the actual
+intention.** `--color-brand-*` is the case where it is.
+
+What is wired: `lib/design/untitled-theme.css` is upstream's file unmodified,
+spliced into the entry point by `gen-tokens.mjs` (it cannot be `@import`ed — a
+nested `@theme` never reaches Tailwind). Its `.dark-mode` is bridged to this
+app's `[data-theme]` *and* to `prefers-color-scheme`, because Card Orb's colours
+are `light-dark()` and Untitled UI's are two flat sets; without the second rule a
+visitor who never chose, on a dark machine, got dark surfaces under light text.
+`npm run ui:add` runs the CLI and then re-applies the two fixes it overwrites
+every time.
+
+Next: sixty-five components in `app/components/` are untouched, on purpose.
+`controlClasses.ts` records a six-control sweep across twenty-five files being
+refused by this same harness at 152,025 pixels with no way to attribute it, and
+reverted whole. Take `npm run visual:baseline` before each screen and read the
+diff after.
+
 **The shared standards are at v0.11.0 as of 2026-08-19 (workspace `canberra`),
 and the biggest change is that agents now ask instead of deciding.** Where there
 is a real choice — what to build, or the approach, structure or library for it —
