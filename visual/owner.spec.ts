@@ -84,3 +84,36 @@ test("the add-card dialog, open", async ({ page: p }) => {
   await settle(p);
   await expect(p).toHaveScreenshot("add-dialog-wide.png", { fullPage: false });
 });
+
+test("the view menu, open", async ({ page: p }) => {
+  /**
+   * The dropdown behind the View button, which nothing photographed until its
+   * checkboxes stopped being styled by cards.css — and a closed panel diffs
+   * identical however wrong the thing inside it is.
+   *
+   * Same shape as the add-card dialog above and the same lesson (ADR-0020): a
+   * control that needs a session *and* a click is two doors away from any
+   * check, and this project has already shipped a styling regression through
+   * exactly that gap.
+   *
+   * ── Still not covered, and worth knowing ──────────────────────────────────
+   *
+   * The *filter* rows. FilterOptions is drawn by two controls — FilterMenu, a
+   * <details> dropdown, and FilterSheet, a button that opens a dialog — and
+   * which one is on screen depends on the width. Neither would open reliably
+   * from a click here, so its checkboxes are converted but unphotographed.
+   * They are the same markup and the same classes as the ones below, which is
+   * an argument and not evidence.
+   */
+  await p.setViewportSize({ width: 1280, height: 1000 });
+  await p.goto("/collection", { waitUntil: "networkidle" });
+  await expect(p).not.toHaveURL(/\/login/);
+
+  // ViewMenu and FilterMenu are both MenuDetails; View is the first.
+  await p.locator("details.filter-menu > summary").first().click();
+  const panel = p.locator(".filter-menu-panel").first();
+  await expect(panel).toBeVisible({ timeout: 10_000 });
+  await settle(p);
+
+  await expect(p).toHaveScreenshot("view-menu-wide.png", { fullPage: false });
+});

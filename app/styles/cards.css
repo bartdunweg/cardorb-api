@@ -479,89 +479,11 @@
   padding: 0;
   list-style: none;
 }
-.filter-menu-panel label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  padding: var(--space-2) var(--space-2);
-  border-radius: var(--radius-orb-sm);
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  color: var(--color-label-secondary);
-  cursor: pointer;
-}
-.filter-menu-panel label:hover {
-  background: var(--color-bg-grouped);
-  color: var(--color-label);
-}
 /* The native box sits at the browser's own grey, which on this surface is
    near enough to the background that ticked and unticked look alike at a
    glance. Drawn by hand instead: an empty outline off, filled ink with a tick
    on, which is the difference the eye is actually scanning for. */
-.filter-menu-panel input {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  padding: 0;
-  border: 1.5px solid var(--color-border-active);
-  border-radius: 4px;
-  background: transparent;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-  transition:
-    background var(--dur-fast) var(--ease-smooth),
-    border-color var(--dur-fast) var(--ease-smooth);
-}
-.filter-menu-panel label:hover input {
-  border-color: var(--color-label);
-}
-.filter-menu-panel input:checked {
-  background: var(--color-label);
-  border-color: var(--color-label);
-}
 /* The tick, drawn rather than a glyph so it keeps its weight at any size. */
-.filter-menu-panel input:checked::after {
-  content: "";
-  display: block;
-  width: 4px;
-  height: 8px;
-  margin: 1px auto 0;
-  border: solid var(--color-bg-surface);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-.filter-menu-panel .facet-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.filter-menu-panel .facet-count {
-  flex-shrink: 0;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-.filter-menu-panel .facet-clear {
-  width: 100%;
-  padding: var(--space-2);
-  margin-bottom: var(--space-1);
-  border: none;
-  border-radius: var(--radius-orb-sm);
-  background: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  text-align: left;
-  cursor: pointer;
-}
-.filter-menu-panel .facet-clear:hover {
-  color: var(--color-label);
-  background: var(--color-bg-grouped);
-}
 
 /* .cards-skeleton--* (app/(app)/loading.tsx's outline sizes) moved to
  * Tailwind classes directly on that file's elements — the look and the sweep

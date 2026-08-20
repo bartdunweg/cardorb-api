@@ -1,0 +1,1 @@
+- The tickboxes in the filter and view menus match the rest of the app now, and the search field looks like the buttons beside it.

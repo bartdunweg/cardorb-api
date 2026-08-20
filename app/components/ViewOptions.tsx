@@ -173,7 +173,17 @@ export default function ViewOptions({
                   className="flex items-center gap-2 min-h-7 [font-family:var(--font-body)]
                     [font-size:var(--fs-small)] text-label cursor-pointer"
                 >
-                  <input type="checkbox" checked={fields.has(key)} onChange={() => onField(key)} />
+                  <input
+                    type="checkbox"
+                    checked={fields.has(key)}
+                    onChange={() => onField(key)}
+                    /* Explicit, where this used to inherit `.filter-menu-panel
+                       input` from cards.css. That rule is gone with the filter
+                       rows it was written for, and a bare checkbox here would
+                       have quietly gone back to the browser's own grey — which
+                       is the exact failure that rule's comment describes. */
+                    className="size-4 shrink-0 appearance-none rounded m-0 cursor-pointer bg-primary ring-1 ring-primary ring-inset transition duration-100 ease-linear checked:bg-brand-solid checked:ring-brand checked:after:mx-auto checked:after:mt-px checked:after:block checked:after:h-2 checked:after:w-1 checked:after:rotate-45 checked:after:border-white checked:after:[border-width:0_2px_2px_0] checked:after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                  />
                   <span>{text}</span>
                 </label>
               </li>
