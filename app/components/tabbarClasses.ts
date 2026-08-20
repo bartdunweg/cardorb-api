@@ -68,10 +68,11 @@ export const tabbarFadeClassName =
 export const tabbarClassName =
   "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 z-[var(--z-tabpage)] [transform:translateZ(0)] " +
   "flex items-center justify-center gap-4 " +
-  "[padding:var(--space-6)_var(--space-4)_calc(var(--space-6)+env(safe-area-inset-bottom,0px))] " +
+  "px-4 pt-6 [padding-bottom:calc(var(--spacing)*6+env(safe-area-inset-bottom,0px))] " +
   "pointer-events-none [&>*]:pointer-events-auto " +
   "[@media(max-width:640px)]:gap-2 " +
-  "[@media(max-width:640px)]:[padding:var(--space-4)_var(--space-4)_calc(var(--space-4)+env(safe-area-inset-bottom,0px))_var(--space-4)] " +
+  "[@media(max-width:640px)]:px-4 [@media(max-width:640px)]:pt-4 " +
+  "[@media(max-width:640px)]:[padding-bottom:calc(var(--spacing)*4+env(safe-area-inset-bottom,0px))] " +
   "[@media(min-width:1001px)]:!hidden";
 
 /**
@@ -168,7 +169,7 @@ export const tabbarPagesClassName =
 export const tabbarItemClassName =
   "tabbar-item group relative z-[1] flex flex-col items-center justify-center gap-0.5 flex-initial min-w-0 " +
   "px-1.5 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-secondary no-underline " +
-  "[transition:color_var(--dur-fast)_var(--ease-in-out)] [&:not(.is-active):hover]:opacity-70";
+  "transition-colors duration-100 ease-linear [&:not(.is-active):hover]:opacity-70";
 
 export const tabbarIconClassName = "flex shrink-0";
 
@@ -234,6 +235,6 @@ export const tabbarPillClassName =
  */
 export const tabbarAddClassName =
   "grid place-items-center flex-none z-[1] " +
-  "w-[var(--control-h)] h-[var(--control-h)] p-0 border-0 rounded-full cursor-pointer " +
-  "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] " +
-  "hover:opacity-90 hover:[box-shadow:var(--shadow-elevated)]";
+  "size-10 p-0 border-0 rounded-full cursor-pointer " +
+  "bg-brand-solid text-white hover:bg-brand-solid_hover shadow-xs-skeuomorphic " +
+  "transition duration-100 ease-linear";
