@@ -6,6 +6,7 @@ import type { CardSet, ImageSize } from "../../lib/core/cards";
 import { LOCALE } from "../../lib/core/config";
 import Wordmark from "./Wordmark";
 import { possessive } from "../../lib/core/owner";
+import { untitledIconButton } from "./untitledButtonClasses";
 
 /**
  * The left rail on /cards: where you are, and nothing else.
@@ -131,7 +132,7 @@ export default function CardsSidebar({
           <Wordmark href="/" />
           <button
             type="button"
-            className="btn btn--icon btn--primary flex-none"
+            className={untitledIconButton({ color: "primary", className: "flex-none" })}
             onClick={onAdd}
             aria-label="Add a card"
             title="Add a card"

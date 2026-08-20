@@ -11,6 +11,7 @@ import {
   dangerButtonClassName,
   settingsHintClassName,
 } from "./SettingsPanel";
+import { untitledButton } from "./untitledButtonClasses";
 
 /**
  * The end of the account, and the end of the page.
@@ -72,7 +73,10 @@ export default function DeleteAccountSettings({ username }: { username: string }
           onChange={(e) => setConfirm(e.target.value)}
         />
         <button
-          className={`btn ${dangerButtonClassName}`}
+          className={untitledButton({
+            color: "primary-destructive",
+            className: dangerButtonClassName,
+          })}
           type="button"
           onClick={deleteAccount}
           disabled={busy || confirm !== username}

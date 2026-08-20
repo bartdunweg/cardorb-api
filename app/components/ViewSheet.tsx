@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Settings2 } from "lucide-react";
 import { Sheet, sheetApplyButtonClassName } from "./Sheet";
 import ViewOptions, { type ViewOptionsProps } from "./ViewOptions";
+import { untitledButton } from "./untitledButtonClasses";
 
 /**
  * The same view options as a sheet, for a phone.
@@ -30,7 +31,7 @@ export default function ViewSheet(props: ViewOptionsProps) {
     <>
       <button
         type="button"
-        className="btn cards-view-trigger"
+        className={untitledButton({ color: "secondary", className: "cards-view-trigger" })}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label="View options"
@@ -48,7 +49,7 @@ export default function ViewSheet(props: ViewOptionsProps) {
         footer={
           <button
             type="button"
-            className={`btn btn--primary ${sheetApplyButtonClassName}`}
+            className={untitledButton({ color: "primary", className: sheetApplyButtonClassName })}
             onClick={() => setOpen(false)}
           >
             Done

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import SigninShell, { SigninOr, signinWideButtonClassName } from "./components/SigninShell";
+import SigninShell, { SigninOr } from "./components/SigninShell";
 import { FormNote } from "./components/FormField";
 import { APP_NAME } from "../lib/core/config";
+import { untitledButton } from "./components/untitledButtonClasses";
 
 /**
  * What a URL that is not a page looks like.
@@ -24,7 +25,14 @@ export default function NotFound() {
         collection.
       </FormNote>
       <SigninOr aria-hidden="true">or</SigninOr>
-      <Link href="/" className={`btn ${signinWideButtonClassName}`}>
+      <Link
+        href="/"
+        className={untitledButton({
+          color: "primary",
+          size: "lg",
+          className: "w-full justify-center",
+        })}
+      >
         Go to {APP_NAME}
       </Link>
     </SigninShell>

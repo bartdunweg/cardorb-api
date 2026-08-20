@@ -9,6 +9,7 @@ import { MAX_RESULTS, type CatalogueMatch } from "../../lib/core/ptcg-search";
 import { modalCardAddClassName } from "./cardModalClasses";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+import { untitledButton } from "./untitledButtonClasses";
 
 /**
  * The form behind the plus: one search box first, a few extra fields once a
@@ -688,7 +689,7 @@ export default function CardAddDialog({
             <button
               ref={changeButtonRef}
               type="button"
-              className="btn shrink-0"
+              className={untitledButton({ color: "secondary", className: "shrink-0" })}
               onClick={clearSelection}
             >
               Change

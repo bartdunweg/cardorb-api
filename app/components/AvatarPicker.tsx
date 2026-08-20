@@ -2,6 +2,7 @@
 
 import { SettingsSaid } from "./SettingsPanel";
 import { useAvatarUpload } from "./useAvatarUpload";
+import { untitledButton } from "./untitledButtonClasses";
 
 /**
  * The avatar, and the one control that changes it.
@@ -60,8 +61,11 @@ export default function AvatarPicker({
             actually see it. */}
         <label className="group cursor-pointer">
           <span
-            className={`btn group-has-[:focus-visible]:[outline:2px_solid_var(--color-label)]
-              group-has-[:focus-visible]:[outline-offset:2px]${busy ? " opacity-55 cursor-not-allowed" : ""}`}
+            className={untitledButton({
+              color: "secondary",
+              className: `group-has-[:focus-visible]:[outline:2px_solid_var(--color-label)]
+                group-has-[:focus-visible]:[outline-offset:2px]${busy ? " opacity-55 cursor-not-allowed" : ""}`,
+            })}
           >
             {busy ? "Saving…" : avatarUrl ? "Change" : "Upload"}
           </span>

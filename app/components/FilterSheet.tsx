@@ -10,6 +10,7 @@ import {
 } from "./Sheet";
 import FilterOptions from "./FilterOptions";
 import type { Facet } from "./cards-fields";
+import { untitledButton } from "./untitledButtonClasses";
 
 /**
  * The same facets as FilterMenu, as a sheet, for a phone.
@@ -53,7 +54,7 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
     <>
       <button
         type="button"
-        className="btn cards-filter-trigger"
+        className={untitledButton({ color: "secondary", className: "cards-filter-trigger" })}
         // Seeded here rather than in an effect on `open`. Same result, one
         // render fewer, and it says plainly that a fresh draft is part of what
         // opening means: a sheet that remembered what you nearly did last time
@@ -96,14 +97,17 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
           <>
             <button
               type="button"
-              className={`btn ${sheetFootButtonClassName}`}
+              className={untitledButton({
+                color: "secondary",
+                className: sheetFootButtonClassName,
+              })}
               onClick={() => setOpen(false)}
             >
               Cancel
             </button>
             <button
               type="button"
-              className={`btn btn--primary ${sheetApplyButtonClassName}`}
+              className={untitledButton({ color: "primary", className: sheetApplyButtonClassName })}
               onClick={apply}
             >
               {staged > 0 ? `Apply ${staged}` : "Apply"}
