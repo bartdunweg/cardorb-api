@@ -42,6 +42,10 @@ compiler flags. Neither is a bug.
 
 **Stop patching files, and say who owns the code.**
 
+- **Prettier**: the same three directories, in `.prettierignore`. Formatting them
+  means every `ui:add` produces a diff that is half reformatting, which is how a
+  real upstream change gets lost in the noise. This one was found the
+  embarrassing way — by committing on a red gate and reading the log afterwards.
 - **eslint**: `components/**`, `utils/**` and `hooks/**` are ignored, as a
   separate config block with the reasoning in it. Flat config does per-directory
   properly, so this is one edit that stays correct.
