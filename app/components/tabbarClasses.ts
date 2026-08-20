@@ -115,10 +115,15 @@ export const tabbarClassName =
  * It was applying correctly the whole time — the slots were simply being laid
  * out past it.
  */
+/* Untitled UI's surface on the capsule, and nothing else about this bar changed
+   (FB-0015). The glass fill, the blur and the hand-tuned shadow are theirs now —
+   the same three the card surfaces took — but the shape, the widths, the slots
+   and the sliding pill are untouched. `rounded-btn` stays: it is the pill
+   radius, this bar is a pill, and ADR-0057 left that token alone precisely
+   because it is not one of Tailwind's names. */
 export const tabbarPagesClassName =
   "tabbar-pages relative flex items-center justify-center gap-2 w-auto min-w-0 p-2 " +
-  "bg-[var(--glass-bg-solid)] border border-[var(--glass-border)] rounded-btn " +
-  "[box-shadow:var(--shadow-elevated)] [backdrop-filter:blur(var(--blur-glass))]";
+  "bg-primary ring-1 ring-secondary ring-inset rounded-btn shadow-lg";
 
 /**
  * Classic bottom-tab shape now: icon over a label, both always shown, on
@@ -162,7 +167,7 @@ export const tabbarPagesClassName =
  */
 export const tabbarItemClassName =
   "tabbar-item group relative z-[1] flex flex-col items-center justify-center gap-0.5 flex-initial min-w-0 " +
-  "px-1.5 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-label no-underline " +
+  "px-1.5 py-1.5 border border-transparent rounded-btn bg-transparent cursor-pointer text-secondary no-underline " +
   "[transition:color_var(--dur-fast)_var(--ease-in-out)] [&:not(.is-active):hover]:opacity-70";
 
 export const tabbarIconClassName = "flex shrink-0";
@@ -179,7 +184,7 @@ export const tabbarIconClassName = "flex shrink-0";
  *  width to keep the capsule on the screen: "Dashboa…" is the price of a bar
  *  that still fits, and it is paid by the label rather than by the layout. */
 export const tabbarLabelClassName =
-  "tabbar-label max-w-full truncate [font-size:var(--fs-tiny)] leading-none";
+  "tabbar-label max-w-full truncate text-xs leading-none";
 
 /** The same glass-lift surface the sidebar's rows use for hover/active
  *  (.cards-nav-item::after, components.css) — was solid black
@@ -189,9 +194,9 @@ export const tabbarLabelClassName =
  *  black pill. Include "is-ready"/"is-animated" alongside this as the
  *  pill's placement settles. */
 export const tabbarPillClassName =
-  "tabbar-pill absolute left-0 top-0 z-0 rounded-btn bg-[var(--glass-bg)] " +
-  "border border-[var(--glass-border)] [backdrop-filter:blur(var(--blur-glass-pill))] " +
-  "[box-shadow:var(--shadow-card)] opacity-0 pointer-events-none " +
+  "tabbar-pill absolute left-0 top-0 z-0 rounded-btn bg-secondary " +
+  "ring-1 ring-secondary ring-inset " +
+  "shadow-xs opacity-0 pointer-events-none " +
   "[&.is-ready]:opacity-100 " +
   "[&.is-animated]:[transition:transform_0.38s_var(--ease-smooth),width_0.38s_var(--ease-smooth),height_0.38s_var(--ease-smooth)]";
 

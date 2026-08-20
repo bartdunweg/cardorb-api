@@ -1,0 +1,1 @@
+- The bar along the bottom on a phone is built from the same surface and type as the rest of the app now. It works exactly as it did.
