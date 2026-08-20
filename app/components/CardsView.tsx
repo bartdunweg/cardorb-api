@@ -1228,7 +1228,21 @@ export default function CardsView({
                   where the rail is a screen you have to open rather than a
                   column you can see. The bar's Search slot lands here and puts
                   the caret in it. */}
-            <div className="cards-search">
+            {/* Untitled UI's input, written out rather than <Input>: this one
+                holds a ref the tab bar's Search slot focuses, has a clear
+                button of its own, and is a flex item the toolbar sizes
+                (flex-[0_1_260px] — not greedy, because the collection is
+                mostly browsed by filter). Their TextField gives no ref and
+                wants to own its width.
+
+                `cards-search` stays as the hook: the toolbar's wrap rules and
+                the <=1000px branch in cards.css still select on it. */}
+            <div
+              className="cards-search flex items-center gap-2 flex-[0_1_260px] min-w-[180px] px-3.5
+                rounded-lg bg-primary shadow-xs ring-1 ring-primary ring-inset
+                transition-shadow duration-100 ease-linear focus-within:ring-2 focus-within:ring-brand
+                [&_svg]:shrink-0 [&_svg]:text-fg-quaternary"
+            >
               <Search size={16} strokeWidth={1.75} aria-hidden="true" />
               <input
                 ref={searchRef}
@@ -1241,9 +1255,19 @@ export default function CardsView({
                 placeholder="Search"
                 aria-label="Search the collection"
                 autoComplete="off"
+                className="min-w-0 flex-1 border-none bg-transparent py-2 text-md text-primary
+                  outline-hidden placeholder:text-placeholder
+                  [&::-webkit-search-cancel-button]:hidden"
               />
               {query && (
-                <button type="button" onClick={() => setQuery("")} aria-label="Clear the search">
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Clear the search"
+                  className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full
+                    border-none bg-transparent p-0 text-fg-quaternary
+                    transition-colors duration-100 ease-linear hover:text-fg-quaternary_hover"
+                >
                   <X size={15} strokeWidth={1.75} />
                 </button>
               )}
@@ -1339,7 +1363,11 @@ export default function CardsView({
             )}
 
             {active && (
-              <button type="button" className="cards-reset" onClick={reset}>
+              <button
+                type="button"
+                className={untitledButton({ color: "tertiary", className: "h-10" })}
+                onClick={reset}
+              >
                 Reset
               </button>
             )}
@@ -1379,7 +1407,7 @@ export default function CardsView({
                 the emptyReason prop. Either way it says so, which beats an
                 empty page that looks like something failed to paint. */}
           {sets.length === 0 ? (
-            <Card className="cards-empty">
+            <Card className="cards-empty [&_p]:m-0 [&_p]:max-w-[52ch] [&_p]:text-md [&_p]:leading-relaxed [&_p]:text-tertiary">
               {emptyReason === "nothing-yet" ? (
                 <>
                   <p>
@@ -1403,7 +1431,7 @@ export default function CardsView({
               )}
             </Card>
           ) : filtered.length === 0 ? (
-            <Card className="cards-empty">
+            <Card className="cards-empty [&_p]:m-0 [&_p]:max-w-[52ch] [&_p]:text-md [&_p]:leading-relaxed [&_p]:text-tertiary">
               <p>
                 Nothing matches that combination. Try fewer filters, or a different Pokémon or set.
               </p>

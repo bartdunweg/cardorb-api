@@ -248,71 +248,10 @@
 /* Only what makes it a search field rather than a button: the surface, the
    height, the radius and the label come from the shared control in
    components.css, which is the same one the chat input is built from. */
-.cards-search {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  /* Not greedy: it took the whole leftover width and dwarfed the controls
-     beside it, when the collection is mostly browsed by filter. */
-  flex: 0 1 260px;
-  min-width: 180px;
-  padding: 0 var(--space-3-5);
-  transition:
-    border-color var(--dur-fast) var(--ease-smooth),
-    box-shadow var(--dur-fast) var(--ease-smooth);
-}
-.cards-search:focus-within {
-  border-color: var(--color-border-active);
-}
-.cards-search svg {
-  flex-shrink: 0;
-}
-.cards-search input {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: none;
-  outline: none;
-  font-family: var(--font-body), sans-serif;
-  /* The size of the control it sits in, and never under 16: at --fs-body-s
-     this field zoomed the page on iOS the moment it took focus, which
-     .chat-input had already been fixed for. See --fs-control. */
-  font-size: var(--fs-control);
-  color: var(--color-label);
-}
-.cards-search input::placeholder {
-  color: var(--color-label-tertiary);
-}
-/* The engine's own clear affordance would sit beside ours. */
-.cards-search input::-webkit-search-cancel-button {
-  display: none;
-}
-.cards-search button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: none;
-  color: var(--color-label-tertiary);
-  cursor: pointer;
-}
-.cards-search button:hover {
-  color: var(--color-label);
-}
-
-.cards-empty p {
-  margin: 0;
-  max-width: 52ch;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  line-height: var(--lh-relaxed);
-  color: var(--color-label-secondary);
-}
+/* .cards-search keeps only what the toolbar around it decides; everything the
+   field is made of moved into CardsView.tsx as Untitled UI's input (FB-0016).
+   The class itself stays because the <=1000px branch below still selects on
+   it. */
 
 /* ── A set ── */
 
@@ -622,22 +561,6 @@
 .filter-menu-panel .facet-clear:hover {
   color: var(--color-label);
   background: var(--color-bg-grouped);
-}
-
-.cards-reset {
-  height: var(--control-h);
-  padding: 0 var(--space-3-5);
-  border: none;
-  border-radius: var(--radius-pill);
-  background: none;
-  font-family: var(--font-main);
-  font-size: var(--fs-small);
-  font-weight: var(--fw-button);
-  color: var(--color-label-tertiary);
-  cursor: pointer;
-}
-.cards-reset:hover {
-  color: var(--color-label);
 }
 
 /* .cards-skeleton--* (app/(app)/loading.tsx's outline sizes) moved to
