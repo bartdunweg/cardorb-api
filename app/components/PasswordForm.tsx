@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "../hooks/useSession";
 import { MIN_PASSWORD } from "../../lib/core/account";
-import { FormError, FormField, FormForm, FormHint, FormInput, FormLabel } from "./FormField";
-import { signinWideButtonClassName } from "./SigninShell";
-import { buttonClassName } from "./controlClasses";
+import { FormError, FormForm } from "./FormField";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 
 /**
  * Setting a new password, for somebody already holding a session.
@@ -26,7 +26,6 @@ export default function PasswordForm() {
   const router = useRouter();
   const { setPassword, error } = useSession();
   const [value, setValue] = useState("");
-  const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -47,40 +46,39 @@ export default function PasswordForm() {
   return (
     <>
       <FormForm layout="column" onSubmit={submit}>
-        <FormField layout="column">
-          <FormLabel>New password</FormLabel>
-          <FormInput
-            type={show ? "text" : "password"}
-            name="new-password"
-            autoComplete="new-password"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            minLength={MIN_PASSWORD}
-            disabled={busy || done}
-            required
-            aria-describedby="password-hint"
-          />
-          <FormHint id="password-hint">At least {MIN_PASSWORD} characters.</FormHint>
-        </FormField>
+        {/* The separate "Show password" button is gone, and its job with it.
+            Untitled UI's password input carries its own reveal toggle, inside
+            the field where the text it reveals actually is — so the control sits
+            beside the thing it acts on rather than below it, and there is one
+            fewer tab stop between the field and Save.
 
-        {/* A button rather than a checkbox: it does something now rather than
-            recording a preference, and aria-pressed is what says which it is. */}
-        <button
-          type="button"
-          className={buttonClassName}
-          onClick={() => setShow((v) => !v)}
-          aria-pressed={show}
-        >
-          {show ? "Hide password" : "Show password"}
-        </button>
+            It was a <button aria-pressed>, deliberately, because it acts now
+            rather than recording a preference. The replacement keeps that: it is
+            a button too, labelled "Toggle password visibility". */}
+        <Input
+          isRequired
+          label="New password"
+          hint={`At least ${MIN_PASSWORD} characters.`}
+          type="password"
+          name="new-password"
+          autoComplete="new-password"
+          value={value}
+          onChange={setValue}
+          minLength={MIN_PASSWORD}
+          isDisabled={busy || done}
+          className="w-full"
+        />
 
-        <button
+        <Button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
-          disabled={busy || done}
+          size="lg"
+          isDisabled={busy || done}
+          isLoading={busy}
+          showTextWhileLoading
+          className="mt-2 w-full"
         >
-          {busy ? "Saving…" : "Save password"}
-        </button>
+          Save password
+        </Button>
       </FormForm>
       {error && <FormError role="alert">{error}</FormError>}
     </>

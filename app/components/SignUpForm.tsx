@@ -5,16 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
 import { MAX_DISPLAY_NAME, MIN_PASSWORD } from "../../lib/core/account";
-import {
-  FormError,
-  FormField,
-  FormForm,
-  FormHint,
-  FormInput,
-  FormLabel,
-  formNoteClassName,
-} from "./FormField";
-import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
+import { FormError, FormForm, formNoteClassName } from "./FormField";
+import { SigninLinks, signinLinkClassName } from "./SigninShell";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 
 /**
  * Two required fields and one that is not.
@@ -104,68 +98,73 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
             one that is about the person rather than about the account. No
             `required`: the hint below says what happens if it is skipped, and
             skipping it has to stay a one-second decision. */}
-        <FormField layout="column">
-          {/* "(optional)" in the label rather than in the placeholder. A
-              placeholder is the only thing on a form that disappears the moment
-              somebody uses the field, and it is not reliably read out — so it
-              is the wrong place to keep the one fact that decides whether this
-              field can be skipped. */}
-          <FormLabel>Your name (optional)</FormLabel>
-          <FormInput
-            type="text"
-            name="name"
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={MAX_DISPLAY_NAME}
-            disabled={busy}
-            aria-describedby="signup-name-hint"
-          />
-          <FormHint id="signup-name-hint">
-            What your collection is called. You can add or change it later in Settings.
-          </FormHint>
-        </FormField>
+        {/* First, because it is the friendliest thing on the form and the only
+            one that is about the person rather than about the account. Not
+            `isRequired`: the hint says what happens if it is skipped, and
+            skipping it has to stay a one-second decision.
 
-        <FormField layout="column">
-          <FormLabel>Email</FormLabel>
-          <FormInput
-            type="email"
-            name="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            disabled={busy}
-            required
-          />
-        </FormField>
+            "(optional)" in the label rather than in the placeholder. A
+            placeholder is the only thing on a form that disappears the moment
+            somebody uses the field, and it is not reliably read out — so it is
+            the wrong place to keep the one fact that decides whether this field
+            can be skipped.
 
-        <FormField layout="column">
-          <FormLabel>Password</FormLabel>
-          {/* new-password, not current-password: it tells a password manager to
-              offer to generate one rather than to fill the last one it saw. */}
-          <FormInput
-            type="password"
-            name="new-password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••••"
-            minLength={MIN_PASSWORD}
-            disabled={busy}
-            required
-            aria-describedby="signup-password-hint"
-          />
-          <FormHint id="signup-password-hint">At least {MIN_PASSWORD} characters.</FormHint>
-        </FormField>
+            The hint is a prop now, and its id and aria-describedby go with it:
+            React Aria wires the description to the input itself, so the two
+            cannot come apart the way a hand-written pair can. */}
+        <Input
+          label="Your name (optional)"
+          hint="What your collection is called. You can add or change it later in Settings."
+          type="text"
+          name="name"
+          autoComplete="name"
+          value={name}
+          onChange={setName}
+          maxLength={MAX_DISPLAY_NAME}
+          isDisabled={busy}
+          className="w-full"
+        />
 
-        <button
+        <Input
+          isRequired
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="username"
+          value={email}
+          onChange={setEmail}
+          placeholder="you@example.com"
+          isDisabled={busy}
+          className="w-full"
+        />
+
+        {/* new-password, not current-password: it tells a password manager to
+            offer to generate one rather than to fill the last one it saw. */}
+        <Input
+          isRequired
+          label="Password"
+          hint={`At least ${MIN_PASSWORD} characters.`}
+          type="password"
+          name="new-password"
+          autoComplete="new-password"
+          value={password}
+          onChange={setPassword}
+          placeholder="••••••••••"
+          minLength={MIN_PASSWORD}
+          isDisabled={busy}
+          className="w-full"
+        />
+
+        <Button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
-          disabled={busy}
+          size="lg"
+          isDisabled={busy}
+          isLoading={busy}
+          showTextWhileLoading
+          className="mt-2 w-full"
         >
-          {busy ? "Creating your account…" : "Create account"}
-        </button>
+          Create account
+        </Button>
 
         {/* Notice belongs where the collecting happens, and this is the only
             screen in the app that asks for an email address. Not a tickbox:

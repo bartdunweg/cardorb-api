@@ -66,6 +66,15 @@ const PAGES = [
    * works in the public project — the owner project would photograph /cards.
    */
   { name: "login", path: "/login", fullPage: true },
+  /**
+   * The rest of the door screens, added when the Untitled UI conversion moved
+   * from /login to the whole FormField family. Both are public, so both can be
+   * photographed; /settings/password is the fourth of the family and needs a
+   * recovery session, so it has no entry here and is converted unphotographed.
+   * That gap is named in ADR-0058 rather than left to be discovered.
+   */
+  { name: "signup", path: "/signup", fullPage: true },
+  { name: "forgotten", path: "/password/forgotten", fullPage: true },
 ];
 
 for (const page of PAGES) {

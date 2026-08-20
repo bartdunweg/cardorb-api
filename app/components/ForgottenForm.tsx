@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
-import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
-import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
+import { FormError, FormForm, FormNote } from "./FormField";
+import { SigninLinks, signinLinkClassName } from "./SigninShell";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 
 /**
  * One field, and one sentence afterwards that is the same whatever happened.
@@ -55,26 +57,28 @@ export default function ForgottenForm() {
         Type the address you signed up with and we will send you a link to set a new one.
       </FormNote>
       <FormForm layout="column" onSubmit={submit}>
-        <FormField layout="column">
-          <FormLabel>Email</FormLabel>
-          <FormInput
-            type="email"
-            name="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            disabled={busy}
-            required
-          />
-        </FormField>
-        <button
+        <Input
+          isRequired
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="username"
+          value={email}
+          onChange={setEmail}
+          placeholder="you@example.com"
+          isDisabled={busy}
+          className="w-full"
+        />
+        <Button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
-          disabled={busy}
+          size="lg"
+          isDisabled={busy}
+          isLoading={busy}
+          showTextWhileLoading
+          className="mt-2 w-full"
         >
-          {busy ? "Sending…" : "Send me a link"}
-        </button>
+          Send me a link
+        </Button>
       </FormForm>
       {error && <FormError role="alert">{error}</FormError>}
       <SigninLinks>
