@@ -21,6 +21,37 @@ import { join } from "node:path";
  * ours to know about.
  */
 
+/**
+ * Tailwind's own default theme, which this test cannot see.
+ *
+ * Untitled UI's theme (spliced into tailwind.generated.css by
+ * scripts/gen-tokens.mjs) expresses its semantic layer in terms of Tailwind's
+ * stock palette — `var(--color-neutral-300)`, `var(--color-red-500)`,
+ * `var(--spacing)` and 153 more. None of those are declared in app/styles,
+ * because Tailwind declares them itself from `@import "tailwindcss"`.
+ *
+ * That is asserted rather than assumed. Built once and read back out of
+ * .next/static:
+ *
+ *   --color-neutral-300:#d4d4d4
+ *   --spacing:.25rem
+ *   --color-red-500:#fb2c36
+ *
+ * So they resolve. The existing `--tw-` filter below does not catch them
+ * because Tailwind's theme variables carry no prefix.
+ *
+ * Deliberately a shape and not a list of 156 names: a list would have to be
+ * re-derived every time Untitled UI reaches for one more step. Deliberately
+ * *not* a blanket `--color-` skip either — a typo like `--color-neutrl-300`
+ * is not in a Tailwind namespace and still fails, which is the whole job.
+ */
+const TAILWIND_PALETTE =
+  "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|" +
+  "violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone";
+const TAILWIND_DEFAULT = new RegExp(
+  `^(--color-(${TAILWIND_PALETTE})-\\d+|--color-(white|black|transparent)|--spacing)$`,
+);
+
 const STYLES = "app/styles";
 
 /** Everything declared anywhere in the stylesheets, generated ones included. */
@@ -60,6 +91,7 @@ describe("custom properties", () => {
       // Tailwind's own machinery and the Lightning CSS light-dark() polyfill
       // declare these at build time; they are correct and not ours to define.
       .filter(([name]) => !name.startsWith("--tw-") && !name.startsWith("--lightningcss-"))
+      .filter(([name]) => !TAILWIND_DEFAULT.test(name))
       .filter(([name]) => !known.has(name))
       .map(([name, files]) => `${name} (used in ${[...new Set(files)].join(", ")})`);
 
