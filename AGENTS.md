@@ -1,15 +1,19 @@
-<!-- DEV-STANDARDS:BEGIN v0.11.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- DEV-STANDARDS:BEGIN v0.14.0 — generated from dev-standards. Do not edit by hand. -->
 
-# Codex adapter
+# Agent adapter
 
 Before planning, editing, reviewing, or running commands, read the repository-root
 `CLAUDE.md`. Treat its standards and product-specific instructions as binding for this
-repository. It is the canonical project instruction file shared with Claude Code.
+repository. It is the canonical project instruction file, and this file only points at it.
 
-When a request matches an installed shared workflow, use it: `apply-standards` for
-onboarding or refreshing standards, `log-feedback` before acting on user feedback, and
-`record-decision` for non-obvious choices. Use natural-language requests when a slash
-command is unavailable.
+`AGENTS.md` is the cross-tool convention: any agent that reads it gets the same rules as
+Claude Code, without those rules being written twice and drifting apart. The standard itself
+is built and tested against Claude Code.
+
+When a request matches an installed shared workflow, use it: `apply-standards` for onboarding
+or refreshing standards, `setup-machine` for preparing a machine, `log-feedback` before acting
+on user feedback, and `record-decision` for non-obvious choices. Use natural-language requests
+when a slash command is unavailable.
 
 After every build or code change, run `./scripts/verify.sh` and then `build-quality` before
 declaring the work complete. `build-quality` reads `Platform:` from `CLAUDE.md` and covers the

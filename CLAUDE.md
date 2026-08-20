@@ -1,4 +1,4 @@
-<!-- STANDARDS:BEGIN v0.11.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.14.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
@@ -75,7 +75,7 @@ private, not to write a diplomatic record.
   where you flag it first**, because a parallel worktree is probably editing it too.
 - Never hand-edit the changelog; add a fragment in `changelog.d/`. Projects that ship no
   user-visible releases have neither, and that is correct — do not create them.
-- On React or Tailwind work, search Untitled UI (MCP) for the component before writing one.
+- On React or Tailwind work, search Untitled UI (MCP) before writing a component; Context7 if it is down.
 
 <!-- STANDARDS:END -->
 
