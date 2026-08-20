@@ -216,11 +216,16 @@ export const tabbarPillClassName =
  * hook name left behind for no reader is how the next pass ends up editing a
  * rule that cannot apply.
  *
- * The colour is --btn-primary-bg, the same black every other primary action
- * uses, on explicit instruction; it was --color-tint, an accent deliberately
- * not this bar's black. That does trade away "one ink for where you are, one
- * for what you can do": the pill and this button are both dark now, told
- * apart by position.
+ * The colour is --btn-primary-bg, the same one every other primary action uses,
+ * on explicit instruction; it was --color-tint, an accent deliberately not this
+ * bar's black. That does trade away "one ink for where you are, one for what you
+ * can do": the pill and this button match, told apart by position.
+ *
+ * "The same black" is what this said, and it was true until the Untitled UI
+ * conversion: --btn-primary-bg is Untitled UI's brand now, which is this app's
+ * blue, so every primary surface went from near-black to blue at once
+ * (ADR-0059). The sentence above still holds — it is the *same* colour as every
+ * other primary action, which was always the point — but the colour changed.
  */
 export const tabbarAddClassName =
   "grid place-items-center flex-none z-[1] " +

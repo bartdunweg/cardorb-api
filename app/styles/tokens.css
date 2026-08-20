@@ -95,9 +95,23 @@
   /* Case marker tick: a touch darker than the timeline dashes so it reads as a
      marker, but still close to them (not a hard accent). */
 
-  /* Buttons */
-  --btn-primary-bg: light-dark(#111111, #ffffff);
-  --btn-primary-text: light-dark(#ffffff, #101010);
+  /* Buttons, and everything else that means "this is the chosen one": the tab
+     bar's active pill, a selected filter chip, the Pokédex badge, the track
+     row's active state.
+
+     These were light-dark(#111111, #ffffff) and light-dark(#ffffff, #101010) —
+     near-black in light, white in dark. They point at Untitled UI's brand now,
+     which is this app's blue (ADR-0055: Untitled UI's value is the default, and
+     "what colour is a primary button" is exactly the sort of thing a design
+     system decides). One edit, and the fourteen places that read these follow,
+     so the primary button and the active pill cannot disagree.
+
+     Deliberately NOT --color-tint. bg-brand-solid resolves to --color-brand-600,
+     which ADR-0057 set to the darkened blue precisely because a filled accent
+     with a white label on it needs 4.5:1 and the lighter one measures 4.02.
+     Every one of these surfaces carries text. */
+  --btn-primary-bg: var(--color-bg-brand-solid);
+  --btn-primary-text: #ffffff;
 
   /* Text on a surface that is dark in both themes: tooltips, the label over a
      cover or a dock image, the play count on a still. Deliberately absent from

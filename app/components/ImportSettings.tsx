@@ -11,7 +11,7 @@ import {
   SettingsPanels,
   SettingsSaid,
 } from "./SettingsPanel";
-import { buttonClassName } from "./controlClasses";
+
 import { untitledButton } from "./untitledButtonClasses";
 
 /**
@@ -130,7 +130,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
         />
 
         <button
-          className={buttonClassName}
+          className={untitledButton({ color: "secondary" })}
           type="button"
           disabled={!csv || busy === "csv"}
           onClick={look}

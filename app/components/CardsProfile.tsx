@@ -4,7 +4,7 @@ import { LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { FormNote } from "./FormField";
 import { cardsSegmentClassName, cardsSegmentedClassName } from "./trackClasses";
-import { buttonClassName } from "./controlClasses";
+import { untitledButton } from "./untitledButtonClasses";
 
 /**
  * Where the password is typed, and the only screen on /cards that is about the
@@ -49,7 +49,11 @@ export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
           thirty days pass. Adding a card writes a row to the same database the rest of this page
           reads.
         </FormNote>
-        <button type="button" className={buttonClassName} onClick={onSignOut}>
+        <button
+          type="button"
+          className={untitledButton({ color: "secondary" })}
+          onClick={onSignOut}
+        >
           <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
           <span>Sign out</span>
         </button>

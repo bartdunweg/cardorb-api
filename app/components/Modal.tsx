@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { animate } from "motion";
 import { X } from "lucide-react";
 import { SPRING_MODAL, DUR_NORMAL, DUR_SLOW, prefersReducedMotion } from "../../lib/core/motion";
+import { untitledIconButton } from "./untitledButtonClasses";
 
 /**
  * Hold the page still while a dialog is over it.
@@ -339,11 +340,16 @@ export default function Modal({
         aria-label={label}
       >
         <button
-          className="modal-close btn btn--icon absolute top-6 right-6 z-10 text-label-secondary cursor-pointer
-            text-[0] leading-[0]
-            [transition:transform_var(--dur-fast)_var(--ease-in-out),color_var(--dur-fast)_var(--ease-in-out),box-shadow_var(--dur-fast)_var(--ease-in-out)]
-            hover:scale-[1.06] hover:text-label hover:[box-shadow:var(--shadow-elevated)]
-            dark:[background:var(--glass-bg-solid)] dark:[border-color:var(--color-border)]"
+          // `btn btn--icon` lived in the middle of this string, which is why the
+          // sweep for `className="btn` walked past it. ADR-0018 is that failure
+          // written down once already; this is it again, found by grepping for
+          // the token rather than for the pattern.
+          className={untitledIconButton({
+            color: "secondary",
+            className: `modal-close absolute top-6 right-6 z-10 cursor-pointer
+              [transition:transform_var(--dur-fast)_var(--ease-in-out),color_var(--dur-fast)_var(--ease-in-out),box-shadow_var(--dur-fast)_var(--ease-in-out)]
+              hover:scale-[1.06]`,
+          })}
           onClick={requestClose}
           aria-label="Close"
         >

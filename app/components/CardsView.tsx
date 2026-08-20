@@ -51,7 +51,7 @@ import {
   onlyNarrowClassName,
   onlyWideClassName,
 } from "./cardsPageClasses";
-import { buttonClassName } from "./controlClasses";
+import { untitledButton } from "./untitledButtonClasses";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
 function releasedIn(iso: string | null) {
@@ -1388,7 +1388,11 @@ export default function CardsView({
                   </p>
                   {onAdd && (
                     <p>
-                      <button type="button" className={buttonClassName} onClick={onAdd}>
+                      <button
+                        type="button"
+                        className={untitledButton({ color: "secondary" })}
+                        onClick={onAdd}
+                      >
                         Add a card
                       </button>
                     </p>
