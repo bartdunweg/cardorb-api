@@ -61,8 +61,8 @@ export function MenuDetails({
           CONTROL"/"CONTROL" recipe, keyed off `.filter-menu > summary`). */}
       <summary
         className="flex items-center gap-2 px-4 cursor-pointer whitespace-nowrap list-none
-          [&::-webkit-details-marker]:hidden
-          [transition:box-shadow_var(--dur-fast)_var(--ease-smooth),border-color_var(--dur-fast)_var(--ease-smooth)]"
+          [&::-webkit-details-marker]:hidden [&>svg:first-of-type]:shrink-0
+          transition duration-100 ease-linear"
       >
         <span className="inline-flex items-center gap-2">
           {trigger}

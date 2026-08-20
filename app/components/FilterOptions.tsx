@@ -74,6 +74,12 @@ export default function FilterOptions({
   /* The same split, for the row that goes back up a level. The sheet's is a
      heading you can press — it is the only thing at the top of the panel — and
      the dropdown's is a divider line above the list. */
+  /* The dropdown scrolls its own list — several hundred Pokémon, so the panel
+     moves rather than the page. The sheet is already a scrolling surface and
+     capping it would give it two scrollbars. */
+  const list =
+    variant === "sheet" ? "" : "max-h-[300px] overflow-y-auto overscroll-contain";
+
   const back =
     variant === "sheet"
       ? "gap-1 p-0 text-lg font-semibold text-primary"
@@ -111,7 +117,7 @@ export default function FilterOptions({
             </button>
           )}
         </div>
-        <ul className="facet-list" role="list">
+        <ul className={`facet-list m-0 list-none p-0 ${list}`} role="list">
           {current.options.map((o) => (
             <li key={o.value}>
               {/* Untitled UI's checkbox as classes on a real <input>, not their
@@ -191,7 +197,7 @@ export default function FilterOptions({
         );
       })}
 
-      <ul className="facet-list" role="list">
+      <ul className={`facet-list m-0 list-none p-0 ${list}`} role="list">
         {drilled.map((f) => {
           const on = selected(f);
           return (

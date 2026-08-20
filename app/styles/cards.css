@@ -467,18 +467,6 @@
  * "CONTROL" hook in components.css, and everything below still styles
  * FilterOptions.tsx's/ViewOptions.tsx's shared markup by landing context. */
 /* Safari draws its own disclosure triangle otherwise. */
-.filter-menu > summary::-webkit-details-marker {
-  display: none;
-}
-.filter-menu-panel ul {
-  /* Several hundred Pokémon, so the panel scrolls rather than the page. */
-  max-height: 300px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 /* The native box sits at the browser's own grey, which on this surface is
    near enough to the background that ticked and unticked look alike at a
    glance. Drawn by hand instead: an empty outline off, filled ink with a tick
@@ -579,10 +567,6 @@
 /* The facet list, the level above the tick-list. */
 /* How many values are on in a facet, so the list says which ones are doing
    something without having to be opened. */
-
-.filter-menu > summary svg:first-of-type {
-  flex-shrink: 0;
-}
 
 /* ─── ONE CARD (app/cards/[id]) ─── */
 
@@ -778,12 +762,6 @@
 }
 .sheet .facet-inline .cards-segmented {
   width: 100%;
-}
-
-.sheet .facet-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .sheet .facet-option,
