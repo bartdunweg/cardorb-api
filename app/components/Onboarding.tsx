@@ -6,16 +6,10 @@ import { SITE_URL } from "../../lib/core/config";
 import { MAX_DISPLAY_NAME, validateUsername } from "../../lib/core/account";
 import AvatarPicker from "./AvatarPicker";
 import { useUsernameCheck, usernameSays } from "./useUsernameCheck";
-import {
-  FormError,
-  FormField,
-  FormForm,
-  FormHint,
-  FormInput,
-  FormLabel,
-  FormNote,
-} from "./FormField";
-import SigninShell, { signinWideButtonClassName } from "./SigninShell";
+import { FormError, FormForm, FormNote } from "./FormField";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
+import SigninShell from "./SigninShell";
 import { SettingsHint, SettingsSwitch } from "./SettingsPanel";
 
 /**
@@ -205,21 +199,24 @@ export default function Onboarding({
             This is where you change it to yours.
           </FormNote>
 
-          <FormField layout="column">
-            <FormLabel>Username</FormLabel>
-            <FormInput
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              spellCheck={false}
-              autoCapitalize="none"
-              autoComplete="off"
-              disabled={busy}
-              aria-describedby="welcome-username-hint"
-            />
-            <FormHint id="welcome-username-hint">
-              {link} — two to thirty characters: lowercase letters, numbers and hyphens.
-            </FormHint>
-          </FormField>
+          <Input
+            label="Username"
+            hint={<>{link} — two to thirty characters: lowercase letters, numbers and hyphens.</>}
+            value={username}
+            onChange={(value) => setUsername(value.toLowerCase())}
+            // React Aria types this as the HTML attribute, which is the string
+            // "false" and not the boolean. Both spell the same thing to a
+            // browser; only one type-checks.
+            spellCheck="false"
+            // autoCapitalize="none" was here and Untitled UI's InputProps does
+            // not carry it. Dropped rather than worked around, because onChange
+            // lowercases every keystroke anyway: the most a phone keyboard can
+            // now do is offer a capital that the field immediately undoes.
+            autoComplete="off"
+            isDisabled={busy}
+            isInvalid={name.kind === "taken"}
+            className="w-full"
+          />
 
           {/* One line, replacing itself, rather than three that can all be on
               screen at once saying different things about the same field.
@@ -228,20 +225,16 @@ export default function Onboarding({
               readers routinely do not announce. */}
           <FormError aria-live="polite">{says ?? ""}</FormError>
 
-          <FormField layout="column">
-            <FormLabel>Display name</FormLabel>
-            <FormInput
-              value={displayName}
-              maxLength={MAX_DISPLAY_NAME}
-              placeholder={wanted || initial.username}
-              onChange={(e) => setDisplayName(e.target.value)}
-              disabled={busy}
-              aria-describedby="welcome-display-hint"
-            />
-            <FormHint id="welcome-display-hint">
-              What your page calls you. Empty means your username.
-            </FormHint>
-          </FormField>
+          <Input
+            label="Display name"
+            hint="What your page calls you. Empty means your username."
+            value={displayName}
+            maxLength={MAX_DISPLAY_NAME}
+            placeholder={wanted || initial.username}
+            onChange={setDisplayName}
+            isDisabled={busy}
+            className="w-full"
+          />
 
           {/* A name the check has already said no to is not worth a round trip
               to be told again. Skip stays live, so this cannot trap anybody. */}
@@ -287,31 +280,34 @@ export default function Onboarding({
           <FormNote>
             Last one. A collection can come in from a spreadsheet, or start with a single card.
           </FormNote>
-          <button
-            type="button"
-            className={`btn ${signinWideButtonClassName}`}
-            disabled={busy}
-            onClick={() => void finish("/collection?add=1")}
+          <Button
+            color="secondary"
+            size="lg"
+            isDisabled={busy}
+            onPress={() => void finish("/collection?add=1")}
+            className="w-full"
           >
             Add my first card
-          </button>
-          <button
-            type="button"
-            className={`btn ${signinWideButtonClassName}`}
-            disabled={busy}
-            onClick={() => void finish("/settings/import")}
+          </Button>
+          <Button
+            color="secondary"
+            size="lg"
+            isDisabled={busy}
+            onPress={() => void finish("/settings/import")}
+            className="w-full"
           >
             Import a CSV
-          </button>
+          </Button>
           <FormError aria-live="polite">{error ?? ""}</FormError>
-          <button
-            type="button"
-            className="btn self-center border-transparent bg-transparent [box-shadow:none]"
-            disabled={busy}
-            onClick={() => void finish("/collection")}
+          <Button
+            color="tertiary"
+            size="lg"
+            isDisabled={busy}
+            onPress={() => void finish("/collection")}
+            className="self-center"
           >
             I&apos;ll do this later
-          </button>
+          </Button>
           {/* All three ways out do the same write first, so one line covers
               them rather than each button rewriting its own label. */}
           {busy && <FormNote className="text-center">One moment…</FormNote>}
@@ -351,22 +347,23 @@ function Controls({
       {/* Mounted whether or not there is anything to say, so the announcement
           happens on the change rather than on the insertion. */}
       <FormError aria-live="polite">{error ?? ""}</FormError>
-      <button
-        className={`btn ${signinWideButtonClassName}`}
+      {/* Continue submits when nothing else is handed in, which is what keeps
+          Enter working from inside the fields. onPress is React Aria's, so it
+          fires the same for a tap, a keyboard Enter and a screen reader. */}
+      <Button
         type={onContinue ? "button" : "submit"}
-        disabled={busy || blocked}
-        onClick={onContinue}
+        size="lg"
+        isDisabled={busy || blocked}
+        isLoading={busy}
+        showTextWhileLoading
+        onPress={onContinue}
+        className="w-full"
       >
-        {busy ? "Saving…" : label}
-      </button>
-      <button
-        type="button"
-        className="btn self-center border-transparent bg-transparent [box-shadow:none]"
-        disabled={busy}
-        onClick={onSkip}
-      >
+        {label}
+      </Button>
+      <Button color="tertiary" size="lg" isDisabled={busy} onPress={onSkip} className="self-center">
         Skip
-      </button>
+      </Button>
     </>
   );
 }

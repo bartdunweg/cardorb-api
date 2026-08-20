@@ -7,6 +7,8 @@ import Modal from "./Modal";
 import { MAX, type CardFields } from "../../lib/core/collection-row";
 import { MAX_RESULTS, type CatalogueMatch } from "../../lib/core/ptcg-search";
 import { modalCardAddClassName } from "./cardModalClasses";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 
 /**
  * The form behind the plus: one search box first, a few extra fields once a
@@ -477,27 +479,30 @@ export default function CardAddDialog({
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 [@media(max-width:480px)]:grid-cols-1">
-                <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-                  <span className={cardAddLabelClassName}>Name</span>
-                  <input
-                    ref={advancedNameRef}
-                    className={cardAddInputClassName}
-                    value={filters.name}
-                    onChange={(e) => setFilter("name", e.target.value)}
-                    autoComplete="off"
-                    placeholder="Charizard"
-                  />
-                </label>
-                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-                  <span className={cardAddLabelClassName}>Number</span>
-                  <input
-                    className={cardAddInputClassName}
-                    value={filters.number}
-                    onChange={(e) => setFilter("number", e.target.value)}
-                    autoComplete="off"
-                    placeholder="006"
-                  />
-                </label>
+                <Input
+                  label="Name"
+                  ref={advancedNameRef}
+                  value={filters.name}
+                  onChange={(v) => setFilter("name", v)}
+                  autoComplete="off"
+                  placeholder="Charizard"
+                  className="col-span-full"
+                />
+                <Input
+                  label="Number"
+                  value={filters.number}
+                  onChange={(v) => setFilter("number", v)}
+                  autoComplete="off"
+                  placeholder="006"
+                />
+                {/* Still a native input with a <datalist>, where Name and
+                    Number above are Untitled UI's. Its Input has no `list`
+                    prop, and Untitled UI's answer to "field that suggests" is
+                    Combobox — a different interaction (ARIA listbox, and it
+                    wants allowsCustomValue to keep free text working). That is
+                    a change worth making on purpose rather than at the end of a
+                    sweep. ADR-0058 has the choice; until it is taken, these
+                    three keep the behaviour they have. */}
                 <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
                   <span className={cardAddLabelClassName}>Set</span>
                   <input
@@ -760,13 +765,15 @@ export default function CardAddDialog({
             </label>
 
             <div className="col-span-full flex justify-end">
-              <button
+              <Button
                 type="submit"
-                className="btn btn--primary"
-                disabled={busy || !draft.name.trim() || !draft.set.trim()}
+                size="lg"
+                isDisabled={busy || !draft.name.trim() || !draft.set.trim()}
+                isLoading={busy}
+                showTextWhileLoading
               >
-                {busy ? "Adding" : "Add to the collection"}
-              </button>
+                Add to the collection
+              </Button>
             </div>
 
             {/* Both live in the same polite region, so the outcome of a

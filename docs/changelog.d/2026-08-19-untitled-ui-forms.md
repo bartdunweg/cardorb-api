@@ -1,0 +1,1 @@
+- Sign-up, password reset and the welcome flow use the same rebuilt fields as sign-in: labels tied to their input, hints that screen readers announce, and a reveal toggle on every password box.
