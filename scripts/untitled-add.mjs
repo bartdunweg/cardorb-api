@@ -65,6 +65,15 @@ for (const dir of ["components", "utils"]) {
     // 2. The eslint-disable for a rule this project does not turn on.
     after = after.replace(/^\/\* eslint-disable @typescript-eslint\/no-explicit-any \*\/\n/m, "");
 
+    // 3. The password reveal toggle is sized to its 16x16 icon, which
+    //    Lighthouse flags as target-size — WCAG 2.2 AA (2.5.8) asks 24x24.
+    //    Grown with an ::after so the icon itself does not move. ADR-0057.
+    after = after.replace(
+      /(\n\s*)(sizes\[inputSize\]\.iconTrailing,\n)(\s*\)\}\n\s*>\n\s*\{isPasswordVisible)/,
+      `$1$2$1"size-6",
+$3`,
+    );
+
     if (after !== before) {
       writeFileSync(file, after);
       fixed.push(file);

@@ -147,13 +147,18 @@ export const colour = {
  *
  *   500 — `--color-border-brand`, which is the focus ring. `tint` below is
  *         argued as exactly this ("a selected pill, a progress bar, a focus
- *         ring") and measured past the 3:1 a graphic needs.
- *   600 — `--color-bg-brand-solid`, the filled accent. Same value, same
- *         argument. 500 and 600 being equal is not a slip: this app has one
- *         accent, not a ramp of them.
- *   700 — `--color-text-brand-secondary`, the accent *as a word*. `tintLabel`
- *         exists because the fill fails AA as text — 4.02:1 on white, 3.87:1
- *         on the page — so this is the darkened value that clears 4.5 on both.
+ *         ring"). A graphic needs 3:1 and it measures 4.02:1 on white.
+ *   600 — `--color-bg-brand-solid`, the filled accent — **and it carries a
+ *         white label**, which is the whole reason this is `tintLabel` and not
+ *         `tint`. Caught by the build-quality pass on /login, not by reasoning:
+ *         the primary button was white on `tint` at 4.02:1, and its label is
+ *         14px semibold, which is not WCAG large text and therefore wants 4.5.
+ *         `tintLabel` gives 5.57:1. The mistake was reading "filled accent" as
+ *         a fill question when the binding constraint was the word on top of
+ *         it — exactly what `tint`'s own comment warns about two screens up.
+ *   700 — `--color-text-brand-secondary`, the accent *as a word*. Same value,
+ *         same measurement, and 600 and 700 being equal is not a slip: once a
+ *         surface carries text, this app has one blue for it.
  *
  * The eight remaining steps are backgrounds and subtle borders. They are
  * derived, not measured, and any of them that ends up under text has to be
@@ -166,9 +171,9 @@ export const brand = {
   200: "#c6e2ff",
   300: "#9eccff",
   400: "#61a8ff",
-  500: colour.tint.light, // focus ring — measured ≥3:1 as a graphic
-  600: colour.tint.light, // filled accent — the same one accent
-  700: colour.tintLabel.light, // accent as text — measured ≥4.5:1
+  500: colour.tint.light, // focus ring — a graphic; 4.02:1 on white, needs 3
+  600: colour.tintLabel.light, // filled accent, and it carries a white label
+  700: colour.tintLabel.light, // accent as text — 5.57:1 on white
   800: "#0048af",
   900: "#003c8a",
   950: "#002669",

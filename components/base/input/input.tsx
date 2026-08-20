@@ -197,6 +197,17 @@ export const InputBase = ({
           className={cx(
             "absolute flex cursor-pointer items-center justify-center text-fg-quaternary transition duration-100 ease-linear hover:text-fg-quaternary_hover focus:text-fg-quaternary_hover focus:outline-hidden",
             sizes[inputSize].iconTrailing,
+            // Vendored edit — see docs/decisions/0057. Upstream sizes this
+            // button to its icon, 16x16, which Lighthouse flags as target-size:
+            // WCAG 2.2 AA (2.5.8) asks for 24x24. Last in the list so
+            // tailwind-merge drops the size-4 that iconTrailing brings; the icon
+            // inside stays 16 and is centred, so only the hit area grows.
+            //
+            // An ::after overlay was tried first and does not work: it grows what
+            // is clickable but not the element's box, and target-size measures
+            // the box. That is the sort of fix that looks right in a diff and
+            // fails the audit it was written for.
+            "size-6",
           )}
         >
           {isPasswordVisible ? (
