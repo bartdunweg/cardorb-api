@@ -40,7 +40,12 @@
 export const tabbarFadeClassName =
   "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 h-36 z-[var(--z-tabbar)] pointer-events-none " +
   "[background:linear-gradient(to_top,var(--color-bg-grouped)_20%,color-mix(in_srgb,var(--color-bg-grouped)_80%,transparent)_50%,color-mix(in_srgb,var(--color-bg-grouped)_0%,transparent)_100%)] " +
-  "[mask-image:linear-gradient(to_top,#000_60%,transparent_100%)] [backdrop-filter:blur(var(--blur-scrim-sm))]";
+  "[mask-image:linear-gradient(to_top,#000_60%,transparent_100%)] [backdrop-filter:blur(var(--blur-scrim-sm))] " +
+  // The rail is back beside the cards above 1000px, so the bar and its scrim
+  // have nothing left to do. `!` for the same reason the bar's own hide has it:
+  // `fixed` above is unconditional and this is not, and the order Tailwind
+  // emits two display-ish utilities in is not a promise (ADR-0012).
+  "[@media(min-width:1001px)]:!hidden";
 
 /**
  * No toggle-footprint reservation on this route's own side padding below

@@ -69,49 +69,13 @@
    the window, which is right for a bar that is the site's navigation and wrong
    for one that is standing in for a rail. Put it back, and restate the fade's
    own gradient, which the same query points the other way. */
-@media (min-width: 641px) and (max-width: 1000px) {
-  .cards-tabbar-fade {
-    top: auto;
-    bottom: 0;
-    background: linear-gradient(
-      to top,
-      var(--color-bg-grouped) 20%,
-      color-mix(in srgb, var(--color-bg-grouped) 80%, transparent) 50%,
-      color-mix(in srgb, var(--color-bg-grouped) 0%, transparent) 100%
-    );
-    -webkit-mask-image: linear-gradient(to top, #000 60%, transparent 100%);
-    mask-image: linear-gradient(to top, #000 60%, transparent 100%);
-  }
-  .cards-tabbar {
-    top: auto;
-    bottom: 0;
-    padding: var(--space-6) var(--space-4);
-  }
-  /* No slot sizing here either: "there is room, so the slots hug their icons
-     again" is what every slot does at every width now, so the three rules
-     that said it for this range only were saying nothing. */
-  /* .page-cards's matching padding-bottom (64px is the room the bar takes
-     plus the same air the phone gets) now lives in cardsPageClasses.ts. */
-}
-
-/* The rail is back beside the cards, so the bar has nothing left to do. */
-@media (min-width: 1001px) {
-  .cards-tabbar,
-  .cards-tabbar-fade {
-    display: none;
-  }
-}
-
-/* The rows the bottom bar already carries, which is why they leave the rail
-   below 1000px: two controls for one destination six pixels apart is one too
-   many, and without them the rail is the list of sets its title says it is.
-
-   Which rows those are depends on the mode, so CardsSidebar puts this class on
-   rather than the markup wearing it. Signed in: Dashboard, Pokédex, Profile.
-   On the public link: those, plus Collection and Wishlist, which have slots
-   there because the plus and the dashboard do not. */
-@media (max-width: 1000px) {
-}
+/* The tab bar's own rules are all in tabbarClasses.ts now. Three blocks left
+   here and every one of them was already dead: the 641-1000 overrides restated
+   values tabbarFadeClassName and tabbarClassName already carry unconditionally
+   (and an unconditional utility beats a legacy media query either way — see
+   ADR-0064, the sixth time that bit), the >=1001 hide is on both elements as
+   `!hidden`, and the <=1000 block had been emptied of rules some time ago and
+   left as a pair of braces. */
 
 /* Searching and adding, at the head of the rail. Both belong to the whole page
    rather than to whichever screen is on the right, and above 1000px the rail is
