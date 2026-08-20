@@ -33,8 +33,39 @@ seventeen more of these into `cardsPageClasses.ts`. It was rescued, judged and
 dropped — `CardsView.tsx` had moved 770 lines underneath it, and the measurement
 above says the extraction was not wanted anyway.
 
-**Untitled UI is in, and `/login` is the only screen using it (PR #102, branch
-`bartdunweg/untitled-ui`, 2026-08-19).** The direction is ADR-0055, corrected
+**The whole app is on Untitled UI now (PR #102, branch `bartdunweg/untitled-ui`,
+2026-08-19).** `className="btn"` appears nowhere; `controlClasses.ts` is deleted;
+`components.css` lost 84 lines; `FormField.tsx` is 57 lines where it was 130.
+Twenty-three files import an Untitled UI component or the class recipe.
+
+**Read ADR-0059 first — the app looks different.** `--btn-primary-bg` was
+near-black and is Untitled UI's brand now, so every primary surface went blue at
+once: the buttons, the tab bar's active pill and add button, selected filter
+chips, the Pokédex badge. One token, fourteen places, one line to reverse.
+
+**The gap, stated plainly: the signed-in screens have never been photographed.**
+`/collection`, `/dashboard`, `/settings`, `/wishlist`, `/welcome`, the add-card
+dialog and everything reading `--btn-primary-bg` were converted without a
+screenshot. `owner.spec.ts` exists precisely for this and needs `VISUAL_EMAIL`
+set — an account address, alongside the service-role key already in `.env.local`.
+**Run it before merging.** ADR-0020 is a regression that hid behind a login for
+weeks, and this is the same shape at ten times the size.
+
+Two things deliberately not converted, both recorded: `CardAddDialog`'s Set,
+Type and Generation keep their native `<datalist>` because Untitled UI's answer
+is `Combobox`, a different interaction (ADR-0058); and `autoCapitalize` is gone
+from the username field because its `onChange` lowercases anyway.
+
+`npm run ui:add` runs the Untitled UI CLI and re-applies the three fixes it
+overwrites every time. `untitledButtonClasses.ts` copies the button recipe for
+the controls that cannot be a React Aria Button — a `<summary>`, a `<label>`, a
+`<span aria-hidden>` — and `untitledButtonClasses.test.ts` fails if the copy
+drifts from the vendored source, the same way `gen-tokens --check` does for
+tokens. The copy exists because `button.tsx` is `"use client"` and a server
+component importing its `styles` gets a client-reference proxy: `/_not-found`
+and `/cards` both died on that.
+
+**Earlier in the same session:** The direction is ADR-0055, corrected
 mid-session by FB-0013: **Untitled UI's value is the default**, and Card Orb's
 earns an exception only by being the identity (glass, orb, holo, the tint blue)
 or by being argued from a contrast ratio `lib/design/tokens.ts` can cite.
