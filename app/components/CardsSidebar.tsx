@@ -92,8 +92,29 @@ export default function CardsSidebar({
       // utility for any of them would now beat that reset (Tailwind utilities
       // outrank legacy CSS regardless of the legacy rule's specificity, see
       // ADR-0012) — caught live: the rail stopped hiding on a narrow phone.
-      className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
-        bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]"
+      /**
+       * `peer`, and that is the whole trick.
+       *
+       * The pane swap was `.cards-rail[data-pane="rail"] + .cards-main` — a
+       * sibling selector, which is why AppShell's comment insists nothing may
+       * come between these two elements. Tailwind spells the same relationship
+       * `peer` / `peer-data-[...]`, so the rule moves onto the elements without
+       * either of them learning about the other, and the constraint stays
+       * exactly what it was.
+       *
+       * Every rule here is inside `[@media(max-width:1000px)]:` or above it,
+       * never both, so no unconditional utility can beat a conditional one —
+       * the ADR-0012/ADR-0017 rule this file's old comment was written for.
+       */
+      className="cards-rail peer group/rail flex flex-col gap-5 [padding:var(--space-4)_var(--space-3)]
+        bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]
+        sticky top-0 h-[100dvh] overflow-y-auto border-r border-[var(--color-border-subtle)]
+        [@media(max-width:1000px)]:static [@media(max-width:1000px)]:h-auto
+        [@media(max-width:1000px)]:overflow-visible [@media(max-width:1000px)]:border-r-0
+        [@media(max-width:1000px)]:[box-shadow:none]
+        [@media(max-width:1000px)]:not-data-[pane=rail]:!hidden
+        [@media(max-width:1000px)]:data-[pane=rail]:[animation:cards-pane-in_var(--dur-normal)_var(--ease-out)]
+        motion-reduce:[animation:none]"
       data-pane={pane}
     >
       {/* What this screen is, and only on the widths where the rail is a screen

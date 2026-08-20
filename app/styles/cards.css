@@ -25,112 +25,11 @@
  * the reset's specificity (see ADR-0012's cascade-layers fix) — caught
  * live when a first attempt at this migrated the rail unconditionally and
  * it stopped hiding on a narrow phone. */
-.cards-rail {
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--color-border-subtle);
-  /* No box-shadow: the border-right above is the only separation from the
-     results now. A directional shadow lived here twice (first at 16%/43%
-     black, then reduced to 10%/40%) and read as "too much" both times, so
-     it is gone rather than tuned a third time. */
-  position: sticky;
-  top: 0;
-  /* The whole window, edge to edge. */
-  height: 100vh;
-  height: 100dvh;
-  overflow-y: auto;
-}
-@media (max-width: 1000px) {
-  .cards-rail {
-    position: static;
-    height: auto;
-    overflow: visible;
-    border-right: 0;
-    box-shadow: none;
-  }
-}
-@media (max-width: 1000px) {
-  /* One pane at a time.
-
-     The rail used to sit above the results as a 420px box with its own
-     scrollbar: fifty-one sets in a slot four rows deep, with the page you came
-     for underneath it. A list you have to scroll inside in order to scroll past
-     is not navigation, it is an obstacle, so the two take turns instead. The
-     results are the screen you land on, the way they are at full width, and the
-     button over them opens the rail. CardsSidebar carries the attribute;
-     .cards-main is its next sibling, which is what makes one attribute enough
-     for both.
-
-     :not([data-pane="rail"]) rather than [data-pane="main"], so the skeleton in
-     app/(app)/loading.tsx, which renders neither, lands on the results too. A
-     fallback that outlines a rail and then hands over a dashboard is a page
-     that changed its mind while you watched. */
-  .cards-rail:not([data-pane="rail"]) {
-    display: none;
-  }
-  .cards-rail[data-pane="rail"] + .cards-main {
-    display: none;
-  }
-  /* The screen that arrives, arriving.
-
-     Swapping the two panes and scrolling to the top in the same frame reads as
-     the page having reloaded, which is the exact complaint FavoritesView was
-     rewritten to answer. A short rise under the incoming pane is enough to say
-     it went somewhere instead. Only the one coming in: the other is already
-     gone by the time this runs, so there is nothing to animate out. */
-  .cards-rail[data-pane="rail"],
-  .cards-rail[data-pane="main"] + .cards-main {
-    animation: cards-pane-in var(--dur-normal) var(--ease-out);
-  }
-  /* Neither matches before the first press, because there is no attribute until
-     then: see the `pane` state in CardsView. That is what keeps this a
-     transition between two screens rather than one the dashboard performs on
-     every page load, announcing a navigation that did not happen. */
-}
 @keyframes cards-pane-in {
   from {
     opacity: 0;
     transform: translateY(6px);
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .cards-rail,
-  .cards-main {
-    animation: none;
-  }
-}
-
-/* .cards-rail-title had no consumer left: the rail's title is a plain <p>
- * with its own Tailwind classes in CardsSidebar.tsx. Dead since that
- * migration, removed on the final cards.css sweep (see ADR-0014). */
-
-/* Between the two top rows and the sets, and between one era and the next.
-   display:block because it is a span inside the era's list item as well as a
-   list item of its own, and an inline box takes neither the height nor the
-   background. */
-/* .cards-nav-rule had no consumer left: the hairline is a plain <li> with its
- * own Tailwind classes in CardsSidebar.tsx. Dead since that migration,
- * removed on the final cards.css sweep (see ADR-0014). */
-/* .cards-nav-era, .cards-nav-art(+img), .cards-nav-blank, .cards-nav-name,
- * .cards-nav-count, and most of .cards-nav-item all moved to Tailwind
- * classes in CardsSidebar.tsx during the migration. .cards-nav-item stays as
- * a class name: the hover-pill pseudo-element (its recipe in components.css,
- * ::after inset here) and the child z-index lift below still reach it —
- * left as CSS rather than a `group-hover:after:` chain, the same call made
- * for the grid tile's own hover pill.
- */
-/* Above the pill, which is positioned and would otherwise paint over them. */
-
-/* ── The results pane ── */
-
-/* min-width/container-type/gap/padding (+ its <=1000px override) moved to
- * cardsPageClasses.ts's cardsMainClassName. display/flex-direction stay
- * here: display is what the pane-swap sibling selector above toggles to
- * none, and an unconditional Tailwind utility for it would outrank this
- * rule regardless of specificity (ADR-0012). */
-.cards-main {
-  display: flex;
-  flex-direction: column;
 }
 
 /* ── The bar along the bottom (CardsTabBar) ──
@@ -286,46 +185,14 @@
    Grid only. A row in the list view has a rule under it and sits in a stack of
    rows; a pill would be a second hover state in a place that already has its
    own shape. */
-.cards-item[data-view="grid"] {
-  position: relative;
-  padding: var(--space-2);
-  border-radius: var(--radius-orb-md);
-}
 /* The pill is a pseudo-element behind the tile's own content rather than a
    background on the tile, so it can scale up into place without taking the
    scan with it. The children are lifted over it by name: .cards-item-link is
    `display: contents` and has no box of its own, so a rule on the tile's direct
    children would land on an element that cannot be stacked. */
-.cards-item[data-view="grid"] .cards-scan,
-.cards-item[data-view="grid"] .cards-item-text,
-.cards-item[data-view="grid"] .cards-item-tags {
-  position: relative;
-  z-index: 1;
-}
-.cards-item[data-view="grid"]::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: var(--radius-orb-md);
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-card);
-  opacity: 0;
-  transform: scale(0.98);
-  transition:
-    opacity var(--dur-fast) var(--ease-smooth),
-    transform var(--dur-fast) var(--ease-smooth);
-  pointer-events: none;
-}
 /* focus-within rather than focus-visible on the link: the ring itself stays on
    the scan (see .cards-item-link:focus-visible), and this is only the surface
    coming up under a tile that has been tabbed to. */
-.cards-item[data-view="grid"]:hover::after,
-.cards-item[data-view="grid"]:focus-within::after {
-  opacity: 1;
-  transform: scale(1);
-}
 
 /* .cards-scan's own box (ratio, margin) and .cards-scan img's filter, plus
  * the grid/list data-view variants, moved to CardItem.tsx Tailwind classes

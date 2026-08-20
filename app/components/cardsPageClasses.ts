@@ -36,7 +36,21 @@ export const pageCardsClassName =
  * stay in cards.css; only the properties nothing ever resets are Tailwind.
  */
 export const cardsMainClassName =
-  "cards-main @container min-w-0 gap-5 " +
+  /* flex/flex-col were the last two declarations left in cards.css's own
+     `.cards-main` rule, and they are what `gap-5` is a gap *of*. They came
+     across when that rule went. */
+  "cards-main @container flex flex-col min-w-0 gap-5 " +
+  /* The other half of the pane swap, as a peer variant of the rail beside it.
+     Was `.cards-rail[data-pane="rail"] + .cards-main { display: none }` and the
+     matching animation rule; the sibling relationship is now `peer-data-`,
+     which needs the rail to carry `peer` and to come first — the same
+     "nothing between these two" constraint AppShell already documents. */
+  /* `!`, because `flex` above is unconditional and `hidden` here is not: two
+     display utilities, and the order Tailwind emits them is not a promise. The
+     same fix as ADR-0012's and the card body's. */
+  "[@media(max-width:1000px)]:peer-data-[pane=rail]:!hidden " +
+  "[@media(max-width:1000px)]:peer-data-[pane=main]:[animation:cards-pane-in_var(--dur-normal)_var(--ease-out)] " +
+  "motion-reduce:[animation:none] " +
   "[padding:var(--space-8)_var(--page-pad-x)_var(--page-pad-bottom)_var(--space-6)] " +
   "[@media(max-width:1000px)]:[padding:var(--space-5)_var(--page-pad-x)_var(--page-pad-bottom)] " +
   "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(var(--space-6)+var(--tabbar-pill-h)+var(--space-10))]";

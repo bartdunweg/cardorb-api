@@ -89,6 +89,35 @@ function CardLink({
  * from, since a new Set on any card would otherwise change the props of all of
  * them, and `onScanBroken` is one useCallback for the whole page.
  */
+/**
+ * The glass pill behind a tile on hover, in grid view only.
+ *
+ * An ::after rather than a background on the tile itself: the scan, the text and
+ * the tags all sit above it on z-1, so the pill grows in behind them instead of
+ * washing over them. It was `.cards-item[data-view="grid"]::after` plus a
+ * three-selector rule lifting those children; both are here now.
+ *
+ * Every part is conditional on the same data-[view=grid], including the hover
+ * and focus states, so nothing here can beat a narrower rule the way an
+ * unconditional utility would — ADR-0017, which this migration has now met five
+ * times.
+ */
+const gridHoverPillClassName = [
+  "data-[view=grid]:[&_.cards-scan]:relative data-[view=grid]:[&_.cards-scan]:z-1",
+  "data-[view=grid]:[&_.cards-item-text]:relative data-[view=grid]:[&_.cards-item-text]:z-1",
+  "data-[view=grid]:[&_.cards-item-tags]:relative data-[view=grid]:[&_.cards-item-tags]:z-1",
+  "data-[view=grid]:after:content-[''] data-[view=grid]:after:absolute data-[view=grid]:after:inset-0",
+  "data-[view=grid]:after:z-0 data-[view=grid]:after:rounded-orb-md",
+  "data-[view=grid]:after:bg-[var(--glass-bg)] data-[view=grid]:after:border",
+  "data-[view=grid]:after:border-[var(--glass-border)] data-[view=grid]:after:[box-shadow:var(--shadow-card)]",
+  "data-[view=grid]:after:opacity-0 data-[view=grid]:after:scale-[0.98]",
+  "data-[view=grid]:after:transition data-[view=grid]:after:duration-150",
+  "data-[view=grid]:after:[transition-timing-function:var(--ease-smooth)]",
+  "data-[view=grid]:after:pointer-events-none",
+  "data-[view=grid]:hover:after:opacity-100 data-[view=grid]:hover:after:scale-100",
+  "data-[view=grid]:focus-within:after:opacity-100 data-[view=grid]:focus-within:after:scale-100",
+].join(" ");
+
 const CardItem = memo(function CardItem({
   card,
   setName,
@@ -245,6 +274,7 @@ const CardItem = memo(function CardItem({
     <li
       className={`cards-item group/item flex flex-col gap-[2px] min-w-0
         data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-orb-md
+        ${gridHoverPillClassName}
         data-[view=list]:flex-row data-[view=list]:items-center data-[view=list]:gap-4
         data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-[var(--color-border)]
         data-[view=list]:last:border-b-0`}
