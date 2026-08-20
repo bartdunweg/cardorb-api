@@ -23,6 +23,7 @@
     "@react-stately/utils": "^3.12.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
+    "@untitledui/file-icons": "^0.0.9",
     "@untitledui/icons": "^0.0.22",
     "@vercel/analytics": "^2.0.1",
     "hover-tilt": "^1.0.0",
@@ -31,8 +32,10 @@
     "motion": "^12.43.0",
     "next": "^16.2.1",
     "react": "^19.2.4",
+    "react-aria": "^3.51.0",
     "react-aria-components": "^1.20.0",
     "react-dom": "^19.2.4",
+    "recharts": "^3.10.1",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
