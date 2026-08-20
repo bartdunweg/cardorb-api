@@ -54,10 +54,11 @@ export function SettingsPanel({
   return (
     <section
       className={cx(
-        "p-4 rounded-orb-lg bg-bg-surface [box-shadow:var(--shadow-card)]",
-        // Deleting everything reads as what it is. The only place in the app
-        // that uses a warning colour (lib/design/tokens.ts's `danger`).
-        danger && "border border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)]",
+        // Untitled UI's card surface, the same constant Card.tsx uses (ADR-0061).
+        "p-4 rounded-xl bg-primary shadow-xs ring-1 ring-secondary ring-inset",
+        // Deleting everything reads as what it is. Untitled UI's error ring
+        // rather than a mix of Card Orb's danger token — same job, their value.
+        danger && "ring-error_subtle",
         className,
       )}
       {...rest}
@@ -69,13 +70,13 @@ export function SettingsPanel({
 export function SettingsPanelTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cx("m-0 mb-3 [font-size:var(--fs-body)] font-semibold text-label", className)}
+      className={cx("m-0 mb-3 text-md font-semibold text-primary", className)}
       {...rest}
     />
   );
 }
 
-export const settingsHintClassName = "my-2 [font-size:var(--fs-small)] text-label-secondary";
+export const settingsHintClassName = "my-2 text-sm text-tertiary";
 
 export function SettingsHint({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cx(settingsHintClassName, className)} {...rest} />;
@@ -83,7 +84,7 @@ export function SettingsHint({ className, ...rest }: HTMLAttributes<HTMLParagrap
 
 /** The one-line result of a save/change, replacing itself as the state moves. */
 export function SettingsSaid({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx("mt-2 [font-size:var(--fs-small)] text-label", className)} {...rest} />;
+  return <p className={cx("mt-2 text-sm text-primary", className)} {...rest} />;
 }
 
 export const SettingsInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
@@ -95,9 +96,12 @@ export const SettingsInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HT
           // Capped: the panels span the whole pane now that Settings is a
           // full-width page, and a 900px-wide email field is a field you have
           // to aim at rather than read.
-          "w-full max-w-[26rem] py-2 px-3 rounded-btn border border-[var(--color-border-active)]",
-          "bg-bg-grouped text-label text-base", // 16px: iOS Safari zooms a smaller field on focus and never zooms back
-          "focus-visible:[outline:2px_solid_var(--color-tint)] focus-visible:[outline-offset:1px]",
+          "w-full max-w-[26rem]",
+          // Untitled UI's input, as classes rather than their <Input>: this is a
+          // forwardRef native <input> that four settings forms hand a ref to,
+          // and their component is a React Aria TextField with no ref to give.
+          "rounded-lg bg-primary px-3 py-2 text-md text-primary shadow-xs ring-1 ring-primary ring-inset",
+          "placeholder:text-placeholder outline-hidden focus:ring-2 focus:ring-brand",
           className,
         )}
         {...rest}
@@ -107,11 +111,11 @@ export const SettingsInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HT
 );
 
 export function SettingsLink({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx("mt-3 [font-size:var(--fs-small)]", className)} {...rest} />;
+  return <p className={cx("mt-3 text-sm", className)} {...rest} />;
 }
 
 /** Applied to the <a> inside SettingsLink. */
-export const settingsLinkAnchorClassName = "text-tint-label";
+export const settingsLinkAnchorClassName = "text-brand-secondary";
 
 /* SettingsRowTitle/SettingsRowBlurb/settingsRowClassName were the four link
    rows of the /settings index. There is no index any more — every section is
@@ -119,7 +123,8 @@ export const settingsLinkAnchorClassName = "text-tint-label";
    primitives that read like a pattern to follow. */
 
 /** .btn--danger, applied alongside the shared .btn class. */
-export const dangerButtonClassName = "bg-danger text-white border-transparent disabled:opacity-50";
+/** Handed to untitledButton({ color: "primary-destructive" }) as extra classes. */
+export const dangerButtonClassName = "disabled:opacity-50";
 
 /** A real checkbox, visually hidden, with the track drawn beside it — see
  *  the comment on the original .settings-switch for why. */
@@ -130,20 +135,26 @@ export function SettingsSwitch({
   return (
     <label className="group flex gap-3 items-start cursor-pointer">
       <input type="checkbox" className="absolute opacity-0 w-0 h-0" {...rest} />
+      {/* Untitled UI's toggle, drawn from their classes rather than their
+          component. Theirs is a React Aria Switch; this is a real <input
+          type="checkbox"> visually hidden with the track beside it, which is
+          what makes it work in a plain form post and with a screen reader that
+          knows what a checkbox is. Their look, our mechanism — the third time
+          this call comes up, after the buttons and the metric tiles. */}
       <span
         aria-hidden="true"
         className={cx(
-          "flex-none w-11 h-[26px] rounded-full bg-[var(--color-border-active)] p-[3px]",
+          "flex-none w-9 h-5 rounded-full bg-tertiary p-0.5 ring-1 ring-transparent ring-inset",
           "[transition:background_0.18s_ease] motion-reduce:transition-none",
-          "group-has-[:checked]:bg-[var(--color-tint)]",
-          "group-has-[:focus-visible]:[outline:2px_solid_var(--color-tint)] group-has-[:focus-visible]:[outline-offset:2px]",
+          "group-has-[:checked]:bg-brand-solid",
+          "group-has-[:focus-visible]:outline-2 group-has-[:focus-visible]:outline-offset-2 group-has-[:focus-visible]:outline-brand",
         )}
       >
         <span
           className={cx(
-            "block w-5 h-5 rounded-full bg-white [box-shadow:var(--shadow-image)]",
+            "block size-4 rounded-full bg-primary shadow-sm",
             "[transition:transform_0.18s_ease] motion-reduce:transition-none",
-            "group-has-[:checked]:translate-x-[18px]",
+            "group-has-[:checked]:translate-x-4",
           )}
         />
       </span>

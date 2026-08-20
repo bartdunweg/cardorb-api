@@ -1,0 +1,1 @@
+- Settings uses the same panels, fields and switches as the rest of the app — one look throughout instead of a page with its own.
