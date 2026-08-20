@@ -577,43 +577,8 @@
 }
 
 /* The facet list, the level above the tick-list. */
-.filter-menu-panel .facet-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-2);
-  border: none;
-  border-radius: var(--radius-orb-sm);
-  background: none;
-  /* A button centres its text, and the name sits in a flex:1 span, so every
-     facet in this list read as a centred word with the count floated off to the
-     right of it. */
-  text-align: left;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  color: var(--color-label-secondary);
-  cursor: pointer;
-}
-.filter-menu-panel .facet-row:hover {
-  background: var(--color-bg-grouped);
-  color: var(--color-label);
-}
-.filter-menu-panel .facet-row svg:last-child {
-  flex-shrink: 0;
-  opacity: 0.4;
-}
 /* How many values are on in a facet, so the list says which ones are doing
    something without having to be opened. */
-.filter-menu-panel .facet-on {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-  font-size: var(--fs-small);
-  color: var(--color-label);
-  font-variant-numeric: lining-nums tabular-nums;
-}
 
 .filter-menu-panel .facet-back {
   display: flex;
@@ -855,23 +820,6 @@
 }
 
 .sheet .facet-option,
-.sheet .facet-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  /* 48px, which is the size of a target a thumb hits without aiming. The
-     dropdown's rows are 32 and that is fine for a pointer. */
-  min-height: 48px;
-  padding: 0 var(--space-4);
-  border: none;
-  background: none;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-body-s);
-  color: var(--color-label);
-  text-align: left;
-  cursor: pointer;
-}
 .sheet .facet-name,
 .sheet .facet-row .facet-name {
   flex: 1 1 auto;
@@ -884,13 +832,6 @@
   font-size: var(--fs-small);
   color: var(--color-label-tertiary);
   font-variant-numeric: tabular-nums;
-}
-.sheet .facet-on {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: var(--fs-small);
-  color: var(--color-label);
 }
 
 /* .sheet-field and .sheet-label moved to Tailwind classes in ViewOptions.tsx

@@ -116,6 +116,7 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
         }
       >
         <FilterOptions
+          variant="sheet"
           facets={facets}
           openFacet={openFacet}
           onOpenFacet={setOpenFacet}

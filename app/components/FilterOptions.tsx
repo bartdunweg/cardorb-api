@@ -44,6 +44,19 @@ export type FilterOptionsProps = {
   onReplace: (facet: Facet, next: Set<string>) => void;
 };
 
+/**
+ * Where these rows are drawn, because the two are not the same size.
+ *
+ * `.sheet .facet-row` overrode `.filter-menu-panel .facet-row` to 48px, which
+ * is what a thumb hits without aiming; the dropdown's 32px is right for a
+ * pointer. That override is a descendant selector, and a Tailwind utility on
+ * the element beats one regardless of specificity — ADR-0012 and ADR-0017 are
+ * both that fact, found the hard way, twice.
+ *
+ * So the variant comes in as a prop instead of being read off an ancestor. The
+ * caller knows which it is: FilterMenu is the dropdown, FilterSheet is the
+ * sheet.
+ */
 export default function FilterOptions({
   facets,
   openFacet,
@@ -51,7 +64,12 @@ export default function FilterOptions({
   selected,
   onToggle,
   onReplace,
-}: FilterOptionsProps) {
+  variant = "menu",
+}: FilterOptionsProps & { variant?: "menu" | "sheet" }) {
+  const row =
+    variant === "sheet"
+      ? "gap-3 min-h-12 px-4 text-primary"
+      : "gap-2 p-2 rounded-md text-secondary hover:bg-primary_hover hover:text-primary";
   const current = facets.find((f) => f.key === openFacet) ?? null;
 
   if (current) {
@@ -169,13 +187,19 @@ export default function FilterOptions({
           const on = selected(f);
           return (
             <li key={f.key}>
-              <button type="button" className="facet-row" onClick={() => onOpenFacet(f.key)}>
+              <button
+                type="button"
+                className={`facet-row flex w-full cursor-pointer items-center border-none bg-transparent
+                  text-left text-sm transition-colors duration-100 ease-linear
+                  [&>svg:last-child]:shrink-0 [&>svg:last-child]:opacity-40 ${row}`}
+                onClick={() => onOpenFacet(f.key)}
+              >
                 <span className="facet-name">{f.label}</span>
                 {/* Both are a bare number on screen and the difference between
                     them is a tick you cannot hear. "Type, 3" could be three
                     selected or three to choose from, so the row says which. */}
                 {on.size > 0 ? (
-                  <span className="facet-on">
+                  <span className="facet-on inline-flex shrink-0 items-center gap-[3px] text-sm text-primary tabular-nums">
                     <Check size={13} strokeWidth={1.75} aria-hidden="true" />
                     <span aria-hidden="true">{on.size}</span>
                     <span className="sr-only">{on.size} selected</span>
