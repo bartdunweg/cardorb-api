@@ -167,7 +167,7 @@
   background: color-mix(in srgb, var(--color-label) 8%, transparent);
 }
 :where(.skeleton) {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-orb-sm);
 }
 .skeleton::after {
   content: "";

@@ -62,7 +62,7 @@ function RailDivider() {
 function RailRow() {
   // One .cards-nav-item: 28px of logo/icon slot plus the --space-2 padding
   // either side of it.
-  return <span className="skeleton h-11 rounded-md" />;
+  return <span className="skeleton h-11 rounded-orb-md" />;
 }
 
 export default function Loading() {
@@ -128,7 +128,7 @@ export default function Loading() {
             (CardsSidebar.tsx) — otherwise it arrives out of nowhere at the end
             of the load. Above 1000px only, like the head. */}
         <span
-          className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-md
+          className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-orb-md
             bg-[var(--glass-bg-solid)] [@media(max-width:1000px)]:hidden"
         >
           <span className="skeleton flex-none w-7 h-7 rounded-full" />
@@ -144,7 +144,7 @@ export default function Loading() {
               Sized to cardsMainTitleClassName's line box, not to its
               font size. */}
           <span
-            className="skeleton w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-xs"
+            className="skeleton w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-orb-xs"
             aria-hidden="true"
             role="presentation"
           />
@@ -167,7 +167,7 @@ export default function Loading() {
             band of light travelling across 40px of text bar reads as loading,
             the same band across half the window reads as the page flickering. */}
         <span
-          className="skeleton block w-full h-[min(420px,52vh)] rounded-lg after:content-none"
+          className="skeleton block w-full h-[min(420px,52vh)] rounded-orb-lg after:content-none"
           aria-hidden="true"
           role="presentation"
         />
@@ -244,8 +244,8 @@ const LABEL_WIDTHS = ["w-[57px]", "w-[52px]", "w-[41px]", "w-[20px]"];
 function TabSlot({ labelWidth }: { labelWidth: string }) {
   return (
     <span className={`${tabbarItemClassName} !cursor-default`}>
-      <span className="skeleton w-5 h-5 rounded-xs" />
-      <span className={`skeleton ${labelWidth} h-[var(--fs-tiny)] rounded-xs`} />
+      <span className="skeleton w-5 h-5 rounded-orb-xs" />
+      <span className={`skeleton ${labelWidth} h-[var(--fs-tiny)] rounded-orb-xs`} />
     </span>
   );
 }

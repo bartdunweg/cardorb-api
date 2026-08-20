@@ -5,7 +5,7 @@ source: Bart
 source-type: stakeholder
 severity: 3
 sentiment: neutral
-status: open
+status: addressed
 tags: [ui, design-system, untitled-ui]
 ---
 
@@ -58,19 +58,19 @@ holo cards, the orb, the glass — the previous answer still stands.
 
 ## Action
 
-- [ ] Treat Untitled UI's own value as the default for anything with no recorded
+- [x] Treat Untitled UI's own value as the default for anything with no recorded
       reason behind it in this repository: radii, shadows, focus rings, spacing,
       transition timings, disabled treatments, type scale.
-- [ ] Keep Card Orb's value only where it is the identity (glass, orb, holo,
+- [x] Keep Card Orb's value only where it is the identity (glass, orb, holo,
       the tint blue) or where `lib/design/tokens.ts` argues it from a measured
       contrast ratio. Both categories are narrow and both are already written
       down.
-- [ ] Revisit ADR-0054's decision 2 in that light. Re-pointing the primitive
+- [x] Revisit ADR-0054's decision 2 in that light. Re-pointing the primitive
       palette stands, but the list of *which* primitives get Card Orb values
       should be shorter than "all forty".
-- [ ] Where a specific case is still 50/50 after the two rules above, go with
+- [x] Where a specific case is still 50/50 after the two rules above, go with
       Untitled UI and note it — do not ask.
-- [ ] Write the decision record that supersedes the affected part of ADR-0054
+- [x] Write the decision record that supersedes the affected part of ADR-0054
       before converting `/login`, since this changes what the proof screen is
       proving.
 
@@ -78,6 +78,9 @@ holo cards, the orb, the glass — the previous answer still stands.
 
 - Decision: ADR-0054 (`docs/decisions/0054-untitled-ui-groundwork.md`) — the
   groundwork this refines. Its decision 2 is the part affected.
+- Decision: ADR-0056 (`docs/decisions/0056-card-orb-radii-move-out-of-tailwinds-names.md`) —
+  the first thing this rule decided, and it was a silent one.
+- Changelog: `docs/changelog.d/2026-08-19-untitled-ui-login.md`
 - Feedback: FB-0009 (`0009-no-paid-services-for-this-project.md`) — unrelated in
   substance, but the same shape: a standing rule given once, meant to apply to
   every later judgement call without being restated.

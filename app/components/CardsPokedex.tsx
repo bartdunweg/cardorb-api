@@ -100,13 +100,13 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
     <span
       className={
         "relative flex items-center justify-center aspect-[245/342] mb-2" +
-        (empty ? " rounded-xs border border-dashed border-[var(--color-border-subtle)]" : "")
+        (empty ? " rounded-orb-xs border border-dashed border-[var(--color-border-subtle)]" : "")
       }
     >
       {card?.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          className="w-full h-full object-contain rounded-xs"
+          className="w-full h-full object-contain rounded-orb-xs"
           src={card.image}
           alt=""
           loading="lazy"
@@ -177,7 +177,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
   // a single class, so the two images needed different rules to not collide.
   // Tailwind classes on each `<img>` directly avoid that trap entirely.
   const baseBodyClassName =
-    "flex flex-col w-full p-2 border-0 rounded-md bg-transparent text-left [color:inherit] [font:inherit]" +
+    "flex flex-col w-full p-2 border-0 rounded-orb-md bg-transparent text-left [color:inherit] [font:inherit]" +
     " relative [--pill-radius:var(--radius-md)]";
   // The hover pill and its cursor are button-only in cards.css
   // (`button.cards-dex-body`) — the empty-slot span never got either, since
@@ -185,7 +185,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
   const buttonBodyClassName =
     baseBodyClassName +
     " cursor-pointer [&>*]:relative [&>*]:z-1" +
-    " after:content-[''] after:absolute after:inset-0 after:z-0 after:rounded-md" +
+    " after:content-[''] after:absolute after:inset-0 after:z-0 after:rounded-orb-md" +
     " after:bg-[var(--glass-bg)] after:border after:border-[var(--glass-border)] after:shadow-[var(--shadow-card)]" +
     " after:opacity-0 after:scale-[0.98] after:pointer-events-none" +
     " after:transition-[opacity,transform] after:duration-[var(--dur-fast)] after:ease-[var(--ease-smooth)]" +

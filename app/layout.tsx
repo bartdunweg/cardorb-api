@@ -129,7 +129,7 @@ export default function RootLayout({
           <a
             href="#main-content"
             className="absolute -top-full left-4 [padding:var(--space-2)_var(--space-4)]
-              bg-label text-bg-surface rounded-sm [font-size:var(--fs-small)]
+              bg-label text-bg-surface rounded-orb-sm [font-size:var(--fs-small)]
               [z-index:var(--z-skip)] no-underline focus:top-4"
           >
             Skip to content

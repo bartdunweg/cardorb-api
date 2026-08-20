@@ -124,7 +124,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                   <li key={set.id}>
                     <Link
                       href={`/collection/browse/${set.id}`}
-                      className="flex flex-col gap-2 p-4 rounded-lg bg-[var(--color-bg-surface)]
+                      className="flex flex-col gap-2 p-4 rounded-orb-lg bg-[var(--color-bg-surface)]
                         [box-shadow:var(--shadow-card)] no-underline text-inherit
                         [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
                         hover:-translate-y-0.5 hover:[box-shadow:var(--shadow-elevated)]"

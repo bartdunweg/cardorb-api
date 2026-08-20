@@ -540,10 +540,10 @@
   --color-tint: #007aff;
   --color-tint-label: light-dark(#0066cc, #007aff);
   --color-danger: #d7263d;
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-orb-xs: 6px;
+  --radius-orb-sm: 8px;
+  --radius-orb-md: 16px;
+  --radius-orb-lg: 24px;
   --radius-btn: 999px;
   --radius-pill: 14px;
 }
@@ -579,10 +579,10 @@
   --color-tint: #007aff;
   --color-tint-label: light-dark(#0066cc, #007aff);
   --color-danger: #d7263d;
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-orb-xs: 6px;
+  --radius-orb-sm: 8px;
+  --radius-orb-md: 16px;
+  --radius-orb-lg: 24px;
   --radius-btn: 999px;
   --radius-pill: 14px;
 }

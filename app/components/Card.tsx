@@ -13,7 +13,7 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 /** Exported for CardsDashboard.tsx's Kpi, which composes "about-card" onto a
  *  <li> directly rather than through this component. */
 export const aboutCardClassName =
-  "p-[var(--card-pad)] overflow-hidden border border-[var(--glass-border)] rounded-lg " +
+  "p-[var(--card-pad)] overflow-hidden border border-[var(--glass-border)] rounded-orb-lg " +
   "bg-[var(--glass-bg)] [backdrop-filter:blur(var(--blur-glass-card))] [box-shadow:var(--shadow-card)]";
 
 type CardProps = {

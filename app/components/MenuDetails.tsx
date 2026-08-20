@@ -73,7 +73,7 @@ export function MenuDetails({
       <div
         className={`filter-menu-panel absolute z-[5] top-[calc(100%+var(--space-2))] left-0 w-[280px]
           max-w-[min(280px,calc(100vw-2*var(--page-pad-x)))] p-2 border border-[var(--color-border)]
-          rounded-md bg-[var(--glass-bg-solid)] [box-shadow:var(--shadow-elevated)]
+          rounded-orb-md bg-[var(--glass-bg-solid)] [box-shadow:var(--shadow-elevated)]
           [backdrop-filter:blur(var(--blur-glass))] ${panelClassName ?? ""}`}
       >
         {children}

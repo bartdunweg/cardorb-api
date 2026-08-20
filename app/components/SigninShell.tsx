@@ -74,7 +74,7 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
   return (
     <p
       className={[
-        "m-0 py-3 px-[var(--space-3-5)] border border-[var(--color-border-subtle)] rounded-sm",
+        "m-0 py-3 px-[var(--space-3-5)] border border-[var(--color-border-subtle)] rounded-orb-sm",
         "bg-[var(--color-surface-subtle)] text-label-secondary",
         "[font-size:var(--fs-body-s)] leading-relaxed",
         className,
@@ -88,4 +88,4 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
 
 /** .signin-public / .signin-submit: full width and square, unlike the pill
  *  .btn draws for toolbars — the two full-width ways in read as a pair. */
-export const signinWideButtonClassName = "self-stretch justify-center rounded-sm";
+export const signinWideButtonClassName = "self-stretch justify-center rounded-orb-sm";

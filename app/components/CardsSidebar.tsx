@@ -275,7 +275,7 @@ export default function CardsSidebar({
                 <button
                   type="button"
                   className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
-                    border-0 rounded-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
+                    border-0 rounded-orb-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
                     [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-label-tertiary
                     hover:text-label first:mt-0
                     ${selected === `era:${group.era}` ? "text-label bg-bg-grouped" : ""}`}
@@ -323,7 +323,7 @@ export default function CardsSidebar({
           type="button"
           onClick={() => onSelect("profile")}
           className="cards-nav-item sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2
-            border-0 rounded-md bg-[var(--glass-bg-solid)] text-left cursor-pointer text-inherit
+            border-0 rounded-orb-md bg-[var(--glass-bg-solid)] text-left cursor-pointer text-inherit
             [@media(max-width:1000px)]:hidden"
         >
           {viewer.avatarUrl ? (
@@ -411,7 +411,7 @@ function NavItem({
       // tabbar's matching change (CardsTabBar.tsx/tabbarClasses.ts), the
       // two are meant to read as one visual language now.
       className={`cards-nav-item after:inset-0 [--pill-radius:var(--radius-md)] relative flex items-center gap-3
-        w-full p-2 border-0 rounded-md bg-transparent text-left cursor-pointer text-inherit${active ? " is-active" : ""}`}
+        w-full p-2 border-0 rounded-orb-md bg-transparent text-left cursor-pointer text-inherit${active ? " is-active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
     >
@@ -437,7 +437,7 @@ function NavItem({
               onError={(e) => retryAsPng(e.currentTarget, onBrokenLogo)}
             />
           ) : (
-            <span className="block w-full h-full rounded-sm bg-bg-grouped" aria-hidden="true" />
+            <span className="block w-full h-full rounded-orb-sm bg-bg-grouped" aria-hidden="true" />
           )}
         </span>
       )}

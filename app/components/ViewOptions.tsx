@@ -196,7 +196,7 @@ export default function ViewOptions({
               <button
                 key={n}
                 type="button"
-                className={`flex-1 min-w-0 h-8 rounded-sm [font-family:var(--font-body)] [font-size:var(--fs-small)]
+                className={`flex-1 min-w-0 h-8 rounded-orb-sm [font-family:var(--font-body)] [font-size:var(--fs-small)]
                   tabular-nums cursor-pointer ${
                     cols === n
                       ? "border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"

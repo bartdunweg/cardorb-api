@@ -244,7 +244,7 @@ const CardItem = memo(function CardItem({
   return (
     <li
       className={`cards-item group/item flex flex-col gap-[2px] min-w-0
-        data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-md
+        data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-orb-md
         data-[view=list]:flex-row data-[view=list]:items-center data-[view=list]:gap-4
         data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-[var(--color-border)]
         data-[view=list]:last:border-b-0`}

@@ -54,6 +54,18 @@ const PAGES = [
   { name: "profile", path: `/user/${OWNER}`, fullPage: false },
   { name: "landing", path: "/", fullPage: true },
   { name: "ios", path: "/app/ios", fullPage: true },
+  /**
+   * The Untitled UI proof screen (ADR-0055).
+   *
+   * Here rather than in owner.spec.ts on purpose: /login is the one screen
+   * carrying converted controls that a signed-out browser can reach, and
+   * ADR-0020 is a regression that hid for weeks behind a login. Short, no lazy
+   * grid, so it gets the full page.
+   *
+   * A signed-in visitor is redirected straight through, which is why this only
+   * works in the public project — the owner project would photograph /cards.
+   */
+  { name: "login", path: "/login", fullPage: true },
 ];
 
 for (const page of PAGES) {

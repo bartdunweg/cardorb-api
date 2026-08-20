@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "../hooks/useSession";
-import { FormError, FormField, FormForm, FormInput, FormLabel, FormNote } from "./FormField";
-import { SigninLinks, signinLinkClassName, signinWideButtonClassName } from "./SigninShell";
-import { buttonClassName } from "./controlClasses";
+import { FormError, FormForm, FormNote } from "./FormField";
+import { SigninLinks, signinLinkClassName } from "./SigninShell";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 
 /**
  * An address and a password, which is now what those words mean.
@@ -89,49 +90,70 @@ export default function SignInForm({
   return (
     <>
       {note && <FormNote>{note}</FormNote>}
-      <FormForm layout={layout} onSubmit={submit}>
-        <FormField layout={layout}>
-          <FormLabel>Email</FormLabel>
-          <FormInput
-            type="email"
-            name="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            disabled={busy}
-          />
-        </FormField>
+      {/* Untitled UI's Input and Button, per ADR-0055 — this is the proof
+          screen for that decision, and /login is it because it is public and
+          can therefore actually be photographed (ADR-0020 is a regression that
+          hid behind a login for exactly this reason).
 
-        <FormField layout={layout}>
-          <FormLabel>Password</FormLabel>
-          {/* type="password", so it is not read over a shoulder and so a
-              password manager offers to keep it. autoComplete tells the manager
-              which one, and pairs with the username field above it: without the
-              two together, browsers fill this with something they guessed. */}
-          <FormInput
-            type="password"
-            name="password"
-            autoComplete="current-password"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="••••••••"
-            disabled={busy}
-            aria-describedby={message ? "sign-in-error" : undefined}
-          />
-        </FormField>
+          The wrapper stays FormForm: it is layout, not a control, and the
+          row/column split still has to serve the profile screen's inline
+          sign-in. What changed is the three things you can see and touch. */}
+      <FormForm layout={layout} onSubmit={submit}>
+        <Input
+          isRequired
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="username"
+          value={email}
+          // react-aria hands over the value, not the event.
+          onChange={setEmail}
+          placeholder="you@example.com"
+          isDisabled={busy}
+          size={layout === "column" ? "md" : "sm"}
+          className={layout === "column" ? "w-full" : "flex-[1_1_200px] min-w-0"}
+        />
+
+        {/* type="password", so it is not read over a shoulder and so a
+            password manager offers to keep it. autoComplete tells the manager
+            which one, and pairs with the username field above it: without the
+            two together, browsers fill this with something they guessed.
+
+            Untitled UI's password input adds a reveal toggle of its own, which
+            is a straight gain: the old one had no way to check what you typed. */}
+        <Input
+          isRequired
+          label="Password"
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          value={value}
+          onChange={setValue}
+          placeholder="••••••••"
+          isDisabled={busy}
+          isInvalid={Boolean(message)}
+          size={layout === "column" ? "md" : "sm"}
+          className={layout === "column" ? "w-full" : "flex-[1_1_200px] min-w-0"}
+          aria-describedby={message ? "sign-in-error" : undefined}
+        />
 
         {/* A button again. It was Enter alone, which is right for a single
             field: one box, one obvious thing to do with it. Two fields is a
             form, and a form with no visible way to submit leaves you looking
-            for one. Enter still works, from either field. */}
-        <button
+            for one. Enter still works, from either field.
+
+            isLoading rather than a swapped label: it keeps the button the same
+            width while it works, where "Signing in…" made it jump. */}
+        <Button
           type="submit"
-          className={`btn btn--primary ${signinWideButtonClassName} mt-2`}
-          disabled={busy}
+          size={layout === "column" ? "lg" : "md"}
+          isDisabled={busy}
+          isLoading={busy}
+          showTextWhileLoading
+          className={layout === "column" ? "mt-2 w-full" : ""}
         >
-          {busy ? "Signing in…" : "Sign in"}
-        </button>
+          Sign in
+        </Button>
       </FormForm>
       {/* role="alert", because the message replaces nothing on screen: a wrong
           key leaves the form exactly as it was, and without this the only thing
@@ -148,16 +170,22 @@ export default function SignInForm({
           reset does not help because the password was never the problem. */}
       {unconfirmed && !resent && (
         <FormNote>
-          <button
-            type="button"
-            className={buttonClassName}
-            onClick={async () => {
+          {/* Secondary, not primary: the primary action on this screen is still
+              signing in. This is the way out of one specific refusal. */}
+          <Button
+            color="secondary"
+            size="sm"
+            // onPress, not onClick: React Aria's own event, so it fires the
+            // same way for a tap, a keyboard Enter and a screen reader's
+            // activation. onClick type-checks here and would mostly work,
+            // which is the sort of "mostly" this repo has been bitten by.
+            onPress={async () => {
               setResent(true);
               await resendConfirmation(email.trim());
             }}
           >
             Send a new confirmation link
-          </button>
+          </Button>
         </FormNote>
       )}
       {resent && (

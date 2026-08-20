@@ -54,7 +54,7 @@ export function SettingsPanel({
   return (
     <section
       className={cx(
-        "p-4 rounded-lg bg-bg-surface [box-shadow:var(--shadow-card)]",
+        "p-4 rounded-orb-lg bg-bg-surface [box-shadow:var(--shadow-card)]",
         // Deleting everything reads as what it is. The only place in the app
         // that uses a warning colour (lib/design/tokens.ts's `danger`).
         danger && "border border-[color-mix(in_srgb,var(--color-danger)_40%,transparent)]",

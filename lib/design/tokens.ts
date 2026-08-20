@@ -193,12 +193,32 @@ export const brand = {
  * the name, it is the rounded rectangle: the glass hover-pill on rows, and the
  * filter-bar controls on /cards, where a round end beside a search field reads
  * as loose. The name stays because thirty rules answer to it.
+ *
+ * ── Why four of these are called orb* ──────────────────────────────────────
+ *
+ * They were `xs`/`sm`/`md`/`lg`, which are Tailwind's own names, and @theme
+ * does not add to Tailwind's scale — it replaces it. So `rounded-lg` meant
+ * 24px everywhere, including inside components this project did not write.
+ *
+ * That went unnoticed until Untitled UI arrived and the proof screen came back
+ * with pill-shaped inputs: every `rounded-lg` in a vendored component was
+ * quietly resolving to `var(--radius-lg)` — 24px, three times what upstream
+ * drew, and nothing failed. A silent collision through a shared name, which is
+ * the same shape as ADR-0012 and ADR-0017.
+ *
+ * ADR-0055 settles which way it goes: Untitled UI's value is the default, so
+ * `rounded-lg` goes back to meaning Tailwind's 8px and Card Orb's scale moves
+ * out of the way. `rounded-orb-lg` is unmistakably ours and cannot collide with
+ * anything upstream adds later.
+ *
+ * `btn` and `pill` keep their names — they are not Tailwind's, so they never
+ * collided.
  */
 export const radius = {
-  xs: "6px",
-  sm: "8px", // buttons, covers
-  md: "16px", // small cards, photos
-  lg: "24px", // bento cards / panels
+  orbXs: "6px",
+  orbSm: "8px", // buttons, covers
+  orbMd: "16px", // small cards, photos
+  orbLg: "24px", // bento cards / panels
   btn: "999px",
   pill: "14px", // glass hover-pill (connect rows, tab pills, FAQ)
 } satisfies Record<string, string>;

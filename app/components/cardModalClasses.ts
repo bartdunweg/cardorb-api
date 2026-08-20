@@ -12,7 +12,7 @@
 // bars come and go.
 export const modalCardClassName =
   "modal--card w-[min(920px,calc(100vw-2*var(--space-6)))] max-h-[calc(100svh-2*var(--space-6))] " +
-  "rounded-lg p-0 overflow-hidden [box-shadow:var(--shadow-elevated)] " +
+  "rounded-orb-lg p-0 overflow-hidden [box-shadow:var(--shadow-elevated)] " +
   // Full screen on a phone, not a sheet stopping short of the top. A card is
   // the one thing on this site worth the whole screen: it is a picture with
   // small print on it, and eight percent of the height went to a strip of
@@ -29,7 +29,7 @@ export const modalCardClassName =
 // screen should arrive from the bottom of the screen.
 export const modalCardAddClassName =
   "modal--card-add w-[min(560px,calc(100vw-2*var(--space-6)))] max-h-[calc(100svh-2*var(--space-6))] " +
-  "rounded-lg p-0 overflow-hidden [box-shadow:var(--shadow-elevated)] " +
+  "rounded-orb-lg p-0 overflow-hidden [box-shadow:var(--shadow-elevated)] " +
   "[@media(max-width:640px)]:w-full [@media(max-width:640px)]:max-h-[92svh] " +
   "[@media(max-width:640px)]:rounded-t-lg [@media(max-width:640px)]:rounded-b-none " +
   "[@media(max-width:640px)]:self-end";

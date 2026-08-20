@@ -1,0 +1,1 @@
+- The sign-in screen's fields and button are rebuilt on Untitled UI. The password box now has a reveal toggle, so you can check what you typed, and both fields keep the accent blue they always had.

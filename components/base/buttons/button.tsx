@@ -1,9 +1,6 @@
 "use client";
 
 import type { FC, ReactElement, ReactNode } from "react";
-// Vendored edit: the default React import the generator writes is unused under
-// the new JSX transform, and `tsc --noEmit` fails on it. `npx untitledui add`
-// will write it back — see docs/decisions/0054.
 import { isValidElement } from "react";
 import type {
   ButtonProps as AriaButtonProps,

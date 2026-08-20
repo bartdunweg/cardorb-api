@@ -348,7 +348,7 @@ function Bars({
             >
               {row.value}
             </span>
-            <span className="h-[10px] rounded-sm bg-[var(--color-surface-subtle)] overflow-hidden">
+            <span className="h-[10px] rounded-orb-sm bg-[var(--color-surface-subtle)] overflow-hidden">
               <span
                 className="block h-full bg-[var(--color-tint)] [border-radius:0_4px_4px_0]"
                 style={{ width: `${(row.count / max) * 100}%` }}

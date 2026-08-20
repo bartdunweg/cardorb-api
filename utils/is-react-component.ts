@@ -1,9 +1,4 @@
 /* We cannot use type `unknown` instead of `any` here because it will break the type assertion `isReactComponent` function is providing. */
-/* Vendored edit: the generator writes an `eslint-disable
-   @typescript-eslint/no-explicit-any` here. This project's config does not
-   enable that rule, so the directive is itself the warning, and `--max-warnings 0`
-   fails on it. `npx untitledui add` will write it back — see
-   docs/decisions/0054. */
 import type React from "react";
 
 type ReactComponent = React.FC<any> | React.ComponentClass<any, any>;

@@ -571,7 +571,7 @@ export default function CardAddDialog({
                   <button
                     key={match.id}
                     type="button"
-                    className="flex flex-col items-center gap-1 p-2 rounded-lg border border-transparent
+                    className="flex flex-col items-center gap-1 p-2 rounded-orb-lg border border-transparent
                       text-center cursor-pointer hover:border-[var(--color-border)]"
                     // The image alt is decorative context, not the whole
                     // story: a card with no scan renders no img at all, so
