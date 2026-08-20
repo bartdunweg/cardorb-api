@@ -27,41 +27,16 @@
 /* ─── GLASS CONTROL ───
    The surface every control on the site is made of. See FormField.tsx's
    FormInput for the Tailwind copy of this recipe, kept in sync by hand. */
-.modal-close,
-.cards-search,
-.filter-menu > summary,
-.cards-segmented,
-.cards-views {
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg-solid);
-  -webkit-backdrop-filter: blur(var(--blur-glass));
-  backdrop-filter: blur(var(--blur-glass));
-  box-shadow: var(--shadow-card);
-  color: var(--color-label);
-}
-/* ─── CONTROL ─── */
-.cards-search,
-.filter-menu > summary {
-  height: var(--control-h);
-  font-family: var(--font-main);
-  font-size: var(--fs-control-label);
-  font-weight: var(--fw-button);
-}
-.cards-search,
-.filter-menu > summary {
-  border-radius: var(--radius-pill);
-}
-.cards-search:hover,
-.filter-menu > summary:hover {
-  box-shadow: var(--shadow-elevated);
-}
-[data-theme="dark"] .modal-close,
-[data-theme="dark"] .cards-search,
-[data-theme="dark"] .filter-menu > summary,
-[data-theme="dark"] .cards-segmented,
-[data-theme="dark"] .cards-views {
-  border-color: var(--glass-border-control);
-}
+/* The glass control recipe that lived here — one grouped selector setting a
+   border, a background, a blur, a shadow and a colour on .modal-close,
+   .cards-search, .filter-menu > summary, .cards-segmented and .cards-views at
+   once — is gone. Every one of those five names its own surface now, in the
+   file that draws it, on Untitled UI's tokens.
+
+   Worth knowing why it went rather than being converted in place: a rule
+   reaching five unrelated controls is the arrangement ADR-0018 records as a
+   trap, and four of the five had already grown Tailwind utilities that beat it
+   silently. It was mostly dead and entirely invisible. */
 
 /* ─── HOVER PILL ───
    The surface a row lifts onto when you point at it. */

@@ -10,7 +10,10 @@ export const cardsSegmentedClassName =
   // max-sm:w-full was `@media (max-width: 640px) { .cards-segmented { width: 100% } }`.
   // A conditional utility, so the panel contexts' own [&_.cards-segmented]:w-full
   // still reads the same at every width.
-  "cards-segmented flex gap-1 p-[3px] rounded-pill max-sm:w-full";
+  "cards-segmented flex gap-1 p-[3px] rounded-pill max-sm:w-full " +
+  // The track's own surface. Was a grouped selector in components.css reaching
+  // five controls at once; each of them names it for itself now.
+  "bg-secondary ring-1 ring-secondary ring-inset";
 
 // `max-sm:` on both, which is what makes it safe to bring them here at all.
 // cards.css set flex/padding on .cards-segment only below 640px, and the filter
@@ -32,7 +35,8 @@ export function cardsSegmentClassName(active: boolean) {
 // The same track, for the grid/list layout toggle. width stays in cards.css:
 // .view-menu-panel sets it to 100% and ViewOptions.tsx has no way to know
 // whether it landed there or in the sheet.
-export const cardsViewsClassName = "cards-views flex gap-[2px] p-[3px] rounded-pill";
+export const cardsViewsClassName =
+  "cards-views flex gap-[2px] p-[3px] rounded-pill bg-secondary ring-1 ring-secondary ring-inset";
 
 export function cardsViewClassName(active: boolean) {
   return (

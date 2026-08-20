@@ -56,11 +56,16 @@ export function MenuDetails({
 
   return (
     <details className="filter-menu relative" ref={ref}>
-      {/* A button, and built like one: everything but the layout comes from
-          .btn's own surface and shape in components.css (the "GLASS
-          CONTROL"/"CONTROL" recipe, keyed off `.filter-menu > summary`). */}
+      {/* A button, and built like one — Untitled UI's secondary button surface,
+          written here rather than borrowed from a grouped selector in
+          components.css. That rule keyed off `.filter-menu > summary` and
+          reached four other controls at the same time, which is exactly the
+          arrangement ADR-0018 warns about: a class with consumers nobody
+          remembers. */}
       <summary
-        className="flex items-center gap-2 px-4 cursor-pointer whitespace-nowrap list-none
+        className="flex h-10 items-center gap-2 px-4 cursor-pointer whitespace-nowrap list-none
+          rounded-lg bg-primary text-secondary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset
+          text-sm font-semibold hover:bg-primary_hover hover:text-secondary_hover
           [&::-webkit-details-marker]:hidden [&>svg:first-of-type]:shrink-0
           transition duration-100 ease-linear"
       >

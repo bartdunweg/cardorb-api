@@ -1,0 +1,1 @@
+- The View and Filter buttons, the grouping tracks and the close button all wear the same surface as every other control in the app, instead of a separate glass recipe that only they used.
