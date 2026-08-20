@@ -60,14 +60,14 @@ export default function RouteError({
         >
           {description}
         </p>
-        <Button onClick={reset} className="btn--primary btn--center">
+        <Button onClick={reset} color="primary" size="lg" className="self-center">
           Try again
         </Button>
         {/* Second, and quieter: a route whose data source is down will fail the
             retry too, and then the only useful control on the page is the one
             that leaves. */}
         {backHref && (
-          <Button href={backHref} className="btn--center">
+          <Button href={backHref} color="secondary" size="lg" className="self-center">
             {backLabel ?? "Go home"}
           </Button>
         )}

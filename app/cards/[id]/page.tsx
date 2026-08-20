@@ -127,7 +127,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           breadcrumb. Both are search-engine markup and this app ships noindex,
           so they came out with the rest of the JSON-LD. */}
       <Card className="flex flex-col items-start">
-        <Button href="/cards" icon={ChevronLeft} iconPosition="left" className="btn--back">
+        <Button href="/cards" icon={ChevronLeft} iconPosition="left" color="tertiary">
           Cards
         </Button>
 

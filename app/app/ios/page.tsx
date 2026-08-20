@@ -197,7 +197,10 @@ export default async function IosApp() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link href="/signup" className="btn btn--primary">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline"
+              >
                 Sign up
               </Link>
             </>
@@ -252,7 +255,7 @@ export default async function IosApp() {
               /* self-center: .btn sets align-self: flex-start for toolbars,
                  which beats this column's items-center and would left-pin
                  both of these buttons. */
-              className="btn btn--primary self-center justify-center min-w-[240px] [@media(max-width:640px)]:w-full"
+              className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline self-center min-w-[240px] [@media(max-width:640px)]:w-full"
             >
               <Download size={17} strokeWidth={1.8} aria-hidden="true" />
               Download on the App Store
@@ -265,7 +268,7 @@ export default async function IosApp() {
             </p>
             <Link
               href="/signup"
-              className="btn self-center [@media(max-width:640px)]:w-full [@media(max-width:640px)]:justify-center"
+              className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-primary text-secondary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset hover:bg-primary_hover no-underline self-center [@media(max-width:640px)]:w-full"
             >
               Start on the web
               <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
@@ -447,7 +450,10 @@ export default async function IosApp() {
           </p>
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
               beats this column's items-center. */}
-          <Link href="/signup" className="btn btn--primary self-center mt-6">
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline self-center mt-6"
+          >
             Create your free collection
             <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
           </Link>

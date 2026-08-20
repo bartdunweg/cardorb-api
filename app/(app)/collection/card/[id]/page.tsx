@@ -77,7 +77,7 @@ export default async function CollectionCardPage({ params }: { params: Promise<{
     // inside a card. /cards/[id]/page.tsx (outside the shell) still wants
     // one; this route does not.
     <div className="flex flex-col items-start">
-      <Button href="/collection" icon={ChevronLeft} iconPosition="left" className="btn--back">
+      <Button href="/collection" icon={ChevronLeft} iconPosition="left" color="tertiary">
         Collection
       </Button>
 

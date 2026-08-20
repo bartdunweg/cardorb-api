@@ -227,7 +227,10 @@ export default async function Home() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link href="/signup" className="btn btn--primary">
+              <Link
+                href="/signup"
+                className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline"
+              >
                 Sign up
               </Link>
             </>
@@ -268,7 +271,7 @@ export default async function Home() {
           <div className="flex flex-wrap justify-center gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
             <Link
               href="/signup"
-              className="btn btn--primary justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
+              className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline min-w-[178px] [@media(max-width:640px)]:self-stretch"
             >
               Start your collection
             </Link>
@@ -499,7 +502,10 @@ export default async function Home() {
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
             beats this column's items-center and left-pins the one button that
             is not inside its own centering wrapper (the hero's is). */}
-          <Link href="/signup" className="btn btn--primary self-center mt-6">
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline self-center mt-6"
+          >
             Create your free collection
             <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
           </Link>
