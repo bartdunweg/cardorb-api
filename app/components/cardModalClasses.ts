@@ -21,7 +21,12 @@ export const modalCardClassName =
   "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
   "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
   "[&_.modal-scroll]:[padding:var(--space-10)_var(--card-pad)_var(--card-pad)] " +
-  "[&_.card-detail-body]:mt-0 " +
+  // `!`, not because two rules disagree but because nothing guarantees which
+  // wins. CardDetail carries `mt-6` on the element and this cancels it from the
+  // ancestor; both are utilities, so the order Tailwind emits them decides, and
+  // that order is not a documented promise. ADR-0012 and ADR-0017 are both this
+  // exact fact, and ADR-0012's fix was the same `!`.
+  "[&_.card-detail-body]:!mt-0 " +
   // Full screen on a phone, not a sheet stopping short of the top. A card is
   // the one thing on this site worth the whole screen: it is a picture with
   // small print on it, and eight percent of the height went to a strip of

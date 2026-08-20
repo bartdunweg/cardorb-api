@@ -1443,7 +1443,16 @@ export default function CardsView({
                       which is what setName is for; what goes is the heading
                       between them. */}
               <ul
-                className={view === "grid" ? "cards-grid" : "cards-rows"}
+                className={
+                  view === "grid"
+                    ? "cards-grid"
+                    : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
+                         so the ones off screen are not laid out until they come near it.
+                         600px is the guess the browser uses for a row it has not
+                         measured; wrong in either direction only costs a scrollbar
+                         that settles. */
+                      "cards-rows m-0 flex list-none flex-col p-0 [content-visibility:auto] [contain-intrinsic-size:auto_600px]"
+                }
                 style={
                   view === "grid"
                     ? ({ "--cards-cols": String(shownCols) } as CSSProperties)
@@ -1530,7 +1539,16 @@ export default function CardsView({
                       the rest of the grid is. Nothing at all until the slider is
                       moved: see scanSize. */}
                 <ul
-                  className={view === "grid" ? "cards-grid" : "cards-rows"}
+                  className={
+                  view === "grid"
+                    ? "cards-grid"
+                    : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
+                         so the ones off screen are not laid out until they come near it.
+                         600px is the guess the browser uses for a row it has not
+                         measured; wrong in either direction only costs a scrollbar
+                         that settles. */
+                      "cards-rows m-0 flex list-none flex-col p-0 [content-visibility:auto] [contain-intrinsic-size:auto_600px]"
+                }
                   style={
                     view === "grid"
                       ? ({ "--cards-cols": String(shownCols) } as CSSProperties)

@@ -54,7 +54,7 @@ export default function CardDetail({
     <div
       // margin-top stays in cards.css: .modal--card overrides it to 0 for the
       // dialog variant, an unconditional Tailwind mt-* would always win over that.
-      className="card-detail-body flex flex-col gap-6 w-full"
+      className="card-detail-body mt-6 flex w-full flex-col gap-6"
     >
       {/* The scan shrunk to a header thumbnail beside the name/price, rather
           than a full-height column beside all the facts — the scan was

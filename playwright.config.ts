@@ -102,6 +102,25 @@ export default defineConfig({
    * apply the same CSS pipeline, and this file exists precisely to catch a CSS
    * pipeline problem.
    */
+  /**
+   * ── When this flakes, and it does ──────────────────────────────────────────
+   *
+   * `npm run build && next start` inside a test runner is fragile here: the
+   * build and the server contend for the same port with anything else the
+   * session left running, and the failure arrives as twenty
+   * ERR_CONNECTION_REFUSED, which reads like the app is broken rather than like
+   * the server never came up.
+   *
+   * The escape hatch is the line below. Start the server yourself and point the
+   * suite at it:
+   *
+   *   npm run build && npx next start -p 3211 &
+   *   VISUAL_BASE_URL=http://127.0.0.1:3211 npm run visual
+   *
+   * Then `webServer` is undefined and Playwright touches nothing. Remember the
+   * server serves the build that was on disk when it started — rebuild before
+   * re-running, or the screenshots quietly check stale code.
+   */
   webServer: process.env.VISUAL_BASE_URL
     ? undefined
     : {

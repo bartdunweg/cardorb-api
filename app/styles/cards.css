@@ -508,15 +508,6 @@
  * updating that test's own reference, not just the rule), and CardsView.tsx
  * switches between the two class names with one ternary — symmetric CSS is
  * simpler than half of that switch being Tailwind and half a literal class. */
-.cards-rows {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 600px;
-}
 /* This whole list-view override block (.cards-item[data-view="list"] and its
  * .cards-scan/.cards-item-name/.cards-item-text descendants,
  * .cards-rows > .cards-item:last-child, and .cards-item-gen) moved to
@@ -584,9 +575,6 @@
    migrated to Tailwind classes on CardDetail.tsx's own elements. margin-top
    stays here: .modal--card overrides it to 0 for the dialog variant below, and
    an unconditional Tailwind mt-* utility would always beat that override. */
-.card-detail-body {
-  margin-top: var(--space-6);
-}
 
 /* .cards-item-link (the scan+name link wrapper) migrated to CardItem.tsx's
  * CardLink during the Tailwind migration — display:contents plus the
