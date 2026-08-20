@@ -65,54 +65,16 @@
 }
 
 /* ── Data table ── */
-.cards-dash-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--font-body), sans-serif;
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-}
-.cards-dash-table th {
-  text-align: left;
-  font-weight: var(--fw-title);
-  color: var(--color-label-tertiary);
-  border-bottom: 1px solid var(--color-border-subtle);
-}
 
 /* ─── LOADING OUTLINES ───
    A sweep rather than a pulse: breathing between two low opacities is a real
    animation and an invisible one, while a band of light crossing the block
    reads as "filling in" at a glance. */
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--color-label) 8%, transparent);
-}
-:where(.skeleton) {
-  border-radius: var(--radius-orb-sm);
-}
-.skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--color-label) 9%, transparent) 50%,
-    transparent 100%
-  );
-  transform: translateX(-100%);
-  animation: skeleton-sweep 1.4s var(--ease-in-out) infinite;
-}
-.skeleton:nth-child(4n + 2)::after {
-  animation-delay: 0.15s;
-}
-.skeleton:nth-child(4n + 3)::after {
-  animation-delay: 0.3s;
-}
-.skeleton:nth-child(4n + 4)::after {
-  animation-delay: 0.45s;
-}
+/* `.skeleton` and its four nth-child stagger rules are cardsPageClasses.ts's
+   skeletonClassName now — Tailwind has after:, nth-[4n+2]: and motion-reduce:,
+   so all of it moved except the @keyframes below, which nothing but CSS can
+   hold. */
+
 @keyframes skeleton-sweep {
   to {
     transform: translateX(100%);

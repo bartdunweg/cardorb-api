@@ -184,3 +184,29 @@ export const cardsMainTitleClassName =
   // theirs and must not be dropped — see the paragraph above; it is why this is
   // a constant rather than the utility string written at each call site.
   "cards-main-title m-0 text-display-xs font-semibold text-primary [overflow-wrap:anywhere]";
+
+/**
+ * A loading placeholder: the block, and the light that sweeps across it.
+ *
+ * Was `.skeleton` in components.css, with four `nth-child` rules staggering the
+ * sweep so a row of them does not pulse in unison. Tailwind expresses all of it
+ * — `after:` for the sweep, `nth-[4n+2]:` and friends for the stagger — so the
+ * only thing that had to stay in CSS is the @keyframes itself, which is in
+ * globals.css beside the other two.
+ *
+ * The colours are Untitled UI's now: their tertiary background for the block,
+ * and their primary surface at low opacity for the light moving over it.
+ */
+export const skeletonClassName = [
+  "relative overflow-hidden rounded-md bg-tertiary",
+  "after:absolute after:inset-0 after:content-['']",
+  "after:[background:linear-gradient(90deg,transparent_0%,var(--color-bg-primary)_50%,transparent_100%)]",
+  "after:opacity-60 after:-translate-x-full",
+  "after:[animation:skeleton-sweep_1.4s_var(--ease-in-out)_infinite]",
+  // A row of these pulsing in unison reads as one object flashing rather than
+  // several things loading. Staggered by an eighth of the sweep each.
+  "nth-[4n+2]:after:[animation-delay:0.15s]",
+  "nth-[4n+3]:after:[animation-delay:0.3s]",
+  "nth-[4n+4]:after:[animation-delay:0.45s]",
+  "motion-reduce:after:animate-none motion-reduce:after:opacity-0",
+].join(" ");

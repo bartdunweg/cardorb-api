@@ -10,6 +10,7 @@ import {
   cardsHeadClassName,
   cardsMainClassName,
   pageCardsClassName,
+  skeletonClassName,
 } from "../components/cardsPageClasses";
 import Wordmark from "../components/Wordmark";
 
@@ -62,7 +63,7 @@ function RailDivider() {
 function RailRow() {
   // One .cards-nav-item: 28px of logo/icon slot plus the --space-2 padding
   // either side of it.
-  return <span className="skeleton h-11 rounded-orb-md" />;
+  return <span className={`${skeletonClassName} h-11 rounded-orb-md`} />;
 }
 
 export default function Loading() {
@@ -106,7 +107,9 @@ export default function Loading() {
             drawing a dead one invites the press it cannot answer. */}
         <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
           <Wordmark />
-          <span className="skeleton flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full" />
+          <span
+            className={`${skeletonClassName} flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full`}
+          />
         </div>
 
         {/* No "Sets" title here, unlike CardsSidebar. Below 1000px cards.css
@@ -131,8 +134,8 @@ export default function Loading() {
           className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-orb-md
             bg-primary [@media(max-width:1000px)]:hidden"
         >
-          <span className="skeleton flex-none w-7 h-7 rounded-full" />
-          <span className="skeleton flex-1 h-[var(--fs-small)]" />
+          <span className={`${skeletonClassName} flex-none w-7 h-7 rounded-full`} />
+          <span className={`${skeletonClassName} flex-1 h-[var(--fs-small)]`} />
         </span>
       </div>
 
@@ -144,7 +147,7 @@ export default function Loading() {
               Sized to cardsMainTitleClassName's line box, not to its
               font size. */}
           <span
-            className="skeleton w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-orb-xs"
+            className={`${skeletonClassName} w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-orb-xs`}
             aria-hidden="true"
             role="presentation"
           />
@@ -167,7 +170,7 @@ export default function Loading() {
             band of light travelling across 40px of text bar reads as loading,
             the same band across half the window reads as the page flickering. */}
         <span
-          className="skeleton block w-full h-[min(420px,52vh)] rounded-orb-lg after:content-none"
+          className={`${skeletonClassName} block w-full h-[min(420px,52vh)] rounded-orb-lg after:content-none`}
           aria-hidden="true"
           role="presentation"
         />
@@ -244,7 +247,7 @@ const LABEL_WIDTHS = ["w-[57px]", "w-[52px]", "w-[41px]", "w-[20px]"];
 function TabSlot({ labelWidth }: { labelWidth: string }) {
   return (
     <span className={`${tabbarItemClassName} !cursor-default`}>
-      <span className="skeleton w-5 h-5 rounded-orb-xs" />
+      <span className={`${skeletonClassName} w-5 h-5 rounded-orb-xs`} />
       <span className={`skeleton ${labelWidth} h-[var(--fs-tiny)] rounded-orb-xs`} />
     </span>
   );

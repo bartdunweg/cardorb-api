@@ -97,7 +97,12 @@ export default function CardsDashboard({
           </p>
           {/* A table, not a chart: ten named things whose identity is the point,
               and a bar chart of them would say less than the numbers do. */}
-          <table className="cards-dash-table">
+          <table
+            /* Was `.cards-dash-table` in components.css, a rule with exactly one
+               consumer — this table. On Untitled UI's type and border tokens now. */
+            className="w-full border-collapse text-sm text-secondary
+              [&_th]:border-b [&_th]:border-secondary [&_th]:text-left [&_th]:font-semibold [&_th]:text-tertiary"
+          >
             <thead>
               <tr>
                 <th scope="col" className="[padding:0_var(--space-3)_var(--space-2)_0]">
