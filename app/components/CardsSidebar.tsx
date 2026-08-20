@@ -26,6 +26,28 @@ import { untitledIconButton } from "./untitledButtonClasses";
  * design system and are different products, so the rail is written twice rather
  * than abstracted into a shell that would tie a change in one to the other.
  */
+/**
+ * The pill a rail row lifts onto when you point at it.
+ *
+ * Was `.cards-nav-item::after` in components.css, with a second rule turning it
+ * on for :hover, :focus-visible and .is-active. Both are here, and every part is
+ * an `after:` variant so the row that draws it also owns it.
+ *
+ * `--pill-radius` stays a variable rather than becoming a class: the two callers
+ * want different radii on the same recipe, and a variable set on the element is
+ * how that was already expressed.
+ */
+const navPillClassName = [
+  "after:absolute after:z-0 after:content-[''] after:pointer-events-none",
+  "after:[border-radius:var(--pill-radius,var(--radius-pill))]",
+  "after:bg-primary after:ring-1 after:ring-secondary after:ring-inset after:shadow-xs",
+  "after:opacity-0 after:scale-[0.98]",
+  "after:transition after:duration-150 after:[transition-timing-function:var(--ease-smooth)]",
+  "hover:after:opacity-100 hover:after:scale-100",
+  "focus-visible:after:opacity-100 focus-visible:after:scale-100",
+  "[&.is-active]:after:opacity-100 [&.is-active]:after:scale-100",
+].join(" ");
+
 export default function CardsSidebar({
   sets,
   setGroups,
@@ -344,9 +366,9 @@ export default function CardsSidebar({
         <button
           type="button"
           onClick={() => onSelect("profile")}
-          className="cards-nav-item [&>*]:relative [&>*]:z-[1] sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2
+          className={`cards-nav-item ${navPillClassName} [&>*]:relative [&>*]:z-[1] sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2
             border-0 rounded-orb-md bg-primary text-left cursor-pointer text-inherit
-            [@media(max-width:1000px)]:hidden"
+            [@media(max-width:1000px)]:hidden`}
         >
           {viewer.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
@@ -432,7 +454,7 @@ function NavItem({
       // rather than a second, flatter treatment of its own — see the
       // tabbar's matching change (CardsTabBar.tsx/tabbarClasses.ts), the
       // two are meant to read as one visual language now.
-      className={`cards-nav-item [&>*]:relative [&>*]:z-[1] after:inset-0 [--pill-radius:var(--radius-orb-md)] relative flex items-center gap-3
+      className={`cards-nav-item ${navPillClassName} [&>*]:relative [&>*]:z-[1] after:inset-0 [--pill-radius:var(--radius-orb-md)] relative flex items-center gap-3
         w-full p-2 border-0 rounded-orb-md bg-transparent text-left cursor-pointer text-inherit${active ? " is-active" : ""}`}
       onClick={onClick}
       aria-pressed={active}
