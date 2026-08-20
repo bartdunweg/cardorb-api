@@ -50,7 +50,7 @@ export const cardsMainClassName =
      same fix as ADR-0012's and the card body's. */
   "[@media(max-width:1000px)]:peer-data-[pane=rail]:!hidden " +
   "[@media(max-width:1000px)]:peer-data-[pane=main]:[animation:cards-pane-in_var(--dur-normal)_var(--ease-out)] " +
-  "motion-reduce:[animation:none] " +
+  "motion-reduce:animate-none " +
   "[padding:var(--space-8)_var(--page-pad-x)_var(--page-pad-bottom)_var(--space-6)] " +
   "[@media(max-width:1000px)]:[padding:var(--space-5)_var(--page-pad-x)_var(--page-pad-bottom)] " +
   "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(var(--space-6)+var(--tabbar-pill-h)+var(--space-10))]";
@@ -84,7 +84,7 @@ export const cardsSetHeadClassName = "cards-set-head flex items-center gap-4 mb-
 
 /** Fixed box so a missing logo does not reflow the row; stepped down under 640. */
 export const cardsSetLogoClassName =
-  "cards-set-logo h-11 w-40 object-contain [object-position:left_center] shrink-0 " +
+  "cards-set-logo h-11 w-40 object-contain object-left shrink-0 " +
   "max-sm:h-[34px] max-sm:w-30";
 
 export const cardsSetTextClassName = "cards-set-text flex flex-col gap-0.5 min-w-0";
@@ -96,7 +96,7 @@ export const cardsSetNameClassName =
 /** Tabular so the counts line up down the page. */
 export const cardsSetMetaClassName =
   "cards-set-meta m-0 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
-  "text-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
+  "text-tertiary lining-nums tabular-nums";
 
 /**
  * The heading row and the toolbar under it — second portion of the cards.css
@@ -113,7 +113,7 @@ export const cardsHeadTitleClassName = "cards-head-title flex items-center gap-4
 /** Fixed box for the same reason the set logo has one: `width: auto` is zero
  *  wide until the file arrives. Stepped down under 640. */
 export const cardsHeadLogoClassName =
-  "cards-head-logo h-10 w-[132px] object-contain [object-position:left_center] shrink-0 " +
+  "cards-head-logo h-10 w-[132px] object-contain object-left shrink-0 " +
   "max-sm:h-[30px] max-sm:w-24";
 
 /**
@@ -138,7 +138,7 @@ export const cardsToolsClassName =
  */
 export const cardsCountClassName =
   "cards-count m-0 mt-2 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
-  "text-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
+  "text-tertiary lining-nums tabular-nums";
 
 /**
  * The last of the simple ones — third and final portion under ADR-0051's

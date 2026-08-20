@@ -142,7 +142,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
         <span
           className="absolute right-[2px] bottom-[2px] min-w-[18px] h-[18px] px-[5px] inline-flex
             items-center justify-center rounded-pill bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]
-            [font-family:var(--font-body)] [font-size:var(--fs-tiny)] [font-variant-numeric:lining-nums_tabular-nums]"
+            [font-family:var(--font-body)] [font-size:var(--fs-tiny)] lining-nums tabular-nums"
         >
           {at + 1}/{entry.cards.length}
           <span className="sr-only"> cards</span>
@@ -156,7 +156,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
       {art}
       <span
         className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)]
-          [font-variant-numeric:lining-nums_tabular-nums] text-tertiary"
+          lining-nums tabular-nums text-tertiary"
       >
         #{String(entry.id).padStart(4, "0")}
       </span>

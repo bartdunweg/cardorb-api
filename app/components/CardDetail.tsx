@@ -77,7 +77,7 @@ export default function CardDetail({
               and what they move). */}
           {nav && (
             <div
-              className="card-detail-move absolute z-2 top-1/2 [transform:translateY(-50%)]
+              className="card-detail-move absolute z-2 top-1/2 -translate-y-1/2
                 flex justify-between pointer-events-none
                 [left:calc(-1*var(--space-4))] [right:calc(-1*var(--space-4))]"
             >
@@ -142,7 +142,7 @@ export default function CardDetail({
           {price != null && (
             <p
               className="mt-4 mb-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-                [font-size:var(--fs-card)] text-primary [font-variant-numeric:lining-nums_tabular-nums]"
+                [font-size:var(--fs-card)] text-primary lining-nums tabular-nums"
             >
               {card.price?.nm ? (
                 <>

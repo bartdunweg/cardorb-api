@@ -101,7 +101,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
               that, so without it the stroke is scaled down with everything else
               and draws thin. */}
           <path
-            className="fill-none stroke-[var(--color-label)] [stroke-width:2px] [stroke-linecap:round] [stroke-linejoin:round]"
+            className="fill-none stroke-[var(--color-label)] stroke-2 [stroke-linecap:round] [stroke-linejoin:round]"
             d={line}
             vectorEffect="non-scaling-stroke"
           />
@@ -113,7 +113,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
           {points.map((p) => (
             <circle
               key={p.date}
-              className="fill-[var(--color-bg-surface)] stroke-[var(--color-label)] [stroke-width:2px]"
+              className="fill-[var(--color-bg-surface)] stroke-[var(--color-label)] stroke-2"
               cx={p.x}
               cy={p.y}
               r={5}

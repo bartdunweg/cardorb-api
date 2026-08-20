@@ -80,7 +80,7 @@ export const legal = {
     "mt-0 mb-4 text-secondary [font-family:var(--font-body)] " +
     "[font-size:var(--fs-body-l)] [line-height:var(--lh-relaxed)]",
   link:
-    "text-primary underline [text-underline-offset:2px] " +
+    "text-primary underline underline-offset-2 " +
     "[transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-secondary",
   /** Emphasis inside body text, which is otherwise --color-label-secondary. */
   strong: "text-primary",

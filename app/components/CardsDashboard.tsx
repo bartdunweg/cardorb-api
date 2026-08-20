@@ -112,7 +112,7 @@ export default function CardsDashboard({
                 <th
                   scope="col"
                   className="[padding:0_var(--space-3)_var(--space-2)_0] text-right
-                    [font-variant-numeric:tabular-nums] whitespace-nowrap"
+                    tabular-nums whitespace-nowrap"
                 >
                   Value
                 </th>
@@ -170,7 +170,7 @@ export default function CardsDashboard({
                   </td>
                   <td
                     className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0] text-right
-                      [font-variant-numeric:tabular-nums] whitespace-nowrap"
+                      tabular-nums whitespace-nowrap"
                   >
                     {euro(shownPrice(card.price) ?? 0)}
                   </td>
@@ -297,7 +297,7 @@ function MoverList({ title, rows }: { title: string; rows: Mover[] }) {
                 because a minus alone at this size is a hyphen. */}
             <span
               className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-                [font-variant-numeric:tabular-nums] whitespace-nowrap text-secondary"
+                tabular-nums whitespace-nowrap text-secondary"
             >
               {m.change > 0 ? "+" : "−"}
               {euro(Math.abs(m.change))}
@@ -352,7 +352,7 @@ function Bars({
             </span>
             <span
               className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-                [font-variant-numeric:tabular-nums] text-tertiary"
+                tabular-nums text-tertiary"
             >
               {row.count}
             </span>

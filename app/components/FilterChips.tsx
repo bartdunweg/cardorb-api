@@ -50,7 +50,7 @@ export default function FilterChips({
       <button
         type="button"
         className="px-2 border-none bg-transparent [font-family:var(--font-body)] [font-size:var(--fs-small)]
-          text-tertiary underline [text-underline-offset:3px] cursor-pointer hover:text-primary"
+          text-tertiary underline underline-offset-[3px] cursor-pointer hover:text-primary"
         onClick={onClearAll}
       >
         Clear all

@@ -1469,7 +1469,7 @@ export default function CardsView({
                          is how it was caught again. .cards-main carries the @container. */
                       "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
                       "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
-                      "[margin:-10px_-20px_-26px] [padding:10px_20px_26px]"
+                      "-mx-5 -mt-2.5 -mb-6.5 px-5 pt-2.5 pb-6.5"
                     : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
                          so the ones off screen are not laid out until they come near it.
                          600px is the guess the browser uses for a row it has not
@@ -1588,7 +1588,7 @@ export default function CardsView({
                          is how it was caught again. .cards-main carries the @container. */
                       "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
                       "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
-                      "[margin:-10px_-20px_-26px] [padding:10px_20px_26px]"
+                      "-mx-5 -mt-2.5 -mb-6.5 px-5 pt-2.5 pb-6.5"
                     : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
                          so the ones off screen are not laid out until they come near it.
                          600px is the guess the browser uses for a row it has not

@@ -85,8 +85,12 @@ describe("paint containment does not slice the shadows off the scans", () => {
       "the one cheap thing that helps a phone through 1,900 cards",
     ).toBe(true);
     expect(
+      // Three spellings, one fact. It was a CSS rule, then an arbitrary Tailwind
+      // pair, and now the plain scale — 10px is 2.5, 20px is 5, 26px is 6.5, so
+      // the measured distances survive the move to utilities exactly.
       has(css, /margin:\s*-10px -20px -26px;\s*padding:\s*10px 20px 26px/) ||
-        has(css, /\[margin:-10px_-20px_-26px\][^"]*\[padding:10px_20px_26px\]/),
+        has(css, /\[margin:-10px_-20px_-26px\][^"]*\[padding:10px_20px_26px\]/) ||
+        has(css, /-mx-5 -mt-2\.5 -mb-6\.5[^"]*px-5 pt-2\.5 pb-6\.5/),
       "the bleed pair that keeps paint containment from clipping the scans' shadow",
     ).toBe(true);
   });
@@ -209,7 +213,13 @@ describe("the Safari fixes, which look like superstition and are not", () => {
     // tabbarClassName is the exported string carrying this now (was the
     // `.tabbar { transform: translateZ(0) }` rule in tabbar.css).
     expect(
-      has(read("app/components/tabbarClasses.ts"), /tabbarClassName\s*=[^;]*translateZ\(0\)/s),
+      // `transform-gpu` is Tailwind's spelling of `translateZ(0)`; the class
+      // string said it the long way until the arbitrary-value sweep. Both
+      // accepted, because the assertion is about the compositing layer existing.
+      has(
+        read("app/components/tabbarClasses.ts"),
+        /tabbarClassName\s*=[^;]*(translateZ\(0\)|transform-gpu)/s,
+      ),
       "no flicker on overscroll in Safari",
     ).toBe(true);
   });

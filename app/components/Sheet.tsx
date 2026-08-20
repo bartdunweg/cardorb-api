@@ -67,7 +67,7 @@ export function Sheet({
             styles its own rows differently depending on which ancestor they
             land in (see FilterOptions.tsx's own comment on that). */}
         <div
-          className={`sheet-body flex-1 min-h-0 overflow-y-auto [overscroll-behavior:contain]
+          className={`sheet-body flex-1 min-h-0 overflow-y-auto overscroll-contain
             [-webkit-overflow-scrolling:touch] ${padBody ? "p-4 flex flex-col gap-5" : ""}`}
         >
           {children}

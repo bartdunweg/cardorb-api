@@ -114,7 +114,7 @@ export default function CardsSidebar({
         [@media(max-width:1000px)]:[box-shadow:none]
         [@media(max-width:1000px)]:not-data-[pane=rail]:!hidden
         [@media(max-width:1000px)]:data-[pane=rail]:[animation:cards-pane-in_var(--dur-normal)_var(--ease-out)]
-        motion-reduce:[animation:none]"
+        motion-reduce:animate-none"
       data-pane={pane}
     >
       {/* What this screen is, and only on the widths where the rail is a screen

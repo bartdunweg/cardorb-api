@@ -105,7 +105,7 @@ const FAQ = [
         goes with it, straight away. The{" "}
         <Link
           href="/privacy"
-          className="text-primary underline [text-underline-offset:2px] [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-secondary"
+          className="text-primary underline underline-offset-2 [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-secondary"
         >
           privacy policy
         </Link>{" "}

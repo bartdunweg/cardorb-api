@@ -71,7 +71,7 @@ export const tabbarFadeClassName =
  * it takes (ADR-0050).
  */
 export const tabbarClassName =
-  "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 z-[var(--z-tabpage)] [transform:translateZ(0)] " +
+  "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 z-[var(--z-tabpage)] transform-gpu " +
   "flex items-center justify-center gap-4 " +
   "px-4 pt-6 [padding-bottom:calc(var(--spacing)*6+env(safe-area-inset-bottom,0px))] " +
   "pointer-events-none [&>*]:pointer-events-auto " +

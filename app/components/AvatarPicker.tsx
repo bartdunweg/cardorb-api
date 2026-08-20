@@ -64,7 +64,7 @@ export default function AvatarPicker({
             className={untitledButton({
               color: "secondary",
               className: `group-has-[:focus-visible]:[outline:2px_solid_var(--color-label)]
-                group-has-[:focus-visible]:[outline-offset:2px]${busy ? " opacity-55 cursor-not-allowed" : ""}`,
+                group-has-[:focus-visible]:outline-offset-2${busy ? " opacity-55 cursor-not-allowed" : ""}`,
             })}
           >
             {busy ? "Saving…" : avatarUrl ? "Change" : "Upload"}
