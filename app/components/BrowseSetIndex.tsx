@@ -85,10 +85,10 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           placeholder="Find a set"
           aria-label="Find a set"
           className="h-[var(--control-h)] w-full pl-10 pr-4 rounded-pill outline-none
-            border border-[var(--glass-border)] bg-[var(--glass-bg-solid)]
+            border border-secondary bg-primary
             [backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary
             [font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)]
-            placeholder:text-tertiary dark:border-[var(--glass-border-control)]
+            placeholder:text-tertiary dark:border-secondary
             hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]"
         />
       </div>

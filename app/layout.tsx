@@ -102,7 +102,7 @@ export default function RootLayout({
       // scrollbar-gutter:stable — Safari paints the rubber-band overscroll
       // area from html's own background, and html+body have to agree on it
       // or the top/bottom bands show a seam. See body's classes below.
-      className={`${inter.variable} bg-bg-grouped text-base antialiased [scrollbar-gutter:stable]`}
+      className={`${inter.variable} bg-secondary text-base antialiased [scrollbar-gutter:stable]`}
     >
       <head>
         {/* Only the choice. The machine is the stylesheet's job now.
@@ -124,7 +124,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-bg-grouped text-primary [font-family:var(--font-main)] min-h-screen text-pretty">
+      <body className="bg-secondary text-primary [font-family:var(--font-main)] min-h-screen text-pretty">
         <ThemeProvider>
           <a
             href="#main-content"

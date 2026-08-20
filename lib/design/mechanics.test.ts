@@ -219,9 +219,14 @@ describe("the Safari fixes, which look like superstition and are not", () => {
     // from the canvas, so body alone leaves a pale strip at the edges. Moved
     // from base.css's `html`/`body` rules to Tailwind classes directly on
     // those elements in layout.tsx during the Tailwind migration (ADR-0011).
+    //
+    // The class is `bg-secondary` now — Untitled UI calls the page background
+    // secondary and a card primary, which is the opposite way round from the
+    // names this project used. Both spellings are accepted so the assertion is
+    // about the fact (two elements carry it) rather than about the vocabulary.
     const layout = read("app/layout.tsx");
     expect(
-      (layout.match(/bg-bg-grouped/g) ?? []).length,
+      (layout.match(/bg-bg-grouped|bg-secondary/g) ?? []).length,
       "both html and body carry the page background",
     ).toBeGreaterThanOrEqual(2);
   });

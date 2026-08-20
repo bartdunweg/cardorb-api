@@ -443,8 +443,8 @@ export default async function Home() {
             </p>
           </div>
           <div
-            className="flex gap-4 items-center p-5 border border-[var(--glass-border)] rounded-orb-md
-            bg-[var(--glass-bg)] [box-shadow:var(--shadow-card)]
+            className="flex gap-4 items-center p-5 border border-secondary rounded-orb-md
+            bg-primary [box-shadow:var(--shadow-card)]
             [@media(max-width:800px)]:max-w-[430px]"
           >
             <span className={featureIcon}>

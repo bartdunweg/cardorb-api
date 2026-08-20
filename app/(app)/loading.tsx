@@ -87,7 +87,7 @@ export default function Loading() {
 
       <div
         className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
-          bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]"
+          bg-primary [backdrop-filter:blur(var(--blur-glass-card))]"
         aria-hidden="true"
       >
         {/* The rail's head, above 1000px only, exactly where CardsSidebar puts
@@ -129,7 +129,7 @@ export default function Loading() {
             of the load. Above 1000px only, like the head. */}
         <span
           className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-orb-md
-            bg-[var(--glass-bg-solid)] [@media(max-width:1000px)]:hidden"
+            bg-primary [@media(max-width:1000px)]:hidden"
         >
           <span className="skeleton flex-none w-7 h-7 rounded-full" />
           <span className="skeleton flex-1 h-[var(--fs-small)]" />

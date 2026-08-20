@@ -14,7 +14,7 @@
  * ending early.
  */
 export const pageCardsClassName =
-  "grid grid-cols-[300px_minmax(0,1fr)] items-start bg-[var(--glass-bg-solid)] min-h-screen min-h-dvh " +
+  "grid grid-cols-[300px_minmax(0,1fr)] items-start bg-primary min-h-screen min-h-dvh " +
   "[margin:calc(-1*var(--main-pad-top))_auto_0] " +
   "[@media(max-width:1000px)]:grid-cols-[minmax(0,1fr)] " +
   "[@media(max-width:640px)]:[margin-top:0]";

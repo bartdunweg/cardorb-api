@@ -392,8 +392,8 @@ export default async function IosApp() {
             </ul>
           </div>
           <dl
-            className="grid gap-4 p-5 m-0 border border-[var(--glass-border)] rounded-orb-md
-              bg-[var(--glass-bg)] [box-shadow:var(--shadow-card)]
+            className="grid gap-4 p-5 m-0 border border-secondary rounded-orb-md
+              bg-primary [box-shadow:var(--shadow-card)]
               [@media(max-width:800px)]:max-w-[430px]"
           >
             {REQUIREMENTS.map(({ term, detail }) => (

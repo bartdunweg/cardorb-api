@@ -118,6 +118,16 @@ export default defineConfig({
    *   nohup npx next start -p 3213 >/tmp/s.log 2>&1 </dev/null & disown
    *   VISUAL_BASE_URL=http://127.0.0.1:3213 npm run visual
    *
+   * The server has to outlive the shell that starts it, and on macOS neither
+   * `&` nor `nohup ... & disown` is enough — there is no `setsid` either. What
+   * works is starting it from something that is not a child of the test shell
+   * at all. Symptom when it is wrong: the suite passes the public specs, then
+   * every owner spec fails at once with ERR_CONNECTION_REFUSED.
+   *
+   * The heavy pages are why it shows up there and not earlier: /collection
+   * renders 1,610 cards, so `NODE_OPTIONS=--max-old-space-size=4096` is worth
+   * setting on the server too.
+   *
    * `nohup ... & disown` and not a plain `&`: a backgrounded server still dies
    * with the shell that started it, and when it dies mid-run the suite does not
    * say so. It photographs the app's own error boundary — "This page couldn't

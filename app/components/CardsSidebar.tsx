@@ -107,7 +107,7 @@ export default function CardsSidebar({
        * the ADR-0012/ADR-0017 rule this file's old comment was written for.
        */
       className="cards-rail peer group/rail flex flex-col gap-5 [padding:var(--space-4)_var(--space-3)]
-        bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]
+        bg-primary [backdrop-filter:blur(var(--blur-glass-card))]
         sticky top-0 h-[100dvh] overflow-y-auto border-r border-[var(--color-border-subtle)]
         [@media(max-width:1000px)]:static [@media(max-width:1000px)]:h-auto
         [@media(max-width:1000px)]:overflow-visible [@media(max-width:1000px)]:border-r-0
@@ -297,10 +297,10 @@ export default function CardsSidebar({
                 <button
                   type="button"
                   className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
-                    border-0 rounded-orb-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
+                    border-0 rounded-orb-sm bg-primary text-left cursor-pointer [font-family:var(--font-body)]
                     [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-tertiary
                     hover:text-primary first:mt-0
-                    ${selected === `era:${group.era}` ? "text-primary bg-bg-grouped" : ""}`}
+                    ${selected === `era:${group.era}` ? "text-primary bg-secondary" : ""}`}
                   onClick={() => onSelect(`era:${group.era}`)}
                   aria-pressed={selected === `era:${group.era}`}
                 >
@@ -345,7 +345,7 @@ export default function CardsSidebar({
           type="button"
           onClick={() => onSelect("profile")}
           className="cards-nav-item [&>*]:relative [&>*]:z-[1] sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2
-            border-0 rounded-orb-md bg-[var(--glass-bg-solid)] text-left cursor-pointer text-inherit
+            border-0 rounded-orb-md bg-primary text-left cursor-pointer text-inherit
             [@media(max-width:1000px)]:hidden"
         >
           {viewer.avatarUrl ? (
@@ -459,7 +459,7 @@ function NavItem({
               onError={(e) => retryAsPng(e.currentTarget, onBrokenLogo)}
             />
           ) : (
-            <span className="block w-full h-full rounded-orb-sm bg-bg-grouped" aria-hidden="true" />
+            <span className="block w-full h-full rounded-orb-sm bg-secondary" aria-hidden="true" />
           )}
         </span>
       )}

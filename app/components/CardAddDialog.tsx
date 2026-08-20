@@ -60,18 +60,18 @@ const cardAddLabelClassName =
 // same way FormField.tsx's FormInput carries its own copy of the same idea
 // for a different control.
 const cardAddInputClassName =
-  "h-[var(--control-h)] border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-pill " +
+  "h-[var(--control-h)] border border-secondary bg-primary rounded-pill " +
   "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary " +
   "[font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] " +
-  "placeholder:text-tertiary dark:border-[var(--glass-border-control)] " +
+  "placeholder:text-tertiary dark:border-secondary " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
 
 /** The one big field this dialog opens on — taller and louder than the rest. */
 const cardAddSearchClassName =
-  "h-14 w-full pl-11 pr-11 border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-2xl " +
+  "h-14 w-full pl-11 pr-11 border border-secondary bg-primary rounded-2xl " +
   "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary outline-none " +
   "[font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-button)] " +
-  "placeholder:text-tertiary dark:border-[var(--glass-border-control)] " +
+  "placeholder:text-tertiary dark:border-secondary " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
   "[&::-webkit-search-cancel-button]:hidden";
 
