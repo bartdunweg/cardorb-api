@@ -5,7 +5,7 @@ source: Bart
 source-type: stakeholder
 severity: 3
 sentiment: positive
-status: open
+status: addressed
 tags: [ui, design-system, untitled-ui, identity]
 ---
 
@@ -65,17 +65,18 @@ different repository is not the same kind of thing as a button.
 
 ## Action
 
-- [ ] Supersede ADR-0055's identity list: holo and the card hover, and nothing
+- [x] Supersede ADR-0055's identity list: holo and the card hover, and nothing
       else, are protected.
-- [ ] Settle the brand colour and the wordmark before deleting anything, since
+- [x] Settle the brand colour and the wordmark before deleting anything, since
       both decide what the token sheet is even for.
 - [ ] Then delete rather than convert: `cards.css`, the glass recipe in
       `components.css`, and whatever of `tokens.css` stops having a reader.
-- [ ] Keep `poke-holo.css` and `hover-tilt` untouched, and say so in the record
+- [x] Keep `poke-holo.css` and `hover-tilt` untouched, and say so in the record
       so a later sweep does not take them.
 
 ## Related
 
+- Decision: ADR-0060 — the record this produced.
 - Decision: ADR-0055 — the identity list this corrects.
 - Decision: ADR-0048, ADR-0049 — the orb mark, which is why the wordmark is a
   question rather than an assumption.

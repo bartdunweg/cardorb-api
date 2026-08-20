@@ -38,10 +38,39 @@ above says the extraction was not wanted anyway.
 `components.css` lost 84 lines; `FormField.tsx` is 57 lines where it was 130.
 Twenty-three files import an Untitled UI component or the class recipe.
 
-**Read ADR-0059 first — the app looks different.** `--btn-primary-bg` was
-near-black and is Untitled UI's brand now, so every primary surface went blue at
-once: the buttons, the tab bar's active pill and add button, selected filter
-chips, the Pokédex badge. One token, fourteen places, one line to reverse.
+**Read ADR-0060 first — the direction changed late in the session.** FB-0014:
+*"UI is van mijn betreft nog helemaal niet gedefinieerd… Alleen de hole, het
+hover-effect van een kaart, moet blijven."* The identity list is down from four
+things to two, and both are effects on a card:
+
+> **`app/styles/poke-holo.css` and `hover-tilt` are the only protected things
+> left. A sweep that removes them is a mistake, not a judgement call.**
+
+Everything else is Untitled UI's, and where they disagree the answer is now
+"delete ours" rather than "argue it". The palette is theirs whole — **the app is
+purple**, not blue; the brand ramp built in Card Orb's blue is gone, and
+ADR-0059 (which had made everything blue four commits earlier) is superseded.
+
+Three answers were given explicitly and two are not done yet:
+
+| Question | Answer | Status |
+|---|---|---|
+| Accent colour | Untitled UI's purple, full palette | **done** |
+| The orb wordmark | "UI: may go or be replaced" | **not acted on** — see below |
+| The app screens | Rebuild on Untitled UI page templates, `cards.css` goes | **not started** |
+
+**The orb was deliberately not deleted.** It is also the favicon, the app icon,
+the manifest and both OG images, and it is *generated* by
+`Tools/GenerateAppIcon.swift` in the separate `cardorb-ios` repo (ADR-0048).
+Removing it from the web changes something two repositories and the public share,
+and ADR-0049 exists because one icon file already shipped wrong once. It wants
+its own decision, not a styling sweep.
+
+**The screen rebuild has not begun.** Untitled UI ships 268 page templates
+including `dashboard` and `settings` types and a `sidebar` layout — that is the
+starting point for `/collection`, `/dashboard`, `/settings` and `/wishlist`, and
+it is a redesign rather than a conversion. `cards.css` (1,169 lines) is a
+deletion at the end of it, not a migration.
 
 **The gap, stated plainly: the signed-in screens have never been photographed.**
 `/collection`, `/dashboard`, `/settings`, `/wishlist`, `/welcome`, the add-card
