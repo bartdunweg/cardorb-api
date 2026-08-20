@@ -70,6 +70,14 @@ export default function FilterOptions({
     variant === "sheet"
       ? "gap-3 min-h-12 px-4 text-primary"
       : "gap-2 p-2 rounded-md text-secondary hover:bg-primary_hover hover:text-primary";
+
+  /* The same split, for the row that goes back up a level. The sheet's is a
+     heading you can press — it is the only thing at the top of the panel — and
+     the dropdown's is a divider line above the list. */
+  const back =
+    variant === "sheet"
+      ? "gap-1 p-0 text-lg font-semibold text-primary"
+      : "gap-1 w-full p-2 mb-1 border-b border-secondary text-sm font-semibold text-primary hover:text-secondary";
   const current = facets.find((f) => f.key === openFacet) ?? null;
 
   if (current) {
@@ -83,7 +91,8 @@ export default function FilterOptions({
         <div className="facet-head">
           <button
             type="button"
-            className="facet-back"
+            className={`facet-back flex cursor-pointer items-center border-none bg-transparent
+              transition-colors duration-100 ease-linear ${back}`}
             onClick={() => onOpenFacet(null)}
             aria-label="Back to all filters"
           >

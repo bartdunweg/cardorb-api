@@ -580,26 +580,6 @@
 /* How many values are on in a facet, so the list says which ones are doing
    something without having to be opened. */
 
-.filter-menu-panel .facet-back {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  width: 100%;
-  padding: var(--space-2);
-  margin-bottom: var(--space-1);
-  border: none;
-  border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
-  background: none;
-  font-family: var(--font-main);
-  font-size: var(--fs-small);
-  font-weight: var(--fw-button);
-  color: var(--color-label);
-  cursor: pointer;
-}
-.filter-menu-panel .facet-back:hover {
-  color: var(--color-label-secondary);
-}
 .filter-menu > summary svg:first-of-type {
   flex-shrink: 0;
 }
@@ -773,19 +753,6 @@
  * shared markup by ancestor, styling it differently depending on whether it
  * landed in this sheet or in .filter-menu-panel's dropdown (see
  * FilterOptions.tsx's own comment on that split). */
-.sheet .facet-back {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 0;
-  border: none;
-  background: none;
-  font-family: var(--font-main);
-  font-weight: var(--fw-title);
-  font-size: var(--fs-sub);
-  color: var(--color-label);
-  cursor: pointer;
-}
 
 /* .sheet-body's own flex/overflow properties, and .sheet-body--pad, moved to
  * Tailwind classes in Sheet.tsx. */
