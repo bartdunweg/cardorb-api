@@ -114,8 +114,16 @@ export default defineConfig({
    * The escape hatch is the line below. Start the server yourself and point the
    * suite at it:
    *
-   *   npm run build && npx next start -p 3211 &
-   *   VISUAL_BASE_URL=http://127.0.0.1:3211 npm run visual
+   *   npm run build
+   *   nohup npx next start -p 3213 >/tmp/s.log 2>&1 </dev/null & disown
+   *   VISUAL_BASE_URL=http://127.0.0.1:3213 npm run visual
+   *
+   * `nohup ... & disown` and not a plain `&`: a backgrounded server still dies
+   * with the shell that started it, and when it dies mid-run the suite does not
+   * say so. It photographs the app's own error boundary — "This page couldn't
+   * load" — and reports a 28% pixel difference, which reads exactly like a CSS
+   * regression. Happened three times before the cause was found. If a diff looks
+   * far too large, open it and check what is actually in the picture.
    *
    * Then `webServer` is undefined and Playwright touches nothing. Remember the
    * server serves the build that was on disk when it started — rebuild before

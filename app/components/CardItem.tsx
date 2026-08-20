@@ -298,6 +298,8 @@ const CardItem = memo(function CardItem({
           </span>
           <span
             className="cards-item-meta flex items-baseline flex-nowrap overflow-hidden gap-x-2 gap-y-[2px]
+            [&>*:not(:first-child)]:before:content-['·'] [&>*:not(:first-child)]:before:mr-2
+            [&>*:not(:first-child)]:before:opacity-50
               [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary"
           >
             {fields.has("number") && card.number && (

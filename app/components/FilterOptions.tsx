@@ -80,6 +80,15 @@ export default function FilterOptions({
   const list =
     variant === "sheet" ? "" : "max-h-[300px] overflow-y-auto overscroll-contain";
 
+  /* The always-open facets at the top of the panel. Two ancestors said the same
+     thing in cards.css — `.sheet .facet-inline` and `.filter-menu-panel
+     .facet-inline` — differing only in padding, so the difference is the prop
+     rather than the selector now. `+ .facet-inline` becomes a sibling variant. */
+  const inlineClassName = [
+    "facet-inline flex flex-col gap-2 [&+.facet-inline]:pt-0",
+    variant === "sheet" ? "px-4 py-3" : "px-2 pt-2 pb-3",
+  ].join(" ");
+
   const back =
     variant === "sheet"
       ? "gap-1 p-0 text-lg font-semibold text-primary"
@@ -167,8 +176,10 @@ export default function FilterOptions({
       {inline.map((f) => {
         const on = selected(f);
         return (
-          <div key={f.key} className="facet-inline">
-            <span className="facet-inline-label">{f.label}</span>
+          <div key={f.key} className={inlineClassName}>
+            <span className="facet-inline-label [font-family:var(--font-main)] text-sm text-secondary">
+              {f.label}
+            </span>
             <div className={cardsSegmentedClassName} role="group" aria-label={f.label}>
               {/* Ticking nothing is an answer, and on a facet of two it is the
                   commonest one — so it gets a word rather than being the state
@@ -209,7 +220,7 @@ export default function FilterOptions({
                   [&>svg:last-child]:shrink-0 [&>svg:last-child]:opacity-40 ${row}`}
                 onClick={() => onOpenFacet(f.key)}
               >
-                <span className="facet-name">{f.label}</span>
+                <span className="facet-name min-w-0 flex-1 truncate">{f.label}</span>
                 {/* Both are a bare number on screen and the difference between
                     them is a tick you cannot hear. "Type, 3" could be three
                     selected or three to choose from, so the row says which. */}
@@ -220,7 +231,7 @@ export default function FilterOptions({
                     <span className="sr-only">{on.size} selected</span>
                   </span>
                 ) : (
-                  <span className="facet-count">
+                  <span className="facet-count shrink-0 text-sm text-tertiary tabular-nums">
                     <span aria-hidden="true">{f.options.length}</span>
                     <span className="sr-only">{f.options.length} options</span>
                   </span>

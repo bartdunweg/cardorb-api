@@ -120,10 +120,6 @@
  * for the grid tile's own hover pill.
  */
 /* Above the pill, which is positioned and would otherwise paint over them. */
-.cards-nav-item > * {
-  position: relative;
-  z-index: 1;
-}
 
 /* ── The results pane ── */
 
@@ -426,11 +422,6 @@
    of those was drawn — including as the first thing on the line, when Number
    was switched off, leading with a separator and nothing to separate. Keyed on
    position now, so it is only ever between siblings. */
-.cards-item-meta > *:not(:first-child)::before {
-  content: "·";
-  margin-right: var(--space-2);
-  opacity: 0.5;
-}
 
 /* Only the gap here now.
    This used to set the columns as well, auto-filling against a minimum scan
@@ -482,9 +473,6 @@
  * Segmented.tsx. width (.cards-segmented) and padding/flex (.cards-segment)
  * stay here: several ancestor contexts override them and an unconditional
  * Tailwind utility would always beat that (see ADR-0013). */
-.cards-segment {
-  padding: 0 var(--space-4);
-}
 
 /* display/gap/padding/border-radius on .cards-views, and every .cards-view
  * property, moved to Tailwind classes in ViewOptions.tsx (trackClasses.ts).
@@ -707,37 +695,8 @@
    one of two is a press to reach a press — as true under a thumb as it is
    under a pointer. Its own padding here rather than the dropdown's, because a
    sheet's rows are inset further and the label has to line up with them. */
-.sheet .facet-inline {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-}
-.sheet .facet-inline + .facet-inline {
-  padding-top: 0;
-}
-.sheet .facet-inline-label {
-  font-family: var(--font-main);
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-}
 .sheet .facet-inline .cards-segmented {
   width: 100%;
-}
-
-.sheet .facet-option,
-.sheet .facet-name,
-.sheet .facet-row .facet-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sheet .facet-count {
-  font-size: var(--fs-small);
-  color: var(--color-label-tertiary);
-  font-variant-numeric: tabular-nums;
 }
 
 /* .sheet-field and .sheet-label moved to Tailwind classes in ViewOptions.tsx
@@ -787,20 +746,6 @@
 /* A short facet, shown open at the top of the filter panel instead of behind a
    row of its own. Era is two answers and Owned is two or three; going a level
    in to tick one of those is a press to reach a press. */
-.filter-menu-panel .facet-inline {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-2) var(--space-3);
-}
-.filter-menu-panel .facet-inline + .facet-inline {
-  padding-top: 0;
-}
-.filter-menu-panel .facet-inline-label {
-  font-family: var(--font-main);
-  font-size: var(--fs-small);
-  color: var(--color-label-secondary);
-}
 .filter-menu-panel .facet-inline .cards-segmented {
   width: 100%;
 }
