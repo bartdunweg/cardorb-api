@@ -189,11 +189,9 @@ export default function CardsDashboard({
   );
 }
 
-const cardsDashTitleClassName =
-  "m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)] text-label";
-const cardsDashSubClassName =
-  "[margin:0_0_var(--space-3)_0] max-w-[60ch] [font-family:var(--font-body)]" +
-  " [font-size:var(--fs-small)] text-label-tertiary";
+const cardsDashTitleClassName = "m-0 text-lg font-semibold text-primary";
+
+const cardsDashSubClassName = "m-0 text-sm text-tertiary";
 
 /**
  * "2.1% above its 30-day average", or nothing at all.
@@ -218,25 +216,23 @@ function movementNote(m: CardsStats["movement"]): string | undefined {
 function Kpi({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <li className={`flex flex-col gap-1 p-5 ${aboutCardClassName}`}>
-      <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary">
-        {label}
-      </span>
+      {/* Untitled UI's metric type, lifted from MetricsSimple rather than using
+          it. That component forces a "..." actions dropdown and a trend arrow
+          into every tile; three of these four have neither, and a dropdown that
+          opens onto nothing is worse than not using the component. Same call as
+          untitledButtonClasses.ts: their design, our element. */}
+      <span className="text-sm font-medium text-tertiary">{label}</span>
       {/* Proportional figures on purpose: tabular-nums gives every digit the
           width of a zero, which reads loose at this size. Tabular is for columns
           that have to line up, which is the table above, not this. */}
-      <span
-        className="[font-family:var(--font-main)] [font-weight:var(--fw-title)]
-          [font-size:var(--fs-h2)] [line-height:var(--lh-tight)] text-label"
-      >
-        {value}
-      </span>
+      <span className="text-display-sm font-semibold text-primary">{value}</span>
       {/* Under the figure rather than beside it, at the label's size and in the
           tertiary tone: it qualifies the number above and must not compete with
           it. The tiles are a grid of equal cells, so a note on two of four
           leaves the other two shorter — which is fine, because they are boxes
           on their own rows of a grid, not columns that have to line up. */}
       {note && (
-        <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+        <span className="text-sm font-medium text-tertiary">
           {note}
         </span>
       )}

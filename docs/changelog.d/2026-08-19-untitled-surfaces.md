@@ -1,0 +1,1 @@
+- Cards across the app — the dashboard tiles, the value chart, the landing page's feature grid — sit on a plain white surface with a soft edge instead of the frosted-glass panel.

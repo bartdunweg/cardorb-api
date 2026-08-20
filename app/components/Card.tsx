@@ -12,9 +12,25 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
  */
 /** Exported for CardsDashboard.tsx's Kpi, which composes "about-card" onto a
  *  <li> directly rather than through this component. */
+/**
+ * Untitled UI's card surface, taken whole.
+ *
+ * This was the glass recipe — a translucent fill, a 24px radius, a backdrop
+ * blur and a hand-tuned shadow — and it was the material every card in the app
+ * was made of. ADR-0060 removed glass from the protected list, so it is theirs
+ * now: `rounded-xl bg-primary shadow-xs ring-1 ring-secondary ring-inset`, which
+ * is what `MetricsSimple` and every other Untitled UI card draws.
+ *
+ * One constant rather than four edits, on purpose. Every card in the app reads
+ * this, so the dashboard tiles, the value chart, the movers and the priciest
+ * table cannot end up on three different surfaces — which is the same property
+ * `--btn-primary-bg` has for the accent, and the same one line to reverse.
+ *
+ * The padding stays a variable: it is layout, not material, and cards.css still
+ * reads it.
+ */
 export const aboutCardClassName =
-  "p-[var(--card-pad)] overflow-hidden border border-[var(--glass-border)] rounded-orb-lg " +
-  "bg-[var(--glass-bg)] [backdrop-filter:blur(var(--blur-glass-card))] [box-shadow:var(--shadow-card)]";
+  "p-[var(--card-pad)] overflow-hidden rounded-xl bg-primary shadow-xs ring-1 ring-secondary ring-inset";
 
 type CardProps = {
   variant?: "about" | "bento";
