@@ -411,7 +411,7 @@ function NavItem({
       // rather than a second, flatter treatment of its own — see the
       // tabbar's matching change (CardsTabBar.tsx/tabbarClasses.ts), the
       // two are meant to read as one visual language now.
-      className={`cards-nav-item after:inset-0 [--pill-radius:var(--radius-md)] relative flex items-center gap-3
+      className={`cards-nav-item after:inset-0 [--pill-radius:var(--radius-orb-md)] relative flex items-center gap-3
         w-full p-2 border-0 rounded-orb-md bg-transparent text-left cursor-pointer text-inherit${active ? " is-active" : ""}`}
       onClick={onClick}
       aria-pressed={active}

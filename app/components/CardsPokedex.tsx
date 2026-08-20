@@ -178,7 +178,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
   // Tailwind classes on each `<img>` directly avoid that trap entirely.
   const baseBodyClassName =
     "flex flex-col w-full p-2 border-0 rounded-orb-md bg-transparent text-left [color:inherit] [font:inherit]" +
-    " relative [--pill-radius:var(--radius-md)]";
+    " relative [--pill-radius:var(--radius-orb-md)]";
   // The hover pill and its cursor are button-only in cards.css
   // (`button.cards-dex-body`) — the empty-slot span never got either, since
   // it isn't a control.

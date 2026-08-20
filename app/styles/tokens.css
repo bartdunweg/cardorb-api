@@ -199,25 +199,13 @@
   /* Soft lift behind free-standing images (sits on a card surface) */
   --shadow-image: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px -10px rgba(0, 0, 0, 0.08);
 
-  /* ── Motion: house easing + durations (rule 1/2, the bare `ease` is banned) ── */
-  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1); /* default for almost everything */
-  --ease-out: cubic-bezier(0.17, 1, 0.32, 1); /* entrances / reveals that decelerate */
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* pops: dots, label catch, press release */
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* symmetric A↔B: theme knob, tab pill */
-  --dur-fast: 150ms;
-  --dur-normal: 200ms;
-  --dur-slow: 280ms;
-  /* The fourth step, and it is deliberately outside the other three. Those are
-     the scale for interface response, where the ceiling is about 300ms and a
-     control that takes longer than that to answer feels slow. This one is for
-     motion that covers a distance instead of changing a state: the external
-     link arrow flying out of its button and its twin arriving behind it, where
-     the movement is the whole point and 280ms was still quick enough that you
-     saw the ends and not the journey. Reach for it only when something is
-     travelling, never to make an ordinary transition more relaxed. */
-
-  /* Corner radius scale: generated into tailwind.generated.css from
-     lib/design/tokens.ts (radius), same mechanism as colour above. */
+  /* Motion, radii, type, weights, line-heights, families, blur and the z-index
+     scale are all generated into tailwind.generated.css from
+     lib/design/tokens.ts now, same mechanism as colour above and for a second
+     reason: a token outside @theme has no Tailwind utility, so every className
+     that wanted one had to write [transition-timing-function:var(--ease-smooth)]
+     by hand. `ease-smooth`, `duration-fast`, `text-small`, `font-title`,
+     `leading-tight`, `blur-glass` and `z-modal` are classes now. */
 
   /* Shared content column width: every page lines up to this (one knob).
      860px gives ~70 chars/line at 16px body; --page-pad-x gutters sit outside this value. */
@@ -264,146 +252,22 @@
      own (≤ 1215px, ≤ 809px, ≤ 479px) for the meta-column/timeline, those are
      scoped to .case/.left/.right and intentionally off the global scale. */
 
-  /* Fonts: custom first, then system fallbacks so content renders
-     immediately even if the web font is still loading */
-  /* Loaded via next/font/local in layout.tsx (woff2 + automatic fallback metrics) */
-  --font-main: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-  --font-body: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
-  /* Code: the article's inline code, the error digest, the token names on
-     /design. Three files were writing this exact stack out by hand, which is
-     the same "one meaning repeated" that named --space-3-5. No web font is
-     loaded for it on purpose: it appears a handful of times and none of them is
-     worth a download. */
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* The type scale, the weights, the line-heights and the three families are
+     generated too, with their reasoning carried over to lib/design/tokens.ts
+     rather than deleted. Read it there before changing a floor: a floor is
+     chosen against its *neighbours*, not against its own ceiling, and
+     tokens.test.ts holds the ordering to it.
 
-  /* ── Design system: typography tokens ──
-     The single source of truth for text styling. Each text role below maps
-     to one of these values so same-role text stays consistent site-wide.
-
-     Roles → tokens:
-       Display (article H1) .... --fs-display / --fw-title   / --lh-tight, Satoshi
-       Section head (H2) ....... --fs-h2      / --fw-title   / --lh-tight, Satoshi
-       Card / case title ....... --fs-card    / --fw-title   / --lh-tight, Satoshi
-       Sub-head (H3/FAQ q) ..... --fs-sub     / --fw-title   / --lh-snug, Satoshi
-       Body .................... --fs-body    / 400          / --lh-normal, Inter
-       Card description ........ --fs-body-s  / 400          / --lh-normal, Inter
-       Long-form body .......... --fs-body-s  / 400          / --lh-relaxed, Inter
-       Small / meta / caption .. --fs-small   / 400          / 1.4, Inter
-       Eyebrow / overline ...... --fs-eyebrow / --fw-eyebrow / 1.4 upper, Inter
-       Button .................. --fs-label   / --fw-button, Satoshi
-  */
-
-  /* Font sizes: fixed scale: 13 15 20 24 28 32 36 40 48 56 64.
-
-     Every step is a clamp between what it is on a phone and what it is on a
-     desktop, reaching its floor at 640px and its ceiling at 900px. Display and
-     H2 were the only two written this way, on the argument that a heading should
-     not jump at a breakpoint; the rest stepped down in one go in a media query
-     and the argument was no weaker for them.
-
-     The floors matter as much as the ceilings, and they are not the ceiling
-     minus one rung. They used to be: the mobile block set "12 14 16 20 from the
-     desktop 13 15 20 24", which works for the steps that sit on that scale and
-     quietly breaks the ones that sit beside it. --fs-label is a step above
-     --fs-body on a desktop and landed on the same 14 as body on a phone, so the
-     testimonial quote, which is the loudest thing on its card, came out the size
-     of the copy around it. --fs-body-l did the same to --fs-sub.
-
-     A floor is therefore chosen against its neighbours, not against its own
-     ceiling, and design-system.test.ts holds the ordering to it: anything that
-     is larger than another step here has to still be larger at 640px. */
-  /* The floors are what these are on a phone, and they were set low enough that
-     a page's own heading came out barely larger than the card titles under it.
-     A page title should still be the biggest thing on the screen at 320px. */
-  --fs-display: clamp(34px, 3.08vw + 12.3px, 40px);
-  --fs-h2: clamp(26px, 1.54vw + 14.2px, 28px);
-  /* The one step that runs the other way, and the only one allowed to.
-     It is for the h1 on the home card, "I'm Bart, Digital Product Designer",
-     which is the first thing on the site. On a desktop it is one card in a grid
-     of nine and it takes --fs-h2's 28 like the other page-openers; on a phone
-     the grid is a column and that heading is the whole first screen, so it can
-     carry more than the scale gives it there.
-
-     Hence a clamp that falls rather than climbs: 30 up to 640px, easing back to
-     28 by 900. Written as a slope rather than a media query because the jump is
-     the thing being avoided, not the size. Measured at 320px, the narrowest the
-     site is built for: still two lines, with room to 34 before it becomes
-     three. Do not reach for this anywhere else. A second heading that grows on
-     small screens is not an exception, it is a scale with two directions. */
-  /* The three years under "Who I am". A step down from where they were: 28 is
-     --fs-h2, the size a page heading takes, and three four-digit numbers set at
-     it were the loudest thing on a card whose job is a sentence about someone.
-     24 is --fs-card's ceiling, so on a desktop a year now reads as a card title
-     rather than as a heading.
-     Still its own token rather than --fs-card itself, because of the other end:
-     on a phone the three of them and their dividers share one card width, and
-     the floor stays at 22 where --fs-card's is 20. */
-  --fs-card: clamp(20px, 1.54vw + 10.2px, 24px);
-  /* 17 on a phone, not 16: --fs-body-l floors at 16 and a sub-head that is the
-     same size as the lede under it is not a sub-head. */
-  --fs-sub: clamp(17px, 1.15vw + 9.6px, 20px);
-  --fs-body: clamp(14px, 0.38vw + 11.5px, 15px);
-  --fs-body-s: clamp(14px, 0.38vw + 11.5px, 15px);
-  /* Off-scale on purpose, and only for long-form: the article lede, its H3s and
-     its standfirst. The next step up is --fs-sub at 20px, which reads as a
-     heading in the middle of prose. Article styles referenced this name for a
-     while with a literal fallback in the var() call, so the value existed
-     without being anywhere it could be changed. */
-  --fs-body-l: clamp(16px, 0.38vw + 13.5px, 17px);
-  --fs-small: clamp(12px, 0.38vw + 9.5px, 13px);
-  --fs-eyebrow: clamp(12px, 0.38vw + 9.5px, 13px);
-  /* 15 on a phone, not 14, and this is the one the complaint came from: a
-     testimonial quote at body size is a quote that has stopped being the point
-     of its card. */
+     One step did not go, and the reason is worth knowing because it is a trap
+     rather than a principle. --fs-label would have to be --text-label inside
+     @theme, and --color-label already owns the `text-label` class; Tailwind
+     would resolve one of the two and say nothing, quietly turning a colour used
+     in forty places into a font size. Nothing in this app reads --fs-label any
+     more, so it stays here, unpromoted, rather than being renamed into the
+     scale. */
+  /* 15 on a phone, not 14: a quote set at body size is a quote that has stopped
+     being the point of its card. */
   --fs-label: clamp(15px, 0.38vw + 12.5px, 16px);
-  /* Every control, label and field alike: the button, the segments, the chat
-     options, the search box, the chat field. One size, because a button and the
-     field beside it are the same row of the same toolbar and a control whose
-     own label is smaller than the text you type into it reads as an accident.
-
-     max() rather than a step, and the argument is .chat-input's, which worked
-     this out first: Safari on iOS zooms the page into any field with text under
-     16px the moment it is focused, and leaves you there. --fs-body-s is 15px on
-     desktop and 14px on mobile, so a field wearing the step alone lurches the
-     page to full screen as soon as you type. This never goes below 16.
-
-     Which also settles the desktop question: at 16 the Satoshi label and the
-     Inter field text read as one size, where the label at --fs-small was two
-     steps under the text next to it. */
-  --fs-control: max(16px, var(--fs-body-s));
-  /* A control's label, under the text in the field beside it, and the gap is the
-     whole point. Satoshi sets larger than Inter at a matched size: at a straight
-     16 the button label read as the bigger of the two, so the pair matched on
-     paper and not on screen. They have to look equal, which is the only test
-     that counts.
-
-     Two pixels rather than one. One was set when this token only had to answer
-     for a button standing next to a search field, and it is now what the nav
-     labels, the chat options and the whole /cards toolbar wear as well: at 15
-     the nav read as a row of buttons rather than as a way around the site.
-     Fields keep --fs-control, never under 16, for the iOS zoom reason above, so
-     nothing anybody types moves with this. */
-  --fs-control-label: calc(var(--fs-control) - 2px);
-  /* One step under --fs-small, for numerals and labels inside a fixed shape:
-     the count badges on /cards, the dense scan tags, the favourites chips. It
-     was written as a literal 11px in five places before it had a name, which is
-     how a scale grows a step whether or not anyone decides to.
-     It does not step down on mobile like the rest. The badges are digits
-     centred in an 18px circle that keeps its size, so shrinking the type would
-     only move the digit away from the edge it is balanced against. */
-  --fs-tiny: 11px;
-
-  /* Line-heights */
-  --lh-tight: 1.2;
-  --lh-snug: 1.35;
-  --lh-normal: 1.5;
-  --lh-relaxed: 1.7;
-
-  /* Weights */
-  --fw-regular: 400;
-  --fw-title: 500;
-  --fw-eyebrow: 600;
-  --fw-button: 700;
 
   /* Solid glass surface: .btn, .theme-toggle, .tabbar-pages (more opaque than --glass-bg) */
   --glass-bg-solid: light-dark(rgba(254, 254, 254, 0.9), rgba(37, 37, 40, 0.66));
@@ -444,46 +308,9 @@
   --space-10: 40px;
   --space-12: 48px;
 
-  /* Glass blur. Three tiers, because the surfaces genuinely differ: bars and
-     toggles sit directly over content, cards over more of it, and pills are
-     small enough that a heavy blur reads as mud. */
-  --blur-glass: 20px; /* bars, toggles, overlays */
-  --blur-glass-card: 24px; /* bento / panel card surfaces */
-  --blur-glass-pill: 16px; /* hover pills and tab indicators */
-
-  /* Scrim blur, which is a different job from the three above and used to claim
-     it did not exist: the line here read "every backdrop-filter in the codebase
-     uses one of these, no hardcoded px", and five rules had been writing 8 or
-     10 ever since. A glass tier is how much a pane frosts what is behind it. A
-     scrim is how much a fade softens whatever passes under it, and it is much
-     lighter because there is no surface to sell.
-     Two values because that is what the five sites do, not because anyone
-     argued for the difference. It looks like drift, and naming it is what makes
-     it arguable: /design now shows the two side by side. */
-  --blur-scrim: 10px; /* card and page scrims: home fade, modal dim, globe head */
-  --blur-scrim-sm: 8px; /* small chrome over content: tooltip, tab-bar fade */
-
   /* Accent: iOS system blue (the map pin). Brand-neutral and theme-stable,
      so it is intentionally not overridden in dark mode. */
   --color-accent-rgb: 0, 122, 255;
-
-  /* Z-index scale: single source of truth for stacking context.
-
-     Page-level layers only, and that is the whole distinction. A z-index of 0,
-     1, 2 or -1 inside a component (text over its own ::before, a canvas under
-     its label) is local stacking: it means "above the thing next to me", it
-     never competes with anything on this list, and it stays a literal. There
-     are around fifty of those and tokenising them would say they are all part
-     of one order when they are not.
-     If a value is deciding what covers what across the page, it belongs here.
-     If it is deciding what covers what inside one box, it does not. */
-  --z-sticky: 200; /* floating bars that scroll with the page */
-  --z-tabbar: 899; /* tab navigation background */
-  --z-tabpage: 900; /* tab page stack */
-  --z-controls: 950; /* floating UI controls (theme toggle, etc.) */
-  --z-modal: 1000; /* modal backdrops */
-  --z-sheet: 1010; /* sheets that layer above modals (chat) */
-  --z-skip: 9999; /* skip-to-content link */
 }
 
 /* ─── DARK MODE ─── */

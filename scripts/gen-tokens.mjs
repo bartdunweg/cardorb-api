@@ -17,13 +17,40 @@
  * fails CI with the filename in the message. That is the whole mechanism: not
  * "please keep these in step", but "these cannot drift".
  *
- * What it deliberately does not generate: most of the rest of tokens.css.
- * Spacing, blur, the shadows and the layout variables stay hand-written,
- * because nothing outside CSS consumes them and their arguments are prose
- * that belongs next to the value rather than in a TypeScript comment two
- * files away. Radii crossed that line during the Tailwind migration: the
- * whole point of `@theme` is generating utilities (`rounded-sm`, etc.) from
- * these values, which is a CSS consumer no hand-written stylesheet is.
+ * That was the first argument. The second is the one that moved everything
+ * else here, and it is about `@theme` rather than about who can read CSS.
+ *
+ * Only a token inside `@theme` becomes a Tailwind utility. Colour and radius
+ * were, so a component writes `text-label` and `rounded-btn`. Type, weight,
+ * line-height, easing, duration, blur and stacking order were not, so the only
+ * way to reach any of them from a className was the arbitrary-value escape
+ * hatch: `[font-size:var(--fs-small)]`. There were 721 of those in `.tsx`
+ * before this. The design system existed and stopped at the door of the
+ * language every component is written in.
+ *
+ * So this now writes four things:
+ *
+ *   1. `@theme` — the scales Tailwind has a namespace for, which is what turns
+ *      them into utilities: `text-small`, `font-title`, `leading-tight`,
+ *      `ease-smooth`, `blur-glass`, `font-main`.
+ *   2. `:root` — the same values again as ordinary custom properties, because
+ *      Tailwind v4 tree-shakes theme variables it cannot see a utility for and
+ *      most of the CSS in this project is still hand-written and reads them by
+ *      name.
+ *   3. `@utility` blocks for the two kinds that cannot live in `@theme`: the
+ *      shadows, which are a different *shape* per theme, and the layout
+ *      constants, which are redefined at breakpoints. Their values stay in
+ *      tokens.css next to the block that answers for them; only the class is
+ *      generated.
+ *   4. An alias block, `--fs-small: var(--text-small)` and its like, so the
+ *      several hundred existing call sites keep resolving while they are
+ *      migrated one portion at a time. There is one source for each value; the
+ *      old name is a pointer at it, not a copy.
+ *
+ * What it still does not generate: the spacing scale, which is Tailwind's
+ * default scale step for step (`p-4` already is `--space-4`), and everything
+ * theme- or breakpoint-shaped that is not in group 3 — the glass surfaces and
+ * borders, whose argument is prose that belongs beside the value.
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -41,7 +68,8 @@ const source = readFileSync("lib/design/tokens.ts", "utf8");
 const js = ts.default.transpileModule(source, {
   compilerOptions: { module: ts.default.ModuleKind.ESNext, target: ts.default.ScriptTarget.ES2022 },
 }).outputText;
-const { colour, radius } = await import(`data:text/javascript,${encodeURIComponent(js)}`);
+const { colour, radius, text, leading, fontWeight, font, ease, duration, blur, zIndex, utilities } =
+  await import(`data:text/javascript,${encodeURIComponent(js)}`);
 
 /**
  * Untitled UI's theme, spliced in rather than imported.
@@ -91,9 +119,92 @@ for (const [name, value] of Object.entries(colour)) {
   );
 }
 
-for (const [name, value] of Object.entries(radius)) {
-  lines.push(`  --radius-${kebab(name)}: ${value};`);
+/**
+ * The prefix each scale takes is Tailwind's, not ours, and that is the whole
+ * mechanism: `--text-*` is what makes `text-small` exist, `--font-weight-*` is
+ * what makes `font-title` exist. A name off the namespace generates nothing and
+ * fails silently, which is why these are written down once here rather than
+ * spelled out at each call.
+ *
+ * `--dur-*` and `--z-*` have no namespace — Tailwind's duration utilities take
+ * a number and its z-index utilities take an integer — so those two are emitted
+ * as plain variables here and given `@utility` blocks below.
+ */
+const SCALES = [
+  ["--radius", radius],
+  ["--text", text],
+  ["--leading", leading],
+  ["--font-weight", fontWeight],
+  ["--font", font],
+  ["--ease", ease],
+  ["--blur", blur],
+  ["--dur", duration],
+  ["--z", zIndex],
+];
+
+for (const [prefix, scale] of SCALES) {
+  for (const [name, value] of Object.entries(scale)) {
+    lines.push(`  ${prefix}-${kebab(name)}: ${value};`);
+  }
 }
+
+/**
+ * The old names, kept alive as pointers.
+ *
+ * Three scales had names off Tailwind's namespaces — `--fs-*`, `--fw-*`,
+ * `--lh-*` — and several hundred call sites in `.tsx` and in the hand-written
+ * sheets still say them. Renaming those in one commit is the big-bang that has
+ * already been tried and reverted once in this repo (see controlClasses.ts).
+ *
+ * So an alias is a `var()` at the new name, never a second copy of the value.
+ * The two cannot drift, and an alias block that has emptied out is how this
+ * migration reports that it is finished.
+ */
+const ALIASES = [
+  ["--fs", "--text", text],
+  ["--fw", "--font-weight", fontWeight],
+  ["--lh", "--leading", leading],
+];
+
+const aliasLines = ALIASES.flatMap(([old, current, scale]) =>
+  Object.keys(scale).map((name) => `  ${old}-${kebab(name)}: var(${current}-${kebab(name)});`),
+);
+
+/**
+ * The classes whose *value* stays in tokens.css.
+ *
+ * A shadow is three layers in light and two in dark, and a page gutter is 32px,
+ * 24px or 16px depending on the viewport. Neither is expressible in `@theme`,
+ * and both have to keep their declaration beside the `[data-theme]` or `@media`
+ * block that answers for them. Reading the variable rather than inlining a
+ * value is what keeps that true.
+ */
+const utilityBlocks = Object.entries(utilities)
+  .map(
+    ([name, { property, variable }]) => `@utility ${name} {\n  ${property}: var(${variable});\n}`,
+  )
+  .join("\n\n");
+
+/**
+ * `duration-fast` sets the longhand *and* Tailwind's own `--tw-duration`.
+ *
+ * Not belt and braces: `transition-*` in v4 emits
+ * `transition-duration: var(--tw-duration, …)`, so a bare longhand here would
+ * be at the mercy of which of the two declarations Tailwind happens to emit
+ * last — the same "two utilities on one element, order decided by the
+ * compiler" hazard that stopped `.btn--primary` moving (see controlClasses.ts).
+ * Writing both makes the class correct whichever way that falls.
+ */
+const motionBlocks = [
+  ...Object.keys(duration).map(
+    (name) =>
+      `@utility duration-${kebab(name)} {\n  --tw-duration: var(--dur-${kebab(name)});\n` +
+      `  transition-duration: var(--dur-${kebab(name)});\n}`,
+  ),
+  ...Object.keys(zIndex).map(
+    (name) => `@utility z-${kebab(name)} {\n  z-index: var(--z-${kebab(name)});\n}`,
+  ),
+].join("\n\n");
 
 const css = `/* Generated by scripts/gen-tokens.mjs from lib/design/tokens.ts.
    Do not edit: npm run check regenerates this and fails on a diff.
@@ -107,8 +218,8 @@ const css = `/* Generated by scripts/gen-tokens.mjs from lib/design/tokens.ts.
    Every colour is one declaration with two answers. light-dark() reads
    color-scheme, which :root sets to 'light dark' — so a visitor who has chosen
    nothing gets their machine's preference before any JavaScript runs, and a
-   pair updated on one side only is not expressible. Radii have no theme to
-   answer to and are a single value each.
+   pair updated on one side only is not expressible. Every other scale here has
+   no theme to answer to and is a single value each.
 
    The reasoning for each value lives in lib/design/tokens.ts, beside the
    number, where the tests that assert it can read it too. */
@@ -149,6 +260,14 @@ ${lines.join("\n")}
    there is nothing here that can disagree with the block above. */
 :root {
 ${lines.join("\n")}
+
+  /* ── The old names, as pointers ──
+     Aliases, never copies: each is a var() at the canonical name above, so the
+     two cannot disagree. They exist so the call sites still written as
+     [font-size:var(--fs-small)] keep resolving while they are migrated to
+     text-small one portion at a time. When this block is empty the migration
+     is over, which is the only progress report it needs. */
+${aliasLines.join("\n")}
 }
 
 /* ── Untitled UI's dark mode, bridged to this app's ───────────────────────────
@@ -188,6 +307,16 @@ ${uuiDark}
     }
   }
 }
+/* ── Classes over values that cannot live in @theme ──
+   A shadow is three layers in light and two in dark; a page gutter is 32, 24
+   or 16 depending on the viewport. Both keep their declaration in tokens.css
+   beside the [data-theme] or @media block that answers for them, and read it
+   here rather than inlining it, so the class stays correct when the block
+   changes. */
+
+${utilityBlocks}
+
+${motionBlocks}
 `;
 
 if (process.argv.includes("--check")) {
