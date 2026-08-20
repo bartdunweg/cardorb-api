@@ -49,5 +49,10 @@ export const modalCardAddClassName =
   "[&_.modal-scroll]:[padding:var(--space-10)_var(--card-pad)_var(--card-pad)] " +
 
   "[@media(max-width:640px)]:w-full [@media(max-width:640px)]:max-h-[92svh] " +
+  // The scroll box gets the same cap as the sheet around it. Was its own 640px
+  // block on `.modal--card-add .modal-scroll` in cards.css; reached through the
+  // variant now, like every other rule in this file that has to touch Modal's
+  // own markup.
+  "[@media(max-width:640px)]:[&_.modal-scroll]:max-h-[92svh] " +
   "[@media(max-width:640px)]:rounded-t-lg [@media(max-width:640px)]:rounded-b-none " +
   "[@media(max-width:640px)]:self-end";

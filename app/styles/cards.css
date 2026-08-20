@@ -319,11 +319,6 @@
  * classes (modalCardAddClassName in cardModalClasses.ts). The class name and
  * the two rules below stay: they target Modal.tsx's own internal
  * .modal-scroll, which a className prop can't reach. */
-@media (max-width: 640px) {
-  .modal--card-add .modal-scroll {
-    max-height: 92svh;
-  }
-}
 
 /* .card-add and its whole family (title/field/label/chips/check/actions/
  * status/error) moved to Tailwind classes in CardAddDialog.tsx. */
@@ -422,12 +417,6 @@
  * and "View" and "Filter" are what they are called everywhere else in the app;
  * a row of unlabelled icons would save forty pixels of a field that is already
  * long enough to type a Pokémon's name into. */
-@media (max-width: 640px) {
-  .cards-search {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-}
 
 /* Every slot wears its label now, at every width this bar exists — this used
    to collapse every label but the active one's (opacity/max-width, restated

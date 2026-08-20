@@ -1239,6 +1239,7 @@ export default function CardsView({
                 the <=1000px branch in cards.css still select on it. */}
             <div
               className="cards-search flex items-center gap-2 flex-[0_1_260px] min-w-[180px] px-3.5
+                max-[900px]:flex-[1_0_100%] max-[900px]:max-w-none max-sm:flex-[1_1_0] max-sm:min-w-0
                 rounded-lg bg-primary shadow-xs ring-1 ring-primary ring-inset
                 transition-shadow duration-100 ease-linear focus-within:ring-2 focus-within:ring-brand
                 [&_svg]:shrink-0 [&_svg]:text-fg-quaternary"
