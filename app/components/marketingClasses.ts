@@ -20,25 +20,25 @@
  */
 
 export const eyebrow =
-  "mt-0 mx-0 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-eyebrow)] " +
+  "mt-0 mx-0 text-tertiary [font-family:var(--font-main)] [font-size:var(--fs-eyebrow)] " +
   "[font-weight:var(--fw-eyebrow)] tracking-[0.08em] uppercase";
 
 export const sectionHeading =
-  "m-0 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
+  "m-0 text-primary [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
   "tracking-[-0.045em] [line-height:var(--lh-tight)] [font-size:var(--fs-display)]";
 
 export const sectionBody =
-  "m-0 text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body-l)] leading-relaxed";
+  "m-0 text-secondary [font-family:var(--font-body)] [font-size:var(--fs-body-l)] leading-relaxed";
 
 export const featureIcon =
-  "inline-grid w-[42px] h-[42px] place-items-center border border-[var(--color-border-subtle)] rounded-full text-label";
+  "inline-grid w-[42px] h-[42px] place-items-center border border-[var(--color-border-subtle)] rounded-full text-primary";
 
 export const cardHeading =
-  "mt-1 mb-0 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
+  "mt-1 mb-0 text-primary [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
   "tracking-[-0.03em] [line-height:var(--lh-snug)] [font-size:var(--fs-sub)]";
 
 export const cardBody =
-  "m-0 text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal";
+  "m-0 text-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal";
 
 /**
  * A navbar link, and the one thing on this list that is not from app/page.tsx's
@@ -46,5 +46,5 @@ export const cardBody =
  * there was a second page wanting the same links.
  */
 export const navLink =
-  "text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline " +
-  "[transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label";
+  "text-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline " +
+  "[transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-primary";

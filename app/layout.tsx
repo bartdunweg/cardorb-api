@@ -124,7 +124,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-bg-grouped text-label [font-family:var(--font-main)] min-h-screen text-pretty">
+      <body className="bg-bg-grouped text-primary [font-family:var(--font-main)] min-h-screen text-pretty">
         <ThemeProvider>
           <a
             href="#main-content"

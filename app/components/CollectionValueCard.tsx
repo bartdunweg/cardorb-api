@@ -71,7 +71,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
 
   return (
     <Card className="flex flex-col gap-2">
-      <h2 className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)] text-label">
+      <h2 className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)] text-primary">
         Value over time
       </h2>
       {/* The caption carries the change rather than the total, because the total
@@ -79,7 +79,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
           page saying one thing twice in two sizes. "Since December 2024" is the
           honest frame: it is where the record starts, not where the collecting
           did. */}
-      <p className="[margin:0_0_var(--space-3)_0] max-w-[60ch] [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+      <p className="[margin:0_0_var(--space-3)_0] max-w-[60ch] [font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary">
         {grew >= 0 ? "Up" : "Down"} {euroWhole(Math.abs(grew))} since {monthYear(first.date)},
         across {last.cards.toLocaleString(LOCALE)} cards.
       </p>
@@ -126,7 +126,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
             instead of being scaled with the drawing. */}
         <p
           className="flex justify-between mt-2 mb-0 [font-family:var(--font-body)]
-            [font-size:var(--fs-small)] text-label-tertiary"
+            [font-size:var(--fs-small)] text-tertiary"
         >
           <span>{shortMonth(first.date)}</span>
           <span>{shortMonth(last.date)}</span>

@@ -50,7 +50,7 @@ export default function AppearanceSettings() {
                 group-has-[:checked]:border-[var(--color-tint)] group-has-[:checked]:[box-shadow:inset_0_0_0_1px_var(--color-tint)]
                 group-has-[:focus-visible]:[outline:2px_solid_var(--color-tint)] group-has-[:focus-visible]:[outline-offset:2px]"
             >
-              <span className="block text-label font-medium">{o.label}</span>
+              <span className="block text-primary font-medium">{o.label}</span>
               <SettingsHint>{o.hint}</SettingsHint>
             </span>
           </label>

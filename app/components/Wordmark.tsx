@@ -57,7 +57,7 @@ const MARK_NUDGE = "translate-y-[6.05%]";
  * than as a word that happens to be first on the page.
  */
 const WORD =
-  "text-label [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em]";
+  "text-primary [font-family:var(--font-main)] [font-size:var(--fs-label)] [font-weight:var(--fw-button)] tracking-[-0.03em]";
 
 const ROW = "inline-flex items-center gap-2";
 

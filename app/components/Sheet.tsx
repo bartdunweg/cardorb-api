@@ -55,7 +55,7 @@ export function Sheet({
     >
       <div className="sheet flex flex-col max-h-[88svh]">
         <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-[var(--color-border)]">
-          <h2 className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-sub)] text-label">
+          <h2 className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-sub)] text-primary">
             {title}
           </h2>
           {headExtra}
@@ -88,7 +88,7 @@ export function Sheet({
 }
 
 export const sheetClearButtonClassName =
-  "p-0 border-none bg-transparent [font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary cursor-pointer";
+  "p-0 border-none bg-transparent [font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary cursor-pointer";
 
 export const sheetFootButtonClassName = "flex-1 justify-center self-auto";
 export const sheetApplyButtonClassName = "flex-[2_1_0%] justify-center self-auto";

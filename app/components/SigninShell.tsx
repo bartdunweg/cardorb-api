@@ -22,7 +22,7 @@ export default function SigninShell({ title, children }: { title: string; childr
       <Navbar />
       <div className="flex flex-col items-center justify-center gap-5 min-h-screen p-[var(--page-pad-x)]">
         <div className="w-full max-w-[380px] flex flex-col gap-6">
-          <h1 className="m-0 [font-size:var(--fs-card)] text-label text-center">{title}</h1>
+          <h1 className="m-0 [font-size:var(--fs-card)] text-primary text-center">{title}</h1>
           {children}
         </div>
       </div>
@@ -36,7 +36,7 @@ export function SigninOr({ className, ...rest }: HTMLAttributes<HTMLParagraphEle
     <p
       className={[
         "flex items-center gap-3 mx-[calc(-1*var(--card-pad))]",
-        "[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary",
+        "[font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary",
         "before:content-[''] before:flex-1 before:border-t before:border-[var(--color-border)]",
         "after:content-[''] after:flex-1 after:border-t after:border-[var(--color-border)]",
         className,
@@ -52,7 +52,7 @@ export function SigninOr({ className, ...rest }: HTMLAttributes<HTMLParagraphEle
 export function SigninLinks({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={["mt-4 text-center text-[0.875rem] text-label-tertiary", className]
+      className={["mt-4 text-center text-[0.875rem] text-tertiary", className]
         .filter(Boolean)
         .join(" ")}
       {...rest}
@@ -65,7 +65,7 @@ export function SigninLinks({ className, ...rest }: HTMLAttributes<HTMLParagraph
  *  always a next/link Link — a wrapper would either drop client routing or
  *  have to re-forward every Link prop for no benefit. */
 export const signinLinkClassName =
-  "text-inherit underline [text-underline-offset:0.2em] hover:text-label";
+  "text-inherit underline [text-underline-offset:0.2em] hover:text-primary";
 
 /** Why you are on this screen when it was not your idea: an expired recovery
  *  link, mostly. Not styled as an error — see FormError, which is plain
@@ -75,7 +75,7 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
     <p
       className={[
         "m-0 py-3 px-[var(--space-3-5)] border border-[var(--color-border-subtle)] rounded-orb-sm",
-        "bg-[var(--color-surface-subtle)] text-label-secondary",
+        "bg-[var(--color-surface-subtle)] text-secondary",
         "[font-size:var(--fs-body-s)] leading-relaxed",
         className,
       ]

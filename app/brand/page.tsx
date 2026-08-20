@@ -92,10 +92,10 @@ function Swatch({ name, pair }: { name: string; pair: ColourPair }) {
         <div className="flex-1" style={{ background: pair.light }} />
         <div className="flex-1" style={{ background: pair.dark }} />
       </div>
-      <div className="[font-family:var(--font-main)] [font-size:var(--fs-small)] text-label">
+      <div className="[font-family:var(--font-main)] [font-size:var(--fs-small)] text-primary">
         {name}
       </div>
-      <div className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+      <div className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary">
         {pair.light} / {pair.dark}
       </div>
     </div>
@@ -138,7 +138,7 @@ export default function BrandPage() {
             full-width footer just looks like something failed to load. */}
         <article className="max-w-[900px] mx-auto [padding-block:clamp(56px,8vw,96px)]">
           <h1
-            className="mt-0 mb-4 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)]
+            className="mt-0 mb-4 text-primary [font-family:var(--font-main)] [font-weight:var(--fw-title)]
               tracking-[-0.045em] [line-height:var(--lh-tight)] [font-size:var(--fs-display)]"
           >
             Brand
@@ -282,7 +282,7 @@ export default function BrandPage() {
                 <a className={link} href={href} download>
                   {label}
                 </a>{" "}
-                <span className="text-label-tertiary">{href.split("/").pop()}</span>
+                <span className="text-tertiary">{href.split("/").pop()}</span>
               </li>
             ))}
           </ul>

@@ -10,7 +10,7 @@ import {
 } from "./trackClasses";
 
 const fieldClassName = "flex flex-col gap-2";
-const labelClassName = "[font-size:var(--fs-small)] text-label-secondary";
+const labelClassName = "[font-size:var(--fs-small)] text-secondary";
 
 export type ViewOptionsProps = {
   view: "grid" | "list";
@@ -171,7 +171,7 @@ export default function ViewOptions({
               <li key={key}>
                 <label
                   className="flex items-center gap-2 min-h-7 [font-family:var(--font-body)]
-                    [font-size:var(--fs-small)] text-label cursor-pointer"
+                    [font-size:var(--fs-small)] text-primary cursor-pointer"
                 >
                   <input
                     type="checkbox"
@@ -210,7 +210,7 @@ export default function ViewOptions({
                   tabular-nums cursor-pointer ${
                     cols === n
                       ? "border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
-                      : "border border-[var(--color-border)] bg-transparent text-label-secondary"
+                      : "border border-[var(--color-border)] bg-transparent text-secondary"
                   }`}
                 aria-pressed={cols === n}
                 onClick={() => onCols(n)}

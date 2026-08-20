@@ -52,7 +52,7 @@ type Draft = {
 
 const cardAddLabelClassName =
   "[font-family:var(--font-main)] [font-size:var(--fs-small)] [font-weight:var(--fw-eyebrow)]" +
-  " text-label-secondary p-0 [float:none]";
+  " text-secondary p-0 [float:none]";
 
 // The GLASS CONTROL / CONTROL recipe .card-add-field input used to read from
 // components.css's grouped selectors, alongside .btn/.cards-search/
@@ -61,17 +61,17 @@ const cardAddLabelClassName =
 // for a different control.
 const cardAddInputClassName =
   "h-[var(--control-h)] border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-pill " +
-  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label " +
+  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary " +
   "[font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] " +
-  "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
+  "placeholder:text-tertiary dark:border-[var(--glass-border-control)] " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
 
 /** The one big field this dialog opens on — taller and louder than the rest. */
 const cardAddSearchClassName =
   "h-14 w-full pl-11 pr-11 border border-[var(--glass-border)] bg-[var(--glass-bg-solid)] rounded-2xl " +
-  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label outline-none " +
+  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary outline-none " +
   "[font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-button)] " +
-  "placeholder:text-label-tertiary dark:border-[var(--glass-border-control)] " +
+  "placeholder:text-tertiary dark:border-[var(--glass-border-control)] " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
   "[&::-webkit-search-cancel-button]:hidden";
 
@@ -441,7 +441,7 @@ export default function CardAddDialog({
       <form className="card-add flex flex-col gap-4" onSubmit={submit}>
         <h2
           className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-            [font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-label"
+            [font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-primary"
         >
           Add a card
         </h2>
@@ -454,7 +454,7 @@ export default function CardAddDialog({
                   size={18}
                   strokeWidth={1.75}
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-label-tertiary"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-tertiary"
                 />
                 <input
                   ref={searchInputRef}
@@ -472,7 +472,7 @@ export default function CardAddDialog({
                     onClick={() => setQuery("")}
                     aria-label="Clear the search"
                     className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center
-                      w-7 h-7 rounded-full text-label-tertiary hover:text-label cursor-pointer"
+                      w-7 h-7 rounded-full text-tertiary hover:text-primary cursor-pointer"
                   >
                     <X size={16} strokeWidth={1.75} />
                   </button>
@@ -539,7 +539,7 @@ export default function CardAddDialog({
                 other message here — it is never true at the same time as a
                 genuine "no matches", see the search effect. */}
             <p
-              className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-label-tertiary"
+              className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-tertiary"
               role="status"
             >
               {searchFailed ? (
@@ -548,7 +548,7 @@ export default function CardAddDialog({
                   <button
                     type="button"
                     onClick={() => setRetryTick((t) => t + 1)}
-                    className="underline cursor-pointer text-label-secondary hover:text-label"
+                    className="underline cursor-pointer text-secondary hover:text-primary"
                   >
                     Try again
                   </button>
@@ -606,12 +606,12 @@ export default function CardAddDialog({
                       />
                     ) : null}
                     <span
-                      className="[font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-label
+                      className="[font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-primary
                         line-clamp-1 w-full"
                     >
                       {match.name}
                     </span>
-                    <span className="[font-size:var(--fs-tiny)] text-label-tertiary tabular-nums truncate w-full">
+                    <span className="[font-size:var(--fs-tiny)] text-tertiary tabular-nums truncate w-full">
                       {match.setName} · #{match.number}
                     </span>
                   </button>
@@ -624,22 +624,22 @@ export default function CardAddDialog({
                 type="button"
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="self-center [font-size:var(--fs-small)] text-label-secondary underline
-                  cursor-pointer hover:text-label disabled:cursor-default disabled:no-underline
-                  disabled:text-label-tertiary"
+                className="self-center [font-size:var(--fs-small)] text-secondary underline
+                  cursor-pointer hover:text-primary disabled:cursor-default disabled:no-underline
+                  disabled:text-tertiary"
               >
                 {loadingMore ? "Loading more…" : "Show more results"}
               </button>
             )}
 
-            <p className="m-0 [font-size:var(--fs-small)] text-label-tertiary">
+            <p className="m-0 [font-size:var(--fs-small)] text-tertiary">
               {mode === "quick" ? (
                 <>
                   Looking for something specific?{" "}
                   <button
                     type="button"
                     onClick={enterAdvanced}
-                    className="underline cursor-pointer text-label-secondary hover:text-label"
+                    className="underline cursor-pointer text-secondary hover:text-primary"
                   >
                     Advanced filters
                   </button>
@@ -649,7 +649,7 @@ export default function CardAddDialog({
                 <button
                   type="button"
                   onClick={backToQuick}
-                  className="underline cursor-pointer text-label-secondary hover:text-label"
+                  className="underline cursor-pointer text-secondary hover:text-primary"
                 >
                   Back to quick search
                 </button>
@@ -678,11 +678,11 @@ export default function CardAddDialog({
             <div className="flex flex-col gap-[2px] min-w-0 flex-1">
               <span
                 className="[font-family:var(--font-main)] [font-weight:var(--fw-title)]
-                  [font-size:var(--fs-body-s)] text-label truncate"
+                  [font-size:var(--fs-body-s)] text-primary truncate"
               >
                 {selected.name}
               </span>
-              <span className="[font-size:var(--fs-small)] text-label-tertiary truncate">
+              <span className="[font-size:var(--fs-small)] text-tertiary truncate">
                 {selected.setName} · #{selected.number}
               </span>
             </div>
@@ -704,14 +704,14 @@ export default function CardAddDialog({
                 so there is nothing here to type around any more. */}
             <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Rarity</span>
-              <p className="m-0 [font-size:var(--fs-control-label)] text-label">
+              <p className="m-0 [font-size:var(--fs-control-label)] text-primary">
                 {selected?.rarity ?? "Unknown"}
               </p>
             </div>
 
             <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Type</span>
-              <p className="m-0 [font-size:var(--fs-control-label)] text-label">
+              <p className="m-0 [font-size:var(--fs-control-label)] text-primary">
                 {selected?.types.length ? selected.types.join(", ") : "Unknown"}
               </p>
             </div>
@@ -731,7 +731,7 @@ export default function CardAddDialog({
 
             <label
               className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-                [font-size:var(--fs-body-s)] text-label cursor-pointer"
+                [font-size:var(--fs-body-s)] text-primary cursor-pointer"
             >
               <input
                 className="mt-[2px] [accent-color:var(--color-tint)]"
@@ -741,7 +741,7 @@ export default function CardAddDialog({
               />
               <span className="flex flex-col gap-[2px]">
                 In the binder
-                <span className="[font-size:var(--fs-small)] text-label-tertiary">
+                <span className="[font-size:var(--fs-small)] text-tertiary">
                   Off means it is wanted rather than held.
                 </span>
               </span>
@@ -749,7 +749,7 @@ export default function CardAddDialog({
 
             <label
               className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-                [font-size:var(--fs-body-s)] text-label cursor-pointer"
+                [font-size:var(--fs-body-s)] text-primary cursor-pointer"
             >
               <input
                 className="mt-[2px] [accent-color:var(--color-tint)]"
@@ -759,7 +759,7 @@ export default function CardAddDialog({
               />
               <span className="flex flex-col gap-[2px]">
                 Excluded
-                <span className="[font-size:var(--fs-small)] text-label-tertiary">
+                <span className="[font-size:var(--fs-small)] text-tertiary">
                   Keeps it out of the latest pull on the about page.
                 </span>
               </span>
@@ -782,11 +782,11 @@ export default function CardAddDialog({
                 the form around when it arrives. */}
             <p
               className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
-                [font-size:var(--fs-small)] text-label-secondary"
+                [font-size:var(--fs-small)] text-secondary"
               role="status"
             >
               {error ? (
-                <span className="text-label [font-weight:var(--fw-eyebrow)]">{error}</span>
+                <span className="text-primary [font-weight:var(--fw-eyebrow)]">{error}</span>
               ) : added ? (
                 <span>{added} added. The page catches up in a moment.</span>
               ) : null}

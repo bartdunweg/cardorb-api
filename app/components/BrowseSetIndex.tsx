@@ -57,14 +57,14 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
         <h1 className={cardsMainTitleClassName}>Browse sets</h1>
         <Link
           href="/collection/sets"
-          className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary
-            underline underline-offset-2 hover:text-label"
+          className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-secondary
+            underline underline-offset-2 hover:text-primary"
         >
           Only your sets
         </Link>
       </div>
 
-      <p className="[font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-label-secondary m-0 max-w-[60ch]">
+      <p className="[font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-secondary m-0 max-w-[60ch]">
         Every set in the catalogue, including the ones you have nothing from yet. Open one to see
         all its cards and which of them are already yours.
       </p>
@@ -74,7 +74,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           dialog's box is one. */}
       <div className="relative max-w-[420px]">
         <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-label-tertiary pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary pointer-events-none"
           size={18}
           aria-hidden="true"
         />
@@ -86,9 +86,9 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           aria-label="Find a set"
           className="h-[var(--control-h)] w-full pl-10 pr-4 rounded-pill outline-none
             border border-[var(--glass-border)] bg-[var(--glass-bg-solid)]
-            [backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-label
+            [backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary
             [font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)]
-            placeholder:text-label-tertiary dark:border-[var(--glass-border-control)]
+            placeholder:text-tertiary dark:border-[var(--glass-border-control)]
             hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]"
         />
       </div>
@@ -105,7 +105,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       ) : (
         groups.map((group) => (
           <section key={group.series} className="flex flex-col gap-4">
-            <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0">
+            <h2 className="[font-size:var(--fs-h2)] font-semibold text-primary m-0">
               {group.series}
             </h2>
 
@@ -143,17 +143,17 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                             className="max-h-full max-w-[70%] object-contain object-left"
                           />
                         ) : (
-                          <span className="[font-size:var(--fs-small)] font-semibold text-label-tertiary">
+                          <span className="[font-size:var(--fs-small)] font-semibold text-tertiary">
                             {set.name}
                           </span>
                         )}
                       </span>
 
-                      <span className="[font-size:var(--fs-body)] font-semibold text-label">
+                      <span className="[font-size:var(--fs-body)] font-semibold text-primary">
                         {set.name}
                       </span>
 
-                      <span className="[font-size:var(--fs-small)] text-label-secondary tabular-nums">
+                      <span className="[font-size:var(--fs-small)] text-secondary tabular-nums">
                         {set.total ? `${n(set.ownedCount)} of ${n(set.total)}` : "Cards unknown"}
                       </span>
 

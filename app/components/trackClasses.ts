@@ -21,10 +21,10 @@ export function cardsSegmentClassName(active: boolean) {
   return (
     "cards-segment h-8 border-none bg-transparent [font-family:var(--font-main)] " +
     "max-sm:flex-1 max-sm:px-2 " +
-    "[font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] text-label-secondary cursor-pointer " +
+    "[font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] text-secondary cursor-pointer " +
     "[border-radius:calc(var(--radius-pill)-4px)] " +
     "[transition:color_var(--dur-fast)_var(--ease-smooth),background_var(--dur-fast)_var(--ease-smooth)] " +
-    "hover:text-label" +
+    "hover:text-primary" +
     (active ? " is-active bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]" : "")
   );
 }
@@ -37,9 +37,9 @@ export const cardsViewsClassName = "cards-views flex gap-[2px] p-[3px] rounded-p
 export function cardsViewClassName(active: boolean) {
   return (
     "cards-view flex items-center justify-center w-8 h-8 border-none bg-transparent " +
-    "text-label-tertiary cursor-pointer [border-radius:calc(var(--radius-pill)-4px)] " +
+    "text-tertiary cursor-pointer [border-radius:calc(var(--radius-pill)-4px)] " +
     "[transition:color_var(--dur-fast)_var(--ease-smooth),background_var(--dur-fast)_var(--ease-smooth)] " +
-    "hover:text-label" +
+    "hover:text-primary" +
     (active ? " is-active bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]" : "")
   );
 }

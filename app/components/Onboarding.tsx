@@ -180,7 +180,7 @@ export default function Onboarding({
   return (
     <SigninShell title={TITLES[step]}>
       <p
-        className="m-0 text-center [font-size:var(--fs-small)] text-label-tertiary"
+        className="m-0 text-center [font-size:var(--fs-small)] text-tertiary"
         aria-live="polite"
       >
         Step {at + 1} of {ORDER.length}
@@ -259,7 +259,7 @@ export default function Onboarding({
             disabled={busy}
             onChange={(e) => setIsPublic(e.target.checked)}
           >
-            <strong className="block text-label font-medium">
+            <strong className="block text-primary font-medium">
               Anyone with the link can see my collection
             </strong>
             <SettingsHint>

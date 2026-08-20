@@ -134,7 +134,7 @@ export default function CardsSidebar({
         className="hidden [@media(max-width:1000px)]:block [@media(max-width:1000px)]:mb-4
           [@media(max-width:1000px)]:p-2 [@media(max-width:1000px)]:[font-family:var(--font-main)]
           [@media(max-width:1000px)]:[font-weight:var(--fw-title)] [@media(max-width:1000px)]:[font-size:var(--fs-h2)]
-          [@media(max-width:1000px)]:[line-height:var(--lh-tight)] [@media(max-width:1000px)]:text-label"
+          [@media(max-width:1000px)]:[line-height:var(--lh-tight)] [@media(max-width:1000px)]:text-primary"
         aria-hidden="true"
       >
         Sets
@@ -298,9 +298,9 @@ export default function CardsSidebar({
                   type="button"
                   className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
                     border-0 rounded-orb-sm bg-[var(--glass-bg-solid)] text-left cursor-pointer [font-family:var(--font-body)]
-                    [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-label-tertiary
-                    hover:text-label first:mt-0
-                    ${selected === `era:${group.era}` ? "text-label bg-bg-grouped" : ""}`}
+                    [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-tertiary
+                    hover:text-primary first:mt-0
+                    ${selected === `era:${group.era}` ? "text-primary bg-bg-grouped" : ""}`}
                   onClick={() => onSelect(`era:${group.era}`)}
                   aria-pressed={selected === `era:${group.era}`}
                 >
@@ -360,14 +360,14 @@ export default function CardsSidebar({
           ) : (
             <span
               className="grid place-items-center w-7 h-7 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
-                border border-[var(--color-border-subtle)] text-label-tertiary
+                border border-[var(--color-border-subtle)] text-tertiary
                 [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
               aria-hidden="true"
             >
               {viewer.name.charAt(0).toUpperCase()}
             </span>
           )}
-          <span className="flex-1 min-w-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)] text-label truncate">
+          <span className="flex-1 min-w-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)] text-primary truncate">
             {viewer.name}
           </span>
         </button>
@@ -463,11 +463,11 @@ function NavItem({
           )}
         </span>
       )}
-      <span className="flex-1 min-w-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)] text-label truncate">
+      <span className="flex-1 min-w-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)] text-primary truncate">
         {name}
       </span>
       {count != null && (
-        <span className="flex-shrink-0 [font-family:var(--font-body)] [font-size:var(--fs-small)] tabular-nums text-label-tertiary">
+        <span className="flex-shrink-0 [font-family:var(--font-body)] [font-size:var(--fs-small)] tabular-nums text-tertiary">
           {count.toLocaleString(LOCALE)}
           {/* The bare number is enough to look at and not enough to hear. */}
           <span className="sr-only"> cards</span>

@@ -35,7 +35,7 @@ import { untitledButton } from "./untitledButtonClasses";
  */
 const cardsProfileTitleClassName =
   "m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-card)]" +
-  " [line-height:var(--lh-tight)] text-label";
+  " [line-height:var(--lh-tight)] text-primary";
 
 export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
   const { theme, toggle } = useTheme();

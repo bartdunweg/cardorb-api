@@ -71,7 +71,7 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
         )}
         <div className="flex flex-col gap-1 min-w-0">
           <h1 className={cardsMainTitleClassName}>{set.name}</h1>
-          <p className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary m-0 tabular-nums">
+          <p className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-secondary m-0 tabular-nums">
             {n(owned)} of {n(cards.length)} in your collection
             {/* The year alone, not the full date. It is what CardItem's Year
                 field shows and what a collector places a set by, and formatting
@@ -96,8 +96,8 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
         />
         <Link
           href="/collection/browse"
-          className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary
-            underline underline-offset-2 hover:text-label"
+          className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-secondary
+            underline underline-offset-2 hover:text-primary"
         >
           All sets
         </Link>
@@ -171,7 +171,7 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                 ) : (
                   <span
                     className="flex flex-col items-center justify-center gap-1 w-full h-full p-3
-                      rounded-[4.5%/3.2%] text-center [font-size:var(--fs-small)] text-label-secondary
+                      rounded-[4.5%/3.2%] text-center [font-size:var(--fs-small)] text-secondary
                       [background:color-mix(in_srgb,var(--color-label)_5%,transparent)]"
                   >
                     {card.name}
@@ -181,14 +181,14 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
 
               <span
                 className="[font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]
-                  [line-height:var(--lh-snug)] text-label line-clamp-2"
+                  [line-height:var(--lh-snug)] text-primary line-clamp-2"
               >
                 {card.name}
               </span>
 
               <span
                 className="flex items-baseline gap-2 [font-family:var(--font-body)]
-                  [font-size:var(--fs-small)] text-label-tertiary"
+                  [font-size:var(--fs-small)] text-tertiary"
               >
                 <span className="tabular-nums shrink-0">
                   <span aria-hidden="true">#</span>
@@ -201,11 +201,11 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                   wishlist looking like a gap, which is the one thing this
                   screen exists to distinguish. */}
               {card.owned ? (
-                <span className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-label-secondary tabular-nums">
+                <span className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-secondary tabular-nums">
                   In your collection{card.quantity > 1 && ` · ${n(card.quantity)}×`}
                 </span>
               ) : card.wishlist ? (
-                <span className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-label-tertiary">
+                <span className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-tertiary">
                   On your wishlist
                 </span>
               ) : (
@@ -213,9 +213,9 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                   type="button"
                   onClick={() => onAddCard(card)}
                   className="inline-flex items-center gap-1 self-start mt-[2px] py-1 px-2 rounded-pill
-                    border border-[var(--color-border)] bg-transparent text-label-secondary
+                    border border-[var(--color-border)] bg-transparent text-secondary
                     [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-button)]
-                    hover:text-label hover:[border-color:var(--color-border-active)]
+                    hover:text-primary hover:[border-color:var(--color-border-active)]
                     focus-visible:outline-2 focus-visible:[outline-color:var(--color-label)] focus-visible:[outline-offset:2px]"
                 >
                   <Plus size={12} aria-hidden="true" />

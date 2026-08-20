@@ -44,19 +44,19 @@ export default function RouteError({
       <div className="flex flex-col items-center gap-3 text-center max-w-[320px]">
         <p
           className="[font-family:var(--font-main)] [font-size:var(--fs-display)]
-            [font-weight:var(--fw-button)] text-label-tertiary leading-none"
+            [font-weight:var(--fw-button)] text-tertiary leading-none"
         >
           500
         </p>
         <h1
           className="[font-family:var(--font-main)] [font-size:var(--fs-h2)]
-            [font-weight:var(--fw-button)] text-label [line-height:var(--lh-tight)]"
+            [font-weight:var(--fw-button)] text-primary [line-height:var(--lh-tight)]"
         >
           {title}
         </h1>
         <p
           className="[font-family:var(--font-body)] [font-size:var(--fs-body-s)]
-            text-label-secondary leading-normal mb-2"
+            text-secondary leading-normal mb-2"
         >
           {description}
         </p>
@@ -82,7 +82,7 @@ export default function RouteError({
         {error.digest && (
           <p
             className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-              text-label-tertiary mt-2"
+              text-tertiary mt-2"
           >
             Reference{" "}
             <code className="[font-family:var(--font-mono)] select-all">{error.digest}</code>

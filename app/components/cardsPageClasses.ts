@@ -91,12 +91,12 @@ export const cardsSetTextClassName = "cards-set-text flex flex-col gap-0.5 min-w
 
 export const cardsSetNameClassName =
   "cards-set-name m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
-  "[font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-label";
+  "[font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-primary";
 
 /** Tabular so the counts line up down the page. */
 export const cardsSetMetaClassName =
   "cards-set-meta m-0 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
-  "text-label-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
+  "text-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
 
 /**
  * The heading row and the toolbar under it — second portion of the cards.css
@@ -138,7 +138,7 @@ export const cardsToolsClassName =
  */
 export const cardsCountClassName =
   "cards-count m-0 mt-2 [font-family:var(--font-body),sans-serif] [font-size:var(--fs-small)] " +
-  "text-label-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
+  "text-tertiary [font-variant-numeric:lining-nums_tabular-nums]";
 
 /**
  * The last of the simple ones — third and final portion under ADR-0051's

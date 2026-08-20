@@ -53,7 +53,7 @@ export default async function SettingsPage() {
           Dashboard/Collection/Wishlist/Sets all share — not a
           similar-looking rebuild of it. */}
       <h1 className={cardsMainTitleClassName}>Settings</h1>
-      <p className="mt-1 mb-6 [font-size:var(--fs-small)] text-label-tertiary">{viewer.email}</p>
+      <p className="mt-1 mb-6 [font-size:var(--fs-small)] text-tertiary">{viewer.email}</p>
 
       {/* gap-8 between groups against the panels' own gap-4 inside them: the
           grouping has to be readable as grouping when it is all one scroll. */}

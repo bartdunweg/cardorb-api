@@ -148,7 +148,7 @@ export default function ProfileSettings({
             if (!(await patch("isPublic", { isPublic: next }))) setIsPublic(!next);
           }}
         >
-          <strong className="block text-label font-medium">
+          <strong className="block text-primary font-medium">
             Anyone with the link can see my collection
           </strong>
           <SettingsHint>

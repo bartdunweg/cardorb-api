@@ -52,7 +52,7 @@ export default function CardsPokedex({
 
   if (!shown.length) {
     return (
-      <p className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-label-secondary">
+      <p className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-secondary">
         {owned === "missing"
           ? "Nothing missing in there. Every one of them is in the binder."
           : owned === "owned"
@@ -156,7 +156,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
       {art}
       <span
         className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)]
-          [font-variant-numeric:lining-nums_tabular-nums] text-label-tertiary"
+          [font-variant-numeric:lining-nums_tabular-nums] text-tertiary"
       >
         #{String(entry.id).padStart(4, "0")}
       </span>
@@ -164,7 +164,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
         className={
           "[font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]" +
           " overflow-hidden text-ellipsis whitespace-nowrap " +
-          (empty ? "text-label-tertiary" : "text-label")
+          (empty ? "text-tertiary" : "text-primary")
         }
       >
         {entry.name}
@@ -235,7 +235,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
 
 const cardsDexStepClassName =
   "absolute top-[calc(var(--space-2)+33%)] flex items-center justify-center w-6 h-6 p-0" +
-  " border border-[var(--color-border)] rounded-full bg-[var(--glass-bg-solid)] text-label-secondary" +
+  " border border-[var(--color-border)] rounded-full bg-[var(--glass-bg-solid)] text-secondary" +
   " cursor-pointer opacity-0 transition-opacity duration-[var(--dur-fast)] ease-[var(--ease-smooth)] z-2" +
   " group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" +
-  " hover:text-label hover:border-[var(--color-border-active)]";
+  " hover:text-primary hover:border-[var(--color-border-active)]";

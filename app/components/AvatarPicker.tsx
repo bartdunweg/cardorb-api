@@ -43,7 +43,7 @@ export default function AvatarPicker({
       ) : (
         <span
           className="grid place-items-center w-14 h-14 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
-            border border-[var(--color-border-subtle)] text-label-tertiary
+            border border-[var(--color-border-subtle)] text-tertiary
             [font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-title)]"
           aria-hidden="true"
         >

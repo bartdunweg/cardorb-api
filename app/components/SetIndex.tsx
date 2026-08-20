@@ -40,8 +40,8 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
   const browseLink = (
     <Link
       href="/collection/browse"
-      className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-secondary
-        underline underline-offset-2 hover:text-label"
+      className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-secondary
+        underline underline-offset-2 hover:text-primary"
     >
       Browse every set
     </Link>
@@ -69,7 +69,7 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
       </div>
       {groups.map((group) => (
         <section key={group.era}>
-          <h2 className="[font-size:var(--fs-h2)] font-semibold text-label m-0 mb-4">
+          <h2 className="[font-size:var(--fs-h2)] font-semibold text-primary m-0 mb-4">
             {group.label}
           </h2>
 
@@ -124,17 +124,17 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                           onError={(e) => retryAsPng(e.currentTarget)}
                         />
                       ) : (
-                        <span className="[font-size:var(--fs-small)] font-semibold text-label-tertiary">
+                        <span className="[font-size:var(--fs-small)] font-semibold text-tertiary">
                           {set.title ?? set.name}
                         </span>
                       )}
                     </span>
 
-                    <span className="[font-size:var(--fs-body)] font-semibold text-label">
+                    <span className="[font-size:var(--fs-body)] font-semibold text-primary">
                       {set.title ?? set.name}
                     </span>
 
-                    <span className="[font-size:var(--fs-small)] text-label-secondary tabular-nums">
+                    <span className="[font-size:var(--fs-small)] text-secondary tabular-nums">
                       {total
                         ? `${n(held)} of ${n(total)}`
                         : `${n(held)} ${held === 1 ? "card" : "cards"}`}

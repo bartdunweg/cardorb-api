@@ -154,7 +154,7 @@ export default function CardsDashboard({
                       <Link
                         href={`/cards/${card.tcgId}`}
                         scroll={false}
-                        className="text-label no-underline"
+                        className="text-primary no-underline"
                       >
                         {card.name}
                       </Link>
@@ -278,30 +278,30 @@ function MoverList({ title, rows }: { title: string; rows: Mover[] }) {
       <ul className="list-none m-0 p-0 flex flex-col gap-2" role="list">
         {rows.map((m) => (
           <li key={m.card.key} className="flex items-baseline justify-between gap-3">
-            <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-primary overflow-hidden text-ellipsis whitespace-nowrap">
               {m.card.tcgId ? (
                 <Link
                   href={`/cards/${m.card.tcgId}`}
                   scroll={false}
-                  className="text-label no-underline"
+                  className="text-primary no-underline"
                 >
                   {m.card.name}
                 </Link>
               ) : (
                 m.card.name
               )}{" "}
-              <span className="text-label-tertiary">{m.set}</span>
+              <span className="text-tertiary">{m.set}</span>
             </span>
             {/* Tabular here, unlike the tiles: these are a column of figures
                 meant to be compared down the page. The sign is written out
                 because a minus alone at this size is a hyphen. */}
             <span
               className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-                [font-variant-numeric:tabular-nums] whitespace-nowrap text-label-secondary"
+                [font-variant-numeric:tabular-nums] whitespace-nowrap text-secondary"
             >
               {m.change > 0 ? "+" : "−"}
               {euro(Math.abs(m.change))}
-              <span className="text-label-tertiary"> ({Math.abs(Math.round(m.pct * 100))}%)</span>
+              <span className="text-tertiary"> ({Math.abs(Math.round(m.pct * 100))}%)</span>
             </span>
           </li>
         ))}
@@ -340,7 +340,7 @@ function Bars({
           >
             <span
               className="p-0 border-0 bg-transparent text-left [font-family:var(--font-body)]
-                [font-size:var(--fs-small)] text-label-secondary overflow-hidden text-ellipsis whitespace-nowrap"
+                [font-size:var(--fs-small)] text-secondary overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {row.value}
             </span>
@@ -352,7 +352,7 @@ function Bars({
             </span>
             <span
               className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-                [font-variant-numeric:tabular-nums] text-label-tertiary"
+                [font-variant-numeric:tabular-nums] text-tertiary"
             >
               {row.count}
             </span>

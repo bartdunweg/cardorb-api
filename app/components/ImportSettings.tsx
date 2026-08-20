@@ -149,7 +149,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           </SettingsHint>
 
           {preview.skippedRows?.length ? (
-            <ul className={`${listClass} text-label-tertiary tabular-nums`}>
+            <ul className={`${listClass} text-tertiary tabular-nums`}>
               {preview.skippedRows.slice(0, 5).map((s) => (
                 <li key={s.line}>
                   Line {s.line}: {s.why}
@@ -158,10 +158,10 @@ export default function ImportSettings({ history }: { history: Run[] }) {
             </ul>
           ) : null}
 
-          <ul className={`${listClass} text-label-secondary`}>
+          <ul className={`${listClass} text-secondary`}>
             {preview.sample.map((c, i) => (
               <li key={i}>
-                <strong className="text-label font-medium">{c.name}</strong> — {c.setName}{" "}
+                <strong className="text-primary font-medium">{c.name}</strong> — {c.setName}{" "}
                 {c.number}
                 {c.rarity ? ` · ${c.rarity}` : ""} · {c.owned ? "in the binder" : "wanted"}
               </li>
@@ -184,7 +184,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
       {history.length > 0 && (
         <SettingsPanel>
           <SettingsPanelTitle>Earlier imports</SettingsPanelTitle>
-          <ul className={`${listClass} text-label-secondary tabular-nums`}>
+          <ul className={`${listClass} text-secondary tabular-nums`}>
             {history.map((r) => (
               <li key={r.id}>
                 {new Date(r.started_at).toLocaleDateString(LOCALE)} · {r.kind} ·{" "}
