@@ -6,7 +6,7 @@ import { Button as UntitledButton } from "@/components/base/buttons/button";
  *
  * It used to be the glass pill: `buttonClassName` from controlClasses.ts, plus
  * `.btn--primary`/`.btn--icon`/`.btn--center`/`.btn--back` still in
- * components.css. ADR-0055 replaced the material; this kept the shape of the
+ * components.css. ADR-0056 replaced the material; this kept the shape of the
  * API so the call sites did not all have to move at once.
  *
  * ── Why this is still here rather than deleted ─────────────────────────────

@@ -181,7 +181,7 @@ describe("this file and the stylesheet it generates agree", () => {
    * the radius scale gained a camelCase name: the four Tailwind-shaped ones
    * (`xs`/`sm`/`md`/`lg`) moved to `orbXs`…`orbLg` so that `rounded-lg` stops
    * meaning 24px inside components this project did not write. See the scale's
-   * own comment in tokens.ts, and ADR-0055.
+   * own comment in tokens.ts, and ADR-0056.
    */
   const kebab = (s: string) => s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
 

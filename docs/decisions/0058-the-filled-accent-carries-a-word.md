@@ -1,12 +1,12 @@
 ---
-id: ADR-0057
+id: ADR-0058
 title: The filled accent is tintLabel, not tint, because it carries a word
 status: accepted
 date: 2026-08-19
 scope: repo
 deciders: [Bart]
 superseded-by: null
-amends: ADR-0055
+amends: ADR-0056
 tags: [accessibility, contrast, tokens, untitled-ui, wcag]
 ---
 
@@ -46,7 +46,7 @@ The visible cost is that the primary button is a shade deeper than iOS system
 blue. That is the cost of the label being readable, and it is the same trade
 `tintLabel` was created to make for links.
 
-**Why this was not caught earlier:** ADR-0055 permits Card Orb's value where it
+**Why this was not caught earlier:** ADR-0056 permits Card Orb's value where it
 is "argued from a measurement". `tint` *is* argued from a measurement — the
 wrong one for this use. A cited measurement is not the same as the applicable
 measurement, and the rule should be read that way from here on.
@@ -66,7 +66,7 @@ looked right in the diff and failed the audit it was written for — worth
 recording, because the next person will reach for the same trick.
 
 This is a **vendored** edit, so `npx untitledui add` overwrites it.
-`scripts/untitled-add.mjs` re-applies it, alongside the two fixes ADR-0054
+`scripts/untitled-add.mjs` re-applies it, alongside the two fixes ADR-0055
 already listed.
 
 ## Consequences
@@ -106,6 +106,6 @@ still identical. `./scripts/verify.sh` exits 0 — 478 tests in 41 files.
 
 ## Related
 
-- ADR-0055 — the rule this amends the reading of.
-- ADR-0054 — the two vendored fixes this adds a third to.
-- ADR-0056 — the other thing the proof screen caught.
+- ADR-0056 — the rule this amends the reading of.
+- ADR-0055 — the two vendored fixes this adds a third to.
+- ADR-0057 — the other thing the proof screen caught.

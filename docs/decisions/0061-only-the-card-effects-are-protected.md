@@ -1,24 +1,24 @@
 ---
-id: ADR-0060
+id: ADR-0061
 title: Only the holo and the card hover are protected; the palette goes purple
 status: accepted
 date: 2026-08-19
 scope: repo
 deciders: [Bart]
 superseded-by: null
-supersedes: ADR-0055 (the identity list), ADR-0059
+supersedes: ADR-0056 (the identity list), ADR-0060
 tags: [ui, design-system, untitled-ui, identity, colour]
 ---
 
 # Only the holo and the card hover are protected; the palette goes purple
 
-Supersedes **ADR-0055's identity list** and **ADR-0059** outright. ADR-0055's
+Supersedes **ADR-0056's identity list** and **ADR-0060** outright. ADR-0056's
 tie-break rule — Untitled UI's value is the default — stands and is now nearly
 absolute.
 
 ## Context and problem statement
 
-ADR-0055 protected four things as Card Orb's identity: the glass material, the
+ADR-0056 protected four things as Card Orb's identity: the glass material, the
 orb, the holographic cards, and the tint blue. It did so because a
 multiple-choice answer earlier that session had asked to keep them.
 
@@ -53,15 +53,15 @@ longer "argue it" but "delete ours". Three consequences were settled explicitly:
 
 ## What this reverses
 
-- **ADR-0059** made every primary surface Card Orb blue. They are purple now, by
+- **ADR-0060** made every primary surface Card Orb blue. They are purple now, by
   the same one-token mechanism, which is why that record is superseded rather
   than amended — its reasoning was right and its conclusion is obsolete.
-- The brand ramp built in **ADR-0055 / the `brand` export in `lib/design/tokens.ts`**
+- The brand ramp built in **ADR-0056 / the `brand` export in `lib/design/tokens.ts`**
   is deleted. The eleven values were derived from Untitled UI's own lightness
   curve in the tint's hue; removing them lets upstream's purple apply directly,
   which is now what is wanted. The contrast reasoning it carried is not lost —
   it moves to a note on `tint`, which `cards.css` still reads.
-- **ADR-0057's finding still applies and must not be re-broken.** Untitled UI's
+- **ADR-0058's finding still applies and must not be re-broken.** Untitled UI's
   `brand-600` is `rgb(127 86 217)` and carries a white label; that is measured
   below rather than assumed, because "their palette is fine" is exactly the
   assumption that put a 4.02:1 button on screen last time.
@@ -112,6 +112,6 @@ written down so the next palette change gets measured too.
 ## Related
 
 - FB-0014 — the correction, quoted verbatim.
-- ADR-0055 — the tie-break rule, which survives; its identity list, which does not.
-- ADR-0057 — the contrast rule that still binds.
+- ADR-0056 — the tie-break rule, which survives; its identity list, which does not.
+- ADR-0058 — the contrast rule that still binds.
 - ADR-0048, ADR-0049 — why the orb is a separate decision.

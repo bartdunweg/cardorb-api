@@ -1,5 +1,5 @@
 ---
-id: ADR-0059
+id: ADR-0060
 title: Every primary surface went from near-black to blue, in one token
 status: accepted
 date: 2026-08-19
@@ -33,7 +33,7 @@ near-black in light and white in dark. It is blue in both now.
 
 ## Why
 
-ADR-0055 settles it: Untitled UI's value is the default, and Card Orb's needs
+ADR-0056 settles it: Untitled UI's value is the default, and Card Orb's needs
 either to be the identity or to be argued from a measurement. "What colour is a
 primary button" is exactly the kind of question a design system exists to answer,
 and Untitled UI answers it with the brand colour. Nothing in this repository
@@ -44,7 +44,7 @@ pill cannot now disagree, which is the property the two tokens were created for
 in the first place.
 
 **Not `--color-tint`.** `--color-bg-brand-solid` resolves to `--color-brand-600`,
-which ADR-0057 set to the darkened blue precisely because a filled accent with a
+which ADR-0058 set to the darkened blue precisely because a filled accent with a
 white label needs 4.5:1 and the lighter one measures 4.02. Every surface reading
 these two tokens carries text on it.
 
@@ -53,7 +53,7 @@ these two tokens carries text on it.
 - **The landing page's call to action is blue.** So is `Sign up` in the nav, so
   is the tab bar's add button. Anyone who knew this product by its black buttons
   will notice immediately. That is the change, not a side effect of it.
-- The identity that ADR-0055 protects — the glass material, the orb, the
+- The identity that ADR-0056 protects — the glass material, the orb, the
   holographic cards — is untouched. What moved is the accent's reach: it used to
   be the thing you *chose*, and is now also the thing you *do*.
 - `tabbarClasses.ts` had a comment reading "the same black every other primary
@@ -70,7 +70,7 @@ these two tokens carries text on it.
   that makes a design system worse than either option — two primaries, told
   apart by which component happened to draw them.
 - **Point the tokens at `--color-tint` (`#007aff`).** Rejected on contrast:
-  4.02:1 under a white label, which is the failure ADR-0057 had just fixed.
+  4.02:1 under a white label, which is the failure ADR-0058 had just fixed.
 
 ## Confirmation
 
@@ -90,5 +90,5 @@ surfaces reading these tokens are on signed-in screens, which is also the gap:
 
 ## Related
 
-- ADR-0055 — Untitled UI is the default.
-- ADR-0057 — why this is `brand-600` and not `tint`.
+- ADR-0056 — Untitled UI is the default.
+- ADR-0058 — why this is `brand-600` and not `tint`.

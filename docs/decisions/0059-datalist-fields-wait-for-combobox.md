@@ -1,5 +1,5 @@
 ---
-id: ADR-0058
+id: ADR-0059
 title: The three suggesting fields stay native until Combobox is chosen deliberately
 status: accepted
 date: 2026-08-19
@@ -39,7 +39,7 @@ different control, not a styled version of the same one:
 Convert what converts cleanly; leave these three alone; write this down.
 
 Swapping them is the right end state — it is more accessible and it is what
-"follow Untitled UI" means (ADR-0055). It is **not** a change to make in the
+"follow Untitled UI" means (ADR-0056). It is **not** a change to make in the
 last ten minutes of a sweep, in the dialog ADR-0020 is about, whose inputs have
 already silently lost their styling once on a route that needs a signed-in
 session to look at.
@@ -53,7 +53,7 @@ session to look at.
 - **Drop the suggestions and use Untitled UI's plain Input.** Rejected: it is a
   feature, and losing it to make a sweep look tidy is the wrong trade.
 - **Add `list` to the vendored `Input`'s props.** Rejected: a fourth patch in
-  `scripts/untitled-add.mjs`, and ADR-0057 already says three is the point where
+  `scripts/untitled-add.mjs`, and ADR-0058 already says three is the point where
   that list stops being maintenance and starts being a signal.
 
 ## Consequences
@@ -77,6 +77,6 @@ close and the next thing to run.
 
 ## Related
 
-- ADR-0055 — Untitled UI is the default, which is why this is a "not yet".
-- ADR-0057 — the three-patch limit this declines to add a fourth to.
+- ADR-0056 — Untitled UI is the default, which is why this is a "not yet".
+- ADR-0058 — the three-patch limit this declines to add a fourth to.
 - ADR-0020 — this dialog losing its input styling silently, once before.

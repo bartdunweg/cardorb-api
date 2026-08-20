@@ -19,7 +19,7 @@ English translation: *"when in doubt follow Untitled please"*.
 
 ## Context
 
-Said immediately after the Untitled UI groundwork was reported (ADR-0054,
+Said immediately after the Untitled UI groundwork was reported (ADR-0055,
 commit `a2b2efd`, branch `bartdunweg/untitled-ui`), and roughly twenty minutes
 after answering a direct multiple-choice question about the visual direction
 with:
@@ -65,20 +65,20 @@ holo cards, the orb, the glass — the previous answer still stands.
       the tint blue) or where `lib/design/tokens.ts` argues it from a measured
       contrast ratio. Both categories are narrow and both are already written
       down.
-- [x] Revisit ADR-0054's decision 2 in that light. Re-pointing the primitive
+- [x] Revisit ADR-0055's decision 2 in that light. Re-pointing the primitive
       palette stands, but the list of *which* primitives get Card Orb values
       should be shorter than "all forty".
 - [x] Where a specific case is still 50/50 after the two rules above, go with
       Untitled UI and note it — do not ask.
-- [x] Write the decision record that supersedes the affected part of ADR-0054
+- [x] Write the decision record that supersedes the affected part of ADR-0055
       before converting `/login`, since this changes what the proof screen is
       proving.
 
 ## Related
 
-- Decision: ADR-0054 (`docs/decisions/0054-untitled-ui-groundwork.md`) — the
+- Decision: ADR-0055 (`docs/decisions/0056-untitled-ui-groundwork.md`) — the
   groundwork this refines. Its decision 2 is the part affected.
-- Decision: ADR-0056 (`docs/decisions/0056-card-orb-radii-move-out-of-tailwinds-names.md`) —
+- Decision: ADR-0057 (`docs/decisions/0058-card-orb-radii-move-out-of-tailwinds-names.md`) —
   the first thing this rule decided, and it was a silent one.
 - Changelog: `docs/changelog.d/2026-08-19-untitled-ui-login.md`
 - Feedback: FB-0009 (`0009-no-paid-services-for-this-project.md`) — unrelated in

@@ -502,7 +502,7 @@ export default function CardAddDialog({
                     Combobox — a different interaction (ARIA listbox, and it
                     wants allowsCustomValue to keep free text working). That is
                     a change worth making on purpose rather than at the end of a
-                    sweep. ADR-0058 has the choice; until it is taken, these
+                    sweep. ADR-0059 has the choice; until it is taken, these
                     three keep the behaviour they have. */}
                 <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
                   <span className={cardAddLabelClassName}>Set</span>

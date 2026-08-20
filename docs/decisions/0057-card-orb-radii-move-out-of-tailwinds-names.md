@@ -1,5 +1,5 @@
 ---
-id: ADR-0056
+id: ADR-0057
 title: Card Orb's radius scale moves out of Tailwind's names, because @theme replaces rather than extends
 status: accepted
 date: 2026-08-19
@@ -46,7 +46,7 @@ are not.
 | `--radius-xs` … `--radius-lg` | `--radius-orb-xs` … `--radius-orb-lg` | These are Tailwind's names. `@theme` replaces, so ours silently won. |
 | `--radius-btn`, `--radius-pill` | unchanged | Not Tailwind's names; they never collided. |
 
-ADR-0055 decides the direction: Untitled UI's value is the default, so
+ADR-0056 decides the direction: Untitled UI's value is the default, so
 `rounded-lg` goes back to meaning Tailwind's 8px and Card Orb's scale is what
 moves. `orb-` is unmistakably this project's and cannot collide with anything
 upstream adds later.
@@ -55,7 +55,7 @@ upstream adds later.
 
 - **Leave it, and let Untitled UI wear Card Orb's radii.** Cheapest, and the
   screenshot honestly looked fine. Rejected on two counts: it contradicts
-  ADR-0055, and — the real objection — it is an *accident* rather than a choice.
+  ADR-0056, and — the real objection — it is an *accident* rather than a choice.
   A design system inherited by name collision cannot be reasoned about, and the
   next collision would be invisible in the same way.
 - **Override `--radius-lg` back to 8px and give Card Orb's 24px a new name
@@ -89,6 +89,6 @@ made.
 
 ## Related
 
-- ADR-0055 — decides that Untitled UI's value is the default.
+- ADR-0056 — decides that Untitled UI's value is the default.
 - ADR-0012, ADR-0017 — the same silent-collision shape, twice, from inside.
-- ADR-0054 — the groundwork, and where the proof screen was chosen.
+- ADR-0055 — the groundwork, and where the proof screen was chosen.

@@ -33,9 +33,9 @@ in principle have to stay, do you get what I mean?"*
 Said after being told the honest answer to "so no custom CSS any more?": that
 2,436 lines of hand-written CSS remain, and that most of it was being kept on
 the grounds that it is Card Orb's identity — the glass material, the orb, the
-tint blue, holo — per ADR-0055.
+tint blue, holo — per ADR-0056.
 
-So this is a direct correction of that record's premise. ADR-0055 protected four
+So this is a direct correction of that record's premise. ADR-0056 protected four
 things as identity because a multiple-choice answer earlier in the same session
 had asked to "keep the Card Orb look: glass, orb, holo". That answer was given
 about a look nobody had committed to.
@@ -65,7 +65,7 @@ different repository is not the same kind of thing as a button.
 
 ## Action
 
-- [x] Supersede ADR-0055's identity list: holo and the card hover, and nothing
+- [x] Supersede ADR-0056's identity list: holo and the card hover, and nothing
       else, are protected.
 - [x] Settle the brand colour and the wordmark before deleting anything, since
       both decide what the token sheet is even for.
@@ -76,8 +76,8 @@ different repository is not the same kind of thing as a button.
 
 ## Related
 
-- Decision: ADR-0060 — the record this produced.
-- Decision: ADR-0055 — the identity list this corrects.
+- Decision: ADR-0061 — the record this produced.
+- Decision: ADR-0056 — the identity list this corrects.
 - Decision: ADR-0048, ADR-0049 — the orb mark, which is why the wordmark is a
   question rather than an assumption.
 - Feedback: FB-0013 — the earlier half of the same instruction, where Untitled

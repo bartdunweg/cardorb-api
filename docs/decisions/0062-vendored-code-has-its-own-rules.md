@@ -1,12 +1,12 @@
 ---
-id: ADR-0061
+id: ADR-0062
 title: Vendored Untitled UI code is exempt from this project's lint and type strictness
 status: accepted
 date: 2026-08-19
 scope: repo
 deciders: [Bart]
 superseded-by: null
-amends: ADR-0054, ADR-0057
+amends: ADR-0055, ADR-0058
 tags: [untitled-ui, tooling, eslint, typescript, vendoring]
 ---
 
@@ -17,8 +17,8 @@ tags: [untitled-ui, tooling, eslint, typescript, vendoring]
 
 ## Context and problem statement
 
-ADR-0054 recorded two edits the Untitled UI generator needed after every add.
-ADR-0057 added a third, and said plainly:
+ADR-0055 recorded two edits the Untitled UI generator needed after every add.
+ADR-0058 added a third, and said plainly:
 
 > If that list grows much past three, the disagreement is with the library
 > rather than the template, and that is worth reconsidering rather than
@@ -51,7 +51,7 @@ compiler flags. Neither is a bug.
   properly, so this is one edit that stays correct.
 - **TypeScript**: has no per-directory options, so it has to be a per-file
   directive. `scripts/untitled-add.mjs` prepends
-  `// @ts-nocheck — vendored, see ADR-0061` to every file under
+  `// @ts-nocheck — vendored, see ADR-0062` to every file under
   `components/{application,base,foundations}/`. **Before `"use client"`, not
   after** — `@ts-nocheck` only counts in a comment ahead of every statement, and
   a directive is a statement. A comment may precede a directive, so both apply.
@@ -75,7 +75,7 @@ it would be the actual mistake.
 
 - **Keep patching per file.** Four kinds of patch and counting, each one a place
   the wrapper can silently stop matching after an upstream refactor. This is the
-  option ADR-0057 told the next person to stop taking.
+  option ADR-0058 told the next person to stop taking.
 - **Relax the flags repository-wide.** `noUncheckedIndexedAccess` catches real
   bugs in code written here, and the React rule caught a real cascading render
   once. Losing them across `app/` and `lib/` to accommodate a dependency is a bad
@@ -103,5 +103,5 @@ asserting the vendored button recipe has not drifted.
 
 ## Related
 
-- ADR-0054 — the first two patches.
-- ADR-0057 — the third, and the warning this acts on.
+- ADR-0055 — the first two patches.
+- ADR-0058 — the third, and the warning this acts on.

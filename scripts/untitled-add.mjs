@@ -4,7 +4,7 @@
  *
  *   npm run ui:add -- button input
  *
- * ADR-0054 recorded both of these as "re-run the fixes after every add", which
+ * ADR-0055 recorded both of these as "re-run the fixes after every add", which
  * was a note asking a person to remember something. This is that note, executed.
  * Both fixes are idempotent, so running it on an unchanged tree does nothing.
  *
@@ -104,10 +104,10 @@ for (const dir of ["components", "utils"]) {
     //    not written under it, so empty-state.tsx indexes an array it built
     //    itself and fails `tsc --noEmit` on three lines.
     //
-    //    ADR-0057 said three patches was the point to stop automating and start
+    //    ADR-0058 said three patches was the point to stop automating and start
     //    reconsidering. This is the fourth, and it is a different kind: the
     //    first three are disagreements with the generator's template, this is a
-    //    disagreement with the whole library's typing conventions. ADR-0061 has
+    //    disagreement with the whole library's typing conventions. ADR-0062 has
     //    the reasoning, and the answer is to exempt the vendored tree rather
     //    than to keep patching files one at a time — a `@ts-nocheck` at the top
     //    of a file this repository does not author is honest about who owns it.
@@ -118,12 +118,12 @@ for (const dir of ["components", "utils"]) {
       //    Before "use client", not after: @ts-nocheck only counts in a comment
       //    ahead of every statement, and a directive is a statement. A comment
       //    may precede a directive, so both still apply.
-      after = "// @ts-nocheck — vendored, see ADR-0061\n" + after;
+      after = "// @ts-nocheck — vendored, see ADR-0062\n" + after;
     }
 
     // 4. The password reveal toggle is sized to its 16x16 icon, which
     //    Lighthouse flags as target-size — WCAG 2.2 AA (2.5.8) asks 24x24.
-    //    Grown with an ::after so the icon itself does not move. ADR-0057.
+    //    Grown with an ::after so the icon itself does not move. ADR-0058.
     after = after.replace(
       /(\n\s*)(sizes\[inputSize\]\.iconTrailing,\n)(\s*\)\}\n\s*>\n\s*\{isPasswordVisible)/,
       `$1$2$1"size-6",

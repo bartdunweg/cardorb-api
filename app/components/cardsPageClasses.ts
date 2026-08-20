@@ -166,7 +166,7 @@ export const cardsHeadClassName = "cards-head relative z-[2] flex flex-col items
  * should wrap instead, so it breaks the word.
  */
 export const cardsMainTitleClassName =
-  // Untitled UI's page title (ADR-0060). `overflow-wrap` is the part that is not
+  // Untitled UI's page title (ADR-0061). `overflow-wrap` is the part that is not
   // theirs and must not be dropped — see the paragraph above; it is why this is
   // a constant rather than the utility string written at each call site.
   "cards-main-title m-0 text-display-xs font-semibold text-primary [overflow-wrap:anywhere]";

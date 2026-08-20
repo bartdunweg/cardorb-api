@@ -224,7 +224,7 @@ export const tabbarPillClassName =
  * "The same black" is what this said, and it was true until the Untitled UI
  * conversion: --btn-primary-bg is Untitled UI's brand now, which is this app's
  * blue, so every primary surface went from near-black to blue at once
- * (ADR-0059). The sentence above still holds — it is the *same* colour as every
+ * (ADR-0060). The sentence above still holds — it is the *same* colour as every
  * other primary action, which was always the point — but the colour changed.
  */
 export const tabbarAddClassName =

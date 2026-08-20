@@ -1,5 +1,5 @@
 ---
-id: ADR-0054
+id: ADR-0055
 title: Untitled UI is vendored at the root and keeps Card Orb's look via its primitive palette
 status: accepted
 date: 2026-08-19

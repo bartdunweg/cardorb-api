@@ -1,24 +1,24 @@
 ---
-id: ADR-0055
+id: ADR-0056
 title: Untitled UI is the default; Card Orb's value has to earn the exception
 status: accepted
 date: 2026-08-19
 scope: repo
 deciders: [Bart]
 superseded-by: null
-supersedes: ADR-0054 (decision 2 only)
+supersedes: ADR-0055 (decision 2 only)
 tags: [ui, design-system, untitled-ui, tailwind, tokens]
 ---
 
 # Untitled UI is the default; Card Orb's value has to earn the exception
 
-Supersedes **decision 2 of ADR-0054** and nothing else. Decisions 1 and 3 of that
+Supersedes **decision 2 of ADR-0055** and nothing else. Decisions 1 and 3 of that
 record — components vendored at the repository root, primitives emitted from
 `lib/design/tokens.ts` — stand unchanged.
 
 ## Context and problem statement
 
-ADR-0054 recorded the direction as "keep the Card Orb look, styled with the
+ADR-0055 recorded the direction as "keep the Card Orb look, styled with the
 existing tokens". Applied literally that means every disagreement between the two
 systems is settled in favour of what Card Orb does today: every radius, shadow,
 focus ring, spacing step and transition. That is close to re-implementing
@@ -56,7 +56,7 @@ Do not ask. That is the whole content of "bij twijfel".
 - The list of primitives that get Card Orb values shrinks from "roughly forty" to
   the identity colours and the measured ones. Most of Untitled UI's neutral ramp
   arrives untouched.
-- **The app will visibly change.** ADR-0054 assumed a conversion could be proven
+- **The app will visibly change.** ADR-0055 assumed a conversion could be proven
   by a screenshot diff near zero. That is no longer the target: buttons will take
   Untitled UI's `rounded-lg` rather than the 999px pill, its `shadow-xs-skeuomorphic`
   rather than the glass shadow, its focus ring rather than the current one. The
@@ -75,7 +75,7 @@ Do not ask. That is the whole content of "bij twijfel".
 
 ## Alternatives considered
 
-- **Keep ADR-0054's reading — Card Orb's value wins by default.** Rejected on
+- **Keep ADR-0055's reading — Card Orb's value wins by default.** Rejected on
   direct correction. It also produces the worst outcome of the three: the cost of
   adopting a component library with none of its design benefit.
 - **Take Untitled UI wholesale, including the identity.** This is the option
@@ -91,7 +91,7 @@ now a *review* of the differences rather than a check that there are none.
 
 ## Related
 
-- ADR-0054 — the groundwork; decision 2 superseded here.
+- ADR-0055 — the groundwork; decision 2 superseded here.
 - FB-0013 — the correction, quoted verbatim.
 - ADR-0012, ADR-0017, ADR-0018, ADR-0020 — four ways this migration has broken
   before, all invisible to tests, typecheck and lint.

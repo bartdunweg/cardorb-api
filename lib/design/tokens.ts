@@ -105,7 +105,7 @@ export const colour = {
    */
   tintLabel: { light: "#0066cc", dark: "#007aff" },
 
-  /* ── On this pair, after the palette went purple (ADR-0060) ──────────────
+  /* ── On this pair, after the palette went purple (ADR-0061) ──────────────
    *
    * `tint` and `tintLabel` are no longer the app's accent. Untitled UI's brand
    * ramp is, and these two are read only by what is left of the hand-written
@@ -114,7 +114,7 @@ export const colour = {
    * The reasoning is kept because it is the general rule, not a fact about
    * blue: a colour measured as a *graphic* (3:1) is not cleared for use under
    * a *word* (4.5:1). That distinction put a 4.02:1 button on screen once
-   * (ADR-0057), and it is the check to run on any future palette — Untitled
+   * (ADR-0058), and it is the check to run on any future palette — Untitled
    * UI's purple happens to clear both, which is luck rather than diligence. */
 
   /**
@@ -165,7 +165,7 @@ export const colour = {
  * drew, and nothing failed. A silent collision through a shared name, which is
  * the same shape as ADR-0012 and ADR-0017.
  *
- * ADR-0055 settles which way it goes: Untitled UI's value is the default, so
+ * ADR-0056 settles which way it goes: Untitled UI's value is the default, so
  * `rounded-lg` goes back to meaning Tailwind's 8px and Card Orb's scale moves
  * out of the way. `rounded-orb-lg` is unmistakably ours and cannot collide with
  * anything upstream adds later.

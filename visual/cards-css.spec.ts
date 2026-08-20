@@ -55,7 +55,7 @@ const PAGES = [
   { name: "landing", path: "/", fullPage: true },
   { name: "ios", path: "/app/ios", fullPage: true },
   /**
-   * The Untitled UI proof screen (ADR-0055).
+   * The Untitled UI proof screen (ADR-0056).
    *
    * Here rather than in owner.spec.ts on purpose: /login is the one screen
    * carrying converted controls that a signed-out browser can reach, and
@@ -71,7 +71,7 @@ const PAGES = [
    * from /login to the whole FormField family. Both are public, so both can be
    * photographed; /settings/password is the fourth of the family and needs a
    * recovery session, so it has no entry here and is converted unphotographed.
-   * That gap is named in ADR-0058 rather than left to be discovered.
+   * That gap is named in ADR-0059 rather than left to be discovered.
    */
   { name: "signup", path: "/signup", fullPage: true },
   { name: "forgotten", path: "/password/forgotten", fullPage: true },

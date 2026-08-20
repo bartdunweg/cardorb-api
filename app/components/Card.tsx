@@ -17,7 +17,7 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
  *
  * This was the glass recipe — a translucent fill, a 24px radius, a backdrop
  * blur and a hand-tuned shadow — and it was the material every card in the app
- * was made of. ADR-0060 removed glass from the protected list, so it is theirs
+ * was made of. ADR-0061 removed glass from the protected list, so it is theirs
  * now: `rounded-xl bg-primary shadow-xs ring-1 ring-secondary ring-inset`, which
  * is what `MetricsSimple` and every other Untitled UI card draws.
  *

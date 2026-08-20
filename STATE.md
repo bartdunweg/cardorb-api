@@ -38,7 +38,7 @@ above says the extraction was not wanted anyway.
 `components.css` lost 84 lines; `FormField.tsx` is 57 lines where it was 130.
 Twenty-three files import an Untitled UI component or the class recipe.
 
-**Read ADR-0060 first — the direction changed late in the session.** FB-0014:
+**Read ADR-0061 first — the direction changed late in the session.** FB-0014:
 *"UI is van mijn betreft nog helemaal niet gedefinieerd… Alleen de hole, het
 hover-effect van een kaart, moet blijven."* The identity list is down from four
 things to two, and both are effects on a card:
@@ -49,7 +49,7 @@ things to two, and both are effects on a card:
 Everything else is Untitled UI's, and where they disagree the answer is now
 "delete ours" rather than "argue it". The palette is theirs whole — **the app is
 purple**, not blue; the brand ramp built in Card Orb's blue is gone, and
-ADR-0059 (which had made everything blue four commits earlier) is superseded.
+ADR-0060 (which had made everything blue four commits earlier) is superseded.
 
 Three answers were given explicitly and two are not done yet:
 
@@ -82,7 +82,7 @@ weeks, and this is the same shape at ten times the size.
 
 Two things deliberately not converted, both recorded: `CardAddDialog`'s Set,
 Type and Generation keep their native `<datalist>` because Untitled UI's answer
-is `Combobox`, a different interaction (ADR-0058); and `autoCapitalize` is gone
+is `Combobox`, a different interaction (ADR-0059); and `autoCapitalize` is gone
 from the username field because its `onChange` lowercases anyway.
 
 `npm run ui:add` runs the Untitled UI CLI and re-applies the three fixes it
@@ -94,13 +94,13 @@ tokens. The copy exists because `button.tsx` is `"use client"` and a server
 component importing its `styles` gets a client-reference proxy: `/_not-found`
 and `/cards` both died on that.
 
-**Earlier in the same session:** The direction is ADR-0055, corrected
+**Earlier in the same session:** The direction is ADR-0056, corrected
 mid-session by FB-0013: **Untitled UI's value is the default**, and Card Orb's
 earns an exception only by being the identity (glass, orb, holo, the tint blue)
 or by being argued from a contrast ratio `lib/design/tokens.ts` can cite.
 Anything still even goes to Untitled UI without asking.
 
-Read ADR-0056 before adding any token. The proof screen came back with
+Read ADR-0057 before adding any token. The proof screen came back with
 pill-shaped inputs because Tailwind v4's `@theme` *replaces* a scale rather than
 extending it: this project declared `--radius-lg: 24px`, so `rounded-lg` meant
 24px inside vendored components too. Nothing failed — not tsc, not eslint, not
