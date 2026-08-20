@@ -275,57 +275,6 @@
 
 /* ── The grid ── */
 
-.cards-grid {
-  display: grid;
-  /* Forty-eight of these, nineteen hundred items between them. The page is not
-     slow (68KB over the wire, complete in under 200ms), so this is not a fix
-     for a problem; it is the one cheap thing that helps a phone. The browser
-     skips layout and paint for the sets that are off screen and remembers each
-     one's real height after it has measured it once. Everything stays in the
-     DOM, so the filters and find-in-page still see the whole collection. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 600px;
-  /* auto-fill, so a set with three cards leaves the rest of the row empty
-     instead of stretching three scans across the whole card.
-
-     132px unless the reader has moved the size slider, which writes
-     the count onto this element as --cards-cols (see cols in CardsView). min() with
-     100% because that slider goes to 260: on a narrow column a track wider than
-     the grid would overflow it rather than fall back to one card per row, which
-     is what a minmax whose floor exceeds its container does. */
-  /* A count, not a width. auto-fill with a minimum is the right shape for a
-     grid that must not overflow, and the wrong thing to ask a reader for:
-     nobody wants a scan 148px wide, they want four across. CardsView writes
-     --cards-cols and the division happens here. */
-  grid-template-columns: repeat(var(--cards-cols, 6), minmax(0, 1fr));
-  /* The Pokédex' spacing, because it is the same shape of thing: a wall of card
-     slots in a 132px column. It used to be 20px between the rows and 16 between
-     the columns with nothing around a tile, against the dex' even 12 plus 8 of
-     padding, so two views of one collection sat at different densities and the
-     tiles in this one had no box to hover. Splitting the same distance between
-     the gap and the padding is what gives the hover pill below something to
-     draw inside. */
-  gap: var(--space-3);
-  list-style: none;
-  /* Room for the shadow, inside the box that clips it.
-     content-visibility above brings paint containment with it, and paint
-     containment clips to the padding box — so the scans' drop-shadow, which
-     reaches 18px sideways and 26 below, was being sliced off in a straight line
-     down both edges of the grid and along the bottom of every row. The padding
-     puts that reach inside the clip and the negative margin takes the same
-     distance back out of the layout, so nothing moves and the column keeps its
-     own gutters. */
-  margin: -10px -20px -26px;
-  padding: 10px 20px 26px;
-}
-
-.cards-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
 /* ── The tile, and the pill under it ──
 
    The same row hover the rail and the Pokédex wear, on the same grounds the
@@ -431,22 +380,6 @@
    this rule always took its 104px fallback and always produced three columns,
    whatever you pressed. The columns come from --cards-cols above, at every
    width. */
-@container (max-width: 560px) {
-  .cards-grid {
-    /* The dex' own narrow gap, for the same reason as the wide one above. */
-    gap: var(--space-2);
-  }
-}
-
-@media (max-width: 640px) {
-  /* The one in the h1 never stepped down with the one over each set, so at
-     390px a 132px wordmark took a third of the row and left the set's name
-     about 210px to be set at --fs-h2 in. */
-  /* Three columns and no minimum, so at 390px the card's name is squeezed by
-     the set beside it. The set is what goes: the scan and the name already say
-     which card this is, and the price is what the table is ranked by. Dropping
-     a column beats adding a second sideways scroller to this page. */
-}
 
 /* ── Tick-list dropdowns ── */
 
@@ -695,9 +628,6 @@
    one of two is a press to reach a press — as true under a thumb as it is
    under a pointer. Its own padding here rather than the dropdown's, because a
    sheet's rows are inset further and the label has to line up with them. */
-.sheet .facet-inline .cards-segmented {
-  width: 100%;
-}
 
 /* .sheet-field and .sheet-label moved to Tailwind classes in ViewOptions.tsx
  * (the only remaining consumer — FilterSheet/FilterMenu never used them). */
@@ -742,9 +672,6 @@
 /* A short facet, shown open at the top of the filter panel instead of behind a
    row of its own. Era is two answers and Owned is two or three; going a level
    in to tick one of those is a press to reach a press. */
-.filter-menu-panel .facet-inline .cards-segmented {
-  width: 100%;
-}
 
 /* The row a facet's name and its Clear share. Fixed by its content on both
    sides, so ticking a box fills the right-hand side in rather than adding a

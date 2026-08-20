@@ -50,13 +50,16 @@ describe("the grid measures its own column, not the window", () => {
     // They are anonymous — they resolve against .cards-main by ancestry alone.
     // Put container-type on the wrong box and these silently become
     // viewport-ish again, which is the failure that has no error message.
-    // The grid's own query is still a raw CSS @container rule; the Pokédex's
-    // moved to a Tailwind @max-[560px]: variant in CardsPokedex.tsx during
-    // the Tailwind migration — both still resolve against the same
-    // .cards-main ancestor container.
+    // Both are Tailwind @max-[560px]: variants now — the Pokédex's moved first,
+    // the grid's followed when .cards-grid left cards.css. They still resolve
+    // against the same .cards-main ancestor container, which is what the test
+    // above is for. The CSS branch stays counted so a move back is not a
+    // failure; it is the total that matters.
     const cssQueries = css.match(/@container\s*\(max-width:\s*560px\)/g) ?? [];
-    const pokedex = read("app/components/CardsPokedex.tsx");
-    const tailwindQueries = pokedex.match(/@max-\[560px\]:/g) ?? [];
+    const tailwind = ["app/components/CardsPokedex.tsx", "app/components/CardsView.tsx"]
+      .map(read)
+      .join("\n");
+    const tailwindQueries = tailwind.match(/@max-\[560px\]:/g) ?? [];
     expect(
       cssQueries.length + tailwindQueries.length,
       "the grid and the Pokédex each answer to .cards-main",
@@ -65,7 +68,10 @@ describe("the grid measures its own column, not the window", () => {
 });
 
 describe("paint containment does not slice the shadows off the scans", () => {
-  const css = read("app/styles/cards.css");
+  // .cards-grid is a Tailwind class string in CardsView now, so both halves of
+  // the pair are read from there. Kept as one assertion over both files so the
+  // pair cannot be split by moving one half back.
+  const css = read("app/styles/cards.css") + "\n" + read("app/components/CardsView.tsx");
 
   it("keeps content-visibility paired with the bleed it forced", () => {
     // content-visibility brings paint containment with it, and paint
@@ -79,7 +85,8 @@ describe("paint containment does not slice the shadows off the scans", () => {
       "the one cheap thing that helps a phone through 1,900 cards",
     ).toBe(true);
     expect(
-      has(css, /margin:\s*-10px -20px -26px;\s*padding:\s*10px 20px 26px/),
+      has(css, /margin:\s*-10px -20px -26px;\s*padding:\s*10px 20px 26px/) ||
+        has(css, /\[margin:-10px_-20px_-26px\][^"]*\[padding:10px_20px_26px\]/),
       "the bleed pair that keeps paint containment from clipping the scans' shadow",
     ).toBe(true);
   });

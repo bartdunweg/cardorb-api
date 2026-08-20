@@ -1445,7 +1445,30 @@ export default function CardsView({
               <ul
                 className={
                   view === "grid"
-                    ? "cards-grid"
+                    ? /* content-visibility + contain-intrinsic-size: forty-eight sets,
+                         nineteen hundred items. The browser skips layout and paint for
+                         the sets off screen and remembers each one's measured height.
+                         Everything stays in the DOM, so filters and find-in-page still
+                         see the whole collection.
+
+                         A count, not a width: nobody wants a scan 148px wide, they want
+                         four across, so CardsView writes --cards-cols and the division
+                         happens here.
+
+                         The negative margin and matching padding are for the shadow.
+                         content-visibility brings paint containment, which clips to the
+                         padding box, and the scans' drop-shadow reaches 18px sideways
+                         and 26 below — it was being sliced off down both edges. The
+                         padding puts that reach inside the clip; the margin takes the
+                         same distance back out of the layout, so nothing moves. */
+                      /* gap-3 wide, gap-2 once the column is under 560px — the dex\' own
+                         narrow gap. As a container variant on the element, not a
+                         @container block in cards.css: an unconditional utility beats a
+                         conditional legacy rule, which is ADR-0017, and this exact pair
+                         is how it was caught again. .cards-main carries the @container. */
+                      "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
+                      "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
+                      "[margin:-10px_-20px_-26px] [padding:10px_20px_26px]"
                     : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
                          so the ones off screen are not laid out until they come near it.
                          600px is the guess the browser uses for a row it has not
@@ -1541,7 +1564,30 @@ export default function CardsView({
                 <ul
                   className={
                   view === "grid"
-                    ? "cards-grid"
+                    ? /* content-visibility + contain-intrinsic-size: forty-eight sets,
+                         nineteen hundred items. The browser skips layout and paint for
+                         the sets off screen and remembers each one's measured height.
+                         Everything stays in the DOM, so filters and find-in-page still
+                         see the whole collection.
+
+                         A count, not a width: nobody wants a scan 148px wide, they want
+                         four across, so CardsView writes --cards-cols and the division
+                         happens here.
+
+                         The negative margin and matching padding are for the shadow.
+                         content-visibility brings paint containment, which clips to the
+                         padding box, and the scans' drop-shadow reaches 18px sideways
+                         and 26 below — it was being sliced off down both edges. The
+                         padding puts that reach inside the clip; the margin takes the
+                         same distance back out of the layout, so nothing moves. */
+                      /* gap-3 wide, gap-2 once the column is under 560px — the dex\' own
+                         narrow gap. As a container variant on the element, not a
+                         @container block in cards.css: an unconditional utility beats a
+                         conditional legacy rule, which is ADR-0017, and this exact pair
+                         is how it was caught again. .cards-main carries the @container. */
+                      "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
+                      "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
+                      "[margin:-10px_-20px_-26px] [padding:10px_20px_26px]"
                     : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
                          so the ones off screen are not laid out until they come near it.
                          600px is the guess the browser uses for a row it has not
