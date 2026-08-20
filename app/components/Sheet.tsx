@@ -38,7 +38,10 @@ export function Sheet({
       onClose={onClose}
       label={label}
       variant="right"
-      // modal--sheet stays a literal class: .modal--sheet .modal-scroll and
+      // The scroll box and the close button are reached with `[&_.modal-scroll]:`
+      // and `[&_.modal-close]:` rather than from cards.css — Modal.tsx owns both
+      // and takes no className for them, which is why those rules lived in the
+      // stylesheet. modal--sheet stays a literal class because Modal.tsx and
       // .modal-close live in cards.css against Modal.tsx's own internal
       // markup, which this component can't reach with a className prop.
       //
@@ -47,7 +50,7 @@ export function Sheet({
       // wearing it read as the same frosted layer as the blur behind it, and
       // every row was a word over whatever card art happened to be there. A
       // list you read needs a real surface.
-      className="modal--sheet w-full max-w-none rounded-t-lg rounded-b-none border-b-0
+      className="modal--sheet [&_.modal-scroll]:h-auto [&_.modal-scroll]:max-h-[88svh] [&_.modal-scroll]:overscroll-contain [&_.modal-close]:hidden w-full max-w-none rounded-t-lg rounded-b-none border-b-0
         bg-[var(--color-bg-surface)]"
     >
       <div className="sheet flex flex-col max-h-[88svh]">

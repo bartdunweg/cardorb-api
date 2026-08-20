@@ -1,9 +1,14 @@
 // Shared between CardModal.tsx, PublicCardDialog.tsx (.modal--card) and
 // CardAddDialog.tsx (.modal--card-add), passed as Modal's className prop.
 //
-// The literal class names stay: .modal--card .modal-scroll,
-// .modal--card .card-detail-body and .modal-close live in cards.css against
-// Modal.tsx's own internal markup, which a className prop can't reach.
+// The scroll box is reached with `[&_.modal-scroll]:` rather than from
+// cards.css. Modal.tsx owns that div and a className prop cannot be handed to
+// it, which is why these rules were in the stylesheet — but an arbitrary
+// descendant variant reaches it from here, and then the two variants stop
+// being a rule each in a file nobody opens.
+//
+// `.modal--card`, `.modal--card-add` and `.modal--sheet` stay as literal names:
+// Modal.tsx reads them, and cards.css still has the phone-width branches.
 //
 // svh, not vh: on iOS vh is the large viewport, the height with the browser
 // bars out of the way, so anything measured in it is taller than what you can
@@ -12,7 +17,11 @@
 // bars come and go.
 export const modalCardClassName =
   "modal--card w-[min(920px,calc(100vw-2*var(--space-6)))] max-h-[calc(100svh-2*var(--space-6))] " +
-  "rounded-orb-lg p-0 overflow-hidden [box-shadow:var(--shadow-elevated)] " +
+  "rounded-orb-lg p-0 overflow-hidden shadow-2xl " +
+  "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
+  "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
+  "[&_.modal-scroll]:[padding:var(--space-10)_var(--card-pad)_var(--card-pad)] " +
+  "[&_.card-detail-body]:mt-0 " +
   // Full screen on a phone, not a sheet stopping short of the top. A card is
   // the one thing on this site worth the whole screen: it is a picture with
   // small print on it, and eight percent of the height went to a strip of
@@ -29,7 +38,11 @@ export const modalCardClassName =
 // screen should arrive from the bottom of the screen.
 export const modalCardAddClassName =
   "modal--card-add w-[min(560px,calc(100vw-2*var(--space-6)))] max-h-[calc(100svh-2*var(--space-6))] " +
-  "rounded-orb-lg p-0 overflow-hidden [box-shadow:var(--shadow-elevated)] " +
+  "rounded-orb-lg p-0 overflow-hidden shadow-2xl " +
+  "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
+  "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
+  "[&_.modal-scroll]:[padding:var(--space-10)_var(--card-pad)_var(--card-pad)] " +
+
   "[@media(max-width:640px)]:w-full [@media(max-width:640px)]:max-h-[92svh] " +
   "[@media(max-width:640px)]:rounded-t-lg [@media(max-width:640px)]:rounded-b-none " +
   "[@media(max-width:640px)]:self-end";

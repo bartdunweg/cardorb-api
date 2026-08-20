@@ -610,19 +610,6 @@
  * classes (modalCardClassName in cardModalClasses.ts). The class name stays:
  * the two rules below target Modal.tsx's own internal markup, which a
  * className prop can't reach. */
-.modal--card .modal-scroll {
-  overflow-y: auto;
-  max-height: calc(100svh - 2 * var(--space-6));
-  /* Reaching the end of a card does not hand the scroll on. Modal.tsx already
-     pins the body, so there is no page behind this to move; what this stops is
-     iOS rubber-banding the whole viewport at the end of the list. The connect
-     drawer carries the same line. */
-  overscroll-behavior: contain;
-  padding: var(--space-10) var(--card-pad) var(--card-pad);
-}
-.modal--card .card-detail-body {
-  margin-top: 0;
-}
 /* .modal--card's own max-width:640px override moved to Tailwind classes too
  * (modalCardClassName). Only the scroll padding below stays: same reason as
  * above. */
@@ -647,12 +634,6 @@
  * classes (modalCardAddClassName in cardModalClasses.ts). The class name and
  * the two rules below stay: they target Modal.tsx's own internal
  * .modal-scroll, which a className prop can't reach. */
-.modal--card-add .modal-scroll {
-  overflow-y: auto;
-  max-height: calc(100svh - 2 * var(--space-6));
-  overscroll-behavior: contain;
-  padding: var(--space-10) var(--card-pad) var(--card-pad);
-}
 @media (max-width: 640px) {
   .modal--card-add .modal-scroll {
     max-height: 92svh;
@@ -719,17 +700,9 @@
  * Tailwind classes on Sheet.tsx's `className` prop to Modal. The class name
  * itself stays, because the two rules below target Modal.tsx's own internal
  * markup, which Sheet.tsx can't reach with a className prop. */
-.modal--sheet .modal-scroll {
-  height: auto;
-  max-height: 88svh;
-  overscroll-behavior: contain;
-}
 /* No round close button. It sat over the header and collided with Clear, and
    this dialog has two plainer ways out that are already under the thumb: the
    buttons in the foot, and the backdrop. */
-.modal--sheet .modal-close {
-  display: none;
-}
 
 /* display/flex-direction/max-height on .sheet, all of .sheet-head and
  * .sheet-title, and .sheet-clear moved to Tailwind classes in Sheet.tsx. The
