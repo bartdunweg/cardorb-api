@@ -301,102 +301,11 @@
  * .cards-rows > .cards-item:last-child, and .cards-item-gen) moved to
  * CardItem.tsx as group-data-[view=list]/item: Tailwind variants during the
  * migration.
+ *
+ * The 640px block that made .cards-segmented full-width and .cards-segment
+ * flex is in trackClasses.ts as max-sm: variants; .filter-chips' own scroll
+ * block went with it, nothing having rendered that class for some time.
  */
-
-@media (max-width: 640px) {
-  .cards-segmented {
-    width: 100%;
-  }
-  .cards-segment {
-    flex: 1;
-    padding: 0 var(--space-2);
-  }
-}
-
-/* Narrow: the bar wraps rather than scrolls. It scrolled for a while, and a
-   scrolling row of controls hides controls: the search took the full width and
-   pushed the era switch, Filter and the layout toggle off the right edge, where
-   nothing suggested they were still there. Four controls fit on two or three
-   short rows, and a row that wraps cannot hide anything. */
-@media (max-width: 900px) {
-  .cards-search {
-    flex: 1 0 100%;
-    max-width: none;
-  }
-}
-
-/* Only the chips scroll, because that row genuinely has no bound: it is as long
-   as the number of filters that happen to be on. */
-@media (max-width: 640px) {
-  .filter-chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    /* Room for the focus rings, which an overflow container would clip. */
-    padding-bottom: var(--space-1);
-  }
-  .filter-chips::-webkit-scrollbar {
-    display: none;
-  }
-  .filter-chips > * {
-    flex-shrink: 0;
-  }
-}
-
-/* The facet list, the level above the tick-list. */
-/* How many values are on in a facet, so the list says which ones are doing
-   something without having to be opened. */
-
-/* ─── ONE CARD (app/cards/[id]) ─── */
-
-/* An ordinary page of this site: the tab bar is above it, so it keeps the top
-   room #main-content reserves instead of pulling back through it the way the
-   full-bleed list does. */
-/* .page-card and .card-detail both moved to Tailwind classes directly in
- * app/cards/[id]/page.tsx — neither had another consumer or an ancestor
- * override to keep in CSS for. */
-
-/* The scan beside the facts, and the scan is the point: it takes the wider
-   column. Stacks on a phone, where a two-column split would leave the artwork
-   the size it is in the grid. */
-/* display/grid-template-columns/gap/width, and the phone-width scan cap,
-   migrated to Tailwind classes on CardDetail.tsx's own elements. margin-top
-   stays here: .modal--card overrides it to 0 for the dialog variant below, and
-   an unconditional Tailwind mt-* utility would always beat that override. */
-
-/* .cards-item-link (the scan+name link wrapper) migrated to CardItem.tsx's
- * CardLink during the Tailwind migration — display:contents plus the
- * focus-visible ring on .cards-scan are now `group`/`group-focus-visible:`
- * classes there.
- */
-
-/* The same card in a dialog, opened from the list. Everything inside it is the
-   route's own markup: only the box around it is different, and the margin the
-   route puts above the body is not wanted under a close button. */
-/* svh, not vh, and it is the last place on the site that still said vh. On iOS
-   vh is the large viewport, the height with the browser bars out of the way, so
-   anything measured in it is taller than what you can actually see while they
-   are showing. It matters most in the mobile block below, where this is a bottom
-   sheet: at 92vh its foot sat behind Safari's toolbar.
-   svh and not dvh for the reason .modal--connect states: dvh follows the bars in
-   and out, and a sheet that resizes while you are reading it moves under your
-   thumb. svh is the smallest it can be, so the sheet is drawn once and stays. */
-/* .modal--card's own width/max-height/border-radius/padding/overflow/shadow,
- * including the max-width:640px full-screen override, moved to Tailwind
- * classes (modalCardClassName in cardModalClasses.ts). The class name stays:
- * the two rules below target Modal.tsx's own internal markup, which a
- * className prop can't reach. */
-/* .modal--card's own max-width:640px override moved to Tailwind classes too
- * (modalCardClassName). Only the scroll padding below stays: same reason as
- * above. */
-@media (max-width: 640px) {
-  .modal--card .modal-scroll {
-    max-height: 100svh;
-    /* Clear of the notch above and the home indicator below. */
-    padding: calc(var(--space-10) + env(safe-area-inset-top, 0px)) var(--card-pad)
-      calc(var(--card-pad) + env(safe-area-inset-bottom, 0px));
-  }
-}
 
 /* ── Adding a card (CardAddDialog) ──
 

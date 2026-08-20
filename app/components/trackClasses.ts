@@ -6,14 +6,21 @@
 // width stays in cards.css: several ancestor contexts (the mobile toolbar,
 // .sheet, .view-menu-panel, .filter-menu-panel) set it to 100% and none of
 // these callers know which one they're in.
-export const cardsSegmentedClassName = "cards-segmented flex gap-1 p-[3px] rounded-pill";
+export const cardsSegmentedClassName =
+  // max-sm:w-full was `@media (max-width: 640px) { .cards-segmented { width: 100% } }`.
+  // A conditional utility, so the panel contexts' own [&_.cards-segmented]:w-full
+  // still reads the same at every width.
+  "cards-segmented flex gap-1 p-[3px] rounded-pill max-sm:w-full";
 
-// padding and flex stay in cards.css: the filter/view panel contexts override
-// both on .cards-segment, and an unconditional Tailwind utility would always
-// beat that (see ADR-0017).
+// `max-sm:` on both, which is what makes it safe to bring them here at all.
+// cards.css set flex/padding on .cards-segment only below 640px, and the filter
+// and view panels set them unconditionally through [&_.cards-segment]. An
+// unconditional utility here would have beaten those (ADR-0017); a conditional
+// one loses to them the same way the media query did.
 export function cardsSegmentClassName(active: boolean) {
   return (
     "cards-segment h-8 border-none bg-transparent [font-family:var(--font-main)] " +
+    "max-sm:flex-1 max-sm:px-2 " +
     "[font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] text-label-secondary cursor-pointer " +
     "[border-radius:calc(var(--radius-pill)-4px)] " +
     "[transition:color_var(--dur-fast)_var(--ease-smooth),background_var(--dur-fast)_var(--ease-smooth)] " +
