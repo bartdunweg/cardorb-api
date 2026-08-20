@@ -59,7 +59,11 @@ export default function CardNav({
     // actually spaces the two buttons apart (PublicCardDialog.tsx passes a
     // bare fragment instead of this component, so that positioning has to
     // live one level up — see the comment in CardDetail.tsx).
-    <div className="card-detail-move flex justify-between pointer-events-none" {...swipe}>
+    <div
+      className="card-detail-move flex justify-between pointer-events-none
+        [&>*]:pointer-events-auto [&_.is-disabled]:opacity-35 [&_.is-disabled]:pointer-events-none"
+      {...swipe}
+    >
       {prev ? (
         <Link
           href={`${basePath}/${prev}`}

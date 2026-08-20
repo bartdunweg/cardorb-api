@@ -738,10 +738,6 @@
    options. */
 /* .view-menu-panel's own display/flex-direction/gap/width/padding moved to
  * Tailwind classes on ViewMenu.tsx's panelClassName prop. */
-.view-menu-panel .cards-segmented,
-.view-menu-panel .cards-views {
-  width: 100%;
-}
 
 /* A short facet, shown open at the top of the filter panel instead of behind a
    row of its own. Era is two answers and Owned is two or three; going a level
@@ -753,17 +749,6 @@
 /* The row a facet's name and its Clear share. Fixed by its content on both
    sides, so ticking a box fills the right-hand side in rather than adding a
    line that pushes the list down under the pointer. */
-.filter-menu-panel .facet-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  min-height: var(--control-h);
-  padding-right: var(--space-2);
-}
-.filter-menu-panel .facet-head .facet-back {
-  flex: 1 1 auto;
-}
 
 /* .view-fields and .view-field moved to Tailwind classes in ViewOptions.tsx. */
 
@@ -776,24 +761,11 @@
    "All" a centimetre inside the left edge while the facet rows under it start
    flush — the same distance read as an indent rather than as a control. Equal
    thirds, and the padding down to what the words need. */
-.filter-menu-panel .facet-inline .cards-segment,
-.view-menu-panel .cards-segment {
-  flex: 1 1 0;
-  min-width: 0;
-  padding: 0 var(--space-2);
-}
 
 /* position/z-index/top/flex/transform/pointer-events/left/right on
  * .card-detail-move, and position:relative on .card-detail-scan, moved to
  * Tailwind classes in CardDetail.tsx. The two rules below stay: they target
  * children of the `nav` slot CardDetail.tsx doesn't own the markup of. */
-.card-detail-move > * {
-  pointer-events: auto;
-}
-.card-detail-move .is-disabled {
-  opacity: 0.35;
-  pointer-events: none;
-}
 
 /* .cards-count-picker and .cards-count-option moved to Tailwind classes in
  * ViewOptions.tsx. */

@@ -26,7 +26,8 @@ export default function ViewMenu(props: ViewOptionsProps) {
           View
         </>
       }
-      panelClassName="view-menu-panel flex flex-col gap-4 w-[260px] p-4"
+      panelClassName="view-menu-panel flex flex-col gap-4 w-[260px] p-4
+        [&_.cards-segmented]:w-full [&_.cards-views]:w-full [&_.cards-segment]:flex-1 [&_.cards-segment]:min-w-0 [&_.cards-segment]:px-2"
     >
       <ViewOptions {...props} />
     </MenuDetails>

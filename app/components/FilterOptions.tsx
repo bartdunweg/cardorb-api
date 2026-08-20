@@ -86,6 +86,10 @@ export default function FilterOptions({
      rather than the selector now. `+ .facet-inline` becomes a sibling variant. */
   const inlineClassName = [
     "facet-inline flex flex-col gap-2 [&+.facet-inline]:pt-0",
+    // The segmented control inside fills the row, and each segment shares the
+    // width evenly — grouped with .view-menu-panel's copy in cards.css until
+    // both moved onto their own elements.
+    "[&_.cards-segmented]:w-full [&_.cards-segment]:flex-1 [&_.cards-segment]:min-w-0 [&_.cards-segment]:px-2",
     variant === "sheet" ? "px-4 py-3" : "px-2 pt-2 pb-3",
   ].join(" ");
 
@@ -103,7 +107,12 @@ export default function FilterOptions({
             it. It used to appear as its own line the moment a box was ticked,
             which pushed the list down by its height under the pointer that had
             just ticked it — so the next option you meant to click had moved. */}
-        <div className="facet-head">
+        <div
+          /* Fixed by its content on both sides, so ticking a box fills the
+             right-hand side in rather than adding a line that pushes the list
+             down under the pointer. min-h-10 is the control height. */
+          className="facet-head flex min-h-10 items-center justify-between gap-2 pr-2 [&_.facet-back]:flex-auto"
+        >
           <button
             type="button"
             className={`facet-back flex cursor-pointer items-center border-none bg-transparent
