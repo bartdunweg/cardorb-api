@@ -64,9 +64,20 @@ for (const page of PAGES) {
          * Masked so a baseline keeps meaning something tomorrow; where they sit
          * is still compared, only what they say is not.
          */
+        /* Prices only. `svg` was in this list and it masked every icon on the
+           page as well as the value chart — which is why the rail's icons have
+           been magenta blocks in every baseline, and why nobody could have seen
+           the chart change. It was there because the chart used to be drawn as
+           an <svg> full of live figures; the figures are a hover tooltip now and
+           the line comes from stored snapshots, so it is stable and worth
+           looking at.
+
+           The two that stay are genuinely live: the collection-value tile and
+           the priciest-cards table both read Cardmarket, which republishes
+           nightly. */
         mask: [
           p.locator("[data-price], .cards-card-price, .card-price"),
-          p.locator(".cards-dash-kpi-value, .cards-dash-table, svg"),
+          p.locator(".cards-dash-kpi-value, .cards-dash-table"),
         ],
       });
     });

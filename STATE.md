@@ -43,12 +43,17 @@ components, and this branch conflated the two for a long time.
 
 All twelve components are installed. This is the work to continue with.
 
-### The one thing that is not verified
+### The chart is verified, and finding that out fixed the harness
 
-`CollectionValueCard` was rebuilt on Recharts with Untitled UI's chart helpers
-(`charts-base`) in the last commit. `verify.sh` passes, but **no screenshot has
-been taken of it** — the harness server died twice on the run and the session
-ended before it came back. Photograph /dashboard first thing.
+`CollectionValueCard` is Recharts now, with Untitled UI's chart helpers
+(`charts-base`). Photographed and green.
+
+Getting there found something worth keeping: `owner.spec.ts` masked `svg` — every
+one on the page. So the rail's icons have been magenta blocks in every baseline
+this harness ever took, and **no screenshot could have shown the chart changing
+at all.** It was there because the chart used to be an `<svg>` full of live
+figures; the figures are a hover tooltip now and the line comes from stored
+snapshots, so it is stable. The mask is prices only.
 
 Recharts is the only dependency this whole migration added, and it was a decision
 rather than a default: Untitled UI has no chart component, only styling helpers
