@@ -1,0 +1,2 @@
+- Adding a card no longer asks you to type the generation. It comes from the card itself, like the rarity and the type already did — so the only things left to answer are whether you own it and whether to keep it out of the latest pull.
+- Cards filed under "X&Y" now say "XY", matching every other era name, so the era filter lists one entry per era instead of two spellings of the same one.

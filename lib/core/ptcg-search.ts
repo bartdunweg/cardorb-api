@@ -28,6 +28,16 @@ export type CatalogueMatch = {
   imageHigh: string | null;
   rarity: string | null;
   types: string[];
+  /**
+   * The era, as the catalogue names it — pokemontcg.io's `set.series`.
+   *
+   * Carried for the same reason `rarity` and `types` are (ADR-0030): it is a
+   * fact about the card, so nobody should be typing it. The whole `set` object
+   * was already being requested and this field was simply dropped on the floor,
+   * which is why the add-card form still had a text box for it and why one row
+   * in the collection reads "Scarlett & Violet".
+   */
+  series: string | null;
 };
 
 /** Also read by the dialog, to know whether a full page means more might exist. */
@@ -108,7 +118,7 @@ type PtcgCard = {
   name?: string;
   rarity?: string;
   types?: string[];
-  set?: { name?: string };
+  set?: { name?: string; series?: string };
   images?: { small?: string; large?: string };
 };
 
@@ -173,6 +183,7 @@ export async function searchCards(
           imageHigh: c.images?.large ?? null,
           rarity: c.rarity ?? null,
           types: c.types ?? [],
+          series: c.set?.series ?? null,
         }));
     } catch (err) {
       if (attempt < ATTEMPTS - 1) {
