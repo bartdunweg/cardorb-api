@@ -9,9 +9,10 @@ import {
   sheetFootButtonClassName,
 } from "@/components/custom/Sheet";
 import { Badge } from "@/components/base/badges/badges";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
+import Button from "@/components/custom/Button";
 import FilterOptions from "@/components/custom/FilterOptions";
 import type { Facet } from "@/components/custom/cards-fields";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
 /**
  * The same facets as FilterMenu, as a sheet, for a phone.
@@ -53,33 +54,43 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
 
   return (
     <>
-      <button
-        type="button"
-        className={untitledButton({ color: "secondary" })}
+      {/* Untitled UI's Button rather than this app's wrapper, for two reasons
+          the wrapper cannot express: `aria-haspopup`, and a trailing slot that
+          takes an arbitrary node. `size="md"` is not a choice — it is what the
+          class recipe defaulted to, where the component defaults to `sm`. */}
+      <UntitledButton
+        size="md"
+        color="secondary"
         // Seeded here rather than in an effect on `open`. Same result, one
         // render fewer, and it says plainly that a fresh draft is part of what
         // opening means: a sheet that remembered what you nearly did last time
         // would apply it the next time you pressed Apply.
-        onClick={() => {
+        onPress={() => {
           setDraft(seed());
           setOpenFacet(null);
           setOpen(true);
         }}
         aria-haspopup="dialog"
+        iconLeading={<Plus size={15} strokeWidth={2.5} aria-hidden="true" />}
+        // The count goes in the trailing icon slot rather than among the
+        // children: children are wrapped in the component's own `data-text`
+        // span, and a badge is not text.
+        //
+        // `.cards-filter-badge` and `.cards-filter-trigger` were both classes
+        // with no definition left anywhere — they went with cards.css and the
+        // names stayed in the JSX, so this count has been rendering as bare
+        // text beside the label. It is Untitled UI's Badge now; the trigger's
+        // class was dead outright and is gone.
+        iconTrailing={
+          total > 0 ? (
+            <Badge type="pill-color" color="brand" size="sm">
+              {total}
+            </Badge>
+          ) : undefined
+        }
       >
-        <Plus size={15} strokeWidth={2.5} aria-hidden="true" />
-        <span>Filter</span>
-        {/* `.cards-filter-badge` and `.cards-filter-trigger` were both classes
-            with no definition left anywhere — they went with cards.css and the
-            names stayed in the JSX, so this count has been rendering as bare
-            text beside the label. It is Untitled UI's Badge now; the trigger's
-            class was dead outright and is gone. */}
-        {total > 0 && (
-          <Badge type="pill-color" color="brand" size="sm">
-            {total}
-          </Badge>
-        )}
-      </button>
+        Filter
+      </UntitledButton>
 
       <Sheet
         open={open}
@@ -105,23 +116,12 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
           // sheet whose only way out is Apply is a sheet that makes you undo
           // what you were only looking at.
           <>
-            <button
-              type="button"
-              className={untitledButton({
-                color: "secondary",
-                className: sheetFootButtonClassName,
-              })}
-              onClick={() => setOpen(false)}
-            >
+            <Button color="secondary" className={sheetFootButtonClassName} onClick={() => setOpen(false)}>
               Cancel
-            </button>
-            <button
-              type="button"
-              className={untitledButton({ color: "primary", className: sheetApplyButtonClassName })}
-              onClick={apply}
-            >
+            </Button>
+            <Button color="primary" className={sheetApplyButtonClassName} onClick={apply}>
               {staged > 0 ? `Apply ${staged}` : "Apply"}
-            </button>
+            </Button>
           </>
         }
       >

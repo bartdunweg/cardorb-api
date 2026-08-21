@@ -233,7 +233,9 @@ is worse than the lead suggested: it names four reasons a plain `<button>` is
 allowed, says "five call sites", has ten, and **three of the four reasons are
 false** — FilterSheet and ViewSheet are not `<details>/<summary>` any more,
 AvatarPicker's trigger is not a `<label>`, and PublicCardDialog's arrows are real
-buttons.
+buttons. *(Corrected since: `dd099b7` rewrote that header, and ADR-0084 converted
+the eight call sites it admitted were undefended. The file is down to two
+importers and five call sites, all of them real.)*
 
 **Two HIGH accessibility findings, both small and both real:**
 - **The filter and view sheets are a keyboard trap.** `Sheet` hides the close
@@ -383,7 +385,8 @@ Untitled UI rather than using it". Two things were.
   asks 24, so their badge is used inside the existing full-chip button.
 
 `untitledButtonClasses.ts` is down to six consumers and its header lists all
-five reasons one is allowed. The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
+five reasons one is allowed. *(Both numbers are stale: see ADR-0084 — two
+consumers, five call sites, three reasons.)* The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
 — every alias had lost its last reader — and the test asserts it stays that way.
 The raw-hex guard now walks `components/`, which is where the components went.
 

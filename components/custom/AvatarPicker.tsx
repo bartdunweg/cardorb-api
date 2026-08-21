@@ -4,7 +4,7 @@ import { SettingsSaid } from "@/components/custom/SettingsPanel";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { FileTrigger } from "@/components/base/file-upload-trigger/file-upload-trigger";
 import { useAvatarUpload } from "@/components/custom/useAvatarUpload";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
+import Button from "@/components/custom/Button";
 
 /**
  * The avatar, and the one control that changes it.
@@ -64,16 +64,20 @@ export default function AvatarPicker({
             if (await upload(file)) onUploaded?.();
           }}
         >
-          <button
-            type="button"
-            disabled={busy}
-            className={untitledButton({
-              color: "secondary",
-              className: busy ? "opacity-55 cursor-not-allowed" : undefined,
-            })}
-          >
+          {/* `type="button"` looks redundant on a button with no onClick, and
+              is what makes this work: FileTrigger clones its single child and
+              injects an `onClick`, which arrives before this renders — but the
+              wrapper decides between a real button and a plain <span> from its
+              own props, and `type` is the half of that test which does not
+              depend on the clone having happened.
+
+              The disabled styling is the component's own
+              (`disabled:opacity-50 disabled:cursor-not-allowed`); the pair of
+              classes hand-written here said the same thing slightly
+              differently. */}
+          <Button type="button" color="secondary" disabled={busy}>
             {busy ? "Saving…" : avatarUrl ? "Change" : "Upload"}
-          </button>
+          </Button>
         </FileTrigger>
         {said && <SettingsSaid>{said}</SettingsSaid>}
       </div>
