@@ -3,6 +3,7 @@ import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/custom/ThemeProvider";
+import LiveDataWarning from "@/components/custom/LiveDataWarning";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
@@ -73,11 +74,15 @@ export const metadata: Metadata = {
    * every route in this app is a tool behind a password, and a tool has nothing
    * to offer a search engine.
    *
-   * Two routes override it, and only two — / , which is the page whose whole
-   * job is being found, and /user/<name>, which is the collection worth
-   * finding. Set here rather than per-route so that a new screen is private by
-   * accident rather than public by accident, which is the direction that
-   * mistake should fall in.
+   * Five routes override it, and only five — / , which is the page whose whole
+   * job is being found; /user/<name>, which is the collection worth finding;
+   * /app/ios, which is the iPhone app's page; and /privacy and /terms, which
+   * are linked from App Store Connect and have to be reachable. Set here rather
+   * than per-route so that a new screen is private by accident rather than
+   * public by accident, which is the direction that mistake should fall in.
+   *
+   * The count has been wrong in this comment twice, because it grew by one
+   * twice. `grep -rn "index: true" app/` is the list, and it is authoritative.
    */
   robots: { index: false, follow: false },
 };
@@ -126,6 +131,10 @@ export default function RootLayout({
       </head>
       <body className="bg-secondary text-primary font-body min-h-screen text-pretty">
         <ThemeProvider>
+          {/* Renders nothing in a production build, and nothing when the
+              database is a local Supabase stack. See the file for why this is a
+              warning rather than a block. */}
+          <LiveDataWarning />
           <a
             href="#main-content"
             className="absolute -top-full left-4 px-4 py-2

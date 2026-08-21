@@ -319,7 +319,15 @@ export function variantPrice(card: OwnedCard, variant: Variant): Price | null {
   return (variant.finish === "reverse-holo" && card.priceHolo) || card.price;
 }
 
-export function forGrid(sets: CardSet[]): CardSet[] {
+/**
+ * Generic over the set shape, because it does not touch a variant.
+ *
+ * It only nulls `imageHigh`, so it is correct for both the owner's sets and the
+ * narrowed public ones — and staying generic is what lets `forGrid(forPublic(…))`
+ * keep the public type all the way to the caller instead of widening it back to
+ * `CardSet[]` and losing the guarantee at the last step.
+ */
+export function forGrid<T extends { cards: { imageHigh: string | null }[] }>(sets: T[]): T[] {
   return sets.map((set) => ({
     ...set,
     cards: set.cards.map((card) => ({ ...card, imageHigh: null })),
@@ -370,6 +378,16 @@ export function forPublic(sets: CardSet[]): CardSet[] {
       ...card,
       price: null,
       priceHolo: null,
+      // Eleven keys written as null rather than omitted, and that is 472.3 kB
+      // of the 1,050 kB RSC flight payload on a 1,635-card profile — 45% of it,
+      // measured. Omitting them instead is the obvious win and was attempted;
+      // it is not as simple as it looks, and the reason is worth keeping:
+      // CardsView reads `finish` after all, transitively, through
+      // shownPrice() -> variantPrice(), which branches on
+      // `variant.finish === "reverse-holo"`. Narrowing the public variant to two
+      // fields therefore breaks nine call sites in a 1,767-line file that is
+      // already queued for its own refactor. Do it there, with variantPrice()
+      // taking an optional finish, not here. See STATE.md.
       variants: card.variants.map((v) => ({
         rarity: v.rarity,
         owned: v.owned,
@@ -770,7 +788,17 @@ export type CardDetail = {
 export async function getCardDetail(id: string): Promise<CardDetail | null> {
   let card;
   try {
-    card = (await json(`https://api.tcgdex.net/v2/en/cards/${id}`, `card ${id}`)) as {
+    // Encoded, not interpolated raw. This id reaches here straight off a URL
+    // segment on the unauthenticated public route, and Next has already decoded
+    // it — so "..%2F..%2Fsets" arrives as "../../sets" and fetch() normalises it
+    // away to a different TCGdex endpoint. The host cannot be changed this way,
+    // so it was never SSRF, but each traversal string is another uncacheable
+    // outbound request and the next person to copy this line may not have a
+    // fixed host.
+    card = (await json(
+      `https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(id)}`,
+      `card ${id}`,
+    )) as {
       id?: string;
       name?: string;
       image?: string;

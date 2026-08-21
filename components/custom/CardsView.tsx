@@ -16,7 +16,6 @@ import Card from "@/components/custom/Card";
 import CardAddDialog from "@/components/custom/CardAddDialog";
 import PublicCardDialog from "@/components/custom/PublicCardDialog";
 import CardItem from "@/components/custom/CardItem";
-import CardsDashboard from "@/components/custom/CardsDashboard";
 import CardsPokedex from "@/components/custom/CardsPokedex";
 import CardsProfile from "@/components/custom/CardsProfile";
 import CardsSidebar, { retryAsPng } from "@/components/custom/CardsSidebar";
@@ -27,7 +26,7 @@ import ViewSheet from "@/components/custom/ViewSheet";
 import ViewMenu from "@/components/custom/ViewMenu";
 import FilterChips, { type ActiveFilter } from "@/components/custom/FilterChips";
 import { useSession } from "@/app/hooks/useSession";
-import { getCardsStats, tally } from "@/lib/core/cards-stats";
+import { tally } from "@/lib/core/cards-stats";
 import { caught, getPokedex } from "@/lib/core/pokedex";
 import { shownPrice } from "@/lib/core/cards";
 import { type CardField, type DexOwned } from "@/components/custom/cards-fields";
@@ -839,12 +838,6 @@ export default function CardsView({
   }, []);
   const hasMore = builtSets < filtered.length;
 
-  // The dashboard reads the whole collection, not what is filtered: it is the
-  // page's answer to "what is in here", and a total that moved every time a box
-  // was ticked would be answering a different question.
-  // Only the dashboard reads these, and the public link has no dashboard, so
-  // the walk over sixteen hundred cards is skipped rather than thrown away.
-  const stats = useMemo(() => (isPublic ? null : getCardsStats(sets)), [isPublic, sets]);
 
   /**
    * Vintage and modern, as a facet rather than as three buttons in the bar.
@@ -1395,16 +1388,6 @@ export default function CardsView({
             setSelected("all");
           }}
         />
-      ) : onDashboard && stats ? (
-        // No value history here, deliberately. This branch is what is left of
-        // the old /cards dashboard — onDashboard is false for the public
-        // variant, and the owner variant reaches this file through
-        // CollectionScreen, which never names "dashboard" as its scope, so in
-        // practice nothing renders it. The live dashboard is
-        // app/(app)/dashboard/page.tsx, a server component that can read the
-        // viewer's own snapshots; this one is a client component with no way
-        // to ask, and an empty series draws no chart rather than a wrong one.
-        <CardsDashboard stats={stats} snapshots={[]} />
       ) : (
         <>
           {/* Nothing to draw, and two quite different reasons for it — see

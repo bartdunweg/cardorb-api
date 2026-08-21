@@ -2,6 +2,200 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
+
+Five `review-*` skills were run over the whole app rather than over a diff —
+there was no diff, the tree was level with `main`. **SEO, security and
+performance reported; interface and accessibility did not** (a session limit
+killed them mid-run, and their re-run is the obvious next task). SEO's and
+security's findings are fixed and on this branch. **Performance's are not
+touched, and they are the biggest numbers in the sweep** — see below.
+
+`verify.sh` exits 0. 521 tests, up from 515. Gzipped client JS unchanged at
+604.3 kB (measured as `find .next/static -name '*.js' | gzip | sum`; `STATE.md`'s
+older 595.7 figure came from a different method — compare like with like).
+
+### Fixed, with evidence
+
+- **`/app/ios` was shipping no `og:image` at all** (ADR-0072). A nested
+  `openGraph` block *replaces* the root one rather than merging, so declaring one
+  drops `app/opengraph-image.tsx`. The repo already knew this — `privacy/page.tsx`
+  carries a comment warning that "anything that declares openGraph in a nested
+  route from now on has the same hole" — and `/app/ios` was written afterwards and
+  fell in anyway. **A warning in a comment in another file did not prevent the
+  second occurrence**, which is why the fix is a shared `SITE_OG_IMAGE` constant
+  (`lib/core/og.ts`) that also feeds the image route's own `alt`/`size`. Proved by
+  curl against a production build: the page went from zero `og:image` tags to the
+  full set plus `twitter:image`.
+- **The landing page's `<title>` was the bare brand name** (ADR-0073). The
+  `title.absolute` that produced it was a correct escape from a doubling
+  template; the string chosen was the problem.
+- **Four comments claimed two or three indexable routes. There are five.**
+  `grep -rn "index: true" app/` is the authoritative list and is now cited in
+  the comments instead of a number.
+- **Three routes had no rate limiter and one promised a check it never had**
+  (ADR-0074) — the public card lookup, the CSV import, the avatar upload, and
+  `usernames/[name]`'s missing `sameOrigin`. All four are the same shape ADR-0023
+  closed, and are its unfinished business rather than new ground. The avatar
+  route also trusted the `data:` prefix about the bytes; it checks the signature
+  now. **Both new tests were proved to fail without their fix**, not merely to
+  pass with it.
+- **Two `CLAUDE.md` lines were wrong and are corrected.** It said read access to
+  `/api/v1/collection` and `/api/v1/cards/:tcgId` is "intentionally open" — both
+  call `authorise()` and refuse an anonymous caller. And it described the wrong
+  fallback for `NEXT_PUBLIC_SITE_URL`; the code avoids `VERCEL_URL` deliberately
+  and is safer than its own documentation claimed. The real constraint, measured:
+  the variable is inlined at **build** time, so setting it only at runtime does
+  nothing and changing it needs a redeploy.
+
+### Not fixed, and the reasons differ
+
+- **`secure_password_change = false`** (`supabase/config.toml:259`) — the most
+  severe finding of the whole sweep. `app/api/v1/password/route.ts` says in its
+  own docstring that it has no current-password field *because* Supabase's
+  setting applies the rule properly. That setting is off, so **nothing anywhere
+  asks for the current password**: a borrowed unlocked session can change the
+  password, which signs the real owner out of their own account, and chain into
+  `/api/v1/email` and then `DELETE /api/v1/account`. Not fixed here because
+  `config.toml` governs the local stack while the hosted project's Auth settings
+  live in the dashboard and can differ — it is a production decision, and it is
+  with the owner.
+### Performance: one fixed and measured, one attempted and honest, two open
+
+- **Fixed: `recharts` no longer ships to five routes that draw no chart.**
+  `CardsView.tsx` imported `CardsDashboard`, which reaches recharts, for a branch
+  its own comment said never renders. Proved dead before deleting rather than
+  trusting the comment: every `scope` any caller passes is `all`, `wishlist`,
+  `era:*` or a set name — never `dashboard` — and the public variant sets
+  `onDashboard` false regardless. **Measured: `/user/[username]` went 285.3 →
+  162.8 kB gzip**, and the recharts chunk is now named by exactly one route
+  manifest, `/dashboard`. Total bundle went 604.3 → 609.8 kB because chunking
+  redistributed; per-route is the number that matters here, and the total is not
+  a regression in what any one visitor downloads.
+- **Attempted and it does not work yet — `/` and `/app/ios` are still
+  uncacheable.** Both awaited `currentViewer()` at the top of the component for
+  one navbar pill, which made them `no-store` with a CDN MISS every time
+  (~+80 ms TTFB against a static `/privacy` serving from cache at `age: 7213`).
+  The await now lives in `components/custom/MarketingViewerSlot.tsx` behind a
+  `<Suspense>` boundary — **and that is not enough.** On Next 16 without Cache
+  Components enabled, a `cookies()` read anywhere in the tree still makes the
+  whole route dynamic; Suspense alone carves out no static shell. Verified after
+  the change: the build still marks `/app/ios` `ƒ` and neither route is in
+  `.next/prerender-manifest.json`. Enabling `cacheComponents` is a project-wide
+  migration with its own adoption skill and would have to reckon with the two
+  routes that are `force-dynamic` for real reasons. **The component was kept
+  anyway**: the same fourteen lines of navbar JSX had been written twice, and the
+  caching fix now needs one edit instead of three. Its docblock says all of this
+  so the next reader is not misled.
+- **Open: the public profile is 6.24 MB of HTML, and 4.55 MB of it is `class`
+  attributes** — one 1,346-character string repeated 1,610 times, six strings
+  making up ~4.0 MB. Gzip hides it on the wire (141 kB); the browser still parses
+  all of it across 20,054 elements. Collapsing the repeated strings into real
+  CSS measured 6.24 → 2.07 MB.
+- **Open, and attempted then reverted: 472 kB of the 1,050 kB RSC payload is
+  keys that are always null.** `forPublic` writes eleven excluded variant fields
+  out as `null` instead of omitting them. Omitting them is right and is *not* a
+  small change — **the premise that nothing reads those fields is false.**
+  `CardsView` reads `finish`, transitively, through `shownPrice()` →
+  `variantPrice()`, which branches on `variant.finish === "reverse-holo"`.
+  Narrowing the public variant to two fields breaks nine call sites inside
+  `CardsView.tsx`, the 1,767-line file already queued for its own refactor. Do it
+  there, with `variantPrice()` taking an optional finish. The attempt left one
+  thing behind that was worth keeping: `cards-public.test.ts` now asserts the
+  allow-list **as a whole** — every non-null key equals exactly `rarity` and
+  `owned` — rather than one field at a time.
+- **Also corrected:** `CardsView.tsx`'s comment claimed the public route is
+  static and so rendering all 1,610 tiles "costs once, in prerender". It is
+  `force-dynamic` on purpose, so that cost is paid per request. Still open as a
+  decision; the comment is no longer the thing hiding it.
+
+### Interface and accessibility: reported, nothing fixed
+
+Both reviews completed on the second attempt and both returned **Block**.
+
+**The systemic finding, and it is this repo's own standard failing:** reasoning
+that outlived its code, in at least seven places. `app/globals.css` points
+readers at **seven stylesheets that no longer exist** (`tabbar.css`,
+`components.css`, `cards.css`, `tokens.css`, `theme-toggle.css`, `landing.css`,
+`layout.css`) — three of those as active instructions. Four comments describe
+`/fifa` and `/favorites`, routes belonging to a different project. A documented
+`--main-pad-top: 32px` computes to `160px`. A token cited as justification
+(`--color-border-active`) does not exist. And `untitledButtonClasses.ts`'s header
+is worse than the lead suggested: it names four reasons a plain `<button>` is
+allowed, says "five call sites", has ten, and **three of the four reasons are
+false** — FilterSheet and ViewSheet are not `<details>/<summary>` any more,
+AvatarPicker's trigger is not a `<label>`, and PublicCardDialog's arrows are real
+buttons.
+
+**Two HIGH accessibility findings, both small and both real:**
+- **The filter and view sheets are a keyboard trap.** `Sheet` hides the close
+  button with `display:none`; `Modal`'s focusable selector filters on `disabled`,
+  not visibility, so it returns that invisible button, focuses it (a no-op), and
+  every subsequent Tab is `preventDefault`ed back to it. Escape still works, so
+  it is escapable — but nothing inside is reachable. Affects every collection
+  route at ≤1000px, which includes a desktop user at 200% zoom. The same selector
+  omits `input`, `select` and `textarea`, so wrapping is wrong in `CardAddDialog`
+  too.
+- **The skip link lands before the navigation it skips.** `#main-content` wraps
+  `{children}`, and `AppShell` renders the sidebar and tab bar *inside* it.
+
+**Five HIGH interface findings:** `/brand` renders the wordmark invisible in dark
+mode (one panel pins `#ffffff` inline while the word is `text-primary`); the
+landing nav's "How it works" points at the Features section; `DashboardScreen`
+never reads `failed`, so a database outage renders "0 cards, €0" as confident
+fact; five different `padding-block` clamps stack into ~2,000 px of void on a
+5,203 px landing page.
+
+Full reports are in this session's transcript, not on disk. **Nothing from either
+review has been fixed.** Contrast numbers are computed from token values, which
+is evidence; no screen reader was run and no axe pass happened, which is not.
+
+### Worth carrying forward
+
+- **The ADR-0045 allow-list did its job on the first new column that tested it.**
+  `finish`, added by a later migration, is excluded with its own comment. The
+  design works; this is the evidence.
+- **The vendored-import lesson held**, and it was verified in the build rather
+  than by reading source: zero `@untitledui/file-icons` in `.next/static`, no
+  barrel names, and all 46 vendored components checked. `@untitledui/icons`
+  tree-shakes correctly — 51 imported, 50 shipped.
+- **The Untitled UI licence key at `scripts/untitled-add.mjs:52` is not a leaked
+  credential** and should not be rotated in a panic. The argument written above it
+  holds on security grounds — build-time only, no data access, `gitleaks` clean.
+  It is a paid entitlement in a repo whose own rules say to write nothing
+  unpublishable, so it should come out before this repository is ever public.
+  That is a licensing point, not a security one.
+- **Production carried a leftover test value, and it is fixed** (ADR-0076).
+  `profiles.display_name` for `bartdunweg` was literally `UI test 2416`, titling
+  an indexed, sitemapped public page. Emptied — not set to the username, so the
+  `ownerLabel()` fallback does the work and ADR-0034's "no name given" stays
+  distinguishable. Verified live: `bartdunweg's Pokémon card collection`.
+  **The cause is worth more than the fix: there is one Supabase project**, and
+  `npm run dev` writes to it. A red `LiveDataWarning` bar now says so on every
+  local page. A separate dev database was considered and rejected — a dev
+  database with twelve cards cannot reproduce the bugs a 1,600-card matcher has.
+  Still true and not addressed: the profile `test` holds "UI test 2025" (private,
+  left alone deliberately), and `pikachu` ("Bigi Mang") is a second public
+  profile in the live sitemap that nobody has confirmed is meant to be.
+  **Agreed and not built:** move the screenshot harness off the real owner
+  account onto a test account with a copied collection.
+- **`find-seo-opportunities` produced nothing, on purpose.** No Search Console
+  credential of any kind exists in this session and no `google-site-verification`
+  token is in the repo. The skill's own first step is to stop rather than invent
+  briefs. To unblock: export `Queries.csv` and `Pages.csv` from Search Console.
+
+### Not measured, and it is a deliberate hole
+
+**No visual verification happened at all**, by explicit instruction. ADR-0069's
+recipe (build the reference commit in a worktree, copy its baselines) was not
+run, so every interface claim this session is `not measured` rather than `pass`.
+The three things `STATE.md` already listed as needing a human signed in are still
+open and untouched. Also unmeasured: live RLS and the hosted Auth config (the
+`supabase` MCP is registered but not signed in — that needs `/mcp` in an
+interactive session), production response headers, and all Core Web Vitals.
+Vercel Web Analytics is already enabled and is the cheapest source for the last
+of those.
+
 ## Shipped (2026-08-21)
 
 Everything in the three entries below merged as **PR #104** and is live.

@@ -123,10 +123,19 @@ serves it an API.
 - Deployed on Vercel with DNS on Cloudflare in DNS-only mode (not proxied) — proxying would
   break `x-forwarded-host`, which `sameOrigin()` in `lib/api/guard.ts` depends on. Do not
   suggest enabling the Cloudflare proxy.
-- `NEXT_PUBLIC_SITE_URL` should always be set explicitly in production; without it `SITE_URL`
-  falls back to Vercel's per-deployment URL, which breaks canonicals/sitemap/robots.
-- Read access to `/api/v1/collection` and `/api/v1/cards/:tcgId` is intentionally open (no
-  key) because the collection itself is public; only writes require `CARDS_TOKEN`.
+- `NEXT_PUBLIC_SITE_URL` should always be set explicitly in production, and it must be set in
+  Vercel's **Build** environment. Because the name starts with `NEXT_PUBLIC_`, Next inlines it
+  at build time: setting it only at runtime silently does nothing, and changing it needs a
+  redeploy. Without it, `SITE_URL` falls back to `VERCEL_PROJECT_PRODUCTION_URL` — the stable
+  project URL, not the per-deployment one — so canonicals stay on a real domain but not
+  necessarily the custom one. (`lib/core/config.ts` avoids `VERCEL_URL` deliberately, for
+  exactly the per-deployment reason an earlier version of this line got wrong.)
+- `/api/v1/collection` and `/api/v1/cards/:tcgId` both call `authorise()` and refuse an
+  anonymous caller. They used to be open, and this line used to say so; they were closed when
+  `/user/<name>` shipped, and each route's docstring says why. The genuinely open, unkeyed
+  routes are the three under `/api/v1/public/<username>/`, which serve the public profile —
+  those are open on purpose (ADR-0021), carry no prices (ADR-0045), and each has its own rate
+  limiter. Do not "fix" the guard back off `/api/v1/collection`.
 
 ## Where things live
 

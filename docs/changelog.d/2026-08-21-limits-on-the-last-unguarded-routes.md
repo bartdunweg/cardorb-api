@@ -1,0 +1,3 @@
+- The public card lookup, the CSV import and the avatar upload are now rate limited, like every other endpoint already was. Nobody using the app normally will meet these limits.
+- Checking whether a username is free now only answers this site's own sign-up form, not a script running on someone else's page.
+- An avatar upload is now checked against the actual file, not just what the upload claims it is.

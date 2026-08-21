@@ -1,0 +1,1 @@
+- A public collection page now downloads about 120 kB less: a charting library was being sent to five screens that never draw a chart.

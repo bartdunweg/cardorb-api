@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "../../../../../lib/api/guard";
+import { createRateLimiter } from "../../../../../lib/api/rate-limit";
 import { bearer, requestViewer } from "../../../../../lib/api/viewer";
 import { serverClient, userClient } from "../../../../../lib/storage/supabase";
 import { updateProfile } from "../../../../../lib/storage/postgres";
@@ -28,11 +29,57 @@ const MIME_TO_EXT: Record<string, string> = {
   "image/webp": "webp",
 };
 
+/**
+ * Do the first bytes agree with the declared type?
+ *
+ * Three signatures, one per entry in MIME_TO_EXT above. PNG and JPEG are fixed
+ * byte sequences; WebP is a RIFF container, so the check is the two four-byte
+ * tags with the file length between them.
+ *
+ * Deliberately not a decode: this is a cheap "is it plausibly what it claims"
+ * that stops a text file, a script or an SVG being stored as image/png, not a
+ * guarantee that the pixels are valid. A malformed PNG is the browser's problem
+ * and always was.
+ */
+function looksLike(mime: string, bytes: Buffer): boolean {
+  if (mime === "image/png") {
+    return bytes.length > 8 && bytes.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex"));
+  }
+  if (mime === "image/jpeg") {
+    return bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (mime === "image/webp") {
+    return (
+      bytes.length > 12 &&
+      bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+      bytes.subarray(8, 12).toString("ascii") === "WEBP"
+    );
+  }
+  return false;
+}
+
+/**
+ * Thirty uploads per account per fifteen minutes.
+ *
+ * Keyed on the account rather than the address, like the CSV import: the cost
+ * is Storage operations and bandwidth, which belong to a user. `upsert: true`
+ * at a fixed path means nothing accumulates, so this is spend rather than
+ * growth — but it was unthrottled, and it is a 2 MB body.
+ *
+ * Generous on purpose. Someone cropping a picture until they like it is the
+ * normal case and should never meet this.
+ */
+const byAccount = createRateLimiter(15 * 60_000, 30);
+
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const viewer = await requestViewer(req);
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+
+  if (byAccount(viewer.userId)) {
+    return NextResponse.json({ error: "Too many uploads. Try again shortly." }, { status: 429 });
+  }
 
   let body: { image?: unknown };
   try {
@@ -60,6 +107,18 @@ export async function POST(req: Request) {
   }
   if (bytes.length === 0 || bytes.length > MAX_BYTES) {
     return NextResponse.json({ error: "Images up to 2MB only." }, { status: 400 });
+  }
+
+  // The `data:` prefix is a claim by the caller, not a fact about the bytes, and
+  // until here it was the only thing deciding what got stored and under which
+  // Content-Type. The bucket is public (see the migration), so what lands in it
+  // is served to anyone with the URL — arbitrary bytes labelled image/png.
+  // Checking the signature is what turns the caller's claim into a fact.
+  if (!looksLike(mime!, bytes)) {
+    return NextResponse.json(
+      { error: "That file is not the kind of image it says it is." },
+      { status: 400 },
+    );
   }
 
   const token = bearer(req);

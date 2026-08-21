@@ -112,4 +112,30 @@ describe("GET /api/v1/public/[username]/cards/[tcgId]", () => {
     const res = await GET(req(), params(PUBLIC_USERNAME));
     expect(res.headers.get("Cache-Control")).toContain("public");
   });
+
+  /**
+   * Last, and it has to be: the limiter is module state, so once this has run
+   * the address it used is spent for the rest of the file. It uses an address
+   * of its own for that reason, and every test above shares the default one.
+   *
+   * Why the route needs this at all, when the response is CDN-cacheable: the
+   * cache key is the path, and the path carries an arbitrary card id. A loop
+   * over invented ids is a cold miss every time — one Postgres round trip plus
+   * one outbound TCGdex fetch each — so the cache never sees it.
+   */
+  it("stops a loop over invented card ids after sixty a minute", async () => {
+    const flood = (tcgId: string) =>
+      GET(
+        new Request("https://cardorb.example/x", { headers: { "x-real-ip": "203.0.113.9" } }),
+        params(PUBLIC_USERNAME, tcgId),
+      );
+
+    for (let i = 0; i < 60; i++) {
+      expect((await flood(`sv03-${i}`)).status).toBe(200);
+    }
+    const blocked = await flood("sv03-61");
+    expect(blocked.status).toBe(429);
+    // And the expensive half never runs: 60 calls, not 61.
+    expect(getCardDetail).toHaveBeenCalledTimes(60);
+  });
 });

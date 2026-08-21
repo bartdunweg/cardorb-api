@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createRateLimiter } from "../../../../../../../lib/api/rate-limit";
 import { getCardDetail } from "../../../../../../../lib/core/cards";
 import { ownerOf } from "../../../../../../../lib/core/collection";
 
@@ -27,10 +28,32 @@ import { ownerOf } from "../../../../../../../lib/core/collection";
  */
 export const dynamic = "force-dynamic";
 
+/**
+ * Sixty a minute per address, the same as both sibling public routes.
+ *
+ * The CDN header below does not stand in for this, and this route is the worst
+ * case of the three for exactly that reason: the cache key is the *path*, and
+ * the path carries an arbitrary card id. Every distinct id is a cold miss
+ * costing one Postgres round trip (`ownerOf`) plus one outbound TCGdex fetch,
+ * so a loop over invented ids never touches the cache once. ADR-0023 rejected
+ * "the CDN covers it" for the sibling collection route, where there is at least
+ * one canonical URL per user; here there is not.
+ */
+const byAddress = createRateLimiter(60_000, 60);
+
+const addressOf = (req: Request) =>
+  req.headers.get("x-real-ip")?.trim() ||
+  req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  "unknown";
+
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ username: string; tcgId: string }> },
 ) {
+  if (byAddress(addressOf(req))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { username, tcgId } = await params;
   if (!(await ownerOf(username))) {
     return NextResponse.json({ error: "No such collection." }, { status: 404 });
