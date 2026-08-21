@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SearchLg } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Search } from "lucide-react";
@@ -101,7 +103,15 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       </p>
 
       {!found ? (
-        <p className="cards-empty">No set matches “{query.trim()}”.</p>
+        /* Three parts of EmptyState, not eleven — see the note in SetIndex.tsx. */
+        <EmptyState size="sm" className="gap-2 py-8">
+          <EmptyState.Header>
+            <EmptyState.FeaturedIcon color="gray" icon={SearchLg} />
+          </EmptyState.Header>
+          <EmptyState.Description>
+            No set matches “{query.trim()}”.
+          </EmptyState.Description>
+        </EmptyState>
       ) : (
         groups.map((group) => (
           <section key={group.series} className="flex flex-col gap-4">

@@ -10,6 +10,8 @@ import {
   useEffect,
 } from "react";
 import { Search, X } from "lucide-react";
+import { FilterFunnel01, Inbox01 } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
 import Card from "@/components/custom/Card";
 import CardAddDialog from "@/components/custom/CardAddDialog";
 import PublicCardDialog from "@/components/custom/PublicCardDialog";
@@ -1408,34 +1410,52 @@ export default function CardsView({
                 the emptyReason prop. Either way it says so, which beats an
                 empty page that looks like something failed to paint. */}
           {sets.length === 0 ? (
-            <Card className="cards-empty [&_p]:m-0 [&_p]:max-w-[52ch] [&_p]:text-md [&_p]:leading-relaxed [&_p]:text-tertiary">
-              {emptyReason === "nothing-yet" ? (
-                <>
-                  <p>
-                    No cards yet. Add the first one, or bring a collection in from a spreadsheet
-                    under Settings.
-                  </p>
-                  {onAdd && (
-                    <p>
-                      <button
-                        type="button"
-                        className={untitledButton({ color: "secondary" })}
-                        onClick={onAdd}
-                      >
-                        Add a card
-                      </button>
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p>The collection is not available right now. It should be back shortly.</p>
-              )}
+            <Card>
+              {/* Three parts of EmptyState, not eleven — see the note in
+                  SetIndex.tsx. Inside the glass Card rather than replacing it:
+                  the card is the surface, the empty state is what stands on
+                  it. */}
+              <EmptyState size="md" className="gap-2 py-4">
+                <EmptyState.Header>
+                  <EmptyState.FeaturedIcon color="gray" icon={Inbox01} />
+                </EmptyState.Header>
+                {emptyReason === "nothing-yet" ? (
+                  <>
+                    <EmptyState.Description>
+                      No cards yet. Add the first one, or bring a collection in from a spreadsheet
+                      under Settings.
+                    </EmptyState.Description>
+                    {onAdd && (
+                      <EmptyState.Footer className="mt-4">
+                        <button
+                          type="button"
+                          className={untitledButton({ color: "secondary" })}
+                          onClick={onAdd}
+                        >
+                          Add a card
+                        </button>
+                      </EmptyState.Footer>
+                    )}
+                  </>
+                ) : (
+                  <EmptyState.Description>
+                    The collection is not available right now. It should be back shortly.
+                  </EmptyState.Description>
+                )}
+              </EmptyState>
             </Card>
           ) : filtered.length === 0 ? (
-            <Card className="cards-empty [&_p]:m-0 [&_p]:max-w-[52ch] [&_p]:text-md [&_p]:leading-relaxed [&_p]:text-tertiary">
-              <p>
-                Nothing matches that combination. Try fewer filters, or a different Pokémon or set.
-              </p>
+            <Card>
+              {/* Three parts of EmptyState, not eleven — see the note in SetIndex.tsx. */}
+              <EmptyState size="md" className="gap-2 py-4">
+                <EmptyState.Header>
+                  <EmptyState.FeaturedIcon color="gray" icon={FilterFunnel01} />
+                </EmptyState.Header>
+                <EmptyState.Description>
+                  Nothing matches that combination. Try fewer filters, or a different Pokémon or
+                  set.
+                </EmptyState.Description>
+              </EmptyState>
             </Card>
           ) : onFlat ? (
             <section className={cardsSetClassName}>

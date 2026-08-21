@@ -4,6 +4,8 @@ import Link from "next/link";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
+import { Grid01 } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
 import Segmented from "@/components/custom/Segmented";
 import { useCollection } from "@/app/(app)/CollectionContext";
 import { LOCALE } from "@/lib/core/config";
@@ -115,14 +117,21 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
            say. The third is the one worth spelling out: a set the catalogue
            lists but has not indexed the cards of is not the same as a set you
            have finished, and saying "you have every card" there would be a
-           congratulation for nothing. */
-        <p className="cards-empty">
-          {!cards.length
-            ? "The catalogue doesn't list any cards for this set yet."
-            : show === "owned"
-              ? "You have none of this set yet."
-              : "You have every card in this set."}
-        </p>
+           congratulation for nothing.
+
+           Three parts of EmptyState, not eleven — see the note in SetIndex.tsx. */
+        <EmptyState size="sm" className="gap-2 py-8">
+          <EmptyState.Header>
+            <EmptyState.FeaturedIcon color="gray" icon={Grid01} />
+          </EmptyState.Header>
+          <EmptyState.Description>
+            {!cards.length
+              ? "The catalogue doesn't list any cards for this set yet."
+              : show === "owned"
+                ? "You have none of this set yet."
+                : "You have every card in this set."}
+          </EmptyState.Description>
+        </EmptyState>
       ) : (
         <ul
           className="grid [grid-template-columns:repeat(auto-fill,minmax(120px,1fr))] gap-x-3 gap-y-5 m-0 p-0 list-none"
