@@ -9,7 +9,7 @@ import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/ptcg-search";
 import { modalCardAddClassName } from "@/components/custom/cardModalClasses";
 import { Button } from "@/components/base/buttons/button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
-import { Input } from "@/components/base/input/input";
+import { Input, InputBase } from "@/components/base/input/input";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
 /**
@@ -55,26 +55,17 @@ const cardAddLabelClassName =
   "font-body text-xs font-semibold" +
   " text-secondary p-0 [float:none]";
 
-// The GLASS CONTROL / CONTROL recipe .card-add-field input used to read from
-// components.css's grouped selectors, alongside .btn/.cards-search/
-// .filter-menu > summary. This is the Tailwind copy, kept in sync by hand the
-// same way FormField.tsx's FormInput carries its own copy of the same idea
-// for a different control.
-const cardAddInputClassName =
-  "h-10 border border-secondary bg-primary rounded-pill " +
-  "[backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary " +
-  "font-body text-sm font-bold " +
-  "placeholder:text-tertiary dark:border-secondary " +
-  "hover:shadow-lg focus-visible:border-primary";
-
-/** The one big field this dialog opens on — taller and louder than the rest. */
-const cardAddSearchClassName =
-  "h-14 w-full pl-11 pr-11 border border-secondary bg-primary rounded-2xl " +
-  "[backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary outline-none " +
-  "font-body text-display-xs font-bold " +
-  "placeholder:text-tertiary dark:border-secondary " +
-  "hover:shadow-lg focus-visible:border-primary " +
-  "[&::-webkit-search-cancel-button]:hidden";
+/**
+ * The one big field this dialog opens on — taller and louder than the rest.
+ *
+ * The surface is Untitled UI's `InputBase` now; what is left here is only the
+ * two ways this field is deliberately not like every other one: it is 56px
+ * rather than 40, and it is set at `text-display-xs`. Their `lg` is as big as
+ * their scale goes and it is smaller than both, so the emphasis has to be said
+ * here or lost.
+ */
+const cardAddSearchInputClassName =
+  "h-14 pr-11 font-body text-display-xs font-bold [&::-webkit-search-cancel-button]:hidden";
 
 const EMPTY: Draft = {
   name: "",
@@ -451,16 +442,17 @@ export default function CardAddDialog({
           <>
             {mode === "quick" ? (
               <div className="relative">
-                <Search
-                  size={18}
-                  strokeWidth={1.75}
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-tertiary"
-                />
-                <input
+                {/* `InputBase` carries the leading icon, so the absolutely
+                    positioned `<Search>` that used to sit here is gone. The
+                    clear button below stays outside it — their trailing slot
+                    is for a tooltip or the invalid icon, not an action. */}
+                <InputBase
                   ref={searchInputRef}
+                  icon={Search}
+                  size="lg"
                   type="search"
-                  className={cardAddSearchClassName}
+                  wrapperClassName="rounded-2xl"
+                  inputClassName={cardAddSearchInputClassName}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   autoComplete="off"
@@ -497,18 +489,24 @@ export default function CardAddDialog({
                   autoComplete="off"
                   placeholder="006"
                 />
-                {/* Still a native input with a <datalist>, where Name and
-                    Number above are Untitled UI's. Its Input has no `list`
-                    prop, and Untitled UI's answer to "field that suggests" is
-                    Combobox — a different interaction (ARIA listbox, and it
-                    wants allowsCustomValue to keep free text working). That is
-                    a change worth making on purpose rather than at the end of a
-                    sweep. ADR-0059 has the choice; until it is taken, these
-                    three keep the behaviour they have. */}
+                {/* Still a `<datalist>`, and still deliberately not a
+                    Combobox: Untitled UI's answer to "field that suggests" is
+                    a different interaction (ARIA listbox, and it wants
+                    allowsCustomValue to keep free text working), which
+                    ADR-0059 left as a decision to take on purpose rather than
+                    at the end of a sweep.
+
+                    What did change is the surface. `Input` above has no `list`
+                    prop, which is why these three carried a hand-copied recipe
+                    of Untitled UI's field — pill-shaped, bold, its own hover
+                    shadow — sitting beside the real thing and drifting from
+                    it. `InputBase` is the layer below `Input` and passes
+                    arbitrary input attributes through, `list` included, so
+                    they wear the same surface as Name and Number now without
+                    the datalist question being touched. */}
                 <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
                   <span className={cardAddLabelClassName}>Set</span>
-                  <input
-                    className={cardAddInputClassName}
+                  <InputBase
                     value={filters.set}
                     onChange={(e) => setFilter("set", e.target.value)}
                     list="card-add-sets"
@@ -519,8 +517,7 @@ export default function CardAddDialog({
                 {suggest("card-add-sets", fields?.sets)}
                 <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
                   <span className={cardAddLabelClassName}>Type</span>
-                  <input
-                    className={cardAddInputClassName}
+                  <InputBase
                     value={filters.type}
                     onChange={(e) => setFilter("type", e.target.value)}
                     list="card-add-filter-types"
@@ -719,8 +716,7 @@ export default function CardAddDialog({
 
             <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
               <span className={cardAddLabelClassName}>Generation</span>
-              <input
-                className={cardAddInputClassName}
+              <InputBase
                 value={draft.gen}
                 onChange={(e) => set("gen", e.target.value)}
                 list="card-add-gens"

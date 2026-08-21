@@ -1,4 +1,5 @@
 import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { InputBase } from "@/components/base/input/input";
 import { ToggleBase } from "@/components/base/toggle/toggle";
 
 /**
@@ -88,28 +89,33 @@ export function SettingsSaid({ className, ...rest }: HTMLAttributes<HTMLParagrap
   return <p className={cx("mt-2 text-sm text-primary", className)} {...rest} />;
 }
 
-export const SettingsInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  function SettingsInput({ className, ...rest }, ref) {
+export const SettingsInput = forwardRef<
+  HTMLInputElement,
+  // `size` is omitted, and it is the one prop that could not come along: on a
+  // native <input> it is a character count, and on InputBase it is
+  // "sm" | "md" | "lg". Nothing here ever passed it.
+  Omit<InputHTMLAttributes<HTMLInputElement>, "size">
+>(function SettingsInput({ className, ...rest }, ref) {
     return (
-      <input
+      // Untitled UI's `InputBase`, not the recipe copied off it — which is
+      // what this was, five classes deep, under a comment saying their
+      // component "is a React Aria TextField with no ref to give". That is
+      // true of `TextField` and `Input`; `InputBase` is the layer below both
+      // and takes a `ref` outright, so the four settings forms that hand this
+      // one a ref keep working.
+      //
+      // Their wrapper also carries the focus ring on the group rather than the
+      // field, so it survives a leading icon — which the copy could not do.
+      <InputBase
         ref={ref}
-        className={cx(
-          // Capped: the panels span the whole pane now that Settings is a
-          // full-width page, and a 900px-wide email field is a field you have
-          // to aim at rather than read.
-          "w-full max-w-[26rem]",
-          // Untitled UI's input, as classes rather than their <Input>: this is a
-          // forwardRef native <input> that four settings forms hand a ref to,
-          // and their component is a React Aria TextField with no ref to give.
-          "rounded-lg bg-primary px-3 py-2 text-md text-primary shadow-xs ring-1 ring-primary ring-inset",
-          "placeholder:text-placeholder outline-hidden focus:ring-2 focus:ring-brand",
-          className,
-        )}
-        {...rest}
-      />
-    );
-  },
-);
+        // Capped: the panels span the whole pane now that Settings is a
+        // full-width page, and a 900px-wide email field is a field you have to
+        // aim at rather than read.
+        wrapperClassName={cx("w-full max-w-[26rem]", className)}
+      {...rest}
+    />
+  );
+});
 
 export function SettingsLink({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cx("mt-3 text-sm", className)} {...rest} />;
