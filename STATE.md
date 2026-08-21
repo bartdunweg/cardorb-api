@@ -136,8 +136,13 @@ buttons.
   route at ≤1000px, which includes a desktop user at 200% zoom. The same selector
   omits `input`, `select` and `textarea`, so wrapping is wrong in `CardAddDialog`
   too.
-- **The skip link lands before the navigation it skips.** `#main-content` wraps
-  `{children}`, and `AppShell` renders the sidebar and tab bar *inside* it.
+- ~~**The skip link lands before the navigation it skips.** `#main-content` wraps
+  `{children}`, and `AppShell` renders the sidebar and tab bar *inside* it.~~
+  **Fixed, ADR-0085.** The root `<main>` is a `<div>` now and every screen draws
+  its own landmark after its own navigation. Measured before and after: navs
+  inside `<main>` went 2 → 0 on signed-in routes and 1 → 0 on the marketing and
+  legal pages, and zero pixels changed. Two guards, because the static one alone
+  could not have caught this: `app/main-landmark.test.ts` and `visual/landmark.ts`.
 
 **Five HIGH interface findings:** `/brand` renders the wordmark invisible in dark
 mode (one panel pins `#ffffff` inline while the word is `text-primary`); the

@@ -125,8 +125,21 @@ export default function AppShell({
       <h1 className="sr-only">Card Orb</h1>
 
       <AppSidebar />
-      {/* The sibling. Nothing may come between these two. */}
-      <section className={cardsMainClassName}>{children}</section>
+      {/* The sibling. Nothing may come between these two.
+
+          This is the <main> for every signed-in route, and it has to be this
+          element rather than a wrapper further out: the rail and the tab bar
+          are its siblings, so a landmark drawn around all three would put the
+          navigation inside the thing "Skip to content" is meant to skip past.
+          That is the bug it was. `<main>` in place of `<section>` changes no
+          styling — cards.css binds to the .cards-main class name, not the tag.
+
+          The sr-only <h1> above stays outside it deliberately: it names the app
+          rather than the pane, and either pane can be the one on screen below
+          1000px. */}
+      <main id="main-content" className={cardsMainClassName}>
+        {children}
+      </main>
       <AppTabBar />
 
       <CardAddDialog

@@ -129,7 +129,13 @@ export default function BrandPage() {
     <div className="-mt-[var(--main-pad-top)]">
       <Navbar />
 
-      <section className="w-[min(100%,1180px)] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
+      {/* After the Navbar: the skip link's target on this page. See
+          app/layout.tsx for why the landmark is per-screen rather than one
+          in the root layout. */}
+      <main
+        id="main-content"
+        className="w-[min(100%,1180px)] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]"
+      >
         {/* Wider than LegalPage's --content-max and centred like it. 900px is
             enough for two sample panels side by side, which is what this page
             is for; ~70 characters is not, and left-aligning it under a
@@ -321,7 +327,7 @@ export default function BrandPage() {
         </article>
 
         <MarketingFooter />
-      </section>
+      </main>
     </div>
   );
 }

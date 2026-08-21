@@ -137,7 +137,12 @@ export default function Loading() {
         </span>
       </div>
 
-      <section className={cardsMainClassName}>
+      {/* The <main> during the fallback, in the same place AppShell puts it, so
+          "Skip to content" has a target while the collection is still loading
+          and lands in the same spot once it arrives. This file draws the rail
+          and the bar as siblings exactly as AppShell does — so, exactly as
+          there, the landmark is this pane and not the grid around all three. */}
+      <main id="main-content" className={cardsMainClassName}>
         <header className={cardsHeadClassName}>
           {/* The one thing every screen in this group has: an h1. What it says
               is the screen's own business — "Dashboard", "Settings", a set
@@ -180,7 +185,7 @@ export default function Loading() {
         <p className="sr-only" role="status">
           Loading
         </p>
-      </section>
+      </main>
 
       {/* The bar, drawn rather than outlined where it can be: it is the site's
           own chrome and an outline of a constant is a shape fading into itself.
