@@ -36,6 +36,7 @@ const card = (over: Partial<CatalogueMatch> = {}): CatalogueMatch => ({
   imageHigh: PNG_BIG,
   rarity: null,
   types: [],
+  series: "Scarlet & Violet",
   ...over,
 });
 

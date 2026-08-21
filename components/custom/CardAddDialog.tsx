@@ -110,6 +110,11 @@ const draftFrom = (match: CatalogueMatch, base: Draft): Draft => ({
   set: match.setName,
   rarity: match.rarity ?? "",
   types: match.types.slice(0, MAX.types),
+  // The era comes off the match too, and for the same reason as the two above
+  // (ADR-0030, extended by ADR-0081): it is a fact about the card, not a
+  // judgement about the copy. It was the last field here anybody typed, and the
+  // collection already carried one "Scarlett & Violet" to show for it.
+  gen: match.series ?? "",
 });
 
 export default function CardAddDialog({
@@ -733,17 +738,10 @@ export default function CardAddDialog({
               </p>
             </div>
 
-            <label className="col-span-full flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
+            <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Generation</span>
-              <InputBase
-                value={draft.gen}
-                onChange={(e) => set("gen", e.target.value)}
-                list="card-add-gens"
-                autoComplete="off"
-                placeholder="Scarlet &amp; Violet"
-              />
-            </label>
-            {suggest("card-add-gens", fields?.gens)}
+              <p className="m-0 text-sm text-primary">{draft.gen || "Unknown"}</p>
+            </div>
 
             <Checkbox
               isSelected={draft.collection}

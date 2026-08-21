@@ -70,7 +70,7 @@ type PtcgCardJson = {
   name?: string;
   rarity?: string;
   types?: string[];
-  set?: { name?: string };
+  set?: { name?: string; series?: string };
   images?: { small?: string; large?: string };
 };
 
@@ -217,6 +217,7 @@ export async function setCards(setId: string): Promise<CatalogueMatch[]> {
         number: c.number,
         name: c.name,
         setName: c.set?.name ?? "",
+        series: c.set?.series ?? null,
         image: c.images?.small ?? null,
         imageHigh: c.images?.large ?? null,
         rarity: c.rarity ?? null,

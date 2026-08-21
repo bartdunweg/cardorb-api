@@ -131,7 +131,7 @@ const card = (number: string, name = "Bulbasaur") => ({
   name,
   rarity: "Common",
   types: ["Grass"],
-  set: { name: "151" },
+  set: { name: "151", series: "Scarlet & Violet" },
   images: { small: "https://img/s.png", large: "https://img/l.png" },
 });
 
@@ -146,6 +146,7 @@ describe("setCards", () => {
         number: "1",
         name: "Bulbasaur",
         setName: "151",
+        series: "Scarlet & Violet",
         image: "https://img/s.png",
         imageHigh: "https://img/l.png",
         rarity: "Common",
