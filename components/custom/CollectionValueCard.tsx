@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
   ChartActiveDot,
   ChartTooltipContent,
@@ -8,7 +8,7 @@ import {
 import Card from "@/components/custom/Card";
 import { LOCALE } from "@/lib/core/config";
 import { euroWhole } from "@/lib/core/format";
-import { chartPoints } from "@/lib/core/value-chart";
+import { chartPoints, niceScale, timeTicks } from "@/lib/core/value-chart";
 import type { ValueSnapshot } from "@/lib/core/value-snapshot";
 
 /**
@@ -22,8 +22,8 @@ import type { ValueSnapshot } from "@/lib/core/value-snapshot";
  * on their own dashboard.
  *
  * The series is recorded rather than fetched, because no free feed publishes the
- * history: scripts/snapshot-collection-value.mjs argues that at length and is the
- * thing that adds a point.
+ * history: app/api/v1/cron/snapshot argues that at length and is the thing that
+ * adds a point, nightly.
  *
  * It is handed the readings rather than importing them. It used to import
  * lib/core/collection-value.generated.json, one committed file generated for one
@@ -36,46 +36,55 @@ import type { ValueSnapshot } from "@/lib/core/value-snapshot";
  * nothing at all, which is the right answer for an account that has never been
  * snapshotted: one reading is a fact about today, not a history, and there is
  * no empty state worth writing for a chart.
+ *
+ * It is Untitled UI's chart, per ADR-0085: two real axes, horizontal gridlines,
+ * the brand colour, and a dot only where the pointer is. It had hidden axes and
+ * a filled dot on every reading, which is neither theirs nor readable.
  */
 
 /**
- * Whole euros, from lib/format, rather than another copy of the same function.
+ * Two date formats, because the axis and the tooltip answer different questions.
  *
- * formatDate is not used for the dates below: it writes "Dec 30, 2024", and a
- * day is a precision this series does not have. A snapshot is whatever
- * Cardmarket published that morning, so the month is the honest unit.
+ * The axis is a scale — a handful of labels across two years, so month and
+ * year; a label per daily reading would be a grey smear. The tooltip is a
+ * single reading, and the readings are daily now, so "December 2024" would name
+ * four of them identically and the day has to be in it.
+ *
+ * Both go through toLocaleDateString rather than lib/format's formatDate, which
+ * only accepts a bare YYYY-MM-DD and only ever writes English. These labels are
+ * chrome the reader is meant to skim, so they follow LOCALE like the euro
+ * figures beside them.
  */
-const monthYear = (iso: string) =>
-  new Date(iso).toLocaleDateString(LOCALE, { month: "long", year: "numeric" });
+const axisMonth = (t: number) =>
+  new Date(t).toLocaleDateString(LOCALE, { month: "short", year: "numeric" });
 
-const shortMonth = (iso: string) =>
-  new Date(iso).toLocaleDateString(LOCALE, { month: "short", year: "numeric" });
+const fullDate = (t: number) =>
+  new Date(t).toLocaleDateString(LOCALE, { day: "numeric", month: "short", year: "numeric" });
 
 /**
- * The drawing's own coordinate space, and the ratio is the decision here.
- *
- * The SVG scales uniformly to the card's width, so this ratio is the chart's
- * height. At 200 it drew 339px tall in the dashboard column, which is taller
- * than the ten-row table under it for three readings, and the fill became a
- * grey slab rather than a line with ground under it. Roughly four to one reads
- * as a chart of a trend, which is what this is.
+ * Untitled UI's Y axis is a handful of round numbers, not one label per
+ * thousand. Four gaps is what fits 240px without the labels touching.
  */
-const W = 640;
-const H = 150;
-/** Room on every side so a dot on the edge is not half outside the viewBox. */
-const PAD = 8;
+const TICKS_Y = 5;
+/** Six across the width: their own charts' density, and what reads at 320px. */
+const TICKS_X = 6;
+
+/** €39,887 → "€40k". A full figure per tick is a wall of digits at 12px. */
+const compactEuro = (n: number) =>
+  Math.abs(n) >= 1000 ? `€${Math.round(n / 100) / 10}k` : euroWhole(n);
 
 export default function CollectionValueCard({ snapshots }: { snapshots: ValueSnapshot[] }) {
-  // The geometry lives in lib/core/value-chart.ts so it can be tested; null is
+  // The arithmetic lives in lib/core/value-chart.ts so it can be tested; null is
   // "fewer than two readings", which is an account with no history yet.
-  const chart = chartPoints(snapshots, { w: W, h: H, pad: PAD });
-  if (!chart) return null;
+  const points = chartPoints(snapshots);
+  if (!points) return null;
 
-  // `line` and `under` were the two SVG paths; Recharts draws both now.
-  const { points } = chart;
   const first = snapshots[0]!;
   const last = snapshots.at(-1)!;
   const grew = last.value - first.value;
+
+  const values = points.map((p) => p.value);
+  const scale = niceScale(Math.min(...values), Math.max(...values), TICKS_Y);
 
   return (
     <Card className="flex flex-col gap-2">
@@ -88,58 +97,105 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
           honest frame: it is where the record starts, not where the collecting
           did. */}
       <p className="[margin:0_0_calc(var(--spacing)*3)_0] max-w-[60ch] font-body text-xs text-tertiary">
-        {grew >= 0 ? "Up" : "Down"} {euroWhole(Math.abs(grew))} since {monthYear(first.date)},
+        {grew >= 0 ? "Up" : "Down"} {euroWhole(Math.abs(grew))} since {fullDate(points[0]!.t)},
         across {last.cards.toLocaleString(LOCALE)} cards.
       </p>
 
-      {/* Recharts, with Untitled UI's tooltip on it (charts-base). It was a
-          hand-drawn <svg> and 75 lines of geometry in lib/core/value-chart.ts
-          working out where each point lands; ResponsiveContainer does that now,
-          and the reader gains a tooltip the drawing never had.
+      {/* Recharts, drawn the way Untitled UI draw theirs. The axis labels are
+          styled with a class on the chart rather than `fill` props on each
+          axis, so they inherit the theme like every other piece of type in the
+          app — which is the whole reason the two end dates used to sit outside
+          the chart as plain <p> text. They are inside it now, as an axis,
+          because a reader wanting the value in March cannot get it off two
+          labels at the ends.
 
           The <ul> below stays. A chart is still not readable by a screen
           reader, and the figures written out are what makes this accessible —
           the tooltip is for a pointer, not a replacement for the list. */}
-      <div className="mt-5 h-[150px] w-full">
+      {/* `fill-current` is load-bearing, not tidiness. Recharts writes
+          fill="#666" onto every tick as a presentation attribute, which is the
+          same grey in both themes: 5.7:1 on the white card, but 3.0:1 on the
+          near-black one, under the 4.5:1 that 12px text needs. A CSS
+          declaration beats a presentation attribute, so this hands the ticks
+          back to `text-tertiary` and to the theme. */}
+      <div className="mt-5 h-60 w-full text-tertiary [&_.recharts-cartesian-axis-tick-value]:fill-current [&_.recharts-cartesian-axis-tick-value]:font-body [&_.recharts-cartesian-axis-tick-value]:text-xs">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+          {/* Room on the right for the hover dot, which is 12px across and
+              would otherwise be half outside the box on the last reading — the
+              one a reader is most likely to point at. */}
+          <AreaChart data={points} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="value-over-time" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--color-bg-secondary)" stopOpacity={1} />
-                <stop offset="100%" stopColor="var(--color-bg-secondary)" stopOpacity={0} />
+                <stop offset="0%" stopColor="var(--color-utility-brand-600)" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="var(--color-utility-brand-600)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="date" hide />
-            <YAxis dataKey="value" domain={["dataMin", "dataMax"]} hide />
-            <Tooltip
-              content={<ChartTooltipContent labelFormatter={(v) => monthYear(String(v))} />}
-              formatter={(v) => euroWhole(Number(v))}
-              cursor={{ stroke: "var(--color-border-secondary)" }}
+
+            {/* Horizontal only. Verticals on a time axis whose points are a day
+                apart at one end and eighteen months apart at the other would
+                claim a regularity the series does not have. */}
+            <CartesianGrid vertical={false} stroke="var(--color-border-secondary)" />
+
+            {/* A time axis, not a category one. `dataKey="date"` with no type
+                is what this was, and Recharts spaces categories evenly: the
+                gap between December 2024 and June 2026 drew the same width as
+                a week.
+
+                Where the labels go is timeTicks' problem, and it is the same
+                problem again one level up: Recharts' own tickCount draws the
+                two ends and nothing between, and charts-base's
+                selectEvenlySpacedItems picks evenly by position in the list.
+                Both are written up there. */}
+            <XAxis
+              type="number"
+              dataKey="t"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
+              ticks={timeTicks(points[0]!.t, points.at(-1)!.t, TICKS_X)}
+              tickFormatter={axisMonth}
+              axisLine={false}
+              tickLine={false}
+              tickMargin={10}
+              minTickGap={16}
             />
+
+            {/* Rounded outwards to 30k/35k/40k/45k rather than sitting exactly
+                on the lowest and highest readings — see niceScale. */}
+            <YAxis
+              dataKey="value"
+              domain={scale.domain}
+              ticks={scale.ticks}
+              tickFormatter={compactEuro}
+              axisLine={false}
+              tickLine={false}
+              tickMargin={8}
+              width={52}
+            />
+
+            <Tooltip
+              content={<ChartTooltipContent labelFormatter={(v) => fullDate(Number(v))} />}
+              formatter={(v) => euroWhole(Number(v))}
+              cursor={{ stroke: "var(--color-utility-brand-600)", strokeWidth: 2 }}
+            />
+
             <Area
               type="monotone"
               dataKey="value"
-              stroke="var(--color-text-primary)"
+              stroke="var(--color-utility-brand-600)"
               strokeWidth={2}
               fill="url(#value-over-time)"
               activeDot={<ChartActiveDot />}
-              dot={{ r: 4, fill: "var(--color-text-primary)", strokeWidth: 0 }}
+              dot={false}
               isAnimationActive={false}
             />
           </AreaChart>
         </ResponsiveContainer>
-        {/* Outside the chart rather than an axis, so the labels are real type at
-            the page's own size and inherit the theme like everything else. */}
-        <p className="flex justify-between mt-2 mb-0 font-body text-xs text-tertiary">
-          <span>{shortMonth(first.date)}</span>
-          <span>{shortMonth(last.date)}</span>
-        </p>
       </div>
 
       <ul className="sr-only">
         {points.map((p) => (
           <li key={p.date}>
-            {monthYear(p.date)}: {euroWhole(p.value)}, {p.priced.toLocaleString(LOCALE)} cards
+            {fullDate(p.t)}: {euroWhole(p.value)}, {p.priced.toLocaleString(LOCALE)} cards
             priced
           </li>
         ))}

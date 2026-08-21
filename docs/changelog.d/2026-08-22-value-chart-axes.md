@@ -1,0 +1,3 @@
+- The "Value over time" chart on the dashboard now has a real X and Y axis with readable, rounded euro values, faint horizontal gridlines and no dots on the line — a dot appears only where you point. It is drawn in the brand colour and is taller.
+- The chart's dates are spaced by how far apart the readings actually are, so a long gap in the record looks like a long gap instead of a single step.
+- Your collection's value is now recorded once a night instead of once a week, so the chart fills in roughly seven times faster from here on.

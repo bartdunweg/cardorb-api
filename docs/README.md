@@ -187,6 +187,15 @@ root `CLAUDE.md` for how and when to write to it.
   and the plain circle goes where the file is drawn as given, which is a browser
   tab. It also has the measurement behind the wordmark's `translate-y-[6.05%]`,
   and why the word beside it needs no matching nudge.
+- `decisions/0085-the-value-chart-gets-its-axes-back.md` — **read before
+  touching any chart in this app.** The dashboard's "Value over time" card is
+  Untitled UI's chart now (two real axes, rounded euro ticks, no dots except on
+  hover), and the record carries three things that are not obvious from the
+  code: why the Y axis frames the data instead of starting at zero, which two
+  ready-made ways of picking x-axis labels do *not* work here and why not to
+  re-try them, and that the X axis had silently become a category axis when
+  ADR-0075 swapped the hand-drawn SVG for Recharts. It also covers the snapshot
+  cron going nightly, and why that cannot backfill the past.
 - `decisions/0053-memory-stays-in-docs.md` — **read before moving anything in
   this directory.** The shared standards keep a repository's memory in
   `.dev-standards/` from v0.11.0 onwards; this repository deliberately keeps

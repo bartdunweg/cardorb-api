@@ -36,7 +36,7 @@ export type ValueSnapshot = {
  * revalidateTag does not exist, so it could not drop either tag anyway. Nothing
  * invalidates this today; the one-hour TTL is what buys freshness, which means a
  * fresh point can be up to an hour late on the dashboard. For a series recorded
- * weekly that is fine, and this tag is the hook for the day there is a "snapshot
+ * nightly that is fine, and this tag is the hook for the day there is a "snapshot
  * now" button to make it not fine.
  */
 export const valueHistoryTag = (userId: string) => `value-history:${userId}`;
