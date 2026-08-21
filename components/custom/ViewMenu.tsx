@@ -1,7 +1,7 @@
 "use client";
 
 import { Settings2 } from "lucide-react";
-import { MenuDetails } from "@/components/custom/MenuDetails";
+import { MenuPopover } from "@/components/custom/MenuPopover";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
 
 /**
@@ -19,7 +19,8 @@ import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOpti
  */
 export default function ViewMenu(props: ViewOptionsProps) {
   return (
-    <MenuDetails
+    <MenuPopover
+      label="View options"
       trigger={
         <>
           <Settings2 size={15} strokeWidth={1.75} aria-hidden="true" />
@@ -39,6 +40,6 @@ export default function ViewMenu(props: ViewOptionsProps) {
       panelClassName="view-menu-panel flex flex-col gap-4 w-[300px] max-w-[min(300px,calc(100vw-2*var(--page-pad-x)))] p-4"
     >
       <ViewOptions {...props} />
-    </MenuDetails>
+    </MenuPopover>
   );
 }
