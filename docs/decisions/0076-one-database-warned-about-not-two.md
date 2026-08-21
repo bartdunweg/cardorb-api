@@ -5,7 +5,7 @@ status: accepted
 date: 2026-08-21
 scope: repo
 deciders: [Bart, Claude]
-superseded-by: null
+superseded-by: ADR-0084 (point 2 only)
 tags: [development-environment, data, safety]
 ---
 
