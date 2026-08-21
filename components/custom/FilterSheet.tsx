@@ -8,6 +8,7 @@ import {
   sheetClearButtonClassName,
   sheetFootButtonClassName,
 } from "@/components/custom/Sheet";
+import { Badge } from "@/components/base/badges/badges";
 import FilterOptions from "@/components/custom/FilterOptions";
 import type { Facet } from "@/components/custom/cards-fields";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
@@ -54,7 +55,7 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
     <>
       <button
         type="button"
-        className={untitledButton({ color: "secondary", className: "cards-filter-trigger" })}
+        className={untitledButton({ color: "secondary" })}
         // Seeded here rather than in an effect on `open`. Same result, one
         // render fewer, and it says plainly that a fresh draft is part of what
         // opening means: a sheet that remembered what you nearly did last time
@@ -68,7 +69,16 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
       >
         <Plus size={15} strokeWidth={2.5} aria-hidden="true" />
         <span>Filter</span>
-        {total > 0 && <span className="cards-filter-badge">{total}</span>}
+        {/* `.cards-filter-badge` and `.cards-filter-trigger` were both classes
+            with no definition left anywhere — they went with cards.css and the
+            names stayed in the JSX, so this count has been rendering as bare
+            text beside the label. It is Untitled UI's Badge now; the trigger's
+            class was dead outright and is gone. */}
+        {total > 0 && (
+          <Badge type="pill-color" color="brand" size="sm">
+            {total}
+          </Badge>
+        )}
       </button>
 
       <Sheet
