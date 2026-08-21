@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectOneMainLandmark } from "./landmark";
 
 /**
  * The signed-in screens — the ones the four failures actually happened on.
@@ -55,6 +56,10 @@ for (const page of PAGES) {
       // screenshot after it would be of the wrong page passing quietly.
       await expect(p).not.toHaveURL(/\/login/);
       await settle(p);
+
+      // Nothing to do with the picture: the landmark and the skip link have no
+      // appearance, so this is the only place they can be checked at all.
+      await expectOneMainLandmark(p, `${page.name} @ ${size.name}`);
 
       await expect(p).toHaveScreenshot(`${page.name}-${size.name}.png`, {
         fullPage: false,

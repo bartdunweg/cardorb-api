@@ -44,13 +44,17 @@ export default async function Welcome() {
   };
 
   return (
-    <Onboarding
-      initial={{
-        username: initial.username,
-        displayName: initial.displayName,
-        isPublic: initial.isPublic,
-        avatarUrl: initial.avatarUrl,
-      }}
-    />
+    // The whole screen is the landmark: the welcome flow draws no navigation,
+    // only its own steps. See app/layout.tsx for why each screen carries one.
+    <main id="main-content">
+      <Onboarding
+        initial={{
+          username: initial.username,
+          displayName: initial.displayName,
+          isPublic: initial.isPublic,
+          avatarUrl: initial.avatarUrl,
+        }}
+      />
+    </main>
   );
 }

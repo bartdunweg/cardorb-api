@@ -35,7 +35,13 @@ export default function LegalPage({
     <div className="-mt-[var(--main-pad-top)]">
       <Navbar />
 
-      <section className="w-[min(100%,1180px)] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
+      {/* After the Navbar: the skip link's target on /privacy and /terms. The
+          footer lives inside it, which is fine — it is not navigation this page
+          is asking anybody to skip past, and it comes last regardless. */}
+      <main
+        id="main-content"
+        className="w-[min(100%,1180px)] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]"
+      >
         {/* --content-max is 860px, which tokens.css defines as ~70 characters a
             line at 16px and which nothing consumed until these pages. It is the
             reason this article is not the 1180px the landing page uses: nobody
@@ -54,7 +60,7 @@ export default function LegalPage({
         </article>
 
         <MarketingFooter />
-      </section>
+      </main>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectOneMainLandmark } from "./landmark";
 
 /**
  * Every public surface that renders a rule from app/styles/cards.css.
@@ -105,6 +106,10 @@ for (const page of PAGES) {
         undefined,
         { timeout: 30_000 },
       );
+
+      // Nothing to do with the picture: the landmark and the skip link have no
+      // appearance, so this is the only place they can be checked at all.
+      await expectOneMainLandmark(p, `${page.name} @ ${size.name}`);
 
       await expect(p).toHaveScreenshot(`${page.name}-${size.name}.png`, {
         fullPage: page.fullPage,

@@ -224,7 +224,13 @@ export default function Home() {
         right={<MarketingViewerSlot dashboardHref={DASHBOARD_HREF} />}
       />
 
-      <section className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
+      {/* After the Navbar: the skip link's target on this page. See
+          app/layout.tsx for why the landmark is per-screen rather than one
+          in the root layout. */}
+      <main
+        id="main-content"
+        className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]"
+      >
         <header
           className="flex flex-col items-center gap-5 text-center mx-auto max-w-[640px]
           min-h-[480px] justify-center [padding-block:clamp(72px,10vw,128px)]"
@@ -494,7 +500,7 @@ export default function Home() {
         </section>
 
         <MarketingFooter />
-      </section>
+      </main>
     </div>
   );
 }

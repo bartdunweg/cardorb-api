@@ -20,12 +20,18 @@ export default function SigninShell({ title, children }: { title: string; childr
       className="-mt-[var(--main-pad-top)]"
     >
       <Navbar />
-      <div className="flex flex-col items-center justify-center gap-5 min-h-screen p-[var(--page-pad-x)]">
+      {/* After the Navbar, which is the point: this is the skip link's target
+          on all five door screens, so it has to start where the navigation
+          ends. See app/layout.tsx for why the landmark is per-screen. */}
+      <main
+        id="main-content"
+        className="flex flex-col items-center justify-center gap-5 min-h-screen p-[var(--page-pad-x)]"
+      >
         <div className="w-full max-w-[380px] flex flex-col gap-6">
           <h1 className="m-0 text-display-xs text-primary text-center">{title}</h1>
           {children}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
