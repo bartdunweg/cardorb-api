@@ -3,7 +3,6 @@ import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/custom/ThemeProvider";
-import LiveDataWarning from "@/components/custom/LiveDataWarning";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
@@ -131,10 +130,6 @@ export default function RootLayout({
       </head>
       <body className="bg-secondary text-primary font-body min-h-screen text-pretty">
         <ThemeProvider>
-          {/* Renders nothing in a production build, and nothing when the
-              database is a local Supabase stack. See the file for why this is a
-              warning rather than a block. */}
-          <LiveDataWarning />
           <a
             href="#main-content"
             className="absolute -top-full left-4 px-4 py-2

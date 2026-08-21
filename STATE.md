@@ -171,14 +171,18 @@ is evidence; no screen reader was run and no axe pass happened, which is not.
   `ownerLabel()` fallback does the work and ADR-0034's "no name given" stays
   distinguishable. Verified live: `bartdunweg's Pokémon card collection`.
   **The cause is worth more than the fix: there is one Supabase project**, and
-  `npm run dev` writes to it. A red `LiveDataWarning` bar now says so on every
-  local page. A separate dev database was considered and rejected — a dev
-  database with twelve cards cannot reproduce the bugs a 1,600-card matcher has.
+  `npm run dev` writes to it. A red `LiveDataWarning` bar said so on every local
+  page for one afternoon; it is gone (ADR-0084, FB-0020 — it was not asked for
+  and the owner did not want it on screen), so **nothing warns you any more**.
+  Assume any form you fill in locally is live. A separate dev database was
+  considered and rejected — a dev database with twelve cards cannot reproduce
+  the bugs a 1,600-card matcher has.
   Still true and not addressed: the profile `test` holds "UI test 2025" (private,
   left alone deliberately), and `pikachu` ("Bigi Mang") is a second public
   profile in the live sitemap that nobody has confirmed is meant to be.
-  **Agreed and not built:** move the screenshot harness off the real owner
-  account onto a test account with a copied collection.
+  **Agreed and not built, and now the only mitigation left:** move the
+  screenshot harness off the real owner account onto a test account with a
+  copied collection.
 - **`find-seo-opportunities` produced nothing, on purpose.** No Search Console
   credential of any kind exists in this session and no `google-site-verification`
   token is in the repo. The skill's own first step is to stop rather than invent
