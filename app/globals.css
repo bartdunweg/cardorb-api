@@ -1,5 +1,5 @@
 /* The foundation every route needs — and by now that is a short list: three
- * resets, seven layout measurements, three @keyframes and one reduced-motion
+ * resets, seven layout measurements, four @keyframes and one reduced-motion
  * override. Everything that used to be here is a Tailwind utility on the
  * component that draws it, or a token in lib/design/tokens.ts.
  *
@@ -212,18 +212,42 @@
     }
   }
 
-  /* The skeleton sweep. Its `.skeleton::after` surface is a Tailwind class on
-     the component now (cardsPageClasses.ts); only the keyframes and this
-     reduced-motion pair have nowhere else to live. */
-  @keyframes skeleton-sweep {
-    to {
-      transform: translateX(100%);
+  /* The loading fallback's orb: it breathes rather than spins, and it arrives
+     late rather than immediately. Both are in app/(app)/loading.tsx; see
+     ADR-0091.
+
+     The resting frame is 0%/100% and not 50%, which is the whole reason this is
+     a three-stop cycle rather than a two-stop `from`/`to`. The reduced-motion
+     block below caps every animation at one iteration of 0.01ms, so a visitor
+     who asked for less motion sees the orb frozen on its first frame forever.
+     Written this way that frame is the orb at full size and full opacity, which
+     is simply a logo. The other way round it would be a logo stuck at 60%,
+     looking disabled.
+
+     These replace `@keyframes skeleton-sweep` and a `.skeleton::after`
+     reduced-motion pair that stood here. Nothing draws a skeleton any more
+     (ADR-0091), and the reduced-motion half had been dead since the Tailwind
+     migration moved that surface onto a class carrying its own `motion-reduce:`
+     variants. */
+  @keyframes orbBreathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.94);
+      opacity: 0.6;
     }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .skeleton::after {
-      animation: none;
-      opacity: 0;
+
+  /* A loader that flashes for 80ms is worse than no loader, so the orb starts at
+     opacity 0 and this fades it in after a delay. animation-delay is not one of
+     the properties the reduced-motion block overrides, so the wait survives
+     there and only the fade itself becomes instant — which is correct. */
+  @keyframes orbArrive {
+    to {
+      opacity: 1;
     }
   }
 

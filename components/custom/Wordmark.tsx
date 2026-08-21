@@ -72,22 +72,30 @@ const ROW = "inline-flex items-center gap-2";
  * literal 1x of a 24px box and inventing one would be a fourth file to keep.
  *
  * alt="" because this sits next to the word "Card Orb". A screen reader
- * announcing "Card Orb Card Orb" is worse than one announcing it once.
+ * announcing "Card Orb Card Orb" is worse than one announcing it once. That
+ * still holds where the mark stands alone — the loading fallback puts the word
+ * "Loading" in a live region beside it, so the picture is decoration there too.
+ *
+ * Exported, and sized by a prop, because the loading fallback wants this same
+ * orb at 64px (ADR-0091). What it wants is not "a circle": it is the width
+ * descriptors, the AVIF-with-PNG pair and the measured nudge below, all of
+ * which a second hand-written <picture> would have to get right again. 64px at
+ * 2x resolves to the 128w source, which exists.
  */
-function Mark() {
+export function Mark({ px = MARK_PX, className }: { px?: number; className?: string }) {
   return (
-    <picture className="flex-none">
+    <picture className={["flex-none", className].filter(Boolean).join(" ")}>
       <source
         srcSet="/brand/orb-shadow-64.avif 64w, /brand/orb-shadow-128.avif 128w, /brand/orb-shadow-256.avif 256w"
-        sizes={`${MARK_PX}px`}
+        sizes={`${px}px`}
         type="image/avif"
       />
       <img
         src="/brand/orb-shadow-64.png"
         srcSet="/brand/orb-shadow-64.png 64w, /brand/orb-shadow-128.png 128w, /brand/orb-shadow-256.png 256w"
-        sizes={`${MARK_PX}px`}
-        width={MARK_PX}
-        height={MARK_PX}
+        sizes={`${px}px`}
+        width={px}
+        height={px}
         alt=""
         aria-hidden="true"
         className={`block ${MARK_NUDGE}`}

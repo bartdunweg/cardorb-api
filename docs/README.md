@@ -161,15 +161,22 @@ root `CLAUDE.md` for how and when to write to it.
   the API and inside the profile page's own HTML. The public path reads exactly
   two variant fields, `rarity` and `owned`, so the new shape is an allow-list of
   those two and a new column is excluded by default.
-- `decisions/0046-loading-fallback-draws-shared-chrome-only.md` — **read before
-  adding anything to `app/(app)/loading.tsx`.** It is the Suspense fallback for
-  every signed-in route, because the slow await is in the group's layout, and it
-  may therefore only draw what is identical on all of them: the frame, the rail,
-  the bar, and one outline where the heading lands. It used to draw the old
-  `/cards` page — a toolbar, two set panels, twenty card tiles and an `<h1>Cards</h1>`
-  no screen has ever shown — which is what `docs/feedback/0010-...` reported.
-  Anything route-specific goes in that route's own `loading.tsx` or nowhere. Read
-  it with `0018`, which is this same file drifting once before.
+- `decisions/0091-the-loading-fallback-is-the-orb-not-a-skeleton.md` — **read
+  before adding anything to `app/(app)/loading.tsx`.** It is the Suspense
+  fallback for every signed-in route, because the slow await is in the group's
+  layout, and it draws no interface at all: just the orb, centred and breathing.
+  It is the third version of this file and supersedes `0046`, which is worth
+  reading with it — `0046` wrote the rule that survives (a shared fallback may
+  only draw what it can know is true on all seven routes) and drew a skeleton
+  with it, which is the conclusion that did not. Before that it drew the old
+  `/cards` page outright (`0018`). The same complaint was reported twice,
+  `feedback/0010-...` and `feedback/0024-...`. Anything route-specific goes in
+  that route's own `loading.tsx` or nowhere, and the real fix — streaming the
+  shell so only the content pane waits — is still deferred, with its trigger
+  written down in both records. Its "Confirmation" section is also the best short
+  argument in this directory for why a loading state is uniquely easy to get
+  wrong: `0087` and `0089` both changed things under it mid-review, and neither
+  break would have shown in a screenshot.
 - `decisions/0086-every-tab-is-the-width-of-the-widest.md` — **read before
   touching the mobile tab bar, and before looking for the add button in it.**
   The track is a grid of `fr` columns now, so every slot is the width of the
