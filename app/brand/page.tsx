@@ -113,7 +113,6 @@ const SWATCHES: [string, ColourPair][] = [
   ["Label tertiary", colour.labelTertiary],
   ["Background", colour.bgGrouped],
   ["Surface", colour.bgSurface],
-  ["Tint", colour.tint],
 ];
 
 /**

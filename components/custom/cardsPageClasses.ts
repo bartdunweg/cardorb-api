@@ -12,9 +12,17 @@
  * sidebar does not reach the bottom." Giving the main column its own
  * trailing space instead keeps that breathing room without the rail's track
  * ending early.
+ *
+ * `bg-secondary`, the same canvas app/layout.tsx paints on html and body.
+ * It was `bg-primary` — the card colour — so the signed-in half of the app
+ * stood on a different surface from the landing page, and the rail, the set
+ * panels and the grid hover pill (all `bg-primary` themselves) had nothing to
+ * stand out against. Untitled UI's system is one tint for the page and another
+ * for anything raised above it; this is the page, so it is the page's tint. A
+ * route that wants the raised colour asks for `bg-primary` on its own box.
  */
 export const pageCardsClassName =
-  "grid grid-cols-[300px_minmax(0,1fr)] items-start bg-primary min-h-screen min-h-dvh " +
+  "grid grid-cols-[300px_minmax(0,1fr)] items-start bg-secondary min-h-screen min-h-dvh " +
   "[margin:calc(-1*var(--main-pad-top))_auto_0] " +
   "[@media(max-width:1000px)]:grid-cols-[minmax(0,1fr)] " +
   "[@media(max-width:640px)]:[margin-top:0]";

@@ -17,13 +17,26 @@
 
 export type Rgb = { r: number; g: number; b: number };
 
-/** `#rgb`, `#rrggbb`, or `rgba(r, g, b, a)` — the three forms tokens.css uses. */
+/**
+ * `#rgb`, `#rrggbb`, `rgba(r, g, b, a)`, or `rgb(r g b / a)`.
+ *
+ * The space-separated form is the fourth because it had to be: this split on
+ * `[,/]` alone, so Untitled UI's own `rgb(127 86 217)` — which is how the brand
+ * ramp is written in the generated stylesheet — parsed to NaN and every ratio
+ * measured against it came back NaN. `expect(NaN).toBeGreaterThanOrEqual(4.5)`
+ * does fail, so it surfaced, but a caller comparing the other way round would
+ * have got a silent pass. Splitting on whitespace too costs nothing and covers
+ * both spellings of the same colour.
+ */
 export function parse(colour: string): Rgb & { a: number } {
   const text = colour.trim();
 
   const rgba = text.match(/^rgba?\(([^)]+)\)$/i);
   if (rgba) {
-    const parts = rgba[1]!.split(/[,/]/).map((p) => Number(p.trim()));
+    const parts = rgba[1]!
+      .split(/[,/\s]+/)
+      .filter(Boolean)
+      .map((p) => Number(p.trim()));
     return { r: parts[0]!, g: parts[1]!, b: parts[2]!, a: parts[3] ?? 1 };
   }
 

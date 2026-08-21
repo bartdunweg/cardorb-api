@@ -19,7 +19,10 @@ import { APP_NAME } from "@/lib/core/config";
  */
 
 /**
- * 24px, against a name set at --fs-label (15–16px).
+ * 24px, against the name's own clamp(15px, …, 16px) — see WORD below.
+ *
+ * That used to read "set at --fs-label", a token this repo has not declared for
+ * some time; the size was right and the mechanism was not.
  *
  * The shadowed cut draws the sphere at roughly 80% of its box so the contact
  * shadow has somewhere to fall, so the ball reads at about 19px here — a little

@@ -28,13 +28,20 @@ const AA = 4.5;
 /** WCAG's floor for a graphic that carries meaning without being text. */
 const GRAPHIC = 3;
 
-/** The three surfaces a tier is read against, composited where translucent. */
+/**
+ * The surfaces a tier is read against, composited where translucent.
+ *
+ * "The glass card" was a fourth entry here until ADR-0090. It composited
+ * `colour.glass`, which no component had rendered since ADR-0061 removed glass,
+ * so every tier was being held to a floor on a surface that did not exist —
+ * a stricter test than reality, but a test of nothing, and the kind that makes a
+ * real regression look like it was already covered.
+ */
 function surfacesFor(theme: "light" | "dark") {
   const s = surfaces[theme];
   return [
     ["the page", s.page],
     ["a card", s.card],
-    ["the glass card", over(s.glass.colour, s.glass.over)],
     ["the control glass", over(s.control.colour, s.control.over)],
   ] as const;
 }
@@ -56,13 +63,17 @@ describe("text tiers clear AA on every surface they touch", () => {
 });
 
 describe("the values that were tried and failed still fail", () => {
-  // The #767676-on-the-page rejection this described no longer applies: it was
-  // measured against the #fafafa page background, which is gone now that
-  // bgGrouped.light is #ffffff (see the light branch of that token). #767676
-  // clears AA on pure white — that was always true and is why it was tempting —
-  // so the case that made it fail is gone with the background it failed on.
-  // labelTertiary is unaffected: the "text tiers clear AA" describe above
-  // still checks its actual value against every current surface.
+  // This rejection was removed once and is back, which is the argument for
+  // writing rejections down at all. It was dropped when ADR-0024 made the light
+  // page pure white, on the reasoning that #767676 clears AA on white and the
+  // background it had failed on was gone. That background is not gone — the
+  // Untitled UI adoption put the page back on #fafafa (bgGrouped.light), so the
+  // measurement that rejected #767676 is live again and this asserts it.
+  it("light: #767676 is under AA on the page, which is why labelTertiary is darker", () => {
+    // tokens.css: "#767676 is 4.54:1 on pure white but this tier also renders
+    // on the page, where it measured 4.35."
+    expect(ratio("#767676", surfaces.light.page)).toBeLessThan(AA);
+  });
 
   it("dark: #878787 is under AA on the control glass, where the rail's counts live", () => {
     // tokens.css: "#878787 measured 4.26 there and failed axe."
@@ -70,61 +81,52 @@ describe("the values that were tried and failed still fail", () => {
     expect(ratio("#878787", control)).toBeLessThan(AA);
   });
 
-  it("light: #b0b0b0 is under 3:1 on the glass, which is why it is not the logo tier", () => {
-    // tokens.css: "#b0b0b0 measured 2.3:1 on the glass".
-    const glass = over(surfaces.light.glass.colour, surfaces.light.glass.over);
-    expect(ratio("#b0b0b0", glass)).toBeLessThan(GRAPHIC);
-  });
+  // "#b0b0b0 measured 2.3:1 on the glass" was a third rejection here. It
+  // belonged to labelQuaternary, and both went with ADR-0090: the tier had no
+  // consumer and the surface it was measured on had not been rendered since
+  // ADR-0061. The measurement is in that record.
 });
 
-describe("the backdrop tier sits just under the graphic floor, deliberately", () => {
-  /**
-   * The one place a claim in tokens.css turned out to be wrong, and the test is
-   * how it was found rather than an argument about it.
-   *
-   * Two comments in that file disagree about the same measurement. The light
-   * block says "this is 3.1:1 and still reads as a backdrop" (tokens.css:76).
-   * The dark block says "2.98:1 here and 2.98 in light" (:537). This measures
-   * 2.98 in both, so the dark comment is right and the light one is stale.
-   *
-   * And 2.98 is a decision, not a miss. The same comment records what happened
-   * when it was raised: "#7a7a7a was 3.83 and the logos sat forward of the work
-   * they are meant to sit behind." WCAG asks 3:1 of a graphic that carries
-   * information; a set's wordmark behind its own cards is decoration standing
-   * in for a label that is also written out beside it, and two hundredths under
-   * the floor buys the recession the tier exists for.
-   *
-   * So the floor here is 2.9 rather than 3, with the reason attached. Written
-   * down because a later reader who only sees `2.9` will assume it is a typo
-   * for 3 and "fix" it, which is exactly how the logos come forward again.
-   */
-  for (const theme of ["light", "dark"] as const) {
-    it(`${theme}: the logo tier is close to 3:1 on the glass without reaching AA`, () => {
-      const s = surfaces[theme];
-      const glass = over(s.glass.colour, s.glass.over);
-      const value = colour.labelQuaternary[theme];
-      expect(ratio(value, glass)).toBeGreaterThanOrEqual(2.9);
-      expect(ratio(value, glass)).toBeLessThan(AA);
-    });
-  }
-});
+/**
+ * The accent carries a word, so it has to clear the floor for words.
+ *
+ * This replaces three tests that measured `tint` and `tintLabel`, the iOS-blue
+ * pair ADR-0090 deleted. The *rule* they encoded is why anything is written
+ * here at all, and it is not a fact about blue:
+ *
+ *   **A colour cleared as a graphic (3:1) is not cleared for use under a word
+ *   (4.5:1).**
+ *
+ * That distinction is what split the pair in the first place — #007aff measured
+ * 4.02 on white, fine for a shape and not for a label — and ignoring it put a
+ * 4.02:1 button on screen once (ADR-0058).
+ *
+ * So the rule is kept and pointed at the colour that carries it now. The accent
+ * is Untitled UI's `bg-brand-solid` since ADR-0061, and it is drawn with
+ * `text-white` on it in at least two live places (tabbarClasses.ts's add button,
+ * Segmented.tsx's selected segment). Read from the generated stylesheet rather
+ * than hard-coded, so a change to the brand ramp is measured rather than
+ * assumed.
+ */
+describe("the accent clears the floor for the text it carries", () => {
+  const brandSolid = readFileSync("app/styles/tailwind.generated.css", "utf8")
+    .match(/--color-brand-600:\s*([^;]+);/)?.[1]
+    ?.trim();
 
-describe("the accent is split because one value cannot do both jobs", () => {
-  it("the fill clears 3:1 and does not pretend to be text", () => {
-    // This is the bug the missing a11y test would have caught: nothing in the
-    // codebase said the accent was unusable as a word.
-    expect(ratio(colour.tint.light, surfaces.light.card)).toBeGreaterThanOrEqual(GRAPHIC);
-    expect(ratio(colour.tint.light, surfaces.light.card)).toBeLessThan(AA);
-    expect(ratio(colour.tint.light, surfaces.light.page)).toBeLessThan(AA);
+  it("is declared, or the rest of this block is measuring nothing", () => {
+    expect(brandSolid, "--color-brand-600 is gone from the generated stylesheet").toBeDefined();
   });
 
-  it("the text tier clears AA on both light surfaces", () => {
-    expect(ratio(colour.tintLabel.light, surfaces.light.card)).toBeGreaterThanOrEqual(AA);
-    expect(ratio(colour.tintLabel.light, surfaces.light.page)).toBeGreaterThanOrEqual(AA);
-  });
-
-  it("dark needs no darkening: system blue already clears AA there", () => {
-    expect(ratio(colour.tintLabel.dark, surfaces.dark.card)).toBeGreaterThanOrEqual(AA);
+  it("white on bg-brand-solid clears AA, not merely the graphic floor", () => {
+    const measured = ratio("#ffffff", brandSolid!);
+    // Stated as two assertions on purpose. The first is the one that matters;
+    // the second says out loud that passing the graphic floor would not have
+    // been enough, which is the whole point of the rule above.
+    expect(
+      measured,
+      `white on ${brandSolid} is ${measured.toFixed(2)}:1, under AA`,
+    ).toBeGreaterThanOrEqual(AA);
+    expect(AA).toBeGreaterThan(GRAPHIC);
   });
 });
 
@@ -153,7 +155,6 @@ describe("this file and the stylesheet it generates agree", () => {
     ["--color-label", colour.label],
     ["--color-label-secondary", colour.labelSecondary],
     ["--color-label-tertiary", colour.labelTertiary],
-    ["--color-label-quaternary", colour.labelQuaternary],
     ["--color-bg-surface", colour.bgSurface],
     ["--color-bg-grouped", colour.bgGrouped],
   ];
@@ -170,13 +171,10 @@ describe("this file and the stylesheet it generates agree", () => {
     });
   }
 
-  it("the accent is a single value in both themes, on purpose", () => {
-    // The one colour that should not shift when the lights go out: it is the
-    // only one carrying "this is the thing you chose".
-    const value = css.match(/--color-tint:\s*([^;]+);/)?.[1]?.trim();
-    expect(value).toBe(colour.tint.light);
-    expect(colour.tint.light).toBe(colour.tint.dark);
-  });
+  // "the accent is a single value in both themes" asserted --color-tint here.
+  // The accent is Untitled UI's brand ramp since ADR-0061 and the token went
+  // with ADR-0090; what replaces this is the AA check further up, which measures
+  // the accent that is actually on screen.
 
   /**
    * The same camelCase → kebab-case the generator applies, so `orbXs` is

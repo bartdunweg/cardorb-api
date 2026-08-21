@@ -2,6 +2,116 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## One canvas for the whole app (2026-08-22, workspace `lahore-v1`)
+
+Bart asked why the landing background, the navbar and the cards are different
+colours. They were not three colours — the navbar and cards are both
+`bg-primary` and always were. The page is `bg-secondary`, and that two-tier read
+is Untitled UI's system (ADR-0061), not drift.
+
+Three real drifts came out of the same root cause and are fixed (ADR-0089):
+
+- `pageCardsClassName` painted the signed-in shell `bg-primary` — the *card*
+  colour — so `/collection`, `/dashboard`, `/user/<name>` and the loading
+  fallback stood on a different canvas from the landing page, and the rail, set
+  panels and grid hover pill (all `bg-primary` themselves) had nothing to stand
+  against. It is `bg-secondary` now.
+- The tab-bar scrim faded to `--color-bg-grouped` (`#181818`) over a `#0a0a0a`
+  canvas — a visible band on every dark-mode phone. It reads
+  `--color-bg-secondary` now, and this retires the last CSS consumer of
+  `--color-bg-grouped`.
+- `colour.bgGrouped` / `colour.bgSurface` in `lib/design/tokens.ts` are
+  documented as "the page" and "a card" but had said `#ffffff`/`#181818` and
+  `#ffffff`/`#101010` since ADR-0024, while the page moved to `bg-secondary` in
+  `b1d574a`. They are `#fafafa`/`#171717` and `#ffffff`/`#0a0a0a` now, which
+  fixes `viewport.themeColor` (the iOS Safari overscroll seam its own comment
+  warns about was live), the web manifest and the `/brand` swatches from one
+  place.
+
+**ADR-0089 supersedes ADR-0024's flat white page**, which the Untitled UI
+adoption had already undone in practice without anyone writing it down — that
+silence is how the token was left describing a page that no longer existed.
+
+One rejection came back into `lib/design/tokens.test.ts`: `#767676` is under AA
+on a `#fafafa` page. It had been deleted when the page went white, on the
+reasoning that the background it failed against was gone. It is back.
+
+**The class of bug is now checked.** `lib/design/token-surfaces.test.ts` resolves
+what the app paints — class → generated CSS → Tailwind's own `theme.css` → hex —
+and compares it to the token. Both failure directions were proved before the fix
+was trusted: reverting `bgGrouped` fails, and moving the class instead fails from
+the other side. It reads Tailwind's ramp rather than hard-coding it, so a
+Tailwind upgrade that retunes `neutral-50` also trips it.
+
+The same file asserts every colour token paints *something*. It reported five
+that did not, and **ADR-0090 deleted all five** — `labelQuaternary`, `glass`,
+`tint`, `tintLabel`, `danger` — with their measurements moved into that record
+rather than lost. `KNOWN_UNPAINTED` is empty now, deliberately: a list with
+entries is a list people add to, a list that must stay empty is one they argue
+with. 57 → 52 generated tokens, 528 → 516 tests.
+
+Two knock-ons worth knowing:
+
+- `surfaces` has three entries per theme, not four. "The glass card" composited
+  `colour.glass`, so every text tier was being measured against a surface
+  nothing had drawn since ADR-0061 — **a stricter floor than reality and a test
+  of nothing**, the kind that makes a regression look already covered.
+- The `tint`/`tintLabel` block asserted facts about an accent that stopped being
+  blue. Replaced with the same *rule* pointed at the live accent: white on
+  `bg-brand-solid`, read from the generated stylesheet, measured at **4.96:1**.
+
+`labelSecondary` and `labelTertiary` survive, and only through the two OG images
+— Satori draws from inline styles and cannot read a stylesheet. A real paint
+site, just not one grep finds in a className.
+
+**A parser bug fell out of writing that replacement:** `lib/design/contrast.ts`
+split `rgb()` arguments on `[,/]` only, so `rgb(127 86 217)` — how Untitled UI
+writes the brand ramp — parsed to `NaN`. It surfaced because the new assertion
+runs `toBeGreaterThanOrEqual`; **a `toBeLessThan` would have passed silently**.
+Fixed to split on whitespace too.
+
+`--fs-label` is also settled: `tokens.ts` and `Wordmark.tsx` both claimed it
+"stays in tokens.css". That file does not exist and the variable is declared
+nowhere. Both corrected; the collision trap behind it is kept, because it is
+live.
+
+**`app/globals.css` is 694 → 269 lines.** It defended values it no longer
+declares, including a globe and a résumé from the portfolio this CSS was ported
+from. Every declaration is byte-identical — comments stripped from both versions
+diff to nothing, 91 lines each way — so no pixel moved. Verified in the browser
+after: all seven layout tokens resolve and the page renders as before.
+
+**Records renumbered to 0088/0089 on rebase.** They were written as 0084/0085
+and `origin/main` moved eight commits underneath this branch, taking both
+numbers. Renumbering the half that has not landed is what the `record numbers`
+check prescribes and what the `biarritz` section below already worked out the
+hard way — ADR-0048's opening warning, for the third time in three days.
+
+**`verify.sh` exits 1 on two checks, and neither is this change.** Both were
+already red on `origin/main` before this branch existed:
+
+- `standards` — the shared standard bumped to v0.23.0 mid-session; `CLAUDE.md`
+  is v0.22.0 on `main` and untouched here. The fix regenerates a shared file,
+  which `CLAUDE.md` says to flag rather than do.
+- `record numbers` — `0084` and `0086` are each doubled, added by #117/#118 and
+  #122/#123. Both halves of each are already merged, so neither can be
+  renumbered; they need `ACCEPTED_COLLISIONS` in `scripts/verify.sh`, also a
+  shared file. See the `biarritz` section.
+
+Proof they are not this branch's: `git show --stat HEAD` touches none of
+`0084-*`, `0086-*` or `CLAUDE.md`. Everything else is green — 546 tests, format,
+tokens, typecheck, lint, build.
+
+Evidence: Chrome DevTools in both themes — page
+`lab(7.78)` = `#171717`, rail `lab(2.75)` = `#0a0a0a`, scrim's opaque stop now
+identical to the shell's background; theme-color meta tags and
+`manifest.webmanifest` served as `#fafafa`/`#171717`. axe `color-contrast` on
+`/` and `/user/<name>`, both themes: 6,763 + 78 passes, one violation, which is
+the dev-only red `LiveDataWarning` banner and renders nothing in a production
+build. **Playwright visual: `not measured`** — baselines are gitignored and
+absent in a fresh workspace, and generating them honestly needs the ADR-0069
+worktree recipe against a reference commit.
+
 
 ## Controls have two shapes now (2026-08-22, workspace `baghdad`)
 
@@ -49,6 +159,7 @@ Left alone deliberately: the `rounded-pill` chips (`FilterChips`,
 `signinWideButtonClassName` in `SigninShell.tsx:91` turns out to have **no
 consumers at all** — dead, found while checking whether its radius override
 would fight the capsule.
+
 
 ## Three of the four open items shipped (2026-08-21/22, workspace `biarritz`)
 

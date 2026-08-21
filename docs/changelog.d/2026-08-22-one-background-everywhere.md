@@ -1,0 +1,3 @@
+- The collection, the dashboard and public profiles now sit on the same page background as the rest of the site, so the sidebar, the set panels and the card hover all stand out against it instead of blending in.
+- The fade behind the mobile tab bar no longer ends in a visible band in dark mode.
+- The browser's own top and bottom bars are tinted the colour of the page again, closing a seam that showed on iPhone.
