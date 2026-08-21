@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sliders02 } from "@untitledui/icons";
+import { Sliders02 } from "@untitledui-pro/icons/line";
 import { Sheet, sheetApplyButtonClassName } from "@/components/custom/Sheet";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";

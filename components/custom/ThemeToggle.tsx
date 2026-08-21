@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon01, Sun } from "@untitledui/icons";
+import { Moon01, Sun } from "@untitledui-pro/icons/line";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 import { useTheme } from "@/components/custom/ThemeProvider";
 

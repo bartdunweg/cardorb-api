@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import Card from "@/components/custom/Card";
 import CardDetail from "@/components/custom/CardDetail";
 import Button from "@/components/custom/Button";
-import { ChevronLeft } from "@untitledui/icons";
+import { ChevronLeft } from "@untitledui-pro/icons/line";
 import CardNav from "@/components/custom/CardNav";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../lib/core/cards";
 import { currentViewer } from "../../../lib/api/viewer";

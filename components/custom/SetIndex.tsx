@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayersThree01 } from "@untitledui/icons";
+import { LayersThree01 } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useMemo } from "react";

@@ -19,7 +19,7 @@
 
 import type { ComponentPropsWithRef } from "react";
 import { createContext, useContext } from "react";
-import { SearchLg } from "@untitledui/icons";
+import { SearchLg } from "@untitledui-pro/icons/line";
 import { FeaturedIcon as FeaturedIconbase } from "@/components/foundations/featured-icon/featured-icon";
 // `./circle` directly, not the `background-patterns` barrel. That barrel is a
 // lookup table over all four patterns, so importing it to draw one of them

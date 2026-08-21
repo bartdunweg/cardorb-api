@@ -8,7 +8,7 @@ import { useCollection } from "@/app/(app)/CollectionContext";
 import CardsDashboard from "@/components/custom/CardsDashboard";
 import Card from "@/components/custom/Card";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { Inbox01 } from "@untitledui/icons";
+import { Inbox01 } from "@untitledui-pro/icons/line";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 
 /**

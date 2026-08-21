@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "@untitledui/icons";
+import { Plus } from "@untitledui-pro/icons/line";
 import type { ButtonProps as AriaButtonProps } from "react-aria-components";
 import { Tooltip as AriaTooltip, TooltipTrigger as AriaTooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { cx } from "@/utils/cx";

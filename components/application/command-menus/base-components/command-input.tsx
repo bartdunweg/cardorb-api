@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentPropsWithRef, ReactNode } from "react";
-import { HelpCircle, SearchLg } from "@untitledui/icons";
+import { HelpCircle, SearchLg } from "@untitledui-pro/icons/line";
 import type { InputProps as AriaInputProps } from "react-aria-components";
 import { Group as AriaGroup, Input as AriaInput } from "react-aria-components";
 import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";

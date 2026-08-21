@@ -2,7 +2,7 @@ import Button from "@/components/custom/Button";
 import TiltScan from "@/components/custom/TiltScan";
 import { Badge } from "@/components/base/badges/badges";
 import type { ReactNode } from "react";
-import { LinkExternal01 } from "@untitledui/icons";
+import { LinkExternal01 } from "@untitledui-pro/icons/line";
 import type { CardDetail as Detail, OwnedCard } from "@/lib/core/cards";
 import { euro, euroWhole } from "@/lib/core/format";
 

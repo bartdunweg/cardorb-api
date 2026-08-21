@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid01, Rows03 } from "@untitledui/icons";
+import { Grid01, Rows03 } from "@untitledui-pro/icons/line";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { CARD_FIELDS, type CardField } from "@/components/custom/cards-fields";

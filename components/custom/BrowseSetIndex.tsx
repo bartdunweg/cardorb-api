@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SearchLg } from "@untitledui/icons";
+import { SearchLg } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { InputBase } from "@/components/base/input/input";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";

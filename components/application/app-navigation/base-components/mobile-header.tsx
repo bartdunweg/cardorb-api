@@ -1,7 +1,7 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-import { X as CloseIcon, Menu02 } from "@untitledui/icons";
+import { X as CloseIcon, Menu02 } from "@untitledui-pro/icons/line";
 import {
     Button as AriaButton,
     Dialog as AriaDialog,

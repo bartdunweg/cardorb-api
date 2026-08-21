@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Modal from "@/components/custom/Modal";
 import CardDetail from "@/components/custom/CardDetail";
 import { FormError } from "@/components/custom/FormField";
-import { ChevronLeft, ChevronRight } from "@untitledui/icons";
+import { ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
 import { useSwipe } from "@/app/hooks/useSwipe";
 import type { CardDetail as Detail, OwnedCard } from "@/lib/core/cards";
 import { modalCardClassName } from "@/components/custom/cardModalClasses";

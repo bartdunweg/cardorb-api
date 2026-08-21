@@ -1,6 +1,6 @@
 "use client";
 
-import { Sliders02 } from "@untitledui/icons";
+import { Sliders02 } from "@untitledui-pro/icons/line";
 import { MenuPopover } from "@/components/custom/MenuPopover";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
 

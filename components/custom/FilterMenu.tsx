@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "@untitledui/icons";
+import { Plus } from "@untitledui-pro/icons/line";
 import { Badge } from "@/components/base/badges/badges";
 import { MenuPopover } from "@/components/custom/MenuPopover";
 import FilterOptions from "@/components/custom/FilterOptions";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Heart, LayersThree01, LayoutAlt01, List, Plus, SearchLg, User01 } from "@untitledui/icons";
+import { Heart, LayersThree01, LayoutAlt01, List, Plus, SearchLg, User01 } from "@untitledui-pro/icons/line";
 import { useSlidingPill } from "@/app/hooks/useSlidingPill";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { Button as AriaButton } from "react-aria-components";

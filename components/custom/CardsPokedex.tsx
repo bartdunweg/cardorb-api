@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "@untitledui/icons";
+import { ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
 import type { DexEntry } from "@/lib/core/pokedex";
 import type { DexOwned } from "@/components/custom/cards-fields";
 import { normalise } from "@/lib/core/pokedex";

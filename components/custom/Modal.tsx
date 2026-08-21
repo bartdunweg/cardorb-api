@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { animate } from "motion";
-import { XClose } from "@untitledui/icons";
+import { XClose } from "@untitledui-pro/icons/line";
 import { SPRING_MODAL, DUR_NORMAL, DUR_SLOW, prefersReducedMotion } from "@/lib/core/motion";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 

@@ -23,7 +23,7 @@
     "@react-stately/utils": "^3.12.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
-    "@untitledui/icons": "^0.0.22",
+    "@untitledui-pro/icons": "^0.0.3",
     "@vercel/analytics": "^2.0.1",
     "hover-tilt": "^1.0.0",
     "input-otp": "^1.5.0",

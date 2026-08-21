@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronLeft, ChevronRight } from "@untitledui/icons";
+import { Check, ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import type { Facet } from "@/components/custom/cards-fields";

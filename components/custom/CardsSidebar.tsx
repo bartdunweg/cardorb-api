@@ -1,7 +1,7 @@
 "use client";
 
 import { cardsNavElsewhereClassName } from "@/components/custom/cardsPageClasses";
-import { Compass03, Heart, LayersThree01, LayoutAlt01, Plus, User01 } from "@untitledui/icons";
+import { Compass03, Heart, LayersThree01, LayoutAlt01, Plus, User01 } from "@untitledui-pro/icons/line";
 import type { CardSet, ImageSize } from "@/lib/core/cards";
 import { LOCALE } from "@/lib/core/config";
 import Wordmark from "@/components/custom/Wordmark";

@@ -1,7 +1,7 @@
 "use client";
 
 import { type FC, type RefAttributes, useCallback } from "react";
-import { Check, ChevronRight, DotsVertical } from "@untitledui/icons";
+import { Check, ChevronRight, DotsVertical } from "@untitledui-pro/icons/line";
 import type {
     ButtonProps as AriaButtonProps,
     MenuItemProps as AriaMenuItemProps,
