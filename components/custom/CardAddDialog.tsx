@@ -8,6 +8,7 @@ import { MAX, type CardFields } from "@/lib/core/collection-row";
 import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/ptcg-search";
 import { modalCardAddClassName } from "@/components/custom/cardModalClasses";
 import { Button } from "@/components/base/buttons/button";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Input } from "@/components/base/input/input";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
@@ -729,41 +730,21 @@ export default function CardAddDialog({
             </label>
             {suggest("card-add-gens", fields?.gens)}
 
-            <label
-              className="col-span-full flex items-start gap-3 font-body
-                text-sm text-primary cursor-pointer"
-            >
-              <input
-                className="mt-[2px] accent-brand-solid"
-                type="checkbox"
-                checked={draft.collection}
-                onChange={(e) => set("collection", e.target.checked)}
-              />
-              <span className="flex flex-col gap-[2px]">
-                In the binder
-                <span className="text-xs text-tertiary">
-                  Off means it is wanted rather than held.
-                </span>
-              </span>
-            </label>
+            <Checkbox
+              isSelected={draft.collection}
+              onChange={(v) => set("collection", v)}
+              className="col-span-full cursor-pointer text-primary"
+              label="In the binder"
+              hint="Off means it is wanted rather than held."
+            />
 
-            <label
-              className="col-span-full flex items-start gap-3 font-body
-                text-sm text-primary cursor-pointer"
-            >
-              <input
-                className="mt-[2px] accent-brand-solid"
-                type="checkbox"
-                checked={draft.excluded}
-                onChange={(e) => set("excluded", e.target.checked)}
-              />
-              <span className="flex flex-col gap-[2px]">
-                Excluded
-                <span className="text-xs text-tertiary">
-                  Keeps it out of the latest pull on the about page.
-                </span>
-              </span>
-            </label>
+            <Checkbox
+              isSelected={draft.excluded}
+              onChange={(v) => set("excluded", v)}
+              className="col-span-full cursor-pointer text-primary"
+              label="Excluded"
+              hint="Keeps it out of the latest pull on the about page."
+            />
 
             <div className="col-span-full flex justify-end">
               <Button

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
 import type { Facet } from "@/components/custom/cards-fields";
 import { cardsSegmentClassName, cardsSegmentedClassName } from "@/components/custom/trackClasses";
 
@@ -138,38 +139,35 @@ export default function FilterOptions({
         <ul className={`facet-list m-0 list-none p-0 ${list}`} role="list">
           {current.options.map((o) => (
             <li key={o.value}>
-              {/* Untitled UI's checkbox as classes on a real <input>, not their
-                  <Checkbox>: this is a native box inside a <label> inside a
-                  <details> panel, and that is what keeps the whole filter menu
-                  working with the keyboard and without JavaScript. Fourth time
-                  this call comes up — buttons, tiles, the settings switch, and
-                  now this. */}
-              <label
-                className="facet-option flex items-center gap-2.5 rounded-md p-2 cursor-pointer
-                  text-sm text-secondary transition-colors duration-100 ease-linear
-                  hover:bg-primary_hover hover:text-primary"
-              >
-                <input
-                  type="checkbox"
-                  checked={on.has(o.value)}
-                  onChange={() => onToggle(current, o.value)}
-                  className="size-4 shrink-0 appearance-none rounded m-0 cursor-pointer
-                    bg-primary ring-1 ring-primary ring-inset
-                    transition duration-100 ease-linear
-                    checked:bg-brand-solid checked:ring-brand
-                    checked:after:mx-auto checked:after:mt-px checked:after:block
-                    checked:after:h-2 checked:after:w-1
-                    checked:after:rotate-45 checked:after:border-white
-                    checked:after:[border-width:0_2px_2px_0] checked:after:content-['']
-                    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                />
-                <span className="facet-name min-w-0 flex-1 truncate">
-                  {current.display ? current.display(o.value) : o.value}
-                </span>
-                <span className="facet-count shrink-0 text-sm text-tertiary tabular-nums">
-                  {o.count}
-                </span>
-              </label>
+              {/* Their <Checkbox>, not their classes on a native input.
+                  It was the second: a hand-drawn tick, an ::after with
+                  `border-width: 0 2px 2px 0` rotated 45 degrees, which is the
+                  trick every checkbox looked like before anyone shipped an SVG.
+                  It rendered as a thick corner rather than a tick.
+
+                  The comment here used to defend the native input by saying it
+                  kept the panel working without JavaScript. That was wrong:
+                  `onToggle` is a callback, so this row has never worked without
+                  it. React Aria's checkbox is a real input under the hood and
+                  keeps the keyboard behaviour the argument was really about. */}
+              <Checkbox
+                isSelected={on.has(o.value)}
+                onChange={() => onToggle(current, o.value)}
+                className="facet-option w-full cursor-pointer items-center gap-2.5 rounded-md p-2
+                  text-secondary transition-colors duration-100 ease-linear
+                  hover:bg-primary_hover hover:text-primary
+                  [&>div]:min-w-0 [&>div]:flex-1"
+                label={
+                  <span className="flex w-full items-center gap-2.5">
+                    <span className="facet-name min-w-0 flex-1 truncate">
+                      {current.display ? current.display(o.value) : o.value}
+                    </span>
+                    <span className="facet-count shrink-0 text-sm text-tertiary tabular-nums">
+                      {o.count}
+                    </span>
+                  </span>
+                }
+              />
             </li>
           ))}
         </ul>

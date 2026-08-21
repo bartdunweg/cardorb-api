@@ -1,6 +1,7 @@
 "use client";
 
 import { LayoutGrid, Rows3 } from "lucide-react";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { CARD_FIELDS, type CardField } from "@/components/custom/cards-fields";
 import {
   cardsSegmentClassName,
@@ -169,23 +170,17 @@ export default function ViewOptions({
           <ul className="grid grid-cols-2 gap-x-3 gap-y-1 m-0 p-0 list-none" role="list">
             {CARD_FIELDS.map(([key, text]) => (
               <li key={key}>
-                <label
-                  className="flex items-center gap-2 min-h-7 font-body
-                    text-xs text-primary cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={fields.has(key)}
-                    onChange={() => onField(key)}
-                    /* Explicit, where this used to inherit `.filter-menu-panel
-                       input` from cards.css. That rule is gone with the filter
-                       rows it was written for, and a bare checkbox here would
-                       have quietly gone back to the browser's own grey — which
-                       is the exact failure that rule's comment describes. */
-                    className="size-4 shrink-0 appearance-none rounded m-0 cursor-pointer bg-primary ring-1 ring-primary ring-inset transition duration-100 ease-linear checked:bg-brand-solid checked:ring-brand checked:after:mx-auto checked:after:mt-px checked:after:block checked:after:h-2 checked:after:w-1 checked:after:rotate-45 checked:after:border-white checked:after:[border-width:0_2px_2px_0] checked:after:content-[''] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                  />
-                  <span>{text}</span>
-                </label>
+                {/* Their <Checkbox>. It was the same hand-drawn tick the filter
+                    rows had — a rotated ::after with two borders — and the
+                    comment above it was defending the *colour* against a
+                    deleted cards.css rule while the shape was the actual
+                    problem. */}
+                <Checkbox
+                  isSelected={fields.has(key)}
+                  onChange={() => onField(key)}
+                  className="min-h-7 cursor-pointer items-center gap-2 text-primary"
+                  label={<span className="text-xs">{text}</span>}
+                />
               </li>
             ))}
           </ul>
