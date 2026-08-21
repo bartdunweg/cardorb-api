@@ -170,6 +170,15 @@ root `CLAUDE.md` for how and when to write to it.
   no screen has ever shown — which is what `docs/feedback/0010-...` reported.
   Anything route-specific goes in that route's own `loading.tsx` or nowhere. Read
   it with `0018`, which is this same file drifting once before.
+- `decisions/0085-every-tab-is-the-width-of-the-widest.md` — **read before
+  touching the mobile tab bar, and before looking for the add button in it.**
+  The track is a grid of `fr` columns now, so every slot is the width of the
+  widest label with no JavaScript measuring it; and the 40px add circle left the
+  bar for the dashboard's title row, **deliberately and temporarily**, because
+  four equal slots plus a circle do not fit a 360px phone. The record says what
+  that costs (on a phone, adding a card is dashboard-only) and what would
+  reverse it. Read it with `0050`, whose overflow diagnosis it keeps, and `0030`,
+  which tried equal widths by measurement and kept clipping "Dashboard".
 - `decisions/0048-the-orb-mark-on-the-web.md` — **read before touching anything
   that shows the product's name or its icon**, and **read its opening warning
   before starting any task in this repo.** Two workspaces built this from the

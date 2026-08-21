@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Heart, LayersThree01, LayoutAlt01, List, Plus, SearchLg, User01 } from "@untitledui-pro/icons/line";
+import { Heart, LayersThree01, LayoutAlt01, List, SearchLg, User01 } from "@untitledui-pro/icons/line";
 // The real solid cuts, not the line ones with fill turned on. Untitled UI draws
 // each style separately: a solid icon is its own shape, where filling an outline
 // path floods the strokes and gives a heavier, blunter form than anyone drew.
@@ -16,10 +16,7 @@ import {
 } from "@untitledui-pro/icons/solid";
 import { useSlidingPill } from "@/app/hooks/useSlidingPill";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { Button as AriaButton } from "react-aria-components";
-import { Tooltip } from "@/components/base/tooltip/tooltip";
 import {
-  tabbarAddClassName,
   tabbarClassName,
   tabbarFadeClassName,
   tabbarIconClassName,
@@ -33,42 +30,33 @@ import {
  * The bottom bar on /cards, below 1000px, where the rail is not beside the
  * cards but instead of them.
  *
- * The site's own bar wearing this route's destinations, the same way the
- * favourites shelves do it (see FavoritesView): TabBar stands down here anyway,
- * so the place along the bottom of the screen is free and a second bar built
- * out of something else would be a second bar. Everything it looks like comes
- * from tabbar.css; cards.css only says where it stands and how wide its slots
- * are.
+ * Everything it looks like comes from tabbarClasses.ts, which is the whole of
+ * it: this file decides which slots there are and which one is lit.
  *
- * Buttons rather than links, which is where it parts from favourites: that
- * route has a URL per shelf and this one has no URL per set, so there is no
- * href to honour and nothing for a middle click to open.
+ * Buttons rather than links: this route has no URL per set, so there is no href
+ * to honour and nothing for a middle click to open.
  *
- * Every slot says its name, at every width — this used to read "no labels at
- * any width", on the arithmetic that a 360px phone left about 214px of track
- * once the theme toggle's footprint was reserved on both sides. That
- * reservation was for a control this route does not have and is gone
- * (tabbarClasses.ts), which leaves 328px, and four labelled slots plus the
- * add circle fit it with room to spare. Below roughly 340px the labels
- * truncate rather than the bar overflowing (ADR-0050).
+ * Every slot says its name, at every width, and every slot is the width of the
+ * widest of those names (ADR-0085). Four labelled slots fit a 360px phone's
+ * 328px of track with room to spare now that the add circle is not in the row
+ * with them. Below roughly 340px the labels truncate rather than the bar
+ * overflowing — the floor ADR-0050 established, unchanged.
  */
 
 /**
- * Where the sliding pill may land. The plus is not one of these.
+ * Where the sliding pill may land.
  *
- * Two different bars, because the two modes have different room. Signed in the
- * plus takes the middle, so four slots is the ceiling: five plus a circle does
- * not divide a 360px phone into anything readable, which is why Sets and
- * Pokédex still sit this one out — Profile fits because it replaced Settings
- * rather than joining it. Signed out there is no account to show at all, so
- * the public link drops Profile along with the plus.
+ * Two different bars, because the two modes have different places to go. Four
+ * slots is the ceiling either way: five equal slots do not divide a 360px phone
+ * into anything readable, which is why Sets and Pokédex sit the signed-in bar
+ * out — Profile fits because it replaced Settings rather than joining it.
  *
- * The public link has no plus and no dashboard, and gives up Search as well,
- * which leaves four for the four places there are: Collection, Wishlist, Sets,
- * Pokédex. Collection and Wishlist were rail-only rows, so on a phone the only
- * way back to either was through the menu the rail opens — a menu standing in
- * front of the two screens anyone followed the link to see. Sets keeps a slot
- * for what it is actually for, picking one.
+ * The public link has no dashboard and no account to show, and gives up Search
+ * as well, which leaves Collection, Wishlist and Sets. Collection and Wishlist
+ * were rail-only rows, so on a phone the only way back to either was through the
+ * menu the rail opens — a menu standing in front of the two screens anyone
+ * followed the link to see. Sets keeps a slot for what it is actually for,
+ * picking one.
  */
 /**
  * The slots. "settings" joined and "search" left on the day the app got
@@ -81,8 +69,9 @@ import {
  * screen you are on. Search went for a related reason — it was a slot that
  * scrolled you to a field, which is a shortcut wearing a destination's clothes.
  *
- * Four is also as many as this bar can carry beside the plus without the labels
- * colliding on a narrow phone, which is the practical half of the argument.
+ * Four is also as many as this bar can carry at one equal width without the
+ * labels truncating on a narrow phone, which is the practical half of the
+ * argument.
  */
 export type CardsTab = "dashboard" | "collection" | "wishlist" | "profile" | "sets" | "search";
 
@@ -94,10 +83,11 @@ export default function CardsTabBar({
   isPublic = false,
   viewer,
   onSelect,
-  onAdd,
 }: {
   active: CardsTab | null;
-  /** The plus is only in the bar once the key is in (see the profile screen). */
+  /** Which slots the bar carries: the public link has no account to show, so no
+   *  "You". Nothing to do with the plus any more — that left the bar entirely
+   *  (ADR-0085). */
   signedIn: boolean;
   /** No Dashboard on the public link: it is three tiles and two charts there. */
   isPublic?: boolean;
@@ -105,7 +95,6 @@ export default function CardsTabBar({
    *  the slot falls back to a plain person icon rather than waiting. */
   viewer?: { name: string; avatarUrl: string | null };
   onSelect: (tab: CardsTab) => void;
-  onAdd: () => void;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const {
@@ -150,23 +139,18 @@ export default function CardsTabBar({
     : ["dashboard", "collection", "wishlist", "profile"];
   const shown = order.map((k) => all[k]!);
 
-  // The plus sits in the middle, which is why the list is split rather than
-  // mapped in one go: it is the thing you came to the bar to do, and on a phone
-  // the middle is the thumb's own place. With no plus the split is invisible,
-  // because both halves land in the same flex row.
-  const half = Math.ceil(shown.length / 2);
-  const left = shown.slice(0, half);
-  const right = shown.slice(half);
-
   /**
-   * No slot-width measurement here any more, and deliberately none: a
-   * --tab-w var was computed from the widest label on mount, on
-   * document.fonts.ready and on every ResizeObserver tick, so that every
-   * slot could be given that one fixed width. ADR-0050 removed the fixed
-   * width — each slot is as wide as its own label now (tabbarItemClassName)
-   * — and with it the whole measuring apparatus, which existed only to feed
-   * a number the layout no longer asks for. The browser was always going to
-   * be better at this than three JavaScript hooks racing a font load.
+   * The slots are mapped in one go. They used to be split in half around a plus
+   * that sat in the middle of the row; ADR-0085 moved that button to the
+   * dashboard's title row, so there is nothing left for the two halves to sit
+   * either side of.
+   *
+   * Still no slot-width measurement here, and deliberately none, even though the
+   * slots are all one width again: a --tab-w var was once computed from the
+   * widest label on mount, on document.fonts.ready and on every ResizeObserver
+   * tick (ADR-0030), and ADR-0050 deleted the lot. Equal widths come from a grid
+   * of fr tracks now (tabbarPagesClassName) — the browser was always going to be
+   * better at this than three JavaScript hooks racing a font load.
    */
 
   const item = (tab: (typeof shown)[number]) => {
@@ -222,26 +206,7 @@ export default function CardsTabBar({
             aria-hidden="true"
             style={pillStyle}
           />
-          {left.map(item)}
-          {signedIn && (
-            /* Untitled UI's Tooltip, in place of `title="Add a card"`. A
-               `title` never reaches a keyboard: it appears on hover and on
-               nothing else, so the one hint this icon-only button carries was
-               unavailable to exactly the people most likely to want it. The
-               `sr-only` label stays — it is the button's name, which the
-               tooltip is not.
-
-               The trigger has to be React Aria's Button. TooltipTrigger hands
-               its child the hover and focus props, and a plain <button> has
-               nowhere to put them, so `onClick` becomes `onPress`. */
-            <Tooltip title="Add a card" placement="top">
-              <AriaButton className={tabbarAddClassName} onPress={onAdd}>
-                <Plus size={20} strokeWidth={2} aria-hidden="true" />
-                <span className="sr-only">Add a card</span>
-              </AriaButton>
-            </Tooltip>
-          )}
-          {right.map(item)}
+          {shown.map(item)}
         </div>
       </nav>
     </>

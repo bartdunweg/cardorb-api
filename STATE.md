@@ -2,6 +2,32 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## The tab bar's slots are all one width, and the plus left it (2026-08-22, workspace `yerevan`)
+
+FB-0021, ADR-0085. Every slot in the mobile tab bar is the width of the widest
+label now — the track is `grid grid-flow-col auto-cols-fr`, so the browser does
+it and no JavaScript measures anything. The avatar slot is no longer the narrow
+one. `px-1.5` on the slot became `px-1`, which is now only the truncation floor
+rather than the visible padding; at 6px a 360px phone read "Dashbo…".
+
+**The thing to know before touching this: the 40px add circle is not in the bar
+any more.** Four equal slots plus a circle do not fit a 360px phone, so it moved
+to the dashboard's title row, on instruction and explicitly *"voor nu eventjes"*.
+Cost: on a phone, adding a card is dashboard-only — `/collection` and `/wishlist`
+have no add action. ADR-0085 lists the three ways to reverse it.
+
+Left undone, and both need a signed-in session this workspace cannot create:
+
+- **Nobody has seen the dashboard's new plus.** The geometry of the bar was
+  measured on the public `/user/<name>` bar with the four signed-in slots built
+  into the page from the same classes; the dashboard button was not rendered at
+  all. Same gap as the `/settings` and `CardAddDialog` items further down.
+- **That button is 36×36** (Untitled UI `Button`, default `sm`, icon-only →
+  `p-2` + a 20px icon), matching the rail's. It clears WCAG 2.2 AA's 24×24 but
+  not the 44×44 comfortable-touch guideline, and unlike the rail's it is now a
+  phone-only control. `size="lg"` would make it exactly 44. Left alone because
+  its visual weight beside the heading has not been looked at yet.
+
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 
 Five `review-*` skills were run over the whole app rather than over a diff —
