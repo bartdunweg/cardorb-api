@@ -2,6 +2,52 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## The loading screen is the orb now (2026-08-22, workspace `beirut`)
+
+Bart reported the signed-in loading state for the **second** time (FB-0024, after
+FB-0010 six days earlier): *"dit is helemaal niet de skeleton van de pagina zelf …
+hoe het nu werkt, ziet er in ieder geval niet uit."* FB-0010 was marked
+`addressed`. It was not.
+
+`app/(app)/loading.tsx` is the orb now — centred, breathing, nothing else. 254
+lines out, 94 in. **ADR-0091 supersedes ADR-0046.** The rule ADR-0046 wrote
+survives (a shared fallback may only draw what it can know is true on all seven
+routes); the skeleton it drew with that rule does not, because a fallback
+covering seven unrelated layouts cannot honestly outline any of them.
+
+Gone with it: `skeletonClassName`, `@keyframes skeleton-sweep`, and a
+`.skeleton::after` reduced-motion block that had been dead since the Tailwind
+migration. `Mark` is exported from `Wordmark.tsx` with a `px` prop so the
+fallback reuses the existing AVIF/PNG pair rather than a second `<picture>`.
+
+**Still deferred, and still the real fix:** stream the collection so the shell
+renders for real and only the content pane waits. `layout.tsx:54` already has
+`viewer` before the slow await; the rail and tab bar need nothing else but three
+counts. Trigger unchanged since ADR-0046: anyone touching `AppShell`'s props.
+
+### What this cost, and it is the part worth reading
+
+**`origin/main` moved twice during one review, and both moves broke this file
+silently.** Written as ADR-0085, renumbered to 0089, renumbered again to 0091.
+That is the cheap half. The expensive half:
+
+- **ADR-0087** moved `<main id="main-content">` out of the root layout. The
+  first version of the new fallback had none, so "Skip to content" would have
+  pointed at nothing for the entire load.
+- **ADR-0089** moved the app canvas from `bg-primary` to `bg-secondary` and
+  names `loading.tsx` among the files it covers. The fallback had been written
+  `bg-primary` — the raised card colour — which is precisely the drift ADR-0089
+  had just removed, and would have changed the background under the reader at
+  the moment the orb went away.
+
+Neither shows in a screenshot or a test. **A loading state is the one surface
+where "rebase and re-run the checks" is not enough — read what landed.**
+
+Also worth knowing: a blanket `sed s/ADR-0089/ADR-0091/` over the tree during the
+renumber silently rewrote a dozen *other* records' references to the real
+ADR-0089. Caught by reading the grep output, not by any check. Renumber your own
+files by name; never sweep the repository.
+
 ## One canvas for the whole app (2026-08-22, workspace `lahore-v1`)
 
 Bart asked why the landing background, the navbar and the cards are different
@@ -1311,9 +1357,10 @@ picked up the same complaint within an hour of each other.
   profile bar with the signed-in shape (four labelled slots plus the add circle)
   injected into it by script — the same no-session gap as every item below. What
   a human should still do: sign in on a phone, tap between all four tabs and
-  watch the pill both slide and resize in one motion, and confirm the skeleton's
-  capsule does not visibly change width when the real bar replaces it (its four
-  placeholder labels are hard-coded to the real labels' widths for exactly that).
+  watch the pill both slide and resize in one motion. (The clause that used to
+  follow — confirm the loading skeleton's capsule does not change width when the
+  real bar replaces it — is moot: the fallback draws no tab bar any more,
+  ADR-0091.)
 - **Re-run `--seed` on another day to recover the 2026-06-17 point**, then delete
   `lib/core/collection-value.generated.json`. The migration and the first two
   points are already in (see "Now"); this is only about the middle reading, which
@@ -1330,17 +1377,19 @@ picked up the same complaint within an hour of each other.
   API were read and carry no purchase price, note, condition or quantity.
   The **iOS app** was checked too, by cloning `bartdunweg/cardorb-ios`: it never
   calls the public endpoint, so it is unaffected. Nothing outstanding here.
-- **The new loading fallback has not been seen in a signed-in browser.** No
-  session in this workspace, `chrome-devtools` was blocked by another
-  automation Chrome holding its profile, and the Chrome extension was not
-  connected — the same gap as the three items below. It was verified by
-  rendering the fallback on a throwaway public route and screenshotting it
-  headless at 1440/900/375 (route deleted again), so the markup and the
-  geometry are right in isolation. What is **not** verified is the thing that
-  matters: hard-load `/dashboard`, `/settings` and `/collection/sets` with the
-  collection slowed down, and confirm nothing moves between the fallback and
-  the real page — specifically that the rail's rows land on the same
-  y-position and the tab bar does not change height.
+- **The loading fallback has still not been seen in a signed-in browser**, two
+  rewrites later. It is the orb alone now (ADR-0091), so most of what this
+  bullet used to ask for went with the skeleton — there are no rail rows to land
+  on the same y-position and no tab bar to change height. Measured 2026-08-22 by
+  rendering it at its real position in the DOM on a throwaway route (deleted
+  again): zero overflow in both axes at 1440/900/640/639/375/320, orb
+  dead-centre at all six, reduced motion resting at full size and full opacity,
+  light and dark both correct. Playwright rather than headless Chrome, so the
+  sub-500px numbers are real ones. What is **not** verified is the one thing
+  left: hard-load `/dashboard` and `/settings` signed in, with the collection
+  slowed down, and judge the jump from the orb to the real page. A signed-out
+  request never reaches the layout — the proxy sends it to `/login` first — so
+  this needs a real session and nothing short of one.
 - **Nothing in this repo has been rendered below 500px this session, or in
   several.** Chrome headless clamps its window to a 500px minimum on macOS, so
   a `--window-size=375` screenshot lays the page out at 500 and crops the image
@@ -1348,13 +1397,10 @@ picked up the same complaint within an hour of each other.
   This cost a wrong finding before it was caught by measuring
   `document.documentElement.scrollWidth` instead of looking at the picture.
   **Measure, do not read screenshots, for anything narrower than 500px.**
-- **`--tab-w` is now computed in `app/(app)/loading.tsx` and inherited in
-  `CardsTabBar.tsx`.** The slot width's 104px default is only safe because
-  `CardsTabBar` measures the widest label on mount and writes a smaller value
-  back; a fallback has no effect, so it held 104 and the end slots hung out of
-  the capsule below ~620px (ADR-0044). Anything else that ever draws this bar
-  without `CardsTabBar` behind it needs the same formula. The formula's
-  behaviour below 500px is arithmetic, not measured.
+- ~~`--tab-w` is now computed in `app/(app)/loading.tsx`.~~ **Gone twice over,
+  and already stale when it was written here.** ADR-0050 made slots size to their
+  own content, which removed the formula; ADR-0091 removed that file's tab bar
+  altogether. `CardsTabBar.tsx` is the only thing that draws the bar now.
 - **`app/cards/[id]/page.tsx`'s soft-404 explanation is now marked unverified.**
   It blamed `app/cards/loading.tsx` for making the route stream; that file does
   not exist and the route is outside the `(app)` group, so it does not inherit

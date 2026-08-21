@@ -1,0 +1,1 @@
+- Signed-in screens now show the Card Orb mark while they load, instead of a grey outline of a page that was not the one you were opening. It fades in only if the wait is long enough to notice.

@@ -1,7 +1,9 @@
 /**
- * Tailwind classes for the floating tab bar, shared between CardsTabBar.tsx
- * and (app)/loading.tsx (which draws the same bar as a skeleton). Used to be
- * app/styles/tabbar.css + app/styles/layout.css.
+ * Tailwind classes for the floating tab bar. Used to be app/styles/tabbar.css +
+ * app/styles/layout.css.
+ *
+ * CardsTabBar.tsx is the only consumer now. (app)/loading.tsx used to draw the
+ * same bar as a skeleton and draws nothing but the orb — ADR-0091.
  *
  * "tabbar-item" and "is-active" stay as literal class names alongside the
  * Tailwind utilities below, because useSlidingPill.ts queries

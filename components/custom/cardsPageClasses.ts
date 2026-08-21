@@ -199,27 +199,16 @@ export const cardsMainTitleClassName =
   "cards-main-title m-0 text-display-xs font-semibold text-primary [overflow-wrap:anywhere]";
 
 /**
- * A loading placeholder: the block, and the light that sweeps across it.
+ * `skeletonClassName` was here — the grey block and the light that swept across
+ * it, with `nth-[4n+…]` rules staggering a row of them.
  *
- * Was `.skeleton` in components.css, with four `nth-child` rules staggering the
- * sweep so a row of them does not pulse in unison. Tailwind expresses all of it
- * — `after:` for the sweep, `nth-[4n+2]:` and friends for the stagger — so the
- * only thing that had to stay in CSS is the @keyframes itself, which is in
- * globals.css beside the other two.
+ * Nothing in the app draws a skeleton any more. Its only consumer was ever
+ * app/(app)/loading.tsx, and that file shows the orb now: a shared fallback
+ * standing in for seven screens with no layout in common cannot honestly
+ * outline any of them (ADR-0091, FB-0024). The `@keyframes skeleton-sweep` it
+ * read went with it.
  *
- * The colours are Untitled UI's now: their tertiary background for the block,
- * and their primary surface at low opacity for the light moving over it.
+ * Deleted rather than kept warm. If per-route skeletons ever arrive they will be
+ * written against whatever the design system looks like then, and this is one
+ * `git show` away in the meantime.
  */
-export const skeletonClassName = [
-  "relative overflow-hidden rounded-md bg-tertiary",
-  "after:absolute after:inset-0 after:content-['']",
-  "after:[background:linear-gradient(90deg,transparent_0%,var(--color-bg-primary)_50%,transparent_100%)]",
-  "after:opacity-60 after:-translate-x-full",
-  "after:[animation:skeleton-sweep_1.4s_var(--ease-in-out)_infinite]",
-  // A row of these pulsing in unison reads as one object flashing rather than
-  // several things loading. Staggered by an eighth of the sweep each.
-  "nth-[4n+2]:after:[animation-delay:0.15s]",
-  "nth-[4n+3]:after:[animation-delay:0.3s]",
-  "nth-[4n+4]:after:[animation-delay:0.45s]",
-  "motion-reduce:after:animate-none motion-reduce:after:opacity-0",
-].join(" ");

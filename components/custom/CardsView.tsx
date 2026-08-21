@@ -276,9 +276,10 @@ export default function CardsView({
    * says where you are the moment you get there.
    *
    * Undefined until something is pressed, which renders no attribute at all,
-   * and that is the landing state for both the real page and the skeleton in
-   * app/(app)/loading.tsx: the stylesheet reads it as the results, which is why
-   * its selector is written as :not([data-pane="rail"]). It also means the
+   * and that is the landing state: the stylesheet reads it as the results,
+   * which is why its selector is written as :not([data-pane="rail"]). (The
+   * loading fallback used to be the other reader of that state; it draws no
+   * panes at all now — ADR-0091.) It also means the
    * pane-swap animation has nothing to match on the way in, so the dashboard
    * does not perform an arrival on every page load.
    *

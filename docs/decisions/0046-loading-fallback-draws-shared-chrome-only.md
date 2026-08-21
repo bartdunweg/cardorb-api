@@ -1,11 +1,11 @@
 ---
 id: ADR-0046
 title: The (app) loading fallback draws shared chrome only, never a page's shape
-status: accepted
+status: superseded by ADR-0091
 date: 2026-08-16
 scope: repo
 deciders: [Bart]
-superseded-by: null
+superseded-by: ADR-0091
 tags: [loading, suspense, skeleton, app-shell, tabbar, sidebar, drift]
 ---
 
