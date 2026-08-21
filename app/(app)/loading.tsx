@@ -4,14 +4,15 @@ import {
   tabbarFadeClassName,
   tabbarItemClassName,
   tabbarPagesClassName,
-} from "../components/tabbarClasses";
+} from "@/components/custom/tabbarClasses";
 import { APP_NAME } from "../../lib/core/config";
 import {
   cardsHeadClassName,
   cardsMainClassName,
   pageCardsClassName,
-} from "../components/cardsPageClasses";
-import Wordmark from "../components/Wordmark";
+  skeletonClassName,
+} from "@/components/custom/cardsPageClasses";
+import Wordmark from "@/components/custom/Wordmark";
 
 /**
  * What every signed-in screen shows while the shell is on its way.
@@ -56,13 +57,13 @@ const RAIL_BELOW = 2;
 /** The hairline between the destinations and the sets. Same markup as the one
  *  in CardsSidebar.tsx, so the rows either side of it are not off by 20px. */
 function RailDivider() {
-  return <span className="block h-px m-2 bg-[var(--color-border-subtle)]" />;
+  return <span className="block h-px m-2 bg-secondary" />;
 }
 
 function RailRow() {
   // One .cards-nav-item: 28px of logo/icon slot plus the --space-2 padding
   // either side of it.
-  return <span className="skeleton h-11 rounded-md" />;
+  return <span className={`${skeletonClassName} h-11 rounded-orb-md`} />;
 }
 
 export default function Loading() {
@@ -74,7 +75,7 @@ export default function Loading() {
     // > .is-fallback in base.css — the direct-child selector only ever
     // matched this one element, so it's a direct class now.
     <section
-      className={`${pageCardsClassName} [animation:pageEnter_420ms_var(--ease-out)] [transform-origin:center_top]`}
+      className={`${pageCardsClassName} [animation:pageEnter_420ms_ease-out] [transform-origin:center_top]`}
     >
       {/* The same heading AppShell renders, word for word and in the same
           position, so the document has exactly one h1 throughout the load
@@ -86,8 +87,8 @@ export default function Loading() {
       <h1 className="sr-only">{APP_NAME}</h1>
 
       <div
-        className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
-          bg-[var(--glass-bg-solid)] [backdrop-filter:blur(var(--blur-glass-card))]"
+        className="cards-rail gap-5 px-3 py-4
+          bg-primary [backdrop-filter:blur(var(--blur-glass-card))]"
         aria-hidden="true"
       >
         {/* The rail's head, above 1000px only, exactly where CardsSidebar puts
@@ -104,9 +105,9 @@ export default function Loading() {
             `href`, so it is not pressable — there is nothing to navigate to yet.
             The add button beside it is an outline, because it is a control and
             drawing a dead one invites the press it cannot answer. */}
-        <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
+        <div className="flex items-center justify-between gap-2 pt-0 px-4 pb-4 [@media(max-width:1000px)]:hidden">
           <Wordmark />
-          <span className="skeleton flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full" />
+          <span className={`${skeletonClassName} flex-none w-10 h-10 rounded-full`} />
         </div>
 
         {/* No "Sets" title here, unlike CardsSidebar. Below 1000px cards.css
@@ -128,11 +129,11 @@ export default function Loading() {
             (CardsSidebar.tsx) — otherwise it arrives out of nowhere at the end
             of the load. Above 1000px only, like the head. */}
         <span
-          className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-md
-            bg-[var(--glass-bg-solid)] [@media(max-width:1000px)]:hidden"
+          className="sticky bottom-0 z-[1] mt-auto flex items-center gap-3 w-full p-2 rounded-orb-md
+            bg-primary [@media(max-width:1000px)]:hidden"
         >
-          <span className="skeleton flex-none w-7 h-7 rounded-full" />
-          <span className="skeleton flex-1 h-[var(--fs-small)]" />
+          <span className={`${skeletonClassName} flex-none w-7 h-7 rounded-full`} />
+          <span className={`${skeletonClassName} flex-1 h-3`} />
         </span>
       </div>
 
@@ -144,7 +145,7 @@ export default function Loading() {
               Sized to cardsMainTitleClassName's line box, not to its
               font size. */}
           <span
-            className="skeleton w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-xs"
+            className={`${skeletonClassName} w-[220px] max-w-full h-8 rounded-orb-xs`}
             aria-hidden="true"
             role="presentation"
           />
@@ -167,7 +168,7 @@ export default function Loading() {
             band of light travelling across 40px of text bar reads as loading,
             the same band across half the window reads as the page flickering. */}
         <span
-          className="skeleton block w-full h-[min(420px,52vh)] rounded-lg after:content-none"
+          className={`${skeletonClassName} block w-full h-[min(420px,52vh)] rounded-orb-lg after:content-none`}
           aria-hidden="true"
           role="presentation"
         />
@@ -244,8 +245,8 @@ const LABEL_WIDTHS = ["w-[57px]", "w-[52px]", "w-[41px]", "w-[20px]"];
 function TabSlot({ labelWidth }: { labelWidth: string }) {
   return (
     <span className={`${tabbarItemClassName} !cursor-default`}>
-      <span className="skeleton w-5 h-5 rounded-xs" />
-      <span className={`skeleton ${labelWidth} h-[var(--fs-tiny)] rounded-xs`} />
+      <span className={`${skeletonClassName} w-5 h-5 rounded-orb-xs`} />
+      <span className={`${skeletonClassName} ${labelWidth} h-3 rounded-orb-xs`} />
     </span>
   );
 }

@@ -1,0 +1,1 @@
+- On a tablet-sized screen the collection's toolbar wraps again: the search field takes its own row and View and Filter sit under it, instead of four controls squeezing onto one line.

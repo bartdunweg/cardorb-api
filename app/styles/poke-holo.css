@@ -298,3 +298,26 @@
 .poke-card[data-rarity="classic collection"] {
   --poke-foil: 0.5;
 }
+
+/* ── How the effect attaches to a card tile ────────────────────────────────
+
+   These two rules were the last thing left in cards.css, and they were never
+   about the grid: `.cards-scan` is the box a scan is drawn in, and these make
+   the tilt wrapper and the card inside it fill that box rather than shrink to
+   their own content.
+
+   Here rather than on the elements as utilities, unlike everything else in this
+   migration. `.poke-tilt` is `hover-tilt`'s own web component and `.poke-card`
+   is this file's root — neither is markup this app writes, so there is no
+   className to put a utility on. ADR-0061 protects the effect; this is the
+   seam it hangs from. */
+.cards-scan .poke-tilt {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cards-scan .poke-card {
+  display: grid;
+  width: 100%;
+  height: 100%;
+}

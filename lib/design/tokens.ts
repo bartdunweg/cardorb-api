@@ -105,6 +105,18 @@ export const colour = {
    */
   tintLabel: { light: "#0066cc", dark: "#007aff" },
 
+  /* ── On this pair, after the palette went purple (ADR-0061) ──────────────
+   *
+   * `tint` and `tintLabel` are no longer the app's accent. Untitled UI's brand
+   * ramp is, and these two are read only by what is left of the hand-written
+   * stylesheets. They stay until those do.
+   *
+   * The reasoning is kept because it is the general rule, not a fact about
+   * blue: a colour measured as a *graphic* (3:1) is not cleared for use under
+   * a *word* (4.5:1). That distinction put a 4.02:1 button on screen once
+   * (ADR-0058), and it is the check to run on any future palette — Untitled
+   * UI's purple happens to clear both, which is luck rather than diligence. */
+
   /**
    * Warning / destructive: the delete-account panel border and button — the
    * only place in the app that uses a warning colour. Used to be a literal
@@ -140,12 +152,32 @@ export const colour = {
  * the name, it is the rounded rectangle: the glass hover-pill on rows, and the
  * filter-bar controls on /cards, where a round end beside a search field reads
  * as loose. The name stays because thirty rules answer to it.
+ *
+ * ── Why four of these are called orb* ──────────────────────────────────────
+ *
+ * They were `xs`/`sm`/`md`/`lg`, which are Tailwind's own names, and @theme
+ * does not add to Tailwind's scale — it replaces it. So `rounded-lg` meant
+ * 24px everywhere, including inside components this project did not write.
+ *
+ * That went unnoticed until Untitled UI arrived and the proof screen came back
+ * with pill-shaped inputs: every `rounded-lg` in a vendored component was
+ * quietly resolving to `var(--radius-lg)` — 24px, three times what upstream
+ * drew, and nothing failed. A silent collision through a shared name, which is
+ * the same shape as ADR-0012 and ADR-0017.
+ *
+ * ADR-0056 settles which way it goes: Untitled UI's value is the default, so
+ * `rounded-lg` goes back to meaning Tailwind's 8px and Card Orb's scale moves
+ * out of the way. `rounded-orb-lg` is unmistakably ours and cannot collide with
+ * anything upstream adds later.
+ *
+ * `btn` and `pill` keep their names — they are not Tailwind's, so they never
+ * collided.
  */
 export const radius = {
-  xs: "6px",
-  sm: "8px", // buttons, covers
-  md: "16px", // small cards, photos
-  lg: "24px", // bento cards / panels
+  orbXs: "6px",
+  orbSm: "8px", // buttons, covers
+  orbMd: "16px", // small cards, photos
+  orbLg: "24px", // bento cards / panels
   btn: "999px",
   pill: "14px", // glass hover-pill (connect rows, tab pills, FAQ)
 } satisfies Record<string, string>;
@@ -285,8 +317,20 @@ export const fontWeight = {
  */
 export const font = {
   main: 'var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)',
-  body: 'var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)',
-  mono: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  /* `body` and `mono` were here and are Untitled UI's now.
+   *
+   * They are the only two names in this file that collide with its theme — 59
+   * Card Orb tokens against 306 of theirs, and these two — and the generator
+   * emits ours after theirs, so ours were winning. ADR-0063 settles which way
+   * that goes: theirs.
+   *
+   * No visible change either way. Both are Inter with a system fallback list;
+   * only the tail of the list differs. That is exactly why it is worth removing
+   * rather than leaving: two definitions of one font, agreeing today, with
+   * nothing to keep them agreeing tomorrow.
+   *
+   * `main` stays because it has no Untitled UI counterpart and cards.css reads
+   * `var(--font-main)` by name. */
 } satisfies Record<string, string>;
 
 /**
@@ -372,33 +416,11 @@ export const zIndex = {
   skip: "9999",
 } satisfies Record<string, string>;
 
-/**
- * The values that stay in tokens.css and get a utility anyway.
- *
- * Two groups, both listed here rather than in the generator, because the
- * generator should not be the place that knows which parts of the design system
- * exist. Each entry is the CSS property a class of this name should set, and
- * the variable it should read.
- *
- * The shadows are theme-shaped (three layers in light, two in dark) and the
- * layout constants are breakpoint-shaped. Both kinds have to keep their
- * declaration next to the `@media`/`[data-theme]` block that answers for them,
- * which is CSS. What they do not have to keep is being unreachable from a
- * className.
- */
-export const utilities = {
-  "shadow-card": { property: "box-shadow", variable: "--shadow-card" },
-  "shadow-elevated": { property: "box-shadow", variable: "--shadow-elevated" },
-  "shadow-image": { property: "box-shadow", variable: "--shadow-image" },
-  "h-control": { property: "height", variable: "--control-h" },
-  "min-h-control": { property: "min-height", variable: "--control-h" },
-  "max-w-content": { property: "max-width", variable: "--content-max" },
-  "p-card": { property: "padding", variable: "--card-pad" },
-  "px-page": { property: "padding-inline", variable: "--page-pad-x" },
-  "pb-page": { property: "padding-bottom", variable: "--page-pad-bottom" },
-  "pt-main": { property: "padding-top", variable: "--main-pad-top" },
-  "h-tabbar-pill": { property: "height", variable: "--tabbar-pill-h" },
-} satisfies Record<string, { property: string; variable: string }>;
+/* `utilities` used to be here — a map generating @utility classes for
+   shadow-card, h-control, p-card, px-page and seven more. Every one of them had
+   zero call sites: the components reach the variables directly, or have moved to
+   Untitled UI's own utilities. Removed with the three --shadow-* tokens that
+   existed only to feed it. */
 
 export const surfaces = {
   light: {

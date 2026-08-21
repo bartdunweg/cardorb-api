@@ -53,6 +53,29 @@ const config = [
   },
   ...next,
   cacheLeash,
+  {
+    /**
+     * Untitled UI's vendored components, exempt.
+     *
+     * `components/`, `utils/` and `hooks/` are written by `npx untitledui add`,
+     * not by anybody here, and re-written wholesale on the next update. Holding
+     * them to this project's rules means either editing every file after every
+     * add — and `scripts/untitled-add.mjs` already re-applies three such
+     * patches — or turning a rule off for the whole repository because a
+     * dependency trips it.
+     *
+     * Neither is right. The rules exist to keep *authored* code honest, and
+     * `app/` and `lib/` are where the authoring happens. What the exemption
+     * covers is real and worth knowing: `use-breakpoint.ts` calls setState in an
+     * effect body, and four components use <img> where this project uses
+     * next/image. Both are defensible in a library that cannot assume Next.
+     *
+     * The same argument, in the same shape, is why `@ts-nocheck` goes on top of
+     * these files — TypeScript has no per-directory options, so that one has to
+     * be a patch. ADR-0061 has both.
+     */
+    ignores: ["components/**", "utils/**", "hooks/**"],
+  },
 ];
 
 export default config;

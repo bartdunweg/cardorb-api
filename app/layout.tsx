@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeProvider } from "@/components/custom/ThemeProvider";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 
@@ -102,7 +102,7 @@ export default function RootLayout({
       // scrollbar-gutter:stable — Safari paints the rubber-band overscroll
       // area from html's own background, and html+body have to agree on it
       // or the top/bottom bands show a seam. See body's classes below.
-      className={`${inter.variable} bg-bg-grouped text-base antialiased [scrollbar-gutter:stable]`}
+      className={`${inter.variable} bg-secondary text-base antialiased [scrollbar-gutter:stable]`}
     >
       <head>
         {/* Only the choice. The machine is the stylesheet's job now.
@@ -124,12 +124,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-bg-grouped text-label [font-family:var(--font-main)] min-h-screen text-pretty">
+      <body className="bg-secondary text-primary font-body min-h-screen text-pretty">
         <ThemeProvider>
           <a
             href="#main-content"
-            className="absolute -top-full left-4 [padding:var(--space-2)_var(--space-4)]
-              bg-label text-bg-surface rounded-sm [font-size:var(--fs-small)]
+            className="absolute -top-full left-4 px-4 py-2
+              bg-label text-bg-surface rounded-orb-sm text-xs
               [z-index:var(--z-skip)] no-underline focus:top-4"
           >
             Skip to content

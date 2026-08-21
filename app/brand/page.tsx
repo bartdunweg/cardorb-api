@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "../components/Navbar";
-import MarketingFooter from "../components/MarketingFooter";
-import { legal, legalList as list } from "../components/LegalPage";
-import Wordmark from "../components/Wordmark";
+import Navbar from "@/components/custom/Navbar";
+import MarketingFooter from "@/components/custom/MarketingFooter";
+import { legal, legalList as list } from "@/components/custom/LegalPage";
+import Wordmark from "@/components/custom/Wordmark";
 import { colour, type ColourPair } from "../../lib/design/tokens";
 import { APP_NAME } from "../../lib/core/config";
 
@@ -56,7 +56,7 @@ const { h2, h3, body, link, strong } = legal;
  *  chrome sphere can be judged against both without toggling the theme. */
 const panel =
   "flex items-center justify-center gap-6 p-6 rounded-lg " +
-  "border border-[var(--color-border-subtle)] min-h-[200px]";
+  "border border-secondary min-h-[200px]";
 
 /**
  * One cut of the mark, at a size worth looking at.
@@ -85,17 +85,15 @@ function Swatch({ name, pair }: { name: string; pair: ColourPair }) {
           token guard was pointed at .tsx: no such token has ever existed, so
           this and the panel above were drawing square corners on the one page
           whose job is showing the shapes. */}
-      <div className="flex h-14 rounded-pill overflow-hidden border border-[var(--color-border-subtle)]">
+      <div className="flex h-14 rounded-pill overflow-hidden border border-secondary">
         {/* Both halves of the pair at once. A swatch that showed only the
             current theme's value would make this page tell half the truth
             depending on when you opened it. */}
         <div className="flex-1" style={{ background: pair.light }} />
         <div className="flex-1" style={{ background: pair.dark }} />
       </div>
-      <div className="[font-family:var(--font-main)] [font-size:var(--fs-small)] text-label">
-        {name}
-      </div>
-      <div className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-label-tertiary">
+      <div className="font-body text-xs text-primary">{name}</div>
+      <div className="font-body text-xs text-tertiary">
         {pair.light} / {pair.dark}
       </div>
     </div>
@@ -138,8 +136,8 @@ export default function BrandPage() {
             full-width footer just looks like something failed to load. */}
         <article className="max-w-[900px] mx-auto [padding-block:clamp(56px,8vw,96px)]">
           <h1
-            className="mt-0 mb-4 text-label [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-              tracking-[-0.045em] [line-height:var(--lh-tight)] [font-size:var(--fs-display)]"
+            className="mt-0 mb-4 text-primary font-body font-medium
+              tracking-[-0.045em] leading-tight text-display-md"
           >
             Brand
           </h1>
@@ -282,7 +280,7 @@ export default function BrandPage() {
                 <a className={link} href={href} download>
                   {label}
                 </a>{" "}
-                <span className="text-label-tertiary">{href.split("/").pop()}</span>
+                <span className="text-tertiary">{href.split("/").pop()}</span>
               </li>
             ))}
           </ul>

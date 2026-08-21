@@ -16,18 +16,27 @@
     "check": "npx prettier --check . && node scripts/gen-tokens.mjs --check && npm run typecheck && npm run test && npm run lint",
     "tokens": "node scripts/gen-tokens.mjs",
     "visual": "playwright test",
-    "visual:baseline": "playwright test --update-snapshots"
+    "visual:baseline": "playwright test --update-snapshots",
+    "ui:add": "node scripts/untitled-add.mjs"
   },
   "dependencies": {
+    "@react-stately/utils": "^3.12.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
+    "@untitledui/file-icons": "^0.0.9",
+    "@untitledui/icons": "^0.0.22",
     "@vercel/analytics": "^2.0.1",
     "hover-tilt": "^1.0.0",
+    "input-otp": "^1.5.0",
     "lucide-react": "^1.30.0",
     "motion": "^12.43.0",
     "next": "^16.2.1",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-aria": "^3.51.0",
+    "react-aria-components": "^1.20.0",
+    "react-dom": "^19.2.4",
+    "recharts": "^3.10.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

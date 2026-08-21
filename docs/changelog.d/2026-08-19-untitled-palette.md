@@ -1,0 +1,1 @@
+- Card Orb's accent colour is now Untitled UI's, so buttons, the active tab and every highlighted surface changed from blue to purple.

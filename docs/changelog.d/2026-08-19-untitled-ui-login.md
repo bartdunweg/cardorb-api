@@ -1,0 +1,1 @@
+- The sign-in screen's fields and button are rebuilt on Untitled UI. The password box now has a reveal toggle, so you can check what you typed, and the sign-in button's blue is a shade deeper — the old one put white text at 4.02:1, under the 4.5:1 that small text needs to stay readable.

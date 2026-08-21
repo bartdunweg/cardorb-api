@@ -32,16 +32,59 @@ import { join } from "node:path";
  * the moment it is most likely to happen.
  */
 
+/**
+ * Tailwind's own default theme, which this test cannot see.
+ *
+ * Untitled UI's theme (spliced into tailwind.generated.css by
+ * scripts/gen-tokens.mjs) expresses its semantic layer in terms of Tailwind's
+ * stock palette — `var(--color-neutral-300)`, `var(--color-red-500)`,
+ * `var(--spacing)` and 153 more. None of those are declared in app/styles,
+ * because Tailwind declares them itself from `@import "tailwindcss"`.
+ *
+ * That is asserted rather than assumed. Built once and read back out of
+ * .next/static:
+ *
+ *   --color-neutral-300:#d4d4d4
+ *   --spacing:.25rem
+ *   --color-red-500:#fb2c36
+ *
+ * So they resolve. The existing `--tw-` filter below does not catch them
+ * because Tailwind's theme variables carry no prefix.
+ *
+ * Deliberately a shape and not a list of 156 names: a list would have to be
+ * re-derived every time Untitled UI reaches for one more step. Deliberately
+ * *not* a blanket `--color-` skip either — a typo like `--color-neutrl-300`
+ * is not in a Tailwind namespace and still fails, which is the whole job.
+ */
+const TAILWIND_PALETTE =
+  "red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|" +
+  "violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone";
+const TAILWIND_DEFAULT = new RegExp(
+  `^(--color-(${TAILWIND_PALETTE})-\\d+|--color-(white|black|transparent)|--spacing)$`,
+);
+
+// `app/globals.css` as well as the two files left in app/styles: the resets,
+// the keyframes and the eleven layout tokens were inlined there when tokens.css,
+// base.css, components.css and pages.css stopped being worth a file each.
 const STYLES = "app/styles";
+const EXTRA_SHEETS = ["app/globals.css"];
 /** Where the arbitrary-value classes are. */
-const CODE = ["app", "lib"];
+// `components/custom` as well as `app`: Card Orb's own components moved out of
+// app/components when the Untitled UI tree arrived beside them, and this test
+// silently stopped seeing three quarters of its subject for one commit.
+const CODE = ["app", "lib", "components/custom"];
 
 /** Everything declared anywhere in the stylesheets, generated ones included. */
 function declared(): Set<string> {
   const names = new Set<string>();
-  for (const file of readdirSync(STYLES)) {
-    if (!file.endsWith(".css")) continue;
-    const css = readFileSync(join(STYLES, file), "utf8");
+  const sheets = [
+    ...readdirSync(STYLES)
+      .filter((f) => f.endsWith(".css"))
+      .map((f) => join(STYLES, f)),
+    ...EXTRA_SHEETS,
+  ];
+  for (const file of sheets) {
+    const css = readFileSync(file, "utf8");
     for (const m of css.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gim)) names.add(m[1]!);
   }
   return names;
@@ -65,6 +108,7 @@ function referenced(): Map<string, string[]> {
     ...readdirSync(STYLES)
       .filter((f) => f.endsWith(".css"))
       .map((f) => join(STYLES, f)),
+    ...EXTRA_SHEETS,
     ...CODE.flatMap((dir) => code(dir)),
   ];
   for (const file of files) {
@@ -95,6 +139,7 @@ describe("custom properties", () => {
       // Tailwind's own machinery and the Lightning CSS light-dark() polyfill
       // declare these at build time; they are correct and not ours to define.
       .filter(([name]) => !name.startsWith("--tw-") && !name.startsWith("--lightningcss-"))
+      .filter(([name]) => !TAILWIND_DEFAULT.test(name))
       .filter(([name]) => !known.has(name))
       .map(([name, files]) => `${name} (used in ${[...new Set(files)].join(", ")})`);
 
@@ -113,7 +158,11 @@ describe("custom properties", () => {
     // And separately that the .tsx half is being reached at all: the first
     // version of this test read only app/styles, and the components are where
     // three quarters of the references are.
+    // Ten rather than twenty: the Untitled UI migration took the count from
+    // ~180 distinct tokens down to a couple of dozen, and this is a canary for
+    // the glob breaking, not a floor anybody should be building up to. If it
+    // ever reads zero, the directory list above is wrong again.
     const inCode = [...used.values()].filter((files) => files.some((f) => /\.tsx?$/.test(f)));
-    expect(inCode.length).toBeGreaterThan(20);
+    expect(inCode.length).toBeGreaterThan(10);
   });
 });

@@ -54,6 +54,27 @@ const PAGES = [
   { name: "profile", path: `/user/${OWNER}`, fullPage: false },
   { name: "landing", path: "/", fullPage: true },
   { name: "ios", path: "/app/ios", fullPage: true },
+  /**
+   * The Untitled UI proof screen (ADR-0056).
+   *
+   * Here rather than in owner.spec.ts on purpose: /login is the one screen
+   * carrying converted controls that a signed-out browser can reach, and
+   * ADR-0020 is a regression that hid for weeks behind a login. Short, no lazy
+   * grid, so it gets the full page.
+   *
+   * A signed-in visitor is redirected straight through, which is why this only
+   * works in the public project — the owner project would photograph /cards.
+   */
+  { name: "login", path: "/login", fullPage: true },
+  /**
+   * The rest of the door screens, added when the Untitled UI conversion moved
+   * from /login to the whole FormField family. Both are public, so both can be
+   * photographed; /settings/password is the fourth of the family and needs a
+   * recovery session, so it has no entry here and is converted unphotographed.
+   * That gap is named in ADR-0059 rather than left to be discovered.
+   */
+  { name: "signup", path: "/signup", fullPage: true },
+  { name: "forgotten", path: "/password/forgotten", fullPage: true },
 ];
 
 for (const page of PAGES) {

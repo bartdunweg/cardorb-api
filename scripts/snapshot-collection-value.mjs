@@ -8,7 +8,7 @@
  *   node scripts/snapshot-collection-value.mjs --user <uuid> --seed   # add the archived points too
  *
  * It writes rows now, not lib/core/collection-value.generated.json. That file
- * was a single committed series which app/components/CollectionValueCard.tsx
+ * was a single committed series which components/custom/CollectionValueCard.tsx
  * imported directly, so every account on the deployment read one account's
  * history under its own value tile. See lib/core/value-history.ts and the
  * 20260816140000 migration.

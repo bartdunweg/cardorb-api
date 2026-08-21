@@ -102,6 +102,43 @@ export default defineConfig({
    * apply the same CSS pipeline, and this file exists precisely to catch a CSS
    * pipeline problem.
    */
+  /**
+   * ── When this flakes, and it does ──────────────────────────────────────────
+   *
+   * `npm run build && next start` inside a test runner is fragile here: the
+   * build and the server contend for the same port with anything else the
+   * session left running, and the failure arrives as twenty
+   * ERR_CONNECTION_REFUSED, which reads like the app is broken rather than like
+   * the server never came up.
+   *
+   * The escape hatch is the line below. Start the server yourself and point the
+   * suite at it:
+   *
+   *   npm run build
+   *   nohup npx next start -p 3213 >/tmp/s.log 2>&1 </dev/null & disown
+   *   VISUAL_BASE_URL=http://127.0.0.1:3213 npm run visual
+   *
+   * The server has to outlive the shell that starts it, and on macOS neither
+   * `&` nor `nohup ... & disown` is enough — there is no `setsid` either. What
+   * works is starting it from something that is not a child of the test shell
+   * at all. Symptom when it is wrong: the suite passes the public specs, then
+   * every owner spec fails at once with ERR_CONNECTION_REFUSED.
+   *
+   * The heavy pages are why it shows up there and not earlier: /collection
+   * renders 1,610 cards, so `NODE_OPTIONS=--max-old-space-size=4096` is worth
+   * setting on the server too.
+   *
+   * `nohup ... & disown` and not a plain `&`: a backgrounded server still dies
+   * with the shell that started it, and when it dies mid-run the suite does not
+   * say so. It photographs the app's own error boundary — "This page couldn't
+   * load" — and reports a 28% pixel difference, which reads exactly like a CSS
+   * regression. Happened three times before the cause was found. If a diff looks
+   * far too large, open it and check what is actually in the picture.
+   *
+   * Then `webServer` is undefined and Playwright touches nothing. Remember the
+   * server serves the build that was on disk when it started — rebuild before
+   * re-running, or the screenshots quietly check stale code.
+   */
   webServer: process.env.VISUAL_BASE_URL
     ? undefined
     : {

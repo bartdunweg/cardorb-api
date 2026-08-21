@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Button } from "@/components/base/buttons/button";
 import {
   ArrowUpRight,
   BookOpen,
@@ -12,10 +13,10 @@ import {
   Smartphone,
   Wallet,
 } from "lucide-react";
-import Card from "../../components/Card";
-import MarketingFooter from "../../components/MarketingFooter";
-import Navbar from "../../components/Navbar";
-import ViewerPill from "../../components/ViewerPill";
+import Card from "@/components/custom/Card";
+import MarketingFooter from "@/components/custom/MarketingFooter";
+import Navbar from "@/components/custom/Navbar";
+import ViewerPill from "@/components/custom/ViewerPill";
 import {
   cardBody,
   cardHeading,
@@ -24,7 +25,7 @@ import {
   navLink,
   sectionBody,
   sectionHeading,
-} from "../../components/marketingClasses";
+} from "@/components/custom/marketingClasses";
 import { APP_NAME, SITE_URL } from "../../../lib/core/config";
 import { currentViewer } from "../../../lib/api/viewer";
 import { ownerLabel } from "../../../lib/core/owner";
@@ -197,9 +198,9 @@ export default async function IosApp() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link href="/signup" className="btn btn--primary">
+              <Button href="/signup" size="lg">
                 Sign up
-              </Link>
+              </Button>
             </>
           )
         }
@@ -212,15 +213,15 @@ export default async function IosApp() {
         >
           <span
             className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
-              border border-[var(--color-border-subtle)] text-label-tertiary
-              [font-family:var(--font-body)] [font-size:var(--fs-tiny)]"
+              border border-secondary text-tertiary
+              font-body text-xs"
           >
             <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
             In development
           </span>
           <h1
-            className="max-w-[15ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
-              [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
+            className="max-w-[15ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary font-body
+              font-medium tracking-[-0.045em] leading-tight
               [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
           >
             Your collection, in your pocket.
@@ -245,31 +246,37 @@ export default async function IosApp() {
               When the app ships, this becomes a <Button href external> and the
               note goes.
             */}
-            <button
-              type="button"
+            {/* `aria-disabled`, never `isDisabled`. React Aria's prop puts the
+                native `disabled` attribute on, which takes the button out of the
+                tab order — and ADR-0042 keeps this one focusable precisely so it
+                can explain itself to somebody who reaches it by keyboard. The
+                note below is what it explains. */}
+            <Button
+              size="lg"
               aria-disabled="true"
               aria-describedby="ios-download-note"
-              /* self-center: .btn sets align-self: flex-start for toolbars,
-                 which beats this column's items-center and would left-pin
-                 both of these buttons. */
-              className="btn btn--primary self-center justify-center min-w-[240px] [@media(max-width:640px)]:w-full"
+              /* An element, not the component. This page is a server component
+                 and a function cannot cross into a client one; Button has a
+                 branch for exactly this, keyed on data-icon. */
+              iconLeading={<Download data-icon="leading" size={17} strokeWidth={1.8} aria-hidden />}
+              className="self-center min-w-[240px] [@media(max-width:640px)]:w-full"
             >
-              <Download size={17} strokeWidth={1.8} aria-hidden="true" />
               Download on the App Store
-            </button>
-            <p
-              id="ios-download-note"
-              className="m-0 max-w-[38ch] text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]"
-            >
+            </Button>
+            <p id="ios-download-note" className="m-0 max-w-[38ch] text-tertiary font-body text-xs">
               Not on the App Store yet. This is where the download will be.
             </p>
-            <Link
+            <Button
               href="/signup"
-              className="btn self-center [@media(max-width:640px)]:w-full [@media(max-width:640px)]:justify-center"
+              color="secondary"
+              size="lg"
+              className="self-center [@media(max-width:640px)]:w-full"
+              iconTrailing={
+                <ArrowUpRight data-icon="trailing" size={17} strokeWidth={1.8} aria-hidden />
+              }
             >
               Start on the web
-              <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-            </Link>
+            </Button>
           </div>
         </header>
 
@@ -289,14 +296,14 @@ export default async function IosApp() {
                     picture of a promise. */}
                 <div
                   className="grid place-items-center w-full aspect-[9/19]
-                    rounded-[28px] border border-dashed border-[var(--color-border-active)]
-                    bg-[color-mix(in_srgb,var(--color-label)_3%,transparent)]
-                    text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]"
+                    rounded-[28px] border border-dashed border-primary
+                    bg-secondary
+                    text-tertiary font-body text-xs"
                   aria-hidden="true"
                 >
                   {label}
                 </div>
-                <p className={`text-center ${cardBody} [font-size:var(--fs-small)]`}>{caption}</p>
+                <p className={`text-center ${cardBody} text-xs`}>{caption}</p>
               </li>
             ))}
           </ul>
@@ -326,7 +333,7 @@ export default async function IosApp() {
                     </span>
                     {comingSoon && (
                       <span
-                        className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+                        className="text-tertiary font-body text-xs
                           uppercase tracking-[0.06em]"
                       >
                         Coming soon
@@ -343,10 +350,10 @@ export default async function IosApp() {
 
         <section
           id="sync"
-          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
-            max-w-[1040px] [padding:clamp(var(--space-8),7vw,88px)] rounded-lg bg-[color-mix(in_srgb,var(--color-label)_4%,transparent)]
+          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(calc(var(--spacing)*8),9vw,128px)]
+            max-w-[1040px] [padding:clamp(calc(var(--spacing)*8),7vw,88px)] rounded-orb-lg bg-secondary
             [@media(max-width:800px)]:grid-cols-1
-            [@media(max-width:640px)]:mx-[calc(-1*var(--space-2))] [@media(max-width:640px)]:p-6"
+            [@media(max-width:640px)]:-mx-2 [@media(max-width:640px)]:p-6"
           aria-labelledby="ios-sync-title"
         >
           <div>
@@ -364,7 +371,7 @@ export default async function IosApp() {
                   size={17}
                   strokeWidth={2}
                   aria-hidden="true"
-                  className="flex-none mt-[2px] text-label"
+                  className="flex-none mt-[2px] text-primary"
                 />
                 One account, both places.
               </li>
@@ -373,7 +380,7 @@ export default async function IosApp() {
                   size={17}
                   strokeWidth={2}
                   aria-hidden="true"
-                  className="flex-none mt-[2px] text-label"
+                  className="flex-none mt-[2px] text-primary"
                 />
                 Owned cards and wishlist, together.
               </li>
@@ -382,23 +389,21 @@ export default async function IosApp() {
                   size={17}
                   strokeWidth={2}
                   aria-hidden="true"
-                  className="flex-none mt-[2px] text-label"
+                  className="flex-none mt-[2px] text-primary"
                 />
                 Your public link works the same from either.
               </li>
             </ul>
           </div>
           <dl
-            className="grid gap-4 p-5 m-0 border border-[var(--glass-border)] rounded-md
-              bg-[var(--glass-bg)] [box-shadow:var(--shadow-card)]
+            className="grid gap-4 p-5 m-0 border border-secondary rounded-orb-md
+              bg-primary shadow-xs
               [@media(max-width:800px)]:max-w-[430px]"
           >
             {REQUIREMENTS.map(({ term, detail }) => (
               <div key={term} className="grid gap-1">
-                <dt className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                  {term}
-                </dt>
-                <dd className="m-0 text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)] tracking-[-0.02em]">
+                <dt className="text-tertiary font-body text-xs">{term}</dt>
+                <dd className="m-0 text-primary font-body text-sm font-medium tracking-[-0.02em]">
                   {detail}
                 </dd>
               </div>
@@ -447,10 +452,10 @@ export default async function IosApp() {
           </p>
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
               beats this column's items-center. */}
-          <Link href="/signup" className="btn btn--primary self-center mt-6">
+          <Button href="/signup" size="lg" className="self-center mt-6">
             Create your free collection
             <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-          </Link>
+          </Button>
         </section>
 
         <MarketingFooter />

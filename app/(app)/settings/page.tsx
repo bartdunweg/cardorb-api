@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { cardsMainTitleClassName } from "../../components/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { redirect } from "next/navigation";
 import { currentViewer } from "../../../lib/api/viewer";
 import { serverClient } from "../../../lib/storage/supabase";
 import { ownProfile } from "../../../lib/storage/postgres";
 import { recentImports } from "../../../lib/storage/imports";
-import AccountSettings from "../../components/AccountSettings";
-import AppearanceSettings from "../../components/AppearanceSettings";
-import DeleteAccountSettings from "../../components/DeleteAccountSettings";
-import ImportSettings from "../../components/ImportSettings";
-import ProfileSettings from "../../components/ProfileSettings";
-import { SettingsHint, SettingsPanels, SettingsSection } from "../../components/SettingsPanel";
+import AccountSettings from "@/components/custom/AccountSettings";
+import AppearanceSettings from "@/components/custom/AppearanceSettings";
+import DeleteAccountSettings from "@/components/custom/DeleteAccountSettings";
+import ImportSettings from "@/components/custom/ImportSettings";
+import ProfileSettings from "@/components/custom/ProfileSettings";
+import { SettingsHint, SettingsPanels, SettingsSection } from "@/components/custom/SettingsPanel";
 
 /**
  * All of settings, on one page, like every other screen in the shell.
@@ -53,7 +53,7 @@ export default async function SettingsPage() {
           Dashboard/Collection/Wishlist/Sets all share — not a
           similar-looking rebuild of it. */}
       <h1 className={cardsMainTitleClassName}>Settings</h1>
-      <p className="mt-1 mb-6 [font-size:var(--fs-small)] text-label-tertiary">{viewer.email}</p>
+      <p className="mt-1 mb-6 text-xs text-tertiary">{viewer.email}</p>
 
       {/* gap-8 between groups against the panels' own gap-4 inside them: the
           grouping has to be readable as grouping when it is all one scroll. */}

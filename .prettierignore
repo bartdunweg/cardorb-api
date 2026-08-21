@@ -24,6 +24,16 @@ docs/*.json
 app/styles/tailwind.generated.css
 
 # --- Not ours -----------------------------------------------------------
+# Untitled UI's vendored components, written by `npx untitledui add` and
+# re-written wholesale on the next one. Same argument as the eslint ignore and
+# the @ts-nocheck the wrapper prepends — this project's rules are for the code
+# this project authors, and the authoring happens in app/ and lib/. Formatting
+# them means every add produces a diff that is half reformatting, which is how a
+# real upstream change gets lost in the noise. ADR-0061.
+components/
+utils/
+hooks/
+
 # Supabase's auth email templates are HTML that Supabase renders and its own
 # tooling round-trips; public/ holds assets generated in the iOS repo.
 supabase/templates/

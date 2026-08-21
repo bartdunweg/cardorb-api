@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import CardDetail from "../../../../components/CardDetail";
-import CardNav from "../../../../components/CardNav";
-import Button from "../../../../components/Button";
+import CardDetail from "@/components/custom/CardDetail";
+import CardNav from "@/components/custom/CardNav";
+import Button from "@/components/custom/Button";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../../lib/core/cards";
 import { currentViewer } from "../../../../../lib/api/viewer";
 import { getCards } from "../../../../../lib/core/collection";
-import "../../../../styles/collection.css";
+import "../../../../styles/poke-holo.css";
 
 /**
  * One card, in full — inside the (app) shell.
@@ -77,7 +77,7 @@ export default async function CollectionCardPage({ params }: { params: Promise<{
     // inside a card. /cards/[id]/page.tsx (outside the shell) still wants
     // one; this route does not.
     <div className="flex flex-col items-start">
-      <Button href="/collection" icon={ChevronLeft} iconPosition="left" className="btn--back">
+      <Button href="/collection" icon={ChevronLeft} iconPosition="left" color="tertiary">
         Collection
       </Button>
 

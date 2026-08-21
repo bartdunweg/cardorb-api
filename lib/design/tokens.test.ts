@@ -178,10 +178,19 @@ describe("this file and the stylesheet it generates agree", () => {
     expect(colour.tint.light).toBe(colour.tint.dark);
   });
 
+  /**
+   * The same camelCase → kebab-case the generator applies, so `orbXs` is
+   * looked up as `--radius-orb-xs`. This loop read the keys literally until
+   * the radius scale gained a camelCase name: the four Tailwind-shaped ones
+   * (`xs`/`sm`/`md`/`lg`) moved to `orbXs`…`orbLg` so that `rounded-lg` stops
+   * meaning 24px inside components this project did not write. See the scale's
+   * own comment in tokens.ts, and ADR-0056.
+   */
   for (const [name, expected] of Object.entries(radius)) {
-    it(`--radius-${name} still reads ${expected}`, () => {
-      const value = css.match(new RegExp(`--radius-${name}:\\s*([^;]+);`))?.[1]?.trim();
-      expect(value, `--radius-${name} is missing from tailwind.generated.css`).toBe(expected);
+    const prop = `--radius-${kebab(name)}`;
+    it(`${prop} still reads ${expected}`, () => {
+      const value = css.match(new RegExp(`${prop}:\\s*([^;]+);`))?.[1]?.trim();
+      expect(value, `${prop} is missing from tailwind.generated.css`).toBe(expected);
     });
   }
 

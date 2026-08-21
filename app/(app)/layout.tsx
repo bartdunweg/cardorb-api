@@ -3,7 +3,7 @@ import { currentViewer } from "../../lib/api/viewer";
 import { forGrid } from "../../lib/core/cards";
 import { getCollection } from "../../lib/core/collection";
 import AppShell from "./AppShell";
-import { pageCardsClassName } from "../components/cardsPageClasses";
+import { pageCardsClassName } from "@/components/custom/cardsPageClasses";
 // Everything that draws a collection, once for every screen in the shell.
 //
 // On the layout rather than on each page, which is the difference between this
@@ -12,7 +12,7 @@ import { pageCardsClassName } from "../components/cardsPageClasses";
 // written — they rendered the markup and none of the 3,199 lines that style
 // it — which is a mistake that only shows up if you look at the page rather
 // than at the status code, and every route answered 200.
-import "../styles/collection.css";
+import "../styles/poke-holo.css";
 
 /**
  * Everything you see once you are signed in.

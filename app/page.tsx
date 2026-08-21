@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Button } from "@/components/base/buttons/button";
+import { Badge } from "@/components/base/badges/badges";
 import {
   ArrowUpRight,
   BookOpen,
@@ -14,10 +16,10 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import Card from "./components/Card";
-import MarketingFooter from "./components/MarketingFooter";
-import Navbar from "./components/Navbar";
-import ViewerPill from "./components/ViewerPill";
+import Card from "@/components/custom/Card";
+import MarketingFooter from "@/components/custom/MarketingFooter";
+import Navbar from "@/components/custom/Navbar";
+import ViewerPill from "@/components/custom/ViewerPill";
 // ThemeToggle moved with the footer into MarketingFooter.
 import {
   cardBody,
@@ -27,7 +29,7 @@ import {
   navLink,
   sectionBody,
   sectionHeading,
-} from "./components/marketingClasses";
+} from "@/components/custom/marketingClasses";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import { currentViewer } from "../lib/api/viewer";
 import { ownerLabel } from "../lib/core/owner";
@@ -105,7 +107,7 @@ const FAQ = [
         goes with it, straight away. The{" "}
         <Link
           href="/privacy"
-          className="text-label underline [text-underline-offset:2px] [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label-secondary"
+          className="text-primary underline underline-offset-2 transition-colors duration-150 ease-out hover:text-secondary"
         >
           privacy policy
         </Link>{" "}
@@ -227,9 +229,9 @@ export default async function Home() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link href="/signup" className="btn btn--primary">
+              <Button href="/signup" size="lg">
                 Sign up
-              </Link>
+              </Button>
             </>
           )
         }
@@ -244,20 +246,20 @@ export default async function Home() {
             — coming soon" and was an inert <span>, so the one question it
             raised — what app, and when — had nowhere to go. It is a link to
             /app/ios now, and names only the platform that has a page. */}
-          <Link
-            href="/app/ios"
-            className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
-            border border-[var(--color-border-subtle)] text-label-tertiary no-underline
-            [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
-            [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-label"
-          >
-            <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
-            The iPhone app is on its way
-            <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
+          <Link href="/app/ios" className="mb-2 no-underline">
+            {/* Badge rather than BadgeWithIcon: that one takes icon
+                *components*, and this page is a server component, so a function
+                cannot cross into a client one. The icons are children here and
+                the pill lays them out the same way. */}
+            <Badge type="pill-color" color="gray" size="md" className="gap-1.5">
+              <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
+              The iPhone app is on its way
+              <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
+            </Badge>
           </Link>
           <h1
-            className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-label [font-family:var(--font-main)]
-            [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
+            className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary font-body
+            font-medium tracking-[-0.045em] leading-tight
             [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
           >
             Track your Pokémon card collection.
@@ -266,12 +268,13 @@ export default async function Home() {
             See every set, what it is worth, and what is still missing.
           </p>
           <div className="flex flex-wrap justify-center gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
-            <Link
+            <Button
               href="/signup"
-              className="btn btn--primary justify-center min-w-[178px] [@media(max-width:640px)]:self-stretch"
+              size="lg"
+              className="min-w-[178px] [@media(max-width:640px)]:self-stretch"
             >
               Start your collection
-            </Link>
+            </Button>
           </div>
           <ul
             className="flex flex-wrap justify-center gap-x-8 gap-y-3 mt-4 m-0 p-0 list-none"
@@ -279,12 +282,8 @@ export default async function Home() {
           >
             {STATS.map(({ value, label }) => (
               <li key={label} className="flex flex-col items-center gap-0.5">
-                <b className="text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
-                  {value}
-                </b>
-                <span className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                  {label}
-                </span>
+                <b className="text-primary font-body text-sm font-medium">{value}</b>
+                <span className="text-tertiary font-body text-xs">{label}</span>
               </li>
             ))}
           </ul>
@@ -328,7 +327,7 @@ export default async function Home() {
                     </span>
                     {comingSoon && (
                       <span
-                        className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+                        className="text-tertiary font-body text-xs
                         uppercase tracking-[0.06em]"
                       >
                         Coming soon{typeof comingSoon === "string" ? ` · ${comingSoon}` : ""}
@@ -344,7 +343,7 @@ export default async function Home() {
         </section>
 
         <section
-          className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(var(--space-10),10vw,140px)]
+          className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(calc(var(--spacing)*10),10vw,140px)]
           max-w-[960px] [padding-block:clamp(104px,14vw,180px)]
           [@media(max-width:800px)]:grid-cols-1 [@media(max-width:800px)]:gap-8"
           aria-labelledby="workflow-title"
@@ -359,46 +358,44 @@ export default async function Home() {
               the last one left off.
             </p>
             <ul className="grid gap-3 mt-6 mb-0 p-0 list-none" role="list">
-              <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+              <li className="flex gap-3 items-start text-secondary font-body text-sm leading-normal">
                 <Check
                   size={17}
                   strokeWidth={2}
                   aria-hidden="true"
-                  className="flex-none mt-[2px] text-label"
+                  className="flex-none mt-[2px] text-primary"
                 />
                 Owned cards and your wishlist, in one view.
               </li>
-              <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+              <li className="flex gap-3 items-start text-secondary font-body text-sm leading-normal">
                 <Check
                   size={17}
                   strokeWidth={2}
                   aria-hidden="true"
-                  className="flex-none mt-[2px] text-label"
+                  className="flex-none mt-[2px] text-primary"
                 />
                 Move between the overview, sets and Pokédex.
               </li>
-              <li className="flex gap-3 items-start text-label-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+              <li className="flex gap-3 items-start text-secondary font-body text-sm leading-normal">
                 <Check
                   size={17}
                   strokeWidth={2}
                   aria-hidden="true"
-                  className="flex-none mt-[2px] text-label"
+                  className="flex-none mt-[2px] text-primary"
                 />
                 Collection value, visible but not the focus.
               </li>
             </ul>
           </div>
           <Card
-            className="relative min-h-[430px] [padding:clamp(var(--space-6),4vw,var(--space-10))]
+            className="relative min-h-[430px] [padding:clamp(calc(var(--spacing)*6),4vw,calc(var(--spacing)*10))]
             [@media(max-width:640px)]:min-h-[370px]"
           >
             <span className={featureIcon}>
               <BookOpen size={22} strokeWidth={1.7} aria-hidden="true" />
             </span>
-            <span className="absolute top-8 right-8 text-label-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]">
-              01
-            </span>
-            <h3 className={`max-w-[13ch] mt-8 [font-size:var(--fs-card)] ${cardHeading}`}>
+            <span className="absolute top-8 right-8 text-tertiary font-body text-xs">01</span>
+            <h3 className={`max-w-[13ch] mt-8 text-display-xs ${cardHeading}`}>
               Every card, tracked.
             </h3>
             <p className={`max-w-[28ch] mt-4 ${cardBody}`}>
@@ -413,9 +410,9 @@ export default async function Home() {
             <span
               aria-hidden="true"
               className="absolute right-8 bottom-[78px] left-8 h-px
-              [background:repeating-linear-gradient(90deg,var(--color-border-active)_0_4px,transparent_4px_10px)]"
+              [background:repeating-linear-gradient(90deg,light-dark(rgba(0,0,0,0.16),rgba(255,255,255,0.16))_0_4px,transparent_4px_10px)]"
             />
-            <span className="absolute bottom-8 left-8 text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+            <span className="absolute bottom-8 left-8 text-tertiary font-body text-xs">
               Your collection, in order
             </span>
           </Card>
@@ -423,10 +420,10 @@ export default async function Home() {
 
         <section
           id="share"
-          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
-          max-w-[1040px] [padding:clamp(var(--space-8),7vw,88px)] rounded-lg bg-[color-mix(in_srgb,var(--color-label)_4%,transparent)]
+          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(calc(var(--spacing)*8),9vw,128px)]
+          max-w-[1040px] [padding:clamp(calc(var(--spacing)*8),7vw,88px)] rounded-orb-lg bg-secondary
           [@media(max-width:800px)]:grid-cols-1
-          [@media(max-width:640px)]:mx-[calc(-1*var(--space-2))] [@media(max-width:640px)]:p-6"
+          [@media(max-width:640px)]:-mx-2 [@media(max-width:640px)]:p-6"
           aria-labelledby="share-title"
         >
           <div>
@@ -440,18 +437,16 @@ export default async function Home() {
             </p>
           </div>
           <div
-            className="flex gap-4 items-center p-5 border border-[var(--glass-border)] rounded-md
-            bg-[var(--glass-bg)] [box-shadow:var(--shadow-card)]
+            className="flex gap-4 items-center p-5 border border-secondary rounded-orb-md
+            bg-primary shadow-xs
             [@media(max-width:800px)]:max-w-[430px]"
           >
             <span className={featureIcon}>
               <Share2 size={20} strokeWidth={1.7} aria-hidden="true" />
             </span>
             <span className="grid gap-1 min-w-0">
-              <small className="text-label-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                Your collection link
-              </small>
-              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-label [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)] tracking-[-0.02em]">
+              <small className="text-tertiary font-body text-xs">Your collection link</small>
+              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-primary font-body text-sm font-medium tracking-[-0.02em]">
                 cardorb.com/user/yourname
               </strong>
             </span>
@@ -499,10 +494,16 @@ export default async function Home() {
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
             beats this column's items-center and left-pins the one button that
             is not inside its own centering wrapper (the hero's is). */}
-          <Link href="/signup" className="btn btn--primary self-center mt-6">
+          <Button
+            href="/signup"
+            size="lg"
+            className="self-center mt-6"
+            iconTrailing={
+              <ArrowUpRight data-icon="trailing" size={17} strokeWidth={1.8} aria-hidden />
+            }
+          >
             Create your free collection
-            <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-          </Link>
+          </Button>
         </section>
 
         <MarketingFooter />

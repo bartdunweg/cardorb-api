@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 
 /**
  * There was no config here at all, and the defaults were right until the day
@@ -12,6 +13,16 @@ import { defineConfig } from "vitest/config";
  * failures as this project's. Same for node_modules and build output.
  */
 export default defineConfig({
+  /**
+   * `@/*` → the repo root, the same mapping tsconfig.json's `paths` gives the
+   * compiler and Next gives the bundler. Vitest reads neither, so a module
+   * importing `@/utils/cx` — which every vendored Untitled UI component does —
+   * fails to resolve here while type-checking and building fine. Added when the
+   * first test needed to import one.
+   */
+  resolve: {
+    alias: { "@": fileURLToPath(new URL(".", import.meta.url)) },
+  },
   test: {
     exclude: [
       "**/node_modules/**",

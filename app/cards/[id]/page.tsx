@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import Card from "../../components/Card";
-import CardDetail from "../../components/CardDetail";
-import Button from "../../components/Button";
+import Card from "@/components/custom/Card";
+import CardDetail from "@/components/custom/CardDetail";
+import Button from "@/components/custom/Button";
 import { ChevronLeft } from "lucide-react";
-import CardNav from "../../components/CardNav";
+import CardNav from "@/components/custom/CardNav";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../lib/core/cards";
 import { currentViewer } from "../../../lib/api/viewer";
 import { getCards } from "../../../lib/core/collection";
-import "../../styles/collection.css";
+import "../../styles/poke-holo.css";
 
 /**
  * One card, in full.
@@ -127,7 +127,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           breadcrumb. Both are search-engine markup and this app ships noindex,
           so they came out with the rest of the JSON-LD. */}
       <Card className="flex flex-col items-start">
-        <Button href="/cards" icon={ChevronLeft} iconPosition="left" className="btn--back">
+        <Button href="/cards" icon={ChevronLeft} iconPosition="left" color="tertiary">
           Cards
         </Button>
 
