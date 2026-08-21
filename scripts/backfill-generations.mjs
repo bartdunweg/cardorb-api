@@ -32,6 +32,20 @@
  * publishes 17 series in total; the five it has that this collection does not
  * (Neo, Gym, EX, …) need no mapping because no row uses them.
  *
+ * ── It writes past the cache, and that is not a bug ────────────────────────
+ *
+ * This talks to PostgREST directly, so it does not go through the four write
+ * routes that call `revalidateTag(cardsTag(userId))`. The assembled collection
+ * is cached for an hour (ADR-0014), so **the API and the pages keep serving the
+ * old era names for up to an hour after this runs** — measured after the real
+ * backfill: the database read `XY` 69 / `X&Y` 0 while
+ * /api/v1/public/<name>/collection still answered `X&Y`.
+ *
+ * Nothing is wrong when that happens and there is nothing to fix. It clears on
+ * its own, or immediately if anybody edits a card through the app, which busts
+ * the same tag. ADR-0030's backfill had the identical property and did not say
+ * so, which is the only reason this paragraph exists.
+ *
  * ── Why a map rather than a re-lookup ──────────────────────────────────────
  *
  * ADR-0030's backfill asked the catalogue per card, because rarity and type are
