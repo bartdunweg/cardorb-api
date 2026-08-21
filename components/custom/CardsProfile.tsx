@@ -3,7 +3,7 @@
 import { LogOut } from "lucide-react";
 import { useTheme } from "@/components/custom/ThemeProvider";
 import { FormNote } from "@/components/custom/FormField";
-import { cardsSegmentClassName, cardsSegmentedClassName } from "@/components/custom/trackClasses";
+import Segmented from "@/components/custom/Segmented";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
 /**
@@ -67,30 +67,20 @@ export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
           shows, which is what a lone sun icon always is. */}
       <section className="flex flex-col items-start gap-4 w-full">
         <h3 className={cardsProfileTitleClassName}>Appearance</h3>
-        <div className={cardsSegmentedClassName} role="group" aria-label="Appearance">
-          {(
-            [
-              ["light", "Light"],
-              ["dark", "Dark"],
-            ] as const
-          ).map(([key, text]) => {
-            const on = (theme === "dark") === (key === "dark");
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={on}
-                className={cardsSegmentClassName(on)}
-                // One toggle rather than a setter, because that is what the
-                // provider exposes: pressing the side you are already on is
-                // the one press that must do nothing.
-                onClick={() => !on && toggle()}
-              >
-                {text}
-              </button>
-            );
-          })}
-        </div>
+        {/* The shared Segmented rather than a hand-drawn copy of the same
+            track, which is what this was. `onChange` only ever fires on a
+            change — the provider exposes a toggle rather than a setter, and
+            pressing the side you are already on is the one press that must do
+            nothing. */}
+        <Segmented
+          label="Appearance"
+          value={theme === "dark" ? "dark" : "light"}
+          onChange={toggle}
+          options={[
+            ["light", "Light"],
+            ["dark", "Dark"],
+          ]}
+        />
       </section>
     </div>
   );

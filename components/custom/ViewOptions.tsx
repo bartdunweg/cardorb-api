@@ -1,14 +1,10 @@
 "use client";
 
 import { LayoutGrid, Rows3 } from "lucide-react";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { CARD_FIELDS, type CardField } from "@/components/custom/cards-fields";
-import {
-  cardsSegmentClassName,
-  cardsSegmentedClassName,
-  cardsViewClassName,
-  cardsViewsClassName,
-} from "@/components/custom/trackClasses";
+import Segmented, { segmentSelectedClassName } from "@/components/custom/Segmented";
 
 const fieldClassName = "flex flex-col gap-2";
 const labelClassName = "text-xs text-secondary";
@@ -79,26 +75,18 @@ export default function ViewOptions({
         <span className={labelClassName} id="view-group">
           Group by
         </span>
-        <div className={cardsSegmentedClassName} role="group" aria-labelledby="view-group">
-          {(
-            [
-              ["flat", "None"],
-              ["set", "Set"],
-              ["year", "Year"],
-              ["dex", "Pokédex"],
-            ] as const
-          ).map(([key, text]) => (
-            <button
-              key={key}
-              type="button"
-              className={cardsSegmentClassName(group === key)}
-              aria-pressed={group === key}
-              onClick={() => onGroup(key)}
-            >
-              {text}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          labelledBy="view-group"
+          value={group}
+          onChange={onGroup}
+          full
+          options={[
+            ["flat", "None"],
+            ["set", "Set"],
+            ["year", "Year"],
+            ["dex", "Pokédex"],
+          ]}
+        />
       </div>
 
       {/* How cards are ordered within their set. Two of the three orders are
@@ -110,25 +98,17 @@ export default function ViewOptions({
           <span className={labelClassName} id="view-sort">
             Sort
           </span>
-          <div className={cardsSegmentedClassName} role="group" aria-labelledby="view-sort">
-            {(
-              [
-                ["set", "By set"],
-                ["value", "Priciest"],
-                ["value-asc", "Cheapest"],
-              ] as const
-            ).map(([key, text]) => (
-              <button
-                key={key}
-                type="button"
-                className={cardsSegmentClassName(sort === key)}
-                aria-pressed={sort === key}
-                onClick={() => onSort(key)}
-              >
-                {text}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            labelledBy="view-sort"
+            value={sort}
+            onChange={onSort}
+            full
+            options={[
+              ["set", "By set"],
+              ["value", "Priciest"],
+              ["value-asc", "Cheapest"],
+            ]}
+          />
         </div>
       )}
 
@@ -137,25 +117,35 @@ export default function ViewOptions({
       {!dex && (
         <div className={fieldClassName}>
           <span className={labelClassName}>Layout</span>
-          <div className={cardsViewsClassName} role="group" aria-label="Layout">
+          {/* ButtonGroup directly rather than through Segmented: these two
+              carry an icon and no word, so each needs its own `aria-label`,
+              which a list of [key, text] pairs has nowhere to put. Same
+              component, one level down. */}
+          <ButtonGroup
+            size="sm"
+            aria-label="Layout"
+            disallowEmptySelection
+            selectedKeys={[view]}
+            onSelectionChange={(keys) => {
+              const next = [...keys][0] as "grid" | "list" | undefined;
+              if (next && next !== view) onView(next);
+            }}
+          >
             {(
               [
                 ["grid", LayoutGrid, "Grid"],
                 ["list", Rows3, "List"],
               ] as const
             ).map(([key, Icon, text]) => (
-              <button
+              <ButtonGroupItem
                 key={key}
-                type="button"
-                className={cardsViewClassName(view === key)}
-                aria-pressed={view === key}
+                id={key}
+                className={segmentSelectedClassName}
                 aria-label={`${text} view`}
-                onClick={() => onView(key)}
-              >
-                <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
-              </button>
+                iconLeading={<Icon size={16} strokeWidth={1.75} aria-hidden="true" />}
+              />
             ))}
-          </div>
+          </ButtonGroup>
         </div>
       )}
 

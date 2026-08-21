@@ -1,9 +1,18 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import type { Facet } from "@/components/custom/cards-fields";
-import { cardsSegmentClassName, cardsSegmentedClassName } from "@/components/custom/trackClasses";
+import { segmentSelectedClassName } from "@/components/custom/Segmented";
+
+/**
+ * The inline row's two kinds of key, kept apart so a facet value spelled
+ * "all" cannot pretend to be the All segment. React Aria needs an id per
+ * item; a facet value is arbitrary text out of the collection.
+ */
+const ALL_KEY = "all:";
+const valueKey = (value: string) => `value:${value}`;
 
 /**
  * How many answers a facet may have before it goes behind a row of its own.
@@ -87,10 +96,12 @@ export default function FilterOptions({
      rather than the selector now. `+ .facet-inline` becomes a sibling variant. */
   const inlineClassName = [
     "facet-inline flex flex-col gap-2 [&+.facet-inline]:pt-0",
-    // The segmented control inside fills the row, and each segment shares the
-    // width evenly — grouped with .view-menu-panel's copy in cards.css until
-    // both moved onto their own elements.
-    "[&_.cards-segmented]:w-full [&_.cards-segment]:flex-1 [&_.cards-segment]:min-w-0 [&_.cards-segment]:px-2",
+    /* "The segmented control inside fills the row" used to be said from here,
+       through `[&_.cards-segmented]:w-full` and two more like it. Those class
+       names no longer exist — the control is Untitled UI's ButtonGroup and it
+       says its own width, a few lines down. Reaching into a child by class
+       name is the arrangement ADR-0017/0018 keep catching; this is one fewer
+       of them. */
     variant === "sheet" ? "px-4 py-3" : "px-2 pt-2 pb-3",
   ].join(" ");
 
@@ -187,30 +198,46 @@ export default function FilterOptions({
             <span className="facet-inline-label font-body text-sm text-secondary">
               {f.label}
             </span>
-            <div className={cardsSegmentedClassName} role="group" aria-label={f.label}>
+            {/* Untitled UI's ButtonGroup directly rather than through
+                Segmented, because this row is not the one-answer control that
+                component is. A facet of two or three may have both ticked at
+                once, so the group is `selectionMode="multiple"` and each
+                segment says for itself what its press means — `onPress`, not a
+                diff of the selection React Aria hands back.
+
+                `onSelectionChange` is a no-op on purpose: the group is
+                controlled from `f.selected` and only the handlers below may
+                move it. Without it React Aria treats the control as read-only
+                and stops the presses reaching us. */}
+            <ButtonGroup
+              size="sm"
+              aria-label={f.label}
+              selectionMode="multiple"
+              selectedKeys={on.size === 0 ? [ALL_KEY] : [...on].map(valueKey)}
+              onSelectionChange={() => {}}
+              className="w-full"
+            >
               {/* Ticking nothing is an answer, and on a facet of two it is the
                   commonest one — so it gets a word rather than being the state
                   you reach by unticking whatever is on. */}
-              <button
-                type="button"
-                className={cardsSegmentClassName(on.size === 0)}
-                aria-pressed={on.size === 0}
-                onClick={() => onReplace(f, new Set())}
+              <ButtonGroupItem
+                id={ALL_KEY}
+                className={`${segmentSelectedClassName} flex-auto min-w-0 justify-center px-2`}
+                onPress={() => onReplace(f, new Set())}
               >
                 All
-              </button>
+              </ButtonGroupItem>
               {f.options.map((o) => (
-                <button
+                <ButtonGroupItem
                   key={o.value}
-                  type="button"
-                  className={cardsSegmentClassName(on.has(o.value))}
-                  aria-pressed={on.has(o.value)}
-                  onClick={() => onToggle(f, o.value)}
+                  id={valueKey(o.value)}
+                  className={`${segmentSelectedClassName} flex-auto min-w-0 justify-center px-2`}
+                  onPress={() => onToggle(f, o.value)}
                 >
                   {f.display ? f.display(o.value) : o.value}
-                </button>
+                </ButtonGroupItem>
               ))}
-            </div>
+            </ButtonGroup>
           </div>
         );
       })}

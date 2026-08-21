@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
+import { cx } from "@/utils/cx";
 
 /**
  * The details/summary dropdown shell FilterMenu and ViewMenu both build: one
@@ -75,11 +76,20 @@ export function MenuDetails({
         </span>
       </summary>
 
+      {/* cx(), not a template string. These two were concatenated, so a caller
+          passing its own w-* landed beside the 280 here rather than replacing
+          it and the max-w capped it back anyway — ViewMenu asked for 300 and
+          got 280, which is how "Pokédex" ended up one pixel too wide for its
+          segment. tailwind-merge resolves the conflict the way the caller
+          meant. */}
       <div
-        className={`filter-menu-panel absolute z-[5] top-[calc(100%+calc(var(--spacing)*2))] left-0 w-[280px]
+        className={cx(
+          `filter-menu-panel absolute z-[5] top-[calc(100%+calc(var(--spacing)*2))] left-0 w-[280px]
           max-w-[min(280px,calc(100vw-2*var(--page-pad-x)))] p-2 border border-secondary
           rounded-orb-md bg-primary shadow-lg
-          [backdrop-filter:blur(var(--blur-glass))] ${panelClassName ?? ""}`}
+          [backdrop-filter:blur(var(--blur-glass))]`,
+          panelClassName,
+        )}
       >
         {children}
       </div>
