@@ -48,7 +48,10 @@ type ButtonProps = {
      renders two of them; an Untitled UI icon satisfies this already. */
   icon?: React.ComponentType<IconProps>;
   iconPosition?: "left" | "right";
-  iconFill?: boolean;
+  // No `iconFill`. It set fill="currentColor" on a line icon to fake a solid
+  // one, had no caller anywhere, and is the wrong technique now regardless:
+  // @untitledui-pro/icons/solid draws the filled cut properly. A button that
+  // wants one imports it — see CardsTabBar and CardsSidebar.
   href?: string;
   external?: boolean;
   onClick?: () => void;
@@ -84,7 +87,6 @@ export default function Button({
   children,
   icon: Icon,
   iconPosition = "right",
-  iconFill = false,
   href,
   external,
   onClick,
@@ -96,7 +98,7 @@ export default function Button({
   ...rest
 }: ButtonProps) {
   const iconEl = Icon ? (
-    <Icon {...ICON} fill={iconFill ? "currentColor" : "none"} data-icon={iconPosition} />
+    <Icon {...ICON} data-icon={iconPosition} />
   ) : null;
 
   const shared = {
