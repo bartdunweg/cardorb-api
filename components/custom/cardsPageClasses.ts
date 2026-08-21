@@ -58,7 +58,7 @@ export const cardsMainClassName =
   // narrow layout by a few pixels on four screens. Caught by the harness.
   "[@media(max-width:1000px)]:pt-5 [@media(max-width:1000px)]:px-[var(--page-pad-x)] " +
   "[@media(max-width:1000px)]:pb-[var(--page-pad-bottom)] " +
-  "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(var(--space-6)+var(--tabbar-pill-h)+var(--space-10))]";
+  "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(calc(var(--spacing)*6)+var(--tabbar-pill-h)+calc(var(--spacing)*10))]";
 
 /**
  * The same three controls twice, and never both on screen: a panel where the

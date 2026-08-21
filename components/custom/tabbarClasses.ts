@@ -58,7 +58,7 @@ export const tabbarFadeClassName =
  * found three times over (see this file's own header comment for the
  * `[@media(min-width:1001px)]:!hidden` fix built the same way). Baked the
  * correct value in here instead of trusting cards.css to win a fight it
- * structurally cannot: plain `var(--space-4)` on every side, not
+ * structurally cannot: plain `calc(var(--spacing)*4)` on every side, not
  * `space-3 + control-h + space-3` reserved for a control this route never
  * has. That reservation (roughly 130px on top of the actual content) was
  * squeezing the track's available width far below what four labelled slots
@@ -99,11 +99,11 @@ export const tabbarClassName =
  * than the bar has room for will overflow somewhere, and with justify-center
  * it overflows symmetrically out of both ends. min-w-0 lets it shrink, the
  * slots below shrink with it (flex-initial min-w-0), and the <nav>'s own
- * var(--space-4) side padding is then the only thing deciding the outer
+ * calc(var(--spacing)*4) side padding is then the only thing deciding the outer
  * margin — which is what it looked like it was doing all along.
  *
  * No max-w either: w-auto hugs the content, and the nav's padding caps it.
- * The old `calc(100vw - 2*var(--space-4))` said the same thing in a second
+ * The old `calc(100vw - 2*calc(var(--spacing)*4))` said the same thing in a second
  * place, in viewport units that quietly include a scrollbar between 641 and
  * 1000px where this bar is still shown.
  */

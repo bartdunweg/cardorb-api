@@ -79,7 +79,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
           page saying one thing twice in two sizes. "Since December 2024" is the
           honest frame: it is where the record starts, not where the collecting
           did. */}
-      <p className="[margin:0_0_var(--space-3)_0] max-w-[60ch] font-body text-xs text-tertiary">
+      <p className="[margin:0_0_calc(var(--spacing)*3)_0] max-w-[60ch] font-body text-xs text-tertiary">
         {grew >= 0 ? "Up" : "Down"} {euroWhole(Math.abs(grew))} since {monthYear(first.date)},
         across {last.cards.toLocaleString(LOCALE)} cards.
       </p>

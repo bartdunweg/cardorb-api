@@ -87,11 +87,6 @@
      to keep two visited neighbours apart. */
 
   /* Borders */
-  --color-border: light-dark(#f0f0f0, rgba(255, 255, 255, 0.08));
-  --color-border-subtle: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
-  --color-border-active: light-dark(rgba(0, 0, 0, 0.16), rgba(255, 255, 255, 0.16));
-  --color-border-hover: light-dark(rgba(0, 0, 0, 0.14), rgba(255, 255, 255, 0.14));
-  --color-surface-subtle: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.04));
   /* Case marker tick: a touch darker than the timeline dashes so it reads as a
      marker, but still close to them (not a hard accent). */
 
@@ -110,18 +105,14 @@
      which ADR-0057 set to the darkened blue precisely because a filled accent
      with a white label on it needs 4.5:1 and the lighter one measures 4.02.
      Every one of these surfaces carries text. */
-  --btn-primary-bg: var(--color-bg-brand-solid);
-  --btn-primary-text: #ffffff;
 
   /* Text on a surface that is dark in both themes: tooltips, the label over a
      cover or a dock image, the play count on a still. Deliberately absent from
      the dark block below, because the surface underneath it does not flip
      either. Not --btn-primary-text, which does flip (#101010 in dark) and would
      turn this text invisible. */
-  --color-on-dark: #ffffff;
 
   /* Brand / status (extracted from hardcoded literals) */
-  --color-placeholder: light-dark(#e2e2e2, #303030);
   /* The disc behind the About card photograph. The photograph is a cutout with
      no background of its own, so this is the backdrop rather than a tint over
      one: pick it too pale and the black t-shirt is the only thing left of the
@@ -160,8 +151,6 @@
      belonging to nothing else on the page. */
 
   /* Glass panel surface: shared by every card/panel (single source of truth) */
-  --glass-bg: light-dark(rgba(254, 254, 254, 0.78), rgba(37, 37, 40, 0.38));
-  --glass-border: rgba(255, 255, 255, 0.9);
   /* The card's edge with a pointer on it. Only the edge: a hover never repaints
      the surface, in either theme, so the card you are pointing at is the same
      colour as the card you are not. Measured on home at 1440, light mode holds
@@ -173,14 +162,12 @@
      white page a white edge is already invisible, so this is the light theme
      declining to change. Dark mode has to say it with the edge instead, because
      a black shadow on a near-black page moves it by one value. See its pair. */
-  --glass-border-hover: var(--color-bg-surface);
   /* The edge of a control rather than of a panel, which in this theme is the
      same value: a near-white hairline on a near-white button, which you cannot
      see and which is not there for you. It is there for the controls that stand
      on artwork, the modal close over a photo and the globe's zoom pill, where it
      is the only thing between the control and the picture. Dark needs its own
      number for that job; see the pair in the dark block. */
-  --glass-border-control: var(--glass-border);
 
   /* Layered depth: hairline ring + tight contact + wide soft ambient (rule 6).
 
@@ -190,14 +177,6 @@
      the /favorites console shells are drawing a specific object rather than
      lifting a surface. Same line as palette against artwork, one property
      down. */
-  --shadow-card:
-    0 0 0 1px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.05),
-    0 8px 24px -8px rgba(0, 0, 0, 0.06);
-  --shadow-elevated:
-    0 0 0 1px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.06),
-    0 16px 40px -12px rgba(0, 0, 0, 0.1);
-  /* Soft lift behind free-standing images (sits on a card surface) */
-  --shadow-image: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 12px -10px rgba(0, 0, 0, 0.08);
 
   /* Motion, radii, type, weights, line-heights, families, blur and the z-index
      scale are all generated into tailwind.generated.css from
@@ -236,7 +215,7 @@
   /* Room #main-content leaves for the nav: the bar sits at the bottom on mobile
      and centred at the top from 641px up (see tabbar.css). Shared as a token so
      full-height panels can subtract exactly what the layout reserved. */
-  --main-pad-top: var(--space-8);
+  --main-pad-top: 32px;
 
   /* Horizontal page gutter: steps down on smaller viewports */
   --page-pad-x: 32px;
@@ -267,13 +246,10 @@
      scale. */
   /* 15 on a phone, not 14: a quote set at body size is a quote that has stopped
      being the point of its card. */
-  --fs-label: clamp(15px, 0.38vw + 12.5px, 16px);
 
   /* Solid glass surface: .btn, .theme-toggle, .tabbar-pages (more opaque than --glass-bg) */
-  --glass-bg-solid: light-dark(rgba(254, 254, 254, 0.9), rgba(37, 37, 40, 0.66));
 
   /* Tooltip chrome: intentionally always-dark (not inverted in dark mode) */
-  --color-tooltip-bg: light-dark(rgba(30, 30, 30, 0.85), rgba(60, 60, 60, 0.9));
   /* Off the type scale on purpose, and fixed rather than stepped: tooltips wore
      --fs-small, which is 13px on desktop and 12px on mobile, so an aside changed
      size with the window. 12 is the size, and at 13 it competed with the label
@@ -287,8 +263,6 @@
      is the test for promoting one of the rest: one meaning, repeated, not one
      pixel count repeated. A 10px padding is still a literal, because padding is
      not what the step below means. */
-  --space-1: 4px;
-  --space-2: 8px;
   /* The gap between a small control and the text beside it in a row: the filter
      checkbox and its label on /cards, the avatar and the name on /fifa, the
      meta line at the foot of a home card.
@@ -297,20 +271,9 @@
      value carried in the fallback, which is how --fs-body-l used to be defined
      in the var() calls that read it. Both of those resolved to the fallback
      every time, because nothing ever set this. */
-  --space-2-5: 10px;
-  --space-3: 12px;
-  --space-3-5: 14px; /* half-step: the house "chip/row" inset, used site-wide */
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-7: 28px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
 
   /* Accent: iOS system blue (the map pin). Brand-neutral and theme-stable,
      so it is intentionally not overridden in dark mode. */
-  --color-accent-rgb: 0, 122, 255;
 }
 
 /* ─── DARK MODE ─── */
@@ -431,7 +394,6 @@
      its own step rather than sinking into the card. Light's card is 1.04 dL* off
      its page, which is the shape being copied, not the number: a step that small
      is invisible this far down the range. */
-  --glass-border: var(--color-border-subtle);
   /* Hover, and dark mode needs its own answer rather than the light one.
      .bento-card:hover lifts a card two ways, and on a #101010 page neither one
      arrives: --shadow-elevated is black on near-black, and the border going to
@@ -453,7 +415,6 @@
      drew a rim you looked at instead of an edge that had woken up. The shadow
      stays, doing nothing on the flat page and still separating cards where they
      overlap. */
-  --glass-border-hover: var(--color-border);
   /* A control's edge, and its own step because --color-border at 0.08 was doing
      two jobs badly. Scanned across the top of the "Show more" button at 1440:
      light draws its border 0.35 dL* off the button's own fill, which is to say
@@ -462,7 +423,6 @@
      at 3.35, still a real hairline for the controls that stand on artwork, which
      is the only thing this border is for. Not --color-border-subtle at 0.05,
      which measured 4.76 and is a panel's edge, not a control's. */
-  --glass-border-control: rgba(255, 255, 255, 0.03);
 
   /* Layered depth (dark): no hairline ring, because the 1.5px glass border
      already defines the edge, and a stacked ring reads as a thicker border.
@@ -482,10 +442,7 @@
      a near-black page is nothing at all. That is true and it is why these are
      still five times light's alphas. It just does not follow that they should be
      seven times. */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.21), 0 8px 24px -8px rgba(0, 0, 0, 0.28);
-  --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.28), 0 16px 40px -12px rgba(0, 0, 0, 0.39);
   /* Soft lift behind free-standing images (dark) */
-  --shadow-image: 0 1px 2px rgba(0, 0, 0, 0.18), 0 4px 12px -10px rgba(0, 0, 0, 0.28);
 }
 /* The two halves light-dark() cannot carry, and why they are here rather than
    folded in above.
@@ -505,12 +462,6 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --glass-border: var(--color-border-subtle);
-    --glass-border-hover: var(--color-border);
-    --glass-border-control: rgba(255, 255, 255, 0.03);
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.21), 0 8px 24px -8px rgba(0, 0, 0, 0.28);
-    --shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.28), 0 16px 40px -12px rgba(0, 0, 0, 0.39);
-    --shadow-image: 0 1px 2px rgba(0, 0, 0, 0.18), 0 4px 12px -10px rgba(0, 0, 0, 0.28);
   }
 }
 

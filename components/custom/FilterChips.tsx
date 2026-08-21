@@ -31,7 +31,7 @@ export default function FilterChips({
         <button
           key={`${f.group}-${f.value}`}
           type="button"
-          className="inline-flex items-center gap-2 h-7 [padding:0_var(--space-2)_0_var(--space-3)]
+          className="inline-flex items-center gap-2 h-7 [padding:0_calc(var(--spacing)*2)_0_calc(var(--spacing)*3)]
             border border-primary rounded-pill bg-transparent
             font-body text-xs text-primary cursor-pointer
             transition-colors duration-[150ms] ease-out

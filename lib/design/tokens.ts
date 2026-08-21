@@ -416,33 +416,11 @@ export const zIndex = {
   skip: "9999",
 } satisfies Record<string, string>;
 
-/**
- * The values that stay in tokens.css and get a utility anyway.
- *
- * Two groups, both listed here rather than in the generator, because the
- * generator should not be the place that knows which parts of the design system
- * exist. Each entry is the CSS property a class of this name should set, and
- * the variable it should read.
- *
- * The shadows are theme-shaped (three layers in light, two in dark) and the
- * layout constants are breakpoint-shaped. Both kinds have to keep their
- * declaration next to the `@media`/`[data-theme]` block that answers for them,
- * which is CSS. What they do not have to keep is being unreachable from a
- * className.
- */
-export const utilities = {
-  "shadow-card": { property: "box-shadow", variable: "--shadow-card" },
-  "shadow-elevated": { property: "box-shadow", variable: "--shadow-elevated" },
-  "shadow-image": { property: "box-shadow", variable: "--shadow-image" },
-  "h-control": { property: "height", variable: "--control-h" },
-  "min-h-control": { property: "min-height", variable: "--control-h" },
-  "max-w-content": { property: "max-width", variable: "--content-max" },
-  "p-card": { property: "padding", variable: "--card-pad" },
-  "px-page": { property: "padding-inline", variable: "--page-pad-x" },
-  "pb-page": { property: "padding-bottom", variable: "--page-pad-bottom" },
-  "pt-main": { property: "padding-top", variable: "--main-pad-top" },
-  "h-tabbar-pill": { property: "height", variable: "--tabbar-pill-h" },
-} satisfies Record<string, { property: string; variable: string }>;
+/* `utilities` used to be here — a map generating @utility classes for
+   shadow-card, h-control, p-card, px-page and seven more. Every one of them had
+   zero call sites: the components reach the variables directly, or have moved to
+   Untitled UI's own utilities. Removed with the three --shadow-* tokens that
+   existed only to feed it. */
 
 export const surfaces = {
   light: {

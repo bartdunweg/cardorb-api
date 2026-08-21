@@ -1427,50 +1427,6 @@
    here rather than inlining it, so the class stays correct when the block
    changes. */
 
-@utility shadow-card {
-  box-shadow: var(--shadow-card);
-}
-
-@utility shadow-elevated {
-  box-shadow: var(--shadow-elevated);
-}
-
-@utility shadow-image {
-  box-shadow: var(--shadow-image);
-}
-
-@utility h-control {
-  height: var(--control-h);
-}
-
-@utility min-h-control {
-  min-height: var(--control-h);
-}
-
-@utility max-w-content {
-  max-width: var(--content-max);
-}
-
-@utility p-card {
-  padding: var(--card-pad);
-}
-
-@utility px-page {
-  padding-inline: var(--page-pad-x);
-}
-
-@utility pb-page {
-  padding-bottom: var(--page-pad-bottom);
-}
-
-@utility pt-main {
-  padding-top: var(--main-pad-top);
-}
-
-@utility h-tabbar-pill {
-  height: var(--tabbar-pill-h);
-}
-
 @utility duration-fast {
   --tw-duration: var(--dur-fast);
   transition-duration: var(--dur-fast);

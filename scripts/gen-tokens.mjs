@@ -68,7 +68,7 @@ const source = readFileSync("lib/design/tokens.ts", "utf8");
 const js = ts.default.transpileModule(source, {
   compilerOptions: { module: ts.default.ModuleKind.ESNext, target: ts.default.ScriptTarget.ES2022 },
 }).outputText;
-const { colour, radius, text, leading, fontWeight, font, ease, duration, blur, zIndex, utilities } =
+const { colour, radius, text, leading, fontWeight, font, ease, duration, blur, zIndex } =
   await import(`data:text/javascript,${encodeURIComponent(js)}`);
 
 /**
@@ -179,12 +179,6 @@ const aliasLines = ALIASES.flatMap(([old, current, scale]) =>
  * block that answers for them. Reading the variable rather than inlining a
  * value is what keeps that true.
  */
-const utilityBlocks = Object.entries(utilities)
-  .map(
-    ([name, { property, variable }]) => `@utility ${name} {\n  ${property}: var(${variable});\n}`,
-  )
-  .join("\n\n");
-
 /**
  * `duration-fast` sets the longhand *and* Tailwind's own `--tw-duration`.
  *
@@ -313,8 +307,6 @@ ${uuiDark}
    beside the [data-theme] or @media block that answers for them, and read it
    here rather than inlining it, so the class stays correct when the block
    changes. */
-
-${utilityBlocks}
 
 ${motionBlocks}
 `;

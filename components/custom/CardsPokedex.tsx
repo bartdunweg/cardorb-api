@@ -234,7 +234,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
 }
 
 const cardsDexStepClassName =
-  "absolute top-[calc(var(--space-2)+33%)] flex items-center justify-center w-6 h-6 p-0" +
+  "absolute top-[calc(calc(var(--spacing)*2)+33%)] flex items-center justify-center w-6 h-6 p-0" +
   " border border-secondary rounded-full bg-primary text-secondary" +
   " cursor-pointer opacity-0 transition-opacity duration-[150ms] ease-out z-2" +
   " group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" +

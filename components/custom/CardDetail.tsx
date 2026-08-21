@@ -79,7 +79,7 @@ export default function CardDetail({
             <div
               className="card-detail-move absolute z-2 top-1/2 -translate-y-1/2
                 flex justify-between pointer-events-none
-                [left:calc(-1*var(--space-4))] -right-4"
+                [left:calc(-1*calc(var(--spacing)*4))] -right-4"
             >
               {nav}
             </div>

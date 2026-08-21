@@ -343,7 +343,7 @@ export default async function Home() {
         </section>
 
         <section
-          className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(var(--space-10),10vw,140px)]
+          className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(calc(var(--spacing)*10),10vw,140px)]
           max-w-[960px] [padding-block:clamp(104px,14vw,180px)]
           [@media(max-width:800px)]:grid-cols-1 [@media(max-width:800px)]:gap-8"
           aria-labelledby="workflow-title"
@@ -388,7 +388,7 @@ export default async function Home() {
             </ul>
           </div>
           <Card
-            className="relative min-h-[430px] [padding:clamp(var(--space-6),4vw,var(--space-10))]
+            className="relative min-h-[430px] [padding:clamp(calc(var(--spacing)*6),4vw,calc(var(--spacing)*10))]
             [@media(max-width:640px)]:min-h-[370px]"
           >
             <span className={featureIcon}>
@@ -410,7 +410,7 @@ export default async function Home() {
             <span
               aria-hidden="true"
               className="absolute right-8 bottom-[78px] left-8 h-px
-              [background:repeating-linear-gradient(90deg,var(--color-border-active)_0_4px,transparent_4px_10px)]"
+              [background:repeating-linear-gradient(90deg,light-dark(rgba(0,0,0,0.16),rgba(255,255,255,0.16))_0_4px,transparent_4px_10px)]"
             />
             <span className="absolute bottom-8 left-8 text-tertiary font-body text-xs">
               Your collection, in order
@@ -420,8 +420,8 @@ export default async function Home() {
 
         <section
           id="share"
-          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
-          max-w-[1040px] [padding:clamp(var(--space-8),7vw,88px)] rounded-orb-lg bg-secondary
+          className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(calc(var(--spacing)*8),9vw,128px)]
+          max-w-[1040px] [padding:clamp(calc(var(--spacing)*8),7vw,88px)] rounded-orb-lg bg-secondary
           [@media(max-width:800px)]:grid-cols-1
           [@media(max-width:640px)]:-mx-2 [@media(max-width:640px)]:p-6"
           aria-labelledby="share-title"

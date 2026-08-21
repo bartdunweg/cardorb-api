@@ -76,7 +76,7 @@ export function MenuDetails({
       </summary>
 
       <div
-        className={`filter-menu-panel absolute z-[5] top-[calc(100%+var(--space-2))] left-0 w-[280px]
+        className={`filter-menu-panel absolute z-[5] top-[calc(100%+calc(var(--spacing)*2))] left-0 w-[280px]
           max-w-[min(280px,calc(100vw-2*var(--page-pad-x)))] p-2 border border-secondary
           rounded-orb-md bg-primary shadow-lg
           [backdrop-filter:blur(var(--blur-glass))] ${panelClassName ?? ""}`}

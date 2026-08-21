@@ -16,10 +16,10 @@
 // sheet is drawn once and stays rather than resizing under your thumb as the
 // bars come and go.
 export const modalCardClassName =
-  "modal--card w-[min(920px,calc(100vw-2*var(--space-6)))] max-h-[calc(100svh-2*var(--space-6))] " +
+  "modal--card w-[min(920px,calc(100vw-2*calc(var(--spacing)*6)))] max-h-[calc(100svh-2*calc(var(--spacing)*6))] " +
   "rounded-orb-lg p-0 overflow-hidden shadow-2xl " +
   "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
-  "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
+  "[&_.modal-scroll]:max-h-[calc(100svh-2*calc(var(--spacing)*6))] " +
   "[&_.modal-scroll]:pt-10 px-[var(--card-pad)] pb-[var(--card-pad)] " +
   // `!`, not because two rules disagree but because nothing guarantees which
   // wins. CardDetail carries `mt-6` on the element and this cancels it from the
@@ -42,10 +42,10 @@ export const modalCardClassName =
 // and for the same reason: a dialog opened from a bar at the bottom of the
 // screen should arrive from the bottom of the screen.
 export const modalCardAddClassName =
-  "modal--card-add w-[min(560px,calc(100vw-2*var(--space-6)))] max-h-[calc(100svh-2*var(--space-6))] " +
+  "modal--card-add w-[min(560px,calc(100vw-2*calc(var(--spacing)*6)))] max-h-[calc(100svh-2*calc(var(--spacing)*6))] " +
   "rounded-orb-lg p-0 overflow-hidden shadow-2xl " +
   "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
-  "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
+  "[&_.modal-scroll]:max-h-[calc(100svh-2*calc(var(--spacing)*6))] " +
   "[&_.modal-scroll]:pt-10 px-[var(--card-pad)] pb-[var(--card-pad)] " +
 
   "[@media(max-width:640px)]:w-full [@media(max-width:640px)]:max-h-[92svh] " +
