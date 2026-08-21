@@ -1,0 +1,1 @@
+- The filter and view panels on a phone can be used with a keyboard again. Opening one used to leave the keyboard stuck outside it, so none of the options could be reached — only Escape worked.

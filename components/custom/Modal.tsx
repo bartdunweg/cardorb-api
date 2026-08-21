@@ -19,6 +19,46 @@ import { Button as UntitledButton } from "@/components/base/buttons/button";
  * had) and the offset is handed back to the scroller on release. Nothing
  * moves, and the page is genuinely locked rather than merely overflowing.
  */
+/**
+ * What counts as focusable inside a dialog, and what counts as *there*.
+ *
+ * Both halves were wrong, and together they made every filter and view sheet a
+ * keyboard trap below 1000px — which includes a desktop user at 200% zoom.
+ *
+ * The selector used to be
+ * `a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])`.
+ *
+ * 1. **No form controls.** `input`, `select` and `textarea` were missing, so in
+ *    `CardAddDialog` and the card modals `first` and `last` were computed over
+ *    the wrong set and the Tab wrap landed in the wrong place.
+ *
+ * 2. **No visibility test.** `querySelectorAll` filters on the `disabled`
+ *    *attribute*, not on whether an element is rendered. `Sheet` hides the
+ *    modal's close button with a Tailwind `hidden` class — `display: none` —
+ *    so the selector still returned it, `focusables()[0].focus()` targeted it,
+ *    and focusing a `display:none` element does nothing. `inert` on the
+ *    backdrop's siblings had already thrown focus off the trigger to `<body>`,
+ *    so every subsequent Tab took the `!modal.contains(active)` branch,
+ *    called `preventDefault()`, and re-focused the same invisible button.
+ *    Focus never moved again. Escape still closed the sheet, so it was
+ *    escapable — but nothing inside it was reachable.
+ *
+ * `getClientRects()` rather than `offsetParent`: `offsetParent` is null for a
+ * `position: fixed` element that is perfectly visible, which this dialog has.
+ * `visibility` is checked separately because a `visibility: hidden` element
+ * still has rects and still is not focusable.
+ *
+ * Exported so the rule can be tested on its own — see Modal.test.ts. The bug
+ * was a predicate, not a component.
+ */
+export const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+export function isVisible(el: HTMLElement): boolean {
+  if (el.getClientRects().length === 0) return false;
+  return el.ownerDocument.defaultView?.getComputedStyle(el).visibility !== "hidden";
+}
+
 function lockScroll(): () => void {
   const y = window.scrollY;
   const { body } = document;
@@ -207,12 +247,7 @@ export default function Modal({
     if (!open) return;
     const opener = document.activeElement as HTMLElement | null;
     const modal = modalRef.current;
-    const focusables = () =>
-      Array.from(
-        modal?.querySelectorAll<HTMLElement>(
-          'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])',
-        ) ?? [],
-      );
+    const focusables = () => Array.from(modal?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(isVisible);
     // preventScroll, or the page behind jumps. Moving focus into a dialog makes
     // the browser scroll the focused element into view, and it measures that
     // against the document rather than against the fixed layer the dialog sits
