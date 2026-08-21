@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { sameOrigin } from "../../../../../lib/api/guard";
+import { createRateLimiter } from "../../../../../lib/api/rate-limit";
 import { currentViewer } from "../../../../../lib/api/viewer";
 import { serverClient } from "../../../../../lib/storage/supabase";
 import { cardsTag } from "../../../../../lib/core/collection-row";
@@ -25,6 +26,22 @@ const MAX_ROWS = 5_000;
 
 export const maxDuration = 300;
 
+/**
+ * Ten commits per account per fifteen minutes. Previews are not counted.
+ *
+ * This is the most expensive route in the app — up to five thousand inserts and
+ * five minutes of function time per call — and being signed in was its only
+ * throttle. ADR-0023 put this same limiter on /email and /password on lighter
+ * reasoning: one external Auth call per request was judged worth it, and this
+ * was not reached in that pass.
+ *
+ * Keyed on the account, not the address: the cost being limited is database
+ * writes, which belong to a user rather than to a network. A preview writes
+ * nothing and opens no transaction, and it is the half a person repeats while
+ * fixing a column mapping, so limiting it would punish the careful path.
+ */
+const byAccount = createRateLimiter(15 * 60_000, 10);
+
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -41,6 +58,12 @@ export async function POST(req: Request) {
     doCommit = body.commit === true;
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  // After the body is read, because the flag deciding whether this call is
+  // expensive is in it. A preview is not counted; see the note on byAccount.
+  if (doCommit && byAccount(viewer.userId)) {
+    return NextResponse.json({ error: "Too many imports. Try again shortly." }, { status: 429 });
   }
 
   if (!csv.trim()) return NextResponse.json({ error: "That file is empty." }, { status: 400 });

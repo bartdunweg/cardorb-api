@@ -1,0 +1,3 @@
+- Sharing the iPhone app's page now shows a picture and a title instead of a bare link. It had been shipping with no share image at all.
+- The share cards for the privacy policy and the terms of use now carry their size and description, so chat apps and social sites draw the large version rather than a thumbnail.
+- The home page's browser tab and search result now read "Card Orb — track your Pokémon card collection" instead of just "Card Orb".

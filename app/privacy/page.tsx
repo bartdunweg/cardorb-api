@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage, { legal, legalList as list } from "@/components/custom/LegalPage";
 import { APP_NAME } from "../../lib/core/config";
+import { SITE_OG_IMAGE } from "../../lib/core/og";
 
 /**
  * The privacy policy, at a URL, because that is the only form it can take.
  *
  * App Store Connect asks for a link rather than a document, so this had to be a
- * route in the web app before the iOS app could be submitted at all. It is the
- * third public, indexable page here after / and /user/<name>.
+ * route in the web app before the iOS app could be submitted at all. It is one
+ * of the five public, indexable pages here — see app/layout.tsx, which noindexes
+ * everything else, and `grep -rn "index: true" app/` for the authoritative list.
  *
  * One policy for both surfaces, not one per surface — see
  * docs/decisions/0042-one-privacy-policy-for-app-and-site.md. Where the website
@@ -50,8 +52,10 @@ export const metadata: Metadata = {
     // rendered with no picture and a twitter:card that fell back to "summary",
     // while / and /login both had one. / does not hit this because it sits in
     // the same segment as the image file. Anything that declares openGraph in a
-    // nested route from now on has the same hole.
-    images: ["/opengraph-image"],
+    // nested route from now on has the same hole — and /app/ios then did fall
+    // into it, which is why the image is a shared constant now rather than a
+    // string each page has to remember to repeat.
+    images: [SITE_OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: `Privacy · ${APP_NAME}` },
 };

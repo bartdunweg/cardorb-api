@@ -19,7 +19,7 @@ import {
 import Card from "@/components/custom/Card";
 import MarketingFooter from "@/components/custom/MarketingFooter";
 import Navbar from "@/components/custom/Navbar";
-import ViewerPill from "@/components/custom/ViewerPill";
+import MarketingViewerSlot from "@/components/custom/MarketingViewerSlot";
 // ThemeToggle moved with the footer into MarketingFooter.
 import {
   cardBody,
@@ -30,15 +30,12 @@ import {
   sectionBody,
   sectionHeading,
 } from "@/components/custom/marketingClasses";
-import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
-import { currentViewer } from "../lib/api/viewer";
-import { ownerLabel } from "../lib/core/owner";
+import { APP_NAME, APP_TAGLINE, APP_TITLE, SITE_URL } from "../lib/core/config";
 
-const SIGN_IN_HREF = "/login";
 const DASHBOARD_HREF = "/dashboard";
 
 export const metadata: Metadata = {
-  title: { absolute: APP_NAME },
+  title: { absolute: APP_TITLE },
   description: APP_TAGLINE,
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
@@ -52,11 +49,11 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: APP_NAME,
-    title: APP_NAME,
+    title: APP_TITLE,
     description: APP_TAGLINE,
     locale: "en_GB",
   },
-  twitter: { card: "summary_large_image", title: APP_NAME, description: APP_TAGLINE },
+  twitter: { card: "summary_large_image", title: APP_TITLE, description: APP_TAGLINE },
 };
 
 /**
@@ -162,12 +159,11 @@ const FEATURES = [
   },
 ];
 
-export default async function Home() {
-  const viewer = await currentViewer();
-  // Whoever is actually signed in. This line used to read OWNER_NAME out of the
-  // environment, so the header greeted every visitor as the person who deployed
-  // the app.
-  const viewerName = viewer ? ownerLabel(viewer) : "";
+export default function Home() {
+  // No `await currentViewer()` here, and that is the whole point: reading a
+  // cookie at the top of this component made the page impossible to render
+  // statically. Whoever is signed in is now MarketingViewerSlot's business,
+  // behind a Suspense boundary — see that file for the measurement.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -221,20 +217,7 @@ export default async function Home() {
             </a>
           </>
         }
-        right={
-          viewer ? (
-            <ViewerPill href={DASHBOARD_HREF} name={viewerName} avatarUrl={viewer.avatarUrl} />
-          ) : (
-            <>
-              <Link href={SIGN_IN_HREF} className={navLink}>
-                Log in
-              </Link>
-              <Button href="/signup" size="lg">
-                Sign up
-              </Button>
-            </>
-          )
-        }
+        right={<MarketingViewerSlot dashboardHref={DASHBOARD_HREF} />}
       />
 
       <section className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">

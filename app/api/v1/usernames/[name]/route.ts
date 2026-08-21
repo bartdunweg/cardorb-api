@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sameOrigin } from "../../../../../lib/api/guard";
 import { createRateLimiter } from "../../../../../lib/api/rate-limit";
 import { adminClient } from "../../../../../lib/storage/supabase";
 import { validateUsername } from "../../../../../lib/core/account";
@@ -15,7 +16,13 @@ import { validateUsername } from "../../../../../lib/core/account";
  * not. Three things stand in the way of using it that way:
  *
  * Same-origin only, so it answers this app's own sign-up form and not a script
- * somewhere else.
+ * somewhere else. This sentence described an intention rather than the code for
+ * a while — the check was named here and never written, so a page on any domain
+ * could run this against every one of its visitors, each getting its own bucket
+ * in a per-instance map. What it stops is that browser-swarm case. It does not
+ * stop `curl`: sameOrigin() passes a request with no Origin header, by design
+ * (lib/api/guard.ts), so a single script with a blank Origin still gets sixty a
+ * minute. Slow and attributable, not impossible — as the closing note says.
  *
  * Rate limited hard, at sixty a minute per address. A person filling in a form
  * makes a handful of these; the debounce in the browser means one per pause in
@@ -35,6 +42,8 @@ import { validateUsername } from "../../../../../lib/core/account";
 const byAddress = createRateLimiter(60_000, 60);
 
 export async function GET(req: Request, { params }: { params: Promise<{ name: string }> }) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const ip =
     req.headers.get("x-real-ip")?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||

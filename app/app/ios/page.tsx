@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Button } from "@/components/base/buttons/button";
 import {
   ArrowUpRight,
@@ -16,7 +15,7 @@ import {
 import Card from "@/components/custom/Card";
 import MarketingFooter from "@/components/custom/MarketingFooter";
 import Navbar from "@/components/custom/Navbar";
-import ViewerPill from "@/components/custom/ViewerPill";
+import MarketingViewerSlot from "@/components/custom/MarketingViewerSlot";
 import {
   cardBody,
   cardHeading,
@@ -27,10 +26,8 @@ import {
   sectionHeading,
 } from "@/components/custom/marketingClasses";
 import { APP_NAME, SITE_URL } from "../../../lib/core/config";
-import { currentViewer } from "../../../lib/api/viewer";
-import { ownerLabel } from "../../../lib/core/owner";
+import { SITE_OG_IMAGE } from "../../../lib/core/og";
 
-const SIGN_IN_HREF = "/login";
 const DASHBOARD_HREF = "/dashboard";
 
 const TITLE = `${APP_NAME} for iPhone`;
@@ -39,7 +36,7 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   // The root layout defaults every route to noindex. This page is one of the
-  // three that opts back in, so it says so here rather than inheriting.
+  // five that opts back in, so it says so here rather than inheriting.
   title: { absolute: TITLE },
   description: DESCRIPTION,
   robots: { index: true, follow: true },
@@ -57,6 +54,13 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     locale: "en_GB",
+    // Named explicitly, and it has to be — the same hole /privacy's comment
+    // warned about, which this page then fell into. A nested `openGraph` block
+    // replaces the root one instead of merging with it, so declaring one here
+    // dropped app/opengraph-image.tsx and shipped a page with no og:image at
+    // all, next to a twitter:card promising a large one. This is the page whose
+    // whole job is to be shared ahead of an App Store launch.
+    images: [SITE_OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
@@ -143,9 +147,10 @@ const FAQ = [
   },
 ];
 
-export default async function IosApp() {
-  const viewer = await currentViewer();
-  const viewerName = viewer ? ownerLabel(viewer) : "";
+export default function IosApp() {
+  // No `await currentViewer()`, same as the landing page: reading a cookie here
+  // made this page impossible to render statically, for one navbar pill. See
+  // MarketingViewerSlot for the measurement.
 
   /**
    * SoftwareApplication, with no `offers`, no `downloadUrl` and no
@@ -190,20 +195,7 @@ export default async function IosApp() {
             </a>
           </>
         }
-        right={
-          viewer ? (
-            <ViewerPill href={DASHBOARD_HREF} name={viewerName} avatarUrl={viewer.avatarUrl} />
-          ) : (
-            <>
-              <Link href={SIGN_IN_HREF} className={navLink}>
-                Log in
-              </Link>
-              <Button href="/signup" size="lg">
-                Sign up
-              </Button>
-            </>
-          )
-        }
+        right={<MarketingViewerSlot dashboardHref={DASHBOARD_HREF} />}
       />
 
       <section className="w-[min(100%,1180px)] mx-auto overflow-hidden [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">

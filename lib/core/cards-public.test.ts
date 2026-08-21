@@ -98,6 +98,19 @@ describe("forPublic", () => {
     expect(only(forPublic([set([card()])])).variants[0]!.id).toBeNull();
   });
 
+  it("carries the two allowed fields and nulls every other one", () => {
+    // The allow-list, asserted as a whole rather than one key at a time. This
+    // is the test that fails when a thirteenth field is added to Variant and
+    // somebody spreads it in here by habit.
+    //
+    // `null`, not absent — see the note in forPublic about why the keys are
+    // still written. When that changes, this assertion becomes
+    // `Object.keys(variant)` equalling exactly ["owned", "rarity"].
+    const variant = only(forPublic([set([card()])])).variants[0]!;
+    const carried = Object.entries(variant).filter(([, v]) => v !== null && v !== false);
+    expect(carried.map(([k]) => k).sort()).toEqual(["owned", "rarity"]);
+  });
+
   it("leaves nothing private anywhere in the serialised payload", () => {
     // The belt to the braces above: whatever shape a future Variant takes, none
     // of these strings may appear in what crosses the wire.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage, { legal, legalList as list } from "@/components/custom/LegalPage";
 import { APP_NAME } from "../../lib/core/config";
+import { SITE_OG_IMAGE } from "../../lib/core/og";
 
 /**
  * Terms of use — the document that protects the operator rather than the user.
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
     siteName: APP_NAME,
     title: `Terms of use · ${APP_NAME}`,
     locale: "en_GB",
-    images: ["/opengraph-image"],
+    images: [SITE_OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: `Terms of use · ${APP_NAME}` },
 };

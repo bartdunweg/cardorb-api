@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "../lib/core/config";
 
 /**
- * What a crawler may look at, which is two pages.
+ * What a crawler may look at, which is five pages.
  *
- * The layout already sends `noindex` on everything but / and /user/<name>, and
- * that is the instruction that actually counts — a robots rule asks a crawler
+ * The layout already sends `noindex` on everything but /, /user/<name>,
+ * /app/ios, /privacy and /terms, and that is the instruction that actually
+ * counts — a robots rule asks a crawler
  * not to *fetch* a page, while noindex asks it not to *list* one, and a page
  * that is never fetched is a page whose noindex is never read. So both are here
  * and they say different things on purpose.

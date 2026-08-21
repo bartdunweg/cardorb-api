@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { colour } from "../lib/design/tokens";
-import { APP_NAME, APP_TAGLINE_SHORT, APP_TAGLINE } from "../lib/core/config";
+import { APP_NAME, APP_TAGLINE_SHORT } from "../lib/core/config";
+import { OG_IMAGE_ALT, OG_IMAGE_SIZE, OG_IMAGE_TYPE } from "../lib/core/og";
 
 /**
  * What a link to this app looks like before anyone clicks it.
@@ -17,9 +18,9 @@ import { APP_NAME, APP_TAGLINE_SHORT, APP_TAGLINE } from "../lib/core/config";
  * Static: no data, no fetch, no revalidate. It is built once and it is the same
  * picture forever, unlike the collection's, which carries a live count.
  */
-export const alt = `${APP_NAME} — ${APP_TAGLINE}`;
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+export const alt = OG_IMAGE_ALT;
+export const size = OG_IMAGE_SIZE;
+export const contentType = OG_IMAGE_TYPE;
 
 /**
  * The mark, inlined.

@@ -49,6 +49,22 @@ export const APP_TAGLINE =
 export const APP_TAGLINE_SHORT = "Set by set — what you own, what it is worth, what is missing.";
 
 /**
+ * The name with enough of a sentence attached to be findable.
+ *
+ * The `<title>` of the landing page, and the og:title beside it. It used to be
+ * the bare `APP_NAME`, set with `title.absolute` so the site-wide template could
+ * not turn it into "Card Orb · Card Orb". That reasoning was right and the
+ * result was still wrong: for a brand nobody is searching for yet, a title
+ * containing no words anyone types is the weakest possible signal on the one
+ * page carrying the site's authority.
+ *
+ * `absolute` stays — the template would still double the name — and this
+ * constant is what it is set to. The root layout's `title.default` is the same
+ * string, so a route with no title of its own reads identically.
+ */
+export const APP_TITLE = `${APP_NAME} — track your Pokémon card collection`;
+
+/**
  * The locale every number and every sort in here is answered in.
  *
  * Dutch, because Bart is, and because it decides two visible things: how a
