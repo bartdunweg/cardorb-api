@@ -9,26 +9,43 @@ import { cx } from "@/utils/cx";
  *
  * ── Why this exists at all ─────────────────────────────────────────────────
  *
- * Almost every button in this app is `<Button>`. Five call sites cannot be,
- * and they are worth naming because "just use the component" is the obvious
- * objection to this file. This is the whole list:
+ * Almost every button in this app is `<Button>`. Seven files reach for the
+ * class string instead, and this list was rewritten on 2026-08-21 because the
+ * one that stood here was wrong in three of its four claims and counted five
+ * call sites where there are seven.
  *
- *   - **`<summary>`** — FilterSheet and ViewSheet are `<details>/<summary>`, and
- *     the open/closed behaviour is the element's own. A React Aria Button
- *     cannot be a `<summary>`.
- *   - **`<span aria-hidden>`** — CardNav's disabled ends and PublicCardDialog's
- *     are deliberately not buttons: there is nowhere to go, and a real disabled
- *     button would still be an element a screen reader walks past announcing
- *     nothing useful.
- *   - **`<label>`** — AvatarPicker's trigger is the label of a file input, which
- *     is what makes the whole control keyboard-reachable without JavaScript.
+ * What it said, and what is actually true:
+ *
+ *   - It claimed **`<summary>`** — that FilterSheet and ViewSheet are
+ *     `<details>/<summary>`, which a React Aria Button cannot be. They are not.
+ *     Both render `<button type="button">` opening a `<Sheet>`/`<Modal>`, and
+ *     MenuPopover renders the vendored Button for the same job.
+ *   - It claimed **`<label>`** — that AvatarPicker's trigger is a file input's
+ *     label, keyboard-reachable without JavaScript. It is a
+ *     `<button type="button">` inside React Aria's `<FileTrigger>`.
+ *   - It claimed **PublicCardDialog's arrows are `<span aria-hidden>`**. They
+ *     are real `<button disabled>`.
+ *
+ * The list that survives inspection:
+ *
+ *   - **`<a>`** — CardNav's previous/next are `<Link>`s. They navigate, so they
+ *     are anchors, and an anchor is not a button.
+ *   - **`<span aria-hidden>`** — CardNav's *disabled* ends only. There is
+ *     nowhere to go, and a real disabled button is something a screen reader
+ *     walks past announcing nothing useful.
  *   - **A button that has to be focused from code** — CardAddDialog's "Change".
  *     That dialog moves focus by hand on every state change, which needs a ref
  *     on the real element, and the vendored Button is typed as a plain call
  *     signature whose props carry no `ref`.
  *
- * If you are about to add a sixth, it belongs on that list or it belongs in the
- * component.
+ * That leaves four consumers — FilterSheet (3), ViewSheet (2), PublicCardDialog
+ * (2) and AvatarPicker (1) — which are plain `<button>` elements with **no
+ * stated reason** not to be `<Button>`. They are not defended here because the
+ * defence was untrue. Converting them is its own change; until somebody does,
+ * this file is carrying them rather than justifying them.
+ *
+ * If you are about to add an eighth, it belongs in one of the three real
+ * categories above or it belongs in the component.
  *
  * ── This reads the recipe. It used to copy it. ─────────────────────────────
  *

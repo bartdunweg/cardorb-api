@@ -284,7 +284,7 @@
     --page-pad-bottom: 64px;
 
     /* Room #main-content leaves for the nav: the bar sits at the bottom on mobile
-     and centred at the top from 641px up (see tabbar.css). Shared as a token so
+     and centred at the top from 641px up (see tabbarClasses.ts). Shared as a token so
      full-height panels can subtract exactly what the layout reserved. */
     --main-pad-top: 32px;
 
@@ -292,15 +292,18 @@
     --page-pad-x: 32px;
 
     /* ── Responsive breakpoint scale ──
-     CSS @media can't read custom properties, so these stay literals in
-     globals.css, but every media query uses ONE of these steps so
-     grid layout, typography, and gutters switch together:
-       Desktop  > 900px, full multi-column (6-col) bento grids
-       Tablet  ≤ 900px, 2-column bento remap (matches this gutter step)
-       Mobile  ≤ 640px, single column (matches type + 16px gutter step)
-     The resume/case layout adds three deliberate intermediate steps of its
-     own (≤ 1215px, ≤ 809px, ≤ 479px) for the meta-column/timeline, those are
-     scoped to .case/.left/.right and intentionally off the global scale. */
+     CSS @media can't read custom properties, so these stay literals.
+
+     Measured, rather than declared: four steps are actually in use across the
+     app — 1000px (the rail becomes its own screen), 800px (the marketing grids
+     collapse), 640px (the tab bar moves to the bottom) and 480px (the add-card
+     dialog's own split). Some appear as 1001/641 for the other side of the same
+     boundary.
+
+     This block used to describe a 900px/640px scale, a "resume/case layout"
+     and .case/.left/.right selectors. None of that is this project — it is
+     another codebase's vocabulary, left behind. `grep -rhoE "max-width:[0-9]+px"`
+     is the list, and it is the authority. */
 
     /* The type scale, the weights, the line-heights and the three families are
      generated too, with their reasoning carried over to lib/design/tokens.ts
@@ -324,7 +327,7 @@
     /* Off the type scale on purpose, and fixed rather than stepped: tooltips wore
      --fs-small, which is 13px on desktop and 12px on mobile, so an aside changed
      size with the window. 12 is the size, and at 13 it competed with the label
-     it was explaining. Argued at length above .tooltip in components.css. */
+     it was explaining. */
 
     /* ── Spacing scale (4px base) ──
      On-grid spacing for padding / margin / gap. Off-grid optical tweaks
@@ -512,9 +515,9 @@
      what puts the deepest pixel on rgb(24) against a card of rgb(29), which is
      light's own dip.
 
-     Which is the other half of the argument in cards.css, where the note beside
-     the /cards rail says dark carries its shadows heavier because 16% black over
-     a near-black page is nothing at all. That is true and it is why these are
+     The other half of that argument used to live beside the rail in cards.css:
+     dark carries its shadows heavier because 16% black over a near-black page is
+     nothing at all. That file is gone; the reasoning is not, and it is why these are
      still five times light's alphas. It just does not follow that they should be
      seven times. */
   /* Soft lift behind free-standing images (dark) */
@@ -544,7 +547,7 @@
 
   /* ── Responsive token steps ──
    These live here, not in a route stylesheet: they retune the site-wide gutter
-   and type scale, so tokens.css is the one place to look for what a token is
+   and type scale, so this file is the one place to look for what a token is
    at any viewport. Declared after the base :root so source order wins. */
 
   /* Room to clear the centred top nav (32 above + ~56 bar + 72 below). Used to
