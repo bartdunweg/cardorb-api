@@ -2,6 +2,18 @@
 
 import { useRef } from "react";
 import { Heart, LayersThree01, LayoutAlt01, List, Plus, SearchLg, User01 } from "@untitledui-pro/icons/line";
+// The real solid cuts, not the line ones with fill turned on. Untitled UI draws
+// each style separately: a solid icon is its own shape, where filling an outline
+// path floods the strokes and gives a heavier, blunter form than anyone drew.
+// Faking it was the only option while the free line-only package was installed.
+import {
+  Heart as HeartSolid,
+  LayersThree01 as LayersThree01Solid,
+  LayoutAlt01 as LayoutAlt01Solid,
+  List as ListSolid,
+  SearchLg as SearchLgSolid,
+  User01 as User01Solid,
+} from "@untitledui-pro/icons/solid";
 import { useSlidingPill } from "@/app/hooks/useSlidingPill";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { Button as AriaButton } from "react-aria-components";
@@ -102,23 +114,30 @@ export default function CardsTabBar({
     style: pillStyle,
   } = useSlidingPill(trackRef, ".tabbar-item.is-active", [active, signedIn, isPublic]);
 
-  // The component itself, not a pre-built element: the active tab renders
-  // its icon filled (fill="currentColor" instead of the icon set's default
-  // fill="none"), which has to be decided per render against `active`, not
-  // once up front here.
-  const all: Record<string, { key: CardsTab; label: string; icon: typeof LayoutAlt01 }> = {
-    dashboard: { key: "dashboard", label: "Dashboard", icon: LayoutAlt01 },
-    collection: { key: "collection", label: "Collection", icon: LayersThree01 },
-    wishlist: { key: "wishlist", label: "Wishlist", icon: Heart },
+  // Two components per slot, not one: the active tab draws the solid cut and the
+  // rest draw the line one, and which is which has to be decided per render
+  // against `active` rather than once up front here.
+  const all: Record<
+    string,
+    { key: CardsTab; label: string; icon: typeof LayoutAlt01; solid: typeof LayoutAlt01 }
+  > = {
+    dashboard: { key: "dashboard", label: "Dashboard", icon: LayoutAlt01, solid: LayoutAlt01Solid },
+    collection: {
+      key: "collection",
+      label: "Collection",
+      icon: LayersThree01,
+      solid: LayersThree01Solid,
+    },
+    wishlist: { key: "wishlist", label: "Wishlist", icon: Heart, solid: HeartSolid },
     // A list rather than boxes: what this slot opens is the rail, which is a
     // list of set names to pick from. Layers belongs to Collection, which is
     // the cards themselves.
-    sets: { key: "sets", label: "Sets", icon: List },
+    sets: { key: "sets", label: "Sets", icon: List, solid: ListSolid },
     // Fallback icon only — item() swaps this for the viewer's avatar (or
     // their initial) whenever one is available, which is every real render
     // signed in.
-    profile: { key: "profile", label: "You", icon: User01 },
-    search: { key: "search", label: "Search", icon: SearchLg },
+    profile: { key: "profile", label: "You", icon: User01, solid: User01Solid },
+    search: { key: "search", label: "Search", icon: SearchLg, solid: SearchLgSolid },
   };
 
   const order = isPublic
@@ -152,7 +171,7 @@ export default function CardsTabBar({
 
   const item = (tab: (typeof shown)[number]) => {
     const on = tab.key === active;
-    const Icon = tab.icon;
+    const Icon = on ? tab.solid : tab.icon;
     return (
       <button
         key={tab.key}
@@ -178,7 +197,7 @@ export default function CardsTabBar({
               className="size-5 shrink-0 [&_span]:text-[9px]"
             />
           ) : (
-            <Icon {...ICON_SIZE} fill={on ? "currentColor" : "none"} aria-hidden="true" />
+            <Icon {...ICON_SIZE} aria-hidden="true" />
           )}
         </span>
         {/* Icon and label both always on, every slot — see tabbarLabelClassName's

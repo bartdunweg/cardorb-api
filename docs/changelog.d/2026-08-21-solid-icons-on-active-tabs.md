@@ -1,0 +1,1 @@
+- The active tab in the mobile bar now uses a properly drawn solid icon instead of an outline icon with its fill turned on.
