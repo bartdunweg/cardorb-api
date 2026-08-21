@@ -1,0 +1,1 @@
+- Active items in the sidebar and the mobile tab bar now use properly drawn solid icons instead of outline icons with their fill turned on.

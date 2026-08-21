@@ -2,6 +2,16 @@
 
 import { cardsNavElsewhereClassName } from "@/components/custom/cardsPageClasses";
 import { Compass03, Heart, LayersThree01, LayoutAlt01, Plus, User01 } from "@untitledui-pro/icons/line";
+// The real solid cuts. See the matching note in CardsTabBar: filling a line
+// icon floods its strokes and gives a blunter shape than the solid one, which
+// Untitled UI draws separately. The two navs have to agree, so both use these.
+import {
+  Compass03 as Compass03Solid,
+  Heart as HeartSolid,
+  LayersThree01 as LayersThree01Solid,
+  LayoutAlt01 as LayoutAlt01Solid,
+  User01 as User01Solid,
+} from "@untitledui-pro/icons/solid";
 import type { CardSet, ImageSize } from "@/lib/core/cards";
 import { LOCALE } from "@/lib/core/config";
 import Wordmark from "@/components/custom/Wordmark";
@@ -214,6 +224,7 @@ export default function CardsSidebar({
                 // An icon where the sets carry their logo, so the two rows sit
                 // on the same left edge as everything under them.
                 icon={LayoutAlt01}
+                solid={LayoutAlt01Solid}
               />
             </li>
           )}
@@ -228,6 +239,7 @@ export default function CardsSidebar({
               name={collectionName}
               count={held}
               icon={LayersThree01}
+                solid={LayersThree01Solid}
             />
           </li>
           {/* Only where there is one. An empty wishlist is a row that answers a
@@ -240,6 +252,7 @@ export default function CardsSidebar({
                 name="Wishlist"
                 count={wanted}
                 icon={Heart}
+                solid={HeartSolid}
               />
             </li>
           )}
@@ -255,6 +268,7 @@ export default function CardsSidebar({
                 onClick={() => onSelect("profile")}
                 name="Profile"
                 icon={User01}
+                solid={User01Solid}
               />
             </li>
           )}
@@ -282,6 +296,7 @@ export default function CardsSidebar({
                 name="Sets"
                 count={sets.length}
                 icon={LayersThree01}
+                solid={LayersThree01Solid}
               />
             </li>
           ) : null}
@@ -299,6 +314,7 @@ export default function CardsSidebar({
                 onClick={() => onSelect("browse")}
                 name="Browse"
                 icon={Compass03}
+                solid={Compass03Solid}
               />
             </li>
           )}
@@ -424,6 +440,7 @@ function NavItem({
   logo,
   logoSize,
   icon: Icon,
+  solid: Solid,
   onBrokenLogo,
 }: {
   active: boolean;
@@ -436,11 +453,20 @@ function NavItem({
   icon?: React.ComponentType<{
     size?: number;
     strokeWidth?: number;
-    fill?: string;
+    "aria-hidden"?: boolean;
+  }>;
+  /** The solid cut of `icon`, drawn while this row is the active one. */
+  solid?: React.ComponentType<{
+    size?: number;
+    strokeWidth?: number;
     "aria-hidden"?: boolean;
   }>;
   onBrokenLogo?: () => void;
 }) {
+  // Solid while active, line otherwise — the same rule the tab bar follows, so
+  // the two navigations read as one language rather than two treatments.
+  const Glyph = active && Solid ? Solid : Icon;
+
   return (
     <button
       type="button"
@@ -457,13 +483,8 @@ function NavItem({
     >
       {(logo !== undefined || Icon) && (
         <span className="flex-shrink-0 flex items-center justify-center w-9 h-7">
-          {Icon ? (
-            <Icon
-              size={18}
-              strokeWidth={1.75}
-              fill={active ? "currentColor" : "none"}
-              aria-hidden={true}
-            />
+          {Glyph ? (
+            <Glyph size={18} strokeWidth={1.75} aria-hidden={true} />
           ) : logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
