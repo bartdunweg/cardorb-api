@@ -2,6 +2,54 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+
+## Controls have two shapes now (2026-08-22, workspace `baghdad`)
+
+Buttons, single-line inputs, input groups and segmented controls default to a
+**capsule** (999px) and can be switched back to the **8px rectangle** they all
+wore before. ADR-0088 has the reasoning and the numbers.
+
+The mechanism is the thing to know before touching any control: shape is a
+**cascading custom property**, not a prop. `--radius-control` and five
+`--control-px-*` are declared in `:root`; two generated `@utility` blocks —
+`shape-round` and `shape-rectangle` — reassign them. So:
+
+- `<Button shape="rectangle">` is one class on one element.
+- `<div className="shape-rectangle">` shapes a whole form or toolbar, and the
+  controls inside need to know nothing. **Prefer this.**
+- A control added later reads two variables and is done. Do not add a `shape`
+  prop to anything new.
+
+Two things found on the way, both worth knowing:
+
+- **`tailwind-merge` never knew this project's radius names**, so
+  `cx("rounded-lg", "rounded-orb-sm")` kept *both* and the winner was whichever
+  rule Tailwind emitted last. Invisible while every value was 8px. `utils/cx.ts`
+  now declares the scale from `tokens.ts`; `lib/design/shape.test.ts` holds it,
+  and those six assertions were confirmed to fail without the fix.
+- **`vars.test.ts` now reads `components/base` and Tailwind's `px-(--token)`
+  shorthand.** It read neither before, so tokens used inside the vendored tree
+  and every reference written in the shorthand were unchecked.
+
+**A trap in the screenshot harness, which cost two worthless runs.**
+`playwright.config.ts` sets `reuseExistingServer: true`, so `npm run visual`
+straight after `npm run visual:baseline` photographs the *baseline run's*
+server — pre-change code against pre-change snapshots, 34/35 green, meaning
+nothing. Start a server by hand from a fresh build and pass
+`VISUAL_BASE_URL=http://127.0.0.1:3210`, then prove it is serving your code
+before believing a single shot.
+
+And when reading a green run: `maxDiffPixelRatio` is 0.001, sized for
+antialiasing. A capsule differs from an 8px rectangle only in its corners —
+about 400 pixels on a 1.4-megapixel page — so a passing shot says *no layout
+shifted*, not *nothing changed*. Computed styles are what prove a shape.
+
+Left alone deliberately: the `rounded-pill` chips (`FilterChips`,
+`BrowseSetGrid`), the dropdown menu panel, the tab bar. And
+`signinWideButtonClassName` in `SigninShell.tsx:91` turns out to have **no
+consumers at all** — dead, found while checking whether its radius override
+would fight the capsule.
+
 ## Three of the four open items shipped (2026-08-21/22, workspace `biarritz`)
 
 Four things had been decided and not built. Three are merged, each with a real
@@ -193,6 +241,7 @@ Left undone, and both need a signed-in session this workspace cannot create:
   not the 44×44 comfortable-touch guideline, and unlike the rail's it is now a
   phone-only control. `size="lg"` would make it exactly 44. Left alone because
   its visual weight beside the heading has not been looked at yet.
+
 
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 

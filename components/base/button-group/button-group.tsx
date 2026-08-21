@@ -26,15 +26,15 @@ export const styles = sortCx({
 
     sizes: {
         sm: {
-            root: "gap-1.5 px-3.5 py-2 text-sm not-last:pr-[calc(calc(var(--spacing)*3.5)+1px)] first:rounded-l-lg last:rounded-r-lg data-icon-leading:pl-3 data-icon-only:px-2.5",
+            root: "gap-1.5 px-3.5 py-2 text-sm not-last:pr-[calc(calc(var(--spacing)*3.5)+1px)] first:rounded-l-control last:rounded-r-control data-icon-leading:pl-3 data-icon-only:px-2.5",
             icon: "size-5",
         },
         md: {
-            root: "gap-1.5 px-4 py-2.5 text-sm not-last:pr-[calc(calc(var(--spacing)*4)+1px)] first:rounded-l-lg last:rounded-r-lg data-icon-leading:pl-3.5 data-icon-only:px-3",
+            root: "gap-1.5 px-4 py-2.5 text-sm not-last:pr-[calc(calc(var(--spacing)*4)+1px)] first:rounded-l-control last:rounded-r-control data-icon-leading:pl-3.5 data-icon-only:px-3",
             icon: "size-5",
         },
         lg: {
-            root: "gap-2 px-4.5 py-2.5 text-md not-last:pr-[calc(calc(var(--spacing)*4.5)+1px)] first:rounded-l-lg last:rounded-r-lg data-icon-leading:pl-4 data-icon-only:px-3.5",
+            root: "gap-2 px-4.5 py-2.5 text-md not-last:pr-[calc(calc(var(--spacing)*4.5)+1px)] first:rounded-l-control last:rounded-r-control data-icon-leading:pl-4 data-icon-only:px-3.5",
             icon: "size-5",
         },
     },
@@ -96,7 +96,7 @@ export const ButtonGroup = ({ children, size = "md", className, ...otherProps }:
         <ButtonGroupContext.Provider value={{ size }}>
             <AriaToggleButtonGroup
                 selectionMode="single"
-                className={cx("relative z-0 inline-flex w-max -space-x-px rounded-lg shadow-xs", className)}
+                className={cx("relative z-0 inline-flex w-max -space-x-px rounded-control shadow-xs", className)}
                 {...otherProps}
             >
                 {children}

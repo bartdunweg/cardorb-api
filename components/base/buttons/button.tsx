@@ -20,35 +20,54 @@ export const styles = sortCx({
         ].join(" "),
         icon: "pointer-events-none size-5 shrink-0 transition-inherit-all",
     },
+    /**
+     * The corner shape, which every size above reads through `--radius-control`
+     * and `--control-px-*` rather than spelling out.
+     *
+     * Written as two literal strings rather than built as `` `shape-${shape}` ``
+     * because Tailwind v4 scans source text for class names it recognises: a
+     * name assembled at runtime is a name it never sees, so the `@utility`
+     * block would be defined and never emitted, and the button would silently
+     * keep whatever shape it inherited. That is the same silent-failure shape
+     * `vars.test.ts` exists for, arriving by a different route.
+     *
+     * Nothing here is applied unless the caller asks. With no `shape` prop the
+     * button reads the variable from wherever it lands — `:root`, or the
+     * nearest ancestor carrying one of these two classes.
+     */
+    shapes: {
+        round: "shape-round",
+        rectangle: "shape-rectangle",
+    },
     sizes: {
         xs: {
             root: [
-                "gap-1 rounded-lg px-2.5 py-1.5 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2",
-                "in-data-input-wrapper:px-3.5 in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
+                "gap-1 rounded-control px-(--control-px-xs) py-1.5 text-sm font-semibold before:rounded-control-inner data-icon-only:p-2",
+                "in-data-input-wrapper:px-(--control-px-md) in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
                 "*:data-icon:size-4 *:data-icon:stroke-[2.25px]",
             ].join(" "),
             linkRoot: "gap-1 *:data-text:underline-offset-3",
         },
         sm: {
             root: [
-                "gap-1 rounded-lg px-3 py-2 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2",
-                "in-data-input-wrapper:px-3.5 in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
+                "gap-1 rounded-control px-(--control-px-sm) py-2 text-sm font-semibold before:rounded-control-inner data-icon-only:p-2",
+                "in-data-input-wrapper:px-(--control-px-md) in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
             ].join(" "),
             linkRoot: "gap-1 *:data-text:underline-offset-3",
         },
         md: {
             root: [
-                "gap-1 rounded-lg px-3.5 py-2.5 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2.5",
-                "in-data-input-wrapper:gap-1.5 in-data-input-wrapper:px-4 in-data-input-wrapper:text-md in-data-input-wrapper:data-icon-only:p-3",
+                "gap-1 rounded-control px-(--control-px-md) py-2.5 text-sm font-semibold before:rounded-control-inner data-icon-only:p-2.5",
+                "in-data-input-wrapper:gap-1.5 in-data-input-wrapper:px-(--control-px-lg) in-data-input-wrapper:text-md in-data-input-wrapper:data-icon-only:p-3",
             ].join(" "),
             linkRoot: "gap-1 *:data-text:underline-offset-4",
         },
         lg: {
-            root: "gap-1.5 rounded-lg px-4 py-2.5 text-md font-semibold before:rounded-[7px] data-icon-only:p-3",
+            root: "gap-1.5 rounded-control px-(--control-px-lg) py-2.5 text-md font-semibold before:rounded-control-inner data-icon-only:p-3",
             linkRoot: "gap-1.5 *:data-text:underline-offset-4",
         },
         xl: {
-            root: "gap-1.5 rounded-lg px-4.5 py-3 text-md font-semibold before:rounded-[7px] data-icon-only:p-3.5",
+            root: "gap-1.5 rounded-control px-(--control-px-xl) py-3 text-md font-semibold before:rounded-control-inner data-icon-only:p-3.5",
             linkRoot: "gap-1.5 *:data-text:underline-offset-4",
         },
     },
@@ -142,6 +161,16 @@ export interface CommonProps {
     size?: keyof typeof styles.sizes;
     /** The color variant of the button */
     color?: keyof typeof styles.colors;
+    /**
+     * The corner shape. Omit it and the button takes whatever shape it lands
+     * in — a capsule, unless an ancestor carries `shape-rectangle`. Set it to
+     * pin one button against its surroundings.
+     *
+     * For a whole form, toolbar or dialog footer, put `shape-rectangle` on the
+     * container instead of this prop on each control: the variable cascades, so
+     * inputs and button groups inside it follow without knowing they were told.
+     */
+    shape?: keyof typeof styles.shapes;
     /** Icon component or element to show before the text */
     iconLeading?: FC<{ className?: string }> | ReactNode;
     /** Icon component or element to show after the text */
@@ -175,6 +204,7 @@ export const Button: {
 } = ({
     size = "sm",
     color = "primary",
+    shape,
     children,
     className,
     noTextPadding,
@@ -240,6 +270,7 @@ export const Button: {
         isDisabled: disabled,
         className: cx(
             styles.common.root,
+            shape && styles.shapes[shape],
             styles.sizes[size].root,
             styles.colors[color].root,
             isLinkType && styles.sizes[size].linkRoot,

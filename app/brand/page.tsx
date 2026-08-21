@@ -4,6 +4,7 @@ import Navbar from "@/components/custom/Navbar";
 import MarketingFooter from "@/components/custom/MarketingFooter";
 import { legal, legalList as list } from "@/components/custom/LegalPage";
 import Wordmark from "@/components/custom/Wordmark";
+import { Button as UiButton } from "@/components/base/buttons/button";
 import { colour, type ColourPair } from "../../lib/design/tokens";
 import { APP_NAME } from "../../lib/core/config";
 
@@ -114,6 +115,21 @@ const SWATCHES: [string, ColourPair][] = [
   ["Surface", colour.bgSurface],
   ["Tint", colour.tint],
 ];
+
+/**
+ * The two shapes, and the class that switches each one.
+ *
+ * Spelled out rather than assembled, because Tailwind reads source text: a
+ * class name built at runtime is one it never sees, and the `@utility` block
+ * would be defined and never emitted. Same reason `button.tsx` keeps its two
+ * literals in `styles.shapes`.
+ */
+const SHAPES: [string, string, string][] = [
+  ["Round", "shape-round", "the default; a capsule at every size"],
+  ["Rectangle", "shape-rectangle", "the opt-in; 8px, and what buttons wore before"],
+];
+
+const SIZES = ["xs", "sm", "md", "lg", "xl"] as const;
 
 const DOWNLOADS: [string, string][] = [
   ["The orb", "/brand/orb-512.png"],
@@ -250,6 +266,40 @@ export default function BrandPage() {
               <Swatch key={name} name={name} pair={pair} />
             ))}
           </div>
+
+          <h2 className={h2}>Shape</h2>
+          <p className={body}>
+            Controls come in two shapes. Round is the default and what a button wears unless
+            something says otherwise; rectangle is the opt-in, and it is exactly what every button
+            wore before the two existed. Both rows below are the same component at the same five
+            sizes — the only difference is one class on the box around each row.
+          </p>
+          <div className="flex flex-col gap-6 my-6">
+            {SHAPES.map(([name, shapeClass, note]) => (
+              <div key={name}>
+                <div className="font-body text-xs text-tertiary mb-2">
+                  {name} — {note}
+                </div>
+                {/* The class goes on the container, not on the buttons. That is
+                    the mechanism, so it is what this page should show: the
+                    buttons inside carry no shape prop and have never heard of
+                    shape. */}
+                <div className={`${shapeClass} flex flex-wrap items-center gap-3`}>
+                  {SIZES.map((size) => (
+                    <UiButton key={size} color="secondary" size={size}>
+                      {size}
+                    </UiButton>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className={body}>
+            Side padding changes with the shape as well as the corner: a capsule curves away from
+            its text for the control&rsquo;s full height, so a word set at the rectangle&rsquo;s
+            padding reads as touching the edge. Inputs, input groups and segmented controls read the
+            same two variables, so a form wrapped in one class comes out whole.
+          </p>
 
           <h2 className={h2}>Using it</h2>
           <ul className={list}>
