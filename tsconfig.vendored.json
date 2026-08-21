@@ -1,0 +1,42 @@
+{
+  // Vendored Untitled UI, checked — loosely, but checked.
+  //
+  // ADR-0062 turned `tsc` off over these files with a per-file @ts-nocheck,
+  // because this project sets flags the library is not written under
+  // (noUncheckedIndexedAccess makes `sizes[i]` a `T | undefined`, three times in
+  // empty-state.tsx alone). That was the right call about *those* flags and the
+  // wrong tool: @ts-nocheck silences the whole file, including the errors that
+  // are not stylistic at all.
+  //
+  // ADR-0066 paid for that. `file-upload-trigger` shipped two faults that would
+  // each have thrown on first render — `React.Children` in a file that never
+  // imports React, and an import of a package that is not a dependency — and
+  // both are exactly what a *default-strictness* tsc reports. Nothing caught
+  // them because nothing was looking.
+  //
+  // So: `strict` stays ON — Untitled UI is written under it, and turning it off
+  // changes inference enough to invent errors of its own — and only the flags
+  // this project adds on top are relaxed. The noise goes away and the crashes
+  // do not.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": [
+    "next-env.d.ts",
+    "components/application/**/*.ts",
+    "components/application/**/*.tsx",
+    "components/base/**/*.ts",
+    "components/base/**/*.tsx",
+    "components/foundations/**/*.ts",
+    "components/foundations/**/*.tsx",
+    "components/shared-assets/**/*.ts",
+    "components/shared-assets/**/*.tsx",
+    "hooks/**/*.ts",
+    "utils/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

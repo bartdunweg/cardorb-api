@@ -1,14 +1,17 @@
+"use client";
+
+import { styles } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
 
 /**
- * Untitled UI's button, as a class string, for the buttons that cannot be its
+ * Untitled UI's button, as a class string, for the elements that cannot be its
  * component.
  *
  * ── Why this exists at all ─────────────────────────────────────────────────
  *
- * Most buttons in this app became `<Button>` outright. A handful cannot, and
- * they are worth naming because "just use the component" is the obvious
- * objection to this file:
+ * Almost every button in this app is `<Button>`. Five call sites cannot be,
+ * and they are worth naming because "just use the component" is the obvious
+ * objection to this file. This is the whole list:
  *
  *   - **`<summary>`** — FilterSheet and ViewSheet are `<details>/<summary>`, and
  *     the open/closed behaviour is the element's own. A React Aria Button
@@ -19,72 +22,50 @@ import { cx } from "@/utils/cx";
  *     nothing useful.
  *   - **`<label>`** — AvatarPicker's trigger is the label of a file input, which
  *     is what makes the whole control keyboard-reachable without JavaScript.
+ *   - **A button that has to be focused from code** — CardAddDialog's "Change".
+ *     That dialog moves focus by hand on every state change, which needs a ref
+ *     on the real element, and the vendored Button is typed as a plain call
+ *     signature whose props carry no `ref`.
  *
- * ── Why the recipe is copied here rather than imported ────────────────────
+ * If you are about to add a sixth, it belongs on that list or it belongs in the
+ * component.
  *
- * It was imported from the vendored component, which is obviously better, and
- * it does not work: `button.tsx` is `"use client"`, so a **server** component
- * importing `styles` from it gets Next's client-reference proxy rather than the
- * object. `styles.common` is `undefined` at prerender, and /_not-found and
- * /cards both died on it. Read the boundary, not the import graph.
+ * ── This reads the recipe. It used to copy it. ─────────────────────────────
  *
- * So it is copied — and `untitledButtonClasses.test.ts` asserts, character for
- * character, that the copy still equals the vendored source. That is this
- * repository's own answer to the same problem elsewhere: `gen-tokens.mjs
- * --check` fails the build when the generated stylesheet drifts from
- * `tokens.ts`. Not "please keep these in step", but "these cannot drift".
+ * Until 2026-08-21 the three class strings below were pasted out of
+ * `button.tsx` character for character, with a test asserting the copy had not
+ * drifted. The reason given was a real one: `button.tsx` is `"use client"`, so
+ * a **server** component importing `styles` from it gets Next's client-
+ * reference proxy rather than the object, `styles.common` is `undefined` at
+ * prerender, and /_not-found died on exactly that.
  *
- * The failure being avoided is written down in controlClasses.ts, whose header
- * records two definitions of one appearance with a comment admitting nothing
- * enforced the agreement. A copy with a test is a different thing from a copy
- * with a promise.
+ * But that was one file. Every other consumer was already a client component,
+ * where the import is ordinary. `app/not-found.tsx` renders `<Button>` now — a
+ * server component may *render* a client component, it just cannot read a value
+ * out of one — and with it gone the copy had no reason left to exist.
+ *
+ * So this file imports the recipe, `"use client"` states the constraint that
+ * makes that safe, and a copy that could drift is replaced by one that cannot.
+ * `untitledButtonClasses.test.ts` is deleted with it: it existed only to police
+ * the copy, and there is nothing left to police.
  */
 
-/** Copied from components/base/buttons/button.tsx — the test enforces it. */
-export const COMMON =
-  "group relative inline-flex h-max cursor-pointer items-center justify-center whitespace-nowrap outline-brand transition duration-100 ease-linear before:absolute focus-visible:outline-2 focus-visible:outline-offset-2 " +
-  "in-data-input-wrapper:shadow-xs in-data-input-wrapper:focus:!z-50 in-data-input-wrapper:in-data-leading:-mr-px in-data-input-wrapper:in-data-leading:rounded-r-none in-data-input-wrapper:in-data-leading:before:rounded-r-none in-data-input-wrapper:in-data-trailing:-ml-px in-data-input-wrapper:in-data-trailing:rounded-l-none in-data-input-wrapper:in-data-trailing:before:rounded-l-none " +
-  "disabled:cursor-not-allowed disabled:opacity-50 in-data-input-wrapper:disabled:opacity-100 " +
-  "*:data-icon:pointer-events-none *:data-icon:size-5 *:data-icon:shrink-0 *:data-icon:transition-inherit-all";
+type Color = keyof typeof styles.colors;
+type Size = keyof typeof styles.sizes;
 
-export const SIZES = {
-  sm: "gap-1 rounded-lg px-3 py-2 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2 in-data-input-wrapper:px-3.5 in-data-input-wrapper:py-2.5 in-data-input-wrapper:data-icon-only:p-2.5",
-  md: "gap-1 rounded-lg px-3.5 py-2.5 text-sm font-semibold before:rounded-[7px] data-icon-only:p-2.5 in-data-input-wrapper:gap-1.5 in-data-input-wrapper:px-4 in-data-input-wrapper:text-md in-data-input-wrapper:data-icon-only:p-3",
-  lg: "gap-1.5 rounded-lg px-4 py-2.5 text-md font-semibold before:rounded-[7px] data-icon-only:p-3",
-  xl: "gap-1.5 rounded-lg px-4.5 py-3 text-md font-semibold before:rounded-[7px] data-icon-only:p-3.5",
-} as const;
-
-export const COLORS = {
-  primary:
-    "bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover data-loading:bg-brand-solid_hover " +
-    "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0% " +
-    "*:data-icon:text-white/60 hover:*:data-icon:text-white/70",
-  secondary:
-    "bg-primary text-secondary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset hover:bg-primary_hover hover:text-secondary_hover data-loading:bg-primary_hover " +
-    "*:data-icon:text-fg-quaternary hover:*:data-icon:text-fg-quaternary_hover",
-  tertiary:
-    "text-tertiary hover:bg-primary_hover hover:text-tertiary_hover data-loading:bg-primary_hover " +
-    "*:data-icon:text-fg-quaternary hover:*:data-icon:text-fg-quaternary_hover",
-  "primary-destructive":
-    "bg-error-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent outline-error ring-inset hover:bg-error-solid_hover data-loading:bg-error-solid_hover " +
-    "before:absolute before:inset-px before:border before:border-white/12 before:mask-b-from-0% " +
-    "*:data-icon:text-white/60 hover:*:data-icon:text-white/70",
-} as const;
+/**
+ * `no-underline` because the component sets it from a prop, and a bare class
+ * string has no prop. Every consumer here is a link, a summary or a label.
+ */
 export function untitledButton({
   color = "secondary",
   size = "md",
   className = "",
-}: {
-  color?: keyof typeof COLORS;
-  size?: keyof typeof SIZES;
-  className?: string;
-} = {}) {
+}: { color?: Color; size?: Size; className?: string } = {}) {
   return cx(
-    COMMON,
-    SIZES[size],
-    COLORS[color],
-    // The component sets this from a prop; a bare class string has no prop, and
-    // every consumer here is either a link, a summary or a label.
+    styles.common.root,
+    styles.sizes[size].root,
+    styles.colors[color].root,
     "no-underline",
     className,
   );
@@ -95,14 +76,6 @@ export function untitledIconButton({
   color = "secondary",
   size = "md",
   className = "",
-}: {
-  color?: keyof typeof COLORS;
-  size?: keyof typeof SIZES;
-  className?: string;
-} = {}) {
-  return untitledButton({
-    color,
-    size,
-    className: cx("aspect-square p-2.5", className),
-  });
+}: { color?: Color; size?: Size; className?: string } = {}) {
+  return untitledButton({ color, size, className: cx("aspect-square p-2.5", className) });
 }

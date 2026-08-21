@@ -105,21 +105,18 @@ for (const dir of ["components", "utils"]) {
     //    itself and fails `tsc --noEmit` on three lines.
     //
     //    ADR-0058 said three patches was the point to stop automating and start
-    //    reconsidering. This is the fourth, and it is a different kind: the
-    //    first three are disagreements with the generator's template, this is a
-    //    disagreement with the whole library's typing conventions. ADR-0062 has
-    //    the reasoning, and the answer is to exempt the vendored tree rather
-    //    than to keep patching files one at a time — a `@ts-nocheck` at the top
-    //    of a file this repository does not author is honest about who owns it.
-    if (
-      /^components\/(application|base|foundations)\//.test(file) &&
-      !after.startsWith("// @ts-nocheck")
-    ) {
-      //    Before "use client", not after: @ts-nocheck only counts in a comment
-      //    ahead of every statement, and a directive is a statement. A comment
-      //    may precede a directive, so both still apply.
-      after = "// @ts-nocheck — vendored, see ADR-0062\n" + after;
-    }
+    //    reconsidering. This one is gone again, and the reason is worth keeping.
+    //
+    //    It used to prepend `// @ts-nocheck — vendored, see ADR-0062` to every
+    //    file here, on the argument that a repository should not typecheck code
+    //    it does not author. True of this project's *own* flags and false of
+    //    everything else: @ts-nocheck silences a whole file, so it also hid two
+    //    faults that would each have thrown on first render (ADR-0066) and one
+    //    import of a package that is not a dependency (ADR-0070).
+    //
+    //    tsconfig.vendored.json replaces it: `strict` stays on, the four flags
+    //    this project adds on top come off, and the vendored trees are excluded
+    //    from the root project instead. Nothing to patch per file.
 
     // 4. The password reveal toggle is sized to its 16x16 icon, which
     //    Lighthouse flags as target-size — WCAG 2.2 AA (2.5.8) asks 24x24.

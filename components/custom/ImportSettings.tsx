@@ -12,7 +12,7 @@ import {
   SettingsSaid,
 } from "@/components/custom/SettingsPanel";
 
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
+import Button from "@/components/custom/Button";
 
 /**
  * Bringing a collection in from a spreadsheet.
@@ -129,14 +129,9 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           }}
         />
 
-        <button
-          className={untitledButton({ color: "secondary" })}
-          type="button"
-          disabled={!csv || busy === "csv"}
-          onClick={look}
-        >
+        <Button disabled={!csv || busy === "csv"} onClick={look}>
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
-        </button>
+        </Button>
       </SettingsPanel>
 
       {preview && (
@@ -168,14 +163,9 @@ export default function ImportSettings({ history }: { history: Run[] }) {
             ))}
           </ul>
 
-          <button
-            className={untitledButton({ color: "primary" })}
-            type="button"
-            disabled={busy === "commit"}
-            onClick={run}
-          >
+          <Button color="primary" disabled={busy === "commit"} onClick={run}>
             {busy === "commit" ? "Importing…" : "Import these"}
-          </button>
+          </Button>
         </SettingsPanel>
       )}
 

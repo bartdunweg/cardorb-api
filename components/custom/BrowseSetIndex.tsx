@@ -6,7 +6,6 @@ import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { InputBase } from "@/components/base/input/input";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useDeferredValue, useMemo, useState } from "react";
-import { Search } from "lucide-react";
 import { LOCALE } from "@/lib/core/config";
 import { norm } from "@/lib/core/util";
 import type { CatalogueSet } from "@/lib/core/ptcg-browse";
@@ -76,14 +75,14 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           right keyboard on iOS for free, which is the same reason the add
           dialog's box is one. */}
       {/* Untitled UI's `InputBase`, which carries the leading icon itself — the
-          absolutely-positioned `<Search>` and the `pl-10` that cleared it are
+          absolutely-positioned `<SearchLg>` and the `pl-10` that cleared it are
           both gone with it. This field was also the last one in the app still
           drawing its own hover shadow and its own focus border; theirs puts the
           focus ring on the wrapper, which is what every other field here now
           does. */}
       <div className="max-w-[420px]">
         <InputBase
-          icon={Search}
+          icon={SearchLg}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

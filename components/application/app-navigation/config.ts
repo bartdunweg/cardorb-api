@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0061
 import type { FC, ReactNode } from "react";
 
 export type NavItemType = {

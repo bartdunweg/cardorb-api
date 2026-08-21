@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0061
 "use client";
 
 import { type HTMLAttributes, type ReactNode } from "react";

@@ -51,6 +51,28 @@ export default defineConfig({
   retries: 0,
 
   /**
+   * A missing baseline is an error, not an invitation to write one.
+   *
+   * This is the single most important line in the file, and it is here because
+   * of what happened without it (ADR-0069). `visual/**\/*-snapshots/` is
+   * gitignored, so in a fresh workspace no baseline exists. Playwright's default
+   * is to *write* the missing one from the build under test and fail that test —
+   * which means the next run passes by comparing a build against pictures of
+   * itself. Three green runs, thirty-five screenshots, and no regression signal
+   * of any kind.
+   *
+   * With 'none' a missing baseline fails and stays missing, so the harness can
+   * only ever report a real comparison or an obvious absence — never a
+   * confident green built out of nothing. To create baselines deliberately,
+   * `npm run visual:baseline` still passes --update-snapshots, which overrides
+   * this.
+   *
+   * Generate them from the *reference commit*, not from your branch. ADR-0069
+   * has the worktree recipe.
+   */
+  updateSnapshots: "none",
+
+  /**
    * Two projects: one signs in, the other uses what it saved. Split because the
    * sign-in mints a one-time link and must happen once per run, not once per
    * screenshot — and because a public-only run is still useful when the service

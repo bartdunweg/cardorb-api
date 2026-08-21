@@ -212,13 +212,20 @@ describe("this file and the stylesheet it generates agree", () => {
     expect(expected.filter((name) => !theme.includes(`${name}:`))).toEqual([]);
   });
 
-  it("every alias points at the canonical name rather than copying its value", () => {
-    // An alias that holds a value is a second source, and a second source is
-    // the drift this file exists to prevent. Each has to be a var().
-    for (const name of Object.keys(text)) {
-      const value = css.match(new RegExp(`--fs-${kebab(name)}:\\s*([^;]+);`))?.[1]?.trim();
-      expect(value, `--fs-${kebab(name)}`).toBe(`var(--text-${kebab(name)})`);
-    }
+  it("emits no legacy aliases, because that migration is finished", () => {
+    // This used to assert the opposite — that every --fs-* alias existed and
+    // was a var() at the canonical name rather than a copy of its value, since
+    // an alias holding a value is a second source and a second source is the
+    // drift this file exists to prevent.
+    //
+    // Every one of those aliases has since lost its last reader, so ALIASES in
+    // scripts/gen-tokens.mjs is empty and the block it fed emits nothing. The
+    // generator's own comment always said an empty block was how the migration
+    // would report itself finished; this is the assertion that keeps it that
+    // way, so a re-added alias has to be a deliberate act rather than a
+    // leftover.
+    const aliases = [...css.matchAll(/--(?:fs|fw|lh)-[a-z-]+:/g)].map((m) => m[0]);
+    expect(aliases).toEqual([]);
   });
 });
 

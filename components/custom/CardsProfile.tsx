@@ -1,10 +1,10 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut01 } from "@untitledui/icons";
 import { useTheme } from "@/components/custom/ThemeProvider";
 import { FormNote } from "@/components/custom/FormField";
 import Segmented from "@/components/custom/Segmented";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
+import Button from "@/components/custom/Button";
 
 /**
  * Where the password is typed, and the only screen on /cards that is about the
@@ -49,14 +49,9 @@ export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
           thirty days pass. Adding a card writes a row to the same database the rest of this page
           reads.
         </FormNote>
-        <button
-          type="button"
-          className={untitledButton({ color: "secondary" })}
-          onClick={onSignOut}
-        >
-          <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
-          <span>Sign out</span>
-        </button>
+        <Button icon={LogOut01} iconPosition="left" onClick={onSignOut}>
+          Sign out
+        </Button>
       </section>
 
       {/* The site's own switch, spelled out. Everywhere else it is a circle

@@ -9,8 +9,7 @@ import {
   type CSSProperties,
   useEffect,
 } from "react";
-import { Search, X } from "lucide-react";
-import { FilterFunnel01, Inbox01 } from "@untitledui/icons";
+import { FilterFunnel01, Inbox01, SearchLg, XClose } from "@untitledui/icons";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { InputBase } from "@/components/base/input/input";
 import Card from "@/components/custom/Card";
@@ -54,7 +53,7 @@ import {
   onlyNarrowClassName,
   onlyWideClassName,
 } from "@/components/custom/cardsPageClasses";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
+import Button from "@/components/custom/Button";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
 function releasedIn(iso: string | null) {
@@ -1251,7 +1250,7 @@ export default function CardsView({
             >
               <InputBase
                 ref={searchRef}
-                icon={Search}
+                icon={SearchLg}
                 type="search"
                 value={query}
                 onChange={(e) => {
@@ -1277,7 +1276,7 @@ export default function CardsView({
                     rounded-full border-none bg-transparent p-0 text-fg-quaternary
                     transition-colors duration-100 ease-linear hover:text-fg-quaternary_hover"
                 >
-                  <X size={15} strokeWidth={1.75} />
+                  <XClose size={15} strokeWidth={1.75} />
                 </button>
               )}
             </div>
@@ -1372,13 +1371,9 @@ export default function CardsView({
             )}
 
             {active && (
-              <button
-                type="button"
-                className={untitledButton({ color: "tertiary", className: "h-10" })}
-                onClick={reset}
-              >
+              <Button color="tertiary" className="h-10" onClick={reset}>
                 Reset
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -1433,13 +1428,7 @@ export default function CardsView({
                     </EmptyState.Description>
                     {onAdd && (
                       <EmptyState.Footer className="mt-4">
-                        <button
-                          type="button"
-                          className={untitledButton({ color: "secondary" })}
-                          onClick={onAdd}
-                        >
-                          Add a card
-                        </button>
+                        <Button onClick={onAdd}>Add a card</Button>
                       </EmptyState.Footer>
                     )}
                   </>

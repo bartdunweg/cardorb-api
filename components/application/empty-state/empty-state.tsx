@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0062
 //
 // TRIMMED, and the reason is measured. Upstream this file also exports
 // Illustration, FileTypeIcon, AvatarRadius, AvatarRow and AvatarGrid, and

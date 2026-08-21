@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import { useSwipe } from "@/app/hooks/useSwipe";
 import { untitledIconButton } from "@/components/custom/untitledButtonClasses";
 

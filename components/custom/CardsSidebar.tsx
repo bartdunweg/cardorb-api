@@ -1,14 +1,13 @@
 "use client";
 
 import { cardsNavElsewhereClassName } from "@/components/custom/cardsPageClasses";
-import { Compass, Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide-react";
+import { Compass03, Heart, LayersThree01, LayoutAlt01, Plus, User01 } from "@untitledui/icons";
 import type { CardSet, ImageSize } from "@/lib/core/cards";
 import { LOCALE } from "@/lib/core/config";
 import Wordmark from "@/components/custom/Wordmark";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { possessive } from "@/lib/core/owner";
-import { untitledIconButton } from "@/components/custom/untitledButtonClasses";
-import { Button as AriaButton } from "react-aria-components";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 /**
@@ -179,13 +178,15 @@ export default function CardsSidebar({
           {/* Their Tooltip rather than `title=`, which only ever appears on
               hover — see the note at the same button in CardsTabBar.tsx. */}
           <Tooltip title="Add a card" placement="bottom">
-            <AriaButton
-              className={untitledIconButton({ color: "primary", className: "flex-none" })}
+            {/* Icon-only: their Button takes the icon as a slot and sizes it
+                itself, rather than a child drawn at a size chosen here. */}
+            <UntitledButton
+              color="primary"
+              className="flex-none"
+              iconLeading={Plus}
               onPress={onAdd}
               aria-label="Add a card"
-            >
-              <Plus size={18} strokeWidth={2} aria-hidden="true" />
-            </AriaButton>
+            />
           </Tooltip>
         </div>
       )}
@@ -212,7 +213,7 @@ export default function CardsSidebar({
                 name="Dashboard"
                 // An icon where the sets carry their logo, so the two rows sit
                 // on the same left edge as everything under them.
-                icon={LayoutDashboard}
+                icon={LayoutAlt01}
               />
             </li>
           )}
@@ -226,7 +227,7 @@ export default function CardsSidebar({
               onClick={() => onSelect("all")}
               name={collectionName}
               count={held}
-              icon={Layers}
+              icon={LayersThree01}
             />
           </li>
           {/* Only where there is one. An empty wishlist is a row that answers a
@@ -253,7 +254,7 @@ export default function CardsSidebar({
                 active={selected === "profile"}
                 onClick={() => onSelect("profile")}
                 name="Profile"
-                icon={UserRound}
+                icon={User01}
               />
             </li>
           )}
@@ -280,7 +281,7 @@ export default function CardsSidebar({
                 onClick={() => onSelect("sets")}
                 name="Sets"
                 count={sets.length}
-                icon={Layers}
+                icon={LayersThree01}
               />
             </li>
           ) : null}
@@ -297,7 +298,7 @@ export default function CardsSidebar({
                 active={selected === "browse"}
                 onClick={() => onSelect("browse")}
                 name="Browse"
-                icon={Compass}
+                icon={Compass03}
               />
             </li>
           )}

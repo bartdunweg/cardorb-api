@@ -149,22 +149,26 @@ for (const [prefix, scale] of SCALES) {
 }
 
 /**
- * The old names, kept alive as pointers.
+ * The old names, kept alive as pointers. **Empty, and that is the point.**
  *
  * Three scales had names off Tailwind's namespaces — `--fs-*`, `--fw-*`,
  * `--lh-*` — and several hundred call sites in `.tsx` and in the hand-written
- * sheets still say them. Renaming those in one commit is the big-bang that has
- * already been tried and reverted once in this repo (see controlClasses.ts).
+ * sheets still said them. Renaming those in one commit is the big-bang that had
+ * already been tried and reverted once in this repo (see controlClasses.ts), so
+ * each alias was a `var()` at the new name rather than a second copy of the
+ * value: the two could not drift, and an alias block that had emptied out was
+ * how this migration would report that it was finished.
  *
- * So an alias is a `var()` at the new name, never a second copy of the value.
- * The two cannot drift, and an alias block that has emptied out is how this
- * migration reports that it is finished.
+ * It is finished. The three entries emitted twenty aliases and every one of
+ * them ended with no reader — checked across `app/`, `components/` and `lib/`,
+ * where the only surviving mentions of `--fs-*`, `--fw-*` and `--lh-*` are
+ * inside comments describing this very migration.
+ *
+ * Left as an empty array rather than deleted along with the block below,
+ * because the mechanism is worth keeping for the next scale that has to be
+ * renamed without a big bang.
  */
-const ALIASES = [
-  ["--fs", "--text", text],
-  ["--fw", "--font-weight", fontWeight],
-  ["--lh", "--leading", leading],
-];
+const ALIASES = [];
 
 const aliasLines = ALIASES.flatMap(([old, current, scale]) =>
   Object.keys(scale).map((name) => `  ${old}-${kebab(name)}: var(${current}-${kebab(name)});`),
@@ -277,12 +281,17 @@ ${lines.join("\n")}
 :root {
 ${lines.join("\n")}
 
-  /* ── The old names, as pointers ──
-     Aliases, never copies: each is a var() at the canonical name above, so the
-     two cannot disagree. They exist so the call sites still written as
-     [font-size:var(--fs-small)] keep resolving while they are migrated to
-     text-small one portion at a time. When this block is empty the migration
-     is over, which is the only progress report it needs. */
+  /* ── The old names, as pointers — none left, and that is the report ──
+     Aliases, never copies: each was a var() at the canonical name above, so the
+     two could not disagree. They existed so that call sites still written in the
+     old font-size, font-weight and line-height names kept resolving while they
+     were migrated across one portion at a time. An empty block meant the
+     migration was over, which was the only progress report it needed.
+
+     It is empty. Deliberately not naming one of those old properties here even
+     as an example: lib/design/vars.test.ts reads every stylesheet for tokens
+     that resolve to nothing, and a var() written in a comment counts. See
+     ALIASES in scripts/gen-tokens.mjs. */
 ${aliasLines.join("\n")}
 }
 

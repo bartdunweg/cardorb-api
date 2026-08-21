@@ -346,12 +346,16 @@
     /* Accent: iOS system blue (the map pin). Brand-neutral and theme-stable,
      so it is intentionally not overridden in dark mode. */
   }
+  /* ─── DARK MODE: the argument, not the values ───
+     Every declaration that lived in a [data-theme="dark"] block here has
+     moved into lib/design/tokens.ts, which emits them as light-dark() pairs
+     in the generated theme. The rule that was left behind held nothing but
+     the reasoning below and emitted no CSS at all, so the selector is gone
+     and the reasoning is not. The measurements it cites are restated beside
+     the values themselves in tokens.ts; this is the long form. */
+  /* Surfaces */
 
-  /* ─── DARK MODE ─── */
-  [data-theme="dark"] {
-    /* Surfaces */
-
-    /* Text: the same three tiers, at the same distance from their surface that
+  /* Text: the same three tiers, at the same distance from their surface that
      light mode puts them at. Not an inversion, which is what these were and is
      why the hierarchy read flat and loud: measured on the card at 1440, light
      runs 18.56 / 5.64 / 4.66 and dark ran 16.45 / 10.25 / 7.08, so body copy
@@ -363,17 +367,17 @@
      dodge: light's #111111 is 18.56:1 and white on this card is 16.84:1, so the
      tier is already the quieter of the two and there is nothing above white to
      reach for. */ /* 5.62:1 on the card, light's is 5.64 */
-    /* Derived at 4.69 on the card and then raised, for exactly the reason the
+  /* Derived at 4.69 on the card and then raised, for exactly the reason the
      light tier one line up from here was: the card is not the lightest thing
      this lands on. The counts in the /cards rail sit on --glass-bg-solid, which
      is rgb(37,37,39), and #878787 measured 4.26 there and failed axe. This is
      the lightest grey that clears 4.5 on all three surfaces the tier touches:
      5.28 on the page, 5.01 on a card, 4.55 on the control glass. */
-    /* Backdrop, not text, so WCAG wants 3:1 of it and no more. 2.98:1 here and
+  /* Backdrop, not text, so WCAG wants 3:1 of it and no more. 2.98:1 here and
      2.98 in light, where #7a7a7a was 3.83 and the logos sat forward of the work
      they are meant to sit behind. */
 
-    /* The same four, turned over: a near-black ocean, land a step out of it, and
+  /* The same four, turned over: a near-black ocean, land a step out of it, and
      the visited countries in the page's dark-mode ink. The order is the design
      and it is unchanged; what moved is how far apart the rungs sit, because the
      turning-over had spread them. Against the page, light runs 1.01 / 1.22 /
@@ -409,26 +413,26 @@
      outside where the shading reaches: light puts the ocean 1.071 off its card
      and this had drifted to 1.139, which is the same step drawn at twice the
      size. It is 1.065 now. */
-    /* And the seam turned over with them: a step down off the light ink, at the
+  /* And the seam turned over with them: a step down off the light ink, at the
      same separation from it that #4a4a4a keeps from #1a1a1a. */
 
-    /* Borders */
-    /* Under active, not over it, which is the order light has run in all along:
+  /* Borders */
+  /* Under active, not over it, which is the order light has run in all along:
      0.14 against 0.16 there, and 0.18 against 0.16 here. Pointing at something
      drew a harder line than selecting it, so the two states argued about which
      was the stronger, and only in this theme. Nothing above --color-border is a
      mirror of light's, whose --color-border is an opaque #f0f0f0 rather than an
      alpha: the mechanisms differ, so only the rungs' order is comparable. */
-    /* Both a rung fainter than their light counterparts rather than louder, which
+  /* Both a rung fainter than their light counterparts rather than louder, which
      is the one direction nobody expects to find in a dark theme: on the card,
      light's dashes measure 1.41 and its marker 1.79, and these measured 1.19 and
      1.55. The marker still sits a step ahead of the dashes, which is what the
      note beside the light pair asks for. */
 
-    /* Buttons */
+  /* Buttons */
 
-    /* Brand / status (dark) */ /* 1.28:1 on the card, light's #e2e2e2 is 1.27 */
-    /* Does not go dark. The photograph was lit against a pale backdrop and the
+  /* Brand / status (dark) */ /* 1.28:1 on the card, light's #e2e2e2 is 1.27 */
+  /* Does not go dark. The photograph was lit against a pale backdrop and the
      shirt in it is black, so a dark disc would eat the shoulders and leave a
      head floating on the card. The pair steps down from light's instead, which
      takes the glare off the brightest thing on a #101010 page without touching
@@ -444,7 +448,7 @@
      than jumping to either of the old ends: at the top stop it would have been
      brighter than the ramp ever read, and at the bottom stop darker. */
 
-    /* Solid glass surface (dark): the panel glass at a higher alpha, which is
+  /* Solid glass surface (dark): the panel glass at a higher alpha, which is
      exactly the relationship light mode has (rgba(254,254,254) at .78 and .9).
      It was a darker colour instead, rgba(22,22,22), and that one difference
      turned the whole stack upside down: sampled at 1440 on home, a button read
@@ -454,10 +458,10 @@
      on. Same colour and more of it puts the button at rgb(34,34,37), 2.53 dL*
      above its card where it was 2.57 below. */
 
-    /* Tooltip chrome (dark: slightly lighter than light-mode value) */
+  /* Tooltip chrome (dark: slightly lighter than light-mode value) */
 
-    /* Glass panel surface (dark): border matches resume-image border (--color-border-subtle) */
-    /* The alpha is where this theme's depth is set, and the colour is shared with
+  /* Glass panel surface (dark): border matches resume-image border (--color-border-subtle) */
+  /* The alpha is where this theme's depth is set, and the colour is shared with
      --glass-bg-solid above so the two layers stay one material. Sampled at 1440
      on home against a page of rgb(24,24,24): this lands the card on rgb(29,29,30),
      2.56 dL* up. It sat at 1.56 and read as nothing, then at 3.58 and read as a
@@ -465,7 +469,7 @@
      its own step rather than sinking into the card. Light's card is 1.04 dL* off
      its page, which is the shape being copied, not the number: a step that small
      is invisible this far down the range. */
-    /* Hover, and dark mode needs its own answer rather than the light one.
+  /* Hover, and dark mode needs its own answer rather than the light one.
      .bento-card:hover lifts a card two ways, and on a #101010 page neither one
      arrives: --shadow-elevated is black on near-black, and the border going to
      --color-bg-surface is the border going to exactly the page colour, so the faint
@@ -486,7 +490,7 @@
      drew a rim you looked at instead of an edge that had woken up. The shadow
      stays, doing nothing on the flat page and still separating cards where they
      overlap. */
-    /* A control's edge, and its own step because --color-border at 0.08 was doing
+  /* A control's edge, and its own step because --color-border at 0.08 was doing
      two jobs badly. Scanned across the top of the "Show more" button at 1440:
      light draws its border 0.35 dL* off the button's own fill, which is to say
      not at all, and this drew it at 7.99, so in dark every button, chat option
@@ -495,7 +499,7 @@
      is the only thing this border is for. Not --color-border-subtle at 0.05,
      which measured 4.76 and is a panel's edge, not a control's. */
 
-    /* Layered depth (dark): no hairline ring, because the 1.5px glass border
+  /* Layered depth (dark): no hairline ring, because the 1.5px glass border
      already defines the edge, and a stacked ring reads as a thicker border.
 
      Every alpha here is the old one times 0.71, and that factor is measured
@@ -513,8 +517,8 @@
      a near-black page is nothing at all. That is true and it is why these are
      still five times light's alphas. It just does not follow that they should be
      seven times. */
-    /* Soft lift behind free-standing images (dark) */
-  }
+  /* Soft lift behind free-standing images (dark) */
+
   /* The two halves light-dark() cannot carry, and why they are here rather than
    folded in above.
    A light-dark() value is one colour with two answers. These six are not that:
@@ -524,16 +528,18 @@
    that is replaced rather than one that resolves.
    Which means they need saying twice — once for somebody who chose dark, and
    once for somebody who chose nothing and whose machine did. Everything above
-   gets the second case free from color-scheme; these do not. */
+   gets the second case free from color-scheme; these do not.
+
+   All six have since moved into lib/design/tokens.ts as well, so what is left
+   here is the pair of color-scheme declarations — which are not a value with
+   two answers either, and genuinely have to be a selector each. The
+   prefers-color-scheme block that stood beside them held an empty rule and is
+   gone; there is nothing left for it to say twice. */
   :root[data-theme="light"] {
     color-scheme: light;
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-    }
   }
 
   /* ── Responsive token steps ──

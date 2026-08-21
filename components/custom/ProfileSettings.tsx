@@ -18,7 +18,7 @@ import {
   SettingsSwitch,
   settingsLinkAnchorClassName,
 } from "@/components/custom/SettingsPanel";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
+import Button from "@/components/custom/Button";
 
 /**
  * The profile screen, and the switch that turns a whole feature on.
@@ -203,13 +203,9 @@ export default function ProfileSettings({
             {ownerLabel(initial)}&rsquo;s Pok&eacute;mon card collection&rdquo;. Empty means your
             username.
           </SettingsHint>
-          <button
-            className={untitledButton({ color: "secondary" })}
-            type="submit"
-            disabled={busy === "displayName"}
-          >
+          <Button type="submit" disabled={busy === "displayName"}>
             {busy === "displayName" ? "Saving…" : "Save"}
-          </button>
+          </Button>
           {saying.displayName && <SettingsSaid>{saying.displayName}</SettingsSaid>}
         </form>
       </SettingsPanel>
@@ -236,13 +232,12 @@ export default function ProfileSettings({
               see useUsernameCheck.ts. Always mounted so the live region
               announces its changes rather than its insertion. */}
           <SettingsSaid aria-live="polite">{says ?? ""}</SettingsSaid>
-          <button
-            className={untitledButton({ color: "secondary" })}
+          <Button
             type="submit"
             disabled={busy === "username" || !nameChanged || name.kind === "taken"}
           >
             {busy === "username" ? "Saving…" : "Save"}
-          </button>
+          </Button>
           {saying.username && <SettingsSaid>{saying.username}</SettingsSaid>}
         </form>
       </SettingsPanel>

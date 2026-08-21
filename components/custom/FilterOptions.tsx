@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "@untitledui/icons";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import type { Facet } from "@/components/custom/cards-fields";

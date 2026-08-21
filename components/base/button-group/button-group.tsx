@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0062
 "use client";
 
 import { type FC, type PropsWithChildren, type ReactNode, type RefAttributes, createContext, isValidElement, useContext } from "react";

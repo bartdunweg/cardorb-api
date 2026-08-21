@@ -677,32 +677,18 @@
   --z-sheet: 1010;
   --z-skip: 9999;
 
-  /* ── The old names, as pointers ──
-     Aliases, never copies: each is a var() at the canonical name above, so the
-     two cannot disagree. They exist so the call sites still written as
-     [font-size:var(--fs-small)] keep resolving while they are migrated to
-     text-small one portion at a time. When this block is empty the migration
-     is over, which is the only progress report it needs. */
-  --fs-display: var(--text-display);
-  --fs-h2: var(--text-h2);
-  --fs-card: var(--text-card);
-  --fs-sub: var(--text-sub);
-  --fs-body: var(--text-body);
-  --fs-body-s: var(--text-body-s);
-  --fs-body-l: var(--text-body-l);
-  --fs-small: var(--text-small);
-  --fs-eyebrow: var(--text-eyebrow);
-  --fs-control: var(--text-control);
-  --fs-control-label: var(--text-control-label);
-  --fs-tiny: var(--text-tiny);
-  --fw-regular: var(--font-weight-regular);
-  --fw-title: var(--font-weight-title);
-  --fw-eyebrow: var(--font-weight-eyebrow);
-  --fw-button: var(--font-weight-button);
-  --lh-tight: var(--leading-tight);
-  --lh-snug: var(--leading-snug);
-  --lh-normal: var(--leading-normal);
-  --lh-relaxed: var(--leading-relaxed);
+  /* ── The old names, as pointers — none left, and that is the report ──
+     Aliases, never copies: each was a var() at the canonical name above, so the
+     two could not disagree. They existed so that call sites still written in the
+     old font-size, font-weight and line-height names kept resolving while they
+     were migrated across one portion at a time. An empty block meant the
+     migration was over, which was the only progress report it needed.
+
+     It is empty. Deliberately not naming one of those old properties here even
+     as an example: lib/design/vars.test.ts reads every stylesheet for tokens
+     that resolve to nothing, and a var() written in a comment counts. See
+     ALIASES in scripts/gen-tokens.mjs. */
+
 }
 
 /* ── Untitled UI's dark mode, bridged to this app's ───────────────────────────

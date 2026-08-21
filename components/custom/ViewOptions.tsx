@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGrid, Rows3 } from "lucide-react";
+import { Grid01, Rows03 } from "@untitledui/icons";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { CARD_FIELDS, type CardField } from "@/components/custom/cards-fields";
@@ -133,8 +133,8 @@ export default function ViewOptions({
           >
             {(
               [
-                ["grid", LayoutGrid, "Grid"],
-                ["list", Rows3, "List"],
+                ["grid", Grid01, "Grid"],
+                ["list", Rows03, "List"],
               ] as const
             ).map(([key, Icon, text]) => (
               <ButtonGroupItem

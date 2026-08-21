@@ -2,6 +2,108 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## Standards refreshed to v0.22.0 (2026-08-21, `st-georges`)
+
+`/apply-standards` moved `CLAUDE.md`/`AGENTS.md` from v0.14.0 to v0.21.0, and a
+second run the same day to v0.22.0. Only the v0.21.0 step changed anything
+substantive: a reworded changelog row, and a new rule to read
+`references/skill-routing.md` before picking a skill, library or MCP. **v0.22.0
+is a marker-only move** — both regions are byte-identical to their templates, so
+whatever that release changed lives in the skills, not in these two files.
+
+`scripts/verify.sh` gained the two checks the standard carries and this repo had
+never had — `standards` (are we still on the current standard?) and
+`record numbers` (did two worktrees take the same number?). Neither can arrive on
+its own: `verify.sh` has no generated region.
+
+**`record numbers` ships with a baseline** of the twelve collisions already here,
+because adding it unmodified turns the gate permanently red on history that is
+immutable and deliberately left (ADR-0071). New collisions still fail — proved
+both ways. **The `standards` check's three `docs/` warnings are expected**
+(ADR-0053) and the block says not to act on them; do not run
+`migrate-memory.sh --apply`.
+
+Two MCP servers, `resend` and `supabase`, are registered but not signed in. That
+needs `/mcp` in an interactive session — the installer cannot open a browser.
+
+## The screenshot harness was not checking anything (2026-08-21, `st-georges`)
+
+**Read ADR-0069 before trusting a green `npm run visual`.** `visual/**/*-snapshots/`
+is gitignored, so in a fresh workspace the baselines do not exist; Playwright
+writes them from the build under test and fails, and the next run passes by
+comparing that build against pictures of itself. Three green runs, thirty-five
+screenshots, zero regression signal.
+
+Everything in the history below that claims screenshot verification should be
+read with that in mind. The claims may well be right; they are unevidenced,
+which this repository's own standard calls `not measured` rather than `pass`.
+
+To get a real signal, build the reference commit in a worktree and copy its
+baselines over — the exact recipe is in ADR-0069. Doing that here turned three
+meaningless greens into fifteen real differences. Also: **curl the server after
+the run, not just before.** It was killed mid-run three times, each time
+producing a convincing and entirely fictitious failure list.
+
+## The last two gaps are closed (2026-08-21, `st-georges`)
+
+An audit asked the question ADR-0066 had answered one layer too high — not "does
+every vendored component have a consumer" but "is anything still *painting*
+Untitled UI rather than using it". Two things were.
+
+- **Icons were two sets, and nothing recorded it** (ADR-0067). `lucide-react`
+  was in 25 authored files, `@untitledui/icons` in 3, and both shipped. One set
+  now; the dependency is removed. Two mappings were wrong first time and were
+  caught by screenshots, not review: `Settings2` is sliders and not a gear, and
+  **an identical name is not an identical icon** — lucide's `Compass` is
+  navigational, Untitled UI's plain `Compass` is a drafting compass.
+- **Ten buttons were the recipe, not the component** (ADR-0068). The wrapper
+  gained `type`, `disabled` and the destructive colours to take them; `type` is
+  the one that mattered, because without it a submit button fell through to the
+  plain-`<span>` branch and would have submitted nothing. `Tag.tsx` is deleted
+  for `Badge`, which makes card rows ~22px shorter. `FilterChips` deliberately
+  does **not** use `BadgeWithButton`: its cross is a 16px target where WCAG 2.2
+  asks 24, so their badge is used inside the existing full-chip button.
+
+`untitledButtonClasses.ts` is down to six consumers and its header lists all
+five reasons one is allowed. The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
+— every alias had lost its last reader — and the test asserts it stays that way.
+The raw-hex guard now walks `components/`, which is where the components went.
+
+**Still needs a human, signed in.** Unchanged from the entry below, and now also:
+the two corrected icons have been seen only at 1280 in a headless browser.
+
+### Then the setup itself was changed (ADR-0070)
+
+Asked whether a from-scratch build on Untitled UI would have looked like this.
+It would not, and four of the differences are applied:
+
+- **The button recipe is imported, not pasted.** The copy existed for exactly
+  one file — a server component cannot read a value out of a `"use client"`
+  module — so `app/not-found.tsx` renders `<Button>` and the copy, and the test
+  policing it, are gone. A server component may *render* a client component; it
+  just cannot import a value from one.
+- **Icons use their real Untitled UI names.** The aliases carried lucide's
+  vocabulary after lucide was removed. Renamed only in the syntactic slots an
+  icon occupies — `Search` appears 20 times in those files and 15 of them are
+  prose.
+- **Vendored code is typechecked** by `tsconfig.vendored.json` instead of 38
+  `@ts-nocheck` directives: `strict` stays on (turning it off invented four new
+  errors), the four flags this project adds come off. **It found a third real
+  fault immediately** — `nav-account-card.tsx` imported a package that is not a
+  dependency. `untitled-add.mjs` is back to three patches, ADR-0058's ceiling.
+- **A missing screenshot baseline now fails** (`updateSnapshots: "none"`) and
+  leaves nothing behind. Proved by deleting the directory: every test failed and
+  the directory was not recreated.
+
+**One criticism was withdrawn, and that is worth knowing:** the token generator
+is *not* over-built. `manifest.ts`, `themeColor` and the OG images read those
+values from TypeScript, which cannot read CSS, so a hand-written `@theme` block
+would mean writing every shared value twice. `gen-tokens --check` is what stops
+that drifting, and this repo already shipped the bug it prevents.
+
+**Named, not missed, still to do:** `CardsView.tsx` at 1,400+ lines; the legacy
+`/cards` route running beside the `(app)` shell; ~16 dead class names.
+
 ## Now
 
 **PR #102 is merged. The component worklist below it is finished too** — see
@@ -107,6 +209,12 @@ slot for a name. `AppSidebar` builds on `NavList` instead.
 `components/custom/` cannot be emptied. Nothing in it is dead — measured — and
 `CardItem`, `CardsView`, `TiltScan` and `Wordmark` have no Untitled UI
 counterpart. That directory is what it is for.
+
+**Two claims in this section are wrong, corrected 2026-08-21.** `AppSidebar`
+does *not* build on `NavList`: `NavList` has no consumer at all, and
+`AppSidebar` wraps the hand-written `CardsSidebar`. And there is no
+`app/components/` directory — it is `components/custom/`, as the line above
+this one says.
 
 ## The adoption is done (2026-08-21, workspace `ashgabat`)
 

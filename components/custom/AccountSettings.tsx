@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Button from "@/components/custom/Button";
 import {
   SettingsHint,
   SettingsInput,
@@ -11,7 +11,6 @@ import {
   SettingsPanels,
   SettingsSaid,
 } from "@/components/custom/SettingsPanel";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
 /**
  * The account: the address, the password, and the way out of this device.
@@ -86,13 +85,9 @@ export default function AccountSettings({ email }: { email: string }) {
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
           />
-          <button
-            className={untitledButton({ color: "secondary" })}
-            type="submit"
-            disabled={busy === "email" || !newEmail.trim()}
-          >
+          <Button type="submit" disabled={busy === "email" || !newEmail.trim()}>
             {busy === "email" ? "Sending…" : "Change address"}
-          </button>
+          </Button>
           {said.email && <SettingsSaid>{said.email}</SettingsSaid>}
         </form>
       </SettingsPanel>
@@ -102,22 +97,15 @@ export default function AccountSettings({ email }: { email: string }) {
         <SettingsHint>
           Setting a new one takes effect immediately and does not sign out your other devices.
         </SettingsHint>
-        <Link className={untitledButton({ color: "secondary" })} href="/settings/password">
-          Change password
-        </Link>
+        <Button href="/settings/password">Change password</Button>
       </SettingsPanel>
 
       <SettingsPanel>
         <SettingsPanelTitle>Sign out</SettingsPanelTitle>
         <SettingsHint>On this device only.</SettingsHint>
-        <button
-          className={untitledButton({ color: "secondary" })}
-          type="button"
-          onClick={signOut}
-          disabled={busy === "signout"}
-        >
+        <Button onClick={signOut} disabled={busy === "signout"}>
           {busy === "signout" ? "Signing out…" : "Sign out"}
-        </button>
+        </Button>
       </SettingsPanel>
 
       {/* Deleting used to be the fourth panel here. It is its own section at

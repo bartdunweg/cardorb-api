@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger } from "react-aria-components";
+import { Dialog as AriaDialog, DialogTrigger } from "react-aria-components";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
 import { cx } from "@/utils/cx";
 
 /**
@@ -58,12 +58,12 @@ export function MenuPopover({
 }) {
   return (
     <DialogTrigger onOpenChange={onToggle}>
-      <AriaButton className={untitledButton({ color: "secondary" })}>
+      <UntitledButton color="secondary">
         <span className="inline-flex items-center gap-2">
           {trigger}
           {badge}
         </span>
-      </AriaButton>
+      </UntitledButton>
 
       {/* `w-auto` because Untitled UI's popover is `w-62` for a menu of items
           and these are panels that size themselves. The max-width is the one

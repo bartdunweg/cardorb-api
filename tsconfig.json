@@ -34,5 +34,14 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "//": "The vendored Untitled UI trees are checked by tsconfig.vendored.json instead, which keeps `strict` but drops the four flags this project adds on top. See ADR-0070; do not fold them back in here.",
+  "exclude": [
+    "node_modules",
+    "components/application/**",
+    "components/base/**",
+    "components/foundations/**",
+    "components/shared-assets/**",
+    "hooks/**",
+    "utils/**"
+  ]
 }
