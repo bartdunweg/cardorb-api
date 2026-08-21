@@ -56,16 +56,30 @@ const cardAddLabelClassName =
   " text-secondary p-0 [float:none]";
 
 /**
- * The one big field this dialog opens on — taller and louder than the rest.
+ * Two functional overrides on the search field, and nothing about how big it is.
  *
- * The surface is Untitled UI's `InputBase` now; what is left here is only the
- * two ways this field is deliberately not like every other one: it is 56px
- * rather than 40, and it is set at `text-display-xs`. Their `lg` is as big as
- * their scale goes and it is smaller than both, so the emphasis has to be said
- * here or lost.
+ * It used to carry four more — `h-14` (56px), `text-display-xs` (24px),
+ * `font-bold`, and `rounded-2xl` on the wrapper — to make this field "taller and
+ * louder than the rest". That was a real intent, written down in place, and it
+ * still lost to the standing rule (FB-0013, FB-0015): Untitled UI wins unless
+ * the product identity or a measurement earns the exception, and wanting
+ * emphasis is neither. Their `lg` is `text-md` at 16px; this was rendering at 24.
+ *
+ * It also had a defect underneath the taste question. `inputClassName` styles
+ * the `<input>`, not the placeholder, so `text-display-xs font-bold` applied to
+ * whatever somebody *typed* — a card name entered at 24px bold, which nobody
+ * asked for. See FB-0018 and ADR-0077.
+ *
+ * What is left is the two things that are not styling:
+ *
+ * `pr-11` — room for the clear button, which is absolutely positioned outside
+ * `InputBase` because their trailing slot is for a tooltip or the invalid icon,
+ * not for an action. Without it the X sits on top of the text.
+ *
+ * `[&::-webkit-search-cancel-button]:hidden` — `type="search"` gives WebKit its
+ * own native clear button, which would sit beside ours and do the same thing.
  */
-const cardAddSearchInputClassName =
-  "h-14 pr-11 font-body text-display-xs font-bold [&::-webkit-search-cancel-button]:hidden";
+const cardAddSearchInputClassName = "pr-11 [&::-webkit-search-cancel-button]:hidden";
 
 const EMPTY: Draft = {
   name: "",
@@ -451,7 +465,6 @@ export default function CardAddDialog({
                   icon={SearchLg}
                   size="lg"
                   type="search"
-                  wrapperClassName="rounded-2xl"
                   inputClassName={cardAddSearchInputClassName}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}

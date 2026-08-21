@@ -1,0 +1,1 @@
+- The search box in "Add a card" is now the same size as every other field in the app. It was rendering at half again the size, and anything you typed into it came out oversized and bold.

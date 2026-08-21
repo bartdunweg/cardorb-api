@@ -51,6 +51,23 @@ const failed = [];
  */
 const LICENSE = process.env.UNTITLED_UI_LICENSE || "a423a3908b1eb27b41de1c28fdc149e6";
 
+/** Files already modified before the generator ran, so its own rewrites can be
+ *  told apart from work in progress. See the report at the bottom. */
+const dirtyBefore = new Set(gitDirty());
+
+function gitDirty() {
+  try {
+    return execFileSync("git", ["diff", "--name-only", "--", "components", "utils"], {
+      encoding: "utf8",
+    })
+      .split("\n")
+      .filter(Boolean);
+  } catch {
+    // Not a git checkout, or git is unavailable.
+    return [];
+  }
+}
+
 for (const name of names) {
   console.log(`\n  untitledui add ${name}`);
   try {
@@ -127,11 +144,67 @@ for (const dir of ["components", "utils"]) {
 $3`,
     );
 
+    // 5. The command menu's parseHotkeys.ts imports two types from
+    //    `react-hotkeys-hook/dist/types`, which is where they lived in v4. The
+    //    installed version is 5.x: its files are under
+    //    `packages/react-hotkeys-hook/dist/`, and it declares both types
+    //    *without* exporting them — so no path, internal or public, reaches
+    //    them. `tsc --noEmit` fails with TS2307 and the component is
+    //    unbuildable exactly as vendored.
+    //
+    //    The file is already a verbatim copy of the library's own source, so
+    //    copying the two type declarations it needs is the same kind of thing
+    //    and cannot break again when the package moves its files.
+    after = after.replace(
+      /^import type \{ Hotkey, KeyboardModifiers \} from "react-hotkeys-hook\/dist\/types";$/m,
+      `type KeyboardModifiers = {
+    alt?: boolean;
+    ctrl?: boolean;
+    meta?: boolean;
+    shift?: boolean;
+    mod?: boolean;
+    useKey?: boolean;
+};
+
+type Hotkey = KeyboardModifiers & {
+    keys?: readonly string[];
+    scopes?: string | readonly string[];
+    description?: string;
+    isSequence?: boolean;
+    hotkey: string;
+    metadata?: Record<string, unknown>;
+};`,
+    );
+
     if (after !== before) {
       writeFileSync(file, after);
       fixed.push(file);
     }
   }
+}
+
+/**
+ * What the generator touched that it was not asked to.
+ *
+ * `untitledui add` rewrites shared files it considers dependencies, and some of
+ * those have deliberate divergences from upstream. Adding `command-menu-users`
+ * silently reverted the trim on `application/empty-state`, putting back the
+ * `@untitledui/file-icons` import and the background-patterns barrel — 62 kB and
+ * 20.8 kB of gzipped SVG that were measured out on purpose.
+ *
+ * That cannot be auto-repaired: this script has no way to know which upstream
+ * differences are intentional. What it can do is refuse to let the revert be
+ * silent. Anything already tracked by git that came back changed is listed here
+ * so the diff gets read rather than committed.
+ */
+const touched = gitDirty().filter((f) => !dirtyBefore.has(f) && !fixed.includes(f));
+
+if (touched.length) {
+  console.log(
+    `\n  the generator also rewrote ${touched.length} file(s) that already existed:\n    ${touched.join("\n    ")}\n` +
+      "\n  READ THE DIFF. A deliberate divergence from upstream looks exactly like\n" +
+      "  an update here, and reverting one is silent. See ADR-0078.",
+  );
 }
 
 console.log(
