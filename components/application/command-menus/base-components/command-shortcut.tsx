@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { ArrowRight } from "@untitledui/icons";
+import { ArrowRight } from "@untitledui-pro/icons/line";
 import { cx } from "@/utils/cx";
 
 interface CommandShortcutProps {

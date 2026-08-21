@@ -15,7 +15,7 @@ import {
   Share01,
   TrendUp01,
   Wallet01,
-} from "@untitledui/icons";
+} from "@untitledui-pro/icons/line";
 import Card from "@/components/custom/Card";
 import MarketingFooter from "@/components/custom/MarketingFooter";
 import Navbar from "@/components/custom/Navbar";

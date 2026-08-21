@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut01 } from "@untitledui/icons";
+import { LogOut01 } from "@untitledui-pro/icons/line";
 import { useTheme } from "@/components/custom/ThemeProvider";
 import { FormNote } from "@/components/custom/FormField";
 import Segmented from "@/components/custom/Segmented";

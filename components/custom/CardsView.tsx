@@ -9,7 +9,7 @@ import {
   type CSSProperties,
   useEffect,
 } from "react";
-import { FilterFunnel01, Inbox01, SearchLg, XClose } from "@untitledui/icons";
+import { FilterFunnel01, Inbox01, SearchLg, XClose } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { InputBase } from "@/components/base/input/input";
 import Card from "@/components/custom/Card";

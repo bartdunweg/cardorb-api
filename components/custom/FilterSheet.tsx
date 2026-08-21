@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Plus } from "@untitledui/icons";
+import { Plus } from "@untitledui-pro/icons/line";
 import {
   Sheet,
   sheetApplyButtonClassName,

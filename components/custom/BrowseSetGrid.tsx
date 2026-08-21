@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useMemo, useState } from "react";
-import { Grid01, Plus } from "@untitledui/icons";
+import { Grid01, Plus } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import Segmented from "@/components/custom/Segmented";
 import { useCollection } from "@/app/(app)/CollectionContext";

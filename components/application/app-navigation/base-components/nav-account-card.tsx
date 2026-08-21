@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef } from "react";
 // failed to compile the moment anything checked this file, which until
 // tsconfig.vendored.json nothing did.
 import type { Placement } from "react-aria-components";
-import { BookOpen01, ChevronSelectorVertical, LogOut01, Plus, Settings01, User01 } from "@untitledui/icons";
+import { BookOpen01, ChevronSelectorVertical, LogOut01, Plus, Settings01, User01 } from "@untitledui-pro/icons/line";
 import { useFocusManager } from "react-aria";
 import type { DialogProps as AriaDialogProps } from "react-aria-components";
 import { Button as AriaButton, Dialog as AriaDialog, DialogTrigger as AriaDialogTrigger, Popover as AriaPopover } from "react-aria-components";

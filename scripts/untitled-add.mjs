@@ -43,13 +43,26 @@ const failed = [];
  * takes it directly — so `metrics`, `section-headers` and `table` install
  * without anybody signing in.
  *
- * From UNTITLED_UI_LICENSE if it is set, which is where it belongs; the fallback
- * is the key this repository's own MCP session returns, and it is not a secret
- * in any useful sense — the server prints it in plain text to anyone who asks
- * for a component. Kept here so the script works on a machine that has the MCP
- * configured and nothing else.
+ * From the environment, with no inline fallback any more.
+ *
+ * The fallback used to be the literal key, argued as "not a secret in any
+ * useful sense" because the MCP server prints it to anyone who asks. That was
+ * true of what it was then. It is now also the auth token for
+ * pkg.untitledui.com in .npmrc, so the same string is what buys access to a
+ * paid private registry — a credential, whatever the component CLI treats it
+ * as. It reads NPM_TOKEN too, because that is the name it already has in the
+ * environment and in Vercel. See ADR-0083.
  */
-const LICENSE = process.env.UNTITLED_UI_LICENSE || "a423a3908b1eb27b41de1c28fdc149e6";
+const LICENSE = process.env.UNTITLED_UI_LICENSE || process.env.NPM_TOKEN;
+
+if (names.length && !LICENSE) {
+  console.error(
+    "\n  No licence. Set UNTITLED_UI_LICENSE or NPM_TOKEN.\n" +
+      "  It is the same value as the token in .npmrc — take it from there,\n" +
+      "  or from untitledui.com. See ADR-0083 for why it is no longer inline.",
+  );
+  process.exit(1);
+}
 
 /** Files already modified before the generator ran, so its own rewrites can be
  *  told apart from work in progress. See the report at the bottom. */

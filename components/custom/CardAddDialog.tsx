@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SearchLg, XClose } from "@untitledui/icons";
+import { SearchLg, XClose } from "@untitledui-pro/icons/line";
 import Modal from "@/components/custom/Modal";
 import { MAX, type CardFields } from "@/lib/core/collection-row";
 import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/ptcg-search";

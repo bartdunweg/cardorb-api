@@ -1,6 +1,6 @@
 "use client";
 
-import { XClose } from "@untitledui/icons";
+import { XClose } from "@untitledui-pro/icons/line";
 import { BadgeWithIcon } from "@/components/base/badges/badges";
 import Button from "@/components/custom/Button";
 

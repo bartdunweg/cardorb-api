@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowLeft, ArrowUp, CornerDownLeft, Settings01 } from "@untitledui/icons";
+import { ArrowDown, ArrowLeft, ArrowUp, CornerDownLeft, Settings01 } from "@untitledui-pro/icons/line";
 import { Button } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
 import { CommandMenuNavigationIcon } from "./command-menu-navigation-icon";
