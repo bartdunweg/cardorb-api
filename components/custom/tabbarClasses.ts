@@ -39,9 +39,16 @@
  * a documented guarantee the way ascending sm:/md:/lg: order is.
  */
 
+// The gradient's opaque end has to be exactly what the route behind it paints,
+// or the scrim ends in a band rather than in the page. That is
+// pageCardsClassName's `bg-secondary`, so this reads --color-bg-secondary and
+// must keep tracking it if that constant ever moves. It used to read
+// --color-bg-grouped, a token from the pre-Untitled-UI palette that no surface
+// has been painted with since ADR-0061: #181818 fading over a #0a0a0a canvas,
+// which is the band this is written to avoid, visible on every dark-mode phone.
 export const tabbarFadeClassName =
   "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 h-36 z-[var(--z-tabbar)] pointer-events-none " +
-  "[background:linear-gradient(to_top,var(--color-bg-grouped)_20%,color-mix(in_srgb,var(--color-bg-grouped)_80%,transparent)_50%,color-mix(in_srgb,var(--color-bg-grouped)_0%,transparent)_100%)] " +
+  "[background:linear-gradient(to_top,var(--color-bg-secondary)_20%,color-mix(in_srgb,var(--color-bg-secondary)_80%,transparent)_50%,color-mix(in_srgb,var(--color-bg-secondary)_0%,transparent)_100%)] " +
   "[mask-image:linear-gradient(to_top,#000_60%,transparent_100%)] [backdrop-filter:blur(var(--blur-scrim-sm))] " +
   // The rail is back beside the cards above 1000px, so the bar and its scrim
   // have nothing left to do. `!` for the same reason the bar's own hide has it:

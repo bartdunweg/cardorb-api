@@ -55,82 +55,42 @@ export const colour = {
   labelTertiary: { light: "#737373", dark: "#8c8c8c" },
 
   /**
-   * A backdrop that carries information without being text — the set logos.
+   * The page. Painted on body, and what the browser chrome is tinted from.
    *
-   * WCAG asks 3:1 of a graphic like this and no more, and *no more* is half the
-   * requirement: raise it and it stops reading as a backdrop and starts
-   * competing with the content in front of it. #b0b0b0 measured 2.3:1 on the
-   * glass and failed; this clears three and still recedes.
+   * These are Untitled UI's `bg-secondary` written out in hex — neutral-50 and
+   * neutral-900 — because a <meta name="theme-color"> and a web manifest are
+   * not CSS and cannot read a variable. That is also why they have to be kept
+   * in step by hand: if the page's class changes, this changes.
+   *
+   * It said #ffffff / #181818 up to here, which was true when ADR-0024 made the
+   * light page white, and stopped being true when the Untitled UI adoption put
+   * html and body on `bg-secondary`. The gap was not cosmetic: Safari paints
+   * the rubber-band bands above and below the page from theme-color, so every
+   * screen had a seam at the top and bottom that the comment on
+   * `viewport.themeColor` had already warned about.
    */
-  labelQuaternary: { light: "#949494", dark: "#676767" },
-
-  /** The page. Painted on body, and what the browser chrome is tinted from. */
-  bgGrouped: { light: "#ffffff", dark: "#181818" },
-
-  /** A card. Equal to the page in light (cards read by border/shadow alone,
-   *  not colour), below the page in dark — Apple's relationship there still. */
-  bgSurface: { light: "#ffffff", dark: "#101010" },
+  bgGrouped: { light: "#fafafa", dark: "#171717" },
 
   /**
-   * The translucent card surface, before it is composited onto the page.
+   * A card, and everything else that stands above the page — the navbar, the
+   * rail, the tab-bar capsule. Untitled UI's `bg-primary`: white and
+   * neutral-950.
    *
-   * Kept as the raw value rather than as the result, because the result depends
-   * on what is behind it and the tests need to do that arithmetic themselves.
+   * Raised by colour in both themes now. ADR-0024 had flattened light to a
+   * white page and a white card, leaving cards to read by border and shadow
+   * alone; adopting Untitled UI's ramp gave light its step back, and dark keeps
+   * the card darker than the page it lies on.
    */
-  glass: { light: "rgba(254, 254, 254, 0.78)", dark: "rgba(37, 37, 40, 0.38)" },
+  bgSurface: { light: "#ffffff", dark: "#0a0a0a" },
 
-  /** The opaque control surface. The rail's counts land here, not on the card. */
+  /**
+   * The opaque control surface, and the last of the glass.
+   *
+   * One consumer left: Modal.tsx's `bg-glass-solid`. Its translucent sibling
+   * `glass` — the card fill — went with ADR-0090, along with the accent pair and
+   * the logo tier; the measurements that argued them are in that record.
+   */
   glassSolid: { light: "rgba(255, 255, 255, 0.9)", dark: "rgb(37, 37, 39)" },
-
-  /**
-   * The accent, for fills: a selected pill, a progress bar, a focus ring.
-   *
-   * iOS system blue, deliberately the same in both themes — it is the one
-   * colour that should not shift when the lights go out, because it is the only
-   * one carrying "this is the thing you chose".
-   *
-   * A graphic wants 3:1 and this clears it. It is **not** a text colour; see
-   * below.
-   */
-  tint: { light: "#007aff", dark: "#007aff" },
-
-  /**
-   * The accent as text: links, an active label.
-   *
-   * Split off from the fill because the fill fails AA as text and nothing in
-   * the codebase said so. #007aff measures 4.02:1 on white and 3.87:1 on the
-   * page — fine for a shape, not for a word. This is the darkened value that
-   * clears 4.5 on both, and in dark mode the system blue is already past the
-   * floor so it stays.
-   */
-  tintLabel: { light: "#0066cc", dark: "#007aff" },
-
-  /* ── On this pair, after the palette went purple (ADR-0061) ──────────────
-   *
-   * `tint` and `tintLabel` are no longer the app's accent. Untitled UI's brand
-   * ramp is, and these two are read only by what is left of the hand-written
-   * stylesheets. They stay until those do.
-   *
-   * The reasoning is kept because it is the general rule, not a fact about
-   * blue: a colour measured as a *graphic* (3:1) is not cleared for use under
-   * a *word* (4.5:1). That distinction put a 4.02:1 button on screen once
-   * (ADR-0058), and it is the check to run on any future palette — Untitled
-   * UI's purple happens to clear both, which is luck rather than diligence. */
-
-  /**
-   * Warning / destructive: the delete-account panel border and button — the
-   * only place in the app that uses a warning colour. Used to be a literal
-   * `#d7263d` written directly in app/styles/settings.css, with a comment
-   * arguing it belonged there rather than as a token "nothing else would
-   * use". Moved here once that literal moved into a .tsx file and
-   * sources.test.ts stopped allowing a hex outside this file — the argument
-   * for keeping it un-tokenised was about discoverability, not about the
-   * value being safe to duplicate.
-   *
-   * Same value in both themes, deliberately: like tint, a colour that means
-   * "this is destructive" should not soften when the lights go out.
-   */
-  danger: { light: "#d7263d", dark: "#d7263d" },
 } satisfies Record<string, ColourPair>;
 
 /**
@@ -313,12 +273,17 @@ export const controlPxRect = {
  *   Tailwind's default scale, step for step. `p-4` already *is* `--space-4`.
  *   Promoting it would generate a second name for utilities that exist, so the
  *   scale stays in CSS for the hand-written sheets and a className says `p-4`.
- * - **`--fs-label`.** The one omission that is a collision rather than a
- *   principle: it would have to be `--text-label`, and `--color-label` already
- *   owns the `text-label` class. Tailwind would resolve one of the two and say
- *   nothing, which is how a colour used in forty places silently becomes a font
- *   size. Nothing in this app reads `--fs-label` any more, so it stays in
- *   tokens.css unpromoted rather than being renamed into the scale.
+ * - **`--fs-label`.** Not omitted — *gone*, and the distinction matters because
+ *   this bullet claimed for months that it "stays in tokens.css unpromoted".
+ *   tokens.css does not exist and the variable is declared nowhere; the one
+ *   thing that wanted it, the wordmark, writes its clamp literally.
+ *
+ *   The reason it was never promoted is worth keeping even though the value is
+ *   not: it would have to be `--text-label`, and `--color-label` already owns
+ *   the `text-label` class. Tailwind resolves one of the two and says nothing,
+ *   which is how a colour used in forty places silently becomes a font size —
+ *   the same shape as ADR-0012 and the `rounded-lg` collision above. Check for
+ *   it before promoting any step into `@theme`.
  */
 
 /**
@@ -511,17 +476,24 @@ export const zIndex = {
    Untitled UI's own utilities. Removed with the three --shadow-* tokens that
    existed only to feed it. */
 
+/**
+ * The surfaces a text tier is actually read against, per theme.
+ *
+ * Three, not four: `glass` — the translucent card fill — left with ADR-0090,
+ * because no component had rendered it since ADR-0061 removed glass, and a tier
+ * measured against a surface nothing draws is a measurement of nothing. What is
+ * left is a surface each: the page, a card, and the one control still made of
+ * glass (Modal.tsx).
+ */
 export const surfaces = {
   light: {
     page: colour.bgGrouped.light,
     card: colour.bgSurface.light,
-    glass: { over: colour.bgGrouped.light, colour: colour.glass.light },
     control: { over: colour.bgGrouped.light, colour: colour.glassSolid.light },
   },
   dark: {
     page: colour.bgGrouped.dark,
     card: colour.bgSurface.dark,
-    glass: { over: colour.bgGrouped.dark, colour: colour.glass.dark },
     control: { over: colour.bgGrouped.dark, colour: colour.glassSolid.dark },
   },
 } as const;
