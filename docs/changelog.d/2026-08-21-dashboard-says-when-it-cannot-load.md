@@ -1,0 +1,1 @@
+- When the collection cannot be loaded, the dashboard now says so instead of showing "0 cards, €0" as though the collection were empty.

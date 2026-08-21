@@ -6,6 +6,10 @@ import type { ValueSnapshot } from "@/lib/core/value-snapshot";
 import { moversOf, type CardPricePoint } from "@/lib/core/movers";
 import { useCollection } from "@/app/(app)/CollectionContext";
 import CardsDashboard from "@/components/custom/CardsDashboard";
+import Card from "@/components/custom/Card";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { Inbox01 } from "@untitledui/icons";
+import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 
 /**
  * The dashboard's client half: it reads the collection out of the shell rather
@@ -27,12 +31,50 @@ export default function DashboardScreen({
   snapshots: ValueSnapshot[];
   prices: CardPricePoint[];
 }) {
-  const { sets } = useCollection();
+  const { sets, failed } = useCollection();
   const stats = useMemo(() => getCardsStats(sets), [sets]);
   // Here rather than on the server for the same reason the stats are: it is a
   // pure function of the collection this client already holds plus a few
   // hundred price rows, and computing it there would mean sending the answer
   // as well as the inputs.
   const movers = useMemo(() => moversOf(sets, prices), [sets, prices]);
+
+  /**
+   * A failed read is not an empty collection, and this screen used to say it was.
+   *
+   * `failed` was sitting in the context unread. When the collection could not be
+   * loaded, `sets` is `[]` — so `getCardsStats([])` returns zeroes and the
+   * dashboard drew "In the binder 0 · Wishlist 0 · Sets 0 · €0" as settled fact,
+   * with every card below it rendering nothing. Telling somebody they own no
+   * cards because a database call failed is the misleading kind of wrong: the
+   * numbers look authoritative and there is nothing on screen to doubt.
+   *
+   * The same sentence CardsView shows for the same condition, deliberately —
+   * one outage, one wording. CardsView reaches it through
+   * `emptyReason={failed ? "outage" : "nothing-yet"}` in CollectionScreen; this
+   * is that branch, for the screen that had no branch at all.
+   *
+   * The heading stays. It is the only place "Dashboard" is written on the page
+   * (the shell's own h1 is sr-only), so dropping it would leave the route
+   * nameless exactly when something has already gone wrong.
+   */
+  if (failed) {
+    return (
+      <div className="flex flex-col gap-8">
+        <h1 className={cardsMainTitleClassName}>Dashboard</h1>
+        <Card>
+          <EmptyState size="md" className="gap-2 py-4">
+            <EmptyState.Header>
+              <EmptyState.FeaturedIcon color="gray" icon={Inbox01} />
+            </EmptyState.Header>
+            <EmptyState.Description>
+              The collection is not available right now. It should be back shortly.
+            </EmptyState.Description>
+          </EmptyState>
+        </Card>
+      </div>
+    );
+  }
+
   return <CardsDashboard stats={stats} snapshots={snapshots} movers={movers} />;
 }
