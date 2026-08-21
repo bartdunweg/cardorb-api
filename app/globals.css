@@ -64,3 +64,21 @@
 @import "./styles/base.css" layer(legacy);
 @import "./styles/components.css" layer(legacy);
 @import "./styles/pages.css" layer(legacy);
+
+/* The screen that arrives, arriving.
+
+   Read by CardsSidebar and cardsMainClassName through
+   `[animation:cards-pane-in_...]`. Swapping the two panes and scrolling to the
+   top in the same frame reads as the page having reloaded; a short rise under
+   the incoming pane says it went somewhere instead. Only the one coming in —
+   the other is already gone by the time this runs.
+
+   Here rather than in a stylesheet of its own because cards.css, which held it,
+   no longer exists. A @keyframes is not component styling and there is nowhere
+   else for it to go. */
+@keyframes cards-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

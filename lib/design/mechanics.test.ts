@@ -27,11 +27,24 @@ import { readFileSync } from "node:fs";
 
 const read = (path: string) => readFileSync(path, "utf8");
 
+/**
+ * `app/styles/cards.css` is gone — every rule in it is a Tailwind class on the
+ * element that draws it now, and the two holo attachment rules moved to
+ * poke-holo.css where the effect lives.
+ *
+ * The assertions below were written against that file and are kept, because
+ * what they assert is still true and still worth holding: they just read the
+ * class strings instead. An empty string stands in where the stylesheet used
+ * to be, so a rule moving *back* into CSS would fail loudly rather than
+ * silently satisfying a regex.
+ */
+const CARDS_CSS = "";
+
 /** Whitespace-insensitive, so reformatting is not a failure. */
 const has = (css: string, pattern: RegExp) => pattern.test(css.replace(/\s+/g, " "));
 
 describe("the grid measures its own column, not the window", () => {
-  const css = read("app/styles/cards.css");
+  const css = CARDS_CSS;
 
   it("keeps container-type on .cards-main", () => {
     // Moved from cards.css's own rule to cardsPageClasses.ts's Tailwind
@@ -71,7 +84,7 @@ describe("paint containment does not slice the shadows off the scans", () => {
   // .cards-grid is a Tailwind class string in CardsView now, so both halves of
   // the pair are read from there. Kept as one assertion over both files so the
   // pair cannot be split by moving one half back.
-  const css = read("app/styles/cards.css") + "\n" + read("app/components/CardsView.tsx");
+  const css = CARDS_CSS + "\n" + read("app/components/CardsView.tsx");
 
   it("keeps content-visibility paired with the bleed it forced", () => {
     // content-visibility brings paint containment with it, and paint

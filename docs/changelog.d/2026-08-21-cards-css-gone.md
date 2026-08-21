@@ -1,0 +1,1 @@
+- The collection screens are drawn entirely from the shared design system now, with no stylesheet of their own.

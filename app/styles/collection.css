@@ -14,5 +14,4 @@
  * Tailwind class this migration adds to a cards.css-family component loses
  * to tokens.css's `*{margin:0;padding:0}` reset.
  */
-@import "./cards.css" layer(legacy);
 @import "./poke-holo.css" layer(legacy);
