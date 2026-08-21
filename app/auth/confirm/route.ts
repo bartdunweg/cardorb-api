@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { serverClient } from "../../../lib/storage/supabase";
 import { NO_DATABASE_CONFIGURED } from "../../../lib/api/guard";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import {
+  RECOVERY_MARKER,
+  RECOVERY_MARKER_MAX_AGE,
+  RECOVERY_MARKER_PATH,
+} from "../../../lib/api/recovery";
 
 /**
  * Where a link in an email lands.
@@ -20,6 +25,10 @@ import type { EmailOtpType } from "@supabase/supabase-js";
  * string, and following whatever it says would let an email — from anyone, to
  * anyone — bounce a freshly authenticated visitor off this domain while wearing
  * its name. Same rule as the login's, for the same reason.
+ *
+ * It also marks a recovery arrival on the way past, so that /settings/password
+ * can tell its two callers apart — see lib/api/recovery.ts for why that marker
+ * is safe to trust for what it is used for, and not for anything else.
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -45,5 +54,25 @@ export async function GET(req: Request) {
     return fail("That link has expired. Ask for a new one.");
   }
 
-  return NextResponse.redirect(new URL(next, req.url));
+  const onward = NextResponse.redirect(new URL(next, req.url));
+
+  // Set on the response rather than through serverClient()'s cookie jar, which
+  // is @supabase/ssr's and carries the session. This is ours and is not a
+  // credential; keeping the two apart means nothing here can disturb the tokens
+  // verifyOtp just wrote.
+  //
+  // Scoped to the one path that reads it, so it is not attached to any other
+  // request. httpOnly because no client code needs it — the page reads it on the
+  // server and passes a boolean down.
+  if (type === "recovery") {
+    onward.cookies.set(RECOVERY_MARKER, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: RECOVERY_MARKER_PATH,
+      maxAge: RECOVERY_MARKER_MAX_AGE,
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
+  return onward;
 }

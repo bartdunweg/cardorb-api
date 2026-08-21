@@ -50,16 +50,25 @@ older 595.7 figure came from a different method — compare like with like).
 
 ### Not fixed, and the reasons differ
 
-- **`secure_password_change = false`** (`supabase/config.toml:259`) — the most
+- ~~**`secure_password_change = false`** (`supabase/config.toml:259`) — the most
   severe finding of the whole sweep. `app/api/v1/password/route.ts` says in its
   own docstring that it has no current-password field *because* Supabase's
   setting applies the rule properly. That setting is off, so **nothing anywhere
   asks for the current password**: a borrowed unlocked session can change the
   password, which signs the real owner out of their own account, and chain into
-  `/api/v1/email` and then `DELETE /api/v1/account`. Not fixed here because
-  `config.toml` governs the local stack while the hosted project's Auth settings
-  live in the dashboard and can differ — it is a production decision, and it is
-  with the owner.
+  `/api/v1/email` and then `DELETE /api/v1/account`.~~ **Fixed in code, ADR-0082,
+  and it never needed the setting.** `current_password` is a parameter on
+  `updateUser`, so the app sends it on the signed-in path and not on the recovery
+  path, and recovery is untouched by construction. Verified live against a real
+  recovery link and a real magic link: the field appears for a deliberate visit
+  and for a magic-link arrival, and only a `type=recovery` arrival hides it.
+  **`secure_password_change` was the wrong setting anyway** — it is *"require
+  reauthentication"* and counts a session as recent for 24 hours, so against a
+  borrowed unlocked browser it did approximately nothing.
+  **Still with the owner, and now genuinely optional:** turning on *Require
+  reauthentication* in the hosted dashboard. It is free and covers sessions older
+  than 24 hours. *Require current password* should stay off — the app sends the
+  parameter itself, and turning it on would demand it from the recovery half too.
 ### Performance: one fixed and measured, one attempted and honest, two open
 
 - **Fixed: `recharts` no longer ships to five routes that draw no chart.**

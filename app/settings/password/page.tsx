@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import PasswordForm from "@/components/custom/PasswordForm";
 import SigninShell from "@/components/custom/SigninShell";
 import { FormNote } from "@/components/custom/FormField";
 import { currentViewer } from "../../../lib/api/viewer";
+import { RECOVERY_MARKER } from "../../../lib/api/recovery";
 
 /**
  * Setting a new password.
@@ -24,10 +26,24 @@ export default async function SetPassword() {
   const viewer = await currentViewer();
   if (!viewer) redirect("/login?error=That+link+has+expired.+Ask+for+a+new+one.");
 
+  /**
+   * Which of the two callers this is. /auth/confirm sets the marker when it
+   * exchanges a `type=recovery` token, and only then — so its absence means
+   * somebody signed in walked here deliberately, and can be asked for the
+   * password they already have.
+   *
+   * Absence is the branch that asks for more, which is the safe way round: a
+   * marker that fails to arrive shows a field somebody can fill, where a marker
+   * wrongly present would hide one. See ADR-0082 for why forging it gains
+   * nothing — Supabase enforces the requirement from the parameter, not from
+   * this.
+   */
+  const viaRecovery = (await cookies()).has(RECOVERY_MARKER);
+
   return (
     <SigninShell title="Set a new password">
       <FormNote>Signed in as {viewer.email}.</FormNote>
-      <PasswordForm />
+      <PasswordForm viaRecovery={viaRecovery} />
     </SigninShell>
   );
 }
