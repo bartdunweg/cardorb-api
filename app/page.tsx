@@ -105,7 +105,7 @@ const FAQ = [
         goes with it, straight away. The{" "}
         <Link
           href="/privacy"
-          className="text-primary underline underline-offset-2 [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-secondary"
+          className="text-primary underline underline-offset-2 [transition:color_150ms_var(--ease-smooth)] hover:text-secondary"
         >
           privacy policy
         </Link>{" "}
@@ -252,7 +252,7 @@ export default async function Home() {
             className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
             border border-[var(--color-border-subtle)] text-tertiary no-underline
             [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
-            [transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-primary"
+            [transition:color_150ms_var(--ease-smooth)] hover:text-primary"
           >
             <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
             The iPhone app is on its way
@@ -429,7 +429,7 @@ export default async function Home() {
           className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
           max-w-[1040px] [padding:clamp(var(--space-8),7vw,88px)] rounded-orb-lg bg-[color-mix(in_srgb,var(--color-label)_4%,transparent)]
           [@media(max-width:800px)]:grid-cols-1
-          [@media(max-width:640px)]:mx-[calc(-1*var(--space-2))] [@media(max-width:640px)]:p-6"
+          [@media(max-width:640px)]:-mx-2 [@media(max-width:640px)]:p-6"
           aria-labelledby="share-title"
         >
           <div>

@@ -20,7 +20,7 @@ export const modalCardClassName =
   "rounded-orb-lg p-0 overflow-hidden shadow-2xl " +
   "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
   "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
-  "[&_.modal-scroll]:[padding:var(--space-10)_var(--card-pad)_var(--card-pad)] " +
+  "[&_.modal-scroll]:pt-10 px-[var(--card-pad)] pb-[var(--card-pad)] " +
   // `!`, not because two rules disagree but because nothing guarantees which
   // wins. CardDetail carries `mt-6` on the element and this cancels it from the
   // ancestor; both are utilities, so the order Tailwind emits them decides, and
@@ -46,7 +46,7 @@ export const modalCardAddClassName =
   "rounded-orb-lg p-0 overflow-hidden shadow-2xl " +
   "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
   "[&_.modal-scroll]:max-h-[calc(100svh-2*var(--space-6))] " +
-  "[&_.modal-scroll]:[padding:var(--space-10)_var(--card-pad)_var(--card-pad)] " +
+  "[&_.modal-scroll]:pt-10 px-[var(--card-pad)] pb-[var(--card-pad)] " +
 
   "[@media(max-width:640px)]:w-full [@media(max-width:640px)]:max-h-[92svh] " +
   // The scroll box gets the same cap as the sheet around it. Was its own 640px

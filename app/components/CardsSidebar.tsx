@@ -128,14 +128,14 @@ export default function CardsSidebar({
        * never both, so no unconditional utility can beat a conditional one —
        * the ADR-0012/ADR-0017 rule this file's old comment was written for.
        */
-      className="cards-rail peer group/rail flex flex-col gap-5 [padding:var(--space-4)_var(--space-3)]
+      className="cards-rail peer group/rail flex flex-col gap-5 px-3 py-4
         bg-primary [backdrop-filter:blur(var(--blur-glass-card))]
         sticky top-0 h-[100dvh] overflow-y-auto border-r border-[var(--color-border-subtle)]
         [@media(max-width:1000px)]:static [@media(max-width:1000px)]:h-auto
         [@media(max-width:1000px)]:overflow-visible [@media(max-width:1000px)]:border-r-0
         [@media(max-width:1000px)]:[box-shadow:none]
         [@media(max-width:1000px)]:not-data-[pane=rail]:!hidden
-        [@media(max-width:1000px)]:data-[pane=rail]:[animation:cards-pane-in_var(--dur-normal)_var(--ease-out)]
+        [@media(max-width:1000px)]:data-[pane=rail]:[animation:cards-pane-in_200ms_var(--ease-out)]
         motion-reduce:animate-none"
       data-pane={pane}
     >
@@ -171,7 +171,7 @@ export default function CardsSidebar({
           Below 1000px this whole head is gone. The bar along the bottom carries
           the plus. */}
       {signedIn && (
-        <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
+        <div className="flex items-center justify-between gap-2 pt-0 px-4 pb-4 [@media(max-width:1000px)]:hidden">
           <Wordmark href="/" />
           <button
             type="button"
@@ -318,7 +318,7 @@ export default function CardsSidebar({
                     further down the rail. */}
                 <button
                   type="button"
-                  className={`sticky top-0 z-[1] w-full [margin:var(--space-4)_0_var(--space-1)] [padding:var(--space-1)_var(--space-2)]
+                  className={`sticky top-0 z-[1] w-full mt-4 mb-1 mx-0 px-2 py-1
                     border-0 rounded-orb-sm bg-primary text-left cursor-pointer [font-family:var(--font-body)]
                     [font-size:var(--fs-small)] [font-weight:var(--fw-title)] text-tertiary
                     hover:text-primary first:mt-0

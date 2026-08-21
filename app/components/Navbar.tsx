@@ -21,7 +21,7 @@ import Wordmark from "./Wordmark";
 export default function Navbar({ center, right }: { center?: ReactNode; right?: ReactNode }) {
   return (
     <nav
-      className="sticky top-0 z-[var(--z-sticky)] w-full [padding:var(--space-4)_var(--page-pad-x)]
+      className="sticky top-0 z-[var(--z-sticky)] w-full py-4 px-[var(--page-pad-x)]
         bg-primary [backdrop-filter:blur(16px)] border-b border-[var(--color-border-subtle)]"
       aria-label="Primary navigation"
     >

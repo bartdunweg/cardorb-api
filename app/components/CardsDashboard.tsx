@@ -105,18 +105,18 @@ export default function CardsDashboard({
           >
             <thead>
               <tr>
-                <th scope="col" className="[padding:0_var(--space-3)_var(--space-2)_0]">
+                <th scope="col" className="pt-0 pr-3 pb-2 pl-0">
                   Card
                 </th>
                 <th
                   scope="col"
-                  className="[padding:0_var(--space-3)_var(--space-2)_0] [@media(max-width:640px)]:hidden"
+                  className="pt-0 pr-3 pb-2 pl-0 [@media(max-width:640px)]:hidden"
                 >
                   Set
                 </th>
                 <th
                   scope="col"
-                  className="[padding:0_var(--space-3)_var(--space-2)_0] text-right
+                  className="pt-0 pr-3 pb-2 pl-0 text-right
                     tabular-nums whitespace-nowrap"
                 >
                   Value
@@ -127,7 +127,7 @@ export default function CardsDashboard({
               {stats.top.map(({ card, set }) => (
                 <tr key={card.key}>
                   <td
-                    className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0]
+                    className="pt-2 pr-3 pb-2 pl-0
                       flex items-center gap-3"
                   >
                     {/* The scan, small. A list of the priciest cards is a list of
@@ -168,13 +168,13 @@ export default function CardsDashboard({
                     )}
                   </td>
                   <td
-                    className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0]
+                    className="pt-2 pr-3 pb-2 pl-0
                       [@media(max-width:640px)]:hidden"
                   >
                     {set}
                   </td>
                   <td
-                    className="[padding:var(--space-2)_var(--space-3)_var(--space-2)_0] text-right
+                    className="pt-2 pr-3 pb-2 pl-0 text-right
                       tabular-nums whitespace-nowrap"
                   >
                     {euro(shownPrice(card.price) ?? 0)}

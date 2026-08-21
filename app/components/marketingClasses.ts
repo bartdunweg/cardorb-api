@@ -47,4 +47,4 @@ export const cardBody =
  */
 export const navLink =
   "text-secondary [font-family:var(--font-body)] [font-size:var(--fs-small)] no-underline " +
-  "[transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-primary";
+  "[transition:color_150ms_var(--ease-smooth)] hover:text-primary";

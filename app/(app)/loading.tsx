@@ -87,7 +87,7 @@ export default function Loading() {
       <h1 className="sr-only">{APP_NAME}</h1>
 
       <div
-        className="cards-rail gap-5 [padding:var(--space-4)_var(--space-3)]
+        className="cards-rail gap-5 px-3 py-4
           bg-primary [backdrop-filter:blur(var(--blur-glass-card))]"
         aria-hidden="true"
       >
@@ -105,7 +105,7 @@ export default function Loading() {
             `href`, so it is not pressable — there is nothing to navigate to yet.
             The add button beside it is an outline, because it is a control and
             drawing a dead one invites the press it cannot answer. */}
-        <div className="flex items-center justify-between gap-2 [padding:0_var(--space-4)_var(--space-4)] [@media(max-width:1000px)]:hidden">
+        <div className="flex items-center justify-between gap-2 pt-0 px-4 pb-4 [@media(max-width:1000px)]:hidden">
           <Wordmark />
           <span
             className={`${skeletonClassName} flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full`}

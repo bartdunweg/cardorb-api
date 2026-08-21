@@ -32,7 +32,7 @@ export default function ViewerPill({
       className="inline-flex items-center gap-2 min-w-0 pl-1 pr-3 py-1 rounded-full
         border border-[var(--color-border)] text-primary no-underline whitespace-nowrap
         overflow-hidden text-ellipsis [font-family:var(--font-body)] [font-size:var(--fs-small)]
-        [transition:border-color_var(--dur-fast)_var(--ease-smooth)]
+        [transition:border-color_150ms_var(--ease-smooth)]
         hover:border-[var(--color-border-hover)]"
     >
       {avatarUrl ? (

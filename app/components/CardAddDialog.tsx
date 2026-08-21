@@ -781,7 +781,7 @@ export default function CardAddDialog({
                 submit is announced whichever way it went, and neither pushes
                 the form around when it arrives. */}
             <p
-              className="col-span-full min-h-[var(--space-5)] m-0 [font-family:var(--font-body)]
+              className="col-span-full min-h-5 m-0 [font-family:var(--font-body)]
                 [font-size:var(--fs-small)] text-secondary"
               role="status"
             >

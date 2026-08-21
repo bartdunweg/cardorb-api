@@ -188,7 +188,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
     " after:content-[''] after:absolute after:inset-0 after:z-0 after:rounded-orb-md" +
     " after:bg-primary after:border after:border-secondary after:shadow-[var(--shadow-card)]" +
     " after:opacity-0 after:scale-[0.98] after:pointer-events-none" +
-    " after:transition-[opacity,transform] after:duration-[var(--dur-fast)] after:ease-[var(--ease-smooth)]" +
+    " after:transition-[opacity,transform] after:duration-[150ms] after:ease-[var(--ease-smooth)]" +
     " hover:after:opacity-100 hover:after:scale-100" +
     " focus-visible:after:opacity-100 focus-visible:after:scale-100";
 
@@ -236,6 +236,6 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
 const cardsDexStepClassName =
   "absolute top-[calc(var(--space-2)+33%)] flex items-center justify-center w-6 h-6 p-0" +
   " border border-[var(--color-border)] rounded-full bg-primary text-secondary" +
-  " cursor-pointer opacity-0 transition-opacity duration-[var(--dur-fast)] ease-[var(--ease-smooth)] z-2" +
+  " cursor-pointer opacity-0 transition-opacity duration-[150ms] ease-[var(--ease-smooth)] z-2" +
   " group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100" +
   " hover:text-primary hover:border-[var(--color-border-active)]";

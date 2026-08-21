@@ -128,7 +128,7 @@ export default function RootLayout({
         <ThemeProvider>
           <a
             href="#main-content"
-            className="absolute -top-full left-4 [padding:var(--space-2)_var(--space-4)]
+            className="absolute -top-full left-4 px-4 py-2
               bg-label text-bg-surface rounded-orb-sm [font-size:var(--fs-small)]
               [z-index:var(--z-skip)] no-underline focus:top-4"
           >

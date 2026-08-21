@@ -78,7 +78,7 @@ export function Sheet({
             indicator. */}
         <div
           className="flex gap-2 border-t border-[var(--color-border)]
-            [padding:var(--space-3)_var(--space-4)_calc(var(--space-4)+env(safe-area-inset-bottom,0px))]"
+            pt-3 px-4 [padding-bottom:calc(var(--spacing)*4+env(safe-area-inset-bottom,0px))]"
         >
           {footer}
         </div>

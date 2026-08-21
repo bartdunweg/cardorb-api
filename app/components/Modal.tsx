@@ -347,7 +347,7 @@ export default function Modal({
           className={untitledIconButton({
             color: "secondary",
             className: `modal-close absolute top-6 right-6 z-10 cursor-pointer
-              [transition:transform_var(--dur-fast)_var(--ease-in-out),color_var(--dur-fast)_var(--ease-in-out),box-shadow_var(--dur-fast)_var(--ease-in-out)]
+              [transition:transform_150ms_var(--ease-in-out),color_150ms_var(--ease-in-out),box-shadow_150ms_var(--ease-in-out)]
               hover:scale-[1.06]`,
           })}
           onClick={requestClose}

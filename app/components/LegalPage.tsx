@@ -81,7 +81,7 @@ export const legal = {
     "[font-size:var(--fs-body-l)] [line-height:var(--lh-relaxed)]",
   link:
     "text-primary underline underline-offset-2 " +
-    "[transition:color_var(--dur-fast)_var(--ease-smooth)] hover:text-secondary",
+    "[transition:color_150ms_var(--ease-smooth)] hover:text-secondary",
   /** Emphasis inside body text, which is otherwise --color-label-secondary. */
   strong: "text-primary",
 };
@@ -90,4 +90,4 @@ export const legal = {
 // lists on the landing page do it: a `display: grid` <ul> blockifies its <li>
 // children, and a blockified list item is not `display: list-item`, so the
 // markers these lists actually want would silently disappear.
-export const legalList = `${legal.body} list-disc [padding-inline-start:var(--space-6)] [&>li]:mb-2 [&>li:last-child]:mb-0`;
+export const legalList = `${legal.body} list-disc ps-6 [&>li]:mb-2 [&>li:last-child]:mb-0`;

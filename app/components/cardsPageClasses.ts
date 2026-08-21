@@ -49,10 +49,15 @@ export const cardsMainClassName =
      display utilities, and the order Tailwind emits them is not a promise. The
      same fix as ADR-0012's and the card body's. */
   "[@media(max-width:1000px)]:peer-data-[pane=rail]:!hidden " +
-  "[@media(max-width:1000px)]:peer-data-[pane=main]:[animation:cards-pane-in_var(--dur-normal)_var(--ease-out)] " +
+  "[@media(max-width:1000px)]:peer-data-[pane=main]:[animation:cards-pane-in_200ms_var(--ease-out)] " +
   "motion-reduce:animate-none " +
-  "[padding:var(--space-8)_var(--page-pad-x)_var(--page-pad-bottom)_var(--space-6)] " +
-  "[@media(max-width:1000px)]:[padding:var(--space-5)_var(--page-pad-x)_var(--page-pad-bottom)] " +
+  "pt-8 pr-[var(--page-pad-x)] pb-[var(--page-pad-bottom)] pl-6 " +
+  // Every part carries the variant. Splitting a `padding` shorthand into three
+  // utilities is only safe if the prefix goes on all three — the first pass left
+  // it on `pt-5` alone and the other two became unconditional, which moved the
+  // narrow layout by a few pixels on four screens. Caught by the harness.
+  "[@media(max-width:1000px)]:pt-5 [@media(max-width:1000px)]:px-[var(--page-pad-x)] " +
+  "[@media(max-width:1000px)]:pb-[var(--page-pad-bottom)] " +
   "[@media(min-width:641px)_and_(max-width:1000px)]:[padding-bottom:calc(var(--space-6)+var(--tabbar-pill-h)+var(--space-10))]";
 
 /**

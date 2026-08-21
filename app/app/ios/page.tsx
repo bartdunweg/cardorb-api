@@ -349,7 +349,7 @@ export default async function IosApp() {
           className="mx-auto grid grid-cols-[minmax(0,1fr)_minmax(300px,0.65fr)] items-center [gap:clamp(var(--space-8),9vw,128px)]
             max-w-[1040px] [padding:clamp(var(--space-8),7vw,88px)] rounded-orb-lg bg-[color-mix(in_srgb,var(--color-label)_4%,transparent)]
             [@media(max-width:800px)]:grid-cols-1
-            [@media(max-width:640px)]:mx-[calc(-1*var(--space-2))] [@media(max-width:640px)]:p-6"
+            [@media(max-width:640px)]:-mx-2 [@media(max-width:640px)]:p-6"
           aria-labelledby="ios-sync-title"
         >
           <div>
