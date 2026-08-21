@@ -7,7 +7,7 @@ import Button from "@/components/custom/Button";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../../lib/core/cards";
 import { currentViewer } from "../../../../../lib/api/viewer";
 import { getCards } from "../../../../../lib/core/collection";
-import "../../../../styles/collection.css";
+import "../../../../styles/poke-holo.css";
 
 /**
  * One card, in full — inside the (app) shell.

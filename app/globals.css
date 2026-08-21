@@ -59,11 +59,612 @@
  */
 @layer theme, base, legacy, components, utilities;
 @import "./styles/tailwind.generated.css";
-@import "./styles/tokens.css" layer(legacy);
 
-@import "./styles/base.css" layer(legacy);
-@import "./styles/components.css" layer(legacy);
-@import "./styles/pages.css" layer(legacy);
+@layer legacy {
+  /* ── What is left of the hand-written CSS ─────────────────────────────────
+     Four files until this commit — tokens, base, components, pages — holding
+     between them eleven layout measurements, three resets, three @keyframes and
+     one reduced-motion override. None of that is component styling any more, so
+     none of it needed a file of its own; they are inlined here in the order they
+     were imported, which is the order they depended on.
+
+     poke-holo.css stays a file. It is a vendored effect from
+     pokemon-cards-css, 300 lines of gradients and blend modes, and keeping it
+     separate is what makes it diffable against upstream (ADR-0061). */
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* .skip-link moved to app/layout.tsx as Tailwind classes. .sr-only is gone
+ * entirely — it was a byte-for-byte duplicate of Tailwind's own built-in
+ * sr-only utility, which every consumer already resolves to (that utility is
+ * generated because the literal string is in ~10 components' classNames). */
+
+  /* ─── FOCUS STYLES ─── */
+  :focus-visible {
+    outline: 2px solid var(--color-label);
+    outline-offset: 2px;
+  }
+
+  :root {
+    /* The colour roles are not here any more.
+     They are generated into tailwind.generated.css from lib/design/tokens.ts,
+     because three consumers cannot read CSS — the manifest, themeColor and the
+     two OG images — and keeping the values here meant keeping copies there. One
+     of those copies shipped a value this file rejects in a paragraph for failing
+     AA, which is what settled the direction.
+     What is still here is everything CSS is the only reader of: spacing, radii,
+     blur, the shadows, the layout variables. Their arguments belong beside the
+     value rather than in a TypeScript comment two files away. */
+
+    /* Tied to the site's own switch, not the OS. The meta in layout.tsx says
+     "light dark", which lets the browser pick from the system preference, and
+     the two disagree the moment anyone uses the toggle: on a machine set to
+     light with the site set to dark, everything the browser paints itself stays
+     light. That is the pale strip along the bottom of the window, and it comes
+     and goes because the scrollbar it belongs to does. */
+    /* Both, and neither leading. An absent [data-theme] now means "ask the
+     machine" and the answer arrives in CSS — before any script runs, and for
+     somebody with JavaScript off, who used to get light whatever their machine
+     said.
+
+     Worth knowing what actually ships: Next's Lightning CSS does not send
+     light-dark() to the browser. It downlevels every pair into
+
+       var(--lightningcss-light, #737373) var(--lightningcss-dark, #8c8c8c)
+
+     and sets one of those two to `initial` and the other to empty depending on
+     the used color-scheme, so the substitution collapses to one value. The
+     result is correct and it works further back than native support does.
+
+     One consequence, and it is the reason ThemeProvider stopped reading a
+     token by name: the *computed value* of a paired custom property is that
+     token stream, not a colour. Ask for --color-bg-grouped through
+     getComputedStyle and you get something no meta tag can carry. Ask the body
+     what it is painted and you get rgb(). */
+    color-scheme: light dark;
+
+    /* Surfaces */
+
+    /* Text colour tiers (one tier per role: keep same-role text on the same tier):
+       primary   → titles, headings, strong, interactive labels/links
+       secondary → body copy / paragraphs (and tag chips)
+       tertiary  → meta, dates, eyebrows, captions, de-emphasised labels */
+    /* 4.54:1 on pure white, but this tier renders on the glass cards
+     (rgba(254,254,254,.78) over #fafafa = #fdfdfd) and on the #fafafa page
+     background, where #767676 measured 4.47:1 and 4.35:1, just under AA.
+     #737373 is the lightest value that clears 4.5:1 on all three. */
+    /* Client logos: lighter than any text tier, they sit behind the content, but
+     not below the 3:1 that WCAG asks of a graphic carrying information. #b0b0b0
+     measured 2.3:1 on the glass; this is 3.1:1 and still reads as a backdrop. */
+
+    /* ── Globe (the travel card) ──
+     Five tones, and every one of them is a token because MapLibre paints onto a
+     canvas and cannot read a stylesheet: TravelCard has to hand it real values,
+     and it should read them from here rather than carry its own copies. The
+     order is the whole design: the ocean recedes, the land sits a step in front
+     of it, the visited countries are the page's own ink, and the borders sit
+     between the land and the ink.
+     The seam is the border tone's opposite number, for the one place the border
+     cannot go: over the ink. A #cfcfcf line on a #1a1a1a country is lighter than
+     the land around it, so every visited country wore a pale rim and read as a
+     cut-out lying on the globe rather than part of it. The seam is a step off
+     the ink instead, dark enough to disappear against the land and light enough
+     to keep two visited neighbours apart. */
+
+    /* Borders */
+    /* Case marker tick: a touch darker than the timeline dashes so it reads as a
+     marker, but still close to them (not a hard accent). */
+
+    /* Buttons, and everything else that means "this is the chosen one": the tab
+     bar's active pill, a selected filter chip, the Pokédex badge, the track
+     row's active state.
+
+     These were light-dark(#111111, #ffffff) and light-dark(#ffffff, #101010) —
+     near-black in light, white in dark. They point at Untitled UI's brand now,
+     which is this app's blue (ADR-0055: Untitled UI's value is the default, and
+     "what colour is a primary button" is exactly the sort of thing a design
+     system decides). One edit, and the fourteen places that read these follow,
+     so the primary button and the active pill cannot disagree.
+
+     Deliberately NOT --color-tint. bg-brand-solid resolves to --color-brand-600,
+     which ADR-0057 set to the darkened blue precisely because a filled accent
+     with a white label on it needs 4.5:1 and the lighter one measures 4.02.
+     Every one of these surfaces carries text. */
+
+    /* Text on a surface that is dark in both themes: tooltips, the label over a
+     cover or a dock image, the play count on a still. Deliberately absent from
+     the dark block below, because the surface underneath it does not flip
+     either. Not --btn-primary-text, which does flip (#101010 in dark) and would
+     turn this text invisible. */
+
+    /* Brand / status (extracted from hardcoded literals) */
+    /* The disc behind the About card photograph. The photograph is a cutout with
+     no background of its own, so this is the backdrop rather than a tint over
+     one: pick it too pale and the black t-shirt is the only thing left of the
+     silhouette, too dark and the hair closes up against it.
+
+     Two stops rather than one flat grey, and the ramp is the point. Screenshot
+     of the disc on the card, sampled down the centre column: a flat #eaeaea
+     bottom edge measured 234 against a shadow that peaks at 230 right beneath
+     it, so the circle ended where nothing changed and the two greys read as one
+     smudge.
+
+     It ramps down, light at the head and shade at the shoulders, which is how a
+     backdrop lit from above behaves. It was ramped the other way first, and the
+     numbers worked but the light came from the floor.
+
+     The top stop is not a grey anybody picked: it is --color-bg-grouped, and the
+     reason to hard-code rather than reference it is that this has to hold when
+     the theme flips and that token does not (see the pair below). It is the
+     backdrop the resume artwork was shot on, measured rgb(250,250,250) in the
+     corners of the Uber still and the same value the token carries, so the head
+     here stands against the grey every other photograph on this site stands
+     against.
+
+     Flat, and one grey top to bottom, which is the point of it: a disc that
+     fades is two greys, and the head was meant to stand on a backdrop rather
+     than in a vignette.
+
+     The page background, by reference rather than as a copy of its value. It is
+     the same grey the resume's .case-image backdrop carries, so every
+     photograph on this site stands on one colour, and reading the token means
+     it stays that way if the page grey is ever retuned.
+
+     It is a quiet disc by design: at three levels off the card surface the
+     hairline in about.css is most of what holds the circle. That is the trade
+     this was set to, over a flat #ececec that was easier to see and was a grey
+     belonging to nothing else on the page. */
+
+    /* Glass panel surface: shared by every card/panel (single source of truth) */
+    /* The card's edge with a pointer on it. Only the edge: a hover never repaints
+     the surface, in either theme, so the card you are pointing at is the same
+     colour as the card you are not. Measured on home at 1440, light mode holds
+     rgb(253,253,253) hovered and unhovered alike, and everything the hover says
+     is said outside the card, by --shadow-elevated darkening the page around it
+     from rgb(248) to rgb(245).
+
+     Here that leaves the border with nothing to do, and that is right: against a
+     white page a white edge is already invisible, so this is the light theme
+     declining to change. Dark mode has to say it with the edge instead, because
+     a black shadow on a near-black page moves it by one value. See its pair. */
+    /* The edge of a control rather than of a panel, which in this theme is the
+     same value: a near-white hairline on a near-white button, which you cannot
+     see and which is not there for you. It is there for the controls that stand
+     on artwork, the modal close over a photo and the globe's zoom pill, where it
+     is the only thing between the control and the picture. Dark needs its own
+     number for that job; see the pair in the dark block. */
+
+    /* Layered depth: hairline ring + tight contact + wide soft ambient (rule 6).
+
+     These three are the ambient depth a surface floats on. They are not every
+     box-shadow in the codebase and are not meant to be: an inset hairline ring,
+     the directional shadow off the /cards rail, and the moulded highlights on
+     the /favorites console shells are drawing a specific object rather than
+     lifting a surface. Same line as palette against artwork, one property
+     down. */
+
+    /* Motion, radii, type, weights, line-heights, families, blur and the z-index
+     scale are all generated into tailwind.generated.css from
+     lib/design/tokens.ts now, same mechanism as colour above and for a second
+     reason: a token outside @theme has no Tailwind utility, so every className
+     that wanted one had to write [transition-timing-function:var(--ease-smooth)]
+     by hand. `ease-smooth`, `duration-fast`, `text-small`, `font-title`,
+     `leading-tight`, `blur-glass` and `z-modal` are classes now. */
+
+    /* Shared content column width: every page lines up to this (one knob).
+     860px gives ~70 chars/line at 16px body; --page-pad-x gutters sit outside this value. */
+    --content-max: 860px;
+
+    /* Card inner padding: every card/panel uses this so they match site-wide */
+    --card-pad: 32px;
+
+    /* Height of an inline control: .btn, .chat-input, .card-external.
+     One knob, because when these each carried their own number the odd one out
+     got "fixed" by lowering it to match, which is the wrong direction. Matches
+     the tab bar's 40px; the theme toggle sits one step up at 44px. */
+    --control-h: 40px;
+
+    /* Height of the floating tab bar's pill: --control-h plus --space-2 of
+     padding at each end plus its two hairlines. Written down because two
+     things outside the bar now have to line up with it: the theme toggle,
+     which sits beside it on a phone, and /cards, which stands its own bar in
+     the same place and pads the page under it. It was a literal 58 in
+     theme-toggle.css with a paragraph explaining it, which is a number one
+     file knows and the other has to guess. */
+    --tabbar-pill-h: 58px;
+
+    /* Breathing room at the bottom of every page (matches the 64px top room;
+     more on mobile to clear the floating bottom bar) */
+    --page-pad-bottom: 64px;
+
+    /* Room #main-content leaves for the nav: the bar sits at the bottom on mobile
+     and centred at the top from 641px up (see tabbar.css). Shared as a token so
+     full-height panels can subtract exactly what the layout reserved. */
+    --main-pad-top: 32px;
+
+    /* Horizontal page gutter: steps down on smaller viewports */
+    --page-pad-x: 32px;
+
+    /* ── Responsive breakpoint scale ──
+     CSS @media can't read custom properties, so these stay literals in
+     globals.css, but every media query uses ONE of these steps so
+     grid layout, typography, and gutters switch together:
+       Desktop  > 900px, full multi-column (6-col) bento grids
+       Tablet  ≤ 900px, 2-column bento remap (matches this gutter step)
+       Mobile  ≤ 640px, single column (matches type + 16px gutter step)
+     The resume/case layout adds three deliberate intermediate steps of its
+     own (≤ 1215px, ≤ 809px, ≤ 479px) for the meta-column/timeline, those are
+     scoped to .case/.left/.right and intentionally off the global scale. */
+
+    /* The type scale, the weights, the line-heights and the three families are
+     generated too, with their reasoning carried over to lib/design/tokens.ts
+     rather than deleted. Read it there before changing a floor: a floor is
+     chosen against its *neighbours*, not against its own ceiling, and
+     tokens.test.ts holds the ordering to it.
+
+     One step did not go, and the reason is worth knowing because it is a trap
+     rather than a principle. --fs-label would have to be --text-label inside
+     @theme, and --color-label already owns the `text-label` class; Tailwind
+     would resolve one of the two and say nothing, quietly turning a colour used
+     in forty places into a font size. Nothing in this app reads --fs-label any
+     more, so it stays here, unpromoted, rather than being renamed into the
+     scale. */
+    /* 15 on a phone, not 14: a quote set at body size is a quote that has stopped
+     being the point of its card. */
+
+    /* Solid glass surface: .btn, .theme-toggle, .tabbar-pages (more opaque than --glass-bg) */
+
+    /* Tooltip chrome: intentionally always-dark (not inverted in dark mode) */
+    /* Off the type scale on purpose, and fixed rather than stepped: tooltips wore
+     --fs-small, which is 13px on desktop and 12px on mobile, so an aside changed
+     size with the window. 12 is the size, and at 13 it competed with the label
+     it was explaining. Argued at length above .tooltip in components.css. */
+
+    /* ── Spacing scale (4px base) ──
+     On-grid spacing for padding / margin / gap. Off-grid optical tweaks
+     (2 / 3 / 5 / 6 / 9px) intentionally stay as literals: a 2px nudge is not a
+     spacing decision and naming it would only make it look like one.
+     14 and 10 were both on that list until each turned out to have a job. That
+     is the test for promoting one of the rest: one meaning, repeated, not one
+     pixel count repeated. A 10px padding is still a literal, because padding is
+     not what the step below means. */
+    /* The gap between a small control and the text beside it in a row: the filter
+     checkbox and its label on /cards, the avatar and the name on /fifa, the
+     meta line at the foot of a home card.
+     This one had already been named before it existed. Two stylesheets wrote
+     var(--space-2-5, 10px), so the step was being asked for by name with the
+     value carried in the fallback, which is how --fs-body-l used to be defined
+     in the var() calls that read it. Both of those resolved to the fallback
+     every time, because nothing ever set this. */
+
+    /* Accent: iOS system blue (the map pin). Brand-neutral and theme-stable,
+     so it is intentionally not overridden in dark mode. */
+  }
+
+  /* ─── DARK MODE ─── */
+  [data-theme="dark"] {
+    /* Surfaces */
+
+    /* Text: the same three tiers, at the same distance from their surface that
+     light mode puts them at. Not an inversion, which is what these were and is
+     why the hierarchy read flat and loud: measured on the card at 1440, light
+     runs 18.56 / 5.64 / 4.66 and dark ran 16.45 / 10.25 / 7.08, so body copy
+     stood at nearly twice the contrast of its own light-mode counterpart and the
+     gap between the tiers had closed up behind it. Each value below is the grey
+     whose ratio on the dark card matches light's on the light one.
+
+     Primary stays pure white, and that is the measured answer rather than a
+     dodge: light's #111111 is 18.56:1 and white on this card is 16.84:1, so the
+     tier is already the quieter of the two and there is nothing above white to
+     reach for. */ /* 5.62:1 on the card, light's is 5.64 */
+    /* Derived at 4.69 on the card and then raised, for exactly the reason the
+     light tier one line up from here was: the card is not the lightest thing
+     this lands on. The counts in the /cards rail sit on --glass-bg-solid, which
+     is rgb(37,37,39), and #878787 measured 4.26 there and failed axe. This is
+     the lightest grey that clears 4.5 on all three surfaces the tier touches:
+     5.28 on the page, 5.01 on a card, 4.55 on the control glass. */
+    /* Backdrop, not text, so WCAG wants 3:1 of it and no more. 2.98:1 here and
+     2.98 in light, where #7a7a7a was 3.83 and the logos sat forward of the work
+     they are meant to sit behind. */
+
+    /* The same four, turned over: a near-black ocean, land a step out of it, and
+     the visited countries in the page's dark-mode ink. The order is the design
+     and it is unchanged; what moved is how far apart the rungs sit, because the
+     turning-over had spread them. Against the page, light runs 1.01 / 1.22 /
+     1.49 / 16.67 and this ran 1.14 / 1.63 / 2.42 / 15.17: the borders in
+     particular were drawn at two thirds again the separation light gives them,
+     so the dark globe read as a wireframe where the light one reads as land.
+
+     Then the border left the ramp, because on this side of the theme the ramp
+     put it on the wrong side of the water. A border is a line drawn on top of
+     two surfaces, and the eye reads a line darker than both as an ink line and
+     a line lighter than both as a highlight. A highlight is a raised edge. In
+     light the border is #cfcfcf against land at #e4e4e4 and sea at #fbfbfb, so
+     it is darker than both and every coast lies flat. Turned over faithfully it
+     came out lighter than both, and measured on the rendered globe that is four
+     device pixels of it round every landmass: the continents read as cut out
+     and lifted off the sphere, and a white country had a glow all the way
+     round.
+
+     What it needs is not to be darker than everything, only never lighter than
+     everything, and there is room for that between the land and the sea. This
+     sits below the land and above the ocean, so a coast now runs 45, 34, 29:
+     one direction, no highlight anywhere along it, and between two countries an
+     ink line 1.16 off the land where light is 1.23. Taking it below the ocean
+     as well was tried and the globe came back as a wireframe, which is the
+     failure the paragraph above was written about.
+
+     Then the whole scale came up by a step, because the thing it stands on had.
+     These were set against the page and the globe is not on the page, it is on
+     a card, and when this theme's card went lighter the globe stayed where it
+     was and started reading as a hole cut in it. The rungs above are untouched
+     relative to one another; the ocean is what moved, and the other two moved
+     with it. Sampled on the rendered card at 1440, from a point on the sphere
+     outside where the shading reaches: light puts the ocean 1.071 off its card
+     and this had drifted to 1.139, which is the same step drawn at twice the
+     size. It is 1.065 now. */
+    /* And the seam turned over with them: a step down off the light ink, at the
+     same separation from it that #4a4a4a keeps from #1a1a1a. */
+
+    /* Borders */
+    /* Under active, not over it, which is the order light has run in all along:
+     0.14 against 0.16 there, and 0.18 against 0.16 here. Pointing at something
+     drew a harder line than selecting it, so the two states argued about which
+     was the stronger, and only in this theme. Nothing above --color-border is a
+     mirror of light's, whose --color-border is an opaque #f0f0f0 rather than an
+     alpha: the mechanisms differ, so only the rungs' order is comparable. */
+    /* Both a rung fainter than their light counterparts rather than louder, which
+     is the one direction nobody expects to find in a dark theme: on the card,
+     light's dashes measure 1.41 and its marker 1.79, and these measured 1.19 and
+     1.55. The marker still sits a step ahead of the dashes, which is what the
+     note beside the light pair asks for. */
+
+    /* Buttons */
+
+    /* Brand / status (dark) */ /* 1.28:1 on the card, light's #e2e2e2 is 1.27 */
+    /* Does not go dark. The photograph was lit against a pale backdrop and the
+     shirt in it is black, so a dark disc would eat the shoulders and leave a
+     head floating on the card. The pair steps down from light's instead, which
+     takes the glare off the brightest thing on a #101010 page without touching
+     the silhouette. This is also where it stops matching --color-bg-grouped, which
+     the light pair's top stop is a copy of: that token is #181818 here, and a
+     disc of it would be the dark card with a head on it. The ramp runs the same
+     way down, but its job here is only the light: a shadow that colour on a
+     page this dark is invisible, so there is no edge to clear and what is left
+     to keep is the object looking like itself in both themes.
+
+     Flat here too, following light. #d3d3d3 is the midpoint of the ramp this
+     replaced, so the disc carries the same weight on the page as it did rather
+     than jumping to either of the old ends: at the top stop it would have been
+     brighter than the ramp ever read, and at the bottom stop darker. */
+
+    /* Solid glass surface (dark): the panel glass at a higher alpha, which is
+     exactly the relationship light mode has (rgba(254,254,254) at .78 and .9).
+     It was a darker colour instead, rgba(22,22,22), and that one difference
+     turned the whole stack upside down: sampled at 1440 on home, a button read
+     rgb(26) on a card of rgb(31,31,33) and the nav pill rgb(21) on a page of
+     rgb(24), so every control on this theme sat in a dip. Light stacks the other
+     way, page 250, card 253, button 254, each one a step up from what it lies
+     on. Same colour and more of it puts the button at rgb(34,34,37), 2.53 dL*
+     above its card where it was 2.57 below. */
+
+    /* Tooltip chrome (dark: slightly lighter than light-mode value) */
+
+    /* Glass panel surface (dark): border matches resume-image border (--color-border-subtle) */
+    /* The alpha is where this theme's depth is set, and the colour is shared with
+     --glass-bg-solid above so the two layers stay one material. Sampled at 1440
+     on home against a page of rgb(24,24,24): this lands the card on rgb(29,29,30),
+     2.56 dL* up. It sat at 1.56 and read as nothing, then at 3.58 and read as a
+     slab; the middle is where it belongs now that the control above it carries
+     its own step rather than sinking into the card. Light's card is 1.04 dL* off
+     its page, which is the shape being copied, not the number: a step that small
+     is invisible this far down the range. */
+    /* Hover, and dark mode needs its own answer rather than the light one.
+     .bento-card:hover lifts a card two ways, and on a #101010 page neither one
+     arrives: --shadow-elevated is black on near-black, and the border going to
+     --color-bg-surface is the border going to exactly the page colour, so the faint
+     hairline the card has at rest was being erased. Measured at rest against
+     hovered, the only thing that changed was the card losing its edge: pointing
+     at it made it flatter.
+
+     So the edge carries the whole hover here, and it is the only thing that
+     moves: the surface stays exactly where it rests, the way light mode's does.
+     An earlier pass lit the glass up as well, from rgb(27,27,29) to rgb(38,38,41),
+     and a card that changes colour under the pointer is a louder thing than any
+     card on this site does.
+
+     One rung, not the top of the scale. The card rests on --color-border-subtle
+     at 0.05 and this is --color-border at 0.08, the next step up the same
+     ladder, not --color-border-hover at 0.18: 0.18 is what a control wears when
+     you point at it (the tool dock), and on a hairline round a whole card it
+     drew a rim you looked at instead of an edge that had woken up. The shadow
+     stays, doing nothing on the flat page and still separating cards where they
+     overlap. */
+    /* A control's edge, and its own step because --color-border at 0.08 was doing
+     two jobs badly. Scanned across the top of the "Show more" button at 1440:
+     light draws its border 0.35 dL* off the button's own fill, which is to say
+     not at all, and this drew it at 7.99, so in dark every button, chat option
+     and toolbar control wore an outline that light does not have. 0.03 puts it
+     at 3.35, still a real hairline for the controls that stand on artwork, which
+     is the only thing this border is for. Not --color-border-subtle at 0.05,
+     which measured 4.76 and is a panel's edge, not a control's. */
+
+    /* Layered depth (dark): no hairline ring, because the 1.5px glass border
+     already defines the edge, and a stacked ring reads as a thicker border.
+
+     Every alpha here is the old one times 0.71, and that factor is measured
+     rather than chosen. The case these have to answer for is not a card on the
+     page, where a black shadow does nothing: sampled at 1440, a card's shadow
+     moves the page by one value. It is a control on a card, where there is a
+     lighter surface to darken. Under the "Show more" button, light dips 2.77 dL*
+     below the card beside it and dark dipped 3.56, a third heavier, and it was
+     still two values down twelve pixels out where light had recovered. 0.71 is
+     what puts the deepest pixel on rgb(24) against a card of rgb(29), which is
+     light's own dip.
+
+     Which is the other half of the argument in cards.css, where the note beside
+     the /cards rail says dark carries its shadows heavier because 16% black over
+     a near-black page is nothing at all. That is true and it is why these are
+     still five times light's alphas. It just does not follow that they should be
+     seven times. */
+    /* Soft lift behind free-standing images (dark) */
+  }
+  /* The two halves light-dark() cannot carry, and why they are here rather than
+   folded in above.
+   A light-dark() value is one colour with two answers. These six are not that:
+   the shadows have three layers in light and two in dark, because a black
+   shadow on a near-black page does nothing and the work is done by the borders
+   instead. Different shape, not a different value, so they stay a declaration
+   that is replaced rather than one that resolves.
+   Which means they need saying twice — once for somebody who chose dark, and
+   once for somebody who chose nothing and whose machine did. Everything above
+   gets the second case free from color-scheme; these do not. */
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+    }
+  }
+
+  /* ── Responsive token steps ──
+   These live here, not in a route stylesheet: they retune the site-wide gutter
+   and type scale, so tokens.css is the one place to look for what a token is
+   at any viewport. Declared after the base :root so source order wins. */
+
+  /* Room to clear the centred top nav (32 above + ~56 bar + 72 below). Used to
+   live in tabbar.css, which is the one component that draws the bar this
+   clears — but --main-pad-top has other readers (the login's negative
+   margin, the mobile #main-content padding), so a component file redefining
+   it by media query was the token's real value hiding in the wrong file. */
+  @media (min-width: 641px) {
+    :root {
+      --main-pad-top: 160px;
+    }
+  }
+
+  /* Tablet gutter */
+  @media (max-width: 900px) {
+    :root {
+      --page-pad-x: 24px;
+      --card-pad: 24px;
+    }
+  }
+
+  /* Mobile gutter + extra bottom room for the floating bottom bar */
+  @media (max-width: 640px) {
+    :root {
+      --page-pad-x: 16px;
+      /* The gutter steps down and the card padding has to step with it, or the
+       two 32px insets plus the two gutters take a fifth of a 320px screen and
+       every card is read through a 224px slot. Everything derived from this
+       token is a calc(), so the negative bleeds and the absolute insets follow
+       on their own. */
+      --card-pad: 20px;
+      --page-pad-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+      /* The nav sits at the bottom here, so nothing has to be cleared at the top:
+       the first card gets the same margin above it as beside it, and the page
+       reads as one even inset instead of a wide band over a narrow gutter. */
+      --main-pad-top: var(--page-pad-x);
+
+      /* Nothing about type here any more. Every --fs-* step is a clamp that has
+       reached its floor by this width, so restating them was a second place to
+       keep in step with the first, and it is where the floors drifted into each
+       other in the first place. */
+    }
+  }
+
+  /* Remove tap flash on iOS for all interactive elements */
+  a,
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Page entrance: the intro + sidebar persist across routes, so only the page
+   content re-mounts and "grows in" (scales up), like a card expanding open.
+   No opacity fade: starting at opacity 0 means the browser does not count the
+   page as painted, which pushed Largest Contentful Paint out by ~1.2s on
+   mobile (5.5s -> 4.3s, Lighthouse 80 -> 86). Scale plus the clearing blur
+   still read as a card expanding open. */
+  @keyframes pageEnter {
+    from {
+      transform: scale(0.9);
+      filter: blur(6px);
+    }
+    to {
+      transform: none;
+      filter: blur(0);
+    }
+  }
+
+  /* Glass pill button: one shared component (Button.tsx) used everywhere, and
+   many more raw `<button className="btn">`/`<Link className="btn">`
+   elements besides. Same recipe as the tab bar / toggle; icons are size 20 /
+   strokeWidth 1.75 with an 8px gap to the label. */
+  /* ─── GLASS CONTROL ───
+   The surface every control on the site is made of. See FormField.tsx's
+   FormInput for the Tailwind copy of this recipe, kept in sync by hand. */
+  /* The glass control recipe that lived here — one grouped selector setting a
+   border, a background, a blur, a shadow and a colour on .modal-close,
+   .cards-search, .filter-menu > summary, .cards-segmented and .cards-views at
+   once — is gone. Every one of those five names its own surface now, in the
+   file that draws it, on Untitled UI's tokens.
+
+   Worth knowing why it went rather than being converted in place: a rule
+   reaching five unrelated controls is the arrangement ADR-0018 records as a
+   trap, and four of the five had already grown Tailwind utilities that beat it
+   silently. It was mostly dead and entirely invisible. */
+
+  /* ─── HOVER PILL ───
+   The surface a row lifts onto when you point at it. */
+  /* The rail's hover pill moved onto the rows that draw it — CardsSidebar's
+   navPillClassName, as `after:` variants. It was the last rule in this file
+   with more than one consumer. */
+
+  @keyframes skeleton-sweep {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  /* Permanent Tailwind-migration exception, not an oversight: a blanket kill
+   switch has to catch every animation/transition site-wide, including ones
+   added later, and Tailwind's motion-reduce: is a per-utility variant you'd
+   have to remember to apply everywhere — which is exactly the failure mode
+   this global override exists to prevent. Stays raw CSS. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      /* stylelint-disable declaration-no-important -- the one place !important
+       belongs: this reset must beat every animation/transition declaration. */
+      animation-duration: 0.01ms !important;
+      /* Without capping iterations, `infinite` animations (sound bars, typing
+       dots, logo marquee, location ping) keep looping at 0.01ms each, that
+       flickers instead of stopping. Each of those ends on its resting frame,
+       so a single instant iteration leaves them looking static, not half-done. */
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      /* stylelint-enable declaration-no-important */
+    }
+  }
+}
 
 /* The screen that arrives, arriving.
 

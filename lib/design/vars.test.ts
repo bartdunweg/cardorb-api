@@ -63,7 +63,11 @@ const TAILWIND_DEFAULT = new RegExp(
   `^(--color-(${TAILWIND_PALETTE})-\\d+|--color-(white|black|transparent)|--spacing)$`,
 );
 
+// `app/globals.css` as well as the two files left in app/styles: the resets,
+// the keyframes and the eleven layout tokens were inlined there when tokens.css,
+// base.css, components.css and pages.css stopped being worth a file each.
 const STYLES = "app/styles";
+const EXTRA_SHEETS = ["app/globals.css"];
 /** Where the arbitrary-value classes are. */
 // `components/custom` as well as `app`: Card Orb's own components moved out of
 // app/components when the Untitled UI tree arrived beside them, and this test
@@ -73,9 +77,14 @@ const CODE = ["app", "lib", "components/custom"];
 /** Everything declared anywhere in the stylesheets, generated ones included. */
 function declared(): Set<string> {
   const names = new Set<string>();
-  for (const file of readdirSync(STYLES)) {
-    if (!file.endsWith(".css")) continue;
-    const css = readFileSync(join(STYLES, file), "utf8");
+  const sheets = [
+    ...readdirSync(STYLES)
+      .filter((f) => f.endsWith(".css"))
+      .map((f) => join(STYLES, f)),
+    ...EXTRA_SHEETS,
+  ];
+  for (const file of sheets) {
+    const css = readFileSync(file, "utf8");
     for (const m of css.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gim)) names.add(m[1]!);
   }
   return names;
@@ -99,6 +108,7 @@ function referenced(): Map<string, string[]> {
     ...readdirSync(STYLES)
       .filter((f) => f.endsWith(".css"))
       .map((f) => join(STYLES, f)),
+    ...EXTRA_SHEETS,
     ...CODE.flatMap((dir) => code(dir)),
   ];
   for (const file of files) {

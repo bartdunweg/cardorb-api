@@ -5,7 +5,7 @@ import { forGrid, forPublic } from "../../../lib/core/cards";
 import { getCards, ownerOf } from "../../../lib/core/collection";
 import { collectionTitle, ownerLabel } from "../../../lib/core/owner";
 import { APP_NAME } from "../../../lib/core/config";
-import "../../styles/collection.css";
+import "../../styles/poke-holo.css";
 import { pageCardsClassName } from "@/components/custom/cardsPageClasses";
 
 /**

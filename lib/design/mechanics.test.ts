@@ -265,7 +265,7 @@ describe("motion stops rather than flickering", () => {
   it("keeps the iteration-count reset in the reduced-motion block", () => {
     // The subtlety, and the one sanctioned !important in the codebase: an
     // infinite animation shortened to 0.01ms flickers instead of stopping.
-    const pages = read("app/styles/pages.css");
+    const pages = read("app/globals.css");
     expect(
       has(pages, /animation-iteration-count:\s*1\s*!important/),
       "infinite animations stop rather than strobe",
