@@ -1,4 +1,4 @@
-// @ts-nocheck — vendored, see ADR-0061
+// @ts-nocheck — vendored, see ADR-0062
 "use client";
 
 import type { ComponentPropsWithRef, HTMLAttributes, ReactNode, Ref, TdHTMLAttributes, ThHTMLAttributes } from "react";

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/base/avatar/avatar";
 
 /**
  * Who is signed in, in a public page's navbar.
@@ -35,27 +36,9 @@ export default function ViewerPill({
         transition-colors duration-150 ease-out
         hover:border-primary"
     >
-      {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
-        <img
-          src={avatarUrl}
-          alt=""
-          width={24}
-          height={24}
-          className="w-6 h-6 shrink-0 aspect-square rounded-full object-cover border border-secondary"
-        />
-      ) : (
-        // No avatar uploaded yet — a circle with the first letter of the name,
-        // same fallback as settings/profile.
-        <span
-          className="grid place-items-center w-6 h-6 shrink-0 aspect-square rounded-full bg-secondary
-            border border-secondary text-tertiary
-            font-body text-xs font-medium"
-          aria-hidden="true"
-        >
-          {name.charAt(0)}
-        </span>
-      )}
+      {/* Their <Avatar>, which carries the initial fallback this used to build
+          by hand as a second branch. `xs` is size-6, the 24px this already was. */}
+      <Avatar size="xs" src={avatarUrl} alt="" initials={name.charAt(0)} className="shrink-0" />
       {/* Capped, because a display name is allowed 60 characters and this bar
           is 390px wide on a phone: uncapped, one long name squeezed the
           wordmark until "Card Orb" wrapped onto two lines. Past the cap the

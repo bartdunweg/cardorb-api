@@ -5,6 +5,7 @@ import { Compass, Heart, LayoutDashboard, Layers, Plus, UserRound } from "lucide
 import type { CardSet, ImageSize } from "@/lib/core/cards";
 import { LOCALE } from "@/lib/core/config";
 import Wordmark from "@/components/custom/Wordmark";
+import { Avatar } from "@/components/base/avatar/avatar";
 import { possessive } from "@/lib/core/owner";
 import { untitledIconButton } from "@/components/custom/untitledButtonClasses";
 
@@ -370,25 +371,15 @@ export default function CardsSidebar({
             border-0 rounded-orb-md bg-primary text-left cursor-pointer text-inherit
             [@media(max-width:1000px)]:hidden`}
         >
-          {viewer.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
-            <img
-              src={viewer.avatarUrl}
-              alt=""
-              width={28}
-              height={28}
-              className="w-7 h-7 shrink-0 aspect-square rounded-full object-cover border border-secondary"
-            />
-          ) : (
-            <span
-              className="grid place-items-center w-7 h-7 shrink-0 aspect-square rounded-full bg-secondary
-                border border-secondary text-tertiary
-                font-body text-xs font-medium"
-              aria-hidden="true"
-            >
-              {viewer.name.charAt(0).toUpperCase()}
-            </span>
-          )}
+          {/* Their <Avatar>. The set logo below stays an <img> — that one is a
+              catalogue asset with a PNG retry on error, not a person. */}
+          <Avatar
+            size="xs"
+            src={viewer.avatarUrl}
+            alt=""
+            initials={viewer.name.charAt(0).toUpperCase()}
+            className="shrink-0"
+          />
           <span className="flex-1 min-w-0 font-body font-medium text-xs text-primary truncate">
             {viewer.name}
           </span>

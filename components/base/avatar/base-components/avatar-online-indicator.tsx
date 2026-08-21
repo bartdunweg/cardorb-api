@@ -1,4 +1,4 @@
-// @ts-nocheck — vendored, see ADR-0061
+// @ts-nocheck — vendored, see ADR-0062
 "use client";
 
 import { cx } from "@/utils/cx";

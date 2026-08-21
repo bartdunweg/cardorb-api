@@ -4,91 +4,98 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
-**The app is being rebuilt on Untitled UI React, and it is roughly two thirds
-done (branch `bartdunweg/untitled-ui`, PR #102, workspace `canberra`,
-2026-08-21).** Fifty-odd commits, `verify.sh` exits 0, thirty-three screenshots
-green. Not merged.
+**The Untitled UI rebuild is on `bartdunweg/untitled-ui` (PR #102), unmerged, and
+the last commit is the only one that has not been photographed.** Sixty-plus
+commits, `verify.sh` exits 0, and every step before the chart was checked against
+thirty-three screenshots. Read FB-0013 through FB-0016 before deciding anything
+is out of scope: the standing rule is that Untitled UI wins, and only the
+identity (ADR-0061 — the holo effect, the orb) or a contrast measurement earns an
+exception.
 
-The instruction was given four times and got blunter each time — "alles
-vervangen", "helemaal untitled", "100% elementen", "alles in cards.css
-vervangen" (FB-0014 through FB-0016). Read those three feedback records before
-deciding anything is out of scope: the standing rule is that Untitled UI wins
-and its value is the default, and only two things earn an exception — the
-identity (ADR-0061 protects the holographic card effect and the orb) or a
-contrast measurement this repository can cite.
+### Where it got to
 
-### Where the CSS went
+    cards.css        1,169 -> deleted
+    components.css     236 -> 57      (two @keyframes and a reduced-motion block)
+    tokens.css          39 tokens -> 11, all of them this app's layout measures
+    stylesheets          8 -> 2       (the theme, and poke-holo.css)
+    Card Orb tokens    620 -> ~100    reads in components
+    app/components/  -> components/custom/, beside Untitled UI's four trees
 
-    cards.css        1,169 -> 434   (about half of what is left is comment)
-    components.css     236 ->  57   (two @keyframes and a reduced-motion block)
-    tokens.css         735 -> 562
-    poke-holo.css      300 -> 300   protected, ADR-0061
+Hand-written component styling: none.
 
-Nothing was deleted without `rg` first. Three rules turned out to have no
-consumer at all — `.cards-segment`, `.filter-chips`, `.cards-item` — and went
-rather than being converted.
+### The audit that should have happened sooner
 
-### The thing that keeps happening, six times now
+Asked whether the landing page's badge was an Untitled UI component. It was not —
+it was their *classes*, assembled by hand, and so were seven button recipes, five
+checkboxes with a tick drawn as a rotated border, four avatars, a table, a radio
+group and eleven `title=` tooltips. Converting tokens is not the same as using
+components, and this branch conflated the two for a long time.
 
-**A Tailwind utility beats a legacy-layer CSS rule even when the legacy rule is
-the conditional one.** ADR-0012 and ADR-0017 are this. So are ADR-0018, the
-grid's `@container` gap, `.cards-main`'s `display: flex`, and **ADR-0064 — the
-first that had reached production.** A 900px rule wrapping the toolbar had been
-dead since the search field was migrated, so the bar squeezed four controls onto
-one row on a tablet, which is the behaviour its own comment says was tried and
-rejected. Fixed, six baselines updated, and it is user-visible.
+**Still hand-built, with the component sitting vendored and unused:**
 
-The fix is always the same: make the override a conditional utility too, or `!`
-it. Reach for `!` when two utilities name the same property from different
-elements.
+  tooltips (11 places)     -> `tooltip`      `title=` is not keyboard-reachable
+  segmented tracks (5)     -> `tabs`         would delete trackClasses.ts
+  search/text inputs (4)   -> `input`
+  SettingsSwitch           -> `toggle`
+  avatar upload            -> `file-upload-trigger`
+  empty states (4)         -> `empty-state`
+  MenuDetails <details>    -> `dropdown`
 
-### The screenshot harness earns its keep
+All twelve components are installed. This is the work to continue with.
 
-Two regressions this session that typecheck, lint and 525 tests all passed
-through. **Do not trust a green `verify.sh` on anything that moves a rule.**
+### The one thing that is not verified
 
-Running it is fiddly and the failure mode lies:
+`CollectionValueCard` was rebuilt on Recharts with Untitled UI's chart helpers
+(`charts-base`) in the last commit. `verify.sh` passes, but **no screenshot has
+been taken of it** — the harness server died twice on the run and the session
+ended before it came back. Photograph /dashboard first thing.
+
+Recharts is the only dependency this whole migration added, and it was a decision
+rather than a default: Untitled UI has no chart component, only styling helpers
+that sit on top of Recharts. The hand-drawn SVG it replaced was 146 lines here
+plus 75 of geometry in `lib/core/value-chart.ts` — that file now has one
+consumer for `points` and its `line`/`under` paths are dead.
+
+### What keeps going wrong, and it is always the same shape
+
+**A Tailwind utility beats a legacy CSS rule even when the legacy rule is the
+conditional one.** Six occurrences, one of which — ADR-0064 — had reached
+production: the toolbar's 900px wrap had been dead since the search field was
+migrated. The fix is always to make the override conditional too, or `!` it.
+
+The screenshots caught five regressions that typecheck, lint and 525 tests all
+passed through. **Do not trust a green `verify.sh` on anything that moves a
+rule.**
+
+Running the harness (`playwright.config.ts` has the detail):
 
     npm run build
-    # start the server from OUTSIDE the test shell — a plain `&`, `nohup` and
+    # start the server from OUTSIDE the test shell — plain `&`, `nohup` and
     # `disown` all still die with it, and macOS has no setsid
     VISUAL_BASE_URL=http://127.0.0.1:3231 npm run visual
 
-When the server dies mid-run the suite photographs the app's own error boundary
-and reports a 28% pixel difference, which reads exactly like a CSS regression.
-If a diff looks far too large, open it and see what is in the picture.
-`playwright.config.ts` carries all of this.
+A dead server photographs the app's own error boundary and reports a 28% pixel
+difference, which reads exactly like a CSS regression. Open the diff before
+believing it.
 
-**The signed-in screens can be photographed now**, which closes a gap STATE.md
-had recorded for weeks. `VISUAL_EMAIL` was never set and `OWNER_EMAIL` in
-`.env.local` is a stale account that was never confirmed — `email_confirmed_at`
-is null. The real one was found through the admin API by counting cards per
-`user_id`. ADR-0063 has the method; the address is not written down anywhere.
+### Two decisions waiting
 
-### What is left
-
-- `cards.css` 434 lines: the modal variants, the pane-swap media queries, the
-  holo attachment, and roughly 180 lines of comment recording where things went.
-- 33 of 57 components still on Card Orb's own vocabulary. The big one is
-  `CardsView.tsx` at 1,659 lines — the collection, the wishlist and the public
-  profile in one file.
-- 49 arbitrary Tailwind values, all of them properties Tailwind has no utility
-  for. The 73 that did have one are gone.
-
-### Two things waiting on a decision
-
-- **The toolbar wrap (ADR-0064).** Restored because it is the documented intent,
-  but it changes what a tablet looks like. If the squeezed row is preferred, the
-  comment arguing the wrap has to go with the rule.
-- **The orb.** Untouched. Two repositories share that asset.
+- **The toolbar wrap (ADR-0064)** — restored because it is the documented intent,
+  but it changes what a tablet looks like.
+- **The fixed type scale** — text no longer stretches with the viewport, because
+  Untitled UI's scale is fixed and Card Orb's was `clamp()`. One commit to
+  revert.
 
 ### Not to be repeated
 
-A sidebar rewrite onto `SidebarNavigationSimple` was built and reverted. It
-changed the responsive model — Untitled UI uses a slide-over below `lg`, this app
-turns the rail into its own screen below 1000px — and that is a visible change
-nobody asked for. `SidebarNavigationSimple` also renders `<UntitledLogo />` and
-takes no slot for a name, which is why `AppSidebar` builds on `NavList` instead.
+A sidebar rewrite onto `SidebarNavigationSimple` was built and reverted: it
+changes the responsive model (they use a slide-over below `lg`, this app turns
+the rail into its own screen below 1000px) and renders `<UntitledLogo />` with no
+slot for a name. `AppSidebar` builds on `NavList` instead.
+
+`components/custom/` cannot be emptied. Nothing in it is dead — measured — and
+`CardItem`, `CardsView`, `TiltScan` and `Wordmark` have no Untitled UI
+counterpart. That directory is what it is for.
 
 ## The signed-in navbar is a pill (2026-08-17, workspace `castries`)
 

@@ -1,0 +1,2 @@
+- The value chart now has a tooltip: point at the line and it says what the collection was worth on that date.
+- Avatars, checkboxes, the priciest-cards table and the appearance picker are built from the shared component set, so they behave the same everywhere — the appearance picker answers to the arrow keys for the first time.

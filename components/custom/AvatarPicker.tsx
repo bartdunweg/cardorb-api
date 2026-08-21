@@ -1,6 +1,7 @@
 "use client";
 
 import { SettingsSaid } from "@/components/custom/SettingsPanel";
+import { Avatar } from "@/components/base/avatar/avatar";
 import { useAvatarUpload } from "@/components/custom/useAvatarUpload";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
@@ -31,25 +32,14 @@ export default function AvatarPicker({
 
   return (
     <div className="flex items-center gap-4">
-      {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
-        <img
-          src={avatarUrl}
-          alt="Your avatar"
-          width={56}
-          height={56}
-          className="w-14 h-14 shrink-0 aspect-square rounded-full object-cover border border-secondary"
-        />
-      ) : (
-        <span
-          className="grid place-items-center w-14 h-14 shrink-0 aspect-square rounded-full bg-secondary
-            border border-secondary text-tertiary
-            font-body text-display-xs font-medium"
-          aria-hidden="true"
-        >
-          {fallback.charAt(0).toUpperCase()}
-        </span>
-      )}
+      {/* Their <Avatar> at xl, which is size-14 — the 56px this already drew. */}
+      <Avatar
+        size="xl"
+        src={avatarUrl}
+        alt="Your avatar"
+        initials={fallback.charAt(0).toUpperCase()}
+        className="shrink-0"
+      />
       <div>
         {/* The input is sr-only, so its own :focus-visible outline lands
             on a clipped 1px box — invisible. group on the label,

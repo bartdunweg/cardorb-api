@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Table } from "@/components/application/table/table";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import Card, { aboutCardClassName } from "@/components/custom/Card";
 import CollectionValueCard from "@/components/custom/CollectionValueCard";
@@ -97,39 +98,29 @@ export default function CardsDashboard({
           </p>
           {/* A table, not a chart: ten named things whose identity is the point,
               and a bar chart of them would say less than the numbers do. */}
-          <table
-            /* Was `.cards-dash-table` in components.css, a rule with exactly one
-               consumer — this table. On Untitled UI's type and border tokens now. */
-            className="w-full border-collapse text-sm text-secondary
-              [&_th]:border-b [&_th]:border-secondary [&_th]:text-left [&_th]:font-semibold [&_th]:text-tertiary"
-          >
-            <thead>
-              <tr>
-                <th scope="col" className="pt-0 pr-3 pb-2 pl-0">
-                  Card
-                </th>
-                <th
-                  scope="col"
-                  className="pt-0 pr-3 pb-2 pl-0 [@media(max-width:640px)]:hidden"
-                >
-                  Set
-                </th>
-                <th
-                  scope="col"
-                  className="pt-0 pr-3 pb-2 pl-0 text-right
-                    tabular-nums whitespace-nowrap"
-                >
-                  Value
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.top.map(({ card, set }) => (
-                <tr key={card.key}>
-                  <td
-                    className="pt-2 pr-3 pb-2 pl-0
-                      flex items-center gap-3"
-                  >
+          {/* Their <Table>, which is React Aria's underneath — so the header
+              is a real column header, the rows are real rows, and a screen
+              reader announces "column 3 of 3, Value" instead of nothing.
+              `aria-label` rather than a caption: the <h2> above already names
+              it and a caption would say it twice. */}
+          <Table aria-label="Priciest cards" className="w-full text-sm text-secondary">
+            <Table.Header className="bg-transparent">
+              <Table.Head id="card" isRowHeader label="Card" className="pt-0 pr-3 pb-2 pl-0" />
+              <Table.Head
+                id="set"
+                label="Set"
+                className="pt-0 pr-3 pb-2 pl-0 [@media(max-width:640px)]:hidden"
+              />
+              <Table.Head
+                id="value"
+                label="Value"
+                className="pt-0 pr-3 pb-2 pl-0 text-right tabular-nums whitespace-nowrap"
+              />
+            </Table.Header>
+            <Table.Body items={stats.top}>
+              {({ card, set }) => (
+                <Table.Row id={card.key}>
+                  <Table.Cell className="flex items-center gap-3 pt-2 pr-3 pb-2 pl-0">
                     {/* The scan, small. A list of the priciest cards is a list of
                         things you recognise by looking at them. */}
                     <span className="flex-shrink-0 block w-[22px] h-[30px] rounded-[3px] overflow-hidden bg-secondary">
@@ -147,10 +138,7 @@ export default function CardsDashboard({
                           height={card.imageSize?.height}
                         />
                       ) : (
-                        <span
-                          className="block w-full h-full bg-secondary"
-                          aria-hidden="true"
-                        />
+                        <span className="block w-full h-full bg-secondary" aria-hidden="true" />
                       )}
                     </span>
                     {card.tcgId ? (
@@ -166,23 +154,17 @@ export default function CardsDashboard({
                     ) : (
                       card.name
                     )}
-                  </td>
-                  <td
-                    className="pt-2 pr-3 pb-2 pl-0
-                      [@media(max-width:640px)]:hidden"
-                  >
+                  </Table.Cell>
+                  <Table.Cell className="pt-2 pr-3 pb-2 pl-0 [@media(max-width:640px)]:hidden">
                     {set}
-                  </td>
-                  <td
-                    className="pt-2 pr-3 pb-2 pl-0 text-right
-                      tabular-nums whitespace-nowrap"
-                  >
+                  </Table.Cell>
+                  <Table.Cell className="pt-2 pr-3 pb-2 pl-0 text-right tabular-nums whitespace-nowrap">
                     {euro(shownPrice(card.price) ?? 0)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            </Table.Body>
+          </Table>
         </Card>
       )}
 

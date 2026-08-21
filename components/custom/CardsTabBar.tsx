@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { Heart, LayoutDashboard, Layers, List, Plus, Search, UserRound } from "lucide-react";
 import { useSlidingPill } from "@/app/hooks/useSlidingPill";
+import { Avatar } from "@/components/base/avatar/avatar";
 import {
   tabbarAddClassName,
   tabbarClassName,
@@ -162,25 +163,15 @@ export default function CardsTabBar({
       >
         <span className={tabbarIconClassName}>
           {tab.key === "profile" && viewer ? (
-            viewer.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- a Supabase Storage URL, not one of the catalogue CDNs next/image is configured for.
-              <img
-                src={viewer.avatarUrl}
-                alt=""
-                width={20}
-                height={20}
-                className="w-5 h-5 shrink-0 aspect-square rounded-full object-cover border border-secondary"
-              />
-            ) : (
-              <span
-                className="grid place-items-center w-5 h-5 shrink-0 aspect-square rounded-full bg-secondary
-                  border border-secondary text-tertiary
-                  font-body [font-size:9px] font-medium"
-                aria-hidden="true"
-              >
-                {viewer.name.charAt(0).toUpperCase()}
-              </span>
-            )
+            /* Their <Avatar>, initials fallback included. 20px is between
+               their xs (24) and nothing below it, so the size comes from a
+               class rather than the prop. */
+            <Avatar
+              src={viewer.avatarUrl}
+              alt=""
+              initials={viewer.name.charAt(0).toUpperCase()}
+              className="size-5 shrink-0 [&_span]:text-[9px]"
+            />
           ) : (
             <Icon {...ICON_SIZE} fill={on ? "currentColor" : "none"} aria-hidden="true" />
           )}

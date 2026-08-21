@@ -1,6 +1,8 @@
 "use client";
 
 import { useTheme, type Mode } from "@/components/custom/ThemeProvider";
+import { Radio as AriaRadio } from "react-aria-components";
+import { RadioGroup } from "@/components/base/radio-buttons/radio-buttons";
 import { SettingsHint, SettingsPanel } from "@/components/custom/SettingsPanel";
 
 /**
@@ -30,32 +32,31 @@ export default function AppearanceSettings() {
     <SettingsPanel>
       {/* No panel title: this is the only panel in the Appearance group, and
           the group's own heading already says the word once. */}
-      <div
-        className="grid grid-cols-3 gap-2 max-w-[26rem]"
-        role="radiogroup"
+      {/* Their <RadioGroup>, drawn as three cards rather than three dots.
+          RadioButton is a dot with a label beside it; this is a picker where the
+          option *is* the card, which is a layout Untitled UI has no component
+          for — so the group and its state come from them and the card is ours.
+          React Aria gives the arrow-key behaviour a radiogroup should have and
+          the hand-rolled version never had. */}
+      <RadioGroup
+        value={mode}
+        onChange={(v) => setMode(v as (typeof OPTIONS)[number]["value"])}
         aria-label="Appearance"
+        className="grid grid-cols-3 gap-2 max-w-[26rem]"
       >
         {OPTIONS.map((o) => (
-          <label key={o.value} className="group">
-            <input
-              type="radio"
-              name="appearance"
-              value={o.value}
-              checked={mode === o.value}
-              onChange={() => setMode(o.value)}
-              className="absolute opacity-0 w-0 h-0"
-            />
+          <AriaRadio key={o.value} value={o.value} className="group cursor-pointer">
             <span
-              className="block p-3 rounded-btn border border-primary text-center cursor-pointer
-                group-has-[:checked]:border-brand group-has-[:checked]:[box-shadow:inset_0_0_0_1px_var(--color-tint)]
-                group-has-[:focus-visible]:[outline:2px_solid_var(--color-tint)] group-has-[:focus-visible]:outline-offset-2"
+              className="block p-3 rounded-btn border border-primary text-center
+                group-data-[selected]:border-brand group-data-[selected]:ring-1 group-data-[selected]:ring-brand group-data-[selected]:ring-inset
+                group-data-[focus-visible]:outline-2 group-data-[focus-visible]:outline-offset-2 group-data-[focus-visible]:outline-brand"
             >
               <span className="block text-primary font-medium">{o.label}</span>
               <SettingsHint>{o.hint}</SettingsHint>
             </span>
-          </label>
+          </AriaRadio>
         ))}
-      </div>
+      </RadioGroup>
 
       <SettingsHint>
         {mode === "system"

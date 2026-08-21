@@ -1,3 +1,10 @@
+"use client";
+
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  ChartActiveDot,
+  ChartTooltipContent,
+} from "@/components/application/charts/charts-base";
 import Card from "@/components/custom/Card";
 import { LOCALE } from "@/lib/core/config";
 import { euroWhole } from "@/lib/core/format";
@@ -64,7 +71,8 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
   const chart = chartPoints(snapshots, { w: W, h: H, pad: PAD });
   if (!chart) return null;
 
-  const { points, line, under } = chart;
+  // `line` and `under` were the two SVG paths; Recharts draws both now.
+  const { points } = chart;
   const first = snapshots[0]!;
   const last = snapshots.at(-1)!;
   const grew = last.value - first.value;
@@ -84,50 +92,45 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
         across {last.cards.toLocaleString(LOCALE)} cards.
       </p>
 
-      <div className="mt-5">
-        {/* aria-hidden with the same figures written out below it, rather than a
-            role="img" and a label trying to say a line in one sentence. A chart
-            read aloud as "line chart trending up" is not the data; the list is.
-            The same call the two bar charts on this page make. */}
-        <svg
-          className="block w-full h-auto overflow-visible"
-          viewBox={`0 0 ${W} ${H}`}
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path className="fill-secondary stroke-none" d={under} />
-          {/* non-scaling-stroke so the line keeps its weight at whatever width
-              the card ends up: the viewBox is 640 wide and the card is rarely
-              that, so without it the stroke is scaled down with everything else
-              and draws thin. */}
-          <path
-            className="fill-none stroke-primary stroke-2 [stroke-linecap:round] [stroke-linejoin:round]"
-            d={line}
-            vectorEffect="non-scaling-stroke"
-          />
-          {/* One mark per reading, and they are not decoration. Three points
-              spread over twenty months drawn as a smooth line reads as a
-              continuous record; the dots are what says there are three
-              measurements here and the rest is the shortest path between them.
-              They will matter less as the weekly points fill in. */}
-          {points.map((p) => (
-            <circle
-              key={p.date}
-              className="fill-primary stroke-primary stroke-2"
-              cx={p.x}
-              cy={p.y}
-              r={5}
-              vectorEffect="non-scaling-stroke"
+      {/* Recharts, with Untitled UI's tooltip on it (charts-base). It was a
+          hand-drawn <svg> and 75 lines of geometry in lib/core/value-chart.ts
+          working out where each point lands; ResponsiveContainer does that now,
+          and the reader gains a tooltip the drawing never had.
+
+          The <ul> below stays. A chart is still not readable by a screen
+          reader, and the figures written out are what makes this accessible —
+          the tooltip is for a pointer, not a replacement for the list. */}
+      <div className="mt-5 h-[150px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+            <defs>
+              <linearGradient id="value-over-time" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--color-bg-secondary)" stopOpacity={1} />
+                <stop offset="100%" stopColor="var(--color-bg-secondary)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="date" hide />
+            <YAxis dataKey="value" domain={["dataMin", "dataMax"]} hide />
+            <Tooltip
+              content={<ChartTooltipContent labelFormatter={(v) => monthYear(String(v))} />}
+              formatter={(v) => euroWhole(Number(v))}
+              cursor={{ stroke: "var(--color-border-secondary)" }}
             />
-          ))}
-        </svg>
-        {/* Outside the SVG rather than as <text>, so the labels are real type at
-            the page's own size and inherit the theme like everything else,
-            instead of being scaled with the drawing. */}
-        <p
-          className="flex justify-between mt-2 mb-0 font-body
-            text-xs text-tertiary"
-        >
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="var(--color-text-primary)"
+              strokeWidth={2}
+              fill="url(#value-over-time)"
+              activeDot={<ChartActiveDot />}
+              dot={{ r: 4, fill: "var(--color-text-primary)", strokeWidth: 0 }}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+        {/* Outside the chart rather than an axis, so the labels are real type at
+            the page's own size and inherit the theme like everything else. */}
+        <p className="flex justify-between mt-2 mb-0 font-body text-xs text-tertiary">
           <span>{shortMonth(first.date)}</span>
           <span>{shortMonth(last.date)}</span>
         </p>
