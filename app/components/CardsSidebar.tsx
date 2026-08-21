@@ -42,7 +42,7 @@ const navPillClassName = [
   "after:[border-radius:var(--pill-radius,var(--radius-pill))]",
   "after:bg-primary after:ring-1 after:ring-secondary after:ring-inset after:shadow-xs",
   "after:opacity-0 after:scale-[0.98]",
-  "after:transition after:duration-150 after:[transition-timing-function:var(--ease-smooth)]",
+  "after:transition after:duration-150 after:ease-out",
   "hover:after:opacity-100 hover:after:scale-100",
   "focus-visible:after:opacity-100 focus-visible:after:scale-100",
   "[&.is-active]:after:opacity-100 [&.is-active]:after:scale-100",
@@ -130,7 +130,7 @@ export default function CardsSidebar({
        */
       className="cards-rail peer group/rail flex flex-col gap-5 px-3 py-4
         bg-primary [backdrop-filter:blur(var(--blur-glass-card))]
-        sticky top-0 h-[100dvh] overflow-y-auto border-r border-[var(--color-border-subtle)]
+        sticky top-0 h-[100dvh] overflow-y-auto border-r border-secondary
         [@media(max-width:1000px)]:static [@media(max-width:1000px)]:h-auto
         [@media(max-width:1000px)]:overflow-visible [@media(max-width:1000px)]:border-r-0
         [@media(max-width:1000px)]:[box-shadow:none]
@@ -258,7 +258,7 @@ export default function CardsSidebar({
               sake. */}
           <li
             aria-hidden="true"
-            className={`block h-px m-2 bg-[var(--color-border-subtle)]${isPublic ? " cards-nav-elsewhere" : ""}`}
+            className={`block h-px m-2 bg-secondary${isPublic ? " cards-nav-elsewhere" : ""}`}
           />
           {setsAsRow ? (
             <li>
@@ -309,7 +309,7 @@ export default function CardsSidebar({
                 {i > 0 && (
                   <span
                     aria-hidden="true"
-                    className="block h-px m-2 bg-[var(--color-border-subtle)]"
+                    className="block h-px m-2 bg-secondary"
                   />
                 )}
                 {/* The label is the selection for the whole era, which is what the
@@ -377,12 +377,12 @@ export default function CardsSidebar({
               alt=""
               width={28}
               height={28}
-              className="w-7 h-7 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
+              className="w-7 h-7 shrink-0 aspect-square rounded-full object-cover border border-secondary"
             />
           ) : (
             <span
-              className="grid place-items-center w-7 h-7 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
-                border border-[var(--color-border-subtle)] text-tertiary
+              className="grid place-items-center w-7 h-7 shrink-0 aspect-square rounded-full bg-secondary
+                border border-secondary text-tertiary
                 font-body text-xs font-medium"
               aria-hidden="true"
             >

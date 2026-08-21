@@ -38,12 +38,12 @@ export default function AvatarPicker({
           alt="Your avatar"
           width={56}
           height={56}
-          className="w-14 h-14 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
+          className="w-14 h-14 shrink-0 aspect-square rounded-full object-cover border border-secondary"
         />
       ) : (
         <span
-          className="grid place-items-center w-14 h-14 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
-            border border-[var(--color-border-subtle)] text-tertiary
+          className="grid place-items-center w-14 h-14 shrink-0 aspect-square rounded-full bg-secondary
+            border border-secondary text-tertiary
             font-body text-display-xs font-medium"
           aria-hidden="true"
         >

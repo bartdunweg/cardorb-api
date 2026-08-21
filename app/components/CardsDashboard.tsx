@@ -132,7 +132,7 @@ export default function CardsDashboard({
                   >
                     {/* The scan, small. A list of the priciest cards is a list of
                         things you recognise by looking at them. */}
-                    <span className="flex-shrink-0 block w-[22px] h-[30px] rounded-[3px] overflow-hidden bg-[var(--color-bg-grouped)]">
+                    <span className="flex-shrink-0 block w-[22px] h-[30px] rounded-[3px] overflow-hidden bg-secondary">
                       {card.image ? (
                         // Already a full URL: lib/cards.ts appends /low.webp
                         // when it builds this, so the size is settled there.
@@ -148,7 +148,7 @@ export default function CardsDashboard({
                         />
                       ) : (
                         <span
-                          className="block w-full h-full bg-[var(--color-bg-grouped)]"
+                          className="block w-full h-full bg-secondary"
                           aria-hidden="true"
                         />
                       )}

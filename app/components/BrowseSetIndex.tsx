@@ -86,10 +86,10 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           aria-label="Find a set"
           className="h-[var(--control-h)] w-full pl-10 pr-4 rounded-pill outline-none
             border border-secondary bg-primary
-            [backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary
+            [backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary
             font-body text-sm font-bold
             placeholder:text-tertiary dark:border-secondary
-            hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]"
+            hover:[box-shadow:var(--shadow-elevated)] focus-visible:border-primary"
         />
       </div>
 
@@ -125,7 +125,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                     <Link
                       href={`/collection/browse/${set.id}`}
                       className="flex flex-col gap-2 p-4 rounded-orb-lg bg-[var(--color-bg-surface)]
-                        [box-shadow:var(--shadow-card)] no-underline text-inherit
+                        shadow-xs no-underline text-inherit
                         [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
                         hover:-translate-y-0.5 hover:[box-shadow:var(--shadow-elevated)]"
                     >

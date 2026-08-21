@@ -31,7 +31,7 @@ export const sectionBody =
   "m-0 text-secondary font-body text-md leading-relaxed";
 
 export const featureIcon =
-  "inline-grid w-[42px] h-[42px] place-items-center border border-[var(--color-border-subtle)] rounded-full text-primary";
+  "inline-grid w-[42px] h-[42px] place-items-center border border-secondary rounded-full text-primary";
 
 export const cardHeading =
   "mt-1 mb-0 text-primary font-body font-medium " +

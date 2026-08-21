@@ -46,7 +46,7 @@ export default function AppearanceSettings() {
               className="absolute opacity-0 w-0 h-0"
             />
             <span
-              className="block p-3 rounded-btn border border-[var(--color-border-active)] text-center cursor-pointer
+              className="block p-3 rounded-btn border border-primary text-center cursor-pointer
                 group-has-[:checked]:border-[var(--color-tint)] group-has-[:checked]:[box-shadow:inset_0_0_0_1px_var(--color-tint)]
                 group-has-[:focus-visible]:[outline:2px_solid_var(--color-tint)] group-has-[:focus-visible]:outline-offset-2"
             >

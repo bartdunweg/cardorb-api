@@ -109,10 +109,10 @@ const gridHoverPillClassName = [
   "data-[view=grid]:after:content-[''] data-[view=grid]:after:absolute data-[view=grid]:after:inset-0",
   "data-[view=grid]:after:z-0 data-[view=grid]:after:rounded-orb-md",
   "data-[view=grid]:after:bg-primary data-[view=grid]:after:border",
-  "data-[view=grid]:after:border-secondary data-[view=grid]:after:[box-shadow:var(--shadow-card)]",
+  "data-[view=grid]:after:border-secondary data-[view=grid]:after:shadow-xs",
   "data-[view=grid]:after:opacity-0 data-[view=grid]:after:scale-[0.98]",
   "data-[view=grid]:after:transition data-[view=grid]:after:duration-150",
-  "data-[view=grid]:after:[transition-timing-function:var(--ease-smooth)]",
+  "data-[view=grid]:after:ease-out",
   "data-[view=grid]:after:pointer-events-none",
   "data-[view=grid]:hover:after:opacity-100 data-[view=grid]:hover:after:scale-100",
   "data-[view=grid]:focus-within:after:opacity-100 data-[view=grid]:focus-within:after:scale-100",
@@ -276,7 +276,7 @@ const CardItem = memo(function CardItem({
         data-[view=grid]:relative data-[view=grid]:p-2 data-[view=grid]:rounded-orb-md
         ${gridHoverPillClassName}
         data-[view=list]:flex-row data-[view=list]:items-center data-[view=list]:gap-4
-        data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-[var(--color-border)]
+        data-[view=list]:py-3 data-[view=list]:border-b data-[view=list]:border-secondary
         data-[view=list]:last:border-b-0`}
       data-view={view}
     >
@@ -384,7 +384,7 @@ const CardItem = memo(function CardItem({
                       ? "[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] text-xs text-secondary"
                       : // Wanted rather than held: an outline instead of a fill, so
                         // the difference survives being read in greyscale too.
-                        "bg-transparent border border-dashed border-[var(--color-border-active)] text-xs text-tertiary"
+                        "bg-transparent border border-dashed border-primary text-xs text-tertiary"
                   }
                 >
                   {v.rarity ?? "Unknown"}

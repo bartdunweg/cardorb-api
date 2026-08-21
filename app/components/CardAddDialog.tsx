@@ -61,18 +61,18 @@ const cardAddLabelClassName =
 // for a different control.
 const cardAddInputClassName =
   "h-[var(--control-h)] border border-secondary bg-primary rounded-pill " +
-  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary " +
+  "[backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary " +
   "font-body text-sm font-bold " +
   "placeholder:text-tertiary dark:border-secondary " +
-  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
+  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:border-primary";
 
 /** The one big field this dialog opens on — taller and louder than the rest. */
 const cardAddSearchClassName =
   "h-14 w-full pl-11 pr-11 border border-secondary bg-primary rounded-2xl " +
-  "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary outline-none " +
+  "[backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary outline-none " +
   "font-body text-display-xs font-bold " +
   "placeholder:text-tertiary dark:border-secondary " +
-  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
+  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:border-primary " +
   "[&::-webkit-search-cancel-button]:hidden";
 
 const EMPTY: Draft = {
@@ -578,7 +578,7 @@ export default function CardAddDialog({
                     key={match.id}
                     type="button"
                     className="flex flex-col items-center gap-1 p-2 rounded-orb-lg border border-transparent
-                      text-center cursor-pointer hover:border-[var(--color-border)]"
+                      text-center cursor-pointer hover:border-secondary"
                     // The image alt is decorative context, not the whole
                     // story: a card with no scan renders no img at all, so
                     // the button needs its own name rather than depending on

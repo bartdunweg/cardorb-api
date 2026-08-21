@@ -56,7 +56,7 @@ const { h2, h3, body, link, strong } = legal;
  *  chrome sphere can be judged against both without toggling the theme. */
 const panel =
   "flex items-center justify-center gap-6 p-6 rounded-lg " +
-  "border border-[var(--color-border-subtle)] min-h-[200px]";
+  "border border-secondary min-h-[200px]";
 
 /**
  * One cut of the mark, at a size worth looking at.
@@ -85,7 +85,7 @@ function Swatch({ name, pair }: { name: string; pair: ColourPair }) {
           token guard was pointed at .tsx: no such token has ever existed, so
           this and the panel above were drawing square corners on the one page
           whose job is showing the shapes. */}
-      <div className="flex h-14 rounded-pill overflow-hidden border border-[var(--color-border-subtle)]">
+      <div className="flex h-14 rounded-pill overflow-hidden border border-secondary">
         {/* Both halves of the pair at once. A swatch that showed only the
             current theme's value would make this page tell half the truth
             depending on when you opened it. */}

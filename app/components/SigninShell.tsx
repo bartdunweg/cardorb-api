@@ -37,8 +37,8 @@ export function SigninOr({ className, ...rest }: HTMLAttributes<HTMLParagraphEle
       className={[
         "flex items-center gap-3 mx-[calc(-1*var(--card-pad))]",
         "font-body text-xs text-tertiary",
-        "before:content-[''] before:flex-1 before:border-t before:border-[var(--color-border)]",
-        "after:content-[''] after:flex-1 after:border-t after:border-[var(--color-border)]",
+        "before:content-[''] before:flex-1 before:border-t before:border-secondary",
+        "after:content-[''] after:flex-1 after:border-t after:border-secondary",
         className,
       ]
         .filter(Boolean)
@@ -74,7 +74,7 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
   return (
     <p
       className={[
-        "m-0 py-3 px-3.5 border border-[var(--color-border-subtle)] rounded-orb-sm",
+        "m-0 py-3 px-3.5 border border-secondary rounded-orb-sm",
         "bg-[var(--color-surface-subtle)] text-secondary",
         "text-sm leading-relaxed",
         className,

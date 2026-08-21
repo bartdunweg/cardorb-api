@@ -213,9 +213,9 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                   type="button"
                   onClick={() => onAddCard(card)}
                   className="inline-flex items-center gap-1 self-start mt-[2px] py-1 px-2 rounded-pill
-                    border border-[var(--color-border)] bg-transparent text-secondary
+                    border border-secondary bg-transparent text-secondary
                     font-body text-xs font-bold
-                    hover:text-primary hover:[border-color:var(--color-border-active)]
+                    hover:text-primary hover:border-primary
                     focus-visible:outline-2 focus-visible:[outline-color:var(--color-label)] focus-visible:outline-offset-2"
                 >
                   <Plus size={12} aria-hidden="true" />

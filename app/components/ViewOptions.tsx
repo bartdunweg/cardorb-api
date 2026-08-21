@@ -210,7 +210,7 @@ export default function ViewOptions({
                   tabular-nums cursor-pointer ${
                     cols === n
                       ? "border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
-                      : "border border-[var(--color-border)] bg-transparent text-secondary"
+                      : "border border-secondary bg-transparent text-secondary"
                   }`}
                 aria-pressed={cols === n}
                 onClick={() => onCols(n)}

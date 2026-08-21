@@ -250,7 +250,7 @@ export default async function Home() {
           <Link
             href="/app/ios"
             className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
-            border border-[var(--color-border-subtle)] text-tertiary no-underline
+            border border-secondary text-tertiary no-underline
             font-body text-xs
             [transition:color_150ms_var(--ease-smooth)] hover:text-primary"
           >
@@ -438,7 +438,7 @@ export default async function Home() {
           </div>
           <div
             className="flex gap-4 items-center p-5 border border-secondary rounded-orb-md
-            bg-primary [box-shadow:var(--shadow-card)]
+            bg-primary shadow-xs
             [@media(max-width:800px)]:max-w-[430px]"
           >
             <span className={featureIcon}>

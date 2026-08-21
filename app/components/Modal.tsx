@@ -332,7 +332,7 @@ export default function Modal({
           covers the overlay too, so the whole screen becomes the dialog and the
           click-outside-to-close target sits inside the thing it closes. */}
       <div
-        className={`modal relative border border-[var(--color-border-subtle)] [background:rgba(255,255,255,0.8)] dark:[background:rgba(34,34,34,0.8)] ${className}`.trim()}
+        className={`modal relative border border-secondary [background:rgba(255,255,255,0.8)] dark:[background:rgba(34,34,34,0.8)] ${className}`.trim()}
         ref={modalRef}
         style={{ opacity: 0 }}
         role="dialog"

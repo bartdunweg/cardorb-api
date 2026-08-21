@@ -57,7 +57,7 @@ const RAIL_BELOW = 2;
 /** The hairline between the destinations and the sets. Same markup as the one
  *  in CardsSidebar.tsx, so the rows either side of it are not off by 20px. */
 function RailDivider() {
-  return <span className="block h-px m-2 bg-[var(--color-border-subtle)]" />;
+  return <span className="block h-px m-2 bg-secondary" />;
 }
 
 function RailRow() {

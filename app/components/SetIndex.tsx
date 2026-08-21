@@ -97,7 +97,7 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                   <Link
                     href={`/collection/set/${slugify(set.name)}`}
                     className="flex flex-col gap-2 p-4 rounded-orb-lg bg-[var(--color-bg-surface)]
-                      [box-shadow:var(--shadow-card)] no-underline text-inherit
+                      shadow-xs no-underline text-inherit
                       [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
                       hover:-translate-y-0.5 hover:[box-shadow:var(--shadow-elevated)]"
                   >

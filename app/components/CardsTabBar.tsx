@@ -169,12 +169,12 @@ export default function CardsTabBar({
                 alt=""
                 width={20}
                 height={20}
-                className="w-5 h-5 shrink-0 aspect-square rounded-full object-cover border border-[var(--color-border-subtle)]"
+                className="w-5 h-5 shrink-0 aspect-square rounded-full object-cover border border-secondary"
               />
             ) : (
               <span
-                className="grid place-items-center w-5 h-5 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
-                  border border-[var(--color-border-subtle)] text-tertiary
+                className="grid place-items-center w-5 h-5 shrink-0 aspect-square rounded-full bg-secondary
+                  border border-secondary text-tertiary
                   font-body [font-size:9px] font-medium"
                 aria-hidden="true"
               >

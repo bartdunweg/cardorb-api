@@ -215,7 +215,7 @@ export default async function IosApp() {
         >
           <span
             className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
-              border border-[var(--color-border-subtle)] text-tertiary
+              border border-secondary text-tertiary
               font-body text-xs"
           >
             <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
@@ -289,7 +289,7 @@ export default async function IosApp() {
                     picture of a promise. */}
                 <div
                   className="grid place-items-center w-full aspect-[9/19]
-                    rounded-[28px] border border-dashed border-[var(--color-border-active)]
+                    rounded-[28px] border border-dashed border-primary
                     bg-[color-mix(in_srgb,var(--color-label)_3%,transparent)]
                     text-tertiary font-body text-xs"
                   aria-hidden="true"
@@ -390,7 +390,7 @@ export default async function IosApp() {
           </div>
           <dl
             className="grid gap-4 p-5 m-0 border border-secondary rounded-orb-md
-              bg-primary [box-shadow:var(--shadow-card)]
+              bg-primary shadow-xs
               [@media(max-width:800px)]:max-w-[430px]"
           >
             {REQUIREMENTS.map(({ term, detail }) => (

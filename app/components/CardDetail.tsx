@@ -189,7 +189,7 @@ export default function CardDetail({
         </dl>
 
         {mine && (
-          <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
+          <div className="mt-6 pt-6 border-t border-secondary">
             <p className="m-0 mb-3 font-body text-xs text-tertiary">
               In the binder
             </p>

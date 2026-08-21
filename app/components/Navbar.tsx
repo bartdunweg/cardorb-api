@@ -22,7 +22,7 @@ export default function Navbar({ center, right }: { center?: ReactNode; right?: 
   return (
     <nav
       className="sticky top-0 z-[var(--z-sticky)] w-full py-4 px-[var(--page-pad-x)]
-        bg-primary [backdrop-filter:blur(16px)] border-b border-[var(--color-border-subtle)]"
+        bg-primary [backdrop-filter:blur(16px)] border-b border-secondary"
       aria-label="Primary navigation"
     >
       <div

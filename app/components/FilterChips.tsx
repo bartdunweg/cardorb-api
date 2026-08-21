@@ -32,9 +32,9 @@ export default function FilterChips({
           key={`${f.group}-${f.value}`}
           type="button"
           className="inline-flex items-center gap-2 h-7 [padding:0_var(--space-2)_0_var(--space-3)]
-            border border-[var(--color-border-active)] rounded-pill bg-transparent
+            border border-primary rounded-pill bg-transparent
             font-body text-xs text-primary cursor-pointer
-            transition-colors duration-[150ms] ease-[var(--ease-smooth)]
+            transition-colors duration-[150ms] ease-out
             hover:bg-[var(--btn-primary-bg)] hover:border-[var(--btn-primary-bg)] hover:text-[var(--btn-primary-text)]
             [&_svg]:flex-shrink-0 [&_svg]:opacity-60 hover:[&_svg]:opacity-100"
           onClick={f.onRemove}

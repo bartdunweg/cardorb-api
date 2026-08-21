@@ -54,7 +54,7 @@ export function Sheet({
         bg-[var(--color-bg-surface)]"
     >
       <div className="sheet flex flex-col max-h-[88svh]">
-        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-secondary">
           <h2 className="m-0 font-body font-medium text-lg text-primary">
             {title}
           </h2>
@@ -77,7 +77,7 @@ export function Sheet({
             end of six hundred Pokémon first, and clear of the home
             indicator. */}
         <div
-          className="flex gap-2 border-t border-[var(--color-border)]
+          className="flex gap-2 border-t border-secondary
             pt-3 px-4 [padding-bottom:calc(var(--spacing)*4+env(safe-area-inset-bottom,0px))]"
         >
           {footer}

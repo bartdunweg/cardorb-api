@@ -26,7 +26,7 @@ export default function MarketingFooter() {
   return (
     <footer
       className="grid grid-cols-[1fr_minmax(0,1.6fr)_1fr] gap-4 items-start pt-5
-        border-t border-[var(--color-border-subtle)] text-tertiary
+        border-t border-secondary text-tertiary
         font-body text-xs
         [@media(max-width:640px)]:grid-cols-1 [@media(max-width:640px)]:text-center"
     >
