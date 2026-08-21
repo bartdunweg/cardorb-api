@@ -2,6 +2,7 @@
 
 import { SettingsSaid } from "@/components/custom/SettingsPanel";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { FileTrigger } from "@/components/base/file-upload-trigger/file-upload-trigger";
 import { useAvatarUpload } from "@/components/custom/useAvatarUpload";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
@@ -41,39 +42,39 @@ export default function AvatarPicker({
         className="shrink-0"
       />
       <div>
-        {/* The input is sr-only, so its own :focus-visible outline lands
-            on a clipped 1px box — invisible. group on the label,
-            group-has-[:focus-visible] on the visible span (same pattern
-            as AppearanceSettings.tsx/SettingsPanel.tsx's other
-            hidden-input controls — Tailwind's group-has-* variant is a
-            descendant selector, so it has to land on a child of .group,
-            not .group itself) puts the ring where a keyboard user can
-            actually see it. */}
-        <label className="group cursor-pointer">
-          <span
+        {/* Untitled UI's FileTrigger. It holds the hidden input itself and
+            opens it from whatever single child it is given, so the control
+            here is an ordinary <button> — which is what it always should have
+            been.
+
+            That retires a whole paragraph of workaround. The label wrapped an
+            sr-only input, whose own :focus-visible outline landed on a clipped
+            1px box and was therefore invisible, so the ring had to be borrowed
+            from the input by the span beside it through
+            `group-has-[:focus-visible]`. A real button has a real focus ring.
+
+            It also retires the `e.target.value = ""` reset: FileTrigger clears
+            the input before every click, so picking the same file twice in a
+            row still fires. Same guarantee, one level down. */}
+        <FileTrigger
+          acceptedFileTypes={["image/png", "image/jpeg", "image/webp"]}
+          onSelect={async (files) => {
+            const file = files?.[0];
+            if (!file) return;
+            if (await upload(file)) onUploaded?.();
+          }}
+        >
+          <button
+            type="button"
+            disabled={busy}
             className={untitledButton({
               color: "secondary",
-              className: `group-has-[:focus-visible]:outline-2 outline-primary
-                group-has-[:focus-visible]:outline-offset-2${busy ? " opacity-55 cursor-not-allowed" : ""}`,
+              className: busy ? "opacity-55 cursor-not-allowed" : undefined,
             })}
           >
             {busy ? "Saving…" : avatarUrl ? "Change" : "Upload"}
-          </span>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
-            disabled={busy}
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              // Cleared before the await, so picking the same file twice in a
-              // row still fires a change event the second time.
-              e.target.value = "";
-              if (!file) return;
-              if (await upload(file)) onUploaded?.();
-            }}
-          />
-        </label>
+          </button>
+        </FileTrigger>
         {said && <SettingsSaid>{said}</SettingsSaid>}
       </div>
     </div>
