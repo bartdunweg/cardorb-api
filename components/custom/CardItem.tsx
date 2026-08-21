@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, type CSSProperties } from "react";
+import { memo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/base/badges/badges";
 import { highScan } from "@/lib/core/cards";
@@ -159,8 +159,10 @@ const CardItem = memo(function CardItem({
    * Whether this one card has been given the trading-card effect yet.
    *
    * The effect is `hover-tilt` and the foil over it is pokemon-cards-css, the
-   * same pair the binder card on /about is built from: see PullScan, which is
-   * where both are argued for.
+   * same pair TiltScan puts on a card's own page. The foil is argued for at the
+   * top of app/styles/poke-holo.css; the pair as a whole is protected by
+   * docs/decisions/0061-only-the-card-effects-are-protected.md. (This used to
+   * point at PullScan and the binder card on /about, and neither still exists.)
    *
    * What is different here is that there are 1,622 of these rather than one, and
    * the honest answer to "can it go on all of them" is no, not standing. Each
@@ -175,23 +177,61 @@ const CardItem = memo(function CardItem({
    * pay the cost twice, and an element already in the document is free.
    */
   const [tilted, setTilted] = useState(false);
+  const arming = useRef(false);
   const arm = () => {
-    // Imported here rather than at the top of the file, for the reason PullScan
+    if (arming.current) return;
+    arming.current = true;
+    // Imported here rather than at the top of the file, for the reason TiltScan
     // gives: the module calls customElements.define on evaluation, and a client
     // component is still evaluated on the server. Repeat calls are the module
     // cache, so this costs nothing after the first card.
-    import("hover-tilt/web-component");
-    setTilted(true);
+    //
+    // Awaited before the switch, which it was not: setTilted used to run on the
+    // line below the import, so React put <hover-tilt> in the document while
+    // customElements.define had not run yet. That is an element with no shadow
+    // root, no slot and none of its own stylesheets — the picture was drawn once
+    // undefined and again on upgrade, and the gap between the two was visible as
+    // a flash on the first hover of every card. The ref is because pointerenter
+    // fires again before state comes back, and two arms mean two imports in
+    // flight.
+    import("hover-tilt/web-component")
+      .then(() => setTilted(true))
+      .catch(() => {
+        // The scan keeps working without the effect, so a chunk that fails to
+        // load leaves the card bare rather than broken — and lets the next
+        // hover try again.
+        arming.current = false;
+      });
   };
+
+  /**
+   * The bigger file, where TCGdex publishes one. Null for a scan that is not
+   * theirs, and the difference between "try the other size" and "there is no
+   * other size to try".
+   */
+  const hiScan = highScan(card.image);
+  /**
+   * Whether the low-quality file failed and this card is showing the high one
+   * instead. State rather than a mark on the element: the element does not
+   * survive being armed (see below), and the flag used to live in its dataset,
+   * so a card that had already recovered went back to the src that 404s the
+   * moment you pointed at it.
+   */
+  const [retriedHigh, setRetriedHigh] = useState(false);
 
   /**
    * The picture, lifted out of the tree below because it is rendered in two
    * shapes: bare, and inside the tilt once this card has been armed.
    *
-   * Swapping between them remounts the element, which is the price of doing this
-   * per card rather than for all of them up front. By the time anyone points at
-   * a card its file is decoded and in the memory cache, so the second mount
-   * paints in the same frame.
+   * Swapping between them remounts it. React cannot move an element to a deeper
+   * place in the tree, so the old <img> is destroyed and a new one is created,
+   * and that is unavoidable without mounting the effect on all 1,622 cards. What
+   * is avoidable is the blank frame it used to leave: a freshly inserted `lazy`
+   * image is only tested for visibility after layout, and `async` decoding waits
+   * for a later frame, so the new element arrived empty even though the file was
+   * already in memory. Hence the two attributes reading `tilted`, which in here
+   * means exactly "this is the second mount": the card is being pointed at, so
+   * it is on screen and its file is decoded, and there is nothing left to defer.
    */
   const scanImg = scan ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -203,10 +243,10 @@ const CardItem = memo(function CardItem({
       // makes this quiet: a browser keeps painting the picture it has until the
       // new one has decoded, so crossing the threshold sharpens the grid in
       // place instead of blanking it and filling it back in.
-      src={(big && highScan(card.image)) || card.image!}
+      src={((big || retriedHigh) && hiScan) || card.image!}
       alt={card.name}
-      loading="lazy"
-      decoding="async"
+      loading={tilted ? "eager" : "lazy"}
+      decoding={tilted ? "sync" : "async"}
       // Two ways a scan goes missing, and they need different answers.
       // The grid asks for `low` because it draws these at 120px, but
       // TCGdex does not publish that quality for every card and its CDN
@@ -220,14 +260,17 @@ const CardItem = memo(function CardItem({
       // artwork arrives per set rather than per card: if this one has
       // none, the twenty-three beside it have none either, and they
       // should not each spend two slow requests finding that out.
-      onError={(e) => {
-        const img = e.currentTarget;
-        if (img.dataset.retried) {
+      //
+      // A card that is already showing `high` — because it is drawn big,
+      // or because it retried — has no other size left, and neither does
+      // one whose scan is not TCGdex's. Those give up on the first
+      // failure rather than re-requesting the file that just failed.
+      onError={() => {
+        if (big || retriedHigh || !hiScan) {
           onScanBroken(card.key, setName);
           return;
         }
-        img.dataset.retried = "1";
-        img.src = img.src.replace("/low.webp", "/high.webp");
+        setRetriedHigh(true);
       }}
       // The ratio .cards-scan already reserves, stated on the element
       // too, so the browser knows the shape before the file lands
@@ -299,11 +342,10 @@ const CardItem = memo(function CardItem({
           onPointerEnter={tilt && !tilted ? arm : undefined}
         >
           {tilted && scan ? (
-            /* The same two props PullScan settles on, minus the shadow: these
-               already carry a drop-shadow that follows the scan's transparent
-               corners (.cards-scan img), and the library's own is a box behind
-               a tile in a dense grid. The foil is the stylesheet's, keyed off
-               the printing exactly as it is on /about. */
+            /* The same two props TiltScan uses, minus the shadow: these already
+               carry a drop-shadow that follows the scan's transparent corners,
+               and the library's own is a box behind a tile in a dense grid. The
+               foil is the stylesheet's, keyed off the printing. */
             <hover-tilt className="poke-tilt" tilt-factor="1" glare-intensity="0.5" glare-hue="200">
               <span
                 className="poke-card"

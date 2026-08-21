@@ -196,6 +196,12 @@ root `CLAUDE.md` for how and when to write to it.
   re-try them, and that the X axis had silently become a category axis when
   ADR-0075 swapped the hand-drawn SVG for Recharts. It also covers the snapshot
   cron going nightly, and why that cannot backfill the past.
+- `decisions/0086-the-tilt-is-armed-after-the-module-lands-not-before.md` —
+  **read before touching how a card arms its hover effect.** The tilt used to be
+  put on screen before the code that draws it had loaded: `<hover-tilt>` sat in
+  the document undefined for 36–47 ms, which is what a first hover flashing was.
+  It also carries the reason the `<img>` remount is accepted rather than removed,
+  and what to reach for if the flash ever comes back.
 - `decisions/0053-memory-stays-in-docs.md` — **read before moving anything in
   this directory.** The shared standards keep a repository's memory in
   `.dev-standards/` from v0.11.0 onwards; this repository deliberately keeps

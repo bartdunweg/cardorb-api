@@ -49,6 +49,33 @@ this repo's stash list before this session and got popped into the tree by a
 `git stash` round-trip here; it has been put back, untouched. It is not part of
 this work.
 
+## The card stopped flashing on hover (2026-08-22, workspace `denver`)
+
+Bart reported that pointing at a card made it flash, disappear for an instant, and
+only then tilt — once per card, on its first hover. `CardItem`'s `arm()` fired
+`import("hover-tilt/web-component")` and `setTilted(true)` on the next line without
+awaiting, so `<hover-tilt>` went into the document before `customElements.define`
+had run. **Measured against a clean build: the element sat undefined for 36–47 ms**,
+then upgraded and re-laid-out its children. ADR-0086 has the numbers and the method
+(a `MutationObserver` reading `customElements.get()` and `shadowRoot` at insertion).
+
+Fixed by awaiting the import, plus `eager`/`sync` on the `<img>` that the swap
+remounts and a fix to the 404 retry, which lived in the element's `dataset` and so
+did not survive that remount. Verified: `defined`/`upgraded` are both true at
+insertion, twice in a row; `prefers-reduced-motion` still reports
+`transform: none` with the foil lit, as ADR-0061 and `poke-holo.css` intend.
+
+**One thing is not settled: whether Bart still sees anything.** Headless Chromium
+cannot show whether a frame painted, so the DOM-level cause is proved and the pixel
+is not. Upgrading a custom element promotes a compositor layer whatever we do, and
+that can still cost a frame. If it is still visible, ADR-0086's option 3 is the next
+move and the record says why it was left on the shelf.
+
+**A trap worth knowing:** `scripts/verify.sh` runs a production build into `.next`,
+and a `next dev` started around it served a stale bundle — a measurement said
+`lazy`/`async` on code that plainly reads `eager`/`sync`. Kill dev, `rm -rf .next`,
+restart, then measure.
+
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 
 Five `review-*` skills were run over the whole app rather than over a diff —
