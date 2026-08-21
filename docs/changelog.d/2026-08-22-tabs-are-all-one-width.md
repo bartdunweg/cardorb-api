@@ -1,0 +1,2 @@
+- Every tab in the mobile tab bar is now the same width — the width of the widest one — so the "You" tab no longer sits narrower than the rest.
+- The add button has moved out of the mobile tab bar and onto the dashboard, beside its heading, which is what makes room for the tabs to be equal. Adding a card from a phone starts on the dashboard for now.

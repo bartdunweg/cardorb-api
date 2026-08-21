@@ -9,27 +9,13 @@ import { cx } from "@/utils/cx";
  *
  * ── Why this exists at all ─────────────────────────────────────────────────
  *
- * Almost every button in this app is `<Button>`. Seven files reach for the
- * class string instead, and this list was rewritten on 2026-08-21 because the
- * one that stood here was wrong in three of its four claims and counted five
- * call sites where there are seven.
+ * Almost every button in this app is `<Button>`. **Two files** reach for the
+ * class string instead, across **five call sites**, and every one of them is an
+ * element a React Aria Button cannot be:
  *
- * What it said, and what is actually true:
- *
- *   - It claimed **`<summary>`** — that FilterSheet and ViewSheet are
- *     `<details>/<summary>`, which a React Aria Button cannot be. They are not.
- *     Both render `<button type="button">` opening a `<Sheet>`/`<Modal>`, and
- *     MenuPopover renders the vendored Button for the same job.
- *   - It claimed **`<label>`** — that AvatarPicker's trigger is a file input's
- *     label, keyboard-reachable without JavaScript. It is a
- *     `<button type="button">` inside React Aria's `<FileTrigger>`.
- *   - It claimed **PublicCardDialog's arrows are `<span aria-hidden>`**. They
- *     are real `<button disabled>`.
- *
- * The list that survives inspection:
- *
- *   - **`<a>`** — CardNav's previous/next are `<Link>`s. They navigate, so they
- *     are anchors, and an anchor is not a button.
+ *   - **`<a>`** — CardNav's previous/next are Next `<Link>`s. They navigate, so
+ *     they are anchors, and an anchor is not a button. The vendored Button's
+ *     `href` renders React Aria's `<a>`, which has no slot for `scroll={false}`.
  *   - **`<span aria-hidden>`** — CardNav's *disabled* ends only. There is
  *     nowhere to go, and a real disabled button is something a screen reader
  *     walks past announcing nothing useful.
@@ -38,13 +24,28 @@ import { cx } from "@/utils/cx";
  *     on the real element, and the vendored Button is typed as a plain call
  *     signature whose props carry no `ref`.
  *
- * That leaves four consumers — FilterSheet (3), ViewSheet (2), PublicCardDialog
- * (2) and AvatarPicker (1) — which are plain `<button>` elements with **no
- * stated reason** not to be `<Button>`. They are not defended here because the
- * defence was untrue. Converting them is its own change; until somebody does,
- * this file is carrying them rather than justifying them.
+ * ── Two earlier versions of this list were wrong, in different ways ─────────
  *
- * If you are about to add an eighth, it belongs in one of the three real
+ * The first named four reasons and counted five call sites. An audit on
+ * 2026-08-21 found three of the four untrue: FilterSheet and ViewSheet were not
+ * `<details>/<summary>`, AvatarPicker's trigger was not a `<label>`, and
+ * PublicCardDialog's arrows were real `<button disabled>` rather than spans.
+ *
+ * The second version said so honestly and then carried those four files anyway,
+ * under the heading "no stated reason", pending a change somebody would make
+ * later. This is that change: all eight of those call sites are the component
+ * now, and the paragraph excusing them is gone with them. Two of the eight
+ * needed Untitled UI's Button directly rather than this app's wrapper — a
+ * trigger with `aria-haspopup`, and an icon-only button with no children — and
+ * each says so where it stands.
+ *
+ * That second version also miscounted twice, which is worth recording because
+ * it is the same failure as the first: it said "seven files" where there were
+ * six, and "seven call sites" where there were thirteen. **Count them before
+ * writing a number here.** `grep -rn "untitledButton\|untitledIconButton"
+ * components/ app/` is the whole check.
+ *
+ * If you are about to add a sixth call site, it belongs in one of the three
  * categories above or it belongs in the component.
  *
  * ── This reads the recipe. It used to copy it. ─────────────────────────────
@@ -72,7 +73,7 @@ type Size = keyof typeof styles.sizes;
 
 /**
  * `no-underline` because the component sets it from a prop, and a bare class
- * string has no prop. Every consumer here is a link, a summary or a label.
+ * string has no prop. Every consumer left here is an anchor or a span.
  */
 export function untitledButton({
   color = "secondary",

@@ -122,7 +122,13 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
   if (!card) notFound();
 
   return (
-    <section className="max-w-[calc(var(--content-max)+2*var(--page-pad-x))] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]">
+    // The skip link's target here. This route draws no navigation of its own,
+    // so the landmark simply wraps everything — see app/layout.tsx for why each
+    // screen carries one rather than the root layout.
+    <main
+      id="main-content"
+      className="max-w-[calc(var(--content-max)+2*var(--page-pad-x))] mx-auto [padding:0_var(--page-pad-x)_var(--page-pad-bottom)]"
+    >
       {/* The portfolio built a Product node with the market price here, plus a
           breadcrumb. Both are search-engine markup and this app ships noindex,
           so they came out with the rest of the JSON-LD. */}
@@ -133,6 +139,6 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
 
         <CardDetail card={card} mine={mine} nav={<CardNav prev={prev} next={next} />} />
       </Card>
-    </section>
+    </main>
   );
 }

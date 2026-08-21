@@ -138,7 +138,24 @@ export default function RootLayout({
           >
             Skip to content
           </a>
-          {/* ml-0 + pt-[var(--main-pad-top)] used to live in tabbar.css's own
+          {/* A <div>, not the <main>, and not `id="main-content"` — both moved
+              down to the individual screens.
+
+              This used to be `<main id="main-content">`, which put the skip
+              link's target above every screen's own navigation: AppShell
+              renders the rail and the tab bar inside {children}, so "Skip to
+              content" landed a keyboard user in front of the whole rail and
+              skipped nothing but the warning bar above. A landmark can only be
+              in the right place if the thing that knows where the navigation
+              ends puts it there, and that is each shell, not this file.
+
+              Every screen therefore renders exactly one <main id="main-content">
+              after its own nav; app/main-landmark.test.ts is what keeps a new
+              route from forgetting. This wrapper keeps the padding it always
+              had, so the six shells that cancel it with -mt-[var(--main-pad-top)]
+              are cancelling the same box as before.
+
+              ml-0 + pt-[var(--main-pad-top)] used to live in tabbar.css's own
               #main-content rule: the bar pads this to clear itself, on
               desktop where it's centred at the top (see tokens.css's
               responsive step for --main-pad-top). The 640px override
@@ -147,12 +164,9 @@ export default function RootLayout({
               shows above the content. Exact 640px arbitrary media query
               rather than Tailwind's max-sm (which is <640px, not <=640px)
               to match the boundary tabbar.css/tokens.css's 641px split used. */}
-          <main
-            id="main-content"
-            className="ml-0 pt-[var(--main-pad-top)] [@media(max-width:640px)]:pt-0"
-          >
+          <div className="ml-0 pt-[var(--main-pad-top)] [@media(max-width:640px)]:pt-0">
             {children}
-          </main>
+          </div>
           {modal}
         </ThemeProvider>
         {/* In production this serves itself from /_vercel/insights on this

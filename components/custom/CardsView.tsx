@@ -1690,7 +1690,18 @@ export default function CardsView({
         onBrokenLogo={(name) => setBrokenLogos((prev) => new Set(prev).add(name))}
       />
 
-      <section className={cardsMainClassName}>{main}</section>
+      {/* The public page's <main>, and only the public page's: this whole
+          branch is behind `if (!isPublic) return main` above, so on the signed-in
+          side CardsView returns the body alone and AppShell's own <main> is the
+          landmark. Two of them would be a nested <main>.
+
+          It has to be this element rather than the grid around it, for the same
+          reason it does in AppShell: the rail and the bar are its siblings, and
+          a landmark drawn around all three is a landmark with the navigation
+          inside it — which is what "Skip to content" is for skipping. */}
+      <main id="main-content" className={cardsMainClassName}>
+        {main}
+      </main>
 
       {/* Last, so Tab reaches the collection before the bar under it. It is
           fixed, so where it sits in the document costs it nothing. */}
@@ -1709,7 +1720,6 @@ export default function CardsView({
                 // label. Everything else is its own name already.
                 openPane(tab === "collection" ? "all" : tab)
         }
-        onAdd={() => setAdding(true)}
       />
 
       {/* Only when signed in: the dialog's first act is to ask the database

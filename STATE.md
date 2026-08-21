@@ -4,20 +4,40 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Three of the four open items shipped (2026-08-21/22, workspace `biarritz`)
 
-Four things had been decided and not built. Three are now PRs against `main`,
-each with a real browser pass rather than a claim:
+Four things had been decided and not built. Three are merged, each with a real
+browser pass rather than a claim:
 
 - **PR #117 — the last four undefended buttons** (ADR-0084). The eight call
   sites `dd099b7` admitted were carrying no reason are the component now. Only
   pixel change: +4px width on the three buttons that have both an icon and a
   label. 30 of 33 screenshots identical.
-- **PR #119 — the skip link lands past the navigation** (ADR-0085). The root
-  `<main>` is a `<div>`; every screen draws its own after its own nav. Measured
-  before and after: navs inside `<main>` 2 → 0, and focus lands on real content
-  instead of `Card Orb home` on all four kinds of route. Zero pixels changed.
+- **PR #119 — the skip link lands past the navigation** (**ADR-0087**, not
+  0085 — see below). The root `<main>` is a `<div>`; every screen draws its own
+  after its own nav. Measured before and after: navs inside `<main>` 2 → 0, and
+  focus lands on real content instead of `Card Orb home` on all four kinds of
+  route. Zero pixels changed.
 - **PR #120 — changing a password asks for the current one** (ADR-0082). The
   sweep's most severe finding, and it never needed the dashboard setting it was
   blamed on. Verified live with real recovery and magic-link tokens.
+
+### Three record numbers collided, and only one could be fixed
+
+Four parallel worktrees merged while these were in review. `0084`, `0085` and
+`0086` all ended up doubled.
+
+- **`0085` was resolved by renumbering**, which is what `verify.sh`'s
+  `record numbers` check tells you to do: the half that has not landed yet moves,
+  because the other one's cross-references are already on `main`. This session's
+  main-landmark record is **ADR-0087**.
+- **`0084` and `0086` cannot be**: both halves of each were already merged before
+  the collision was visible. They need a baseline entry in `scripts/verify.sh`'s
+  `ACCEPTED_COLLISIONS`, the same way ADR-0071's twelve are handled. **Not done
+  here — `verify.sh` is a shared file and a parallel worktree is probably in it.**
+  Until somebody adds them, `record numbers` is red on `main` for reasons that
+  have nothing to do with the next change.
+- **#119's squash commit title still says ADR-0085.** The renumber happened in
+  the last commit before the merge and the PR title was not updated with it. The
+  record is 0087; the commit message naming it is wrong and cannot be rewritten.
 
 ### Not started: the add-card command-dialog rewrite (ADR-0079 + ADR-0080)
 
@@ -66,6 +86,113 @@ a parallel workspace ran `pkill -f "next start"` and killed both servers
 mid-run, which produced a convincing and entirely fictitious failure list.
 **Start the server with the agent harness's own background mode, and curl it
 after the run as well as before.**
+## The value chart got its axes back (2026-08-22, workspace `banjul`)
+
+Branch `bartdunweg/value-chart-untitled-style`, not yet merged. FB-0021 and
+ADR-0085 have the whole story; the short version:
+
+- **The dashboard's "Value over time" card is Untitled UI's chart now** — two
+  real axes, rounded euro ticks (€30k/€35k/€40k/€45k), horizontal gridlines,
+  brand purple, 240px tall, and no dots except the one under the pointer. It
+  was reported as "heel lelijk" with both axes hidden, which it was.
+- **A regression was found and fixed on the way.** The X axis had been
+  `dataKey="date"` with no `type` since ADR-0075 swapped the hand-drawn SVG for
+  Recharts — a *category* axis, evenly spaced by position in the list. The old
+  file had gone to some length to space X by elapsed time and to say why, and
+  that intent was silently dropped. It is a `scale="time"` axis again, and
+  `chartPoints` hands it a `t` field so a future rewrite has to delete
+  something to lose it.
+- **Two ready-made ways to pick x-axis labels do not work here**, and ADR-0085
+  says so in detail: Recharts' `tickCount` on a data-pinned time domain draws
+  only the two ends, and `charts-base`'s `selectEvenlySpacedItems` picks evenly
+  by position in the list. `timeTicks()` in `lib/core/value-chart.ts` does it by
+  time. Do not re-try either.
+- **The snapshot cron is nightly** (`vercel.json`, `0 4 * * *`, was `0 4 * * 1`).
+  Daily is the ceiling, not a preference: Hobby allows two crons at most once a
+  day, and Cardmarket's guide is only rebuilt nightly. It makes the series
+  denser from here on and **cannot backfill** — there is no archive to backfill
+  from. The tooltip carries the day now rather than the month, because daily
+  readings would otherwise be named identically.
+- `lib/core/value-chart.ts` lost `line`, `under`, `x`, `y` and `ChartBox`; all
+  five had been unread since ADR-0075. It gained `niceScale` and `timeTicks`,
+  both tested (18 cases in that file).
+- **Recharts hardcodes `fill="#666"` on axis ticks**, as a presentation
+  attribute, in both themes — 3.45:1 on the dark card, under the 4.5:1 that
+  12px text needs. Found by measuring, not by reading. The card overrides it
+  with `[&_.recharts-cartesian-axis-tick-value]:fill-current`, and **any second
+  chart in this app needs the same line**; a light-mode screenshot will not
+  show the problem.
+
+`verify.sh`: everything passes except `standards`, which fails the same way on
+`main` — the `docs/` versus `.dev-standards/` placement ADR-0053 chose on
+purpose, plus a CLAUDE.md generated from v0.22.0 against a v0.23.0 standard.
+
+**A caution about `git stash` in a Conductor workspace, since this session got
+caught by it.** The stash is a single stack in the *shared* git directory, not
+per-worktree: eight workspaces are all pushing onto the same `refs/stash`. A
+`git stash` / `git stash pop` round-trip here — used to check whether a
+`verify.sh` failure predated the branch — popped a *different* workspace's
+entry into this tree, because theirs had landed on top in between. It was put
+back untouched and its owner has since committed it as "Stop the card flashing
+on its first hover" on `bartdunweg/card-hover-flash`, so nothing was lost.
+
+Do not use `git stash` to park work in a workspace. To answer "did this failure
+exist before my branch?", read the file at the base commit
+(`git show origin/main:path`) or run the check in another worktree; both leave
+the shared stack alone.
+
+## The card stopped flashing on hover (2026-08-22, workspace `denver`)
+
+Bart reported that pointing at a card made it flash, disappear for an instant, and
+only then tilt — once per card, on its first hover. `CardItem`'s `arm()` fired
+`import("hover-tilt/web-component")` and `setTilted(true)` on the next line without
+awaiting, so `<hover-tilt>` went into the document before `customElements.define`
+had run. **Measured against a clean build: the element sat undefined for 36–47 ms**,
+then upgraded and re-laid-out its children. ADR-0086 has the numbers and the method
+(a `MutationObserver` reading `customElements.get()` and `shadowRoot` at insertion).
+
+Fixed by awaiting the import, plus `eager`/`sync` on the `<img>` that the swap
+remounts and a fix to the 404 retry, which lived in the element's `dataset` and so
+did not survive that remount. Verified: `defined`/`upgraded` are both true at
+insertion, twice in a row; `prefers-reduced-motion` still reports
+`transform: none` with the foil lit, as ADR-0061 and `poke-holo.css` intend.
+
+**One thing is not settled: whether Bart still sees anything.** Headless Chromium
+cannot show whether a frame painted, so the DOM-level cause is proved and the pixel
+is not. Upgrading a custom element promotes a compositor layer whatever we do, and
+that can still cost a frame. If it is still visible, ADR-0086's option 3 is the next
+move and the record says why it was left on the shelf.
+
+**A trap worth knowing:** `scripts/verify.sh` runs a production build into `.next`,
+and a `next dev` started around it served a stale bundle — a measurement said
+`lazy`/`async` on code that plainly reads `eager`/`sync`. Kill dev, `rm -rf .next`,
+restart, then measure.
+
+## The tab bar's slots are all one width, and the plus left it (2026-08-22, workspace `yerevan`)
+
+FB-0022, ADR-0086. Every slot in the mobile tab bar is the width of the widest
+label now — the track is `grid grid-flow-col auto-cols-fr`, so the browser does
+it and no JavaScript measures anything. The avatar slot is no longer the narrow
+one. `px-1.5` on the slot became `px-1`, which is now only the truncation floor
+rather than the visible padding; at 6px a 360px phone read "Dashbo…".
+
+**The thing to know before touching this: the 40px add circle is not in the bar
+any more.** Four equal slots plus a circle do not fit a 360px phone, so it moved
+to the dashboard's title row, on instruction and explicitly *"voor nu eventjes"*.
+Cost: on a phone, adding a card is dashboard-only — `/collection` and `/wishlist`
+have no add action. ADR-0086 lists the three ways to reverse it.
+
+Left undone, and both need a signed-in session this workspace cannot create:
+
+- **Nobody has seen the dashboard's new plus.** The geometry of the bar was
+  measured on the public `/user/<name>` bar with the four signed-in slots built
+  into the page from the same classes; the dashboard button was not rendered at
+  all. Same gap as the `/settings` and `CardAddDialog` items further down.
+- **That button is 36×36** (Untitled UI `Button`, default `sm`, icon-only →
+  `p-2` + a 20px icon), matching the rail's. It clears WCAG 2.2 AA's 24×24 but
+  not the 44×44 comfortable-touch guideline, and unlike the rail's it is now a
+  phone-only control. `size="lg"` would make it exactly 44. Left alone because
+  its visual weight beside the heading has not been looked at yet.
 
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 
@@ -199,7 +326,9 @@ is worse than the lead suggested: it names four reasons a plain `<button>` is
 allowed, says "five call sites", has ten, and **three of the four reasons are
 false** — FilterSheet and ViewSheet are not `<details>/<summary>` any more,
 AvatarPicker's trigger is not a `<label>`, and PublicCardDialog's arrows are real
-buttons.
+buttons. *(Corrected since: `dd099b7` rewrote that header, and ADR-0084 converted
+the eight call sites it admitted were undefended. The file is down to two
+importers and five call sites, all of them real.)*
 
 **Two HIGH accessibility findings, both small and both real:**
 - **The filter and view sheets are a keyboard trap.** `Sheet` hides the close
@@ -210,8 +339,13 @@ buttons.
   route at ≤1000px, which includes a desktop user at 200% zoom. The same selector
   omits `input`, `select` and `textarea`, so wrapping is wrong in `CardAddDialog`
   too.
-- **The skip link lands before the navigation it skips.** `#main-content` wraps
-  `{children}`, and `AppShell` renders the sidebar and tab bar *inside* it.
+- ~~**The skip link lands before the navigation it skips.** `#main-content` wraps
+  `{children}`, and `AppShell` renders the sidebar and tab bar *inside* it.~~
+  **Fixed, ADR-0087.** The root `<main>` is a `<div>` now and every screen draws
+  its own landmark after its own navigation. Measured before and after: navs
+  inside `<main>` went 2 → 0 on signed-in routes and 1 → 0 on the marketing and
+  legal pages, and zero pixels changed. Two guards, because the static one alone
+  could not have caught this: `app/main-landmark.test.ts` and `visual/landmark.ts`.
 
 **Five HIGH interface findings:** `/brand` renders the wordmark invisible in dark
 mode (one panel pins `#ffffff` inline while the word is `text-primary`); the
@@ -349,7 +483,8 @@ Untitled UI rather than using it". Two things were.
   asks 24, so their badge is used inside the existing full-chip button.
 
 `untitledButtonClasses.ts` is down to six consumers and its header lists all
-five reasons one is allowed. The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
+five reasons one is allowed. *(Both numbers are stale: see ADR-0084 — two
+consumers, five call sites, three reasons.)* The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
 — every alias had lost its last reader — and the test asserts it stays that way.
 The raw-hex guard now walks `components/`, which is where the components went.
 
