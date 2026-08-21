@@ -68,8 +68,20 @@ const source = readFileSync("lib/design/tokens.ts", "utf8");
 const js = ts.default.transpileModule(source, {
   compilerOptions: { module: ts.default.ModuleKind.ESNext, target: ts.default.ScriptTarget.ES2022 },
 }).outputText;
-const { colour, radius, text, leading, fontWeight, font, ease, duration, blur, zIndex } =
-  await import(`data:text/javascript,${encodeURIComponent(js)}`);
+const {
+  colour,
+  radius,
+  controlPx,
+  controlPxRect,
+  text,
+  leading,
+  fontWeight,
+  font,
+  ease,
+  duration,
+  blur,
+  zIndex,
+} = await import(`data:text/javascript,${encodeURIComponent(js)}`);
 
 /**
  * Untitled UI's theme, spliced in rather than imported.
@@ -129,9 +141,16 @@ for (const [name, value] of Object.entries(colour)) {
  * `--dur-*` and `--z-*` have no namespace — Tailwind's duration utilities take
  * a number and its z-index utilities take an integer — so those two are emitted
  * as plain variables here and given `@utility` blocks below.
+ *
+ * `--control-px-*` has none either, and unlike those two it gets no `@utility`
+ * block: padding is Tailwind's own `px-*` namespace, which takes a spacing step
+ * rather than a named token, and a `px-control-md` class of our own would be a
+ * second answer to a question `px-(--control-px-md)` already answers. It is
+ * emitted here so the name exists to be read.
  */
 const SCALES = [
   ["--radius", radius],
+  ["--control-px", controlPx],
   ["--text", text],
   ["--leading", leading],
   ["--font-weight", fontWeight],
@@ -193,6 +212,40 @@ const aliasLines = ALIASES.flatMap(([old, current, scale]) =>
  * compiler" hazard that stopped `.btn--primary` moving (see controlClasses.ts).
  * Writing both makes the class correct whichever way that falls.
  */
+/**
+ * The two shapes a control can be in, as classes that reassign variables.
+ *
+ * Neither block styles anything itself. They set `--radius-control` and the
+ * five `--control-px-*`, and the controls a few directories away read those —
+ * so a control never learns about shape, and a shape never learns about
+ * controls. Adding a sixth control means reading two variables, not editing
+ * this file.
+ *
+ * `shape-round` restates what `:root` already says. That looks redundant and is
+ * the entire reason the pair exists: it is how a round control inside a
+ * `shape-rectangle` block gets back to round. Generated from the same two
+ * objects as the defaults, so the restatement cannot drift from what it
+ * restates.
+ *
+ * `@utility` rather than a plain class so Tailwind sorts it with everything
+ * else in the utilities layer — a hand-written rule would sit unlayered and
+ * beat utilities it has no business beating (ADR-0012 is this project's
+ * cautionary tale about that cascade).
+ */
+const shapeBlocks = [
+  ["shape-round", "var(--radius-btn)", controlPx],
+  ["shape-rectangle", "var(--radius-orb-sm)", controlPxRect],
+]
+  .map(
+    ([name, value, px]) =>
+      `@utility ${name} {\n  --radius-control: ${value};\n` +
+      Object.entries(px)
+        .map(([size, v]) => `  --control-px-${size}: ${v};\n`)
+        .join("") +
+      `}`,
+  )
+  .join("\n\n");
+
 const motionBlocks = [
   ...Object.keys(duration).map(
     (name) =>
@@ -340,6 +393,14 @@ ${uuiDark}
    changes. */
 
 ${motionBlocks}
+
+/* ── The two shapes a control can be in ──
+   These set variables and style nothing. Every button, input and input group
+   reads --radius-control and --control-px-*, so shape is chosen here and
+   obeyed there. Put shape-rectangle on one control or on a whole form; either
+   works, because a custom property cascades and a prop does not. */
+
+${shapeBlocks}
 `;
 
 if (process.argv.includes("--check")) {

@@ -137,12 +137,38 @@ export default function Button({
   // Visual only: the parent element is the link/click target. Not a React Aria
   // Button — that would render a real <button>, and a <button> inside an <a> is
   // invalid and behaves differently in every browser.
+  //
+  // ── Why this is a hand-copy of the `md`/`secondary` recipe ────────────────
+  //
+  // It should be `untitledButton({ color, size, className })` — that helper
+  // exists for exactly this, and ADR-0068 is the record of copies like this one
+  // being replaced by it. It cannot be, here: `untitledButtonClasses.ts` is
+  // "use client" because it reads `styles` out of a "use client" module, and
+  // **this file has no "use client"**. A server component may render a client
+  // component, but it may not read a value out of one — at prerender it gets
+  // Next's client-reference proxy and `styles.common` is `undefined`. That is
+  // the /_not-found crash ADR-0068 describes, and reaching for the helper here
+  // is how it comes back.
+  //
+  // So the copy stays, and the two things it must not get wrong are marked:
+  //
+  //   - **Shape.** `rounded-control` and `px-(--control-px-md)` are read from
+  //     the same variables `button.tsx` reads, so this span follows a
+  //     `shape-rectangle` ancestor without this file knowing shape exists.
+  //     It said `rounded-lg px-3.5`, which was the right answer for one shape.
+  //   - **The inner border.** `before:` was missing from this copy entirely,
+  //     so this span has always drawn a flatter edge than the real button
+  //     beside it. Restored.
+  //
+  // Still wrong and deliberately left alone, because it is not this change's
+  // subject: the recipe is pinned to `secondary`/`md`, so `color` and `size`
+  // are silently ignored on this branch. No call site passes them here today.
   return (
     <span
       className={[
-        "inline-flex items-center justify-center gap-1 rounded-lg px-3.5 py-2.5",
+        "relative inline-flex items-center justify-center gap-1 rounded-control px-(--control-px-md) py-2.5",
         "text-sm font-semibold bg-primary text-secondary ring-1 ring-primary ring-inset",
-        "shadow-xs-skeuomorphic",
+        "shadow-xs-skeuomorphic before:absolute before:rounded-control-inner",
         className,
       ]
         .filter(Boolean)

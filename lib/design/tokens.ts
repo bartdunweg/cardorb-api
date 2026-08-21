@@ -175,11 +175,100 @@ export const colour = {
  */
 export const radius = {
   orbXs: "6px",
-  orbSm: "8px", // buttons, covers
+  orbSm: "8px", // buttons in their rectangle shape, covers
   orbMd: "16px", // small cards, photos
   orbLg: "24px", // bento cards / panels
-  btn: "999px",
+  btn: "999px", // buttons in their round shape — see `control` below
   pill: "14px", // glass hover-pill (connect rows, tab pills, FAQ)
+
+  /**
+   * ── The shape of a control, as a variable rather than a value ─────────────
+   *
+   * The five entries above are values. This one is a *pointer*, and it is the
+   * only token in this file that is meant to be reassigned while the page is
+   * running.
+   *
+   * Card Orb draws controls in two shapes. Round — a capsule, `btn` — is the
+   * default and what every button wears unless something says otherwise.
+   * Rectangle — `orbSm`, 8px — is the opt-in, and it is exactly what every
+   * button wore before this token existed.
+   *
+   * Both shapes had to be reachable without each control learning about shape.
+   * The alternative was a `shape` prop threaded down into the class strings of
+   * `button.tsx`, `button-group.tsx`, `input.tsx`, `input-group.tsx` and
+   * `untitledButtonClasses.ts` — five files that would each have to be edited
+   * again for a sixth control, and none of which could then be made rectangular
+   * as a *block* without touching every call site inside it.
+   *
+   * A custom property is the mechanism the platform already has for this. The
+   * two `@utility` blocks the generator writes — `shape-round` and
+   * `shape-rectangle` — reassign it, so:
+   *
+   *   - `<Button shape="rectangle">` is one class on one element.
+   *   - `<div className="shape-rectangle">` is a whole form, toolbar or dialog
+   *     footer, and the controls inside it need to know nothing.
+   *   - `shape-round` *inside* a rectangle block wins, because that is what the
+   *     cascade does. A descendant-selector variant could not undo itself.
+   *
+   * A warning worth carrying, because the name has a history. ADR-0054 records
+   * `/brand` drawing its colour swatches with `rounded-[var(--radius-control)]`
+   * when no such token had ever existed: the declaration was dropped, the
+   * corners came out square, and nothing failed until `vars.test.ts` was pointed
+   * at `.tsx`. **The guard did not regress — the token is real now.** That page
+   * still says `rounded-pill`, and deliberately: it is documenting a fixed
+   * shape, not wearing whatever shape a control happens to be in.
+   */
+  control: "var(--radius-btn)",
+
+  /**
+   * The button's inner border sits 1px inside the edge (`before:inset-px`), so
+   * its radius has to be 1px tighter or the two curves fight. This was written
+   * as the literal `rounded-[7px]` against `rounded-lg`'s 8 — correct, and only
+   * correct for one shape. Derived from the shape now, so it cannot be left
+   * behind when the shape changes. At 999px it resolves to 998px, which is
+   * still a capsule.
+   */
+  controlInner: "calc(var(--radius-control) - 1px)",
+} satisfies Record<string, string>;
+
+/**
+ * ── How much room a control's text needs at its ends ──────────────────────────
+ *
+ * Side padding is the second thing shape changes, and the reason is optical
+ * rather than arithmetic: a capsule's corner curves away from the text for the
+ * full height of the control, so a word set at a rectangle's padding reads as
+ * touching the edge even though it measures the same gap.
+ *
+ * So there are two sets. `controlPx` is the round one and the default; a size's
+ * value is its rectangle value plus 4px. `controlPxRect` is what every button
+ * measured before this existed, and `shape-rectangle` restores it — which is
+ * what makes the rectangle shape a true "what it used to be" rather than a
+ * near miss.
+ *
+ * One variable per size rather than one shared `+4px` bonus, so a size that
+ * looks wrong on screen can be tuned on its own. The 4px is a starting point,
+ * not a rule the scale has to keep.
+ *
+ * Only `controlPx` is emitted as a token. The rectangle values are read
+ * straight into the `shape-rectangle` block by the generator, because a
+ * `--control-px-rect-md` that nothing may reference from a className would be a
+ * name inviting exactly the misuse it cannot serve.
+ */
+export const controlPx = {
+  xs: "14px",
+  sm: "16px",
+  md: "18px",
+  lg: "20px",
+  xl: "22px",
+} satisfies Record<string, string>;
+
+/** The same five, as they were before the round shape became the default. */
+export const controlPxRect = {
+  xs: "10px",
+  sm: "12px",
+  md: "14px",
+  lg: "16px",
+  xl: "18px",
 } satisfies Record<string, string>;
 
 /**

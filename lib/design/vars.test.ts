@@ -72,7 +72,13 @@ const EXTRA_SHEETS = ["app/globals.css"];
 // `components/custom` as well as `app`: Card Orb's own components moved out of
 // app/components when the Untitled UI tree arrived beside them, and this test
 // silently stopped seeing three quarters of its subject for one commit.
-const CODE = ["app", "lib", "components/custom"];
+// `components/base` too, since the shape tokens are read from inside the
+// vendored tree. It was left out while that tree only ever referenced Untitled
+// UI's own theme variables, which are declared in the same file that uses them;
+// once Card Orb's tokens started appearing in there, "vendored" stopped being a
+// reason not to look. Upstream's own `var()`s pass — they resolve against the
+// theme block the generator splices in.
+const CODE = ["app", "lib", "components/custom", "components/base"];
 
 /** Everything declared anywhere in the stylesheets, generated ones included. */
 function declared(): Set<string> {
@@ -126,6 +132,20 @@ function referenced(): Map<string, string[]> {
       const name = m[1]!;
       uses.set(name, [...(uses.get(name) ?? []), file]);
     }
+
+    // Tailwind v4's shorthand for the same thing: `px-(--control-px-md)` is
+    // `px-[var(--control-px-md)]` with the `var()` elided. It compiles to the
+    // identical declaration and fails in the identical silent way, but the loop
+    // above cannot see it — there is no `var(` to match. Missing this would
+    // have made the shorthand the one form of token reference in the project
+    // that nothing checks, which is the reverse of what this file is for.
+    //
+    // `[\w.-]` before the paren so it only matches a real utility prefix and
+    // not, say, the `(` of a function call in ordinary code.
+    for (const m of source.matchAll(/[\w.-]-\(\s*(--[a-z0-9-]+)\s*\)/g)) {
+      const name = m[1]!;
+      uses.set(name, [...(uses.get(name) ?? []), file]);
+    }
   }
   return uses;
 }
@@ -139,6 +159,14 @@ describe("custom properties", () => {
       // Tailwind's own machinery and the Lightning CSS light-dark() polyfill
       // declare these at build time; they are correct and not ours to define.
       .filter(([name]) => !name.startsWith("--tw-") && !name.startsWith("--lightningcss-"))
+      // React Aria writes this one onto the popover element itself, in JS, at
+      // the moment it positions it — so it is correct, it is not ours to
+      // declare, and no stylesheet will ever contain it. Surfaced the first
+      // time this test was pointed at `components/base`, from
+      // `origin-(--trigger-anchor-point)` in dropdown.tsx and tooltip.tsx.
+      // Verified rather than assumed: it is written in
+      // node_modules/react-aria-components/dist/private/Popover.cjs.
+      .filter(([name]) => name !== "--trigger-anchor-point")
       .filter(([name]) => !TAILWIND_DEFAULT.test(name))
       .filter(([name]) => !known.has(name))
       .map(([name, files]) => `${name} (used in ${[...new Set(files)].join(", ")})`);
@@ -164,5 +192,20 @@ describe("custom properties", () => {
     // ever reads zero, the directory list above is wrong again.
     const inCode = [...used.values()].filter((files) => files.some((f) => /\.tsx?$/.test(f)));
     expect(inCode.length).toBeGreaterThan(10);
+  });
+
+  // The name deliberately spells out no example. A test *title* is a string,
+  // not a comment, so the comment-stripping above does not reach it — this test
+  // failed on its own first run because its name contained a made-up token in
+  // the shorthand form and the new branch dutifully reported it missing. Which
+  // is the guard working, but a poor way to say so.
+  it("sees Tailwind's parenthesised shorthand, not only the spelled-out var()", () => {
+    // A guard on the guard, and not a formality: the shorthand branch was added
+    // alongside the first tokens written in that form, and if its regex ever
+    // stops matching, this whole file goes quiet about them rather than
+    // failing. `--control-px-md` appears in button.tsx only as
+    // `px-(--control-px-md)` — there is no `var(` anywhere near it — so this
+    // assertion cannot be satisfied by the older branch.
+    expect([...used.keys()]).toContain("--control-px-md");
   });
 });
