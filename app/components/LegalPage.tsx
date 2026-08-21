@@ -81,7 +81,7 @@ export const legal = {
     "text-md leading-relaxed",
   link:
     "text-primary underline underline-offset-2 " +
-    "[transition:color_150ms_var(--ease-smooth)] hover:text-secondary",
+    "transition-colors duration-150 ease-out hover:text-secondary",
   /** Emphasis inside body text, which is otherwise --color-label-secondary. */
   strong: "text-primary",
 };

@@ -126,7 +126,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                       href={`/collection/browse/${set.id}`}
                       className="flex flex-col gap-2 p-4 rounded-orb-lg bg-primary
                         shadow-xs no-underline text-inherit
-                        [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
+                        transition duration-150 ease-out
                         hover:-translate-y-0.5 hover:shadow-lg"
                     >
                       {/* Height reserved before the logo lands, so a lazy image

@@ -19,7 +19,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className="grid place-items-center w-8 h-8 rounded-full text-secondary
-        [transition:color_150ms_var(--ease-smooth)] hover:text-primary"
+        transition-colors duration-150 ease-out hover:text-primary"
     >
       {isDark ? (
         <Sun size={17} strokeWidth={1.75} aria-hidden="true" />

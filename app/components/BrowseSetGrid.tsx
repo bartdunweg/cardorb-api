@@ -172,7 +172,7 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                   <span
                     className="flex flex-col items-center justify-center gap-1 w-full h-full p-3
                       rounded-[4.5%/3.2%] text-center text-xs text-secondary
-                      [background:color-mix(in_srgb,var(--color-label)_5%,transparent)]"
+                      bg-tertiary"
                   >
                     {card.name}
                   </span>

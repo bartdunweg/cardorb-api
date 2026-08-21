@@ -47,4 +47,4 @@ export const cardBody =
  */
 export const navLink =
   "text-secondary font-body text-xs no-underline " +
-  "[transition:color_150ms_var(--ease-smooth)] hover:text-primary";
+  "transition-colors duration-150 ease-out hover:text-primary";

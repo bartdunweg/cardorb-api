@@ -98,7 +98,7 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                     href={`/collection/set/${slugify(set.name)}`}
                     className="flex flex-col gap-2 p-4 rounded-orb-lg bg-primary
                       shadow-xs no-underline text-inherit
-                      [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
+                      transition duration-150 ease-out
                       hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     {/* The logo carries the recognition, so it goes first and

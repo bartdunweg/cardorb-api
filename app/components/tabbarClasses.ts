@@ -204,7 +204,7 @@ export const tabbarPillClassName =
   "ring-1 ring-secondary ring-inset " +
   "shadow-xs opacity-0 pointer-events-none " +
   "[&.is-ready]:opacity-100 " +
-  "[&.is-animated]:[transition:transform_0.38s_var(--ease-smooth),width_0.38s_var(--ease-smooth),height_0.38s_var(--ease-smooth)]";
+  "[&.is-animated]:transition-[transform,width,height] duration-[380ms] ease-out";
 
 /**
  * The plus in the middle of the track. Was `.cards-tabbar-add` in cards.css

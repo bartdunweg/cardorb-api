@@ -26,7 +26,7 @@ export function cardsSegmentClassName(active: boolean) {
     "max-sm:flex-1 max-sm:px-2 " +
     "text-sm font-bold text-secondary cursor-pointer " +
     "[border-radius:calc(var(--radius-pill)-4px)] " +
-    "[transition:color_150ms_var(--ease-smooth),background_150ms_var(--ease-smooth)] " +
+    "transition-colors duration-150 ease-out " +
     "hover:text-primary" +
     (active ? " is-active bg-brand-solid text-white" : "")
   );
@@ -42,7 +42,7 @@ export function cardsViewClassName(active: boolean) {
   return (
     "cards-view flex items-center justify-center w-8 h-8 border-none bg-transparent " +
     "text-tertiary cursor-pointer [border-radius:calc(var(--radius-pill)-4px)] " +
-    "[transition:color_150ms_var(--ease-smooth),background_150ms_var(--ease-smooth)] " +
+    "transition-colors duration-150 ease-out " +
     "hover:text-primary" +
     (active ? " is-active bg-brand-solid text-white" : "")
   );

@@ -75,7 +75,7 @@ export default function Loading() {
     // > .is-fallback in base.css — the direct-child selector only ever
     // matched this one element, so it's a direct class now.
     <section
-      className={`${pageCardsClassName} [animation:pageEnter_420ms_var(--ease-out)] [transform-origin:center_top]`}
+      className={`${pageCardsClassName} [animation:pageEnter_420ms_ease-out] [transform-origin:center_top]`}
     >
       {/* The same heading AppShell renders, word for word and in the same
           position, so the document has exactly one h1 throughout the load

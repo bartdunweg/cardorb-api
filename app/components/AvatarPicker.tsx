@@ -63,7 +63,7 @@ export default function AvatarPicker({
           <span
             className={untitledButton({
               color: "secondary",
-              className: `group-has-[:focus-visible]:[outline:2px_solid_var(--color-label)]
+              className: `group-has-[:focus-visible]:outline-2 outline-primary
                 group-has-[:focus-visible]:outline-offset-2${busy ? " opacity-55 cursor-not-allowed" : ""}`,
             })}
           >

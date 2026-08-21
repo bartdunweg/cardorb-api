@@ -145,7 +145,7 @@ export function SettingsSwitch({
         aria-hidden="true"
         className={cx(
           "flex-none w-9 h-5 rounded-full bg-tertiary p-0.5 ring-1 ring-transparent ring-inset",
-          "[transition:background_0.18s_ease] motion-reduce:transition-none",
+          "transition-colors duration-200 ease-out motion-reduce:transition-none",
           "group-has-[:checked]:bg-brand-solid",
           "group-has-[:focus-visible]:outline-2 group-has-[:focus-visible]:outline-offset-2 group-has-[:focus-visible]:outline-brand",
         )}
@@ -153,7 +153,7 @@ export function SettingsSwitch({
         <span
           className={cx(
             "block size-4 rounded-full bg-primary shadow-sm",
-            "[transition:transform_0.18s_ease] motion-reduce:transition-none",
+            "transition-transform duration-200 ease-out motion-reduce:transition-none",
             "group-has-[:checked]:translate-x-4",
           )}
         />
