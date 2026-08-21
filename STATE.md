@@ -2,6 +2,18 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## Shipped (2026-08-21)
+
+Everything in the three entries below merged as **PR #104** and is live.
+Production is on `cb1f1bf`; the Vercel deployment reports `success`, and the one
+public route that changed structurally was checked on the real site —
+`cardorb.com/<nonexistent>` still answers 404 with `noindex`, which is what the
+`app/not-found.tsx` conversion had to preserve.
+
+GitHub's `check` was red on the PR in 2s with **no log at all**: the runner never
+started (Actions billing), not a test failure. `./scripts/verify.sh` locally is
+the real gate and exited 0.
+
 ## Standards refreshed to v0.22.0 (2026-08-21, `st-georges`)
 
 `/apply-standards` moved `CLAUDE.md`/`AGENTS.md` from v0.14.0 to v0.21.0, and a
