@@ -149,6 +149,15 @@ adoption itself.
   tint measured 1.04:1 too, where WCAG 1.4.11 asks 3:1. `bg-brand-solid`
   measures 4.96:1. ADR-0065 has the numbers.
 
+- **A vendored component's *imports* are part of what you are adopting.**
+  `application/empty-state` also exports illustration and avatar-collage parts
+  and imports `@untitledui/file-icons` (2.5 MB on disk) at the module's top
+  level. Adopting it for five sentences put 62 kB of gzipped SVG on the client;
+  `Header`'s background-pattern barrel added 20.8 kB more. Measured against a
+  build of `origin/main` in a worktree: 562.7 -> 655.3 -> 595.7 kB gzipped
+  client JS. The unused parts are cut. **Check the import list before adopting
+  the next one.**
+
 **Left deliberately, and both are recorded in ADR-0066:** `application/tabs`,
 `metrics`, `section-headers` and `app-navigation` end with no consumer and are
 kept; and about sixteen dead legacy class names (`cards-head-title`,

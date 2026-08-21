@@ -77,12 +77,35 @@ that exemption is why neither was caught: `@ts-nocheck` hides the first, the
 eslint-ignore hides the second, and having no consumer meant nothing ever ran
 the file to find out.
 
-**A crash is not formatting.** ADR-0062's rule — leave vendored code alone — is
-about style, and it does not extend to a component that cannot render. Both are
+**A crash is not formatting, and neither is 62 kB.** ADR-0062's rule — leave
+vendored code alone — is about style. It does not extend to a component that
+cannot render, nor to one that cannot be used here at an acceptable cost. Both are
 fixed in place, with the reason written at each edit. `filterDOMProps` was
 removed rather than adding a package for it: it was called on the props left
 after the six named ones, and `FileTriggerProps` declares none and extends no
 element, so the result was `{}` at every possible call site.
+
+**A third divergence, and this one is measured.** `application/empty-state`
+also exports Illustration, FileTypeIcon, AvatarRadius, AvatarRow and
+AvatarGrid, and imports `@untitledui/file-icons` (2.5 MB on disk) plus four
+illustration sets to do it — at the module's top level, so they ship whether or
+not anything renders them. Adopting it for five "no cards yet" sentences put a
+460 kB chunk on the client, 62 kB gzipped, holding 1,843 SVG paths. A second,
+smaller one behind it: `Header`'s decorative `BackgroundPattern` came through a
+barrel over all four patterns, so drawing one shipped the other three — 20.8 kB
+gzipped more, almost all `grid-check`.
+
+Measured against a build of `origin/main` in a worktree:
+
+    origin/main                 562.7 kB gzipped client JS
+    after adopting EmptyState   655.3 kB   +92.6
+    after trimming              595.7 kB   +33.0
+
+The five asset-heavy parts are cut and the pattern is imported directly. The
++33 kB that remains is React Aria's overlay machinery — Popover, Dialog,
+Tooltip, ToggleButtonGroup, FileTrigger — buying placement, focus return,
+Escape, outside-click and keyboard-reachable tooltips that were hand-written or
+absent before, and it is left alone.
 
 The wider lesson is the one to carry: **"vendored and unused" is not a neutral
 state.** Twelve components were installed and seven had no consumer; the two
