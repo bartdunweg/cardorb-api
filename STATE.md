@@ -4,13 +4,18 @@ Where this project stands, for whoever (human or agent) picks it up next.
 
 ## Now
 
+**PR #102 is merged. The component worklist below it is finished too** — see
+"The adoption is done" further down, which is the current entry. Everything from
+here to that heading is the history that led to it and is left as written.
+
+Read FB-0013 through FB-0016 before deciding anything is out of scope: the
+standing rule is that Untitled UI wins, and only the identity (ADR-0061 — the
+holo effect, the orb) or a contrast measurement earns an exception.
+
 **The Untitled UI rebuild is on `bartdunweg/untitled-ui` (PR #102), unmerged, and
 the last commit is the only one that has not been photographed.** Sixty-plus
 commits, `verify.sh` exits 0, and every step before the chart was checked against
-thirty-three screenshots. Read FB-0013 through FB-0016 before deciding anything
-is out of scope: the standing rule is that Untitled UI wins, and only the
-identity (ADR-0061 — the holo effect, the orb) or a contrast measurement earns an
-exception.
+thirty-three screenshots.
 
 ### Where it got to
 
@@ -42,6 +47,7 @@ components, and this branch conflated the two for a long time.
   MenuDetails <details>    -> `dropdown`
 
 All twelve components are installed. This is the work to continue with.
+**Done — see "The adoption is done" below.**
 
 ### The chart is verified, and finding that out fixed the harness
 
@@ -101,6 +107,69 @@ slot for a name. `AppSidebar` builds on `NavList` instead.
 `components/custom/` cannot be emptied. Nothing in it is dead — measured — and
 `CardItem`, `CardsView`, `TiltScan` and `Wordmark` have no Untitled UI
 counterpart. That directory is what it is for.
+
+## The adoption is done (2026-08-21, workspace `ashgabat`)
+
+The worklist under "The audit that should have happened sooner" is finished.
+Every vendored component now has a consumer or a written reason not to
+(ADR-0065, ADR-0066).
+
+    tooltips        -> base/tooltip          (2 of them; the third stays a title=, on purpose)
+    segmented rows  -> base/button-group     trackClasses.ts deleted
+    inputs          -> base/input InputBase  cardAddInputClassName deleted
+    SettingsSwitch  -> base/toggle ToggleBase native checkbox kept
+    avatar upload   -> base/file-upload-trigger
+    empty states    -> application/empty-state
+    the two menus   -> DialogTrigger + Dropdown.Popover, MenuDetails.tsx deleted
+
+**Two live bugs came out of it, and neither was migration debt.**
+`.cards-empty` and `.cards-filter-badge` were defined in no stylesheet at all —
+they went with `cards.css` and the names stayed in the JSX. Three empty states
+and the active-filter count had been rendering unstyled. Both are fixed by the
+adoption itself.
+
+**Three things worth carrying forward:**
+
+- **`selected:` and `pressed:` were undefined variants project-wide.** Untitled
+  UI writes its components against React Aria's data attributes and turns them
+  into variants with a plugin this repo does not have; Tailwind v4 skips an
+  unknown variant silently. The chosen segment carried `aria-checked="true"`
+  and `data-selected="true"` and painted pure white, same as its neighbours.
+  The already-adopted table had the same dead class. Both are `@custom-variant`
+  in `scripts/gen-tokens.mjs` now. **If a vendored component looks stateless,
+  check the variant exists before checking anything else.**
+- **"Vendored and unused" is not a neutral state.** `base/file-upload-trigger`
+  had two faults that would each have thrown on first render — a
+  `React.Children` call in a file that never imports `React`, and an import of
+  `@react-aria/utils`, which is not a dependency here. `@ts-nocheck` (ADR-0062)
+  and the eslint-ignore hid both, and no consumer meant nothing ever ran it.
+  Two earlier audits counted these components as done work.
+- **Untitled UI's neutral tints do not survive a pure-white page.** Their
+  selected background measured 1.04:1 against unselected, and their own Tabs
+  tint measured 1.04:1 too, where WCAG 1.4.11 asks 3:1. `bg-brand-solid`
+  measures 4.96:1. ADR-0065 has the numbers.
+
+**Left deliberately, and both are recorded in ADR-0066:** `application/tabs`,
+`metrics`, `section-headers` and `app-navigation` end with no consumer and are
+kept; and about sixteen dead legacy class names (`cards-head-title`,
+`cards-set-meta`, `view-menu-panel`, `cards-view-trigger`, …) are written onto
+elements and read by nothing. Every one of those sits on an element that
+carries real utilities too, so none is a third `.cards-empty` — but they are the
+camouflage that hid the two real ones. Deleting them is its own change.
+
+**The harness gained two checks and lost a blind spot.** `owner.spec.ts` used
+to say the filter rows were "converted but unphotographed" because neither menu
+would open reliably from a click; both are a real `<button>` opening a real
+`role="dialog"` now, and the filter panel has a baseline for the first time.
+`visual/upload-owner.spec.ts` is new and is not a screenshot — a picture of an
+upload button proves nothing about it.
+
+**Still needs a human, signed in.** Everything below was verified against a real
+session and a production build, but three things a screenshot cannot show:
+the public-link switch in its *on* state (it is off in every baseline, so the
+toggle's brand fill is uncovered), a real avatar actually uploading end to end
+(the chooser opening twice is checked, the upload is not), and the two menus on
+a phone — the sheet handoff is `display:none` and untouched, but unseen.
 
 ## The signed-in navbar is a pill (2026-08-17, workspace `castries`)
 
