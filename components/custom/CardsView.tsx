@@ -1709,7 +1709,6 @@ export default function CardsView({
                 // label. Everything else is its own name already.
                 openPane(tab === "collection" ? "all" : tab)
         }
-        onAdd={() => setAdding(true)}
       />
 
       {/* Only when signed in: the dialog's first act is to ask the database

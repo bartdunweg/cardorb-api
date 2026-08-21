@@ -1,5 +1,4 @@
 import {
-  tabbarAddClassName,
   tabbarClassName,
   tabbarFadeClassName,
   tabbarItemClassName,
@@ -185,12 +184,13 @@ export default function Loading() {
       {/* The bar, drawn rather than outlined where it can be: it is the site's
           own chrome and an outline of a constant is a shape fading into itself.
 
-          Four slots and the add circle, which is the signed-in bar
-          (CardsTabBar.tsx). The plus used to be left out, on the grounds that
-          the fallback could not know whether anyone was signed in — true on
-          /cards, not true here: this group's layout redirects a viewerless
-          request before it can ever reach this file, so signed-in is a fact and
-          not a guess.
+          Four slots and no add circle, which is the signed-in bar
+          (CardsTabBar.tsx). The circle was drawn here for a while, on the sound
+          reasoning that this group's layout redirects a viewerless request
+          before it can reach this file, so signed-in is a fact and not a guess.
+          It is gone because the real bar's is: ADR-0086 moved that button to the
+          dashboard's own title row, which is route-specific and therefore not
+          something this file may draw.
 
           Each slot carries an icon-sized and a label-sized outline rather than
           being empty. Empty, the slots collapsed to about 12px against a real
@@ -201,25 +201,21 @@ export default function Loading() {
           here that genuinely depends on where you are going. */}
       <div className={`${tabbarFadeClassName} cards-tabbar-fade`} aria-hidden="true" />
       <nav className={`${tabbarClassName} cards-tabbar`} aria-hidden="true">
-        {/* No --tab-w here any more. This used to hand the track a
+        {/* No --tab-w here, and none coming back. This used to hand the track a
             hand-computed slot width, because every slot was one fixed size and
-            this file had no labels to measure one from. Slots size themselves
-            to their content now (ADR-0050), so the formula is gone along with
-            the var — and good riddance: it was a second copy of the bar's
-            layout arithmetic, in a file that per ADR-0046 may only draw the
-            chrome every route shares. */}
+            this file had no labels to measure one from. Slots are one size again
+            (ADR-0086), but the grid works it out from the labels below rather
+            than from a number — so the formula stays gone, and good riddance: it
+            was a second copy of the bar's layout arithmetic, in a file that per
+            ADR-0046 may only draw the chrome every route shares. */}
         <div className={tabbarPagesClassName}>
-          {LABEL_WIDTHS.slice(0, 2).map((w, i) => (
-            <TabSlot key={`l${i}`} labelWidth={w} />
-          ))}
-          {/* !cursor-default on this and on every slot: both shared classes
-              carry cursor:pointer for the real, pressable bar, and the track
-              sets pointer-events:auto on its children — so without this the
+          {/* !cursor-default on every slot: the shared class carries
+              cursor:pointer for the real, pressable bar, and the track sets
+              pointer-events:auto on its children — so without this the
               fallback's dead shapes offer a pointer to a press they cannot
               answer. */}
-          <span className={`${tabbarAddClassName} !cursor-default`} />
-          {LABEL_WIDTHS.slice(2).map((w, i) => (
-            <TabSlot key={`r${i}`} labelWidth={w} />
+          {LABEL_WIDTHS.map((w, i) => (
+            <TabSlot key={i} labelWidth={w} />
           ))}
         </div>
       </nav>
@@ -228,15 +224,16 @@ export default function Loading() {
 }
 
 /**
- * The four slots' label widths, in the bar's own order: Dashboard,
- * Collection, [the add circle], Wishlist, You. Measured at --fs-tiny (11px
- * Inter), which is what the real bar renders them at.
+ * The four slots' label widths, in the bar's own order: Dashboard, Collection,
+ * Wishlist, You. Measured at --fs-tiny (11px Inter), which is what the real bar
+ * renders them at.
  *
- * Four identical placeholders would do while every slot was one fixed width.
- * Now that a slot is as wide as its label (ADR-0050), identical placeholders
- * would make the capsule a different width from the real one and it would
- * visibly resize the moment the bar loaded — the same layout movement this
- * file's slots already carry an icon and a label outline to avoid vertically.
+ * Still four different widths, even though every slot is one width again
+ * (ADR-0086): the *slot* is as wide as the widest label, and the label inside it
+ * is still its own width, centred. So these outlines are what the real bar's
+ * words look like, and the widest of them is what sizes all four tracks here
+ * exactly as it sizes all four there — the capsule comes out the same width and
+ * does not visibly resize the moment the bar loads.
  */
 const LABEL_WIDTHS = ["w-[57px]", "w-[52px]", "w-[41px]", "w-[20px]"];
 

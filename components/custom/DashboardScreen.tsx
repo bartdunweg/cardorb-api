@@ -31,7 +31,7 @@ export default function DashboardScreen({
   snapshots: ValueSnapshot[];
   prices: CardPricePoint[];
 }) {
-  const { sets, failed } = useCollection();
+  const { sets, failed, onAdd } = useCollection();
   const stats = useMemo(() => getCardsStats(sets), [sets]);
   // Here rather than on the server for the same reason the stats are: it is a
   // pure function of the collection this client already holds plus a few
@@ -76,5 +76,8 @@ export default function DashboardScreen({
     );
   }
 
-  return <CardsDashboard stats={stats} snapshots={snapshots} movers={movers} />;
+  // onAdd only on the good branch. The failed one above keeps its bare heading
+  // deliberately: if the collection could not be read, offering to add to it is
+  // an action pointing at the thing that just broke.
+  return <CardsDashboard stats={stats} snapshots={snapshots} movers={movers} onAdd={onAdd} />;
 }

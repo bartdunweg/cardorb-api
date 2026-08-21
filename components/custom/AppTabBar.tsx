@@ -47,7 +47,7 @@ const HREF: Partial<Record<CardsTab, string>> = {
 export default function AppTabBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { onAdd, viewer } = useCollection();
+  const { viewer } = useCollection();
 
   return (
     <CardsTabBar
@@ -58,7 +58,6 @@ export default function AppTabBar() {
         const href = HREF[tab];
         if (href) router.push(href);
       }}
-      onAdd={onAdd}
     />
   );
 }
