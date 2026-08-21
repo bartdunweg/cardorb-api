@@ -96,10 +96,10 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                 <li key={set.name}>
                   <Link
                     href={`/collection/set/${slugify(set.name)}`}
-                    className="flex flex-col gap-2 p-4 rounded-orb-lg bg-[var(--color-bg-surface)]
+                    className="flex flex-col gap-2 p-4 rounded-orb-lg bg-primary
                       shadow-xs no-underline text-inherit
                       [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
-                      hover:-translate-y-0.5 hover:[box-shadow:var(--shadow-elevated)]"
+                      hover:-translate-y-0.5 hover:shadow-lg"
                   >
                     {/* The logo carries the recognition, so it goes first and
                         large. A set is remembered by its wordmark long before
@@ -146,11 +146,11 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
                          above it is the accessible answer, so the bar is
                          decorative and hidden from the accessibility tree. */
                       <span
-                        className="h-[3px] rounded-[2px] bg-[var(--color-surface-subtle)] overflow-hidden"
+                        className="h-[3px] rounded-[2px] bg-secondary overflow-hidden"
                         aria-hidden="true"
                       >
                         <span
-                          className="block h-full rounded-[inherit] bg-[var(--color-tint)]"
+                          className="block h-full rounded-[inherit] bg-brand-solid"
                           style={{ width: `${pct}%` }}
                         />
                       </span>

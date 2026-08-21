@@ -107,9 +107,7 @@ export default function Loading() {
             drawing a dead one invites the press it cannot answer. */}
         <div className="flex items-center justify-between gap-2 pt-0 px-4 pb-4 [@media(max-width:1000px)]:hidden">
           <Wordmark />
-          <span
-            className={`${skeletonClassName} flex-none w-[var(--control-h)] h-[var(--control-h)] rounded-full`}
-          />
+          <span className={`${skeletonClassName} flex-none w-10 h-10 rounded-full`} />
         </div>
 
         {/* No "Sets" title here, unlike CardsSidebar. Below 1000px cards.css

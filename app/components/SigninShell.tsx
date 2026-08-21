@@ -75,7 +75,7 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
     <p
       className={[
         "m-0 py-3 px-3.5 border border-secondary rounded-orb-sm",
-        "bg-[var(--color-surface-subtle)] text-secondary",
+        "bg-secondary text-secondary",
         "text-sm leading-relaxed",
         className,
       ]

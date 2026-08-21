@@ -60,11 +60,11 @@ const cardAddLabelClassName =
 // same way FormField.tsx's FormInput carries its own copy of the same idea
 // for a different control.
 const cardAddInputClassName =
-  "h-[var(--control-h)] border border-secondary bg-primary rounded-pill " +
+  "h-10 border border-secondary bg-primary rounded-pill " +
   "[backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary " +
   "font-body text-sm font-bold " +
   "placeholder:text-tertiary dark:border-secondary " +
-  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:border-primary";
+  "hover:shadow-lg focus-visible:border-primary";
 
 /** The one big field this dialog opens on — taller and louder than the rest. */
 const cardAddSearchClassName =
@@ -72,7 +72,7 @@ const cardAddSearchClassName =
   "[backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary outline-none " +
   "font-body text-display-xs font-bold " +
   "placeholder:text-tertiary dark:border-secondary " +
-  "hover:[box-shadow:var(--shadow-elevated)] focus-visible:border-primary " +
+  "hover:shadow-lg focus-visible:border-primary " +
   "[&::-webkit-search-cancel-button]:hidden";
 
 const EMPTY: Draft = {
@@ -734,7 +734,7 @@ export default function CardAddDialog({
                 text-sm text-primary cursor-pointer"
             >
               <input
-                className="mt-[2px] [accent-color:var(--color-tint)]"
+                className="mt-[2px] accent-brand-solid"
                 type="checkbox"
                 checked={draft.collection}
                 onChange={(e) => set("collection", e.target.checked)}
@@ -752,7 +752,7 @@ export default function CardAddDialog({
                 text-sm text-primary cursor-pointer"
             >
               <input
-                className="mt-[2px] [accent-color:var(--color-tint)]"
+                className="mt-[2px] accent-brand-solid"
                 type="checkbox"
                 checked={draft.excluded}
                 onChange={(e) => set("excluded", e.target.checked)}

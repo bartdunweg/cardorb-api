@@ -209,7 +209,7 @@ export default function ViewOptions({
                 className={`flex-1 min-w-0 h-8 rounded-orb-sm font-body text-xs
                   tabular-nums cursor-pointer ${
                     cols === n
-                      ? "border-transparent bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]"
+                      ? "border-transparent bg-brand-solid text-white"
                       : "border border-secondary bg-transparent text-secondary"
                   }`}
                 aria-pressed={cols === n}

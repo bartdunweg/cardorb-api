@@ -27,7 +27,7 @@ export default function Navbar({ center, right }: { center?: ReactNode; right?: 
     >
       <div
         className="grid grid-cols-[1fr_auto_minmax(0,1fr)] items-center gap-6 w-[min(100%,1180px)] mx-auto
-          min-h-[var(--control-h)] [@media(max-width:640px)]:grid-cols-[1fr_minmax(0,auto)]"
+          min-h-10 [@media(max-width:640px)]:grid-cols-[1fr_minmax(0,auto)]"
       >
         {/* justify-self-start so the link is the size of the mark and the name.
             As a grid item it stretched across the whole 1fr column, which was

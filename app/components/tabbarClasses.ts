@@ -194,7 +194,7 @@ export const tabbarLabelClassName =
 
 /** The same glass-lift surface the sidebar's rows use for hover/active
  *  (.cards-nav-item::after, components.css) — was solid black
- *  (bg-[var(--btn-primary-bg)]), changed on explicit instruction so the
+ *  (bg-brand-solid), changed on explicit instruction so the
  *  sidebar and the tabbar read as the same visual language rather than the
  *  sidebar's rows lifting onto glass and the active tab sitting on a filled
  *  black pill. Include "is-ready"/"is-animated" alongside this as the
@@ -214,7 +214,7 @@ export const tabbarPillClassName =
  * something the browser cannot resolve while it computes an intrinsic width,
  * so the circle counted as ~0 towards the track's max-content and the
  * track's min-w-max under-reserved by exactly these 40px. A plain
- * w-[var(--control-h)] instead: the slots beside it shrink now, so nothing
+ * w-10 instead: the slots beside it shrink now, so nothing
  * needs this one to.
  *
  * flex-none for the reason the old comment gave and is worth keeping: with

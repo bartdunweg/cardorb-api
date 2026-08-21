@@ -28,7 +28,7 @@ export function cardsSegmentClassName(active: boolean) {
     "[border-radius:calc(var(--radius-pill)-4px)] " +
     "[transition:color_150ms_var(--ease-smooth),background_150ms_var(--ease-smooth)] " +
     "hover:text-primary" +
-    (active ? " is-active bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]" : "")
+    (active ? " is-active bg-brand-solid text-white" : "")
   );
 }
 
@@ -44,6 +44,6 @@ export function cardsViewClassName(active: boolean) {
     "text-tertiary cursor-pointer [border-radius:calc(var(--radius-pill)-4px)] " +
     "[transition:color_150ms_var(--ease-smooth),background_150ms_var(--ease-smooth)] " +
     "hover:text-primary" +
-    (active ? " is-active bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]" : "")
+    (active ? " is-active bg-brand-solid text-white" : "")
   );
 }

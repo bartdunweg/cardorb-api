@@ -45,13 +45,13 @@ export function Sheet({
       // .modal-close live in cards.css against Modal.tsx's own internal
       // markup, which this component can't reach with a className prop.
       //
-      // bg-[var(--color-bg-surface)], not --glass-bg-solid: that token is
+      // bg-primary, not --glass-bg-solid: that token is
       // solid only by name (0.9 alpha in light, 0.66 in dark), so a sheet
       // wearing it read as the same frosted layer as the blur behind it, and
       // every row was a word over whatever card art happened to be there. A
       // list you read needs a real surface.
       className="modal--sheet [&_.modal-scroll]:h-auto [&_.modal-scroll]:max-h-[88svh] [&_.modal-scroll]:overscroll-contain [&_.modal-close]:hidden w-full max-w-none rounded-t-lg rounded-b-none border-b-0
-        bg-[var(--color-bg-surface)]"
+        bg-primary"
     >
       <div className="sheet flex flex-col max-h-[88svh]">
         <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-secondary">

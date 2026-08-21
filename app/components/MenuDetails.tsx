@@ -78,7 +78,7 @@ export function MenuDetails({
       <div
         className={`filter-menu-panel absolute z-[5] top-[calc(100%+var(--space-2))] left-0 w-[280px]
           max-w-[min(280px,calc(100vw-2*var(--page-pad-x)))] p-2 border border-secondary
-          rounded-orb-md bg-primary [box-shadow:var(--shadow-elevated)]
+          rounded-orb-md bg-primary shadow-lg
           [backdrop-filter:blur(var(--blur-glass))] ${panelClassName ?? ""}`}
       >
         {children}
@@ -89,5 +89,5 @@ export function MenuDetails({
 
 export const filterMenuBadgeClassName =
   "inline-flex items-center justify-center min-w-[18px] h-[18px] px-[5px] rounded-pill " +
-  "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] text-xs " +
+  "bg-brand-solid text-white text-xs " +
   "lining-nums tabular-nums";

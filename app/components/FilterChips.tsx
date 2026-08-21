@@ -35,7 +35,7 @@ export default function FilterChips({
             border border-primary rounded-pill bg-transparent
             font-body text-xs text-primary cursor-pointer
             transition-colors duration-[150ms] ease-out
-            hover:bg-[var(--btn-primary-bg)] hover:border-[var(--btn-primary-bg)] hover:text-[var(--btn-primary-text)]
+            hover:bg-brand-solid hover:border-brand hover:text-white
             [&_svg]:flex-shrink-0 [&_svg]:opacity-60 hover:[&_svg]:opacity-100"
           onClick={f.onRemove}
           // The group is in the label but not on screen: "Rarity: Holo" reads

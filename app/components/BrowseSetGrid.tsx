@@ -216,7 +216,7 @@ export default function BrowseSetGrid({ set, cards }: { set: CatalogueSet; cards
                     border border-secondary bg-transparent text-secondary
                     font-body text-xs font-bold
                     hover:text-primary hover:border-primary
-                    focus-visible:outline-2 focus-visible:[outline-color:var(--color-label)] focus-visible:outline-offset-2"
+                    focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
                 >
                   <Plus size={12} aria-hidden="true" />
                   Add

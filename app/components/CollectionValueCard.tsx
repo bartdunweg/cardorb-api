@@ -95,7 +95,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
           aria-hidden="true"
           focusable="false"
         >
-          <path className="fill-[var(--color-surface-subtle)] stroke-none" d={under} />
+          <path className="fill-secondary stroke-none" d={under} />
           {/* non-scaling-stroke so the line keeps its weight at whatever width
               the card ends up: the viewBox is 640 wide and the card is rarely
               that, so without it the stroke is scaled down with everything else
@@ -113,7 +113,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
           {points.map((p) => (
             <circle
               key={p.date}
-              className="fill-[var(--color-bg-surface)] stroke-primary stroke-2"
+              className="fill-primary stroke-primary stroke-2"
               cx={p.x}
               cy={p.y}
               r={5}

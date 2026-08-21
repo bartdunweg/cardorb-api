@@ -292,7 +292,7 @@ const CardItem = memo(function CardItem({
         <span
           className="cards-scan block relative aspect-[245/342] mb-2
             group-data-[view=list]/item:w-11 group-data-[view=list]/item:shrink-0 group-data-[view=list]/item:mb-0
-            group-focus-visible:outline-2 group-focus-visible:[outline-color:var(--color-label)]
+            group-focus-visible:outline-2 group-focus-visible:outline-primary
             group-focus-visible:[outline-offset:3px] group-focus-visible:rounded-[2px]"
           // Arming rather than tilting: the effect is mounted for this one card
           // and stays mounted, so a card upgrades once and never again.

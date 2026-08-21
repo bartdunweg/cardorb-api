@@ -141,7 +141,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
       {many && (
         <span
           className="absolute right-[2px] bottom-[2px] min-w-[18px] h-[18px] px-[5px] inline-flex
-            items-center justify-center rounded-pill bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]
+            items-center justify-center rounded-pill bg-brand-solid text-white
             font-body text-xs lining-nums tabular-nums"
         >
           {at + 1}/{entry.cards.length}

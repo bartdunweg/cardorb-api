@@ -47,7 +47,7 @@ export default function AppearanceSettings() {
             />
             <span
               className="block p-3 rounded-btn border border-primary text-center cursor-pointer
-                group-has-[:checked]:border-[var(--color-tint)] group-has-[:checked]:[box-shadow:inset_0_0_0_1px_var(--color-tint)]
+                group-has-[:checked]:border-brand group-has-[:checked]:[box-shadow:inset_0_0_0_1px_var(--color-tint)]
                 group-has-[:focus-visible]:[outline:2px_solid_var(--color-tint)] group-has-[:focus-visible]:outline-offset-2"
             >
               <span className="block text-primary font-medium">{o.label}</span>

@@ -84,12 +84,12 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a set"
           aria-label="Find a set"
-          className="h-[var(--control-h)] w-full pl-10 pr-4 rounded-pill outline-none
+          className="h-10 w-full pl-10 pr-4 rounded-pill outline-none
             border border-secondary bg-primary
             [backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary
             font-body text-sm font-bold
             placeholder:text-tertiary dark:border-secondary
-            hover:[box-shadow:var(--shadow-elevated)] focus-visible:border-primary"
+            hover:shadow-lg focus-visible:border-primary"
         />
       </div>
 
@@ -124,10 +124,10 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                   <li key={set.id}>
                     <Link
                       href={`/collection/browse/${set.id}`}
-                      className="flex flex-col gap-2 p-4 rounded-orb-lg bg-[var(--color-bg-surface)]
+                      className="flex flex-col gap-2 p-4 rounded-orb-lg bg-primary
                         shadow-xs no-underline text-inherit
                         [transition:transform_0.16s_ease,box-shadow_0.16s_ease]
-                        hover:-translate-y-0.5 hover:[box-shadow:var(--shadow-elevated)]"
+                        hover:-translate-y-0.5 hover:shadow-lg"
                     >
                       {/* Height reserved before the logo lands, so a lazy image
                           does not shunt the name and the count down as it
@@ -162,11 +162,11 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                            answer, and <progress> would announce itself as a
                            live task. SetIndex makes the same call. */
                         <span
-                          className="h-[3px] rounded-[2px] bg-[var(--color-surface-subtle)] overflow-hidden"
+                          className="h-[3px] rounded-[2px] bg-secondary overflow-hidden"
                           aria-hidden="true"
                         >
                           <span
-                            className="block h-full rounded-[inherit] bg-[var(--color-tint)]"
+                            className="block h-full rounded-[inherit] bg-brand-solid"
                             style={{ width: `${pct}%` }}
                           />
                         </span>
