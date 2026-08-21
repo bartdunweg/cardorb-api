@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "../components/Navbar";
-import MarketingFooter from "../components/MarketingFooter";
-import { legal, legalList as list } from "../components/LegalPage";
-import Wordmark from "../components/Wordmark";
+import Navbar from "@/components/custom/Navbar";
+import MarketingFooter from "@/components/custom/MarketingFooter";
+import { legal, legalList as list } from "@/components/custom/LegalPage";
+import Wordmark from "@/components/custom/Wordmark";
 import { colour, type ColourPair } from "../../lib/design/tokens";
 import { APP_NAME } from "../../lib/core/config";
 

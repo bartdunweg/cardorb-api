@@ -1,8 +1,8 @@
 import Link from "next/link";
-import SigninShell, { SigninOr } from "./components/SigninShell";
-import { FormNote } from "./components/FormField";
+import SigninShell, { SigninOr } from "@/components/custom/SigninShell";
+import { FormNote } from "@/components/custom/FormField";
 import { APP_NAME } from "../lib/core/config";
-import { untitledButton } from "./components/untitledButtonClasses";
+import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
 /**
  * What a URL that is not a page looks like.

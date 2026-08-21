@@ -50,7 +50,7 @@ describe("the grid measures its own column, not the window", () => {
     // Moved from cards.css's own rule to cardsPageClasses.ts's Tailwind
     // `@container` class (which is exactly `container-type: inline-size`)
     // during the Tailwind migration (ADR-0012's follow-up fixes).
-    const classes = read("app/components/cardsPageClasses.ts");
+    const classes = read("components/custom/cardsPageClasses.ts");
     expect(
       has(classes, /cards-main[^"]*@container/) || has(classes, /@container[^"]*cards-main/),
       "Every card-grid breakpoint is measured against this box rather than the " +
@@ -69,7 +69,7 @@ describe("the grid measures its own column, not the window", () => {
     // above is for. The CSS branch stays counted so a move back is not a
     // failure; it is the total that matters.
     const cssQueries = css.match(/@container\s*\(max-width:\s*560px\)/g) ?? [];
-    const tailwind = ["app/components/CardsPokedex.tsx", "app/components/CardsView.tsx"]
+    const tailwind = ["components/custom/CardsPokedex.tsx", "components/custom/CardsView.tsx"]
       .map(read)
       .join("\n");
     const tailwindQueries = tailwind.match(/@max-\[560px\]:/g) ?? [];
@@ -84,7 +84,7 @@ describe("paint containment does not slice the shadows off the scans", () => {
   // .cards-grid is a Tailwind class string in CardsView now, so both halves of
   // the pair are read from there. Kept as one assertion over both files so the
   // pair cannot be split by moving one half back.
-  const css = CARDS_CSS + "\n" + read("app/components/CardsView.tsx");
+  const css = CARDS_CSS + "\n" + read("components/custom/CardsView.tsx");
 
   it("keeps content-visibility paired with the bleed it forced", () => {
     // content-visibility brings paint containment with it, and paint
@@ -118,9 +118,9 @@ describe("the scans land in a box that was already the right shape", () => {
     // (CardItem.tsx), the detail-page scan and its missing-scan placeholder
     // (CardDetail.tsx), and the Pokédex slot's artwork (CardsPokedex.tsx).
     for (const path of [
-      "app/components/CardItem.tsx",
-      "app/components/CardDetail.tsx",
-      "app/components/CardsPokedex.tsx",
+      "components/custom/CardItem.tsx",
+      "components/custom/CardDetail.tsx",
+      "components/custom/CardsPokedex.tsx",
     ]) {
       expect(
         has(read(path), /aspect-\[245\/342\]/),
@@ -135,7 +135,7 @@ describe("the scans land in a box that was already the right shape", () => {
     // beside it. There is no fixed radius that does this.
     // Moved to a Tailwind rounded-[4.5%/3.2%] class on CardDetail.tsx's
     // missing-scan placeholder — the last consumer of .cards-scan-missing.
-    const cardDetail = read("app/components/CardDetail.tsx");
+    const cardDetail = read("components/custom/CardDetail.tsx");
     expect(has(cardDetail, /rounded-\[4\.5%\/3\.2%\]/), "placeholder matches a real card").toBe(
       true,
     );
@@ -161,7 +161,7 @@ describe("the things that would look like leftovers", () => {
     // The second design test in this file to follow a class out of the
     // stylesheet, which is the argument for these tests existing: nothing else
     // would have noticed the guarantee had changed address.
-    const cardsPageClasses = read("app/components/cardsPageClasses.ts");
+    const cardsPageClasses = read("components/custom/cardsPageClasses.ts");
     expect(
       has(cardsPageClasses, /cardsMoreClassName[\s\S]*?\bh-px\b/),
       "the build-out tripwire",
@@ -179,7 +179,7 @@ describe("the things that would look like leftovers", () => {
     // only where it is written. This test finding the move is the point: it is
     // the kind of second consumer ADR-0018 is about, and it is a *test* reading
     // the stylesheet, which no grep for className would have turned up.
-    const cardsPageClasses = read("app/components/cardsPageClasses.ts");
+    const cardsPageClasses = read("components/custom/cardsPageClasses.ts");
     expect(
       has(cardsPageClasses, /cardsSetLogoClassName[\s\S]*?\bw-40\b/),
       "logos load at all",
@@ -194,7 +194,7 @@ describe("the things that would look like leftovers", () => {
     //
     // Moved to onlyNarrowClassName in cardsPageClasses.ts during the Tailwind
     // migration — cards.css no longer defines .only-narrow/.only-wide at all.
-    const cardsPageClasses = read("app/components/cardsPageClasses.ts");
+    const cardsPageClasses = read("components/custom/cardsPageClasses.ts");
     expect(
       has(cardsPageClasses, /onlyNarrowClassName\s*=\s*"[^"]*\bcontents\b/),
       "no layout flash",
@@ -203,9 +203,9 @@ describe("the things that would look like leftovers", () => {
 });
 
 describe("the fixed bar does not flinch when a modal opens", () => {
-  // Moved from app/styles/tabbar.css to app/components/tabbarClasses.ts's
+  // Moved from app/styles/tabbar.css to components/custom/tabbarClasses.ts's
   // exported class-name strings during the Tailwind migration (ADR-0009).
-  const tabbar = read("app/components/tabbarClasses.ts");
+  const tabbar = read("components/custom/tabbarClasses.ts");
 
   it("keeps the --lock-vw consumers", () => {
     // A position:fixed element measures itself against the viewport, not
@@ -230,7 +230,7 @@ describe("the Safari fixes, which look like superstition and are not", () => {
       // string said it the long way until the arbitrary-value sweep. Both
       // accepted, because the assertion is about the compositing layer existing.
       has(
-        read("app/components/tabbarClasses.ts"),
+        read("components/custom/tabbarClasses.ts"),
         /tabbarClassName\s*=[^;]*(translateZ\(0\)|transform-gpu)/s,
       ),
       "no flicker on overscroll in Safari",

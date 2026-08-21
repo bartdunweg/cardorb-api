@@ -15,7 +15,7 @@
  * wraps the shell, which is where the collection actually renders.
  */
 
-import RouteError from "../components/RouteError";
+import RouteError from "@/components/custom/RouteError";
 
 /**
  * The collection comes out of Postgres, which is a service that can be down,

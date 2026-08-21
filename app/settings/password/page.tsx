@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import PasswordForm from "../../components/PasswordForm";
-import SigninShell from "../../components/SigninShell";
-import { FormNote } from "../../components/FormField";
+import PasswordForm from "@/components/custom/PasswordForm";
+import SigninShell from "@/components/custom/SigninShell";
+import { FormNote } from "@/components/custom/FormField";
 import { currentViewer } from "../../../lib/api/viewer";
 
 /**

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { colour } from "../lib/design/tokens";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeProvider } from "@/components/custom/ThemeProvider";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 import "./globals.css";
 

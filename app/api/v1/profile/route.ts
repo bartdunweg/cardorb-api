@@ -18,7 +18,7 @@ import { MAX_DISPLAY_NAME } from "../../../../lib/core/account";
  *
  * PATCH rather than PUT: a body that mentions one field must not clear the
  * others. The screen has controls that save independently, and the welcome
- * flow (app/components/Onboarding.tsx) saves each of its steps on its own for
+ * flow (components/custom/Onboarding.tsx) saves each of its steps on its own for
  * the same reason.
  *
  * requestViewer() rather than currentViewer(): the latter only ever reads a

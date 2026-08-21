@@ -1,6 +1,6 @@
 "use client";
 
-import RouteError from "../../../components/RouteError";
+import RouteError from "@/components/custom/RouteError";
 
 /**
  * Browse's own boundary, because browse fails differently from everything else

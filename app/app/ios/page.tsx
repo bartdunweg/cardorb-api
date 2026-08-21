@@ -12,10 +12,10 @@ import {
   Smartphone,
   Wallet,
 } from "lucide-react";
-import Card from "../../components/Card";
-import MarketingFooter from "../../components/MarketingFooter";
-import Navbar from "../../components/Navbar";
-import ViewerPill from "../../components/ViewerPill";
+import Card from "@/components/custom/Card";
+import MarketingFooter from "@/components/custom/MarketingFooter";
+import Navbar from "@/components/custom/Navbar";
+import ViewerPill from "@/components/custom/ViewerPill";
 import {
   cardBody,
   cardHeading,
@@ -24,7 +24,7 @@ import {
   navLink,
   sectionBody,
   sectionHeading,
-} from "../../components/marketingClasses";
+} from "@/components/custom/marketingClasses";
 import { APP_NAME, SITE_URL } from "../../../lib/core/config";
 import { currentViewer } from "../../../lib/api/viewer";
 import { ownerLabel } from "../../../lib/core/owner";

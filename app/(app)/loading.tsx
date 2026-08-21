@@ -4,15 +4,15 @@ import {
   tabbarFadeClassName,
   tabbarItemClassName,
   tabbarPagesClassName,
-} from "../components/tabbarClasses";
+} from "@/components/custom/tabbarClasses";
 import { APP_NAME } from "../../lib/core/config";
 import {
   cardsHeadClassName,
   cardsMainClassName,
   pageCardsClassName,
   skeletonClassName,
-} from "../components/cardsPageClasses";
-import Wordmark from "../components/Wordmark";
+} from "@/components/custom/cardsPageClasses";
+import Wordmark from "@/components/custom/Wordmark";
 
 /**
  * What every signed-in screen shows while the shell is on its way.

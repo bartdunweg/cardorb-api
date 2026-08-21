@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import LegalPage, { legal, legalList as list } from "../components/LegalPage";
+import LegalPage, { legal, legalList as list } from "@/components/custom/LegalPage";
 import { APP_NAME } from "../../lib/core/config";
 
 /**

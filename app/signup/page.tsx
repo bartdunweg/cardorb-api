@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import SignUpForm from "../components/SignUpForm";
-import SigninShell from "../components/SigninShell";
+import SignUpForm from "@/components/custom/SignUpForm";
+import SigninShell from "@/components/custom/SigninShell";
 import { currentViewer } from "../../lib/api/viewer";
 import { APP_NAME } from "../../lib/core/config";
 

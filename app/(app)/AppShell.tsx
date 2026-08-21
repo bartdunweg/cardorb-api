@@ -4,11 +4,11 @@ import { useCallback, useMemo, useState } from "react";
 import type { CardSet } from "../../lib/core/cards";
 import type { CatalogueMatch } from "../../lib/core/ptcg-search";
 import { groupByEra } from "../../lib/core/eras";
-import AppSidebar from "../components/AppSidebar";
-import AppTabBar from "../components/AppTabBar";
-import CardAddDialog from "../components/CardAddDialog";
+import AppSidebar from "@/components/custom/AppSidebar";
+import AppTabBar from "@/components/custom/AppTabBar";
+import CardAddDialog from "@/components/custom/CardAddDialog";
 import { CollectionProvider, type CollectionValue } from "./CollectionContext";
-import { cardsMainClassName } from "../components/cardsPageClasses";
+import { cardsMainClassName } from "@/components/custom/cardsPageClasses";
 
 /**
  * The furniture around every signed-in screen.

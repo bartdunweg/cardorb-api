@@ -65,7 +65,10 @@ const TAILWIND_DEFAULT = new RegExp(
 
 const STYLES = "app/styles";
 /** Where the arbitrary-value classes are. */
-const CODE = ["app", "lib"];
+// `components/custom` as well as `app`: Card Orb's own components moved out of
+// app/components when the Untitled UI tree arrived beside them, and this test
+// silently stopped seeing three quarters of its subject for one commit.
+const CODE = ["app", "lib", "components/custom"];
 
 /** Everything declared anywhere in the stylesheets, generated ones included. */
 function declared(): Set<string> {
@@ -145,7 +148,11 @@ describe("custom properties", () => {
     // And separately that the .tsx half is being reached at all: the first
     // version of this test read only app/styles, and the components are where
     // three quarters of the references are.
+    // Ten rather than twenty: the Untitled UI migration took the count from
+    // ~180 distinct tokens down to a couple of dozen, and this is a canary for
+    // the glob breaking, not a floor anybody should be building up to. If it
+    // ever reads zero, the directory list above is wrong again.
     const inCode = [...used.values()].filter((files) => files.some((f) => /\.tsx?$/.test(f)));
-    expect(inCode.length).toBeGreaterThan(20);
+    expect(inCode.length).toBeGreaterThan(10);
   });
 });
