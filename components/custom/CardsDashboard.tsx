@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Plus } from "@untitledui-pro/icons/line";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { Table } from "@/components/application/table/table";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import Card, { aboutCardClassName } from "@/components/custom/Card";
@@ -31,14 +34,24 @@ export default function CardsDashboard({
   stats,
   snapshots,
   movers = { up: [], down: [] },
+  onAdd,
 }: {
   stats: CardsStats;
   snapshots: ValueSnapshot[];
   movers?: { up: Mover[]; down: Mover[] };
+  /** Opens the shell's one CardAddDialog. Optional so the component still
+   *  renders from data alone, which is how every other prop here works. */
+  onAdd?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-8">
-      {/* Visible, unlike CardsView's own <h1>: that one is sr-only because the
+      {/* A title row rather than a bare heading, the same shape SetIndex.tsx
+          uses to hang "Browse every set" off its own: heading left, one action
+          right, wrapping to two lines rather than colliding. items-center, not
+          SetIndex's items-baseline — a button has no baseline worth aligning
+          against a display-size heading.
+
+          Visible, unlike CardsView's own <h1>: that one is sr-only because the
           rail/tabbar already says which screen you're on, twice over. Neither
           exists above this content on its own — the (app) shell's own <h1> is
           sr-only too — so this is the only place "Dashboard" is actually
@@ -48,7 +61,32 @@ export default function CardsDashboard({
           screen CardsView draws (its own <MainTitle>), so reusing the class
           is what keeps this one in step with them rather than a second,
           similar-looking style drifting beside it. */}
-      <h1 className={cardsMainTitleClassName}>Dashboard</h1>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h1 className={cardsMainTitleClassName}>Dashboard</h1>
+        {/* The plus that used to sit in the middle of the mobile tab bar. It
+            left so the bar's four slots could be one equal width (ADR-0086),
+            and this is where it went — deliberately for now, and deliberately
+            recorded as temporary: it costs a phone the ability to add a card
+            from /collection or /wishlist, which the bar could do from anywhere.
+
+            Hidden at 1001px and up, the exact mirror of the rail's own
+            [@media(max-width:1000px)]:hidden on the identical button
+            (CardsSidebar.tsx). One plus at every width, never two.
+
+            Same shape as that one down to the tooltip: their Button, icon-only,
+            color="primary", with a real aria-label because there is no text. */}
+        {onAdd && (
+          <Tooltip title="Add a card" placement="bottom">
+            <UntitledButton
+              color="primary"
+              className="flex-none [@media(min-width:1001px)]:hidden"
+              iconLeading={Plus}
+              onPress={onAdd}
+              aria-label="Add a card"
+            />
+          </Tooltip>
+        )}
+      </div>
 
       {/* Four numbers rather than four one-bar charts: a headline value is a
           stat tile, and a bar chart of unrelated totals compares things that do

@@ -2,6 +2,114 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## The value chart got its axes back (2026-08-22, workspace `banjul`)
+
+Branch `bartdunweg/value-chart-untitled-style`, not yet merged. FB-0021 and
+ADR-0085 have the whole story; the short version:
+
+- **The dashboard's "Value over time" card is Untitled UI's chart now** — two
+  real axes, rounded euro ticks (€30k/€35k/€40k/€45k), horizontal gridlines,
+  brand purple, 240px tall, and no dots except the one under the pointer. It
+  was reported as "heel lelijk" with both axes hidden, which it was.
+- **A regression was found and fixed on the way.** The X axis had been
+  `dataKey="date"` with no `type` since ADR-0075 swapped the hand-drawn SVG for
+  Recharts — a *category* axis, evenly spaced by position in the list. The old
+  file had gone to some length to space X by elapsed time and to say why, and
+  that intent was silently dropped. It is a `scale="time"` axis again, and
+  `chartPoints` hands it a `t` field so a future rewrite has to delete
+  something to lose it.
+- **Two ready-made ways to pick x-axis labels do not work here**, and ADR-0085
+  says so in detail: Recharts' `tickCount` on a data-pinned time domain draws
+  only the two ends, and `charts-base`'s `selectEvenlySpacedItems` picks evenly
+  by position in the list. `timeTicks()` in `lib/core/value-chart.ts` does it by
+  time. Do not re-try either.
+- **The snapshot cron is nightly** (`vercel.json`, `0 4 * * *`, was `0 4 * * 1`).
+  Daily is the ceiling, not a preference: Hobby allows two crons at most once a
+  day, and Cardmarket's guide is only rebuilt nightly. It makes the series
+  denser from here on and **cannot backfill** — there is no archive to backfill
+  from. The tooltip carries the day now rather than the month, because daily
+  readings would otherwise be named identically.
+- `lib/core/value-chart.ts` lost `line`, `under`, `x`, `y` and `ChartBox`; all
+  five had been unread since ADR-0075. It gained `niceScale` and `timeTicks`,
+  both tested (18 cases in that file).
+- **Recharts hardcodes `fill="#666"` on axis ticks**, as a presentation
+  attribute, in both themes — 3.45:1 on the dark card, under the 4.5:1 that
+  12px text needs. Found by measuring, not by reading. The card overrides it
+  with `[&_.recharts-cartesian-axis-tick-value]:fill-current`, and **any second
+  chart in this app needs the same line**; a light-mode screenshot will not
+  show the problem.
+
+`verify.sh`: everything passes except `standards`, which fails the same way on
+`main` — the `docs/` versus `.dev-standards/` placement ADR-0053 chose on
+purpose, plus a CLAUDE.md generated from v0.22.0 against a v0.23.0 standard.
+
+**A caution about `git stash` in a Conductor workspace, since this session got
+caught by it.** The stash is a single stack in the *shared* git directory, not
+per-worktree: eight workspaces are all pushing onto the same `refs/stash`. A
+`git stash` / `git stash pop` round-trip here — used to check whether a
+`verify.sh` failure predated the branch — popped a *different* workspace's
+entry into this tree, because theirs had landed on top in between. It was put
+back untouched and its owner has since committed it as "Stop the card flashing
+on its first hover" on `bartdunweg/card-hover-flash`, so nothing was lost.
+
+Do not use `git stash` to park work in a workspace. To answer "did this failure
+exist before my branch?", read the file at the base commit
+(`git show origin/main:path`) or run the check in another worktree; both leave
+the shared stack alone.
+
+## The card stopped flashing on hover (2026-08-22, workspace `denver`)
+
+Bart reported that pointing at a card made it flash, disappear for an instant, and
+only then tilt — once per card, on its first hover. `CardItem`'s `arm()` fired
+`import("hover-tilt/web-component")` and `setTilted(true)` on the next line without
+awaiting, so `<hover-tilt>` went into the document before `customElements.define`
+had run. **Measured against a clean build: the element sat undefined for 36–47 ms**,
+then upgraded and re-laid-out its children. ADR-0086 has the numbers and the method
+(a `MutationObserver` reading `customElements.get()` and `shadowRoot` at insertion).
+
+Fixed by awaiting the import, plus `eager`/`sync` on the `<img>` that the swap
+remounts and a fix to the 404 retry, which lived in the element's `dataset` and so
+did not survive that remount. Verified: `defined`/`upgraded` are both true at
+insertion, twice in a row; `prefers-reduced-motion` still reports
+`transform: none` with the foil lit, as ADR-0061 and `poke-holo.css` intend.
+
+**One thing is not settled: whether Bart still sees anything.** Headless Chromium
+cannot show whether a frame painted, so the DOM-level cause is proved and the pixel
+is not. Upgrading a custom element promotes a compositor layer whatever we do, and
+that can still cost a frame. If it is still visible, ADR-0086's option 3 is the next
+move and the record says why it was left on the shelf.
+
+**A trap worth knowing:** `scripts/verify.sh` runs a production build into `.next`,
+and a `next dev` started around it served a stale bundle — a measurement said
+`lazy`/`async` on code that plainly reads `eager`/`sync`. Kill dev, `rm -rf .next`,
+restart, then measure.
+
+## The tab bar's slots are all one width, and the plus left it (2026-08-22, workspace `yerevan`)
+
+FB-0022, ADR-0086. Every slot in the mobile tab bar is the width of the widest
+label now — the track is `grid grid-flow-col auto-cols-fr`, so the browser does
+it and no JavaScript measures anything. The avatar slot is no longer the narrow
+one. `px-1.5` on the slot became `px-1`, which is now only the truncation floor
+rather than the visible padding; at 6px a 360px phone read "Dashbo…".
+
+**The thing to know before touching this: the 40px add circle is not in the bar
+any more.** Four equal slots plus a circle do not fit a 360px phone, so it moved
+to the dashboard's title row, on instruction and explicitly *"voor nu eventjes"*.
+Cost: on a phone, adding a card is dashboard-only — `/collection` and `/wishlist`
+have no add action. ADR-0086 lists the three ways to reverse it.
+
+Left undone, and both need a signed-in session this workspace cannot create:
+
+- **Nobody has seen the dashboard's new plus.** The geometry of the bar was
+  measured on the public `/user/<name>` bar with the four signed-in slots built
+  into the page from the same classes; the dashboard button was not rendered at
+  all. Same gap as the `/settings` and `CardAddDialog` items further down.
+- **That button is 36×36** (Untitled UI `Button`, default `sm`, icon-only →
+  `p-2` + a 20px icon), matching the rail's. It clears WCAG 2.2 AA's 24×24 but
+  not the 44×44 comfortable-touch guideline, and unlike the rail's it is now a
+  phone-only control. `size="lg"` would make it exactly 44. Left alone because
+  its visual weight beside the heading has not been looked at yet.
+
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 
 Five `review-*` skills were run over the whole app rather than over a diff —
@@ -125,7 +233,9 @@ is worse than the lead suggested: it names four reasons a plain `<button>` is
 allowed, says "five call sites", has ten, and **three of the four reasons are
 false** — FilterSheet and ViewSheet are not `<details>/<summary>` any more,
 AvatarPicker's trigger is not a `<label>`, and PublicCardDialog's arrows are real
-buttons.
+buttons. *(Corrected since: `dd099b7` rewrote that header, and ADR-0084 converted
+the eight call sites it admitted were undefended. The file is down to two
+importers and five call sites, all of them real.)*
 
 **Two HIGH accessibility findings, both small and both real:**
 - **The filter and view sheets are a keyboard trap.** `Sheet` hides the close
@@ -176,14 +286,18 @@ is evidence; no screen reader was run and no axe pass happened, which is not.
   `ownerLabel()` fallback does the work and ADR-0034's "no name given" stays
   distinguishable. Verified live: `bartdunweg's Pokémon card collection`.
   **The cause is worth more than the fix: there is one Supabase project**, and
-  `npm run dev` writes to it. A red `LiveDataWarning` bar now says so on every
-  local page. A separate dev database was considered and rejected — a dev
-  database with twelve cards cannot reproduce the bugs a 1,600-card matcher has.
+  `npm run dev` writes to it. A red `LiveDataWarning` bar said so on every local
+  page for one afternoon; it is gone (ADR-0084, FB-0020 — it was not asked for
+  and the owner did not want it on screen), so **nothing warns you any more**.
+  Assume any form you fill in locally is live. A separate dev database was
+  considered and rejected — a dev database with twelve cards cannot reproduce
+  the bugs a 1,600-card matcher has.
   Still true and not addressed: the profile `test` holds "UI test 2025" (private,
   left alone deliberately), and `pikachu` ("Bigi Mang") is a second public
   profile in the live sitemap that nobody has confirmed is meant to be.
-  **Agreed and not built:** move the screenshot harness off the real owner
-  account onto a test account with a copied collection.
+  **Agreed and not built, and now the only mitigation left:** move the
+  screenshot harness off the real owner account onto a test account with a
+  copied collection.
 - **`find-seo-opportunities` produced nothing, on purpose.** No Search Console
   credential of any kind exists in this session and no `google-site-verification`
   token is in the repo. The skill's own first step is to stop rather than invent
@@ -276,7 +390,8 @@ Untitled UI rather than using it". Two things were.
   asks 24, so their badge is used inside the existing full-chip button.
 
 `untitledButtonClasses.ts` is down to six consumers and its header lists all
-five reasons one is allowed. The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
+five reasons one is allowed. *(Both numbers are stale: see ADR-0084 — two
+consumers, five call sites, three reasons.)* The `--fs-*`/`--fw-*`/`--lh-*` alias block is empty
 — every alias had lost its last reader — and the test asserts it stays that way.
 The raw-hex guard now walks `components/`, which is where the components went.
 

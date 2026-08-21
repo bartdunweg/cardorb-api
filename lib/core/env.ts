@@ -81,7 +81,7 @@ const CHECKS: Check[] = [
   {
     name: "SUPABASE_SERVICE_ROLE_KEY",
     required: false,
-    without: "account deletion and the weekly value snapshot cannot run; no page needs it",
+    without: "account deletion and the nightly value snapshot cannot run; no page needs it",
   },
   // Warned rather than required, and the route agrees: without this the weekly
   // snapshot refuses to run at all rather than running unauthenticated. A
@@ -90,7 +90,7 @@ const CHECKS: Check[] = [
   {
     name: "CRON_SECRET",
     required: false,
-    without: "the weekly value snapshot refuses to run, so no new points are recorded",
+    without: "the nightly value snapshot refuses to run, so no new points are recorded",
   },
 ];
 

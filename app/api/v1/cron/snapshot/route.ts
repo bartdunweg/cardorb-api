@@ -18,7 +18,16 @@ import { adminClient } from "../../../../../lib/storage/supabase";
 import IDS from "../../../../../lib/core/cardmarket-ids.generated.json";
 
 /**
- * One value reading per account, once a week.
+ * One value reading per account, once a night.
+ *
+ * It was once a week, which is why the chart on the dashboard had four points
+ * in it eight months after the table shipped. Nightly is both the ceiling and
+ * the right answer, and neither reason is a preference: this is a Vercel Hobby
+ * project, where a cron may be triggered at most once a day, and the price
+ * guide read below is itself only rebuilt nightly — running twice would write
+ * the same number twice. It cannot make history, only density from here on;
+ * scripts/snapshot-collection-value.mjs already went looking for an archive to
+ * backfill from and found two copies of the guide, total.
  *
  * This is the half of ADR-0044 that was missing. The table it writes to shipped
  * with three points in it, put there by hand, and nothing added a fourth — a
@@ -29,7 +38,7 @@ import IDS from "../../../../../lib/core/cardmarket-ids.generated.json";
  *
  * ── Why the service role, which the rules say to avoid ─────────────────────
  *
- * Because there is nobody to be. A cron fires at four on a Sunday morning with
+ * Because there is nobody to be. A cron fires at four in the morning with
  * no session attached, and a job that recorded only the collections whose
  * owners happened to be signed in would record almost nothing. That is the
  * exact condition adminClient()'s own comment now names as the second

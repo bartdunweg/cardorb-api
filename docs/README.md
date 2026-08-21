@@ -170,6 +170,15 @@ root `CLAUDE.md` for how and when to write to it.
   no screen has ever shown — which is what `docs/feedback/0010-...` reported.
   Anything route-specific goes in that route's own `loading.tsx` or nowhere. Read
   it with `0018`, which is this same file drifting once before.
+- `decisions/0086-every-tab-is-the-width-of-the-widest.md` — **read before
+  touching the mobile tab bar, and before looking for the add button in it.**
+  The track is a grid of `fr` columns now, so every slot is the width of the
+  widest label with no JavaScript measuring it; and the 40px add circle left the
+  bar for the dashboard's title row, **deliberately and temporarily**, because
+  four equal slots plus a circle do not fit a 360px phone. The record says what
+  that costs (on a phone, adding a card is dashboard-only) and what would
+  reverse it. Read it with `0050`, whose overflow diagnosis it keeps, and `0030`,
+  which tried equal widths by measurement and kept clipping "Dashboard".
 - `decisions/0048-the-orb-mark-on-the-web.md` — **read before touching anything
   that shows the product's name or its icon**, and **read its opening warning
   before starting any task in this repo.** Two workspaces built this from the
@@ -187,6 +196,21 @@ root `CLAUDE.md` for how and when to write to it.
   and the plain circle goes where the file is drawn as given, which is a browser
   tab. It also has the measurement behind the wordmark's `translate-y-[6.05%]`,
   and why the word beside it needs no matching nudge.
+- `decisions/0085-the-value-chart-gets-its-axes-back.md` — **read before
+  touching any chart in this app.** The dashboard's "Value over time" card is
+  Untitled UI's chart now (two real axes, rounded euro ticks, no dots except on
+  hover), and the record carries three things that are not obvious from the
+  code: why the Y axis frames the data instead of starting at zero, which two
+  ready-made ways of picking x-axis labels do *not* work here and why not to
+  re-try them, and that the X axis had silently become a category axis when
+  ADR-0075 swapped the hand-drawn SVG for Recharts. It also covers the snapshot
+  cron going nightly, and why that cannot backfill the past.
+- `decisions/0086-the-tilt-is-armed-after-the-module-lands-not-before.md` —
+  **read before touching how a card arms its hover effect.** The tilt used to be
+  put on screen before the code that draws it had loaded: `<hover-tilt>` sat in
+  the document undefined for 36–47 ms, which is what a first hover flashing was.
+  It also carries the reason the `<img>` remount is accepted rather than removed,
+  and what to reach for if the flash ever comes back.
 - `decisions/0053-memory-stays-in-docs.md` — **read before moving anything in
   this directory.** The shared standards keep a repository's memory in
   `.dev-standards/` from v0.11.0 onwards; this repository deliberately keeps

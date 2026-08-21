@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Sliders02 } from "@untitledui-pro/icons/line";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
+import Button from "@/components/custom/Button";
 import { Sheet, sheetApplyButtonClassName } from "@/components/custom/Sheet";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
 
 /**
  * The same view options as a sheet, for a phone.
@@ -29,16 +30,20 @@ export default function ViewSheet(props: ViewOptionsProps) {
 
   return (
     <>
-      <button
-        type="button"
-        className={untitledButton({ color: "secondary", className: "cards-view-trigger" })}
-        onClick={() => setOpen(true)}
+      {/* Untitled UI's Button rather than this app's wrapper: the wrapper has no
+          slot for `aria-haspopup`. `size="md"` is what the class recipe
+          defaulted to; the component itself defaults to `sm`. */}
+      <UntitledButton
+        size="md"
+        color="secondary"
+        className="cards-view-trigger"
+        onPress={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label="View options"
+        iconLeading={<Sliders02 size={16} strokeWidth={1.75} aria-hidden="true" />}
       >
-        <Sliders02 size={16} strokeWidth={1.75} aria-hidden="true" />
-        <span>View</span>
-      </button>
+        View
+      </UntitledButton>
 
       <Sheet
         open={open}
@@ -47,13 +52,9 @@ export default function ViewSheet(props: ViewOptionsProps) {
         title="View"
         padBody
         footer={
-          <button
-            type="button"
-            className={untitledButton({ color: "primary", className: sheetApplyButtonClassName })}
-            onClick={() => setOpen(false)}
-          >
+          <Button color="primary" className={sheetApplyButtonClassName} onClick={() => setOpen(false)}>
             Done
-          </button>
+          </Button>
         }
       >
         <ViewOptions {...props} />

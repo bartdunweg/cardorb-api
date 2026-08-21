@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
 import { useSwipe } from "@/app/hooks/useSwipe";
 import type { CardDetail as Detail, OwnedCard } from "@/lib/core/cards";
 import { modalCardClassName } from "@/components/custom/cardModalClasses";
-import { untitledIconButton } from "@/components/custom/untitledButtonClasses";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
 
 /**
  * A card on the public link, opened in place.
@@ -129,25 +129,29 @@ export default function PublicCardDialog({
                 // Buttons, not links: on the public page a card has no URL of its
                 // own, so there is nothing for an anchor to point at. Swiping the
                 // dialog does the same thing.
+                // Untitled UI's Button rather than this app's wrapper: the
+                // wrapper requires children, and these two have none. An icon
+                // with no children is what the component reads as icon-only,
+                // and it sets `data-icon-only` itself — which is where the
+                // square shape `untitledIconButton` used to paste in comes
+                // from.
                 <>
-                  <button
-                    type="button"
-                    className={untitledIconButton({ color: "secondary" })}
-                    onClick={() => onGo(-1)}
-                    disabled={!hasPrev}
+                  <UntitledButton
+                    size="md"
+                    color="secondary"
+                    onPress={() => onGo(-1)}
+                    isDisabled={!hasPrev}
                     aria-label="Previous card"
-                  >
-                    <ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className={untitledIconButton({ color: "secondary" })}
-                    onClick={() => onGo(1)}
-                    disabled={!hasNext}
+                    iconLeading={<ChevronLeft size={20} strokeWidth={1.75} aria-hidden="true" />}
+                  />
+                  <UntitledButton
+                    size="md"
+                    color="secondary"
+                    onPress={() => onGo(1)}
+                    isDisabled={!hasNext}
                     aria-label="Next card"
-                  >
-                    <ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />
-                  </button>
+                    iconLeading={<ChevronRight size={20} strokeWidth={1.75} aria-hidden="true" />}
+                  />
                 </>
               ) : undefined
             }
