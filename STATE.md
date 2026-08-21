@@ -43,11 +43,19 @@ ADR-0085 have the whole story; the short version:
 `main` — the `docs/` versus `.dev-standards/` placement ADR-0053 chose on
 purpose, plus a CLAUDE.md generated from v0.22.0 against a v0.23.0 standard.
 
-**Left for whoever picks this up:** an unrelated stash sits at `stash@{0}`,
-message "recovered: CardItem.tsx (not mine - popped by accident)". It was in
-this repo's stash list before this session and got popped into the tree by a
-`git stash` round-trip here; it has been put back, untouched. It is not part of
-this work.
+**A caution about `git stash` in a Conductor workspace, since this session got
+caught by it.** The stash is a single stack in the *shared* git directory, not
+per-worktree: eight workspaces are all pushing onto the same `refs/stash`. A
+`git stash` / `git stash pop` round-trip here — used to check whether a
+`verify.sh` failure predated the branch — popped a *different* workspace's
+entry into this tree, because theirs had landed on top in between. It was put
+back untouched and its owner has since committed it as "Stop the card flashing
+on its first hover" on `bartdunweg/card-hover-flash`, so nothing was lost.
+
+Do not use `git stash` to park work in a workspace. To answer "did this failure
+exist before my branch?", read the file at the base commit
+(`git show origin/main:path`) or run the check in another worktree; both leave
+the shared stack alone.
 
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 
