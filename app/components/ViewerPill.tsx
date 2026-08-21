@@ -31,7 +31,7 @@ export default function ViewerPill({
       aria-label={`Signed in as ${name} — open dashboard`}
       className="inline-flex items-center gap-2 min-w-0 pl-1 pr-3 py-1 rounded-full
         border border-[var(--color-border)] text-primary no-underline whitespace-nowrap
-        overflow-hidden text-ellipsis [font-family:var(--font-body)] [font-size:var(--fs-small)]
+        overflow-hidden text-ellipsis font-body text-xs
         [transition:border-color_150ms_var(--ease-smooth)]
         hover:border-[var(--color-border-hover)]"
     >
@@ -50,7 +50,7 @@ export default function ViewerPill({
         <span
           className="grid place-items-center w-6 h-6 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
             border border-[var(--color-border-subtle)] text-tertiary
-            [font-family:var(--font-main)] [font-size:var(--fs-tiny)] [font-weight:var(--fw-title)]"
+            font-body text-xs font-medium"
           aria-hidden="true"
         >
           {name.charAt(0)}

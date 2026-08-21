@@ -283,7 +283,7 @@ function MoverList({ title, rows }: { title: string; rows: Mover[] }) {
       <ul className="list-none m-0 p-0 flex flex-col gap-2" role="list">
         {rows.map((m) => (
           <li key={m.card.key} className="flex items-baseline justify-between gap-3">
-            <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-primary overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="font-body text-xs text-primary overflow-hidden text-ellipsis whitespace-nowrap">
               {m.card.tcgId ? (
                 <Link
                   href={`/cards/${m.card.tcgId}`}
@@ -301,7 +301,7 @@ function MoverList({ title, rows }: { title: string; rows: Mover[] }) {
                 meant to be compared down the page. The sign is written out
                 because a minus alone at this size is a hyphen. */}
             <span
-              className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+              className="font-body text-xs
                 tabular-nums whitespace-nowrap text-secondary"
             >
               {m.change > 0 ? "+" : "−"}
@@ -344,8 +344,8 @@ function Bars({
             className="grid items-center gap-3 [grid-template-columns:minmax(0,8rem)_minmax(0,1fr)_auto]"
           >
             <span
-              className="p-0 border-0 bg-transparent text-left [font-family:var(--font-body)]
-                [font-size:var(--fs-small)] text-secondary overflow-hidden text-ellipsis whitespace-nowrap"
+              className="p-0 border-0 bg-transparent text-left font-body
+                text-xs text-secondary overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {row.value}
             </span>
@@ -356,7 +356,7 @@ function Bars({
               />
             </span>
             <span
-              className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
+              className="font-body text-xs
                 tabular-nums text-tertiary"
             >
               {row.count}

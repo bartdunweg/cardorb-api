@@ -22,7 +22,7 @@ export default function SigninShell({ title, children }: { title: string; childr
       <Navbar />
       <div className="flex flex-col items-center justify-center gap-5 min-h-screen p-[var(--page-pad-x)]">
         <div className="w-full max-w-[380px] flex flex-col gap-6">
-          <h1 className="m-0 [font-size:var(--fs-card)] text-primary text-center">{title}</h1>
+          <h1 className="m-0 text-display-xs text-primary text-center">{title}</h1>
           {children}
         </div>
       </div>
@@ -36,7 +36,7 @@ export function SigninOr({ className, ...rest }: HTMLAttributes<HTMLParagraphEle
     <p
       className={[
         "flex items-center gap-3 mx-[calc(-1*var(--card-pad))]",
-        "[font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary",
+        "font-body text-xs text-tertiary",
         "before:content-[''] before:flex-1 before:border-t before:border-[var(--color-border)]",
         "after:content-[''] after:flex-1 after:border-t after:border-[var(--color-border)]",
         className,
@@ -76,7 +76,7 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
       className={[
         "m-0 py-3 px-3.5 border border-[var(--color-border-subtle)] rounded-orb-sm",
         "bg-[var(--color-surface-subtle)] text-secondary",
-        "[font-size:var(--fs-body-s)] leading-relaxed",
+        "text-sm leading-relaxed",
         className,
       ]
         .filter(Boolean)

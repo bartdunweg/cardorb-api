@@ -216,14 +216,14 @@ export default async function IosApp() {
           <span
             className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
               border border-[var(--color-border-subtle)] text-tertiary
-              [font-family:var(--font-body)] [font-size:var(--fs-tiny)]"
+              font-body text-xs"
           >
             <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
             In development
           </span>
           <h1
-            className="max-w-[15ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary [font-family:var(--font-main)]
-              [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
+            className="max-w-[15ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary font-body
+              font-medium tracking-[-0.045em] leading-tight
               [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
           >
             Your collection, in your pocket.
@@ -260,10 +260,7 @@ export default async function IosApp() {
               <Download size={17} strokeWidth={1.8} aria-hidden="true" />
               Download on the App Store
             </button>
-            <p
-              id="ios-download-note"
-              className="m-0 max-w-[38ch] text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]"
-            >
+            <p id="ios-download-note" className="m-0 max-w-[38ch] text-tertiary font-body text-xs">
               Not on the App Store yet. This is where the download will be.
             </p>
             <Link
@@ -294,12 +291,12 @@ export default async function IosApp() {
                   className="grid place-items-center w-full aspect-[9/19]
                     rounded-[28px] border border-dashed border-[var(--color-border-active)]
                     bg-[color-mix(in_srgb,var(--color-label)_3%,transparent)]
-                    text-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]"
+                    text-tertiary font-body text-xs"
                   aria-hidden="true"
                 >
                   {label}
                 </div>
-                <p className={`text-center ${cardBody} [font-size:var(--fs-small)]`}>{caption}</p>
+                <p className={`text-center ${cardBody} text-xs`}>{caption}</p>
               </li>
             ))}
           </ul>
@@ -329,7 +326,7 @@ export default async function IosApp() {
                     </span>
                     {comingSoon && (
                       <span
-                        className="text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+                        className="text-tertiary font-body text-xs
                           uppercase tracking-[0.06em]"
                       >
                         Coming soon
@@ -398,10 +395,8 @@ export default async function IosApp() {
           >
             {REQUIREMENTS.map(({ term, detail }) => (
               <div key={term} className="grid gap-1">
-                <dt className="text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                  {term}
-                </dt>
-                <dd className="m-0 text-primary [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)] tracking-[-0.02em]">
+                <dt className="text-tertiary font-body text-xs">{term}</dt>
+                <dd className="m-0 text-primary font-body text-sm font-medium tracking-[-0.02em]">
                   {detail}
                 </dd>
               </div>

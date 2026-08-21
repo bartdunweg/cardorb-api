@@ -42,12 +42,12 @@ export default function LegalPage({
             reads a legal document set the full width of a desktop. */}
         <article className="max-w-[var(--content-max)] mx-auto [padding-block:clamp(56px,8vw,96px)]">
           <h1
-            className="mt-0 mb-3 text-primary [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-              tracking-[-0.045em] [line-height:var(--lh-tight)] [font-size:var(--fs-display)]"
+            className="mt-0 mb-3 text-primary font-body font-medium
+              tracking-[-0.045em] leading-tight text-display-md"
           >
             {title}
           </h1>
-          <p className="m-0 text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+          <p className="m-0 text-tertiary font-body text-xs">
             Last updated <time dateTime={updated.iso}>{updated.human}</time>
           </p>
           {children}
@@ -69,16 +69,16 @@ export default function LegalPage({
  */
 export const legal = {
   h2:
-    "mt-12 mb-3 text-primary [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
-    "tracking-[-0.03em] [line-height:var(--lh-tight)] [font-size:var(--fs-h2)]",
+    "mt-12 mb-3 text-primary font-body font-medium " +
+    "tracking-[-0.03em] leading-tight text-display-sm",
   h3:
-    "mt-7 mb-2 text-primary [font-family:var(--font-main)] [font-weight:var(--fw-title)] " +
-    "tracking-[-0.02em] [line-height:var(--lh-snug)] [font-size:var(--fs-sub)]",
+    "mt-7 mb-2 text-primary font-body font-medium " +
+    "tracking-[-0.02em] leading-snug text-lg",
   // --lh-relaxed, which tokens.css names "long-form body" and which nothing in
   // this app had a use for until these two pages.
   body:
-    "mt-0 mb-4 text-secondary [font-family:var(--font-body)] " +
-    "[font-size:var(--fs-body-l)] [line-height:var(--lh-relaxed)]",
+    "mt-0 mb-4 text-secondary font-body " +
+    "text-md leading-relaxed",
   link:
     "text-primary underline underline-offset-2 " +
     "[transition:color_150ms_var(--ease-smooth)] hover:text-secondary",

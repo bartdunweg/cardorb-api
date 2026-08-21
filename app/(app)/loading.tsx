@@ -135,7 +135,7 @@ export default function Loading() {
             bg-primary [@media(max-width:1000px)]:hidden"
         >
           <span className={`${skeletonClassName} flex-none w-7 h-7 rounded-full`} />
-          <span className={`${skeletonClassName} flex-1 h-[var(--fs-small)]`} />
+          <span className={`${skeletonClassName} flex-1 h-3`} />
         </span>
       </div>
 
@@ -147,7 +147,7 @@ export default function Loading() {
               Sized to cardsMainTitleClassName's line box, not to its
               font size. */}
           <span
-            className={`${skeletonClassName} w-[220px] max-w-full h-[calc(var(--fs-h2)*var(--lh-tight))] rounded-orb-xs`}
+            className={`${skeletonClassName} w-[220px] max-w-full h-8 rounded-orb-xs`}
             aria-hidden="true"
             role="presentation"
           />
@@ -248,7 +248,7 @@ function TabSlot({ labelWidth }: { labelWidth: string }) {
   return (
     <span className={`${tabbarItemClassName} !cursor-default`}>
       <span className={`${skeletonClassName} w-5 h-5 rounded-orb-xs`} />
-      <span className={`skeleton ${labelWidth} h-[var(--fs-tiny)] rounded-orb-xs`} />
+      <span className={`${skeletonClassName} ${labelWidth} h-3 rounded-orb-xs`} />
     </span>
   );
 }

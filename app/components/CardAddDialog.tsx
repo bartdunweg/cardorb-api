@@ -51,7 +51,7 @@ type Draft = {
 };
 
 const cardAddLabelClassName =
-  "[font-family:var(--font-main)] [font-size:var(--fs-small)] [font-weight:var(--fw-eyebrow)]" +
+  "font-body text-xs font-semibold" +
   " text-secondary p-0 [float:none]";
 
 // The GLASS CONTROL / CONTROL recipe .card-add-field input used to read from
@@ -62,7 +62,7 @@ const cardAddLabelClassName =
 const cardAddInputClassName =
   "h-[var(--control-h)] border border-secondary bg-primary rounded-pill " +
   "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary " +
-  "[font-family:var(--font-main)] [font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] " +
+  "font-body text-sm font-bold " +
   "placeholder:text-tertiary dark:border-secondary " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)]";
 
@@ -70,7 +70,7 @@ const cardAddInputClassName =
 const cardAddSearchClassName =
   "h-14 w-full pl-11 pr-11 border border-secondary bg-primary rounded-2xl " +
   "[backdrop-filter:blur(var(--blur-glass))] [box-shadow:var(--shadow-card)] text-primary outline-none " +
-  "[font-family:var(--font-main)] [font-size:var(--fs-card)] [font-weight:var(--fw-button)] " +
+  "font-body text-display-xs font-bold " +
   "placeholder:text-tertiary dark:border-secondary " +
   "hover:[box-shadow:var(--shadow-elevated)] focus-visible:[border-color:var(--color-border-active)] " +
   "[&::-webkit-search-cancel-button]:hidden";
@@ -440,8 +440,8 @@ export default function CardAddDialog({
     <Modal open={open} onClose={onClose} label="Add a card" className={modalCardAddClassName}>
       <form className="card-add flex flex-col gap-4" onSubmit={submit}>
         <h2
-          className="m-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-            [font-size:var(--fs-card)] [line-height:var(--lh-tight)] text-primary"
+          className="m-0 font-body font-medium
+            text-display-xs leading-tight text-primary"
         >
           Add a card
         </h2>
@@ -539,7 +539,7 @@ export default function CardAddDialog({
                 other message here — it is never true at the same time as a
                 genuine "no matches", see the search effect. */}
             <p
-              className="m-0 min-h-[1.2em] [font-size:var(--fs-tiny)] text-tertiary"
+              className="m-0 min-h-[1.2em] text-xs text-tertiary"
               role="status"
             >
               {searchFailed ? (
@@ -606,12 +606,12 @@ export default function CardAddDialog({
                       />
                     ) : null}
                     <span
-                      className="[font-size:var(--fs-tiny)] [font-weight:var(--fw-eyebrow)] text-primary
+                      className="text-xs font-semibold text-primary
                         line-clamp-1 w-full"
                     >
                       {match.name}
                     </span>
-                    <span className="[font-size:var(--fs-tiny)] text-tertiary tabular-nums truncate w-full">
+                    <span className="text-xs text-tertiary tabular-nums truncate w-full">
                       {match.setName} · #{match.number}
                     </span>
                   </button>
@@ -624,7 +624,7 @@ export default function CardAddDialog({
                 type="button"
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="self-center [font-size:var(--fs-small)] text-secondary underline
+                className="self-center text-xs text-secondary underline
                   cursor-pointer hover:text-primary disabled:cursor-default disabled:no-underline
                   disabled:text-tertiary"
               >
@@ -632,7 +632,7 @@ export default function CardAddDialog({
               </button>
             )}
 
-            <p className="m-0 [font-size:var(--fs-small)] text-tertiary">
+            <p className="m-0 text-xs text-tertiary">
               {mode === "quick" ? (
                 <>
                   Looking for something specific?{" "}
@@ -677,12 +677,12 @@ export default function CardAddDialog({
             ) : null}
             <div className="flex flex-col gap-[2px] min-w-0 flex-1">
               <span
-                className="[font-family:var(--font-main)] [font-weight:var(--fw-title)]
-                  [font-size:var(--fs-body-s)] text-primary truncate"
+                className="font-body font-medium
+                  text-sm text-primary truncate"
               >
                 {selected.name}
               </span>
-              <span className="[font-size:var(--fs-small)] text-tertiary truncate">
+              <span className="text-xs text-tertiary truncate">
                 {selected.setName} · #{selected.number}
               </span>
             </div>
@@ -704,14 +704,14 @@ export default function CardAddDialog({
                 so there is nothing here to type around any more. */}
             <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Rarity</span>
-              <p className="m-0 [font-size:var(--fs-control-label)] text-primary">
+              <p className="m-0 text-sm text-primary">
                 {selected?.rarity ?? "Unknown"}
               </p>
             </div>
 
             <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Type</span>
-              <p className="m-0 [font-size:var(--fs-control-label)] text-primary">
+              <p className="m-0 text-sm text-primary">
                 {selected?.types.length ? selected.types.join(", ") : "Unknown"}
               </p>
             </div>
@@ -730,8 +730,8 @@ export default function CardAddDialog({
             {suggest("card-add-gens", fields?.gens)}
 
             <label
-              className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-                [font-size:var(--fs-body-s)] text-primary cursor-pointer"
+              className="col-span-full flex items-start gap-3 font-body
+                text-sm text-primary cursor-pointer"
             >
               <input
                 className="mt-[2px] [accent-color:var(--color-tint)]"
@@ -741,15 +741,15 @@ export default function CardAddDialog({
               />
               <span className="flex flex-col gap-[2px]">
                 In the binder
-                <span className="[font-size:var(--fs-small)] text-tertiary">
+                <span className="text-xs text-tertiary">
                   Off means it is wanted rather than held.
                 </span>
               </span>
             </label>
 
             <label
-              className="col-span-full flex items-start gap-3 [font-family:var(--font-body)]
-                [font-size:var(--fs-body-s)] text-primary cursor-pointer"
+              className="col-span-full flex items-start gap-3 font-body
+                text-sm text-primary cursor-pointer"
             >
               <input
                 className="mt-[2px] [accent-color:var(--color-tint)]"
@@ -759,7 +759,7 @@ export default function CardAddDialog({
               />
               <span className="flex flex-col gap-[2px]">
                 Excluded
-                <span className="[font-size:var(--fs-small)] text-tertiary">
+                <span className="text-xs text-tertiary">
                   Keeps it out of the latest pull on the about page.
                 </span>
               </span>
@@ -781,12 +781,12 @@ export default function CardAddDialog({
                 submit is announced whichever way it went, and neither pushes
                 the form around when it arrives. */}
             <p
-              className="col-span-full min-h-5 m-0 [font-family:var(--font-body)]
-                [font-size:var(--fs-small)] text-secondary"
+              className="col-span-full min-h-5 m-0 font-body
+                text-xs text-secondary"
               role="status"
             >
               {error ? (
-                <span className="text-primary [font-weight:var(--fw-eyebrow)]">{error}</span>
+                <span className="text-primary font-semibold">{error}</span>
               ) : added ? (
                 <span>{added} added. The page catches up in a moment.</span>
               ) : null}

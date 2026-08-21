@@ -33,7 +33,7 @@ export default function FilterChips({
           type="button"
           className="inline-flex items-center gap-2 h-7 [padding:0_var(--space-2)_0_var(--space-3)]
             border border-[var(--color-border-active)] rounded-pill bg-transparent
-            [font-family:var(--font-body)] [font-size:var(--fs-small)] text-primary cursor-pointer
+            font-body text-xs text-primary cursor-pointer
             transition-colors duration-[150ms] ease-[var(--ease-smooth)]
             hover:bg-[var(--btn-primary-bg)] hover:border-[var(--btn-primary-bg)] hover:text-[var(--btn-primary-text)]
             [&_svg]:flex-shrink-0 [&_svg]:opacity-60 hover:[&_svg]:opacity-100"
@@ -49,7 +49,7 @@ export default function FilterChips({
       ))}
       <button
         type="button"
-        className="px-2 border-none bg-transparent [font-family:var(--font-body)] [font-size:var(--fs-small)]
+        className="px-2 border-none bg-transparent font-body text-xs
           text-tertiary underline underline-offset-[3px] cursor-pointer hover:text-primary"
         onClick={onClearAll}
       >

@@ -20,7 +20,7 @@ import type { FormHTMLAttributes, HTMLAttributes } from "react";
 const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(" ");
 
 export const formNoteClassName =
-  "m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] leading-relaxed text-secondary";
+  "m-0 font-body text-sm leading-relaxed text-secondary";
 
 export function FormNote({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cx(formNoteClassName, className)} {...rest} />;
@@ -30,7 +30,7 @@ export function FormError({ className, ...rest }: HTMLAttributes<HTMLParagraphEl
   return (
     <p
       className={cx(
-        "m-0 [font-family:var(--font-body)] [font-size:var(--fs-small)] [font-weight:var(--fw-eyebrow)] text-primary",
+        "m-0 font-body text-xs font-semibold text-primary",
         className,
       )}
       {...rest}

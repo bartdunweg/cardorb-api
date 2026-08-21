@@ -22,9 +22,9 @@ export const cardsSegmentedClassName =
 // one loses to them the same way the media query did.
 export function cardsSegmentClassName(active: boolean) {
   return (
-    "cards-segment h-8 border-none bg-transparent [font-family:var(--font-main)] " +
+    "cards-segment h-8 border-none bg-transparent font-body " +
     "max-sm:flex-1 max-sm:px-2 " +
-    "[font-size:var(--fs-control-label)] [font-weight:var(--fw-button)] text-secondary cursor-pointer " +
+    "text-sm font-bold text-secondary cursor-pointer " +
     "[border-radius:calc(var(--radius-pill)-4px)] " +
     "[transition:color_150ms_var(--ease-smooth),background_150ms_var(--ease-smooth)] " +
     "hover:text-primary" +

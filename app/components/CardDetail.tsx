@@ -124,12 +124,12 @@ export default function CardDetail({
         </div>
 
         <div className="card-detail-text min-w-0 flex-1 [@media(max-width:640px)]:text-center">
-          <p className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary">
+          <p className="m-0 font-body text-xs text-tertiary">
             {mine?.setName ?? card.set?.name}
           </p>
           <Title
-            className="mt-1 mb-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-              [font-size:var(--fs-h2)] [line-height:var(--lh-tight)] text-primary"
+            className="mt-1 mb-0 font-body font-medium
+              text-display-sm leading-tight text-primary"
           >
             {card.name}
           </Title>
@@ -141,15 +141,15 @@ export default function CardDetail({
               no range and the market price stands on its own. */}
           {price != null && (
             <p
-              className="mt-4 mb-0 [font-family:var(--font-main)] [font-weight:var(--fw-title)]
-                [font-size:var(--fs-card)] text-primary lining-nums tabular-nums"
+              className="mt-4 mb-0 font-body font-medium
+                text-display-xs text-primary lining-nums tabular-nums"
             >
               {card.price?.nm ? (
                 <>
                   {euroWhole(card.price.nm.low)} – {euroWhole(card.price.nm.high)}
                   <span
-                    className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-                      [font-weight:var(--fw-regular)] text-tertiary"
+                    className="font-body text-xs
+                      font-normal text-tertiary"
                   >
                     {" "}
                     estimated for an English Near Mint copy · {euro(price)} on Cardmarket
@@ -159,8 +159,8 @@ export default function CardDetail({
                 <>
                   {euro(price)}
                   <span
-                    className="[font-family:var(--font-body)] [font-size:var(--fs-small)]
-                      [font-weight:var(--fw-regular)] text-tertiary"
+                    className="font-body text-xs
+                      font-normal text-tertiary"
                   >
                     {" "}
                     on Cardmarket
@@ -178,10 +178,10 @@ export default function CardDetail({
             .filter(([, v]) => v)
             .map(([k, v]) => (
               <div key={k} className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 items-baseline">
-                <dt className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary">
+                <dt className="font-body text-xs text-tertiary">
                   {k}
                 </dt>
-                <dd className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-primary">
+                <dd className="m-0 font-body text-sm text-primary">
                   {v}
                 </dd>
               </div>
@@ -190,16 +190,16 @@ export default function CardDetail({
 
         {mine && (
           <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
-            <p className="m-0 mb-3 [font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary">
+            <p className="m-0 mb-3 font-body text-xs text-tertiary">
               In the binder
             </p>
             <ul className="m-0 p-0 list-none flex flex-col gap-2">
               {mine.card.variants.map((v, i) => (
                 <li key={i} className="flex items-center gap-3">
-                  <Tag className="[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] [font-size:var(--fs-tiny)] text-secondary">
+                  <Tag className="[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] text-xs text-secondary">
                     {v.rarity ?? "Unknown printing"}
                   </Tag>
-                  <span className="[font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary">
+                  <span className="font-body text-xs text-tertiary">
                     {v.owned ? "Owned" : "On the wishlist"}
                   </span>
                 </li>

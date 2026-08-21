@@ -186,7 +186,7 @@ export default function FilterOptions({
         const on = selected(f);
         return (
           <div key={f.key} className={inlineClassName}>
-            <span className="facet-inline-label [font-family:var(--font-main)] text-sm text-secondary">
+            <span className="facet-inline-label font-body text-sm text-secondary">
               {f.label}
             </span>
             <div className={cardsSegmentedClassName} role="group" aria-label={f.label}>

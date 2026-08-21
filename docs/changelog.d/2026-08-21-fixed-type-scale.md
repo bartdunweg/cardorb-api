@@ -1,0 +1,1 @@
+- Text sizes no longer stretch with the width of the window. Every size is one of a fixed set now, so a heading is the same size on a laptop as on a large monitor.

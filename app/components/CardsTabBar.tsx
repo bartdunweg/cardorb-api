@@ -175,7 +175,7 @@ export default function CardsTabBar({
               <span
                 className="grid place-items-center w-5 h-5 shrink-0 aspect-square rounded-full bg-[var(--color-bg-grouped)]
                   border border-[var(--color-border-subtle)] text-tertiary
-                  [font-family:var(--font-main)] [font-size:9px] [font-weight:var(--fw-title)]"
+                  font-body [font-size:9px] font-medium"
                 aria-hidden="true"
               >
                 {viewer.name.charAt(0).toUpperCase()}

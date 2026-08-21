@@ -102,7 +102,7 @@ export default function ImportSettings({ history }: { history: Run[] }) {
 
   // Monospace-ish numbers so the line numbers in a skipped-rows list line up
   // with each other rather than drifting.
-  const listClass = "list-none my-3 p-0 grid gap-1 [font-size:var(--fs-small)]";
+  const listClass = "list-none my-3 p-0 grid gap-1 text-xs";
 
   return (
     <SettingsPanels>

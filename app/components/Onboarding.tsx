@@ -180,7 +180,7 @@ export default function Onboarding({
   return (
     <SigninShell title={TITLES[step]}>
       <p
-        className="m-0 text-center [font-size:var(--fs-small)] text-tertiary"
+        className="m-0 text-center text-xs text-tertiary"
         aria-live="polite"
       >
         Step {at + 1} of {ORDER.length}

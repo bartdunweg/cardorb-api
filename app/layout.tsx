@@ -124,12 +124,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-secondary text-primary [font-family:var(--font-main)] min-h-screen text-pretty">
+      <body className="bg-secondary text-primary font-body min-h-screen text-pretty">
         <ThemeProvider>
           <a
             href="#main-content"
             className="absolute -top-full left-4 px-4 py-2
-              bg-label text-bg-surface rounded-orb-sm [font-size:var(--fs-small)]
+              bg-label text-bg-surface rounded-orb-sm text-xs
               [z-index:var(--z-skip)] no-underline focus:top-4"
           >
             Skip to content

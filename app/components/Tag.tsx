@@ -20,6 +20,6 @@ export default function Tag({
   children: React.ReactNode;
 }) {
   const base =
-    "py-[2px] px-2 rounded-pill [font-family:var(--font-body)] leading-normal whitespace-nowrap";
+    "py-[2px] px-2 rounded-pill font-body leading-normal whitespace-nowrap";
   return <span className={[base, className].filter(Boolean).join(" ")}>{children}</span>;
 }

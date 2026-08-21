@@ -256,13 +256,13 @@ const CardItem = memo(function CardItem({
         className="absolute inset-[6%] border border-[color-mix(in_srgb,var(--color-label)_12%,transparent)] rounded-[3%/2.2%]"
       />
       <span
-        className="relative [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]
-          [line-height:var(--lh-snug)] text-secondary line-clamp-2"
+        className="relative font-body font-medium text-xs
+          leading-snug text-secondary line-clamp-2"
       >
         {card.name}
       </span>
       {card.number && (
-        <span className="relative [font-family:var(--font-body)] [font-size:var(--fs-tiny)] text-tertiary tabular-nums">
+        <span className="relative font-body text-xs text-tertiary tabular-nums">
           {card.number}
         </span>
       )}
@@ -320,9 +320,9 @@ const CardItem = memo(function CardItem({
         </span>
         <span className="cards-item-text flex flex-col gap-[2px] min-w-0 group-data-[view=list]/item:flex-1">
           <span
-            className="cards-item-name [font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]
-              [line-height:var(--lh-snug)] text-primary line-clamp-2
-              group-data-[view=list]/item:[font-size:var(--fs-body-s)] group-data-[view=list]/item:line-clamp-1"
+            className="cards-item-name font-body font-medium text-xs
+              leading-snug text-primary line-clamp-2
+              group-data-[view=list]/item:text-sm group-data-[view=list]/item:line-clamp-1"
           >
             {card.name}
           </span>
@@ -330,7 +330,7 @@ const CardItem = memo(function CardItem({
             className="cards-item-meta flex items-baseline flex-nowrap overflow-hidden gap-x-2 gap-y-[2px]
             [&>*:not(:first-child)]:before:content-['·'] [&>*:not(:first-child)]:before:mr-2
             [&>*:not(:first-child)]:before:opacity-50
-              [font-family:var(--font-body)] [font-size:var(--fs-small)] text-tertiary"
+              font-body text-xs text-tertiary"
           >
             {fields.has("number") && card.number && (
               <span className="tabular-nums shrink-0">
@@ -361,7 +361,7 @@ const CardItem = memo(function CardItem({
               zero. */}
           {fields.has("price") && card.price && euroShown(card.price) && (
             <span
-              className="[font-family:var(--font-body)] [font-size:var(--fs-small)] [font-weight:var(--fw-eyebrow)]
+              className="font-body text-xs font-semibold
                 text-primary tabular-nums mt-[2px]"
               title={
                 card.price.nm
@@ -381,10 +381,10 @@ const CardItem = memo(function CardItem({
                   key={`${v.rarity}-${v.owned}`}
                   className={
                     v.owned
-                      ? "[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] [font-size:var(--fs-tiny)] text-secondary"
+                      ? "[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] text-xs text-secondary"
                       : // Wanted rather than held: an outline instead of a fill, so
                         // the difference survives being read in greyscale too.
-                        "bg-transparent border border-dashed border-[var(--color-border-active)] [font-size:var(--fs-tiny)] text-tertiary"
+                        "bg-transparent border border-dashed border-[var(--color-border-active)] text-xs text-tertiary"
                   }
                 >
                   {v.rarity ?? "Unknown"}

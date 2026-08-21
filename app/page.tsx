@@ -251,7 +251,7 @@ export default async function Home() {
             href="/app/ios"
             className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
             border border-[var(--color-border-subtle)] text-tertiary no-underline
-            [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+            font-body text-xs
             [transition:color_150ms_var(--ease-smooth)] hover:text-primary"
           >
             <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
@@ -259,8 +259,8 @@ export default async function Home() {
             <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
           </Link>
           <h1
-            className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary [font-family:var(--font-main)]
-            [font-weight:var(--fw-title)] tracking-[-0.045em] [line-height:var(--lh-tight)]
+            className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary font-body
+            font-medium tracking-[-0.045em] leading-tight
             [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
           >
             Track your Pokémon card collection.
@@ -282,12 +282,8 @@ export default async function Home() {
           >
             {STATS.map(({ value, label }) => (
               <li key={label} className="flex flex-col items-center gap-0.5">
-                <b className="text-primary [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)]">
-                  {value}
-                </b>
-                <span className="text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                  {label}
-                </span>
+                <b className="text-primary font-body text-sm font-medium">{value}</b>
+                <span className="text-tertiary font-body text-xs">{label}</span>
               </li>
             ))}
           </ul>
@@ -331,7 +327,7 @@ export default async function Home() {
                     </span>
                     {comingSoon && (
                       <span
-                        className="text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+                        className="text-tertiary font-body text-xs
                         uppercase tracking-[0.06em]"
                       >
                         Coming soon{typeof comingSoon === "string" ? ` · ${comingSoon}` : ""}
@@ -362,7 +358,7 @@ export default async function Home() {
               the last one left off.
             </p>
             <ul className="grid gap-3 mt-6 mb-0 p-0 list-none" role="list">
-              <li className="flex gap-3 items-start text-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+              <li className="flex gap-3 items-start text-secondary font-body text-sm leading-normal">
                 <Check
                   size={17}
                   strokeWidth={2}
@@ -371,7 +367,7 @@ export default async function Home() {
                 />
                 Owned cards and your wishlist, in one view.
               </li>
-              <li className="flex gap-3 items-start text-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+              <li className="flex gap-3 items-start text-secondary font-body text-sm leading-normal">
                 <Check
                   size={17}
                   strokeWidth={2}
@@ -380,7 +376,7 @@ export default async function Home() {
                 />
                 Move between the overview, sets and Pokédex.
               </li>
-              <li className="flex gap-3 items-start text-secondary [font-family:var(--font-body)] [font-size:var(--fs-body)] leading-normal">
+              <li className="flex gap-3 items-start text-secondary font-body text-sm leading-normal">
                 <Check
                   size={17}
                   strokeWidth={2}
@@ -398,10 +394,8 @@ export default async function Home() {
             <span className={featureIcon}>
               <BookOpen size={22} strokeWidth={1.7} aria-hidden="true" />
             </span>
-            <span className="absolute top-8 right-8 text-tertiary [font-family:var(--font-main)] [font-size:var(--fs-small)]">
-              01
-            </span>
-            <h3 className={`max-w-[13ch] mt-8 [font-size:var(--fs-card)] ${cardHeading}`}>
+            <span className="absolute top-8 right-8 text-tertiary font-body text-xs">01</span>
+            <h3 className={`max-w-[13ch] mt-8 text-display-xs ${cardHeading}`}>
               Every card, tracked.
             </h3>
             <p className={`max-w-[28ch] mt-4 ${cardBody}`}>
@@ -418,7 +412,7 @@ export default async function Home() {
               className="absolute right-8 bottom-[78px] left-8 h-px
               [background:repeating-linear-gradient(90deg,var(--color-border-active)_0_4px,transparent_4px_10px)]"
             />
-            <span className="absolute bottom-8 left-8 text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+            <span className="absolute bottom-8 left-8 text-tertiary font-body text-xs">
               Your collection, in order
             </span>
           </Card>
@@ -451,10 +445,8 @@ export default async function Home() {
               <Share2 size={20} strokeWidth={1.7} aria-hidden="true" />
             </span>
             <span className="grid gap-1 min-w-0">
-              <small className="text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
-                Your collection link
-              </small>
-              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-primary [font-family:var(--font-main)] [font-size:var(--fs-body)] [font-weight:var(--fw-title)] tracking-[-0.02em]">
+              <small className="text-tertiary font-body text-xs">Your collection link</small>
+              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-primary font-body text-sm font-medium tracking-[-0.02em]">
                 cardorb.com/user/yourname
               </strong>
             </span>

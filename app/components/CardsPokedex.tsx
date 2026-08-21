@@ -52,7 +52,7 @@ export default function CardsPokedex({
 
   if (!shown.length) {
     return (
-      <p className="m-0 [font-family:var(--font-body)] [font-size:var(--fs-body-s)] text-secondary">
+      <p className="m-0 font-body text-sm text-secondary">
         {owned === "missing"
           ? "Nothing missing in there. Every one of them is in the binder."
           : owned === "owned"
@@ -142,7 +142,7 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
         <span
           className="absolute right-[2px] bottom-[2px] min-w-[18px] h-[18px] px-[5px] inline-flex
             items-center justify-center rounded-pill bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)]
-            [font-family:var(--font-body)] [font-size:var(--fs-tiny)] lining-nums tabular-nums"
+            font-body text-xs lining-nums tabular-nums"
         >
           {at + 1}/{entry.cards.length}
           <span className="sr-only"> cards</span>
@@ -155,14 +155,14 @@ function Slot({ entry, onPick }: { entry: DexEntry; onPick: (name: string) => vo
     <>
       {art}
       <span
-        className="[font-family:var(--font-body)] [font-size:var(--fs-tiny)]
+        className="font-body text-xs
           lining-nums tabular-nums text-tertiary"
       >
         #{String(entry.id).padStart(4, "0")}
       </span>
       <span
         className={
-          "[font-family:var(--font-main)] [font-weight:var(--fw-title)] [font-size:var(--fs-small)]" +
+          "font-body font-medium text-xs" +
           " overflow-hidden text-ellipsis whitespace-nowrap " +
           (empty ? "text-tertiary" : "text-primary")
         }

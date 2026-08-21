@@ -89,5 +89,5 @@ export function MenuDetails({
 
 export const filterMenuBadgeClassName =
   "inline-flex items-center justify-center min-w-[18px] h-[18px] px-[5px] rounded-pill " +
-  "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] [font-size:var(--fs-tiny)] " +
+  "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] text-xs " +
   "lining-nums tabular-nums";

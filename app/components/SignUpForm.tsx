@@ -170,7 +170,7 @@ export default function SignUpForm({ redirectTo = "/cards" }: { redirectTo?: str
             screen in the app that asks for an email address. Not a tickbox:
             the account is processed to perform a contract, not on consent, and
             a checkbox would misdescribe the basis as well as add a step. */}
-        <p className="m-0 mt-1 text-center text-tertiary [font-family:var(--font-body)] [font-size:var(--fs-small)]">
+        <p className="m-0 mt-1 text-center text-tertiary font-body text-xs">
           By creating an account you agree to our{" "}
           <Link href="/terms" className={signinLinkClassName}>
             terms of use
