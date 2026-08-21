@@ -1,0 +1,2 @@
+- The brand page shows the Card Orb wordmark again in dark mode. It was drawn in near-white on a white panel, so the name was invisible on the one page whose job is showing how the name is used.
+- "How it works" in the landing page's menu now goes to the How it works section. It went to Features.

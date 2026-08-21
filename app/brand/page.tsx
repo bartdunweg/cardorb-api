@@ -183,10 +183,17 @@ export default function BrandPage() {
             lockup in the nav bar above and the footer below; it is one component, so it is the same
             everywhere.
           </p>
-          <div
-            className={`${panel} my-6`}
-            style={{ background: colour.bgSurface.light, minHeight: 0 }}
-          >
+          {/* `bg-primary`, not a pinned light surface.
+              Every other sample on this page pins a theme on purpose, and is
+              right to: the orb pair above shows the same file on light and on
+              dark deliberately, and the tile below is a PNG that does not care
+              what the theme is. This one is different, because what it holds is
+              not a file — <Wordmark /> draws the word with `text-primary`, which
+              follows the theme. Pinning the background to light while the text
+              followed the theme rendered the brand's own name in near-white on
+              white, invisible, on the page whose whole job is showing how the
+              mark is used. Both halves have to agree; the token makes them. */}
+          <div className={`${panel} my-6 bg-primary`} style={{ minHeight: 0 }}>
             <Wordmark />
           </div>
 

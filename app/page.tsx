@@ -200,7 +200,11 @@ export default function Home() {
       <Navbar
         center={
           <>
-            <a href="#organise" className={navLink}>
+            {/* #how-it-works, not #organise. This said "How it works" and
+                jumped to the Features section, because that is where the id
+                was; the section this names had none at all. The only link to
+                #organise was this one, so the id moved rather than the copy. */}
+            <a href="#how-it-works" className={navLink}>
               How it works
             </a>
             <a href="#share" className={navLink}>
@@ -287,7 +291,6 @@ export default function Home() {
         </section>
 
         <section
-          id="organise"
           className="mx-auto max-w-[1040px] [padding-block:clamp(104px,14vw,180px)]"
           aria-labelledby="features-title"
         >
@@ -326,6 +329,7 @@ export default function Home() {
         </section>
 
         <section
+          id="how-it-works"
           className="mx-auto grid grid-cols-[minmax(0,0.85fr)_minmax(330px,0.7fr)] items-center [gap:clamp(calc(var(--spacing)*10),10vw,140px)]
           max-w-[960px] [padding-block:clamp(104px,14vw,180px)]
           [@media(max-width:800px)]:grid-cols-1 [@media(max-width:800px)]:gap-8"
