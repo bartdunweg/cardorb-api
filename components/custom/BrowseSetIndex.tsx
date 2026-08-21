@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { SearchLg } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { InputBase } from "@/components/base/input/input";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Search } from "lucide-react";
@@ -72,24 +75,20 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       {/* type="search" rather than text: it gets the clear affordance and the
           right keyboard on iOS for free, which is the same reason the add
           dialog's box is one. */}
-      <div className="relative max-w-[420px]">
-        <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-tertiary pointer-events-none"
-          size={18}
-          aria-hidden="true"
-        />
-        <input
+      {/* Untitled UI's `InputBase`, which carries the leading icon itself — the
+          absolutely-positioned `<Search>` and the `pl-10` that cleared it are
+          both gone with it. This field was also the last one in the app still
+          drawing its own hover shadow and its own focus border; theirs puts the
+          focus ring on the wrapper, which is what every other field here now
+          does. */}
+      <div className="max-w-[420px]">
+        <InputBase
+          icon={Search}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a set"
           aria-label="Find a set"
-          className="h-10 w-full pl-10 pr-4 rounded-pill outline-none
-            border border-secondary bg-primary
-            [backdrop-filter:blur(var(--blur-glass))] shadow-xs text-primary
-            font-body text-sm font-bold
-            placeholder:text-tertiary dark:border-secondary
-            hover:shadow-lg focus-visible:border-primary"
         />
       </div>
 
@@ -101,7 +100,15 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       </p>
 
       {!found ? (
-        <p className="cards-empty">No set matches “{query.trim()}”.</p>
+        /* Three parts of EmptyState, not eleven — see the note in SetIndex.tsx. */
+        <EmptyState size="sm" className="gap-2 py-8">
+          <EmptyState.Header>
+            <EmptyState.FeaturedIcon color="gray" icon={SearchLg} />
+          </EmptyState.Header>
+          <EmptyState.Description>
+            No set matches “{query.trim()}”.
+          </EmptyState.Description>
+        </EmptyState>
       ) : (
         groups.map((group) => (
           <section key={group.series} className="flex flex-col gap-4">

@@ -107,24 +107,40 @@ test("the view menu, open", async ({ page: p }) => {
    * check, and this project has already shipped a styling regression through
    * exactly that gap.
    *
-   * ── Still not covered, and worth knowing ──────────────────────────────────
-   *
-   * The *filter* rows. FilterOptions is drawn by two controls — FilterMenu, a
-   * <details> dropdown, and FilterSheet, a button that opens a dialog — and
-   * which one is on screen depends on the width. Neither would open reliably
-   * from a click here, so its checkboxes are converted but unphotographed.
-   * They are the same markup and the same classes as the ones below, which is
-   * an argument and not evidence.
+   * The filter rows used to be the gap named here: "neither would open
+   * reliably from a click", so FilterOptions was converted and unphotographed.
+   * Both menus are a real `<button>` opening a real `role="dialog"` now
+   * (MenuPopover), so both open by accessible name and the filter panel has
+   * its own shot below.
    */
   await p.setViewportSize({ width: 1280, height: 1000 });
   await p.goto("/collection", { waitUntil: "networkidle" });
   await expect(p).not.toHaveURL(/\/login/);
 
-  // ViewMenu and FilterMenu are both MenuDetails; View is the first.
-  await p.locator("details.filter-menu > summary").first().click();
-  const panel = p.locator(".filter-menu-panel").first();
-  await expect(panel).toBeVisible({ timeout: 10_000 });
+  await p.getByRole("button", { name: "View" }).first().click();
+  await expect(p.getByRole("dialog", { name: "View options" })).toBeVisible({
+    timeout: 10_000,
+  });
   await settle(p);
 
   await expect(p).toHaveScreenshot("view-menu-wide.png", { fullPage: false });
+});
+
+test("the filter menu, open", async ({ page: p }) => {
+  /**
+   * The other half of the same gap. FilterOptions draws the inline segmented
+   * rows and the facet list, and until this menu became a dialog nothing here
+   * could open it.
+   */
+  await p.setViewportSize({ width: 1280, height: 1000 });
+  await p.goto("/collection", { waitUntil: "networkidle" });
+  await expect(p).not.toHaveURL(/\/login/);
+
+  await p.getByRole("button", { name: "Filter" }).first().click();
+  await expect(p.getByRole("dialog", { name: "Filter the collection" })).toBeVisible({
+    timeout: 10_000,
+  });
+  await settle(p);
+
+  await expect(p).toHaveScreenshot("filter-menu-wide.png", { fullPage: false });
 });

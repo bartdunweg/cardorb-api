@@ -10,6 +10,9 @@ import {
   useEffect,
 } from "react";
 import { Search, X } from "lucide-react";
+import { FilterFunnel01, Inbox01 } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { InputBase } from "@/components/base/input/input";
 import Card from "@/components/custom/Card";
 import CardAddDialog from "@/components/custom/CardAddDialog";
 import PublicCardDialog from "@/components/custom/PublicCardDialog";
@@ -1228,25 +1231,27 @@ export default function CardsView({
                   where the rail is a screen you have to open rather than a
                   column you can see. The bar's Search slot lands here and puts
                   the caret in it. */}
-            {/* Untitled UI's input, written out rather than <Input>: this one
-                holds a ref the tab bar's Search slot focuses, has a clear
-                button of its own, and is a flex item the toolbar sizes
-                (flex-[0_1_260px] — not greedy, because the collection is
-                mostly browsed by filter). Their TextField gives no ref and
-                wants to own its width.
+            {/* Untitled UI's `InputBase`. The comment here used to say their
+                input had to be "written out rather than <Input>" because this
+                one holds a ref the tab bar's Search slot focuses and is a flex
+                item the toolbar sizes. Both were true of `Input` and
+                `TextField`, and neither is true of `InputBase`: it takes a
+                `ref`, an `icon`, and a `wrapperClassName` that is the flex
+                item. The surface, the ring and the focus ring are theirs now
+                rather than a copy of theirs.
 
-                `cards-search` stays as the hook: the toolbar's wrap rules and
-                the <=1000px branch in cards.css still select on it. */}
+                The clear button stays outside it — `InputBase`'s own trailing
+                slot is for a tooltip or the invalid icon, not an action.
+
+                `cards-search` stays as the hook: the toolbar's wrap rules
+                still select on it. */}
             <div
-              className="cards-search flex items-center gap-2 flex-[0_1_260px] min-w-[180px] px-3.5
-                max-[900px]:flex-[1_0_100%] max-[900px]:max-w-none max-sm:flex-[1_1_0] max-sm:min-w-0
-                rounded-lg bg-primary shadow-xs ring-1 ring-primary ring-inset
-                transition-shadow duration-100 ease-linear focus-within:ring-2 focus-within:ring-brand
-                [&_svg]:shrink-0 [&_svg]:text-fg-quaternary"
+              className="cards-search relative flex items-center flex-[0_1_260px] min-w-[180px]
+                max-[900px]:flex-[1_0_100%] max-[900px]:max-w-none max-sm:flex-[1_1_0] max-sm:min-w-0"
             >
-              <Search size={16} strokeWidth={1.75} aria-hidden="true" />
-              <input
+              <InputBase
                 ref={searchRef}
+                icon={Search}
                 type="search"
                 value={query}
                 onChange={(e) => {
@@ -1256,17 +1261,20 @@ export default function CardsView({
                 placeholder="Search"
                 aria-label="Search the collection"
                 autoComplete="off"
-                className="min-w-0 flex-1 border-none bg-transparent py-2 text-md text-primary
-                  outline-hidden placeholder:text-placeholder
-                  [&::-webkit-search-cancel-button]:hidden"
+                inputClassName={
+                  // Their trailing padding is for their own trailing icon; the
+                  // clear button below is ours and sits on top, so the room for
+                  // it is made here.
+                  `[&::-webkit-search-cancel-button]:hidden${query ? " pr-9" : ""}`
+                }
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery("")}
                   aria-label="Clear the search"
-                  className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full
-                    border-none bg-transparent p-0 text-fg-quaternary
+                  className="absolute right-3 flex size-5 shrink-0 cursor-pointer items-center justify-center
+                    rounded-full border-none bg-transparent p-0 text-fg-quaternary
                     transition-colors duration-100 ease-linear hover:text-fg-quaternary_hover"
                 >
                   <X size={15} strokeWidth={1.75} />
@@ -1408,34 +1416,52 @@ export default function CardsView({
                 the emptyReason prop. Either way it says so, which beats an
                 empty page that looks like something failed to paint. */}
           {sets.length === 0 ? (
-            <Card className="cards-empty [&_p]:m-0 [&_p]:max-w-[52ch] [&_p]:text-md [&_p]:leading-relaxed [&_p]:text-tertiary">
-              {emptyReason === "nothing-yet" ? (
-                <>
-                  <p>
-                    No cards yet. Add the first one, or bring a collection in from a spreadsheet
-                    under Settings.
-                  </p>
-                  {onAdd && (
-                    <p>
-                      <button
-                        type="button"
-                        className={untitledButton({ color: "secondary" })}
-                        onClick={onAdd}
-                      >
-                        Add a card
-                      </button>
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p>The collection is not available right now. It should be back shortly.</p>
-              )}
+            <Card>
+              {/* Three parts of EmptyState, not eleven — see the note in
+                  SetIndex.tsx. Inside the glass Card rather than replacing it:
+                  the card is the surface, the empty state is what stands on
+                  it. */}
+              <EmptyState size="md" className="gap-2 py-4">
+                <EmptyState.Header>
+                  <EmptyState.FeaturedIcon color="gray" icon={Inbox01} />
+                </EmptyState.Header>
+                {emptyReason === "nothing-yet" ? (
+                  <>
+                    <EmptyState.Description>
+                      No cards yet. Add the first one, or bring a collection in from a spreadsheet
+                      under Settings.
+                    </EmptyState.Description>
+                    {onAdd && (
+                      <EmptyState.Footer className="mt-4">
+                        <button
+                          type="button"
+                          className={untitledButton({ color: "secondary" })}
+                          onClick={onAdd}
+                        >
+                          Add a card
+                        </button>
+                      </EmptyState.Footer>
+                    )}
+                  </>
+                ) : (
+                  <EmptyState.Description>
+                    The collection is not available right now. It should be back shortly.
+                  </EmptyState.Description>
+                )}
+              </EmptyState>
             </Card>
           ) : filtered.length === 0 ? (
-            <Card className="cards-empty [&_p]:m-0 [&_p]:max-w-[52ch] [&_p]:text-md [&_p]:leading-relaxed [&_p]:text-tertiary">
-              <p>
-                Nothing matches that combination. Try fewer filters, or a different Pokémon or set.
-              </p>
+            <Card>
+              {/* Three parts of EmptyState, not eleven — see the note in SetIndex.tsx. */}
+              <EmptyState size="md" className="gap-2 py-4">
+                <EmptyState.Header>
+                  <EmptyState.FeaturedIcon color="gray" icon={FilterFunnel01} />
+                </EmptyState.Header>
+                <EmptyState.Description>
+                  Nothing matches that combination. Try fewer filters, or a different Pokémon or
+                  set.
+                </EmptyState.Description>
+              </EmptyState>
             </Card>
           ) : onFlat ? (
             <section className={cardsSetClassName}>

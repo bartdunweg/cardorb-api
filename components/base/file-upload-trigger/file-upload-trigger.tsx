@@ -2,8 +2,15 @@
 "use client";
 
 import type { DetailedReactHTMLElement, HTMLAttributes, ReactNode } from "react";
-import { cloneElement, useRef } from "react";
-import { filterDOMProps } from "@react-aria/utils";
+import { Children, cloneElement, useRef } from "react";
+// `filterDOMProps` from "@react-aria/utils" was the second thing stopping this
+// file from running: that package is not a dependency of this project and is
+// not in node_modules — react-aria-components bundles its own copy. It was
+// called on `rest`, which is whatever is left of the props after the six named
+// ones, and FileTriggerProps declares nothing else and does not extend an HTML
+// element's props. So the result was `{}` at every possible call site, and
+// removing it costs nothing and saves a dependency. See ADR-0062 for why a
+// vendored file is otherwise left alone.
 
 interface FileTriggerProps {
     /**
@@ -36,13 +43,17 @@ interface FileTriggerProps {
  * A FileTrigger allows a user to access the file system with any pressable React Aria or React Spectrum component, or custom components built with usePress.
  */
 export const FileTrigger = (props: FileTriggerProps) => {
-    const { children, onSelect, acceptedFileTypes, allowsMultiple, defaultCamera, acceptDirectory, ...rest } = props;
+    const { children, onSelect, acceptedFileTypes, allowsMultiple, defaultCamera, acceptDirectory } = props;
 
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const domProps = filterDOMProps(rest);
 
     // Make sure that only one child is passed to the component.
-    const clonableElement = React.Children.only(children);
+    // `Children`, not `React.Children`: upstream reaches for a `React` global
+    // this file never imports, so the component threw a ReferenceError the
+    // first time anything rendered it. @ts-nocheck (ADR-0062) is why the
+    // typechecker never said so, and no consumer is why nobody ran it.
+    // A crash is not formatting, so this is a fix rather than a tidy-up.
+    const clonableElement = Children.only(children);
 
     // Clone the child element and add an `onClick` handler to open the file dialog.
     const mainElement = cloneElement(clonableElement as DetailedReactHTMLElement<HTMLAttributes<HTMLElement>, HTMLElement>, {
@@ -58,7 +69,6 @@ export const FileTrigger = (props: FileTriggerProps) => {
         <>
             {mainElement}
             <input
-                {...domProps}
                 type="file"
                 ref={inputRef}
                 style={{ display: "none" }}

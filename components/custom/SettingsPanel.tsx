@@ -1,4 +1,6 @@
 import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { InputBase } from "@/components/base/input/input";
+import { ToggleBase } from "@/components/base/toggle/toggle";
 
 /**
  * Shared pieces of every /settings screen: a panel is a card, a hint explains
@@ -87,28 +89,33 @@ export function SettingsSaid({ className, ...rest }: HTMLAttributes<HTMLParagrap
   return <p className={cx("mt-2 text-sm text-primary", className)} {...rest} />;
 }
 
-export const SettingsInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
-  function SettingsInput({ className, ...rest }, ref) {
+export const SettingsInput = forwardRef<
+  HTMLInputElement,
+  // `size` is omitted, and it is the one prop that could not come along: on a
+  // native <input> it is a character count, and on InputBase it is
+  // "sm" | "md" | "lg". Nothing here ever passed it.
+  Omit<InputHTMLAttributes<HTMLInputElement>, "size">
+>(function SettingsInput({ className, ...rest }, ref) {
     return (
-      <input
+      // Untitled UI's `InputBase`, not the recipe copied off it — which is
+      // what this was, five classes deep, under a comment saying their
+      // component "is a React Aria TextField with no ref to give". That is
+      // true of `TextField` and `Input`; `InputBase` is the layer below both
+      // and takes a `ref` outright, so the four settings forms that hand this
+      // one a ref keep working.
+      //
+      // Their wrapper also carries the focus ring on the group rather than the
+      // field, so it survives a leading icon — which the copy could not do.
+      <InputBase
         ref={ref}
-        className={cx(
-          // Capped: the panels span the whole pane now that Settings is a
-          // full-width page, and a 900px-wide email field is a field you have
-          // to aim at rather than read.
-          "w-full max-w-[26rem]",
-          // Untitled UI's input, as classes rather than their <Input>: this is a
-          // forwardRef native <input> that four settings forms hand a ref to,
-          // and their component is a React Aria TextField with no ref to give.
-          "rounded-lg bg-primary px-3 py-2 text-md text-primary shadow-xs ring-1 ring-primary ring-inset",
-          "placeholder:text-placeholder outline-hidden focus:ring-2 focus:ring-brand",
-          className,
-        )}
-        {...rest}
-      />
-    );
-  },
-);
+        // Capped: the panels span the whole pane now that Settings is a
+        // full-width page, and a 900px-wide email field is a field you have to
+        // aim at rather than read.
+        wrapperClassName={cx("w-full max-w-[26rem]", className)}
+      {...rest}
+    />
+  );
+});
 
 export function SettingsLink({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cx("mt-3 text-sm", className)} {...rest} />;
@@ -135,26 +142,30 @@ export function SettingsSwitch({
   return (
     <label className="group flex gap-3 items-start cursor-pointer">
       <input type="checkbox" className="absolute opacity-0 w-0 h-0" {...rest} />
-      {/* Untitled UI's toggle, drawn from their classes rather than their
-          component. Theirs is a React Aria Switch; this is a real <input
-          type="checkbox"> visually hidden with the track beside it, which is
-          what makes it work in a plain form post and with a screen reader that
-          knows what a checkbox is. Their look, our mechanism — the third time
-          this call comes up, after the buttons and the metric tiles. */}
-      <span
-        aria-hidden="true"
-        className={cx(
-          "flex-none w-9 h-5 rounded-full bg-tertiary p-0.5 ring-1 ring-transparent ring-inset",
-          "transition-colors duration-200 ease-out motion-reduce:transition-none",
-          "group-has-[:checked]:bg-brand-solid",
-          "group-has-[:focus-visible]:outline-2 group-has-[:focus-visible]:outline-offset-2 group-has-[:focus-visible]:outline-brand",
-        )}
-      >
-        <span
+      {/* Untitled UI's `ToggleBase`, their component, rather than a hand-drawn
+          copy of what it renders — which is what this was: a track, a knob, a
+          translate and four transitions, all written out here.
+
+          `ToggleBase` and not `Toggle`. `Toggle` is a React Aria Switch and
+          would replace the mechanism; `ToggleBase` is the presentational half,
+          driven entirely by props, so the real `<input type="checkbox">` above
+          stays exactly where it is. That input is the point: it works in a
+          plain form post, and a screen reader announces its state without
+          being told to.
+
+          Two states `ToggleBase` expects as props are things only the input
+          knows here, so they come in through `className` as `group-has-*`
+          variants instead: focus follows the hidden input's own
+          `:focus-visible`, and hover is the whole label's. */}
+      <span aria-hidden="true" className="flex-none">
+        <ToggleBase
+          size="sm"
+          isSelected={!!rest.checked}
+          isDisabled={!!rest.disabled}
           className={cx(
-            "block size-4 rounded-full bg-primary shadow-sm",
-            "transition-transform duration-200 ease-out motion-reduce:transition-none",
-            "group-has-[:checked]:translate-x-4",
+            "motion-reduce:transition-none",
+            rest.checked && !rest.disabled && "group-hover:bg-brand-solid_hover",
+            "group-has-[:focus-visible]:outline-2 group-has-[:focus-visible]:outline-offset-2",
           )}
         />
       </span>

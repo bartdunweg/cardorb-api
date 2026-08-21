@@ -1,0 +1,5 @@
+- Three empty messages — the sets list, the set browser, and a set you have every card of — were rendering as unstyled text. They are proper empty states again, with an icon and a line explaining what to do.
+- The number of active filters beside the Filter button was showing as bare text instead of a badge. It is a badge again.
+- Filter and View open as proper panels now: they close on Escape and on a click outside, and they hand focus back to the button you opened them from.
+- The switches, the segmented rows and every text field are built from the shared component set. The chosen option in a segmented row is filled in rather than tinted, so it is legible at a glance.
+- The "Add a card" button now shows its label when you reach it with the keyboard, not only when you point at it with a mouse.

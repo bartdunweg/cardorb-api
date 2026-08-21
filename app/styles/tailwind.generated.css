@@ -589,6 +589,28 @@
    and two in dark. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
+/* React Aria's two state attributes, as variants.
+
+   Untitled UI's components are written against them — 'selected:bg-primary_hover'
+   on a ButtonGroup segment, 'selected:bg-secondary' on a table row, 'pressed:'
+   on a nav button — and upstream turns them on with the
+   tailwindcss-react-aria-components plugin. This repository vendors the
+   components without the plugin, so Tailwind saw two variants it did not know
+   and, as v4 does, emitted nothing and said nothing.
+
+   The effect was invisible in the usual way: the markup was right the whole
+   time. Measured on the view menu, the chosen segment carried role="radio",
+   aria-checked="true" and data-selected="true" — and rgb(255,255,255), exactly
+   its unchosen neighbours. Correct to a screen reader, blank to everyone else.
+   The already-adopted table (highlightSelectedRow) had the same dead class.
+
+   '&[data-selected]' rather than the ':where()' the line above uses, because
+   this one has to beat the unprefixed 'bg-primary' on the same element. dark:
+   never competes with anything, so it can afford zero specificity; a state
+   variant cannot. This is also the form upstream's plugin emits. */
+@custom-variant selected (&[data-selected]);
+@custom-variant pressed (&[data-pressed]);
+
 /* The same values again, as ordinary custom properties.
    Not a slip and not a fallback: Tailwind v4 tree-shakes theme variables it
    cannot see a utility for, which is right for a project written entirely in

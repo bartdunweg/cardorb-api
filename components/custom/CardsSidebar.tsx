@@ -8,6 +8,8 @@ import Wordmark from "@/components/custom/Wordmark";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { possessive } from "@/lib/core/owner";
 import { untitledIconButton } from "@/components/custom/untitledButtonClasses";
+import { Button as AriaButton } from "react-aria-components";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 /**
  * The left rail on /cards: where you are, and nothing else.
@@ -174,15 +176,17 @@ export default function CardsSidebar({
       {signedIn && (
         <div className="flex items-center justify-between gap-2 pt-0 px-4 pb-4 [@media(max-width:1000px)]:hidden">
           <Wordmark href="/" />
-          <button
-            type="button"
-            className={untitledIconButton({ color: "primary", className: "flex-none" })}
-            onClick={onAdd}
-            aria-label="Add a card"
-            title="Add a card"
-          >
-            <Plus size={18} strokeWidth={2} aria-hidden="true" />
-          </button>
+          {/* Their Tooltip rather than `title=`, which only ever appears on
+              hover — see the note at the same button in CardsTabBar.tsx. */}
+          <Tooltip title="Add a card" placement="bottom">
+            <AriaButton
+              className={untitledIconButton({ color: "primary", className: "flex-none" })}
+              onPress={onAdd}
+              aria-label="Add a card"
+            >
+              <Plus size={18} strokeWidth={2} aria-hidden="true" />
+            </AriaButton>
+          </Tooltip>
         </div>
       )}
 

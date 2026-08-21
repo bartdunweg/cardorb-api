@@ -363,6 +363,14 @@ const CardItem = memo(function CardItem({
             <span
               className="font-body text-xs font-semibold
                 text-primary tabular-nums mt-[2px]"
+              /* The one `title=` left in the app, and it stays one. A `title`
+                 is not keyboard-reachable, which is why the other two became
+                 Untitled UI Tooltips — but a Tooltip needs a focusable
+                 trigger, and this span renders once per card: /collection
+                 draws 1,610 of them. Converting would add sixteen hundred tab
+                 stops to a grid, in front of information the card's own dialog
+                 already spells out on opening. Worse for the keyboard, not
+                 better. Left as a pointer-only nicety on purpose. */
               title={
                 card.price.nm
                   ? `About ${euroWhole(card.price.nm.low)} to ${euroWhole(card.price.nm.high)} for an English Near Mint copy · ${euro(card.price.market!)} on Cardmarket`

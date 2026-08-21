@@ -1,7 +1,7 @@
 "use client";
 
 import { Settings2 } from "lucide-react";
-import { MenuDetails } from "@/components/custom/MenuDetails";
+import { MenuPopover } from "@/components/custom/MenuPopover";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
 
 /**
@@ -19,17 +19,27 @@ import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOpti
  */
 export default function ViewMenu(props: ViewOptionsProps) {
   return (
-    <MenuDetails
+    <MenuPopover
+      label="View options"
       trigger={
         <>
           <Settings2 size={15} strokeWidth={1.75} aria-hidden="true" />
           View
         </>
       }
-      panelClassName="view-menu-panel flex flex-col gap-4 w-[260px] p-4
-        [&_.cards-segmented]:w-full [&_.cards-views]:w-full [&_.cards-segment]:flex-1 [&_.cards-segment]:min-w-0 [&_.cards-segment]:px-2"
+      /* The four `[&_.cards-*]` width hooks that used to hang off this string
+         are gone with the class names they reached: ViewOptions' two word
+         tracks now ask for the full row themselves (Segmented's `full`), and
+         the Layout toggle deliberately does not — two icon buttons stretched
+         across 260px was the old rule doing it by accident. */
+      /* 300, not 260. Measured on the built page: at 260 the "Group by" row
+         gives each of its four segments 57px and "Pokédex" needs 58, and
+         "Cheapest" needs 65 in 62 — both clipped. Untitled UI's segment carries
+         more padding than the pill track it replaced, so the row that used to
+         fit no longer does. 300 leaves 67px a segment and both fit with room. */
+      panelClassName="view-menu-panel flex flex-col gap-4 w-[300px] max-w-[min(300px,calc(100vw-2*var(--page-pad-x)))] p-4"
     >
       <ViewOptions {...props} />
-    </MenuDetails>
+    </MenuPopover>
   );
 }

@@ -4,6 +4,8 @@ import { useRef } from "react";
 import { Heart, LayoutDashboard, Layers, List, Plus, Search, UserRound } from "lucide-react";
 import { useSlidingPill } from "@/app/hooks/useSlidingPill";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { Button as AriaButton } from "react-aria-components";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import {
   tabbarAddClassName,
   tabbarClassName,
@@ -158,7 +160,10 @@ export default function CardsTabBar({
         className={`${tabbarItemClassName}${on ? " is-active" : ""}`}
         aria-current={on ? "page" : undefined}
         aria-label={tab.label}
-        title={tab.label}
+        // No `title` and no tooltip. Every slot has shown its name as visible
+        // text since ADR-0050, so the native tooltip was repeating a word
+        // already on screen a few pixels below itself — and a Tooltip here
+        // would repeat it more elaborately. Deleted rather than converted.
         onClick={() => onSelect(tab.key)}
       >
         <span className={tabbarIconClassName}>
@@ -200,10 +205,22 @@ export default function CardsTabBar({
           />
           {left.map(item)}
           {signedIn && (
-            <button type="button" className={tabbarAddClassName} onClick={onAdd} title="Add a card">
-              <Plus size={20} strokeWidth={2} aria-hidden="true" />
-              <span className="sr-only">Add a card</span>
-            </button>
+            /* Untitled UI's Tooltip, in place of `title="Add a card"`. A
+               `title` never reaches a keyboard: it appears on hover and on
+               nothing else, so the one hint this icon-only button carries was
+               unavailable to exactly the people most likely to want it. The
+               `sr-only` label stays — it is the button's name, which the
+               tooltip is not.
+
+               The trigger has to be React Aria's Button. TooltipTrigger hands
+               its child the hover and focus props, and a plain <button> has
+               nowhere to put them, so `onClick` becomes `onPress`. */
+            <Tooltip title="Add a card" placement="top">
+              <AriaButton className={tabbarAddClassName} onPress={onAdd}>
+                <Plus size={20} strokeWidth={2} aria-hidden="true" />
+                <span className="sr-only">Add a card</span>
+              </AriaButton>
+            </Tooltip>
           )}
           {right.map(item)}
         </div>

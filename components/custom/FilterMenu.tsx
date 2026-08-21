@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { MenuDetails, filterMenuBadgeClassName } from "@/components/custom/MenuDetails";
+import { Badge } from "@/components/base/badges/badges";
+import { MenuPopover } from "@/components/custom/MenuPopover";
 import FilterOptions from "@/components/custom/FilterOptions";
 import type { Facet } from "@/components/custom/cards-fields";
 
@@ -26,14 +27,21 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
   const total = facets.reduce((n, f) => n + f.selected.size, 0);
 
   return (
-    <MenuDetails
+    <MenuPopover
+      label="Filter the collection"
       trigger={
         <>
           <Plus size={15} strokeWidth={1.75} aria-hidden="true" />
           Filter
         </>
       }
-      badge={total > 0 && <span className={filterMenuBadgeClassName}>{total}</span>}
+      badge={
+        total > 0 && (
+          <Badge type="pill-color" color="brand" size="sm">
+            {total}
+          </Badge>
+        )
+      }
       onToggle={(open) => {
         if (open) setOpened(true);
         // Back to the facet list next time, rather than reopening halfway
@@ -57,6 +65,6 @@ export default function FilterMenu({ facets }: { facets: Facet[] }) {
           onReplace={(f, next) => f.onReplace(next)}
         />
       )}
-    </MenuDetails>
+    </MenuPopover>
   );
 }

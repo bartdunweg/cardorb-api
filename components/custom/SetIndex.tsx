@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { LayersThree01 } from "@untitledui/icons";
+import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
 import { useMemo } from "react";
 import type { CardSet } from "@/lib/core/cards";
@@ -51,10 +53,21 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
     return (
       <>
         <h1 className={`${cardsMainTitleClassName} mb-4`}>Sets</h1>
-        <p className="cards-empty">
-          No sets yet. Add a card and the set it came from appears here.
-        </p>
-        <p className="mt-3">{browseLink}</p>
+        {/* Untitled UI's EmptyState, and deliberately only three of its eleven
+            parts. EmptyState.Content renders a <main> and EmptyState.Title an
+            <h1>: this page already has both, and a document may hold one of
+            each. Root carries the centring and the width cap, Header the icon,
+            Description the sentence — the rest is passed as children. Same
+            three parts at all five empty states in this app. */}
+        <EmptyState size="sm" className="gap-2 py-8">
+          <EmptyState.Header>
+            <EmptyState.FeaturedIcon color="gray" icon={LayersThree01} />
+          </EmptyState.Header>
+          <EmptyState.Description>
+            No sets yet. Add a card and the set it came from appears here.
+          </EmptyState.Description>
+          <EmptyState.Footer className="mt-3">{browseLink}</EmptyState.Footer>
+        </EmptyState>
       </>
     );
   }
