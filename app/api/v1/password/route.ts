@@ -16,15 +16,29 @@ const addressOf = (req: Request) =>
 /**
  * Setting a new password, for somebody who is already holding a session.
  *
- * Two ways to be holding one, and this route deliberately does not care which:
- * signed in normally and changing it, or arrived through a recovery link that
- * exchanged itself for a session at /auth/confirm. Both are "the person who can
- * prove they are this account", which is the only question worth asking here.
+ * Two ways to be holding one, and this route now cares which: signed in
+ * normally and changing it, or arrived through a recovery link that exchanged
+ * itself for a session at /auth/confirm. A session alone is not enough for the
+ * first case — a borrowed, unlocked browser is a session — so that path sends
+ * the current password and this route passes it on.
  *
- * That is also why there is no "current password" field. It would be the right
- * thing for the first case and impossible for the second, and Supabase has a
- * setting for it (secure_password_change) that applies the rule properly to
- * both — a check here would be a worse copy of it.
+ * **The check is Supabase's, not this file's.** `current_password` is a
+ * parameter on `updateUser`; when it is present the provider verifies it on its
+ * own server before changing anything. Nothing here compares passwords, and
+ * nothing here decides who has to supply one — the client sends it when its
+ * form asked for it, and a request that omits it simply does not get the check.
+ *
+ * That sounds like a hole and is not, because of what the two paths actually
+ * are. Recovery already proved possession of the account's mailbox, through a
+ * single-use token this route's own /auth/confirm spent. The signed-in path
+ * proved only that a browser has a valid cookie. So the parameter is required
+ * exactly where the proof is weaker, which is the point.
+ *
+ * This docstring used to argue the opposite — no current-password field at all,
+ * on the grounds that Supabase's `secure_password_change` applied the rule
+ * properly to both halves. That setting is *"require reauthentication"* and
+ * counts a session as recent for 24 hours, so against a borrowed unlocked
+ * browser it did approximately nothing. See ADR-0082.
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -35,9 +49,16 @@ export async function POST(req: Request) {
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
   let password = "";
+  let currentPassword: string | undefined;
   try {
-    const body = (await req.json()) as { password?: unknown };
+    const body = (await req.json()) as { password?: unknown; currentPassword?: unknown };
     if (typeof body.password === "string") password = body.password;
+    // An empty string is treated as absent rather than passed on: Supabase
+    // would reject it as a wrong current password, and the message a person
+    // needs there is "fill this in", which the form's own required field
+    // already gives them.
+    if (typeof body.currentPassword === "string" && body.currentPassword.length > 0)
+      currentPassword = body.currentPassword;
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -54,8 +75,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: NO_DATABASE_CONFIGURED }, { status: 503 });
   }
 
-  const { error } = await db.auth.updateUser({ password });
+  // Spread rather than passed as undefined: sending the key with no value is
+  // not the same request as not sending the key, and only one of them leaves
+  // the recovery path alone.
+  const { error } = await db.auth.updateUser({
+    password,
+    ...(currentPassword ? { current_password: currentPassword } : {}),
+  });
   if (error) {
+    // Said plainly rather than folded into "That password could not be set",
+    // which would send somebody off to change the new password when the field
+    // that is wrong is the one above it. Checked before the "already your
+    // password" branch below: Supabase's wording for a wrong current password
+    // can also contain "new password", and the more specific reading wins.
+    if (/current password|invalid credentials|incorrect password/i.test(error.message)) {
+      return NextResponse.json({ error: "That is not your current password." }, { status: 400 });
+    }
     // The one refusal worth translating. Supabase declines a password that
     // matches the current one, and it is a likely thing to type: somebody who
     // came here through a reset link often does not remember *whether* they

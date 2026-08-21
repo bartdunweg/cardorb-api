@@ -144,12 +144,19 @@ export function useSession() {
 
   /** Setting a new one, for somebody already holding a session. */
   const setPassword = useCallback(
-    async (password: string): Promise<boolean> => {
+    /**
+     * `currentPassword` is optional because one of the two callers genuinely
+     * cannot supply it: somebody who arrived through a recovery link does not
+     * have the old password, which is why they are there. Omitting it is a real
+     * state and not a missing argument — the route sends the parameter on to
+     * Supabase only when it arrives. See ADR-0082.
+     */
+    async (password: string, currentPassword?: string): Promise<boolean> => {
       setError(null);
       const res = await fetch("/api/v1/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify(currentPassword ? { password, currentPassword } : { password }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };

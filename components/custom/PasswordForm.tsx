@@ -11,30 +11,53 @@ import { Input } from "@/components/base/input/input";
 /**
  * Setting a new password, for somebody already holding a session.
  *
- * No "current password" field, and that is not an oversight. Half the people
- * reaching this screen arrived through a recovery link precisely because they
- * do not have the current one, and a field they cannot fill would make the
- * recovery path impossible. Whether to demand it from the other half is a
- * setting on the account provider (secure_password_change), which applies the
- * rule properly to both — a check written here would be a worse copy of it.
+ * **Two callers, one screen, and the current-password field is the difference.**
+ * Somebody signed in who came here on purpose is asked for the password they
+ * already have. Somebody who followed a recovery link is not — they are there
+ * precisely because they do not have it, and a required field they cannot fill
+ * would make recovery impossible.
  *
- * Typed once rather than twice. A confirmation field catches a typo you cannot
- * see, and it is the wrong fix: the eye toggle catches the same typo and does
- * not double the work for everyone who did not make one.
+ * `viaRecovery` is how the screen is told which it is. It comes from a marker
+ * `/auth/confirm` sets while exchanging a `type=recovery` token, read on the
+ * server by the page above (lib/api/recovery.ts). Note the direction: **absence
+ * is what asks for more.** A marker that fails to arrive shows a field somebody
+ * can fill; one wrongly present would hide a check. So the failure mode of the
+ * signal is the harmless one.
+ *
+ * This file used to argue the opposite at length — that no current-password
+ * field belonged here at all, because Supabase's `secure_password_change`
+ * applied the rule to both halves properly. Two things were wrong with that.
+ * The setting is *"require reauthentication"*, and it counts a session as recent
+ * for 24 hours, so for the case that prompted this — a borrowed, unlocked,
+ * signed-in browser — it did approximately nothing. And `current_password` is a
+ * parameter on `updateUser`, not only a dashboard setting, so the app can send
+ * it on one path and not the other and leave recovery untouched by
+ * construction. See ADR-0082.
+ *
+ * The new password is typed once rather than twice. A confirmation field catches
+ * a typo you cannot see, and it is the wrong fix: the eye toggle catches the
+ * same typo and does not double the work for everyone who did not make one.
  */
-export default function PasswordForm() {
+export default function PasswordForm({ viaRecovery = false }: { viaRecovery?: boolean }) {
   const router = useRouter();
   const { setPassword, error } = useSession();
   const [value, setValue] = useState("");
+  const [current, setCurrent] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+
+  const asksForCurrent = !viaRecovery;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || value.length < MIN_PASSWORD) return;
+    if (asksForCurrent && current.length === 0) return;
     setBusy(true);
     try {
-      if (await setPassword(value)) {
+      // Sent only when the field was shown. The server passes it to Supabase
+      // only when it arrives, so the recovery path never carries a parameter
+      // that would be checked against a password nobody has.
+      if (await setPassword(value, asksForCurrent ? current : undefined)) {
         setDone(true);
         router.push("/cards");
       }
@@ -46,6 +69,25 @@ export default function PasswordForm() {
   return (
     <>
       <FormForm layout="column" onSubmit={submit}>
+        {/* First, so a password manager sees the pair in the order it expects:
+            the current one, then the new one. `autoComplete="current-password"`
+            is what tells it which is which — without it, managers offer to fill
+            both fields with the same saved value. */}
+        {asksForCurrent && (
+          <Input
+            isRequired
+            label="Current password"
+            hint="The one you are replacing."
+            type="password"
+            name="current-password"
+            autoComplete="current-password"
+            value={current}
+            onChange={setCurrent}
+            isDisabled={busy || done}
+            className="w-full"
+          />
+        )}
+
         {/* The separate "Show password" button is gone, and its job with it.
             Untitled UI's password input carries its own reveal toggle, inside
             the field where the text it reveals actually is — so the control sits
