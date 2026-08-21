@@ -248,7 +248,7 @@ importers and five call sites, all of them real.)*
   too.
 - ~~**The skip link lands before the navigation it skips.** `#main-content` wraps
   `{children}`, and `AppShell` renders the sidebar and tab bar *inside* it.~~
-  **Fixed, ADR-0085.** The root `<main>` is a `<div>` now and every screen draws
+  **Fixed, ADR-0087.** The root `<main>` is a `<div>` now and every screen draws
   its own landmark after its own navigation. Measured before and after: navs
   inside `<main>` went 2 → 0 on signed-in routes and 1 → 0 on the marketing and
   legal pages, and zero pixels changed. Two guards, because the static one alone

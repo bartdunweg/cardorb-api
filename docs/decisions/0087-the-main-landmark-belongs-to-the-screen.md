@@ -1,5 +1,5 @@
 ---
-id: ADR-0085
+id: ADR-0087
 title: The main landmark belongs to each screen, not to the root layout
 status: accepted
 date: 2026-08-21
@@ -10,6 +10,13 @@ tags: [accessibility, layout, routing]
 ---
 
 # The main landmark belongs to each screen, not to the root layout
+
+**Written as 0085 and renumbered to 0087 before merging.** Two parallel
+worktrees took 0085 and 0086 while this was in review. `verify.sh`'s
+`record numbers` check names the rule for that case — renumber the one that has
+not landed yet, because the other is already on `main` and its cross-references
+are not. That was this one. The doubled 0084 and 0086 could not be resolved that
+way: both halves of each were already merged.
 
 ## Context and problem statement
 
