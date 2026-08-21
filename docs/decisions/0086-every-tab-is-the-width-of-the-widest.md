@@ -1,5 +1,5 @@
 ---
-id: ADR-0085
+id: ADR-0086
 title: Every tab is the width of the widest, and the add circle leaves the bar to pay for it
 status: accepted
 date: 2026-08-22
@@ -21,7 +21,7 @@ attempt at equal widths and why it was thrown away.
 
 ## Context and problem statement
 
-FB-0021: *"In de tabbar op mobiel moeten alle tabs even breed zijn. Momenteel is
+FB-0022: *"In de tabbar op mobiel moeten alle tabs even breed zijn. Momenteel is
 de avatar minder breed dan de rest… neem daarvoor de breedte van de breedste
 variant aan."*
 
@@ -51,7 +51,7 @@ computed anywhere; it is what an fr track *is*. Three consequences worth naming:
 
 - **The capsule still hugs.** Its width is the sum of the tracks plus the gaps
   and `p-2`. This is what Bart asked for after briefly agreeing to a full-width
-  bar and withdrawing it in the same minute (FB-0021's second quote).
+  bar and withdrawing it in the same minute (FB-0022's second quote).
 - **The row still cannot overflow.** The `minmax(0, …)` floor is load-bearing:
   plain `1fr` floors at min-content, and a row of nowrap labels that cannot go
   below min-content is exactly the ADR-0050 failure. With a 0 floor the tracks
@@ -184,7 +184,7 @@ whether it may move.
 
 ## Related
 
-- `docs/feedback/0021-every-tab-the-same-width-as-the-widest.md` — the report.
+- `docs/feedback/0022-every-tab-the-same-width-as-the-widest.md` — the report.
 - `docs/decisions/0050-tab-bar-slots-fit-the-screen-they-are-on.md` — what this
   amends, and the overflow diagnosis it must not undo. FB-0011 is behind it.
 - `docs/decisions/0030-tabbar-profile-avatar-and-track-min-width.md` — the first

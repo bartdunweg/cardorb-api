@@ -188,7 +188,7 @@ export default function Loading() {
           (CardsTabBar.tsx). The circle was drawn here for a while, on the sound
           reasoning that this group's layout redirects a viewerless request
           before it can reach this file, so signed-in is a fact and not a guess.
-          It is gone because the real bar's is: ADR-0085 moved that button to the
+          It is gone because the real bar's is: ADR-0086 moved that button to the
           dashboard's own title row, which is route-specific and therefore not
           something this file may draw.
 
@@ -204,7 +204,7 @@ export default function Loading() {
         {/* No --tab-w here, and none coming back. This used to hand the track a
             hand-computed slot width, because every slot was one fixed size and
             this file had no labels to measure one from. Slots are one size again
-            (ADR-0085), but the grid works it out from the labels below rather
+            (ADR-0086), but the grid works it out from the labels below rather
             than from a number — so the formula stays gone, and good riddance: it
             was a second copy of the bar's layout arithmetic, in a file that per
             ADR-0046 may only draw the chrome every route shares. */}
@@ -229,7 +229,7 @@ export default function Loading() {
  * renders them at.
  *
  * Still four different widths, even though every slot is one width again
- * (ADR-0085): the *slot* is as wide as the widest label, and the label inside it
+ * (ADR-0086): the *slot* is as wide as the widest label, and the label inside it
  * is still its own width, centred. So these outlines are what the real bar's
  * words look like, and the widest of them is what sizes all four tracks here
  * exactly as it sizes all four there — the capsule comes out the same width and

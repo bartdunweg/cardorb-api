@@ -2,9 +2,56 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## The value chart got its axes back (2026-08-22, workspace `banjul`)
+
+Branch `bartdunweg/value-chart-untitled-style`, not yet merged. FB-0021 and
+ADR-0085 have the whole story; the short version:
+
+- **The dashboard's "Value over time" card is Untitled UI's chart now** — two
+  real axes, rounded euro ticks (€30k/€35k/€40k/€45k), horizontal gridlines,
+  brand purple, 240px tall, and no dots except the one under the pointer. It
+  was reported as "heel lelijk" with both axes hidden, which it was.
+- **A regression was found and fixed on the way.** The X axis had been
+  `dataKey="date"` with no `type` since ADR-0075 swapped the hand-drawn SVG for
+  Recharts — a *category* axis, evenly spaced by position in the list. The old
+  file had gone to some length to space X by elapsed time and to say why, and
+  that intent was silently dropped. It is a `scale="time"` axis again, and
+  `chartPoints` hands it a `t` field so a future rewrite has to delete
+  something to lose it.
+- **Two ready-made ways to pick x-axis labels do not work here**, and ADR-0085
+  says so in detail: Recharts' `tickCount` on a data-pinned time domain draws
+  only the two ends, and `charts-base`'s `selectEvenlySpacedItems` picks evenly
+  by position in the list. `timeTicks()` in `lib/core/value-chart.ts` does it by
+  time. Do not re-try either.
+- **The snapshot cron is nightly** (`vercel.json`, `0 4 * * *`, was `0 4 * * 1`).
+  Daily is the ceiling, not a preference: Hobby allows two crons at most once a
+  day, and Cardmarket's guide is only rebuilt nightly. It makes the series
+  denser from here on and **cannot backfill** — there is no archive to backfill
+  from. The tooltip carries the day now rather than the month, because daily
+  readings would otherwise be named identically.
+- `lib/core/value-chart.ts` lost `line`, `under`, `x`, `y` and `ChartBox`; all
+  five had been unread since ADR-0075. It gained `niceScale` and `timeTicks`,
+  both tested (18 cases in that file).
+- **Recharts hardcodes `fill="#666"` on axis ticks**, as a presentation
+  attribute, in both themes — 3.45:1 on the dark card, under the 4.5:1 that
+  12px text needs. Found by measuring, not by reading. The card overrides it
+  with `[&_.recharts-cartesian-axis-tick-value]:fill-current`, and **any second
+  chart in this app needs the same line**; a light-mode screenshot will not
+  show the problem.
+
+`verify.sh`: everything passes except `standards`, which fails the same way on
+`main` — the `docs/` versus `.dev-standards/` placement ADR-0053 chose on
+purpose, plus a CLAUDE.md generated from v0.22.0 against a v0.23.0 standard.
+
+**Left for whoever picks this up:** an unrelated stash sits at `stash@{0}`,
+message "recovered: CardItem.tsx (not mine - popped by accident)". It was in
+this repo's stash list before this session and got popped into the tree by a
+`git stash` round-trip here; it has been put back, untouched. It is not part of
+this work.
+
 ## The tab bar's slots are all one width, and the plus left it (2026-08-22, workspace `yerevan`)
 
-FB-0021, ADR-0085. Every slot in the mobile tab bar is the width of the widest
+FB-0022, ADR-0086. Every slot in the mobile tab bar is the width of the widest
 label now — the track is `grid grid-flow-col auto-cols-fr`, so the browser does
 it and no JavaScript measures anything. The avatar slot is no longer the narrow
 one. `px-1.5` on the slot became `px-1`, which is now only the truncation floor
@@ -14,7 +61,7 @@ rather than the visible padding; at 6px a 360px phone read "Dashbo…".
 any more.** Four equal slots plus a circle do not fit a 360px phone, so it moved
 to the dashboard's title row, on instruction and explicitly *"voor nu eventjes"*.
 Cost: on a phone, adding a card is dashboard-only — `/collection` and `/wishlist`
-have no add action. ADR-0085 lists the three ways to reverse it.
+have no add action. ADR-0086 lists the three ways to reverse it.
 
 Left undone, and both need a signed-in session this workspace cannot create:
 

@@ -1,5 +1,5 @@
 ---
-id: FB-0021
+id: FB-0022
 date: 2026-08-22
 source: Bart
 source-type: stakeholder
@@ -56,14 +56,14 @@ ones.
 ## Action
 
 - [x] Equal tracks via CSS Grid `fr`, which sizes every track to the widest by
-      definition and still lets them shrink together on a narrow phone — ADR-0085.
+      definition and still lets them shrink together on a narrow phone — ADR-0086.
 - [x] The add circle leaves the bar to make four equal slots fit a 360px phone,
       explicitly as a temporary move. That is a separate decision with its own
-      cost, recorded in ADR-0085 rather than here.
+      cost, recorded in ADR-0086 rather than here.
 
 ## Related
 
-- Decision: ADR-0085 — the change this asked for.
+- Decision: ADR-0086 — the change this asked for.
 - Decision: ADR-0050 — the half of it this reverses, and the failure it must not
   reintroduce. FB-0011 is the report behind that one.
 - Decision: ADR-0030 — the first, JavaScript-measured attempt at equal widths.

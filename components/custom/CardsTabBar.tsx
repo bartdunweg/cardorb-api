@@ -37,7 +37,7 @@ import {
  * to honour and nothing for a middle click to open.
  *
  * Every slot says its name, at every width, and every slot is the width of the
- * widest of those names (ADR-0085). Four labelled slots fit a 360px phone's
+ * widest of those names (ADR-0086). Four labelled slots fit a 360px phone's
  * 328px of track with room to spare now that the add circle is not in the row
  * with them. Below roughly 340px the labels truncate rather than the bar
  * overflowing — the floor ADR-0050 established, unchanged.
@@ -87,7 +87,7 @@ export default function CardsTabBar({
   active: CardsTab | null;
   /** Which slots the bar carries: the public link has no account to show, so no
    *  "You". Nothing to do with the plus any more — that left the bar entirely
-   *  (ADR-0085). */
+   *  (ADR-0086). */
   signedIn: boolean;
   /** No Dashboard on the public link: it is three tiles and two charts there. */
   isPublic?: boolean;
@@ -141,7 +141,7 @@ export default function CardsTabBar({
 
   /**
    * The slots are mapped in one go. They used to be split in half around a plus
-   * that sat in the middle of the row; ADR-0085 moved that button to the
+   * that sat in the middle of the row; ADR-0086 moved that button to the
    * dashboard's title row, so there is nothing left for the two halves to sit
    * either side of.
    *

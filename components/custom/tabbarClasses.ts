@@ -92,7 +92,7 @@ export const tabbarClassName =
  * applied everywhere a gap exists here, so nine seemingly-independent spacing
  * bugs can't reopen this file nine more times.
  *
- * Untouched by ADR-0050 and ADR-0085, and worth saying why: p-2 was never what
+ * Untouched by ADR-0050 and ADR-0086, and worth saying why: p-2 was never what
  * was wrong. It was applying correctly the whole time — the slots were simply
  * being laid out past it.
  */
@@ -104,8 +104,8 @@ export const tabbarClassName =
    because it is not one of Tailwind's names. */
 /**
  * grid grid-flow-col auto-cols-fr, where this was a flex row: every slot is the
- * width of the widest label now, which is what FB-0021 asked for and what
- * ADR-0085 explains at length. Three things about it are worth knowing before
+ * width of the widest label now, which is what FB-0022 asked for and what
+ * ADR-0086 explains at length. Three things about it are worth knowing before
  * touching this line.
  *
  * `auto-cols-fr` is `grid-auto-columns: minmax(0, 1fr)`, and in a grid container
@@ -160,9 +160,9 @@ export const tabbarPagesClassName =
  *
  * No width and no flex sizing here at all: this is a grid item now, and the
  * track it sits in decides how wide it is (tabbarPagesClassName). Every slot
- * therefore comes out the width of the widest label — FB-0021 — instead of the
+ * therefore comes out the width of the widest label — FB-0022 — instead of the
  * width of its own, which is what `flex-initial` gave it between ADR-0050 and
- * ADR-0085, and what made the avatar slot visibly the narrowest of the four:
+ * ADR-0086, and what made the avatar slot visibly the narrowest of the four:
  * "You" is the shortest word in the bar, and since the avatar is size-5, exactly
  * as wide as every other icon, the label was the only thing left to differ.
  *
@@ -207,7 +207,7 @@ export const tabbarIconClassName = "flex shrink-0";
  *  still applies "group" unconditionally and there is no reason to make
  *  that conditional for one class that stopped needing it. */
 /** max-w-full + truncate: every slot is sized to the *widest* label now
- *  (ADR-0085), so on a wide enough screen these never fire — not even for the
+ *  (ADR-0086), so on a wide enough screen these never fire — not even for the
  *  widest one. They are what happens below roughly 340px, where the tracks have
  *  to give up width together to keep the capsule on the screen: "Dashboa…" is
  *  the price of a bar that still fits, and it is paid by the label rather than
@@ -234,7 +234,7 @@ export const tabbarPillClassName =
  *
  * A 40px add circle used to sit in the middle of this track, and it is what made
  * equal-width slots impossible: four slots at the widest label plus the circle
- * need ~366px, and a 360px phone gives the track 328. ADR-0085 takes the circle
+ * need ~366px, and a 360px phone gives the track 328. ADR-0086 takes the circle
  * out of the bar entirely — on instruction, and explicitly as a temporary move —
  * so the four slots can be equal. It lives on the dashboard's title row now
  * (CardsDashboard.tsx), built from Untitled UI's own Button rather than from a
