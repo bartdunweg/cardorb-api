@@ -2,6 +2,71 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## Three of the four open items shipped (2026-08-21/22, workspace `biarritz`)
+
+Four things had been decided and not built. Three are now PRs against `main`,
+each with a real browser pass rather than a claim:
+
+- **PR #117 — the last four undefended buttons** (ADR-0084). The eight call
+  sites `dd099b7` admitted were carrying no reason are the component now. Only
+  pixel change: +4px width on the three buttons that have both an icon and a
+  label. 30 of 33 screenshots identical.
+- **PR #119 — the skip link lands past the navigation** (ADR-0085). The root
+  `<main>` is a `<div>`; every screen draws its own after its own nav. Measured
+  before and after: navs inside `<main>` 2 → 0, and focus lands on real content
+  instead of `Card Orb home` on all four kinds of route. Zero pixels changed.
+- **PR #120 — changing a password asks for the current one** (ADR-0082). The
+  sweep's most severe finding, and it never needed the dashboard setting it was
+  blamed on. Verified live with real recovery and magic-link tokens.
+
+### Not started: the add-card command-dialog rewrite (ADR-0079 + ADR-0080)
+
+Deliberately not begun rather than begun badly — it is a 793-line file with 16
+pieces of state and three stages, and both records say every claim about it is a
+claim about pixels. The research is done and is worth not repeating:
+
+- **`CommandMenuRoot` holds `selectedKeys` in its own `useState`** and never
+  syncs to a controlled prop, which fights `CardAddDialog`'s `selected` and its
+  "Change" reset. `CommandMenuList` cannot be used outside it either — it pulls
+  `items` from a context the module does not export. So the recommended shape is
+  `CommandDialog` (which *is* exported) + `AriaListBox` + their
+  `CommandDropdownMenuItem`, whose `children` prop is the documented extension
+  point ADR-0080 relies on. `CommandMenuRoot` with `filter={false}` is the
+  fallback; `filter` must be false either way or `useFilter`'s client-side
+  `contains` re-filters the server's results.
+- **The vendored footer hardcodes its hints and carries a dead `Settings01`
+  button**, and is `max-md:hidden`. "Advanced filters" needs a sibling footer in
+  `components/custom/`, not a patch (ADR-0062).
+- **Bart chose to keep the phone bottom sheet** via `CommandDialog`'s own
+  `className`/`dialogClassName`/`overlayClassName`, which is a divergence from
+  the component as shipped and needs its own short ADR.
+- **Two overlay stacks meet**: `Modal`'s scroll lock, `motion` springs with
+  reduced-motion guards and `z-[var(--z-modal)]`, against React Aria's
+  `AriaModalOverlay` at a hardcoded `z-50`.
+- `command-menu-users.tsx` is to be deleted with the rewrite (ADR-0079), and it
+  is the only importer of `empty-state`'s `.Content`.
+
+### Two things found on the way, neither fixed
+
+- **`/dashboard` has a focusable `<svg tabindex="0" class="recharts-surface">`
+  with no accessible name.** Recharts' own, identical on `origin/main`, and now
+  the first thing the skip link reaches on that route.
+- **The shared standard moved v0.22.0 → v0.23.0 mid-session**, so `verify.sh`'s
+  `standards` check fails on all three branches. `CLAUDE.md` needs
+  `/apply-standards`; none of these branches touch it, because it is a shared
+  file and a parallel worktree is probably in it.
+
+### Worth copying: the harness recipe now has a correction
+
+ADR-0069's recipe says to run the reference build twice and let Playwright write
+the missing baselines. **That no longer works** — `playwright.config.ts:73` sets
+`updateSnapshots: "none"`, so the reference run needs `--update-snapshots` (or
+`npm run visual:baseline`) explicitly. Also confirmed the hard way this session:
+a parallel workspace ran `pkill -f "next start"` and killed both servers
+mid-run, which produced a convincing and entirely fictitious failure list.
+**Start the server with the agent harness's own background mode, and curl it
+after the run as well as before.**
+
 ## A full quality sweep, half applied (2026-08-21, workspace `sao-paulo`)
 
 Five `review-*` skills were run over the whole app rather than over a diff —
