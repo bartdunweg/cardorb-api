@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Button } from "@/components/base/buttons/button";
 import {
   ArrowUpRight,
   BookOpen,
@@ -197,12 +198,9 @@ export default async function IosApp() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline"
-              >
+              <Button href="/signup" size="lg">
                 Sign up
-              </Link>
+              </Button>
             </>
           )
         }
@@ -248,28 +246,37 @@ export default async function IosApp() {
               When the app ships, this becomes a <Button href external> and the
               note goes.
             */}
-            <button
-              type="button"
+            {/* `aria-disabled`, never `isDisabled`. React Aria's prop puts the
+                native `disabled` attribute on, which takes the button out of the
+                tab order — and ADR-0042 keeps this one focusable precisely so it
+                can explain itself to somebody who reaches it by keyboard. The
+                note below is what it explains. */}
+            <Button
+              size="lg"
               aria-disabled="true"
               aria-describedby="ios-download-note"
-              /* self-center: .btn sets align-self: flex-start for toolbars,
-                 which beats this column's items-center and would left-pin
-                 both of these buttons. */
-              className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline self-center min-w-[240px] [@media(max-width:640px)]:w-full"
+              /* An element, not the component. This page is a server component
+                 and a function cannot cross into a client one; Button has a
+                 branch for exactly this, keyed on data-icon. */
+              iconLeading={<Download data-icon="leading" size={17} strokeWidth={1.8} aria-hidden />}
+              className="self-center min-w-[240px] [@media(max-width:640px)]:w-full"
             >
-              <Download size={17} strokeWidth={1.8} aria-hidden="true" />
               Download on the App Store
-            </button>
+            </Button>
             <p id="ios-download-note" className="m-0 max-w-[38ch] text-tertiary font-body text-xs">
               Not on the App Store yet. This is where the download will be.
             </p>
-            <Link
+            <Button
               href="/signup"
-              className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-primary text-secondary shadow-xs-skeuomorphic ring-1 ring-primary ring-inset hover:bg-primary_hover no-underline self-center [@media(max-width:640px)]:w-full"
+              color="secondary"
+              size="lg"
+              className="self-center [@media(max-width:640px)]:w-full"
+              iconTrailing={
+                <ArrowUpRight data-icon="trailing" size={17} strokeWidth={1.8} aria-hidden />
+              }
             >
               Start on the web
-              <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-            </Link>
+            </Button>
           </div>
         </header>
 
@@ -445,13 +452,10 @@ export default async function IosApp() {
           </p>
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
               beats this column's items-center. */}
-          <Link
-            href="/signup"
-            className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline self-center mt-6"
-          >
+          <Button href="/signup" size="lg" className="self-center mt-6">
             Create your free collection
             <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-          </Link>
+          </Button>
         </section>
 
         <MarketingFooter />

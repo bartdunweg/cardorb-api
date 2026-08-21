@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Button } from "@/components/base/buttons/button";
+import { Badge } from "@/components/base/badges/badges";
 import {
   ArrowUpRight,
   BookOpen,
@@ -227,12 +229,9 @@ export default async function Home() {
               <Link href={SIGN_IN_HREF} className={navLink}>
                 Log in
               </Link>
-              <Link
-                href="/signup"
-                className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline"
-              >
+              <Button href="/signup" size="lg">
                 Sign up
-              </Link>
+              </Button>
             </>
           )
         }
@@ -247,16 +246,16 @@ export default async function Home() {
             — coming soon" and was an inert <span>, so the one question it
             raised — what app, and when — had nowhere to go. It is a link to
             /app/ios now, and names only the platform that has a page. */}
-          <Link
-            href="/app/ios"
-            className="inline-flex items-center gap-2 mb-2 px-3 py-2 rounded-full
-            border border-secondary text-tertiary no-underline
-            font-body text-xs
-            transition-colors duration-150 ease-out hover:text-primary"
-          >
-            <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
-            The iPhone app is on its way
-            <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
+          <Link href="/app/ios" className="mb-2 no-underline">
+            {/* Badge rather than BadgeWithIcon: that one takes icon
+                *components*, and this page is a server component, so a function
+                cannot cross into a client one. The icons are children here and
+                the pill lays them out the same way. */}
+            <Badge type="pill-color" color="gray" size="md" className="gap-1.5">
+              <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
+              The iPhone app is on its way
+              <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
+            </Badge>
           </Link>
           <h1
             className="max-w-[14ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary font-body
@@ -269,12 +268,13 @@ export default async function Home() {
             See every set, what it is worth, and what is still missing.
           </p>
           <div className="flex flex-wrap justify-center gap-3 mt-2 [@media(max-width:640px)]:w-full [@media(max-width:640px)]:flex-col">
-            <Link
+            <Button
               href="/signup"
-              className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline min-w-[178px] [@media(max-width:640px)]:self-stretch"
+              size="lg"
+              className="min-w-[178px] [@media(max-width:640px)]:self-stretch"
             >
               Start your collection
-            </Link>
+            </Button>
           </div>
           <ul
             className="flex flex-wrap justify-center gap-x-8 gap-y-3 mt-4 m-0 p-0 list-none"
@@ -494,13 +494,16 @@ export default async function Home() {
           {/* self-center: .btn sets align-self: flex-start for toolbars, which
             beats this column's items-center and left-pins the one button that
             is not inside its own centering wrapper (the hero's is). */}
-          <Link
+          <Button
             href="/signup"
-            className="inline-flex items-center justify-center gap-1 rounded-lg px-4 py-2.5 text-md font-semibold bg-brand-solid text-white shadow-xs-skeuomorphic ring-1 ring-transparent ring-inset hover:bg-brand-solid_hover no-underline self-center mt-6"
+            size="lg"
+            className="self-center mt-6"
+            iconTrailing={
+              <ArrowUpRight data-icon="trailing" size={17} strokeWidth={1.8} aria-hidden />
+            }
           >
             Create your free collection
-            <ArrowUpRight size={17} strokeWidth={1.8} aria-hidden="true" />
-          </Link>
+          </Button>
         </section>
 
         <MarketingFooter />

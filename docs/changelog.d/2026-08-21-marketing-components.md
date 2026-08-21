@@ -1,0 +1,1 @@
+- The buttons and the badge on the landing and iPhone pages are the same components as everywhere else in the app, rather than look-alikes assembled by hand.
