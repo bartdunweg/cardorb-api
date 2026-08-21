@@ -3,16 +3,16 @@ import Link from "next/link";
 import { Button } from "@/components/base/buttons/button";
 import {
   ArrowUpRight,
-  BookOpen,
-  Camera,
+  BookOpen01,
+  Camera01,
   Check,
-  Download,
-  Layers,
-  RefreshCw,
-  Search,
-  Smartphone,
-  Wallet,
-} from "lucide-react";
+  Download01,
+  LayersThree01,
+  Phone01,
+  RefreshCw01,
+  SearchLg,
+  Wallet01,
+} from "@untitledui/icons";
 import Card from "@/components/custom/Card";
 import MarketingFooter from "@/components/custom/MarketingFooter";
 import Navbar from "@/components/custom/Navbar";
@@ -74,32 +74,32 @@ export const metadata: Metadata = {
  */
 const FEATURES = [
   {
-    icon: Layers,
+    icon: LayersThree01,
     title: "Your binder, in order",
     body: "Every set and era the way you keep them, with the gaps you are still looking for right where they belong.",
   },
   {
-    icon: Search,
+    icon: SearchLg,
     title: "Find a card standing up",
     body: "Search by name, or narrow by set, rarity and type — one hand, at a table, mid-trade.",
   },
   {
-    icon: Wallet,
+    icon: Wallet01,
     title: "What it is worth, in euros",
     body: "Cardmarket prices travel with the cards, so the total is there when somebody asks.",
   },
   {
-    icon: BookOpen,
+    icon: BookOpen01,
     title: "The whole catalogue",
     body: "Browse a set you do not own a single card from, and see at a glance which ones you already have.",
   },
   {
-    icon: RefreshCw,
+    icon: RefreshCw01,
     title: "Nothing to sync by hand",
     body: "Add a card on the phone and it is on the web. One collection, not two that need reconciling.",
   },
   {
-    icon: Camera,
+    icon: Camera01,
     title: "Scan to add",
     body: "Point the camera at a card and let it find the match.",
     comingSoon: true,
@@ -216,7 +216,7 @@ export default async function IosApp() {
               border border-secondary text-tertiary
               font-body text-xs"
           >
-            <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
+            <Phone01 size={13} strokeWidth={1.8} aria-hidden="true" />
             In development
           </span>
           <h1
@@ -258,7 +258,9 @@ export default async function IosApp() {
               /* An element, not the component. This page is a server component
                  and a function cannot cross into a client one; Button has a
                  branch for exactly this, keyed on data-icon. */
-              iconLeading={<Download data-icon="leading" size={17} strokeWidth={1.8} aria-hidden />}
+              iconLeading={
+                <Download01 data-icon="leading" size={17} strokeWidth={1.8} aria-hidden />
+              }
               className="self-center min-w-[240px] [@media(max-width:640px)]:w-full"
             >
               Download on the App Store

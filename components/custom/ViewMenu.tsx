@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings2 } from "lucide-react";
+import { Sliders02 } from "@untitledui/icons";
 import { MenuPopover } from "@/components/custom/MenuPopover";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
 
@@ -23,7 +23,7 @@ export default function ViewMenu(props: ViewOptionsProps) {
       label="View options"
       trigger={
         <>
-          <Settings2 size={15} strokeWidth={1.75} aria-hidden="true" />
+          <Sliders02 size={15} strokeWidth={1.75} aria-hidden="true" />
           View
         </>
       }

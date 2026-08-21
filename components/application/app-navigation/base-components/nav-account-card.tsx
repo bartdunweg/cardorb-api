@@ -1,9 +1,14 @@
-// @ts-nocheck — vendored, see ADR-0061
 "use client";
 
 import type { FC, HTMLAttributes } from "react";
 import { useCallback, useEffect, useRef } from "react";
-import type { Placement } from "@react-types/overlays";
+// Was `@react-types/overlays`, which is not a dependency of this project and is
+// not in node_modules — the same fault ADR-0066 found twice in
+// file-upload-trigger. react-aria-components re-exports the type and *is* a
+// dependency. Type-only, so it could never have thrown; it would simply have
+// failed to compile the moment anything checked this file, which until
+// tsconfig.vendored.json nothing did.
+import type { Placement } from "react-aria-components";
 import { BookOpen01, ChevronSelectorVertical, LogOut01, Plus, Settings01, User01 } from "@untitledui/icons";
 import { useFocusManager } from "react-aria";
 import type { DialogProps as AriaDialogProps } from "react-aria-components";

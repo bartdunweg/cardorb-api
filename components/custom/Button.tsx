@@ -1,4 +1,4 @@
-import type { LucideProps } from "lucide-react";
+import type { SVGProps } from "react";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 
 /**
@@ -25,27 +25,53 @@ import { Button as UntitledButton } from "@/components/base/buttons/button";
  *      announced it and some did not, which is worse than either, because the
  *      silence then reads as "this one stays here".
  *
- *   2. **The plain-span mode.** With neither `href` nor `onClick`, this renders
- *      a `<span>`: a button that looks like one but is not, for when the whole
- *      card around it is the link. A real nested button inside a link is invalid
- *      and behaves differently in every browser.
+ *   2. **The plain-span mode.** With none of `href`, `onClick` or `type`, this
+ *      renders a `<span>`: a button that looks like one but is not, for when the
+ *      whole card around it is the link. A real nested button inside a link is
+ *      invalid and behaves differently in every browser.
+ *
+ *      `type` counts because a form's submit button has no `onClick` — the
+ *      form's `onSubmit` fires instead — and would otherwise fall through to
+ *      the span and silently stop submitting anything.
  */
 const ICON = { size: 16, strokeWidth: 1.75 } as const;
 
+/* The shape an @untitledui/icons component takes: every SVG prop, plus `size`,
+   which they turn into width and height. Spelled out here rather than imported
+   because the package exports the icons themselves and not this type. */
+export type IconProps = SVGProps<SVGSVGElement> & { size?: number };
+
 type ButtonProps = {
   children: React.ReactNode;
-  /* ComponentType rather than LucideIcon, so ExternalArrow can be handed in
-     where ArrowUpRight used to be. It takes the same props and renders two of
-     them; a Lucide icon still satisfies this, being one of these already. */
-  icon?: React.ComponentType<LucideProps>;
+  /* ComponentType rather than the icon type itself, so ExternalArrow can be
+     handed in where ArrowUpRight used to be. It takes the same props and
+     renders two of them; an Untitled UI icon satisfies this already. */
+  icon?: React.ComponentType<IconProps>;
   iconPosition?: "left" | "right";
   iconFill?: boolean;
   href?: string;
   external?: boolean;
   onClick?: () => void;
+  /** A form's submit button has no onClick — the form's own onSubmit fires.
+      Passing this is what tells the plain-span branch below not to take it. */
+  type?: "button" | "submit";
+  /** Spelled the DOM's way rather than React Aria's `isDisabled`, because every
+      call site here is replacing a plain <button disabled>. Mapped over below. */
+  disabled?: boolean;
   className?: string;
-  /** Untitled UI's colour vocabulary, passed straight through. */
-  color?: "primary" | "secondary" | "tertiary";
+  /** Untitled UI's colour vocabulary, passed straight through. The destructive
+      four are theirs too; `primary-destructive` is what deleting an account
+      uses. */
+  color?:
+    | "primary"
+    | "secondary"
+    | "tertiary"
+    | "link-color"
+    | "link-gray"
+    | "primary-destructive"
+    | "secondary-destructive"
+    | "tertiary-destructive"
+    | "link-destructive";
   size?: "sm" | "md" | "lg" | "xl";
   "aria-label"?: string;
   /** For a button that is deliberately not actionable yet but must stay
@@ -62,6 +88,8 @@ export default function Button({
   href,
   external,
   onClick,
+  type,
+  disabled,
   className = "",
   color = "secondary",
   size = "md",
@@ -75,6 +103,7 @@ export default function Button({
     color,
     size,
     className,
+    isDisabled: disabled,
     ...(iconPosition === "left" ? { iconLeading: iconEl } : { iconTrailing: iconEl }),
   } as const;
 
@@ -95,9 +124,9 @@ export default function Button({
     );
   }
 
-  if (onClick) {
+  if (onClick || type) {
     return (
-      <UntitledButton {...shared} onPress={onClick} {...rest}>
+      <UntitledButton {...shared} type={type} onPress={onClick} {...rest}>
         {children}
       </UntitledButton>
     );

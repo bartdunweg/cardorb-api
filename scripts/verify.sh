@@ -89,6 +89,79 @@ run "lint"      npm run lint
 # route which cannot be rendered the way its exports claim.
 run "build"     npm run build
 
+# --- Memory and standards health ----------------------------------------------------------
+# Two checks that watch the memory system rather than the build. They cost milliseconds and
+# both cover a failure that is silent by nature. Added by /apply-standards on 2026-08-21;
+# verify.sh has no generated region, so nothing else would ever have copied them in.
+
+# Is this project still running the current standard?
+#
+# Nothing else asks. The instruction block in CLAUDE.md is generated, and a project drifts from
+# it the moment the standard changes — quietly, because every build check stays green.
+#
+# It exits 0 on warnings, which is what this repo gets: it keeps its memory in docs/ rather than
+# .dev-standards/, deliberately and per ADR-0053. Those three warnings are expected. Read them,
+# do not act on them, and do not run migrate-memory.sh --apply.
+#
+# Skipping when the checkout is absent is deliberate and sets no failure: a CI runner has no
+# reason to carry the standards repo, and a project is not unhealthy because of where it builds.
+standards_root="${DEV_STANDARDS_HOME:-$HOME/.local/share/dev-standards}"
+if [[ -x "$standards_root/scripts/check-standards.sh" ]]; then
+  run "standards" "$standards_root/scripts/check-standards.sh" .
+else
+  skip "standards" "no dev-standards checkout at $standards_root, so drift was not checked"
+fi
+
+# Did two parallel worktrees take the same record number?
+#
+# Both see the same directory, neither sees the other's uncommitted file, so both take the next
+# free number. Git then merges 0007-a.md beside 0007-b.md without complaint — different
+# filenames, no conflict. Records are immutable, so a collision noticed late is permanent.
+#
+# ── Why this one carries a baseline, which the template's version does not ──
+#
+# Twelve numbers were already doubled up when this check was added, every one of them a real
+# parallel-worktree collision that was found late and left on purpose: records are immutable and
+# renumbering one means rewriting every cross-reference in the other files that point at it.
+# STATE.md and docs/README.md both say so at the collisions they describe.
+#
+# Failing on those forever would teach exactly one lesson, which is to stop reading the output.
+# So they are listed here as accepted, and anything NOT on the list fails — which is the case
+# the check is actually for: the collision you just created, today, in the other worktree.
+#
+# Adding a number here is not a way to dismiss a fresh collision. If yours is new, renumber it;
+# the other one is already on the main branch.
+ACCEPTED_COLLISIONS="docs/decisions:0014 docs/decisions:0021 docs/decisions:0023 \
+docs/decisions:0030 docs/decisions:0034 docs/decisions:0035 docs/decisions:0042 \
+docs/decisions:0046 docs/decisions:0048 docs/decisions:0049 docs/decisions:0050 \
+docs/feedback:0007"
+
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+record_numbers() {
+  local found=0 dir dupes number clashing
+  for dir in .dev-standards/decisions .dev-standards/feedback docs/decisions docs/feedback; do
+    [[ -d "$dir" ]] || continue
+    dupes="$(find "$dir" -maxdepth 1 -name '[0-9][0-9][0-9][0-9]-*.md' -exec basename {} \; \
+      | cut -d- -f1 | sort | uniq -d)"
+    [[ -n "$dupes" ]] || continue
+    while IFS= read -r number; do
+      [[ -n "$number" ]] || continue
+      case " $ACCEPTED_COLLISIONS " in
+        *" $dir:$number "*) continue ;;
+      esac
+      clashing="$(find "$dir" -maxdepth 1 -name "$number-*.md" -exec basename {} \; | sort | tr '\n' ' ')"
+      printf '%s/ has %s twice — %s\n' "$dir" "$number" "$clashing"
+      found=1
+    done <<< "$dupes"
+  done
+  if [[ "$found" -eq 1 ]]; then
+    printf 'Two worktrees took the same number. Renumber yours; the other is already on the main branch.\n'
+    return 1
+  fi
+  return 0
+}
+run "record numbers" record_numbers
+
 # ------------------------------------------------------------------------------------------
 if [[ "$status" -eq 0 ]]; then
   printf '\nAll checks passed.\n'

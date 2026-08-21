@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Heart, LayoutDashboard, Layers, List, Plus, Search, UserRound } from "lucide-react";
+import { Heart, LayersThree01, LayoutAlt01, List, Plus, SearchLg, User01 } from "@untitledui/icons";
 import { useSlidingPill } from "@/app/hooks/useSlidingPill";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { Button as AriaButton } from "react-aria-components";
@@ -103,12 +103,12 @@ export default function CardsTabBar({
   } = useSlidingPill(trackRef, ".tabbar-item.is-active", [active, signedIn, isPublic]);
 
   // The component itself, not a pre-built element: the active tab renders
-  // its icon filled (fill="currentColor" instead of lucide's default
+  // its icon filled (fill="currentColor" instead of the icon set's default
   // fill="none"), which has to be decided per render against `active`, not
   // once up front here.
-  const all: Record<string, { key: CardsTab; label: string; icon: typeof LayoutDashboard }> = {
-    dashboard: { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    collection: { key: "collection", label: "Collection", icon: Layers },
+  const all: Record<string, { key: CardsTab; label: string; icon: typeof LayoutAlt01 }> = {
+    dashboard: { key: "dashboard", label: "Dashboard", icon: LayoutAlt01 },
+    collection: { key: "collection", label: "Collection", icon: LayersThree01 },
     wishlist: { key: "wishlist", label: "Wishlist", icon: Heart },
     // A list rather than boxes: what this slot opens is the rail, which is a
     // list of set names to pick from. Layers belongs to Collection, which is
@@ -117,8 +117,8 @@ export default function CardsTabBar({
     // Fallback icon only — item() swaps this for the viewer's avatar (or
     // their initial) whenever one is available, which is every real render
     // signed in.
-    profile: { key: "profile", label: "You", icon: UserRound },
-    search: { key: "search", label: "Search", icon: Search },
+    profile: { key: "profile", label: "You", icon: User01 },
+    search: { key: "search", label: "Search", icon: SearchLg },
   };
 
   const order = isPublic

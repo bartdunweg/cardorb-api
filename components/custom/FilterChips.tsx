@@ -1,6 +1,8 @@
 "use client";
 
-import { X } from "lucide-react";
+import { XClose } from "@untitledui/icons";
+import { BadgeWithIcon } from "@/components/base/badges/badges";
+import Button from "@/components/custom/Button";
 
 export type ActiveFilter = { group: string; value: string; onRemove: () => void };
 
@@ -11,6 +13,18 @@ export type ActiveFilter = { group: string; value: string; onRemove: () => void 
  * and a count that does not add up unless you open all five to find out why.
  * This is the same state said out loud, and removable one at a time without
  * hunting for the list it came from.
+ *
+ * ── Why not `BadgeWithButton`, which is the obvious component ──────────────
+ *
+ * Because it puts the cross in a button of its own *inside* the chip, and only
+ * that cross removes anything. Measured: a `size-3` icon with `p-0.5` around it
+ * is a 16px target, where WCAG 2.2's 2.5.8 asks 24px. The whole chip here is
+ * one 28px-tall button, so the target is the chip.
+ *
+ * That is ADR-0056's second exception — Untitled UI's value is the default
+ * *unless* Card Orb's is argued from a measurement — so their look is adopted
+ * (`BadgeWithIcon` draws the pill and the cross) and the hit area stays ours.
+ * The badge is a `<span>`, so nesting it in the button is valid.
  */
 export default function FilterChips({
   filters,
@@ -31,30 +45,22 @@ export default function FilterChips({
         <button
           key={`${f.group}-${f.value}`}
           type="button"
-          className="inline-flex items-center gap-2 h-7 [padding:0_calc(var(--spacing)*2)_0_calc(var(--spacing)*3)]
-            border border-primary rounded-pill bg-transparent
-            font-body text-xs text-primary cursor-pointer
-            transition-colors duration-[150ms] ease-out
-            hover:bg-brand-solid hover:border-brand hover:text-white
-            [&_svg]:flex-shrink-0 [&_svg]:opacity-60 hover:[&_svg]:opacity-100"
+          className="cursor-pointer rounded-pill outline-focus-ring focus-visible:outline-2
+            focus-visible:outline-offset-2"
           onClick={f.onRemove}
           // The group is in the label but not on screen: "Rarity: Holo" reads
           // as clutter in a row of eight, and is exactly what a screen reader
           // needs to tell one Holo from another.
           aria-label={`Remove ${f.group} filter ${f.value}`}
         >
-          <span>{f.value}</span>
-          <X size={13} strokeWidth={1.75} aria-hidden="true" />
+          <BadgeWithIcon size="lg" color="gray" type="pill-color" iconTrailing={XClose}>
+            {f.value}
+          </BadgeWithIcon>
         </button>
       ))}
-      <button
-        type="button"
-        className="px-2 border-none bg-transparent font-body text-xs
-          text-tertiary underline underline-offset-[3px] cursor-pointer hover:text-primary"
-        onClick={onClearAll}
-      >
+      <Button color="link-gray" size="sm" onClick={onClearAll}>
         Clear all
-      </button>
+      </Button>
     </div>
   );
 }

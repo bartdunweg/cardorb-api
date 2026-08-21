@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "@untitledui/icons";
 import CardDetail from "@/components/custom/CardDetail";
 import CardNav from "@/components/custom/CardNav";
 import Button from "@/components/custom/Button";

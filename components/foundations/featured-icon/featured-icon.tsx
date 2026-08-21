@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0062
 import type { FC, ReactNode, Ref } from "react";
 import { isValidElement } from "react";
 import { cx, sortCx } from "@/utils/cx";

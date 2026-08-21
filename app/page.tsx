@@ -4,18 +4,18 @@ import { Button } from "@/components/base/buttons/button";
 import { Badge } from "@/components/base/badges/badges";
 import {
   ArrowUpRight,
-  BookOpen,
-  Camera,
+  BookOpen01,
+  Camera01,
   Check,
-  Download,
-  Layers,
+  Download01,
+  LayersThree01,
+  Phone01,
   Plus,
-  Search,
-  Share2,
-  Smartphone,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
+  SearchLg,
+  Share01,
+  TrendUp01,
+  Wallet01,
+} from "@untitledui/icons";
 import Card from "@/components/custom/Card";
 import MarketingFooter from "@/components/custom/MarketingFooter";
 import Navbar from "@/components/custom/Navbar";
@@ -119,17 +119,17 @@ const FAQ = [
 
 const FEATURES = [
   {
-    icon: Layers,
+    icon: LayersThree01,
     title: "Every set has its place",
     body: "Keep your cards in the order a binder makes sense: by set, era and the gaps you are still looking for.",
   },
   {
-    icon: Wallet,
+    icon: Wallet01,
     title: "Value without the guesswork",
     body: "Cardmarket prices in euros travel with your cards, so the total is always there when you want to see it.",
   },
   {
-    icon: Search,
+    icon: SearchLg,
     title: "The card you mean, quickly",
     body: "Search by name or narrow by set, rarity, type and era — whether it is owned or still on the wishlist.",
   },
@@ -139,23 +139,23 @@ const FEATURES = [
     body: "Type a name, pick the print, and it is in the binder — no barcode and no hunting through menus.",
   },
   {
-    icon: BookOpen,
+    icon: BookOpen01,
     title: "Every Pokémon, indexed",
     body: "A living Pokédex beside the binder: what is owned for each Pokémon, and what is still missing.",
   },
   {
-    icon: TrendingUp,
+    icon: TrendUp01,
     title: "Value over time",
     body: "Every snapshot of the collection's worth is kept, so you can see the total move, not just where it stands.",
   },
   {
-    icon: Camera,
+    icon: Camera01,
     title: "Scan to add, on the way",
     body: "Point a phone at a card and let it find the match.",
     comingSoon: "iOS & Android",
   },
   {
-    icon: Download,
+    icon: Download01,
     title: "Take it with you",
     body: "Export the whole collection to CSV whenever you want it outside Card Orb.",
     comingSoon: true,
@@ -252,7 +252,7 @@ export default async function Home() {
                 cannot cross into a client one. The icons are children here and
                 the pill lays them out the same way. */}
             <Badge type="pill-color" color="gray" size="md" className="gap-1.5">
-              <Smartphone size={13} strokeWidth={1.8} aria-hidden="true" />
+              <Phone01 size={13} strokeWidth={1.8} aria-hidden="true" />
               The iPhone app is on its way
               <ArrowUpRight size={13} strokeWidth={1.8} aria-hidden="true" />
             </Badge>
@@ -392,7 +392,7 @@ export default async function Home() {
             [@media(max-width:640px)]:min-h-[370px]"
           >
             <span className={featureIcon}>
-              <BookOpen size={22} strokeWidth={1.7} aria-hidden="true" />
+              <BookOpen01 size={22} strokeWidth={1.7} aria-hidden="true" />
             </span>
             <span className="absolute top-8 right-8 text-tertiary font-body text-xs">01</span>
             <h3 className={`max-w-[13ch] mt-8 text-display-xs ${cardHeading}`}>
@@ -442,7 +442,7 @@ export default async function Home() {
             [@media(max-width:800px)]:max-w-[430px]"
           >
             <span className={featureIcon}>
-              <Share2 size={20} strokeWidth={1.7} aria-hidden="true" />
+              <Share01 size={20} strokeWidth={1.7} aria-hidden="true" />
             </span>
             <span className="grid gap-1 min-w-0">
               <small className="text-tertiary font-body text-xs">Your collection link</small>

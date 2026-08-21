@@ -33,6 +33,22 @@ const ALLOWED = [
   "lib/design/contrast.ts",
 ];
 
+/**
+ * Vendored Untitled UI, which this rule is not for.
+ *
+ * ADR-0062 says who owns which code: the rules exist to keep *authored* code
+ * honest, and the authoring happens in app/, lib/ and components/custom/. The
+ * vendored trees carry hundreds of raw hexes — grid-check.tsx alone is a
+ * generated SVG pattern with 364 of them — and rewriting those to tokens would
+ * be exactly the per-file patching that ADR ended.
+ */
+const VENDORED = [
+  "components/application/",
+  "components/base/",
+  "components/foundations/",
+  "components/shared-assets/",
+];
+
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
     if (name === "node_modules" || name === ".next" || name.startsWith(".")) continue;
@@ -44,7 +60,13 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe("colours are not written down twice", () => {
-  const files = [...walk("app"), ...walk("lib")].filter((f) => !ALLOWED.some((a) => f.endsWith(a)));
+  // components/ is walked too. It used not to be, and that was the whole blind
+  // spot: every component this app draws moved out of app/ into
+  // components/custom/, so the guard was watching a directory the components
+  // had left.
+  const files = [...walk("app"), ...walk("lib"), ...walk("components")].filter(
+    (f) => !ALLOWED.some((a) => f.endsWith(a)) && !VENDORED.some((v) => f.startsWith(v)),
+  );
 
   for (const file of files) {
     const source = readFileSync(file, "utf8");

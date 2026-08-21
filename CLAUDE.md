@@ -1,4 +1,4 @@
-<!-- STANDARDS:BEGIN v0.14.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.22.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
@@ -42,7 +42,7 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 |---|---|
 | User reacts, criticises, or states a preference | Use the `log-feedback` workflow before acting |
 | A non-obvious choice between real alternatives | Use the `record-decision` workflow |
-| A user-visible change ships | Changelog entry + fragment in `changelog.d/`, and refresh any outward-facing text it makes stale — README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md`, a brief, or a record |
+| A user-visible change ships | A fragment in `changelog.d/`, never a hand-edit of the changelog — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md`, a brief, or a record. A project that ships no user-visible releases has neither file, and that is correct — do not create them |
 | Session starts on an existing project | Read `STATE.md` first |
 | Session ends | Update `STATE.md` so the next session starts oriented |
 | A build or code change is complete | Run `scripts/verify.sh`, then `build-quality` |
@@ -73,8 +73,8 @@ private, not to write a diplomatic record.
   Never present a guessed rationale as fact.
 - Creating new shared files is fine; **editing an existing shared file is the one case
   where you flag it first**, because a parallel worktree is probably editing it too.
-- Never hand-edit the changelog; add a fragment in `changelog.d/`. Projects that ship no
-  user-visible releases have neither, and that is correct — do not create them.
+- Before choosing a skill, a library, or an MCP, read `~/.local/share/dev-standards/references/`:
+  `skill-routing.md` says which skills a request should wake, plus libraries, MCPs, and baselines.
 - On React or Tailwind work, search Untitled UI (MCP) before writing a component; Context7 if it is down.
 
 <!-- STANDARDS:END -->

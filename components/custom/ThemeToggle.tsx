@@ -1,6 +1,7 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Moon01, Sun } from "@untitledui/icons";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
 import { useTheme } from "@/components/custom/ThemeProvider";
 
 /**
@@ -13,19 +14,16 @@ export default function ThemeToggle() {
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
 
+  // Icon-only and borderless: `tertiary` is the one colour in their vocabulary
+  // that draws no fill and no ring until it is pointed at, which is what this
+  // slot in the nav needs — it sits beside a text link, not beside a button.
   return (
-    <button
-      type="button"
-      onClick={toggle}
+    <UntitledButton
+      color="tertiary"
+      size="sm"
+      iconLeading={isDark ? Sun : Moon01}
+      onPress={toggle}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className="grid place-items-center w-8 h-8 rounded-full text-secondary
-        transition-colors duration-150 ease-out hover:text-primary"
-    >
-      {isDark ? (
-        <Sun size={17} strokeWidth={1.75} aria-hidden="true" />
-      ) : (
-        <Moon size={17} strokeWidth={1.75} aria-hidden="true" />
-      )}
-    </button>
+    />
   );
 }

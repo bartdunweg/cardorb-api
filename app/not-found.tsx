@@ -1,8 +1,7 @@
-import Link from "next/link";
 import SigninShell, { SigninOr } from "@/components/custom/SigninShell";
 import { FormNote } from "@/components/custom/FormField";
 import { APP_NAME } from "../lib/core/config";
-import { untitledButton } from "@/components/custom/untitledButtonClasses";
+import Button from "@/components/custom/Button";
 
 /**
  * What a URL that is not a page looks like.
@@ -25,16 +24,12 @@ export default function NotFound() {
         collection.
       </FormNote>
       <SigninOr aria-hidden="true">or</SigninOr>
-      <Link
-        href="/"
-        className={untitledButton({
-          color: "primary",
-          size: "lg",
-          className: "w-full justify-center",
-        })}
-      >
+      {/* The component, not its classes. A server component may *render* a
+          client component; what it cannot do is import a value out of one,
+          which is the whole reason the recipe was ever copied. */}
+      <Button href="/" color="primary" size="lg" className="w-full justify-center">
         Go to {APP_NAME}
-      </Link>
+      </Button>
     </SigninShell>
   );
 }

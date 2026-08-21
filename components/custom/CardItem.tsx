@@ -2,7 +2,7 @@
 
 import { memo, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import Tag from "@/components/custom/Tag";
+import { Badge } from "@/components/base/badges/badges";
 import { highScan } from "@/lib/core/cards";
 import type { CardField } from "@/components/custom/cards-fields";
 import type { OwnedCard } from "@/lib/core/cards";
@@ -385,19 +385,22 @@ const CardItem = memo(function CardItem({
           {fields.has("rarity") && (
             <span className="flex flex-wrap gap-1 mt-1">
               {card.variants.map((v) => (
-                <Tag
+                <Badge
                   key={`${v.rarity}-${v.owned}`}
-                  className={
-                    v.owned
-                      ? "[background:color-mix(in_srgb,var(--color-label)_7%,transparent)] text-xs text-secondary"
-                      : // Wanted rather than held: an outline instead of a fill, so
-                        // the difference survives being read in greyscale too.
-                        "bg-transparent border border-dashed border-primary text-xs text-tertiary"
-                  }
+                  size="sm"
+                  color="gray"
+                  // Held is filled, wanted is not. Their two badge types carry
+                  // that distinction already — `pill-color` has a background,
+                  // `modern` is the page colour inside a ring — so it still
+                  // survives being read in greyscale, which is the whole point
+                  // of not saying it in colour alone. The outline used to be
+                  // dashed; a ring cannot be, and fill-versus-none is the part
+                  // that was doing the work.
+                  type={v.owned ? "pill-color" : "modern"}
                 >
                   {v.rarity ?? "Unknown"}
                   {!v.owned && <span className="sr-only"> (on the wishlist)</span>}
-                </Tag>
+                </Badge>
               ))}
             </span>
           )}

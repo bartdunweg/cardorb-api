@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { SearchLg, XClose } from "@untitledui/icons";
 import Modal from "@/components/custom/Modal";
 import { MAX, type CardFields } from "@/lib/core/collection-row";
 import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/ptcg-search";
@@ -443,12 +443,12 @@ export default function CardAddDialog({
             {mode === "quick" ? (
               <div className="relative">
                 {/* `InputBase` carries the leading icon, so the absolutely
-                    positioned `<Search>` that used to sit here is gone. The
+                    positioned `<SearchLg>` that used to sit here is gone. The
                     clear button below stays outside it — their trailing slot
                     is for a tooltip or the invalid icon, not an action. */}
                 <InputBase
                   ref={searchInputRef}
-                  icon={Search}
+                  icon={SearchLg}
                   size="lg"
                   type="search"
                   wrapperClassName="rounded-2xl"
@@ -467,7 +467,7 @@ export default function CardAddDialog({
                     className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center
                       w-7 h-7 rounded-full text-tertiary hover:text-primary cursor-pointer"
                   >
-                    <X size={16} strokeWidth={1.75} />
+                    <XClose size={16} strokeWidth={1.75} />
                   </button>
                 )}
               </div>
@@ -684,6 +684,12 @@ export default function CardAddDialog({
                 {selected.setName} · #{selected.number}
               </span>
             </div>
+            {/* Still a plain <button> wearing their recipe, and the one place
+                left in this file that is. The focus management above needs a
+                ref on the real element, and the vendored Button is typed as a
+                plain call signature — its props carry no `ref`, so there is no
+                way to reach the node without patching vendored code, which
+                ADR-0062 keeps for crashes rather than convenience. */}
             <button
               ref={changeButtonRef}
               type="button"

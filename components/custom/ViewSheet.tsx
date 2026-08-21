@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Settings2 } from "lucide-react";
+import { Sliders02 } from "@untitledui/icons";
 import { Sheet, sheetApplyButtonClassName } from "@/components/custom/Sheet";
 import ViewOptions, { type ViewOptionsProps } from "@/components/custom/ViewOptions";
 import { untitledButton } from "@/components/custom/untitledButtonClasses";
@@ -36,7 +36,7 @@ export default function ViewSheet(props: ViewOptionsProps) {
         aria-haspopup="dialog"
         aria-label="View options"
       >
-        <Settings2 size={16} strokeWidth={1.75} aria-hidden="true" />
+        <Sliders02 size={16} strokeWidth={1.75} aria-hidden="true" />
         <span>View</span>
       </button>
 

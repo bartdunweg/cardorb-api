@@ -2,9 +2,9 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { animate } from "motion";
-import { X } from "lucide-react";
+import { XClose } from "@untitledui/icons";
 import { SPRING_MODAL, DUR_NORMAL, DUR_SLOW, prefersReducedMotion } from "@/lib/core/motion";
-import { untitledIconButton } from "@/components/custom/untitledButtonClasses";
+import { Button as UntitledButton } from "@/components/base/buttons/button";
 
 /**
  * Hold the page still while a dialog is over it.
@@ -332,29 +332,32 @@ export default function Modal({
           covers the overlay too, so the whole screen becomes the dialog and the
           click-outside-to-close target sits inside the thing it closes. */}
       <div
-        className={`modal relative border border-secondary [background:rgba(255,255,255,0.8)] dark:[background:rgba(34,34,34,0.8)] ${className}`.trim()}
+        // bg-glass-solid rather than the two hand-written rgba() values this
+        // carried (white at 0.8, #222 at 0.8). They were the only colours left
+        // in product code that named themselves instead of a token, and what
+        // they were describing is exactly what --color-glass-solid is for. The
+        // values shift slightly with it: 0.9 rather than 0.8 in light, and
+        // opaque rgb(37,37,39) rather than 0.8 in dark.
+        className={`modal relative border border-secondary bg-glass-solid ${className}`.trim()}
         ref={modalRef}
         style={{ opacity: 0 }}
         role="dialog"
         aria-modal="true"
         aria-label={label}
       >
-        <button
-          // `btn btn--icon` lived in the middle of this string, which is why the
-          // sweep for `className="btn` walked past it. ADR-0018 is that failure
-          // written down once already; this is it again, found by grepping for
-          // the token rather than for the pattern.
-          className={untitledIconButton({
-            color: "secondary",
-            className: `modal-close absolute top-6 right-6 z-10 cursor-pointer
+        {/* `btn btn--icon` lived in the middle of this string, which is why the
+            sweep for `className="btn` walked past it. ADR-0018 is that failure
+            written down once already; this is it again, found by grepping for
+            the token rather than for the pattern. */}
+        <UntitledButton
+          color="secondary"
+          className={`modal-close absolute top-6 right-6 z-10 cursor-pointer
               transition duration-150 ease-in-out
-              hover:scale-[1.06]`,
-          })}
-          onClick={requestClose}
+              hover:scale-[1.06]`}
+          iconLeading={XClose}
+          onPress={requestClose}
           aria-label="Close"
-        >
-          <X size={20} strokeWidth={1.75} />
-        </button>
+        />
         <div className="modal-scroll [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {children}
         </div>

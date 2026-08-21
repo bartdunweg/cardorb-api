@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0062
 "use client";
 
 import { Plus } from "@untitledui/icons";

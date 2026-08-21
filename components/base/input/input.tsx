@@ -1,4 +1,3 @@
-// @ts-nocheck — vendored, see ADR-0061
 "use client";
 
 import { type ComponentType, type HTMLAttributes, type ReactNode, type Ref, createContext, useContext, useState } from "react";
