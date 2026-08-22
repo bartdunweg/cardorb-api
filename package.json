@@ -13,7 +13,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.vendored.json",
     "format": "prettier --write .",
-    "check": "npx prettier --check . && npm run typecheck && npm run test && npm run lint",
+    "check": "npx prettier --check . && node scripts/extract-theme-values.mjs --check && npm run typecheck && npm run test && npm run lint",
+    "tokens": "node scripts/extract-theme-values.mjs",
     "visual": "playwright test",
     "visual:baseline": "playwright test --update-snapshots",
     "ui:add": "node scripts/untitled-add.mjs"
@@ -45,6 +46,8 @@
     "prettier": "^3.9.5",
     "server-only": "^0.0.1",
     "tailwindcss": "^4.3.3",
+    "tailwindcss-animate": "^1.0.7",
+    "tailwindcss-react-aria-components": "^2.2.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   }

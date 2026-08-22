@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { colour } from "../lib/design/theme-values";
+import { colour } from "../lib/design/theme-values.generated";
 import { APP_NAME, APP_TAGLINE_SHORT } from "../lib/core/config";
 import { OG_IMAGE_ALT, OG_IMAGE_SIZE, OG_IMAGE_TYPE } from "../lib/core/og";
 

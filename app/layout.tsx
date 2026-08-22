@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { colour } from "../lib/design/theme-values";
+import "../styles/globals.css";
+import { colour } from "../lib/design/theme-values.generated";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/custom/ThemeProvider";

@@ -1,5 +1,5 @@
 import { extendTailwindMerge } from "tailwind-merge";
-import { radiusNames } from "@/lib/design/theme-values";
+import { radiusNames } from "@/lib/design/theme-values.generated";
 
 /**
  * ── Why the radius scale has to be listed here ─────────────────────────────

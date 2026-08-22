@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { colour } from "../lib/design/theme-values";
+import { colour } from "../lib/design/theme-values.generated";
 import { APP_NAME, APP_TAGLINE } from "../lib/core/config";
 
 /**
