@@ -1,0 +1,3 @@
+- Each group on the Settings screen now carries a short description under its heading and a divider between groups, so Profile, Account, Import, Appearance and "Delete this account" read as clear, separate blocks.
+- On the Appearance picker, the mode you have chosen is now marked with a checkmark, not by colour alone.
+- Saving a setting — and any error — is now announced to screen readers instead of appearing silently.

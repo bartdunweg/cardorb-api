@@ -80,7 +80,7 @@ export default function DeleteAccountSettings({ username }: { username: string }
         >
           {busy ? "Deleting…" : "Delete everything"}
         </Button>
-        {said && <SettingsSaid>{said}</SettingsSaid>}
+        <SettingsSaid>{said ?? ""}</SettingsSaid>
       </SettingsPanel>
     </SettingsPanels>
   );

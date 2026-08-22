@@ -132,6 +132,9 @@ export default function ImportSettings({ history }: { history: Run[] }) {
         <Button disabled={!csv || busy === "csv"} onClick={look}>
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
         </Button>
+        {/* The read/import result lives inside this panel — always mounted so the
+            live region announces it — rather than floating as a bare grid cell. */}
+        <SettingsSaid>{said ?? ""}</SettingsSaid>
       </SettingsPanel>
 
       {preview && (
@@ -168,8 +171,6 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           </Button>
         </SettingsPanel>
       )}
-
-      {said && <SettingsSaid>{said}</SettingsSaid>}
 
       {history.length > 0 && (
         <SettingsPanel>

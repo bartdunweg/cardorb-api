@@ -4,6 +4,12 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-08-23
+
+- Each group on the Settings screen now carries a short description under its heading and a divider between groups, so Profile, Account, Import, Appearance and "Delete this account" read as clear, separate blocks.
+- On the Appearance picker, the mode you have chosen is now marked with a checkmark, not by colour alone.
+- Saving a setting — and any error — is now announced to screen readers instead of appearing silently.
+
 ## 2026-08-22
 
 - Request size limits now count bytes rather than characters. Anything you sent

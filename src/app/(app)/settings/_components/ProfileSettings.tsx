@@ -168,7 +168,9 @@ export default function ProfileSettings({
             taken, so it cannot be used to find out you are here.
           </SettingsHint>
         )}
-        {saying.isPublic && <SettingsSaid>{saying.isPublic}</SettingsSaid>}
+        {/* Always mounted, empty when there is nothing to say: a live region
+            inserted at the same moment as its text is not announced. */}
+        <SettingsSaid>{saying.isPublic ?? ""}</SettingsSaid>
       </SettingsPanel>
 
       <SettingsPanel>
@@ -206,7 +208,7 @@ export default function ProfileSettings({
           <Button type="submit" disabled={busy === "displayName"}>
             {busy === "displayName" ? "Saving…" : "Save"}
           </Button>
-          {saying.displayName && <SettingsSaid>{saying.displayName}</SettingsSaid>}
+          <SettingsSaid>{saying.displayName ?? ""}</SettingsSaid>
         </form>
       </SettingsPanel>
 
@@ -238,7 +240,7 @@ export default function ProfileSettings({
           >
             {busy === "username" ? "Saving…" : "Save"}
           </Button>
-          {saying.username && <SettingsSaid>{saying.username}</SettingsSaid>}
+          <SettingsSaid>{saying.username ?? ""}</SettingsSaid>
         </form>
       </SettingsPanel>
     </SettingsPanels>

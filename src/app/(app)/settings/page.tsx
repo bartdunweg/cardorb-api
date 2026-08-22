@@ -62,7 +62,11 @@ export default async function SettingsPage() {
       {/* gap-8 between groups against the panels' own gap-4 inside them: the
           grouping has to be readable as grouping when it is all one scroll. */}
       <div className="flex flex-col gap-8">
-        <SettingsSection id="profile" title="Profile">
+        <SettingsSection
+          id="profile"
+          title="Profile"
+          description="Your public page and what anyone with the link can see."
+        >
           {profile ? (
             <ProfileSettings initial={profile} />
           ) : (
@@ -71,15 +75,27 @@ export default async function SettingsPage() {
           )}
         </SettingsSection>
 
-        <SettingsSection id="account" title="Account">
+        <SettingsSection
+          id="account"
+          title="Account"
+          description="Your sign-in email and password."
+        >
           <AccountSettings email={viewer.email} />
         </SettingsSection>
 
-        <SettingsSection id="import" title="Import">
+        <SettingsSection
+          id="import"
+          title="Import"
+          description="Bring a collection in from a CSV file."
+        >
           <ImportSettings history={history as never} />
         </SettingsSection>
 
-        <SettingsSection id="appearance" title="Appearance">
+        <SettingsSection
+          id="appearance"
+          title="Appearance"
+          description="How Card Orb looks on this device."
+        >
           <SettingsPanels>
             <AppearanceSettings />
           </SettingsPanels>
@@ -88,7 +104,11 @@ export default async function SettingsPage() {
         {/* Last, and on its own. Inside the Account group it sat between an
             email field and a theme picker — a red-bordered door marked
             "everything goes" in the middle of ordinary traffic. */}
-        <SettingsSection id="delete" title="Delete this account">
+        <SettingsSection
+          id="delete"
+          title="Delete this account"
+          description="Permanently remove your account and everything in it."
+        >
           <DeleteAccountSettings username={viewer.username} />
         </SettingsSection>
       </div>

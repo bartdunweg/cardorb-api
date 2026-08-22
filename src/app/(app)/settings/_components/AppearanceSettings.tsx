@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "@untitledui-pro/icons/line";
 import { useTheme, type Mode } from "@/components/shared/ThemeProvider";
 import { Radio as AriaRadio } from "react-aria-components";
 import { RadioGroup } from "@/components/base/radio-buttons/radio-buttons";
@@ -47,10 +48,16 @@ export default function AppearanceSettings() {
         {OPTIONS.map((o) => (
           <AriaRadio key={o.value} value={o.value} className="group cursor-pointer">
             <span
-              className="block p-3 rounded-btn border border-primary text-center
+              className="relative block p-3 rounded-btn border border-primary text-center
                 group-data-[selected]:border-brand group-data-[selected]:ring-1 group-data-[selected]:ring-brand group-data-[selected]:ring-inset
                 group-data-[focus-visible]:outline-2 group-data-[focus-visible]:outline-offset-2 group-data-[focus-visible]:outline-brand"
             >
+              {/* A checkmark marks the chosen card, so selection is not signalled
+                  by colour alone (WCAG 1.4.1). */}
+              <Check
+                aria-hidden
+                className="absolute right-2 top-2 size-4 text-brand opacity-0 transition-opacity motion-reduce:transition-none group-data-[selected]:opacity-100"
+              />
               <span className="block text-primary font-medium">{o.label}</span>
               <SettingsHint>{o.hint}</SettingsHint>
             </span>

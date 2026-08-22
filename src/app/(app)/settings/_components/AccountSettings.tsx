@@ -88,7 +88,7 @@ export default function AccountSettings({ email }: { email: string }) {
           <Button type="submit" disabled={busy === "email" || !newEmail.trim()}>
             {busy === "email" ? "Sending…" : "Change address"}
           </Button>
-          {said.email && <SettingsSaid>{said.email}</SettingsSaid>}
+          <SettingsSaid>{said.email ?? ""}</SettingsSaid>
         </form>
       </SettingsPanel>
 

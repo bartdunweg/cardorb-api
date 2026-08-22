@@ -1,6 +1,9 @@
+"use client";
+
 import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
 import { InputBase } from "@/components/base/input/input";
 import { ToggleBase } from "@/components/base/toggle/toggle";
+import { SectionHeader } from "@/components/application/section-headers/section-headers";
 
 /**
  * Shared pieces of every /settings screen: a panel is a card, a hint explains
@@ -28,18 +31,34 @@ export function SettingsPanels({ className, ...rest }: HTMLAttributes<HTMLDivEle
  */
 export function SettingsSection({
   title,
+  description,
   id,
   children,
 }: {
   title: string;
+  description?: string;
   id: string;
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={`${id}-heading`}>
-      <h2 id={`${id}-heading`} className="text-xl font-title-strong text-primary m-0 mb-4">
-        {title}
-      </h2>
+      {/* Untitled UI's SectionHeader gives each group a heading, a one-line
+          description and the divider that separates the five groups on one
+          scroll. This module is "use client", so the compound component
+          resolves normally (the reason the earlier server-rendered attempt
+          500'd). Our own <h2> keeps the app register + font-title-strong
+          weight; SectionHeader.Heading bakes in font-semibold, which we may not
+          edit out of the vendored file (R-UI-003). */}
+      <SectionHeader.Root className="mb-6">
+        <SectionHeader.Group>
+          <div className="flex flex-1 flex-col gap-1">
+            <h2 id={`${id}-heading`} className="m-0 text-xl font-title-strong text-primary">
+              {title}
+            </h2>
+            {description && <SectionHeader.Subheading>{description}</SectionHeader.Subheading>}
+          </div>
+        </SectionHeader.Group>
+      </SectionHeader.Root>
       {children}
     </section>
   );
@@ -78,9 +97,23 @@ export function SettingsHint({ className, ...rest }: HTMLAttributes<HTMLParagrap
   return <p className={cx(settingsHintClassName, className)} {...rest} />;
 }
 
-/** The one-line result of a save/change, replacing itself as the state moves. */
+/**
+ * The one-line result of a save/change, replacing itself as the state moves.
+ *
+ * A live region by default, and meant to be mounted before the result arrives
+ * (render it with an empty string, not conditionally): a region inserted at the
+ * same moment as its text is not announced by a screen reader, so the save it
+ * reports is silent. `role`/`aria-live` stay overridable via `...rest`.
+ */
 export function SettingsSaid({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx("mt-2 text-sm text-primary", className)} {...rest} />;
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={cx("mt-2 text-sm text-primary", className)}
+      {...rest}
+    />
+  );
 }
 
 export const SettingsInput = forwardRef<
