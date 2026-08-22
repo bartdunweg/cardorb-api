@@ -21,7 +21,6 @@
 # Rows lifted verbatim out of Postgres so they can be pasted back. Reformatting
 # them would be editing a record of what the database held.
 docs/*.json
-app/styles/tailwind.generated.css
 
 # --- Not ours -----------------------------------------------------------
 # Untitled UI's vendored components, written by `npx untitledui add` and
@@ -31,9 +30,10 @@ app/styles/tailwind.generated.css
 # them means every add produces a diff that is half reformatting, which is how a
 # real upstream change gets lost in the noise. ADR-0061.
 src/components/
-src/utils/
-# One file, not the directory: three hooks this project wrote live beside it.
-src/hooks/use-breakpoint.ts
+# One file each, not the directory: cx.ts is ours and lives beside
+# is-react-component.ts, and three hooks this project wrote live beside
+# use-resize-observer.ts.
+src/utils/is-react-component.ts
 src/hooks/use-resize-observer.ts
 
 # Supabase's auth email templates are HTML that Supabase renders and its own

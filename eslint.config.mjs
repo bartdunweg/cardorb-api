@@ -57,8 +57,9 @@ const config = [
     /**
      * Untitled UI's vendored components, exempt.
      *
-     * `components/`, `src/utils/` and `src/hooks/` are written by `npx untitledui add`,
-     * not by anybody here, and re-written wholesale on the next update. Holding
+     * `components/` and the named files in `src/utils/` and `src/hooks/` are
+     * written by `npx untitledui add`, not by anybody here, and re-written
+     * wholesale on the next update. Holding
      * them to this project's rules means either editing every file after every
      * add — and `scripts/untitled-add.mjs` already re-applies three such
      * patches — or turning a rule off for the whole repository because a
@@ -66,19 +67,24 @@ const config = [
      *
      * Neither is right. The rules exist to keep *authored* code honest, and
      * `app/` and `lib/` are where the authoring happens. What the exemption
-     * covers is real and worth knowing: `use-breakpoint.ts` calls setState in an
-     * effect body, and four components use <img> where this project uses
-     * next/image. Both are defensible in a library that cannot assume Next.
+     * covers is real and worth knowing: four components use <img> where this
+     * project uses next/image, which is defensible in a library that cannot
+     * assume Next. The other example here used to be `use-breakpoint.ts` calling
+     * setState in an effect body; that file was deleted in c38dacf and the
+     * sentence outlived it by a week.
      *
      * The same argument, in the same shape, is why `@ts-nocheck` goes on top of
      * these files — TypeScript has no per-directory options, so that one has to
      * be a patch. ADR-0061 has both.
      */
-    /* src/hooks/ is named file by file rather than as a directory, because it
-       is the one mixed tree: Untitled UI's use-breakpoint.ts sits beside three
-       hooks this project wrote, and those three must be linted. A directory
-       glob here would exempt them silently — the worst kind of exemption,
-       because nothing reports a rule that stopped running.
+    /* src/hooks/ and src/utils/ are named file by file rather than as
+       directories, because they are the two mixed trees: Untitled UI's
+       use-resize-observer.ts sits beside three hooks this project wrote, and
+       is-react-component.ts beside cx.ts, which is ours. A directory glob here
+       would exempt those silently — the worst kind of exemption, because
+       nothing reports a rule that stopped running. src/utils/** *was* such a
+       glob until it was noticed; use-breakpoint.ts was listed here for a while
+       after it had been deleted, which is the same failure one step on.
 
        If `npm run ui:add` writes another hook, add it to this list. The
        wrapper prints what it changed, which is where you will see it. */
@@ -93,8 +99,7 @@ const config = [
       "src/components/application/**",
       "src/components/foundations/**",
       "src/components/shared-assets/**",
-      "src/utils/**",
-      "src/hooks/use-breakpoint.ts",
+      "src/utils/is-react-component.ts",
       "src/hooks/use-resize-observer.ts",
     ],
   },

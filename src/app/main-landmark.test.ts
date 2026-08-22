@@ -116,6 +116,10 @@ const ALSO_DRAWS: Record<string, string> = {
   "src/app/(app)/loading.tsx":
     "the Suspense fallback for every signed-in route: the skip link needs a " +
     "target while the collection is still loading, in the place it will be after",
+  "src/app/error.tsx":
+    "the boundary for every public route: it replaces the page, so it has to " +
+    "draw the nav and the landmark the page would have drawn. Nothing else out " +
+    "here does — the root layout deliberately draws neither",
 };
 
 /**
@@ -189,10 +193,10 @@ describe("the main landmark", () => {
     ).toEqual([]);
   });
 
-  it("the loading fallback draws one too", () => {
-    // Called out separately because it is the easiest to forget: it is not a
-    // route, it has no entry in DRAWN_BY, and it is on screen for exactly as
-    // long as the slow await in the group's layout takes.
+  it("the files that stand in for a screen draw one too", () => {
+    // Called out separately because these are the easiest to forget: neither is
+    // a route, neither has an entry in DRAWN_BY, and each replaces a real screen
+    // for exactly as long as something is loading or broken.
     for (const file of Object.keys(ALSO_DRAWS)) expect(has(file), ALSO_DRAWS[file]).toBe(true);
   });
 

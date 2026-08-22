@@ -33,10 +33,16 @@ export type ValueSnapshot = {
  * Adding a card does not add a reading — the series only moves when the
  * snapshot script runs — so sharing the cards tag would drop a still-correct
  * cache on every edit. And the script writes from plain node, out of band, where
- * revalidateTag does not exist, so it could not drop either tag anyway. Nothing
- * invalidates this today; the one-hour TTL is what buys freshness, which means a
- * fresh point can be up to an hour late on the dashboard. For a series recorded
- * nightly that is fine, and this tag is the hook for the day there is a "snapshot
- * now" button to make it not fine.
+ * revalidateTag does not exist, so it could not drop either tag anyway.
+ *
+ * That last part was true when it was written and is not any more: the snapshot
+ * cron runs as a route handler now, not from plain node, and it revalidates this
+ * tag itself — api/v1/cron/snapshot/route.ts, beside the write. So a fresh point
+ * reaches the dashboard immediately rather than on the one-hour TTL.
+ *
+ * The paragraph is kept rather than deleted because it explains why the tag is
+ * separate from cardsTag(), which is still the reason it exists. Note that
+ * cardPricesTag in ./collection.ts is the one now in the position this used to
+ * describe: declared, applied, and dropped by nothing.
  */
 export const valueHistoryTag = (userId: string) => `value-history:${userId}`;

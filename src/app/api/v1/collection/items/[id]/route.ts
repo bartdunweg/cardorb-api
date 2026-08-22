@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardPatch } from "@/lib/core/collection-row";
 import { updateRow, deleteRow } from "@/lib/storage/collection";
 import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
+import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
 /**
@@ -30,7 +31,10 @@ import { bearer } from "@/lib/api/viewer";
  * either — cards_update/cards_delete are `using (user_id = auth.uid())`, so a
  * caller can only ever reach their own row, whatever id they name.
  */
-const MAX_BODY_BYTES = 4_096;
+/* The cap is BODY_LIMIT.patch in lib/api/body.ts — "a patch: a few inventory
+   fields", the same 4,096 this file used to declare for itself. See the note in
+   ../../../cards/route.ts: readJsonBody() was extracted from these two handlers
+   and neither was moved onto it. */
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
@@ -42,32 +46,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { id } = await params;
 
-  const declared = Number(req.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+  const read = await readJsonBody(req, BODY_LIMIT.patch);
+  if (read.kind === "too-large") {
     return NextResponse.json(
       { error: "Payload too large" },
       { status: 413, headers: readHeaders(req) },
     );
   }
-
-  let body: unknown;
-  try {
-    const raw = await req.text();
-    if (raw.length > MAX_BODY_BYTES) {
-      return NextResponse.json(
-        { error: "Payload too large" },
-        { status: 413, headers: readHeaders(req) },
-      );
-    }
-    body = JSON.parse(raw);
-  } catch {
+  if (read.kind === "invalid") {
     return NextResponse.json(
       { error: "Invalid request" },
       { status: 400, headers: readHeaders(req) },
     );
   }
 
-  const result = validateCardPatch(body);
+  const result = validateCardPatch(read.body);
   if (result.kind === "invalid") {
     return NextResponse.json({ error: result.error }, { status: 400, headers: readHeaders(req) });
   }

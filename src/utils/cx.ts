@@ -23,12 +23,12 @@ import { radiusNames } from "@/lib/design/theme-values.generated";
  * same bug again one rung up.
  */
 const twMerge = extendTailwindMerge({
-    extend: {
-        theme: {
-            text: ["display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
-            radius: [...radiusNames],
-        },
+  extend: {
+    theme: {
+      text: ["display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
+      radius: [...radiusNames],
     },
+  },
 });
 
 /**
@@ -42,6 +42,11 @@ export const cx = twMerge;
  * sort the classes inside style objects which is not supported
  * by the Tailwind IntelliSense by default.
  */
-export function sortCx<T extends Record<string, string | number | Record<string, string | number | Record<string, string | number>>>>(classes: T): T {
-    return classes;
+export function sortCx<
+  T extends Record<
+    string,
+    string | number | Record<string, string | number | Record<string, string | number>>
+  >,
+>(classes: T): T {
+  return classes;
 }
