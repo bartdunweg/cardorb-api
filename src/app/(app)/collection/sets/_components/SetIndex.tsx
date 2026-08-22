@@ -82,9 +82,7 @@ export default function SetIndex({ sets }: { sets: CardSet[] }) {
       </div>
       {groups.map((group) => (
         <section key={group.era}>
-          <h2 className="text-display-sm font-semibold text-primary m-0 mb-4">
-            {group.label}
-          </h2>
+          <h2 className="text-display-sm font-semibold text-primary m-0 mb-4">{group.label}</h2>
 
           {/* Auto-fill rather than a column count: the tile has a natural
               width and the row takes as many as fit. A fixed count needs a

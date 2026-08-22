@@ -104,16 +104,12 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
           <EmptyState.Header>
             <EmptyState.FeaturedIcon color="gray" icon={SearchLg} />
           </EmptyState.Header>
-          <EmptyState.Description>
-            No set matches “{query.trim()}”.
-          </EmptyState.Description>
+          <EmptyState.Description>No set matches “{query.trim()}”.</EmptyState.Description>
         </EmptyState>
       ) : (
         groups.map((group) => (
           <section key={group.series} className="flex flex-col gap-4">
-            <h2 className="text-display-sm font-semibold text-primary m-0">
-              {group.series}
-            </h2>
+            <h2 className="text-display-sm font-semibold text-primary m-0">{group.series}</h2>
 
             {/* Auto-fill rather than a column count, for the reason SetIndex
                 gives: .cards-main is a container, so a fixed count would need
@@ -149,15 +145,11 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
                             className="max-h-full max-w-[70%] object-contain object-left"
                           />
                         ) : (
-                          <span className="text-xs font-semibold text-tertiary">
-                            {set.name}
-                          </span>
+                          <span className="text-xs font-semibold text-tertiary">{set.name}</span>
                         )}
                       </span>
 
-                      <span className="text-sm font-semibold text-primary">
-                        {set.name}
-                      </span>
+                      <span className="text-sm font-semibold text-primary">{set.name}</span>
 
                       <span className="text-xs text-secondary tabular-nums">
                         {set.total ? `${n(set.ownedCount)} of ${n(set.total)}` : "Cards unknown"}

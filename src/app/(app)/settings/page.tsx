@@ -5,11 +5,11 @@ import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
 import { ownProfile } from "@/lib/storage/postgres";
 import { recentImports } from "@/lib/storage/imports";
-import AccountSettings from "@/components/shared/AccountSettings";
-import AppearanceSettings from "@/components/shared/AppearanceSettings";
-import DeleteAccountSettings from "@/components/shared/DeleteAccountSettings";
-import ImportSettings from "@/components/shared/ImportSettings";
-import ProfileSettings from "@/components/shared/ProfileSettings";
+import AccountSettings from "./_components/AccountSettings";
+import AppearanceSettings from "./_components/AppearanceSettings";
+import DeleteAccountSettings from "./_components/DeleteAccountSettings";
+import ImportSettings from "./_components/ImportSettings";
+import ProfileSettings from "./_components/ProfileSettings";
 import { SettingsHint, SettingsPanels, SettingsSection } from "@/components/shared/SettingsPanel";
 
 /**

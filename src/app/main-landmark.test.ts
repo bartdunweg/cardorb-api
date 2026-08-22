@@ -91,16 +91,16 @@ const DRAWN_BY: Record<string, string> = {
   // Every signed-in route: AppShell's content pane is the landmark, and it has
   // to be that pane rather than the grid around it, because the rail and the
   // tab bar are its siblings.
-  "/collection": "src/app/(app)/AppShell.tsx",
-  "/collection/browse": "src/app/(app)/AppShell.tsx",
-  "/collection/browse/:param": "src/app/(app)/AppShell.tsx",
-  "/collection/card/:param": "src/app/(app)/AppShell.tsx",
-  "/collection/era/:param": "src/app/(app)/AppShell.tsx",
-  "/collection/set/:param": "src/app/(app)/AppShell.tsx",
-  "/collection/sets": "src/app/(app)/AppShell.tsx",
-  "/dashboard": "src/app/(app)/AppShell.tsx",
-  "/settings": "src/app/(app)/AppShell.tsx",
-  "/wishlist": "src/app/(app)/AppShell.tsx",
+  "/collection": "src/app/(app)/_components/AppShell.tsx",
+  "/collection/browse": "src/app/(app)/_components/AppShell.tsx",
+  "/collection/browse/:param": "src/app/(app)/_components/AppShell.tsx",
+  "/collection/card/:param": "src/app/(app)/_components/AppShell.tsx",
+  "/collection/era/:param": "src/app/(app)/_components/AppShell.tsx",
+  "/collection/set/:param": "src/app/(app)/_components/AppShell.tsx",
+  "/collection/sets": "src/app/(app)/_components/AppShell.tsx",
+  "/dashboard": "src/app/(app)/_components/AppShell.tsx",
+  "/settings": "src/app/(app)/_components/AppShell.tsx",
+  "/wishlist": "src/app/(app)/_components/AppShell.tsx",
 };
 
 /**

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import PasswordForm from "@/components/shared/PasswordForm";
+import PasswordForm from "./_components/PasswordForm";
 import SigninShell from "@/components/shared/SigninShell";
 import { FormNote } from "@/components/shared/FormField";
 import { currentViewer } from "@/lib/api/viewer";

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ForgottenForm from "@/components/shared/ForgottenForm";
+import ForgottenForm from "./_components/ForgottenForm";
 import SigninShell from "@/components/shared/SigninShell";
 import { APP_NAME } from "@/lib/core/config";
 

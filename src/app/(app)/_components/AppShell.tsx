@@ -4,10 +4,10 @@ import { useCallback, useMemo, useState } from "react";
 import type { CardSet } from "@/lib/core/cards";
 import type { CatalogueMatch } from "@/lib/core/ptcg-search";
 import { groupByEra } from "@/lib/core/eras";
-import AppSidebar from "@/components/shared/AppSidebar";
-import AppTabBar from "@/components/shared/AppTabBar";
+import AppSidebar from "./AppSidebar";
+import AppTabBar from "./AppTabBar";
 import CardAddDialog from "@/components/shared/CardAddDialog";
-import { CollectionProvider, type CollectionValue } from "./CollectionContext";
+import { CollectionProvider, type CollectionValue } from "../CollectionContext";
 import { cardsMainClassName } from "@/components/shared/cardsPageClasses";
 
 /**

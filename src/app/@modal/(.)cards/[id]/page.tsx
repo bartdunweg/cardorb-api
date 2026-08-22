@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import CardModal from "@/components/shared/CardModal";
+import CardModal from "./_components/CardModal";
 import CardDetail from "@/components/shared/CardDetail";
 import CardNav from "@/components/shared/CardNav";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
