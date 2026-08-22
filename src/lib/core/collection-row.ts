@@ -365,10 +365,24 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
   const b = (body ?? {}) as Record<string, unknown>;
   const patch: CardPatch = {};
 
-  if ("owned" in b) {
-    if (typeof b.owned !== "boolean")
-      return { kind: "invalid", error: "owned must be true or false." };
-    patch.owned = b.owned;
+  // The three flags, checked the same way, in one place rather than three
+  // copies of the same four lines. Not coerced: `"false"` and `0` are both
+  // truthy-adjacent enough that a coercing check would silently invert them,
+  // and a PATCH names the field it is changing, so a wrong type is worth
+  // saying out loud.
+  //
+  // One thing did change when these three were gathered here, and it is small
+  // enough to be worth writing down rather than discovering: this returns the
+  // *first* error it finds, and `excluded` and `isFavorite` used to be checked
+  // after `finish` and `quantity`. A body with two invalid fields at once is
+  // now told about the flag rather than the finish. Every single-field answer
+  // is identical, which is every answer a working client can produce.
+  for (const key of ["owned", "excluded", "isFavorite"] as const) {
+    if (key in b) {
+      if (typeof b[key] !== "boolean")
+        return { kind: "invalid", error: `${key} must be true or false.` };
+      patch[key] = b[key];
+    }
   }
   if ("finish" in b) {
     // null is allowed and meaningful: it puts the row back to "nobody has
@@ -380,22 +394,12 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
       return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
     patch.finish = b.finish as Finish | null;
   }
-  if ("excluded" in b) {
-    if (typeof b.excluded !== "boolean")
-      return { kind: "invalid", error: "excluded must be true or false." };
-    patch.excluded = b.excluded;
-  }
   if ("quantity" in b) {
     const q = Number(b.quantity);
     if (!Number.isInteger(q) || q < 1) {
       return { kind: "invalid", error: "Quantity must be a whole number of at least 1." };
     }
     patch.quantity = q;
-  }
-  if ("isFavorite" in b) {
-    if (typeof b.isFavorite !== "boolean")
-      return { kind: "invalid", error: "isFavorite must be true or false." };
-    patch.isFavorite = b.isFavorite;
   }
   for (const key of ["condition", "grade"] as const) {
     if (key in b) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX, rowFromDraft, validateCardDraft } from "./collection-row";
+import { MAX, rowFromDraft, validateCardDraft, validateCardPatch } from "./collection-row";
 
 const ok = (body: unknown) => {
   const result = validateCardDraft(body);
@@ -108,5 +108,109 @@ describe("rowFromDraft", () => {
   it("carries the wishlist flag across as owned", () => {
     const row = rowFromDraft(ok({ name: "P", set: "B", collection: false }));
     expect(row.owned).toBe(false);
+  });
+});
+
+const patched = (body: unknown) => {
+  const result = validateCardPatch(body);
+  if (result.kind !== "ok") throw new Error(`expected valid, got: ${result.error}`);
+  return result.patch;
+};
+
+const refused = (body: unknown) => {
+  const result = validateCardPatch(body);
+  return result.kind === "invalid" ? result.error : null;
+};
+
+/**
+ * Written before the refactor below it, not after, and that is the point.
+ *
+ * `validateCardPatch` had no tests at all while sitting behind a live PATCH
+ * route (`/api/v1/collection/items/[id]`). These characterise what it already
+ * does — including the two places it deliberately disagrees with
+ * `validateCardDraft` — so that anything the refactor changed would have shown
+ * up as a red test rather than as a field that quietly stopped saving.
+ */
+describe("validateCardPatch", () => {
+  it("touches only the keys that were sent", () => {
+    // updateRow() in postgres.ts builds its SQL from exactly this object, so a
+    // key that appears here is a column that gets written. Filling in defaults
+    // for fields nobody mentioned would overwrite them with guesses.
+    expect(patched({ owned: false })).toEqual({ owned: false });
+    expect(Object.keys(patched({ notes: "mint" }))).toEqual(["notes"]);
+  });
+
+  it("refuses an empty patch rather than writing nothing", () => {
+    expect(refused({})).toMatch(/nothing to change/i);
+    expect(refused(null)).toMatch(/nothing to change/i);
+    expect(refused({ unknownField: 1 })).toMatch(/nothing to change/i);
+  });
+
+  it("wants a real boolean for each of the three flags", () => {
+    for (const key of ["owned", "excluded", "isFavorite"]) {
+      expect(patched({ [key]: true })).toEqual({ [key]: true });
+      expect(patched({ [key]: false })).toEqual({ [key]: false });
+      // Not coerced. "false" and 0 are the two that would silently invert.
+      expect(refused({ [key]: "true" })).toMatch(new RegExp(`${key} must be true or false`));
+      expect(refused({ [key]: 0 })).toMatch(new RegExp(`${key} must be true or false`));
+    }
+  });
+
+  it("reports the flag first when a body is invalid in two ways at once", () => {
+    // Pinned rather than assumed. Gathering the three flags into one loop moved
+    // them ahead of finish and quantity, so this is the one answer the refactor
+    // changed — only reachable by a client sending two broken fields together.
+    expect(refused({ excluded: "no", finish: "shiny" })).toMatch(/excluded must be/);
+  });
+
+  it("refuses an unknown finish, unlike a draft", () => {
+    // The deliberate disagreement with validateCardDraft: a draft turns an odd
+    // finish into null so an import does not lose the card, but a PATCH is
+    // somebody editing one field on purpose, so a typo is told.
+    expect(patched({ finish: null })).toEqual({ finish: null });
+    expect(refused({ finish: "shiny" })).toMatch(/finish must be null/);
+  });
+
+  it("keeps quantity a whole number of at least one", () => {
+    expect(patched({ quantity: "3" }).quantity).toBe(3);
+    expect(refused({ quantity: 0 })).toMatch(/at least 1/);
+    expect(refused({ quantity: 1.5 })).toMatch(/at least 1/);
+  });
+
+  it("cleans condition and grade, and lets null clear them", () => {
+    expect(patched({ condition: "  Near Mint  " }).condition).toBe("Near Mint");
+    // A newline becomes a space; runs of spaces are left alone. cleanText only
+    // flattens line breaks, which is the whole of its difference from trim().
+    expect(patched({ condition: "Near\nMint" }).condition).toBe("Near Mint");
+    expect(patched({ grade: null }).grade).toBeNull();
+    // Whitespace only is the same as clearing it.
+    expect(patched({ condition: "   " }).condition).toBeNull();
+    expect(refused({ condition: 7 })).toMatch(/condition must be text or null/);
+    expect(refused({ grade: "g".repeat(MAX.conditionOrGrade + 1) })).toMatch(/too long/);
+  });
+
+  it("trims notes but does not collapse them, unlike condition and grade", () => {
+    // The second deliberate disagreement, and the reason notes is not in the
+    // same loop as condition and grade: cleanText() turns every line break into
+    // a space, which would flatten a note somebody wrote over two lines into
+    // one. notes uses trim(), so the breaks survive.
+    expect(patched({ notes: "  two\n\nlines  " }).notes).toBe("two\n\nlines");
+    expect(patched({ notes: "   " }).notes).toBeNull();
+    expect(refused({ notes: 7 })).toMatch(/notes must be text or null/);
+    expect(refused({ notes: "n".repeat(MAX.notes + 1) })).toMatch(/too long/);
+  });
+
+  it("takes a price of zero but not a negative one", () => {
+    expect(patched({ purchasePrice: 0 }).purchasePrice).toBe(0);
+    expect(patched({ purchasePrice: null }).purchasePrice).toBeNull();
+    expect(refused({ purchasePrice: -1 })).toMatch(/not valid/);
+    expect(refused({ purchasePrice: "free" })).toMatch(/not valid/);
+  });
+
+  it("checks a purchase date parses", () => {
+    expect(patched({ purchaseDate: "2026-01-31" }).purchaseDate).toBe("2026-01-31");
+    expect(patched({ purchaseDate: null }).purchaseDate).toBeNull();
+    expect(refused({ purchaseDate: "yesterday" })).toMatch(/not valid/);
+    expect(refused({ purchaseDate: 20260131 })).toMatch(/date string or null/);
   });
 });
