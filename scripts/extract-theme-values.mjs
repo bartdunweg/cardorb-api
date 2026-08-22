@@ -34,7 +34,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 
-const THEME = "styles/theme.css";
+const THEME = "src/styles/theme.css";
 const TAILWIND = "node_modules/tailwindcss/theme.css";
 const OUT = "lib/design/theme-values.generated.ts";
 

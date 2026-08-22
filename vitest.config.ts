@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 
 /**
  * There was no config here at all, and the defaults were right until the day
@@ -21,7 +22,25 @@ export default defineConfig({
    * first test needed to import one.
    */
   resolve: {
-    alias: { "@": fileURLToPath(new URL(".", import.meta.url)) },
+    /* Two entries in the same order tsconfig.json uses, and for the same
+       reason: while the src/ migration runs, a module may live under either.
+       Vite takes the first alias whose prefix matches, so `find` is a function
+       rather than a string — it has to try src/ and fall back to the root. */
+    alias: [
+      {
+        find: /^@\/(.*)$/,
+        replacement: "$1",
+        customResolver(id) {
+          for (const base of ["src/", ""]) {
+            for (const ext of ["", ".ts", ".tsx", ".css", "/index.ts", "/index.tsx"]) {
+              const p = fileURLToPath(new URL(base + id + ext, import.meta.url));
+              if (existsSync(p)) return p;
+            }
+          }
+          return null;
+        },
+      },
+    ],
   },
   test: {
     exclude: [

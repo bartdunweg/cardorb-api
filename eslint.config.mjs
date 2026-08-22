@@ -57,7 +57,7 @@ const config = [
     /**
      * Untitled UI's vendored components, exempt.
      *
-     * `components/`, `utils/` and `hooks/` are written by `npx untitledui add`,
+     * `components/`, `src/utils/` and `src/hooks/` are written by `npx untitledui add`,
      * not by anybody here, and re-written wholesale on the next update. Holding
      * them to this project's rules means either editing every file after every
      * add — and `scripts/untitled-add.mjs` already re-applies three such
@@ -74,7 +74,7 @@ const config = [
      * these files — TypeScript has no per-directory options, so that one has to
      * be a patch. ADR-0061 has both.
      */
-    ignores: ["components/**", "utils/**", "hooks/**"],
+    ignores: ["components/**", "src/utils/**", "src/hooks/**"],
   },
 ];
 

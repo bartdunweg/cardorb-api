@@ -12,7 +12,7 @@ import { pageCardsClassName } from "@/components/custom/cardsPageClasses";
 // written — they rendered the markup and none of the 3,199 lines that style
 // it — which is a mistake that only shows up if you look at the page rather
 // than at the status code, and every route answered 200.
-import "../styles/poke-holo.css";
+import "@/styles/poke-holo.css";
 
 /**
  * Everything you see once you are signed in.

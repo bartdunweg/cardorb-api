@@ -31,8 +31,8 @@ app/styles/tailwind.generated.css
 # them means every add produces a diff that is half reformatting, which is how a
 # real upstream change gets lost in the noise. ADR-0061.
 components/
-utils/
-hooks/
+src/utils/
+src/hooks/
 
 # Supabase's auth email templates are HTML that Supabase renders and its own
 # tooling round-trips; public/ holds assets generated in the iOS repo.

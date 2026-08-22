@@ -35,8 +35,8 @@
     "components/foundations/**/*.tsx",
     "components/shared-assets/**/*.ts",
     "components/shared-assets/**/*.tsx",
-    "hooks/**/*.ts",
-    "utils/**/*.ts"
+    "src/hooks/**/*.ts",
+    "src/utils/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }
