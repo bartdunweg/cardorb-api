@@ -32,8 +32,24 @@ const supabaseHost = (() => {
     return "";
   }
 })();
+/**
+ * Every host a card picture may come from, and nothing else.
+ *
+ * `images.scrydex.com` is pokemontcg.io's newer CDN, not a third party we chose:
+ * its API hands out image URLs on both hosts and has been moving sets across one
+ * at a time. Measured on 2026-08-22 — of 348 set logo and symbol URLs the API
+ * returned, 340 were on `images.pokemontcg.io` and 8 on `images.scrydex.com`,
+ * all of them recent sets. Those 8 were simply blocked: /collection/browse threw
+ * 68 CSP errors and drew blank tiles, in production, for everyone.
+ *
+ * Adding it does widen what the page may load. That is the honest cost, and it
+ * is the same cost already accepted for the two hosts beside it: an allow-list
+ * of picture sources this app asks for by name, none of which may run a script.
+ * The alternative is a browse page that loses a set every few weeks.
+ */
 const IMG_SRC =
   `img-src 'self' data: blob: https://assets.tcgdex.net https://images.pokemontcg.io ` +
+  `https://images.scrydex.com ` +
   `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com${supabaseHost ? ` ${supabaseHost}` : ""}`;
 
 /**
