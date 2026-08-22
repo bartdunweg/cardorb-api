@@ -61,12 +61,20 @@ This session, on branch `bartdunweg/apply-standards-v3`:
   `font-semibold` (R-STYLE-003) that R-UI-003 forbids editing out. The full-page settings
   templates were **not** adopted: all eight are standalone `layout: sidebar` pages that bring their
   own navigation plus a tiptap editor and qr codes — a conflict with the `(app)` shell, not an
-  adoption. Two free, structural opportunities remain, each a partial restructure with real design
-  choices, best on their own branch: `application/filter-bar` + `filter-dropdown-menu` could take
-  over the outer structure of the filter cluster (`FilterMenu/Sheet/Options/Chips`,
-  `ViewMenu/Options/Sheet`) while keeping the staging logic; `sidebar-navigation-base`'s `NavItem`
-  anatomy could replace the bespoke rows in `CardsSidebar.tsx` (desktop rail only, so the sliding
-  pill and per-width logic survive).
+  adoption.
+- **`filter-bar` (free) adopted as the toolbar container.** `FilterBar.Root` now wraps the
+  collection toolbar in `CardsView.tsx` (children stay flat, so the responsive wrap rules, the
+  search flex-basis and the CSS-only menu/sheet swap all hold). Its `filter-dropdown-menu` half was
+  a query-row builder (field/operator/value) — a different interaction model from the faceted
+  toggles here — so it was removed rather than left as dead vendored code. No behaviour or visual
+  changed. Notably, Untitled's own filter dropdown uses react-aria `DialogTrigger`, not
+  `Dropdown.Root` menu semantics, which validates `MenuPopover`'s choice.
+- **`sidebar-navigation-base` NavItem does not map — not adopted.** Card Orb's rail row
+  (`CardsSidebar.tsx:437`) is a `<button aria-pressed>` pane selector with a bespoke `::after`
+  sliding pill deliberately shared with the tab bar as one visual language; Untitled's `NavItem` is
+  an `<a href>` route link with its own filled active background. Forcing it would downgrade the
+  semantics, split the rail/tab-bar language, and vendor a 25-file nav shell — a product-degrading
+  change with no clean subset. Left bespoke on purpose unless the owner decides otherwise.
 - **R-STYLE-016 enforcement is narrower than its wording.** `contrast.test.ts` measures one
   control-border token and one placeholder; the rule says "every control boundary and both
   placeholders". Either add the second assertion or narrow the rule — a rule-vs-code gap.
