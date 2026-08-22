@@ -74,7 +74,7 @@ const config = [
      * these files — TypeScript has no per-directory options, so that one has to
      * be a patch. ADR-0061 has both.
      */
-    ignores: ["components/**", "src/utils/**", "src/hooks/**"],
+    ignores: ["src/components/**", "src/utils/**", "src/hooks/**"],
   },
 ];
 

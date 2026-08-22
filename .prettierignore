@@ -30,7 +30,7 @@ app/styles/tailwind.generated.css
 # this project authors, and the authoring happens in app/ and lib/. Formatting
 # them means every add produces a diff that is half reformatting, which is how a
 # real upstream change gets lost in the noise. ADR-0061.
-components/
+src/components/
 src/utils/
 src/hooks/
 

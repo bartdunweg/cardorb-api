@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { Button } from "@/components/base/buttons/button";
 import ViewerPill from "@/components/custom/ViewerPill";
 import { navLink } from "@/components/custom/marketingClasses";
-import { currentViewer } from "../../lib/api/viewer";
-import { ownerLabel } from "../../lib/core/owner";
+import { currentViewer } from "@/lib/api/viewer";
+import { ownerLabel } from "@/lib/core/owner";
 
 /**
  * The navbar's right-hand slot on the two public marketing pages, and the only

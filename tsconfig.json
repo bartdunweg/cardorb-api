@@ -48,10 +48,10 @@
   "//": "The vendored Untitled UI trees are checked by tsconfig.vendored.json instead, which keeps `strict` but drops the four flags this project adds on top. See ADR-0070; do not fold them back in here.",
   "exclude": [
     "node_modules",
-    "components/application/**",
-    "components/base/**",
-    "components/foundations/**",
-    "components/shared-assets/**",
+    "src/components/application/**",
+    "src/components/base/**",
+    "src/components/foundations/**",
+    "src/components/shared-assets/**",
     "src/hooks/**",
     "src/utils/**"
   ]

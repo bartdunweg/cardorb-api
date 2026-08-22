@@ -75,18 +75,18 @@ const DRAWN_BY: Record<string, string> = {
   "/app/ios": "app/app/ios/page.tsx",
   "/brand": "app/brand/page.tsx",
   "/cards/:param": "app/cards/[id]/page.tsx",
-  "/user/:param": "components/custom/CardsView.tsx",
+  "/user/:param": "src/components/custom/CardsView.tsx",
   "/welcome": "app/welcome/page.tsx",
 
   // The five door screens, all through one shell.
-  "/login": "components/custom/SigninShell.tsx",
-  "/signup": "components/custom/SigninShell.tsx",
-  "/password/forgotten": "components/custom/SigninShell.tsx",
-  "/settings/password": "components/custom/SigninShell.tsx",
+  "/login": "src/components/custom/SigninShell.tsx",
+  "/signup": "src/components/custom/SigninShell.tsx",
+  "/password/forgotten": "src/components/custom/SigninShell.tsx",
+  "/settings/password": "src/components/custom/SigninShell.tsx",
 
   // The two legal pages, likewise.
-  "/privacy": "components/custom/LegalPage.tsx",
-  "/terms": "components/custom/LegalPage.tsx",
+  "/privacy": "src/components/custom/LegalPage.tsx",
+  "/terms": "src/components/custom/LegalPage.tsx",
 
   // Every signed-in route: AppShell's content pane is the landmark, and it has
   // to be that pane rather than the grid around it, because the rail and the
