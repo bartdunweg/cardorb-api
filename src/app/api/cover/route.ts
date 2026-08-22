@@ -8,7 +8,7 @@ import { NextResponse } from "next/server";
  * load at all rather than merely failing to be sampled. Served from our own
  * origin the question never comes up, and the CSP needs nothing beyond 'self'.
  *
- * Only used where it is actually needed: lib/core/cards.ts rewrites a Limitless
+ * Only used where it is actually needed: lib/core/collection/cards.ts rewrites a Limitless
  * URL to this route and links every other source directly.
  *
  * Deliberately outside /v1. This is plumbing for the web tool's own <img> tags,

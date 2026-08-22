@@ -8,8 +8,8 @@ import { EmptyState } from "@/components/application/empty-state/empty-state";
 import Segmented from "@/components/shared/Segmented";
 import { useCollection } from "@/features/collection/CollectionContext";
 import { LOCALE } from "@/lib/core/config";
-import type { BrowseCard } from "@/lib/core/ownership";
-import type { CatalogueSet } from "@/lib/core/ptcg-browse";
+import type { BrowseCard } from "@/lib/core/collection/ownership";
+import type { CatalogueSet } from "@/lib/core/catalogue/ptcg-browse";
 
 /**
  * One whole set, with the cards you hold marked and the ones you do not still

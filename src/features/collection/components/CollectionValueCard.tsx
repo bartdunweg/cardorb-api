@@ -13,8 +13,8 @@ import { ChartActiveDot, ChartTooltipContent } from "@/components/application/ch
 import Card from "@/components/shared/Card";
 import { LOCALE } from "@/lib/core/config";
 import { euroWhole } from "@/lib/core/format";
-import { chartPoints, niceScale, timeTicks } from "@/lib/core/value-chart";
-import type { ValueSnapshot } from "@/lib/core/value-snapshot";
+import { chartPoints, niceScale, timeTicks } from "@/lib/core/collection/value-chart";
+import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
 
 /**
  * What your collection has been worth, as a line, on the dashboard.
@@ -79,7 +79,7 @@ const compactEuro = (n: number) =>
   Math.abs(n) >= 1000 ? `€${Math.round(n / 100) / 10}k` : euroWhole(n);
 
 export default function CollectionValueCard({ snapshots }: { snapshots: ValueSnapshot[] }) {
-  // The arithmetic lives in lib/core/value-chart.ts so it can be tested; null is
+  // The arithmetic lives in lib/core/collection/value-chart.ts so it can be tested; null is
   // "fewer than two readings", which is an account with no history yet.
   const points = chartPoints(snapshots);
   if (!points) return null;

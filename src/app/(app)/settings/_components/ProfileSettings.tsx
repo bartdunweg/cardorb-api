@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_URL } from "@/lib/core/config";
-import { MAX_DISPLAY_NAME } from "@/lib/core/account";
-import { ownerLabel } from "@/lib/core/owner";
+import { MAX_DISPLAY_NAME } from "@/lib/core/account/account";
+import { ownerLabel } from "@/lib/core/account/owner";
 import AvatarPicker from "@/features/account/components/AvatarPicker";
 import { useUsernameCheck, usernameSays } from "@/features/account/hooks/useUsernameCheck";
 import {
@@ -180,7 +180,7 @@ export default function ProfileSettings({
           }}
         >
           {/* The placeholder is the fallback, not a suggestion: ownerLabel()
-              in lib/core/owner.ts resolves an empty name to exactly this, so
+              in lib/core/account/owner.ts resolves an empty name to exactly this, so
               the field previews what the public page will say. */}
           <SettingsInput
             value={displayName}

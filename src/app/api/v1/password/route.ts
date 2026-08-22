@@ -3,7 +3,7 @@ import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
-import { MIN_PASSWORD } from "@/lib/core/account";
+import { MIN_PASSWORD } from "@/lib/core/account/account";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
 /** Requires a session already, so this only bounds an account hammering its own Auth calls. */

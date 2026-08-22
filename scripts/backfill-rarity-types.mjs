@@ -9,7 +9,7 @@
  * @supabase/supabase-js needs a native WebSocket, which Node 20 does not have.
  *
  * Matches each row to a TCGdex id the same way buildCollection() does in
- * lib/core/cards.ts — resolveSetIds() + fetchSet() + numberForms() to build a
+ * lib/core/collection/cards.ts — resolveSetIds() + fetchSet() + numberForms() to build a
  * byNumber index per set, then sameCard() as the same guard: "a number that
  * resolves to a different Pokémon means the numbering does not line up, and a
  * wrong scan is worse than a missing one" — the same call artwork makes.
@@ -17,7 +17,7 @@
  * this stays the one matching implementation rather than a second one that
  * drifts.
  *
- * Deliberately not routed through setCatalogue()/lib/core/catalogue.ts: that
+ * Deliberately not routed through setCatalogue()/lib/core/catalogue/catalogue.ts: that
  * wraps this same walk in unstable_cache, which needs a running Next.js
  * request context and throws ("incrementalCache missing") called from a bare
  * script. The pieces used below (resolveSetIds, fetchSet, numberForms) are
@@ -35,10 +35,10 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-import { resolveSetIds } from "../src/lib/core/catalogue.ts";
-import { fetchSet, json } from "../src/lib/core/tcgdex-client.ts";
+import { resolveSetIds } from "../src/lib/core/catalogue/catalogue.ts";
+import { fetchSet, json } from "../src/lib/core/catalogue/tcgdex-client.ts";
 import { numberForms, mapLimit } from "../src/lib/core/util.ts";
-import { sameCard } from "../src/lib/core/matching.ts";
+import { sameCard } from "../src/lib/core/catalogue/matching.ts";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const WORKLIST = `${ROOT}docs/rarity-type-backfill-corrections.md`;
@@ -177,7 +177,7 @@ for (const row of rows) {
 const matched = [];
 const unmatched = [];
 console.log(`Resolving ${bySet.size} sets against TCGdex…`);
-// Three at a time, matching the concurrency lib/core/cards.ts's own set walk
+// Three at a time, matching the concurrency lib/core/collection/cards.ts's own set walk
 // uses, for the same reason: TCGdex starts refusing requests well before 48
 // sets in flight at once.
 await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {

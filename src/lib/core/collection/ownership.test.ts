@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { canonNumber, markOwnership, ownershipIndex, ownershipOf, setCounts } from "./ownership";
 import type { CollectionRow } from "./collection-row";
-import type { CatalogueMatch } from "./ptcg-search";
-import type { CatalogueSet } from "./ptcg-browse";
+import type { CatalogueMatch } from "../catalogue/ptcg-search";
+import type { CatalogueSet } from "../catalogue/ptcg-browse";
 
 const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   id: "row-1",

@@ -2,9 +2,30 @@
 
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
-import type { DexEntry } from "@/lib/core/pokedex";
+import type { DexEntry } from "@/lib/core/collection/pokedex";
 import type { DexOwned } from "@/features/collection/components/cards-fields";
-import { normalise } from "@/lib/core/pokedex";
+import { normalise } from "@/lib/core/collection/pokedex";
+
+/**
+ * Which slots survive the toolbar. Out here rather than inside the component
+ * because it is the only decision this file makes, and reaching it through a
+ * render costs more than it proves.
+ */
+export function dexShown(entries: DexEntry[], query: string, owned: DexOwned) {
+  const q = normalise(query.trim());
+  return entries.filter((e) => {
+    // Owned and wishlist are not opposites and are deliberately allowed to
+    // overlap: a Pokémon can be in the binder in one printing and wanted in
+    // another, and that Pokémon is a true answer to both questions.
+    if (owned === "owned" && !e.owned) return false;
+    if (owned === "wishlist" && !e.cards.some((c) => !c.owned)) return false;
+    // Not owned is the gaps: no card of it at all, wanted or held.
+    if (owned === "missing" && e.cards.length) return false;
+    if (!q) return true;
+    // The number, too: "#25" and "25" are how half of a dex is searched.
+    return normalise(e.name).includes(q) || String(e.id) === q;
+  });
+}
 
 /**
  * The collection as a Pokédex: all 1,025 of them, and which ones the binder can
@@ -34,21 +55,7 @@ export default function CardsPokedex({
   /** Show me the cards of this Pokémon. */
   onPick: (name: string) => void;
 }) {
-  const shown = useMemo(() => {
-    const q = normalise(query.trim());
-    return entries.filter((e) => {
-      // Owned and wishlist are not opposites and are deliberately allowed to
-      // overlap: a Pokémon can be in the binder in one printing and wanted in
-      // another, and that Pokémon is a true answer to both questions.
-      if (owned === "owned" && !e.owned) return false;
-      if (owned === "wishlist" && !e.cards.some((c) => !c.owned)) return false;
-      // Not owned is the gaps: no card of it at all, wanted or held.
-      if (owned === "missing" && e.cards.length) return false;
-      if (!q) return true;
-      // The number, too: "#25" and "25" are how half of a dex is searched.
-      return normalise(e.name).includes(q) || String(e.id) === q;
-    });
-  }, [entries, query, owned]);
+  const shown = useMemo(() => dexShown(entries, query, owned), [entries, query, owned]);
 
   if (!shown.length) {
     return (

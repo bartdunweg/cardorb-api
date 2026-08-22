@@ -28,6 +28,8 @@ last-reviewed: 2026-08-22
 | R-STRUCT-003 | `components/shared/` does not name a feature. Shared code that knows a domain belongs to that domain. | enforced — `eslint.config.mjs` | A shared component that knows a domain is a domain component filed where nobody looks for it. |
 | R-STRUCT-004 | A component used by exactly one route lives in that route's `_components/`. | reviewed | A one-caller component parked in a shared folder invites a second caller that should never have existed. |
 | R-STRUCT-005 | `app/` is routing and data fetching. Logic lives in a feature or in `lib/`. | reviewed | Logic inside a route cannot be tested or reused without the route around it. |
+| R-STRUCT-006 | `lib/core/` is `catalogue/`, `collection/` and `account/`. Only what both domains need — config, env, format, og, slug, util — stays at its root. | reviewed | Thirty files on one heap gave no hint which of them a change could reach, and the three names are the ones the rules already use. |
+| R-STRUCT-007 | A decision inside a client component — a filter, a sort, a derived label — lives in a plain module beside it. The component keeps the state; the module says what it means. | reviewed | A decision reachable only by rendering the page is a decision nothing tests, which is how `src/features/` reached 30 files and zero tests. |
 
 ```
 src/app/<route>/              routing + data fetching
@@ -36,7 +38,8 @@ src/features/<domain>/        UI and hooks owned by one domain
 src/components/shared/        UI with no domain (Button, Modal, FormField)
 src/components/base|application|foundations|shared-assets/
                               vendored Untitled UI — CLI-managed
-src/lib/                      db, auth, clients, domain logic
+src/lib/core/<domain>/        domain logic, under the domain it belongs to
+src/lib/                      db, auth, clients
 src/hooks/ utils/ providers/ styles/
 ```
 
@@ -109,7 +112,7 @@ in the list.
 | ID | Rule | Enforcement | Why |
 |---|---|---|---|
 | R-API-001 | The three routes under `/api/v1/public/<username>/` are open on purpose, carry no prices, and each has its own rate limiter. Everything else under `/api/v1/` requires a viewer. | reviewed | They exist to serve the public profile; anything wider hands out a keyed API for free. |
-| R-API-002 | A public collection exposes exactly two variant fields: `rarity` and `owned`. It is an allow-list, so a new column is excluded by default. | enforced — `src/lib/core/cards-public.test.ts` | `stripPrices()` nulled the price and left `card.variants` untouched, publishing purchase price, date, condition and grade. |
+| R-API-002 | A public collection exposes exactly two variant fields: `rarity` and `owned`. It is an allow-list, so a new column is excluded by default. | enforced — `src/lib/core/collection/cards-public.test.ts` | `stripPrices()` nulled the price and left `card.variants` untouched, publishing purchase price, date, condition and grade. |
 | R-API-003 | No paid third-party services. Recurring cost is a hard constraint. | reviewed | Bart declined the same spend twice; the free tier's failure rate is the price of that. |
 | R-API-004 | A route that reads a JSON body bounds it with `readJsonBody()` and a named `BODY_LIMIT`. | enforced — `src/lib/api/body.test.ts` | Nothing else does: Next sets no limit and neither does `next.config.ts`. |
 | R-API-005 | Two validation idioms, and the boundary decides. `zod` at process boundaries that run once and must fail loudly — today only `lib/core/env.ts`. Hand-written narrowing for request bodies, after `readJsonBody()` has bounded them. | reviewed | A schema for three fields costs more to read than the three `typeof` checks it replaces. |

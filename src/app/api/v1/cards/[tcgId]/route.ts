@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCardDetail } from "@/lib/core/cards";
+import { getCardDetail } from "@/lib/core/collection/cards";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
 /**

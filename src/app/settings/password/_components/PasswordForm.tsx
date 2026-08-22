@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/hooks/useSession";
-import { MIN_PASSWORD } from "@/lib/core/account";
+import { MIN_PASSWORD } from "@/lib/core/account/account";
 import { FormError, FormForm } from "@/components/shared/FormField";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";

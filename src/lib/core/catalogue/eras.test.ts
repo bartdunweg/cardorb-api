@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { eraLabel, eraYears, groupByEra } from "./eras";
-import type { CardSet, OwnedCard } from "./cards";
+import type { CardSet, OwnedCard } from "../collection/cards";
 
 const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   key: "k",

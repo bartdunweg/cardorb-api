@@ -27,7 +27,7 @@
  */
 
 import { copiesHeld } from "./cards-stats";
-import { priceOf, holoPriceOf, shownPrice } from "./price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { CardPricePoint } from "./movers";

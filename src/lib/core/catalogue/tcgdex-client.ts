@@ -8,9 +8,9 @@
  * collection.ts so the eventual move to `use cache` stays a two-file change.
  * This file only ever runs inside a call that one of those two already cached.
  */
-import { DAY, mapLimit } from "./util";
-import { priceOf, holoPriceOf } from "./price-basis.mjs";
-import type { Price } from "./price-basis.mjs";
+import { DAY, mapLimit } from "../util";
+import { priceOf, holoPriceOf } from "../price-basis.mjs";
+import type { Price } from "../price-basis.mjs";
 
 export type TcgSet = { id: string; name: string };
 export type TcgCard = { id: string; localId?: string; name?: string; image?: string };

@@ -5,9 +5,9 @@ import CardDetail from "@/features/collection/components/CardDetail";
 import Button from "@/components/shared/Button";
 import { ChevronLeft } from "@untitledui-pro/icons/line";
 import CardNav from "@/features/collection/components/CardNav";
-import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/collection/cards";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCards } from "@/lib/core/collection";
+import { getCards } from "@/lib/core/collection/collection";
 import "@/styles/poke-holo.css";
 
 /**
@@ -30,8 +30,8 @@ export const dynamicParams = true;
  * questions and getting one answer, whichever of them rendered it first.
  *
  * The cost is smaller than it looks, because the expensive half moved. The
- * catalogue is cached and shared (lib/core/catalogue.ts) and the rows are cached
- * per person (lib/core/collection.ts), so what a request pays for now is the
+ * catalogue is cached and shared (lib/core/catalogue/catalogue.ts) and the rows are cached
+ * per person (lib/core/collection/collection.ts), so what a request pays for now is the
  * join, which is memory and milliseconds.
  *
  * A missing card answers 200 with the not-found page in the body — a soft 404,

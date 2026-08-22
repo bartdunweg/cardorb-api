@@ -2,9 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import CardModal from "./_components/CardModal";
 import CardDetail from "@/features/collection/components/CardDetail";
 import CardNav from "@/features/collection/components/CardNav";
-import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/collection/cards";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCards } from "@/lib/core/collection";
+import { getCards } from "@/lib/core/collection/collection";
 import "@/styles/poke-holo.css";
 
 /**
@@ -38,7 +38,7 @@ import "@/styles/poke-holo.css";
  * takes a moment", and it was not the animation.
  *
  * Neither holds now. The rows are cached per person and the catalogue is cached
- * for everybody (lib/core/collection.ts, lib/core/catalogue.ts), so what a
+ * for everybody (lib/core/collection/collection.ts, lib/core/catalogue/catalogue.ts), so what a
  * dynamic render pays for is the join.
  */
 export const dynamic = "force-dynamic";

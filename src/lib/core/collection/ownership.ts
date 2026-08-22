@@ -31,12 +31,12 @@
  * than a missing one — and the fix is the row, not the join.
  */
 
-import { sameCard } from "./matching";
-import { norm } from "./util";
-import { collectionSetNames, galleryParent, isGalleryNumber } from "./set-aliases";
+import { sameCard } from "../catalogue/matching";
+import { norm } from "../util";
+import { collectionSetNames, galleryParent, isGalleryNumber } from "../catalogue/set-aliases";
 import type { CollectionRow } from "./collection-row";
-import type { CatalogueMatch } from "./ptcg-search";
-import type { CatalogueSet } from "./ptcg-browse";
+import type { CatalogueMatch } from "../catalogue/ptcg-search";
+import type { CatalogueSet } from "../catalogue/ptcg-browse";
 
 /** What the viewer has of one catalogue card. */
 export type Ownership = {

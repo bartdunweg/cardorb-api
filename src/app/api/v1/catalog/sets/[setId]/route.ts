@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { findSet, setCards } from "@/lib/core/ptcg-browse";
-import { withTcgdexScans } from "@/lib/core/browse-artwork";
-import { getRows } from "@/lib/core/collection";
-import { markOwnership, ownershipIndex } from "@/lib/core/ownership";
+import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
+import { withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
+import { getRows } from "@/lib/core/collection/collection";
+import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 

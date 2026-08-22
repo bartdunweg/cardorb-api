@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { getCardsStats } from "@/lib/core/cards-stats";
-import type { ValueSnapshot } from "@/lib/core/value-snapshot";
-import { moversOf, type CardPricePoint } from "@/lib/core/movers";
+import { getCardsStats } from "@/lib/core/collection/cards-stats";
+import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
+import { moversOf, type CardPricePoint } from "@/lib/core/collection/movers";
 import { useCollection } from "@/features/collection/CollectionContext";
 import CardsDashboard from "@/features/collection/components/CardsDashboard";
 import Card from "@/components/shared/Card";

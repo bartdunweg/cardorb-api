@@ -28,7 +28,7 @@
  * asking, so it does the job across requests without ever answering one
  * person's question with another's data.
  *
- * The expensive half went somewhere else entirely: see lib/core/catalogue.ts,
+ * The expensive half went somewhere else entirely: see lib/core/catalogue/catalogue.ts,
  * where the facts about cards — the same for everybody — are cached once and
  * shared. What is left here is a database read and an in-memory join.
  */
@@ -39,11 +39,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCollection, type CardSet } from "./cards";
 import { cardsTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
-import { listRows, listSnapshots, publicProfile } from "../storage/collection";
-import { listCardPrices } from "../storage/postgres";
+import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
+import { listCardPrices } from "../../storage/postgres";
 import type { CardPricePoint } from "./movers";
-import type { PublicProfile } from "../storage/postgres";
-import { serverClient, userClient } from "../storage/supabase";
+import type { PublicProfile } from "../../storage/postgres";
+import { serverClient, userClient } from "../../storage/supabase";
 
 export type { ValueSnapshot } from "./value-snapshot";
 export { valueHistoryTag } from "./value-snapshot";

@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SearchLg, XClose } from "@untitledui-pro/icons/line";
 import Modal from "@/components/shared/Modal";
-import { MAX, type CardFields } from "@/lib/core/collection-row";
-import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/ptcg-search";
+import { MAX, type CardFields } from "@/lib/core/collection/collection-row";
+import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/catalogue/ptcg-search";
 import { modalCardAddClassName } from "@/features/collection/components/cardModalClasses";
 import { Button } from "@/components/base/buttons/button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
@@ -21,7 +21,7 @@ import { untitledButton } from "@/components/shared/untitledButtonClasses";
  * "1 invoerveld voor alles" (git history):
  * typing a name, a number, a set, or a type into the same box shows matching
  * cards live, via /api/v1/catalog/search (pokemontcg.io underneath — see
- * lib/core/ptcg-search.ts for why). Picking one fills Name, Number, Set,
+ * lib/core/catalogue/ptcg-search.ts for why). Picking one fills Name, Number, Set,
  * Rarity and Type from the catalogue; only Generation and the two toggles are
  * still typed by hand, because nothing indexes them.
  *

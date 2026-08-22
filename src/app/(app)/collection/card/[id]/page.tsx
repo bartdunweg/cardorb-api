@@ -4,9 +4,9 @@ import { ChevronLeft } from "@untitledui-pro/icons/line";
 import CardDetail from "@/features/collection/components/CardDetail";
 import CardNav from "@/features/collection/components/CardNav";
 import Button from "@/components/shared/Button";
-import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/collection/cards";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCards } from "@/lib/core/collection";
+import { getCards } from "@/lib/core/collection/collection";
 import "@/styles/poke-holo.css";
 
 /**

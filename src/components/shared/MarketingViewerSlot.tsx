@@ -4,7 +4,7 @@ import { Button } from "@/components/base/buttons/button";
 import ViewerPill from "@/components/shared/ViewerPill";
 import { navLink } from "@/components/shared/marketingClasses";
 import { currentViewer } from "@/lib/api/viewer";
-import { ownerLabel } from "@/lib/core/owner";
+import { ownerLabel } from "@/lib/core/account/owner";
 
 /**
  * The navbar's right-hand slot on the two public marketing pages, and the only

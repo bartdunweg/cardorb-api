@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
-import { getValueHistory } from "@/lib/core/collection";
+import { getValueHistory } from "@/lib/core/collection/collection";
 
 /**
  * What the caller's collection has been worth, oldest reading first.
@@ -10,7 +10,7 @@ import { getValueHistory } from "@/lib/core/collection";
  * unpriced}] }`, values in whole euros — because the iOS app reads it and this
  * change is about whose numbers those are, not what they look like. It used to
  * import lib/core/collection-value.generated.json and hand the identical series
- * to every authenticated caller; see getValueHistory in lib/core/collection.ts
+ * to every authenticated caller; see getValueHistory in lib/core/collection/collection.ts
  * for what that was and why it is a per-user table now.
  *
  * The bearer is forwarded for the same reason /v1/collection forwards it: row

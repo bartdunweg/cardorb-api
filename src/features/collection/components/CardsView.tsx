@@ -26,14 +26,21 @@ import ViewSheet from "@/features/collection/components/ViewSheet";
 import ViewMenu from "@/features/collection/components/ViewMenu";
 import FilterChips, { type ActiveFilter } from "@/features/collection/components/FilterChips";
 import { useSession } from "@/hooks/useSession";
-import { tally } from "@/lib/core/cards-stats";
-import { caught, getPokedex } from "@/lib/core/pokedex";
-import { shownPrice } from "@/lib/core/cards";
+import { tally } from "@/lib/core/collection/cards-stats";
+import { caught, getPokedex } from "@/lib/core/collection/pokedex";
+import { shownPrice } from "@/lib/core/collection/cards";
 import { type CardField, type DexOwned } from "@/features/collection/components/cards-fields";
-import type { CardSet, OwnedCard } from "@/lib/core/cards";
-import { eraLabel, eraYears, groupByEra } from "@/lib/core/eras";
+import {
+  VALUE_BANDS,
+  filterSets,
+  groupByYear,
+  setMeta,
+  vintageEras,
+} from "@/features/collection/components/cards-filter";
+import type { CardSet, OwnedCard } from "@/lib/core/collection/cards";
+import { eraLabel, eraYears, groupByEra } from "@/lib/core/catalogue/eras";
+import { possessive } from "@/lib/core/account/owner";
 import { LOCALE } from "@/lib/core/config";
-import { possessive } from "@/lib/core/owner";
 import {
   cardsCountClassName,
   cardsHeadClassName,
@@ -53,34 +60,6 @@ import {
   onlyWideClassName,
 } from "@/features/collection/components/cardsPageClasses";
 import Button from "@/components/shared/Button";
-
-/** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
-function releasedIn(iso: string | null) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? null
-    : d.toLocaleDateString(LOCALE, { month: "long", year: "numeric" });
-}
-
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-
-/**
- * What a set amounts to: how much of it is held, and when it came out.
- *
- * "of N" only while the two agree. A Notion set name can cover several TCGdex
- * subsets, and `total` is the base set's official count, so a set built from
- * subsets read "170 of 86" and looked broken. Where the pair cannot be true,
- * the count that certainly is gets shown alone.
- */
-function setMeta(set: CardSet) {
-  const held =
-    set.total && set.cards.length <= set.total
-      ? `${set.cards.length} of ${set.total}`
-      : `${set.cards.length} owned`;
-  const when = releasedIn(set.releaseDate);
-  return when ? `${held} · ${when}` : held;
-}
 
 /** How many sets are built at a time. See builtSets in CardsView. */
 const SET_STEP = 6;
@@ -126,7 +105,6 @@ const COLS = {
 const TILT_UNDER = 6;
 
 /** Vintage is the Wizards era. Decided on the sets' own dates, not a list. */
-const VINTAGE_BEFORE = 2010;
 
 /**
  * Which of the two this screen is.
@@ -180,7 +158,7 @@ export default function CardsView({
    * Passed in rather than read from a constant. It used to be OWNER_NAME out of
    * the environment, which was one name for the whole deployment, so a second
    * account's public page called its own cards somebody else's. The server
-   * resolves it with ownerLabel() (lib/core/owner.ts) from the profile the page
+   * resolves it with ownerLabel() (lib/core/account/owner.ts) from the profile the page
    * looked up anyway, and falls back to the username when no name was given.
    */
   ownerName?: string;
@@ -196,7 +174,7 @@ export default function CardsView({
    * way of knowing, and a stranger who is told a collection is empty when the
    * store was merely unreachable has been told something false about somebody
    * else. The owner screens know, because the layout's fetch reports whether it
-   * gave up (see getCollection in lib/core/collection.ts), and a new account
+   * gave up (see getCollection in lib/core/collection/collection.ts), and a new account
    * whose first screen claims an outage is the other half of the same bug.
    */
   emptyReason?: "outage" | "nothing-yet";
@@ -480,11 +458,7 @@ export default function CardsView({
   );
 
   /** Which eras count as vintage, from the earliest set each one appears in. */
-  const vintageEras = useMemo(() => {
-    const out = new Set<string>();
-    for (const [gen, [from]] of years) if (from < VINTAGE_BEFORE) out.add(gen);
-    return out;
-  }, [years]);
+  const vintage = useMemo(() => vintageEras(years), [years]);
 
   // Built from the whole collection rather than from what is currently shown,
   // so the lists do not shuffle and shrink underneath the pointer as boxes are
@@ -494,20 +468,6 @@ export default function CardsView({
     [all],
   );
   const typeOptions = useMemo(() => tally(all.map((c) => c.type)), [all]);
-  // Bands rather than a slider: a slider over a range this skewed (a €5.68
-  // median under a €3,250 top card) spends nine tenths of its travel on the
-  // last twenty cards. The edges are round numbers a collector already thinks
-  // in.
-  const VALUE_BANDS = useMemo(
-    () =>
-      [
-        { value: "Under €5", test: (n: number) => n < 5 },
-        { value: "€5 – €25", test: (n: number) => n >= 5 && n < 25 },
-        { value: "€25 – €100", test: (n: number) => n >= 25 && n < 100 },
-        { value: "€100 and up", test: (n: number) => n >= 100 },
-      ] as const,
-    [],
-  );
   const valueOptions = useMemo(
     () =>
       VALUE_BANDS.map((b) => ({
@@ -517,7 +477,7 @@ export default function CardsView({
           return n != null && b.test(n);
         }).length,
       })).filter((o) => o.count > 0),
-    [all, VALUE_BANDS],
+    [all],
   );
 
   /**
@@ -585,107 +545,38 @@ export default function CardsView({
     setPickedEras(new Set());
   }, []);
 
-  const matchesValue = useCallback(
-    (c: OwnedCard) => {
-      if (!pickedValues.size) return true;
-      const n = shownPrice(c.price);
-      // A card with no price cannot be in a band. It is not worth nothing, it
-      // is unknown, and putting it in "under €5" would be inventing a fact.
-      if (n == null) return false;
-      return VALUE_BANDS.some((b) => pickedValues.has(b.value) && b.test(n));
-    },
-    [pickedValues, VALUE_BANDS],
+  const filtered = useMemo(
+    () =>
+      // Wishlist is the one screen that runs over the cards you do not hold;
+      // the sets, the eras and My collection are all the ones you do. Scoped
+      // here rather than inside filterSets, so there is no view left where the
+      // two can be mixed by accident.
+      filterSets(onWishlist ? wishlistSets : collectionSets, {
+        query: deferred,
+        selected,
+        sort,
+        pickedEras,
+        pickedTypes,
+        pickedRarities,
+        pickedOwnership,
+        pickedValues,
+        vintage,
+      }),
+    [
+      onWishlist,
+      collectionSets,
+      wishlistSets,
+      deferred,
+      selected,
+      sort,
+      vintage,
+      pickedEras,
+      pickedTypes,
+      pickedRarities,
+      pickedOwnership,
+      pickedValues,
+    ],
   );
-
-  const matchesOwnership = useCallback(
-    (c: OwnedCard) =>
-      !pickedOwnership.size ||
-      (pickedOwnership.has("In the binder") && c.owned) ||
-      (pickedOwnership.has("On the wishlist") && !c.owned),
-    [pickedOwnership],
-  );
-
-  const filtered = useMemo(() => {
-    const q = norm(deferred.trim());
-    // Wishlist is the one screen that runs over the cards you do not hold; the
-    // sets, the eras and My collection are all the ones you do. Scoped here, at
-    // the source, rather than as one more condition inside the card filter, so
-    // there is no view left where the two can be mixed by accident.
-    const scope = onWishlist ? wishlistSets : collectionSets;
-    return scope
-      .map((set) => {
-        // "era:Base" keeps every set that holds a card from it; the cards
-        // themselves are narrowed below. A plain set name keeps just that set.
-        if (selected.startsWith("era:")) {
-          const want = selected.slice(4);
-          if (!set.cards.some((c) => c.gen === want)) return null;
-        } else if (
-          selected !== "all" &&
-          selected !== "wishlist" &&
-          selected !== "dashboard" &&
-          set.name !== selected
-        ) {
-          return null;
-        }
-        // A set whose name matches the search keeps all of its cards: typing
-        // "surging" is asking for the set, not for cards with that word in
-        // them. The tick boxes still apply on top of it.
-        const bySetName = q !== "" && norm(set.name).includes(q);
-        const cards = set.cards.filter((c) => {
-          if (selected.startsWith("era:") && c.gen !== selected.slice(4)) return false;
-          // Vintage or modern, decided by the set's own release date rather
-          // than by a list kept by hand. See vintageEras.
-          if (pickedEras.size) {
-            const isVintage = c.gen ? vintageEras.has(c.gen) : false;
-            if (!pickedEras.has(isVintage ? "Vintage" : "Modern")) return false;
-          }
-          if (pickedTypes.size && !pickedTypes.has(c.type ?? "")) return false;
-          if (!matchesOwnership(c)) return false;
-          if (!matchesValue(c)) return false;
-          if (pickedRarities.size && !c.variants.some((v) => pickedRarities.has(v.rarity ?? "")))
-            return false;
-          if (!q || bySetName) return true;
-          return (
-            norm(c.name).includes(q) ||
-            norm(c.number).includes(q) ||
-            norm(c.type ?? "").includes(q) ||
-            norm(c.gen ?? "").includes(q) ||
-            c.variants.some((v) => norm(v.rarity ?? "").includes(q))
-          );
-        });
-        if (!cards.length) return null;
-        // Sorted within the set, not across the collection: the page is a
-        // shelf of sets and flattening it would throw away the one thing the
-        // grouping tells you. A card with no price sorts last either way,
-        // unknown is not the cheapest.
-        const ordered =
-          sort === "set"
-            ? cards
-            : [...cards].sort((a, b) => {
-                const x = shownPrice(a.price);
-                const y = shownPrice(b.price);
-                if (x === null && y === null) return 0;
-                if (x === null) return 1;
-                if (y === null) return -1;
-                return sort === "value" ? y - x : x - y;
-              });
-        return { ...set, cards: ordered };
-      })
-      .filter(Boolean) as CardSet[];
-  }, [
-    onWishlist,
-    collectionSets,
-    wishlistSets,
-    deferred,
-    selected,
-    vintageEras,
-    pickedEras,
-    pickedRarities,
-    pickedTypes,
-    matchesOwnership,
-    matchesValue,
-    sort,
-  ]);
 
   const shown = useMemo(() => filtered.reduce((n, set) => n + set.cards.length, 0), [filtered]);
 
@@ -698,25 +589,7 @@ export default function CardsView({
    * the question a shelf sorted by time is actually asked. A set with no date
    * at TCGdex lands under Undated rather than under a guess.
    */
-  const yearGroups = useMemo(() => {
-    if (!onYear) return [];
-    const by = new Map<string, CardSet>();
-    for (const set of filtered) {
-      const year = set.releaseDate?.slice(0, 4) ?? "Undated";
-      const at = by.get(year);
-      if (at) at.cards.push(...set.cards);
-      else
-        by.set(year, {
-          ...set,
-          name: year,
-          logo: null,
-          logoSize: null,
-          total: null,
-          cards: [...set.cards],
-        });
-    }
-    return [...by.values()].sort((a, b) => b.name.localeCompare(a.name));
-  }, [onYear, filtered]);
+  const yearGroups = useMemo(() => (onYear ? groupByYear(filtered) : []), [onYear, filtered]);
 
   /**
    * Every card on screen in the order it is drawn, so the dialog's arrows and
@@ -852,12 +725,12 @@ export default function CardsView({
    * vintageEras), so this stays a list of two and never a list of eras.
    */
   const eraOptions = useMemo(() => {
-    const vintage = all.filter((c) => (c.gen ? vintageEras.has(c.gen) : false)).length;
+    const held = all.filter((c) => (c.gen ? vintage.has(c.gen) : false)).length;
     return [
-      { value: "Vintage", count: vintage },
-      { value: "Modern", count: all.length - vintage },
+      { value: "Vintage", count: held },
+      { value: "Modern", count: all.length - held },
     ].filter((o) => o.count > 0);
-  }, [all, vintageEras]);
+  }, [all, vintage]);
 
   const facets = useMemo(
     (): Facet[] => [
@@ -1076,7 +949,7 @@ export default function CardsView({
         filtered.map((set) => ({
           ...set,
           cards: set.cards.filter((c) => {
-            const isVintage = c.gen ? vintageEras.has(c.gen) : false;
+            const isVintage = c.gen ? vintage.has(c.gen) : false;
             if (isVintage) return true;
             // Both the Illustration Rares and the Special ones, which is what
             // the one word they share is doing here.
@@ -1084,7 +957,7 @@ export default function CardsView({
           }),
         })),
       ),
-    [filtered, vintageEras],
+    [filtered, vintage],
   );
 
   /**

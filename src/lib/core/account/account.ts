@@ -112,7 +112,7 @@ const NOUNS = [
  * third field the database still needs. An adjective, a noun from the set
  * every collector here already knows, and a few digits for spread — good
  * enough to ship a working link with, not meant to be a name anyone keeps.
- * `lib/core/account.ts:35` (validateUsername) accepts anything this can
+ * `lib/core/account/account.ts:35` (validateUsername) accepts anything this can
  * produce, since it is built from the same alphabet and shape.
  */
 export function generateUsername(): string {

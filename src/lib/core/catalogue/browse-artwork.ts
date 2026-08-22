@@ -39,7 +39,7 @@
 
 import { setCatalogue } from "./catalogue";
 import { sameCard } from "./matching";
-import { localise, numberForms } from "./util";
+import { localise, numberForms } from "../util";
 import { tcgdexSetName } from "./set-aliases";
 import type { CatalogueMatch } from "./ptcg-search";
 import type { CatalogueSet } from "./ptcg-browse";

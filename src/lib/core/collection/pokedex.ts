@@ -19,7 +19,7 @@
 
 import { shownPrice } from "./cards";
 import type { CardSet, OwnedCard } from "./cards";
-import SPECIES from "./pokedex.generated.json";
+import SPECIES from "../pokedex.generated.json";
 
 export type DexEntry = {
   /** National Dex number. */

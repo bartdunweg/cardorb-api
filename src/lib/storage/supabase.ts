@@ -72,7 +72,7 @@ export function userClient(accessToken: string): SupabaseClient | null {
  * a cache entry outlives the request that filled it, so a client built from one
  * person's cookies would be answering the next person's question with the first
  * person's session. That is the same disclosure bug the module-level slot in
- * lib/core/collection.ts was killed for, one layer down. A read that is cached
+ * lib/core/collection/collection.ts was killed for, one layer down. A read that is cached
  * across requests has to be a read that belongs to nobody, and this is it.
  */
 export function readClient(): SupabaseClient | null {

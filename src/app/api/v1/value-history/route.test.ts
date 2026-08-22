@@ -24,7 +24,7 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
-vi.mock("@/lib/core/collection", () => ({
+vi.mock("@/lib/core/collection/collection", () => ({
   getValueHistory: (...a: unknown[]) => getValueHistory(...a),
 }));
 

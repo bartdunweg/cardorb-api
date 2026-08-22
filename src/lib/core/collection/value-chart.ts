@@ -2,9 +2,10 @@
  * The value chart's arithmetic, with no markup in it.
  *
  * Pulled out of src/components/shared/CollectionValueCard.tsx so the decisions in
- * here can be tested. There is no component testing in this repo — no jsdom, no
- * RTL — and both of these are arithmetic that looks fine in a screenshot while
- * being wrong: "too few readings to be a history" is the whole of what a
+ * here can be tested. There is component testing now — jsdom and RTL, in the
+ * `.dom.test.tsx` files — but arithmetic still belongs outside the component,
+ * because both of these look fine in a screenshot while being wrong: "too few
+ * readings to be a history" is the whole of what a
  * brand-new account sees on the dashboard, and an axis whose ticks land on
  * 38,412 instead of 40,000 is a chart nobody can read a value off.
  *

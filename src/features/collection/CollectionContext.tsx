@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { CardSet } from "@/lib/core/cards";
-import type { EraGroup } from "@/lib/core/eras";
-import type { CatalogueMatch } from "@/lib/core/ptcg-search";
+import type { CardSet } from "@/lib/core/collection/cards";
+import type { EraGroup } from "@/lib/core/catalogue/eras";
+import type { CatalogueMatch } from "@/lib/core/catalogue/ptcg-search";
 
 /**
  * The collection, once, for every screen inside the shell.

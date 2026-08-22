@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { listSets } from "@/lib/core/ptcg-browse";
-import { getRows } from "@/lib/core/collection";
-import { ownershipIndex, setCounts } from "@/lib/core/ownership";
+import { listSets } from "@/lib/core/catalogue/ptcg-browse";
+import { getRows } from "@/lib/core/collection/collection";
+import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 

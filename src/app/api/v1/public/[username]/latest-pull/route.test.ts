@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CardSet } from "@/lib/core/cards";
+import type { CardSet } from "@/lib/core/collection/cards";
 
 const sets: CardSet[] = [
   {
@@ -48,7 +48,7 @@ const sets: CardSet[] = [
 
 const getCards = vi.fn();
 const ownerOf = vi.fn();
-vi.mock("@/lib/core/collection", () => ({
+vi.mock("@/lib/core/collection/collection", () => ({
   getCards: (...args: unknown[]) => getCards(...args),
   ownerOf: (...args: unknown[]) => ownerOf(...args),
 }));

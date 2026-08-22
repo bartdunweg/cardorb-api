@@ -52,7 +52,7 @@ export const metadata: Metadata = {
    * both say which product they belong to without every route repeating the
    * word: /login is "Sign in · Card Orb", a public collection is "Bart’s
    * Pokémon card collection · Card Orb" for Bart and somebody else's name for
-   * somebody else (see lib/core/owner.ts). The two pages that are mostly the
+   * somebody else (see lib/core/account/owner.ts). The two pages that are mostly the
    * name itself opt out with `title.absolute`, which is what that field is for.
    *
    * `default` is required alongside a template and is what a child with no

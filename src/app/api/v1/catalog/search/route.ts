@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { searchCards } from "@/lib/core/ptcg-search";
-import { getRows } from "@/lib/core/collection";
-import { markOwnership, ownershipIndex } from "@/lib/core/ownership";
+import { searchCards } from "@/lib/core/catalogue/ptcg-search";
+import { getRows } from "@/lib/core/collection/collection";
+import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -15,7 +15,7 @@ import { bearer } from "@/lib/api/viewer";
  * "als je op plus klikt... 1 invoerveld voor alles" (see
  * git history) — so this asks
  * pokemontcg.io instead, which already indexes every card across every set
- * behind one query. See lib/core/ptcg-search.ts for the query shape and why
+ * behind one query. See lib/core/catalogue/ptcg-search.ts for the query shape and why
  * it lives apart from ptcg.ts's narrower artwork-fallback job.
  *
  * `name`/`number`/`set`/`type` are a second, separate mode from `query`

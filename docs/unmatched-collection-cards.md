@@ -94,7 +94,7 @@ wrong: the app already resolves a `TG` number filed under the base set to the
 gallery set. Checked against the live collection — 69 of this binder's 73
 Trainer Gallery cards match `swsh11.5tg-TG…` and `swsh12.5tg-TG…` today, from
 rows whose `set_name` says plainly "Lost Origin" or "Silver Tempest". The subset
-resolution in `lib/core/cards.ts` has been doing this the whole time.
+resolution in `lib/core/collection/cards.ts` has been doing this the whole time.
 
 So there are four broken rows, not seventy-four, and Bart's original reading was
 right both times: the name is his, the number is wrong, and nothing else needs

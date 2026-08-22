@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_URL } from "@/lib/core/config";
-import { MAX_DISPLAY_NAME, validateUsername } from "@/lib/core/account";
+import { MAX_DISPLAY_NAME, validateUsername } from "@/lib/core/account/account";
 import AvatarPicker from "@/features/account/components/AvatarPicker";
 import { useUsernameCheck, usernameSays } from "@/features/account/hooks/useUsernameCheck";
 import { FormError, FormForm, FormNote } from "@/components/shared/FormField";
