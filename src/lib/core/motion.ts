@@ -1,24 +1,16 @@
-// JS-side motion constants, mirroring the CSS tokens in app/styles/tokens.css.
+// JS-side motion constants, mirroring the CSS tokens in src/styles/theme.css.
 // Use these instead of ad-hoc springs/beziers so JS and CSS animation share
 // one motion language.
-
-/** Shared pill/indicator spring (tab pills, connect list highlight). */
-export const SPRING_PILL = { type: "spring", stiffness: 380, damping: 32 } as const;
-
-/**
- * Chat bubble entrance.
- *
- * Softer than it was. At 500/34/0.8 a bubble arrived with a snap, which read as
- * hard next to everything else on the page now that it no longer grows out of
- * the typing dots; this settles rather than lands.
- */
-export const SPRING_BUBBLE = { type: "spring", stiffness: 260, damping: 30, mass: 1 } as const;
+//
+// This file used to export three more — SPRING_PILL, SPRING_BUBBLE and
+// EASE_SMOOTH — and describe a chat bubble arriving out of its typing dots and
+// a highlight travelling down a connect list. Neither exists in this product;
+// they came in with the file and were never used here. The header also pointed
+// at app/styles/tokens.css, which does not exist either. Removed rather than
+// left as a motion language for a codebase this is not.
 
 /** Modal/sheet entrance spring. */
 export const SPRING_MODAL = { type: "spring", stiffness: 300, damping: 30 } as const;
-
-/** = --ease-smooth: default for almost everything. */
-export const EASE_SMOOTH = [0.22, 1, 0.36, 1] as const;
 
 /** = --dur-normal / --dur-slow (in seconds, for motion APIs). */
 export const DUR_NORMAL = 0.2;

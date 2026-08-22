@@ -38,16 +38,60 @@ describe("readJsonBody", () => {
 });
 
 describe("every route that reads a body caps it", () => {
-  it("finds no uncapped req.json()", () => {
+  /**
+   * Both spellings, and only readJsonBody() counts as the cap.
+   *
+   * This check passed while two routes broke the rule it enforces, and it did so
+   * on two independent counts. `cards/route.ts` and `collection/items/[id]/route.ts`
+   * read their bodies with `req.text()` + `JSON.parse`, which never matched a
+   * pattern looking for `req.json()`; and both declared a local `MAX_BODY_BYTES`,
+   * which the exemption accepted as evidence of a cap. So the rule read
+   * `Enforced` in CONVENTIONS.md while the only two routes breaking it were
+   * invisible to the thing enforcing it.
+   *
+   * `req.text()` is the one that mattered. A new handler written that way with no
+   * cap at all — the exact failure this file exists to prevent — was not caught
+   * by any part of the old check.
+   *
+   * `MAX_BODY_BYTES` is deliberately no longer an escape. A hand-rolled limit is
+   * how the duplication started; R-API-004 asks for readJsonBody() and a named
+   * BODY_LIMIT, so that is what is checked.
+   *
+   * ── The call, in code, not the name in a sentence ──────────────────────────
+   *
+   * Two false passes had to be closed here, and both were found the same way:
+   * by deleting the readJsonBody() call from cards/route.ts and checking this
+   * test went red. It did not, twice.
+   *
+   *   1. Matching the bare name `readJsonBody` was satisfied by the `import`
+   *      line, so a handler could import the helper, never call it, and pass.
+   *      Hence the `\(`.
+   *   2. Matching `readJsonBody(` was then satisfied by the *comment* in that
+   *      same route explaining why the helper exists — prose naming the function
+   *      the way prose does. Hence the strip below.
+   *
+   * main-landmark.test.ts hit exactly this second trap and solved it first: a
+   * test that cannot tell an element from a sentence about one is a test that
+   * punishes writing the sentence. The comment-stripping is lifted from there
+   * rather than reinvented.
+   */
+
+  /** The source with its comments removed — see main-landmark.test.ts. */
+  const code = (src: string) =>
+    src
+      .replace(/\/\*[\s\S]*?\*\//g, "") // /* block */ and /** doc */
+      .replace(/^\s*\/\/.*$/gm, ""); // // line
+
+  it("finds no uncapped body read, in either spelling", () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir)) {
         const path = join(dir, entry);
         if (statSync(path).isDirectory()) walk(path);
         else if (entry === "route.ts") {
-          const src = readFileSync(path, "utf8");
-          const reads = /\breq(uest)?\.json\(\)/.test(src);
-          const caps = /readJsonBody|MAX_BODY_BYTES/.test(src);
+          const src = code(readFileSync(path, "utf8"));
+          const reads = /\breq(uest)?\.(json|text)\(\)/.test(src);
+          const caps = /\breadJsonBody\s*\(/.test(src);
           if (reads && !caps) offenders.push(path);
         }
       }

@@ -1,0 +1,1 @@
+- A page that fails outside the signed-in area — the homepage, a shared profile link, the legal pages, the sign-in screens — now shows Card Orb's own error page with a way back and a reference code, instead of the browser's blank default.

@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "@/lib/core/collection-row";
 import { createRow } from "@/lib/storage/collection";
 import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
+import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
 /**
@@ -15,8 +16,11 @@ import { bearer } from "@/lib/api/viewer";
  * store's own words where the store is the one refusing.
  */
 
-/** A card is eight short fields. Anything near this is a paste accident. */
-const MAX_BODY_BYTES = 8_192;
+/* The cap is BODY_LIMIT.card in lib/api/body.ts — "a card: eight short fields",
+   the same 8,192 this file used to declare for itself. It moved because
+   readJsonBody() was extracted from this handler and its sibling and then
+   neither was migrated onto it, so the pattern lived in three places at once
+   and R-API-004 was broken by the two routes it was written for. */
 
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
@@ -26,33 +30,21 @@ export async function POST(req: Request) {
       { status: who.status, headers: readHeaders(req) },
     );
 
-  const declared = Number(req.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+  const read = await readJsonBody(req, BODY_LIMIT.card);
+  if (read.kind === "too-large") {
     return NextResponse.json(
       { error: "Payload too large" },
       { status: 413, headers: readHeaders(req) },
     );
   }
-
-  let body: unknown;
-  try {
-    const raw = await req.text();
-    // content-length can lie or be absent (chunked); check what arrived.
-    if (raw.length > MAX_BODY_BYTES) {
-      return NextResponse.json(
-        { error: "Payload too large" },
-        { status: 413, headers: readHeaders(req) },
-      );
-    }
-    body = JSON.parse(raw);
-  } catch {
+  if (read.kind === "invalid") {
     return NextResponse.json(
       { error: "Invalid request" },
       { status: 400, headers: readHeaders(req) },
     );
   }
 
-  const result = validateCardDraft(body);
+  const result = validateCardDraft(read.body);
   if (result.kind === "invalid") {
     return NextResponse.json({ error: result.error }, { status: 400, headers: readHeaders(req) });
   }
