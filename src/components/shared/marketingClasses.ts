@@ -24,7 +24,7 @@ export const eyebrow =
   "font-semibold tracking-[0.08em] uppercase";
 
 export const sectionHeading =
-  "m-0 text-primary font-body font-medium " +
+  "m-0 text-primary font-body font-title " +
   "tracking-[-0.045em] leading-tight text-display-md";
 
 export const sectionBody =
@@ -34,7 +34,7 @@ export const featureIcon =
   "inline-grid w-[42px] h-[42px] place-items-center border border-secondary rounded-full text-primary";
 
 export const cardHeading =
-  "mt-1 mb-0 text-primary font-body font-medium " +
+  "mt-1 mb-0 text-primary font-body font-title " +
   "tracking-[-0.03em] leading-snug text-lg";
 
 export const cardBody =

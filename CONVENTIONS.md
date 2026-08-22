@@ -52,6 +52,11 @@ no `actions.ts`/`queries.ts`/`schemas.ts` — data access is in `lib/`.
 **6.** `src/styles/theme.css` is the only place a design value is written. —
 *Enforced* (`scripts/verify.sh` regenerates and fails on a diff)
 
+**6b.** A heading's weight comes from `--font-weight-title` (500) or
+`--font-weight-title-strong` (600), written as `font-title` / `font-title-strong`
+— never `font-medium` or `font-semibold`. Those are Tailwind's defaults, which
+puts them outside `theme.css` by definition. — *Reviewed*
+
 **7.** Only a token inside `@theme` becomes a Tailwind utility. A token in
 `:root` alone generates nothing and fails silently. — *Intent*
 
@@ -189,8 +194,14 @@ Things a rule cannot yet be written for, kept here rather than lost:
   placeholder text in dark mode is **4.18** against 4.5, and a control's border
   is **1.48** (light) and **1.91** (dark) against the 3:1 that WCAG 1.4.11 asks
   of a component's boundary.
-- **Page titles have no norm.** Four sizes and three weights all claim to be
-  "the page title", and `theme.css` defines no weight token at all.
+- **Page titles have no norm.** Weight is a token now, and every heading in the
+  app reads it — but four *sizes* still claim to be "the page title":
+  `display-md` (marketing, legal, brand), `display-sm` (route error),
+  `display-xs` (the seven signed-in screens and the four door screens). Two of
+  those are defensible as two registers; four are not. **Undecided.**
+- **One heading is still `font-bold`** — `RouteError.tsx:53`, the only one in
+  the app. Left alone because changing it changes what paints, and it is a
+  taste call rather than a definition one.
 - **`lib/core` is not split by domain.** Fine at two features; ambiguous at
   three.
 - **15 of 28 API routes have no named validation**, and nothing uses zod except

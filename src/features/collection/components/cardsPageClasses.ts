@@ -102,7 +102,7 @@ export const cardsSetLogoClassName =
 export const cardsSetTextClassName = "cards-set-text flex flex-col gap-0.5 min-w-0";
 
 export const cardsSetNameClassName =
-  "cards-set-name m-0 font-body font-medium " + "text-display-xs leading-tight text-primary";
+  "cards-set-name m-0 font-body font-title " + "text-display-xs leading-tight text-primary";
 
 /** Tabular so the counts line up down the page. */
 export const cardsSetMetaClassName =
@@ -191,7 +191,7 @@ export const cardsMainTitleClassName =
   // Untitled UI's page title. `overflow-wrap` is the part that is not
   // theirs and must not be dropped — see the paragraph above; it is why this is
   // a constant rather than the utility string written at each call site.
-  "cards-main-title m-0 text-display-xs font-semibold text-primary [overflow-wrap:anywhere]";
+  "cards-main-title m-0 text-display-xs font-title-strong text-primary [overflow-wrap:anywhere]";
 
 /**
  * `skeletonClassName` was here — the grey block and the light that swept across

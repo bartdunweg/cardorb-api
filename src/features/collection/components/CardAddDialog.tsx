@@ -453,7 +453,7 @@ export default function CardAddDialog({
     <Modal open={open} onClose={onClose} label="Add a card" className={modalCardAddClassName}>
       <form className="card-add flex flex-col gap-4" onSubmit={submit}>
         <h2
-          className="m-0 font-body font-medium
+          className="m-0 font-body font-title
             text-display-xs leading-tight text-primary"
         >
           Add a card

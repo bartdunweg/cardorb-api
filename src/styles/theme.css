@@ -624,6 +624,25 @@
   --color-orb-label-secondary: var(--color-text-secondary);
   --color-orb-label-tertiary: var(--color-text-tertiary);
 
+  /* ── Title weight ────────────────────────────────────────────────────────
+     The one axis a title needs that Untitled UI's theme does not name. Its
+     scale covers size, line-height, letter-spacing and colour; weight came from
+     Tailwind's own defaults, so every heading in the app was outside this file
+     by definition — which is the one thing this file exists to prevent.
+
+     Two steps, not three. `title` is what a page and a card heading wear;
+     `title-strong` is for a heading that has to carry over a busy surface.
+     Deliberately the same numbers Tailwind's `font-medium` and `font-semibold`
+     already resolve to, so naming them changes nothing that paints — the point
+     is that a heading now says which role it is playing rather than which
+     number it happens to want.
+
+     A third step for `font-bold` (700) is not here on purpose: exactly one
+     heading in the app uses it, and one call site is a decision to make rather
+     than a scale to widen. */
+  --font-weight-title: 500;
+  --font-weight-title-strong: 600;
+
   /* The shape scale. Prefixed `orb-` deliberately (ADR-0057): `@theme`
      replaces a namespace rather than extending it, so naming these `--radius-md`
      would silently retune every vendored Untitled UI component that asks for

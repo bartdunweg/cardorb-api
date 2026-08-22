@@ -109,7 +109,7 @@ export default function BrowseSetIndex({ sets }: { sets: BrowsableSet[] }) {
       ) : (
         groups.map((group) => (
           <section key={group.series} className="flex flex-col gap-4">
-            <h2 className="text-display-sm font-semibold text-primary m-0">{group.series}</h2>
+            <h2 className="text-display-sm font-title-strong text-primary m-0">{group.series}</h2>
 
             {/* Auto-fill rather than a column count, for the reason SetIndex
                 gives: .cards-main is a container, so a fixed count would need

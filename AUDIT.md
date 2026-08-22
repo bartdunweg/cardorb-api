@@ -312,6 +312,15 @@ decision that is yours.
 - **42 unused vendored files, ~6,650 lines.** Costs nothing today — they are not
   bundled. They cost the next `npx untitledui upgrade`, which will offer to
   update all of them.
+
+**Correction to this audit, made 2026-08-22 after measuring properly.** An
+earlier reading of "zero `next/dynamic` in the tree" was turned into a claim
+that recharts ships to every route. It does not. Next splits client components
+per route on its own: recharts sits alone in a 451 kB chunk that `/`, `/login`
+and `/privacy` never request, and those three load 681, 694 and 647 kB. Adding
+`next/dynamic` would only defer the chart *within* the dashboard, where it sits
+above the fold — a layout shift bought for nothing. The observation was right and
+the conclusion drawn from it was not.
 - **No zod on 15 of 28 API routes.** The hand-written validators are good where
   they exist. This bites when a route grows a field and the validation is three
   files away from the type.

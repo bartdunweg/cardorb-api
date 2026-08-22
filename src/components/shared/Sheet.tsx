@@ -55,7 +55,7 @@ export function Sheet({
     >
       <div className="sheet flex flex-col max-h-[88svh]">
         <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-secondary">
-          <h2 className="m-0 font-body font-medium text-lg text-primary">
+          <h2 className="m-0 font-body font-title text-lg text-primary">
             {title}
           </h2>
           {headExtra}

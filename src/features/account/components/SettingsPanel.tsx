@@ -37,7 +37,7 @@ export function SettingsSection({
 }) {
   return (
     <section aria-labelledby={`${id}-heading`}>
-      <h2 id={`${id}-heading`} className="text-display-sm font-semibold text-primary m-0 mb-4">
+      <h2 id={`${id}-heading`} className="text-display-sm font-title-strong text-primary m-0 mb-4">
         {title}
       </h2>
       {children}
@@ -67,7 +67,9 @@ export function SettingsPanel({
 
 /** An <h3>: every panel now sits under a SettingsSection's <h2>. */
 export function SettingsPanelTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cx("m-0 mb-3 text-md font-semibold text-primary", className)} {...rest} />;
+  return (
+    <h3 className={cx("m-0 mb-3 text-md font-title-strong text-primary", className)} {...rest} />
+  );
 }
 
 export const settingsHintClassName = "my-2 text-sm text-tertiary";

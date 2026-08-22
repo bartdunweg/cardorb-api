@@ -48,7 +48,7 @@ export default function LegalPage({
             reads a legal document set the full width of a desktop. */}
         <article className="max-w-[var(--content-max)] mx-auto [padding-block:clamp(56px,8vw,96px)]">
           <h1
-            className="mt-0 mb-3 text-primary font-body font-medium
+            className="mt-0 mb-3 text-primary font-body font-title
               tracking-[-0.045em] leading-tight text-display-md"
           >
             {title}
@@ -75,10 +75,10 @@ export default function LegalPage({
  */
 export const legal = {
   h2:
-    "mt-12 mb-3 text-primary font-body font-medium " +
+    "mt-12 mb-3 text-primary font-body font-title " +
     "tracking-[-0.03em] leading-tight text-display-sm",
   h3:
-    "mt-7 mb-2 text-primary font-body font-medium " +
+    "mt-7 mb-2 text-primary font-body font-title " +
     "tracking-[-0.02em] leading-snug text-lg",
   // --lh-relaxed, which tokens.css names "long-form body" and which nothing in
   // this app had a use for until these two pages.
