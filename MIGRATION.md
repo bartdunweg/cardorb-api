@@ -1,6 +1,8 @@
 # Migration — folder structure to `src/` + `features/`
 
-Phase 0 report. Read-only: nothing in this repository was changed to produce it.
+**Closed 2026-08-22.** Phases 0–5 are done; the outcome is at the bottom under
+"Where it landed". What follows is the Phase 0 report as written, kept unedited
+so the plan can be read against the result.
 
 **Target**, from the brief:
 
@@ -264,3 +266,106 @@ should be in flight while it does. This is the question only you can answer.
 ---
 
 **Phase 0 ends here. Nothing moves until you say so.**
+
+---
+
+# Where it landed
+
+Phases 1–5, nine commits, each green on `./scripts/verify.sh` on its own.
+
+```
+src/
+├── app/                    24 routes; 12 _components/ folders
+├── components/
+│   ├── base/ application/ foundations/ shared-assets/   Untitled UI, CLI-managed
+│   └── shared/             19 files — genuinely shared
+├── features/
+│   ├── collection/         26 files
+│   └── account/             4 files
+├── lib/                    api/ core/ design/ storage/
+├── hooks/ providers/ styles/ utils/
+```
+
+Against the target: **`features/` and everything above it match.** Two
+deviations, both deliberate:
+
+- **`types/` was never created.** There are no standalone type modules in this
+  project; types live beside the module that defines them. An empty directory is
+  not structure.
+- **`lib/core`'s 52 modules stayed put.** Folding data access into features is a
+  much larger measurement than the component split, and a big diff is what this
+  migration spent nine commits avoiding. It is the obvious next step and has no
+  deadline.
+
+`visual/`, `scripts/`, `supabase/`, `docs/` and `public/` remain at the root
+(assumption A1).
+
+## What the phases actually cost
+
+| Phase | Renames | Lines changed |
+|---|---:|---:|
+| 1a — zod env shape, `providers/` | — | 4 new files |
+| 1b — `src/` + four leaves, alias becomes a pair | 14 | 6 configs |
+| 2a-i — `components/` → `src/` | 123 | 5 configs/tests |
+| 2a-ii — `custom/` → `shared/` | 65 | 183 in / 183 out |
+| 2b — `lib/` → `src/` | 70 | 224 specifiers |
+| 2c — `app/` → `src/` | 89 | **20** |
+| 3 — 18 route-local → `_components/` | 18 | 36 |
+| 4 — `features/collection`, `features/account` | 30 | — |
+| 5 — boundary rules, ignore narrowed | — | 1 config |
+
+## The three findings worth keeping
+
+**1. `tsc` catches every broken import. The risk is entirely in code and
+configuration that treats a path as data**, and none of that is type-checked.
+Every phase found more of it: tsconfig globs, eslint ignores, `.prettierignore`,
+`CACHE_OWNERS`, the token generator's input *and* output paths, `scripts/*.mjs`
+(Node reads no tsconfig paths), **32 `vi.mock()` calls** — a specifier as an
+argument, invisible to an import-statement regex — and, in three separate
+phases, **tests that read source files by path**.
+
+**2. The alias pair is what made this incremental.** `@/*` resolved
+`["./src/*", "./*"]` for the length of Phase 2, so a moved directory was found
+under `src/` and an unmoved one at the root. Without it the alias could only be
+flipped after all six of its tops had moved — one commit, no way back. It was
+narrowed to `["./src/*"]` the moment `src/` was complete.
+
+**3. A directory-wide ignore hides more than it says.** Twice:
+
+- Merging the two `hooks/` directories would have silently exempted three
+  first-party hooks from linting, because the vendored ignore was a directory
+  glob. It names `use-breakpoint.ts` by file now.
+- **`components/**` had been exempting `components/custom/` — 65 files of this
+  project's own code — from eslint since the day Untitled UI was vendored.**
+  Nobody knew. Phase 4's rename made the exemption follow `shared/`, which is
+  how it surfaced. The ignore names the four vendored trees now, and those 19
+  files pass lint with zero errors, which is the only good news in this
+  paragraph.
+
+## What stops it sliding back
+
+Three `no-restricted-imports` rules in `eslint.config.mjs`, ESLint's own rule,
+no plugin and no new dependency:
+
+1. a feature may not import another feature
+2. a feature may not import a route
+3. `components/shared/` may not import a feature
+
+All three were **proved to fire** by introducing each violation and reading the
+error, then reverting. A rule that catches nothing is not a rule.
+
+## Deliberately not migrated
+
+- **`lib/core/` into features** — see above. Next step, no deadline.
+- **The 31 unreachable vendored Untitled UI files** (6,651 lines). FB-0023:
+  *"Nee, ze zijn vers, laat maar liggen."*
+- **`types/`** — nothing to put in it.
+- **The 88 arbitrary `px`/`rem` in classNames.** Screen work, not structure.
+- **`/collection/browse`'s missing set logos** — pokemontcg.io moved to
+  `images.scrydex.com` and the CSP at `next.config.ts:36` predates it. 68 console
+  errors, four blank tiles, live in production. Adding a third-party image host
+  to a CSP is a security decision, so it stays written down rather than slipped
+  into a migration commit. **This is the most urgent thing in this document.**
+- **The measured contrast arguments**, lost with `lib/design/tokens.ts` in the
+  styling rebuild (`git show 22ca2cb~1:lib/design/tokens.ts`). A colour change
+  today ships unmeasured. Largest open debt in the repository.

@@ -82,7 +82,105 @@ const config = [
 
        If `npm run ui:add` writes another hook, add it to this list. The
        wrapper prints what it changed, which is where you will see it. */
-    ignores: ["src/components/**", "src/utils/**", "src/hooks/use-breakpoint.ts"],
+    /* The four vendored trees by name, not `src/components/**`.
+       That wider glob is what this ignore used to be — as `components/**` — and
+       it swallowed components/custom/ with it: 65 files of this project's own
+       code, exempt from eslint since the day Untitled UI was vendored, and
+       nothing ever said so. Phase 4 renamed that directory to shared/ and the
+       exemption followed it silently, which is how it was finally noticed. */
+    ignores: [
+      "src/components/base/**",
+      "src/components/application/**",
+      "src/components/foundations/**",
+      "src/components/shared-assets/**",
+      "src/utils/**",
+      "src/hooks/use-breakpoint.ts",
+    ],
+  },
+  /**
+   * ── The one rule that keeps features/ from becoming shared/ again ─────────
+   *
+   * Three edges, all of them the same mistake in different clothes:
+   *
+   *   1. A feature importing another feature. Two domains that reach into each
+   *      other are one domain with a folder between them, and the folder is the
+   *      part that lies. Cross-links belong in the route that needs both, or in
+   *      lib/ if they are genuinely shared.
+   *   2. A feature importing a route. Routes compose features, never the
+   *      reverse. This one was real: CollectionScreen imported
+   *      app/(app)/CollectionContext until ADR — see Phase 4 — moved the context
+   *      into the domain it belongs to.
+   *   3. components/shared/ importing a feature. Shared code that knows about a
+   *      domain is not shared; it is that domain's code in the wrong drawer,
+   *      and it is how the 48-file shared/ happened in the first place.
+   *
+   * `no-restricted-imports` is ESLint's own rule, so this needs no plugin.
+   * eslint-plugin-boundaries would express it more directly and is not worth a
+   * dependency for three patterns.
+   *
+   * The split these guard was measured before it was made: zero
+   * collection <-> account edges existed. This is what keeps that true.
+   */
+  {
+    files: ["src/features/collection/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features/account/*", "@/features/account"],
+              message:
+                "A feature may not import another feature. Put the cross-link in the route that needs both, or lift it into lib/.",
+            },
+            {
+              group: ["@/app/*", "@/app"],
+              message:
+                "A feature may not import a route. Routes compose features, never the reverse — move what you need into this feature.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/features/account/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features/collection/*", "@/features/collection"],
+              message:
+                "A feature may not import another feature. Put the cross-link in the route that needs both, or lift it into lib/.",
+            },
+            {
+              group: ["@/app/*", "@/app"],
+              message:
+                "A feature may not import a route. Routes compose features, never the reverse — move what you need into this feature.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/components/shared/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features/*", "@/features"],
+              message:
+                "components/shared/ may not know about a feature. If it needs one, it is that feature's component and belongs under src/features/.",
+            },
+          ],
+        },
+      ],
+    },
   },
 ];
 
