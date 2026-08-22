@@ -143,6 +143,32 @@ that hold it together.
   routes are the three under `/api/v1/public/<username>/`, which serve the public profile —
   those are open on purpose, carry no prices, and each has its own rate limiter. Do not "fix" the guard back off `/api/v1/collection`.
 
+## Decisions and context
+
+- **`CONVENTIONS.md` holds the rules that apply. It is the only binding source.**
+  Rules have stable IDs (`R-STRUCT-001`), so you can be told to ignore one by name.
+- **There is no decision archive.** 133 records were removed on 2026-08-22; the
+  rules that survived are in `CONVENTIONS.md` and the reasoning is in `git log`.
+  Do not go looking for a `docs/adr/`, and do not reconstruct why something was
+  once chosen unless I ask.
+- **A request from me beats a rule that is already written down.** You do not
+  have to work out why it was decided differently before.
+- **My request conflicts with a rule: say so in one sentence** ("this departs
+  from R-STYLE-006") and then just do it. No investigation, no alternatives,
+  unless I ask for them.
+- **If the new approach becomes the norm, propose changing the rule at the end** —
+  not before doing the work.
+
+## Components
+
+- Untitled UI is the component library. Before building any UI component, search
+  it first: `npx untitledui@latest search "<description>"`.
+- It exists: use it. Our need differs: a thin wrapper in `components/shared/`,
+  never a new implementation.
+- Never edit `base/`, `application/` or `foundations/` by hand.
+- Build something of our own anyway: say in one sentence what you searched for
+  and why it was not there.
+
 ## Where things live
 
 - **Rules: @CONVENTIONS.md** — the conventions this codebase runs on, each with how it is held.
@@ -151,11 +177,9 @@ that hold it together.
 - Open data worklists and rollback files: `docs/*.md`, `docs/*.json` — these are rows in the
   live database that still need a hand, and the before-state of past backfills. Not history.
 
-**This project keeps no decision or feedback records.** They were removed on
-2026-08-22: the rules that survived are in `CONVENTIONS.md`, and the reasoning
-behind any of them is in `git log`. The generated block at the top of this file
-still describes a memory system this repository no longer has — `/apply-standards`
-will keep putting it back, so read that section as describing the standard rather
-than this project.
+The generated block at the top of this file still describes a memory system this
+repository no longer has. `/apply-standards` will keep putting it back, so read
+that section as describing the standard rather than this project — the
+"Decisions and context" section above is what applies here.
 
 <!-- PRODUCT:END -->

@@ -181,20 +181,43 @@ and measure rather than assume.
 
 ## Shape
 
+Everything lives under `src/`. Where a new file goes is decided by who uses it,
+not by what it is:
+
 ```
-lib/core/       the domain layer. No React, no routes. This is the part worth having.
-lib/storage/    where the collection is kept, and the only part that knows.
-lib/api/        who may write, and how often.
-app/api/v1/     the four endpoints.
-app/api/cover/  a same-origin passthrough for the one host that sends no CORS headers.
-app/page.tsx    the landing page: the one screen written for someone new here.
-app/login/      the password field, and the redirect back to where you were aiming.
-app/cards/      the collection: the rail, the dashboard, the Pokédex, one card.
-app/@modal/     that card again, as a dialog, intercepted so the list survives.
-app/components/ everything the two above are built from.
-app/styles/     the portfolio's stylesheets, copied whole rather than trimmed.
-scripts/        the generators lib/core keeps referring to.
+src/app/<route>/              routing and data fetching only
+src/app/<route>/_components/  UI that only that route uses
+src/features/<domain>/        UI and hooks owned by one domain — collection, account
+src/components/shared/        UI with no domain: Button, Modal, FormField, Card
+src/components/base/          vendored Untitled UI primitives — CLI-managed
+src/components/application/   vendored Untitled UI patterns
+src/components/foundations/   vendored icons and logos
+src/lib/core/                 the domain layer. No React, no routes. The part worth having.
+src/lib/storage/              where the collection is kept, and the only part that knows.
+src/lib/api/                  who may read and write, and how often.
+src/styles/theme.css          every design value, and the only place one may be written
+src/styles/globals.css        imports, base, variants. Hard ceiling: 200 lines.
+src/styles/app.css            the exception layer. Starts empty; keep it that way.
+src/styles/poke-holo.css      the holographic shine — vendored, and one of the two
+                              things that are the product's identity
+src/hooks/ utils/ providers/  small, shared, and partly vendored
+scripts/                      the generators src/lib/core keeps referring to
+supabase/                     auth and session backing store, migrations
 ```
+
+Three folders the target layout names do not exist here, and that is deliberate:
+`types/` (types live beside what defines them) and `features/*/actions.ts`,
+`queries.ts`, `schemas.ts` (data access is in `lib/`). Create them when there is
+something to put in them, not before.
+
+**The rules that hold this together — including which folder a thing belongs in
+and what may import what — are in [`CONVENTIONS.md`](./CONVENTIONS.md).** Three
+of them are enforced by `npm run lint`; the rest are review.
+
+Two route notes worth knowing before reading the tree: `src/app/@modal/` is a
+card shown as a dialog, intercepted so the list behind it survives, and
+`src/app/api/cover/` is a same-origin passthrough for the one image host that
+sends no CORS headers.
 
 The web tool is the portfolio's `/cards`, moved rather than rewritten: the same
 rail, the same dashboard, the same Pokédex, the same tilt on a holo. Four things
@@ -206,17 +229,17 @@ pages do not: `/`, which is the landing page, and `/user/<name>`, which is the
 collection you hand to someone. Both carry a graph again, and they are the only
 two entries in `sitemap.xml`.
 
-`app/cards/page.tsx` calls `getCards()` directly rather than its own
-`/api/v1/collection`: a server component has no relative fetch, and the port
-changes per workspace. The route handler wraps the same function, so there is
-one implementation and nothing to drift.
+The signed-in screens read the collection through `src/lib/core` directly rather
+than through their own `/api/v1/collection`: a server component has no relative
+fetch, and the port changes per workspace. The route handler wraps the same
+function, so there is one implementation and nothing to drift.
 
-`/` is the landing page and `/login` is the password field; the collection stays
-at `/cards`. The list could have lived at the root, but the card dialog is an
-intercepted parallel route and interception is defined relative to the segment
-it intercepts, which is a poor thing to rewrite for one character of URL. The
-proxy bounces a signed-out request for `/cards` to `/login` with a `next`
-parameter, so the form can put you back where you were aiming.
+`/` is the landing page, `/login` is the door, and the collection lives at
+`/collection` inside the `(app)` group. **`/cards` is a redirect** — it was the
+whole app for two years and is in bookmarks, in the iOS client's memory and in
+shared links, so it keeps answering by pointing at the real address. The proxy
+bounces a signed-out request to `/login` with a `next` parameter, so the form
+can put you back where you were aiming.
 
 Two things in `lib/core` are deliberately hollow. `localise()` and `measure()` in
 `util.ts` used to swap a remote image for a copy the portfolio served itself, and
