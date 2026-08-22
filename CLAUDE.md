@@ -1,4 +1,4 @@
-<!-- STANDARDS:BEGIN v0.24.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.26.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
@@ -6,8 +6,11 @@
   messages, code comments, documentation, PR and issue text. Read any language, write English.
 - **Answer in the language the user writes in** — the chat only; every file you write is English.
 - **Explain simply, in bullets.** Short, common words and one idea per sentence — write as if the
-  reader is smart but new to the topic (ELI5 / simplified technical English). Avoid jargon; when a
-  technical term is unavoidable, say what it means. Default to bullets and small tables over prose.
+  reader is smart but new to the topic. Say the consequence first, then the thing.
+- **Never invent a word for something.** No metaphors of your own making, no house vocabulary,
+  no shorthand borrowed from this repository's files. Use the ordinary word, even if it is
+  longer. A term the reader has not met needs its meaning in the same sentence, every time —
+  not the first time only. Default to bullets and small tables over prose.
 - The product's user-facing copy may be in any language; everything internal is English.
 
 ## How you close a response
@@ -30,20 +33,25 @@ up to find out what happened.
   Always stop for destructive or irreversible operations, real money, or production.
 - **Batch, never interrupt.** One upfront batch or a checkpoint, never scattered
   mid-task; anything you did not ask, you decided — record it in the closing summary.
+- **Reach for subagents on purpose.** Before a broad search, a sweep across many files, or two
+  jobs that do not depend on each other, ask which agent fits and dispatch it — in parallel where
+  they share no state. Name the agent and the skill it should run, in one line, then send it.
+  Waiting to be asked is the failure; a single known file is the only case that stays inline.
 - **Look backwards only when you are the one starting.** Deciding yourself to change existing
-  code? First find out why it is the way it is — search the decision records, then `git log -S`,
-  and write the rationale down if none exists. Asked directly for something? Build it; do not
-  go digging for why it was once done differently.
+  code? First find out why it is the way it is — `git log -S` on the line, and the rule in
+  `CONVENTIONS.md` if one covers it. Asked directly for something? Build it; do not go digging
+  for why it was once done differently.
 
-## Decisions and context
+## Rules
 
-- **`CONVENTIONS.md` holds the rules that apply now.** It is the only binding source.
-- **`.dev-standards/decisions/` is history, not instruction.** Do not read it unless the user
-  asks, or unless you need the reason behind a rule you are about to change.
-- **A request outranks a recorded decision.** Where the request departs from a rule, say so in
-  one sentence — *this departs from R-STRUCT-001* — and then carry it out. No investigation and
-  no alternatives unless asked.
-- **If the new approach becomes the norm, propose amending the rule** at the end, in the summary.
+- **`CONVENTIONS.md` holds the rules that apply now.** It is the only binding source, and it is
+  a living file: a rule is rewritten or deleted the moment it stops being true. There is no
+  archive of past rules, and nothing outside this file may be quoted as binding.
+- **A request outranks a rule.** Where the request departs from one, say so in one sentence —
+  *this departs from R-STRUCT-001* — and then carry it out. No investigation, no alternatives.
+- **Past reasoning lives in git.** `git log -p CONVENTIONS.md` shows when a rule changed and why.
+  That is the whole history mechanism, and it is deliberately not in the read path.
+- **If the new approach becomes the norm, update the rule** at the end, in the summary.
 - **A rule the code structurally ignores is a bug in one of the two.** Never decide which alone:
   add it to `## Open` in `STATE.md`.
 
@@ -53,42 +61,37 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 
 | Trigger | Action |
 |---|---|
-| User reacts, criticises, or states a preference | Use the `log-feedback` workflow before acting |
-| A choice that is far-reaching **and** hard to reverse | Use the `record-decision` workflow |
-| A norm that is neither — how things are done here | A rule in `CONVENTIONS.md`; not a record |
-| A user-visible change ships | A fragment in `changelog.d/`, never a hand-edit of the changelog — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md`, a brief, or a record. A project that ships no user-visible releases has neither file, and that is correct — do not create them |
-| Session starts on an existing project | Read `STATE.md` first |
-| Session ends | Update `STATE.md` so the next session starts oriented |
+| User reacts, criticises, or states a preference | Use the `record-rule` workflow before acting |
+| A real choice is made, or a norm needs writing down | Use the `record-rule` workflow |
+| A rule stops being true | Rewrite it or delete it. Never leave it standing as history |
+| A user-visible change ships | A fragment in `changelog.d/`, never a hand-edit of the changelog — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md` or a brief. A project that ships no user-visible releases has neither file, and that is correct — do not create them |
+| Session starts on an existing project | Run `catch-up` — `STATE.md` here, then every sibling worktree's, then unmerged branches |
+| Session ends | Run `handoff`, unannounced. A sibling workspace can only read what you wrote down |
 | A build or code change is complete | Run `scripts/verify.sh`, then `build-quality` |
 
-**Definition of Done:** `scripts/verify.sh` exits 0 + changelog entry if user-visible +
-decision record if a real choice was made + prompting feedback marked `addressed` +
-`STATE.md` updated + a `build-quality` report for this project's platform, where every domain
-carries evidence or is reported `not measured` + every written artefact in English + a closing
-summary block listing the assumptions.
+**Definition of Done:** `scripts/verify.sh` exits 0 + changelog entry if user-visible + a rule
+written, updated or deleted where the work settled one + `STATE.md` updated + a `build-quality`
+report for this project's platform, where every domain carries evidence or is reported
+`not measured` + every written artefact in English + a closing summary block listing the
+assumptions.
 
 **A `pass` without evidence is not a pass.** Report `not measured` instead and say what would
 have produced the evidence. A task without a memory write is not done.
 
-**`Visibility` decides how freely memory is written.** Where it is `private`, write bluntly —
-a carefully-worded feedback record is worthless, and that candour is the whole value. Where it
-is `public` or `may become public`, write nothing you would not publish on this project's own
-website: records are immutable and git history is public the moment the repository is, so there
-is no later redaction. Record the shape instead — *the budget ceiling was reached*, not the
-figure; *a customer on the enterprise plan*, not the name. **If keeping a record honest and
-keeping it publishable conflict, say so and stop**; the answer is to move the memory somewhere
-private, not to write a diplomatic record.
+**`Visibility` decides how freely memory is written.** Where it is `private`, write bluntly.
+Where it is `public` or `may become public`, write nothing you would not publish on this
+project's own website — git history is public the moment the repository is, so there is no
+later redaction. Record the shape instead: *the budget ceiling was reached*, not the figure.
 
 ## Rules that are easy to get wrong
 
-- Decision records are immutable. Supersede, never rewrite.
-- Feedback is quoted verbatim before it is interpreted.
-- Reconstructed history is labelled `reconstructed: true` with a confidence level.
-  Never present a guessed rationale as fact.
+- A rule carries one sentence of *why*. If the why does not fit in one sentence, the rule is wrong.
+- Never invent a reason. Where the evidence is silent, write `Why: unknown` and leave it there.
 - Creating new shared files is fine; **editing an existing shared file is the one case
   where you flag it first**, because a parallel worktree is probably editing it too.
-- Before choosing a skill, a library, or an MCP, read `~/.local/share/dev-standards/references/`:
-  `skill-routing.md` says which skills a request should wake, plus libraries, MCPs, and baselines.
+- Before choosing a skill, an agent, a library, or an MCP, read
+  `~/.local/share/dev-standards/references/`: `skill-routing.md` says which skills a request
+  should wake and `standard-agents.md` names the agents you may send, plus libraries and MCPs.
 - On React or Tailwind work, search Untitled UI (MCP) before writing a component or icon; Context7 if it is down.
 
 <!-- STANDARDS:END -->
@@ -157,43 +160,17 @@ that hold it together.
   routes are the three under `/api/v1/public/<username>/`, which serve the public profile —
   those are open on purpose, carry no prices, and each has its own rate limiter. Do not "fix" the guard back off `/api/v1/collection`.
 
-## Decisions and context
-
-- **`CONVENTIONS.md` holds the rules that apply. It is the only binding source.**
-  Rules have stable IDs (`R-STRUCT-001`), so you can be told to ignore one by name.
-- **There is no decision archive.** 133 records were removed on 2026-08-22; the
-  rules that survived are in `CONVENTIONS.md` and the reasoning is in `git log`.
-  Do not go looking for a `docs/adr/`, and do not reconstruct why something was
-  once chosen unless I ask.
-- **A request from me beats a rule that is already written down.** You do not
-  have to work out why it was decided differently before.
-- **My request conflicts with a rule: say so in one sentence** ("this departs
-  from R-STYLE-006") and then just do it. No investigation, no alternatives,
-  unless I ask for them.
-- **If the new approach becomes the norm, propose changing the rule at the end** —
-  not before doing the work.
-
 ## Components
 
-- Untitled UI is the component library. Before building any UI component, search
-  it first: `npx untitledui@latest search "<description>"`.
-- It exists: use it. Our need differs: a thin wrapper in `components/shared/`,
-  never a new implementation.
-- Never edit `base/`, `application/` or `foundations/` by hand.
-- Build something of our own anyway: say in one sentence what you searched for
-  and why it was not there.
+They live in `CONVENTIONS.md` as R-UI-001 through R-UI-008 — one list, one place.
 
 ## Where things live
 
-- **Rules: @CONVENTIONS.md** — the conventions this codebase runs on, each with how it is held.
-  It is the only document that describes the current state. There is no second one.
-- Changelog fragments: `docs/changelog.d/`, collected into `docs/CHANGELOG.md`
+- Rules that apply now: @CONVENTIONS.md — the only binding source, and the whole of it.
+- Current state: @STATE.md
+- Why a rule reads the way it does: `git log -p CONVENTIONS.md`. There is no archive.
+- Changelog fragments: `changelog.d/`, collected into `CHANGELOG.md` by `npm run changelog`.
 - Open data worklists and rollback files: `docs/*.md`, `docs/*.json` — these are rows in the
   live database that still need a hand, and the before-state of past backfills. Not history.
-
-The generated block at the top of this file still describes a memory system this
-repository no longer has. `/apply-standards` will keep putting it back, so read
-that section as describing the standard rather than this project — the
-"Decisions and context" section above is what applies here.
 
 <!-- PRODUCT:END -->
