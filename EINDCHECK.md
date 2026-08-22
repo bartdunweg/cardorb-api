@@ -61,7 +61,7 @@ Everything mechanical passes. What is left is judgement.
 | Quick win 2 — `FormField` → `label` + `hint-text` | ❌ | Not started |
 | Quick win 3 — delete or adopt `app-navigation` | ❌ | Not started. **This is also open point 4** |
 | `RouteError` → `EmptyState` | ❌ | Not started |
-| `Modal` on `react-aria-components` | ❌ | Its own piece of work, by design |
+| `Modal` on Untitled UI's own shell | ❌ | Its own piece of work, by design. **The classification changed after Bart pushed back**: `application/modals/modal.tsx` exists and is 47 lines, so this is a wrapper, not a rebuild |
 | Borging — R-UI-001…008 + `CLAUDE.md` block | ✅ | `98bd8ef` |
 
 ### Rules from `CONVENTIONS.md` — every enforcement command run
@@ -124,6 +124,11 @@ enforcement it does not have.
 - **`AUDIT.md` carries a correction to itself.** Its recharts finding was wrong —
   Next splits client components per route on its own. Corrected in place with the
   measurement.
+- **`UI-ADOPTIE.md` carries one too, and it is the more instructive.** It claimed
+  Untitled UI ships no modal, on the strength of a catalogue listing. Installing
+  one shows a 47-line `modals/modal.tsx` shell comes with it. Two documents in
+  this set now contain a finding that was wrong until someone checked — both
+  found by reading a list instead of running the thing.
 
 ## The four open points
 

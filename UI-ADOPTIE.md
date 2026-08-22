@@ -19,9 +19,9 @@ code being judged.
 | Access | **PRO** (`has_pro_access: true` from the catalogue) |
 | Import sites reaching into Untitled UI from our code | **60** |
 | Our own UI files | **64** (`components/shared/` 19 · `features/*` 30 · `_components/` 15) |
-| Of those, with a genuine Untitled UI equivalent | **2** |
+| Of those, with a genuine Untitled UI equivalent | **3** |
 | Competing UI libraries | **0** — no Radix, MUI, Headless, Chakra, react-select, react-modal, react-toastify |
-| Our own implementations of the notoriously hard parts | **1** (`Modal.tsx`) |
+| Our own implementations of the notoriously hard parts | **1** (`Modal.tsx`, 404 lines — and there is a 47-line shell for it) |
 
 **Conclusion in one line: adoption is high and the remaining gap is small, but
 it is concentrated in exactly the place where it costs the most — one
@@ -39,9 +39,9 @@ not judged against themselves.
 | `CardsView` | 21 | 1761 | ⚪ | none | Keep. Domain logic, not UI |
 | `SigninShell` | 14 | 94 | ⚪ | none | Keep. Page layout for the four door screens |
 | `CardDetail` | 13 | 227 | ⚪ | none | Keep. Domain |
-| `Sheet` | 11 | 95 | 🔵 | `application/slideout-menus/*` are **composed panels**, not a shell | Rebuild on the same primitive `Modal` moves to — see below |
+| `Sheet` | 11 | 95 | 🟡 | none directly; `slideout-menus/*` are composed panels | Follows `Modal`. The drawer direction is the wrapper's job |
 | `FormField` | 11 | 58 | 🟡 | `base/input/label` + `base/input/hint-text` | Replace its internals with those two. They are installed and unused |
-| **`Modal`** | **10** | **405** | 🔵 | **no generic modal in `base/`.** The 36 in `application/modals/` are composed dialogs (`image-crop-modal`, `plan-01-modal`) | **The one that matters. See section 4.** |
+| **`Modal`** | **10** | **404** | 🟡 | **`application/modals/modal.tsx`** — a 47-line shell exporting `ModalOverlay`, `Modal`, `Dialog`, `DialogTrigger`, already styled with our tokens | **The one that matters. See section 4.** |
 | `SettingsPanel` | 8 | 172 | ⚪ | none | Keep. Layout |
 | `CardsSidebar` `FilterSheet` `ViewSheet` `CardsTabBar` `FilterMenu` `ViewMenu` | 6–7 each | 46–520 | ⚪ | `application/app-navigation` exists but is **built for a different shape** | Keep. See the ⚪ list |
 | `CardAddDialog` | 6 | 797 | ⚪ | none | Keep. Domain, and it already uses `ComboBox`, `Input`, `Checkbox`, `Button` |
@@ -53,7 +53,7 @@ not judged against themselves.
 | `ViewerPill` | 1 | 46 | 🟢 | `base/badges/badges` | **Replace.** Every other chip in the app already uses `Badge` |
 | `RouteError` | 2 | 95 | 🟡 | `application/empty-state/empty-state` | Consider. It is installed and used elsewhere |
 
-**🟢 1 · 🟡 5 · 🔵 2 · ⚪ the rest.**
+**🟢 1 · 🟡 7 · 🔵 0 · ⚪ the rest.**
 
 The honest reading: this is not a codebase that reinvented the library. It is a
 codebase that adopted the library and kept the things the library does not have.
@@ -74,29 +74,47 @@ it: `Sheet`, `FilterSheet`, `ViewSheet`, `CardModal`, `CardAddDialog`,
 
 ## 4. `Modal` — the one decision worth making
 
-**Untitled UI does not solve this.** There is no modal primitive in `base/`, and
-its 36 `application/modals/*` are finished dialogs for specific jobs. Adopting
-one would mean adopting its content, not its shell.
+**Correction, and it matters.** An earlier draft of this document said Untitled
+UI ships no modal and that the answer was to rebuild on `react-aria-components`
+ourselves. That was wrong, and Bart pushed back on it. It came from reading the
+catalogue listing — 36 entries under `application/modals/`, all composed dialogs
+— and never installing one to look inside.
 
-**What does solve it is one layer down.** Untitled UI's own overlays are built
-on `react-aria-components`, which this project already depends on and which
-ships `ModalOverlay`, `Modal` and `Dialog` — a portal, a focus trap, a scroll
-lock (`usePreventScroll`, which handles iOS specifically) and the ARIA wiring,
-maintained by Adobe.
+**Installing one shows a shared shell comes with it.**
+`application/modals/modal.tsx`, 47 lines, exporting `ModalOverlay`, `Modal`,
+`Dialog` and `DialogTrigger`. It is a thin styled wrapper over
+`react-aria-components` — which is exactly the composition the earlier draft
+proposed building by hand, except already carrying our tokens (`bg-overlay/70`,
+`bg-primary`, `rounded-xl`, `shadow-xl`), the backdrop blur, and entry/exit
+animation through `animate-in` / `animate-out`.
 
-So the honest classification is 🔵: rebuild `Modal.tsx` as a composition over
-`react-aria-components`, not adopt an Untitled UI component.
+Verified by running `npx untitledui@latest add access-request-modal` in a
+throwaway project: 16 files, and `modals/modal.tsx` is one of them.
 
-**And it is the highest-risk change in this document.** `Modal.tsx`'s comments
-document real behaviour that was got wrong before — the scroll lock at
-`Modal.tsx:62-98` compensates for the scrollbar width so the page does not shift,
-and there is a hand-written `isVisible` filter on the focusable list. Whether
-React Aria covers each of those has to be proved per case, in a browser, not
-assumed from its README.
+**So this is 🟡, not 🔵: adopt the shell, wrap what it does not cover.**
 
-**Recommendation: do it, but as its own piece of work with its own verification,
-and not because "use the library more" says so.** The argument is keyboard and
-screen-reader behaviour we would otherwise maintain ourselves — not consistency.
+Our `Modal.tsx` is 404 lines against its 47. What the difference buys:
+
+| Ours does | The shell does | Verdict |
+|---|---|---|
+| Portal, focus trap, Escape, backdrop click | React Aria, underneath | **Theirs.** Adobe maintains it; we have 405 lines of it |
+| Scroll lock **with scrollbar-width compensation** (`Modal.tsx:62-98`) so the page does not shift | Unknown | **Could not verify** — see below |
+| A drawer that comes from the right on desktop and up from the bottom on a phone (`Modal.tsx:120`, `:156`) | Not offered | **Ours.** This is what the wrapper is for |
+| `motion`-driven animation | `animate-in`/`animate-out` data attributes | Theirs, unless the spring is wanted |
+
+**What I could not verify.** Whether React Aria's scroll lock compensates for the
+scrollbar's width. I could not find the implementation in the installed package —
+greps for `paddingRight`, `scrollbarWidth` and `clientWidth` across
+`react-aria-components/dist` came back empty, which more likely means my search
+was wrong than that the code is absent. **Test it in a browser before trusting
+either answer**: open an overlay on a page long enough to scroll and watch
+whether the content jumps sideways. That single behaviour is why our version is
+405 lines instead of 100.
+
+**Recommendation: adopt the shell, keep a thin wrapper for the drawer direction,
+and prove the scroll behaviour in a browser rather than from a README.** The
+argument is still keyboard and screen-reader behaviour we would otherwise
+maintain — but the work is now a wrapper, not a rebuild.
 
 ## 5. Quick wins — today, negligible risk
 
@@ -114,7 +132,9 @@ PR.
 **Next:** `RouteError` → `EmptyState`. It is 🟡, one screen, and `EmptyState` is
 already used in six places.
 
-**Its own piece of work:** `Modal` on `react-aria-components`, then `Sheet`
+**Its own piece of work:** `Modal` on Untitled UI's own shell
+(`npm run ui:add -- access-request-modal` brings it, then delete the dialog and
+keep `modals/modal.tsx`), with a wrapper for the drawer direction. `Sheet`
 follows for free. Risks to prove, not assume:
 
 - **State** — ours is controlled through an `open` prop; React Aria's `Modal`
