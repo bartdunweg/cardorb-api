@@ -1,0 +1,2 @@
+- The Settings screen now heads each of its five groups — Profile, Account, Import, Appearance and "Delete this account" — with a full-width divider, the same section-header pattern the rest of the app's Untitled UI uses. The groups read as separate blocks on one scroll instead of five headings stacked in a column.
+- The dashboard's "By era" and "By type" titles now use the same heading weight and size as every other section heading in the app, instead of a slightly smaller, off-scale one.

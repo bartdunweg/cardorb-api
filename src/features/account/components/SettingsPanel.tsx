@@ -1,6 +1,7 @@
 import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
 import { InputBase } from "@/components/base/input/input";
 import { ToggleBase } from "@/components/base/toggle/toggle";
+import { SectionHeader } from "@/components/application/section-headers/section-headers";
 
 /**
  * Shared pieces of every /settings screen: a panel is a card, a hint explains
@@ -28,18 +29,40 @@ export function SettingsPanels({ className, ...rest }: HTMLAttributes<HTMLDivEle
  */
 export function SettingsSection({
   title,
+  description,
+  actions,
   id,
   children,
 }: {
   title: string;
+  description?: string;
+  actions?: ReactNode;
   id: string;
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={`${id}-heading`}>
-      <h2 id={`${id}-heading`} className="text-xl font-title-strong text-primary m-0 mb-4">
-        {title}
-      </h2>
+      {/* Untitled UI's SectionHeader — the same pattern its settings page
+          templates use to head each group, so this screen reads as an Untitled
+          settings page even though the full-page templates (own sidebar, a
+          tiptap editor, qr codes) do not fit a panel inside the (app) shell.
+          Its `Root` gives the divider that separates the five groups on one
+          scroll. We supply our own <h2>, not SectionHeader.Heading: that one
+          bakes in `font-semibold`, which cannot clear R-STYLE-003 (the heading
+          weight is `font-title-strong`, the same 600 spelled the way the type
+          system spells it) and cannot be edited out of the vendored file
+          (R-UI-003). The <section aria-labelledby> landmark stays. */}
+      <SectionHeader.Root className="mb-4">
+        <SectionHeader.Group>
+          <div className="flex flex-1 flex-col gap-0.5">
+            <h2 id={`${id}-heading`} className="m-0 text-xl font-title-strong text-primary">
+              {title}
+            </h2>
+            {description && <SectionHeader.Subheading>{description}</SectionHeader.Subheading>}
+          </div>
+          {actions && <SectionHeader.Actions>{actions}</SectionHeader.Actions>}
+        </SectionHeader.Group>
+      </SectionHeader.Root>
       {children}
     </section>
   );

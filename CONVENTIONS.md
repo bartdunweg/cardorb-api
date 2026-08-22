@@ -121,6 +121,12 @@ in the list.
 | R-PLAT-003 | Every screen renders exactly one `<main id="main-content">`, after its own navigation. The root layout does not. | enforced — `src/app/main-landmark.test.ts` | A landmark in the root layout wraps each screen's own, and the skip link then lands above the navigation. |
 | R-PLAT-004 | The `(app)` loading fallback may only draw what is true on all seven routes it covers. | reviewed | It is one file standing in for seven screens, so anything route-specific in it flashes wrong on six of them. |
 
+## Build and verification
+
+| ID | Rule | Enforcement | Why |
+|---|---|---|---|
+| R-BUILD-001 | During iteration run `npm run check` (typecheck, test, lint). The full `./scripts/verify.sh`, which also runs `next build`, runs only at completion: before a commit or PR. | reviewed | The full build is slow and adds nothing mid-iteration that `check` does not already catch. |
+
 ---
 
 **Where a rule and the code disagree**, the rule is dead or the code is wrong. Do not decide

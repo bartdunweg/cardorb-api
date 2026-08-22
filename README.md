@@ -12,9 +12,12 @@ number a collector would recognise. None of that was worth writing twice.
 
 ## The API
 
-Everything under `/api/v1/` needs a viewer, reading included. The key is
+Every **data** route under `/api/v1/` needs a viewer, reading included. The key is
 `CARDS_TOKEN`, one shared passcode rather than an account system: one person edits
-this.
+this. The exceptions are not data: the bootstrap and health routes
+(`/health`, `/session`, `/signup`, `/password/reset`, `/confirmation`, `/username`)
+and the `/cron/snapshot` job carry no viewer, and are gated by `sameOrigin()` or
+`CRON_SECRET` instead — each route's own docstring says which and why.
 
 | | |
 | --- | --- |
