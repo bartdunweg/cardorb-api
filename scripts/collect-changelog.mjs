@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Build docs/CHANGELOG.md out of the fragments in docs/changelog.d/.
+ * Build CHANGELOG.md out of the fragments in changelog.d/.
  *
  * The file has claimed to be generated since the day it was created — "Generated
  * from fragments in `changelog.d/`. Do not hand-edit; add a fragment instead." —
@@ -29,8 +29,8 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const DIR = "docs/changelog.d";
-const OUT = "docs/CHANGELOG.md";
+const DIR = "changelog.d";
+const OUT = "CHANGELOG.md";
 
 /** `2026-08-22-value-chart-axes.md` → the date, which is all the name has to carry. */
 const NAMED = /^(\d{4}-\d{2}-\d{2})-.+\.md$/;
