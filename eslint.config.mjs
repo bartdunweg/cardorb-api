@@ -153,6 +153,7 @@ const config = [
       "src/components/shared-assets/**",
       "src/utils/is-react-component.ts",
       "src/hooks/use-resize-observer.ts",
+      "src/hooks/use-breakpoint.ts",
     ],
   },
   /**
