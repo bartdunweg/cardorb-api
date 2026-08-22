@@ -1,204 +1,153 @@
 # Eindcheck
 
-Controle only. Nothing was changed to produce this. Every row was re-verified
-against the code, not read out of the document that claimed it.
+Control only. Nothing was changed to produce this document.
 
-**Read this with one caveat.** The prompt asks for a fresh session, so the agent
-is checking rather than defending. This ran in the session that did the work. It
-is the weakest link in this document and it applies most to the ⚪ rows, where
-"there is no equivalent" is exactly what someone defending their own code would
-say.
+## Read this first: I am not allowed to sign this off
+
+Prompt 00 puts the eindcheck **after** the fixes, in a fresh session, because an
+agent that wrote the code confirms its own assumptions instead of testing them.
+
+The first run of this document broke the first half of that rule: it ran before
+the fixes, so its verdict described a state that no longer exists. This run
+breaks the second half. **I wrote the seven fixes it is checking.** That is
+exactly the position I criticised the previous session for occupying, and noticing
+it does not get me out of it.
+
+So this document is split deliberately:
+
+- **Part 1 — the previous audit's ten findings.** I did not cause these outcomes;
+  most were closed before I arrived. Checked normally.
+- **Part 2 — my own seven fixes.** Marked `⊘ self-checked`, never `✅`. I ran
+  mutation tests rather than eyeballing them, and two of those mutations found
+  real holes in my own work — evidence below. That raises the confidence; it does
+  not make me the right signer.
+- **Part 3 — what is still open**, which nobody has touched.
+
+**Verdict: NIET AFGETEKEND.** Not because something is broken — the gate is green
+and I found no defect — but because seven of the rows that would carry the
+signature are rows I wrote, and one criterion is genuinely unmet. Part 2 needs a
+session that did not write the code.
 
 ---
 
-## Verdict
+## Part 1 — the previous audit's ten findings
 
-**AFGETEKEND.** All four open points are closed — see the update at the bottom.
+Unchanged from the first run except where the fixes touched them. Verified against
+the code, not against the claim.
 
-The original verdict and its evidence are kept below unchanged, because the four
-points and how they were closed are more useful together than a rewritten page.
-
----
-
-## The table
-
-### Acceptance criteria from `AUDIT.md`
-
-| Source | Point | Status | Evidence | Note |
-|---|---|---|---|---|
-| AUDIT §7 | Clean install + typecheck + lint + test + build, zero ignored warnings | ✅ | `rm -rf node_modules .next && npm install` → all four exit 0. `grep -ci warn` on the build log → **0** | 43 test files, **483 tests** |
-| AUDIT §7 | No hardcoded design value in `src/`; `theme.css` demonstrably the only source | ✅ | palette classes **0**, arbitrary font-size **0**, `@theme` outside `theme.css` **0** | Enforced by `type-discipline.test.ts` and `extract-theme-values.mjs --check` |
-| AUDIT §7 | Every title from the token set, same kind identical everywhere | ✅ | `font-medium\|semibold\|bold` on a heading → **0**. Two registers in R-STYLE-004 | Was ❌ at audit time |
-| AUDIT §7 | No cross-feature imports; knip and depcheck clean | ⚠️ | cross-feature **0** ✅ · unlisted deps **0** ✅ · **42 unused files, 2 unused deps** ❌ | See open point 4 |
-| AUDIT §7 | No `any`, `@ts-ignore`, `as any` without explanation | ✅ | 1 hit, and it is English prose: `CardItem.tsx:378` "…as any other number on a tile" | |
-| AUDIT §7 | Server/client boundary correct | ✅ | server-only imports in client components → **0** | |
-| AUDIT §7 | One document describes the current state | ✅ | `CONVENTIONS.md`, 41 rules with stable IDs. `README.md` describes `src/` | Was ❌ at audit time |
-| AUDIT §7 | `MIGRATION.md` gone, contents processed | ✅ | file absent; A1–A5 resolved before removal | |
-| AUDIT §7 | Decision documents merged into one rule set | ✅ | `docs/decisions/` absent, `CONVENTIONS.md` present | **Bart's decision, twice.** See "crept in" |
-| AUDIT §7 | No commented-out code, no ownerless TODOs, no migration shims | ✅ | `TODO\|FIXME\|HACK` → **0** | |
-| AUDIT §7 | One active enforcement mechanism for token discipline | ✅ | `src/lib/design/type-discipline.test.ts`, 2 assertions | Was ❌ at audit time |
-
-### Findings from `AUDIT.md` marked to fix
-
-| # | Finding | Status | Evidence |
+| # | Finding as recorded | Status | Evidence |
 |---|---|---|---|
-| 1 | `/collection/browse` blocked by the CSP | ✅ | `images.scrydex.com` in the served header on cardorb.com; 68 CSP errors → **0** |
-| 2 | `@react-types/shared` imported, not declared | ✅ | `package.json:23`; knip "Unlisted" → 0 |
-| 3 | 104 tests deleted with the contrast measurements | ✅ | `contrast.test.ts`, 19 assertions. 462 → 483 |
-| 4 | Target structure documented nowhere | ✅ | `README.md:186-216` + `CONVENTIONS.md` |
-| 5 | Four title sizes, three weights, no weight token | ✅ | `--font-weight-title` / `-title-strong`; R-STYLE-004 |
-| 6 | 15 of 28 API routes without named validation | ❌ | still 0 routes using zod | **Open point 3** |
-| 7 | 42 unused files, 2 dependencies alive only through them | ❌ | knip: unchanged | **Open point 4** |
-| 8 | Two hero titles on an arbitrary `clamp()` | ✅ | `--text-hero` / `--text-hero-narrow` |
-| 9 | `tracking-[…]` fighting the token | ➖ | Not done. Subsumed by R-STYLE-004; the overrides are on the marketing register, which was not re-measured |
-| 10 | `src/utils/` and `src/hooks/` mixed | ➖ | Accepted. R-UI-008 records it and `untitled-add.mjs` warns |
+| 1 | **Blocking** — CSP blocks `images.scrydex.com` | ✅ voldaan | `next.config.ts:52`, with a 12-line rationale at `:38-49`. |
+| 2 | **Blocking** — `@react-types/shared` imported, not declared | ✅ voldaan | `"@react-types/shared": "^3.36.1"` in `dependencies`. |
+| 3 | 104 tests deleted, 566 → 462 | ⚠️ deels | **503 now**, up from the 462 recorded and the 492 before this session. Still 63 below the pre-migration 566. The specific loss named — contrast measurement — is restored and enforced by R-STYLE-016. The rest was suites against a stylesheet that no longer exists, which is reasonable and still nowhere recorded as a deliberate write-off. |
+| 4 | Target structure documented nowhere | ✅ voldaan | `README.md:184-196`; all eight named directories exist. |
+| 5 | 4 title sizes, 3 weights, no weight token | ✅ voldaan | `theme.css:705-706`; R-STYLE-003; zero `<hN>` with a raw weight. |
+| 6 | 15 of 28 routes unvalidated, zero zod | ⚠️ deels | All 12 body-reading routes validate. The ask was "decide one pattern"; no decision recorded. zod still used in one file. |
+| 7 | 42 unused files, 2 dependencies | ✅ voldaan | `c38dacf`. No orphaned vendored component remains — re-checked. |
+| 8 | Two hero titles use an arbitrary `clamp()` | ✅ voldaan | Zero `clamp()` in a className; `--text-hero` is a token. |
+| 9 | `tracking-[…]` overrides fight the applied token | ❌ **niet gedaan** | **Still 14**, unchanged this session. `-0.045em` ×5, `-0.03em` ×3, `-0.02em` ×3, `0.06em` ×2, `0.08em` ×1. Nothing catches it: R-STYLE-002 bans a raw font *size* only. By prompt 03's own step-3 rule, all three top values passed the promote-to-token threshold long ago. |
+| 10 | `src/utils/` and `src/hooks/` mix vendored with first-party | ⊘ see Part 2 | The rule text said per file and the implementation was a directory glob. Changed this session. |
 
-### The plan from `UI-ADOPTIE.md`
-
-| Step | Status | Note |
-|---|---|---|
-| Quick win 1 — `ViewerPill` → `Badge` | ❌ | Not started. Written today; nothing has run yet |
-| Quick win 2 — `FormField` → `label` + `hint-text` | ❌ | Not started |
-| Quick win 3 — delete or adopt `app-navigation` | ❌ | Not started. **This is also open point 4** |
-| `RouteError` → `EmptyState` | ❌ | Not started |
-| `Modal` on Untitled UI's own shell | ❌ | Its own piece of work, by design. **The classification changed after Bart pushed back**: `application/modals/modal.tsx` exists and is 47 lines, so this is a wrapper, not a rebuild |
-| Borging — R-UI-001…008 + `CLAUDE.md` block | ✅ | `98bd8ef` |
-
-### Rules from `CONVENTIONS.md` — every enforcement command run
-
-| ID | Command | Result |
-|---|---|---|
-| R-STRUCT-001/002/003 | `npx eslint src/features src/components/shared` | ✅ green |
-| R-STYLE-001 | `node scripts/extract-theme-values.mjs --check` | ✅ green |
-| R-STYLE-002 | `vitest run src/lib/design/type-discipline.test.ts` | ✅ 2 passed |
-| R-STYLE-015 | `scripts/untitled-add.mjs` — `@untitledui/icons` in `package.json` | ✅ absent |
-| R-STYLE-016 | `vitest run src/lib/design/contrast.test.ts` | ✅ 19 passed |
-| R-UI-006 | `tsc --noEmit -p tsconfig.vendored.json` | ✅ exit 0 |
-| R-PLAT-003 | `vitest run src/app/main-landmark.test.ts` | ✅ passed |
-
-**All 10 Enforced rules verified by running their command.** No rule claims an
-enforcement it does not have.
-
-### Structure described in `README.md`
-
-| Claim | Status | Evidence |
-|---|---|---|
-| Everything under `src/` | ✅ | `src/app`, `src/features`, `src/components`, `src/lib`, `src/styles`, `src/hooks`, `src/utils`, `src/providers` |
-| `types/` and `features/*/actions.ts` deliberately absent | ✅ | absent, and the README says why |
-| `/cards` is a redirect | ✅ | `src/app/cards/page.tsx` — `redirect()` |
-| Three CSS files + `poke-holo.css` | ✅ | `theme.css`, `globals.css`, `app.css`, `poke-holo.css` |
+**Part 1 score: 6 ✅, 2 ⚠️, 1 ❌, 1 moved to Part 2.**
 
 ---
 
-## What fell between the cracks
+## Part 2 — my own seven fixes ⊘
 
-- **`components.json` does not exist.** The adoption prompt opens with
-  `cat components.json` — Untitled UI's own CLI config, which records the version
-  and the brand colour. This project has never had one; components were added
-  with explicit `-t` and `-p` flags. It works, but the version we are vendored
-  against is written down nowhere, so `npx untitledui upgrade` has no baseline.
-- **`app.css` is still empty.** That is the intended state and worth saying out
-  loud: layer 3 has attracted nothing in a week of work.
-- **`AUDIT.md` and `UI-ADOPTIE.md` are now themselves point-in-time documents**
-  of the kind this project just deleted 133 of. Their live content is in
-  `CONVENTIONS.md`'s Open section. They should go the same way once acted on.
-- **Ten rules are marked Intent.** By this project's own standard those are not
-  rules. They are listed under Open, which is honest, but a list that stays a
-  list becomes an archive.
+Not signed. Mutation-tested, because after what the first two mutations found I do
+not trust a reading of my own diff.
 
-## What crept in without being written down
-
-- **The decision records were deleted, not archived.** The dev standard says
-  *"stempel en verhuis de originelen naar `docs/adr/`… verwijderen alleen bij
-  echte duplicaten of lege notities"*. 133 records were removed. This was Bart's
-  explicit instruction, given twice and confirmed after the conflict was pointed
-  out — so it is a decision, not drift. It is here because a reader in six months
-  will find a standard the repository does not follow, and nothing else says why.
-- **The audit ran in the migration's own session**, against `00-overzicht.md`,
-  which asks for a fresh one. So did this check and the adoption report. The
-  reason for the rule is real and it was not followed.
-- **`scripts/verify.sh` lost its record-number step.** It had nothing left to
-  check once `docs/decisions/` was gone. `verify.sh` is a shared file across
-  worktrees; the edit was flagged at the time but it is a change to a shared
-  thing made for a local reason.
-- **`AUDIT.md` carries a correction to itself.** Its recharts finding was wrong —
-  Next splits client components per route on its own. Corrected in place with the
-  measurement.
-- **`UI-ADOPTIE.md` carries one too, and it is the more instructive.** It claimed
-  Untitled UI ships no modal, on the strength of a catalogue listing. Installing
-  one shows a 47-line `modals/modal.tsx` shell comes with it. Two documents in
-  this set now contain a finding that was wrong until someone checked — both
-  found by reading a list instead of running the thing.
-
-## The four open points
-
-| # | Point | Cost | Whose |
+| Fix | What it claims | How I tried to break it | Result |
 |---|---|---|---|
-| 1 | **Three colour pairs below WCAG.** Placeholder in dark **4.18**/4.5; a control's border **1.48** light and **1.91** dark against 3:1. The first step that clears 3:1 is `neutral-500`, a mid-grey that changes every control in the app | An afternoon, plus a look | **Bart** |
-| 2 | **The `UI-ADOPTIE.md` quick wins** — `ViewerPill`, `FormField`, `app-navigation` | Half a day | Ready to run |
-| 3 | **15 of 28 API routes have no named validation**, nothing uses zod but the env check | A day | Nobody has picked it up |
-| 4 | **42 unused vendored files, and 2 dependencies alive only through them** | An hour to delete | Was decided as "keep" in a feedback record that has since been deleted. **The decision now exists nowhere** |
+| `Modal.test.ts` exists | The predicate the file has always claimed was tested, now is | Reverted `FOCUSABLE` to the selector that caused the keyboard trap; separately stubbed `isVisible`'s visibility check to `return true` | ⊘ **4 tests fail** on the first, **1** on the second. It bites. |
+| R-API-004 enforced for real | Both `req.text()` routes on `readJsonBody()`; the check sees both spellings | Deleted the `readJsonBody` call from `cards/route.ts` | ⊘ **Two false passes found in my own fix before it worked.** See below. |
+| `src/app/error.tsx` | Public routes get a real error page | `npm run build` compiles it; added to `ALSO_DRAWS` so `main-landmark.test.ts` asserts it draws the landmark | ⊘ Static only. Nobody has seen this page render. |
+| `motion.ts` cleaned | 3 dead exports and two invented features gone | `knip`, typecheck, build | ⊘ 4 exports left, all consumed by `Modal.tsx`. |
+| Dead config paths gone | `use-breakpoint.ts` ×4, `tailwind.generated.css` ×1 | Grep | ⊘ Zero live references. Two mentions remain, both in comments that deliberately record the history. Found and fixed a **third** stale comment while checking — `eslint.config.mjs:69` justified the exemption with an example from the deleted file. |
+| `src/utils/` per file | R-UI-008's text now matches its implementation | Removed the blanket glob; `cx.ts` now under lint, prettier and the four strict flags | ⊘ Passes all three. It needed reformatting, which is the point: it had drifted, unwatched, for as long as the glob existed. |
+| Cache-tag comments truthful | Both describe what the code does | Grepped every `revalidateTag` call | ⊘ Comments correct now. **The underlying behaviour is unchanged** — `cardPricesTag` is still dropped by nothing. |
 
-Point 4 is the sharpest illustration of what removing the records costs: the
-reasoning was *"ze zijn vers, laat maar liggen"*, it was a real answer to a real
-question, and it is now only in `git log`.
+### The two false passes, written down because they are the finding
 
----
+My fix to `body.test.ts` did not work twice, and both times the test stayed green
+while the rule was broken — the identical failure mode the fix was written to
+close.
 
-## Eindoordeel
+1. **Matching the bare name `readJsonBody`.** The `import { readJsonBody }` line
+   satisfied it. A handler could import the helper, never call it, read the body
+   with `req.text()`, and pass.
+2. **Matching `readJsonBody(` with the paren.** The *comment* I had just written
+   in that route — explaining why the helper exists — contained `readJsonBody()`
+   and satisfied it. Prose naming a function the way prose does.
 
-**Yes, this is a codebase you can build on for years — and the reason is not the
-structure, it is that ten of its rules now fail a command instead of asking a
-person to remember.** Boundaries between features, one source for every design
-value, no font size in a className, contrast on every text-on-surface pair, one
-main landmark. Those cannot rot quietly, and a year from now that will matter
-more than any folder name.
+Only after stripping comments before scanning does the mutation go red and name
+the offending file. `main-landmark.test.ts:135-143` had already hit trap 2 and
+solved it — "a test that cannot tell an element from a sentence about one is a
+test that punishes writing the sentence". I should have reused that first; the
+stripping is now lifted from there rather than reinvented.
 
-The structure is good but ordinary — `src/`, features, route-local components. A
-competent developer would arrive at it. What is not ordinary is that the
-migration was done in twenty-four reviewable commits with the checks green at
-each one, and that the audit found its own author's claim about recharts to be
-wrong and said so.
-
-Where I would not be relaxed: **three WCAG failures are shipping right now**, and
-one of them — a control's border at 1.48:1 — is on every input and checkbox on
-the site. It is measured, pinned, and documented, which is much better than
-unknown. It is still shipping. And the ten Intent rules are a slow leak: each is
-a thing someone decided mattered and nothing checks.
-
-The thing that will hurt most is not on any list above: **133 decision records
-were deleted this week, and the one place it already bit is open point 4** — a
-decision that exists now only as a line in a git log nobody will think to search.
-That was a deliberate choice, made twice, against the project's own standard. It
-is defensible. It is also the one thing here that cannot be undone by running a
-command, and its cost arrives later than everything else on this page.
-
+This is the strongest argument in this document for the fresh-session rule. I
+wrote a fix for "an enforcement that does not enforce", shipped an enforcement
+that did not enforce, twice, and would have reported it as done both times had I
+not mutated it.
 
 ---
 
-## Update — the four points, closed
+## Part 3 — still open, untouched
 
-| # | Point | What happened |
+| Item | State | Whose call |
 |---|---|---|
-| 1 | Three colour pairs below WCAG | **Fixed.** `--color-border-primary` is `light-dark(#919191, #646464)` and `--color-text-placeholder` is `#797979` in dark — the *lightest* values that clear 3:1 and 4.5 on both surfaces a control sits on. `contrast.test.ts`'s three pinned gaps are assertions now, 19 → 22 |
-| 2 | The `UI-ADOPTIE.md` quick wins | **One of three was real.** `app-navigation` deleted with point 4. The other two were wrong when the files were opened: `Badge` cannot be a link, and `FormField.tsx` contains no `FormField` |
-| 3 | 15 of 28 routes without named validation | **The finding was mostly wrong.** 18 read no body; the rest validate per field with distinct messages. What *was* missing is a size bound, on eight of ten. `src/lib/api/body.ts` now caps all twelve, with a test that fails on any uncapped handler |
-| 4 | 42 unused files, 2 dependencies | **34 deleted**, plus `react-aria` and `react-hotkeys-hook`. Eight stay and knip is wrong about all of them: the scripts are run by hand and `visual/auth.setup.ts` is called by Playwright through `testMatch` |
+| Changelog | **95 fragments** (I added one), `CHANGELOG.md` still 8 lines and stopping at 2026-08-14, still claiming to be generated | Yours: build the collector, or delete the file |
+| `tracking-[…]` | 14 overrides, three values past the promote-to-token threshold | Arguably not yours — it is your own documented rule |
+| 3 dead type tokens | `display-lg`, `display-xl`, `display-2xl` — 0 consumers each | Yours: delete, or document as vendored whole |
+| `Intent` tier | **9 rules** that by `CONVENTIONS.md`'s own preamble are not rules | Yours; proposal in `AUDIT.md` §9 |
+| Rule-set size | 45 rules against a ceiling of 15, and `verify.sh` skips the check that says so | Yours |
+| `components.json` | Still absent; `untitledui upgrade` has no baseline | Yours |
+| `cardPricesTag` | Declared, applied, invalidated by nothing. One line in the cron if you want it immediate | Yours — it is a behaviour change |
+| `poke-holo.css` | Holds design values R-STYLE-001's enforcement cannot see | Yours; a rule the code structurally ignores |
+| `visual/` | Its stated job (the `cards.css` migration) is finished | Yours |
+| Feature-boundary lint | A hand-written pair list; feature three is unguarded | Nothing to do until feature three |
 
-Tests 483 → **492**. Enforced rules 10 → 11.
+---
 
-**What this update is really about.** Of the four points, **two were findings
-that did not survive contact with the code** — the quick wins and the validation
-gap. Both were written by reading a listing: knip's output, a filename, a
-catalogue entry. Together with the recharts claim in `AUDIT.md` and the "Untitled
-UI ships no modal" claim in `UI-ADOPTIE.md`, that is four in one week, all the
-same shape.
+## Acceptance criteria
 
-The useful conclusion is not that the documents were sloppy. It is that **a
-finding is a hypothesis until the file is opened**, and that all four were caught
-— three by opening the file before changing it, one because Bart pushed back.
-The audit format worked; the reading did not.
+| Criterion | Status |
+|---|---|
+| Clean install + typecheck + lint + test + build green, no ignored warnings | ⚠️ `verify.sh` exit 0, all ten checks, 503 tests. Not run from a wiped `node_modules` by me; CI does `npm ci` on every push. |
+| No hardcoded design value in `src/` | ⚠️ Zero in first-party TS/TSX. `poke-holo.css` excepted and unchecked. |
+| Every title from the tokenset, consistent | ⚠️ Sizes yes, and enforced. **Letter-spacing no** — finding 9. |
+| No cross-feature imports, no dead code or unused deps | ✅ |
+| No `any` / `@ts-ignore` without a reason | ✅ Zero in first-party code. |
+| Server/client boundary correct | ✅ |
+| One document describes the current state, no second contradicting it | ❌ `docs/CHANGELOG.md` still claims to be generated. |
+| `MIGRATION.md` gone | ✅ |
+| No two documents contradicting each other | ❌ Same as above. |
+| No commented-out code, no ownerless TODOs, no shims | ✅ |
+| One mechanism enforcing token discipline | ✅ Three, for size. None for letter-spacing. |
 
-**Still open**, and now the whole list: `lib/core` is not split by domain; nine
-rules are Intent and by this project's own standard are therefore not rules;
-`components.json` does not exist, so `npx untitledui upgrade` has no baseline.
+---
+
+## Final judgement
+
+Unchanged in substance from the first run, and this session sharpened rather than
+softened it.
+
+**This is a codebase you can build on for years, and its one real exposure is that
+it is easier to trust than it should be.** The engineering is genuinely strong:
+zero cross-feature imports with a lint rule behind them, zero hardcoded colours,
+zero `any`, no competing UI library, and a reason written down beside almost every
+non-obvious decision. Both blocking findings are properly closed.
+
+The weakness is a pattern: something states that a check exists, and it does not.
+Four instances were open this morning. Seven fixes later, the count is lower — and
+in the course of fixing the *worst* of them I produced two more of exactly the same
+kind, in the same file, within an hour. That is not carelessness so much as
+evidence of how easy this particular mistake is to make here, and it is why the
+remaining `Intent` tier matters more than its size suggests: nine rules that state
+how they are held while nothing holds them are nine standing invitations to the
+same error.
+
+What would actually change the odds is not more documents. It is the habit that
+caught both of my own failures: when you write a check, break the thing it checks
+and watch it go red. Nothing else in this repository would have found either one.

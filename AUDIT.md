@@ -1,326 +1,291 @@
-# Release audit — `src/` + `features/` migration
+# Release audit
 
-Diagnosis only. Nothing was fixed. Every ✅ below carries a command output or a
-`file:line`; anything I could not check is in section 5 rather than left silent.
+Diagnosis only. Nothing was fixed. Every claim below carries a command output or
+a `file:line`; what I could not check is in section 5 rather than left silent.
+
+Run in a session that did none of the migration work and read no previous report
+before forming these findings. The earlier `AUDIT.md`, `UI-ADOPTIE.md` and
+`EINDCHECK.md` all state that they ran in the session that wrote the code they
+judge. They are recoverable with `git show 2b12ef3:AUDIT.md`.
+
+> **Status, 2026-08-22, after this audit was written.**
+>
+> **Fixed:** 1, 2, 4, 6, 7, 8, 9. **Still open:** 3 (changelog), 5 (dead type
+> tokens), 10, 11, 12, 13, 14, and the `tracking-[…]` finding in `EINDCHECK.md`.
+>
+> The diagnosis below is left exactly as written rather than edited down to
+> match, because a report that quietly rewrites itself is worth less than one you
+> can check against the commit.
+>
+> One correction, which is why this note is not just a tick list: **finding 8 was
+> worse than it says.** `collection.ts` did not merely lack a warning — it
+> actively claimed "the cron revalidates this tag itself after it writes, so a
+> fresh week's prices are on the dashboard immediately". It never has. The
+> comment is now truthful; the one-line wiring, if you want it to be immediate
+> after all, is still yours to decide.
 
 ---
 
 ## 1. Verdict
 
-**READY, subject to 3 fixes** — one production defect that predates this
-migration, one dependency that will break a future update, and one deleted
-safety net.
+**READY, subject to 4 fixes.** Nothing here is broken in production and nothing
+leaks. What I found is a different shape: four places where a check, a document
+or a comment claims something that is not true of the code. Each one costs the
+next person the time they would have saved by trusting it.
 
-The structural work itself holds up under every check I could run. The findings
-are not in the migration; they are in what the migration made visible.
+No blocking findings.
 
 ---
 
-## 2. Findings, by severity
+## 2. Findings
 
-| # | Severity | Finding | Evidence | Consequence | Fix | Estimate |
+| # | Severity | Finding | Evidence | Consequence | Fix | Size |
 |---|---|---|---|---|---|---|
-| 1 | **Blocking** | `/collection/browse` cannot load set logos in production. pokemontcg.io is moving its CDN to `images.scrydex.com` per set; the CSP allows only `assets.tcgdex.net` and `images.pokemontcg.io` | `next.config.ts:36` · 68 console errors on that route, 4 blank tiles in the first screen | Broken now, for everyone, and it grows as more sets migrate | Add the host to `IMG_SRC`. **Your call** — a third-party image host in a CSP is a security decision | 1 line |
-| 2 | **Blocking** | `@react-types/shared` is imported but not declared | `src/hooks/use-resize-observer.ts:2` · `npx knip` "Unlisted dependencies (1)" · `depcheck` `missing: ['@react-types/shared']` | Resolves today only because it is transitive under `react-aria-components`. The day that package drops or bumps it, the build fails with no warning. Arrived today with the ComboBox | `npm i @react-types/shared` | 1 line |
-| 3 | **Before release** | **104 tests were deleted and not replaced.** `main` runs 566, this branch runs 462 | `git checkout origin/main && npm run test` → `Tests 566 passed`; here → `Tests 462 passed`. Files gone: `tokens`, `vars`, `sources`, `token-surfaces`, `shape`, `mechanics`, `cards-css.spec` | Every contrast measurement went with them. A colour change ships **unmeasured** — and `scripts/gen-tokens.mjs` records that this exact failure already happened once (`#767676` under AA in the OG images) | Re-derive the AA assertions against `styles/theme.css` | Half a day, own PR |
-| 4 | **Before release** | The target structure is documented **nowhere** | `grep "src/\|features/\|_components" README.md CLAUDE.md` → no matches. It exists only in `MIGRATION.md`, which the brief says to delete | The next developer has no statement of where anything belongs, including the folders that do not exist yet. Deleting `MIGRATION.md` without this first destroys the only copy | One paragraph in `README.md` | 20 min |
-| 5 | **Before release** | Page titles use **4 different sizes and 3 different weights**, and `theme.css` defines **no weight token at all** | `display-md/medium` (`LegalPage.tsx:50`, `brand/page.tsx:159`), `display-sm/bold` (`RouteError.tsx:51`), `display-xs/semibold` (`cardsPageClasses.ts:195`), `display-xs/no weight` (`SigninShell.tsx:31`), plus two `clamp()` heroes. `grep -oE "--font-weight-[a-z]+" src/styles/theme.css` → empty | Every heading weight in the app is outside the token set by definition. "The same kind of title looks the same everywhere" is not true today | See section 3 | Half a day |
-| 6 | **Before release** | 15 of 28 API routes have no named validation; **zero use zod**, although zod is now a dependency | `find src/app/api -name route.ts \| wc -l` → 28; `grep -rl validate` → 13; `grep -rl zod` → 0 | Untrusted input reaches 15 handlers with only ad-hoc checks. zod was added in Phase 1a for env and stops there | Decide one pattern and apply it | 1 day |
-| 7 | **Later** | 42 unused files, and 2 dependencies kept alive only by them | `npx knip` → "Unused files (42)", "Unused dependencies (2): react-aria, react-hotkeys-hook". Both are imported **only** by files knip already flagged dead (`nav-account-card.tsx:13`, `command-menu-users.tsx:5`) | Two packages ship for code nothing renders | FB-0023 already answered: *"ze zijn vers, laat maar liggen."* Re-decide or leave | — |
-| 8 | **Later** | Two hero titles use an arbitrary `clamp()` instead of a token | `src/app/page.tsx:254` and `src/app/app/ios/page.tsx:221`: `[font-size:clamp(42px,4.5vw,64px)]` with a 640px override to `clamp(40px,12vw,52px)` | These are the last survivors of the deleted `clamp()` type scale. `STATE.md` lists "the fixed type scale" as an open decision — this is it, still open | See section 3, deviation D1 | 1 hour + a look |
-| 9 | **Later** | `tracking-[…]` overrides fight the token that is already applied | `tracking-[-0.045em]` ×4, `-0.03em` ×3, `-0.02em` ×3, `0.06em` ×2. `theme.css:` `--text-display-md--letter-spacing: -0.72px`, which Tailwind applies with the size utility. At 36px, `-0.045em` = **−1.62px** — more than double | The override silently disagrees with the token by a factor of two | See section 3, deviation D2 | 1 hour + a look |
-| 10 | **Later** | `src/utils/` and `src/hooks/` are mixed: vendored Untitled UI beside first-party code | `src/utils/cx.ts` + `is-react-component.ts` are vendored; `src/hooks/` holds three first-party hooks and two vendored. Exemptions in `eslint.config.mjs:77-79`, `.prettierignore`, both tsconfigs are **per file** | Every `ui:add` can drop a file there that must be added to four lists by hand. `MIGRATION.md` A5 predicted it and it fired the same day (`use-resize-observer.ts`) | Split vendored into its own directory, or accept and keep the wrapper's warning | Half a day |
+| 1 | Before release | `Modal.tsx` says its focus predicate is tested. There is no such test, and there are no component tests at all. | `src/components/shared/Modal.tsx:52` says "see Modal.test.ts". `find src -name 'Modal.test.*'` → nothing. 43 test files, none render a component. | The keyboard trap documented at `Modal.tsx:23-47` — every filter and view sheet unreachable below 1000px, which includes 200% zoom — is a WCAG 2.1.2 failure that shipped once and has no regression test. `FOCUSABLE` and `isVisible` are exported for testing and nothing else (`knip`). | Write `Modal.test.ts` over the two exported predicates. They are pure functions; no renderer needed. | S |
+| 2 | Before release | R-API-004 is marked `Enforced`, but its test cannot see either route that breaks it — nor an uncapped route written the same way. | `CONVENTIONS.md` R-API-004. `body.test.ts:47-48` matches `req.json()` and exempts on `readJsonBody\|MAX_BODY_BYTES`. `cards/route.ts:39` and `collection/items/[id]/route.ts:55` both use `await req.text()` and their own `MAX_BODY_BYTES`. 2 of 12 body-reading routes. | Two escapes at once: `req.text()` never matches `reads`, and a local `MAX_BODY_BYTES` satisfies `caps`. A **new** route using `req.text()` + `JSON.parse` with no cap at all is also invisible. `body.ts:13` says the helper exists "rather than in a third copy" — the two copies it was extracted from were never migrated. | Move both routes to `readJsonBody()`, then widen the regex to `req.(json\|text)()` and drop the `MAX_BODY_BYTES` escape. | M |
+| 3 | Before release | The changelog claims to be generated and no generator exists. | `docs/CHANGELOG.md:3` — "Generated from fragments in `changelog.d/`. Do not hand-edit". File is 8 lines and stops at 2026-08-14. `ls docs/changelog.d \| wc -l` → **94**. No collector in `package.json`, `scripts/`, or `.github/workflows/`. | 8 days and 92 entries of shipped user-visible work have never reached the changelog, and `CLAUDE.md`'s memory table instructs every future change to add another fragment to a pile nothing drains. | Write the collector, or delete `CHANGELOG.md` and say the fragments are the record. Either is fine; the present state claims one and does the other. | S |
+| 4 | Before release | No error boundary on the public surface. | `find src/app -name 'error.tsx' -o -name 'global-error.tsx'` → only `(app)/error.tsx` and `(app)/collection/browse/error.tsx`. No `src/app/error.tsx`, no `global-error.tsx`. | Every route outside `(app)` — the landing page, `/brand`, `/privacy`, `/terms`, `/login`, `/signup` and `/user/[username]` — falls back to Next's default error page. `/user/[username]` is the page shared links point at. | Add `src/app/error.tsx`. `RouteError.tsx` already exists and is what `(app)/error.tsx` renders. | S |
+| 5 | Later | Three type-scale tokens have no consumer. | `--text-display-lg\|xl\|2xl` at `theme.css:64-74`. Consumers outside `theme.css` and tests: **0, 0, 0**. Compare `display-xs` (14), `display-md` (4), `display-sm` (2). | They are in neither heading register in `CONVENTIONS.md` and in neither out-of-table carve-out, so the next person picks `text-display-xl` believing it is sanctioned and lands outside both registers. | Either delete them, or add one line to R-STYLE-004 saying the display scale is vendored whole from Untitled UI and runs to `2xl`. Deciding is the fix; both answers are defensible under R-STYLE-006. | S |
+| 6 | Later | `lib/core/motion.ts` describes a product that is not this one. | Header: "mirroring the CSS tokens in `app/styles/tokens.css`" — that path does not exist. `SPRING_BUBBLE` documents "chat bubble entrance… typing dots"; `SPRING_PILL` documents a "connect list highlight". Neither exists here. `SPRING_PILL`, `SPRING_BUBBLE`, `EASE_SMOOTH`: 0 consumers (`knip`). Only `Modal.tsx` imports the file. | Half the file is dead and the live half is documented against a codebase that is not this one. A reader looking for the motion language finds a broken file reference first. | Delete the three unused exports and the two invented use-cases; point the header at `src/styles/theme.css`. | S |
+| 7 | Later | Config names three files that do not exist. | `src/hooks/use-breakpoint.ts` — deleted in `c38dacf` — is still listed in `eslint.config.mjs:97`, `.prettierignore`, `tsconfig.json:52` and `tsconfig.vendored.json`. `.prettierignore` also names `app/styles/tailwind.generated.css`, which does not exist. | Harmless today, with one trap: a **first-party** `use-breakpoint.ts` created later lands silently exempt from lint, prettier and the four strict flags. R-UI-008's "goes in all four" ritual now has a phantom worked example. | Delete the four `use-breakpoint.ts` entries and the `tailwind.generated.css` line. | S |
+| 8 | Later | Two cache-tag comments have swapped truth. | `value-snapshot.ts:36` — "Nothing invalidates this today" — but `cron/snapshot/route.ts:122` calls `revalidateTag(valueHistoryTag(userId))`. Meanwhile `cardPricesTag` (`collection.ts:265`) is applied to a cache entry at `:283` and **never** passed to `revalidateTag` anywhere. | The comment that warns you describes the tag that is fine; the tag that actually has no invalidation carries no warning. Prices refresh only on the 3600s timer, which may well be intended — but nothing says so. | Move the paragraph to `cardPricesTag` and update it, or wire the invalidation. | S |
+| 9 | Later | `src/utils/**` is exempted as a directory, though R-UI-008 requires per file. | `eslint.config.mjs:96`, `.prettierignore`, `tsconfig.json:54` all use `src/utils/**`. `src/hooks/` is correctly per-file. `src/utils/cx.ts` is substantially first-party — a 25-line rationale and an `extendTailwindMerge` built from `@/lib/design/theme-values.generated`. | A first-party file carrying the class-merge tie-break — which its own comment says was already shipping a live bug — is unlinted, unformatted, and typechecked only under the relaxed vendored config. | Name `is-react-component.ts` per file, as `src/hooks/` already does, and let `cx.ts` back under the project's own rules. | S |
+| 10 | Later | The feature-boundary lint is enumerated per pair, so a third feature is unguarded. | `eslint.config.mjs:126-162` — one block naming `collection`, one naming `account`, each blocking the other by name. A `features/pricing/` would match no block. | R-STRUCT-001 reads as structural and is actually a hand-maintained pair list. `CONVENTIONS.md`'s `## Open` already flags three features as the point where `lib/core` gets ambiguous; this is the same cliff, one file over. Zero violations today — I checked every import. | Nothing now. When feature three arrives, replace both blocks with one `zones` rule. Worth a line in `## Open`. | — |
+| 11 | Later | Body limits are named in bytes and measured in UTF-16 code units. | `body.ts:76` `raw.length > limit`; same at `cards/route.ts:41` and `items/[id]/route.ts:56`. Constants are `MAX_BODY_BYTES` and `BODY_LIMIT`. | A body of multibyte text passes a cap up to ~3× its named byte figure. Bounded and not exploitable at these limits, but the name and the behaviour disagree. | `new TextEncoder().encode(raw).length`, or rename the constants. | S |
+| 12 | Later | `poke-holo.css` holds design values that R-STYLE-001's enforcement cannot see. | `#0e152e` ×3 plus `hsl()`/`hsla()` stops at `poke-holo.css:194-205`. `extract-theme-values.mjs` reads `theme.css` only. | R-STYLE-001 says `theme.css` is the only place a design value is written, and R-STYLE-007 protects the holo shine as identity. Both are true and they collide here, with nothing to say which wins. | This is a rule the code structurally ignores. Per the standard, it goes to `## Open` rather than being decided by me: either the gradient artwork is carved out of R-STYLE-001 in writing, or its stops become tokens. | — |
+| 13 | Later | `visual/`'s stated job is finished. | `playwright.config.ts:4` — "for one job: making the Tailwind migration of `cards.css` safe" and "before moving another rule out of `cards.css`". `cards.css` no longer exists (`2026-08-21-cards-css-gone`). | Not dead — it photographs ten pages at three widths and would catch a cascade regression. But it is a migration artefact whose migration is over, and nothing says what it is for now. | A question for you, not a deletion: keep it as the general cascade net and rewrite the header, or retire it. | — |
+| 14 | Later | Two validation idioms. | `zod` in `dependencies` and used once, in `lib/core/env.ts:1`. Zero zod under `src/app/api`; the 12 body-reading routes use hand-rolled validators such as `validateCardDraft`. | Everything from outside **is** validated — this is a consistency finding, not a hole. But the next person adding a route has two patterns to choose from and no rule naming the winner. | Pick one and write it as a rule. The hand-rolled validators return typed results already; zod would not obviously improve them. | — |
 
-### What passed, with evidence
+### Not findings — checked and clean
 
-| Check | Result |
-|---|---|
-| Clean install → typecheck → lint → test → build | **all exit 0**, `rm -rf node_modules .next && npm install` first |
-| Ignored warnings | **0.** `eslint --max-warnings 0` passes; `grep -icE "warn" build.log` → 0 |
-| Skipped or emptied tests | **0.** `grep -rn "\.skip\|\.todo\|xit(\|xdescribe("` → no matches |
-| Cross-feature imports | **0** — and now enforced, `eslint.config.mjs:135-160` |
-| Feature → route imports | **0** (`grep -rn 'from "@/app/' src/features src/components`) |
-| `components/shared/` → feature imports | **0** |
-| Hardcoded palette classes (`bg-blue-600`-style) in own code | **0** |
-| Hex outside `theme.css` | Only in `theme-values.generated.ts`, which **is** generated from `theme.css` and checked by `verify.sh`'s tokens step |
-| `@theme` outside `theme.css` | **0** (other hits are prose in comments) |
-| Server-only imports in client components | **0** |
-| `any` / `@ts-ignore` in first-party code | **0.** The 4 hits are in vendored `src/utils/is-react-component.ts` |
-| Renames legible in git | **65 renames** in Phase 2a alone, `git diff --summary -M` |
+Recorded because a silent gap is worse than a known one.
 
-**Folders that do not exist, and correctly so:** `types/` — no content, and this
-project keeps types beside what defines them. `features/*/actions.ts`,
-`queries.ts`, `schemas.ts` — data access lives in `lib/`. No stray content: no
-hook in `utils/`, no schema in `types/`, no provider in `components/`. The
-finding is not the empty folder, it is #4 — none of this is written down.
+- **Cross-feature imports: zero.** The naive `rg "from '@/features/"` returns 37 hits; all 37 are a feature importing *itself*. Comparing source feature to target feature gives 0 violations. R-STRUCT-001, 002 and 003 all hold.
+- **Hardcoded palette colours in first-party code: zero.** `bg-(blue|red|…)-N` and `text-(gray|slate|…)-N` → 0 matches outside the vendored trees.
+- **Hex literals outside `theme.css`:** every hit is either a comment, or `theme-values.generated.ts` (generated from `theme.css` and checked by `--check`), except `poke-holo.css` — finding 12.
+- **Server/client boundary:** no non-`NEXT_PUBLIC_` `process.env` read in any of the 82 `'use client'` files; no storage or service-role import in one.
+- **`any` / `@ts-ignore` / `@ts-expect-error` in first-party code: zero.** The five `any`s are all in `src/utils/is-react-component.ts`, which is vendored Untitled UI.
+- **Clickable `<div>`s: one**, `Modal.tsx:361`, a dialog backdrop — the conventional pattern, with Escape and a real close button alongside.
+- **`depcheck`'s four "unused" devDependencies are false positives.** `@tailwindcss/postcss` is in `postcss.config.mjs:10`; `tailwindcss`, `tailwindcss-animate` and `tailwindcss-react-aria-components` are at `globals.css:19-24` via `@import`/`@plugin`. depcheck does not read CSS.
+- **`knip`'s unused exports inside `components/base|application`** are the vendored library's own surface. R-UI-003 forbids editing it. Not findings.
+- **`scripts/*.mjs` flagged as unused files** are hand-run operational scripts (`node scripts/audit-collection.mjs`). Not dead.
+- **`visual/` baselines are gitignored on purpose**, and `playwright.config.ts:20-31` explains why at length: the pages render live Cardmarket prices, so a committed baseline would be red by morning. Correct call, clearly written. I suspected a hollow test suite and was wrong.
 
 ---
 
-## 3. Title inventory (section E)
+## 3. Title and token inventory
 
-**The token set that may define a title** (`src/styles/theme.css`):
+The tokenset a title may draw on, from `theme.css`: the `--text-*` steps with their
+paired `--line-height` and `--letter-spacing`, the `--font-title` weights, and the
+semantic text colours. Sizes are the meterstick; everything below is measured against them.
 
-| Axis | Tokens | Note |
+**Every font size in first-party code comes from the tokenset.** There is no
+exception to report.
+
+- `rg "text-\[[0-9]|font-size:"` over `src`, excluding the vendored trees, returns
+  **zero** hits outside `type-discipline.test.ts` (the check itself) and a comment
+  in `theme.css`.
+- `rg "<h[1-6][^>]*font-(medium|semibold|bold|black)"` → **zero**. R-STYLE-003 holds.
+- 90 raw `<hN>` tags, all drawing sizes from the scale.
+
+Usage against the two registers in `CONVENTIONS.md`:
+
+| Token | Register | Consumers |
 |---|---|---|
-| Size + line-height | `--text-xs · sm · md · lg · xl · display-xs · display-sm · display-md · display-lg · display-xl · display-2xl` | 11 steps, each with its own line-height |
-| Letter-spacing | `--text-display-md/-lg/-xl/-2xl--letter-spacing` | Applied automatically with the size utility; the four smaller steps have none |
-| Colour | `--color-text-primary · secondary · tertiary · brand-* · error/warning/success · placeholder · white` | |
-| **Weight** | **none** | **This is finding #5.** Every `font-medium/semibold/bold` in the app comes from Tailwind's default theme, not from `theme.css` |
+| `text-display-md` | Public page title | 4 |
+| `text-display-sm` | Public section | 2 |
+| `text-display-xs` | App page title | 14 |
+| `text-xl` | App section | 5 |
+| `text-lg` | Public card | 7 |
+| `text-md` | App card | 6 |
+| `text-hero` / `text-hero-narrow` | Out of table, named | 4 / 2 |
+| `text-wordmark` | Out of table, named | 1 |
+| `text-micro` | Out of table, named | 1 |
+| `text-display-lg` | **In no register** | **0** |
+| `text-display-xl` | **In no register** | **0** |
+| `text-display-2xl` | **In no register** | **0** |
 
-**88 headings in first-party code.** Grouped by recipe:
+Every out-of-table token that `CONVENTIONS.md` justifies by naming its caller does
+have one. The three at the bottom are finding 5: defined, in no register, unused.
 
-| Recipe | Where | From the token set? |
-|---|---|---|
-| `text-display-md font-medium tracking-[-0.045em] leading-tight` | `LegalPage.tsx:50`, `brand/page.tsx:159` (byte-identical, **duplicated** rather than shared), `marketingClasses.ts:26` (`sectionHeading`, 4 call sites) | size ✅ · weight ❌ · tracking ❌ overrides the token |
-| `[font-size:clamp(42px,4.5vw,64px)]` + 640px override, `font-medium tracking-[-0.045em]` | `page.tsx:254`, `app/ios/page.tsx:221` | size ❌ · weight ❌ · tracking ❌ |
-| `text-display-sm font-semibold` | `SetIndex.tsx:85`, `BrowseSetIndex.tsx:112`, `SettingsPanel.tsx:40` | size ✅ · weight ❌ |
-| `text-display-sm font-bold` | `RouteError.tsx:51` — the only `font-bold` heading | size ✅ · weight ❌ |
-| `text-display-xs font-semibold` | `cardsPageClasses.ts:195` (`cardsMainTitleClassName`, the signed-in page title) | size ✅ · weight ❌ |
-| `text-display-xs font-medium` | `CardAddDialog.tsx:455`, `CollectionValueCard.tsx:96` | size ✅ · weight ❌ |
-| `text-display-xs` alone | `SigninShell.tsx:31` — no weight, no tracking | size ✅ |
-| `text-lg font-medium` | `Sheet.tsx:58` | size ✅ · weight ❌ |
-| `text-lg font-medium tracking-[-0.03em] leading-snug` | `marketingClasses.ts:36` (`cardHeading`, 4 call sites) | size ✅ · weight ❌ · tracking ❌ |
-| no classes (inherit) | 62 headings, nearly all in `privacy`, `terms`, `brand` — they inherit from `LegalPage` | n/a |
+**Step 4, consistency.** No two places render the same kind of title at different
+values. `text-display-xs` carries every app page title (14 callers) and
+`text-display-md` every public one (4).
 
-### The deviations, and what I would do with each
-
-**D1 — the two `clamp()` hero titles.** `page.tsx:254`, `app/ios/page.tsx:221`.
-Two occurrences, so your rule says *snap*, not *promote*. But snapping loses
-fluid scaling: the nearest tokens are `display-lg` (48px) and `display-xl`
-(60px), against a clamp that runs 42→64px. **This one I am putting to you rather
-than deciding**, because your own rule does not cover "the need is real but
-occurs twice", and because `STATE.md` already lists "the fixed type scale" as an
-open decision. These two headings *are* that decision, still unmade.
-
-**D2 — `tracking-[-0.045em]` (×4) and `tracking-[-0.03em]` (×3).** → **Snap to
-the existing token.** `text-display-md` already carries `-0.72px`. The override
-sets −1.62px at that size — the visible difference is a noticeably tighter title,
-which means removing it *will* change the look. Old `−1.62px` → new `−0.72px`.
-The two smaller cases (`-0.02em` ×3, `0.06em` ×2) are on non-title text and are
-out of scope for this section.
-
-**D3 — weight.** 30 `font-medium`, 20 `font-semibold`, 6 `font-bold`, and no
-weight token exists. → **Add tokens.** Well over three occurrences, and the
-need is real. Proposal: `--font-weight-title: 500` and
-`--font-weight-title-strong: 600`, in `theme.css`, replacing every
-`font-medium`/`font-semibold` on a heading. `font-bold` at `RouteError.tsx:51`
-snaps to `title-strong`; it is the only one and nothing argues for a third step.
-
-**D4 — consistency.** `brand/page.tsx:159` duplicates `LegalPage.tsx:50`
-character for character instead of using it. Two page titles, one string, two
-places — this is the same class of bug as the one `components/shared/` was
-supposed to end.
-
-**Which is the norm?** Four sizes claim to be "the page title":
-`display-md` (marketing, legal, brand), `display-sm` (route error),
-`display-xs` (signed-in pages, sign-in). That is not a deviation from the token
-set — every one is a real token — but it means the app has no page-title size.
-**This needs your answer before any of the above is worth doing.**
-
-### Enforcement — one recommendation
-
-**A `<Heading>` component with fixed variants** (`page`, `section`, `card`),
-in `components/shared/`. Not a lint rule.
-
-The reason is D4: a lint rule forbidding raw `text-*`/`font-*` on `<h1-6>` can
-catch a new deviation, but it cannot answer "which of the four is the norm", and
-it cannot stop `brand/page.tsx` from duplicating `LegalPage.tsx`'s string. A
-component does both, and it is what ADR-0007 already chose for this repository —
-shared React components hold the utility string once, `@apply` and
-`@layer components` are forbidden.
+**Step 5, how this is held.** It already is, and better than a component would
+hold it: `type-discipline.test.ts` is a static scan over `src/app`, `src/features`,
+`src/components/shared` and `src/providers` that fails on any raw size in a
+className, and its failure message carries the fix. One gap worth a line — `src/lib`,
+`src/hooks` and `src/utils` are not in `ROOTS`. Today none of them contains a
+className string, so nothing escapes. Adding `src/lib` costs nothing and closes it
+before something does. **Recommendation: add `src/lib` to `ROOTS`.**
 
 ---
 
-## 4. Cleanup list (section F)
+## 4. Cleanup list
 
-### First: what I could not explain, and want you to decide
+### Reason I could not reconstruct — for you
 
-| Item | What I could reconstruct | What I could not |
-|---|---|---|
-| **The whole `docs/` memory system vs. this brief** | `CLAUDE.md:70` — *"Decision records are immutable. Supersede, never rewrite."* ADR-0053 records deliberately keeping memory in `docs/` and names what would void that choice. 108 ADRs, 25 feedback records, 94 changelog fragments | **Nothing.** This is not ambiguity — it is a direct contradiction, and it is the highest-priority item in this audit. See below |
-| `scripts/audit-collection.mjs`, `backfill-finish`, `backfill-generations`, `backfill-rarity-types`, `cardmarket-links`, `pokedex-art`, `pokedex` (7 files) | knip calls them unused; they are one-off data migrations, and `backfill-rarity-types.mjs` is named in ADR-0030 as the script that produced the current data | Whether any is still needed. They read like history, but deleting the script that produced your rarities feels like burning the receipt |
-| `scripts/snapshot-collection-value.mjs` | ADR-0044 records it was broken for everyone once `/cards` became a redirect | Whether it was ever repaired, or whether the cron replaced it entirely |
+Nothing. Every construction I flagged carries its own rationale in a comment, which
+is unusual and is the main reason this audit found no blocking issues. The three
+items below are questions of intent, not of lost reasoning:
 
-### The contradiction, stated plainly
+- **`visual/`** — purpose fulfilled, still functional. Keep as a general cascade net
+  or retire? (Finding 13.)
+- **`poke-holo.css` gradient stops** — identity artwork or design values? (Finding 12.)
+- **`cardPricesTag`** — is the hourly timer the intended mechanism? (Finding 8.)
 
-**This brief asks me to dissolve 108 decision records into one `CONVENTIONS.md`
-and delete the originals. `CLAUDE.md` — the binding instruction file for this
-repository — forbids exactly that.**
+### Remove
 
-Both cannot hold. The arguments, so you can choose:
-
-- **For the brief.** 244 markdown files is a lot to hand a new developer. Records
-  do contradict each other (ADR-0059 said "not now" and ADR-0095 says "now";
-  ADR-0056 was partly superseded by ADR-0061). A rule in the present tense is
-  more useful than an argument from March.
-- **Against.** The records are *why*, not *what*, and this session alone used
-  them six times to avoid re-making a settled mistake — ADR-0012's cascade bug,
-  ADR-0017's conditional-reset trap, ADR-0018's grep-before-delete, FB-0023's
-  "leave the vendored files", ADR-0059's parked Combobox, ADR-0057's naming
-  collision. A `CONVENTIONS.md` line saying "features do not import each other"
-  does not carry the measurement that made it true. And the migration you just
-  approved was steered by them.
-
-**My recommendation: do both, and delete nothing.** Write `CONVENTIONS.md` as
-the rules in the present tense — that is genuinely missing and is finding #4.
-Keep `docs/decisions/` as the reasoning behind them, and have `CONVENTIONS.md`
-link each rule to the record it came from. You get the one document you asked
-for; you keep the receipts. **But this is your call, and I have not touched a
-single record.**
-
-### The rest of the cleanup list
-
-| Path | What it is | Outcome | Why |
+| Path | What | Outcome | Why |
 |---|---|---|---|
-| `MIGRATION.md` | Phase 0 report + A1–A5 assumptions, all resolved and marked so | **Delete — after** finding #4 is done | It is currently the only place the target structure is written down |
-| `.context/plans/*.md` (3), `.context/todos.md` | Session scratch, gitignored | Leave | Not in the repository |
-| TODO / FIXME / HACK / `@deprecated` in `src/` | **0 found** | — | `grep -rnE "TODO\|FIXME\|HACK\|XXX\|@deprecated" src scripts` → empty |
-| Commented-out code | **0 found** | — | The 6 hits are prose comments containing punctuation, not code |
-| Migration shims in `src/` | **0** | — | `@/*` is back to `["./src/*"]`, the dual alias is gone (A2), `lib/design/theme-values.ts` was replaced by the generated file |
-| Feature flags permanently on/off | **0 found** | — | |
-| `docs/changelog.d/` (94 fragments) | Unreleased changelog entries | Question for you | 94 fragments and `docs/CHANGELOG.md` exists — has a release ever consumed them? |
+| `eslint.config.mjs:97`, `.prettierignore`, `tsconfig.json:52`, `tsconfig.vendored.json` | `use-breakpoint.ts` entries | Remove | File deleted in `c38dacf`. Four dead entries and a trap for a future first-party file of the same name. |
+| `.prettierignore` | `app/styles/tailwind.generated.css` | Remove | Path does not exist. |
+| `lib/core/motion.ts` | `SPRING_PILL`, `SPRING_BUBBLE`, `EASE_SMOOTH` + their comments | Remove | Zero consumers; the comments describe chat bubbles and connect lists that this product does not have. |
+| `lib/core/motion.ts:1` | Header reference to `app/styles/tokens.css` | Correct | Path does not exist. |
+| `value-snapshot.ts:36` | "Nothing invalidates this today" | Correct | It is invalidated, at `cron/snapshot/route.ts:122`. |
 
----
+### Keep, verified in place
 
-## 4b. Proposed rule set
+- The six `for now` / `temporary` hits are all deliberate and all carry their reason
+  in the same comment (`artwork.ts:44`, `tabbarClasses.ts:246`, `CardsDashboard.tsx:68`,
+  `cards/[id]/page.tsx:34`, and two in user-facing copy). None is an ownerless TODO.
+- No `TODO`, `FIXME`, `HACK`, `XXX` or `@deprecated` anywhere in first-party code.
+- No commented-out code.
+- The four `docs/*.md` worklists and the `*.undo.json` rollback files are live
+  database state, as `CLAUDE.md` says. Not history, not cleanup.
+- `MIGRATION.md` is already gone.
 
-Written as `CONVENTIONS.md` would be. **Not created** — this is the proposal.
+### Out of scope, named only
 
-| # | Rule | Enforcement | From |
-|---|---|---|---|
-| 1 | A feature does not import another feature | **Enforced** — `eslint.config.mjs:135` | this migration |
-| 2 | A feature does not import a route; routes compose features | **Enforced** — `eslint.config.mjs:139` | this migration |
-| 3 | `components/shared/` does not know about a feature | **Enforced** — `eslint.config.mjs:166` | this migration |
-| 4 | A component used by exactly one route lives in that route's `_components/` | Reviewed | this migration |
-| 5 | `styles/theme.css` is the only place a design value is written | **Enforced** — `verify.sh` tokens step regenerates and fails on a diff | ADR-0093 |
-| 6 | Untitled UI is the default; a local value must earn the exception with the identity or a measurement | Reviewed | ADR-0056 |
-| 7 | The product identity is the holographic shine and the card tilt. Nothing else | Reviewed | ADR-0061 |
-| 8 | No `@apply`, no `@layer components`. A shared utility string lives in one constant or one component | Reviewed | ADR-0007 |
-| 9 | Do not name a token what Tailwind names one, unless replacing it app-wide on purpose | **Loose intent** — nothing checks it | ADR-0057 |
-| 10 | Grep the whole tree for a class name before deleting its CSS | **Loose intent** | ADR-0018 |
-| 11 | Vendored Untitled UI is exempt from this project's lint and format, not from `strict` | **Enforced** — `tsconfig.vendored.json`, per-file exemptions | ADR-0062, ADR-0066 |
-| 12 | One icon set: `@untitledui-pro/icons` | **Enforced** — `scripts/untitled-add.mjs` rewrites and drops the second package | ADR-0067, ADR-0083 |
-
-**Loose intents that nobody can check** — rules 9 and 10. By your own standard
-these are not rules. Rule 9 could become a test (an allowlist of Tailwind
-namespaces this project owns); rule 10 cannot be automated and should probably
-be a line in `CONVENTIONS.md` rather than pretend to be enforced.
-
-**Rules the code does not follow** — none of the twelve. The one candidate,
-rule 5, survives on a technicality worth naming: `theme-values.generated.ts`
-contains hex, but it is generated from `theme.css` and `verify.sh` fails if the
-two disagree.
-
-**Contradictions between records** — three, all already resolved by supersession
-rather than left open: ADR-0059 → ADR-0095 (Combobox), ADR-0056 → ADR-0061
-(identity list), ADR-0013/0054 → ADR-0093 (token layer). The supersession
-mechanism worked; this is the argument for keeping it.
+`.dev-standards/`, `CLAUDE.md`, `AGENTS.md` and `CONVENTIONS.md` are the decision
+layer and follow the Dev Standard, not this audit.
 
 ---
 
 ## 5. What I could not verify
 
-| | Why | What I need |
-|---|---|---|
-| **Whether the site renders correctly in production** | Nothing is pushed; 22 commits, no deploy, no preview URL | Push the branch — Vercel builds a preview for any branch, PR or not |
-| **Visual regressions across the CSS rebuild** | The Playwright baselines were deleted with `cards-css.spec.ts`, and ADR-0069 requires baselines from a reference commit in a separate worktree | A baseline run against `origin/main` in a worktree |
-| **Mobile and tablet** | I verified 1461px only, in one browser | A run at 390 / 800 / 1280 |
-| **Whether the 42 unused vendored files are truly unreachable** | knip is static; a runtime-composed import would not show | Nothing cheap. FB-0023 already chose to keep them |
-| **Whether the colour changes are acceptable** | `labelSecondary` went `#666666` → `#404040`, `labelTertiary` `#737373` → `#525252`. Higher contrast, so better — but it also changes both OG images and the browser chrome colour | Your eye on a shared link preview |
-| **Accessibility beyond the mechanical check** | I checked for `<div onClick>` (1 hit: `Modal.tsx:361`, the backdrop, which has Escape handling beside it) and server/client leaks. No screen reader was run | A real assistive-technology pass |
-| **Whether `docs/changelog.d/`'s 94 fragments were ever released** | No release tooling in `package.json` | You |
+- **A clean install.** I did not `rm -rf node_modules`; the working tree was in use
+  for this audit throughout. `./scripts/verify.sh` passes end to end on the existing
+  tree — secrets, node, format, tokens, typecheck, test, lint, build, standards,
+  record numbers — exit 0. CI (`check.yml`) does `npm ci` from scratch on every push,
+  so the clean path is covered continuously; it is just not covered *by me*.
+- **Whether the test count fell during the migration.** 43 test files today. I did
+  not reconstruct the count before the migration, because the migration predates the
+  branch point and `git log` over deleted test files would need a date I would be
+  guessing at.
+- **Runtime accessibility.** I checked structurally — React Aria intact, one backdrop
+  `div`, `main-landmark.test.ts` enforcing one `<main>` per screen. I did not drive a
+  screen reader or a keyboard through a real page.
+- **Whether the four Untitled UI plugins are all still needed at runtime.** They are
+  imported; I did not check that removing one would visibly change anything.
 
 ---
 
 ## 6. The three future-proof questions
 
-**Can a new developer add a feature independently within a week? — No.**
-Not because the structure is wrong, but because it is written down nowhere:
-`README.md` and `CLAUDE.md` do not mention `src/`, `features/` or `_components/`
-(finding #4). The lint rules would teach them the boundaries by failing, which
-is a slow way to learn a convention.
+**Can a new developer add a feature within a week? — Yes.** The structure is
+enforced rather than described: three eslint rules on feature boundaries, a token
+test, a contrast test, a landmark test, a body-limit test. A newcomer finds out
+they broke the shape from a failing check, not from review.
 
-**Can a feature be removed without archaeology in five other folders? — Yes.**
-`features/collection` and `features/account` have zero edges to each other and
-zero into routes; deleting one means deleting its folder and the routes that
-import it, and eslint fails loudly if anything is missed.
+**Can a feature be removed without archaeology in five directories? — Yes, for the
+two that exist.** `features/collection` and `features/account` are self-contained,
+and I verified zero imports between them. The caveat is finding 10: the boundary is
+held by a hand-written pair list, so this answer is about the codebase as it is, not
+as it scales.
 
-**Can Untitled UI be updated without merge hell? — Yes, and better than before.**
-`scripts/untitled-add.mjs` now absorbs six things the generator breaks, proved
-by reproducing its damage and re-running. Two caveats: `src/utils/` and
-`src/hooks/` are mixed directories with per-file exemptions (finding #10), and
-`components/base/select/` was pruned by hand to four of the eight files the CLI
-installed — a re-run will bring the other four back.
+**Can Untitled UI be updated without merge hell? — Yes.** The vendored trees are
+untouched by hand, exempted per tree in four configs, checked by a separate tsconfig
+that keeps `strict` while dropping the four flags the library is not written under,
+and added through `npm run ui:add` which repairs what the generator breaks. This is
+the best-defended part of the repo. One gap: `components.json` does not exist, so
+`npx untitledui upgrade` has no baseline version to diff from — already in
+`CONVENTIONS.md`'s `## Open`.
 
 ---
 
 ## 7. Acceptance criteria
 
-| | Criterion | Evidence |
+| Criterion | Status | Evidence |
 |---|---|---|
-| ✅ | Clean install + typecheck + lint + test + build green, zero ignored warnings | `rm -rf node_modules .next && npm install` then all four → exit 0. `--max-warnings 0`. Build warnings: 0 |
-| ✅ | No hardcoded design value in `src/`; `theme.css` demonstrably the only source | 0 palette classes, 0 hex outside the generated file, 0 `@theme` outside `theme.css`. `verify.sh` regenerates and fails on a diff |
-| ❌ | Every title from the token set, and the same kind of title identical everywhere | Finding #5. Weight is not tokenised at all; page titles come in four sizes |
-| ⚠️ | No cross-feature imports; knip and depcheck clean | Cross-feature: **0** ✅. knip: 42 unused files, 2 unused deps, 1 unlisted ❌ |
-| ✅ | No `any`, `@ts-ignore` or `as any` without explanation | 0 in first-party code; the 4 in vendored `is-react-component.ts` are exempt by ADR-0062 |
-| ✅ | Server/client boundary correct | 0 server-only imports in client components. 111 `use client` of 284 files, but 79 of those are vendored |
-| ❌ | One document describes the current state, structure included | Finding #4 — no document does |
-| ❌ | `MIGRATION.md` gone, everything in it processed | Still present, and currently the only record of the target structure |
-| ❌ | All decision documents merged into one rule set | **Blocked on your decision** — see section 4, the contradiction |
-| ✅ | No commented-out code, no ownerless TODOs, no migration shims | 0 / 0 / 0, all three greps empty |
-| ❌ | One active enforcement mechanism for token discipline | `verify.sh` enforces the token *file*; nothing enforces that a title uses it. Section 3 proposes `<Heading>` |
+| Clean install + typecheck + lint + test + build all green, no ignored warnings | ⚠️ partly | `./scripts/verify.sh` → exit 0, all ten checks. Not run from a wiped `node_modules` — see section 5. `lint` is `--max-warnings 0`, so there are no ignored warnings. |
+| No hardcoded design value in `src/`; `theme.css` demonstrably the only source | ⚠️ partly | Zero in first-party TS/TSX. `poke-holo.css` is the exception, and nothing checks it — finding 12. |
+| Every title from the tokenset, same kind of title identical everywhere | ✅ | Section 3. Zero raw sizes; no inconsistent pair found. |
+| No cross-feature imports; no dead code or unused dependencies | ✅ | 0 cross-feature imports, verified per source feature. `knip` and `depcheck` hits triaged in section 2 — all vendored surface, hand-run scripts, or CSS-loaded plugins. |
+| No `any`, `@ts-ignore`, `as any` without a stated reason | ✅ | Zero in first-party code. Five in `is-react-component.ts`, which is vendored. |
+| Server/client boundary correct | ✅ | No secret or server-only import in any of the 82 client files. |
+| One document describes the current state; no second document contradicting it | ✅ | `CONVENTIONS.md`, and `CLAUDE.md` says so explicitly. |
+| `MIGRATION.md` gone, everything in it handled | ✅ | Absent. |
+| No two documents contradicting each other about the codebase | ❌ | `docs/CHANGELOG.md` says it is generated from `changelog.d/`; it is not — finding 3. |
+| No commented-out code, no ownerless TODOs, no migration shims in `src/` | ✅ | Zero of each. The six "temporary" markers all carry a reason. |
+| One active mechanism enforcing token discipline | ✅ | `type-discipline.test.ts`, plus `contrast.test.ts` and `extract-theme-values.mjs --check`. Three, not one. |
 
-**7 of 11.** The four open ones are findings #4, #5, the knip result, and one
-decision that is yours.
+Nine of eleven met, two partly, one failed.
 
 ---
 
 ## 8. Ground to build on
 
-### Adding a feature, in five lines
+**Adding a feature.** Create `src/features/<domain>/` with `components/` and
+`hooks/`. Data access goes in `src/lib/`, never in the feature — there is no
+`actions.ts` or `queries.ts` here. Route-only UI goes in that route's
+`_components/`. The route composes the feature; the feature never imports a route
+or another feature. Design values come from `theme.css` and nowhere else.
 
-1. Route in `src/app/<route>/page.tsx` — routing and data fetching only.
-2. UI that only that route uses → `src/app/<route>/_components/`.
-3. UI shared across routes but owned by one domain →
-   `src/features/<domain>/components/`; hooks in `hooks/` beside it.
-4. UI with no domain (Button, Modal, FormField) → `src/components/shared/`.
-   Search Untitled UI first — that is the standing rule, not a preference.
-5. Never import another feature. Cross-links go in the route that needs both, or
-   into `lib/`. Eslint will stop you.
+**The three places this will shift if nobody watches.**
 
-### The three places this will drift first
+1. **The feature-boundary lint, at feature three.** It names `collection` and
+   `account` explicitly. The third feature is unguarded on the day it is created,
+   and the failure is silent.
+2. **`lib/core/`, also at feature three.** Already named in `CONVENTIONS.md`'s
+   `## Open`. It is currently a single bag holding catalogue matching, pricing,
+   artwork, motion constants and formatting.
+3. **`CONVENTIONS.md`'s own size.** 45 rules against a standard that caps the set
+   at 15, and 9 of them marked `Intent` — which by the project's own definition
+   means nothing checks them. See below.
 
-1. **`components/shared/`.** It went from 48 files to 19 by taking a domain out.
-   The pressure that made it 48 has not gone anywhere: the next component with
-   no obvious home lands there, and nothing fails. Rule 4 is *reviewed*, not
-   enforced.
-2. **Titles.** Four sizes and three weights already claim to be the page title,
-   and nothing prevents a fifth. This is the one place the codebase has already
-   drifted while the tokens stayed perfectly correct.
-3. **`src/utils/` and `src/hooks/`.** Mixed vendored and first-party, exempted
-   per file across four config files. One `ui:add` puts a file there that three
-   of the four do not know about, and the failure is a lint error nobody wrote.
+**Deliberately left, will wring later.** No component renders in any test. All 43
+test files are API routes, `lib/`, or static file scans. That is a defensible shape
+for a codebase whose UI logic mostly lives in vendored React Aria components — until
+`Modal.tsx` grows to 404 lines of hand-rolled focus management, which it has.
+Finding 1 is the first bill for it.
 
-### Deliberately left, and when it will start to hurt
+---
 
-- **`lib/core`'s 52 modules stay outside `features/`.** Fine at this size. It
-  starts to hurt at the third domain, when "which feature owns `matching.ts`"
-  has three plausible answers.
-- **`CardsView.tsx` is 1,760 lines.** It works and it is tested through its
-  routes. It becomes the reason a change takes a day the first time two people
-  touch it in one week.
-- **42 unused vendored files, ~6,650 lines.** Costs nothing today — they are not
-  bundled. They cost the next `npx untitledui upgrade`, which will offer to
-  update all of them.
+## 9. `CONVENTIONS.md` — proposed reduction
 
-**Correction to this audit, made 2026-08-22 after measuring properly.** An
-earlier reading of "zero `next/dynamic` in the tree" was turned into a claim
-that recharts ships to every route. It does not. Next splits client components
-per route on its own: recharts sits alone in a 451 kB chunk that `/`, `/login`
-and `/privacy` never request, and those three load 681, 694 and 647 kB. Adding
-`next/dynamic` would only defer the chart *within* the dashboard, where it sits
-above the fold — a layout shift bought for nothing. The observation was right and
-the conclusion drawn from it was not.
-- **No zod on 15 of 28 API routes.** The hand-written validators are good where
-  they exist. This bites when a route grows a field and the validation is three
-  files away from the type.
+You left this to me. The rule set is 45 rules where both the installed standard
+(ceiling 15) and the Dev Standard doc ("houd de set klein") say it should be
+smaller, and `verify.sh` currently *skips* the check that would say so.
+
+The 9 `Intent` rules are the place to start, because the file's own preamble
+concedes them: "Anything on this list is a candidate to make enforceable or to
+drop." My recommendation per rule:
+
+| Rule | Now | Proposal |
+|---|---|---|
+| R-STYLE-005 | Intent | **Drop.** A token in `:root` generating nothing is Tailwind behaviour, not a project rule. It belongs in a comment in `theme.css`. |
+| R-STYLE-009 | Intent | **Drop.** Same: a naming caution, not a testable rule. |
+| R-STYLE-010 | Intent | **Drop.** Advice about a CSS technique. Unenforceable as written. |
+| R-STYLE-011 | Intent | **Drop.** "Grep before deleting" is a working habit, not a convention. |
+| R-STYLE-012 | Intent | **Enforce.** A literal class name defined nowhere is findable by a static scan, exactly like `type-discipline.test.ts`. |
+| R-STYLE-018 | Intent | **Fold into R-STYLE-007.** It is a fact about one file; state it in the file. |
+| R-UI-007 | Intent | **Enforce.** "A vendored component with no consumer" is what `knip` already reports. |
+| R-PLAT-001 | Intent | **Keep as Intent, or move to the README.** Nothing in this repo can check Cloudflare's setting. It is real and it is not a code rule. |
+| R-PLAT-002 | Intent | **Same.** A Vercel dashboard setting. |
+
+That is 5 dropped, 2 made enforceable, 2 acknowledged as environment facts rather
+than code rules — taking the set from 45 to 40 and the `Intent` count to 0 or 2.
+
+Getting from 40 to 15 is a larger conversation and I am not going to pretend
+otherwise: the Styling block alone is 18 rules, and most of them are load-bearing.
+My honest read is that **15 is the wrong ceiling for this repo** and the rule to
+change is the standard's, not this project's. The set is long because the project
+is unusually disciplined, not because it is an archive. What it does need is the
+`Intent` tier gone, since a rule nothing checks is the thing the ceiling exists to
+prevent.
+
+`verify.sh` currently skips the `conventions` check with those numbers written into
+the skip line. Once the `Intent` tier is resolved, two of the three blockers to
+turning it on are gone; the third is the rule-count ceiling.
