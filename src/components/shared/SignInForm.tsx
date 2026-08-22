@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useSession } from "@/app/hooks/useSession";
+import { useSession } from "@/hooks/useSession";
 import { FormError, FormForm, FormNote } from "@/components/shared/FormField";
 import { SigninLinks, signinLinkClassName } from "@/components/shared/SigninShell";
 import { Button } from "@/components/base/buttons/button";

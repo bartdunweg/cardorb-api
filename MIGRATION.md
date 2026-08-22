@@ -152,6 +152,65 @@ per the brief. `@/`-prefixed imports are not touched at all.
 **Verification after every step:** `./scripts/verify.sh` — one command covering
 prettier, the token generator's `--check`, typecheck, 452 tests, lint and build.
 
+## 6b. Assumptions taken while Phase 1–2 ran
+
+Recorded rather than asked, because a question must not stop the work. Each is
+reversible; raise any of them and it changes.
+
+**A1 — `visual/` stays at the repository root.** The brief's target tree does not
+name it, Playwright's `testDir` points at `./visual`, and it is test
+infrastructure rather than source. Moving it buys nothing and adds a config to
+get wrong.
+
+**A2 — `@/*` resolves `["./src/*", "./*"]` for the duration.** Without the pair
+the alias could only be flipped after every one of its six tops had moved, which
+is the big bang the brief forbids. **The second entry must come out when `src/`
+holds everything** — leaving it means a stale root copy of a moved file keeps
+resolving silently. It is the one piece of temporary scaffolding in this
+migration.
+
+**A3 — relative imports crossing a directory boundary become `@/` imports.**
+The depth differs per file and would have to be recomputed at every later move.
+224 specifiers were converted this way in Phase 2b alone. It is an import
+rewrite inside a move, which the brief endorses; it is not a content change.
+
+**A4 — `docs/` is never swept.** 209 mentions of `components/custom/` live in
+decision records, which are immutable and historically accurate: that *is* where
+the file was when the record was written. `STATE.md` carries this project's own
+account of a blanket `sed` silently rewriting a dozen unrelated records.
+
+**A5 — the two `hooks/` directories are merged.** `app/hooks/` (three hooks this
+project wrote) and `hooks/` (Untitled UI's `use-breakpoint.ts`) are one
+`src/hooks/` now. Consequence, and it is the kind that hides: the vendored
+eslint/prettier/tsconfig exemption was a **directory** glob, so merging would
+have silently exempted our three hooks from linting. It names
+`use-breakpoint.ts` by file now. **If `npm run ui:add` writes another vendored
+hook, it has to be added to that list** — `scripts/untitled-add.mjs` prints what
+it changed, which is where it will show.
+
+**A6 — `lib/design/` keeps its name inside `src/lib/`.** The brief's tree does
+not mention it and it holds one generated file. Folding it into `src/lib/` flat
+is cosmetic and belongs in Phase 5, not in a move.
+
+### The pattern all of Phase 2 confirmed
+
+`tsc` catches every broken import. **The risk lives entirely in code and
+configuration that treats a path as data**, and none of it is type-checked:
+
+| Where | Found in |
+|---|---|
+| `tsconfig.json`, `tsconfig.vendored.json` include/exclude globs | 1b, 2a-i, 2c |
+| `eslint.config.mjs` vendored ignores **and** `CACHE_OWNERS` | 1b, 2a-i, 2b |
+| `.prettierignore` | 1b, 2a-i |
+| `scripts/extract-theme-values.mjs` input **and** output paths | 1b, 2b |
+| `scripts/*.mjs` importing `../lib/...` — Node reads no tsconfig paths | 2b |
+| **`vi.mock()` / `await import()`** — a specifier as an *argument*, invisible to an import-statement regex | 2b, 32 of them |
+| **Tests that read source files by path** — `main-landmark.test.ts`, `routes.test.ts` | 2a-i, 2c |
+
+The last two are the ones that bite: a `vi.mock()` with a dead path fails at
+collection time in a message naming the test, and a route-walking test is only
+as good as the string it walks from.
+
 ## 7. Open questions
 
 **Q1 — `components/custom/` → `components/shared/`, or straight into `features/`?**

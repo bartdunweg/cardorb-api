@@ -32,7 +32,8 @@ app/styles/tailwind.generated.css
 # real upstream change gets lost in the noise. ADR-0061.
 src/components/
 src/utils/
-src/hooks/
+# One file, not the directory: three hooks this project wrote live beside it.
+src/hooks/use-breakpoint.ts
 
 # Supabase's auth email templates are HTML that Supabase renders and its own
 # tooling round-trips; public/ holds assets generated in the iOS repo.

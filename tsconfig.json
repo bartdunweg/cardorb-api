@@ -52,7 +52,7 @@
     "src/components/base/**",
     "src/components/foundations/**",
     "src/components/shared-assets/**",
-    "src/hooks/**",
+    "src/hooks/use-breakpoint.ts",
     "src/utils/**"
   ]
 }

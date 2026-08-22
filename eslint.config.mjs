@@ -74,7 +74,15 @@ const config = [
      * these files — TypeScript has no per-directory options, so that one has to
      * be a patch. ADR-0061 has both.
      */
-    ignores: ["src/components/**", "src/utils/**", "src/hooks/**"],
+    /* src/hooks/ is named file by file rather than as a directory, because it
+       is the one mixed tree: Untitled UI's use-breakpoint.ts sits beside three
+       hooks this project wrote, and those three must be linted. A directory
+       glob here would exempt them silently — the worst kind of exemption,
+       because nothing reports a rule that stopped running.
+
+       If `npm run ui:add` writes another hook, add it to this list. The
+       wrapper prints what it changed, which is where you will see it. */
+    ignores: ["src/components/**", "src/utils/**", "src/hooks/use-breakpoint.ts"],
   },
 ];
 

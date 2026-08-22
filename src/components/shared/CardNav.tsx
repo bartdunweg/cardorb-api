@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
-import { useSwipe } from "@/app/hooks/useSwipe";
+import { useSwipe } from "@/hooks/useSwipe";
 import { untitledIconButton } from "@/components/shared/untitledButtonClasses";
 
 /**

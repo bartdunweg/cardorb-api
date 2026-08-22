@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/app/hooks/useSession";
+import { useSession } from "@/hooks/useSession";
 import { MIN_PASSWORD } from "@/lib/core/account";
 import { FormError, FormForm } from "@/components/shared/FormField";
 import { Button } from "@/components/base/buttons/button";

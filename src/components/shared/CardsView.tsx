@@ -25,7 +25,7 @@ import FilterSheet from "@/components/shared/FilterSheet";
 import ViewSheet from "@/components/shared/ViewSheet";
 import ViewMenu from "@/components/shared/ViewMenu";
 import FilterChips, { type ActiveFilter } from "@/components/shared/FilterChips";
-import { useSession } from "@/app/hooks/useSession";
+import { useSession } from "@/hooks/useSession";
 import { tally } from "@/lib/core/cards-stats";
 import { caught, getPokedex } from "@/lib/core/pokedex";
 import { shownPrice } from "@/lib/core/cards";

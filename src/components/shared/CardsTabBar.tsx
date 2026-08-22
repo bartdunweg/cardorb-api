@@ -14,7 +14,7 @@ import {
   SearchLg as SearchLgSolid,
   User01 as User01Solid,
 } from "@untitledui-pro/icons/solid";
-import { useSlidingPill } from "@/app/hooks/useSlidingPill";
+import { useSlidingPill } from "@/hooks/useSlidingPill";
 import { Avatar } from "@/components/base/avatar/avatar";
 import {
   tabbarClassName,

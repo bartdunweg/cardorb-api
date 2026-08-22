@@ -35,7 +35,7 @@
     "src/components/foundations/**/*.tsx",
     "src/components/shared-assets/**/*.ts",
     "src/components/shared-assets/**/*.tsx",
-    "src/hooks/**/*.ts",
+    "src/hooks/use-breakpoint.ts",
     "src/utils/**/*.ts"
   ],
   "exclude": ["node_modules"]
