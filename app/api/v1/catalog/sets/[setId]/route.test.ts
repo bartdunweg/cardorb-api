@@ -7,23 +7,23 @@ const getRows = vi.fn();
 
 /* Same three server-only modules replaced wholesale as in the sibling route's
    test; the ownership join is the real, pure one. */
-vi.mock("../../../../../../lib/api/guard", () => ({
+vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
 }));
-vi.mock("../../../../../../lib/api/viewer", () => ({ bearer: () => null }));
-vi.mock("../../../../../../lib/core/collection", () => ({
+vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
+vi.mock("@/lib/core/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
-vi.mock("../../../../../../lib/core/ptcg-browse", () => ({
+vi.mock("@/lib/core/ptcg-browse", () => ({
   findSet: (...a: unknown[]) => findSet(...a),
   setCards: (...a: unknown[]) => setCards(...a),
 }));
 /* The TCGdex scan swap is a real network call through setCatalogue() and has
    its own tests; here it would only make these ones depend on a second host
    being up. Replaced with the identity it degrades to when TCGdex is silent. */
-vi.mock("../../../../../../lib/core/browse-artwork", () => ({
+vi.mock("@/lib/core/browse-artwork", () => ({
   withTcgdexScans: (_set: unknown, cards: unknown) => cards,
 }));
 

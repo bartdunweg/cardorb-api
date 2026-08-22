@@ -1,6 +1,6 @@
 import SigninShell, { SigninOr } from "@/components/shared/SigninShell";
 import { FormNote } from "@/components/shared/FormField";
-import { APP_NAME } from "../lib/core/config";
+import { APP_NAME } from "@/lib/core/config";
 import Button from "@/components/shared/Button";
 
 /**

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { sameOrigin } from "../../../../../lib/api/guard";
-import { createRateLimiter } from "../../../../../lib/api/rate-limit";
-import { adminClient } from "../../../../../lib/storage/supabase";
-import { validateUsername } from "../../../../../lib/core/account";
+import { sameOrigin } from "@/lib/api/guard";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { adminClient } from "@/lib/storage/supabase";
+import { validateUsername } from "@/lib/core/account";
 
 /**
  * Whether a name is free, while somebody is still typing it.

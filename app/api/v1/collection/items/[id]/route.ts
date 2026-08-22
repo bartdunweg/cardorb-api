@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { CARDS_TAG, cardsTag, validateCardPatch } from "../../../../../../lib/core/collection-row";
-import { updateRow, deleteRow } from "../../../../../../lib/storage/collection";
-import {
-  authoriseWrite,
-  readHeaders,
-  refused,
-  storeErrorResponse,
-} from "../../../../../../lib/api/guard";
-import { bearer } from "../../../../../../lib/api/viewer";
+import { CARDS_TAG, cardsTag, validateCardPatch } from "@/lib/core/collection-row";
+import { updateRow, deleteRow } from "@/lib/storage/collection";
+import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
+import { bearer } from "@/lib/api/viewer";
 
 /**
  * One printing, changed or removed.

@@ -6,22 +6,22 @@ const getRows = vi.fn();
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
 // wholesale rather than importOriginal()-ed.
-vi.mock("../../../../../lib/api/guard", () => ({
+vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
 }));
-vi.mock("../../../../../lib/core/ptcg-search", () => ({
+vi.mock("@/lib/core/ptcg-search", () => ({
   searchCards: (...a: unknown[]) => searchCards(...a),
 }));
 /* Both of these are `import "server-only"` underneath — viewer.ts directly,
    collection.ts through the Supabase clients — which throws the moment vitest
    imports them. Replaced wholesale for that reason, the same way guard.ts is,
    and then used for the ownership overlay the route attaches to every result. */
-vi.mock("../../../../../lib/core/collection", () => ({
+vi.mock("@/lib/core/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
-vi.mock("../../../../../lib/api/viewer", () => ({ bearer: () => null }));
+vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 
 const { GET } = await import("./route");
 

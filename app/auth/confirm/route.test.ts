@@ -19,13 +19,13 @@ const verifyOtp = vi.fn(async () =>
   otpFails ? { error: { message: "expired" } } : { error: null },
 );
 
-vi.mock("../../../lib/storage/supabase", () => ({
+vi.mock("@/lib/storage/supabase", () => ({
   configured: () => true,
   serverClient: async () => ({ auth: { verifyOtp } }),
 }));
 
 const { GET } = await import("./route");
-const { RECOVERY_MARKER, RECOVERY_MARKER_PATH } = await import("../../../lib/api/recovery");
+const { RECOVERY_MARKER, RECOVERY_MARKER_PATH } = await import("@/lib/api/recovery");
 
 const visit = (type: string, next = "/settings/password") =>
   GET(

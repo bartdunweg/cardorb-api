@@ -25,8 +25,8 @@ import {
   sectionBody,
   sectionHeading,
 } from "@/components/shared/marketingClasses";
-import { APP_NAME, SITE_URL } from "../../../lib/core/config";
-import { SITE_OG_IMAGE } from "../../../lib/core/og";
+import { APP_NAME, SITE_URL } from "@/lib/core/config";
+import { SITE_OG_IMAGE } from "@/lib/core/og";
 
 const DASHBOARD_HREF = "/dashboard";
 

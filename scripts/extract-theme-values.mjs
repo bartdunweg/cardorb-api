@@ -1,5 +1,5 @@
 /**
- * styles/theme.css → lib/design/theme-values.generated.ts
+ * src/styles/theme.css → src/lib/design/theme-values.generated.ts
  *
  *   node scripts/extract-theme-values.mjs           # write
  *   node scripts/extract-theme-values.mjs --check   # fail if the file disagrees
@@ -36,7 +36,7 @@ import { execFileSync } from "node:child_process";
 
 const THEME = "src/styles/theme.css";
 const TAILWIND = "node_modules/tailwindcss/theme.css";
-const OUT = "lib/design/theme-values.generated.ts";
+const OUT = "src/lib/design/theme-values.generated.ts";
 
 /** Every `--name: value;` in a sheet. Later wins, as the cascade would. */
 function declarations(path) {

@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import PasswordForm from "@/components/shared/PasswordForm";
 import SigninShell from "@/components/shared/SigninShell";
 import { FormNote } from "@/components/shared/FormField";
-import { currentViewer } from "../../../lib/api/viewer";
-import { RECOVERY_MARKER } from "../../../lib/api/recovery";
+import { currentViewer } from "@/lib/api/viewer";
+import { RECOVERY_MARKER } from "@/lib/api/recovery";
 
 /**
  * Setting a new password.

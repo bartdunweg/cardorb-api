@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { configured, serverClient } from "../../../../lib/storage/supabase";
+import { configured, serverClient } from "@/lib/storage/supabase";
 
 /**
  * Something cheap to hit on a timer.

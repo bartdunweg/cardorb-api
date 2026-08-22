@@ -2,9 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import CardModal from "@/components/shared/CardModal";
 import CardDetail from "@/components/shared/CardDetail";
 import CardNav from "@/components/shared/CardNav";
-import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../lib/core/cards";
-import { currentViewer } from "../../../../lib/api/viewer";
-import { getCards } from "../../../../lib/core/collection";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
+import { currentViewer } from "@/lib/api/viewer";
+import { getCards } from "@/lib/core/collection";
 import "@/styles/poke-holo.css";
 
 /**

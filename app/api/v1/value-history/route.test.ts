@@ -16,15 +16,15 @@ const getValueHistory = vi.fn();
 // The real guard.ts pulls in lib/api/viewer.ts, which is `import "server-only"`
 // — fine under Next's bundler, fatal under plain vitest. Replaced wholesale,
 // like every other route test here.
-vi.mock("../../../../lib/api/guard", () => ({
+vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
 }));
-vi.mock("../../../../lib/api/viewer", () => ({
+vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
-vi.mock("../../../../lib/core/collection", () => ({
+vi.mock("@/lib/core/collection", () => ({
   getValueHistory: (...a: unknown[]) => getValueHistory(...a),
 }));
 

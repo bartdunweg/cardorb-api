@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { authorise, refused } from "../../../../lib/api/guard";
-import { adminClient } from "../../../../lib/storage/supabase";
+import { authorise, refused } from "@/lib/api/guard";
+import { adminClient } from "@/lib/storage/supabase";
 
 /**
  * Deleting an account, and everything of its owner's with it.

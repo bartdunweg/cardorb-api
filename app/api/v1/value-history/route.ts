@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
-import { bearer } from "../../../../lib/api/viewer";
-import { getValueHistory } from "../../../../lib/core/collection";
+import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { bearer } from "@/lib/api/viewer";
+import { getValueHistory } from "@/lib/core/collection";
 
 /**
  * What the caller's collection has been worth, oldest reading first.

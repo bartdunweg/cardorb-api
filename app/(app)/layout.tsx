@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { currentViewer } from "../../lib/api/viewer";
-import { forGrid } from "../../lib/core/cards";
-import { getCollection } from "../../lib/core/collection";
+import { currentViewer } from "@/lib/api/viewer";
+import { forGrid } from "@/lib/core/cards";
+import { getCollection } from "@/lib/core/collection";
 import AppShell from "./AppShell";
 import { pageCardsClassName } from "@/components/shared/cardsPageClasses";
 // Everything that draws a collection, once for every screen in the shell.

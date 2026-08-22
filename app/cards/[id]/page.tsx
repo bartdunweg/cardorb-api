@@ -5,9 +5,9 @@ import CardDetail from "@/components/shared/CardDetail";
 import Button from "@/components/shared/Button";
 import { ChevronLeft } from "@untitledui-pro/icons/line";
 import CardNav from "@/components/shared/CardNav";
-import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../lib/core/cards";
-import { currentViewer } from "../../../lib/api/viewer";
-import { getCards } from "../../../lib/core/collection";
+import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
+import { currentViewer } from "@/lib/api/viewer";
+import { getCards } from "@/lib/core/collection";
 import "@/styles/poke-holo.css";
 
 /**

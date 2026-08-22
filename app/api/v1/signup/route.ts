@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../lib/api/guard";
-import { createRateLimiter } from "../../../../lib/api/rate-limit";
-import { serverClient } from "../../../../lib/storage/supabase";
-import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "../../../../lib/core/account";
+import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { serverClient } from "@/lib/storage/supabase";
+import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "@/lib/core/account";
 
 /**
  * Making an account.

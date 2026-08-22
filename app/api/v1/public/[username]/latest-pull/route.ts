@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getCards, ownerOf } from "../../../../../../lib/core/collection";
-import { latestPull } from "../../../../../../lib/core/cards";
-import { createRateLimiter } from "../../../../../../lib/api/rate-limit";
+import { getCards, ownerOf } from "@/lib/core/collection";
+import { latestPull } from "@/lib/core/cards";
+import { createRateLimiter } from "@/lib/api/rate-limit";
 
 export const dynamic = "force-dynamic";
 

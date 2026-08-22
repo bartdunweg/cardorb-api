@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCardDetail } from "../../../../../lib/core/cards";
-import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
+import { getCardDetail } from "@/lib/core/cards";
+import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
 /**
  * One card, by the id TCGdex gives it ("sv03-125").

@@ -69,7 +69,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { priceOf, holoPriceOf, shownPrice } from "../lib/core/price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice } from "../src/lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 /** tcgId -> Cardmarket idProduct. Cached because it costs 1,553 requests and never moves. */

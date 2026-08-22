@@ -22,15 +22,15 @@ const claimUsername = vi.fn();
 const COOKIE_DB = { via: "cookies" };
 const tokenDb = (token: string) => ({ via: "bearer", token });
 
-vi.mock("../../../../lib/api/viewer", () => ({
+vi.mock("@/lib/api/viewer", () => ({
   requestViewer: (req: Request) => requestViewer(req),
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
-vi.mock("../../../../lib/storage/supabase", () => ({
+vi.mock("@/lib/storage/supabase", () => ({
   serverClient: async () => COOKIE_DB,
   userClient: (token: string) => tokenDb(token),
 }));
-vi.mock("../../../../lib/storage/postgres", () => ({
+vi.mock("@/lib/storage/postgres", () => ({
   claimUsername: (...a: unknown[]) => claimUsername(...a),
 }));
 

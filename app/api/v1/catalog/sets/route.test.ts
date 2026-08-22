@@ -9,16 +9,16 @@ const getRows = vi.fn();
    app/api/v1/catalog/search/route.test.ts, whose pattern this follows. The
    ownership join itself is the real one: it is pure, and the point of these
    tests is what the route does with it. */
-vi.mock("../../../../../lib/api/guard", () => ({
+vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
 }));
-vi.mock("../../../../../lib/api/viewer", () => ({ bearer: () => null }));
-vi.mock("../../../../../lib/core/collection", () => ({
+vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
+vi.mock("@/lib/core/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
-vi.mock("../../../../../lib/core/ptcg-browse", () => ({
+vi.mock("@/lib/core/ptcg-browse", () => ({
   listSets: (...a: unknown[]) => listSets(...a),
 }));
 

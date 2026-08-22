@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { currentViewer } from "../../../../../lib/api/viewer";
-import { getCards } from "../../../../../lib/core/collection";
-import { groupByEra } from "../../../../../lib/core/eras";
-import { slugify } from "../../../../../lib/core/slug";
+import { currentViewer } from "@/lib/api/viewer";
+import { getCards } from "@/lib/core/collection";
+import { groupByEra } from "@/lib/core/eras";
+import { slugify } from "@/lib/core/slug";
 
 import CollectionScreen from "@/components/shared/CollectionScreen";
 

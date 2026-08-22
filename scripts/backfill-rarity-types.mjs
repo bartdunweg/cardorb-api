@@ -35,10 +35,10 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-import { resolveSetIds } from "../lib/core/catalogue.ts";
-import { fetchSet, json } from "../lib/core/tcgdex-client.ts";
-import { numberForms, mapLimit } from "../lib/core/util.ts";
-import { sameCard } from "../lib/core/matching.ts";
+import { resolveSetIds } from "../src/lib/core/catalogue.ts";
+import { fetchSet, json } from "../src/lib/core/tcgdex-client.ts";
+import { numberForms, mapLimit } from "../src/lib/core/util.ts";
+import { sameCard } from "../src/lib/core/matching.ts";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const WORKLIST = `${ROOT}docs/rarity-type-backfill-corrections.md`;

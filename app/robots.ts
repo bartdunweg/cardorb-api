@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "../lib/core/config";
+import { SITE_URL } from "@/lib/core/config";
 
 /**
  * What a crawler may look at, which is five pages.

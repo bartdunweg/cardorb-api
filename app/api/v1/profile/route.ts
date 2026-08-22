@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { sameOrigin } from "../../../../lib/api/guard";
-import { bearer, requestViewer } from "../../../../lib/api/viewer";
-import { serverClient, userClient } from "../../../../lib/storage/supabase";
-import { ownProfile, updateProfile } from "../../../../lib/storage/postgres";
-import { MAX_DISPLAY_NAME } from "../../../../lib/core/account";
+import { sameOrigin } from "@/lib/api/guard";
+import { bearer, requestViewer } from "@/lib/api/viewer";
+import { serverClient, userClient } from "@/lib/storage/supabase";
+import { ownProfile, updateProfile } from "@/lib/storage/postgres";
+import { MAX_DISPLAY_NAME } from "@/lib/core/account";
 
 /**
  * The things about a profile its owner may change.

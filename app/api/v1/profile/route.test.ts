@@ -18,15 +18,15 @@ const requestViewer = vi.fn();
 const updateProfile = vi.fn();
 const ownProfile = vi.fn();
 
-vi.mock("../../../../lib/api/viewer", () => ({
+vi.mock("@/lib/api/viewer", () => ({
   requestViewer: (req: Request) => requestViewer(req),
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
-vi.mock("../../../../lib/storage/supabase", () => ({
+vi.mock("@/lib/storage/supabase", () => ({
   serverClient: async () => ({}),
   userClient: () => ({}),
 }));
-vi.mock("../../../../lib/storage/postgres", () => ({
+vi.mock("@/lib/storage/postgres", () => ({
   updateProfile: (...a: unknown[]) => updateProfile(...a),
   ownProfile: (...a: unknown[]) => ownProfile(...a),
 }));

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { createRateLimiter } from "../../../../../../../lib/api/rate-limit";
-import { getCardDetail } from "../../../../../../../lib/core/cards";
-import { ownerOf } from "../../../../../../../lib/core/collection";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { getCardDetail } from "@/lib/core/cards";
+import { ownerOf } from "@/lib/core/collection";
 
 /**
  * One card, for the public link, without a price on it.

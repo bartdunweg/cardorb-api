@@ -30,7 +30,7 @@ import {
   sectionBody,
   sectionHeading,
 } from "@/components/shared/marketingClasses";
-import { APP_NAME, APP_TAGLINE, APP_TITLE, SITE_URL } from "../lib/core/config";
+import { APP_NAME, APP_TAGLINE, APP_TITLE, SITE_URL } from "@/lib/core/config";
 
 const DASHBOARD_HREF = "/dashboard";
 

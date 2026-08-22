@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { searchCards } from "../../../../../lib/core/ptcg-search";
-import { getRows } from "../../../../../lib/core/collection";
-import { markOwnership, ownershipIndex } from "../../../../../lib/core/ownership";
-import { authorise, readHeaders, refused } from "../../../../../lib/api/guard";
-import { bearer } from "../../../../../lib/api/viewer";
+import { searchCards } from "@/lib/core/ptcg-search";
+import { getRows } from "@/lib/core/collection";
+import { markOwnership, ownershipIndex } from "@/lib/core/ownership";
+import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { bearer } from "@/lib/api/viewer";
 
 /**
  * Finding a card to add, by anything: name, number, set, or type, in one box

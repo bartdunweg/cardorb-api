@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isAuthCookie } from "./lib/api/session-cookie";
+import { isAuthCookie } from "./src/lib/api/session-cookie";
 
 /**
  * The first thing in this app that decides who may see a page.

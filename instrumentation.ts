@@ -1,4 +1,4 @@
-import { checkEnv } from "./lib/core/env";
+import { checkEnv } from "./src/lib/core/env";
 
 /**
  * Once per server, before the first request.

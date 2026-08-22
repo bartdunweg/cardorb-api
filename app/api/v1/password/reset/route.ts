@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../../lib/api/guard";
-import { createRateLimiter } from "../../../../../lib/api/rate-limit";
-import { serverClient } from "../../../../../lib/storage/supabase";
-import { SITE_URL } from "../../../../../lib/core/config";
+import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { serverClient } from "@/lib/storage/supabase";
+import { SITE_URL } from "@/lib/core/config";
 
 /**
  * Asking for a way back in.

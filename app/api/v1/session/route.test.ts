@@ -29,7 +29,7 @@ const signIn = vi.fn(async () =>
 const signOut = vi.fn(async () => ({ error: null }));
 let hasDatabase = true;
 
-vi.mock("../../../../lib/storage/supabase", () => ({
+vi.mock("@/lib/storage/supabase", () => ({
   configured: () => hasDatabase,
   serverClient: async () =>
     hasDatabase ? { auth: { signInWithPassword: signIn, signOut } } : null,

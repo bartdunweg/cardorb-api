@@ -23,7 +23,7 @@ vi.mock("server-only", () => ({}));
 
 const maybeSingle = vi.fn();
 const adminClient = vi.fn();
-vi.mock("../../../../../lib/storage/supabase", () => ({ adminClient: () => adminClient() }));
+vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => adminClient() }));
 
 const { GET } = await import("./route");
 

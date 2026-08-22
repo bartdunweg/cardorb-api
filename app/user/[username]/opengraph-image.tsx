@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
-import { colour } from "../../../lib/design/theme-values.generated";
-import { APP_NAME } from "../../../lib/core/config";
-import { forPublic } from "../../../lib/core/cards";
-import { getCards, ownerOf } from "../../../lib/core/collection";
-import { ownerLabel } from "../../../lib/core/owner";
+import { colour } from "@/lib/design/theme-values.generated";
+import { APP_NAME } from "@/lib/core/config";
+import { forPublic } from "@/lib/core/cards";
+import { getCards, ownerOf } from "@/lib/core/collection";
+import { ownerLabel } from "@/lib/core/owner";
 
 /**
  * What a shared link looks like before anyone clicks it.

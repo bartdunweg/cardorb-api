@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../lib/api/guard";
-import { createRateLimiter } from "../../../../lib/api/rate-limit";
-import { serverClient } from "../../../../lib/storage/supabase";
+import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { serverClient } from "@/lib/storage/supabase";
 import { createHash } from "node:crypto";
 
 /**

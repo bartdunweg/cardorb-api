@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import SignInForm from "@/components/shared/SignInForm";
 import SigninShell, { SigninNotice } from "@/components/shared/SigninShell";
-import { currentViewer } from "../../lib/api/viewer";
-import { APP_NAME } from "../../lib/core/config";
+import { currentViewer } from "@/lib/api/viewer";
+import { APP_NAME } from "@/lib/core/config";
 
 export const metadata: Metadata = {
   title: "Sign in",

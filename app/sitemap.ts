@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "../lib/core/config";
-import { publicUsernames } from "../lib/storage/collection";
+import { SITE_URL } from "@/lib/core/config";
+import { publicUsernames } from "@/lib/storage/collection";
 
 /**
  * The landing page, the iPhone app's page, the two legal pages, and every

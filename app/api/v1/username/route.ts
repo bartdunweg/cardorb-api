@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { sameOrigin } from "../../../../lib/api/guard";
-import { bearer, requestViewer } from "../../../../lib/api/viewer";
-import { serverClient, userClient } from "../../../../lib/storage/supabase";
-import { claimUsername } from "../../../../lib/storage/postgres";
-import { validateUsername } from "../../../../lib/core/account";
+import { sameOrigin } from "@/lib/api/guard";
+import { bearer, requestViewer } from "@/lib/api/viewer";
+import { serverClient, userClient } from "@/lib/storage/supabase";
+import { claimUsername } from "@/lib/storage/postgres";
+import { validateUsername } from "@/lib/core/account";
 
 /**
  * Changing the name in /user/<name>.

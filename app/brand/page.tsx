@@ -5,8 +5,8 @@ import MarketingFooter from "@/components/shared/MarketingFooter";
 import { legal, legalList as list } from "@/components/shared/LegalPage";
 import Wordmark from "@/components/shared/Wordmark";
 import { Button as UiButton } from "@/components/base/buttons/button";
-import { colour, type ColourPair } from "../../lib/design/theme-values.generated";
-import { APP_NAME } from "../../lib/core/config";
+import { colour, type ColourPair } from "@/lib/design/theme-values.generated";
+import { APP_NAME } from "@/lib/core/config";
 
 /**
  * The brand page — what the mark is, which cut goes where, and where to get it.

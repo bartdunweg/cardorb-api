@@ -32,12 +32,12 @@ const updateUser = vi.fn(async (_attrs: { password: string; current_password?: s
 let hasDatabase = true;
 let signedIn = true;
 
-vi.mock("../../../../lib/storage/supabase", () => ({
+vi.mock("@/lib/storage/supabase", () => ({
   configured: () => hasDatabase,
   serverClient: async () => (hasDatabase ? { auth: { updateUser } } : null),
 }));
 
-vi.mock("../../../../lib/api/viewer", () => ({
+vi.mock("@/lib/api/viewer", () => ({
   currentViewer: async () => (signedIn ? { id: "u1", email: "owner@example.com" } : null),
 }));
 

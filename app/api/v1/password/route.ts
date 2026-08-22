@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { NO_DATABASE_CONFIGURED, sameOrigin } from "../../../../lib/api/guard";
-import { currentViewer } from "../../../../lib/api/viewer";
-import { serverClient } from "../../../../lib/storage/supabase";
-import { MIN_PASSWORD } from "../../../../lib/core/account";
-import { createRateLimiter } from "../../../../lib/api/rate-limit";
+import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
+import { currentViewer } from "@/lib/api/viewer";
+import { serverClient } from "@/lib/storage/supabase";
+import { MIN_PASSWORD } from "@/lib/core/account";
+import { createRateLimiter } from "@/lib/api/rate-limit";
 
 /** Requires a session already, so this only bounds an account hammering its own Auth calls. */
 const byAddress = createRateLimiter(15 * 60_000, 10);

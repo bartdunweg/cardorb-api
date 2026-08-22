@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { optionsFor } from "../../../../lib/storage/collection";
-import { authorise, readHeaders, refused, storeErrorResponse } from "../../../../lib/api/guard";
-import { bearer } from "../../../../lib/api/viewer";
+import { optionsFor } from "@/lib/storage/collection";
+import { authorise, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
+import { bearer } from "@/lib/api/viewer";
 
 /**
  * What the collection's select columns currently offer, so a form is built from

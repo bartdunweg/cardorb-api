@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { config, proxy } from "./proxy";
-import { isAuthCookie } from "./lib/api/session-cookie";
+import { isAuthCookie } from "./src/lib/api/session-cookie";
 
 /**
  * The redirect in front of /cards.

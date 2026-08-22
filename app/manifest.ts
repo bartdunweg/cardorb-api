@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { colour } from "../lib/design/theme-values.generated";
-import { APP_NAME, APP_TAGLINE } from "../lib/core/config";
+import { colour } from "@/lib/design/theme-values.generated";
+import { APP_NAME, APP_TAGLINE } from "@/lib/core/config";
 
 /**
  * What this is when it is saved to a home screen.

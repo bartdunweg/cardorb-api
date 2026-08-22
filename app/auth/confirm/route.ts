@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import { serverClient } from "../../../lib/storage/supabase";
-import { NO_DATABASE_CONFIGURED } from "../../../lib/api/guard";
+import { serverClient } from "@/lib/storage/supabase";
+import { NO_DATABASE_CONFIGURED } from "@/lib/api/guard";
 import type { EmailOtpType } from "@supabase/supabase-js";
-import {
-  RECOVERY_MARKER,
-  RECOVERY_MARKER_MAX_AGE,
-  RECOVERY_MARKER_PATH,
-} from "../../../lib/api/recovery";
+import { RECOVERY_MARKER, RECOVERY_MARKER_MAX_AGE, RECOVERY_MARKER_PATH } from "@/lib/api/recovery";
 
 /**
  * Where a link in an email lands.

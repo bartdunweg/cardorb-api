@@ -38,10 +38,10 @@ const detail = {
 };
 
 const getCardDetail = vi.fn();
-vi.mock("../../../../../../../lib/core/cards", () => ({ getCardDetail: () => getCardDetail() }));
+vi.mock("@/lib/core/cards", () => ({ getCardDetail: () => getCardDetail() }));
 
 const ownerOf = vi.fn();
-vi.mock("../../../../../../../lib/core/collection", () => ({
+vi.mock("@/lib/core/collection", () => ({
   ownerOf: (...args: unknown[]) => ownerOf(...args),
 }));
 

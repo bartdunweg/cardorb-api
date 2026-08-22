@@ -16,17 +16,17 @@ const deleteRow = vi.fn();
 // replaces the module wholesale rather than importOriginal()-ing it, the same
 // way app/api/v1/profile/route.test.ts replaces lib/api/viewer instead of
 // importing the real one.
-vi.mock("../../../../../../lib/api/guard", () => ({
+vi.mock("@/lib/api/guard", () => ({
   authoriseWrite: (...a: unknown[]) => authoriseWrite(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
   storeErrorResponse: (err: unknown) =>
     Response.json({ error: (err as Error).message }, { status: 502 }),
 }));
-vi.mock("../../../../../../lib/api/viewer", () => ({
+vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
-vi.mock("../../../../../../lib/storage/collection", () => ({
+vi.mock("@/lib/storage/collection", () => ({
   updateRow: (...a: unknown[]) => updateRow(...a),
   deleteRow: (...a: unknown[]) => deleteRow(...a),
 }));

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Onboarding from "@/components/shared/Onboarding";
-import { currentViewer } from "../../lib/api/viewer";
-import { serverClient } from "../../lib/storage/supabase";
-import { ownProfile } from "../../lib/storage/postgres";
+import { currentViewer } from "@/lib/api/viewer";
+import { serverClient } from "@/lib/storage/supabase";
+import { ownProfile } from "@/lib/storage/postgres";
 
 /**
  * The first minute of a new account.

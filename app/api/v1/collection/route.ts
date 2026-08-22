@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getCards } from "../../../../lib/core/collection";
-import { authorise, readHeaders, refused } from "../../../../lib/api/guard";
-import { bearer } from "../../../../lib/api/viewer";
+import { getCards } from "@/lib/core/collection";
+import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { bearer } from "@/lib/api/viewer";
 
 /**
  * The whole collection, grouped by set. This is the endpoint every client

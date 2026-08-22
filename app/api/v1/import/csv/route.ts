@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { sameOrigin } from "../../../../../lib/api/guard";
-import { createRateLimiter } from "../../../../../lib/api/rate-limit";
-import { currentViewer } from "../../../../../lib/api/viewer";
-import { serverClient } from "../../../../../lib/storage/supabase";
-import { cardsTag } from "../../../../../lib/core/collection-row";
-import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "../../../../../lib/core/csv";
-import { commit, preview } from "../../../../../lib/storage/imports";
+import { sameOrigin } from "@/lib/api/guard";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { currentViewer } from "@/lib/api/viewer";
+import { serverClient } from "@/lib/storage/supabase";
+import { cardsTag } from "@/lib/core/collection-row";
+import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/csv";
+import { commit, preview } from "@/lib/storage/imports";
 
 /**
  * A spreadsheet, previewed or committed.

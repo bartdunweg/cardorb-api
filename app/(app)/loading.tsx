@@ -1,4 +1,4 @@
-import { APP_NAME } from "../../lib/core/config";
+import { APP_NAME } from "@/lib/core/config";
 import { Mark } from "@/components/shared/Wordmark";
 
 /**

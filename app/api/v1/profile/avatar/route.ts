@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { sameOrigin } from "../../../../../lib/api/guard";
-import { createRateLimiter } from "../../../../../lib/api/rate-limit";
-import { bearer, requestViewer } from "../../../../../lib/api/viewer";
-import { serverClient, userClient } from "../../../../../lib/storage/supabase";
-import { updateProfile } from "../../../../../lib/storage/postgres";
+import { sameOrigin } from "@/lib/api/guard";
+import { createRateLimiter } from "@/lib/api/rate-limit";
+import { bearer, requestViewer } from "@/lib/api/viewer";
+import { serverClient, userClient } from "@/lib/storage/supabase";
+import { updateProfile } from "@/lib/storage/postgres";
 
 /**
  * A profile picture, uploaded.

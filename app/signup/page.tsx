@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import SignUpForm from "@/components/shared/SignUpForm";
 import SigninShell from "@/components/shared/SigninShell";
-import { currentViewer } from "../../lib/api/viewer";
-import { APP_NAME } from "../../lib/core/config";
+import { currentViewer } from "@/lib/api/viewer";
+import { APP_NAME } from "@/lib/core/config";
 
 /**
  * Making an account.

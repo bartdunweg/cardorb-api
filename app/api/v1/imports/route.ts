@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { currentViewer } from "../../../../lib/api/viewer";
-import { serverClient } from "../../../../lib/storage/supabase";
-import { recentImports } from "../../../../lib/storage/imports";
+import { currentViewer } from "@/lib/api/viewer";
+import { serverClient } from "@/lib/storage/supabase";
+import { recentImports } from "@/lib/storage/imports";
 
 /** What happened, each time somebody pressed the button. */
 export async function GET() {

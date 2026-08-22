@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { findSet, setCards } from "../../../../../../lib/core/ptcg-browse";
-import { withTcgdexScans } from "../../../../../../lib/core/browse-artwork";
-import { getRows } from "../../../../../../lib/core/collection";
-import { markOwnership, ownershipIndex } from "../../../../../../lib/core/ownership";
-import { authorise, readHeaders, refused } from "../../../../../../lib/api/guard";
-import { bearer } from "../../../../../../lib/api/viewer";
+import { findSet, setCards } from "@/lib/core/ptcg-browse";
+import { withTcgdexScans } from "@/lib/core/browse-artwork";
+import { getRows } from "@/lib/core/collection";
+import { markOwnership, ownershipIndex } from "@/lib/core/ownership";
+import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { bearer } from "@/lib/api/viewer";
 
 /**
  * One set, all of it, with the viewer's own cards marked.
