@@ -222,4 +222,19 @@ root `CLAUDE.md` for how and when to write to it.
   this directory.** The shared standards keep a repository's memory in
   `.dev-standards/` from v0.11.0 onwards; this repository deliberately keeps
   `docs/`, and the record says why and what would void that choice.
+- `decisions/0093-the-styling-is-three-layers-and-theme-css-is-the-source.md` —
+  **read before touching any stylesheet.** The whole CSS layer was demolished
+  and rebuilt: `globals.css`, `tailwind.generated.css`, `tokens.ts`,
+  `untitled-theme.css`, `gen-tokens.mjs` and 1,353 lines of token tests are
+  gone, replaced by `styles/theme.css` (tokens, no selectors),
+  `styles/globals.css` (200-line ceiling) and an empty `styles/app.css`. The
+  generator now runs CSS → TypeScript, not the other way. Untitled UI's light
+  and dark halves are one `light-dark()` per colour, so no colour exists twice.
+  It supersedes ADR-0013 and ADR-0054's arrangement, though their argument for
+  *why* a generator exists at all still stands.
+  `decisions/0094-only-a-token-in-theme-becomes-a-utility.md` is its follow-up
+  and **the more useful of the two**: everything passed — build, 452 tests, and
+  a 491-token comparison across four theme states — and the buttons were still
+  square. Twice. It is this repository's clearest case that a token can be
+  perfectly correct and reach no class at all, and that nothing here reports it.
 - Root `README.md` — what Card Orb is, the API surface, production environment.

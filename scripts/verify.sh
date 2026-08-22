@@ -78,7 +78,7 @@ fi
 # Scope is set by .prettierignore, and the argument is there: this formats code, not
 # prose. Every .md in the repo is hand-wrapped and Prettier would reflow it.
 run "format"    npx prettier --check .
-run "tokens"    node scripts/gen-tokens.mjs --check
+run "tokens"    node scripts/extract-theme-values.mjs --check
 run "typecheck" npm run typecheck
 run "test"      npm run test
 run "lint"      npm run lint
