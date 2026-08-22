@@ -184,7 +184,7 @@ export default function CardsTabBar({
               src={viewer.avatarUrl}
               alt=""
               initials={viewer.name.charAt(0).toUpperCase()}
-              className="size-5 shrink-0 [&_span]:text-[9px]"
+              className="size-5 shrink-0 [&_span]:text-micro"
             />
           ) : (
             <Icon {...ICON_SIZE} aria-hidden="true" />

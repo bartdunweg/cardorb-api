@@ -624,6 +624,42 @@
   --color-orb-label-secondary: var(--color-text-secondary);
   --color-orb-label-tertiary: var(--color-text-tertiary);
 
+  /* ── The hero title ──────────────────────────────────────────────────────
+     One step Untitled UI's scale cannot express, and the only fluid size left
+     in the app.
+
+     Its scale is stepped: display-lg is 48px and display-xl is 60px, and the
+     two marketing heroes want to run 42→64 with the viewport. Snapping to
+     either step loses that; leaving the clamp inline left two headings outside
+     this file, which is the one thing it exists to prevent. So it is a token —
+     which is also what makes it a *decision* rather than a number somebody
+     typed into a className twice.
+
+     Two of them because the curve inverts on a phone: below 640px the viewport
+     is narrow enough that 4.5vw collapses the title to nothing, so the small
+     one leans on vw much harder over a lower ceiling. That boundary is 640px
+     exactly, not Tailwind's `max-sm` — see the note on breakpoints in
+     CONVENTIONS.md.
+
+     Nothing else may use these. A third caller means this is a scale step and
+     belongs in the table in CONVENTIONS.md instead. */
+  --text-hero: clamp(42px, 4.5vw, 64px);
+  --text-hero-narrow: clamp(40px, 12vw, 52px);
+
+  /* The wordmark's own size. A token for one caller, which is normally
+     over-tokenising — but it is the last arbitrary font-size in the app, and a
+     rule with one exception is a rule nobody can check. With this here, "no
+     font size outside theme.css" is absolute and
+     src/lib/design/type-discipline.test.ts enforces it. */
+  --text-wordmark: clamp(15px, 0.38vw + 12.5px, 16px);
+
+  /* Below the scale on purpose. Untitled UI's smallest step is text-xs at
+     12px; this is the count that sits inside a 20px icon in the mobile tab bar,
+     where 12px does not fit. Named rather than written as `text-[9px]` in a
+     className for the same reason as everything else here: a number in a
+     className is a value with no owner. */
+  --text-micro: 9px;
+
   /* ── Title weight ────────────────────────────────────────────────────────
      The one axis a title needs that Untitled UI's theme does not name. Its
      scale covers size, line-height, letter-spacing and colour; weight came from

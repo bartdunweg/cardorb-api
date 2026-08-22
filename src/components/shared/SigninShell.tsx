@@ -58,7 +58,7 @@ export function SigninOr({ className, ...rest }: HTMLAttributes<HTMLParagraphEle
 export function SigninLinks({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={["mt-4 text-center text-[0.875rem] text-tertiary", className]
+      className={["mt-4 text-center text-sm text-tertiary", className]
         .filter(Boolean)
         .join(" ")}
       {...rest}

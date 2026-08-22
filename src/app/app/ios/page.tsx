@@ -218,9 +218,9 @@ export default function IosApp() {
             In development
           </span>
           <h1
-            className="max-w-[15ch] mx-auto [font-size:clamp(42px,4.5vw,64px)] m-0 text-primary font-body
+            className="max-w-[15ch] mx-auto text-hero m-0 text-primary font-body
               font-title tracking-[-0.045em] leading-tight
-              [@media(max-width:640px)]:[font-size:clamp(40px,12vw,52px)]"
+              [@media(max-width:640px)]:text-hero-narrow"
           >
             Your collection, in your pocket.
           </h1>

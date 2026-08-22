@@ -60,7 +60,7 @@ const MARK_NUDGE = "translate-y-[6.05%]";
  * than as a word that happens to be first on the page.
  */
 const WORD =
-  "text-primary font-body [font-size:clamp(15px,0.38vw_+_12.5px,16px)] font-bold tracking-[-0.03em]";
+  "text-primary font-body text-wordmark font-bold tracking-[-0.03em]";
 
 const ROW = "inline-flex items-center gap-2";
 
