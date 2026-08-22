@@ -13,8 +13,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.vendored.json",
     "format": "prettier --write .",
-    "check": "npx prettier --check . && node scripts/gen-tokens.mjs --check && npm run typecheck && npm run test && npm run lint",
-    "tokens": "node scripts/gen-tokens.mjs",
+    "check": "npx prettier --check . && npm run typecheck && npm run test && npm run lint",
     "visual": "playwright test",
     "visual:baseline": "playwright test --update-snapshots",
     "ui:add": "node scripts/untitled-add.mjs"

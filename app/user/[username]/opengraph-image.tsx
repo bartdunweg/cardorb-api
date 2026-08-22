@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { colour } from "../../../lib/design/tokens";
+import { colour } from "../../../lib/design/theme-values";
 import { APP_NAME } from "../../../lib/core/config";
 import { forPublic } from "../../../lib/core/cards";
 import { getCards, ownerOf } from "../../../lib/core/collection";

@@ -5,7 +5,7 @@ import MarketingFooter from "@/components/custom/MarketingFooter";
 import { legal, legalList as list } from "@/components/custom/LegalPage";
 import Wordmark from "@/components/custom/Wordmark";
 import { Button as UiButton } from "@/components/base/buttons/button";
-import { colour, type ColourPair } from "../../lib/design/tokens";
+import { colour, type ColourPair } from "../../lib/design/theme-values";
 import { APP_NAME } from "../../lib/core/config";
 
 /**

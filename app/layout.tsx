@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { colour } from "../lib/design/tokens";
+import { colour } from "../lib/design/theme-values";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/custom/ThemeProvider";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
-import "./globals.css";
 
 /**
  * The one family tokens.css asks for: both --font-main and --font-body resolve

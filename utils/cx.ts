@@ -1,8 +1,5 @@
 import { extendTailwindMerge } from "tailwind-merge";
-import { radius } from "@/lib/design/tokens";
-
-/** camelCase → kebab-case, the same rule scripts/gen-tokens.mjs writes the names with. */
-const kebab = (s: string) => s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+import { radiusNames } from "@/lib/design/theme-values";
 
 /**
  * ── Why the radius scale has to be listed here ─────────────────────────────
@@ -29,7 +26,7 @@ const twMerge = extendTailwindMerge({
     extend: {
         theme: {
             text: ["display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
-            radius: Object.keys(radius).map(kebab),
+            radius: [...radiusNames],
         },
     },
 });
