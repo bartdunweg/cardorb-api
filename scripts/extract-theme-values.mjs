@@ -32,6 +32,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 
 const THEME = "styles/theme.css";
 const TAILWIND = "node_modules/tailwindcss/theme.css";
@@ -199,9 +200,23 @@ ${pairs.join("\n")}
 export const radiusNames = [${radiusNames.map((n) => `"${n}"`).join(", ")}] as const;
 `;
 
+/**
+ * Run the output through Prettier before comparing or writing.
+ *
+ * Not cosmetic — it is what keeps `--check` honest. `npm run check` runs
+ * Prettier over the whole tree first, so a generated file Prettier would
+ * reformat makes the build red no matter what this script thinks. Formatting
+ * the string here means the two can never disagree: an array that grows past
+ * the print width simply wraps, instead of turning green into red.
+ */
+const formatted = execFileSync("npx", ["prettier", "--stdin-filepath", OUT], {
+  input: ts,
+  encoding: "utf8",
+});
+
 if (process.argv.includes("--check")) {
   const current = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
-  if (current !== ts) {
+  if (current !== formatted) {
     console.error(
       `\n  ${OUT} does not match ${THEME}.\n  Run: node scripts/extract-theme-values.mjs\n`,
     );
@@ -209,6 +224,6 @@ if (process.argv.includes("--check")) {
   }
   console.log(`  ${OUT} is up to date (${pairs.length} colours, ${radiusNames.length} radii)`);
 } else {
-  writeFileSync(OUT, ts);
+  writeFileSync(OUT, formatted);
   console.log(`  wrote ${OUT} — ${pairs.length} colours, ${radiusNames.length} radii`);
 }

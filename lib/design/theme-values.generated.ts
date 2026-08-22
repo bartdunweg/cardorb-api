@@ -18,4 +18,13 @@ export const colour = {
 } satisfies Record<string, ColourPair>;
 
 /** Card Orb's radius scale, by name — tailwind-merge needs the names, not the values. */
-export const radiusNames = ["btn", "orb-lg", "orb-md", "orb-sm", "orb-xs", "pill"] as const;
+export const radiusNames = [
+  "btn",
+  "control",
+  "control-inner",
+  "orb-lg",
+  "orb-md",
+  "orb-sm",
+  "orb-xs",
+  "pill",
+] as const;

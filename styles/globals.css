@@ -60,6 +60,17 @@
   --page-pad-x: 32px;
   --page-pad-bottom: 64px;
   --main-pad-top: 32px;
+
+  /* The horizontal padding half of the default shape. The radius half is in
+     theme.css, because it has to be in `@theme` to generate `rounded-control`
+     at all; these need no utility, since call sites read them as
+     `px-(--control-px-lg)`. ADR-0088: the capsule is the default, the rectangle
+     is the exception. */
+  --control-px-xs: 14px;
+  --control-px-sm: 16px;
+  --control-px-md: 18px;
+  --control-px-lg: 20px;
+  --control-px-xl: 22px;
 }
 
 :root[data-theme="light"] {
@@ -135,6 +146,33 @@ input[type="search"]::-webkit-search-cancel-button {
 }
 
 /* ── Utilities Untitled UI's components expect ──────────────────────────────*/
+
+/* ── The control shape (ADR-0088) ───────────────────────────────────────────
+ *
+ * A control's roundness is a cascading custom property, not a prop. Put
+ * `shape-rectangle` on a container and every button, input and input group
+ * inside it squares off together; the default is the capsule.
+ *
+ * These have to be utilities rather than theme tokens because each one sets six
+ * variables at once, which is exactly what a prop-per-control could not do
+ * without being passed down by hand everywhere. */
+@utility shape-round {
+  --radius-control: var(--radius-btn);
+  --control-px-xs: 14px;
+  --control-px-sm: 16px;
+  --control-px-md: 18px;
+  --control-px-lg: 20px;
+  --control-px-xl: 22px;
+}
+
+@utility shape-rectangle {
+  --radius-control: var(--radius-orb-sm);
+  --control-px-xs: 10px;
+  --control-px-sm: 12px;
+  --control-px-md: 14px;
+  --control-px-lg: 16px;
+  --control-px-xl: 18px;
+}
 
 /* 13 vendored components read this. */
 @utility transition-inherit-all {

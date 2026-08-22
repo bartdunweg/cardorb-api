@@ -635,7 +635,33 @@
   --radius-btn: 999px;
   --radius-pill: 14px;
 
-  /* Stacking order, written down once so no component has to guess. */
+  /* The control shape, per ADR-0088. Both must be declared here and not only in
+     `:root`, because **only a token inside `@theme` becomes a Tailwind
+     utility** — `rounded-control` exists because this line does, and a token
+     that lives in `:root` alone generates no class and fails silently. That is
+     not theory: it happened during this rebuild, and the symptom was a capsule
+     button rendering with square corners while `--radius-control` computed to
+     999px perfectly well.
+     
+     The value is a default, not a constant. `shape-round` / `shape-rectangle`
+     in globals.css rewrite it on a container, and because Tailwind emits
+     `border-radius: var(--radius-control)` rather than inlining the value, the
+     override cascades to every control inside. */
+  --radius-control: var(--radius-btn);
+  --radius-control-inner: calc(var(--radius-control) - 1px);
+
+  /* Glass. Two blurs and one fill, all that survives of a much larger set
+     (ADR-0056, ADR-0061 moved the app onto Untitled UI's flat surfaces). */
+  --blur-glass: 20px;
+  --blur-glass-card: 24px;
+  --blur-scrim: 10px;
+  --blur-scrim-sm: 8px;
+  --color-glass-solid: light-dark(rgba(255, 255, 255, 0.9), rgb(37, 37, 39));
+
+  /* Stacking order, written down once so no component has to guess. Read as
+     `z-(--z-modal)` at the call site — Tailwind has no namespace that turns a
+     z-index token into a utility, and four call sites is not worth five
+     @utility blocks in globals.css to avoid four sets of brackets. */
   --z-sticky: 200;
   --z-tabbar: 899;
   --z-tabpage: 900;
