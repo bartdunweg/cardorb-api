@@ -6,12 +6,12 @@ import { Table } from "@/components/application/table/table";
 import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 import Card, { aboutCardClassName } from "@/components/shared/Card";
 import CollectionValueCard from "@/features/collection/components/CollectionValueCard";
-import { shownPrice } from "@/lib/core/cards";
-import type { CardsStats } from "@/lib/core/cards-stats";
+import { shownPrice } from "@/lib/core/collection/cards";
+import type { CardsStats } from "@/lib/core/collection/cards-stats";
 import { LOCALE } from "@/lib/core/config";
 import { euro } from "@/lib/core/format";
-import type { ValueSnapshot } from "@/lib/core/value-snapshot";
-import type { Mover } from "@/lib/core/movers";
+import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
+import type { Mover } from "@/lib/core/collection/movers";
 
 /**
  * The collection at a glance, and where /cards opens.
@@ -231,7 +231,7 @@ const cardsDashSubClassName = "m-0 text-sm text-tertiary";
  * screen carries a wishlist. Green with a triangle would decide that for the
  * reader.
  */
-function movementNote(m: CardsStats["movement"]): string | undefined {
+export function movementNote(m: CardsStats["movement"]): string | undefined {
   if (!m) return undefined;
   const pct = m.pct * 100;
   if (Math.abs(pct) < 0.1) return "level with its 30-day average";

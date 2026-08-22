@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { SetCatalogue } from "./catalogue";
+import type { SetCatalogue } from "../catalogue/catalogue";
 import type { CollectionRow } from "./collection-row";
 
 /**
@@ -73,7 +73,7 @@ const pricesFor = vi.fn(
     ),
 );
 
-vi.mock("./catalogue", () => ({
+vi.mock("../catalogue/catalogue", () => ({
   setCatalogue: (name: string) => setCatalogue(name),
   pricesFor: (ids: string[]) => pricesFor(ids),
   json: async () => null,
@@ -84,7 +84,7 @@ vi.mock("./catalogue", () => ({
 // file 1.5 seconds per unmatched card and told us nothing: whether a card the
 // catalogue could not place also fails to turn up at pokemontcg.io is that
 // module's question, not this one's.
-vi.mock("./ptcg", () => ({
+vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
 }));

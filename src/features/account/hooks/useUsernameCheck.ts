@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { validateUsername } from "@/lib/core/account";
+import { validateUsername } from "@/lib/core/account/account";
 
 /**
  * Whether a typed name is free, asked while there is still a chance to change

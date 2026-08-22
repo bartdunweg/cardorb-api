@@ -3,9 +3,9 @@
 import { memo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/base/badges/badges";
-import { highScan } from "@/lib/core/cards";
+import { highScan } from "@/lib/core/collection/cards";
 import type { CardField } from "@/features/collection/components/cards-fields";
-import type { OwnedCard } from "@/lib/core/cards";
+import type { OwnedCard } from "@/lib/core/collection/cards";
 import { euro, euroWhole } from "@/lib/core/format";
 
 /**

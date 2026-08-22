@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { currentViewer } from "@/lib/api/viewer";
-import { getRows } from "@/lib/core/collection";
-import { listSets } from "@/lib/core/ptcg-browse";
-import { ownershipIndex, setCounts } from "@/lib/core/ownership";
+import { getRows } from "@/lib/core/collection/collection";
+import { listSets } from "@/lib/core/catalogue/ptcg-browse";
+import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
 import BrowseSetIndex from "./_components/BrowseSetIndex";
 
 /**

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCards } from "@/lib/core/collection";
+import { getCards } from "@/lib/core/collection/collection";
 import { bySlug } from "@/lib/core/slug";
 import CollectionScreen from "@/features/collection/components/CollectionScreen";
 

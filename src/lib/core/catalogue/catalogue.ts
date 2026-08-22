@@ -40,9 +40,9 @@
  * allowed to import (see eslint.config.mjs).
  */
 
-import { DAY, localise, mapLimit, norm, numberForms } from "./util";
+import { DAY, localise, mapLimit, norm, numberForms } from "../util";
 import { ptcgLogo } from "./ptcg";
-import type { Price } from "./price-basis.mjs";
+import type { Price } from "../price-basis.mjs";
 import { unstable_cache } from "next/cache";
 import { json, fetchSet, pricesFor } from "./tcgdex-client";
 import type { TcgSet, TcgCard, TcgSetDetail } from "./tcgdex-client";

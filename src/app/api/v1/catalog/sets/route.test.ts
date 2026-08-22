@@ -15,10 +15,10 @@ vi.mock("@/lib/api/guard", () => ({
   readHeaders: () => ({}),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
-vi.mock("@/lib/core/collection", () => ({
+vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
-vi.mock("@/lib/core/ptcg-browse", () => ({
+vi.mock("@/lib/core/catalogue/ptcg-browse", () => ({
   listSets: (...a: unknown[]) => listSets(...a),
 }));
 

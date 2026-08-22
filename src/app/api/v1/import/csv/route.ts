@@ -5,8 +5,8 @@ import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
-import { cardsTag } from "@/lib/core/collection-row";
-import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/csv";
+import { cardsTag } from "@/lib/core/collection/collection-row";
+import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/collection/csv";
 import { commit, preview } from "@/lib/storage/imports";
 
 /**

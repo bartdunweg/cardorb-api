@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "@/hooks/useSession";
-import { MAX_DISPLAY_NAME, MIN_PASSWORD } from "@/lib/core/account";
+import { MAX_DISPLAY_NAME, MIN_PASSWORD } from "@/lib/core/account/account";
 import { FormError, FormForm, formNoteClassName } from "@/components/shared/FormField";
 import { SigninLinks, signinLinkClassName } from "@/components/shared/SigninShell";
 import { Button } from "@/components/base/buttons/button";
@@ -17,7 +17,7 @@ import { Input } from "@/components/base/input/input";
  * is called. The *username* used to be a third required field here, asked for
  * before there was anything to name — a simpler form traded for a decision made
  * under no context at all. It is generated instead (generateUsername, in
- * lib/core/account.ts) so the account exists with a working link the moment it
+ * lib/core/account/account.ts) so the account exists with a working link the moment it
  * is confirmed, and the person picks their own handle later from Settings.
  *
  * The name asked for here is the other half of that, and the reason the

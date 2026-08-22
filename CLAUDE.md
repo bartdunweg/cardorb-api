@@ -133,8 +133,10 @@ that hold it together.
   `(app)` group, auth pages. Route-local UI lives in that route's `_components/`
 - `src/features/<domain>/` — UI and hooks owned by one domain (`collection`, `account`)
 - `src/components/shared/` — UI with no domain; `base|application|foundations` are vendored Untitled UI
-- `src/lib/core/` — matching a hand-kept collection against TCGdex, Limitless, pokemontcg.io;
-  artwork resolution; Cardmarket pricing
+- `src/lib/core/` — domain logic, in three folders that carry the domain's own words:
+  `catalogue/` (the three catalogues, matching, artwork, Cardmarket pricing), `collection/`
+  (rows, assembly, statistics, value over time) and `account/`. What both domains need —
+  `config.ts`, `env.ts`, `format.ts`, `og.ts`, `slug.ts`, `util.ts` — stays at the root
 - `src/lib/api/` — request guards (e.g. `guard.ts` reads `x-forwarded-host` for `sameOrigin()`)
 - `src/lib/storage/` — persistence helpers
 - `src/styles/theme.css` — every design value, and the only place one may be written

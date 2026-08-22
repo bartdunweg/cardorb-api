@@ -327,7 +327,7 @@ const sortKeys = (o) =>
  * number. Owned only, on the same grounds getCardsStats uses: a wishlist is not
  * a holding.
  *
- * Copies, not cards, and that has to match copiesHeld() in lib/core/cards-stats.ts
+ * Copies, not cards, and that has to match copiesHeld() in lib/core/collection/cards-stats.ts
  * exactly. The tile says what the binder is worth now and the chart says how it
  * got there; if one counted stacks and the other counted cards, the dashboard
  * would disagree with itself at the seam between two elements sitting one above
@@ -357,7 +357,7 @@ function valueAt(guide, cards, ids, acquisitions) {
     held += copies;
 
     const row = byProduct.get(ids[tcgId]);
-    // Both printings, the same pair lib/core/snapshot.ts resolves for the cron.
+    // Both printings, the same pair lib/core/collection/snapshot.ts resolves for the cron.
     // The two have to agree: this fills in history and that adds today's point,
     // onto one chart.
     const normal = row && priceOf(row);
@@ -369,7 +369,7 @@ function valueAt(guide, cards, ids, acquisitions) {
 
     let any = false;
     for (const r of mine) {
-      // reverse-holo only — see variantPrice() in lib/core/cards.ts.
+      // reverse-holo only — see variantPrice() in lib/core/collection/cards.ts.
       const each = shownPrice((r.finish === "reverse-holo" && foil) || normal);
       if (each == null) continue;
       value += each * r.quantity;

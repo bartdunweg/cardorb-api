@@ -8,7 +8,7 @@ import { cardsMainTitleClassName } from "@/features/collection/components/cardsP
 import { useDeferredValue, useMemo, useState } from "react";
 import { LOCALE } from "@/lib/core/config";
 import { norm } from "@/lib/core/util";
-import type { CatalogueSet } from "@/lib/core/ptcg-browse";
+import type { CatalogueSet } from "@/lib/core/catalogue/ptcg-browse";
 
 /** A set as the browse index shows it: the catalogue's, plus what you hold. */
 export type BrowsableSet = CatalogueSet & { ownedCount: number; wishlistCount: number };

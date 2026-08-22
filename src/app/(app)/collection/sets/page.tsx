@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCards } from "@/lib/core/collection";
+import { getCards } from "@/lib/core/collection/collection";
 import SetIndex from "./_components/SetIndex";
 
 /**

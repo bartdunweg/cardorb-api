@@ -14,7 +14,7 @@
  * with it and the page is exactly as complete as TCGdex is.
  */
 
-import { DAY, norm } from "./util";
+import { DAY, norm } from "../util";
 import { sameCard } from "./matching";
 import { isGalleryNumber, ptcgSetName } from "./set-aliases";
 
@@ -87,7 +87,7 @@ export { isGalleryNumber } from "./set-aliases";
  * asking for a set this index does not have under that name.
  *
  * Matched by prefix rather than by building the name, for the same reason
- * resolveSetIds() does it (lib/core/catalogue.ts): "Trainer" and "Galarian" are
+ * resolveSetIds() does it (lib/core/catalogue/catalogue.ts): "Trainer" and "Galarian" are
  * not the only two words this could ever be, and a prefix that also says
  * "gallery" cannot drag in an unrelated set.
  */
@@ -158,7 +158,7 @@ function namesIn(setId: string): Promise<Map<string, string>> {
  * the whole reason a TG card can be found here when it cannot be found at
  * Limitless: this address is the printed number under a set of its own, where
  * Limitless renumbers gallery cards into the parent's run and finding them there
- * would mean guessing an offset (see lib/core/catalogue.ts).
+ * would mean guessing an offset (see lib/core/catalogue/catalogue.ts).
  *
  * It is also the one lookup here that is checked against the row's name before
  * it is believed, which is the same guard buildCollection() puts on a TCGdex

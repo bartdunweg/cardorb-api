@@ -98,7 +98,7 @@ if (profileError) throw new Error(`No profile for ${userId}: ${profileError.mess
 
 /**
  * key -> tcgId, from the built site, exactly as the snapshot script does it.
- * The matching stays lib/core/cards.ts's; this asks for its answer.
+ * The matching stays lib/core/collection/cards.ts's; this asks for its answer.
  */
 async function cardsFor() {
   const url = TOKEN

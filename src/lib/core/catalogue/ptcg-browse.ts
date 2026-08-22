@@ -36,7 +36,7 @@
  * entire purpose is the set. See the decision record for the long version.
  */
 
-import { DAY } from "./util";
+import { DAY } from "../util";
 import { escapeTerm, type CatalogueMatch } from "./ptcg-search";
 
 /** One set, with enough to render a tile and sort a shelf. */

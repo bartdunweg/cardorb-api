@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CollectionRow } from "../core/collection-row";
+import type { CollectionRow } from "../core/collection/collection-row";
 import { createRows } from "./postgres";
 
 /**

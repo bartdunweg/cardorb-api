@@ -205,6 +205,9 @@ src/components/base/          vendored Untitled UI primitives — CLI-managed
 src/components/application/   vendored Untitled UI patterns
 src/components/foundations/   vendored icons and logos
 src/lib/core/                 the domain layer. No React, no routes. The part worth having.
+src/lib/core/catalogue/       what a card is: the three catalogues, matching, artwork, prices
+src/lib/core/collection/      what you own: rows, assembly, statistics, value over time
+src/lib/core/account/         who you are: username and password rules, what to call you
 src/lib/storage/              where the collection is kept, and the only part that knows.
 src/lib/api/                  who may read and write, and how often.
 src/styles/theme.css          every design value, and the only place one may be written

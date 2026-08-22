@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { buildCollection } from "@/lib/core/cards";
-import { cardPricesOf, snapshotOf, type PriceGuide, type ProductIds } from "@/lib/core/snapshot";
-import { valueHistoryTag } from "@/lib/core/value-snapshot";
+import { buildCollection } from "@/lib/core/collection/cards";
+import {
+  cardPricesOf,
+  snapshotOf,
+  type PriceGuide,
+  type ProductIds,
+} from "@/lib/core/collection/snapshot";
+import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
   listAccountIds,

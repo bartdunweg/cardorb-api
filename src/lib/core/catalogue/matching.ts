@@ -6,7 +6,7 @@
  * about scans or prices and nothing here reads a catalogue, so it is testable
  * — and tested, in cards-name.test.ts — on its own.
  */
-import { norm } from "./util";
+import { norm } from "../util";
 
 /**
  * The check exists to catch numbering that does not line up, where a scan would

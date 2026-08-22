@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
-import { forGrid } from "@/lib/core/cards";
-import { getCollection } from "@/lib/core/collection";
+import { forGrid } from "@/lib/core/collection/cards";
+import { getCollection } from "@/lib/core/collection/collection";
 import AppShell from "./_components/AppShell";
 import { pageCardsClassName } from "@/features/collection/components/cardsPageClasses";
 // Everything that draws a collection, once for every screen in the shell.
@@ -64,7 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!viewer.onboardedAt) redirect("/welcome");
 
   // Derivable fields off before the collection crosses into a client component.
-  // See forGrid in lib/core/cards.ts.
+  // See forGrid in lib/core/collection/cards.ts.
   //
   // `failed` travels with it because no screen below can work it out: an empty
   // list is a new account and an empty list is an outage, and the two need

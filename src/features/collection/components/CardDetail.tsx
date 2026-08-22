@@ -3,7 +3,7 @@ import TiltScan from "@/features/collection/components/TiltScan";
 import { Badge } from "@/components/base/badges/badges";
 import type { ReactNode } from "react";
 import { LinkExternal01 } from "@untitledui-pro/icons/line";
-import type { CardDetail as Detail, OwnedCard } from "@/lib/core/cards";
+import type { CardDetail as Detail, OwnedCard } from "@/lib/core/collection/cards";
 import { euro, euroWhole } from "@/lib/core/format";
 
 /**

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CardsView from "@/features/collection/components/CardsView";
-import { forGrid, forPublic } from "@/lib/core/cards";
-import { getCards, ownerOf } from "@/lib/core/collection";
-import { collectionTitle, ownerLabel } from "@/lib/core/owner";
+import { forGrid, forPublic } from "@/lib/core/collection/cards";
+import { getCards, ownerOf } from "@/lib/core/collection/collection";
+import { collectionTitle, ownerLabel } from "@/lib/core/account/owner";
 import { APP_NAME } from "@/lib/core/config";
 import "@/styles/poke-holo.css";
 import { pageCardsClassName } from "@/features/collection/components/cardsPageClasses";
@@ -115,7 +115,7 @@ export default async function PublicCollection({
 
   // Curated before it is handed to a client component, so neither the prices
   // nor the owner's own inventory — what they paid, condition, notes, how many
-  // — are in the HTML or in the props. See forPublic in lib/core/cards.ts.
+  // — are in the HTML or in the props. See forPublic in lib/core/collection/cards.ts.
   const sets = forGrid(forPublic(await getCards(owner.id)));
 
   const held = sets.reduce((n, set) => n + set.cards.filter((c) => c.owned).length, 0);

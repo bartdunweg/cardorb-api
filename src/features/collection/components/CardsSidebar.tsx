@@ -19,11 +19,11 @@ import {
   LayoutAlt01 as LayoutAlt01Solid,
   User01 as User01Solid,
 } from "@untitledui-pro/icons/solid";
-import type { CardSet, ImageSize } from "@/lib/core/cards";
+import type { CardSet, ImageSize } from "@/lib/core/collection/cards";
 import { LOCALE } from "@/lib/core/config";
 import Wordmark from "@/components/shared/Wordmark";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { possessive } from "@/lib/core/owner";
+import { possessive } from "@/lib/core/account/owner";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 

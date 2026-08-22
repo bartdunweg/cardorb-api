@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { CARDS_TAG, cardsTag, validateCardDraft } from "@/lib/core/collection-row";
+import { CARDS_TAG, cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
 import { createRow } from "@/lib/storage/collection";
 import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";

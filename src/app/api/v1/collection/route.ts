@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCards } from "@/lib/core/collection";
+import { getCards } from "@/lib/core/collection/collection";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 

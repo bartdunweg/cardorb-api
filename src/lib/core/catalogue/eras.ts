@@ -12,8 +12,8 @@
  * can run over anything that used to live in a component.
  */
 
-import type { CardSet } from "./cards";
-import { LOCALE } from "./config";
+import type { CardSet } from "../collection/cards";
+import { LOCALE } from "../config";
 
 export type EraGroup = {
   /** The era as the collection records it: "Base", "Scarlet & Violet". */

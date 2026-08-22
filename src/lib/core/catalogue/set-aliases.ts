@@ -19,7 +19,7 @@
  * mapping table for every set.
  */
 
-import { norm } from "./util";
+import { norm } from "../util";
 
 /**
  * Keyed by the *normalised* collection name, because that is what the lookup

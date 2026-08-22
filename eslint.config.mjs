@@ -70,7 +70,10 @@ const featureBoundaries = FEATURES.map((name) => ({
  * revalidateTag and revalidatePath are deliberately *not* restricted — those
  * are how a write says the cache is wrong, and they belong at the write.
  */
-const CACHE_OWNERS = ["src/lib/core/catalogue.ts", "src/lib/core/collection.ts"];
+const CACHE_OWNERS = [
+  "src/lib/core/catalogue/catalogue.ts",
+  "src/lib/core/collection/collection.ts",
+];
 
 const cacheLeash = {
   files: ["**/*.ts", "**/*.tsx"],
@@ -84,7 +87,7 @@ const cacheLeash = {
             name: "next/cache",
             importNames: ["unstable_cache"],
             message:
-              "unstable_cache lives in src/lib/core/catalogue.ts and src/lib/core/collection.ts only, so the move to `use cache` stays a two-file change. Ask those modules for the data instead.",
+              "unstable_cache lives in src/lib/core/catalogue/catalogue.ts and src/lib/core/collection/collection.ts only, so the move to `use cache` stays a two-file change. Ask those modules for the data instead.",
           },
         ],
       },

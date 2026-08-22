@@ -19,7 +19,7 @@
  *
  * It does not know where the collection is kept. It is handed CollectionRows
  * and matches them against the catalogues; lib/storage decides who answered and
- * lib/core/collection.ts is what asks. That split is recent — this file used to
+ * lib/core/collection/collection.ts is what asks. That split is recent — this file used to
  * open with a Notion query and carry Notion property bags four hundred lines
  * down into the per-card map — and the reason for it is that there is about to
  * be more than one collection, kept somewhere else, and none of the matching
@@ -31,26 +31,26 @@
  * to know about. This file is what assembles their answers into a collection.
  */
 
-import { localise, mapLimit, measure, numberForms } from "./util";
-import { json, pricesFor, setCatalogue } from "./catalogue";
-import type { CardPrices } from "./tcgdex-client";
+import { localise, mapLimit, measure, numberForms } from "../util";
+import { json, pricesFor, setCatalogue } from "../catalogue/catalogue";
+import type { CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
-import { LOCALE } from "./config";
-import { limitlessScan } from "./artwork";
-import { cardmarketUrl } from "./cardmarket";
-import { sameCard } from "./matching";
-import { ptcgScan } from "./ptcg";
+import { LOCALE } from "../config";
+import { limitlessScan } from "../catalogue/artwork";
+import { cardmarketUrl } from "../catalogue/cardmarket";
+import { sameCard } from "../catalogue/matching";
+import { ptcgScan } from "../catalogue/ptcg";
 import type { CollectionRow, Finish } from "./collection-row";
 
-export { sameCard } from "./matching";
-export { highScan } from "./artwork";
+export { sameCard } from "../catalogue/matching";
+export { highScan } from "../catalogue/artwork";
 
 /**
  * One printing of a card: a rarity, and whether that printing is in the binder
  * or on the wishlist. The same card is often held twice, normally and as a
  * reverse holo, and those are two of these rather than two cards.
  *
- * `id` is the row it came from (lib/core/collection-row.ts's CollectionRow.id)
+ * `id` is the row it came from (lib/core/collection/collection-row.ts's CollectionRow.id)
  * — a Postgres row id or a Notion page id, both real and stable once a row is
  * written; null only in the moment before that (a draft has none yet). It is
  * what makes a variant editable and deletable on its own: PATCH/DELETE
@@ -119,10 +119,10 @@ export type Variant = {
  * number on a card as this file does, and Node 20 cannot import a .ts file. The
  * calibration comments moved with it; that file is where they are now.
  */
-import { priceOf } from "./price-basis.mjs";
-export { priceOf, holoPriceOf, shownPrice } from "./price-basis.mjs";
-export type { Price } from "./price-basis.mjs";
-import type { Price } from "./price-basis.mjs";
+import { priceOf } from "../price-basis.mjs";
+export { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
+export type { Price } from "../price-basis.mjs";
+import type { Price } from "../price-basis.mjs";
 
 const num = (v: unknown) => (typeof v === "number" ? v : null);
 
@@ -477,7 +477,7 @@ export function latestPull(sets: CardSet[]): LatestPull | null {
  * It takes the rows rather than fetching them, and that is the seam: this
  * function is the same work whether they came from Notion, from Postgres or
  * from a CSV somebody pasted in. It reads no environment and holds no cache —
- * lib/core/collection.ts does both, because caching a collection is a question
+ * lib/core/collection/collection.ts does both, because caching a collection is a question
  * about whose it is, and nothing here knows.
  */
 export type BuildOptions = {
@@ -528,7 +528,7 @@ export async function buildCollection(
   // Three at a time. Forty-eight sets going at once was enough for TCGdex to
   // start refusing, and a refusal is a whole section of the page with no
   // artwork. The per-set work itself is behind a shared cache now (see
-  // lib/core/catalogue.ts), so on a warm cache this loop is a lookup rather
+  // lib/core/catalogue/catalogue.ts), so on a warm cache this loop is a lookup rather
   // than a walk and the limit costs nothing.
   const out = await mapLimit([...grouped.entries()], 3, async ([setName, setRows]) => {
     const cat = await setCatalogue(setName);
@@ -585,7 +585,7 @@ export async function buildCollection(
         //
         // Never for a gallery number, though: Limitless renumbers those into the
         // parent set's run, so TG04 would be asked for under the parent's 04 and
-        // answer with a different card. That is the offset lib/core/catalogue.ts
+        // answer with a different card. That is the offset lib/core/catalogue/catalogue.ts
         // declines to guess, and it is why this line keeps the letter check the
         // one below no longer needs.
         if (code && !/^[A-Za-z]/.test(number)) image = await limitlessScan(code, number);

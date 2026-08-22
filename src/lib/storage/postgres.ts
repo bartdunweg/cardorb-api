@@ -27,9 +27,9 @@ import {
   type CardFields,
   type CardPatch,
   type CollectionRow,
-} from "../core/collection-row";
-import type { ValueSnapshot } from "../core/value-snapshot";
-import type { CardPricePoint } from "../core/movers";
+} from "../core/collection/collection-row";
+import type { ValueSnapshot } from "../core/collection/value-snapshot";
+import type { CardPricePoint } from "../core/collection/movers";
 
 /** The row as the table has it, before it is turned into the shape above. */
 type CardRecord = {
@@ -179,7 +179,7 @@ type SnapshotRecord = {
  * is no user_id anywhere below, and the exception is deliberate rather than an
  * oversight in either direction. That rule holds where the policy alone gets it
  * right; it was wrong once already, in exactly this shape — see the comment on
- * cachedRows() in lib/core/collection.ts, where a brand new account asking for
+ * cachedRows() in lib/core/collection/collection.ts, where a brand new account asking for
  * its own empty collection was handed a public one because the policy allowed
  * the read and nothing had said whose. RLS is the wall against seeing what is
  * private; it is not a substitute for the application naming the collection it

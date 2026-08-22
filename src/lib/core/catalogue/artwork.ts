@@ -2,7 +2,7 @@
  * Resolving scans that TCGdex does not have. Split out of cards.ts, where this
  * sat beside matching and collection assembly with no seam between them.
  */
-import { DAY, numberForms } from "./util";
+import { DAY, numberForms } from "../util";
 
 /**
  * Limitless publishes scans as soon as a set is out, at a path built from the

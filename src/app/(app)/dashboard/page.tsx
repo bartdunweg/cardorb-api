@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCardPrices, getCollection, getValueHistory } from "@/lib/core/collection";
+import { getCardPrices, getCollection, getValueHistory } from "@/lib/core/collection/collection";
 import DashboardScreen from "./_components/DashboardScreen";
 
 /**

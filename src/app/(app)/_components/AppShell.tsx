@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type { CardSet } from "@/lib/core/cards";
-import type { CatalogueMatch } from "@/lib/core/ptcg-search";
-import { groupByEra } from "@/lib/core/eras";
+import type { CardSet } from "@/lib/core/collection/cards";
+import type { CatalogueMatch } from "@/lib/core/catalogue/ptcg-search";
+import { groupByEra } from "@/lib/core/catalogue/eras";
 import AppSidebar from "./AppSidebar";
 import AppTabBar from "./AppTabBar";
 import CardAddDialog from "@/features/collection/components/CardAddDialog";

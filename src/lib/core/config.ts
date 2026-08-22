@@ -79,8 +79,8 @@ export const LOCALE = "nl-NL";
  * Both were env vars with a default — one naming the collection at /user/<name>,
  * the other naming its owner — and both were written with a note saying they
  * would become a lookup on the day accounts arrived. Accounts arrived; the
- * lookups are ownerOf() in lib/core/collection.ts and ownerLabel() in
- * lib/core/owner.ts, and a name that belongs to a person has no business being
+ * lookups are ownerOf() in lib/core/collection/collection.ts and ownerLabel() in
+ * lib/core/account/owner.ts, and a name that belongs to a person has no business being
  * deployment configuration. Nothing reads either variable now, so setting one
  * in an environment does nothing.
  */

@@ -2,7 +2,7 @@
  * Where the collection is kept.
  *
  * Three verbs: list the rows, write one, say what the options are. Above
- * this nothing knows how they were answered — lib/core/cards.ts takes rows
+ * this nothing knows how they were answered — lib/core/collection/cards.ts takes rows
  * and matches them against three catalogues regardless of where they came
  * from.
  *
@@ -33,14 +33,19 @@
  * token builds userClient(token); a page render holding cookies builds
  * serverClient(); a stranger reading a public profile passes neither and
  * falls back to the anonymous readClient(), which is what cards_read's
- * `exists (... is_public)` branch is for. See lib/core/collection.ts's
+ * `exists (... is_public)` branch is for. See lib/core/collection/collection.ts's
  * getCards() for where that choice is made and why it happens outside the
  * unstable_cache boundary rather than inside it.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { CardDraft, CardFields, CardPatch, CollectionRow } from "../core/collection-row";
-import type { ValueSnapshot } from "../core/value-snapshot";
+import type {
+  CardDraft,
+  CardFields,
+  CardPatch,
+  CollectionRow,
+} from "../core/collection/collection-row";
+import type { ValueSnapshot } from "../core/collection/value-snapshot";
 import * as postgres from "./postgres";
 import { readClient, serverClient, userClient } from "./supabase";
 

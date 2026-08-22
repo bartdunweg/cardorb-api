@@ -13,17 +13,17 @@ vi.mock("@/lib/api/guard", () => ({
   readHeaders: () => ({}),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
-vi.mock("@/lib/core/collection", () => ({
+vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
-vi.mock("@/lib/core/ptcg-browse", () => ({
+vi.mock("@/lib/core/catalogue/ptcg-browse", () => ({
   findSet: (...a: unknown[]) => findSet(...a),
   setCards: (...a: unknown[]) => setCards(...a),
 }));
 /* The TCGdex scan swap is a real network call through setCatalogue() and has
    its own tests; here it would only make these ones depend on a second host
    being up. Replaced with the identity it degrades to when TCGdex is silent. */
-vi.mock("@/lib/core/browse-artwork", () => ({
+vi.mock("@/lib/core/catalogue/browse-artwork", () => ({
   withTcgdexScans: (_set: unknown, cards: unknown) => cards,
 }));
 

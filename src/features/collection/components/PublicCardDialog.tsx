@@ -6,7 +6,7 @@ import CardDetail from "@/features/collection/components/CardDetail";
 import { FormError } from "@/components/shared/FormField";
 import { ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
 import { useSwipe } from "@/hooks/useSwipe";
-import type { CardDetail as Detail, OwnedCard } from "@/lib/core/cards";
+import type { CardDetail as Detail, OwnedCard } from "@/lib/core/collection/cards";
 import { modalCardClassName } from "@/features/collection/components/cardModalClasses";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 

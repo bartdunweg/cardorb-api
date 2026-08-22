@@ -9,7 +9,7 @@
  */
 
 import { shownPrice, variantPrice } from "./cards";
-import { LOCALE } from "./config";
+import { LOCALE } from "../config";
 import type { CardSet, OwnedCard } from "./cards";
 
 /**

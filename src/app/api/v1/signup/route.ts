@@ -3,7 +3,7 @@ import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { serverClient } from "@/lib/storage/supabase";
-import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "@/lib/core/account";
+import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "@/lib/core/account/account";
 
 /**
  * Making an account.
@@ -13,7 +13,7 @@ import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "@/lib/core/acc
  * have to think about: what to do when two people want the same name.
  *
  * The username is not asked for. Signup only needs an address and a password;
- * a handle is generated here (generateUsername, in lib/core/account.ts) so the
+ * a handle is generated here (generateUsername, in lib/core/account/account.ts) so the
  * form has one fewer decision in front of it, and the person can pick their
  * own later from Settings, where changing it is a much smaller thing to do
  * than typing the first one under pressure.
@@ -23,7 +23,7 @@ import { MAX_DISPLAY_NAME, MIN_PASSWORD, generateUsername } from "@/lib/core/acc
  * generated username, so every account's name was "swift-eevee-4821" and there
  * was no way to tell a name somebody chose from one nobody did. Now an omitted
  * name is null, the public page falls back to the username (ownerLabel, in
- * lib/core/owner.ts), and Settings shows the same fallback as its placeholder.
+ * lib/core/account/owner.ts), and Settings shows the same fallback as its placeholder.
  * One field rather than first and last: this app has no billing and no
  * shipping, so a split would buy nothing and would ask people whose name does
  * not divide in two to pretend it does.

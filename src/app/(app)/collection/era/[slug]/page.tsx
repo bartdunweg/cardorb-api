@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { currentViewer } from "@/lib/api/viewer";
-import { getCards } from "@/lib/core/collection";
-import { groupByEra } from "@/lib/core/eras";
+import { getCards } from "@/lib/core/collection/collection";
+import { groupByEra } from "@/lib/core/catalogue/eras";
 import { slugify } from "@/lib/core/slug";
 
 import CollectionScreen from "@/features/collection/components/CollectionScreen";
@@ -12,7 +12,7 @@ import CollectionScreen from "@/features/collection/components/CollectionScreen"
  *
  * Resolved through the same grouping the rail draws, so an era exists here
  * exactly when it exists there. Computing it a second way would let the two
- * disagree about which sets belong to it — see lib/core/eras.ts.
+ * disagree about which sets belong to it — see lib/core/catalogue/eras.ts.
  */
 async function eraFor(slug: string) {
   const viewer = await currentViewer();

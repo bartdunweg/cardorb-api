@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
-import { getRows } from "@/lib/core/collection";
-import { findSet, setCards } from "@/lib/core/ptcg-browse";
-import { withTcgdexScans } from "@/lib/core/browse-artwork";
-import { markOwnership, ownershipIndex } from "@/lib/core/ownership";
+import { getRows } from "@/lib/core/collection/collection";
+import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
+import { withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
+import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import BrowseSetGrid from "./_components/BrowseSetGrid";
 
 /**

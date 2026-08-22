@@ -31,7 +31,7 @@
  * **A. The name does not match the catalogue's.** The number matched and
  *    sameCard() agreed, so this is definitely the same card and only the way it
  *    is written moves. Two kinds: a typo ("Tyrantirar" for Tyranitar — twenty-two
- *    of those are in here, see lib/core/matching.ts, which was widened to
+ *    of those are in here, see lib/core/catalogue/matching.ts, which was widened to
  *    tolerate them rather than lose their artwork), and a missing card-type
  *    suffix, where the row says "Pikachu" and the card says "Pikachu ex". Both
  *    are corrected to exactly what the catalogue says: "Als TCGdex 'Pikachu X'
@@ -66,10 +66,10 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-import { resolveSetIds } from "../src/lib/core/catalogue.ts";
-import { fetchSet, json } from "../src/lib/core/tcgdex-client.ts";
+import { resolveSetIds } from "../src/lib/core/catalogue/catalogue.ts";
+import { fetchSet, json } from "../src/lib/core/catalogue/tcgdex-client.ts";
 import { numberForms, mapLimit, norm } from "../src/lib/core/util.ts";
-import { sameCard } from "../src/lib/core/matching.ts";
+import { sameCard } from "../src/lib/core/catalogue/matching.ts";
 
 /* The card-type suffix, the same list matching.ts strips before comparing two
    names. Module scope because both halves of this script need it: the name
@@ -219,7 +219,7 @@ const unresolved = [];
 let fine = 0;
 
 console.log(`Resolving ${bySet.size} sets against TCGdex…`);
-// Three at a time, the same limit lib/core/cards.ts's own set walk uses: TCGdex
+// Three at a time, the same limit lib/core/collection/cards.ts's own set walk uses: TCGdex
 // starts refusing well before every set is in flight at once.
 await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
   const { byNumber, byName, size } = await indexSet(setName, setsIndex);
