@@ -1,10 +1,15 @@
-<!-- DEV-STANDARDS:BEGIN v0.22.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- DEV-STANDARDS:BEGIN v0.24.0 — generated from dev-standards. Do not edit by hand. -->
 
 # Agent adapter
 
 Before planning, editing, reviewing, or running commands, read the repository-root
 `CLAUDE.md`. Treat its standards and product-specific instructions as binding for this
 repository. It is the canonical project instruction file, and this file only points at it.
+
+Read `CONVENTIONS.md` too: it holds the rules that apply now, and it is the only binding
+source for them. `.dev-standards/decisions/` is history — open it only when asked, or when you
+need the reason behind a rule you are about to change. A request outranks anything recorded
+there; name the rule it departs from in one sentence and then carry it out.
 
 `AGENTS.md` is the cross-tool convention: any agent that reads it gets the same rules as
 Claude Code, without those rules being written twice and drifting apart. The standard itself

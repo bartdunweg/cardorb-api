@@ -92,9 +92,27 @@ run "lint"      npm run lint
 run "build"     npm run build
 
 # --- Memory and standards health ----------------------------------------------------------
-# Two checks that watch the memory system rather than the build. They cost milliseconds and
-# both cover a failure that is silent by nature. Added by /apply-standards on 2026-08-21;
-# verify.sh has no generated region, so nothing else would ever have copied them in.
+# Three checks that watch the memory system rather than the build. They cost milliseconds and
+# each covers a failure that is silent by nature. Added by /apply-standards on 2026-08-21 and
+# extended on 2026-08-22; verify.sh has no generated region, so nothing else would ever have
+# copied them in.
+
+# Is CONVENTIONS.md still small, still shaped, and still looked at?
+#
+# The standard's own `conventions` check is deliberately NOT run here, and this skip line is
+# how that stays visible instead of being forgotten. It would fail on three counts today, and
+# every one of them is a content decision the owner has to make, not a script:
+#   - 45 rules against the standard's ceiling of 15. Getting under it means retiring 30 rules.
+#   - `Intent` is a third enforcement value the standard does not allow. CONVENTIONS.md's own
+#     `## Open` section already names those nine as candidates to enforce or to drop.
+#   - the heading-register table under R-STYLE-004 has rows the check reads as malformed IDs.
+# Turn this into a real `run` once those are settled; copy the block from
+# ~/.local/share/dev-standards/templates/verify.sh.template.
+if [[ -f CONVENTIONS.md ]]; then
+  skip "conventions" "45 rules vs the standard's 15, and 9 rules marked Intent — see the comment above"
+else
+  skip "conventions" "no CONVENTIONS.md — run apply-standards"
+fi
 
 # Is this project still running the current standard?
 #
@@ -113,6 +131,37 @@ if [[ -x "$standards_root/scripts/check-standards.sh" ]]; then
 else
   skip "standards" "no dev-standards checkout at $standards_root, so drift was not checked"
 fi
+
+# Did two parallel worktrees take the same record number?
+#
+# Both see the same directory, neither sees the other's uncommitted file, so both take the next
+# free number. Git then merges 0007-a.md beside 0007-b.md without complaint — different filenames,
+# no conflict. Records are immutable, so a collision noticed late is permanent.
+#
+# This catches; it cannot prevent. A lock would have to live somewhere both worktrees can see, and
+# that is precisely what they do not share.
+# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
+record_numbers() {
+  local found=0 dir dupes number clashing
+  for dir in .dev-standards/decisions .dev-standards/feedback docs/decisions docs/feedback; do
+    [[ -d "$dir" ]] || continue
+    dupes="$(find "$dir" -maxdepth 1 -name '[0-9][0-9][0-9][0-9]-*.md' -exec basename {} \; \
+      | cut -d- -f1 | sort | uniq -d)"
+    [[ -n "$dupes" ]] || continue
+    while IFS= read -r number; do
+      [[ -n "$number" ]] || continue
+      clashing="$(find "$dir" -maxdepth 1 -name "$number-*.md" -exec basename {} \; | sort | tr '\n' ' ')"
+      printf '%s/ has %s twice — %s\n' "$dir" "$number" "$clashing"
+      found=1
+    done <<< "$dupes"
+  done
+  if [[ "$found" -eq 1 ]]; then
+    printf 'Two worktrees took the same number. Renumber yours; the other is already on the main branch.\n'
+    return 1
+  fi
+  return 0
+}
+run "record numbers" record_numbers
 
 # ------------------------------------------------------------------------------------------
 if [[ "$status" -eq 0 ]]; then
