@@ -1,7 +1,33 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Screenshots, for one job: making the Tailwind migration of cards.css safe.
+ * Screenshots, and now rather more than that.
+ *
+ * The original job was making the Tailwind migration of cards.css safe, and that
+ * migration is finished — cards.css no longer exists. What the suite carries now
+ * is the set of things only a real browser can answer, and two of them are
+ * contracts nothing else guards: that a dialog plays its exit before its consumer
+ * is told it closed, and that opening one does not move the page behind it. A
+ * third is that every card can be reached with a keyboard, which was false until
+ * it was measured here.
+ *
+ * The baselines are gitignored (.gitignore:15) and stay that way, which is a
+ * decision rather than an oversight. They are platform-stamped — `-darwin` —
+ * so a machine that is not this one would rewrite every file it compared, and
+ * this project has no CI runner to make the pictures canonical on. Committing
+ * them would buy the *look* of a guarded appearance and none of the guarding.
+ * The cost is real and worth naming: on a fresh checkout every screenshot test
+ * fails with "a snapshot doesn't exist" until somebody runs --update-snapshots
+ * once, and from then on it only catches what changes after that moment.
+ *
+ * This suite is also in neither scripts/verify.sh nor CI, and that is the same
+ * trade: it needs a build and a real .env.local, so putting it in the gate would
+ * make the gate fail on a machine that is merely unconfigured. What lives here
+ * instead of in the gate is written down at the top of each test that needs it.
+ *
+ * The behavioural assertions run without baselines. The pictures do not.
+ *
+ * The history below is kept because the reasoning still applies.
  *
  * ── Why this exists ────────────────────────────────────────────────────────
  *

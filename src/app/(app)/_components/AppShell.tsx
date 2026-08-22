@@ -14,10 +14,12 @@ import { cardsMainClassName } from "@/features/collection/components/cardsPageCl
  * The furniture around every signed-in screen.
  *
  * The one structural rule this file exists to keep: **the rail and .cards-main
- * are literal siblings, in that order.** app/styles/cards.css leans on it twice
+ * are literal siblings, in that order.** `cardsPageClasses.ts` leans on it twice
  * — the pane swap is written as `.cards-rail[data-pane="rail"] + .cards-main`,
  * and .cards-main carries `container-type: inline-size`, which every card-grid
- * breakpoint in the stylesheet is measured against rather than the viewport.
+ * breakpoint is measured against rather than the viewport. (Both rules lived in
+ * app/styles/cards.css until that file was migrated away; the sibling
+ * requirement did not move with it.)
  * Wrap either of them in anything and the grid reflows for reasons nobody will
  * connect to the file they changed.
  *
@@ -132,7 +134,8 @@ export default function AppShell({
           are its siblings, so a landmark drawn around all three would put the
           navigation inside the thing "Skip to content" is meant to skip past.
           That is the bug it was. `<main>` in place of `<section>` changes no
-          styling — cards.css binds to the .cards-main class name, not the tag.
+          styling — cardsPageClasses.ts binds to the .cards-main class name,
+          not the tag.
 
           The sr-only <h1> above stays outside it deliberately: it names the app
           rather than the pane, and either pane can be the one on screen below
