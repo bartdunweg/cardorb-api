@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /**
  * What this deployment needs, checked once, out loud.
  *
@@ -94,13 +96,75 @@ const CHECKS: Check[] = [
   },
 ];
 
+/**
+ * ── The second failure, which is not absence ───────────────────────────────
+ *
+ * Everything above answers "is it set". These answer "is it the right shape",
+ * and they exist because the two fail differently. A missing
+ * NEXT_PUBLIC_SUPABASE_URL is loud: the collection is empty everywhere and the
+ * check above names it. A *malformed* one is quiet — @supabase/ssr builds a
+ * client against it, every request fails at the network layer, and the log
+ * fills with fetch errors that name a host rather than a variable.
+ *
+ * Shape only, and only where a wrong shape is silent. Deliberately not
+ * validated: whether a key is genuinely the right key (only Supabase can say),
+ * and whether the values are correct for *this* deployment (nothing here can).
+ *
+ * Like the checks above, this **does not throw**. Refusing to boot would turn a
+ * typo into an outage, and this project's whole position on configuration is
+ * that a degradation is better than a dead site — the log is what has to say
+ * which one you are in. `.optional()` throughout for the same reason: absence
+ * is the block above's job, and reporting it twice would bury the shape error
+ * in a repeat of something already said.
+ */
+const SHAPES = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: z
+    .string()
+    .url("must be a full URL, scheme included — https://<project>.supabase.co")
+    .optional(),
+  NEXT_PUBLIC_SITE_URL: z
+    .string()
+    .url("must be a full URL, scheme included — a bare host silently breaks every canonical")
+    .optional(),
+  /* JWTs. Length rather than a JWT parse: a truncated paste is the failure that
+     happens, and it is already caught by "far too short to be one". */
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z
+    .string()
+    .min(40, "far too short to be a Supabase key")
+    .optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(40, "far too short to be a Supabase key").optional(),
+  /* Comma-separated origins, each a scheme + host with no path. A trailing
+     slash is the common one and it makes sameOrigin() refuse silently. */
+  ALLOWED_ORIGINS: z
+    .string()
+    .refine(
+      (v) => v.split(",").every((o) => /^https?:\/\/[^/\s]+$/.test(o.trim())),
+      "must be comma-separated origins with no trailing slash and no path",
+    )
+    .optional(),
+});
+
 export function checkEnv() {
   const missing = CHECKS.filter((c) => !process.env[c.name]?.trim());
-  if (!missing.length) return;
 
   for (const c of missing) {
     const line = `${c.name} is not set: ${c.without}`;
     if (c.required) console.error(`[env] ${line}`);
     else console.warn(`[env] ${line}`);
+  }
+
+  /* Only what is present. An absent variable is the block above's finding, and
+     saying it twice pushes the shape errors off the first screen of the log. */
+  const present = Object.fromEntries(
+    Object.keys(SHAPES.shape)
+      .map((name) => [name, process.env[name]?.trim()])
+      .filter(([, v]) => v),
+  );
+
+  const shaped = SHAPES.safeParse(present);
+  if (shaped.success) return;
+
+  for (const issue of shaped.error.issues) {
+    console.error(`[env] ${issue.path.join(".")} is set but malformed: ${issue.message}`);
   }
 }

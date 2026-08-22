@@ -3,7 +3,7 @@ import "../styles/globals.css";
 import { colour } from "../lib/design/theme-values.generated";
 import { Analytics } from "@vercel/analytics/next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/custom/ThemeProvider";
+import { Providers } from "@/providers";
 import { APP_NAME, APP_TAGLINE, SITE_URL } from "../lib/core/config";
 
 /**
@@ -129,7 +129,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-secondary text-primary font-body min-h-screen text-pretty">
-        <ThemeProvider>
+        <Providers>
           <a
             href="#main-content"
             className="absolute -top-full left-4 px-4 py-2
@@ -168,7 +168,7 @@ export default function RootLayout({
             {children}
           </div>
           {modal}
-        </ThemeProvider>
+        </Providers>
         {/* In production this serves itself from /_vercel/insights on this
             origin, so the CSP's script-src 'self' and connect-src 'self'
             already cover it. Locally it reaches for va.vercel-scripts.com
