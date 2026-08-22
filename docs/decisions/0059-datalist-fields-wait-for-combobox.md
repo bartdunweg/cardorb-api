@@ -5,7 +5,7 @@ status: accepted
 date: 2026-08-19
 scope: repo
 deciders: [Bart]
-superseded-by: null
+superseded-by: ADR-0095
 tags: [untitled-ui, forms, combobox, accessibility]
 ---
 

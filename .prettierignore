@@ -34,6 +34,7 @@ src/components/
 src/utils/
 # One file, not the directory: three hooks this project wrote live beside it.
 src/hooks/use-breakpoint.ts
+src/hooks/use-resize-observer.ts
 
 # Supabase's auth email templates are HTML that Supabase renders and its own
 # tooling round-trips; public/ holds assets generated in the iOS repo.

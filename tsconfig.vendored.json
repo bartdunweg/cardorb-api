@@ -36,6 +36,7 @@
     "src/components/shared-assets/**/*.ts",
     "src/components/shared-assets/**/*.tsx",
     "src/hooks/use-breakpoint.ts",
+    "src/hooks/use-resize-observer.ts",
     "src/utils/**/*.ts"
   ],
   "exclude": ["node_modules"]

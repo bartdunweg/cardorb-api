@@ -95,6 +95,7 @@ const config = [
       "src/components/shared-assets/**",
       "src/utils/**",
       "src/hooks/use-breakpoint.ts",
+      "src/hooks/use-resize-observer.ts",
     ],
   },
   /**

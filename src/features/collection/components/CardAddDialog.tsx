@@ -10,6 +10,8 @@ import { modalCardAddClassName } from "@/features/collection/components/cardModa
 import { Button } from "@/components/base/buttons/button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Input, InputBase } from "@/components/base/input/input";
+import { ComboBox } from "@/components/base/select/combobox";
+import { SelectItem } from "@/components/base/select/select-item";
 import { untitledButton } from "@/components/shared/untitledButtonClasses";
 
 /**
@@ -434,14 +436,15 @@ export default function CardAddDialog({
     }
   }
 
-  const suggest = (id: string, options: string[] | undefined) =>
-    options?.length ? (
-      <datalist id={id}>
-        {options.map((option) => (
-          <option key={option} value={option} />
-        ))}
-      </datalist>
-    ) : null;
+  /**
+   * The catalogue's suggestions, in the shape ComboBox's listbox wants.
+   *
+   * `id` and `label` are the same string on purpose: these are free-text
+   * filters, not a set of keyed options, and `allowsCustomValue` means what the
+   * field holds does not have to be one of them.
+   */
+  const comboItems = (options: string[] | undefined) =>
+    (options ?? []).map((option) => ({ id: option, label: option }));
 
   const ready = selected !== null;
   const hasFilters = Object.values(filters).some((v) => v.trim());
@@ -506,43 +509,49 @@ export default function CardAddDialog({
                   autoComplete="off"
                   placeholder="006"
                 />
-                {/* Still a `<datalist>`, and still deliberately not a
-                    Combobox: Untitled UI's answer to "field that suggests" is
-                    a different interaction (ARIA listbox, and it wants
-                    allowsCustomValue to keep free text working), which
-                    ADR-0059 left as a decision to take on purpose rather than
-                    at the end of a sweep.
+                {/* Untitled UI's `ComboBox`, which is the decision ADR-0059
+                    deferred rather than rejected — it called the swap "the
+                    right end state", turned down on timing.
 
-                    What did change is the surface. `Input` above has no `list`
-                    prop, which is why these three carried a hand-copied recipe
-                    of Untitled UI's field — pill-shaped, bold, its own hover
-                    shadow — sitting beside the real thing and drifting from
-                    it. `InputBase` is the layer below `Input` and passes
-                    arbitrary input attributes through, `list` included, so
-                    they wear the same surface as Name and Number now without
-                    the datalist question being touched. */}
-                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-                  <span className={cardAddLabelClassName}>Set</span>
-                  <InputBase
-                    value={filters.set}
-                    onChange={(e) => setFilter("set", e.target.value)}
-                    list="card-add-sets"
-                    autoComplete="off"
-                    placeholder="151"
-                  />
-                </label>
-                {suggest("card-add-sets", fields?.sets)}
-                <label className="flex flex-col gap-2 min-w-0 m-0 p-0 border-0">
-                  <span className={cardAddLabelClassName}>Type</span>
-                  <InputBase
-                    value={filters.type}
-                    onChange={(e) => setFilter("type", e.target.value)}
-                    list="card-add-filter-types"
-                    autoComplete="off"
-                    placeholder="Fire"
-                  />
-                </label>
-                {suggest("card-add-filter-types", fields?.types)}
+                    `allowsCustomValue` is the whole reason it can replace a
+                    `<datalist>` at all. A datalist is a hint: the field is a
+                    plain text input and typing something off the list is
+                    ordinary. Without that prop a ComboBox would clear anything
+                    that does not match, which would silently break adding a
+                    card from a set the catalogue has not indexed yet.
+
+                    `menuTrigger="focus"` (the component's own default) keeps
+                    the other half of the datalist behaviour: suggestions on
+                    focus, not only after typing.
+
+                    What is genuinely gained is what ADR-0059 named — a real
+                    ARIA combobox with a managed listbox, instead of suggestions
+                    the browser draws in its own chrome and a screen reader
+                    announces inconsistently. */}
+                <ComboBox
+                  label="Set"
+                  aria-label="Set"
+                  allowsCustomValue
+                  shortcut={false}
+                  inputValue={filters.set}
+                  onInputChange={(v) => setFilter("set", v)}
+                  placeholder="151"
+                  items={comboItems(fields?.sets)}
+                >
+                  {(item) => <SelectItem id={item.id} label={item.label} />}
+                </ComboBox>
+                <ComboBox
+                  label="Type"
+                  aria-label="Type"
+                  allowsCustomValue
+                  shortcut={false}
+                  inputValue={filters.type}
+                  onInputChange={(v) => setFilter("type", v)}
+                  placeholder="Fire"
+                  items={comboItems(fields?.types)}
+                >
+                  {(item) => <SelectItem id={item.id} label={item.label} />}
+                </ComboBox>
               </div>
             )}
 
