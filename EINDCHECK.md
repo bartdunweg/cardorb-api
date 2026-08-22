@@ -13,10 +13,10 @@ say.
 
 ## Verdict
 
-**NIET AFGETEKEND — 4 openstaande punten.** Three are decisions waiting on Bart;
-one is a genuine gap nobody has picked up.
+**AFGETEKEND.** All four open points are closed — see the update at the bottom.
 
-Everything mechanical passes. What is left is judgement.
+The original verdict and its evidence are kept below unchanged, because the four
+points and how they were closed are more useful together than a rewritten page.
 
 ---
 
@@ -172,3 +172,33 @@ decision that exists now only as a line in a git log nobody will think to search
 That was a deliberate choice, made twice, against the project's own standard. It
 is defensible. It is also the one thing here that cannot be undone by running a
 command, and its cost arrives later than everything else on this page.
+
+
+---
+
+## Update — the four points, closed
+
+| # | Point | What happened |
+|---|---|---|
+| 1 | Three colour pairs below WCAG | **Fixed.** `--color-border-primary` is `light-dark(#919191, #646464)` and `--color-text-placeholder` is `#797979` in dark — the *lightest* values that clear 3:1 and 4.5 on both surfaces a control sits on. `contrast.test.ts`'s three pinned gaps are assertions now, 19 → 22 |
+| 2 | The `UI-ADOPTIE.md` quick wins | **One of three was real.** `app-navigation` deleted with point 4. The other two were wrong when the files were opened: `Badge` cannot be a link, and `FormField.tsx` contains no `FormField` |
+| 3 | 15 of 28 routes without named validation | **The finding was mostly wrong.** 18 read no body; the rest validate per field with distinct messages. What *was* missing is a size bound, on eight of ten. `src/lib/api/body.ts` now caps all twelve, with a test that fails on any uncapped handler |
+| 4 | 42 unused files, 2 dependencies | **34 deleted**, plus `react-aria` and `react-hotkeys-hook`. Eight stay and knip is wrong about all of them: the scripts are run by hand and `visual/auth.setup.ts` is called by Playwright through `testMatch` |
+
+Tests 483 → **492**. Enforced rules 10 → 11.
+
+**What this update is really about.** Of the four points, **two were findings
+that did not survive contact with the code** — the quick wins and the validation
+gap. Both were written by reading a listing: knip's output, a filename, a
+catalogue entry. Together with the recharts claim in `AUDIT.md` and the "Untitled
+UI ships no modal" claim in `UI-ADOPTIE.md`, that is four in one week, all the
+same shape.
+
+The useful conclusion is not that the documents were sloppy. It is that **a
+finding is a hypothesis until the file is opened**, and that all four were caught
+— three by opening the file before changing it, one because Bart pushed back.
+The audit format worked; the reading did not.
+
+**Still open**, and now the whole list: `lib/core` is not split by domain; nine
+rules are Intent and by this project's own standard are therefore not rules;
+`components.json` does not exist, so `npx untitledui upgrade` has no baseline.

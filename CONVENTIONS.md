@@ -59,7 +59,7 @@ src/hooks/ utils/ providers/ styles/
 | **R-STYLE-013** | Controls have two shapes: `shape-round` (default) and `shape-rectangle`. Shape is a cascading property on a container, never a prop. | Reviewed |
 | **R-STYLE-014** | A button is the component. `untitledButtonClasses.ts` is only for elements a React Aria `Button` cannot be. | Reviewed |
 | **R-STYLE-015** | One icon set: `@untitledui-pro/icons`. | Enforced — `scripts/untitled-add.mjs` rewrites imports and drops the second package |
-| **R-STYLE-016** | A colour cleared as a graphic (3:1) is not cleared under a word (4.5:1). | Enforced — `src/lib/design/contrast.test.ts` |
+| **R-STYLE-016** | A colour cleared as a graphic (3:1) is not cleared under a word (4.5:1). Every text-on-surface pair, every control boundary and both placeholders are measured. | Enforced — `src/lib/design/contrast.test.ts` |
 | **R-STYLE-017** | The page is `bg-secondary`; raised surfaces are `bg-primary`. | Reviewed |
 | **R-STYLE-018** | `styles/poke-holo.css` is unlayered, so every rule in it beats every Tailwind utility. Know that before adding to it. | Intent |
 
@@ -108,6 +108,7 @@ caller for any of them means it is a scale step and belongs in the table.
 | **R-API-001** | The three routes under `/api/v1/public/<username>/` are open on purpose, carry no prices, and each has its own rate limiter. Everything else under `/api/v1/` requires a viewer. | Reviewed |
 | **R-API-002** | A public collection exposes exactly two variant fields: `rarity` and `owned`. It is an allow-list, so a new column is excluded by default. | Reviewed |
 | **R-API-003** | No paid third-party services. Recurring cost is a hard constraint. | Reviewed |
+| **R-API-004** | A route that reads a JSON body bounds it with `readJsonBody()` and a named `BODY_LIMIT`. Nothing else does: Next sets no limit and neither does `next.config.ts`. | Enforced — `src/lib/api/body.test.ts` |
 | **R-PLAT-001** | Cloudflare stays DNS-only, never proxied. Proxying breaks `x-forwarded-host`, which `sameOrigin()` depends on. | Intent |
 | **R-PLAT-002** | `NEXT_PUBLIC_SITE_URL` is set in Vercel's **Build** environment. `NEXT_PUBLIC_` is inlined at build time, so runtime-only silently does nothing. | Intent |
 | **R-PLAT-003** | Every screen renders exactly one `<main id="main-content">`, after its own navigation. The root layout does not. | Enforced — `src/app/main-landmark.test.ts` |
@@ -119,16 +120,9 @@ caller for any of them means it is a scale step and belongs in the table.
 
 Not rules — things a rule cannot yet be written for.
 
-- **Three colour pairs sit below the threshold that applies to them.** All are
-  Untitled UI's values, so R-STYLE-006 says take them; these are the measurement
-  that would earn the exception, and the decision is not made. Pinned in
-  `contrast.test.ts` at today's figure so a change fails: placeholder text in
-  dark is **4.18** against 4.5, and a control's border is **1.48** (light) and
-  **1.91** (dark) against the 3:1 of WCAG 1.4.11. The first step that clears 3:1
-  is `neutral-500`, a mid-grey that changes every control in the app.
 - **`lib/core` is not split by domain.** Fine at two features; ambiguous at three.
-- **15 of 28 API routes have no named validation**, and nothing uses zod except
-  the env check. There is no `R-DATA` rule for this yet because the code would
-  not follow it.
 - **Ten rules are Intent.** By this project's own standard those are not rules.
   Each is a candidate to make enforceable or to drop.
+- **`components.json` does not exist.** Untitled UI's CLI config records the
+  version we are vendored against; without it `npx untitledui upgrade` has no
+  baseline.
