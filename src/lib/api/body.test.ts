@@ -29,6 +29,26 @@ describe("readJsonBody", () => {
     expect(result).toEqual({ kind: "too-large" });
   });
 
+  it("measures the body in bytes, not in characters", async () => {
+    // `raw.length` counts UTF-16 code units, and the limit is in bytes — the
+    // declared content-length checked above is. So a cap written as 100 used to
+    // accept 200 bytes of accented text and about 150 of CJK: every character
+    // outside ASCII bought itself another byte or two for free.
+    //
+    // 60 accented characters wrapped in JSON: 68 UTF-16 units, 128 bytes. Under
+    // a 100-byte cap the old check saw 68 and let it through.
+    const payload = JSON.stringify({ a: "é".repeat(60) });
+    expect(payload.length).toBeLessThan(100);
+    expect(new TextEncoder().encode(payload).length).toBeGreaterThan(100);
+
+    expect(await readJsonBody(req(payload), 100)).toEqual({ kind: "too-large" });
+    // And the same body still arrives when the cap is genuinely big enough.
+    expect(await readJsonBody(req(payload), 200)).toEqual({
+      kind: "ok",
+      body: { a: "é".repeat(60) },
+    });
+  });
+
   it("tells malformed apart from too large", async () => {
     // Two different answers for the sender: 400 means fix the JSON, 413 means
     // send less. A caller that cannot tell them apart tells you to fix the

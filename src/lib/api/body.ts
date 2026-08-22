@@ -73,7 +73,12 @@ export async function readJsonBody<T = unknown>(
 
   try {
     const raw = await req.text();
-    if (raw.length > limit) return { kind: "too-large" };
+    // Bytes, not characters. `raw.length` counts UTF-16 code units, and a limit
+    // written in bytes then lets through anything that is not ASCII: "é" is one
+    // unit and two bytes, so a 1 kB cap accepted 2 kB of accented text and about
+    // 1.5 kB of CJK. The declared content-length above is already in bytes, so
+    // the two halves of this guard were measuring different things.
+    if (new TextEncoder().encode(raw).length > limit) return { kind: "too-large" };
     return { kind: "ok", body: JSON.parse(raw) as T };
   } catch {
     return { kind: "invalid" };

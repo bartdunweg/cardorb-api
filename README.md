@@ -12,16 +12,28 @@ number a collector would recognise. None of that was worth writing twice.
 
 ## The API
 
-Reading is open, because this collection is already public. Only writing carries
-a key, which is `CARDS_TOKEN` and is one shared passcode rather than an account
-system: one person edits this.
+Everything under `/api/v1/` needs a viewer, reading included. The key is
+`CARDS_TOKEN`, one shared passcode rather than an account system: one person edits
+this.
 
 | | |
 | --- | --- |
-| `GET /api/v1/collection` | the whole thing, grouped by set |
-| `GET /api/v1/cards/:tcgId` | one card, its printings and its price |
-| `GET /api/v1/fields` | the database's select options, key required |
-| `POST /api/v1/cards` | add a card, key required |
+| `GET /api/v1/collection` | the whole thing, grouped by set — viewer required |
+| `GET /api/v1/cards/:tcgId` | one card, its printings and its price — viewer required |
+| `GET /api/v1/fields` | the database's select options — viewer required |
+| `POST /api/v1/cards` | add a card — viewer required |
+
+**These two used to be open and this section used to say so.** They were closed
+when `/user/<name>` shipped, and each route's own docstring says why. The
+genuinely unkeyed routes are the three under `/api/v1/public/<username>/`, which
+serve the public profile: they never call `authorise()`, they carry no prices, and
+each has its own rate limiter (R-API-001, R-API-002).
+
+| | |
+| --- | --- |
+| `GET /api/v1/public/:username/collection` | the public collection, two variant fields only |
+| `GET /api/v1/public/:username/cards/:tcgId` | one card, no price |
+| `GET /api/v1/public/:username/latest-pull` | the most recent addition |
 
 Browsing the catalogue — every set and every card in it, not only what is owned —
 is a separate, signed-in surface. It reads pokemontcg.io rather than the
