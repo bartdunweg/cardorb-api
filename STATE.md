@@ -62,9 +62,21 @@ opening the app. If you change a token, render a screen.
   them yet. A colour change today ships unmeasured.
 - The 88 arbitrary px/rem in classNames (`max-w-[1040px]` and its like) were not
   absorbed into `theme.css`. That is screen work, and Bart is doing the screens.
-- Only the landing page has been rendered. The signed-in routes, `/settings`,
-  `/collection/browse` and the add-card dialog have not — and ADR-0020 is the
-  standing warning about exactly those.
+- ~~Only the landing page has been rendered.~~ **Done.** Landing, `/brand`,
+  `/dashboard`, `/collection` (light and dark), `/settings`, the add-card dialog
+  and `/collection/browse` were all loaded signed-in and read. Every one renders
+  correctly, including the scrim blur behind the dialog — the surface ADR-0020
+  warns about. `/welcome` and a card detail are still unseen.
+
+- **Found while doing that, and not fixed: `/collection/browse` is missing set
+  logos in production.** pokemontcg.io serves them from
+  `images.scrydex.com` now, and the CSP in `next.config.ts:36` allows only
+  `assets.tcgdex.net` and `images.pokemontcg.io`. 68 console errors on that one
+  page, four visibly blank set tiles in the first screen alone. The allowlist
+  dates from `02111fd` (2026-08-09), so this pre-dates the styling rebuild by two
+  weeks and is unrelated to it. Left alone deliberately: adding a third-party
+  image host to a CSP is a security decision, not a styling one. There is also a
+  React duplicate-key warning on the same page.
 - A migration brief proposing `src/` + `features/` was raised mid-session and
   parked. Its Fase 2–5 is about folder structure and does not conflict with any
   of this.
