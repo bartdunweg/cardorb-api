@@ -1,6 +1,5 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
-import { existsSync } from "node:fs";
 
 /**
  * There was no config here at all, and the defaults were right until the day
@@ -14,33 +13,15 @@ import { existsSync } from "node:fs";
  * failures as this project's. Same for node_modules and build output.
  */
 export default defineConfig({
-  /**
-   * `@/*` → the repo root, the same mapping tsconfig.json's `paths` gives the
-   * compiler and Next gives the bundler. Vitest reads neither, so a module
-   * importing `@/utils/cx` — which every vendored Untitled UI component does —
-   * fails to resolve here while type-checking and building fine. Added when the
-   * first test needed to import one.
-   */
   resolve: {
-    /* Two entries in the same order tsconfig.json uses, and for the same
-       reason: while the src/ migration runs, a module may live under either.
-       Vite takes the first alias whose prefix matches, so `find` is a function
-       rather than a string — it has to try src/ and fall back to the root. */
-    alias: [
-      {
-        find: /^@\/(.*)$/,
-        replacement: "$1",
-        customResolver(id) {
-          for (const base of ["src/", ""]) {
-            for (const ext of ["", ".ts", ".tsx", ".css", "/index.ts", "/index.tsx"]) {
-              const p = fileURLToPath(new URL(base + id + ext, import.meta.url));
-              if (existsSync(p)) return p;
-            }
-          }
-          return null;
-        },
-      },
-    ],
+    /* `@/*` → src/, the same single mapping tsconfig.json gives the compiler
+       and Next gives the bundler. Vitest reads neither, so a module importing
+       `@/utils/cx` — which every vendored Untitled UI component does — fails to
+       resolve here while type-checking and building fine.
+
+       This was a two-entry customResolver while the src/ migration ran, for the
+       same reason tsconfig's alias was: a module could be under either root. */
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
     exclude: [

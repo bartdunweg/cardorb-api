@@ -18,19 +18,16 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    /* Two entries, in order, for exactly as long as the src/ migration runs.
-       TypeScript tries them left to right, so a directory that has moved is
-       found under src/ and one that has not is still found at the root — which
-       is what lets each directory move in its own commit instead of all of them
-       in one. `@/` reaches six tops today (components 266, lib 56, utils 53,
-       app 13, providers 1, hooks 1); a single-entry alias could only be flipped
-       once every one of them had moved, and that is the big-bang this migration
-       exists to avoid.
+    /* One entry again. It was ["./src/*", "./*"] for the length of the src/
+       migration, so a directory that had moved resolved under src/ and one that
+       had not still resolved at the root — which is what let each move be its
+       own commit instead of all of them being one.
 
-       Delete the second entry when src/ holds everything. Leaving it would mean
-       a stale root copy of a moved file silently keeps resolving. */
+       Narrowed the moment src/ held everything `@/` reaches. Leaving the root
+       entry in would mean a stale copy of a moved file keeps resolving
+       silently, which is the failure this whole migration was careful about. */
     "paths": {
-      "@/*": ["./src/*", "./*"]
+      "@/*": ["./src/*"]
     },
     "plugins": [
       {

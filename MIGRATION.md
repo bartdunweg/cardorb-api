@@ -162,12 +162,12 @@ name it, Playwright's `testDir` points at `./visual`, and it is test
 infrastructure rather than source. Moving it buys nothing and adds a config to
 get wrong.
 
-**A2 — `@/*` resolves `["./src/*", "./*"]` for the duration.** Without the pair
-the alias could only be flipped after every one of its six tops had moved, which
-is the big bang the brief forbids. **The second entry must come out when `src/`
-holds everything** — leaving it means a stale root copy of a moved file keeps
-resolving silently. It is the one piece of temporary scaffolding in this
-migration.
+**A2 — `@/*` resolved `["./src/*", "./*"]` for the duration. ~~Deadline~~ done.**
+Without the pair the alias could only be flipped after every one of its six tops
+had moved, which is the big bang the brief forbids. The second entry came out
+the moment `src/` held everything `@/` reaches — leaving it would mean a stale
+root copy of a moved file keeps resolving silently. `@/*` is `["./src/*"]`
+again, and vitest's alias is a plain string rather than a customResolver.
 
 **A3 — relative imports crossing a directory boundary become `@/` imports.**
 The depth differs per file and would have to be recomputed at every later move.
