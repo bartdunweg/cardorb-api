@@ -252,7 +252,7 @@ export default function Home() {
           </Link>
           <h1
             className="max-w-[14ch] mx-auto text-hero m-0 text-primary font-body
-            font-title tracking-[-0.045em] leading-tight
+            font-title tracking-display leading-tight
             [@media(max-width:640px)]:text-hero-narrow"
           >
             Track your Pokémon card collection.
@@ -320,7 +320,7 @@ export default function Home() {
                     {comingSoon && (
                       <span
                         className="text-tertiary font-body text-xs
-                        uppercase tracking-[0.06em]"
+                        uppercase tracking-caps"
                       >
                         Coming soon{typeof comingSoon === "string" ? ` · ${comingSoon}` : ""}
                       </span>
@@ -439,7 +439,7 @@ export default function Home() {
             </span>
             <span className="grid gap-1 min-w-0">
               <small className="text-tertiary font-body text-xs">Your collection link</small>
-              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-primary font-body text-sm font-medium tracking-[-0.02em]">
+              <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-primary font-body text-sm font-medium tracking-snug">
                 cardorb.com/user/yourname
               </strong>
             </span>

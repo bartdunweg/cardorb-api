@@ -21,11 +21,11 @@
 
 export const eyebrow =
   "mt-0 mx-0 text-tertiary font-body text-xs " +
-  "font-semibold tracking-[0.08em] uppercase";
+  "font-semibold tracking-caps-wide uppercase";
 
 export const sectionHeading =
   "m-0 text-primary font-body font-title " +
-  "tracking-[-0.045em] leading-tight text-display-md";
+  "tracking-display leading-tight text-display-md";
 
 export const sectionBody =
   "m-0 text-secondary font-body text-md leading-relaxed";
@@ -35,7 +35,7 @@ export const featureIcon =
 
 export const cardHeading =
   "mt-1 mb-0 text-primary font-body font-title " +
-  "tracking-[-0.03em] leading-snug text-lg";
+  "tracking-heading leading-snug text-lg";
 
 export const cardBody =
   "m-0 text-secondary font-body text-sm leading-normal";

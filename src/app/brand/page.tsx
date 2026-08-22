@@ -158,7 +158,7 @@ export default function BrandPage() {
         <article className="max-w-[900px] mx-auto [padding-block:clamp(56px,8vw,96px)]">
           <h1
             className="mt-0 mb-4 text-primary font-body font-title
-              tracking-[-0.045em] leading-tight text-display-md"
+              tracking-display leading-tight text-display-md"
           >
             Brand
           </h1>

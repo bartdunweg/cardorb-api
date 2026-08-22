@@ -167,13 +167,17 @@
     --space: 5%;
     --angle: 133deg;
 
-    /* The six foil colours, from upstream's base.css. */
-    --sunpillar-1: hsl(2, 100%, 73%);
-    --sunpillar-2: hsl(53, 100%, 69%);
-    --sunpillar-3: hsl(93, 100%, 69%);
-    --sunpillar-4: hsl(176, 100%, 76%);
-    --sunpillar-5: hsl(228, 100%, 74%);
-    --sunpillar-6: hsl(283, 100%, 73%);
+    /* The six foil colours. They were written out here, which made this file
+       the one place in the app holding a colour theme.css had never seen; they
+       are tokens now and this reads them. The local --sunpillar-* names stay
+       because the gradient below is upstream's and is easier to compare to it
+       with its own vocabulary intact. */
+    --sunpillar-1: var(--color-foil-1);
+    --sunpillar-2: var(--color-foil-2);
+    --sunpillar-3: var(--color-foil-3);
+    --sunpillar-4: var(--color-foil-4);
+    --sunpillar-5: var(--color-foil-5);
+    --sunpillar-6: var(--color-foil-6);
 
     display: grid;
     overflow: hidden;
@@ -191,18 +195,18 @@
       ),
       repeating-linear-gradient(
         var(--angle),
-        #0e152e 0%,
-        hsl(180, 10%, 60%) 3.8%,
-        hsl(180, 29%, 66%) 4.5%,
-        hsl(180, 10%, 60%) 5.2%,
-        #0e152e 10%,
-        #0e152e 12%
+        var(--color-foil-deep) 0%,
+        var(--color-foil-sheen-dim) 3.8%,
+        var(--color-foil-sheen) 4.5%,
+        var(--color-foil-sheen-dim) 5.2%,
+        var(--color-foil-deep) 10%,
+        var(--color-foil-deep) 12%
       ),
       radial-gradient(
         farthest-corner circle at var(--pointer-x) var(--pointer-y),
-        hsla(0, 0%, 0%, 0.1) 12%,
-        hsla(0, 0%, 0%, 0.15) 20%,
-        hsla(0, 0%, 0%, 0.25) 120%
+        var(--color-foil-shade-soft) 12%,
+        var(--color-foil-shade-mid) 20%,
+        var(--color-foil-shade-deep) 120%
       );
     background-position:
       0% var(--background-y),
