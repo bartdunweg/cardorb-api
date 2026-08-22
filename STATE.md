@@ -40,9 +40,6 @@ Nothing is queued. Name the next piece of work when you start it.
   `templates/CONVENTIONS.md.template` says "There is no rule-count ceiling. Freshness is the
   brake, not size."; `templates/verify.sh.template` fails above 15 rules. This project has 47
   and follows the template. `scripts/verify.sh` therefore runs every clause of the standard's
-  `conventions` check except the count, and says so in a comment. Settle it upstream in
-  `bartdunweg/dev-standards`, then put the clause back.
-- **`README.md` line 16 says reading is open**, and lists `GET /api/v1/collection` and
-  `GET /api/v1/cards/:tcgId` with no key. Both call `authorise()` and refuse an anonymous
-  caller — R-API-001 is the rule, and the README is the thing that is wrong. Carried over
-  from `EINDCHECK.md`; roughly ten minutes of work.
+  `conventions` check except the count, and says so in a comment. The upstream fix is open as
+  `bartdunweg/dev-standards#45`, which drops the clause from the template; put nothing back here
+  when it merges, because the count is going away rather than the exception.
