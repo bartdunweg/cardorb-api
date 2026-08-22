@@ -75,42 +75,38 @@ describe("the two places text sits on something other than a page surface", () =
 });
 
 /**
- * ── The gaps, pinned rather than hidden ────────────────────────────────────
+ * ── The two that needed a decision, and got one ────────────────────────────
  *
- * Three pairs are below the threshold that would apply to them. None is
- * asserted at AA, because a permanently red test teaches people to stop reading
- * the output. They are pinned at what they measure today instead, so that a
- * change to any of them fails here and has to be looked at — and so the numbers
- * are written somewhere that cannot go stale.
+ * These were below their threshold on Untitled UI's own values and were pinned
+ * at what they measured, because a permanently red test teaches people to stop
+ * reading the output. They are assertions now: the tokens were raised to the
+ * lightest values that clear the rule, so the change is the smallest one that
+ * meets it rather than the most legible one.
  *
- * All three are Untitled UI's own values, which the standing rule says to take
- * unless the identity or a measurement earns the exception. These are the
- * measurement; what they earn is Bart's decision, not this file's.
+ * R-STYLE-006 says take Untitled UI's value unless the identity or a
+ * measurement earns the exception. This is what the measurement bought.
  */
-describe("known gaps, pinned at today's value", () => {
-  it("placeholder text is below AA in dark mode", () => {
-    // 4.18 against 4.5. Light mode is 4.74 and passes. Placeholder is text by
-    // WCAG's reckoning, so this is a real miss rather than a technicality —
-    // it is the hint inside every input on a dark screen.
-    const measured = ratio(
-      hex("--color-text-placeholder", "dark"),
-      hex("--color-bg-primary", "dark"),
-    );
-    expect(measured).toBeCloseTo(4.18, 2);
-    expect(measured).toBeLessThan(AA_TEXT);
-  });
+describe("controls and placeholders meet the rule that applies to them", () => {
+  /** WCAG 2.2 AA 1.4.11: the boundary of a user interface component. */
+  const AA_NON_TEXT = 3;
 
-  for (const [mode, expected] of [
-    ["light", 1.48],
-    ["dark", 1.91],
-  ] as const) {
-    it(`a control's border is below 3:1 in ${mode} mode`, () => {
-      // WCAG 1.4.11 asks 3:1 for the boundary of a user interface component,
-      // which an input's border is. A decorative hairline between rows is not
-      // covered and is not the concern here; the same token draws both.
-      const measured = ratio(hex("--color-border-primary", mode), hex("--color-bg-primary", mode));
-      expect(measured).toBeCloseTo(expected, 2);
-      expect(measured).toBeLessThan(3);
+  for (const mode of MODES) {
+    for (const surface of SURFACES) {
+      it(`a control's border on ${surface.replace("--color-bg-", "")}, ${mode}`, () => {
+        // This token draws every control edge in the app: input, checkbox,
+        // radio, combobox, button-group, the secondary button. It was 1.48 in
+        // light and 1.91 in dark before the tokens were raised.
+        const fg = hex("--color-border-primary", mode);
+        const bg = hex(surface, mode);
+        expect(ratio(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(AA_NON_TEXT);
+      });
+    }
+
+    it(`placeholder text, ${mode}`, () => {
+      // A placeholder is text, so it is 4.5 rather than 3. Dark was 4.18.
+      const fg = hex("--color-text-placeholder", mode);
+      const bg = hex("--color-bg-primary", mode);
+      expect(ratio(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(AA_TEXT);
     });
   }
 });

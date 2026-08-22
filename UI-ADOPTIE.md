@@ -40,7 +40,7 @@ not judged against themselves.
 | `SigninShell` | 14 | 94 | ⚪ | none | Keep. Page layout for the four door screens |
 | `CardDetail` | 13 | 227 | ⚪ | none | Keep. Domain |
 | `Sheet` | 11 | 95 | 🟡 | none directly; `slideout-menus/*` are composed panels | Follows `Modal`. The drawer direction is the wrapper's job |
-| `FormField` | 11 | 58 | 🟡 | `base/input/label` + `base/input/hint-text` | Replace its internals with those two. They are installed and unused |
+| `FormField` | 11 | 58 | ⚪ | none — **it contains no FormField.** `FormNote`, `FormError` and a `<form>` layout wrapper; the field parts were adopted earlier | Keep. Corrected — see below |
 | **`Modal`** | **10** | **404** | 🟡 | **`application/modals/modal.tsx`** — a 47-line shell exporting `ModalOverlay`, `Modal`, `Dialog`, `DialogTrigger`, already styled with our tokens | **The one that matters. See section 4.** |
 | `SettingsPanel` | 8 | 172 | ⚪ | none | Keep. Layout |
 | `CardsSidebar` `FilterSheet` `ViewSheet` `CardsTabBar` `FilterMenu` `ViewMenu` | 6–7 each | 46–520 | ⚪ | `application/app-navigation` exists but is **built for a different shape** | Keep. See the ⚪ list |
@@ -50,10 +50,10 @@ not judged against themselves.
 | `Segmented` | 5 | 109 | 🟡 | `base/button-group/button-group` | Already a wrapper over it. Keep |
 | `LegalPage` `MarketingFooter` `Navbar` | 5–7 | 58–100 | ⚪ | none | Keep. Page furniture |
 | `MenuPopover` | 2 | 89 | 🟡 | `base/dropdown/dropdown` | Already a wrapper. Keep |
-| `ViewerPill` | 1 | 46 | 🟢 | `base/badges/badges` | **Replace.** Every other chip in the app already uses `Badge` |
+| `ViewerPill` | 1 | 46 | ⚪ | none — **`Badge` cannot be a link.** No `href`, no `<a>`, no `Link` in `badges.tsx`; `AvatarLabelGroup` is a two-line `<figure>` | Keep. Corrected — see below |
 | `RouteError` | 2 | 95 | 🟡 | `application/empty-state/empty-state` | Consider. It is installed and used elsewhere |
 
-**🟢 1 · 🟡 7 · 🔵 0 · ⚪ the rest.**
+**🟢 0 · 🟡 5 · 🔵 0 · ⚪ the rest.** (Was 🟢 1 · 🟡 7 before the two below were read rather than listed.)
 
 The honest reading: this is not a codebase that reinvented the library. It is a
 codebase that adopted the library and kept the things the library does not have.
@@ -116,13 +116,23 @@ and prove the scroll behaviour in a browser rather than from a README.** The
 argument is still keyboard and screen-reader behaviour we would otherwise
 maintain — but the work is now a wrapper, not a rebuild.
 
-## 5. Quick wins — today, negligible risk
+## 5. Quick wins — all three turned out not to be
 
-| # | Change | Why it is safe |
+**Every one was classified from a filename or a catalogue entry, and every one
+was wrong when the file was opened.** Recorded rather than quietly dropped,
+because the pattern is the finding.
+
+| # | Claimed | What reading it showed |
 |---|---|---|
-| 1 | `ViewerPill` → `base/badges/badges` | 1 call site, and every other chip in the app is already a `Badge` |
-| 2 | `FormField` internals → `base/input/label` + `base/input/hint-text` | Both installed and currently unused. Its own API does not change, so its 11 call sites do not move |
-| 3 | Delete `application/app-navigation/**` (6 files) or adopt it | It is installed, unused, and drags `react-aria` and `react-hotkeys-hook` — two dependencies that exist only for dead files |
+| 1 | `ViewerPill` → `Badge` | **`Badge` cannot be a link.** `badges.tsx` has no `href`, no `<a>`, no `Link`. `ViewerPill` is a `<Link>` with an `Avatar`, a width cap and an aria-label. `AvatarLabelGroup` is a two-line `<figure>`, also not a link. ⚪, not 🟢 |
+| 2 | `FormField` internals → `label` + `hint-text` | **`FormField.tsx` contains no `FormField`.** Its own docstring says `FormField`, `FormLabel`, `FormInput` and `FormHint` were removed earlier because Untitled UI's `Input` takes label and hint as props. What is left is `FormNote`, `FormError` and a `<form>` layout wrapper — which `Label` and `HintText` do not replace. The adoption already happened |
+| 3 | Delete or adopt `app-navigation` | **Correct**, and done — see the vendored-cleanup commit. 34 files and two dependencies |
+
+One of three. The two that failed did so the same way as the recharts claim in
+`AUDIT.md` and the "Untitled UI has no modal" claim in section 4 of this
+document: **a conclusion drawn from a listing instead of from the thing.** That
+is now four times in one week, and it is worth more as a warning than the three
+changes would have been.
 
 ## 6. The plan, in order
 
