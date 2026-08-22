@@ -17,7 +17,7 @@ import { join } from "node:path";
  * both cheaper and more complete.
  */
 
-const APP = "app";
+const APP = "src/app";
 
 /** Turn the app directory into the set of paths it answers. */
 function routes(dir = APP, prefix = ""): string[] {

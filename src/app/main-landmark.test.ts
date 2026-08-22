@@ -27,7 +27,7 @@ import { join } from "node:path";
  * file claiming to draw one; that half proves the browser agrees.
  */
 
-const APP = "app";
+const APP = "src/app";
 
 /**
  * The URL paths that render a page. Route handlers are not screens.
@@ -71,12 +71,12 @@ function pageRoutes(dir = APP, prefix = ""): string[] {
  * the position right.
  */
 const DRAWN_BY: Record<string, string> = {
-  "/": "app/page.tsx",
-  "/app/ios": "app/app/ios/page.tsx",
-  "/brand": "app/brand/page.tsx",
-  "/cards/:param": "app/cards/[id]/page.tsx",
+  "/": "src/app/page.tsx",
+  "/app/ios": "src/app/app/ios/page.tsx",
+  "/brand": "src/app/brand/page.tsx",
+  "/cards/:param": "src/app/cards/[id]/page.tsx",
   "/user/:param": "src/components/shared/CardsView.tsx",
-  "/welcome": "app/welcome/page.tsx",
+  "/welcome": "src/app/welcome/page.tsx",
 
   // The five door screens, all through one shell.
   "/login": "src/components/shared/SigninShell.tsx",
@@ -91,16 +91,16 @@ const DRAWN_BY: Record<string, string> = {
   // Every signed-in route: AppShell's content pane is the landmark, and it has
   // to be that pane rather than the grid around it, because the rail and the
   // tab bar are its siblings.
-  "/collection": "app/(app)/AppShell.tsx",
-  "/collection/browse": "app/(app)/AppShell.tsx",
-  "/collection/browse/:param": "app/(app)/AppShell.tsx",
-  "/collection/card/:param": "app/(app)/AppShell.tsx",
-  "/collection/era/:param": "app/(app)/AppShell.tsx",
-  "/collection/set/:param": "app/(app)/AppShell.tsx",
-  "/collection/sets": "app/(app)/AppShell.tsx",
-  "/dashboard": "app/(app)/AppShell.tsx",
-  "/settings": "app/(app)/AppShell.tsx",
-  "/wishlist": "app/(app)/AppShell.tsx",
+  "/collection": "src/app/(app)/AppShell.tsx",
+  "/collection/browse": "src/app/(app)/AppShell.tsx",
+  "/collection/browse/:param": "src/app/(app)/AppShell.tsx",
+  "/collection/card/:param": "src/app/(app)/AppShell.tsx",
+  "/collection/era/:param": "src/app/(app)/AppShell.tsx",
+  "/collection/set/:param": "src/app/(app)/AppShell.tsx",
+  "/collection/sets": "src/app/(app)/AppShell.tsx",
+  "/dashboard": "src/app/(app)/AppShell.tsx",
+  "/settings": "src/app/(app)/AppShell.tsx",
+  "/wishlist": "src/app/(app)/AppShell.tsx",
 };
 
 /**
@@ -113,7 +113,7 @@ const NO_LANDMARK: Record<string, string> = {
 
 /** Files that draw one without being a route's own entry point. */
 const ALSO_DRAWS: Record<string, string> = {
-  "app/(app)/loading.tsx":
+  "src/app/(app)/loading.tsx":
     "the Suspense fallback for every signed-in route: the skip link needs a " +
     "target while the collection is still loading, in the place it will be after",
 };
@@ -145,8 +145,8 @@ const count = (file: string) => (code(file).match(new RegExp(LANDMARK, "g")) ?? 
 describe("the main landmark", () => {
   it("is not in the root layout, where it sat above every screen's navigation", () => {
     expect(
-      has("app/layout.tsx"),
-      "app/layout.tsx wraps {children}, and AppShell renders the sidebar and the " +
+      has("src/app/layout.tsx"),
+      "src/app/layout.tsx wraps {children}, and AppShell renders the sidebar and the " +
         "tab bar inside {children}. A landmark here contains the navigation the " +
         "skip link exists to skip. Put it in the shell that knows where the " +
         "navigation ends.",
