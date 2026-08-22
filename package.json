@@ -20,6 +20,7 @@
     "ui:add": "node scripts/untitled-add.mjs"
   },
   "dependencies": {
+    "@react-types/shared": "^3.36.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "@untitledui-pro/icons": "^0.0.3",

@@ -92,7 +92,8 @@ identical icon. — *Enforced* (`scripts/untitled-add.mjs` rewrites imports and
 drops the second package)
 
 **18.** A colour cleared as a graphic (3:1) is not cleared for use under a word
-(4.5:1). — *Intent* — **and nothing measures this any more; see Open below.**
+(4.5:1). — *Enforced* (`src/lib/design/contrast.test.ts` resolves every text and
+surface token out of `theme.css` and measures it)
 
 **19.** The page is `bg-secondary`; raised surfaces are `bg-primary`. One canvas
 for the whole app. — *Reviewed*
@@ -181,9 +182,13 @@ routes it covers. Anything route-specific goes in that route's own
 
 Things a rule cannot yet be written for, kept here rather than lost:
 
-- **Rule 18 has no teeth.** The contrast measurements were deleted with
-  `lib/design/*.test.ts` (104 tests). A colour change currently ships
-  unmeasured, and that exact failure has happened once before.
+- **Three colour pairs sit below the threshold that applies to them.** All
+  three are Untitled UI's values, so rule 8 says take them; these are the
+  measurement that would earn the exception, and the decision is not made.
+  They are pinned in `contrast.test.ts` at today's figure, so a change fails:
+  placeholder text in dark mode is **4.18** against 4.5, and a control's border
+  is **1.48** (light) and **1.91** (dark) against the 3:1 that WCAG 1.4.11 asks
+  of a component's boundary.
 - **Page titles have no norm.** Four sizes and three weights all claim to be
   "the page title", and `theme.css` defines no weight token at all.
 - **`lib/core` is not split by domain.** Fine at two features; ambiguous at
