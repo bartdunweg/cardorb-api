@@ -126,8 +126,8 @@ export default function CardDetail({
         <div className="card-detail-text min-w-0 flex-1 [@media(max-width:640px)]:text-center">
           <p className="m-0 font-body text-xs text-tertiary">{mine?.setName ?? card.set?.name}</p>
           <Title
-            className="mt-1 mb-0 font-body font-medium
-              text-display-sm leading-tight text-primary"
+            className="mt-1 mb-0 font-body font-title
+              text-display-xs leading-tight text-primary"
           >
             {card.name}
           </Title>

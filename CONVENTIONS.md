@@ -57,6 +57,19 @@ no `actions.ts`/`queries.ts`/`schemas.ts` — data access is in `lib/`.
 — never `font-medium` or `font-semibold`. Those are Tailwind's defaults, which
 puts them outside `theme.css` by definition. — *Reviewed*
 
+**6c.** Headings come in **two registers**, and a screen belongs to exactly one.
+A section heading is always smaller than the page title above it. — *Reviewed*
+
+| | Public — marketing, legal, `/brand` | App — signed-in screens and the four door screens |
+|---|---|---|
+| Page title | `text-display-md` (36px) | `text-display-xs` (24px) |
+| Section | `text-display-sm` (30px) | `text-xl` (20px) |
+| Card / sub | `text-lg` (18px) | `text-md` (16px) |
+
+The two hero titles on `/` and `/app/ios` are the one exception: an arbitrary
+`clamp(42px, 4.5vw, 64px)`, and the last of the deleted fluid type scale. Still
+undecided; see Open.
+
 **7.** Only a token inside `@theme` becomes a Tailwind utility. A token in
 `:root` alone generates nothing and fails silently. — *Intent*
 
@@ -194,14 +207,11 @@ Things a rule cannot yet be written for, kept here rather than lost:
   placeholder text in dark mode is **4.18** against 4.5, and a control's border
   is **1.48** (light) and **1.91** (dark) against the 3:1 that WCAG 1.4.11 asks
   of a component's boundary.
-- **Page titles have no norm.** Weight is a token now, and every heading in the
-  app reads it — but four *sizes* still claim to be "the page title":
-  `display-md` (marketing, legal, brand), `display-sm` (route error),
-  `display-xs` (the seven signed-in screens and the four door screens). Two of
-  those are defensible as two registers; four are not. **Undecided.**
-- **One heading is still `font-bold`** — `RouteError.tsx:53`, the only one in
-  the app. Left alone because changing it changes what paints, and it is a
-  taste call rather than a definition one.
+- **The two hero titles** on `/` and `/app/ios` use
+  `[font-size:clamp(42px,4.5vw,64px)]` with a 640px override. They are the last
+  of the fluid type scale that was deleted, and the nearest tokens
+  (`display-lg` 48px, `display-xl` 60px) are steps rather than a curve. Snapping
+  them loses the fluidity; keeping them leaves two headings outside the scale.
 - **`lib/core` is not split by domain.** Fine at two features; ambiguous at
   three.
 - **15 of 28 API routes have no named validation**, and nothing uses zod except

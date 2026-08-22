@@ -174,7 +174,7 @@ export default function CardsSidebar({
       <p
         className="hidden [@media(max-width:1000px)]:block [@media(max-width:1000px)]:mb-4
           [@media(max-width:1000px)]:p-2 [@media(max-width:1000px)]:font-body
-          [@media(max-width:1000px)]:font-medium [@media(max-width:1000px)]:text-display-sm
+          [@media(max-width:1000px)]:font-title [@media(max-width:1000px)]:text-display-xs
           [@media(max-width:1000px)]:leading-tight [@media(max-width:1000px)]:text-primary"
         aria-hidden="true"
       >

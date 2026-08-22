@@ -49,8 +49,8 @@ export default function RouteError({
           500
         </p>
         <h1
-          className="font-body text-display-sm
-            font-bold text-primary leading-tight"
+          className="font-body text-display-xs
+            font-title-strong text-primary leading-tight"
         >
           {title}
         </h1>
