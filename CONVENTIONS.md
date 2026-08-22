@@ -1,5 +1,7 @@
 # Conventions
 
+last-reviewed: 2026-08-22
+
 The rules this codebase runs on. Present tense, imperative, testable.
 
 **Enforcement** is one of three, and the difference matters:

@@ -1,4 +1,4 @@
-<!-- STANDARDS:BEGIN v0.22.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.24.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
@@ -30,9 +30,22 @@ up to find out what happened.
   Always stop for destructive or irreversible operations, real money, or production.
 - **Batch, never interrupt.** One upfront batch or a checkpoint, never scattered
   mid-task; anything you did not ask, you decided — record it in the closing summary.
-- **Look backwards first.** Before changing existing code, find out why it is the way it
-  is — search the decision records, then `git log -S`. If no rationale exists, write one
-  before you change it. Reasoning disappears the moment you overwrite the code.
+- **Look backwards only when you are the one starting.** Deciding yourself to change existing
+  code? First find out why it is the way it is — search the decision records, then `git log -S`,
+  and write the rationale down if none exists. Asked directly for something? Build it; do not
+  go digging for why it was once done differently.
+
+## Decisions and context
+
+- **`CONVENTIONS.md` holds the rules that apply now.** It is the only binding source.
+- **`.dev-standards/decisions/` is history, not instruction.** Do not read it unless the user
+  asks, or unless you need the reason behind a rule you are about to change.
+- **A request outranks a recorded decision.** Where the request departs from a rule, say so in
+  one sentence — *this departs from R-STRUCT-001* — and then carry it out. No investigation and
+  no alternatives unless asked.
+- **If the new approach becomes the norm, propose amending the rule** at the end, in the summary.
+- **A rule the code structurally ignores is a bug in one of the two.** Never decide which alone:
+  add it to `## Open` in `STATE.md`.
 
 ## Memory system
 
@@ -41,7 +54,8 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 | Trigger | Action |
 |---|---|
 | User reacts, criticises, or states a preference | Use the `log-feedback` workflow before acting |
-| A non-obvious choice between real alternatives | Use the `record-decision` workflow |
+| A choice that is far-reaching **and** hard to reverse | Use the `record-decision` workflow |
+| A norm that is neither — how things are done here | A rule in `CONVENTIONS.md`; not a record |
 | A user-visible change ships | A fragment in `changelog.d/`, never a hand-edit of the changelog — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md`, a brief, or a record. A project that ships no user-visible releases has neither file, and that is correct — do not create them |
 | Session starts on an existing project | Read `STATE.md` first |
 | Session ends | Update `STATE.md` so the next session starts oriented |
@@ -75,7 +89,7 @@ private, not to write a diplomatic record.
   where you flag it first**, because a parallel worktree is probably editing it too.
 - Before choosing a skill, a library, or an MCP, read `~/.local/share/dev-standards/references/`:
   `skill-routing.md` says which skills a request should wake, plus libraries, MCPs, and baselines.
-- On React or Tailwind work, search Untitled UI (MCP) before writing a component; Context7 if it is down.
+- On React or Tailwind work, search Untitled UI (MCP) before writing a component or icon; Context7 if it is down.
 
 <!-- STANDARDS:END -->
 
