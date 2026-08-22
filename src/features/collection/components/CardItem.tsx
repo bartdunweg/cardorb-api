@@ -43,10 +43,28 @@ function CardLink({
   children: React.ReactNode;
 }) {
   if (!id) return <>{children}</>;
-  // "group": the focus-visible ring lands on the child .cards-scan, not the
-  // link itself — display:contents removes the box a ring would draw on the
-  // link, so the ring goes on the part you are actually pointing at instead.
-  const linkClassName = "group contents text-left text-inherit no-underline";
+  /**
+   * "group": the focus-visible ring lands on the child .cards-scan, not on the
+   * link itself, so it frames the part you are actually pointing at.
+   *
+   * This used to be `display: contents`, which removed the box a ring would have
+   * drawn here. It also removed the box *full stop*, and an element with no
+   * layout box cannot take focus: measured in Chrome on /user/<name>, all 1,609
+   * cards in the grid reported zero client rects and none accepted `.focus()`.
+   * Nobody could reach a card with a keyboard — WCAG 2.1.1, level A, on a public
+   * page.
+   *
+   * `outline-hidden` does the one thing `contents` was wanted for. The flex
+   * classes repeat the row/column the li sets, because the link now sits between
+   * the li and the two children that used to be its direct flex items; the tags
+   * stay outside the link and stay a sibling.
+   */
+  const linkClassName = [
+    "group text-left text-inherit no-underline outline-hidden",
+    "flex flex-col gap-[2px] min-w-0",
+    "group-data-[view=list]/item:flex-row group-data-[view=list]/item:items-center",
+    "group-data-[view=list]/item:gap-4 group-data-[view=list]/item:flex-1",
+  ].join(" ");
   if (onPick) {
     return (
       <button type="button" className={linkClassName} onClick={onPick}>

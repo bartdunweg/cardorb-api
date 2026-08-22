@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+/* The one place zod is used, deliberately (R-API-005). This runs once at boot,
+   over values nobody typed in a browser, and a wrong one should stop the process
+   rather than be narrowed past. Request bodies are the other case and take the
+   other idiom: bounded by readJsonBody() and then narrowed by hand, because
+   three fields do not earn a schema. */
+
 /**
  * What this deployment needs, checked once, out loud.
  *

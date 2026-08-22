@@ -46,8 +46,8 @@ src/hooks/ utils/ providers/ styles/
 
 | ID | Rule | Enforcement |
 |---|---|---|
-| **R-STYLE-001** | `src/styles/theme.css` is the only place a design value is written. | Enforced — `node scripts/extract-theme-values.mjs --check` |
-| **R-STYLE-002** | No font size in a className — not `[font-size:…]`, not `text-[13px]`. Snap to a step or name it in `theme.css`. | Enforced — `src/lib/design/type-discipline.test.ts` |
+| **R-STYLE-001** | `src/styles/theme.css` is the only place a design value is written. | Enforced — `node scripts/extract-theme-values.mjs --check`, plus `src/lib/design/stylesheet-discipline.test.ts` for colours in the other stylesheets |
+| **R-STYLE-002** | No font size and no letter-spacing in a className — not `[font-size:…]`, not `text-[13px]`, not `tracking-[-0.02em]`. Snap to a step or name it in `theme.css`. | Enforced — `src/lib/design/type-discipline.test.ts` |
 | **R-STYLE-003** | A heading's weight is `font-title` (500) or `font-title-strong` (600), never `font-medium` or `font-semibold`. | Reviewed |
 | **R-STYLE-004** | Headings come in two registers (below). A section heading is always smaller than the page title above it. | Reviewed |
 | **R-STYLE-005** | Only a token inside `@theme` becomes a utility. A token in `:root` alone generates nothing and fails silently. | Intent |
@@ -59,11 +59,11 @@ src/hooks/ utils/ providers/ styles/
 | **R-STYLE-011** | Grep the whole tree for a class name before deleting its CSS. Loading states and second render branches are the traps. | Intent |
 | **R-STYLE-012** | A literal class name is defined in CSS, read by a variant, or deleted. | Intent |
 | **R-STYLE-013** | Controls have two shapes: `shape-round` (default) and `shape-rectangle`. Shape is a cascading property on a container, never a prop. | Reviewed |
-| **R-STYLE-014** | A button is the component. `untitledButtonClasses.ts` is only for elements a React Aria `Button` cannot be. | Reviewed |
+| **R-STYLE-014** | A button is the component. `untitledButtonClasses.ts` is only for elements a React Aria `Button` cannot be. A transparent interactive *row* — a facet, a sidebar entry — is the exception this allows: a bare `<button type="button">` is right there, and a React Aria `Button` would add nothing it does not already have. | Reviewed |
 | **R-STYLE-015** | One icon set: `@untitledui-pro/icons`. | Enforced — `scripts/untitled-add.mjs` rewrites imports and drops the second package |
 | **R-STYLE-016** | A colour cleared as a graphic (3:1) is not cleared under a word (4.5:1). Every text-on-surface pair, every control boundary and both placeholders are measured. | Enforced — `src/lib/design/contrast.test.ts` |
 | **R-STYLE-017** | The page is `bg-secondary`; raised surfaces are `bg-primary`. | Reviewed |
-| **R-STYLE-018** | `styles/poke-holo.css` is unlayered, so every rule in it beats every Tailwind utility. Know that before adding to it. | Intent |
+| **R-STYLE-018** | `styles/poke-holo.css` is unlayered, so every rule in it beats every Tailwind utility. Know that before adding to it. Its colours are `--color-foil-*` in `theme.css` like everything else. | Intent for the layering; Enforced for the colours — `src/lib/design/stylesheet-discipline.test.ts` |
 
 **The two heading registers (R-STYLE-004):**
 
@@ -108,9 +108,10 @@ caller for any of them means it is a scale step and belongs in the table.
 | ID | Rule | Enforcement |
 |---|---|---|
 | **R-API-001** | The three routes under `/api/v1/public/<username>/` are open on purpose, carry no prices, and each has its own rate limiter. Everything else under `/api/v1/` requires a viewer. | Reviewed |
-| **R-API-002** | A public collection exposes exactly two variant fields: `rarity` and `owned`. It is an allow-list, so a new column is excluded by default. | Reviewed |
+| **R-API-002** | A public collection exposes exactly two variant fields: `rarity` and `owned`. It is an allow-list, so a new column is excluded by default. | Enforced — `src/lib/core/cards-public.test.ts` |
 | **R-API-003** | No paid third-party services. Recurring cost is a hard constraint. | Reviewed |
 | **R-API-004** | A route that reads a JSON body bounds it with `readJsonBody()` and a named `BODY_LIMIT`. Nothing else does: Next sets no limit and neither does `next.config.ts`. | Enforced — `src/lib/api/body.test.ts` |
+| **R-API-005** | Two validation idioms, and the boundary decides which. `zod` at process boundaries that run once and must fail loudly — today that is `lib/core/env.ts` and nothing else. Hand-written narrowing (`typeof`, `Array.isArray`) for request bodies, after `readJsonBody()` has bounded them. Do not reach for a schema for three fields. | Reviewed |
 | **R-PLAT-001** | Cloudflare stays DNS-only, never proxied. Proxying breaks `x-forwarded-host`, which `sameOrigin()` depends on. | Intent |
 | **R-PLAT-002** | `NEXT_PUBLIC_SITE_URL` is set in Vercel's **Build** environment. `NEXT_PUBLIC_` is inlined at build time, so runtime-only silently does nothing. | Intent |
 | **R-PLAT-003** | Every screen renders exactly one `<main id="main-content">`, after its own navigation. The root layout does not. | Enforced — `src/app/main-landmark.test.ts` |
@@ -123,8 +124,7 @@ caller for any of them means it is a scale step and belongs in the table.
 Not rules — things a rule cannot yet be written for.
 
 - **`lib/core` is not split by domain.** Fine at two features; ambiguous at three.
-- **Ten rules are Intent.** By this project's own standard those are not rules.
-  Each is a candidate to make enforceable or to drop.
-- **`components.json` does not exist.** Untitled UI's CLI config records the
-  version we are vendored against; without it `npx untitledui upgrade` has no
-  baseline.
+- **Eight rules are Intent.** By this project's own standard those are not rules.
+  Each is a candidate to make enforceable or to drop. R-STYLE-018 was the ninth
+  and is now half enforced, which is the shape the rest of the list should take:
+  find the half of the rule a machine can hold, and hold it.

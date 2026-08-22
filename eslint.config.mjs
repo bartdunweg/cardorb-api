@@ -1,4 +1,53 @@
+import { readdirSync } from "node:fs";
 import next from "eslint-config-next";
+
+/**
+ * R-STRUCT-001 and R-STRUCT-002, generated from the directory rather than typed
+ * out per pair.
+ *
+ * This used to be two hand-written blocks, one per feature, each naming the
+ * other. Both rules read `Enforced` in CONVENTIONS.md and both were — for
+ * exactly the two directory names somebody had remembered to write down. A third
+ * feature was guarded by nothing at all, and the sign-off check proved it: a file
+ * under `src/features/pricing/` importing both another feature *and* a route
+ * linted clean.
+ *
+ * A single blanket block cannot express this, because a feature's own files
+ * import each other through the same `@/features/<name>/…` alias — 35 times in
+ * `collection` alone. So it stays one block per feature, and the list comes from
+ * the filesystem so the next feature is guarded the day the directory exists.
+ *
+ * Read at config load, relative to the working directory, which is the repo root
+ * whenever ESLint runs here. The same bet src/lib/design/type-discipline.test.ts
+ * makes about its own roots.
+ */
+const FEATURES = readdirSync("src/features", { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
+
+const CROSS_FEATURE =
+  "A feature may not import another feature. Put the cross-link in the route that needs both, or lift it into lib/.";
+const FEATURE_TO_ROUTE =
+  "A feature may not import a route. Routes compose features, never the reverse — move what you need into this feature.";
+
+const featureBoundaries = FEATURES.map((name) => ({
+  files: [`src/features/${name}/**/*.{ts,tsx}`],
+  rules: {
+    "no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          ...FEATURES.filter((other) => other !== name).map((other) => ({
+            group: [`@/features/${other}/*`, `@/features/${other}`],
+            message: CROSS_FEATURE,
+          })),
+          { group: ["@/app/*", "@/app"], message: FEATURE_TO_ROUTE },
+        ],
+      },
+    ],
+  },
+}));
 
 // eslint-config-next exports the flat config as an array, not as a factory, so
 // `...next()` threw "next is not a function" and `npm run check` had never got
@@ -127,50 +176,7 @@ const config = [
    * The split these guard was measured before it was made: zero
    * collection <-> account edges existed. This is what keeps that true.
    */
-  {
-    files: ["src/features/collection/**/*.{ts,tsx}"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["@/features/account/*", "@/features/account"],
-              message:
-                "A feature may not import another feature. Put the cross-link in the route that needs both, or lift it into lib/.",
-            },
-            {
-              group: ["@/app/*", "@/app"],
-              message:
-                "A feature may not import a route. Routes compose features, never the reverse — move what you need into this feature.",
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ["src/features/account/**/*.{ts,tsx}"],
-    rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["@/features/collection/*", "@/features/collection"],
-              message:
-                "A feature may not import another feature. Put the cross-link in the route that needs both, or lift it into lib/.",
-            },
-            {
-              group: ["@/app/*", "@/app"],
-              message:
-                "A feature may not import a route. Routes compose features, never the reverse — move what you need into this feature.",
-            },
-          ],
-        },
-      ],
-    },
-  },
+  ...featureBoundaries,
   {
     files: ["src/components/shared/**/*.{ts,tsx}"],
     rules: {

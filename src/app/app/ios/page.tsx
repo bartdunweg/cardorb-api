@@ -219,7 +219,7 @@ export default function IosApp() {
           </span>
           <h1
             className="max-w-[15ch] mx-auto text-hero m-0 text-primary font-body
-              font-title tracking-[-0.045em] leading-tight
+              font-title tracking-display leading-tight
               [@media(max-width:640px)]:text-hero-narrow"
           >
             Your collection, in your pocket.
@@ -334,7 +334,7 @@ export default function IosApp() {
                     {comingSoon && (
                       <span
                         className="text-tertiary font-body text-xs
-                          uppercase tracking-[0.06em]"
+                          uppercase tracking-caps"
                       >
                         Coming soon
                       </span>
@@ -403,7 +403,7 @@ export default function IosApp() {
             {REQUIREMENTS.map(({ term, detail }) => (
               <div key={term} className="grid gap-1">
                 <dt className="text-tertiary font-body text-xs">{term}</dt>
-                <dd className="m-0 text-primary font-body text-sm font-medium tracking-[-0.02em]">
+                <dd className="m-0 text-primary font-body text-sm font-medium tracking-snug">
                   {detail}
                 </dd>
               </div>

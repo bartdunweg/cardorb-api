@@ -81,6 +81,11 @@ fi
 # prose. Every .md in the repo is hand-wrapped and Prettier would reflow it.
 run "format"    npx prettier --check .
 run "tokens"    node scripts/extract-theme-values.mjs --check
+# The changelog is generated from docs/changelog.d/ and used to only claim it was.
+# This is what makes the claim true: a fragment added without collecting it turns
+# the run red, which is the whole reason the collector exists rather than a note
+# asking people to remember.
+run "changelog" node scripts/collect-changelog.mjs --check
 run "typecheck" npm run typecheck
 run "test"      npm run test
 run "lint"      npm run lint
@@ -104,12 +109,12 @@ run "build"     npm run build
 # every one of them is a content decision the owner has to make, not a script:
 #   - 45 rules against the standard's ceiling of 15. Getting under it means retiring 30 rules.
 #   - `Intent` is a third enforcement value the standard does not allow. CONVENTIONS.md's own
-#     `## Open` section already names those nine as candidates to enforce or to drop.
+#     `## Open` section already names those eight as candidates to enforce or to drop.
 #   - the heading-register table under R-STYLE-004 has rows the check reads as malformed IDs.
 # Turn this into a real `run` once those are settled; copy the block from
 # ~/.local/share/dev-standards/templates/verify.sh.template.
 if [[ -f CONVENTIONS.md ]]; then
-  skip "conventions" "45 rules vs the standard's 15, and 9 rules marked Intent — see the comment above"
+  skip "conventions" "45 rules vs the standard's 15, and 8 rules marked Intent — see the comment above"
 else
   skip "conventions" "no CONVENTIONS.md — run apply-standards"
 fi

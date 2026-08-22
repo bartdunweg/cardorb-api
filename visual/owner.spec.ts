@@ -149,3 +149,134 @@ test("the filter menu, open", async ({ page: p }) => {
 
   await expect(p).toHaveScreenshot("filter-menu-wide.png", { fullPage: false });
 });
+
+test("the filter sheet on a phone, and its keyboard", async ({ page: p }) => {
+  /**
+   * The viewport that shipped the keyboard trap, and the one nothing has ever
+   * opened. Below 1000px the Filter button opens `Sheet`, not the menu above —
+   * a different component, with `[&_.modal-close]:hidden` on it. That hidden
+   * close button was the old focus trap's first candidate: focusing it did
+   * nothing, `inert` had already thrown focus to <body>, and every Tab escaped.
+   *
+   * jsdom cannot reproduce that, because it applies no stylesheet and the
+   * button is therefore visible there. This is the only place in the suite with
+   * real CSS, so this is where the case has to live. It asserts behaviour, not
+   * pixels: a screenshot diffs identical whether or not Tab works.
+   */
+  await p.setViewportSize({ width: 390, height: 900 });
+  await p.goto("/collection", { waitUntil: "networkidle" });
+  await expect(p).not.toHaveURL(/\/login/);
+
+  await p.getByRole("button", { name: "Filter" }).first().click();
+  const sheet = p.getByRole("dialog", { name: "Filter the collection" });
+  await expect(sheet).toBeVisible({ timeout: 10_000 });
+  await settle(p);
+
+  // Measured against `.modal--sheet`, the panel, rather than the first
+  // `[role=dialog]` on the page: the collection has other dialogs mounted, and
+  // React Aria puts the role on a `display: contents` box inside the panel.
+  const inSheet = () =>
+    p.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null;
+      const panel = document.querySelector(".modal--sheet");
+      return {
+        inside: !!active && !!panel && panel.contains(active),
+        onHiddenClose: !!active?.closest(".modal-close"),
+        active: active ? `${active.tagName}.${active.className.split(" ")[0]}` : "none",
+      };
+    });
+
+  // Focus went into the sheet, and not onto the close button that is not there.
+  const landed = await inSheet();
+  expect(landed.inside, `focus landed on ${landed.active}`).toBe(true);
+  expect(landed.onHiddenClose).toBe(false);
+
+  // Tab all the way round twice. Focus must never leave the sheet.
+  for (let i = 0; i < 24; i++) {
+    await p.keyboard.press("Tab");
+    const still = await inSheet();
+    expect(still.inside, `focus escaped the sheet on Tab ${i + 1}, to ${still.active}`).toBe(true);
+  }
+
+  await expect(p).toHaveScreenshot("filter-sheet-narrow.png", { fullPage: false });
+
+  // The exit is allowed to happen. React Aria marks the panel `data-exiting`
+  // and keeps it mounted until the animation finishes, and Modal only tells its
+  // consumer the dialog closed once it has — CardModal calls router.back()
+  // there, so an early signal tears the route down mid-animation. jsdom has no
+  // animations to observe, which is why this half of that contract is here.
+  await p.keyboard.press("Escape");
+  const exiting = await p.evaluate(
+    () => document.querySelector(".modal")?.hasAttribute("data-exiting") ?? false,
+  );
+  expect(exiting, "the sheet closed without playing its exit").toBe(true);
+  await expect(sheet).toBeHidden({ timeout: 10_000 });
+});
+
+test("a card opened from halfway down does not move the page", async ({ page: p }) => {
+  /**
+   * The one measurement the scroll lock exists for, and the one thing jsdom
+   * cannot referee.
+   *
+   * Modal used to pin the body `position: fixed` at its own negative scroll
+   * offset, because `overflow: hidden` alone had been measured here to clamp the
+   * scroll position to zero: opening a card from halfway down /cards snapped
+   * everything behind it to the top, and snapped back on close. React Aria's
+   * lock is `overflow: hidden` plus `scrollbar-gutter: stable` on the root
+   * element — a different bet on the same problem — so the swap to it is only
+   * safe if this passes.
+   */
+  await p.setViewportSize({ width: 1280, height: 1000 });
+  await p.goto("/collection", { waitUntil: "networkidle" });
+  await expect(p).not.toHaveURL(/\/login/);
+  await settle(p);
+
+  await p.evaluate(() => window.scrollTo(0, 1200));
+  await p.waitForFunction(() => window.scrollY > 600);
+  const before = await p.evaluate(() => window.scrollY);
+
+  await p.getByRole("button", { name: "Add a card" }).first().click();
+  await expect(p.getByRole("dialog").first()).toBeVisible({ timeout: 10_000 });
+  const during = await p.evaluate(() => window.scrollY);
+  expect(during, `the page moved from ${before} to ${during} when the dialog opened`).toBe(before);
+
+  await p.keyboard.press("Escape");
+  await expect(p.getByRole("dialog").first()).toBeHidden({ timeout: 10_000 });
+  const after = await p.evaluate(() => window.scrollY);
+  expect(after, `the page moved from ${before} to ${after} when the dialog closed`).toBe(before);
+});
+
+test("a card can be reached and opened with a keyboard", async ({ page: p }) => {
+  /**
+   * The failure this exists for: every card in the grid was wrapped in an
+   * element with `display: contents`, which has no layout box, and Chrome will
+   * not focus one. Measured before the fix on /user/<name> — 1,609 of 1,609
+   * focusable candidates in the grid reported zero client rects and none
+   * accepted `.focus()`. The whole collection was unreachable by keyboard, which
+   * is WCAG 2.1.1 at level A, and no test at any level said so.
+   *
+   * Asserted on the box rather than on the ring, because the box is the part
+   * that decides whether focus can land at all.
+   */
+  await p.setViewportSize({ width: 1280, height: 1000 });
+  await p.goto("/collection", { waitUntil: "networkidle" });
+  await expect(p).not.toHaveURL(/\/login/);
+  await settle(p);
+
+  const measured = await p.evaluate(() => {
+    const cards = Array.from(
+      document.querySelectorAll<HTMLElement>(".cards-item a[href], .cards-item button"),
+    ).filter((el) => el.closest(".cards-item-tags") === null);
+    const first = cards[0];
+    first?.focus();
+    return {
+      count: cards.length,
+      boxless: cards.filter((el) => el.getClientRects().length === 0).length,
+      firstTakesFocus: !!first && document.activeElement === first,
+    };
+  });
+
+  expect(measured.count, "no card links found — the selector has drifted").toBeGreaterThan(10);
+  expect(measured.boxless, "cards with no layout box cannot be focused").toBe(0);
+  expect(measured.firstTakesFocus, "the first card did not accept focus").toBe(true);
+});

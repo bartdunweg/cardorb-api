@@ -61,6 +61,13 @@
   --text-display-md--line-height: calc(var(--spacing) * 11);
   --text-display-md--letter-spacing: -0.72px;
 
+  /* display-lg, -xl and -2xl have no caller in this app and are kept anyway.
+     They are steps of Untitled UI's own scale, and the vendored trees are
+     rewritten wholesale by `npm run ui:add` — a component that arrives using
+     `text-display-xl` after the token was deleted does not fail, it silently
+     renders at the browser's default size. Parity with the library is cheaper
+     than that. Audited as dead three times now; this is the answer, so it stops
+     being re-found. */
   --text-display-lg: calc(var(--spacing) * 12);
   --text-display-lg--line-height: calc(var(--spacing) * 15);
   --text-display-lg--letter-spacing: -0.96px;
@@ -704,6 +711,74 @@
      than a scale to widen. */
   --font-weight-title: 500;
   --font-weight-title-strong: 600;
+
+  /* ── Holographic foil ────────────────────────────────────────────────────
+     The shine is one of the two things this product protects (R-STYLE-007), and
+     until now its colours were the only ones in the app written outside this
+     file. They sat in styles/poke-holo.css, which R-STYLE-001 says is not
+     allowed and which nothing checked — the rule and the code disagreed, in the
+     code's favour, for as long as the file existed.
+
+     The six `foil-*` steps are upstream's own sunpillar palette, taken as-is
+     from the effect's base.css. They are not ours to retune: change one and the
+     foil stops matching the thing it imitates. Named here so the rule is true,
+     not so the numbers become negotiable.
+
+     `deep` and the two `sheen` steps build the diagonal bar that reads as the
+     card tipping; the three `shade` alphas are the pointer-follow shadow.
+     `hsl()` and `hsla()` rather than this file's usual `light-dark()` pairs
+     because foil does not have a dark mode: it is a picture of a physical
+     surface, and the surface is the same in both. */
+  --color-foil-1: hsl(2, 100%, 73%);
+  --color-foil-2: hsl(53, 100%, 69%);
+  --color-foil-3: hsl(93, 100%, 69%);
+  --color-foil-4: hsl(176, 100%, 76%);
+  --color-foil-5: hsl(228, 100%, 74%);
+  --color-foil-6: hsl(283, 100%, 73%);
+  --color-foil-deep: #0e152e;
+  --color-foil-sheen: hsl(180, 29%, 66%);
+  --color-foil-sheen-dim: hsl(180, 10%, 60%);
+  --color-foil-shade-soft: hsla(0, 0%, 0%, 0.1);
+  --color-foil-shade-mid: hsla(0, 0%, 0%, 0.15);
+  --color-foil-shade-deep: hsla(0, 0%, 0%, 0.25);
+
+  /* ── Letter-spacing ──────────────────────────────────────────────────────
+     The second axis a title needs that nothing here named. Untitled UI's scale
+     carries letter-spacing on four steps only — display-md, -lg, -xl and -2xl,
+     all at its stock -0.02em ratio — and every heading in this app wanted
+     tighter than that. So fourteen classNames wrote the number themselves, and
+     three of them wrote it directly over the token they had just applied:
+     `text-display-md tracking-[-0.045em]` is a step and an override of that
+     step arguing in the same string.
+
+     Five values, named for the role rather than the number, because that is
+     what makes them a decision instead of a measurement somebody repeated.
+     `display` is the marketing hero and every display-sized heading; `heading`
+     is a section head, a card head and the wordmark; `snug` is a sub-head and
+     the two places a short run of data is set tight. The two `caps` steps are
+     uppercase micro-labels, which need positive tracking to stay readable.
+
+     Not folded into the `--text-*` steps as a `--letter-spacing` modifier, even
+     though four steps already work that way. `text-xs` carries two of these
+     labels and is used in thirty other places that want no tracking at all;
+     bundling would have moved type nobody asked to move. A separate axis is
+     also what lets `text-display-md` keep Untitled UI's own value for anyone
+     who wants it.
+
+     `caps-wide` has a single caller, which is normally over-tokenising — the
+     same exception `--text-wordmark` is written under, and for the same reason:
+     with it here, "no letter-spacing outside theme.css" is absolute and
+     src/lib/design/type-discipline.test.ts can enforce it. A rule with one
+     exception is a rule nobody can check.
+
+     None of these names collide with Tailwind's own tracking scale (tighter,
+     tight, normal, wide, wider, widest), which nothing in this repo uses —
+     first-party or vendored. Checked before naming them, per R-STYLE-009. */
+  --tracking-display: -0.045em;
+  --tracking-heading: -0.03em;
+  --tracking-snug: -0.02em;
+  --tracking-caps: 0.06em;
+  --tracking-caps-wide: 0.08em;
 
   /* The shape scale. Prefixed `orb-` deliberately (ADR-0057): `@theme`
      replaces a namespace rather than extending it, so naming these `--radius-md`

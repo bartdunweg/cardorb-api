@@ -39,11 +39,10 @@ export function Sheet({
       label={label}
       variant="right"
       // The scroll box and the close button are reached with `[&_.modal-scroll]:`
-      // and `[&_.modal-close]:` rather than from cards.css — Modal.tsx owns both
-      // and takes no className for them, which is why those rules lived in the
-      // stylesheet. modal--sheet stays a literal class because Modal.tsx and
-      // .modal-close live in cards.css against Modal.tsx's own internal
-      // markup, which this component can't reach with a className prop.
+      // and `[&_.modal-close]:` — Modal owns both elements and takes no className
+      // for them, which is why these rules used to live in cards.css. That file is
+      // gone; `modal--sheet` survives as the scope these variants are written
+      // under, and nothing else reads it.
       //
       // bg-primary, not --glass-bg-solid: that token is
       // solid only by name (0.9 alpha in light, 0.66 in dark), so a sheet
