@@ -2,6 +2,65 @@
 
 Where this project stands, for whoever (human or agent) picks it up next.
 
+## The tree moved to src/ + features/ (2026-08-22, workspace `havana`)
+
+Nine commits, Phases 1–5 of `MIGRATION.md`, each green on `verify.sh` on its own.
+Read `MIGRATION.md` for the plan and its closing section for the outcome.
+
+```
+src/  app/ (24 routes, 12 _components/)  components/{base,application,foundations,
+      shared-assets,shared}  features/{collection,account}  lib/ hooks/ providers/
+      styles/ utils/
+root: docs/ public/ scripts/ supabase/ visual/
+```
+
+**Three things to know before you move anything else here.**
+
+**1. `tsc` catches every broken import. The risk is entirely in code and config
+that treats a path as data**, and none of that is type-checked. Every phase found
+more: tsconfig globs, eslint ignores, `.prettierignore`, `CACHE_OWNERS`, the token
+generator's input *and* output paths, `scripts/*.mjs` (Node reads no tsconfig
+paths), **32 `vi.mock()` calls** — a specifier as an argument, invisible to an
+import-statement regex — and, three phases running, **tests that read source files
+by path** (`main-landmark.test.ts`, `routes.test.ts`).
+
+**2. The alias was a pair, on purpose, and is not any more.** `@/*` resolved
+`["./src/*", "./*"]` for the length of Phase 2 so a moved directory was found under
+`src/` and an unmoved one at the root. That is the only reason the phase could be
+five commits. It is `["./src/*"]` again — if you ever widen it, put a deadline on
+it, because a stale root copy resolving silently is the failure it invites.
+
+**3. A directory-wide ignore hides more than it says. Twice, and the second one
+matters.** `components/**` had been exempting `components/custom/` — **65 files of
+this project's own code — from eslint since the day Untitled UI was vendored.**
+Nobody knew. It surfaced only because Phase 4's rename made the exemption follow
+`shared/`, and a test for a new lint rule then failed for the wrong reason. The
+ignore names the four vendored trees by name now, and those files pass clean.
+Same shape as the `src/hooks/` merge, which would have exempted three first-party
+hooks the same way.
+
+### What stops it sliding back
+
+Three `no-restricted-imports` rules in `eslint.config.mjs` (ESLint's own rule, no
+plugin): a feature may not import another feature, a feature may not import a
+route, `components/shared/` may not import a feature. **All three were proved to
+fire** by writing each violation and reading the error. The split they guard was
+measured before it was made — zero `collection` ↔ `account` edges existed.
+
+### Still open
+
+- **`lib/core/`'s 52 modules stayed put.** Folding data access into features is a
+  much bigger measurement than the component split. Obvious next step, no deadline.
+- **`/collection/browse` is missing set logos in production.** pokemontcg.io serves
+  them from `images.scrydex.com`; the CSP at `next.config.ts:36` predates that. 68
+  console errors, four blank tiles. Not fixed here because adding a third-party
+  image host to a CSP is a security decision. **Most urgent item in the repo.**
+- **The measured contrast arguments are gone** with `lib/design/tokens.ts`
+  (`git show 22ca2cb~1:lib/design/tokens.ts`). A colour change today ships
+  unmeasured. Largest open debt.
+- `types/` was never created — nothing to put in it. The 88 arbitrary `px`/`rem`
+  in classNames are screen work, not structure.
+
 ## The styling was demolished and rebuilt on three layers (2026-08-22, workspace `havana`)
 
 `app/globals.css`, `app/styles/tailwind.generated.css`, `lib/design/tokens.ts`,
