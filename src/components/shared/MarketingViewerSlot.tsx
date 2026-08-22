@@ -32,7 +32,7 @@ import { ownerLabel } from "@/lib/core/owner";
  * `/app/ios` `ƒ`, and neither route appears in `.next/prerender-manifest.json`.
  * Turning on `cacheComponents` is a project-wide migration with its own
  * adoption skill, and it would have to reckon with the two routes that are
- * `force-dynamic` for real reasons. That is its own change; see STATE.md.
+ * `force-dynamic` for real reasons. That is its own change.
  *
  * What this file is worth on its own, until then: the same fourteen lines of
  * navbar JSX had been written out twice and were free to disagree, and the

@@ -279,7 +279,7 @@ export default function CardsView({
    * and that is the landing state: the stylesheet reads it as the results,
    * which is why its selector is written as :not([data-pane="rail"]). (The
    * loading fallback used to be the other reader of that state; it draws no
-   * panes at all now — ADR-0091.) It also means the
+   * panes at all now.) It also means the
    * pane-swap animation has nothing to match on the way in, so the dashboard
    * does not perform an arrival on every page load.
    *
@@ -1463,7 +1463,7 @@ export default function CardsView({
                       /* gap-3 wide, gap-2 once the column is under 560px — the dex\' own
                          narrow gap. As a container variant on the element, not a
                          @container block in cards.css: an unconditional utility beats a
-                         conditional legacy rule, which is ADR-0017, and this exact pair
+                         conditional legacy rule, and this exact pair
                          is how it was caught again. .cards-main carries the @container. */
                       "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
                       "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
@@ -1582,7 +1582,7 @@ export default function CardsView({
                         /* gap-3 wide, gap-2 once the column is under 560px — the dex\' own
                          narrow gap. As a container variant on the element, not a
                          @container block in cards.css: an unconditional utility beats a
-                         conditional legacy rule, which is ADR-0017, and this exact pair
+                         conditional legacy rule, and this exact pair
                          is how it was caught again. .cards-main carries the @container. */
                         "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
                         "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +

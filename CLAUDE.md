@@ -109,11 +109,18 @@ serves it an API.
 
 ## Architecture
 
-- `app/` — Next.js routes: `api/v1/*` (public collection API), `cards/`, `user/`, auth pages
-- `lib/core/` — matching a hand-kept collection against TCGdex, Limitless, pokemontcg.io;
+Everything is under `src/`. See @CONVENTIONS.md for the full layout and the rules
+that hold it together.
+
+- `src/app/` — routes only: `api/v1/*` (public collection API), the signed-in
+  `(app)` group, auth pages. Route-local UI lives in that route's `_components/`
+- `src/features/<domain>/` — UI and hooks owned by one domain (`collection`, `account`)
+- `src/components/shared/` — UI with no domain; `base|application|foundations` are vendored Untitled UI
+- `src/lib/core/` — matching a hand-kept collection against TCGdex, Limitless, pokemontcg.io;
   artwork resolution; Cardmarket pricing
-- `lib/api/` — request guards (e.g. `guard.ts` reads `x-forwarded-host` for `sameOrigin()`)
-- `lib/storage/` — persistence helpers
+- `src/lib/api/` — request guards (e.g. `guard.ts` reads `x-forwarded-host` for `sameOrigin()`)
+- `src/lib/storage/` — persistence helpers
+- `src/styles/theme.css` — every design value, and the only place one may be written
 - `supabase/` — auth/session backing store, migrations
 
 ## Product-specific rules
@@ -134,15 +141,21 @@ serves it an API.
   anonymous caller. They used to be open, and this line used to say so; they were closed when
   `/user/<name>` shipped, and each route's docstring says why. The genuinely open, unkeyed
   routes are the three under `/api/v1/public/<username>/`, which serve the public profile —
-  those are open on purpose (ADR-0021), carry no prices (ADR-0045), and each has its own rate
-  limiter. Do not "fix" the guard back off `/api/v1/collection`.
+  those are open on purpose, carry no prices, and each has its own rate limiter. Do not "fix" the guard back off `/api/v1/collection`.
 
 ## Where things live
 
-- Docs map: @docs/README.md
-- Decisions: @docs/decisions/
-- Feedback: `docs/feedback/`
-- Changelog fragments: `docs/changelog.d/` (the standard says `changelog.d/`; here it lives
-  under `docs/`, which is this repo's memory root and is not published anywhere)
+- **Rules: @CONVENTIONS.md** — the conventions this codebase runs on, each with how it is held.
+  It is the only document that describes the current state. There is no second one.
+- Changelog fragments: `docs/changelog.d/`, collected into `docs/CHANGELOG.md`
+- Open data worklists and rollback files: `docs/*.md`, `docs/*.json` — these are rows in the
+  live database that still need a hand, and the before-state of past backfills. Not history.
+
+**This project keeps no decision or feedback records.** They were removed on
+2026-08-22: the rules that survived are in `CONVENTIONS.md`, and the reasoning
+behind any of them is in `git log`. The generated block at the top of this file
+still describes a memory system this repository no longer has — `/apply-standards`
+will keep putting it back, so read that section as describing the standard rather
+than this project.
 
 <!-- PRODUCT:END -->

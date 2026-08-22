@@ -11,7 +11,7 @@ import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/but
  * `bg-primary` here is pure white and `bg-primary_hover` is #fafafa. Measured
  * on the built view menu: the chosen segment painted rgb(250,250,250) beside
  * neighbours at rgb(255,255,255), a ratio of 1.04:1, where WCAG 1.4.11 asks
- * 3:1 of anything that carries a control's state. That is ADR-0056's second
+ * 3:1 of anything that carries a control's state. That is the second
  * exception — argued from a measurement, not from taste.
  *
  * `bg-brand-primary_alt` — the tint their own Tabs puts behind a selected
@@ -19,7 +19,7 @@ import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/but
  * again. Their tints are built for a page that is not pure white. So the
  * background here has to be the solid, `bg-brand-solid`, which is
  * `--color-brand-600` and still an Untitled UI value rather than a Card Orb
- * one. ADR-0057 already chose that particular blue over the lighter one
+ * one. That particular blue was already chosen over the lighter one
  * because a filled accent carrying white text needs 4.5:1 and the lighter
  * measures 4.02.
  */
@@ -42,7 +42,7 @@ const SELECTED = segmentSelectedClassName;
  * ToggleButtonGroup is one answer out of N and renders the `aria-pressed`
  * buttons this control already had. Their look arrives with it: a joined row
  * with hairlines between the segments, not the pill track on glass that
- * `trackClasses.ts` drew (ADR-0056, and it is on purpose that it looks
+ * `trackClasses.ts` drew (on purpose that it looks
  * different).
  */
 export default function Segmented<T extends string>({

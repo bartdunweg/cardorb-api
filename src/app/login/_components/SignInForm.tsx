@@ -90,9 +90,9 @@ export default function SignInForm({
   return (
     <>
       {note && <FormNote>{note}</FormNote>}
-      {/* Untitled UI's Input and Button, per ADR-0056 — this is the proof
+      {/* Untitled UI's Input and Button, because Untitled UI is the default — this is the proof
           screen for that decision, and /login is it because it is public and
-          can therefore actually be photographed (ADR-0020 is a regression that
+          can therefore actually be photographed (a styling regression once hid here that
           hid behind a login for exactly this reason).
 
           The wrapper stays FormForm: it is layout, not a control, and the

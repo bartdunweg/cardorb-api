@@ -59,7 +59,7 @@ export type ProductIds = Record<string, number | null>;
  * `cards` counts copies rather than cards, matching copiesHeld() and therefore
  * the "Collection value" tile: a card held as a normal printing and again as a
  * reverse holo is two copies of one card, and valuing it once was the bug
- * ADR-0044 closed. `priced` and `unpriced` stay counts of distinct cards,
+ * was closed. `priced` and `unpriced` stay counts of distinct cards,
  * because they answer how much of the collection could be valued at all, which
  * is a question about coverage rather than about holdings.
  *

@@ -18,7 +18,7 @@ import { SettingsHint, SettingsSwitch } from "@/features/account/components/Sett
  * Signing up asks for an email address and a password and nothing else, which
  * is the right trade at that moment — every extra field on a signup form is a
  * reason not to finish it. The cost is an account that then exists with a name
- * it did not choose (see docs/decisions/0006), a public page it does not know
+ * it did not choose, a public page it does not know
  * it has, and an empty collection whose screen used to say the collection was
  * unavailable. This is where those are asked instead, once, after the door.
  *
@@ -68,7 +68,7 @@ export default function Onboarding({
   const [username, setUsername] = useState(initial.username);
   // A name given at signup is shown back, because it was given. What is not
   // shown back is a display name that is only a copy of the username: signup
-  // stopped seeding that (ADR-0034), but rows written before it did still hold
+  // stopped seeding that, but rows written before it did still hold
   // one, and a box pre-filled with `swift-magnemite-4821` invites you to keep
   // it. The placeholder already says what an empty box means.
   const [displayName, setDisplayName] = useState(

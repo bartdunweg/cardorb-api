@@ -29,7 +29,7 @@ export const contentType = OG_IMAGE_TYPE;
  * and an absolute URL would make this route fetch itself, so the bytes have to
  * be in the markup. Read once at module scope rather than per request, which
  * costs nothing here: this route takes no data and is built once (see the note
- * on `alt` above, and ADR-0035 for why what renders when matters on OG routes).
+ * on `alt` above; what renders when matters on OG routes).
  *
  * PNG rather than the AVIF beside it. Everywhere else the AVIF is the one to
  * serve, but Satori does not decode AVIF and the failure is a blank space in

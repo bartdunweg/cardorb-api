@@ -55,7 +55,7 @@
  * Because it is what buildCollection() matches against, so an audit that used
  * a different catalogue would "fix" rows into disagreeing with the app that
  * reads them. It is also free and unmetered, which the alternative is not
- * (ADR-0039). The matching pieces are imported from lib/core rather than
+ *. The matching pieces are imported from lib/core rather than
  * copied, so this stays the one implementation.
  *
  * Deliberately not routed through setCatalogue(): that wraps the same walk in
@@ -244,13 +244,13 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
        * had years of "Pikachu" where TCGdex says "Pikachu ex", so the first
        * version read the suffix as house style and compared with it stripped,
        * which left 179 rows alone. Bart's call: "Als TCGdex 'Pikachu X' zegt,
-       * dan moeten wij dat ook zeggen." Which is only ADR-0040's own principle
+       * dan moeten wij dat ook zeggen." Which is only the catalogue-is-truth principle
        * applied without an exception carved out of it — a card's name is a fact
        * about the card, and the catalogue owns those.
        *
        * It also makes the old rows match the new ones. Nothing hand-types a
        * name any more: the add dialog writes whatever the catalogue match said
-       * (ADR-0030, ADR-0032), suffix and all. So the 179 were not a convention
+       *, suffix and all. So the 179 were not a convention
        * being kept, they were rows predating the rule.
        *
        * Checked before running rather than after: speciesOf() finds a Pokémon

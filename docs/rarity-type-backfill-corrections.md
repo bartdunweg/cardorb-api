@@ -1,8 +1,8 @@
 # Rarity/type backfill: rows with no confident TCGdex match
 
 A worklist, not a decision — the reasoning is in
-`docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md`. These rows kept
-their existing rarity/type untouched, on the same principle ADR-0022 applied to
+git history. These rows kept
+their existing rarity/type untouched, on the same principle applied to
 artwork: a wrong fact is worse than a missing one. Most of these are the same rows
 listed in `trainer-gallery-row-corrections.md`, or promos TCGdex has never indexed.
 Fix the underlying number/name mismatch (or accept there is nothing to match), then

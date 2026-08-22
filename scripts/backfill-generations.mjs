@@ -6,12 +6,12 @@
  *
  * ── Why ────────────────────────────────────────────────────────────────────
  *
- * ADR-0030 stopped rarity and type being hand-typed and backfilled the existing
+ * An earlier pass stopped rarity and type being hand-typed and backfilled the existing
  * rows from the catalogue. It left `gen` alone without saying why, so the
  * add-card form kept a text box for it — and a text box is a place to make a
  * mistake. The collection carries exactly one "Scarlett & Violet" to prove it.
  *
- * ADR-0081 closes that gap: `gen` is filled from pokemontcg.io's `set.series`
+ * This closes that gap: `gen` is filled from pokemontcg.io's `set.series`
  * now and shown read-only. This script makes the rows written before that agree
  * with the rows written after, so the era filter lists one entry per era rather
  * than two spellings of the same one.
@@ -36,19 +36,19 @@
  *
  * This talks to PostgREST directly, so it does not go through the four write
  * routes that call `revalidateTag(cardsTag(userId))`. The assembled collection
- * is cached for an hour (ADR-0014), so **the API and the pages keep serving the
+ * is cached for an hour, so **the API and the pages keep serving the
  * old era names for up to an hour after this runs** — measured after the real
  * backfill: the database read `XY` 69 / `X&Y` 0 while
  * /api/v1/public/<name>/collection still answered `X&Y`.
  *
  * Nothing is wrong when that happens and there is nothing to fix. It clears on
  * its own, or immediately if anybody edits a card through the app, which busts
- * the same tag. ADR-0030's backfill had the identical property and did not say
+ * the same tag. The rarity/type backfill had the identical property and did not say
  * so, which is the only reason this paragraph exists.
  *
  * ── Why a map rather than a re-lookup ──────────────────────────────────────
  *
- * ADR-0030's backfill asked the catalogue per card, because rarity and type are
+ * The rarity/type backfill asked the catalogue per card, because rarity and type are
  * per-card facts that nothing local could derive. An era is a fact about the
  * *set*, and both of these are spelling differences on values that are otherwise
  * identical — so 1,960 network round trips would buy nothing that two string

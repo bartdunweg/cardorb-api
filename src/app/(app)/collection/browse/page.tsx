@@ -16,7 +16,7 @@ import BrowseSetIndex from "./_components/BrowseSetIndex";
  * Rows rather than the assembled collection, deliberately: the shell above has
  * already built the collection for the rail, and this page needs none of it —
  * only which sets have how many rows, which is a Map away from getRows(). See
- * that function's comment and ADR-0014.
+ * that function's comment.
  */
 export const metadata: Metadata = { title: "Browse sets" };
 

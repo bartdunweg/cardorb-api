@@ -4,7 +4,7 @@ import type { FormHTMLAttributes, HTMLAttributes } from "react";
  * What is left of the shared form primitives: the wrapper, and the three bits
  * of prose around a form.
  *
- * FormField, FormLabel, FormInput and FormHint were here too — ADR-0007 built
+ * FormField, FormLabel, FormInput and FormHint were here too — they were built
  * them so the login, signup, forgotten-password and set-password screens could
  * not drift apart. They are gone because Untitled UI's Input does that job now,
  * and does it better: the label and the hint are props on the field rather than

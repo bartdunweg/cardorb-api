@@ -20,7 +20,7 @@ import { bearer } from "@/lib/api/viewer";
  * do them: cards_update and cards_delete existed in the accounts migration
  * from the start, but the storage layer only ever exposed list/write/options,
  * and Postgres's own deleteRow() had no caller anywhere in the app. See
- * docs/decisions/0008-per-variant-inventory-fields-and-bearer-rls-fix.md for
+ * git history for
  * why a printing rather than a card is what this addresses — the same id
  * OwnedCard.variants[].id carries.
  *

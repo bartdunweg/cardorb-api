@@ -34,7 +34,7 @@ export default async function SetPassword() {
    *
    * Absence is the branch that asks for more, which is the safe way round: a
    * marker that fails to arrive shows a field somebody can fill, where a marker
-   * wrongly present would hide one. See ADR-0082 for why forging it gains
+   * wrongly present would hide one. Forging it gains
    * nothing — Supabase enforces the requirement from the parameter, not from
    * this.
    */

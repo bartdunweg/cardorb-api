@@ -38,7 +38,7 @@ const addressOf = (req: Request) =>
  * on the grounds that Supabase's `secure_password_change` applied the rule
  * properly to both halves. That setting is *"require reauthentication"* and
  * counts a session as recent for 24 hours, so against a borrowed unlocked
- * browser it did approximately nothing. See ADR-0082.
+ * browser it did approximately nothing.
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

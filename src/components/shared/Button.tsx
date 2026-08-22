@@ -6,7 +6,7 @@ import { Button as UntitledButton } from "@/components/base/buttons/button";
  *
  * It used to be the glass pill: `buttonClassName` from controlClasses.ts, plus
  * `.btn--primary`/`.btn--icon`/`.btn--center`/`.btn--back` still in
- * components.css. ADR-0056 replaced the material; this kept the shape of the
+ * components.css. Untitled UI replaced the material; this kept the shape of the
  * API so the call sites did not all have to move at once.
  *
  * ── Why this is still here rather than deleted ─────────────────────────────
@@ -141,13 +141,13 @@ export default function Button({
   // ── Why this is a hand-copy of the `md`/`secondary` recipe ────────────────
   //
   // It should be `untitledButton({ color, size, className })` — that helper
-  // exists for exactly this, and ADR-0068 is the record of copies like this one
+  // exists for exactly this, and copies like this one
   // being replaced by it. It cannot be, here: `untitledButtonClasses.ts` is
   // "use client" because it reads `styles` out of a "use client" module, and
   // **this file has no "use client"**. A server component may render a client
   // component, but it may not read a value out of one — at prerender it gets
   // Next's client-reference proxy and `styles.common` is `undefined`. That is
-  // the /_not-found crash ADR-0068 describes, and reaching for the helper here
+  // the /_not-found crash, and reaching for the helper here
   // is how it comes back.
   //
   // So the copy stays, and the two things it must not get wrong are marked:

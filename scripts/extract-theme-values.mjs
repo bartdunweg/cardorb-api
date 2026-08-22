@@ -23,7 +23,7 @@
  * It is not a copy. It *resolves* — `--color-orb-page` is a `var()` at an
  * Untitled UI semantic token, which is a `light-dark()` of two Tailwind
  * primitives — so there is still exactly one place each value is decided, and
- * nothing here can drift from it. The previous arrangement did drift: ADR-0089
+ * nothing here can drift from it. The previous arrangement did drift: an audit
  * found Card Orb's hand-written pairs describing a page colour the app had
  * stopped painting.
  *

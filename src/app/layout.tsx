@@ -73,7 +73,7 @@ export const metadata: Metadata = {
    * every route in this app is a tool behind a password, and a tool has nothing
    * to offer a search engine.
    *
-   * Five routes override it, and only five — / , which is the page whose whole
+   * Five routes override it, and only five — /, which is the page whose whole
    * job is being found; /user/<name>, which is the collection worth finding;
    * /app/ios, which is the iPhone app's page; and /privacy and /terms, which
    * are linked from App Store Connect and have to be reachable. Set here rather

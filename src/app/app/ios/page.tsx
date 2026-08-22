@@ -246,7 +246,7 @@ export default function IosApp() {
             */}
             {/* `aria-disabled`, never `isDisabled`. React Aria's prop puts the
                 native `disabled` attribute on, which takes the button out of the
-                tab order — and ADR-0042 keeps this one focusable precisely so it
+                tab order — and this one stays focusable precisely so it
                 can explain itself to somebody who reaches it by keyboard. The
                 note below is what it explains. */}
             <Button

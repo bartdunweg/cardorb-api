@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * The route's whole job here is which arguments reach `updateUser`, so that is
  * what these assert. Whether a given current password is *correct* is auth-js's
  * question, on Supabase's server; this file is about whether the route gives it
- * the chance to ask. See ADR-0082.
+ * the chance to ask.
  *
  * Supabase is mocked at the module, the same way session/route.test.ts does it.
  */

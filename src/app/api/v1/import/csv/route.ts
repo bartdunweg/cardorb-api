@@ -31,7 +31,7 @@ export const maxDuration = 300;
  *
  * This is the most expensive route in the app — up to five thousand inserts and
  * five minutes of function time per call — and being signed in was its only
- * throttle. ADR-0023 put this same limiter on /email and /password on lighter
+ * throttle. The same limiter is on /email and /password on lighter
  * reasoning: one external Auth call per request was judged worth it, and this
  * was not reached in that pass.
  *

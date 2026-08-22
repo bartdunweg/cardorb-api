@@ -4,7 +4,7 @@
  *
  *   npm run ui:add -- button input
  *
- * ADR-0055 recorded both of these as "re-run the fixes after every add", which
+ * Both of these were once recorded as "re-run the fixes after every add", which
  * was a note asking a person to remember something. This is that note, executed.
  * Both fixes are idempotent, so running it on an unchanged tree does nothing.
  *
@@ -60,7 +60,7 @@ const failed = [];
  * pkg.untitledui.com in .npmrc, so the same string is what buys access to a
  * paid private registry — a credential, whatever the component CLI treats it
  * as. It reads NPM_TOKEN too, because that is the name it already has in the
- * environment and in Vercel. See ADR-0083.
+ * environment and in Vercel.
  */
 const LICENSE = process.env.UNTITLED_UI_LICENSE || process.env.NPM_TOKEN;
 
@@ -68,7 +68,7 @@ if (names.length && !LICENSE) {
   console.error(
     "\n  No licence. Set UNTITLED_UI_LICENSE or NPM_TOKEN.\n" +
       "  It is the same value as the token in .npmrc — take it from there,\n" +
-      "  or from untitledui.com. See ADR-0083 for why it is no longer inline.",
+      "  or from untitledui.com. It is a credential, so it is no longer inline.",
   );
   process.exit(1);
 }
@@ -144,8 +144,8 @@ for (const name of names) {
  *      type, and half a dozen "Property 'label' does not exist" errors fifty
  *      lines further down.
  *   3. It adds `@untitledui/icons` to package.json and imports from it, beside
- *      the `@untitledui-pro/icons` this project already has. ADR-0067 and
- *      ADR-0083 are both "one icon set"; an identical name is not an identical
+ *      the `@untitledui-pro/icons` this project already has. The rule is
+ *      one icon set; an identical name is not an identical
  *      icon.
  *   4. **It overwrites `src/utils/cx.ts` with its own stock version**, which
  *      does not carry this project's radius scale. Nothing fails. `cx` simply
@@ -207,7 +207,7 @@ const relocated = relocate();
  * The second icon package, removed again.
  *
  * The generator adds `@untitledui/icons` to package.json and imports from it.
- * This project has `@untitledui-pro/icons`, and ADR-0067 and ADR-0083 are both
+ * This project has `@untitledui-pro/icons`, and the rule is
  * "one icon set" — an identical name is not an identical icon. The per-file fix
  * below rewrites the imports; without this the dependency stays behind, which
  * is worse than either state on its own: nothing imports it, so nothing fails,
@@ -271,7 +271,7 @@ for (const dir of ROOTS) {
       "@/components/$1/",
     );
 
-    // 1c. One icon set (ADR-0067, ADR-0083). The generator imports from
+    // 1c. One icon set. The generator imports from
     //     `@untitledui/icons`, the free package, which this project does not
     //     have — it has the PRO one, and every name checked so far exists in
     //     both. Adding the second package would make "which set is this icon
@@ -288,15 +288,15 @@ for (const dir of ROOTS) {
     //    not written under it, so empty-state.tsx indexes an array it built
     //    itself and fails `tsc --noEmit` on three lines.
     //
-    //    ADR-0058 said three patches was the point to stop automating and start
+    //    Three patches was once called the point to stop automating and start
     //    reconsidering. This one is gone again, and the reason is worth keeping.
     //
-    //    It used to prepend `// @ts-nocheck — vendored, see ADR-0062` to every
+    //    It used to prepend `// @ts-nocheck — vendored` to every
     //    file here, on the argument that a repository should not typecheck code
     //    it does not author. True of this project's *own* flags and false of
     //    everything else: @ts-nocheck silences a whole file, so it also hid two
-    //    faults that would each have thrown on first render (ADR-0066) and one
-    //    import of a package that is not a dependency (ADR-0070).
+    //    faults that would each have thrown on first render and one
+    //    import of a package that is not a dependency.
     //
     //    tsconfig.vendored.json replaces it: `strict` stays on, the four flags
     //    this project adds on top come off, and the vendored trees are excluded
@@ -304,7 +304,7 @@ for (const dir of ROOTS) {
 
     // 4. The password reveal toggle is sized to its 16x16 icon, which
     //    Lighthouse flags as target-size — WCAG 2.2 AA (2.5.8) asks 24x24.
-    //    Grown with an ::after so the icon itself does not move. ADR-0058.
+    //    Grown with an ::after so the icon itself does not move.
     after = after.replace(
       /(\n\s*)(sizes\[inputSize\]\.iconTrailing,\n)(\s*\)\}\n\s*>\n\s*\{isPasswordVisible)/,
       `$1$2$1"size-6",
@@ -370,7 +370,7 @@ if (touched.length) {
   console.log(
     `\n  the generator also rewrote ${touched.length} file(s) that already existed:\n    ${touched.join("\n    ")}\n` +
       "\n  READ THE DIFF. A deliberate divergence from upstream looks exactly like\n" +
-      "  an update here, and reverting one is silent. See ADR-0078.",
+      "  an update here, and reverting one is silent.",
   );
 }
 
@@ -383,7 +383,7 @@ if (relocated.length) {
 if (droppedDep) {
   console.log(
     "\n  removed @untitledui/icons from package.json — this project has the PRO\n" +
-      "  set and only one is allowed (ADR-0067, ADR-0083). Run `npm install` to\n" +
+      "  set and only one is allowed. Run `npm install` to\n" +
       "  take it out of the lockfile too.",
   );
 }

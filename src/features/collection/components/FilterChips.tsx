@@ -21,7 +21,7 @@ export type ActiveFilter = { group: string; value: string; onRemove: () => void 
  * is a 16px target, where WCAG 2.2's 2.5.8 asks 24px. The whole chip here is
  * one 28px-tall button, so the target is the chip.
  *
- * That is ADR-0056's second exception — Untitled UI's value is the default
+ * That is the second exception — Untitled UI's value is the default
  * *unless* Card Orb's is argued from a measurement — so their look is adopted
  * (`BadgeWithIcon` draws the pill and the cross) and the hit area stays ours.
  * The badge is a `<span>`, so nesting it in the button is valid.

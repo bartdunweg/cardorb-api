@@ -44,10 +44,10 @@ import {
  * to honour and nothing for a middle click to open.
  *
  * Every slot says its name, at every width, and every slot is the width of the
- * widest of those names (ADR-0086). Four labelled slots fit a 360px phone's
+ * widest of those names. Four labelled slots fit a 360px phone's
  * 328px of track with room to spare now that the add circle is not in the row
  * with them. Below roughly 340px the labels truncate rather than the bar
- * overflowing — the floor ADR-0050 established, unchanged.
+ * overflowing — the floor the overflow fix established, unchanged.
  */
 
 /**
@@ -93,8 +93,7 @@ export default function CardsTabBar({
 }: {
   active: CardsTab | null;
   /** Which slots the bar carries: the public link has no account to show, so no
-   *  "You". Nothing to do with the plus any more — that left the bar entirely
-   *  (ADR-0086). */
+   *  "You". Nothing to do with the plus any more — that left the bar entirely. */
   signedIn: boolean;
   /** No Dashboard on the public link: it is three tiles and two charts there. */
   isPublic?: boolean;
@@ -148,14 +147,14 @@ export default function CardsTabBar({
 
   /**
    * The slots are mapped in one go. They used to be split in half around a plus
-   * that sat in the middle of the row; ADR-0086 moved that button to the
+   * that sat in the middle of the row; that button moved to the
    * dashboard's title row, so there is nothing left for the two halves to sit
    * either side of.
    *
    * Still no slot-width measurement here, and deliberately none, even though the
    * slots are all one width again: a --tab-w var was once computed from the
    * widest label on mount, on document.fonts.ready and on every ResizeObserver
-   * tick (ADR-0030), and ADR-0050 deleted the lot. Equal widths come from a grid
+   * tick, and all of it was deleted. Equal widths come from a grid
    * of fr tracks now (tabbarPagesClassName) — the browser was always going to be
    * better at this than three JavaScript hooks racing a font load.
    */
@@ -171,7 +170,7 @@ export default function CardsTabBar({
         aria-current={on ? "page" : undefined}
         aria-label={tab.label}
         // No `title` and no tooltip. Every slot has shown its name as visible
-        // text since ADR-0050, so the native tooltip was repeating a word
+        // text since the bar was rewritten, so the native tooltip was repeating a word
         // already on screen a few pixels below itself — and a Tooltip here
         // would repeat it more elaborately. Deleted rather than converted.
         onClick={() => onSelect(tab.key)}

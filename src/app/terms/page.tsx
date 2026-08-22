@@ -22,7 +22,7 @@ import { SITE_OG_IMAGE } from "@/lib/core/og";
  *      half of that decision.
  *   3. It is free, and a free service has to be able to change or stop.
  *
- * See docs/decisions/0043-terms-of-use.md. Not legal advice — it is honest
+ * See git history. Not legal advice — it is honest
  * about what the software does and what is promised, which is the part that can
  * be verified from in here.
  */

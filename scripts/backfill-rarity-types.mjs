@@ -1,6 +1,6 @@
 /**
  * Rarity and type, moved off whatever a Notion column once said and onto
- * what TCGdex says today. See docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md.
+ * what TCGdex says today. See git history.
  *
  *   npx tsx scripts/backfill-rarity-types.mjs --user <uuid>              # dry run: logs every diff, writes nothing
  *   npx tsx scripts/backfill-rarity-types.mjs --user <uuid> --write      # the same, and updates Postgres
@@ -12,8 +12,8 @@
  * lib/core/cards.ts — resolveSetIds() + fetchSet() + numberForms() to build a
  * byNumber index per set, then sameCard() as the same guard: "a number that
  * resolves to a different Pokémon means the numbering does not line up, and a
- * wrong scan is worse than a missing one" (see ADR-0022, which made the same
- * call for artwork). Imported directly from lib/core rather than copied, so
+ * wrong scan is worse than a missing one" — the same call artwork makes.
+ * Imported directly from lib/core rather than copied, so
  * this stays the one matching implementation rather than a second one that
  * drifts.
  *
@@ -203,7 +203,7 @@ const details = await detailsFor([...new Set(matched.map((m) => m.tcgId))]);
  * rows at once, and TCGdex's rarity vocabulary is *coarser* than what some rows
  * already hold — "Special Illustration Rare" becomes "Ultra Rare", which is a
  * real distinction being spent, deliberately, in exchange for one vocabulary
- * across the whole collection (ADR-0041). A decision like that is exactly the
+ * across the whole collection. A decision like that is exactly the
  * kind worth being able to take back.
  */
 const undo = [];
@@ -259,9 +259,8 @@ if (unmatched.length) {
   const lines = [
     "# Rarity/type backfill: rows with no confident TCGdex match",
     "",
-    "A worklist, not a decision — the reasoning is in",
-    "`docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md`. These rows kept",
-    "their existing rarity/type untouched, on the same principle ADR-0022 applied to",
+    "A worklist, not a decision — the reasoning is in git history. These rows kept",
+    "their existing rarity/type untouched, on the same principle applied to",
     "artwork: a wrong fact is worse than a missing one. Most of these are the same rows",
     "listed in `trainer-gallery-row-corrections.md`, or promos TCGdex has never indexed.",
     "Fix the underlying number/name mismatch (or accept there is nothing to match), then",

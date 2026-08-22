@@ -79,7 +79,7 @@ export type CollectionRow = {
    * way; what null buys is that a later import can fill blanks without
    * overwriting a judgement somebody made.
    *
-   * This used to live in `rarity`, which the ADR-0030 backfill replaced with
+   * This used to live in `rarity`, which the catalogue backfill replaced with
    * TCGdex's vocabulary. That vocabulary describes the card; this describes the
    * copy, and the two were never the same question.
    */
@@ -88,7 +88,7 @@ export type CollectionRow = {
    * The nine — not eight — inventory facts added for per-printing detail
    * (2026-08-14 card-inventory-fields migration): quantity 1, isFavorite
    * false, the rest null by default. See
-   * docs/decisions/0006-per-variant-inventory-fields.md.
+   * git history.
    */
   quantity: number;
   condition: string | null;

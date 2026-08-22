@@ -3,7 +3,7 @@
 import type { FC, HTMLAttributes } from "react";
 import { useCallback, useEffect, useRef } from "react";
 // Was `@react-types/overlays`, which is not a dependency of this project and is
-// not in node_modules — the same fault ADR-0066 found twice in
+// not in node_modules — the same fault found twice in
 // file-upload-trigger. react-aria-components re-exports the type and *is* a
 // dependency. Type-only, so it could never have thrown; it would simply have
 // failed to compile the moment anything checked this file, which until

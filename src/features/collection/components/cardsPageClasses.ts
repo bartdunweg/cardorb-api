@@ -40,7 +40,7 @@ export const pageCardsClassName =
  * No `flex`/`flex-col` here on purpose, even though the base rule sets them:
  * `display` is exactly the property the pane-swap sibling selector toggles
  * to `none`, and an unconditional Tailwind utility for it would outrank that
- * CSS regardless of the CSS's specificity (ADR-0012). display/flex-direction
+ * CSS regardless of the CSS's specificity. display/flex-direction
  * stay in cards.css; only the properties nothing ever resets are Tailwind.
  */
 export const cardsMainClassName =
@@ -55,7 +55,7 @@ export const cardsMainClassName =
      "nothing between these two" constraint AppShell already documents. */
   /* `!`, because `flex` above is unconditional and `hidden` here is not: two
      display utilities, and the order Tailwind emits them is not a promise. The
-     same fix as ADR-0012's and the card body's. */
+     same fix as the cascade-layer one and the card body's. */
   "[@media(max-width:1000px)]:peer-data-[pane=rail]:!hidden " +
   "[@media(max-width:1000px)]:peer-data-[pane=main]:[animation:cards-pane-in_200ms_var(--ease-out)] " +
   "motion-reduce:animate-none " +
@@ -83,7 +83,7 @@ export const onlyNarrowClassName = "hidden [@media(max-width:640px)]:contents";
  * The set header above each grid: a logo, the set's name, and its counts.
  *
  * First portion of the cards.css migration to be moved under the visual harness
- * added in ADR-0051. Chosen because it is the safest shape there is here — five
+ * added with the screenshot harness. Chosen because it is the safest shape here — five
  * classes, one consumer (CardsView), and not one descendant selector, so the
  * markup does not move and only the styling does. The families that style a
  * child from the parent's class are the ones that broke this migration four
@@ -110,7 +110,7 @@ export const cardsSetMetaClassName =
 
 /**
  * The heading row and the toolbar under it — second portion of the cards.css
- * migration (ADR-0051).
+ * migration.
  *
  * The spacing numbers are Tailwind's own scale rather than arbitrary values,
  * because this project's tokens already agree with it: --space-2 through
@@ -150,8 +150,7 @@ export const cardsCountClassName =
   "cards-count m-0 mt-2 font-body text-xs " + "text-tertiary lining-nums tabular-nums";
 
 /**
- * The last of the simple ones — third and final portion under ADR-0051's
- * harness. See ADR-0052 for where this migration stops and why.
+ * The last of the simple ones, done under the screenshot harness.
  */
 export const cardsSetClassName = "cards-set flex flex-col";
 
@@ -171,7 +170,7 @@ export const cardsNavElsewhereClassName = "cards-nav-elsewhere max-[1000px]:hidd
 
 /**
  * The signed-in chrome — the last portion, and the one that needed a session
- * before it could be moved at all. See ADR-0051 for why, and ADR-0020 for the
+ * before it could be moved at all — and for the
  * bug that hid on exactly these routes.
  */
 
@@ -189,7 +188,7 @@ export const cardsHeadClassName = "cards-head relative z-[2] flex flex-col items
  * should wrap instead, so it breaks the word.
  */
 export const cardsMainTitleClassName =
-  // Untitled UI's page title (ADR-0061). `overflow-wrap` is the part that is not
+  // Untitled UI's page title. `overflow-wrap` is the part that is not
   // theirs and must not be dropped — see the paragraph above; it is why this is
   // a constant rather than the utility string written at each call site.
   "cards-main-title m-0 text-display-xs font-semibold text-primary [overflow-wrap:anywhere]";
@@ -201,7 +200,7 @@ export const cardsMainTitleClassName =
  * Nothing in the app draws a skeleton any more. Its only consumer was ever
  * app/(app)/loading.tsx, and that file shows the orb now: a shared fallback
  * standing in for seven screens with no layout in common cannot honestly
- * outline any of them (ADR-0091, FB-0024). The `@keyframes skeleton-sweep` it
+ * outline any of them. The `@keyframes skeleton-sweep` it
  * read went with it.
  *
  * Deleted rather than kept warm. If per-route skeletons ever arrive they will be

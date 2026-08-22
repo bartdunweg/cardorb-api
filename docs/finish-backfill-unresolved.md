@@ -1,6 +1,6 @@
 # Finish backfill: cards the catalogue could not settle
 
-Left null, which still means "nobody has said" — see ADR-0048. Fix by hand,
+Left null, which still means "nobody has said". Fix by hand,
 or wait for an import that knows. Delete this file once it is empty.
 
 | card | why | copies held |

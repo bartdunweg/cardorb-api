@@ -69,7 +69,7 @@ The SVGs are an approximation, not a lossless export — a shaded chrome materia
 exact SVG expression. They read as the same object, round and glossy, and hold up down to
 64 px, but carry less silver in the lit mass, a smaller specular, and only a hint of the
 iridescent rim. Prefer the raster wherever one will do.
-`docs/decisions/0020-web-mark-ships-as-png-with-an-svg-fallback.md` has the reasoning.
+The reasoning is in git history.
 
 The mark is the app icon's sphere without the tile, so it stays consistent with the
 installed app. Retuning the icon and re-running `--web` keeps both in step.

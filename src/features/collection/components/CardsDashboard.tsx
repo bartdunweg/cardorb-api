@@ -64,7 +64,7 @@ export default function CardsDashboard({
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <h1 className={cardsMainTitleClassName}>Dashboard</h1>
         {/* The plus that used to sit in the middle of the mobile tab bar. It
-            left so the bar's four slots could be one equal width (ADR-0086),
+            left so the bar's four slots could be one equal width,
             and this is where it went — deliberately for now, and deliberately
             recorded as temporary: it costs a phone the ability to add a card
             from /collection or /wishlist, which the bar could do from anywhere.

@@ -24,7 +24,7 @@ import IDS from "@/lib/core/cardmarket-ids.generated.json";
  * scripts/snapshot-collection-value.mjs already went looking for an archive to
  * backfill from and found two copies of the guide, total.
  *
- * This is the half of ADR-0044 that was missing. The table it writes to shipped
+ * This is the half of per-user value history that was missing. The table it writes to shipped
  * with three points in it, put there by hand, and nothing added a fourth — a
  * chart whose whole premise is "recorded over time" that would have shown the
  * same three readings for the rest of its life. The series cannot be fetched

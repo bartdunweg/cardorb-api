@@ -8,8 +8,8 @@ import { Children, cloneElement, useRef } from "react";
 // called on `rest`, which is whatever is left of the props after the six named
 // ones, and FileTriggerProps declares nothing else and does not extend an HTML
 // element's props. So the result was `{}` at every possible call site, and
-// removing it costs nothing and saves a dependency. See ADR-0062 for why a
-// vendored file is otherwise left alone.
+// removing it costs nothing and saves a dependency. A vendored file is
+// otherwise left alone; this is one of the few crash fixes that earn an edit.
 
 interface FileTriggerProps {
     /**
@@ -49,7 +49,7 @@ export const FileTrigger = (props: FileTriggerProps) => {
     // Make sure that only one child is passed to the component.
     // `Children`, not `React.Children`: upstream reaches for a `React` global
     // this file never imports, so the component threw a ReferenceError the
-    // first time anything rendered it. @ts-nocheck (ADR-0062) is why the
+    // first time anything rendered it. @ts-nocheck is why the
     // typechecker never said so, and no consumer is why nobody ran it.
     // A crash is not formatting, so this is a fix rather than a tidy-up.
     const clonableElement = Children.only(children);

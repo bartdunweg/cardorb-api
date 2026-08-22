@@ -78,7 +78,7 @@ describe("ownershipOf", () => {
     expect(of([row()], card())).toMatchObject({ owned: true, quantity: 1, itemIds: ["row-1"] });
   });
 
-  it("refuses a number that lines up on a card by another name (ADR-0022)", () => {
+  it("refuses a number that lines up on a card by another name", () => {
     expect(of([row({ name: "Blastoise" })], card())).toMatchObject({ owned: false, itemIds: [] });
   });
 

@@ -15,7 +15,7 @@ import Wordmark from "@/components/shared/Wordmark";
  * extracted its own footer: this one for /app/ios, and a `Footer.tsx` for
  * /privacy and /terms. This one won the merge on arriving first and on having
  * somewhere to put links; the other was deleted whole rather than kept beside
- * it, which is the same resolution ADR-0034 records for `displayNameOf()`.
+ * it, which is the same resolution `displayNameOf()` uses.
  * /privacy and /terms render it through LegalPage.tsx.
  *
  * Three columns: the wordmark, the Cardmarket note, and the theme toggle. The

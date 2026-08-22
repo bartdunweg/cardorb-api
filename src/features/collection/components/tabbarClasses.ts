@@ -3,7 +3,7 @@
  * app/styles/layout.css.
  *
  * CardsTabBar.tsx is the only consumer now. (app)/loading.tsx used to draw the
- * same bar as a skeleton and draws nothing but the orb — ADR-0091.
+ * same bar as a skeleton and draws nothing but the orb.
  *
  * "tabbar-item" and "is-active" stay as literal class names alongside the
  * Tailwind utilities below, because useSlidingPill.ts queries
@@ -46,7 +46,7 @@
 // pageCardsClassName's `bg-secondary`, so this reads --color-bg-secondary and
 // must keep tracking it if that constant ever moves. It used to read
 // --color-bg-grouped, a token from the pre-Untitled-UI palette that no surface
-// has been painted with since ADR-0061: #181818 fading over a #0a0a0a canvas,
+// has been painted with since the palette moved: #181818 fading over a #0a0a0a canvas,
 // which is the band this is written to avoid, visible on every dark-mode phone.
 export const tabbarFadeClassName =
   "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 h-36 z-[var(--z-tabbar)] pointer-events-none " +
@@ -55,7 +55,7 @@ export const tabbarFadeClassName =
   // The rail is back beside the cards above 1000px, so the bar and its scrim
   // have nothing left to do. `!` for the same reason the bar's own hide has it:
   // `fixed` above is unconditional and this is not, and the order Tailwind
-  // emits two display-ish utilities in is not a promise (ADR-0012).
+  // emits two display-ish utilities in is not a promise.
   "[@media(min-width:1001px)]:!hidden";
 
 /**
@@ -65,7 +65,7 @@ export const tabbarFadeClassName =
  * either side of the bar... There is no toggle on this route to reserve for")
  * and tried to cancel it there, but that cancellation lives in the `legacy`
  * layer and can never beat this file's own `utilities`-layer padding once
- * both match — the same cascade-layer fact `ADR-0012`/`0017`/`0028` already
+ * both match — the same cascade-layer fact already
  * found three times over (see this file's own header comment for the
  * `[@media(min-width:1001px)]:!hidden` fix built the same way). Baked the
  * correct value in here instead of trusting cards.css to win a fight it
@@ -79,7 +79,7 @@ export const tabbarFadeClassName =
  *
  * This padding is the whole outer margin now: the track below shrinks to fit
  * rather than insisting on its content's width, so what it is given is what
- * it takes (ADR-0050).
+ * it takes.
  */
 export const tabbarClassName =
   "fixed w-[var(--lock-vw,100%)] left-0 right-0 bottom-0 z-[var(--z-tabpage)] transform-gpu " +
@@ -101,33 +101,33 @@ export const tabbarClassName =
  * applied everywhere a gap exists here, so nine seemingly-independent spacing
  * bugs can't reopen this file nine more times.
  *
- * Untouched by ADR-0050 and ADR-0086, and worth saying why: p-2 was never what
+ * Untouched by both later rewrites of this bar, and worth saying why: p-2 was never what
  * was wrong. It was applying correctly the whole time — the slots were simply
  * being laid out past it.
  */
 /* Untitled UI's surface on the capsule, and nothing else about this bar changed
-   (FB-0015). The glass fill, the blur and the hand-tuned shadow are theirs now —
+  . The glass fill, the blur and the hand-tuned shadow are theirs now —
    the same three the card surfaces took — but the shape, the widths, the slots
    and the sliding pill are untouched. `rounded-btn` stays: it is the pill
-   radius, this bar is a pill, and ADR-0057 left that token alone precisely
+   radius, this bar is a pill, and that token was left alone precisely
    because it is not one of Tailwind's names. */
 /**
  * grid grid-flow-col auto-cols-fr, where this was a flex row: every slot is the
- * width of the widest label now, which is what FB-0022 asked for and what
- * ADR-0086 explains at length. Three things about it are worth knowing before
+ * width of the widest label now, which is what was asked for. Three things
+ * about it are worth knowing before
  * touching this line.
  *
  * `auto-cols-fr` is `grid-auto-columns: minmax(0, 1fr)`, and in a grid container
  * whose width is indefinite — which this is, `w-auto` — every `1fr` track
  * resolves to the *maximum* of the tracks' max-content sizes. So "all equal, at
  * the widest" is not something computed here; it is the definition of an fr
- * track. ADR-0030 hand-rolled this with a --tab-w var measured by three hooks
- * racing a font load, and ADR-0050 deleted the lot. Neither should come back.
+ * track. An earlier version hand-rolled this with a --tab-w var measured by
+ * three hooks racing a font load, and it was deleted. It should not come back.
  *
- * The `minmax(0, …)` half is the part that keeps ADR-0050's fix. Plain `1fr` is
+ * The `minmax(0, …)` half is the part that keeps the overflow fix. Plain `1fr` is
  * `minmax(auto, 1fr)`, whose floor is the track's min-content size, and a row of
  * nowrap labels that cannot go below min-content overflows a narrow phone — the
- * exact failure FB-0011 reported. With a 0 floor the tracks shrink together
+ * exact failure once reported. With a 0 floor the tracks shrink together
  * instead and the labels truncate equally.
  *
  * `grid-flow-col` rather than an explicit template, because the slot count is
@@ -137,7 +137,7 @@ export const tabbarClassName =
  */
 /**
  * min-w-0, where this used to say min-w-max and a `<=640px` max-w cap. Both are
- * gone, and the reason is ADR-0050: the pill was drawn *outside* the capsule's
+ * gone, and the reason is the overflow fix: the pill was drawn *outside* the capsule's
  * left and right edges, not short of a margin inside them. min-w-max was meant
  * to widen the capsule to whatever its slots need, and a track that is allowed
  * to be wider than the bar has room for will overflow somewhere — with the
@@ -169,9 +169,9 @@ export const tabbarPagesClassName =
  *
  * No width and no flex sizing here at all: this is a grid item now, and the
  * track it sits in decides how wide it is (tabbarPagesClassName). Every slot
- * therefore comes out the width of the widest label — FB-0022 — instead of the
- * width of its own, which is what `flex-initial` gave it between ADR-0050 and
- * ADR-0086, and what made the avatar slot visibly the narrowest of the four:
+ * therefore comes out the width of the widest label instead of the width of
+ * its own, which is what `flex-initial` gave it in between, and what made the
+ * avatar slot visibly the narrowest of the four:
  * "You" is the shortest word in the bar, and since the avatar is size-5, exactly
  * as wide as every other icon, the label was the only thing left to differ.
  *
@@ -186,7 +186,7 @@ export const tabbarPagesClassName =
  * own shrink-0 keeps a slot from collapsing past its icon.
  *
  * px-1, and it stopped meaning what it used to mean. While a slot hugged its own
- * label this was the space around the words, and ADR-0050 set it to px-1.5 so
+ * label this was the space around the words, and it was set to px-1.5 so
  * the pill's inner padding came out equal on all four sides. Neither is true
  * now: the track decides the slot's width, the label is centred in whatever it
  * gets, and above about 375px that is already more room than any padding here
@@ -216,7 +216,7 @@ export const tabbarIconClassName = "flex shrink-0";
  *  still applies "group" unconditionally and there is no reason to make
  *  that conditional for one class that stopped needing it. */
 /** max-w-full + truncate: every slot is sized to the *widest* label now
- *  (ADR-0086), so on a wide enough screen these never fire — not even for the
+ *  so on a wide enough screen these never fire — not even for the
  *  widest one. They are what happens below roughly 340px, where the tracks have
  *  to give up width together to keep the capsule on the screen: "Dashboa…" is
  *  the price of a bar that still fits, and it is paid by the label rather than
@@ -242,7 +242,7 @@ export const tabbarPillClassName =
  *
  * A 40px add circle used to sit in the middle of this track, and it is what made
  * equal-width slots impossible: four slots at the widest label plus the circle
- * need ~366px, and a 360px phone gives the track 328. ADR-0086 takes the circle
+ * need ~366px, and a 360px phone gives the track 328. The circle leaves
  * out of the bar entirely — on instruction, and explicitly as a temporary move —
  * so the four slots can be equal. It lives on the dashboard's title row now
  * (CardsDashboard.tsx), built from Untitled UI's own Button rather than from a

@@ -9,7 +9,7 @@
  * ── Why pokemontcg.io and not TCGdex ───────────────────────────────────────
  *
  * TCGdex is the source of truth for the assembled collection and stays that
- * way. It is the wrong source for this one, for a reason ADR-0030 already wrote
+ * way. It is the wrong source for this one, for a reason already written
  * down: its list endpoint carries no rarity and no types, only its single-card
  * endpoint does, so browsing a 207-card set from TCGdex is 207 extra requests
  * to show what a grid displays at a glance. pokemontcg.io returns rarity, types
@@ -30,7 +30,7 @@
  *
  * A previous session built /api/v1/catalog/sets off TCGdex as a set-picker for
  * the add-card dialog, and it was deleted when the one-box search replaced that
- * flow (ADR-0031, ADR-0032). This is not that returning: nothing here feeds the
+ * flow. This is not that returning: nothing here feeds the
  * add form's identity fields, and the reason it was redundant — a set picker in
  * front of a search that does not need one — does not apply to a screen whose
  * entire purpose is the set. See the decision record for the long version.
@@ -89,7 +89,7 @@ const headers = (): Record<string, string> =>
  * is several requests where searching is one.
  *
  * Throws once the attempts are gone, rather than returning an empty page. The
- * whole point of ADR-0033 is that a catalogue that refused and a set that is
+ * whole point is that a catalogue that refused and a set that is
  * genuinely empty must not arrive at the caller looking alike; a browse screen
  * showing "no cards in this set" because a host hiccuped is exactly that bug
  * with a bigger surface.

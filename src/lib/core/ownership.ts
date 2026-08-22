@@ -8,7 +8,7 @@
  * ── Why this is pure, and why it does not go through buildCollection() ─────
  *
  * cards.ts already joins rows to a catalogue, and reusing it here would be a
- * mistake ADR-0014 spells out: buildCollection() resolves artwork, prices and
+ * mistake the collection cache exists to prevent: buildCollection() resolves artwork, prices and
  * species for all sixteen hundred rows against three catalogues, which is
  * precisely the per-request cost that ADR was written to stop paying. Browse
  * needs one boolean per card. So this takes the *raw rows* and does an in-memory
@@ -18,7 +18,7 @@
  * ── What the join is allowed to believe ────────────────────────────────────
  *
  * Set name and number, and then only if the name agrees. That last clause is
- * ADR-0022 restated: twenty-three gallery rows in this collection are filed
+ * Worth restating: twenty-three gallery rows in this collection are filed
  * under a number that belongs to a different card, so a number that lines up is
  * a candidate, not an answer. sameCard() is the same check buildCollection()
  * and ptcgScan() put on their own matches, for the same reason and with the same
@@ -27,7 +27,7 @@
  *
  * The failure it accepts in exchange is the quieter one: a row whose number is
  * wrong stays unmatched, so a card that is genuinely in the binder shows as
- * missing. That is the trade ADR-0022 already chose — a wrong match is worse
+ * missing. That is the trade already chosen — a wrong match is worse
  * than a missing one — and the fix is the row, not the join.
  */
 

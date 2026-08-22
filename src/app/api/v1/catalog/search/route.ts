@@ -9,18 +9,18 @@ import { bearer } from "@/lib/api/viewer";
  * Finding a card to add, by anything: name, number, set, or type, in one box
  * — or, precisely, by any combination of those four as separate filters.
  *
- * Used to be scoped to one set at a time (see git history / ADR-0030), on the
+ * Used to be scoped to one set at a time (see git history), on the
  * reasoning that a global search meant fetching every TCGdex set uncached per
  * keystroke. That reasoning was sound and the UX it produced was wrong —
  * "als je op plus klikt... 1 invoerveld voor alles" (see
- * docs/feedback/0005-add-card-should-be-one-search-bar.md) — so this asks
+ * git history) — so this asks
  * pokemontcg.io instead, which already indexes every card across every set
  * behind one query. See lib/core/ptcg-search.ts for the query shape and why
  * it lives apart from ptcg.ts's narrower artwork-fallback job.
  *
  * `name`/`number`/`set`/`type` are a second, separate mode from `query`
  * (advanced filters rather than the quick search box) — see
- * docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md for why the
+ * git history for why the
  * alternative to the quick box is a more precise search rather than a way to
  * skip search and add an unmatched row.
  *
@@ -33,7 +33,7 @@ import { bearer } from "@/lib/api/viewer";
  * nothing useful" — the two are different problems for the dialog to show
  * differently (a request worth retrying vs. one that needs a different
  * query), and conflating them is exactly the bug that prompted this: see
- * docs/decisions/0033-add-card-search-failure-and-paging.md.
+ * git history.
  *
  * Every result now carries owned/wishlist/quantity for the caller, the same
  * fields /api/v1/catalog/sets/[setId] attaches — added with browse, because the

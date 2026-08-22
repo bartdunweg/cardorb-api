@@ -6,7 +6,7 @@
  * password; the first cannot possibly supply it, which is why they are there.
  * `app/auth/confirm/route.ts` is the only place that knows which happened — it
  * receives `type=recovery` and exchanges it — and it can write a cookie, which a
- * Server Component cannot. See ADR-0082.
+ * Server Component cannot.
  *
  * **A UX signal, not a security boundary, and the distinction is what makes it
  * safe.** Anybody can set a cookie in their own browser, so this cannot be

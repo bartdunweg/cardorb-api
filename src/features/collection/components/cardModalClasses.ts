@@ -24,8 +24,8 @@ export const modalCardClassName =
   // `!`, not because two rules disagree but because nothing guarantees which
   // wins. CardDetail carries `mt-6` on the element and this cancels it from the
   // ancestor; both are utilities, so the order Tailwind emits them decides, and
-  // that order is not a documented promise. ADR-0012 and ADR-0017 are both this
-  // exact fact, and ADR-0012's fix was the same `!`.
+  // that order is not a documented promise. The cascade-layer rule and the
+  // conditional-reset rule are both this exact fact, and the fix was the same `!`.
   "[&_.card-detail-body]:!mt-0 " +
   // Full screen on a phone, not a sheet stopping short of the top. A card is
   // the one thing on this site worth the whole screen: it is a picture with

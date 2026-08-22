@@ -35,7 +35,7 @@ export const dynamic = "force-dynamic";
  * case of the three for exactly that reason: the cache key is the *path*, and
  * the path carries an arbitrary card id. Every distinct id is a cold miss
  * costing one Postgres round trip (`ownerOf`) plus one outbound TCGdex fetch,
- * so a loop over invented ids never touches the cache once. ADR-0023 rejected
+ * so a loop over invented ids never touches the cache once. A security review rejected
  * "the CDN covers it" for the sibling collection route, where there is at least
  * one canonical URL per user; here there is not.
  */

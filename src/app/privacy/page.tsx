@@ -13,7 +13,7 @@ import { SITE_OG_IMAGE } from "@/lib/core/og";
  * everything else, and `grep -rn "index: true" app/` for the authoritative list.
  *
  * One policy for both surfaces, not one per surface — see
- * docs/decisions/0042-one-privacy-policy-for-app-and-site.md. Where the website
+ * git history. Where the website
  * and the app genuinely differ (analytics, crash reporting) the difference is
  * named in the sentence rather than split into a second document that would
  * describe the same accounts and the same database and drift from this one.

@@ -11,9 +11,9 @@
 // asset-heavy parts are cut, with their imports. Re-add them from
 // `scripts/untitled-add.mjs` if something ever needs one, and re-measure.
 //
-// This is a deliberate divergence from upstream on top of ADR-0062's
-// leave-vendored-code-alone rule, on the same footing as the crash fixes in
-// `base/file-upload-trigger` (ADR-0066): the component as vendored is not
+// This is a deliberate divergence from upstream, on top of the standing
+// leave-vendored-code-alone rule, and on the same footing as the crash fixes in
+// `base/file-upload-trigger`: the component as vendored is not
 // usable here at an acceptable cost.
 "use client";
 

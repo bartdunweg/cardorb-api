@@ -32,7 +32,7 @@ import { Input } from "@/components/base/input/input";
  * signed-in browser — it did approximately nothing. And `current_password` is a
  * parameter on `updateUser`, not only a dashboard setting, so the app can send
  * it on one path and not the other and leave recovery untouched by
- * construction. See ADR-0082.
+ * construction.
  *
  * The new password is typed once rather than twice. A confirmation field catches
  * a typo you cannot see, and it is the wrong fix: the eye toggle catches the

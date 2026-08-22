@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * `/settings/password` serves two callers through one screen and has no way of
  * its own to tell them apart. This route does: it receives `type=recovery` and
  * exchanges it. So it leaves a marker, and the tests here are about when it does
- * and does not. See ADR-0082 and lib/api/recovery.ts.
+ * and does not. See lib/api/recovery.ts.
  *
  * Worth knowing: before this, `type=recovery` had no test coverage of any kind.
  * `visual/auth.setup.ts` exercises this route with `type=magiclink` only.

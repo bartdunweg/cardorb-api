@@ -132,7 +132,7 @@ export default function CardsSidebar({
       // the <=1000px pane-swap block below, and an unconditional Tailwind
       // utility for any of them would now beat that reset (Tailwind utilities
       // outrank legacy CSS regardless of the legacy rule's specificity, see
-      // ADR-0012) — caught live: the rail stopped hiding on a narrow phone.
+      // unlayered CSS) — caught live: the rail stopped hiding on a narrow phone.
       /**
        * `peer`, and that is the whole trick.
        *
@@ -145,7 +145,7 @@ export default function CardsSidebar({
        *
        * Every rule here is inside `[@media(max-width:1000px)]:` or above it,
        * never both, so no unconditional utility can beat a conditional one —
-       * the ADR-0012/ADR-0017 rule this file's old comment was written for.
+       * the cascade-layer rule this file's old comment was written for.
        */
       className="cards-rail peer group/rail flex flex-col gap-5 px-3 py-4
         bg-primary [backdrop-filter:blur(var(--blur-glass-card))]
@@ -383,7 +383,7 @@ export default function CardsSidebar({
         // sticky bottom-0 rather than mt-auto: mt-auto only reaches the
         // viewport edge when the rest of the rail's content is shorter than
         // the rail itself, which stopped being reliably true once setsAsRow
-        // (ADR-0027) made the content's height depend on how many rows are
+        // made the content's height depend on how many rows are
         // signed-in-only vs public. Sticky keeps this pinned to the visible
         // bottom of the scrollable rail either way — its own background is
         // needed so content scrolled underneath does not show through.

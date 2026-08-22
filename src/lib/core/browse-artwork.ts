@@ -17,7 +17,7 @@
  * ── Why this is a swap and not a source change ─────────────────────────────
  *
  * Browse is built on pokemontcg.io because that is the catalogue that answers
- * "what is in this set" in one call with rarity and types attached (ADR-0037).
+ * "what is in this set" in one call with rarity and types attached.
  * None of that changes. This runs afterwards and replaces the image URLs, card
  * by card, wherever TCGdex demonstrably has the same card — and leaves the PNG
  * in place wherever it does not. TCGdex's coverage gaps are exactly why ptcg.ts
@@ -86,7 +86,7 @@ export async function withTcgdexScans(
     /* A number that lines up on a card by another name means the two catalogues
        number this set differently, and a confidently wrong picture is worse
        than a heavy right one. Same guard, same reason, as buildCollection()
-       and ADR-0022. */
+       and the name check. */
     if (!match?.name || !sameCard(match.name, card.name)) return card;
 
     const base =

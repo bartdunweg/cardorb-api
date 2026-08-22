@@ -16,13 +16,13 @@ import { Mark } from "@/components/shared/Wordmark";
  * five stacked sections and no cards at all, /collection has a toolbar and set
  * panels — so this file cannot make that promise. Two earlier attempts broke it
  * in the two available directions: the first drew the old /cards page and so was
- * wrong everywhere (ADR-0018, FB-0010), the second drew only what all seven
+ * wrong everywhere, the second drew only what all seven
  * genuinely share and so was a grey rail beside a grey slab, the shape of no
- * page in the app (ADR-0046, FB-0024). The rule ADR-0046 wrote is still right;
+ * page in the app. The rule is still right;
  * a skeleton was the wrong thing to apply it to.
  *
  * So: the orb, centred, breathing. It says the app is coming and claims nothing
- * about what it will look like. See ADR-0091.
+ * about what it will look like.
  *
  * If a route wants its own shape outlined, it gets its own loading.tsx. It does
  * not get added here.
@@ -30,7 +30,8 @@ import { Mark } from "@/components/shared/Wordmark";
  * The real fix is still the one neither record did: stream the collection so the
  * shell renders for real and only the content pane waits. layout.tsx already has
  * `viewer` before the slow await, and the rail and the tab bar need nothing else
- * but three counts. Deferred, deliberately; ADR-0091 carries the trigger.
+ * but three counts. Deferred, deliberately: the trigger is anyone touching
+ * AppShell's props.
  */
 export default function Loading() {
   return (
@@ -41,7 +42,7 @@ export default function Loading() {
     // the length of the load and then leaves again.
     //
     // <main id="main-content"> on the outermost element, and not on an inner
-    // pane as AppShell and the previous version of this file both do (ADR-0087).
+    // pane as AppShell and the previous version of this file both do.
     // The rule there is that the landmark is the content pane rather than the
     // grid around the navigation — and this fallback draws no navigation at all,
     // so there is nothing for the landmark to wrongly contain. "Skip to content"
@@ -50,7 +51,7 @@ export default function Loading() {
     // absence.
     //
     // bg-secondary, not bg-primary: this is the page, and the page's tint is the
-    // one app/layout.tsx paints on html and body (ADR-0089). It is also what
+    // one app/layout.tsx paints on html and body. It is also what
     // pageCardsClassName paints, which is what arrives when the load finishes —
     // so the canvas does not change colour underneath the reader at the moment
     // the orb goes away. bg-primary is the raised, card colour.

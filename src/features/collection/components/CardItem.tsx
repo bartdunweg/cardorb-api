@@ -99,7 +99,7 @@ function CardLink({
  *
  * Every part is conditional on the same data-[view=grid], including the hover
  * and focus states, so nothing here can beat a narrower rule the way an
- * unconditional utility would — ADR-0017, which this migration has now met five
+ * unconditional utility would — the conditional-reset rule, met five
  * times.
  */
 const gridHoverPillClassName = [
@@ -161,7 +161,7 @@ const CardItem = memo(function CardItem({
    * The effect is `hover-tilt` and the foil over it is pokemon-cards-css, the
    * same pair TiltScan puts on a card's own page. The foil is argued for at the
    * top of app/styles/poke-holo.css; the pair as a whole is protected by
-   * docs/decisions/0061-only-the-card-effects-are-protected.md. (This used to
+   * git history. (This used to
    * point at PullScan and the binder card on /about, and neither still exists.)
    *
    * What is different here is that there are 1,622 of these rather than one, and

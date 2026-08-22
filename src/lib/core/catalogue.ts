@@ -262,7 +262,7 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // That still holds for Limitless. What has changed since is where those cards
   // come from instead: pokemontcg.io publishes the galleries as sets of their
   // own, addressed by the printed number, so there is no offset to guess there
-  // and ptcgScan() picks them up. See docs/decisions/0022.
+  // and ptcgScan() picks them up.
   const code = detail?.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null;
 
   /**

@@ -20,7 +20,7 @@ import { Input } from "@/components/base/input/input";
  * lib/core/account.ts) so the account exists with a working link the moment it
  * is confirmed, and the person picks their own handle later from Settings.
  *
- * The name asked for here is the other half of that, and the reason ADR-0006's
+ * The name asked for here is the other half of that, and the reason the
  * "nobody's first choice" downside is smaller than it was: the public page is
  * titled after this, so somebody who fills it in gets "Bart’s Pokémon card
  * collection" without ever visiting Settings. Optional on purpose — it is the

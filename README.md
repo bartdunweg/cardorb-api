@@ -26,7 +26,7 @@ system: one person edits this.
 Browsing the catalogue — every set and every card in it, not only what is owned —
 is a separate, signed-in surface. It reads pokemontcg.io rather than the
 database, and each answer carries the caller's own `owned` / `wishlist` /
-`quantity` for the cards in it. See ADR-0037.
+`quantity` for the cards in it.
 
 | | |
 | --- | --- |
@@ -47,17 +47,17 @@ Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
 
 **Native clients do not call `/api/v1/public/:username/collection`.** This line
 used to say they did, which is worth correcting rather than deleting: that one
-wrong sentence is the only reason ADR-0045 shipped with "we may have broken the
+wrong sentence is the only reason that change shipped with "we may have broken the
 iOS app" beside it. The public routes are for a browser and for the portfolio
 site; the app is signed in and reads `/api/v1/collection`, which carries the
 inventory fields as it always has.
 
 The public collection response carries no prices and no inventory: of each
 printing it publishes the rarity and whether it is owned, and nothing else — not
-what was paid, the condition, the grade, the notes, or how many (ADR-0045).
+what was paid, the condition, the grade, the notes, or how many.
 
 `GET /api/v1/value-history` answers with **the caller's own** series, oldest
-reading first (ADR-0044). It needs a bearer token: the deprecated `x-cards-key`
+reading first. It needs a bearer token: the deprecated `x-cards-key`
 header is a passcode rather than an identity, so it carries no session for row
 level security to judge and that path answers with an empty series.
 
@@ -85,7 +85,7 @@ Three things to know before you render it:
 
 - **`image` can be relative.** A scan that comes from Limitless is served through this
   app's CORS proxy as `/api/cover?url=…`, so prefix anything starting with `/` with
-  `https://cardorb.com`. It can also be `null` — see `docs/decisions/0022`.
+  `https://cardorb.com`. It can also be `null`.
 - **`imageHigh` is only set for TCGdex scans**, `null` for everything else. Never rely
   on it alone. `rarity`, `speciesId` and `tcgId` are nullable too.
 - **404 means nothing to show** — `{"error":"No card found."}` for an empty or entirely
@@ -94,7 +94,7 @@ Three things to know before you render it:
 
 The card is the newest printing that is owned, dated, and not marked `excluded` in the
 card dialog — that checkbox is how you keep one out of this. Wishlist rows never appear
-(`docs/decisions/0021`).
+(deliberately unkeyed — a key in a public site's JavaScript is not a secret).
 
 `GET /v1/fields` is behind the key on purpose: it is the cheapest thing a client
 can call to find out whether the key it holds still works, so signing in is one
@@ -138,7 +138,7 @@ the wrong address.
 ## The database
 
 The collection lives in Postgres (Supabase); it started in Notion and was
-migrated over — see `docs/decisions/` for why and when. The schema is in
+migrated over. The schema is in
 `supabase/migrations/`.
 
 Four things have to be set up once, and each of them fails in a way that looks

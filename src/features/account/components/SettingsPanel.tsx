@@ -53,7 +53,7 @@ export function SettingsPanel({
   return (
     <section
       className={cx(
-        // Untitled UI's card surface, the same constant Card.tsx uses (ADR-0061).
+        // Untitled UI's card surface, the same constant Card.tsx uses.
         "p-4 rounded-xl bg-primary shadow-xs ring-1 ring-secondary ring-inset",
         // Deleting everything reads as what it is. Untitled UI's error ring
         // rather than a mix of Card Orb's danger token — same job, their value.

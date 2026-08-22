@@ -381,7 +381,8 @@ export default function Modal({
         aria-label={label}
       >
         {/* `btn btn--icon` lived in the middle of this string, which is why the
-            sweep for `className="btn` walked past it. ADR-0018 is that failure
+            sweep for `className="btn` walked past it. Grepping the whole tree before
+     deleting a class is the rule that came out of that failure
             written down once already; this is it again, found by grepping for
             the token rather than for the pattern. */}
         <UntitledButton

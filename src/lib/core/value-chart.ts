@@ -10,7 +10,7 @@
  *
  * It used to draw the line too — an SVG path per point, plus the same path
  * closed against the baseline for the fill. Recharts draws both now, and the
- * paths had gone unread since; see ADR-0085 for what was left behind and why
+ * paths had gone unread since for what was left behind and why
  * it is gone.
  */
 

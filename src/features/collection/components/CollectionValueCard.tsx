@@ -42,7 +42,7 @@ import type { ValueSnapshot } from "@/lib/core/value-snapshot";
  * snapshotted: one reading is a fact about today, not a history, and there is
  * no empty state worth writing for a chart.
  *
- * It is Untitled UI's chart, per ADR-0085: two real axes, horizontal gridlines,
+ * It is Untitled UI's chart: two real axes, horizontal gridlines,
  * the brand colour, and a dot only where the pointer is. It had hidden axes and
  * a filled dot on every reading, which is neither theirs nor readable.
  */

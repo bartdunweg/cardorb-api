@@ -30,6 +30,15 @@ never `pass`.
 Rules that hold for this repository only, and that the generated block above does not cover.
 Anything written here survives a re-run of `/apply-standards`; anything written above it does not.
 
+**Read `CONVENTIONS.md` before changing anything.** It is the only document that
+describes how this codebase is arranged and what holds it together, and each rule
+says whether a check enforces it or a person has to notice.
+
+**This project keeps no decision or feedback records.** They were removed on
+2026-08-22; the rules that survived them are in `CONVENTIONS.md` and the
+reasoning is in `git log`. The generated block above still names `log-feedback`
+and `record-decision` — those workflows have nothing to write to here.
+
 <!-- PRODUCT:END -->
 
 <!-- BEGIN:nextjs-agent-rules -->

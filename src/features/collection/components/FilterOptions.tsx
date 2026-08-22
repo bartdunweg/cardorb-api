@@ -60,7 +60,8 @@ export type FilterOptionsProps = {
  * `.sheet .facet-row` overrode `.filter-menu-panel .facet-row` to 48px, which
  * is what a thumb hits without aiming; the dropdown's 32px is right for a
  * pointer. That override is a descendant selector, and a Tailwind utility on
- * the element beats one regardless of specificity — ADR-0012 and ADR-0017 are
+ * the element beats one regardless of specificity — the cascade-layer rule and
+ * the conditional-reset rule are
  * both that fact, found the hard way, twice.
  *
  * So the variant comes in as a prop instead of being read off an ancestor. The
@@ -99,7 +100,7 @@ export default function FilterOptions({
        through `[&_.cards-segmented]:w-full` and two more like it. Those class
        names no longer exist — the control is Untitled UI's ButtonGroup and it
        says its own width, a few lines down. Reaching into a child by class
-       name is the arrangement ADR-0017/0018 keep catching; this is one fewer
+       name is the arrangement the conditional-reset rule keeps catching; this is one fewer
        of them. */
     variant === "sheet" ? "px-4 py-3" : "px-2 pt-2 pb-3",
   ].join(" ");

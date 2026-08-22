@@ -6,7 +6,7 @@
  * set is the expensive half of catalogue.ts, on purpose cached per set, and a
  * search across all of them would mean paying that cost, uncached, on every
  * keystroke (see the now-deleted /api/v1/catalog/search route this replaces,
- * and docs/feedback/0005-add-card-should-be-one-search-bar.md for why a
+ * and git history for why a
  * scoped search stopped being the right shape). pokemontcg.io already indexes
  * every card across every set behind one endpoint with a fielded query
  * syntax, so this asks them instead of TCGdex.
@@ -31,7 +31,7 @@ export type CatalogueMatch = {
   /**
    * The era, as the catalogue names it — pokemontcg.io's `set.series`.
    *
-   * Carried for the same reason `rarity` and `types` are (ADR-0030): it is a
+   * Carried for the same reason `rarity` and `types` are: it is a
    * fact about the card, so nobody should be typing it. The whole `set` object
    * was already being requested and this field was simply dropped on the floor,
    * which is why the add-card form still had a text box for it and why one row
@@ -73,7 +73,7 @@ const MAX_WORDS = 6;
  * looks like it means. Each word gets its own name/number/set/type clause,
  * and the clauses are joined by a bare space, which pokemontcg.io's Lucene
  * parser treats as AND by default (confirmed against the real API — see
- * ADR-0031) — so "charizard 151" becomes "matches charizard-ish AND
+ * the one-box search) — so "charizard 151" becomes "matches charizard-ish AND
  * matches 151-ish", true of exactly the cards this was typed to find.
  */
 function buildQuickQuery(term: string): string {
@@ -97,7 +97,7 @@ export type SearchFilters = { name?: string; number?: string; set?: string; type
 
 /**
  * The precise alternative to the one-box quick search — see
- * docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md for why the
+ * git history for why the
  * alternative is this and not a way to skip search altogether. Each filled
  * field becomes its own targeted clause (unlike buildQuickQuery's one
  * generic four-field OR per word), AND'd together the same way.
@@ -150,7 +150,7 @@ type PtcgCard = {
  * search that failed and a search that genuinely matched nothing used to be
  * the same shape, which meant a card add-card dialog now depends on entirely
  * (there is no manual-entry fallback any more, see
- * docs/decisions/0032-add-card-advanced-filters-not-manual-entry.md) could
+ * git history) could
  * fail silently. The caller decides what "unavailable" looks like; this
  * function's only job is to not lie about which one happened.
  */

@@ -154,7 +154,7 @@ export const getCollection = cache(
  * is one boolean per card and needs the name, number and set of every row and
  * nothing else. Going through getCards() to get there would resolve artwork,
  * prices and species for sixteen hundred rows against three catalogues to
- * answer it — exactly the per-request cost ADR-0014 exists to stop paying.
+ * answer it — exactly the per-request cost this cache exists to stop paying.
  *
  * The same client resolution and the same soft failure as getCollection(),
  * deliberately: a store outage on a browse screen should cost the ownership

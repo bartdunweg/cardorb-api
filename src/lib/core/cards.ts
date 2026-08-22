@@ -60,7 +60,7 @@ export { highScan } from "./artwork";
  * The six inventory fields below it are per-row for the same reason acquired_at
  * always was: two printings of the same card can be different copies, bought
  * at different times for different prices in different condition. See
- * docs/decisions/0006-per-variant-inventory-fields.md.
+ * git history.
  */
 export type Variant = {
   id: string | null;
@@ -387,7 +387,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
       // `variant.finish === "reverse-holo"`. Narrowing the public variant to two
       // fields therefore breaks nine call sites in a 1,767-line file that is
       // already queued for its own refactor. Do it there, with variantPrice()
-      // taking an optional finish, not here. See STATE.md.
+      // taking an optional finish, not here.
       variants: card.variants.map((v) => ({
         rarity: v.rarity,
         owned: v.owned,

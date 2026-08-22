@@ -24,20 +24,20 @@ import { APP_NAME } from "@/lib/core/config";
  * it: it is a generator's hand-off note, addressed to whoever copies the files,
  * not to somebody who wants to use the logo. This page is the one written for a
  * reader. It is also the reason the favicon here disagrees with what that README
- * recommends; see ADR-0049.
+ * recommends;
  *
  * It also makes the duplication go away in the right direction. cardorb-ios
  * commits its own copy of these files; after this it needs only the one the app
  * bundle genuinely cannot fetch — the app icon — and can point at these URLs
  * for the rest.
  *
- * Not LegalPage.tsx, though ADR-0042 rightly says to read it first: that shell
+ * Not LegalPage.tsx, though it is worth reading first: that shell
  * requires an `updated` date this page has no use for and caps its column at
  * --content-max, ~70 characters, which is correct for a document to be read and
  * wrong for a page whose subject is images side by side. Its *type scale* is
  * reused, which is the part that would otherwise drift.
  *
- * See docs/decisions/0048-the-orb-mark-on-the-web.md.
+ * See git history.
  */
 
 export const metadata: Metadata = {

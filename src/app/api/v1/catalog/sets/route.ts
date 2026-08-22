@@ -21,8 +21,8 @@ import { bearer } from "@/lib/api/viewer";
  * same as every other guarded read here.
  *
  * A previous session had a /api/v1/catalog/sets that was deleted (see
- * STATE.md): a TCGdex-backed set picker in front of the add-card dialog, made
- * redundant by the one-box search of ADR-0031/0032. Same path, different job —
+ * once planned): a TCGdex-backed set picker in front of the add-card dialog, made
+ * redundant by the one-box search. Same path, different job —
  * nothing here feeds the add form. The decision record has the long version.
  */
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
        refused, the request is worth retrying, and the client can say so. Same
-       shape as search's `search-unavailable` (ADR-0033). */
+       shape as search's `search-unavailable`. */
     return NextResponse.json(
       { error: "catalog-unavailable" },
       { status: 502, headers: readHeaders(req) },

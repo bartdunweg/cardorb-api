@@ -70,7 +70,7 @@ export default function LegalPage({
  *
  * No @tailwindcss/typography: this repo is Tailwind v4 CSS-first with
  * hand-rolled tokens, and a plugin would put a third opinion into the cascade
- * layers ADR-0012 and ADR-0013 exist to keep ordered. Preflight strips heading
+ * layers the entry point exists to keep ordered. Preflight strips heading
  * sizes and list markers anyway, so every element states its own type.
  */
 export const legal = {

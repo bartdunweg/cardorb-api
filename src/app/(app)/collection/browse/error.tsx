@@ -9,7 +9,7 @@ import RouteError from "@/components/shared/RouteError";
  * The rest of these screens read the collection, which fails soft: getCards()
  * catches its own outage and renders an empty state that says so. Browse reads
  * a third-party catalogue that throws on purpose — see ptcg-browse.ts, and
- * ADR-0033 for why a refused request must not arrive looking like an empty
+ * A refused request must not arrive looking like an empty
  * answer. Without a boundary here, that deliberate throw would be caught by
  * (app)/error.tsx and blamed on the database, which is the one component that
  * had nothing to do with it.

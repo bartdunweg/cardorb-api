@@ -42,14 +42,14 @@ Delete a row from this file once its card matches. Delete the file once it is
 empty.
 
 Related worklists, and worth reading before starting: `trainer-gallery-row-corrections.md`
-(the same numbering problem, found by the ADR-0022 audit) and
+(the same numbering problem, found by the gallery-artwork audit) and
 `rarity-type-backfill-corrections.md`.
 
 ---
 
 ## 1. The number belongs to a different card — 6 rows
 
-The pattern ADR-0022 documented and the reason the lookup is name-checked: the
+The pattern behind it, and the reason the lookup is name-checked: the
 number in the row resolves to a real card, just not this one. Fixing means
 finding the right number, not forcing the match.
 
@@ -176,7 +176,7 @@ Checked against both catalogues on 16 August 2026:
 | **Ancient Mew** | **no scan, no price** | **not indexed at all** |
 
 The Trainer Gallery cards are fine: TCGdex has no artwork for that subset, which
-is the whole reason ADR-0022 reads gallery scans from pokemontcg.io, and it has
+is the whole reason gallery scans come from pokemontcg.io, and it has
 all five. They also now carry prices — €6.39 to €35.75 — which they did not
 before, because they were not matching at all.
 

@@ -18,7 +18,7 @@ import { untitledButton } from "@/components/shared/untitledButtonClasses";
  * The form behind the plus: one search box first, a few extra fields once a
  * card is found.
  *
- * "1 invoerveld voor alles" (docs/feedback/0005-add-card-should-be-one-search-bar.md):
+ * "1 invoerveld voor alles" (git history):
  * typing a name, a number, a set, or a type into the same box shows matching
  * cards live, via /api/v1/catalog/search (pokemontcg.io underneath — see
  * lib/core/ptcg-search.ts for why). Picking one fills Name, Number, Set,
@@ -28,13 +28,13 @@ import { untitledButton } from "@/components/shared/untitledButtonClasses";
  * A card the quick box can't find gets "Advanced filters" — Name, Number,
  * Set and Type as their own fields, still searched, never a way to skip
  * search and write an unmatched row. That used to be an "Enter it by hand"
- * escape hatch; see docs/feedback/0006-add-card-no-manual-entry-escape-hatch.md
+ * escape hatch; see git history
  * for why it was replaced rather than kept: a card pokemontcg.io has not
  * indexed genuinely cannot be added through this dialog any more, a
- * deliberate, known tradeoff (ADR-0032), not an oversight.
+ * deliberate, known tradeoff, not an oversight.
  *
  * Rarity and Type stop being editable once a match is picked (see
- * docs/decisions/0030-tcgdex-source-of-truth-for-rarity-and-type.md): they
+ * git history): they
  * used to be a text input and toggle chips a person could override, which is
  * how they ended up carrying whatever a Notion column once said rather than
  * what the card actually is. They are shown, not asked for, sourced strictly
@@ -62,14 +62,14 @@ const cardAddLabelClassName =
  * It used to carry four more — `h-14` (56px), `text-display-xs` (24px),
  * `font-bold`, and `rounded-2xl` on the wrapper — to make this field "taller and
  * louder than the rest". That was a real intent, written down in place, and it
- * still lost to the standing rule (FB-0013, FB-0015): Untitled UI wins unless
+ * still lost to the standing rule: Untitled UI wins unless
  * the product identity or a measurement earns the exception, and wanting
  * emphasis is neither. Their `lg` is `text-md` at 16px; this was rendering at 24.
  *
  * It also had a defect underneath the taste question. `inputClassName` styles
  * the `<input>`, not the placeholder, so `text-display-xs font-bold` applied to
  * whatever somebody *typed* — a card name entered at 24px bold, which nobody
- * asked for. See FB-0018 and ADR-0077.
+ * asked for.
  *
  * What is left is the two things that are not styling:
  *
@@ -101,7 +101,7 @@ const SEARCH_DEBOUNCE_MS = 300;
  *
  * Read from two directions — a result clicked in the list (selectMatch) and a
  * card the caller opened the dialog on (`prefill`) — and they have to agree
- * exactly, because rarity and types are read-only now (ADR-0030): whatever this
+ * exactly, because rarity and types are read-only now: whatever this
  * writes is what gets submitted, with no field left for anyone to correct it in.
  */
 const draftFrom = (match: CatalogueMatch, base: Draft): Draft => ({
@@ -112,7 +112,7 @@ const draftFrom = (match: CatalogueMatch, base: Draft): Draft => ({
   rarity: match.rarity ?? "",
   types: match.types.slice(0, MAX.types),
   // The era comes off the match too, and for the same reason as the two above
-  // (ADR-0030, extended by ADR-0081): it is a fact about the card, not a
+  // it is a fact about the card, not a
   // judgement about the copy. It was the last field here anybody typed, and the
   // collection already carried one "Scarlett & Violet" to show for it.
   gen: match.series ?? "",
@@ -133,7 +133,7 @@ export default function CardAddDialog({
    * search would have produced. Browse passes one; the plus button passes none.
    *
    * Not a way around search — it *is* a search result, one this dialog would
-   * have shown for the same card. ADR-0032's rule is that nothing writes a row
+   * have shown for the same card. The rule is that nothing writes a row
    * the catalogue has not matched, and a prefilled CatalogueMatch is by
    * construction matched. "Change" clears it back to the search box.
    */
@@ -161,7 +161,7 @@ export default function CardAddDialog({
   const [searching, setSearching] = useState(false);
   /** True only when the request itself failed — never for a genuine zero
    *  matches — so the two stop looking identical to whoever is typing. See
-   *  docs/decisions/0033-add-card-search-failure-and-paging.md. */
+   *  git history. */
   const [searchFailed, setSearchFailed] = useState(false);
   /** Bumped by "Try again" to force the search effect to re-run without a
    *  new keystroke — nothing else reads its value. */
@@ -509,9 +509,9 @@ export default function CardAddDialog({
                   autoComplete="off"
                   placeholder="006"
                 />
-                {/* Untitled UI's `ComboBox`, which is the decision ADR-0059
-                    deferred rather than rejected — it called the swap "the
-                    right end state", turned down on timing.
+                {/* Untitled UI's `ComboBox`. The swap was deferred once rather
+                    than rejected: it was called the right end state and turned
+                    down on timing, not on merit.
 
                     `allowsCustomValue` is the whole reason it can replace a
                     `<datalist>` at all. A datalist is a hint: the field is a
@@ -524,7 +524,7 @@ export default function CardAddDialog({
                     the other half of the datalist behaviour: suggestions on
                     focus, not only after typing.
 
-                    What is genuinely gained is what ADR-0059 named — a real
+                    What is genuinely gained is a real
                     ARIA combobox with a managed listbox, instead of suggestions
                     the browser draws in its own chrome and a screen reader
                     announces inconsistently. */}
@@ -712,7 +712,7 @@ export default function CardAddDialog({
                 ref on the real element, and the vendored Button is typed as a
                 plain call signature — its props carry no `ref`, so there is no
                 way to reach the node without patching vendored code, which
-                ADR-0062 keeps for crashes rather than convenience. */}
+                the vendored exemption keeps for crashes rather than convenience. */}
             <button
               ref={changeButtonRef}
               type="button"

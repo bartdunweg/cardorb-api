@@ -149,7 +149,7 @@ export function useSession() {
      * cannot supply it: somebody who arrived through a recovery link does not
      * have the old password, which is why they are there. Omitting it is a real
      * state and not a missing argument — the route sends the parameter on to
-     * Supabase only when it arrives. See ADR-0082.
+     * Supabase only when it arrives.
      */
     async (password: string, currentPassword?: string): Promise<boolean> => {
       setError(null);

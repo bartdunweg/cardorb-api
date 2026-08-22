@@ -7,8 +7,8 @@
  *
  * ── Why this can be done at all ────────────────────────────────────────────
  *
- * ADR-0048 shipped `cards.finish` empty, on the reasoning that the original
- * hand-kept answers were overwritten by ADR-0030's backfill and nothing left
+ * `cards.finish` shipped empty, on the reasoning that the original hand-kept
+ * answers were overwritten by the rarity/type backfill and nothing left
  * knew which copy was a reverse holo. That was true of *this database* and
  * false of the world: TCGdex publishes, per card, which printings exist —
  * `variants: { normal, reverse, holo, firstEdition, wPromo }` — and that
@@ -241,7 +241,7 @@ if (unresolved.length) {
   const lines = [
     "# Finish backfill: cards the catalogue could not settle",
     "",
-    'Left null, which still means "nobody has said" — see ADR-0048. Fix by hand,',
+    'Left null, which still means "nobody has said" — Fix by hand,',
     "or wait for an import that knows. Delete this file once it is empty.",
     "",
     "| card | why | copies held |",
