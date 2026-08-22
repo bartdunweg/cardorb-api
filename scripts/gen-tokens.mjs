@@ -9,7 +9,7 @@
  * and both OG images are React that Satori draws without a browser — so a
  * stylesheet cannot be the source of truth without those three keeping copies.
  * They did keep copies, and one of the copies was wrong: the OG images used
- * #767676, the exact value tokens.css rejects in a paragraph for measuring
+ * #767676, the exact value tokens.ts rejects in a paragraph for measuring
  * under AA. Every shared link carried a contrast bug the app had already fixed.
  *
  * So TypeScript holds the values and this writes the stylesheet. `npm run
@@ -37,20 +37,20 @@
  *      Tailwind v4 tree-shakes theme variables it cannot see a utility for and
  *      most of the CSS in this project is still hand-written and reads them by
  *      name.
- *   3. `@utility` blocks for the two kinds that cannot live in `@theme`: the
- *      shadows, which are a different *shape* per theme, and the layout
- *      constants, which are redefined at breakpoints. Their values stay in
- *      tokens.css next to the block that answers for them; only the class is
- *      generated.
- *   4. An alias block, `--fs-small: var(--text-small)` and its like, so the
- *      several hundred existing call sites keep resolving while they are
- *      migrated one portion at a time. There is one source for each value; the
- *      old name is a pointer at it, not a copy.
+ *   3. `@utility` blocks for what has no `@theme` namespace to live in.
+ *      Twelve of them, and that is the whole list: `duration-fast|normal|slow`,
+ *      the seven `z-*`, and `shape-round|rectangle`. An earlier version of this
+ *      paragraph also promised blocks for the shadows and the layout constants,
+ *      "whose values stay in tokens.css". It generated neither, and tokens.css
+ *      was deleted by ADR-0090 — the sentence outlived both the file it named
+ *      and the feature it described. The shadows are `@theme` entries; the
+ *      seven layout constants are hand-written in app/globals.css, which is the
+ *      one place a breakpoint can redefine them.
+ *   4. An alias block for old token names, now empty — which is how the
+ *      migration reported it was over (ADR-0054). See ALIASES below.
  *
  * What it still does not generate: the spacing scale, which is Tailwind's
- * default scale step for step (`p-4` already is `--space-4`), and everything
- * theme- or breakpoint-shaped that is not in group 3 — the glass surfaces and
- * borders, whose argument is prose that belongs beside the value.
+ * default scale step for step (`p-4` already is `--space-4`).
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -194,13 +194,12 @@ const aliasLines = ALIASES.flatMap(([old, current, scale]) =>
 );
 
 /**
- * The classes whose *value* stays in tokens.css.
+ * Classes over values that have no `@theme` namespace of their own.
  *
- * A shadow is three layers in light and two in dark, and a page gutter is 32px,
- * 24px or 16px depending on the viewport. Neither is expressible in `@theme`,
- * and both have to keep their declaration beside the `[data-theme]` or `@media`
- * block that answers for them. Reading the variable rather than inlining a
- * value is what keeps that true.
+ * Tailwind has no namespace that turns a duration or a z-index token into a
+ * utility, so these are written as `@utility` blocks that read the variable
+ * rather than inlining it — which is what keeps the class correct when the
+ * value moves.
  */
 /**
  * `duration-fast` sets the longhand *and* Tailwind's own `--tw-duration`.
@@ -385,12 +384,11 @@ ${uuiDark}
     }
   }
 }
-/* ── Classes over values that cannot live in @theme ──
-   A shadow is three layers in light and two in dark; a page gutter is 32, 24
-   or 16 depending on the viewport. Both keep their declaration in tokens.css
-   beside the [data-theme] or @media block that answers for them, and read it
-   here rather than inlining it, so the class stays correct when the block
-   changes. */
+/* ── Classes over values that have no @theme namespace ──
+   Tailwind turns a colour or a radius token into a utility on its own; it has
+   no namespace that does the same for a duration or a z-index. These read the
+   variable rather than inlining it, so the class stays correct when the value
+   moves. */
 
 ${motionBlocks}
 

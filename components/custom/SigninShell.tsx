@@ -91,7 +91,3 @@ export function SigninNotice({ className, ...rest }: HTMLAttributes<HTMLParagrap
     />
   );
 }
-
-/** .signin-public / .signin-submit: full width and square, unlike the pill
- *  .btn draws for toolbars — the two full-width ways in read as a pair. */
-export const signinWideButtonClassName = "self-stretch justify-center rounded-orb-sm";

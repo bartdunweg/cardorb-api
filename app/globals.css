@@ -1,7 +1,7 @@
-/* The foundation every route needs — and by now that is a short list: three
- * resets, seven layout measurements, four @keyframes and one reduced-motion
- * override. Everything that used to be here is a Tailwind utility on the
- * component that draws it, or a token in lib/design/tokens.ts.
+/* The foundation every route needs — and by now that is a short list: one
+ * focus ring, seven layout measurements, three @keyframes and one
+ * reduced-motion override. Everything that used to be here is a Tailwind
+ * utility on the component that draws it, or a token in lib/design/tokens.ts.
  *
  * ── Where the history went ─────────────────────────────────────────────────
  *
@@ -27,14 +27,24 @@
  * specificity or source order, and every hand-written sheet here was unlayered
  * while Tailwind wraps its output in `@layer utilities`. The effect: every
  * margin and padding utility added during the Tailwind migration silently lost
- * to the `*{margin:0;padding:0}` reset below. `gap-*` was unaffected, which is
- * why the screenshots looked fine.
+ * to a `*{margin:0;padding:0}` reset that stood here. `gap-*` was unaffected,
+ * which is why the screenshots looked fine.
+ *
+ * That reset is gone now, and the reason is worth more than the six lines it
+ * took: it was a character-for-character duplicate of Tailwind's own Preflight
+ * (`node_modules/tailwindcss/preflight.css`, which resets box-sizing, margin
+ * and padding on `*` and rather more besides). It never added anything. It only
+ * ever won a fight it should not have been in. The same is true of the
+ * `-webkit-tap-highlight-color` rule that stood further down: Preflight sets it
+ * on `html` and the property inherits.
  *
  * `legacy` sits *after* `base` and not before it. Before was tried first and
- * overcorrected: `.btn`'s background then lost to Tailwind's Preflight, which
- * resets a bare <button>. After base, hand-written CSS still beats Preflight
- * and a Tailwind utility still beats hand-written CSS — the model everyone
- * already assumed was true.
+ * overcorrected: `.btn`'s background then lost to Preflight, which resets a
+ * bare <button>. After base, hand-written CSS still beats Preflight and a
+ * Tailwind utility still beats hand-written CSS — the model everyone already
+ * assumed was true. Nothing in this file relies on that any more; the layer is
+ * kept because poke-holo.css is unlayered and the declaration is what keeps
+ * that hazard legible.
  *
  * tailwind.generated.css is imported first because it is also Tailwind's entry
  * point (`@import "tailwindcss"` + `@theme`), so its preflight has to land
@@ -47,14 +57,6 @@
   /* poke-holo.css stays a file of its own rather than being inlined here: it is
      vendored from pokemon-cards-css, and keeping it separate is what makes it
      diffable against upstream (ADR-0061). */
-
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
 
   :focus-visible {
     outline: 2px solid var(--color-label);
@@ -185,30 +187,6 @@
          page reads as one even inset instead of a wide band over a narrow
          gutter. */
       --main-pad-top: var(--page-pad-x);
-    }
-  }
-
-  /* Remove tap flash on iOS for all interactive elements */
-  a,
-  button,
-  [role="button"] {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Page entrance: the shell persists across routes, so only the page content
-     re-mounts and grows in, like a card expanding open.
-     No opacity fade, and that is measured: starting at opacity 0 means the
-     browser does not count the page as painted, which pushed Largest Contentful
-     Paint out by ~1.2s on mobile (5.5s → 4.3s, Lighthouse 80 → 86). Scale plus
-     the clearing blur still reads as a card expanding open. */
-  @keyframes pageEnter {
-    from {
-      transform: scale(0.9);
-      filter: blur(6px);
-    }
-    to {
-      transform: none;
-      filter: blur(0);
     }
   }
 

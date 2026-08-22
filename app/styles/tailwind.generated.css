@@ -1432,12 +1432,11 @@
     }
   }
 }
-/* ── Classes over values that cannot live in @theme ──
-   A shadow is three layers in light and two in dark; a page gutter is 32, 24
-   or 16 depending on the viewport. Both keep their declaration in tokens.css
-   beside the [data-theme] or @media block that answers for them, and read it
-   here rather than inlining it, so the class stays correct when the block
-   changes. */
+/* ── Classes over values that have no @theme namespace ──
+   Tailwind turns a colour or a radius token into a utility on its own; it has
+   no namespace that does the same for a duration or a z-index. These read the
+   variable rather than inlining it, so the class stays correct when the value
+   moves. */
 
 @utility duration-fast {
   --tw-duration: var(--dur-fast);
