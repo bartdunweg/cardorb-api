@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
@@ -34,12 +35,12 @@ export async function PATCH(req: Request) {
   const viewer = await requestViewer(req);
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await req.json()) as Record<string, unknown>;
-  } catch {
+  const read = await readJsonBody<Record<string, unknown>>(req, BODY_LIMIT.profile);
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
 
   const patch: { displayName?: string | null; isPublic?: boolean; onboardedAt?: string } = {};
 

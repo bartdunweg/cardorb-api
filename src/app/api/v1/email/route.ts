@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
@@ -33,12 +34,13 @@ export async function POST(req: Request) {
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
   let email = "";
-  try {
-    const body = (await req.json()) as { email?: unknown };
-    if (typeof body.email === "string") email = body.email.trim();
-  } catch {
+  const read = await readJsonBody<{ email?: unknown }>(req, BODY_LIMIT.credentials);
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
+  if (typeof body.email === "string") email = body.email.trim();
 
   if (!email.includes("@")) {
     return NextResponse.json(

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -81,12 +82,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Too many uploads. Try again shortly." }, { status: 429 });
   }
 
-  let body: { image?: unknown };
-  try {
-    body = (await req.json()) as { image?: unknown };
-  } catch {
+  const read = await readJsonBody<{ image?: unknown }>(req, BODY_LIMIT.avatar);
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "That image is too large." }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
 
   if (typeof body.image !== "string") {
     return NextResponse.json({ error: "No image sent." }, { status: 400 });

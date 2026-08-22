@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { serverClient } from "@/lib/storage/supabase";
@@ -69,14 +70,15 @@ export async function POST(req: Request) {
   let email = "";
   let password = "";
   let name = "";
-  try {
-    const body = (await req.json()) as Record<string, unknown>;
-    if (typeof body.email === "string") email = body.email.trim();
-    if (typeof body.password === "string") password = body.password;
-    if (typeof body.name === "string") name = body.name.trim();
-  } catch {
+  const read = await readJsonBody<Record<string, unknown>>(req, BODY_LIMIT.credentials);
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
+  if (typeof body.email === "string") email = body.email.trim();
+  if (typeof body.password === "string") password = body.password;
+  if (typeof body.name === "string") name = body.name.trim();
 
   // Said plainly and one at a time. A form that answers "invalid input" to
   // two fields has told you nothing about which one.

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { serverClient } from "@/lib/storage/supabase";
@@ -40,12 +41,13 @@ export async function POST(req: Request) {
   }
 
   let email = "";
-  try {
-    const body = (await req.json()) as { email?: unknown };
-    if (typeof body.email === "string") email = body.email.trim();
-  } catch {
+  const read = await readJsonBody<{ email?: unknown }>(req, BODY_LIMIT.credentials);
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
+  if (typeof body.email === "string") email = body.email.trim();
 
   if (email.includes("@")) {
     const { error } = await db.auth.resetPasswordForEmail(email, {

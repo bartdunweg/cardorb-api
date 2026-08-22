@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { revalidateTag } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -51,14 +52,18 @@ export async function POST(req: Request) {
   let csv = "";
   let map: Partial<ColumnMap> | undefined;
   let doCommit = false;
-  try {
-    const body = (await req.json()) as { csv?: unknown; map?: unknown; commit?: unknown };
-    if (typeof body.csv === "string") csv = body.csv;
-    if (body.map && typeof body.map === "object") map = body.map as Partial<ColumnMap>;
-    doCommit = body.commit === true;
-  } catch {
+  const read = await readJsonBody<{ csv?: unknown; map?: unknown; commit?: unknown }>(
+    req,
+    BODY_LIMIT.csv,
+  );
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "That file is too large." }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
+  if (typeof body.csv === "string") csv = body.csv;
+  if (body.map && typeof body.map === "object") map = body.map as Partial<ColumnMap>;
+  doCommit = body.commit === true;
 
   // After the body is read, because the flag deciding whether this call is
   // expensive is in it. A preview is not counted; see the note on byAccount.

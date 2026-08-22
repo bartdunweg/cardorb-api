@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
@@ -50,18 +51,22 @@ export async function POST(req: Request) {
 
   let password = "";
   let currentPassword: string | undefined;
-  try {
-    const body = (await req.json()) as { password?: unknown; currentPassword?: unknown };
-    if (typeof body.password === "string") password = body.password;
-    // An empty string is treated as absent rather than passed on: Supabase
-    // would reject it as a wrong current password, and the message a person
-    // needs there is "fill this in", which the form's own required field
-    // already gives them.
-    if (typeof body.currentPassword === "string" && body.currentPassword.length > 0)
-      currentPassword = body.currentPassword;
-  } catch {
+  const read = await readJsonBody<{ password?: unknown; currentPassword?: unknown }>(
+    req,
+    BODY_LIMIT.credentials,
+  );
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
+  if (typeof body.password === "string") password = body.password;
+  // An empty string is treated as absent rather than passed on: Supabase
+  // would reject it as a wrong current password, and the message a person
+  // needs there is "fill this in", which the form's own required field
+  // already gives them.
+  if (typeof body.currentPassword === "string" && body.currentPassword.length > 0)
+    currentPassword = body.currentPassword;
 
   if (password.length < MIN_PASSWORD) {
     return NextResponse.json(

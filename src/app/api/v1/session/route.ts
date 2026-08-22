@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { serverClient } from "@/lib/storage/supabase";
@@ -80,16 +81,20 @@ export async function POST(req: Request) {
 
   let email = "";
   let password = "";
-  try {
-    const body = (await req.json()) as { email?: unknown; password?: unknown; key?: unknown };
-    if (typeof body.email === "string") email = body.email;
-    // `key` is what the old form called it, accepted so a client mid-update is
-    // not a client that cannot sign in.
-    if (typeof body.password === "string") password = body.password;
-    else if (typeof body.key === "string") password = body.key;
-  } catch {
+  const read = await readJsonBody<{ email?: unknown; password?: unknown; key?: unknown }>(
+    req,
+    BODY_LIMIT.credentials,
+  );
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
+  const body = read.body;
+  if (typeof body.email === "string") email = body.email;
+  // `key` is what the old form called it, accepted so a client mid-update is
+  // not a client that cannot sign in.
+  if (typeof body.password === "string") password = body.password;
+  else if (typeof body.key === "string") password = body.key;
 
   const ip = clientIp(req);
   if (byAddress(ip) || byAccount(accountKey(ip, email))) {
