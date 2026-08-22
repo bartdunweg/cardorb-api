@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import CollectionScreen from "@/components/custom/CollectionScreen";
+import CollectionScreen from "@/components/shared/CollectionScreen";
 
 export const metadata: Metadata = { title: "Collection" };
 

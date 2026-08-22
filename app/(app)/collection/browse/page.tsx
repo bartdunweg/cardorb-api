@@ -3,7 +3,7 @@ import { currentViewer } from "../../../../lib/api/viewer";
 import { getRows } from "../../../../lib/core/collection";
 import { listSets } from "../../../../lib/core/ptcg-browse";
 import { ownershipIndex, setCounts } from "../../../../lib/core/ownership";
-import BrowseSetIndex from "@/components/custom/BrowseSetIndex";
+import BrowseSetIndex from "@/components/shared/BrowseSetIndex";
 
 /**
  * The catalogue, as a place.

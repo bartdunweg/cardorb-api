@@ -1,7 +1,7 @@
-import SigninShell, { SigninOr } from "@/components/custom/SigninShell";
-import { FormNote } from "@/components/custom/FormField";
+import SigninShell, { SigninOr } from "@/components/shared/SigninShell";
+import { FormNote } from "@/components/shared/FormField";
 import { APP_NAME } from "../lib/core/config";
-import Button from "@/components/custom/Button";
+import Button from "@/components/shared/Button";
 
 /**
  * What a URL that is not a page looks like.

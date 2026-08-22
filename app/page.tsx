@@ -16,10 +16,10 @@ import {
   TrendUp01,
   Wallet01,
 } from "@untitledui-pro/icons/line";
-import Card from "@/components/custom/Card";
-import MarketingFooter from "@/components/custom/MarketingFooter";
-import Navbar from "@/components/custom/Navbar";
-import MarketingViewerSlot from "@/components/custom/MarketingViewerSlot";
+import Card from "@/components/shared/Card";
+import MarketingFooter from "@/components/shared/MarketingFooter";
+import Navbar from "@/components/shared/Navbar";
+import MarketingViewerSlot from "@/components/shared/MarketingViewerSlot";
 // ThemeToggle moved with the footer into MarketingFooter.
 import {
   cardBody,
@@ -29,7 +29,7 @@ import {
   navLink,
   sectionBody,
   sectionHeading,
-} from "@/components/custom/marketingClasses";
+} from "@/components/shared/marketingClasses";
 import { APP_NAME, APP_TAGLINE, APP_TITLE, SITE_URL } from "../lib/core/config";
 
 const DASHBOARD_HREF = "/dashboard";

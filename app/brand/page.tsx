@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "@/components/custom/Navbar";
-import MarketingFooter from "@/components/custom/MarketingFooter";
-import { legal, legalList as list } from "@/components/custom/LegalPage";
-import Wordmark from "@/components/custom/Wordmark";
+import Navbar from "@/components/shared/Navbar";
+import MarketingFooter from "@/components/shared/MarketingFooter";
+import { legal, legalList as list } from "@/components/shared/LegalPage";
+import Wordmark from "@/components/shared/Wordmark";
 import { Button as UiButton } from "@/components/base/buttons/button";
 import { colour, type ColourPair } from "../../lib/design/theme-values.generated";
 import { APP_NAME } from "../../lib/core/config";

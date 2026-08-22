@@ -1,7 +1,7 @@
 /**
  * The value chart's arithmetic, with no markup in it.
  *
- * Pulled out of components/custom/CollectionValueCard.tsx so the decisions in
+ * Pulled out of src/components/shared/CollectionValueCard.tsx so the decisions in
  * here can be tested. There is no component testing in this repo — no jsdom, no
  * RTL — and both of these are arithmetic that looks fine in a screenshot while
  * being wrong: "too few readings to be a history" is the whole of what a

@@ -5,7 +5,7 @@ import { getCards } from "../../../../../lib/core/collection";
 import { groupByEra } from "../../../../../lib/core/eras";
 import { slugify } from "../../../../../lib/core/slug";
 
-import CollectionScreen from "@/components/custom/CollectionScreen";
+import CollectionScreen from "@/components/shared/CollectionScreen";
 
 /**
  * One era: every set from a stretch of years, together.

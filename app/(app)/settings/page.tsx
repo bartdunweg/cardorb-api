@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
-import { cardsMainTitleClassName } from "@/components/custom/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
 import { redirect } from "next/navigation";
 import { currentViewer } from "../../../lib/api/viewer";
 import { serverClient } from "../../../lib/storage/supabase";
 import { ownProfile } from "../../../lib/storage/postgres";
 import { recentImports } from "../../../lib/storage/imports";
-import AccountSettings from "@/components/custom/AccountSettings";
-import AppearanceSettings from "@/components/custom/AppearanceSettings";
-import DeleteAccountSettings from "@/components/custom/DeleteAccountSettings";
-import ImportSettings from "@/components/custom/ImportSettings";
-import ProfileSettings from "@/components/custom/ProfileSettings";
-import { SettingsHint, SettingsPanels, SettingsSection } from "@/components/custom/SettingsPanel";
+import AccountSettings from "@/components/shared/AccountSettings";
+import AppearanceSettings from "@/components/shared/AppearanceSettings";
+import DeleteAccountSettings from "@/components/shared/DeleteAccountSettings";
+import ImportSettings from "@/components/shared/ImportSettings";
+import ProfileSettings from "@/components/shared/ProfileSettings";
+import { SettingsHint, SettingsPanels, SettingsSection } from "@/components/shared/SettingsPanel";
 
 /**
  * All of settings, on one page, like every other screen in the shell.

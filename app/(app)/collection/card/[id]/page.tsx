@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ChevronLeft } from "@untitledui-pro/icons/line";
-import CardDetail from "@/components/custom/CardDetail";
-import CardNav from "@/components/custom/CardNav";
-import Button from "@/components/custom/Button";
+import CardDetail from "@/components/shared/CardDetail";
+import CardNav from "@/components/shared/CardNav";
+import Button from "@/components/shared/Button";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "../../../../../lib/core/cards";
 import { currentViewer } from "../../../../../lib/api/viewer";
 import { getCards } from "../../../../../lib/core/collection";

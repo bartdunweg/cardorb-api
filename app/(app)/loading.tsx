@@ -1,5 +1,5 @@
 import { APP_NAME } from "../../lib/core/config";
-import { Mark } from "@/components/custom/Wordmark";
+import { Mark } from "@/components/shared/Wordmark";
 
 /**
  * What every signed-in screen shows while the shell is on its way.

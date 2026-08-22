@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ThemeProvider } from "@/components/custom/ThemeProvider";
+import { ThemeProvider } from "@/components/shared/ThemeProvider";
 
 /**
  * Every React context the app is wrapped in, in one place.

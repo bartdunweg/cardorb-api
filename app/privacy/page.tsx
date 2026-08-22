@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import LegalPage, { legal, legalList as list } from "@/components/custom/LegalPage";
+import LegalPage, { legal, legalList as list } from "@/components/shared/LegalPage";
 import { APP_NAME } from "../../lib/core/config";
 import { SITE_OG_IMAGE } from "../../lib/core/og";
 

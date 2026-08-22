@@ -5,7 +5,7 @@ import { getRows } from "../../../../../lib/core/collection";
 import { findSet, setCards } from "../../../../../lib/core/ptcg-browse";
 import { withTcgdexScans } from "../../../../../lib/core/browse-artwork";
 import { markOwnership, ownershipIndex } from "../../../../../lib/core/ownership";
-import BrowseSetGrid from "@/components/custom/BrowseSetGrid";
+import BrowseSetGrid from "@/components/shared/BrowseSetGrid";
 
 /**
  * One set, all of it.

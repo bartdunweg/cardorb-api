@@ -12,10 +12,10 @@ import {
   SearchLg,
   Wallet01,
 } from "@untitledui-pro/icons/line";
-import Card from "@/components/custom/Card";
-import MarketingFooter from "@/components/custom/MarketingFooter";
-import Navbar from "@/components/custom/Navbar";
-import MarketingViewerSlot from "@/components/custom/MarketingViewerSlot";
+import Card from "@/components/shared/Card";
+import MarketingFooter from "@/components/shared/MarketingFooter";
+import Navbar from "@/components/shared/Navbar";
+import MarketingViewerSlot from "@/components/shared/MarketingViewerSlot";
 import {
   cardBody,
   cardHeading,
@@ -24,7 +24,7 @@ import {
   navLink,
   sectionBody,
   sectionHeading,
-} from "@/components/custom/marketingClasses";
+} from "@/components/shared/marketingClasses";
 import { APP_NAME, SITE_URL } from "../../../lib/core/config";
 import { SITE_OG_IMAGE } from "../../../lib/core/og";
 
