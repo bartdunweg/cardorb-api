@@ -1,0 +1,1 @@
+- The dashboard's "By era" and "By type" titles now use the same heading weight and size as every other section heading in the app, instead of a slightly smaller, off-scale one.

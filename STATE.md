@@ -55,13 +55,17 @@ This session, on branch `bartdunweg/apply-standards-v3`:
 - **`CardsView.tsx` is the biggest untested surface.** Coverage is 72% lines overall, but branch
   coverage is 50.6% and this file carries the bulk of the untested decisions. No coverage floor is
   wired into `verify.sh` yet — that is a separate decision, not an omission.
-- **Untitled UI adoption opportunities (MCP-scanned).** `section-headers` (PRO) is now vendored
-  and adopted in `SettingsPanel.tsx`'s `SettingsSection` — `Root`/`Group`/`Actions`/`Subheading`
-  for the layout and divider, with our own `<h2>` because `SectionHeader.Heading` bakes in
-  `font-semibold` (R-STYLE-003) that R-UI-003 forbids editing out. The full-page settings
-  templates were **not** adopted: all eight are standalone `layout: sidebar` pages that bring their
-  own navigation plus a tiptap editor and qr codes — a conflict with the `(app)` shell, not an
-  adoption.
+- **`section-headers` adoption was reverted — it 500'd the Settings page (RSC boundary).**
+  `SettingsSection` lives in `SettingsPanel.tsx` (no `"use client"`) and is rendered by
+  `page.tsx`, a Server Component. `SectionHeader` is an object exported from a `"use client"`
+  module, so across the server→client boundary `SectionHeader.Root` is `undefined` → "Element type
+  is invalid" at render. `next build` missed it because `/settings` is `force-dynamic` and is never
+  rendered at build; only a real request triggers it. Reverted to the plain `<h2>` and removed the
+  vendored component. The lesson: a compound component from a `"use client"` module may only be
+  consumed inside a Client Component (that is why `FilterBar.Root` in the client `CardsView` is
+  fine). Reintroduce section-headers during the Settings redesign, in a client context. The
+  full-page settings templates stay unfit regardless: all eight are standalone `layout: sidebar`
+  pages that bring their own navigation plus a tiptap editor and qr codes.
 - **`filter-bar` (free) adopted as the toolbar container.** `FilterBar.Root` now wraps the
   collection toolbar in `CardsView.tsx` (children stay flat, so the responsive wrap rules, the
   search flex-basis and the CSS-only menu/sheet swap all hold). Its `filter-dropdown-menu` half was

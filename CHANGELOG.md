@@ -33,6 +33,8 @@ two brought you.
 If you type the wrong current password it says so, instead of telling you the
 new one could not be set.
 
+- The dashboard's "By era" and "By type" titles now use the same heading weight and size as every other section heading in the app, instead of a slightly smaller, off-scale one.
+
 - Every dialog and sheet — the card view, Add a card, Filter and View — now runs
   on the same component library as the rest of the app instead of on hand-written
   code of our own. What you should notice: nothing, except that they open and
@@ -56,9 +58,6 @@ new one could not be set.
   a screen reader, and typing something that is not on the list still works —
   so a card from a set the catalogue has not indexed yet can still be filtered
   for.
-
-- The Settings screen now heads each of its five groups — Profile, Account, Import, Appearance and "Delete this account" — with a full-width divider, the same section-header pattern the rest of the app's Untitled UI uses. The groups read as separate blocks on one scroll instead of five headings stacked in a column.
-- The dashboard's "By era" and "By type" titles now use the same heading weight and size as every other section heading in the app, instead of a slightly smaller, off-scale one.
 
 ### Changed
 
