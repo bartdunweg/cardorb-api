@@ -3,7 +3,7 @@
 import { useTheme, type Mode } from "@/components/shared/ThemeProvider";
 import { Radio as AriaRadio } from "react-aria-components";
 import { RadioGroup } from "@/components/base/radio-buttons/radio-buttons";
-import { SettingsHint, SettingsPanel } from "@/components/shared/SettingsPanel";
+import { SettingsHint, SettingsPanel } from "@/features/account/components/SettingsPanel";
 
 /**
  * Three answers, and the third was unreachable until now.

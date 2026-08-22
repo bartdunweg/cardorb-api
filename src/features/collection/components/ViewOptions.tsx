@@ -3,7 +3,7 @@
 import { Grid01, Rows03 } from "@untitledui-pro/icons/line";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
-import { CARD_FIELDS, type CardField } from "@/components/shared/cards-fields";
+import { CARD_FIELDS, type CardField } from "@/features/collection/components/cards-fields";
 import Segmented, { segmentSelectedClassName } from "@/components/shared/Segmented";
 
 const fieldClassName = "flex flex-col gap-2";

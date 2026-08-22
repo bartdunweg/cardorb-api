@@ -3,7 +3,7 @@ import { currentViewer } from "@/lib/api/viewer";
 import { forGrid } from "@/lib/core/cards";
 import { getCollection } from "@/lib/core/collection";
 import AppShell from "./_components/AppShell";
-import { pageCardsClassName } from "@/components/shared/cardsPageClasses";
+import { pageCardsClassName } from "@/features/collection/components/cardsPageClasses";
 // Everything that draws a collection, once for every screen in the shell.
 //
 // On the layout rather than on each page, which is the difference between this

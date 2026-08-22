@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useCollection } from "@/app/(app)/CollectionContext";
-import CardsTabBar, { type CardsTab } from "@/components/shared/CardsTabBar";
+import { useCollection } from "@/features/collection/CollectionContext";
+import CardsTabBar, { type CardsTab } from "@/features/collection/components/CardsTabBar";
 
 /**
  * The bar along the bottom, told where it is by the address bar.

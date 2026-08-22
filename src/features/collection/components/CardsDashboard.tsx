@@ -3,9 +3,9 @@ import { Plus } from "@untitledui-pro/icons/line";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { Table } from "@/components/application/table/table";
-import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 import Card, { aboutCardClassName } from "@/components/shared/Card";
-import CollectionValueCard from "@/components/shared/CollectionValueCard";
+import CollectionValueCard from "@/features/collection/components/CollectionValueCard";
 import { shownPrice } from "@/lib/core/cards";
 import type { CardsStats } from "@/lib/core/cards-stats";
 import { LOCALE } from "@/lib/core/config";
@@ -256,11 +256,7 @@ function Kpi({ label, value, note }: { label: string; value: string; note?: stri
           it. The tiles are a grid of equal cells, so a note on two of four
           leaves the other two shorter — which is fine, because they are boxes
           on their own rows of a grid, not columns that have to line up. */}
-      {note && (
-        <span className="text-sm font-medium text-tertiary">
-          {note}
-        </span>
-      )}
+      {note && <span className="text-sm font-medium text-tertiary">{note}</span>}
     </li>
   );
 }

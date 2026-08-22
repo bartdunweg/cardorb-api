@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { SITE_URL } from "@/lib/core/config";
 import { MAX_DISPLAY_NAME } from "@/lib/core/account";
 import { ownerLabel } from "@/lib/core/owner";
-import AvatarPicker from "@/components/shared/AvatarPicker";
-import { useUsernameCheck, usernameSays } from "@/components/shared/useUsernameCheck";
+import AvatarPicker from "@/features/account/components/AvatarPicker";
+import { useUsernameCheck, usernameSays } from "@/features/account/hooks/useUsernameCheck";
 import {
   SettingsHint,
   SettingsInput,
@@ -17,7 +17,7 @@ import {
   SettingsSaid,
   SettingsSwitch,
   settingsLinkAnchorClassName,
-} from "@/components/shared/SettingsPanel";
+} from "@/features/account/components/SettingsPanel";
 import Button from "@/components/shared/Button";
 
 /**

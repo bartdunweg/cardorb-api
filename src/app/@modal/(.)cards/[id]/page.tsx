@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import CardModal from "./_components/CardModal";
-import CardDetail from "@/components/shared/CardDetail";
-import CardNav from "@/components/shared/CardNav";
+import CardDetail from "@/features/collection/components/CardDetail";
+import CardNav from "@/features/collection/components/CardNav";
 import { cardNeighbours, getCardDetail, type OwnedCard } from "@/lib/core/cards";
 import { currentViewer } from "@/lib/api/viewer";
 import { getCards } from "@/lib/core/collection";

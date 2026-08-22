@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Plus } from "@untitledui-pro/icons/line";
 import { Badge } from "@/components/base/badges/badges";
 import { MenuPopover } from "@/components/shared/MenuPopover";
-import FilterOptions from "@/components/shared/FilterOptions";
-import type { Facet } from "@/components/shared/cards-fields";
+import FilterOptions from "@/features/collection/components/FilterOptions";
+import type { Facet } from "@/features/collection/components/cards-fields";
 
-export type { Facet, Option } from "@/components/shared/cards-fields";
+export type { Facet, Option } from "@/features/collection/components/cards-fields";
 
 /**
  * One "Filter" button covering every facet, two levels deep: the facets first,

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { SearchLg } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { InputBase } from "@/components/base/input/input";
-import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 import { useDeferredValue, useMemo, useState } from "react";
 import { LOCALE } from "@/lib/core/config";
 import { norm } from "@/lib/core/util";

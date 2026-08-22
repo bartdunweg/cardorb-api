@@ -13,23 +13,23 @@ import { FilterFunnel01, Inbox01, SearchLg, XClose } from "@untitledui-pro/icons
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { InputBase } from "@/components/base/input/input";
 import Card from "@/components/shared/Card";
-import CardAddDialog from "@/components/shared/CardAddDialog";
-import PublicCardDialog from "@/components/shared/PublicCardDialog";
-import CardItem from "@/components/shared/CardItem";
-import CardsPokedex from "@/components/shared/CardsPokedex";
-import CardsProfile from "@/components/shared/CardsProfile";
-import CardsSidebar, { retryAsPng } from "@/components/shared/CardsSidebar";
-import CardsTabBar, { type CardsTab } from "@/components/shared/CardsTabBar";
-import FilterMenu, { type Facet } from "@/components/shared/FilterMenu";
-import FilterSheet from "@/components/shared/FilterSheet";
-import ViewSheet from "@/components/shared/ViewSheet";
-import ViewMenu from "@/components/shared/ViewMenu";
-import FilterChips, { type ActiveFilter } from "@/components/shared/FilterChips";
+import CardAddDialog from "@/features/collection/components/CardAddDialog";
+import PublicCardDialog from "@/features/collection/components/PublicCardDialog";
+import CardItem from "@/features/collection/components/CardItem";
+import CardsPokedex from "@/features/collection/components/CardsPokedex";
+import CardsProfile from "@/features/collection/components/CardsProfile";
+import CardsSidebar, { retryAsPng } from "@/features/collection/components/CardsSidebar";
+import CardsTabBar, { type CardsTab } from "@/features/collection/components/CardsTabBar";
+import FilterMenu, { type Facet } from "@/features/collection/components/FilterMenu";
+import FilterSheet from "@/features/collection/components/FilterSheet";
+import ViewSheet from "@/features/collection/components/ViewSheet";
+import ViewMenu from "@/features/collection/components/ViewMenu";
+import FilterChips, { type ActiveFilter } from "@/features/collection/components/FilterChips";
 import { useSession } from "@/hooks/useSession";
 import { tally } from "@/lib/core/cards-stats";
 import { caught, getPokedex } from "@/lib/core/pokedex";
 import { shownPrice } from "@/lib/core/cards";
-import { type CardField, type DexOwned } from "@/components/shared/cards-fields";
+import { type CardField, type DexOwned } from "@/features/collection/components/cards-fields";
 import type { CardSet, OwnedCard } from "@/lib/core/cards";
 import { eraLabel, eraYears, groupByEra } from "@/lib/core/eras";
 import { LOCALE } from "@/lib/core/config";
@@ -51,7 +51,7 @@ import {
   cardsToolsClassName,
   onlyNarrowClassName,
   onlyWideClassName,
-} from "@/components/shared/cardsPageClasses";
+} from "@/features/collection/components/cardsPageClasses";
 import Button from "@/components/shared/Button";
 
 /** "November 2024" from the ISO date TCGdex hands out, when it knows one. */
@@ -839,7 +839,6 @@ export default function CardsView({
   }, []);
   const hasMore = builtSets < filtered.length;
 
-
   /**
    * Vintage and modern, as a facet rather than as three buttons in the bar.
    *
@@ -1563,8 +1562,8 @@ export default function CardsView({
                       moved: see scanSize. */}
                 <ul
                   className={
-                  view === "grid"
-                    ? /* content-visibility + contain-intrinsic-size: forty-eight sets,
+                    view === "grid"
+                      ? /* content-visibility + contain-intrinsic-size: forty-eight sets,
                          nineteen hundred items. The browser skips layout and paint for
                          the sets off screen and remembers each one's measured height.
                          Everything stays in the DOM, so filters and find-in-page still
@@ -1580,21 +1579,21 @@ export default function CardsView({
                          and 26 below — it was being sliced off down both edges. The
                          padding puts that reach inside the clip; the margin takes the
                          same distance back out of the layout, so nothing moves. */
-                      /* gap-3 wide, gap-2 once the column is under 560px — the dex\' own
+                        /* gap-3 wide, gap-2 once the column is under 560px — the dex\' own
                          narrow gap. As a container variant on the element, not a
                          @container block in cards.css: an unconditional utility beats a
                          conditional legacy rule, which is ADR-0017, and this exact pair
                          is how it was caught again. .cards-main carries the @container. */
-                      "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
-                      "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
-                      "-mx-5 -mt-2.5 -mb-6.5 px-5 pt-2.5 pb-6.5"
-                    : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
+                        "cards-grid grid list-none gap-3 @max-[560px]:gap-2 [grid-template-columns:repeat(var(--cards-cols,6),minmax(0,1fr))] " +
+                        "[content-visibility:auto] [contain-intrinsic-size:auto_600px] " +
+                        "-mx-5 -mt-2.5 -mb-6.5 px-5 pt-2.5 pb-6.5"
+                      : /* content-visibility + contain-intrinsic-size: sixteen hundred rows,
                          so the ones off screen are not laid out until they come near it.
                          600px is the guess the browser uses for a row it has not
                          measured; wrong in either direction only costs a scrollbar
                          that settles. */
-                      "cards-rows m-0 flex list-none flex-col p-0 [content-visibility:auto] [contain-intrinsic-size:auto_600px]"
-                }
+                        "cards-rows m-0 flex list-none flex-col p-0 [content-visibility:auto] [contain-intrinsic-size:auto_600px]"
+                  }
                   style={
                     view === "grid"
                       ? ({ "--cards-cols": String(shownCols) } as CSSProperties)

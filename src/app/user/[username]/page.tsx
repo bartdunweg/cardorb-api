@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import CardsView from "@/components/shared/CardsView";
+import CardsView from "@/features/collection/components/CardsView";
 import { forGrid, forPublic } from "@/lib/core/cards";
 import { getCards, ownerOf } from "@/lib/core/collection";
 import { collectionTitle, ownerLabel } from "@/lib/core/owner";
 import { APP_NAME } from "@/lib/core/config";
 import "@/styles/poke-holo.css";
-import { pageCardsClassName } from "@/components/shared/cardsPageClasses";
+import { pageCardsClassName } from "@/features/collection/components/cardsPageClasses";
 
 /**
  * The link you hand to someone: the collection, to look at.

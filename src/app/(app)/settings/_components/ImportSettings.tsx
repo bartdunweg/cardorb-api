@@ -10,7 +10,7 @@ import {
   SettingsPanelTitle,
   SettingsPanels,
   SettingsSaid,
-} from "@/components/shared/SettingsPanel";
+} from "@/features/account/components/SettingsPanel";
 
 import Button from "@/components/shared/Button";
 

@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef } from "react";
-import { Heart, LayersThree01, LayoutAlt01, List, SearchLg, User01 } from "@untitledui-pro/icons/line";
+import {
+  Heart,
+  LayersThree01,
+  LayoutAlt01,
+  List,
+  SearchLg,
+  User01,
+} from "@untitledui-pro/icons/line";
 // The real solid cuts, not the line ones with fill turned on. Untitled UI draws
 // each style separately: a solid icon is its own shape, where filling an outline
 // path floods the strokes and gives a heavier, blunter form than anyone drew.
@@ -24,7 +31,7 @@ import {
   tabbarLabelClassName,
   tabbarPagesClassName,
   tabbarPillClassName,
-} from "@/components/shared/tabbarClasses";
+} from "@/features/collection/components/tabbarClasses";
 
 /**
  * The bottom bar on /cards, below 1000px, where the rail is not beside the

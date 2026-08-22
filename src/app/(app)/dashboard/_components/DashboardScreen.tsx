@@ -4,12 +4,12 @@ import { useMemo } from "react";
 import { getCardsStats } from "@/lib/core/cards-stats";
 import type { ValueSnapshot } from "@/lib/core/value-snapshot";
 import { moversOf, type CardPricePoint } from "@/lib/core/movers";
-import { useCollection } from "@/app/(app)/CollectionContext";
-import CardsDashboard from "@/components/shared/CardsDashboard";
+import { useCollection } from "@/features/collection/CollectionContext";
+import CardsDashboard from "@/features/collection/components/CardsDashboard";
 import Card from "@/components/shared/Card";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import { Inbox01 } from "@untitledui-pro/icons/line";
-import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 
 /**
  * The dashboard's client half: it reads the collection out of the shell rather

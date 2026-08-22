@@ -2,7 +2,7 @@
 import { useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/shared/Modal";
-import { modalCardClassName } from "@/components/shared/cardModalClasses";
+import { modalCardClassName } from "@/features/collection/components/cardModalClasses";
 
 /**
  * The dialog the card detail is shown in when it is opened from the list.

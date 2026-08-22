@@ -1,7 +1,14 @@
 "use client";
 
-import { cardsNavElsewhereClassName } from "@/components/shared/cardsPageClasses";
-import { Compass03, Heart, LayersThree01, LayoutAlt01, Plus, User01 } from "@untitledui-pro/icons/line";
+import { cardsNavElsewhereClassName } from "@/features/collection/components/cardsPageClasses";
+import {
+  Compass03,
+  Heart,
+  LayersThree01,
+  LayoutAlt01,
+  Plus,
+  User01,
+} from "@untitledui-pro/icons/line";
 // The real solid cuts. See the matching note in CardsTabBar: filling a line
 // icon floods its strokes and gives a blunter shape than the solid one, which
 // Untitled UI draws separately. The two navs have to agree, so both use these.
@@ -239,7 +246,7 @@ export default function CardsSidebar({
               name={collectionName}
               count={held}
               icon={LayersThree01}
-                solid={LayersThree01Solid}
+              solid={LayersThree01Solid}
             />
           </li>
           {/* Only where there is one. An empty wishlist is a row that answers a
@@ -328,12 +335,7 @@ export default function CardsSidebar({
                     separates the sets from the two rows above them. The label
                     alone had to carry the break on its own, which at --fs-small
                     and tertiary is not a line anyone reads as one. */}
-                {i > 0 && (
-                  <span
-                    aria-hidden="true"
-                    className="block h-px m-2 bg-secondary"
-                  />
-                )}
+                {i > 0 && <span aria-hidden="true" className="block h-px m-2 bg-secondary" />}
                 {/* The label is the selection for the whole era, which is what the
                     Era facet used to be. One control instead of two: a heading you
                     can press beats the same list of eras repeated as tick boxes

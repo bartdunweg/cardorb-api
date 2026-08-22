@@ -3,7 +3,7 @@
 import { Check, ChevronLeft, ChevronRight } from "@untitledui-pro/icons/line";
 import { ButtonGroup, ButtonGroupItem } from "@/components/base/button-group/button-group";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
-import type { Facet } from "@/components/shared/cards-fields";
+import type { Facet } from "@/features/collection/components/cards-fields";
 import { segmentSelectedClassName } from "@/components/shared/Segmented";
 
 /**
@@ -87,8 +87,7 @@ export default function FilterOptions({
   /* The dropdown scrolls its own list — several hundred Pokémon, so the panel
      moves rather than the page. The sheet is already a scrolling surface and
      capping it would give it two scrollbars. */
-  const list =
-    variant === "sheet" ? "" : "max-h-[300px] overflow-y-auto overscroll-contain";
+  const list = variant === "sheet" ? "" : "max-h-[300px] overflow-y-auto overscroll-contain";
 
   /* The always-open facets at the top of the panel. Two ancestors said the same
      thing in cards.css — `.sheet .facet-inline` and `.filter-menu-panel
@@ -195,9 +194,7 @@ export default function FilterOptions({
         const on = selected(f);
         return (
           <div key={f.key} className={inlineClassName}>
-            <span className="facet-inline-label font-body text-sm text-secondary">
-              {f.label}
-            </span>
+            <span className="facet-inline-label font-body text-sm text-secondary">{f.label}</span>
             {/* Untitled UI's ButtonGroup directly rather than through
                 Segmented, because this row is not the one-answer control that
                 component is. A facet of two or three may have both ticked at

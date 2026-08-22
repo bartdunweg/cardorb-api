@@ -75,7 +75,7 @@ const DRAWN_BY: Record<string, string> = {
   "/app/ios": "src/app/app/ios/page.tsx",
   "/brand": "src/app/brand/page.tsx",
   "/cards/:param": "src/app/cards/[id]/page.tsx",
-  "/user/:param": "src/components/shared/CardsView.tsx",
+  "/user/:param": "src/features/collection/components/CardsView.tsx",
   "/welcome": "src/app/welcome/page.tsx",
 
   // The five door screens, all through one shell.

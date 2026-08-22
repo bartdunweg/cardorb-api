@@ -5,7 +5,7 @@ import { Sliders02 } from "@untitledui-pro/icons/line";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 import Button from "@/components/shared/Button";
 import { Sheet, sheetApplyButtonClassName } from "@/components/shared/Sheet";
-import ViewOptions, { type ViewOptionsProps } from "@/components/shared/ViewOptions";
+import ViewOptions, { type ViewOptionsProps } from "@/features/collection/components/ViewOptions";
 
 /**
  * The same view options as a sheet, for a phone.
@@ -52,7 +52,11 @@ export default function ViewSheet(props: ViewOptionsProps) {
         title="View"
         padBody
         footer={
-          <Button color="primary" className={sheetApplyButtonClassName} onClick={() => setOpen(false)}>
+          <Button
+            color="primary"
+            className={sheetApplyButtonClassName}
+            onClick={() => setOpen(false)}
+          >
             Done
           </Button>
         }

@@ -6,9 +6,9 @@ import type { CatalogueMatch } from "@/lib/core/ptcg-search";
 import { groupByEra } from "@/lib/core/eras";
 import AppSidebar from "./AppSidebar";
 import AppTabBar from "./AppTabBar";
-import CardAddDialog from "@/components/shared/CardAddDialog";
-import { CollectionProvider, type CollectionValue } from "../CollectionContext";
-import { cardsMainClassName } from "@/components/shared/cardsPageClasses";
+import CardAddDialog from "@/features/collection/components/CardAddDialog";
+import { CollectionProvider, type CollectionValue } from "@/features/collection/CollectionContext";
+import { cardsMainClassName } from "@/features/collection/components/cardsPageClasses";
 
 /**
  * The furniture around every signed-in screen.

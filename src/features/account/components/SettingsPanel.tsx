@@ -37,10 +37,7 @@ export function SettingsSection({
 }) {
   return (
     <section aria-labelledby={`${id}-heading`}>
-      <h2
-        id={`${id}-heading`}
-        className="text-display-sm font-semibold text-primary m-0 mb-4"
-      >
+      <h2 id={`${id}-heading`} className="text-display-sm font-semibold text-primary m-0 mb-4">
         {title}
       </h2>
       {children}
@@ -70,12 +67,7 @@ export function SettingsPanel({
 
 /** An <h3>: every panel now sits under a SettingsSection's <h2>. */
 export function SettingsPanelTitle({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
-  return (
-    <h3
-      className={cx("m-0 mb-3 text-md font-semibold text-primary", className)}
-      {...rest}
-    />
-  );
+  return <h3 className={cx("m-0 mb-3 text-md font-semibold text-primary", className)} {...rest} />;
 }
 
 export const settingsHintClassName = "my-2 text-sm text-tertiary";
@@ -96,22 +88,22 @@ export const SettingsInput = forwardRef<
   // "sm" | "md" | "lg". Nothing here ever passed it.
   Omit<InputHTMLAttributes<HTMLInputElement>, "size">
 >(function SettingsInput({ className, ...rest }, ref) {
-    return (
-      // Untitled UI's `InputBase`, not the recipe copied off it — which is
-      // what this was, five classes deep, under a comment saying their
-      // component "is a React Aria TextField with no ref to give". That is
-      // true of `TextField` and `Input`; `InputBase` is the layer below both
-      // and takes a `ref` outright, so the four settings forms that hand this
-      // one a ref keep working.
-      //
-      // Their wrapper also carries the focus ring on the group rather than the
-      // field, so it survives a leading icon — which the copy could not do.
-      <InputBase
-        ref={ref}
-        // Capped: the panels span the whole pane now that Settings is a
-        // full-width page, and a 900px-wide email field is a field you have to
-        // aim at rather than read.
-        wrapperClassName={cx("w-full max-w-[26rem]", className)}
+  return (
+    // Untitled UI's `InputBase`, not the recipe copied off it — which is
+    // what this was, five classes deep, under a comment saying their
+    // component "is a React Aria TextField with no ref to give". That is
+    // true of `TextField` and `Input`; `InputBase` is the layer below both
+    // and takes a `ref` outright, so the four settings forms that hand this
+    // one a ref keep working.
+    //
+    // Their wrapper also carries the focus ring on the group rather than the
+    // field, so it survives a leading icon — which the copy could not do.
+    <InputBase
+      ref={ref}
+      // Capped: the panels span the whole pane now that Settings is a
+      // full-width page, and a 900px-wide email field is a field you have to
+      // aim at rather than read.
+      wrapperClassName={cx("w-full max-w-[26rem]", className)}
       {...rest}
     />
   );

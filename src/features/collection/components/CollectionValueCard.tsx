@@ -1,10 +1,15 @@
 "use client";
 
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
-  ChartActiveDot,
-  ChartTooltipContent,
-} from "@/components/application/charts/charts-base";
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { ChartActiveDot, ChartTooltipContent } from "@/components/application/charts/charts-base";
 import Card from "@/components/shared/Card";
 import { LOCALE } from "@/lib/core/config";
 import { euroWhole } from "@/lib/core/format";
@@ -88,9 +93,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
 
   return (
     <Card className="flex flex-col gap-2">
-      <h2 className="m-0 font-body font-medium text-display-xs text-primary">
-        Value over time
-      </h2>
+      <h2 className="m-0 font-body font-medium text-display-xs text-primary">Value over time</h2>
       {/* The caption carries the change rather than the total, because the total
           is already the fourth tile above and repeating it here would be the
           page saying one thing twice in two sizes. "Since December 2024" is the
@@ -195,8 +198,7 @@ export default function CollectionValueCard({ snapshots }: { snapshots: ValueSna
       <ul className="sr-only">
         {points.map((p) => (
           <li key={p.date}>
-            {fullDate(p.t)}: {euroWhole(p.value)}, {p.priced.toLocaleString(LOCALE)} cards
-            priced
+            {fullDate(p.t)}: {euroWhole(p.value)}, {p.priced.toLocaleString(LOCALE)} cards priced
           </li>
         ))}
       </ul>

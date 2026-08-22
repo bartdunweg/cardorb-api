@@ -47,7 +47,6 @@ export const modalCardAddClassName =
   "[&_.modal-scroll]:overflow-y-auto [&_.modal-scroll]:overscroll-contain " +
   "[&_.modal-scroll]:max-h-[calc(100svh-2*calc(var(--spacing)*6))] " +
   "[&_.modal-scroll]:pt-10 px-[var(--card-pad)] pb-[var(--card-pad)] " +
-
   "[@media(max-width:640px)]:w-full [@media(max-width:640px)]:max-h-[92svh] " +
   // The scroll box gets the same cap as the sheet around it. Was its own 640px
   // block on `.modal--card-add .modal-scroll` in cards.css; reached through the

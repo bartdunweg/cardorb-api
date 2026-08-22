@@ -6,7 +6,7 @@ import { SearchLg, XClose } from "@untitledui-pro/icons/line";
 import Modal from "@/components/shared/Modal";
 import { MAX, type CardFields } from "@/lib/core/collection-row";
 import { MAX_RESULTS, type CatalogueMatch } from "@/lib/core/ptcg-search";
-import { modalCardAddClassName } from "@/components/shared/cardModalClasses";
+import { modalCardAddClassName } from "@/features/collection/components/cardModalClasses";
 import { Button } from "@/components/base/buttons/button";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { Input, InputBase } from "@/components/base/input/input";
@@ -52,8 +52,7 @@ type Draft = {
 };
 
 const cardAddLabelClassName =
-  "font-body text-xs font-semibold" +
-  " text-secondary p-0 [float:none]";
+  "font-body text-xs font-semibold" + " text-secondary p-0 [float:none]";
 
 /**
  * Two functional overrides on the search field, and nothing about how big it is.
@@ -554,10 +553,7 @@ export default function CardAddDialog({
                 "searching" does. searchFailed takes priority over every
                 other message here — it is never true at the same time as a
                 genuine "no matches", see the search effect. */}
-            <p
-              className="m-0 min-h-[1.2em] text-xs text-tertiary"
-              role="status"
-            >
+            <p className="m-0 min-h-[1.2em] text-xs text-tertiary" role="status">
               {searchFailed ? (
                 <>
                   Search is temporarily unavailable.{" "}
@@ -726,9 +722,7 @@ export default function CardAddDialog({
                 so there is nothing here to type around any more. */}
             <div className="flex flex-col gap-2 min-w-0 m-0 p-0">
               <span className={cardAddLabelClassName}>Rarity</span>
-              <p className="m-0 text-sm text-primary">
-                {selected?.rarity ?? "Unknown"}
-              </p>
+              <p className="m-0 text-sm text-primary">{selected?.rarity ?? "Unknown"}</p>
             </div>
 
             <div className="flex flex-col gap-2 min-w-0 m-0 p-0">

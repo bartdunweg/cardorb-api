@@ -221,8 +221,7 @@ export const tabbarIconClassName = "flex shrink-0";
  *  to give up width together to keep the capsule on the screen: "Dashboa…" is
  *  the price of a bar that still fits, and it is paid by the label rather than
  *  by the layout. */
-export const tabbarLabelClassName =
-  "tabbar-label max-w-full truncate text-xs leading-none";
+export const tabbarLabelClassName = "tabbar-label max-w-full truncate text-xs leading-none";
 
 /** The same glass-lift surface the sidebar's rows use for hover/active
  *  (.cards-nav-item::after, components.css) — was solid black

@@ -10,7 +10,7 @@ import {
   SettingsPanelTitle,
   SettingsPanels,
   SettingsSaid,
-} from "@/components/shared/SettingsPanel";
+} from "@/features/account/components/SettingsPanel";
 
 /**
  * The account: the address, the password, and the way out of this device.

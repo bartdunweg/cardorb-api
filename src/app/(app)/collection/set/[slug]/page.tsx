@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
 import { getCards } from "@/lib/core/collection";
 import { bySlug } from "@/lib/core/slug";
-import CollectionScreen from "@/components/shared/CollectionScreen";
+import CollectionScreen from "@/features/collection/components/CollectionScreen";
 
 /**
  * One set.

@@ -2,7 +2,7 @@
 
 import { Sliders02 } from "@untitledui-pro/icons/line";
 import { MenuPopover } from "@/components/shared/MenuPopover";
-import ViewOptions, { type ViewOptionsProps } from "@/components/shared/ViewOptions";
+import ViewOptions, { type ViewOptionsProps } from "@/features/collection/components/ViewOptions";
 
 /**
  * The view options as a dropdown, for the widths that have room beside the

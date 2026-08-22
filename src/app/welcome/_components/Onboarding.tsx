@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_URL } from "@/lib/core/config";
 import { MAX_DISPLAY_NAME, validateUsername } from "@/lib/core/account";
-import AvatarPicker from "@/components/shared/AvatarPicker";
-import { useUsernameCheck, usernameSays } from "@/components/shared/useUsernameCheck";
+import AvatarPicker from "@/features/account/components/AvatarPicker";
+import { useUsernameCheck, usernameSays } from "@/features/account/hooks/useUsernameCheck";
 import { FormError, FormForm, FormNote } from "@/components/shared/FormField";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import SigninShell from "@/components/shared/SigninShell";
-import { SettingsHint, SettingsSwitch } from "@/components/shared/SettingsPanel";
+import { SettingsHint, SettingsSwitch } from "@/features/account/components/SettingsPanel";
 
 /**
  * The four things worth asking once, before the app.

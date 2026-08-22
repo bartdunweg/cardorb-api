@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { LayersThree01 } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
-import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 import { useMemo } from "react";
 import type { CardSet } from "@/lib/core/cards";
 import { eraYears, groupByEra, eraLabel } from "@/lib/core/eras";
 import { slugify } from "@/lib/core/slug";
 import { LOCALE } from "@/lib/core/config";
-import { retryAsPng } from "@/components/shared/CardsSidebar";
+import { retryAsPng } from "@/features/collection/components/CardsSidebar";
 
 /**
  * Every set, as a screen rather than as a column.

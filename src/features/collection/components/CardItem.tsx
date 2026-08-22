@@ -4,7 +4,7 @@ import { memo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/base/badges/badges";
 import { highScan } from "@/lib/core/cards";
-import type { CardField } from "@/components/shared/cards-fields";
+import type { CardField } from "@/features/collection/components/cards-fields";
 import type { OwnedCard } from "@/lib/core/cards";
 import { euro, euroWhole } from "@/lib/core/format";
 
@@ -305,9 +305,7 @@ const CardItem = memo(function CardItem({
         {card.name}
       </span>
       {card.number && (
-        <span className="relative font-body text-xs text-tertiary tabular-nums">
-          {card.number}
-        </span>
+        <span className="relative font-body text-xs text-tertiary tabular-nums">{card.number}</span>
       )}
       <span className="sr-only">No picture available</span>
     </span>

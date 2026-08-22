@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 import { useMemo, useState } from "react";
 import { Grid01, Plus } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
 import Segmented from "@/components/shared/Segmented";
-import { useCollection } from "@/app/(app)/CollectionContext";
+import { useCollection } from "@/features/collection/CollectionContext";
 import { LOCALE } from "@/lib/core/config";
 import type { BrowseCard } from "@/lib/core/ownership";
 import type { CatalogueSet } from "@/lib/core/ptcg-browse";

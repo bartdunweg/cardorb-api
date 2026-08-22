@@ -1,9 +1,9 @@
 "use client";
 
-import { SettingsSaid } from "@/components/shared/SettingsPanel";
+import { SettingsSaid } from "@/features/account/components/SettingsPanel";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { FileTrigger } from "@/components/base/file-upload-trigger/file-upload-trigger";
-import { useAvatarUpload } from "@/components/shared/useAvatarUpload";
+import { useAvatarUpload } from "@/features/account/hooks/useAvatarUpload";
 import Button from "@/components/shared/Button";
 
 /**

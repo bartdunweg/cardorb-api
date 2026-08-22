@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cardsMainTitleClassName } from "@/components/shared/cardsPageClasses";
+import { cardsMainTitleClassName } from "@/features/collection/components/cardsPageClasses";
 import { redirect } from "next/navigation";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
@@ -10,7 +10,11 @@ import AppearanceSettings from "./_components/AppearanceSettings";
 import DeleteAccountSettings from "./_components/DeleteAccountSettings";
 import ImportSettings from "./_components/ImportSettings";
 import ProfileSettings from "./_components/ProfileSettings";
-import { SettingsHint, SettingsPanels, SettingsSection } from "@/components/shared/SettingsPanel";
+import {
+  SettingsHint,
+  SettingsPanels,
+  SettingsSection,
+} from "@/features/account/components/SettingsPanel";
 
 /**
  * All of settings, on one page, like every other screen in the shell.

@@ -1,5 +1,5 @@
 import Button from "@/components/shared/Button";
-import TiltScan from "@/components/shared/TiltScan";
+import TiltScan from "@/features/collection/components/TiltScan";
 import { Badge } from "@/components/base/badges/badges";
 import type { ReactNode } from "react";
 import { LinkExternal01 } from "@untitledui-pro/icons/line";
@@ -124,9 +124,7 @@ export default function CardDetail({
         </div>
 
         <div className="card-detail-text min-w-0 flex-1 [@media(max-width:640px)]:text-center">
-          <p className="m-0 font-body text-xs text-tertiary">
-            {mine?.setName ?? card.set?.name}
-          </p>
+          <p className="m-0 font-body text-xs text-tertiary">{mine?.setName ?? card.set?.name}</p>
           <Title
             className="mt-1 mb-0 font-body font-medium
               text-display-sm leading-tight text-primary"
@@ -178,21 +176,15 @@ export default function CardDetail({
             .filter(([, v]) => v)
             .map(([k, v]) => (
               <div key={k} className="grid grid-cols-[104px_minmax(0,1fr)] gap-3 items-baseline">
-                <dt className="font-body text-xs text-tertiary">
-                  {k}
-                </dt>
-                <dd className="m-0 font-body text-sm text-primary">
-                  {v}
-                </dd>
+                <dt className="font-body text-xs text-tertiary">{k}</dt>
+                <dd className="m-0 font-body text-sm text-primary">{v}</dd>
               </div>
             ))}
         </dl>
 
         {mine && (
           <div className="mt-6 pt-6 border-t border-secondary">
-            <p className="m-0 mb-3 font-body text-xs text-tertiary">
-              In the binder
-            </p>
+            <p className="m-0 mb-3 font-body text-xs text-tertiary">In the binder</p>
             <ul className="m-0 p-0 list-none flex flex-col gap-2">
               {mine.card.variants.map((v, i) => (
                 <li key={i} className="flex items-center gap-3">

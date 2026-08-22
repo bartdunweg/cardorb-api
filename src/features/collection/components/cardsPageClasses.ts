@@ -97,19 +97,16 @@ export const cardsSetHeadClassName = "cards-set-head flex items-center gap-4 mb-
 
 /** Fixed box so a missing logo does not reflow the row; stepped down under 640. */
 export const cardsSetLogoClassName =
-  "cards-set-logo h-11 w-40 object-contain object-left shrink-0 " +
-  "max-sm:h-[34px] max-sm:w-30";
+  "cards-set-logo h-11 w-40 object-contain object-left shrink-0 " + "max-sm:h-[34px] max-sm:w-30";
 
 export const cardsSetTextClassName = "cards-set-text flex flex-col gap-0.5 min-w-0";
 
 export const cardsSetNameClassName =
-  "cards-set-name m-0 font-body font-medium " +
-  "text-display-xs leading-tight text-primary";
+  "cards-set-name m-0 font-body font-medium " + "text-display-xs leading-tight text-primary";
 
 /** Tabular so the counts line up down the page. */
 export const cardsSetMetaClassName =
-  "cards-set-meta m-0 font-body text-xs " +
-  "text-tertiary lining-nums tabular-nums";
+  "cards-set-meta m-0 font-body text-xs " + "text-tertiary lining-nums tabular-nums";
 
 /**
  * The heading row and the toolbar under it — second portion of the cards.css
@@ -150,8 +147,7 @@ export const cardsToolsClassName =
  * second win, and that is not a thing to preserve.
  */
 export const cardsCountClassName =
-  "cards-count m-0 mt-2 font-body text-xs " +
-  "text-tertiary lining-nums tabular-nums";
+  "cards-count m-0 mt-2 font-body text-xs " + "text-tertiary lining-nums tabular-nums";
 
 /**
  * The last of the simple ones — third and final portion under ADR-0051's

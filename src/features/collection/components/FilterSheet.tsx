@@ -11,8 +11,8 @@ import {
 import { Badge } from "@/components/base/badges/badges";
 import { Button as UntitledButton } from "@/components/base/buttons/button";
 import Button from "@/components/shared/Button";
-import FilterOptions from "@/components/shared/FilterOptions";
-import type { Facet } from "@/components/shared/cards-fields";
+import FilterOptions from "@/features/collection/components/FilterOptions";
+import type { Facet } from "@/features/collection/components/cards-fields";
 
 /**
  * The same facets as FilterMenu, as a sheet, for a phone.
@@ -116,7 +116,11 @@ export default function FilterSheet({ facets }: { facets: Facet[] }) {
           // sheet whose only way out is Apply is a sheet that makes you undo
           // what you were only looking at.
           <>
-            <Button color="secondary" className={sheetFootButtonClassName} onClick={() => setOpen(false)}>
+            <Button
+              color="secondary"
+              className={sheetFootButtonClassName}
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button color="primary" className={sheetApplyButtonClassName} onClick={apply}>

@@ -34,8 +34,7 @@ import Button from "@/components/shared/Button";
  * collection is Bart's to add to"), which is how it was found.
  */
 const cardsProfileTitleClassName =
-  "m-0 font-body font-medium text-display-xs" +
-  " leading-tight text-primary";
+  "m-0 font-body font-medium text-display-xs" + " leading-tight text-primary";
 
 export default function CardsProfile({ onSignOut }: { onSignOut: () => void }) {
   const { theme, toggle } = useTheme();

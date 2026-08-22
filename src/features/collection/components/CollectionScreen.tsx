@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useCollection } from "@/app/(app)/CollectionContext";
-import CardsView from "@/components/shared/CardsView";
+import { useCollection } from "@/features/collection/CollectionContext";
+import CardsView from "@/features/collection/components/CardsView";
 
 /**
  * The collection, at whatever address you reached it by.

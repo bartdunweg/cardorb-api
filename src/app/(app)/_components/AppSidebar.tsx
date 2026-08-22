@@ -2,8 +2,8 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { slugify } from "@/lib/core/slug";
-import { useCollection } from "@/app/(app)/CollectionContext";
-import CardsSidebar from "@/components/shared/CardsSidebar";
+import { useCollection } from "@/features/collection/CollectionContext";
+import CardsSidebar from "@/features/collection/components/CardsSidebar";
 
 /**
  * The rail, told where it is by the address bar instead of by a useState.
