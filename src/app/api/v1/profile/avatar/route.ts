@@ -159,3 +159,45 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true, avatarUrl });
 }
+
+/**
+ * Removing the avatar again.
+ *
+ * Nulling the profile's `avatarUrl` is the part that matters — that column is
+ * what the UI and the public page read. The stored object is removed too so its
+ * public URL stops answering, but the extension it was saved under is not known
+ * here, so all three candidates are removed and the ones that do not exist are a
+ * no-op. Storage failure is not fatal: an orphaned object nobody points at is
+ * better than a delete that refuses because a file was already gone.
+ */
+export async function DELETE(req: Request) {
+  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const viewer = await requestViewer(req);
+  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+
+  const token = bearer(req);
+  const db = token ? userClient(token) : await serverClient();
+  if (!db) {
+    return NextResponse.json(
+      { error: "This deployment has no database configured." },
+      { status: 503 },
+    );
+  }
+
+  await db.storage
+    .from("avatars")
+    .remove(Object.values(MIME_TO_EXT).map((ext) => `${viewer.userId}/avatar.${ext}`))
+    .catch(() => {});
+
+  try {
+    await updateProfile(db, viewer.userId, { avatarUrl: null });
+  } catch (err) {
+    console.error("Clearing the avatar failed:", err);
+    return NextResponse.json({ error: "That change could not be saved." }, { status: 500 });
+  }
+
+  revalidatePath(`/user/${viewer.username}`);
+
+  return NextResponse.json({ ok: true });
+}

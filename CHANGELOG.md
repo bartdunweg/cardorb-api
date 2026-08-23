@@ -6,6 +6,9 @@ if the two have drifted apart.
 
 ## 2026-08-23
 
+- You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.
+- Deleting your account now opens a confirmation dialog that asks for your password again, and that password is checked on the server before anything is removed — so a signed-in session left open cannot end the account in one click.
+
 - The Settings screen is rebuilt on Untitled UI's two-column layout: each section — Profile, Account, Import, Appearance, and delete — shows its title and a one-line description in a column on the left, with the fields in a card on the right, divided from the next section.
 - Every field now has a visible label, the Save button sits next to the field it saves, and the light/dark picker is a segmented control.
 - The page opens with a short description of what Settings is, rather than printing your email address at the top.

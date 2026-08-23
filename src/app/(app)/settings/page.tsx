@@ -109,7 +109,7 @@ export default async function SettingsPage() {
           description="Permanently remove your account and everything in it."
           danger
         >
-          <DeleteAccountSettings username={viewer.username} />
+          <DeleteAccountSettings />
         </SettingsSection>
       </div>
     </>

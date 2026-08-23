@@ -1,0 +1,2 @@
+- You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.
+- Deleting your account now opens a confirmation dialog that asks for your password again, and that password is checked on the server before anything is removed — so a signed-in session left open cannot end the account in one click.
