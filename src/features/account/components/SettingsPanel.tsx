@@ -10,7 +10,6 @@ import {
 import { InputBase } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { ToggleBase } from "@/components/base/toggle/toggle";
-import { SectionHeader } from "@/components/application/section-headers/section-headers";
 
 /**
  * Shared pieces of every /settings screen: a panel is a card, a hint explains
@@ -51,27 +50,21 @@ export function SettingsSection({
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={`${id}-heading`}>
-      <SettingsPanel danger={danger}>
-        {/* Title and one-line description sit at the top of the card. Untitled
-            UI's SectionHeader.Root draws the divider under them (its own
-            border-b). This module is "use client", so the compound component
-            resolves normally — the reason the earlier server-rendered attempt
-            500'd. Our own <h2> keeps the app register and font-title-strong;
-            SectionHeader.Heading bakes in font-semibold, which R-UI-003 forbids
-            editing out of the vendored file. */}
-        <SectionHeader.Root className="mb-6">
-          <SectionHeader.Group>
-            <div className="flex flex-1 flex-col gap-1">
-              <h2 id={`${id}-heading`} className="m-0 text-xl font-title-strong text-primary">
-                {title}
-              </h2>
-              {description && <SectionHeader.Subheading>{description}</SectionHeader.Subheading>}
-            </div>
-          </SectionHeader.Group>
-        </SectionHeader.Root>
-        {/* The settings stack with space between them, no divider each. */}
-        <div className="flex flex-col gap-6">{children}</div>
+    <section
+      aria-labelledby={`${id}-heading`}
+      className="grid gap-x-8 gap-y-5 border-b border-secondary py-10 first:pt-0 last:border-b-0 last:pb-0 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
+    >
+      {/* Untitled UI's settings-01 layout: the section label and its one-line
+          description sit in the left column, the fields in a card on the right.
+          The grid collapses to one column on a narrow screen. */}
+      <div>
+        <h2 id={`${id}-heading`} className="m-0 text-lg font-title-strong text-primary">
+          {title}
+        </h2>
+        {description && <p className="mt-1 text-sm text-tertiary">{description}</p>}
+      </div>
+      <SettingsPanel danger={danger} className="flex flex-col gap-6">
+        {children}
       </SettingsPanel>
     </section>
   );

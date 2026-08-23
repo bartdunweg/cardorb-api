@@ -57,13 +57,12 @@ export default async function SettingsPage() {
         Your public page, your account, and how Card Orb looks.
       </p>
 
-      {/* One readable column, not full-bleed: on a wide pane a card that runs
-          the whole width makes every line of body text too long to read. This
-          matches Untitled's settings pattern, where the stacked form sits in a
-          constrained content column rather than spanning the screen. */}
-      {/* shape-rectangle cascades Untitled's rectangle control shape (R-STYLE-013)
-          to every input and button in Settings; the cards stay rounded-xl. */}
-      <div className="shape-rectangle flex max-w-2xl flex-col gap-8">
+      {/* Untitled's settings-01 layout: each section is a row of [label +
+          description | fields card], divided from the next. Capped so the form
+          card keeps a readable width on a wide pane. shape-rectangle cascades
+          Untitled's rectangle control shape (R-STYLE-013) to every input and
+          button here; the cards stay rounded-xl. */}
+      <div className="shape-rectangle flex max-w-4xl flex-col">
         <SettingsSection
           id="profile"
           title="Profile"

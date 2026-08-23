@@ -6,7 +6,7 @@ if the two have drifted apart.
 
 ## 2026-08-23
 
-- The Settings screen is rebuilt: each section — Profile, Account, Import, Appearance, and delete — is now a single card with its title and one-line description inside it, and the settings stack cleanly within, without a divider between each one.
+- The Settings screen is rebuilt on Untitled UI's two-column layout: each section — Profile, Account, Import, Appearance, and delete — shows its title and a one-line description in a column on the left, with the fields in a card on the right, divided from the next section.
 - Every field now has a visible label, the Save button sits next to the field it saves, and the light/dark picker is a segmented control.
 - The page opens with a short description of what Settings is, rather than printing your email address at the top.
 - Control edges — the borders on inputs and buttons across the whole app — are lighter, matching Untitled UI's own softer edge.
