@@ -6,9 +6,7 @@ import Button from "@/components/shared/Button";
 import {
   SettingsHint,
   SettingsInput,
-  SettingsPanel,
   SettingsPanelTitle,
-  SettingsPanels,
   SettingsSaid,
 } from "@/features/account/components/SettingsPanel";
 
@@ -71,45 +69,43 @@ export default function AccountSettings({ email }: { email: string }) {
   }
 
   return (
-    <SettingsPanels>
-      <SettingsPanel>
-        <SettingsPanelTitle>Email address</SettingsPanelTitle>
-        <SettingsHint>Currently {email}.</SettingsHint>
-        <form onSubmit={changeEmail}>
-          <SettingsInput
-            type="email"
-            autoComplete="email"
-            placeholder="new@example.com"
-            // A placeholder disappears as you type and is not a name.
-            aria-label="New email address"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-          />
-          <Button type="submit" disabled={busy === "email" || !newEmail.trim()}>
-            {busy === "email" ? "Sending…" : "Change address"}
-          </Button>
-          <SettingsSaid>{said.email ?? ""}</SettingsSaid>
-        </form>
-      </SettingsPanel>
+    <>
+      <form onSubmit={changeEmail}>
+        <SettingsInput
+          label="Email address"
+          type="email"
+          autoComplete="email"
+          placeholder="new@example.com"
+          value={newEmail}
+          onChange={(e) => setNewEmail(e.target.value)}
+          hint={`Currently ${email}.`}
+        />
+        <Button type="submit" className="mt-4" disabled={busy === "email" || !newEmail.trim()}>
+          {busy === "email" ? "Sending…" : "Change address"}
+        </Button>
+        <SettingsSaid>{said.email ?? ""}</SettingsSaid>
+      </form>
 
-      <SettingsPanel>
+      <div>
         <SettingsPanelTitle>Password</SettingsPanelTitle>
         <SettingsHint>
           Setting a new one takes effect immediately and does not sign out your other devices.
         </SettingsHint>
-        <Button href="/settings/password">Change password</Button>
-      </SettingsPanel>
+        <Button href="/settings/password" className="mt-1">
+          Change password
+        </Button>
+      </div>
 
-      <SettingsPanel>
+      <div>
         <SettingsPanelTitle>Sign out</SettingsPanelTitle>
         <SettingsHint>On this device only.</SettingsHint>
-        <Button onClick={signOut} disabled={busy === "signout"}>
+        <Button onClick={signOut} className="mt-1" disabled={busy === "signout"}>
           {busy === "signout" ? "Signing out…" : "Sign out"}
         </Button>
-      </SettingsPanel>
+      </div>
 
       {/* Deleting used to be the fourth panel here. It is its own section at
           the bottom of the page now — see DeleteAccountSettings.tsx. */}
-    </SettingsPanels>
+    </>
   );
 }

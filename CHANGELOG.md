@@ -6,6 +6,11 @@ if the two have drifted apart.
 
 ## 2026-08-23
 
+- The Settings screen is rebuilt: each section — Profile, Account, Import, Appearance, and delete — is now a single card with its title and one-line description inside it, and the settings stack cleanly within, without a divider between each one.
+- Every field now has a visible label, the Save button sits next to the field it saves, and the light/dark picker is a segmented control.
+- The page opens with a short description of what Settings is, rather than printing your email address at the top.
+- Control edges — the borders on inputs and buttons across the whole app — are lighter, matching Untitled UI's own softer edge.
+
 - Each group on the Settings screen now carries a short description under its heading and a divider between groups, so Profile, Account, Import, Appearance and "Delete this account" read as clear, separate blocks.
 - On the Appearance picker, the mode you have chosen is now marked with a checkmark, not by colour alone.
 - Saving a setting — and any error — is now announced to screen readers instead of appearing silently.

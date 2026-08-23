@@ -10,11 +10,7 @@ import AppearanceSettings from "./_components/AppearanceSettings";
 import DeleteAccountSettings from "./_components/DeleteAccountSettings";
 import ImportSettings from "./_components/ImportSettings";
 import ProfileSettings from "./_components/ProfileSettings";
-import {
-  SettingsHint,
-  SettingsPanels,
-  SettingsSection,
-} from "@/features/account/components/SettingsPanel";
+import { SettingsHint, SettingsSection } from "@/features/account/components/SettingsPanel";
 
 /**
  * All of settings, on one page, like every other screen in the shell.
@@ -57,11 +53,17 @@ export default async function SettingsPage() {
           Dashboard/Collection/Wishlist/Sets all share — not a
           similar-looking rebuild of it. */}
       <h1 className={cardsMainTitleClassName}>Settings</h1>
-      <p className="mt-1 mb-6 text-xs text-tertiary">{viewer.email}</p>
+      <p className="mt-1 mb-8 text-md text-tertiary">
+        Your public page, your account, and how Card Orb looks.
+      </p>
 
-      {/* gap-8 between groups against the panels' own gap-4 inside them: the
-          grouping has to be readable as grouping when it is all one scroll. */}
-      <div className="flex flex-col gap-8">
+      {/* One readable column, not full-bleed: on a wide pane a card that runs
+          the whole width makes every line of body text too long to read. This
+          matches Untitled's settings pattern, where the stacked form sits in a
+          constrained content column rather than spanning the screen. */}
+      {/* shape-rectangle cascades Untitled's rectangle control shape (R-STYLE-013)
+          to every input and button in Settings; the cards stay rounded-xl. */}
+      <div className="shape-rectangle flex max-w-2xl flex-col gap-8">
         <SettingsSection
           id="profile"
           title="Profile"
@@ -96,9 +98,7 @@ export default async function SettingsPage() {
           title="Appearance"
           description="How Card Orb looks on this device."
         >
-          <SettingsPanels>
-            <AppearanceSettings />
-          </SettingsPanels>
+          <AppearanceSettings />
         </SettingsSection>
 
         {/* Last, and on its own. Inside the Account group it sat between an
@@ -108,6 +108,7 @@ export default async function SettingsPage() {
           id="delete"
           title="Delete this account"
           description="Permanently remove your account and everything in it."
+          danger
         >
           <DeleteAccountSettings username={viewer.username} />
         </SettingsSection>

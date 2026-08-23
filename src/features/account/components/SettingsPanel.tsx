@@ -1,7 +1,14 @@
 "use client";
 
-import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  forwardRef,
+  useId,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { InputBase } from "@/components/base/input/input";
+import { Label } from "@/components/base/input/label";
 import { ToggleBase } from "@/components/base/toggle/toggle";
 import { SectionHeader } from "@/components/application/section-headers/section-headers";
 
@@ -33,33 +40,39 @@ export function SettingsSection({
   title,
   description,
   id,
+  danger,
   children,
 }: {
   title: string;
   description?: string;
   id: string;
+  /** The delete section: the card carries Untitled's error ring. */
+  danger?: boolean;
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={`${id}-heading`}>
-      {/* Untitled UI's SectionHeader gives each group a heading, a one-line
-          description and the divider that separates the five groups on one
-          scroll. This module is "use client", so the compound component
-          resolves normally (the reason the earlier server-rendered attempt
-          500'd). Our own <h2> keeps the app register + font-title-strong
-          weight; SectionHeader.Heading bakes in font-semibold, which we may not
-          edit out of the vendored file (R-UI-003). */}
-      <SectionHeader.Root className="mb-6">
-        <SectionHeader.Group>
-          <div className="flex flex-1 flex-col gap-1">
-            <h2 id={`${id}-heading`} className="m-0 text-xl font-title-strong text-primary">
-              {title}
-            </h2>
-            {description && <SectionHeader.Subheading>{description}</SectionHeader.Subheading>}
-          </div>
-        </SectionHeader.Group>
-      </SectionHeader.Root>
-      {children}
+      <SettingsPanel danger={danger}>
+        {/* Title and one-line description sit at the top of the card. Untitled
+            UI's SectionHeader.Root draws the divider under them (its own
+            border-b). This module is "use client", so the compound component
+            resolves normally — the reason the earlier server-rendered attempt
+            500'd. Our own <h2> keeps the app register and font-title-strong;
+            SectionHeader.Heading bakes in font-semibold, which R-UI-003 forbids
+            editing out of the vendored file. */}
+        <SectionHeader.Root className="mb-6">
+          <SectionHeader.Group>
+            <div className="flex flex-1 flex-col gap-1">
+              <h2 id={`${id}-heading`} className="m-0 text-xl font-title-strong text-primary">
+                {title}
+              </h2>
+              {description && <SectionHeader.Subheading>{description}</SectionHeader.Subheading>}
+            </div>
+          </SectionHeader.Group>
+        </SectionHeader.Root>
+        {/* The settings stack with space between them, no divider each. */}
+        <div className="flex flex-col gap-6">{children}</div>
+      </SettingsPanel>
     </section>
   );
 }
@@ -118,29 +131,48 @@ export function SettingsSaid({ className, ...rest }: HTMLAttributes<HTMLParagrap
 
 export const SettingsInput = forwardRef<
   HTMLInputElement,
-  // `size` is omitted, and it is the one prop that could not come along: on a
-  // native <input> it is a character count, and on InputBase it is
-  // "sm" | "md" | "lg". Nothing here ever passed it.
-  Omit<InputHTMLAttributes<HTMLInputElement>, "size">
->(function SettingsInput({ className, ...rest }, ref) {
+  // `size` is omitted: on a native <input> it is a character count, and on
+  // InputBase it is "sm" | "md" | "lg". Nothing here ever passed it.
+  Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
+    /** Visible field label. Preferred over aria-label: a field whose name you
+     *  can see reads as a form rather than a row of unlabelled boxes. */
+    label?: string;
+    /** Helper text under the field, associated to it for screen readers. */
+    hint?: ReactNode;
+    /** A control on the same row as the input, to its right — a Save button.
+     *  The label stays above the row and the hint below it. */
+    action?: ReactNode;
+  }
+>(function SettingsInput({ className, label, hint, action, id, ...rest }, ref) {
+  const auto = useId();
+  const fieldId = id ?? auto;
+  const hintId = hint ? `${fieldId}-hint` : undefined;
   return (
-    // Untitled UI's `InputBase`, not the recipe copied off it — which is
-    // what this was, five classes deep, under a comment saying their
-    // component "is a React Aria TextField with no ref to give". That is
-    // true of `TextField` and `Input`; `InputBase` is the layer below both
-    // and takes a `ref` outright, so the four settings forms that hand this
-    // one a ref keep working.
-    //
-    // Their wrapper also carries the focus ring on the group rather than the
-    // field, so it survives a leading icon — which the copy could not do.
-    <InputBase
-      ref={ref}
-      // Capped: the panels span the whole pane now that Settings is a
-      // full-width page, and a 900px-wide email field is a field you have to
-      // aim at rather than read.
-      wrapperClassName={cx("w-full max-w-[26rem]", className)}
-      {...rest}
-    />
+    <div className="flex flex-col gap-1.5">
+      {label && <Label htmlFor={fieldId}>{label}</Label>}
+      {/* Untitled UI's `InputBase`. Their labelled `Input` above it wants React
+          Aria's value/onChange, but these forms use native events and hand a
+          `ref` (the CSV file field), so the label sits here and the field stays
+          native. `InputBase` carries the focus ring on the group, so it
+          survives a leading icon. */}
+      <div className="flex items-center gap-3">
+        <InputBase
+          ref={ref}
+          id={fieldId}
+          aria-describedby={hintId}
+          // Capped: a full-width field on this full-width page is one you aim at
+          // rather than read.
+          wrapperClassName={cx("w-full max-w-[26rem]", className)}
+          {...rest}
+        />
+        {action}
+      </div>
+      {hint && (
+        <p id={hintId} className="text-sm text-tertiary">
+          {hint}
+        </p>
+      )}
+    </div>
   );
 });
 

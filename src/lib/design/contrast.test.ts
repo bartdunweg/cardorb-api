@@ -75,33 +75,18 @@ describe("the two places text sits on something other than a page surface", () =
 });
 
 /**
- * ── The two that needed a decision, and got one ────────────────────────────
+ * ── Placeholders: text, so the 4.5 text rule ───────────────────────────────
  *
- * These were below their threshold on Untitled UI's own values and were pinned
- * at what they measured, because a permanently red test teaches people to stop
- * reading the output. They are assertions now: the tokens were raised to the
- * lightest values that clear the rule, so the change is the smallest one that
- * meets it rather than the most legible one.
- *
- * R-STYLE-006 says take Untitled UI's value unless the identity or a
- * measurement earns the exception. This is what the measurement bought.
+ * The control-border assertion that used to sit here is gone. The owner chose
+ * Untitled UI's lighter control edge over WCAG 1.4.11's 3:1, so
+ * `--color-border-primary` is back on neutral-300 / neutral-700 and no longer
+ * clears 3:1 — a deliberate override of R-STYLE-016, which was narrowed to
+ * match. A test asserting a bar the project no longer holds would be a
+ * permanently red one nobody intends to fix. Placeholders stay measured,
+ * because a placeholder is text.
  */
-describe("controls and placeholders meet the rule that applies to them", () => {
-  /** WCAG 2.2 AA 1.4.11: the boundary of a user interface component. */
-  const AA_NON_TEXT = 3;
-
+describe("placeholder text meets the text rule", () => {
   for (const mode of MODES) {
-    for (const surface of SURFACES) {
-      it(`a control's border on ${surface.replace("--color-bg-", "")}, ${mode}`, () => {
-        // This token draws every control edge in the app: input, checkbox,
-        // radio, combobox, button-group, the secondary button. It was 1.48 in
-        // light and 1.91 in dark before the tokens were raised.
-        const fg = hex("--color-border-primary", mode);
-        const bg = hex(surface, mode);
-        expect(ratio(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(AA_NON_TEXT);
-      });
-    }
-
     it(`placeholder text, ${mode}`, () => {
       // A placeholder is text, so it is 4.5 rather than 3. Dark was 4.18.
       const fg = hex("--color-text-placeholder", mode);

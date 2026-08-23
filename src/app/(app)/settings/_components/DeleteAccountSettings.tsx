@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   SettingsHint,
   SettingsInput,
-  SettingsPanel,
-  SettingsPanels,
   SettingsSaid,
   dangerButtonClassName,
   settingsHintClassName,
@@ -56,32 +54,30 @@ export default function DeleteAccountSettings({ username }: { username: string }
   }
 
   return (
-    <SettingsPanels>
-      <SettingsPanel danger>
-        <SettingsHint>
-          Every card, every import and your link go with it, immediately and for good. There is no
-          undo and no copy kept.
-        </SettingsHint>
-        <label className={settingsHintClassName} htmlFor="confirm-delete">
-          Type <strong>{username}</strong> to confirm.
-        </label>
-        <SettingsInput
-          id="confirm-delete"
-          value={confirm}
-          autoComplete="off"
-          spellCheck={false}
-          onChange={(e) => setConfirm(e.target.value)}
-        />
-        <Button
-          color="primary-destructive"
-          className={dangerButtonClassName}
-          onClick={deleteAccount}
-          disabled={busy || confirm !== username}
-        >
-          {busy ? "Deleting…" : "Delete everything"}
-        </Button>
-        <SettingsSaid>{said ?? ""}</SettingsSaid>
-      </SettingsPanel>
-    </SettingsPanels>
+    <div>
+      <SettingsHint>
+        Every card, every import and your link go with it, immediately and for good. There is no
+        undo and no copy kept.
+      </SettingsHint>
+      <label className={settingsHintClassName} htmlFor="confirm-delete">
+        Type <strong>{username}</strong> to confirm.
+      </label>
+      <SettingsInput
+        id="confirm-delete"
+        value={confirm}
+        autoComplete="off"
+        spellCheck={false}
+        onChange={(e) => setConfirm(e.target.value)}
+      />
+      <Button
+        color="primary-destructive"
+        className={`mt-4 ${dangerButtonClassName}`}
+        onClick={deleteAccount}
+        disabled={busy || confirm !== username}
+      >
+        {busy ? "Deleting…" : "Delete everything"}
+      </Button>
+      <SettingsSaid>{said ?? ""}</SettingsSaid>
+    </div>
   );
 }
