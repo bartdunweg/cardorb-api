@@ -4,6 +4,20 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-08-23
+
+- You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.
+- Deleting your account now opens a confirmation dialog that asks for your password again, and that password is checked on the server before anything is removed — so a signed-in session left open cannot end the account in one click.
+
+- The Settings screen is rebuilt on Untitled UI's two-column layout: each section — Profile, Account, Import, Appearance, and delete — shows its title and a one-line description in a column on the left, with the fields in a card on the right, divided from the next section.
+- Every field now has a visible label, the Save button sits next to the field it saves, and the light/dark picker is a segmented control.
+- The page opens with a short description of what Settings is, rather than printing your email address at the top.
+- Control edges — the borders on inputs and buttons across the whole app — are lighter, matching Untitled UI's own softer edge.
+
+- Each group on the Settings screen now carries a short description under its heading and a divider between groups, so Profile, Account, Import, Appearance and "Delete this account" read as clear, separate blocks.
+- On the Appearance picker, the mode you have chosen is now marked with a checkmark, not by colour alone.
+- Saving a setting — and any error — is now announced to screen readers instead of appearing silently.
+
 ## 2026-08-22
 
 - Request size limits now count bytes rather than characters. Anything you sent
@@ -32,6 +46,8 @@ two brought you.
 
 If you type the wrong current password it says so, instead of telling you the
 new one could not be set.
+
+- The dashboard's "By era" and "By type" titles now use the same heading weight and size as every other section heading in the app, instead of a slightly smaller, off-scale one.
 
 - Every dialog and sheet — the card view, Add a card, Filter and View — now runs
   on the same component library as the rest of the app instead of on hand-written

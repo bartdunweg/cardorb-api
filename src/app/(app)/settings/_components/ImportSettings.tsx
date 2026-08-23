@@ -6,9 +6,7 @@ import { LOCALE } from "@/lib/core/config";
 import {
   SettingsHint,
   SettingsInput,
-  SettingsPanel,
   SettingsPanelTitle,
-  SettingsPanels,
   SettingsSaid,
 } from "@/features/account/components/SettingsPanel";
 
@@ -105,8 +103,8 @@ export default function ImportSettings({ history }: { history: Run[] }) {
   const listClass = "list-none my-3 p-0 grid gap-1 text-xs";
 
   return (
-    <SettingsPanels>
-      <SettingsPanel>
+    <>
+      <div>
         <SettingsPanelTitle>From a spreadsheet</SettingsPanelTitle>
         <SettingsHint>
           A CSV with a column for the card name and one for the set. Anything else — number, rarity,
@@ -116,9 +114,9 @@ export default function ImportSettings({ history }: { history: Run[] }) {
 
         <SettingsInput
           ref={file}
+          label="CSV file"
           type="file"
           accept=".csv,text/csv"
-          aria-label="CSV file"
           onChange={async (e) => {
             const f = e.target.files?.[0];
             if (!f) return;
@@ -129,13 +127,16 @@ export default function ImportSettings({ history }: { history: Run[] }) {
           }}
         />
 
-        <Button disabled={!csv || busy === "csv"} onClick={look}>
+        <Button className="mt-4" disabled={!csv || busy === "csv"} onClick={look}>
           {busy === "csv" ? "Reading…" : csvName ? `Check ${csvName}` : "Check the file"}
         </Button>
-      </SettingsPanel>
+        {/* The read/import result lives inside this row — always mounted so the
+              live region announces it — rather than floating as a bare grid cell. */}
+        <SettingsSaid>{said ?? ""}</SettingsSaid>
+      </div>
 
       {preview && (
-        <SettingsPanel>
+        <div>
           <SettingsPanelTitle>What this would bring in</SettingsPanelTitle>
           <SettingsHint>
             {n(preview.seen)} rows read
@@ -163,16 +164,14 @@ export default function ImportSettings({ history }: { history: Run[] }) {
             ))}
           </ul>
 
-          <Button color="primary" disabled={busy === "commit"} onClick={run}>
+          <Button className="mt-4" color="primary" disabled={busy === "commit"} onClick={run}>
             {busy === "commit" ? "Importing…" : "Import these"}
           </Button>
-        </SettingsPanel>
+        </div>
       )}
 
-      {said && <SettingsSaid>{said}</SettingsSaid>}
-
       {history.length > 0 && (
-        <SettingsPanel>
+        <div>
           <SettingsPanelTitle>Earlier imports</SettingsPanelTitle>
           <ul className={`${listClass} text-secondary tabular-nums`}>
             {history.map((r) => (
@@ -186,8 +185,8 @@ export default function ImportSettings({ history }: { history: Run[] }) {
               </li>
             ))}
           </ul>
-        </SettingsPanel>
+        </div>
       )}
-    </SettingsPanels>
+    </>
   );
 }

@@ -10,11 +10,7 @@ import AppearanceSettings from "./_components/AppearanceSettings";
 import DeleteAccountSettings from "./_components/DeleteAccountSettings";
 import ImportSettings from "./_components/ImportSettings";
 import ProfileSettings from "./_components/ProfileSettings";
-import {
-  SettingsHint,
-  SettingsPanels,
-  SettingsSection,
-} from "@/features/account/components/SettingsPanel";
+import { SettingsHint, SettingsSection } from "@/features/account/components/SettingsPanel";
 
 /**
  * All of settings, on one page, like every other screen in the shell.
@@ -57,12 +53,21 @@ export default async function SettingsPage() {
           Dashboard/Collection/Wishlist/Sets all share — not a
           similar-looking rebuild of it. */}
       <h1 className={cardsMainTitleClassName}>Settings</h1>
-      <p className="mt-1 mb-6 text-xs text-tertiary">{viewer.email}</p>
+      <p className="mt-1 mb-8 text-md text-tertiary">
+        Your public page, your account, and how Card Orb looks.
+      </p>
 
-      {/* gap-8 between groups against the panels' own gap-4 inside them: the
-          grouping has to be readable as grouping when it is all one scroll. */}
-      <div className="flex flex-col gap-8">
-        <SettingsSection id="profile" title="Profile">
+      {/* Untitled's settings-01 layout: each section is a row of [label +
+          description | fields card], divided from the next. Capped so the form
+          card keeps a readable width on a wide pane. shape-rectangle cascades
+          Untitled's rectangle control shape (R-STYLE-013) to every input and
+          button here; the cards stay rounded-xl. */}
+      <div className="shape-rectangle flex max-w-4xl flex-col">
+        <SettingsSection
+          id="profile"
+          title="Profile"
+          description="Your public page and what anyone with the link can see."
+        >
           {profile ? (
             <ProfileSettings initial={profile} />
           ) : (
@@ -71,25 +76,40 @@ export default async function SettingsPage() {
           )}
         </SettingsSection>
 
-        <SettingsSection id="account" title="Account">
+        <SettingsSection
+          id="account"
+          title="Account"
+          description="Your sign-in email and password."
+        >
           <AccountSettings email={viewer.email} />
         </SettingsSection>
 
-        <SettingsSection id="import" title="Import">
+        <SettingsSection
+          id="import"
+          title="Import"
+          description="Bring a collection in from a CSV file."
+        >
           <ImportSettings history={history as never} />
         </SettingsSection>
 
-        <SettingsSection id="appearance" title="Appearance">
-          <SettingsPanels>
-            <AppearanceSettings />
-          </SettingsPanels>
+        <SettingsSection
+          id="appearance"
+          title="Appearance"
+          description="How Card Orb looks on this device."
+        >
+          <AppearanceSettings />
         </SettingsSection>
 
         {/* Last, and on its own. Inside the Account group it sat between an
             email field and a theme picker — a red-bordered door marked
             "everything goes" in the middle of ordinary traffic. */}
-        <SettingsSection id="delete" title="Delete this account">
-          <DeleteAccountSettings username={viewer.username} />
+        <SettingsSection
+          id="delete"
+          title="Delete this account"
+          description="Permanently remove your account and everything in it."
+          danger
+        >
+          <DeleteAccountSettings />
         </SettingsSection>
       </div>
     </>

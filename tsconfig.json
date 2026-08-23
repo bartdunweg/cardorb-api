@@ -50,6 +50,7 @@
     "src/components/foundations/**",
     "src/components/shared-assets/**",
     "src/hooks/use-resize-observer.ts",
+    "src/hooks/use-breakpoint.ts",
     "src/utils/is-react-component.ts"
   ]
 }

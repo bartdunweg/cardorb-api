@@ -29,7 +29,7 @@ export default function AvatarPicker({
    *  it — the settings screen refreshes so the tab bar picks the new one up. */
   onUploaded?: () => void;
 }) {
-  const { upload, avatarUrl, busy, said } = useAvatarUpload(initial);
+  const { upload, remove, avatarUrl, busy, said } = useAvatarUpload(initial);
 
   return (
     <div className="flex items-center gap-4">
@@ -56,29 +56,44 @@ export default function AvatarPicker({
             It also retires the `e.target.value = ""` reset: FileTrigger clears
             the input before every click, so picking the same file twice in a
             row still fires. Same guarantee, one level down. */}
-        <FileTrigger
-          acceptedFileTypes={["image/png", "image/jpeg", "image/webp"]}
-          onSelect={async (files) => {
-            const file = files?.[0];
-            if (!file) return;
-            if (await upload(file)) onUploaded?.();
-          }}
-        >
-          {/* `type="button"` looks redundant on a button with no onClick, and
-              is what makes this work: FileTrigger clones its single child and
-              injects an `onClick`, which arrives before this renders — but the
-              wrapper decides between a real button and a plain <span> from its
-              own props, and `type` is the half of that test which does not
-              depend on the clone having happened.
+        <div className="flex items-center gap-2">
+          <FileTrigger
+            acceptedFileTypes={["image/png", "image/jpeg", "image/webp"]}
+            onSelect={async (files) => {
+              const file = files?.[0];
+              if (!file) return;
+              if (await upload(file)) onUploaded?.();
+            }}
+          >
+            {/* `type="button"` looks redundant on a button with no onClick, and
+                is what makes this work: FileTrigger clones its single child and
+                injects an `onClick`, which arrives before this renders — but the
+                wrapper decides between a real button and a plain <span> from its
+                own props, and `type` is the half of that test which does not
+                depend on the clone having happened.
 
-              The disabled styling is the component's own
-              (`disabled:opacity-50 disabled:cursor-not-allowed`); the pair of
-              classes hand-written here said the same thing slightly
-              differently. */}
-          <Button type="button" color="secondary" disabled={busy}>
-            {busy ? "Saving…" : avatarUrl ? "Change" : "Upload"}
-          </Button>
-        </FileTrigger>
+                The disabled styling is the component's own
+                (`disabled:opacity-50 disabled:cursor-not-allowed`); the pair of
+                classes hand-written here said the same thing slightly
+                differently. */}
+            <Button type="button" color="secondary" disabled={busy}>
+              {busy ? "Saving…" : avatarUrl ? "Change" : "Upload"}
+            </Button>
+          </FileTrigger>
+          {/* Removing is only offered when there is something to remove. */}
+          {avatarUrl && (
+            <Button
+              type="button"
+              color="secondary"
+              disabled={busy}
+              onClick={async () => {
+                if (await remove()) onUploaded?.();
+              }}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
         {said && <SettingsSaid>{said}</SettingsSaid>}
       </div>
     </div>

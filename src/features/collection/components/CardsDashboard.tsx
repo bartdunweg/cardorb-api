@@ -214,7 +214,7 @@ export default function CardsDashboard({
   );
 }
 
-const cardsDashTitleClassName = "m-0 text-lg font-semibold text-primary";
+const cardsDashTitleClassName = "m-0 text-xl font-title-strong text-primary";
 
 const cardsDashSubClassName = "m-0 text-sm text-tertiary";
 

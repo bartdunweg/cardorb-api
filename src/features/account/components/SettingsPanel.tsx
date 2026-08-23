@@ -1,5 +1,14 @@
-import { forwardRef, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+"use client";
+
+import {
+  forwardRef,
+  useId,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { InputBase } from "@/components/base/input/input";
+import { Label } from "@/components/base/input/label";
 import { ToggleBase } from "@/components/base/toggle/toggle";
 
 /**
@@ -28,19 +37,35 @@ export function SettingsPanels({ className, ...rest }: HTMLAttributes<HTMLDivEle
  */
 export function SettingsSection({
   title,
+  description,
   id,
+  danger,
   children,
 }: {
   title: string;
+  description?: string;
   id: string;
+  /** The delete section: the card carries Untitled's error ring. */
+  danger?: boolean;
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={`${id}-heading`}>
-      <h2 id={`${id}-heading`} className="text-xl font-title-strong text-primary m-0 mb-4">
-        {title}
-      </h2>
-      {children}
+    <section
+      aria-labelledby={`${id}-heading`}
+      className="grid gap-x-8 gap-y-5 border-b border-secondary py-10 first:pt-0 last:border-b-0 last:pb-0 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)]"
+    >
+      {/* Untitled UI's settings-01 layout: the section label and its one-line
+          description sit in the left column, the fields in a card on the right.
+          The grid collapses to one column on a narrow screen. */}
+      <div>
+        <h2 id={`${id}-heading`} className="m-0 text-lg font-title-strong text-primary">
+          {title}
+        </h2>
+        {description && <p className="mt-1 text-sm text-tertiary">{description}</p>}
+      </div>
+      <SettingsPanel danger={danger} className="flex flex-col gap-6">
+        {children}
+      </SettingsPanel>
     </section>
   );
 }
@@ -78,36 +103,69 @@ export function SettingsHint({ className, ...rest }: HTMLAttributes<HTMLParagrap
   return <p className={cx(settingsHintClassName, className)} {...rest} />;
 }
 
-/** The one-line result of a save/change, replacing itself as the state moves. */
+/**
+ * The one-line result of a save/change, replacing itself as the state moves.
+ *
+ * A live region by default, and meant to be mounted before the result arrives
+ * (render it with an empty string, not conditionally): a region inserted at the
+ * same moment as its text is not announced by a screen reader, so the save it
+ * reports is silent. `role`/`aria-live` stay overridable via `...rest`.
+ */
 export function SettingsSaid({ className, ...rest }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cx("mt-2 text-sm text-primary", className)} {...rest} />;
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={cx("mt-2 text-sm text-primary", className)}
+      {...rest}
+    />
+  );
 }
 
 export const SettingsInput = forwardRef<
   HTMLInputElement,
-  // `size` is omitted, and it is the one prop that could not come along: on a
-  // native <input> it is a character count, and on InputBase it is
-  // "sm" | "md" | "lg". Nothing here ever passed it.
-  Omit<InputHTMLAttributes<HTMLInputElement>, "size">
->(function SettingsInput({ className, ...rest }, ref) {
+  // `size` is omitted: on a native <input> it is a character count, and on
+  // InputBase it is "sm" | "md" | "lg". Nothing here ever passed it.
+  Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
+    /** Visible field label. Preferred over aria-label: a field whose name you
+     *  can see reads as a form rather than a row of unlabelled boxes. */
+    label?: string;
+    /** Helper text under the field, associated to it for screen readers. */
+    hint?: ReactNode;
+    /** A control on the same row as the input, to its right — a Save button.
+     *  The label stays above the row and the hint below it. */
+    action?: ReactNode;
+  }
+>(function SettingsInput({ className, label, hint, action, id, ...rest }, ref) {
+  const auto = useId();
+  const fieldId = id ?? auto;
+  const hintId = hint ? `${fieldId}-hint` : undefined;
   return (
-    // Untitled UI's `InputBase`, not the recipe copied off it — which is
-    // what this was, five classes deep, under a comment saying their
-    // component "is a React Aria TextField with no ref to give". That is
-    // true of `TextField` and `Input`; `InputBase` is the layer below both
-    // and takes a `ref` outright, so the four settings forms that hand this
-    // one a ref keep working.
-    //
-    // Their wrapper also carries the focus ring on the group rather than the
-    // field, so it survives a leading icon — which the copy could not do.
-    <InputBase
-      ref={ref}
-      // Capped: the panels span the whole pane now that Settings is a
-      // full-width page, and a 900px-wide email field is a field you have to
-      // aim at rather than read.
-      wrapperClassName={cx("w-full max-w-[26rem]", className)}
-      {...rest}
-    />
+    <div className="flex flex-col gap-1.5">
+      {label && <Label htmlFor={fieldId}>{label}</Label>}
+      {/* Untitled UI's `InputBase`. Their labelled `Input` above it wants React
+          Aria's value/onChange, but these forms use native events and hand a
+          `ref` (the CSV file field), so the label sits here and the field stays
+          native. `InputBase` carries the focus ring on the group, so it
+          survives a leading icon. */}
+      <div className="flex items-center gap-3">
+        <InputBase
+          ref={ref}
+          id={fieldId}
+          aria-describedby={hintId}
+          // Capped: a full-width field on this full-width page is one you aim at
+          // rather than read.
+          wrapperClassName={cx("w-full max-w-[26rem]", className)}
+          {...rest}
+        />
+        {action}
+      </div>
+      {hint && (
+        <p id={hintId} className="text-sm text-tertiary">
+          {hint}
+        </p>
+      )}
+    </div>
   );
 });
 

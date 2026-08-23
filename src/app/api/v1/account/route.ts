@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { authorise, refused } from "@/lib/api/guard";
-import { adminClient } from "@/lib/storage/supabase";
+import { adminClient, readClient } from "@/lib/storage/supabase";
 
 /**
  * Deleting an account, and everything of its owner's with it.
@@ -17,13 +18,31 @@ import { adminClient } from "@/lib/storage/supabase";
  * has to be: the id it acts on comes from a verified session, never from the
  * body.
  *
- * Confirmation is the form's job, not this route's. An endpoint that asks "are
- * you sure" is an endpoint that can be answered "yes" by the same script that
- * called it.
+ * The password is re-verified here, not just in the form. A signed-in session
+ * left open on a shared machine should not be able to end the account from a
+ * button, so the modal asks for the password again and this route proves it
+ * before deleting. The check goes through a throwaway anon client
+ * (`persistSession: false`), so it confirms the password without touching the
+ * caller's own session.
  */
 export async function DELETE(req: Request) {
   const viewer = await authorise(req);
   if (refused(viewer)) return NextResponse.json({ error: viewer.error }, { status: viewer.status });
+
+  const read = await readJsonBody<{ password?: unknown }>(req, BODY_LIMIT.credentials);
+  if (read.kind === "too-large")
+    return NextResponse.json({ error: "Invalid request" }, { status: 413 });
+  if (read.kind === "invalid")
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  const password = typeof read.body.password === "string" ? read.body.password : "";
+  if (!password)
+    return NextResponse.json({ error: "Enter your password to confirm." }, { status: 400 });
+
+  const auth = readClient();
+  if (!auth)
+    return NextResponse.json({ error: "Accounts cannot be deleted here." }, { status: 503 });
+  const { error: wrong } = await auth.auth.signInWithPassword({ email: viewer.email, password });
+  if (wrong) return NextResponse.json({ error: "That password is not right." }, { status: 403 });
 
   const admin = adminClient();
   if (!admin) {

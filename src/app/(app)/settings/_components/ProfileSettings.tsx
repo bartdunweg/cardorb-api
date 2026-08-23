@@ -11,9 +11,7 @@ import {
   SettingsHint,
   SettingsInput,
   SettingsLink,
-  SettingsPanel,
   SettingsPanelTitle,
-  SettingsPanels,
   SettingsSaid,
   SettingsSwitch,
   settingsLinkAnchorClassName,
@@ -116,8 +114,8 @@ export default function ProfileSettings({
   const link = `${SITE_URL}/user/${initial.username}`;
 
   return (
-    <SettingsPanels>
-      <SettingsPanel>
+    <>
+      <div>
         <SettingsPanelTitle>Avatar</SettingsPanelTitle>
         {/* The picture, the button and what happened are AvatarPicker's, shared
             with the welcome flow's avatar step. Refreshing afterwards is this
@@ -128,9 +126,9 @@ export default function ProfileSettings({
           fallback={displayName || ownerLabel(initial)}
           onUploaded={() => router.refresh()}
         />
-      </SettingsPanel>
+      </div>
 
-      <SettingsPanel>
+      <div>
         <SettingsPanelTitle>Your link</SettingsPanelTitle>
 
         {/* A real checkbox with a label, styled as a switch. role="switch" on a
@@ -168,79 +166,68 @@ export default function ProfileSettings({
             taken, so it cannot be used to find out you are here.
           </SettingsHint>
         )}
-        {saying.isPublic && <SettingsSaid>{saying.isPublic}</SettingsSaid>}
-      </SettingsPanel>
+        {/* Always mounted, empty when there is nothing to say: a live region
+            inserted at the same moment as its text is not announced. */}
+        <SettingsSaid>{saying.isPublic ?? ""}</SettingsSaid>
+      </div>
 
-      <SettingsPanel>
-        <SettingsPanelTitle>Your name</SettingsPanelTitle>
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            await patch("displayName", { displayName });
-          }}
-        >
-          {/* The placeholder is the fallback, not a suggestion: ownerLabel()
-              in lib/core/account/owner.ts resolves an empty name to exactly this, so
-              the field previews what the public page will say. */}
-          <SettingsInput
-            value={displayName}
-            maxLength={MAX_DISPLAY_NAME}
-            placeholder={initial.username}
-            onChange={(e) => setDisplayName(e.target.value)}
-            // The panel's heading is what sighted people read as this field's
-            // name; a heading is not an accessible name, so it is said again.
-            aria-label="Your name"
-            aria-describedby="display-name-hint"
-          />
-          {/* Built from `initial`, not from the live field. This element is the
-              input's aria-describedby, and a description that changes on every
-              keystroke is one a screen reader may read back on every keystroke.
-              So it shows what the page is called now and the placeholder above
-              shows what an empty field falls back to; neither moves while
-              somebody is typing into the box they describe. */}
-          <SettingsHint id="display-name-hint">
-            What your collection is called: &ldquo;
-            {ownerLabel(initial)}&rsquo;s Pok&eacute;mon card collection&rdquo;. Empty means your
-            username.
-          </SettingsHint>
-          <Button type="submit" disabled={busy === "displayName"}>
-            {busy === "displayName" ? "Saving…" : "Save"}
-          </Button>
-          {saying.displayName && <SettingsSaid>{saying.displayName}</SettingsSaid>}
-        </form>
-      </SettingsPanel>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await patch("displayName", { displayName });
+        }}
+      >
+        {/* The placeholder is the fallback, not a suggestion: ownerLabel()
+            resolves an empty name to exactly this, so the field previews what
+            the public page will say. The hint is built from `initial`, not the
+            live field, so a screen reader is not read the whole description on
+            every keystroke. */}
+        <SettingsInput
+          label="Display name"
+          value={displayName}
+          maxLength={MAX_DISPLAY_NAME}
+          placeholder={initial.username}
+          onChange={(e) => setDisplayName(e.target.value)}
+          hint={
+            <>
+              What your collection is called: &ldquo;{ownerLabel(initial)}&rsquo;s Pok&eacute;mon
+              card collection&rdquo;. Empty means your username.
+            </>
+          }
+          action={
+            <Button type="submit" disabled={busy === "displayName"}>
+              {busy === "displayName" ? "Saving…" : "Save"}
+            </Button>
+          }
+        />
+        <SettingsSaid>{saying.displayName ?? ""}</SettingsSaid>
+      </form>
 
-      <SettingsPanel>
-        <SettingsPanelTitle>Username</SettingsPanelTitle>
-        <form onSubmit={saveUsername}>
-          <SettingsInput
-            value={username}
-            onChange={(e) => setUsername(e.target.value.toLowerCase())}
-            spellCheck={false}
-            autoCapitalize="none"
-            aria-label="Username"
-            aria-describedby="username-hint"
-          />
-          <SettingsHint id="username-hint">
-            Two to thirty characters: lowercase letters, numbers and hyphens. Changing it changes
-            your link, and the old one stops working.
-          </SettingsHint>
-          {/* Whether the name is free, while it is still being typed — the same
-              check the welcome flow makes, and for the same reason: being told
-              after pressing Save that somebody else has the name is the one
-              thing this screen can cheaply avoid. The database still decides;
-              see useUsernameCheck.ts. Always mounted so the live region
-              announces its changes rather than its insertion. */}
-          <SettingsSaid aria-live="polite">{says ?? ""}</SettingsSaid>
-          <Button
-            type="submit"
-            disabled={busy === "username" || !nameChanged || name.kind === "taken"}
-          >
-            {busy === "username" ? "Saving…" : "Save"}
-          </Button>
-          {saying.username && <SettingsSaid>{saying.username}</SettingsSaid>}
-        </form>
-      </SettingsPanel>
-    </SettingsPanels>
+      <form onSubmit={saveUsername}>
+        <SettingsInput
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.toLowerCase())}
+          spellCheck={false}
+          autoCapitalize="none"
+          hint="Two to thirty characters: lowercase letters, numbers and hyphens. Changing it changes your link, and the old one stops working."
+          action={
+            <Button
+              type="submit"
+              disabled={busy === "username" || !nameChanged || name.kind === "taken"}
+            >
+              {busy === "username" ? "Saving…" : "Save"}
+            </Button>
+          }
+        />
+        {/* Whether the name is free, while it is still being typed — the same
+            check the welcome flow makes, and for the same reason: being told
+            after pressing Save that somebody else has the name is the one thing
+            this screen can cheaply avoid. Always mounted so the live region
+            announces its changes rather than its insertion. */}
+        <SettingsSaid aria-live="polite">{says ?? ""}</SettingsSaid>
+        <SettingsSaid>{saying.username ?? ""}</SettingsSaid>
+      </form>
+    </>
   );
 }

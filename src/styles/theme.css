@@ -397,28 +397,16 @@
   --color-text-brand-secondary_hover: light-dark(var(--color-brand-800), var(--color-neutral-200));
 
   /* BORDER COLORS */
-  /* ── Raised off Untitled UI's value, and this is the measurement that earns it ──
-     WCAG 1.4.11 asks 3:1 for the boundary of a user interface component, and
-     this token draws every one of them: input, checkbox, radio, combobox,
-     button-group, the secondary button. Upstream's neutral-300 / neutral-700
-     measured **1.48** in light and **1.91** in dark — less than half.
-
-     These are the *lightest* values that clear 3:1 on both surfaces a control
-     sits on, so the change is the smallest one that meets the rule rather than
-     the most legible one:
-
-       #919191  on #ffffff 3.15   on #fafafa 3.02
-       #646464  on #0a0a0a 3.35   on #171717 3.03
-
-     They are literals rather than a step on Tailwind's scale because the scale
-     has no step between neutral-400 (2.58, short) and neutral-500 (4.74, a
-     mid-grey that reads as a 2010 form). src/lib/design/contrast.test.ts holds
-     both numbers.
-
-     This is a visible change: every control in the app has a firmer edge than
-     it did. R-STYLE-006 says take Untitled UI's value unless the identity or a
-     measurement earns the exception — this is the measurement. */
-  --color-border-primary: light-dark(#919191, #646464);
+  /* Untitled UI's own control-edge value, restored at the owner's request.
+     This token draws every control boundary — input, checkbox, radio, combobox,
+     button-group, the secondary button. It was once raised to #919191 / #646464
+     to clear WCAG 1.4.11's 3:1 for a control boundary; the owner chose the
+     lighter, more Untitled-native edge over that AA guarantee. neutral-300 /
+     neutral-700 measure ~1.48 in light and ~1.91 in dark against the surfaces a
+     control sits on — below AA for an edge that is the sole means of telling the
+     control from the surface. This is a deliberate override: R-STYLE-016 was
+     narrowed to match, and contrast.test.ts no longer asserts this token. */
+  --color-border-primary: light-dark(var(--color-neutral-300), var(--color-neutral-700));
   --color-border-secondary: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-border-secondary_alt: light-dark(rgb(0 0 0 / 0.1), var(--color-neutral-800));
   --color-border-tertiary: light-dark(var(--color-neutral-100), var(--color-neutral-800));

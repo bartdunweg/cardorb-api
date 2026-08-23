@@ -65,7 +65,7 @@ src/hooks/ utils/ providers/ styles/
 | R-STYLE-013 | Controls have two shapes: `shape-round` (default) and `shape-rectangle`. Shape is a cascading property on a container, never a prop. | reviewed | Every button was one shape written five times, so asking for a different one meant overriding `className` at each call site. |
 | R-STYLE-014 | A button is the component. `untitledButtonClasses.ts` is only for elements a React Aria `Button` cannot be. | reviewed | An audit found three of that file's four stated reasons for a plain `<button>` untrue; a transparent interactive row is the one that survives, because React Aria adds nothing it does not already have. |
 | R-STYLE-015 | One icon set: `@untitledui-pro/icons`. | enforced — `scripts/untitled-add.mjs` rewrites imports and drops the second package | The generator keeps adding a second package, and two sets put two drawing styles on one screen. |
-| R-STYLE-016 | A colour cleared as a graphic (3:1) is not cleared under a word (4.5:1). Every text-on-surface pair, every control boundary and both placeholders are measured. | enforced — `src/lib/design/contrast.test.ts` | The two WCAG thresholds differ, so a colour signed off as an icon can still fail as body text. |
+| R-STYLE-016 | Every text-on-surface pair and both placeholders are measured at 4.5:1. Control boundaries are deliberately not: `--color-border-primary` uses Untitled UI's lighter value, below WCAG 1.4.11's 3:1, by the owner's call. | enforced — `src/lib/design/contrast.test.ts` | The owner chose Untitled's native, lighter control edge over the AA boundary contrast; text still has to clear 4.5. |
 | R-STYLE-017 | The page is `bg-secondary`; raised surfaces are `bg-primary`. | reviewed | Inverting the two sinks every card into the page instead of lifting it off. |
 | R-STYLE-018 | `styles/poke-holo.css` is unlayered, so every rule in it beats every Tailwind utility. Know that before adding to it. | reviewed | An unlayered sheet outranks all of Tailwind, so a rule added there silently wins arguments it was never meant to enter. |
 | R-STYLE-019 | The foil colours in `styles/poke-holo.css` are `--color-foil-*` in `theme.css`, like every other colour. | enforced — `src/lib/design/stylesheet-discipline.test.ts` | R-STYLE-001 has no exception for the holo sheet. |
@@ -120,6 +120,12 @@ in the list.
 | R-PLAT-002 | `NEXT_PUBLIC_SITE_URL` is set in Vercel's **Build** environment. | reviewed | `NEXT_PUBLIC_` is inlined at build time, so setting it only at runtime silently does nothing. |
 | R-PLAT-003 | Every screen renders exactly one `<main id="main-content">`, after its own navigation. The root layout does not. | enforced — `src/app/main-landmark.test.ts` | A landmark in the root layout wraps each screen's own, and the skip link then lands above the navigation. |
 | R-PLAT-004 | The `(app)` loading fallback may only draw what is true on all seven routes it covers. | reviewed | It is one file standing in for seven screens, so anything route-specific in it flashes wrong on six of them. |
+
+## Build and verification
+
+| ID | Rule | Enforcement | Why |
+|---|---|---|---|
+| R-BUILD-001 | During iteration run `npm run check` (typecheck, test, lint). The full `./scripts/verify.sh`, which also runs `next build`, runs only at completion: before a commit or PR. | reviewed | The full build is slow and adds nothing mid-iteration that `check` does not already catch. |
 
 ---
 

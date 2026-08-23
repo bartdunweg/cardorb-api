@@ -1,4 +1,4 @@
-<!-- STANDARDS:BEGIN v0.26.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- STANDARDS:BEGIN v0.27.0 — generated from dev-standards. Do not edit by hand. -->
 
 ## Language
 
@@ -64,7 +64,7 @@ This repo keeps its own memory. **IMPORTANT: you maintain it as part of doing th
 | User reacts, criticises, or states a preference | Use the `record-rule` workflow before acting |
 | A real choice is made, or a norm needs writing down | Use the `record-rule` workflow |
 | A rule stops being true | Rewrite it or delete it. Never leave it standing as history |
-| A user-visible change ships | A fragment in `changelog.d/`, never a hand-edit of the changelog — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md` or a brief. A project that ships no user-visible releases has neither file, and that is correct — do not create them |
+| A user-visible change ships | An entry in the changelog naming what is different for the reader — and refresh any outward-facing text it makes stale: README opening, repository description and topics. Outward text is derived from what is already public, never from `STATE.md` or a brief. A project that ships no user-visible releases has no changelog, and that is correct — do not create one |
 | Session starts on an existing project | Run `catch-up` — `STATE.md` here, then every sibling worktree's, then unmerged branches |
 | Session ends | Run `handoff`, unannounced. A sibling workspace can only read what you wrote down |
 | A build or code change is complete | Run `scripts/verify.sh`, then `build-quality` |

@@ -22,6 +22,8 @@ export type AvatarUpload = {
    *  `avatarUrl` from the closure it was called in would give it the value
    *  from before this call. */
   upload: (file: File) => Promise<boolean>;
+  /** Clear the saved avatar. True when it was removed, like `upload`. */
+  remove: () => Promise<boolean>;
   /** The saved URL, kept here so a screen can render it without a refresh. */
   avatarUrl: string | null;
   busy: boolean;
@@ -75,5 +77,26 @@ export function useAvatarUpload(initial: string | null): AvatarUpload {
     }
   }
 
-  return { upload, avatarUrl, busy, said };
+  async function remove(): Promise<boolean> {
+    setBusy(true);
+    setSaid(null);
+    try {
+      const res = await fetch("/api/v1/profile/avatar", { method: "DELETE" });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setSaid(data.error ?? "That could not be removed.");
+        return false;
+      }
+      setAvatarUrl(null);
+      setSaid("Removed.");
+      return true;
+    } catch {
+      setSaid("No answer from the server.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return { upload, remove, avatarUrl, busy, said };
 }

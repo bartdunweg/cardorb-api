@@ -1,4 +1,4 @@
-<!-- DEV-STANDARDS:BEGIN v0.26.0 — generated from dev-standards. Do not edit by hand. -->
+<!-- DEV-STANDARDS:BEGIN v0.27.0 — generated from dev-standards. Do not edit by hand. -->
 
 # Agent adapter
 

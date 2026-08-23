@@ -11,6 +11,7 @@ import {
 } from "react";
 import { FilterFunnel01, Inbox01, SearchLg, XClose } from "@untitledui-pro/icons/line";
 import { EmptyState } from "@/components/application/empty-state/empty-state";
+import { FilterBar } from "@/components/application/filter-bar/filter-bar";
 import { InputBase } from "@/components/base/input/input";
 import Card from "@/components/shared/Card";
 import CardAddDialog from "@/features/collection/components/CardAddDialog";
@@ -1090,7 +1091,13 @@ export default function CardsView({
               here is filtering, sorting and layout, which are answers about a
               list of cards and mean nothing over a summary or a key. */}
         {!onProfile && !onDashboard && (
-          <div className={cardsToolsClassName}>
+          // Untitled UI's FilterBar.Root is the toolbar container. Children stay
+          // flat — search, View, Filter and Reset are direct flex items, so the
+          // responsive wrap rules, the search flex-basis and the CSS-only
+          // menu/sheet swap all hold. FilterBar.Content/Actions would nest and
+          // break that layout, so they are not used. cardsToolsClassName still
+          // supplies items-center, w-full, mt-5 and the .cards-tools hook.
+          <FilterBar.Root className={cardsToolsClassName}>
             {/* The same field as the one in the rail's head, and only ever
                   one of the two on screen: this is the copy for below 1000px,
                   where the rail is a screen you have to open rather than a
@@ -1241,7 +1248,7 @@ export default function CardsView({
                 Reset
               </Button>
             )}
-          </div>
+          </FilterBar.Root>
         )}
 
         {activeFilters.length > 0 && <FilterChips filters={activeFilters} onClearAll={reset} />}
