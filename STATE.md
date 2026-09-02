@@ -40,8 +40,8 @@ Previous release (#133, #134): the repository became the Card Orb API — `docs/
 2. **Merge this branch, which redeploys.** `NEXT_PUBLIC_SITE_URL` on the `cardorb-api`
    project is `https://cardorb.com` again (the owner set it this session); it is inlined at
    build time (R-PLAT-002), so it takes effect on that deploy.
-3. **Move the iOS app's base URL** to `api.cardorb.com` (`bartdunweg/cardorb-ios`), watch the
-   logs for `[deprecated] CARDS_TOKEN was used`, then retire the passcode (design steps 3–4).
+3. **Retire the passcode.** The iOS app already calls `api.cardorb.com/v1` (its PR #52). Watch
+   the logs for `[deprecated] CARDS_TOKEN was used`, then drop the `passcode` scheme (design step 4).
 4. **Decide the two stale branches** (see `## Open`).
 
 ## Open` sections pasted over each
@@ -69,11 +69,11 @@ one error helper. Rules R-API-006, R-API-007, R-API-008 and R-PLAT-005 came with
 
 ## Open
 
-- **Supabase's auth emails may still link to pages that no longer exist here.**
-  `supabase/templates/*.html` build their links from the project's Site URL and land on
-  `/auth/confirm`, which was a route of the web tool and is gone. If the Supabase Site URL
-  still points at this deployment, confirmation and recovery links break; the web app owns
-  those pages now and the Site URL should be `https://cardorb.com`. Owner's check.
+- **Auth email links need `bartdunweg/cardorb-web`'s `/auth/confirm` PR merged.** One Supabase
+  project serves all three clients and every template links to `{{ .SiteURL }}/auth/confirm`;
+  the Site URL in the Supabase dashboard must be `https://cardorb.com`. Until that PR is live,
+  confirmation and recovery links 404. The `next=` values in `supabase/templates/*.html` name
+  the old app's routes; the web route ignores them, so the templates need no change.
 - **`/v1/session` and the cookie helpers stay although no browser client lives here.**
   `lib/api/session-cookie.ts` and `viewer.ts` serve the cookie path of `/v1/session`; the
   web app may use it cross-origin or move to bearer. Removing it is a `/v2` question
