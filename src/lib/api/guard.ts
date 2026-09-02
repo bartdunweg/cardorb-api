@@ -26,8 +26,24 @@ import { requestViewer, type Viewer } from "./viewer";
  * the header for curl and for the iOS app, the cookie for the browser.
  */
 
-/** Ten a minute per address: far above opening a pack, far below guessing a key. */
-const rateLimited = createRateLimiter(60_000, 10);
+/**
+ * Two limiters, because two kinds of caller share an address.
+ *
+ * A request that carries no account credential — no bearer token, no session
+ * cookie — can only be somebody guessing the deprecated passcode, and ten a
+ * minute is far above opening a pack and far below guessing a key. A request
+ * that carries one is a client we wrote, and the web app's servers make those
+ * for every visitor from a handful of shared addresses; holding them to ten
+ * would take the site down on its second visitor. A wrong token is refused
+ * cheaply after a local signature check, so the generous ceiling only bounds
+ * what one address can make this deployment do in a minute.
+ */
+const guessing = createRateLimiter(60_000, 10);
+const withCredential = createRateLimiter(60_000, 600);
+
+const carriesCredential = (req: Request): boolean =>
+  /^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "") ||
+  (req.headers.get("cookie") ?? "").includes(`${SESSION_COOKIE}=`);
 
 export type Refusal = { status: number; error: string };
 
@@ -198,7 +214,8 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
     req.headers.get("x-real-ip")?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
-  if (rateLimited(ip)) return { status: 429, error: "Too many requests" };
+  if ((carriesCredential(req) ? withCredential : guessing)(ip))
+    return { status: 429, error: "Too many requests" };
 
   // Told apart from a wrong credential on purpose, and kept in the same place
   // in the order. A deployment with no database is not somebody getting it
