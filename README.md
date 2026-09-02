@@ -2,8 +2,9 @@
 
 The API behind Card Orb: a Pokémon card collection of 1,600-odd cards kept in
 Postgres (Supabase), matched against three card catalogues, priced, and served at
-`api.cardorb.com` to two clients, the web tool at cardorb.com and the iOS app. The
-web tool lives in this repository too, as one of those clients.
+`api.cardorb.com` to two clients: the web app at [cardorb.com](https://cardorb.com)
+(`bartdunweg/cardorb-web`, its own repository since 2026-09-02) and the iOS app. The web
+tool still in `src/app/(app)` here is the previous app, and it is on its way out.
 
 It began as `/cards` on [bartdunweg.com](https://bartdunweg.com), which is why
 the first commit is not a scaffold. Two years of work sit in `lib/core`: matching
@@ -14,7 +15,7 @@ number a collector would recognise. None of that was worth writing twice.
 ## The API
 
 **The contract is [`public/openapi.yaml`](public/openapi.yaml)**, served as-is at
-`/openapi.yaml` and rendered as plain HTML at [`/docs/api`](https://cardorb.com/docs/api).
+`/openapi.yaml` and rendered as plain HTML at [`/docs/api`](https://api.cardorb.com/).
 A test holds it against the route files in both directions, so a route that is not in it
 does not ship. On `api.cardorb.com` the same API is `/v1/…` and the reference is `/`; the
 browser keeps calling `/api/v1` on its own origin, because its session cookie does not
@@ -88,7 +89,7 @@ level security to judge and that path answers with an empty series.
 ### The latest pull, for another site
 
 ```
-GET https://cardorb.com/api/v1/public/bartdunweg/latest-pull
+GET https://api.cardorb.com/v1/public/bartdunweg/latest-pull
 ```
 
 The one route meant to be read from a different domain, so it is the one route that
@@ -98,7 +99,7 @@ no auth, no cookies and no prices. Rate-limited at 60/minute per address and cac
 five minutes at the CDN, so a widget should fetch it and not think about it.
 
 ```js
-const res = await fetch("https://cardorb.com/api/v1/public/bartdunweg/latest-pull");
+const res = await fetch("https://api.cardorb.com/v1/public/bartdunweg/latest-pull");
 if (res.ok) {
   const { latestPull } = await res.json();
   // name, number, image, imageHigh, rarity, speciesId, tcgId, setName, setTitle, acquiredAt
@@ -109,7 +110,7 @@ Three things to know before you render it:
 
 - **`image` can be relative.** A scan that comes from Limitless is served through this
   app's CORS proxy as `/api/cover?url=…`, so prefix anything starting with `/` with
-  `https://cardorb.com`. It can also be `null`.
+  `https://api.cardorb.com`. It can also be `null`.
 - **`imageHigh` is only set for TCGdex scans**, `null` for everything else. Never rely
   on it alone. `rarity`, `speciesId` and `tcgId` are nullable too.
 - **404 means nothing to show** — `{"error":"No card found."}` for an empty or entirely
@@ -149,7 +150,7 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | `CARDS_TOKEN` | yes | the one passcode that may write |
 | `OWNER_EMAIL` | yes | the address the login checks against |
 | `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
-| `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — canonicals, `og:url`, the sitemap and `robots.txt` all read this |
+| `NEXT_PUBLIC_SITE_URL` | recommended | `https://api.cardorb.com` in production — canonicals, `og:url`, the sitemap and `robots.txt` all read this |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
 | `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
 

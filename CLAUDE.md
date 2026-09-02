@@ -102,8 +102,10 @@ later redaction. Record the shape instead: *the budget ceiling was reached*, not
 
 The API behind Card Orb: a Pokémon card collection (~1,600 cards) kept in Postgres
 (Supabase), matched against three card catalogues, priced, and served at
-`api.cardorb.com` to a web tool and an iOS app. The web tool lives here too, as one of
-the API's two clients; the repository is `bartdunweg/cardorb-api`.
+`api.cardorb.com` to two clients: the web app at cardorb.com (`bartdunweg/cardorb-web`,
+its own repository since 2026-09-02) and the iOS app. The web tool still in `src/app/(app)`
+here is the previous app; the owner has decided it comes out, and `STATE.md` tracks that.
+The repository is `bartdunweg/cardorb-api`.
 
 - Profile: production
 - Platform: web

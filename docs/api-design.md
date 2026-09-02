@@ -135,8 +135,9 @@ one to.
 
 ## What was not done, and why
 
-- **Not moving the web tool out.** The owner chose to keep it here. It is a client, and a
-  client in the same repository costs nothing the API has to pay for.
+- **Not moving the web tool out — in this step.** The owner chose to keep it here at the
+  time. Since 2026-09-02 cardorb.com is served by `bartdunweg/cardorb-web`, and the owner has
+  decided the web tool here comes out; `STATE.md` tracks that.
 - **Not renaming any success shape.** See above: a break with no reader asking for it.
 - **Not adopting `apiError()` in all 102 call sites.** The helper exists and the four
   drifting wordings are gone. Rewriting every hand-typed refusal in one pass would touch 28
