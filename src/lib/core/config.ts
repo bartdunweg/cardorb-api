@@ -86,18 +86,18 @@ export const LOCALE = "nl-NL";
  */
 
 /**
- * Where this app lives, absolutely.
+ * Where the web app lives, absolutely — `https://cardorb.com` in production.
  *
- * Needed the moment anything has to say its own address: a canonical, an
- * og:url, a sitemap. A relative path cannot do any of those.
+ * This API writes exactly one kind of absolute URL: the address a person lands
+ * on after clicking a link in an auth email (`/v1/email`, `/v1/password/reset`).
+ * Those pages belong to the web app, not to this deployment, so this is the
+ * web app's origin and never `api.cardorb.com`.
  *
  * Three sources in order. An explicit NEXT_PUBLIC_SITE_URL wins, because a
  * custom domain is a decision rather than something to infer. Failing that,
- * Vercel's own production URL, which is right on every deploy without anyone
- * setting it — note this is the *project* production URL and not VERCEL_URL,
- * which is the per-deployment address and would put a preview's hostname in a
- * canonical. Failing both, localhost, so development does not emit somebody
- * else's domain.
+ * Vercel's own production URL — the *project* production URL and not
+ * VERCEL_URL, which is the per-deployment address — which is wrong for this
+ * deployment since the split, so set the variable. Failing both, localhost.
  */
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ??

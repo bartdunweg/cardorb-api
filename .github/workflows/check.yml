@@ -1,10 +1,9 @@
-# The gate npm run check was written to be and never had.
+# The gate npm run check was written to be.
 #
-# Deploys go straight off a push to main, so until now nothing stood between a
-# typecheck error and production except remembering to run the command. The
-# build is in here as well as the tests for a specific reason: it is the only
-# step that parses the CSS, and a broken selector has reached main that way
-# before — tests and typecheck both passed, and the page 500'd on the stylesheet.
+# Deploys go straight off a push to main, and Vercel does not wait for this
+# workflow, so a red run here does not stop a deploy: it tells you one went
+# out broken. The build is in here as well as the tests because it is the one
+# step that resolves every route handler the way Vercel will.
 name: check
 
 on:
@@ -38,8 +37,6 @@ jobs:
       # cannot drift.
       - run: npm run check
 
-      # Needs no secrets: getCards() fails soft and returns an empty collection
-      # without a configured Supabase client, which is enough to compile every
-      # route. The pages that prerender card detail get an empty list and
-      # build zero of them.
+      # Needs no secrets: every route handler is rendered on demand, so the
+      # build compiles them without a database behind them.
       - run: npm run build

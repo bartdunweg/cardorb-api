@@ -11,10 +11,10 @@ describe("the API host", () => {
     expect(API_HOST).toBe("api.cardorb.com");
   });
 
-  it("sends /v1 to the route handlers and / to the docs", () => {
+  it("sends /v1 to the route handlers and / to the contract", () => {
     expect(API_HOST_REWRITES.map((r) => [r.source, r.destination])).toEqual([
       ["/v1/:path*", "/api/v1/:path*"],
-      ["/", "/docs/api"],
+      ["/", "/openapi.yaml"],
     ]);
   });
 

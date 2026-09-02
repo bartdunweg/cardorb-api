@@ -113,43 +113,24 @@ const SECURITY_HEADERS = [
 ];
 
 /**
- * Settings became one page, so its four sub-routes stopped existing.
+ * The API's own hostname. On this host `/v1/…` is the API and `/` is the
+ * contract, `/openapi.yaml`, served as-is — the rendered reference moved to
+ * the web app (`bartdunweg/cardorb-web`) with the rest of the UI, and until it
+ * is live there the contract itself is what a visitor gets.
  *
- * They are redirected rather than left to 404 because they were addresses
- * people and machines already hold: a bookmark, and — the one that matters —
- * the `next=` in a confirmation email sent before this change, which lands
- * somebody on /settings/account after they confirm a new address.
+ * A host-conditional rewrite rather than a second deployment (R-PLAT-005): one
+ * project, one set of environment variables, one cron. The web app at
+ * cardorb.com calls this host with a bearer token, as the iOS app does.
  *
- * /settings/password is deliberately absent from this list: it is a real
- * route still, outside the app shell, reached from password recovery.
- */
-const SETTINGS_SECTIONS = ["profile", "account", "import", "appearance"];
-
-/**
- * The API's own hostname. On this host `/v1/…` is the API, `/openapi.yaml` is
- * the contract and `/` is its documentation; everything else is not served.
- *
- * Same Vercel project, same code, one extra domain attached: a second
- * deployment would be a second thing to keep in step with the first, and the
- * routes already exist under /api/v1 on cardorb.com. A host-conditional rewrite
- * is a view of the same app, and it stays a view whether or not the domain is
- * attached yet — a request for `api.cardorb.com` that never arrives matches
- * nothing and changes nothing.
- *
- * The web tool keeps calling `/api/v1` on its own origin, on purpose. Its
- * session is a cookie scoped to cardorb.com, and a browser would not send it
- * across to api.cardorb.com; the iOS app sends a bearer token, which crosses
- * hosts without a second thought. So the browser stays home and the app moves.
- *
- * Cloudflare stays DNS-only for this host too (R-PLAT-001): the rewrite
- * reads the `host` header, which the proxy would rewrite.
+ * Cloudflare stays DNS-only for this host (R-PLAT-001): the rewrite reads the
+ * `host` header, which the proxy would rewrite.
  */
 export const API_HOST = "api.cardorb.com";
 
 /** Rewrites that only fire on the API host, in the order Next tries them. */
 export const API_HOST_REWRITES = [
   { source: "/v1/:path*", destination: "/api/v1/:path*" },
-  { source: "/", destination: "/docs/api" },
+  { source: "/", destination: "/openapi.yaml" },
 ].map((rewrite) => ({ ...rewrite, has: [{ type: "host" as const, value: API_HOST }] }));
 
 const nextConfig: NextConfig = {
@@ -158,30 +139,9 @@ const nextConfig: NextConfig = {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },
   async rewrites() {
-    // beforeFiles, because `/` exists on the filesystem (the landing page) and
-    // an afterFiles rewrite would never get the chance to send the API host's
-    // root to the documentation instead.
+    // beforeFiles, so the API host's root is answered before Next looks for a
+    // page that does not exist.
     return { beforeFiles: API_HOST_REWRITES, afterFiles: [], fallback: [] };
-  },
-  async redirects() {
-    return [
-      ...SETTINGS_SECTIONS.map((section) => ({
-        source: `/settings/${section}`,
-        destination: "/settings",
-        permanent: true,
-      })),
-      {
-        // /app is the address somebody types looking for the app page, and
-        // there is only one of those to send them to. Temporary, not
-        // permanent, and that is the whole point of the entry: when the
-        // Android page lands, /app should become the index of both, and a 308
-        // cached in every browser that ever followed it would make that
-        // change arrive weeks late for the people who had already been here.
-        source: "/app",
-        destination: "/app/ios",
-        permanent: false,
-      },
-    ];
   },
 };
 

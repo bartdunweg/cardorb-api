@@ -42,15 +42,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "//": "The vendored Untitled UI trees are checked by tsconfig.vendored.json instead, which keeps `strict` but drops the four flags this project adds on top. See ADR-0070; do not fold them back in here.",
-  "exclude": [
-    "node_modules",
-    "src/components/application/**",
-    "src/components/base/**",
-    "src/components/foundations/**",
-    "src/components/shared-assets/**",
-    "src/hooks/use-resize-observer.ts",
-    "src/hooks/use-breakpoint.ts",
-    "src/utils/is-react-component.ts"
-  ]
+  "exclude": ["node_modules"]
 }

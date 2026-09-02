@@ -1,9 +1,0 @@
-{
-  "version": "8",
-  "aliases": {
-    "components": "@/components",
-    "utils": "@/utils",
-    "hooks": "@/hooks",
-    "lib": "@/lib"
-  }
-}
