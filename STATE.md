@@ -39,19 +39,19 @@ And a build that cannot reach the store or the catalogue is a 503 nothing caches
 route: one 404 from TCGdex's set index during a cold build had left every card without a
 picture, a price or an id, cached for a day.
 
+The schema lives here again: the five migrations the web app applied from its own checkout
+(`20260823…`–`20260831…`) were fetched from the live history table, the migration recording
+the folders and the anonymous grants is applied, and `cards.wishlist` and
+`cards.pokedex_numbers` are dropped — nothing read them. Applying and recording goes through
+`supabase db query --linked` and `supabase migration repair`, which need the CLI login and
+not the database password.
+
 `./scripts/verify.sh` exits 0 here.
 
 ## Next
 
-1. **Bring the web app's five migrations into this repository.** The live history has
-   `20260823201942`, `20260827212050`, `20260827213734`, `20260831195235` and `20260831205915`,
-   applied from `cardorb-web`, and this repository owns the schema. `supabase db pull` needs the
-   database password; `supabase db query --linked` does not and is how the migration file here
-   was applied and recorded on 2026-09-02.
-2. **Move the web app's public page onto `GET /v1/public/<username>/cards`** so it stops
+1. **Move the web app's public page onto `GET /v1/public/<username>/cards`** so it stops
    fetching the whole public collection (~940 kB) to show a hundred cards.
-3. **Drop the dead columns** `cards.wishlist` and `cards.pokedex_numbers` once nothing reads
-   them (the API never did; the web app stopped on 2026-09-02). A migration here.
 
 ## Open
 
