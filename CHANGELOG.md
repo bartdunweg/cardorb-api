@@ -31,6 +31,11 @@ if the two have drifted apart.
   of the site, from `/openapi.yaml` on this host. Until then `api.cardorb.com/` answers
   with the contract itself. Nothing under `/v1` changed.
 
+- A request that carries an account credential is no longer held to ten a minute per address.
+  That ceiling was for guessing the old passcode, and the web app's servers make requests for
+  every visitor from a handful of shared addresses; they are held to six hundred a minute now,
+  and a request with nothing to show is still held to ten.
+
 - `GET /v1/public/<username>/profile` answers the name to print and the picture, so a page
   can draw a public collection's header without a key. No prices, no email, same limiter and
   cache as its two siblings.

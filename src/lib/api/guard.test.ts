@@ -61,11 +61,13 @@ function req(
     host?: string;
     header?: string;
     cookie?: string;
+    bearer?: string;
     ip?: string;
     contentType?: string;
   } = {},
 ) {
   const h = new Headers();
+  if (opts.bearer) h.set("authorization", `Bearer ${opts.bearer}`);
   if (opts.origin) h.set("origin", opts.origin);
   h.set("host", opts.host ?? "cardorb.example");
   if (opts.header) h.set("x-cards-key", opts.header);
@@ -231,6 +233,16 @@ describe("authorise", () => {
     for (let i = 0; i < 11; i++) await authorise(req({ ip: "10.9.9.8" }));
     const r = await authorise(req({ ip: "10.9.9.7" }));
     expect(refused(r)).toBe(false);
+  });
+
+  it("holds a request that carries a credential to a far higher ceiling, because the web app's servers share an address", async () => {
+    const ip = "10.9.9.5";
+    for (let i = 0; i < 50; i++) await authorise(req({ ip, bearer: "a.b.c" }));
+    expect(refused(await authorise(req({ ip, bearer: "a.b.c" })))).toBe(false);
+    expect(refused(await authorise(req({ ip, cookie: "binder_session=abc" })))).toBe(false);
+    // The same address with nothing to show is still held to ten.
+    for (let i = 0; i < 10; i++) await authorise(req({ ip }));
+    expect(await authorise(req({ ip }))).toMatchObject({ status: 429 });
   });
 
   it("counts a request with no session against the limit too, so guessing is not free", async () => {
