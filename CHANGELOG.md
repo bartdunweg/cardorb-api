@@ -46,6 +46,9 @@ if the two have drifted apart.
   the CDN for an hour. They read as the service role now, scoped to the one public profile, and
   a failed read is a 503 nothing caches rather than an empty 200.
 
+- `api.cardorb.com/` sends a visitor to the reference again: the web app draws it from this
+  contract at cardorb.com/docs/api, in the site's own theme.
+
 ## 2026-08-23
 
 - You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.

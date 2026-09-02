@@ -15,7 +15,7 @@ number a collector would recognise. None of that was worth writing twice.
 ## The API
 
 **The contract is [`public/openapi.yaml`](public/openapi.yaml)**, served as-is at
-`/openapi.yaml` and rendered as plain HTML at [`/docs/api`](https://api.cardorb.com/).
+`/openapi.yaml` and rendered as plain HTML at [`/docs/api`](https://cardorb.com/docs/api) on the web app, which draws it from this contract.
 A test holds it against the route files in both directions, so a route that is not in it
 does not ship. On `api.cardorb.com` the same API is `/v1/…` and the reference is `/`; the
 browser keeps calling `/api/v1` on its own origin, because its session cookie does not

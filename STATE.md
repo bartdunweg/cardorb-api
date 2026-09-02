@@ -14,8 +14,8 @@ loads this file on every request, so its length is a cost paid continuously.
 Card Orb is live, and since 2026-09-02 it is two repositories on two Vercel projects:
 
 - **This repository, `bartdunweg/cardorb-api`** — the API only, at `api.cardorb.com`
-  (Vercel project `cardorb-api`). `/v1/*` is the API and `/` is the contract,
-  `public/openapi.yaml`, served as-is. `/v1/health` answers `{"ok":true,"database":"reachable"}`.
+  (Vercel project `cardorb-api`). `/v1/*` is the API, `/openapi.yaml` the contract, and `/`
+  sends a visitor to the reference the web app draws from it (cardorb.com/docs/api).
 - **`bartdunweg/cardorb-web`** — the web app, at `cardorb.com` (Vercel project `cardorb`;
   pnpm, Next 16, its own standards). It calls this API with a bearer token, as the iOS app does.
 
@@ -39,9 +39,6 @@ with tests. 477 tests.
    `collections.ts`, `profile.ts`, `public-profile.ts`, `pokedex.ts` and the server actions call
    the API; adding a card goes through `/v1/catalog/search` and `POST /v1/cards`; `pokemontcg.ts`
    goes. Then a rule there: no `.from(` outside auth.
-2. **Build the reference in `cardorb-web`** at `/docs/api` from `https://api.cardorb.com/openapi.yaml`,
-   then point `api.cardorb.com/` at it (the one rewrite in `next.config.ts`). The old renderer
-   is in git at `40cc85d`, `src/app/docs/api/`.
 3. **Retire the passcode.** The iOS app already calls `api.cardorb.com/v1` (its PR #52). Watch
    the logs for `[deprecated] CARDS_TOKEN was used`, then drop the `passcode` scheme.
 4. **Decide the two stale branches** (see `## Open`).
