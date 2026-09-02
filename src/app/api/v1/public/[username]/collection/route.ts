@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCards, ownerOf } from "@/lib/core/collection/collection";
+import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { forGrid, forPublic } from "@/lib/core/collection/cards";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
@@ -24,8 +24,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const { username } = await params;
   const owner = await ownerOf(username);
   if (!owner) return NextResponse.json({ error: "No such collection." }, { status: 404 });
+  const { sets, failed } = await getPublicCollection(owner.id);
+  // Never cache a failure: the CDN would hand an empty collection to every
+  // visitor for an hour, which is what happened once.
+  if (failed)
+    return NextResponse.json(
+      { error: "The collection could not be read. Try again in a moment." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+
   return NextResponse.json(
-    { sets: forGrid(forPublic(await getCards(owner.id))) },
+    { sets: forGrid(forPublic(sets)) },
     { headers: { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" } },
   );
 }

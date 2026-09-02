@@ -43,7 +43,7 @@ import { listRows, listSnapshots, publicProfile } from "../../storage/collection
 import { listCardPrices } from "../../storage/postgres";
 import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
-import { serverClient, userClient } from "../../storage/supabase";
+import { adminClient, serverClient, userClient } from "../../storage/supabase";
 
 export type { ValueSnapshot } from "./value-snapshot";
 export { valueHistoryTag } from "./value-snapshot";
@@ -180,6 +180,34 @@ export const getRows = cache(
  */
 export const getCards = async (userId: string, token?: string): Promise<CardSet[]> =>
   (await getCollection(userId, token)).sets;
+
+/**
+ * A public profile's collection, read for a stranger.
+ *
+ * The stranger has no account, so there is nobody this could act as — which is
+ * the one condition under which the service role is the right client (see
+ * adminClient()). The anonymous role is not: since the web app's schema review
+ * it may read only the public columns of `cards`, and a walk that selects the
+ * full row as anon is refused outright, which this API then answered with an
+ * empty collection for an hour of CDN cache. The read is scoped to the one
+ * owner, whom ownerOf() has already found public, and forPublic() strips every
+ * private field before anything leaves.
+ *
+ * `failed` is handed back rather than swallowed: a public answer is cached at
+ * the CDN, and an empty collection cached for an hour is worse than a 503.
+ */
+export const getPublicCollection = cache(
+  async (userId: string): Promise<{ sets: CardSet[]; failed: boolean }> => {
+    try {
+      const db = adminClient();
+      if (!db) return { sets: [], failed: true };
+      return { sets: await cachedCollection(userId, db), failed: false };
+    } catch (err) {
+      console.error("Public collection walk failed, retrying on the next request:", err);
+      return { sets: [], failed: true };
+    }
+  },
+);
 
 /**
  * The readings, cached across requests under a tag that names their owner.

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCards, ownerOf } from "@/lib/core/collection/collection";
+import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { latestPull } from "@/lib/core/collection/cards";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
@@ -49,7 +49,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   if (!owner)
     return NextResponse.json({ error: "No such collection." }, { status: 404, headers: CORS_HEADERS });
 
-  const pull = latestPull(await getCards(owner.id));
+  const { sets, failed } = await getPublicCollection(owner.id);
+  if (failed)
+    return NextResponse.json(
+      { error: "The collection could not be read. Try again in a moment." },
+      { status: 503, headers: { ...CORS_HEADERS, "Cache-Control": "no-store" } },
+    );
+
+  const pull = latestPull(sets);
   if (!pull) return NextResponse.json({ error: "No card found." }, { status: 404, headers: CORS_HEADERS });
 
   return NextResponse.json(
