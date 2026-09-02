@@ -502,11 +502,18 @@ export type BuildOptions = {
    * should not have to wonder which ones it got anyway.
    */
   prices?: boolean;
+  /**
+   * Where a price comes from, given the TCGdex ids that need one. The default
+   * asks TCGdex card by card; collection.ts hands in the Cardmarket guide first
+   * and TCGdex only for what the guide does not know. The nightly snapshot
+   * passes `prices: false` and never reaches this.
+   */
+  priceSource?: (ids: string[]) => Promise<Map<string, CardPrices>>;
 };
 
 export async function buildCollection(
   rows: CollectionRow[],
-  { prices = true }: BuildOptions = {},
+  { prices = true, priceSource = pricesFor }: BuildOptions = {},
 ): Promise<CardSet[]> {
   if (!rows.length) return [];
 
@@ -655,7 +662,7 @@ export async function buildCollection(
     // card, exactly as before. With it on, this list is usually empty.
     const wanted = [...new Set(printings.map((p) => p.tcgId).filter(Boolean))] as string[];
     const missing = prices ? wanted.filter((id) => !(id in cat.prices)) : [];
-    const fetched = missing.length ? await pricesFor(missing) : new Map<string, CardPrices>();
+    const fetched = missing.length ? await priceSource(missing) : new Map<string, CardPrices>();
     const priceOfId = (id: string | null) =>
       (prices && id && (fetched.get(id)?.price ?? cat.prices[id])) || null;
     /**

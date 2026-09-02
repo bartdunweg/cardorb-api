@@ -31,6 +31,10 @@ anonymous role may read only the public columns of `cards` since the web app's s
 `apiError()`, a paged `GET /v1/public/<username>/cards`, and a migration file recording the
 `collections` table, `cards.collection_id` and the anonymous grants as the web app made them.
 
+Then prices from Cardmarket's guide at build time (one file a day, cached as a small map)
+instead of one TCGdex request per card: a cold build was minutes, which the first visitor after
+a deploy paid; TCGdex is asked only for a card the guide does not know.
+
 `./scripts/verify.sh` exits 0 here.
 
 ## Next
