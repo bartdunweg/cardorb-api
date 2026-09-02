@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, unavailable } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
 import { createRow } from "@/lib/storage/collection";
@@ -10,7 +10,7 @@ import {
   refused,
   storeErrorResponse,
 } from "@/lib/api/guard";
-import { getCards } from "@/lib/core/collection/collection";
+import { getCollection } from "@/lib/core/collection/collection";
 import { filterItems, flattenItems, pageOf, readItemQuery } from "@/lib/core/collection/items";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
@@ -47,7 +47,8 @@ export async function GET(req: Request) {
   if (read.kind === "invalid")
     return apiError(400, read.error, undefined, { headers: readHeaders(req) });
 
-  const sets = await getCards(who.userId, bearer(req) ?? undefined);
+  const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
+  if (failed) return unavailable();
   const { items, total } = pageOf(filterItems(flattenItems(sets), read.query), read.query);
   return NextResponse.json({ cards: items, total }, { headers: readHeaders(req) });
 }

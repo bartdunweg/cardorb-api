@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
-const getCards = vi.fn();
+const getCollection = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
@@ -12,7 +12,7 @@ vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
-  getCards: (...a: unknown[]) => getCards(...a),
+  getCollection: (...a: unknown[]) => getCollection(...a),
 }));
 
 const { GET } = await import("./route");
@@ -23,16 +23,23 @@ const get = () =>
 beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
-  getCards.mockResolvedValue([]);
+  getCollection.mockResolvedValue({ sets: [], failed: false });
 });
 
 describe("GET /api/v1/stats", () => {
   it("counts the caller's own collection", async () => {
     const res = await get();
-    expect(getCards).toHaveBeenCalledWith("me-uuid", "t");
+    expect(getCollection).toHaveBeenCalledWith("me-uuid", "t");
     expect(await res.json()).toEqual({
       stats: { cards: 0, copies: 0, wishlist: 0, favorites: 0, sets: 0 },
     });
+  });
+
+  it("is a 503 nothing caches when the collection could not be built", async () => {
+    getCollection.mockResolvedValue({ sets: [], failed: true });
+    const res = await get();
+    expect(res.status).toBe(503);
+    expect(res.headers.get("cache-control")).toBe("no-store");
   });
 
   it("passes a refusal through", async () => {

@@ -61,3 +61,14 @@ export function refuse(
   const { status, error } = REFUSALS[which];
   return apiError(status, error, undefined, init);
 }
+
+/**
+ * The collection could not be built — the store or a catalogue was
+ * unreachable — and nothing should cache that. A 503 rather than an empty
+ * 200: an app that got `[]` would show a person their collection is gone.
+ */
+export function unavailable(): NextResponse<ApiError> {
+  return apiError(503, "The collection could not be read. Try again in a moment.", undefined, {
+    headers: { "Cache-Control": "no-store" },
+  });
+}

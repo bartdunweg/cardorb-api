@@ -35,6 +35,10 @@ Then prices from Cardmarket's guide at build time (one file a day, cached as a s
 instead of one TCGdex request per card: a cold build was minutes, which the first visitor after
 a deploy paid; TCGdex is asked only for a card the guide does not know.
 
+And a build that cannot reach the store or the catalogue is a 503 nothing caches, on every
+route: one 404 from TCGdex's set index during a cold build had left every card without a
+picture, a price or an id, cached for a day.
+
 `./scripts/verify.sh` exits 0 here.
 
 ## Next

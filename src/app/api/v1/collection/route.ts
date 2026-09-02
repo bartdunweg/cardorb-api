@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
-import { getCards } from "@/lib/core/collection/collection";
+import { apiError, unavailable } from "@/lib/api/respond";
+import { getCollection } from "@/lib/core/collection/collection";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -37,7 +37,8 @@ export async function GET(req: Request) {
   // the collection, singular, and the endpoint could not have said whose if it
   // had been asked. The token, not just the id: getCards() needs the caller's
   // own connection to satisfy row level security, see its own comment.
-  const sets = await getCards(who.userId, bearer(req) ?? undefined);
+  const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
+  if (failed) return unavailable();
 
   // "An empty collection is never true" used to live here, and it threw. It was
   // right: there was one collection, it had sixteen hundred cards in it, and an

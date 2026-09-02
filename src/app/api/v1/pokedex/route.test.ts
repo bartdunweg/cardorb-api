@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
-const getCards = vi.fn();
+const getCollection = vi.fn();
 const getPokedex = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
@@ -13,7 +13,7 @@ vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
-  getCards: (...a: unknown[]) => getCards(...a),
+  getCollection: (...a: unknown[]) => getCollection(...a),
 }));
 vi.mock("@/lib/core/collection/pokedex", () => ({
   getPokedex: (...a: unknown[]) => getPokedex(...a),
@@ -29,7 +29,7 @@ const get = () =>
 beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
-  getCards.mockResolvedValue([]);
+  getCollection.mockResolvedValue({ sets: [], failed: false });
   getPokedex.mockReturnValue([
     { id: 25, name: "Pikachu", owned: 1, cards: [{ key: "k", name: "Pikachu", image: "/p.png" }] },
   ]);
@@ -38,7 +38,7 @@ beforeEach(() => {
 describe("GET /api/v1/pokedex", () => {
   it("hands back the slots without the cards under them", async () => {
     const body = await (await get()).json();
-    expect(getCards).toHaveBeenCalledWith("me-uuid", "t");
+    expect(getCollection).toHaveBeenCalledWith("me-uuid", "t");
     expect(body).toEqual({
       entries: [
         {

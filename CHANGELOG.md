@@ -36,6 +36,12 @@ if the two have drifted apart.
   every visitor from a handful of shared addresses; they are held to six hundred a minute now,
   and a request with nothing to show is still held to ten.
 
+- A collection that could not be built — the store or the card catalogue unreachable — is
+  a 503 nothing caches, on every route that reads it. It used to be an empty 200 that the
+  cache kept for an hour, and the catalogue half was kept for a day: one 404 from TCGdex's
+  set index during a build left every card without a picture, a price or an id for every
+  app at once.
+
 - Every failure under `/v1` is written by one helper now. The 140 hand-typed `{ error }`
   answers across 31 route files were rewritten to `apiError()`; nothing a client sees changed.
 
