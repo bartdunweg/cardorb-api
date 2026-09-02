@@ -13,18 +13,39 @@ loads this file on every request, so its length is a cost paid continuously.
 
 Card Orb is live, and since 2026-09-02 it is two repositories on two Vercel projects:
 
-- **This repository, `bartdunweg/cardorb-api`** — the API, at `api.cardorb.com` (Vercel
-  project `cardorb-api`). `/v1/*` is the API, `/` is the reference, and `/v1/health` answers
-  `{"ok":true,"database":"reachable"}`. Design step 2 (attach the host) is done. The web tool
-  in `src/app/(app)` is still built and served on this host, but no domain the owner hands out
-  points at it any more.
-- **`bartdunweg/cardorb-web`** — the new web app, at `cardorb.com` (Vercel project `cardorb`,
-  created 2026-09-02; pnpm, Next 16, its own `/api/v1` and its own standards). Its docs call
-  this repository "the previous app".
+- **This repository, `bartdunweg/cardorb-api`** — the API only, at `api.cardorb.com`
+  (Vercel project `cardorb-api`). `/v1/*` is the API and `/` is the contract,
+  `public/openapi.yaml`, served as-is. `/v1/health` answers `{"ok":true,"database":"reachable"}`.
+- **`bartdunweg/cardorb-web`** — the web app, at `cardorb.com` (Vercel project `cardorb`;
+  pnpm, Next 16, its own standards). It calls this API with a bearer token, as the iOS app does.
 
-This session, on `claude/project-name-cardorb-api`: the npm package is `cardorb-api` (it was
-`cardorb`, which is also what named every deployment URL `cardorb-<hash>`), and this file was
-rewritten — the previous version had two `## Next` and two `## Open` sections pasted over each
+This session, on `claude/api-only`: **the web tool came out.** Gone: every page, `features/`,
+`components/`, `hooks/`, `utils/`, `providers/`, `styles/`, `lib/design/`, `proxy.ts`,
+Playwright, Tailwind, Untitled UI and the `@untitledui-pro/icons` package — so `.npmrc` and
+`NPM_TOKEN` went too and `npm ci` needs no secret. Left: 32 route handlers, `lib/`, the
+contract, `public/artwork/`. R-STRUCT-001..004/007, every R-STYLE and R-UI rule and
+R-PLAT-003/004 were deleted; 20 rules remain. 450 tests, `next build` and lint pass here.
+
+Previous release (#133, #134): the repository became the Card Orb API — `docs/api-design.md`,
+`public/openapi.yaml` (34 operations, held to the file layout and the `Error` schema by
+`src/app/api/openapi.test.ts`), the host-conditional rewrites in `next.config.ts`,
+`src/lib/api/respond.ts`, rules R-API-006..008 and R-PLAT-005.
+
+## Next
+
+1. **Build the reference in `cardorb-web`** at `/docs/api`, in that app's theme, reading
+   `https://api.cardorb.com/openapi.yaml` at build time. Then point `api.cardorb.com/` at it
+   (the one rewrite in `next.config.ts`). The old renderer is in git at `40cc85d`,
+   `src/app/docs/api/_components/reference.ts`, with its tests.
+2. **Set `NEXT_PUBLIC_SITE_URL` back to `https://cardorb.com` on the `cardorb-api` project**
+   (it was set to `api.cardorb.com` earlier this session, for a canonical that no longer
+   exists). It is the base of the links in auth emails, which land on the web app. Then
+   redeploy: it is inlined at build time (R-PLAT-002).
+3. **Move the iOS app's base URL** to `api.cardorb.com` (`bartdunweg/cardorb-ios`), watch the
+   logs for `[deprecated] CARDS_TOKEN was used`, then retire the passcode (design steps 3–4).
+4. **Decide the two stale branches** (see `## Open`).
+
+## Open` sections pasted over each
 other.
 
 Previous release (#133, #134): the repository became the Card Orb API. `docs/api-design.md`
@@ -49,39 +70,20 @@ one error helper. Rules R-API-006, R-API-007, R-API-008 and R-PLAT-005 came with
 
 ## Open
 
-- **The web tool is still here until `## Next` item 1 ships.** `CLAUDE.md`, `README.md` and
-  `docs/api-design.md` now say so; `README.md`'s tour of the signed-in screens and its
-  environment table still describe the previous app and go with it.
-- **The README's examples and the reference's canonical point at `cardorb.com`.**
-  `cardorb.com/api/v1/…` now answers from `cardorb-web`'s own API, not this one, and
-  `cardorb.com/docs/api` and `/openapi.yaml` are 404 there. The examples should read
-  `api.cardorb.com/v1/…`; the canonical follows `## Next` item 2.
-- **CI is red on every run, `main` included.** `npm ci` fails with `401 Unauthorized` from
-  `pkg.untitledui.com`: the `NPM_TOKEN` secret in the repository's Actions settings is invalid
-  or expired. Until it is refreshed, `./scripts/verify.sh` run by a person is the only gate, and
-  `main` still deploys straight to production.
+- **Supabase's auth emails may still link to pages that no longer exist here.**
+  `supabase/templates/*.html` build their links from the project's Site URL and land on
+  `/auth/confirm`, which was a route of the web tool and is gone. If the Supabase Site URL
+  still points at this deployment, confirmation and recovery links break; the web app owns
+  those pages now and the Site URL should be `https://cardorb.com`. Owner's check.
+- **`/v1/session` and the cookie helpers stay although no browser client lives here.**
+  `lib/api/session-cookie.ts` and `viewer.ts` serve the cookie path of `/v1/session`; the
+  web app may use it cross-origin or move to bearer. Removing it is a `/v2` question
+  (R-API-008), not a cleanup.
+- **`AUDIT.md` and `EINDCHECK.md` are sign-off notes for screens that no longer exist.** Left as they were; delete or move them.
+- **Coverage is not measured since the split;** no floor is wired into `verify.sh`.
+
 - **102 hand-typed refusals remain.** `apiError()`/`refuse()` exist; each route moves over when
   next opened. A sweep for its own sake was deliberately not done.
-- **R-STRUCT-007 has known violations in `CardsView.tsx`** (1,640 lines): `eraOptions`,
-  `valueOptions`, `ownershipOptions`, `activeFilters`, `dex`, `dexShown`, `visibleSets` and
-  `activeTab` are decisions no test reaches. Branch coverage is 50.6% overall, mostly here. No
-  coverage floor is wired into `verify.sh`; that is a separate decision.
-- **Two vendored avatar sub-components have no consumer** — `avatar-add-button.tsx` and
-  `avatar-company-icon.tsx` under `src/components/base/avatar/` (R-UI-007). They cannot be
-  hand-deleted: `base/` is CLI-regenerated (R-UI-003). Tracked here rather than "fixed" wrongly.
-- **`section-headers` adoption was reverted — it 500'd the Settings page.** A compound
-  component exported from a `"use client"` module is `undefined` when rendered from a Server
-  Component, and `next build` cannot catch it on a `force-dynamic` route. Reintroduce it during
-  a Settings redesign, inside a Client Component.
-- **`filter-bar` (free) is the toolbar container; `sidebar-navigation-base` was not adopted.**
-  The rail row is a `<button aria-pressed>` pane selector sharing one sliding pill with the tab
-  bar; Untitled's `NavItem` is a route link with its own active background. Left bespoke on
-  purpose unless the owner decides otherwise.
-- **R-STYLE-016 enforcement is narrower than its wording.** `contrast.test.ts` measures one
-  control-border token and one placeholder; the rule says every control boundary and both
-  placeholders. Add the assertion or narrow the rule.
-- **Playwright's `public` project selects zero tests.** It matches `cards-css.spec.ts`, deleted
-  when that migration finished. Measured: `--project=public --list` → `Total: 0 tests in 0 files`.
 - **`lib/core/collection/value-chart.ts` has a damaged sentence** in its header (lines 12–13).
   Nobody now knows what it meant, so it was left alone.
 - **Both unmerged branches are superseded and neither merges as-is.**

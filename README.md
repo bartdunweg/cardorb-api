@@ -136,7 +136,8 @@ npm run dev
 curl localhost:3000/api/v1/collection | jq '.sets | length'
 ```
 
-`npm run check` is typecheck, tests and lint together.
+`npm run check` is prettier, typecheck, tests and lint together; `./scripts/verify.sh` adds
+the secrets scan, the changelog check and `next build`.
 
 ## Production
 
@@ -150,15 +151,13 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | `CARDS_TOKEN` | yes | the one passcode that may write |
 | `OWNER_EMAIL` | yes | the address the login checks against |
 | `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
-| `NEXT_PUBLIC_SITE_URL` | recommended | `https://api.cardorb.com` in production — canonicals, `og:url`, the sitemap and `robots.txt` all read this |
+| `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — the web app, where the links in auth emails land |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
 | `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
 
 `NEXT_PUBLIC_SITE_URL` matters more than its "recommended" tag suggests: without it,
-`SITE_URL` falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, which is whichever
-`*.vercel.app` alias Vercel currently treats as production rather than the custom domain —
-set it explicitly the moment a custom domain is attached, or a canonical link can point at
-the wrong address.
+`SITE_URL` falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, which is this API's own
+address — and a confirmation link that lands on the API instead of the web app is a dead end.
 
 ## The database
 
@@ -206,68 +205,35 @@ and measure rather than assume.
 
 ## Shape
 
-Everything lives under `src/`. Where a new file goes is decided by who uses it,
-not by what it is:
+Everything lives under `src/`, and there is no UI in it: the web app is
+`bartdunweg/cardorb-web`, the iOS app `bartdunweg/cardorb-ios`, and both call this API
+with a bearer token.
 
 ```
-src/app/<route>/              routing and data fetching only
-src/app/<route>/_components/  UI that only that route uses
-src/features/<domain>/        UI and hooks owned by one domain — collection, account
-src/components/shared/        UI with no domain: Button, Modal, FormField, Card
-src/components/base/          vendored Untitled UI primitives — CLI-managed
-src/components/application/   vendored Untitled UI patterns
-src/components/foundations/   vendored icons and logos
-src/lib/core/                 the domain layer. No React, no routes. The part worth having.
-src/lib/core/catalogue/       what a card is: the three catalogues, matching, artwork, prices
-src/lib/core/collection/      what you own: rows, assembly, statistics, value over time
-src/lib/core/account/         who you are: username and password rules, what to call you
-src/lib/storage/              where the collection is kept, and the only part that knows.
-src/lib/api/                  who may read and write, and how often.
-src/styles/theme.css          every design value, and the only place one may be written
-src/styles/globals.css        imports, base, variants. Hard ceiling: 200 lines.
-src/styles/app.css            the exception layer. Starts empty; keep it that way.
-src/styles/poke-holo.css      the holographic shine — vendored, and one of the two
-                              things that are the product's identity
-src/hooks/ utils/ providers/  small, shared, and partly vendored
-scripts/                      the generators src/lib/core keeps referring to
-supabase/                     auth and session backing store, migrations
+src/app/api/v1/<route>/route.ts   one route handler per operation in public/openapi.yaml
+src/app/api/cover/route.ts        a same-origin passthrough for the one image host that
+                                  sends no CORS headers
+src/app/layout.tsx                the root layout Next requires; there is no page
+src/lib/core/                     the domain layer. No React, no routes. The part worth having.
+src/lib/core/catalogue/           what a card is: the three catalogues, matching, artwork, prices
+src/lib/core/collection/          what you own: rows, assembly, statistics, value over time
+src/lib/core/account/             who you are: username and password rules, what to call you
+src/lib/storage/                  where the collection is kept, and the only part that knows.
+src/lib/api/                      who may read and write, how often, and the one error shape.
+public/openapi.yaml               the contract
+public/artwork/                   the scans the API links to
+scripts/                          the generators src/lib/core keeps referring to
+supabase/                         auth and session backing store, migrations, the auth emails
 ```
 
-Three folders the target layout names do not exist here, and that is deliberate:
-`types/` (types live beside what defines them) and `features/*/actions.ts`,
-`queries.ts`, `schemas.ts` (data access is in `lib/`). Create them when there is
-something to put in them, not before.
+`types/` does not exist: types live beside what defines them.
 
-**The rules that hold this together — including which folder a thing belongs in
-and what may import what — are in [`CONVENTIONS.md`](./CONVENTIONS.md).** Three
-of them are enforced by `npm run lint`; the rest are review.
+**The rules that hold this together are in [`CONVENTIONS.md`](./CONVENTIONS.md).**
+Each says whether a check enforces it or a person has to notice.
 
-Two route notes worth knowing before reading the tree: `src/app/@modal/` is a
-card shown as a dialog, intercepted so the list behind it survives, and
-`src/app/api/cover/` is a same-origin passthrough for the one image host that
-sends no CORS headers.
-
-The web tool is the portfolio's `/cards`, moved rather than rewritten: the same
-rail, the same dashboard, the same Pokédex, the same tilt on a holo. Four things
-changed on the way over. The endpoints are Card Orb's (`/api/v1/fields` and
-`/api/v1/cards` instead of one `/api/cards`), the imports point at `lib/core`,
-the locale stays `nl-NL`, so the numbers read `€ 41.042` rather than `€41,042`,
-and the JSON-LD came out of `/cards` because that screen ships `noindex`. Two
-pages do not: `/`, which is the landing page, and `/user/<name>`, which is the
-collection you hand to someone. Both carry a graph again, and they are the only
-two entries in `sitemap.xml`.
-
-The signed-in screens read the collection through `src/lib/core` directly rather
-than through their own `/api/v1/collection`: a server component has no relative
-fetch, and the port changes per workspace. The route handler wraps the same
-function, so there is one implementation and nothing to drift.
-
-`/` is the landing page, `/login` is the door, and the collection lives at
-`/collection` inside the `(app)` group. **`/cards` is a redirect** — it was the
-whole app for two years and is in bookmarks, in the iOS client's memory and in
-shared links, so it keeps answering by pointing at the real address. The proxy
-bounces a signed-out request to `/login` with a `next` parameter, so the form
-can put you back where you were aiming.
+The web tool that used to live here — the portfolio's `/cards`, moved rather than
+rewritten — was removed on 2026-09-02 when cardorb.com moved to its own repository.
+It is in git up to `6e9a834`.
 
 Two things in `lib/core` are deliberately hollow. `localise()` and `measure()` in
 `util.ts` used to swap a remote image for a copy the portfolio served itself, and

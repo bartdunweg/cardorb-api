@@ -64,7 +64,7 @@ const CHECKS: Check[] = [
   {
     name: "NEXT_PUBLIC_SITE_URL",
     required: false,
-    without: "canonicals and the sitemap use Vercel's project URL",
+    without: "auth email links land on Vercel's project URL, not the web app",
   },
   { name: "ALLOWED_ORIGINS", required: false, without: "only this app's own origin may post" },
   {

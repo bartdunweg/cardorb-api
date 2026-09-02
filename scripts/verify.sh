@@ -68,11 +68,6 @@ fi
 # one pass shows every problem. The commands are the same ones `npm run check` composes, so
 # the two cannot drift.
 
-# The direction reversed with the CSS rebuild (ADR-0093): styles/theme.css is the source now,
-# and lib/design/theme-values.generated.ts is what is written — the handful of colours the web
-# manifest, viewport.themeColor and the two OG images need, none of which can read a stylesheet.
-# --check fails if the committed file no longer matches theme.css, which is how a token edit
-# that was never regenerated gets caught before it reaches a page.
 # --check, never --write. A verify script that fixes what it finds reports a pass on a
 # working tree it just changed, which is how an unreviewed reformat rides along with a
 # feature commit. `npm run format` is the one that writes; this one only judges.
@@ -80,7 +75,6 @@ fi
 # Scope is set by .prettierignore, and the argument is there: this formats code, not
 # prose. Every .md in the repo is hand-wrapped and Prettier would reflow it.
 run "format"    npx prettier --check .
-run "tokens"    node scripts/extract-theme-values.mjs --check
 # The changelog is generated from changelog.d/ and used to only claim it was.
 # This is what makes the claim true: a fragment added without collecting it turns
 # the run red, which is the whole reason the collector exists rather than a note

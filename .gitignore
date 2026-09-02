@@ -12,7 +12,3 @@ docs/rarity-backfill-*.undo.json
 # a fact about the project: the pages photographed render live Cardmarket
 # prices, so a committed baseline is red by the next morning through nothing
 # anyone did. Take them, make the change, compare, throw away.
-visual/**/*-snapshots/
-test-results/
-playwright-report/
-visual/.auth/

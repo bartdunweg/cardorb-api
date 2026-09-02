@@ -12,6 +12,18 @@ if the two have drifted apart.
   `{ "error": "<sentence>" }`; the one that did not (the health check) now does, and the
   four wordings of "no database" are one.
 
+- `api.cardorb.com` is attached and live, and the README says so: its examples read
+  `api.cardorb.com/v1/…` instead of `cardorb.com/api/v1/…`, which since 2026-09-02 answers
+  from the new web app's own API. The npm package is `cardorb-api`, so deployment URLs stop
+  being named `cardorb-<hash>`.
+
+- The web tool is gone from this repository, and with it every page: the signed-in
+  screens, login and signup, the public profile, the marketing and legal pages, the
+  brand page and the rendered API reference. cardorb.com is `bartdunweg/cardorb-web`
+  now, and that is where the reference will be rebuilt, in the same theme as the rest
+  of the site, from `/openapi.yaml` on this host. Until then `api.cardorb.com/` answers
+  with the contract itself. Nothing under `/v1` changed.
+
 ## 2026-08-23
 
 - You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.
