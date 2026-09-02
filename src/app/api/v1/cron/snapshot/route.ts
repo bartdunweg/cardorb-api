@@ -17,6 +17,7 @@ import {
 } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 import IDS from "@/lib/core/cardmarket-ids.generated.json";
+import { fetchPriceGuide } from "@/lib/core/catalogue/price-guide";
 
 /**
  * One value reading per account, once a night.
@@ -69,9 +70,6 @@ import IDS from "@/lib/core/cardmarket-ids.generated.json";
  * one, which is the only reason it is acceptable.
  */
 
-/** 6 is Pokémon in Cardmarket's game table. Public, no login, rebuilt nightly. */
-const GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json";
-
 export const dynamic = "force-dynamic";
 /**
  * The guide is fourteen megabytes and there is one build per account. Sixty
@@ -96,12 +94,13 @@ export async function GET(req: Request) {
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 
-  const guide = (await (
-    await fetch(GUIDE, { headers: { "User-Agent": "cardorb.com" } })
-  ).json()) as PriceGuide;
-  if (!guide?.priceGuides?.length || !guide.createdAt) {
+  let guide: PriceGuide;
+  try {
+    guide = await fetchPriceGuide();
+  } catch (err) {
     // Better to write nothing than to write a day where everything is unpriced:
     // that draws as the morning the collection became worthless.
+    console.error("[cron] the price guide could not be read:", err);
     return apiError(502, "The price guide came back empty.");
   }
 

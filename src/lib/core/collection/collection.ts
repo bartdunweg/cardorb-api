@@ -37,6 +37,10 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCollection, type CardSet } from "./cards";
+import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
+import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
+import type { ProductIds } from "./snapshot";
+import IDS from "../cardmarket-ids.generated.json";
 import { cardsTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
@@ -103,9 +107,51 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
  * no separate invalidation path needed. revalidate matches cachedRows()'s TTL:
  * the assembled collection can never be fresher than the rows it is built from.
  */
+/**
+ * Every mapped card's price from Cardmarket's guide, as one plain object,
+ * cached a day. The guide itself is fourteen megabytes and cannot sit in the
+ * data cache; what it says about the sixteen hundred cards this deployment
+ * knows a product id for is a couple of hundred kilobytes and can.
+ */
+export const PRICE_GUIDE_TAG = "price-guide";
+
+const cachedGuidePrices = () =>
+  unstable_cache(
+    async (): Promise<Record<string, CardPrices>> => {
+      const ids = Object.keys(IDS as ProductIds);
+      return Object.fromEntries(guidePrices(ids, await fetchPriceGuide(), IDS as ProductIds));
+    },
+    ["guide-prices"],
+    { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
+  )();
+
+/**
+ * The guide first, TCGdex for what the guide does not know — a card added
+ * before the id mapping learned it. If the guide is unreachable the whole
+ * list goes to TCGdex, which is slow but was the only path until today.
+ */
+export async function pricesFromGuideThenTcgdex(ids: string[]): Promise<Map<string, CardPrices>> {
+  let known: Record<string, CardPrices> = {};
+  try {
+    known = await cachedGuidePrices();
+  } catch (err) {
+    console.error("Price guide unavailable, pricing card by card:", err);
+  }
+  const out = new Map<string, CardPrices>();
+  const missing: string[] = [];
+  for (const id of ids) {
+    const hit = known[id];
+    if (hit) out.set(id, hit);
+    else missing.push(id);
+  }
+  if (missing.length) for (const [id, p] of await pricesFor(missing)) out.set(id, p);
+  return out;
+}
+
 const cachedCollection = (userId: string, db: SupabaseClient | null) =>
   unstable_cache(
-    async () => buildCollection(await cachedRows(userId, db)),
+    async () =>
+      buildCollection(await cachedRows(userId, db), { priceSource: pricesFromGuideThenTcgdex }),
     ["collection", userId],
     { revalidate: 3600, tags: [cardsTag(userId)] },
   )();
