@@ -37,10 +37,9 @@ Previous release (#133, #134): the repository became the Card Orb API — `docs/
    `https://api.cardorb.com/openapi.yaml` at build time. Then point `api.cardorb.com/` at it
    (the one rewrite in `next.config.ts`). The old renderer is in git at `40cc85d`,
    `src/app/docs/api/_components/reference.ts`, with its tests.
-2. **Set `NEXT_PUBLIC_SITE_URL` back to `https://cardorb.com` on the `cardorb-api` project**
-   (it was set to `api.cardorb.com` earlier this session, for a canonical that no longer
-   exists). It is the base of the links in auth emails, which land on the web app. Then
-   redeploy: it is inlined at build time (R-PLAT-002).
+2. **Merge this branch, which redeploys.** `NEXT_PUBLIC_SITE_URL` on the `cardorb-api`
+   project is `https://cardorb.com` again (the owner set it this session); it is inlined at
+   build time (R-PLAT-002), so it takes effect on that deploy.
 3. **Move the iOS app's base URL** to `api.cardorb.com` (`bartdunweg/cardorb-ios`), watch the
    logs for `[deprecated] CARDS_TOKEN was used`, then retire the passcode (design steps 3–4).
 4. **Decide the two stale branches** (see `## Open`).
