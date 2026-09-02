@@ -31,6 +31,9 @@ if the two have drifted apart.
   of the site, from `/openapi.yaml` on this host. Until then `api.cardorb.com/` answers
   with the contract itself. Nothing under `/v1` changed.
 
+- A set whose records TCGdex could not deliver is no longer remembered as empty for a day: the API asks again on the next request, so a short outage at TCGdex costs a moment rather than a day of cards without pictures.
+- `GET /v1/public/<username>/cards` also says how many sets the collection spans, so a profile page can show that without fetching the whole collection.
+
 - A request that carries an account credential is no longer held to ten a minute per address.
   That ceiling was for guessing the old passcode, and the web app's servers make requests for
   every visitor from a handful of shared addresses; they are held to six hundred a minute now,

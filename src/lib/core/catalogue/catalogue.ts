@@ -175,8 +175,8 @@ function setPricingMax(): number {
   return Number.isFinite(raw) && raw > 0 ? raw : 0;
 }
 
-/** The whole of the per-set work, on a cache miss. */
-async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
+/** The whole of the per-set work, on a cache miss. Exported for its test only. */
+export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // Fetched inside rather than passed in, so a cached catalogue is a complete
   // answer to "tell me about this set" and not half of one. It costs nothing on
   // a miss: the index is one fetch and json() caches it for a day like the rest.
@@ -202,6 +202,18 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   const ids = resolveSetIds(setName, sets);
   // One at a time: the subsets of a set in turn rather than alongside it.
   const details = (await mapLimit(ids, 1, fetchSet)).filter(Boolean) as TcgSetDetail[];
+  // The index knows the set and not one of its records could be fetched: that
+  // is TCGdex not answering, not a set without cards. fetchSet() fails soft so
+  // one gallery can go missing without costing the set, but a catalogue with
+  // nothing in it would be cached below for a day — on 2026-09-02 a few
+  // minutes of TCGdex being unreachable from the API's region left the newest
+  // set without a scan or a catalogue id for every app until the entry aged
+  // out. Throwing keeps it out of the cache; the next request tries again.
+  if (ids.length > 0 && details.length === 0) {
+    throw new Error(
+      `TCGdex lists ${setName} as ${ids.join(", ")} but answered for none of them; not caching an empty catalogue`,
+    );
+  }
   // The first is the set itself; the rest are its galleries, which have their
   // own logos and dates and should not be the ones on the heading.
   const detail = details[0] ?? null;

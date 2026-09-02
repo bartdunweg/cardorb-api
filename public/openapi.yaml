@@ -1563,16 +1563,17 @@ paths:
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
       responses:
         "200":
-          description: The page, in set order, and the total behind it.
+          description: The page, in set order, the total behind it, and how many sets the whole spans.
           headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
           content:
             application/json:
               schema:
                 type: object
-                required: [cards, total]
+                required: [cards, total, sets]
                 properties:
                   cards: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
                   total: { type: integer }
+                  sets: { type: integer, description: "Sets with at least one owned card, over the whole collection rather than the page." }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
