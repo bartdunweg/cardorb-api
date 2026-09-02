@@ -36,12 +36,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       headers: { "Cache-Control": "no-store" },
     });
 
-  const { items, total } = pageOf(
-    filterPublicItems(publicItems(forPublic(sets)), read.query.q),
-    read.query,
-  );
+  const shown = forPublic(sets);
+  const { items, total } = pageOf(filterPublicItems(publicItems(shown), read.query.q), read.query);
+  // How many sets the owned cards span, for the line under the profile's name; a page of a
+  // hundred cannot count that for itself, and the whole collection is what this route exists
+  // to spare the reader.
+  const setCount = shown.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
   return NextResponse.json(
-    { cards: items, total },
+    { cards: items, total, sets: setCount },
     { headers: { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" } },
   );
 }

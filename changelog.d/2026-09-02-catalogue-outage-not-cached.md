@@ -1,0 +1,2 @@
+- A set whose records TCGdex could not deliver is no longer remembered as empty for a day: the API asks again on the next request, so a short outage at TCGdex costs a moment rather than a day of cards without pictures.
+- `GET /v1/public/<username>/cards` also says how many sets the collection spans, so a profile page can show that without fetching the whole collection.
