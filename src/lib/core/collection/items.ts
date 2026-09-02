@@ -196,14 +196,18 @@ export function countStats(sets: CardSet[]): Stats {
   return stats;
 }
 
-/** A Pokédex slot without the cards under it: what a 1,025-tile grid needs and no more. */
-export type DexSummary = { id: number; name: string; owned: number; image: string | null };
+/**
+ * A Pokédex slot for a 1,025-tile grid: a count, and the owned cards of that
+ * Pokémon as name and picture only. The row-level facts stay on `GET /v1/cards`.
+ */
+export type DexCard = { key: string; name: string; image: string | null };
+export type DexSummary = { id: number; name: string; owned: number; cards: DexCard[] };
 
 export function summariseDex(dex: DexEntry[]): DexSummary[] {
   return dex.map((e) => ({
     id: e.id,
     name: e.name,
     owned: e.owned,
-    image: e.cards.find((c) => c.image)?.image ?? null,
+    cards: e.cards.map((c) => ({ key: c.key, name: c.name, image: c.image })),
   }));
 }

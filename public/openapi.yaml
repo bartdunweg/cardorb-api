@@ -440,15 +440,23 @@ components:
         favorites: { type: integer }
         sets: { type: integer, description: "Sets with at least one owned copy." }
 
+    DexCard:
+      type: object
+      required: [key, name, image]
+      properties:
+        key: { type: string, description: "The card's key in `GET /v1/collection`." }
+        name: { type: string }
+        image: { type: [string, "null"] }
+
     DexSummary:
       type: object
-      description: One National Pokédex slot, without the cards under it.
-      required: [id, name, owned, image]
+      description: One National Pokédex slot, with the owned cards of it as name and picture.
+      required: [id, name, owned, cards]
       properties:
         id: { type: integer }
         name: { type: string }
         owned: { type: integer, description: "Owned cards of this Pokémon." }
-        image: { type: [string, "null"], description: "One owned card's picture, for a tile." }
+        cards: { type: array, items: { $ref: "#/components/schemas/DexCard" } }
 
     Folder:
       type: object
@@ -857,7 +865,7 @@ paths:
       tags: [Collection]
       operationId: getPokedex
       summary: Every National Pokédex slot, with how many cards of it the caller owns
-      description: 1,025 entries, each a count and one picture. The cards themselves are `GET /v1/cards?q=`.
+      description: 1,025 entries, each a count and the owned cards of that Pokémon as name and picture. The rows are `GET /v1/cards`.
       responses:
         "200":
           description: The slots, in Pokédex order.

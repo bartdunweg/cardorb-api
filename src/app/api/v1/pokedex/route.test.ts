@@ -30,14 +30,25 @@ beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
   getCards.mockResolvedValue([]);
-  getPokedex.mockReturnValue([{ id: 25, name: "Pikachu", owned: 1, cards: [{ image: "/p.png" }] }]);
+  getPokedex.mockReturnValue([
+    { id: 25, name: "Pikachu", owned: 1, cards: [{ key: "k", name: "Pikachu", image: "/p.png" }] },
+  ]);
 });
 
 describe("GET /api/v1/pokedex", () => {
   it("hands back the slots without the cards under them", async () => {
     const body = await (await get()).json();
     expect(getCards).toHaveBeenCalledWith("me-uuid", "t");
-    expect(body).toEqual({ entries: [{ id: 25, name: "Pikachu", owned: 1, image: "/p.png" }] });
+    expect(body).toEqual({
+      entries: [
+        {
+          id: 25,
+          name: "Pikachu",
+          owned: 1,
+          cards: [{ key: "k", name: "Pikachu", image: "/p.png" }],
+        },
+      ],
+    });
   });
 
   it("passes a refusal through", async () => {

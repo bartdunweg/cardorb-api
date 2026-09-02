@@ -126,7 +126,7 @@ describe("countStats", () => {
 });
 
 describe("summariseDex", () => {
-  it("keeps the slot and its first picture, not the cards", () => {
+  it("keeps the slot and its cards as name and picture, not the rows", () => {
     const dex = [
       {
         id: 25,
@@ -137,8 +137,16 @@ describe("summariseDex", () => {
       { id: 1, name: "Bulbasaur", owned: 0, cards: [] },
     ];
     expect(summariseDex(dex)).toEqual([
-      { id: 25, name: "Pikachu", owned: 2, image: "/Pikachu V.png" },
-      { id: 1, name: "Bulbasaur", owned: 0, image: null },
+      {
+        id: 25,
+        name: "Pikachu",
+        owned: 2,
+        cards: [
+          { key: "Pikachu", name: "Pikachu", image: null },
+          { key: "Pikachu V", name: "Pikachu V", image: "/Pikachu V.png" },
+        ],
+      },
+      { id: 1, name: "Bulbasaur", owned: 0, cards: [] },
     ]);
   });
 });

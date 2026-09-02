@@ -8,9 +8,9 @@ import { getPokedex } from "@/lib/core/collection/pokedex";
 export const dynamic = "force-dynamic";
 
 /**
- * Every National Pokédex slot with how many cards of it the caller owns and
- * one picture. The cards themselves are not in it: a 1,025-tile grid needs
- * a count and a thumbnail, and the list is `GET /v1/cards?q=`.
+ * Every National Pokédex slot with how many cards of it the caller owns, and
+ * those cards as name and picture. The row-level facts are not in it: a
+ * 1,025-tile grid needs a count and thumbnails, and the list is `GET /v1/cards`.
  */
 export async function GET(req: Request) {
   const who = await authorise(req);
