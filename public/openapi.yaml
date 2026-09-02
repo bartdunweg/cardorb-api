@@ -1509,6 +1509,7 @@ paths:
               schema: { $ref: "#/components/schemas/Collection" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/public/{username}/profile:
     get:
@@ -1579,6 +1580,7 @@ paths:
                   latestPull: { $ref: "#/components/schemas/LatestPull" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
     options:
       tags: [Public]
       operationId: getLatestPullPreflight

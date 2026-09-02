@@ -134,6 +134,10 @@ export async function serverClient(): Promise<SupabaseClient | null> {
  *  - **The snapshot cron** acts for everybody at once. Nobody is signed in when
  *    it fires, and a job that recorded only the collections whose owners
  *    happened to have a live session would record almost nothing.
+ *  - **A public profile, read for a stranger** (getPublicCollection). The
+ *    stranger has no account to act as, the profile has said it is public,
+ *    and the anonymous role may read only the public columns — not enough to
+ *    assemble the collection. forPublic() strips the rest before it leaves.
  *
  * The test that still holds: if there is a person this could be acting *as*,
  * this is the wrong client. Anything that arrived as a request with a cookie or

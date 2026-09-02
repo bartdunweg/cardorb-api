@@ -71,6 +71,10 @@ other.
   links to `{{ .SiteURL }}/auth/confirm`, which lives in `cardorb-web` since its PR #15. The
   `next=` values in `supabase/templates/*.html` name the old app's routes; the web route
   ignores them, so the templates need no change. Owner's check.
+- **The anonymous role's column grants on `cards` live outside this repository too.** The web
+  app's schema review restricted `anon` to the public columns (found on 2026-09-02, when the
+  public routes came back empty). Public reads use the service role now, scoped to one public
+  profile; the grants themselves are worth a migration file that records them.
 - **The `collections` table and `cards.collection_id` have no migration here.** The web app
   made them in the dashboard. Their `on delete` behaviour is unknown, which is why
   `deleteFolder()` empties a folder explicitly first. Worth a migration file that records

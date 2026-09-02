@@ -47,10 +47,10 @@ const sets: CardSet[] = [
   },
 ];
 
-const getCards = vi.fn();
+const getPublicCollection = vi.fn();
 const ownerOf = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
-  getCards: (...args: unknown[]) => getCards(...args),
+  getPublicCollection: (...args: unknown[]) => getPublicCollection(...args),
   ownerOf: (...args: unknown[]) => ownerOf(...args),
 }));
 
@@ -67,10 +67,10 @@ const req = (ip = `10.0.0.${++addresses}`) =>
   });
 
 beforeEach(() => {
-  // The whole profile, not just the id: the route needs getCards(owner.id) and
+  // The whole profile, not just the id: the route needs getPublicCollection(owner.id) and
   // the page beside it needs the name off the same lookup.
   ownerOf.mockResolvedValue({ id: "owner-1", username: "owner", displayName: null });
-  getCards.mockResolvedValue(sets);
+  getPublicCollection.mockResolvedValue({ sets, failed: false });
 });
 
 afterEach(() => {
@@ -104,11 +104,11 @@ describe("GET /api/v1/public/[username]/latest-pull", () => {
     ownerOf.mockResolvedValue(null);
     const res = await GET(req(), params("someone-else"));
     expect(res.status).toBe(404);
-    expect(getCards).not.toHaveBeenCalled();
+    expect(getPublicCollection).not.toHaveBeenCalled();
   });
 
   it("404s when there is nothing eligible to show", async () => {
-    getCards.mockResolvedValue([]);
+    getPublicCollection.mockResolvedValue({ sets: [], failed: false });
     expect((await GET(req(), params("owner"))).status).toBe(404);
   });
 
@@ -124,7 +124,7 @@ describe("GET /api/v1/public/[username]/latest-pull", () => {
       owned: false,
       variants: [{ ...owned.variants[0]!, owned: false, acquiredAt: "2026-08-14T00:00:00.000Z" }],
     };
-    getCards.mockResolvedValue([{ ...base, cards: [...base.cards, wanted] }]);
+    getPublicCollection.mockResolvedValue({ sets: [{ ...base, cards: [...base.cards, wanted] }], failed: false });
 
     const body = await (await GET(req(), params("owner"))).json();
     expect(body.latestPull.name).toBe("Charizard");
