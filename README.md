@@ -22,9 +22,9 @@ browser keeps calling `/api/v1` on its own origin, because its session cookie do
 cross hosts. Every failure is `{ "error": "<sentence>" }` at a status a client can branch
 on. `docs/api-design.md` has the reasoning.
 
-Every **data** route under `/api/v1/` needs a viewer, reading included. The key is
-`CARDS_TOKEN`, one shared passcode rather than an account system: one person edits
-this. The exceptions are not data: the bootstrap and health routes
+Every **data** route under `/api/v1/` needs a viewer, reading included: a Supabase
+access token as `Authorization: Bearer`, which both apps send. The one shared passcode
+that predated accounts was retired on 2026-09-02. The exceptions are not data: the bootstrap and health routes
 (`/health`, `/session`, `/signup`, `/password/reset`, `/confirmation`, `/username`)
 and the `/cron/snapshot` job carry no viewer, and are gated by `sameOrigin()` or
 `CRON_SECRET` instead — each route's own docstring says which and why.
@@ -85,9 +85,7 @@ printing it publishes the rarity and whether it is owned, and nothing else — n
 what was paid, the condition, the grade, the notes, or how many.
 
 `GET /api/v1/value-history` answers with **the caller's own** series, oldest
-reading first. It needs a bearer token: the deprecated `x-cards-key`
-header is a passcode rather than an identity, so it carries no session for row
-level security to judge and that path answers with an empty series.
+reading first.
 
 ### The latest pull, for another site
 
@@ -134,7 +132,7 @@ request rather than a failed card.
 
 ```
 npm install
-cp .env.example .env.local   # then fill in the Supabase vars and CARDS_TOKEN
+cp .env.example .env.local   # then fill in the Supabase vars and OWNER_EMAIL
 npm run dev
 curl localhost:3000/api/v1/collection | jq '.sets | length'
 ```
@@ -151,7 +149,6 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | | required | |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | the collection's database; public by design, RLS is what stops a stranger, not secrecy |
-| `CARDS_TOKEN` | yes | the one passcode that may write |
 | `OWNER_EMAIL` | yes | the address the login checks against |
 | `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
 | `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — the web app, where the links in auth emails land |

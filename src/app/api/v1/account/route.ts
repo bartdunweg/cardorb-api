@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { authorise, refused } from "@/lib/api/guard";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { adminClient, readClient } from "@/lib/storage/supabase";
 
 /**
@@ -28,32 +28,29 @@ import { adminClient, readClient } from "@/lib/storage/supabase";
  */
 export async function DELETE(req: Request) {
   const viewer = await authorise(req);
-  if (refused(viewer)) return NextResponse.json({ error: viewer.error }, { status: viewer.status });
+  if (refused(viewer)) return apiError(viewer.status, viewer.error);
 
   const read = await readJsonBody<{ password?: unknown }>(req, BODY_LIMIT.credentials);
   if (read.kind === "too-large") return refuse("tooLarge");
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const password = typeof read.body.password === "string" ? read.body.password : "";
-  if (!password)
-    return NextResponse.json({ error: "Enter your password to confirm." }, { status: 400 });
+  if (!password) return apiError(400, "Enter your password to confirm.");
 
   const auth = readClient();
-  if (!auth)
-    return NextResponse.json({ error: "Accounts cannot be deleted here." }, { status: 503 });
+  if (!auth) return apiError(503, "Accounts cannot be deleted here.");
   const { error: wrong } = await auth.auth.signInWithPassword({ email: viewer.email, password });
-  if (wrong) return NextResponse.json({ error: "That password is not right." }, { status: 403 });
+  if (wrong) return apiError(403, "That password is not right.");
 
   const admin = adminClient();
   if (!admin) {
     console.error("SUPABASE_SERVICE_ROLE_KEY is not set: an account cannot be deleted");
-    return NextResponse.json({ error: "Accounts cannot be deleted here." }, { status: 503 });
+    return apiError(503, "Accounts cannot be deleted here.");
   }
 
   const { error } = await admin.auth.admin.deleteUser(viewer.userId);
   if (error) {
     console.error("Deleting an account failed:", error.message);
-    return NextResponse.json({ error: "That account could not be deleted." }, { status: 500 });
+    return apiError(500, "That account could not be deleted.");
   }
 
   // The session outlives the account it named unless it is ended: the cookies

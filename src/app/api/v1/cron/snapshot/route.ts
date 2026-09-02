@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { buildCollection } from "@/lib/core/collection/cards";
 import {
   cardPricesOf,
@@ -87,10 +87,10 @@ export async function GET(req: Request) {
   // unauthenticated write endpoint as a consolation prize.
   if (!secret) {
     console.error("[cron] CRON_SECRET is not set: refusing to run the snapshot");
-    return NextResponse.json({ error: "Not configured." }, { status: 503 });
+    return apiError(503, "Not configured.");
   }
   if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "No." }, { status: 401 });
+    return apiError(401, "No.");
   }
 
   const db = adminClient();
@@ -102,7 +102,7 @@ export async function GET(req: Request) {
   if (!guide?.priceGuides?.length || !guide.createdAt) {
     // Better to write nothing than to write a day where everything is unpriced:
     // that draws as the morning the collection became worthless.
-    return NextResponse.json({ error: "The price guide came back empty." }, { status: 502 });
+    return apiError(502, "The price guide came back empty.");
   }
 
   const ids = IDS as ProductIds;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { ownerOf } from "@/lib/core/collection/collection";
@@ -51,17 +52,17 @@ export async function GET(
   { params }: { params: Promise<{ username: string; tcgId: string }> },
 ) {
   if (byAddress(addressOf(req))) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return apiError(429, "Too many requests");
   }
 
   const { username, tcgId } = await params;
   if (!(await ownerOf(username))) {
-    return NextResponse.json({ error: "No such collection." }, { status: 404 });
+    return apiError(404, "No such collection.");
   }
 
   const card = await getCardDetail(tcgId);
   if (!card) {
-    return NextResponse.json({ error: "No such card." }, { status: 404 });
+    return apiError(404, "No such card.");
   }
 
   const { price: _price, market: _market, ...rest } = card;

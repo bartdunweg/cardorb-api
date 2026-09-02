@@ -126,10 +126,11 @@ one to.
    No client has to change anything.
 2. **Attach the host.** Vercel domain + Cloudflare CNAME, DNS-only. Verify
    `curl https://api.cardorb.com/v1/health` and that `/` there is the reference.
-3. **Move the iOS app to `api.cardorb.com`.** Its base URL, nothing else. Watch the logs for
-   `[deprecated] CARDS_TOKEN was used` to see what still calls with the passcode.
-4. **Retire the passcode** once nothing in the logs uses it: remove the `passcode` scheme from
-   the contract in the same commit as the code.
+3. **Move the iOS app to `api.cardorb.com`.** Done in its PR #52.
+4. **Retire the passcode.** Done on 2026-09-02, by the owner's decision without a log check:
+   no client of ours sent it. The `passcode` scheme left the contract in the same commit as
+   the code — a removal under `/v1`, which R-API-008 reserves for `/v2`; the owner waived it
+   because no reader existed.
 5. **Only if a third party appears:** per-user keys, a `code` key on errors, a public
    changelog for the contract. None of it before there is a reader.
 

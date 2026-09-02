@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
@@ -42,12 +43,11 @@ const addressOf = (req: Request) =>
  * browser it did approximately nothing.
  */
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (byAddress(addressOf(req)))
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
+  if (byAddress(addressOf(req))) return apiError(429, "Too many requests");
 
   const viewer = await currentViewer();
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   let password = "";
   let currentPassword: string | undefined;
@@ -55,10 +55,8 @@ export async function POST(req: Request) {
     req,
     BODY_LIMIT.credentials,
   );
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.password === "string") password = body.password;
   // An empty string is treated as absent rather than passed on: Supabase
@@ -77,7 +75,7 @@ export async function POST(req: Request) {
 
   const db = await serverClient();
   if (!db) {
-    return NextResponse.json({ error: NO_DATABASE_CONFIGURED }, { status: 503 });
+    return apiError(503, NO_DATABASE_CONFIGURED);
   }
 
   // Spread rather than passed as undefined: sending the key with no value is
@@ -94,7 +92,7 @@ export async function POST(req: Request) {
     // password" branch below: Supabase's wording for a wrong current password
     // can also contain "new password", and the more specific reading wins.
     if (/current password|invalid credentials|incorrect password/i.test(error.message)) {
-      return NextResponse.json({ error: "That is not your current password." }, { status: 400 });
+      return apiError(400, "That is not your current password.");
     }
     // The one refusal worth translating. Supabase declines a password that
     // matches the current one, and it is a likely thing to type: somebody who
@@ -102,13 +100,10 @@ export async function POST(req: Request) {
     // remember, and tries the one they think it is. "That password could not be
     // set" tells them nothing about which part to change.
     if (/should be different|same as the old|new password/i.test(error.message)) {
-      return NextResponse.json(
-        { error: "That is already your password. Pick a different one." },
-        { status: 400 },
-      );
+      return apiError(400, "That is already your password. Pick a different one.");
     }
     console.error("Password change failed:", error.message);
-    return NextResponse.json({ error: "That password could not be set." }, { status: 400 });
+    return apiError(400, "That password could not be set.");
   }
 
   return NextResponse.json({ ok: true });

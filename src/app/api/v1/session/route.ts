@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
   // only ever served by this app, so the host it was served from is the only
   // one that may post to it, whatever that host happens to be today.
   if (!sameOrigin(req)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return apiError(403, "Forbidden");
   }
 
   const db = await serverClient();
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
   // would not work anyway.
   if (!db) {
     console.error("No database is configured: nobody can sign in");
-    return NextResponse.json({ error: NO_DATABASE_CONFIGURED }, { status: 503 });
+    return apiError(503, NO_DATABASE_CONFIGURED);
   }
 
   let email = "";
@@ -85,10 +86,8 @@ export async function POST(req: Request) {
     req,
     BODY_LIMIT.credentials,
   );
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.email === "string") email = body.email;
   // `key` is what the old form called it, accepted so a client mid-update is
@@ -100,10 +99,7 @@ export async function POST(req: Request) {
   if (byAddress(ip) || byAccount(accountKey(ip, email))) {
     // The same vagueness as a wrong password, and for the same reason: "too
     // many attempts on that account" tells a stranger the account exists.
-    return NextResponse.json(
-      { error: "Too many attempts. Try again in a few minutes." },
-      { status: 429 },
-    );
+    return apiError(429, "Too many attempts. Try again in a few minutes.");
   }
 
   const { error } = await db.auth.signInWithPassword({ email, password });
@@ -135,7 +131,7 @@ export async function POST(req: Request) {
     // One message for both halves, and deliberately vague about which was
     // wrong. "No account with that address" is a way to ask whether an address
     // has an account here, one guess at a time.
-    return NextResponse.json({ error: "That email or password is not right." }, { status: 401 });
+    return apiError(401, "That email or password is not right.");
   }
 
   // No Set-Cookie here: the client in lib/storage/supabase.ts wrote the session

@@ -76,14 +76,6 @@ components:
         The browser's session cookie, set by `POST /v1/session`. What the web
         tool sends. Scoped to cardorb.com, so it never reaches api.cardorb.com —
         the browser calls `/api/v1` on its own origin instead.
-    passcode:
-      type: apiKey
-      in: header
-      name: x-cards-key
-      description: |
-        **Deprecated.** The one shared passcode, `CARDS_TOKEN`. Still accepted so
-        curl and the snapshot script keep working; every use is logged. It names
-        no session, so `GET /v1/value-history` answers it with an empty series.
     cron:
       type: http
       scheme: bearer
@@ -428,6 +420,24 @@ components:
         collectionId: { type: [string, "null"], format: uuid }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+
+    PublicItem:
+      type: object
+      description: One card on a public profile, with how many copies the owner holds. Nothing private.
+      required: [key, name, number, set, setTitle, rarity, gen, type, image, speciesId, tcgId, copies]
+      properties:
+        key: { type: string }
+        name: { type: string }
+        number: { type: string }
+        set: { type: string }
+        setTitle: { type: string }
+        rarity: { type: [string, "null"] }
+        gen: { type: [string, "null"] }
+        type: { type: [string, "null"] }
+        image: { type: [string, "null"] }
+        speciesId: { type: [integer, "null"] }
+        tcgId: { type: [string, "null"] }
+        copies: { type: integer, minimum: 1 }
 
     Stats:
       type: object
@@ -985,7 +995,7 @@ paths:
       tags: [Value]
       operationId: getValueHistory
       summary: The caller's collection value over time, oldest first
-      description: Needs a bearer token or a session. The deprecated passcode names no session and gets an empty series.
+      description: Needs a bearer token or a session.
       responses:
         "200":
           description: The series.
@@ -1535,6 +1545,38 @@ paths:
                   avatarUrl: { type: [string, "null"] }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /v1/public/{username}/cards:
+    get:
+      tags: [Public]
+      operationId: listPublicCards
+      summary: One page of a public collection as a flat list
+      description: |
+        For a page that shows a hundred cards at a time and should not fetch the whole
+        collection to do it. One entry per card with owned copies, nothing private. No key;
+        sixty a minute per address; cached five minutes at the CDN.
+      security: []
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+        - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        "200":
+          description: The page, in set order, and the total behind it.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cards, total]
+                properties:
+                  cards: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
+                  total: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/public/{username}/cards/{tcgId}:
     get:

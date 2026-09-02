@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
-import { forGrid, forPublic } from "@/lib/core/collection/cards";
+import { forPublic } from "@/lib/core/collection/cards";
+import { filterPublicItems, pageOf, publicItems, readPublicQuery } from "@/lib/core/collection/items";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /**
- * The public routes never go through authorise(), so this is the only throttle
- * in front of them. Same limiter as latest-pull's — this one is also unauthenticated
- * and is the most expensive of the two (walks the full catalogue match).
+ * One page of a public collection as a flat list — for a page that shows a
+ * hundred cards at a time and should not fetch nineteen hundred to do it.
+ * The grouped whole stays at the sibling route. No key, same limiter and
+ * cache as its siblings; a failed read is a 503 nothing caches.
  */
 const byAddress = createRateLimiter(60_000, 60);
 
 const addressOf = (req: Request) =>
-  // x-real-ip first: x-forwarded-for is client-spoofable. Same order as guard.ts.
   req.headers.get("x-real-ip")?.trim() ||
   req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
   "unknown";
@@ -22,20 +23,25 @@ const addressOf = (req: Request) =>
 export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
   if (byAddress(addressOf(req))) return apiError(429, "Too many requests");
 
+  const read = readPublicQuery(new URL(req.url).searchParams);
+  if (read.kind === "invalid") return apiError(400, read.error);
+
   const { username } = await params;
   const owner = await ownerOf(username);
   if (!owner) return apiError(404, "No such collection.");
-  const { sets, failed } = await getPublicCollection(owner.id);
-  // Never cache a failure: the CDN would hand an empty collection to every
-  // visitor for an hour, which is what happened once.
-  if (failed)
-    return NextResponse.json(
-      { error: "The collection could not be read. Try again in a moment." },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
 
+  const { sets, failed } = await getPublicCollection(owner.id);
+  if (failed)
+    return apiError(503, "The collection could not be read. Try again in a moment.", undefined, {
+      headers: { "Cache-Control": "no-store" },
+    });
+
+  const { items, total } = pageOf(
+    filterPublicItems(publicItems(forPublic(sets)), read.query.q),
+    read.query,
+  );
   return NextResponse.json(
-    { sets: forGrid(forPublic(sets)) },
+    { cards: items, total },
     { headers: { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" } },
   );
 }

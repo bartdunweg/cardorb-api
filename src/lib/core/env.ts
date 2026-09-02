@@ -10,7 +10,6 @@ import { z } from "zod";
  * What this deployment needs, checked once, out loud.
  *
  * Every consumer reads process.env directly and degrades on its own: no
- * CARDS_TOKEN and every request is refused with a 503, no
  * NEXT_PUBLIC_SUPABASE_URL and the collection is empty everywhere. Each of
  * those failures is sensible in isolation
  * and together they are the same symptom — a site that looks like it works
@@ -32,11 +31,6 @@ import { z } from "zod";
 type Check = { name: string; required: boolean; without: string };
 
 const CHECKS: Check[] = [
-  {
-    name: "CARDS_TOKEN",
-    required: true,
-    without: "every API request answers 503 and nobody can sign in",
-  },
   // OWNER_EMAIL was required here, and said so with "the sign-in form refuses
   // every address, including the right one". That stopped being true when
   // accounts arrived: /api/v1/session hands the address and password to

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
@@ -33,24 +33,22 @@ import { validateUsername } from "@/lib/core/account/account";
  * would raise 'not signed in'. Same rule, same shape, as PATCH /v1/profile.
  */
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   let wanted = "";
   const read = await readJsonBody<{ username?: unknown }>(req, BODY_LIMIT.profile);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.username === "string") wanted = body.username.trim().toLowerCase();
 
   if (wanted === viewer.username) return NextResponse.json({ ok: true, username: wanted });
 
   const shape = validateUsername(wanted);
-  if (!shape.ok) return NextResponse.json({ error: shape.error }, { status: 400 });
+  if (!shape.ok) return apiError(400, shape.error);
 
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
@@ -69,5 +67,5 @@ export async function POST(req: Request) {
     failed: { error: "That name could not be claimed.", status: 500 },
   }[result.reason];
 
-  return NextResponse.json({ error: said.error }, { status: said.status });
+  return apiError(said.status, said.error);
 }

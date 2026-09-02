@@ -36,6 +36,18 @@ if the two have drifted apart.
   every visitor from a handful of shared addresses; they are held to six hundred a minute now,
   and a request with nothing to show is still held to ten.
 
+- Every failure under `/v1` is written by one helper now. The 140 hand-typed `{ error }`
+  answers across 31 route files were rewritten to `apiError()`; nothing a client sees changed.
+
+- The shared passcode (`CARDS_TOKEN`, the `x-cards-key` header) is gone. Every caller is an
+  account now: a Supabase access token as bearer, or the session cookie on this origin. No
+  client of ours sent it any more; a request that still does is refused like any other
+  unsigned request.
+
+- `GET /v1/public/<username>/cards` answers one page of a public collection as a flat list —
+  `q`, `limit`, `offset` — one entry per card with its copy count, nothing private, for a page
+  that shows a hundred cards without fetching nineteen hundred.
+
 - `GET /v1/public/<username>/profile` answers the name to print and the picture, so a page
   can draw a public collection's header without a key. No prices, no email, same limiter and
   cache as its two siblings.

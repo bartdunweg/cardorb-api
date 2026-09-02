@@ -211,3 +211,73 @@ export function summariseDex(dex: DexEntry[]): DexSummary[] {
     cards: e.cards.map((c) => ({ key: c.key, name: c.name, image: c.image })),
   }));
 }
+
+/**
+ * One entry per card on a public profile: what a stranger may see, and how
+ * many copies the owner holds — never the copies themselves. Read from the
+ * public payload (forPublic), where every private field is already gone.
+ */
+export type PublicItem = {
+  key: string;
+  name: string;
+  number: string;
+  set: string;
+  setTitle: string;
+  rarity: string | null;
+  gen: string | null;
+  type: string | null;
+  image: string | null;
+  speciesId: number | null;
+  tcgId: string | null;
+  /** Owned copies. A card with only wishes is not on a public page. */
+  copies: number;
+};
+
+export function publicItems(sets: CardSet[]): PublicItem[] {
+  const out: PublicItem[] = [];
+  for (const set of sets) {
+    for (const card of set.cards) {
+      const copies = card.variants.filter((v) => v.owned).length;
+      if (copies === 0) continue;
+      out.push({
+        key: card.key,
+        name: card.name,
+        number: card.number,
+        set: set.name,
+        setTitle: set.title,
+        rarity: card.variants.find((v) => v.owned)?.rarity ?? null,
+        gen: card.gen,
+        type: card.type,
+        image: card.image,
+        speciesId: card.speciesId,
+        tcgId: card.tcgId,
+        copies,
+      });
+    }
+  }
+  return out;
+}
+
+export function filterPublicItems(items: PublicItem[], q?: string): PublicItem[] {
+  const needle = q?.trim().toLowerCase();
+  if (!needle) return items;
+  return items.filter(
+    (it) => it.name.toLowerCase().includes(needle) || it.set.toLowerCase().includes(needle),
+  );
+}
+
+/** `q`, `limit` and `offset` only: a public page has no wishlist, favourites or folders. */
+export function readPublicQuery(
+  params: URLSearchParams,
+): { kind: "ok"; query: { q?: string } & Page } | { kind: "invalid"; error: string } {
+  const read = readItemQuery(
+    new URLSearchParams(
+      Object.fromEntries(
+        [...params.entries()].filter(([k]) => ["q", "limit", "offset"].includes(k)),
+      ),
+    ),
+  );
+  if (read.kind === "invalid") return read;
+  const { q, limit, offset } = read.query;
+  return { kind: "ok", query: { ...(q ? { q } : {}), limit, offset } };
+}

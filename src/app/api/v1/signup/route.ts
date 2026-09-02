@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -51,30 +52,25 @@ const clientIp = (req: Request) =>
 
 export async function POST(req: Request) {
   if (!sameOrigin(req)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return apiError(403, "Forbidden");
   }
 
   const db = await serverClient();
   if (!db) {
     console.error("No database is configured: nobody can sign up");
-    return NextResponse.json({ error: NO_DATABASE_CONFIGURED }, { status: 503 });
+    return apiError(503, NO_DATABASE_CONFIGURED);
   }
 
   if (bySignup(clientIp(req))) {
-    return NextResponse.json(
-      { error: "Too many accounts from here. Try again in a few minutes." },
-      { status: 429 },
-    );
+    return apiError(429, "Too many accounts from here. Try again in a few minutes.");
   }
 
   let email = "";
   let password = "";
   let name = "";
   const read = await readJsonBody<Record<string, unknown>>(req, BODY_LIMIT.credentials);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.email === "string") email = body.email.trim();
   if (typeof body.password === "string") password = body.password;
@@ -83,10 +79,7 @@ export async function POST(req: Request) {
   // Said plainly and one at a time. A form that answers "invalid input" to
   // two fields has told you nothing about which one.
   if (!email.includes("@")) {
-    return NextResponse.json(
-      { error: "That does not look like an email address." },
-      { status: 400 },
-    );
+    return apiError(400, "That does not look like an email address.");
   }
   if (password.length < MIN_PASSWORD) {
     return NextResponse.json(
@@ -121,10 +114,7 @@ export async function POST(req: Request) {
     }
   }
   if (!username) {
-    return NextResponse.json(
-      { error: "Could not create an account right now. Try again in a moment." },
-      { status: 503 },
-    );
+    return apiError(503, "Could not create an account right now. Try again in a moment.");
   }
 
   const { error } = await db.auth.signUp({
@@ -149,16 +139,16 @@ export async function POST(req: Request) {
     // generated and pre-checked, but the message stays generic since a
     // username collision could in principle land here too.
     if (/duplicate key|already registered|unique/i.test(error.message)) {
-      return NextResponse.json({ error: "That address is already in use." }, { status: 409 });
+      return apiError(409, "That address is already in use.");
     }
     // Sign-ups being switched off is a deployment's decision, not the visitor's
     // mistake, and it deserves to say so rather than reading as a fault in what
     // they typed.
     if (/signups? not allowed|signup is disabled/i.test(error.message)) {
-      return NextResponse.json({ error: "New accounts are closed right now." }, { status: 403 });
+      return apiError(403, "New accounts are closed right now.");
     }
     console.error("Sign-up failed:", error.message);
-    return NextResponse.json({ error: "That account could not be created." }, { status: 400 });
+    return apiError(400, "That account could not be created.");
   }
 
   // Not signed in. Confirmation is on, so what exists now is an account that

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { latestPull } from "@/lib/core/collection/cards";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -42,12 +43,12 @@ export async function OPTIONS() {
 
 export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
   if (byAddress(addressOf(req)))
-    return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: CORS_HEADERS });
+    return apiError(429, "Too many requests", undefined, { headers: CORS_HEADERS });
 
   const { username } = await params;
   const owner = await ownerOf(username);
   if (!owner)
-    return NextResponse.json({ error: "No such collection." }, { status: 404, headers: CORS_HEADERS });
+    return apiError(404, "No such collection.", undefined, { headers: CORS_HEADERS });
 
   const { sets, failed } = await getPublicCollection(owner.id);
   if (failed)
@@ -57,7 +58,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     );
 
   const pull = latestPull(sets);
-  if (!pull) return NextResponse.json({ error: "No card found." }, { status: 404, headers: CORS_HEADERS });
+  if (!pull) return apiError(404, "No card found.", undefined, { headers: CORS_HEADERS });
 
   return NextResponse.json(
     { latestPull: pull },

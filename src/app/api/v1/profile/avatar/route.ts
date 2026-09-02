@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -74,29 +74,27 @@ function looksLike(mime: string, bytes: Buffer): boolean {
 const byAccount = createRateLimiter(15 * 60_000, 30);
 
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   if (byAccount(viewer.userId)) {
-    return NextResponse.json({ error: "Too many uploads. Try again shortly." }, { status: 429 });
+    return apiError(429, "Too many uploads. Try again shortly.");
   }
 
   const read = await readJsonBody<{ image?: unknown }>(req, BODY_LIMIT.avatar);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "That image is too large." }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "That image is too large.");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
 
   if (typeof body.image !== "string") {
-    return NextResponse.json({ error: "No image sent." }, { status: 400 });
+    return apiError(400, "No image sent.");
   }
 
   const match = /^data:(image\/(?:png|jpeg|webp));base64,(.+)$/.exec(body.image);
   if (!match) {
-    return NextResponse.json({ error: "That is not a PNG, JPEG or WebP image." }, { status: 400 });
+    return apiError(400, "That is not a PNG, JPEG or WebP image.");
   }
   const [, mime, base64] = match;
   const ext = MIME_TO_EXT[mime!]!;
@@ -105,10 +103,10 @@ export async function POST(req: Request) {
   try {
     bytes = Buffer.from(base64!, "base64");
   } catch {
-    return NextResponse.json({ error: "That image could not be read." }, { status: 400 });
+    return apiError(400, "That image could not be read.");
   }
   if (bytes.length === 0 || bytes.length > MAX_BYTES) {
-    return NextResponse.json({ error: "Images up to 2MB only." }, { status: 400 });
+    return apiError(400, "Images up to 2MB only.");
   }
 
   // The `data:` prefix is a claim by the caller, not a fact about the bytes, and
@@ -117,10 +115,7 @@ export async function POST(req: Request) {
   // is served to anyone with the URL — arbitrary bytes labelled image/png.
   // Checking the signature is what turns the caller's claim into a fact.
   if (!looksLike(mime!, bytes)) {
-    return NextResponse.json(
-      { error: "That file is not the kind of image it says it is." },
-      { status: 400 },
-    );
+    return apiError(400, "That file is not the kind of image it says it is.");
   }
 
   const token = bearer(req);
@@ -135,7 +130,7 @@ export async function POST(req: Request) {
     .upload(path, bytes, { contentType: mime, upsert: true });
   if (uploadError) {
     console.error("Uploading an avatar failed:", uploadError);
-    return NextResponse.json({ error: "That image could not be saved." }, { status: 500 });
+    return apiError(500, "That image could not be saved.");
   }
 
   const {
@@ -150,7 +145,7 @@ export async function POST(req: Request) {
     await updateProfile(db, viewer.userId, { avatarUrl });
   } catch (err) {
     console.error("Saving the avatar URL failed:", err);
-    return NextResponse.json({ error: "That change could not be saved." }, { status: 500 });
+    return apiError(500, "That change could not be saved.");
   }
 
   revalidatePath(`/user/${viewer.username}`);
@@ -169,10 +164,10 @@ export async function POST(req: Request) {
  * better than a delete that refuses because a file was already gone.
  */
 export async function DELETE(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
@@ -189,7 +184,7 @@ export async function DELETE(req: Request) {
     await updateProfile(db, viewer.userId, { avatarUrl: null });
   } catch (err) {
     console.error("Clearing the avatar failed:", err);
-    return NextResponse.json({ error: "That change could not be saved." }, { status: 500 });
+    return apiError(500, "That change could not be saved.");
   }
 
   revalidatePath(`/user/${viewer.username}`);

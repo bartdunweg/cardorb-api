@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import {
   authorise,
@@ -18,10 +19,7 @@ const NOT_FOUND = { error: "No folder by that id." };
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const { id } = await params;
   if (!UUID.test(id))
@@ -29,19 +27,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const read = await readJsonBody(req, BODY_LIMIT.folder);
   if (read.kind === "too-large")
-    return NextResponse.json(
-      { error: "Payload too large" },
-      { status: 413, headers: readHeaders(req) },
-    );
+    return apiError(413, "Payload too large", undefined, { headers: readHeaders(req) });
   if (read.kind === "invalid")
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400, headers: readHeaders(req) },
-    );
+    return apiError(400, "Invalid request", undefined, { headers: readHeaders(req) });
 
   const name = validateFolderName((read.body as { name?: unknown })?.name);
   if (name.kind === "invalid")
-    return NextResponse.json({ error: name.error }, { status: 400, headers: readHeaders(req) });
+    return apiError(400, name.error, undefined, { headers: readHeaders(req) });
 
   let folder;
   try {
@@ -57,10 +49,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authorise(req);
   if (refused(who))
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const { id } = await params;
   if (!UUID.test(id))

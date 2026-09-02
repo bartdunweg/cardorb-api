@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
@@ -27,30 +27,24 @@ const addressOf = (req: Request) =>
  * in, before there was anything to trigger it. This is what triggers it.
  */
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (byAddress(addressOf(req)))
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
+  if (byAddress(addressOf(req))) return apiError(429, "Too many requests");
 
   const viewer = await currentViewer();
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   let email = "";
   const read = await readJsonBody<{ email?: unknown }>(req, BODY_LIMIT.credentials);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.email === "string") email = body.email.trim();
 
   if (!email.includes("@")) {
-    return NextResponse.json(
-      { error: "That does not look like an email address." },
-      { status: 400 },
-    );
+    return apiError(400, "That does not look like an email address.");
   }
   if (email.toLowerCase() === viewer.email.toLowerCase()) {
-    return NextResponse.json({ error: "That is already your address." }, { status: 400 });
+    return apiError(400, "That is already your address.");
   }
 
   const db = await serverClient();
@@ -71,7 +65,7 @@ export async function POST(req: Request) {
     // a signed-in person could otherwise use it to test addresses one at a
     // time. One message, and the log carries the real one.
     console.error("Email change failed:", error.message);
-    return NextResponse.json({ error: "That address could not be set." }, { status: 400 });
+    return apiError(400, "That address could not be set.");
   }
 
   return NextResponse.json({ ok: true });

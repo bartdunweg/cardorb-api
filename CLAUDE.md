@@ -110,7 +110,7 @@ the web tool that used to live here was removed on 2026-09-02. The repository is
 - Profile: production
 - Platform: web
 - Stage: live
-- Users: one owner (single-passcode API), public read access at cardorb.com
+- Users: accounts (Supabase auth; one owner today), public profiles readable without a key
 - Visibility: private (the repository; the deployed site and its API are public)
 
 `Platform: web` is what `build-quality` reads to decide which domains apply, and it is

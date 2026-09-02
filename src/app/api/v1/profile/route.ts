@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
@@ -31,16 +31,14 @@ import { MAX_DISPLAY_NAME } from "@/lib/core/account/account";
  * one cookie-only lookup.
  */
 export async function PATCH(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   const read = await readJsonBody<Record<string, unknown>>(req, BODY_LIMIT.profile);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
 
   const patch: { displayName?: string | null; isPublic?: boolean; onboardedAt?: string } = {};
@@ -51,14 +49,14 @@ export async function PATCH(req: Request) {
     // than an empty string: the public page falls back on null, and "" would
     // render as a heading with nothing in it.
     if (raw.length > MAX_DISPLAY_NAME) {
-      return NextResponse.json({ error: "That name is too long." }, { status: 400 });
+      return apiError(400, "That name is too long.");
     }
     patch.displayName = raw || null;
   }
 
   if ("isPublic" in body) {
     if (typeof body.isPublic !== "boolean") {
-      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+      return apiError(400, "Invalid request");
     }
     patch.isPublic = body.isPublic;
   }
@@ -72,7 +70,7 @@ export async function PATCH(req: Request) {
   }
 
   if (!Object.keys(patch).length) {
-    return NextResponse.json({ error: "Nothing to change." }, { status: 400 });
+    return apiError(400, "Nothing to change.");
   }
 
   // A token if the caller sent one, cookies otherwise — the same rule as
@@ -89,7 +87,7 @@ export async function PATCH(req: Request) {
     await updateProfile(db, viewer.userId, patch);
   } catch (err) {
     console.error("Updating a profile failed:", err);
-    return NextResponse.json({ error: "That change could not be saved." }, { status: 500 });
+    return apiError(500, "That change could not be saved.");
   }
 
   // The public page is dynamic, so there is no ISR entry to drop — but it is
@@ -105,7 +103,7 @@ export async function PATCH(req: Request) {
 /** What the settings screen renders from. */
 export async function GET(req: Request) {
   const viewer = await requestViewer(req);
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
@@ -114,7 +112,7 @@ export async function GET(req: Request) {
   }
 
   const profile = await ownProfile(db, viewer.userId);
-  if (!profile) return NextResponse.json({ error: "No profile." }, { status: 404 });
+  if (!profile) return apiError(404, "No profile.");
 
   return NextResponse.json({ ...profile, email: viewer.email });
 }
