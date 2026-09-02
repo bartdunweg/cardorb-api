@@ -32,7 +32,10 @@ and the `/cron/snapshot` job carry no viewer, and are gated by `sameOrigin()` or
 | | |
 | --- | --- |
 | `GET /api/v1/collection` | the whole thing, grouped by set — viewer required |
+| `GET /api/v1/cards` | one page of it as a flat list: `q`, `owned`, `favorite`, `collection`, `limit`, `offset` — viewer required |
 | `GET /api/v1/cards/:tcgId` | one card, its printings and its price — viewer required |
+| `GET /api/v1/stats`, `GET /api/v1/pokedex` | the dashboard's numbers and the 1,025 Pokédex slots — viewer required |
+| `GET /api/v1/folders`, `POST`, `PATCH /:id`, `DELETE /:id` | the folders a person sorts cards into — viewer required |
 | `GET /api/v1/fields` | the database's select options — viewer required |
 | `POST /api/v1/cards` | add a card — viewer required |
 

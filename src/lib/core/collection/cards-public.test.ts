@@ -32,6 +32,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   isFavorite: true,
   acquiredAt: "2026-01-01",
   excluded: true,
+  collectionId: null,
   ...over,
 });
 

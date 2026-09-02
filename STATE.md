@@ -19,39 +19,37 @@ Card Orb is live, and since 2026-09-02 it is two repositories on two Vercel proj
 - **`bartdunweg/cardorb-web`** — the web app, at `cardorb.com` (Vercel project `cardorb`;
   pnpm, Next 16, its own standards). It calls this API with a bearer token, as the iOS app does.
 
-This session, on `claude/api-only`: **the web tool came out.** Gone: every page, `features/`,
-`components/`, `hooks/`, `utils/`, `providers/`, `styles/`, `lib/design/`, `proxy.ts`,
-Playwright, Tailwind, Untitled UI and the `@untitledui-pro/icons` package — so `.npmrc` and
-`NPM_TOKEN` went too and `npm ci` needs no secret. Left: 32 route handlers, `lib/`, the
-contract, `public/artwork/`. R-STRUCT-001..004/007, every R-STYLE and R-UI rule and
-R-PLAT-003/004 were deleted; 20 rules remain. 450 tests, `next build` and lint pass here.
+**The owner decided on 2026-09-02: the web app moves onto this API.** Both apps read the same
+`cards` table, but the web app read it directly and fetched card data from pokemontcg.io itself,
+so prices and pictures differed from iOS and every feature existed on one side only. From now
+on only this API touches the cards; the web app calls `api.cardorb.com` with its Supabase
+session as bearer, like iOS.
 
-Previous release (#133, #134): the repository became the Card Orb API — `docs/api-design.md`,
-`public/openapi.yaml` (34 operations, held to the file layout and the `Error` schema by
-`src/app/api/openapi.test.ts`), the host-conditional rewrites in `next.config.ts`,
-`src/lib/api/respond.ts`, rules R-API-006..008 and R-PLAT-005.
+Step 1 shipped here: `GET /v1/cards` (flat, paged, filtered — read from the cached assembly so
+a page is a filter over memory), `GET /v1/stats`, `GET /v1/pokedex` (slots only, no cards),
+`/v1/folders` (the web app's `collections` table, which it made outside this repository's
+migrations; "collection" already means the whole here, so they are folders in the contract),
+and `collectionId` on a copy and its patch. `lib/core/collection/items.ts` holds the decisions
+with tests. 477 tests.
 
 ## Next
 
-1. **Build the reference in `cardorb-web`** at `/docs/api`, in that app's theme, reading
-   `https://api.cardorb.com/openapi.yaml` at build time. Then point `api.cardorb.com/` at it
-   (the one rewrite in `next.config.ts`). The old renderer is in git at `40cc85d`,
-   `src/app/docs/api/_components/reference.ts`, with its tests.
-2. **Merge this branch, which redeploys.** `NEXT_PUBLIC_SITE_URL` on the `cardorb-api`
-   project is `https://cardorb.com` again (the owner set it this session); it is inlined at
-   build time (R-PLAT-002), so it takes effect on that deploy.
+1. **Move the web app onto the API** (`bartdunweg/cardorb-web`): an API client in `src/lib/api.ts`
+   (bearer = the Supabase session's access token, base URL from env), then `lib/cards.ts`,
+   `collections.ts`, `profile.ts`, `public-profile.ts`, `pokedex.ts` and the server actions call
+   the API; adding a card goes through `/v1/catalog/search` and `POST /v1/cards`; `pokemontcg.ts`
+   goes. Then a rule there: no `.from(` outside auth.
+2. **Build the reference in `cardorb-web`** at `/docs/api` from `https://api.cardorb.com/openapi.yaml`,
+   then point `api.cardorb.com/` at it (the one rewrite in `next.config.ts`). The old renderer
+   is in git at `40cc85d`, `src/app/docs/api/`.
 3. **Retire the passcode.** The iOS app already calls `api.cardorb.com/v1` (its PR #52). Watch
-   the logs for `[deprecated] CARDS_TOKEN was used`, then drop the `passcode` scheme (design step 4).
+   the logs for `[deprecated] CARDS_TOKEN was used`, then drop the `passcode` scheme.
 4. **Decide the two stale branches** (see `## Open`).
+
+## Open`).
 
 ## Open` sections pasted over each
 other.
-
-Previous release (#133, #134): the repository became the Card Orb API. `docs/api-design.md`
-holds the design; `public/openapi.yaml` the contract (34 operations, held to the file layout
-and the `Error` schema by `src/app/api/openapi.test.ts`); `/docs/api` the reference, rendered
-at build time; `next.config.ts` the host-conditional rewrites; `src/lib/api/respond.ts` the
-one error helper. Rules R-API-006, R-API-007, R-API-008 and R-PLAT-005 came with it.
 
 ## Next
 
@@ -69,11 +67,14 @@ one error helper. Rules R-API-006, R-API-007, R-API-008 and R-PLAT-005 came with
 
 ## Open
 
-- **Auth email links need `bartdunweg/cardorb-web`'s `/auth/confirm` PR merged.** One Supabase
-  project serves all three clients and every template links to `{{ .SiteURL }}/auth/confirm`;
-  the Site URL in the Supabase dashboard must be `https://cardorb.com`. Until that PR is live,
-  confirmation and recovery links 404. The `next=` values in `supabase/templates/*.html` name
-  the old app's routes; the web route ignores them, so the templates need no change.
+- **The Site URL in the Supabase dashboard must be `https://cardorb.com`.** Every auth email
+  links to `{{ .SiteURL }}/auth/confirm`, which lives in `cardorb-web` since its PR #15. The
+  `next=` values in `supabase/templates/*.html` name the old app's routes; the web route
+  ignores them, so the templates need no change. Owner's check.
+- **The `collections` table and `cards.collection_id` have no migration here.** The web app
+  made them in the dashboard. Their `on delete` behaviour is unknown, which is why
+  `deleteFolder()` empties a folder explicitly first. Worth a migration file that records
+  the schema as it is, so a reviewer can read it.
 - **`/v1/session` and the cookie helpers stay although no browser client lives here.**
   `lib/api/session-cookie.ts` and `viewer.ts` serve the cookie path of `/v1/session`; the
   web app may use it cross-origin or move to bearer. Removing it is a `/v2` question
@@ -81,10 +82,8 @@ one error helper. Rules R-API-006, R-API-007, R-API-008 and R-PLAT-005 came with
 - **`AUDIT.md` and `EINDCHECK.md` are sign-off notes for screens that no longer exist.** Left as they were; delete or move them.
 - **Coverage is not measured since the split;** no floor is wired into `verify.sh`.
 
-- **102 hand-typed refusals remain.** `apiError()`/`refuse()` exist; each route moves over when
-  next opened. A sweep for its own sake was deliberately not done.
-- **`lib/core/collection/value-chart.ts` has a damaged sentence** in its header (lines 12–13).
-  Nobody now knows what it meant, so it was left alone.
+- **102 hand-typed refusals remain.** Each route moves to `apiError()`/`refuse()` when next opened.
+- **`lib/core/collection/value-chart.ts` has a damaged sentence** in its header (lines 12–13). Left alone.
 - **Both unmerged branches are superseded and neither merges as-is.**
   `origin/bartdunweg/catalog-wide-search-index` (582 files, predates the `src/` move) built
   cross-set search as a Postgres index on a weekly cron; what shipped queries pokemontcg.io live

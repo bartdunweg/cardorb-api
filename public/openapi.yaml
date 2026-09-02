@@ -212,6 +212,7 @@ components:
         isFavorite: { type: boolean }
         acquiredAt: { type: [string, "null"], format: date-time }
         excluded: { type: boolean, description: "Kept out of the public profile and the latest pull." }
+        collectionId: { type: [string, "null"], description: "The folder this copy is filed in (`/v1/folders`). Null on a public payload." }
 
     OwnedCard:
       type: object
@@ -329,6 +330,7 @@ components:
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
         isFavorite: { type: boolean }
+        collectionId: { type: [string, "null"], format: uuid, description: "The folder to file it in; null takes it out of its folder." }
 
     CollectionRow:
       type: object
@@ -353,6 +355,7 @@ components:
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
         isFavorite: { type: boolean }
+        collectionId: { type: [string, "null"], format: uuid }
 
     CatalogueSet:
       type: object
@@ -394,6 +397,74 @@ components:
         wishlist: { type: boolean }
         quantity: { type: integer, description: "Summed over owned rows only." }
         itemIds: { type: array, items: { type: string }, description: "Every collection row this card matched." }
+
+    CardItem:
+      type: object
+      description: One copy of a card, flat, for a list that pages. `GET /v1/cards`.
+      required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, acquiredAt, collectionId, price, priceHolo]
+      properties:
+        id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
+        name: { type: string }
+        number: { type: string }
+        set: { type: string, description: "The set's name as the catalogue spells it." }
+        setTitle: { type: string }
+        rarity: { type: [string, "null"] }
+        gen: { type: [string, "null"] }
+        type: { type: [string, "null"] }
+        image: { type: [string, "null"] }
+        imageHigh: { type: [string, "null"] }
+        speciesId: { type: [integer, "null"] }
+        tcgId: { type: [string, "null"] }
+        owned: { type: boolean, description: "`false` is a wishlist entry." }
+        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        quantity: { type: integer }
+        condition: { type: [string, "null"] }
+        grade: { type: [string, "null"] }
+        purchasePrice: { type: [number, "null"] }
+        purchaseDate: { type: [string, "null"], format: date }
+        notes: { type: [string, "null"] }
+        isFavorite: { type: boolean }
+        acquiredAt: { type: [string, "null"], format: date-time }
+        collectionId: { type: [string, "null"], format: uuid }
+        price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+
+    Stats:
+      type: object
+      description: The dashboard's numbers. Copies count what is held; cards count rows.
+      required: [cards, copies, wishlist, favorites, sets]
+      properties:
+        cards: { type: integer }
+        copies: { type: integer }
+        wishlist: { type: integer }
+        favorites: { type: integer }
+        sets: { type: integer, description: "Sets with at least one owned copy." }
+
+    DexSummary:
+      type: object
+      description: One National Pokédex slot, without the cards under it.
+      required: [id, name, owned, image]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        owned: { type: integer, description: "Owned cards of this Pokémon." }
+        image: { type: [string, "null"], description: "One owned card's picture, for a tile." }
+
+    Folder:
+      type: object
+      description: A folder the person made to sort cards into. The web app's copy calls it a collection.
+      required: [id, name, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+        count: { type: integer, description: "Owned copies filed in it. On the list only." }
+
+    FolderDraft:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
 
     ValueSnapshot:
       type: object
@@ -500,6 +571,38 @@ paths:
         "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/cards:
+    get:
+      tags: [Collection]
+      operationId: listCards
+      summary: One page of the collection as a flat list of copies
+      description: |
+        The shape a list with a search box wants; `GET /v1/collection` is the same
+        collection grouped by set. Read from the same cached assembly, so a page
+        is a filter over memory. A value the query cannot mean is a 400, never a guess.
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set, anywhere, in any case." }
+        - { name: owned, in: query, schema: { type: boolean }, description: "`true` the collection, `false` the wishlist, absent both." }
+        - { name: favorite, in: query, schema: { type: boolean } }
+        - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        "200":
+          description: The page, in set order, and the total behind it.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cards, total]
+                properties:
+                  cards: { type: array, items: { $ref: "#/components/schemas/CardItem" } }
+                  total: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
     post:
       tags: [Collection]
       operationId: addCard
@@ -726,6 +829,146 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/stats:
+    get:
+      tags: [Collection]
+      operationId: getStats
+      summary: The dashboard's numbers
+      responses:
+        "200":
+          description: The counts.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [stats]
+                properties:
+                  stats: { $ref: "#/components/schemas/Stats" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/pokedex:
+    get:
+      tags: [Collection]
+      operationId: getPokedex
+      summary: Every National Pokédex slot, with how many cards of it the caller owns
+      description: 1,025 entries, each a count and one picture. The cards themselves are `GET /v1/cards?q=`.
+      responses:
+        "200":
+          description: The slots, in Pokédex order.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries]
+                properties:
+                  entries: { type: array, items: { $ref: "#/components/schemas/DexSummary" } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/folders:
+    get:
+      tags: [Collection]
+      operationId: listFolders
+      summary: The caller's folders, oldest first, with how many owned copies sit in each
+      responses:
+        "200":
+          description: The folders.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [folders]
+                properties:
+                  folders: { type: array, items: { $ref: "#/components/schemas/Folder" } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    post:
+      tags: [Collection]
+      operationId: createFolder
+      summary: Make a folder
+      description: "`BODY_LIMIT.folder`, 1 kB. The name is trimmed and inner whitespace collapsed."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FolderDraft" }
+      responses:
+        "200":
+          description: Made.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, folder]
+                properties:
+                  ok: { type: boolean, const: true }
+                  folder: { $ref: "#/components/schemas/Folder" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/folders/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [Collection]
+      operationId: renameFolder
+      summary: Rename a folder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FolderDraft" }
+      responses:
+        "200":
+          description: Renamed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, folder]
+                properties:
+                  ok: { type: boolean, const: true }
+                  folder: { $ref: "#/components/schemas/Folder" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    delete:
+      tags: [Collection]
+      operationId: deleteFolder
+      summary: Delete a folder
+      description: The copies filed in it stay in the collection and are taken out of the folder first.
+      responses:
+        "200":
+          description: Deleted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
   # ── Value ─────────────────────────────────────────────────────────────────

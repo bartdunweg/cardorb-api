@@ -93,6 +93,8 @@ export type Variant = {
   acquiredAt: string | null;
   /** Kept out of the "latest pull" on the portfolio site. See CollectionRow.excluded. */
   excluded: boolean;
+  /** The folder this copy is filed in (`/v1/folders`), or null. Nulled on a public payload. */
+  collectionId: string | null;
 };
 
 /**
@@ -406,6 +408,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
         isFavorite: false,
         acquiredAt: null,
         excluded: false,
+        collectionId: null,
       })),
     })),
   }));
@@ -639,6 +642,7 @@ export async function buildCollection(
         isFavorite: row.isFavorite,
         acquiredAt: row.acquiredAt,
         excluded: row.excluded,
+        collectionId: row.collectionId,
       };
     });
 
@@ -695,6 +699,7 @@ export async function buildCollection(
         isFavorite: p.isFavorite,
         acquiredAt: p.acquiredAt,
         excluded: p.excluded,
+        collectionId: p.collectionId,
       };
       if (existing) {
         if (variant.id === null || !existing.variants.some((v) => v.id === variant.id))

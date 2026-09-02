@@ -102,6 +102,7 @@ describe("rowFromDraft", () => {
       purchaseDate: null,
       notes: null,
       isFavorite: false,
+      collectionId: null,
     });
   });
 

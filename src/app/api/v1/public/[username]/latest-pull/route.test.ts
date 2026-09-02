@@ -39,6 +39,7 @@ const sets: CardSet[] = [
             isFavorite: true,
             acquiredAt: "2026-08-10T12:00:00.000Z",
             excluded: false,
+            collectionId: null,
           },
         ],
       },

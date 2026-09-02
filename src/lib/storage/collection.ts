@@ -137,6 +137,32 @@ export async function deleteRow(id: string, token?: string): Promise<void> {
  * lists rather than an error — worth knowing if a filter picker looks
  * emptier than the collection actually is.
  */
+export type { Folder } from "./postgres";
+
+export async function listFolders(userId: string, token?: string) {
+  const db = await clientFor(token);
+  if (!db) throw new Error("No database is connected here.");
+  return postgres.listFolders(db, userId);
+}
+
+export async function createFolder(userId: string, name: string, token?: string) {
+  const db = await clientFor(token);
+  if (!db) throw new Error("No database is connected here.");
+  return postgres.createFolder(db, userId, name);
+}
+
+export async function renameFolder(userId: string, id: string, name: string, token?: string) {
+  const db = await clientFor(token);
+  if (!db) throw new Error("No database is connected here.");
+  return postgres.renameFolder(db, userId, id, name);
+}
+
+export async function deleteFolder(userId: string, id: string, token?: string) {
+  const db = await clientFor(token);
+  if (!db) throw new Error("No database is connected here.");
+  return postgres.deleteFolder(db, userId, id);
+}
+
 export async function optionsFor(token?: string): Promise<CardFields> {
   const db = await clientFor(token);
   if (!db) throw new Error("No database is connected here.");
