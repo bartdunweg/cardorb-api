@@ -17,6 +17,13 @@ if the two have drifted apart.
   from the new web app's own API. The npm package is `cardorb-api`, so deployment URLs stop
   being named `cardorb-<hash>`.
 
+- The API grew what the web app needs to stop reading the database itself: `GET /v1/cards`
+  answers one page of the collection as a flat list (search, wishlist, favourites, folder,
+  paging), `GET /v1/stats` the dashboard's numbers, `GET /v1/pokedex` the 1,025 slots with a
+  count and a picture each, and `/v1/folders` makes, renames and deletes the folders a person
+  sorts cards into. A copy now carries `collectionId`, and `PATCH /v1/collection/items/{id}`
+  files it. Everything under `/v1` that existed keeps its shape.
+
 - The web tool is gone from this repository, and with it every page: the signed-in
   screens, login and signup, the public profile, the marketing and legal pages, the
   brand page and the rendered API reference. cardorb.com is `bartdunweg/cardorb-web`

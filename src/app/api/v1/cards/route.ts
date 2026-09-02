@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
 import { createRow } from "@/lib/storage/collection";
-import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
+import {
+  authorise,
+  authoriseWrite,
+  readHeaders,
+  refused,
+  storeErrorResponse,
+} from "@/lib/api/guard";
+import { getCards } from "@/lib/core/collection/collection";
+import { filterItems, flattenItems, pageOf, readItemQuery } from "@/lib/core/collection/items";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
@@ -21,6 +29,30 @@ import { bearer } from "@/lib/api/viewer";
    readJsonBody() was extracted from this handler and its sibling and then
    neither was migrated onto it, so the pattern lived in three places at once
    and R-API-004 was broken by the two routes it was written for. */
+
+export const dynamic = "force-dynamic";
+
+/**
+ * One page of the collection as a flat list of copies — the shape a web list
+ * with a search box wants. `GET /v1/collection` stays the grouped whole for
+ * the iOS app. Both read the same cached assembly; see lib/core/collection/items.ts.
+ */
+export async function GET(req: Request) {
+  const who = await authorise(req);
+  if (refused(who))
+    return NextResponse.json(
+      { error: who.error },
+      { status: who.status, headers: readHeaders(req) },
+    );
+
+  const read = readItemQuery(new URL(req.url).searchParams);
+  if (read.kind === "invalid")
+    return NextResponse.json({ error: read.error }, { status: 400, headers: readHeaders(req) });
+
+  const sets = await getCards(who.userId, bearer(req) ?? undefined);
+  const { items, total } = pageOf(filterItems(flattenItems(sets), read.query), read.query);
+  return NextResponse.json({ cards: items, total }, { headers: readHeaders(req) });
+}
 
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
@@ -98,7 +130,7 @@ export async function OPTIONS(req: Request) {
     headers: ok
       ? {
           "Access-Control-Allow-Origin": origin!,
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
           "Access-Control-Allow-Headers": "content-type, x-cards-key",
           "Access-Control-Max-Age": "86400",
           Vary: "Origin",

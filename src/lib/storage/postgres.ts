@@ -51,10 +51,11 @@ type CardRecord = {
   purchase_date: string | null;
   notes: string | null;
   is_favorite: boolean;
+  collection_id: string | null;
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,quantity,condition,grade,purchase_price,purchase_date,notes,is_favorite";
+  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,quantity,condition,grade,purchase_price,purchase_date,notes,is_favorite,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -98,6 +99,7 @@ const toRow = (r: CardRecord): CollectionRow => ({
   purchaseDate: r.purchase_date,
   notes: r.notes,
   isFavorite: r.is_favorite ?? false,
+  collectionId: r.collection_id ?? null,
 });
 
 /**
@@ -400,6 +402,7 @@ export async function updateRow(
   if ("purchaseDate" in patch) row.purchase_date = patch.purchaseDate;
   if ("notes" in patch) row.notes = patch.notes;
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
+  if ("collectionId" in patch) row.collection_id = patch.collectionId;
 
   const { data, error } = await db.from("cards").update(row).eq("id", id).select(COLUMNS).single();
 
@@ -668,4 +671,93 @@ export async function claimUsername(db: SupabaseClient, wanted: string): Promise
   }
   console.error("Claiming a username failed:", error.message);
   return { ok: false, reason: "failed" };
+}
+
+/**
+ * Folders: the `collections` table, which the web app made and this API now
+ * owns the writes to. "Collection" already means the whole of what a person
+ * owns everywhere in this repository, so here and in the contract these are
+ * folders; the table keeps its name because a rename is a migration for no
+ * behaviour.
+ *
+ * Every read and write names the user as well as relying on row level
+ * security: a client that can only see its own rows still should not be able
+ * to *say* another's id and get a silent no-op back as success.
+ */
+export type Folder = { id: string; name: string; createdAt: string };
+
+type FolderRecord = { id: string; name: string; created_at: string };
+
+const FOLDER_COLUMNS = "id,name,created_at";
+
+const toFolder = (r: FolderRecord): Folder => ({ id: r.id, name: r.name, createdAt: r.created_at });
+
+export async function listFolders(db: SupabaseClient, userId: string): Promise<Folder[]> {
+  const { data, error } = await db
+    .from("collections")
+    .select(FOLDER_COLUMNS)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(`Reading the folders failed: ${error.message}`);
+  return ((data ?? []) as FolderRecord[]).map(toFolder);
+}
+
+export async function createFolder(
+  db: SupabaseClient,
+  userId: string,
+  name: string,
+): Promise<Folder> {
+  const { data, error } = await db
+    .from("collections")
+    .insert({ user_id: userId, name })
+    .select(FOLDER_COLUMNS)
+    .single();
+  if (error) throw new Error(`That folder could not be created: ${error.message}`);
+  return toFolder(data as FolderRecord);
+}
+
+/** null when no folder of the caller's has that id. */
+export async function renameFolder(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+  name: string,
+): Promise<Folder | null> {
+  const { data, error } = await db
+    .from("collections")
+    .update({ name, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select(FOLDER_COLUMNS)
+    .maybeSingle();
+  if (error) throw new Error(`That folder could not be renamed: ${error.message}`);
+  return data ? toFolder(data as FolderRecord) : null;
+}
+
+/**
+ * false when no folder of the caller's has that id. The cards filed in it are
+ * taken out first, explicitly, rather than trusting the foreign key to do it:
+ * the table was made outside this repository and its `on delete` is not
+ * written down anywhere a reader could check.
+ */
+export async function deleteFolder(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<boolean> {
+  const unfile = await db
+    .from("cards")
+    .update({ collection_id: null })
+    .eq("collection_id", id)
+    .eq("user_id", userId);
+  if (unfile.error) throw new Error(`Emptying that folder failed: ${unfile.error.message}`);
+
+  const { data, error } = await db
+    .from("collections")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select("id");
+  if (error) throw new Error(`That folder could not be deleted: ${error.message}`);
+  return (data ?? []).length > 0;
 }

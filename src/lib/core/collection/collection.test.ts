@@ -110,6 +110,7 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  collectionId: null,
   ...over,
 });
 
@@ -147,6 +148,7 @@ describe("buildCollection", () => {
     isFavorite: false,
     acquiredAt: null,
     excluded: false,
+    collectionId: null,
     ...over,
   });
 

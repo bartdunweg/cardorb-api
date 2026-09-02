@@ -24,6 +24,9 @@
  * a price, so they share a lookup, but they are different things to own and a
  * collector would not thank us for merging them into "foil".
  */
+/** A folder id, as Postgres writes one. Checked before it reaches the store. */
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const FINISHES = ["normal", "reverse-holo", "holo"] as const;
 export type Finish = (typeof FINISHES)[number];
 
@@ -98,6 +101,8 @@ export type CollectionRow = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** The folder this copy is filed in (`/v1/folders`), or null for none. */
+  collectionId: string | null;
 };
 
 /**
@@ -327,6 +332,7 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     purchaseDate: draft.purchaseDate,
     notes: draft.notes,
     isFavorite: draft.isFavorite,
+    collectionId: null,
   };
 }
 
@@ -350,6 +356,8 @@ export type CardPatch = Partial<{
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** null takes the copy out of its folder. */
+  collectionId: string | null;
 }>;
 
 export type CardPatchValidation =
@@ -446,6 +454,14 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
       return { kind: "invalid", error: "That purchase date is not valid." };
     }
     patch.purchaseDate = value;
+  }
+
+  if ("collectionId" in b) {
+    const value = b.collectionId;
+    if (value !== null && !(typeof value === "string" && UUID.test(value))) {
+      return { kind: "invalid", error: "collectionId must be a folder id or null." };
+    }
+    patch.collectionId = value as string | null;
   }
 
   if (!Object.keys(patch).length) return { kind: "invalid", error: "Nothing to change." };

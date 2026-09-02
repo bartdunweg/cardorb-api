@@ -25,6 +25,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   isFavorite: false,
   acquiredAt: null,
   excluded: false,
+  collectionId: null,
   ...over,
 });
 
