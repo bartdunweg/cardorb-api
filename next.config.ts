@@ -125,10 +125,43 @@ const SECURITY_HEADERS = [
  */
 const SETTINGS_SECTIONS = ["profile", "account", "import", "appearance"];
 
+/**
+ * The API's own hostname. On this host `/v1/…` is the API, `/openapi.yaml` is
+ * the contract and `/` is its documentation; everything else is not served.
+ *
+ * Same Vercel project, same code, one extra domain attached: a second
+ * deployment would be a second thing to keep in step with the first, and the
+ * routes already exist under /api/v1 on cardorb.com. A host-conditional rewrite
+ * is a view of the same app, and it stays a view whether or not the domain is
+ * attached yet — a request for `api.cardorb.com` that never arrives matches
+ * nothing and changes nothing.
+ *
+ * The web tool keeps calling `/api/v1` on its own origin, on purpose. Its
+ * session is a cookie scoped to cardorb.com, and a browser would not send it
+ * across to api.cardorb.com; the iOS app sends a bearer token, which crosses
+ * hosts without a second thought. So the browser stays home and the app moves.
+ *
+ * Cloudflare stays DNS-only for this host too (R-PLAT-001): the rewrite
+ * reads the `host` header, which the proxy would rewrite.
+ */
+export const API_HOST = "api.cardorb.com";
+
+/** Rewrites that only fire on the API host, in the order Next tries them. */
+export const API_HOST_REWRITES = [
+  { source: "/v1/:path*", destination: "/api/v1/:path*" },
+  { source: "/", destination: "/docs/api" },
+].map((rewrite) => ({ ...rewrite, has: [{ type: "host" as const, value: API_HOST }] }));
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   async headers() {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
+  },
+  async rewrites() {
+    // beforeFiles, because `/` exists on the filesystem (the landing page) and
+    // an afterFiles rewrite would never get the chance to send the API host's
+    // root to the documentation instead.
+    return { beforeFiles: API_HOST_REWRITES, afterFiles: [], fallback: [] };
   },
   async redirects() {
     return [

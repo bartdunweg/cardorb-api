@@ -4,6 +4,14 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-02
+
+- The API now has a contract and a home of its own. `openapi.yaml` describes every
+  route under `/api/v1`, a plain-HTML reference is at `/docs/api`, and `api.cardorb.com`
+  serves the same API as `/v1/…` once the domain is attached. Every failure answers
+  `{ "error": "<sentence>" }`; the one that did not (the health check) now does, and the
+  four wordings of "no database" are one.
+
 ## 2026-08-23
 
 - You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.

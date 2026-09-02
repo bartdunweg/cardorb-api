@@ -46,7 +46,10 @@ export async function GET() {
     // that is genuinely wrong — configured and not answering — and a monitor
     // should not have to parse JSON to find that out.
     console.error("Health check: the database did not answer:", err);
-    return answer({ ok: false, database: "unreachable" }, 503);
+    return answer(
+      { ok: false, database: "unreachable", error: "The database is not answering." },
+      503,
+    );
   }
 }
 

@@ -13,14 +13,46 @@ loads this file on every request, so its length is a cost paid continuously.
 
 Card Orb is live at cardorb.com and serves the iOS client an API. Nothing is half-built.
 
-This session, on branch `bartdunweg/apply-standards-v3`:
+This session, on branch `claude/cardorb-api-design-8xy6rt` — **the repository is now the
+Card Orb API, and the web tool is one of its two clients.** The owner chose: API is the
+product, web stays; own clients only; OpenAPI 3.1 in the repo; design plus a first step.
 
-- **Refreshed the standard v0.26.0 → v0.27.0** — the generated regions in `CLAUDE.md` and
-  `AGENTS.md` only (version markers, plus the changelog row reworded to "an entry in the
-  changelog"). This project keeps its own `changelog.d/` tooling; that is PRODUCT-region and stays.
-- **Ran a four-agent read-only assessment** (project state, Untitled UI adoption, standards /
-  production bar, design system). Verdict: the code holds a professional bar; the design system
-  is professional with margin; the one structural gap is CI (see `## Open`).
+- **`docs/api-design.md`** — the design: host, contract, error shape, versioning, auth,
+  migration path, and what was deliberately not done.
+- **`public/openapi.yaml`** — the contract, 34 operations across 27 paths, every route under
+  `src/app/api/v1`. `src/app/api/openapi.test.ts` holds it against the file layout both ways
+  and every 4xx/5xx to the `Error` schema.
+- **`/docs/api`** — the reference, rendered from the contract at build time as plain HTML
+  (no third-party script; the CSP allows none). `_components/reference.ts` holds the
+  decisions, with tests; `page.test.tsx` renders the page with the chrome stubbed.
+- **`api.cardorb.com`** — host-conditional rewrites in `next.config.ts`: `/v1/*` → `/api/v1/*`,
+  `/` → `/docs/api`. Inert until the domain is attached (see `## Open`).
+- **`src/lib/api/respond.ts`** — `apiError()`, `refuse()` and the shared `REFUSALS`.
+  `NO_DATABASE_CONFIGURED` now reads from there; the four wordings of it are one; the
+  account route's 413 says `Payload too large`; the health check's 503 carries an `error`.
+- **Rules:** R-API-006 (error shape), R-API-007 (contract), R-API-008 (`/v1` by addition
+  only), R-PLAT-005 (the host is a rewrite, not a deployment).
+- Added `yaml` (MIT) as a dependency, for the contract test and the reference page.
+
+`npm run check` in this workspace: prettier, theme check, tests (547 + 19 new) and lint pass.
+Typecheck and `next build` could not run here: the private `@untitledui-pro/icons` registry
+needs `NPM_TOKEN`, which this workspace does not have. See `## Open`.
+
+## Next
+
+1. **Attach the host.** Add `api.cardorb.com` to the Vercel project and a CNAME at
+   Cloudflare, DNS-only (R-PLAT-001). Then `curl https://api.cardorb.com/v1/health` and
+   open `https://api.cardorb.com/` — it should be the reference.
+2. **Run `./scripts/verify.sh` on a machine with `NPM_TOKEN`** before merging this branch.
+   The build-time read of `public/openapi.yaml` in `/docs/api` is what most needs a real
+   `next build` behind it.
+3. **Move the iOS app's base URL** to `api.cardorb.com` (`bartdunweg/cardorb-ios`), then
+   watch the logs for `[deprecated] CARDS_TOKEN was used` and retire the passcode.
+4. **Keep pulling decisions out of `CardsView.tsx`** (1,633 lines; eight `useMemo` bodies
+   with no test) — unchanged from the previous session.
+5. **Decide the two stale branches and the CI billing block** (see `## Open`).
+
+## Open`).
 - **Applied the small fixes those agents found:** the `CardsDashboard` headings now use
   `text-xl font-title-strong` (R-STYLE-003/004); the README API summary no longer overstates the
   guard against the bootstrap/health/cron routes; `@vitest/coverage-v8` is installed so coverage
@@ -40,11 +72,23 @@ This session, on branch `bartdunweg/apply-standards-v3`:
 
 ## Open
 
-- **CI is a paper gate right now.** GitHub Actions billing is blocked, so pushes to `main` run no
-  real check — every run fails in 3–5s with an empty step list, and `main` deploys straight to
-  production. `./scripts/verify.sh`, run by a person or an agent, is the only real gate. See the
-  `github-actions-billing-blocked` memory. `.github/workflows/check.yml`'s header comment
-  overstates what protects production while this holds.
+- **`api.cardorb.com` is not attached yet.** The rewrites are in place and inert; attaching
+  the domain is the owner's step (Vercel + Cloudflare DNS-only). Until then the host does not
+  resolve and the design's step 2 has not happened.
+- **This branch was not built here.** `next build` and `tsc` fail in this workspace on the
+  missing private icon package, not on this change; `npm run lint`, prettier and vitest pass.
+  A `verify.sh` run with `NPM_TOKEN` set is owed before merge.
+- **102 hand-typed refusals remain.** `apiError()`/`refuse()` exist and the drifting wordings
+  are gone, but most routes still build `{ error }` by hand. Each moves over when next opened;
+  a sweep for its own sake was deliberately not done.
+- **CI is red on every commit, `main` included, and the cause has moved.** It used to be
+  the GitHub Actions billing block; now the runner starts and `npm ci` fails with
+  `401 Unauthorized … Invalid API key` from `pkg.untitledui.com` (seen on PR #133's run and on
+  the last five runs on `main`). The `NPM_TOKEN` secret in the repository's Actions settings
+  is invalid or expired; refresh it and CI comes back. Until then `./scripts/verify.sh`, run
+  by a person with a working token, is the only real gate, and `main` still deploys straight
+  to production. `.github/workflows/check.yml`'s header comment overstates what protects
+  production while this holds.
 - **R-STRUCT-007 has known violations.** The eight bodies under `## Next` item 1 are decisions
   still inside a component. The rule is right and the code has not caught up.
 - **Two vendored avatar sub-components have no consumer** — `avatar-add-button.tsx` and

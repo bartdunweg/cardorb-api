@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { authorise, refused } from "@/lib/api/guard";
+import { refuse } from "@/lib/api/respond";
 import { adminClient, readClient } from "@/lib/storage/supabase";
 
 /**
@@ -30,8 +31,7 @@ export async function DELETE(req: Request) {
   if (refused(viewer)) return NextResponse.json({ error: viewer.error }, { status: viewer.status });
 
   const read = await readJsonBody<{ password?: unknown }>(req, BODY_LIMIT.credentials);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Invalid request" }, { status: 413 });
+  if (read.kind === "too-large") return refuse("tooLarge");
   if (read.kind === "invalid")
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   const password = typeof read.body.password === "string" ? read.body.password : "";

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentViewer } from "@/lib/api/viewer";
+import { refuse } from "@/lib/api/respond";
 import { serverClient } from "@/lib/storage/supabase";
 import { recentImports } from "@/lib/storage/imports";
 
@@ -9,7 +10,7 @@ export async function GET() {
   if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
 
   const db = await serverClient();
-  if (!db) return NextResponse.json({ error: "No database configured." }, { status: 503 });
+  if (!db) return refuse("noDatabase");
 
   return NextResponse.json({ imports: await recentImports(db, viewer.userId) });
 }
