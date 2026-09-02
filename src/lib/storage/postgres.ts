@@ -510,7 +510,12 @@ export async function optionsFor(db: SupabaseClient): Promise<CardFields> {
 }
 
 /** A public profile, or null where the name is unknown or not shared. */
-export type PublicProfile = { id: string; username: string; displayName: string | null };
+export type PublicProfile = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+};
 
 /**
  * Who owns /user/<name>, if anybody is willing to say.
@@ -529,7 +534,7 @@ export async function profileByUsername(
 ): Promise<PublicProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("id,username,display_name")
+    .select("id,username,display_name,avatar_url")
     .eq("username", username)
     .eq("is_public", true)
     .maybeSingle();
@@ -537,8 +542,18 @@ export async function profileByUsername(
   if (error) throw new Error(`Reading that profile failed: ${error.message}`);
   if (!data) return null;
 
-  const row = data as { id: string; username: string; display_name: string | null };
-  return { id: row.id, username: row.username, displayName: row.display_name };
+  const row = data as {
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+  return {
+    id: row.id,
+    username: row.username,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+  };
 }
 
 /**

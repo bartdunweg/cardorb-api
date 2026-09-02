@@ -1510,6 +1510,31 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
 
+  /v1/public/{username}/profile:
+    get:
+      tags: [Public]
+      operationId: getPublicProfile
+      summary: The name to print and the picture, for a public profile's header
+      description: No key. Sixty a minute per address; cached five minutes at the CDN.
+      security: []
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The profile's public face.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [username, displayName, avatarUrl]
+                properties:
+                  username: { type: string }
+                  displayName: { type: [string, "null"] }
+                  avatarUrl: { type: [string, "null"] }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
   /v1/public/{username}/cards/{tcgId}:
     get:
       tags: [Public]
