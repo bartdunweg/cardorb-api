@@ -43,9 +43,11 @@ picture, a price or an id, cached for a day.
 
 ## Next
 
-1. **Apply `supabase/migrations/20260902200000_folders_and_public_columns.sql`** with
-   `supabase db push`. It is idempotent and records what the database already has; until it
-   is applied, the file and the database agree by accident rather than by record.
+1. **Bring the web app's five migrations into this repository.** The live history has
+   `20260823201942`, `20260827212050`, `20260827213734`, `20260831195235` and `20260831205915`,
+   applied from `cardorb-web`, and this repository owns the schema. `supabase db pull` needs the
+   database password; `supabase db query --linked` does not and is how the migration file here
+   was applied and recorded on 2026-09-02.
 2. **Move the web app's public page onto `GET /v1/public/<username>/cards`** so it stops
    fetching the whole public collection (~940 kB) to show a hundred cards.
 3. **Drop the dead columns** `cards.wishlist` and `cards.pokedex_numbers` once nothing reads
@@ -53,13 +55,11 @@ picture, a price or an id, cached for a day.
 
 ## Open
 
-- **The Site URL in the Supabase dashboard must be `https://cardorb.com`.** Every auth email
-  links to `{{ .SiteURL }}/auth/confirm`, which lives in `cardorb-web`. Owner's check.
 - **`/v1/session` and the cookie helpers stay although no browser client lives here.**
   Removing them is a `/v2` question (R-API-008), not a cleanup.
-- **The `on delete` behaviour of `cards.collection_id` is unknown**, which is why
-  `deleteFolder()` empties a folder explicitly first. The migration file declares the
-  reference without one; on the live database the constraint is whatever the web app made.
+- **`cards.collection_id` is `on delete set null` on the live database** (read on
+  2026-09-02), so `deleteFolder()` emptying a folder first is belt and braces, not a
+  necessity. The migration file declares the reference without it; harmless, already applied.
 - **`lib/core/collection/value-chart.ts` has a damaged sentence** in its header (lines 12–13). Left alone.
 - **Coverage is not measured since the split;** no floor is wired into `verify.sh`.
 - **dev-standards rule-count contradiction persists at v0.27.0.** The `CONVENTIONS.md`
