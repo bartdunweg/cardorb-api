@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 import { getCards } from "@/lib/core/collection/collection";
@@ -15,10 +16,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const sets = await getCards(who.userId, bearer(req) ?? undefined);
   return NextResponse.json(

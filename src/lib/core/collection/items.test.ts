@@ -3,9 +3,12 @@ import type { CardSet, OwnedCard, Variant } from "./cards";
 import {
   countStats,
   filterItems,
+  filterPublicItems,
   flattenItems,
   pageOf,
+  publicItems,
   readItemQuery,
+  readPublicQuery,
   summariseDex,
 } from "./items";
 
@@ -148,5 +151,24 @@ describe("summariseDex", () => {
       },
       { id: 1, name: "Bulbasaur", owned: 0, cards: [] },
     ]);
+  });
+});
+
+describe("publicItems", () => {
+  it("shows one entry per card with owned copies, and never a card that is only wished for", () => {
+    const items = publicItems(SETS);
+    expect(items.map((i) => [i.name, i.copies])).toEqual([
+      ["Pikachu", 1],
+      ["Snorlax", 2],
+    ]);
+    expect(Object.keys(items[0] ?? {})).not.toContain("purchasePrice");
+  });
+
+  it("searches by name or set, and reads only q, limit and offset", () => {
+    expect(filterPublicItems(publicItems(SETS), "jungle").map((i) => i.name)).toEqual(["Snorlax"]);
+    expect(readPublicQuery(new URLSearchParams("q=x&owned=false&limit=5"))).toEqual({
+      kind: "ok",
+      query: { q: "x", limit: 5, offset: 0 },
+    });
   });
 });

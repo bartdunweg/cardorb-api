@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { optionsFor } from "@/lib/storage/collection";
 import { authorise, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -24,10 +25,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   try {
     return NextResponse.json(await optionsFor(bearer(req) ?? undefined), {

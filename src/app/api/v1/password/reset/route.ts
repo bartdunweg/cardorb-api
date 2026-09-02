@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -23,11 +24,11 @@ import { SITE_URL } from "@/lib/core/config";
 const byAddress = createRateLimiter(15 * 60_000, 3);
 
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const db = await serverClient();
   if (!db) {
-    return NextResponse.json({ error: NO_DATABASE_CONFIGURED }, { status: 503 });
+    return apiError(503, NO_DATABASE_CONFIGURED);
   }
 
   const ip =
@@ -42,10 +43,8 @@ export async function POST(req: Request) {
 
   let email = "";
   const read = await readJsonBody<{ email?: unknown }>(req, BODY_LIMIT.credentials);
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "Payload too large");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.email === "string") email = body.email.trim();
 

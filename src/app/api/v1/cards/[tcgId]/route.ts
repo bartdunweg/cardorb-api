@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
@@ -24,16 +25,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // behind the door, not because the answer depends on who opened it.
   const who = await authorise(req);
   if (refused(who)) {
-    return NextResponse.json({ error: who.error }, { status: who.status });
+    return apiError(who.status, who.error);
   }
 
   const { tcgId } = await params;
   const card = await getCardDetail(tcgId);
   if (!card) {
-    return NextResponse.json(
-      { error: "No such card." },
-      { status: 404, headers: readHeaders(req) },
-    );
+    return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });
   }
   // The hour of shared caching this used to carry is gone with the lock: a CDN
   // holding one person's answer and handing it to the next asker without a key

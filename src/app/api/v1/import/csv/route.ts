@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse } from "@/lib/api/respond";
+import { refuse, apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -45,10 +45,10 @@ export const maxDuration = 300;
 const byAccount = createRateLimiter(15 * 60_000, 10);
 
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await currentViewer();
-  if (!viewer) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (!viewer) return apiError(401, "Sign in first.");
 
   let csv = "";
   let map: Partial<ColumnMap> | undefined;
@@ -57,10 +57,8 @@ export async function POST(req: Request) {
     req,
     BODY_LIMIT.csv,
   );
-  if (read.kind === "too-large")
-    return NextResponse.json({ error: "That file is too large." }, { status: 413 });
-  if (read.kind === "invalid")
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  if (read.kind === "too-large") return apiError(413, "That file is too large.");
+  if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.csv === "string") csv = body.csv;
   if (body.map && typeof body.map === "object") map = body.map as Partial<ColumnMap>;
@@ -69,17 +67,16 @@ export async function POST(req: Request) {
   // After the body is read, because the flag deciding whether this call is
   // expensive is in it. A preview is not counted; see the note on byAccount.
   if (doCommit && byAccount(viewer.userId)) {
-    return NextResponse.json({ error: "Too many imports. Try again shortly." }, { status: 429 });
+    return apiError(429, "Too many imports. Try again shortly.");
   }
 
-  if (!csv.trim()) return NextResponse.json({ error: "That file is empty." }, { status: 400 });
+  if (!csv.trim()) return apiError(400, "That file is empty.");
   if (csv.length > MAX_BYTES) {
-    return NextResponse.json({ error: "That file is too large." }, { status: 413 });
+    return apiError(413, "That file is too large.");
   }
 
   const grid = parseCsv(csv);
-  if (!grid.length)
-    return NextResponse.json({ error: "Nothing could be read from that file." }, { status: 400 });
+  if (!grid.length) return apiError(400, "Nothing could be read from that file.");
   if (grid.length > MAX_ROWS + 1) {
     return NextResponse.json(
       { error: `That file has more than ${MAX_ROWS} rows.` },
@@ -127,6 +124,6 @@ export async function POST(req: Request) {
     return NextResponse.json(outcome);
   } catch (err) {
     console.error("CSV import failed:", err);
-    return NextResponse.json({ error: "That import could not be finished." }, { status: 500 });
+    return apiError(500, "That import could not be finished.");
   }
 }

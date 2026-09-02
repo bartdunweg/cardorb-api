@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { CARDS_TAG, cardsTag, validateCardPatch } from "@/lib/core/collection/collection-row";
 import { updateRow, deleteRow } from "@/lib/storage/collection";
@@ -39,30 +40,21 @@ import { bearer } from "@/lib/api/viewer";
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const { id } = await params;
 
   const read = await readJsonBody(req, BODY_LIMIT.patch);
   if (read.kind === "too-large") {
-    return NextResponse.json(
-      { error: "Payload too large" },
-      { status: 413, headers: readHeaders(req) },
-    );
+    return apiError(413, "Payload too large", undefined, { headers: readHeaders(req) });
   }
   if (read.kind === "invalid") {
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400, headers: readHeaders(req) },
-    );
+    return apiError(400, "Invalid request", undefined, { headers: readHeaders(req) });
   }
 
   const result = validateCardPatch(read.body);
   if (result.kind === "invalid") {
-    return NextResponse.json({ error: result.error }, { status: 400, headers: readHeaders(req) });
+    return apiError(400, result.error, undefined, { headers: readHeaders(req) });
   }
 
   let row;
@@ -81,10 +73,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const { id } = await params;
 
@@ -113,7 +102,7 @@ export async function OPTIONS(req: Request) {
       ? {
           "Access-Control-Allow-Origin": origin!,
           "Access-Control-Allow-Methods": "PATCH, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "content-type, x-cards-key",
+          "Access-Control-Allow-Headers": "content-type, authorization",
           "Access-Control-Max-Age": "86400",
           Vary: "Origin",
         }

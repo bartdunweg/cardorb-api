@@ -15,17 +15,8 @@ vi.mock("./viewer", () => ({ requestViewer: async () => viewer }));
 let hasDatabase = true;
 vi.mock("../storage/supabase", () => ({ configured: () => hasDatabase }));
 
-const {
-  authorise,
-  authoriseWrite,
-  keyFrom,
-  keyIsRight,
-  originAllowed,
-  readHeaders,
-  refused,
-  sameOrigin,
-  SESSION_COOKIE,
-} = await import("./guard");
+const { authorise, authoriseWrite, originAllowed, readHeaders, refused, sameOrigin } =
+  await import("./guard");
 
 const SOMEBODY: Viewer = {
   userId: "user-1",
@@ -52,7 +43,6 @@ const SOMEBODY: Viewer = {
  */
 
 const KEY = "a-token-of-exactly-this-length-01";
-const OTHER = "b-token-of-exactly-this-length-02";
 
 /** A request from `origin`, carrying whatever credentials are passed. */
 function req(
@@ -82,8 +72,6 @@ function req(
 beforeEach(() => {
   viewer = SOMEBODY;
   hasDatabase = true;
-  vi.stubEnv("CARDS_TOKEN", KEY);
-  vi.stubEnv("OWNER_USER_ID", "owner-1");
   vi.stubEnv("OWNER_EMAIL", "owner@example.com");
   vi.stubEnv("ALLOWED_ORIGINS", "https://app.example, https://ios.example");
 });
@@ -91,57 +79,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
-});
-
-describe("keyIsRight", () => {
-  it("accepts the configured key", () => {
-    expect(keyIsRight(KEY)).toBe(true);
-  });
-
-  it("refuses a different key of the same length", () => {
-    expect(OTHER.length).toBe(KEY.length);
-    expect(keyIsRight(OTHER)).toBe(false);
-  });
-
-  it("refuses a prefix of the key rather than throwing", () => {
-    // timingSafeEqual throws on a length mismatch. If that ever escapes, a
-    // wrong-length guess becomes a 500 and a length oracle at the same time.
-    expect(() => keyIsRight(KEY.slice(0, 5))).not.toThrow();
-    expect(keyIsRight(KEY.slice(0, 5))).toBe(false);
-  });
-
-  it("refuses everything when the deployment has no key", () => {
-    vi.stubEnv("CARDS_TOKEN", "");
-    expect(keyIsRight("")).toBe(false);
-    expect(keyIsRight(KEY)).toBe(false);
-  });
-});
-
-describe("keyFrom", () => {
-  it("reads the header", () => {
-    expect(keyFrom(req({ header: KEY }))).toBe(KEY);
-  });
-
-  it("reads the session cookie", () => {
-    expect(keyFrom(req({ cookie: `${SESSION_COOKIE}=${KEY}` }))).toBe(KEY);
-  });
-
-  it("prefers the header, so a stale cookie cannot override an explicit client", () => {
-    expect(keyFrom(req({ header: KEY, cookie: `${SESSION_COOKIE}=${OTHER}` }))).toBe(KEY);
-  });
-
-  it("finds the cookie among others and decodes it", () => {
-    const jar = `theme=dark; ${SESSION_COOKIE}=${encodeURIComponent("a b")}; other=1`;
-    expect(keyFrom(req({ cookie: jar }))).toBe("a b");
-  });
-
-  it("is empty when nothing is offered", () => {
-    expect(keyFrom(req())).toBe("");
-  });
-
-  it("does not mistake a cookie whose name merely ends with the session's", () => {
-    expect(keyFrom(req({ cookie: `not-${SESSION_COOKIE}=${OTHER}` }))).toBe("");
-  });
 });
 
 describe("sameOrigin", () => {
@@ -252,30 +189,6 @@ describe("authorise", () => {
     const r = await authorise(req({ ip }));
     expect(r).toMatchObject({ status: 429 });
   });
-
-  describe("the CARDS_TOKEN compatibility path", () => {
-    it("lets the old shared passcode through as the owner", async () => {
-      // curl and the snapshot script keep working while accounts arrive beside
-      // them. On its way out; see the note on keyIsRight.
-      viewer = null;
-      const r = await authorise(req({ header: KEY }));
-      expect(r).toMatchObject({ userId: "owner-1" });
-    });
-
-    it("refuses to be anybody when the deployment has not said who the owner is", async () => {
-      // A passcode is not an identity. Without OWNER_USER_ID there is nobody
-      // for it to be, and guessing would be worse than refusing.
-      viewer = null;
-      vi.stubEnv("OWNER_USER_ID", "");
-      const r = await authorise(req({ header: KEY }));
-      expect(r).toMatchObject({ status: 503 });
-    });
-
-    it("ignores a wrong passcode and falls through to the session", async () => {
-      const r = await authorise(req({ header: OTHER }));
-      expect(r).toMatchObject({ userId: "user-1" });
-    });
-  });
 });
 
 describe("authoriseWrite", () => {
@@ -303,7 +216,7 @@ describe("authoriseWrite", () => {
 
 describe("readHeaders", () => {
   it("never caches a keyed answer in a shared cache", () => {
-    expect(readHeaders(req({ header: KEY }))["Cache-Control"]).toBe("private, no-store");
+    expect(readHeaders(req({ bearer: KEY }))["Cache-Control"]).toBe("private, no-store");
   });
 
   it("answers an allowed origin by name, not with a wildcard", () => {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { getCards } from "@/lib/core/collection/collection";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -29,7 +30,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who)) {
-    return NextResponse.json({ error: who.error }, { status: who.status });
+    return apiError(who.status, who.error);
   }
 
   // Whose collection, which is the whole of what changed here. It used to be

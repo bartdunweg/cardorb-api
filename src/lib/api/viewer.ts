@@ -139,7 +139,7 @@ export const currentViewer = cache(async (): Promise<Viewer | null> => {
 /**
  * Who is making this request, for the routes that are not a rendered page.
  *
- * Bearer first, then the cookie, which is the same precedence keyFrom() used
+ * Bearer first, then the cookie, the precedence the passcode path once used
  * and for the same reason: a client that bothered to set a header is being
  * explicit, and a stale cookie should not quietly override it. The iOS and
  * Android apps are the bearer half; the browser is the cookie half.

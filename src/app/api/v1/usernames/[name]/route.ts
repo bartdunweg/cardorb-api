@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { adminClient } from "@/lib/storage/supabase";
@@ -42,14 +43,14 @@ import { validateUsername } from "@/lib/core/account/account";
 const byAddress = createRateLimiter(60_000, 60);
 
 export async function GET(req: Request, { params }: { params: Promise<{ name: string }> }) {
-  if (!sameOrigin(req)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const ip =
     req.headers.get("x-real-ip")?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
   if (byAddress(ip)) {
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return apiError(429, "Too many requests");
   }
 
   const { name } = await params;

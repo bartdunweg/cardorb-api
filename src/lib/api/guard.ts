@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createRateLimiter } from "./rate-limit";
 import { REFUSALS } from "./respond";
@@ -18,20 +17,19 @@ import { requestViewer, type Viewer } from "./viewer";
  * curtain rather than a wall. So the door is shut and the endpoints are behind
  * the key; the public page does not go through them at all.
  *
- * CARDS_TOKEN is still a shared passcode rather than an account system: one
- * person edits this collection. What changed is where a browser keeps it. It
- * used to sit in localStorage and travel as an x-cards-key header, which the
- * server cannot see until JavaScript runs — so a page could not know who was
- * looking while it was being rendered. It is a cookie now. Both are accepted:
- * the header for curl and for the iOS app, the cookie for the browser.
+ * Every caller is an account now. CARDS_TOKEN, the one shared passcode that
+ * predated accounts, was retired on 2026-09-02: the iOS app signs in with an
+ * account, the web app forwards its session as a bearer token, and nothing of
+ * ours sent the header any more. A bearer token for the apps, the session
+ * cookie for a browser on this origin.
  */
 
 /**
  * Two limiters, because two kinds of caller share an address.
  *
  * A request that carries no account credential — no bearer token, no session
- * cookie — can only be somebody guessing the deprecated passcode, and ten a
- * minute is far above opening a pack and far below guessing a key. A request
+ * cookie — has nothing to say and is only ever a probe, and ten a minute is
+ * far above opening a pack and far below guessing anything. A request
  * that carries one is a client we wrote, and the web app's servers make those
  * for every visitor from a handful of shared addresses; holding them to ten
  * would take the site down on its second visitor. A wrong token is refused
@@ -125,32 +123,7 @@ export function sameOrigin(req: Request): boolean {
  * the network boundary for it, so the string lives in session-cookie.ts — see
  * the comment there for why that is still true. Imported *and* exported, not
  * re-exported in one line — `export { x } from` forwards the name without
- * binding it locally, and keyFrom below reads it.
  */
-export { SESSION_COOKIE };
-
-/**
- * The key this request is offering, from either place it is allowed to be.
- *
- * The header wins when both are present, because a client that bothered to set
- * one is being explicit and a stale cookie should not quietly override it.
- *
- * Parsed by hand rather than through next/headers so this stays a plain
- * `Request` function: the same code then answers for a route handler and for
- * the proxy, and there is one comparison in the app rather than two that have
- * to be kept agreeing with each other.
- */
-export function keyFrom(req: Request): string {
-  const header = req.headers.get("x-cards-key");
-  if (header) return header;
-  const jar = req.headers.get("cookie");
-  if (!jar) return "";
-  for (const part of jar.split(";")) {
-    const [name, ...rest] = part.trim().split("=");
-    if (name === SESSION_COOKIE) return decodeURIComponent(rest.join("="));
-  }
-  return "";
-}
 
 /**
  * Whether a key is the right one, in constant time.
@@ -159,26 +132,6 @@ export function keyFrom(req: Request): string {
  * if it were caught and turned into an answer. The lengths are compared first
  * and folded in, so every wrong key costs the same.
  */
-/**
- * Whether a key is the one shared passcode, in constant time.
- *
- * On its way out. This is the compatibility path: curl, the snapshot script and
- * anything else that learned CARDS_TOKEN keeps working while accounts arrive
- * beside it, resolving to whoever OWNER_USER_ID names. It logs every time it is
- * used, so the question "does anything still depend on this" has an answer in
- * the logs rather than in somebody's memory.
- *
- * timingSafeEqual throws on a length mismatch, which would be a length oracle
- * if it were caught and turned into an answer. The lengths are compared first
- * and folded in, so every wrong key costs the same.
- */
-export function keyIsRight(given: string): boolean {
-  const expected = process.env.CARDS_TOKEN;
-  if (!expected) return false;
-  const a = Buffer.from(given);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 /**
  * Who is asking. Returns the viewer, or the refusal to send instead.
@@ -224,35 +177,6 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
   if (!configured()) {
     console.error("No database is configured: every request will be refused");
     return { status: 503, error: NO_DATABASE_CONFIGURED };
-  }
-
-  // The compatibility path, first because it is cheapest and because a request
-  // carrying this header is not carrying a session. It is deliberately narrow:
-  // the passcode alone is not an identity, so it only works where the
-  // deployment has said which account it stands for.
-  const legacy = req.headers.get("x-cards-key");
-  if (legacy && keyIsRight(legacy)) {
-    const owner = process.env.OWNER_USER_ID?.trim();
-    if (!owner) {
-      console.error("CARDS_TOKEN was accepted but OWNER_USER_ID is not set: nobody to be");
-      return { status: 503, error: "This deployment has no account configured." };
-    }
-    console.warn("[deprecated] CARDS_TOKEN was used; move this client to an account token");
-    // No username and no name: this path never read the profile, and a
-    // passcode standing in for an account is not a person to call anything.
-    // The empty username never resolves as one, which is the correct outcome.
-    return {
-      userId: owner,
-      email: process.env.OWNER_EMAIL ?? "",
-      username: "",
-      displayName: null,
-      avatarUrl: null,
-      // The passcode names an account that predates the welcome flow, and this
-      // path never renders a page anyway — an API caller has nothing to be
-      // onboarded to. A timestamp rather than null so nothing downstream reads
-      // this as an account that still needs setting up.
-      onboardedAt: new Date(0).toISOString(),
-    };
   }
 
   const viewer = await requestViewer(req);

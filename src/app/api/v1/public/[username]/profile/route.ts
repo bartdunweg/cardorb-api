@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { ownerOf } from "@/lib/core/collection/collection";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
@@ -18,11 +19,11 @@ const addressOf = (req: Request) =>
 
 export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
   if (byAddress(addressOf(req)))
-    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    return apiError(429, "Too many requests");
 
   const { username } = await params;
   const owner = await ownerOf(username);
-  if (!owner) return NextResponse.json({ error: "No such collection." }, { status: 404 });
+  if (!owner) return apiError(404, "No such collection.");
 
   return NextResponse.json(
     { username: owner.username, displayName: owner.displayName, avatarUrl: owner.avatarUrl },

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api/respond";
 import { searchCards } from "@/lib/core/catalogue/ptcg-search";
 import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -47,10 +48,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who)) {
-    return NextResponse.json(
-      { error: who.error },
-      { status: who.status, headers: readHeaders(req) },
-    );
+    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
   }
 
   const url = new URL(req.url);
@@ -67,10 +65,9 @@ export async function GET(req: Request) {
   if (!usingFilters) {
     const query = (url.searchParams.get("query") ?? "").trim();
     if (query.length < 2) {
-      return NextResponse.json(
-        { error: "Type at least two characters to search." },
-        { status: 400, headers: readHeaders(req) },
-      );
+      return apiError(400, "Type at least two characters to search.", undefined, {
+        headers: readHeaders(req),
+      });
     }
   }
 
@@ -87,9 +84,6 @@ export async function GET(req: Request) {
       { headers: readHeaders(req) },
     );
   } catch {
-    return NextResponse.json(
-      { error: "search-unavailable" },
-      { status: 502, headers: readHeaders(req) },
-    );
+    return apiError(502, "search-unavailable", undefined, { headers: readHeaders(req) });
   }
 }
