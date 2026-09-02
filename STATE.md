@@ -89,11 +89,10 @@ other.
 - **102 hand-typed refusals remain.** Each route moves to `apiError()`/`refuse()` when next opened.
 - **`lib/core/collection/value-chart.ts` has a damaged sentence** in its header (lines 12–13). Left alone.
 - **Both unmerged branches are superseded and neither merges as-is.**
-  `origin/bartdunweg/catalog-wide-search-index` (582 files, predates the `src/` move) built
-  cross-set search as a Postgres index on a weekly cron; what shipped queries pokemontcg.io live
-  with a five-minute cache. The local index is still the better answer if that dependency ever
-  becomes a problem. `origin/bartdunweg/check-tailwind-conversion` restores the removed Notion
-  integration. Deleting them is a person's call.
+  `origin/bartdunweg/catalog-wide-search-index` built cross-set search as a Postgres index on a
+  weekly cron (still the better answer if pokemontcg.io ever becomes a problem);
+  `origin/bartdunweg/check-tailwind-conversion` restores the removed Notion integration.
+  Deleting them is a person's call.
 - **dev-standards rule-count contradiction persists at v0.27.0.** The `CONVENTIONS.md`
   template says there is no rule-count ceiling; `verify.sh.template` still fails above 15
   rules. `scripts/verify.sh` runs every clause of the `conventions` check except the count and
