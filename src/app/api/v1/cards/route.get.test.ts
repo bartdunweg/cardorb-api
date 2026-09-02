@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 const authorise = vi.fn();
-const getCards = vi.fn();
+const getCollection = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
@@ -19,7 +19,7 @@ vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
-  getCards: (...a: unknown[]) => getCards(...a),
+  getCollection: (...a: unknown[]) => getCollection(...a),
 }));
 vi.mock("@/lib/storage/collection", () => ({ createRow: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
@@ -84,13 +84,13 @@ const get = (qs = "") =>
 beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue(VIEWER);
-  getCards.mockResolvedValue(SETS);
+  getCollection.mockResolvedValue({ sets: SETS, failed: false });
 });
 
 describe("GET /api/v1/cards", () => {
   it("reads the caller's own collection with the caller's own credential", async () => {
     await get();
-    expect(getCards).toHaveBeenCalledWith("me-uuid", "t.o.k.e.n");
+    expect(getCollection).toHaveBeenCalledWith("me-uuid", "t.o.k.e.n");
   });
 
   it("answers one page of copies and the total behind it", async () => {
@@ -104,13 +104,13 @@ describe("GET /api/v1/cards", () => {
     const res = await get("?owned=maybe");
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: "owned must be true or false." });
-    expect(getCards).not.toHaveBeenCalled();
+    expect(getCollection).not.toHaveBeenCalled();
   });
 
   it("passes a refusal through", async () => {
     authorise.mockResolvedValue({ status: 401, error: "Who are you?" });
     const res = await get();
     expect(res.status).toBe(401);
-    expect(getCards).not.toHaveBeenCalled();
+    expect(getCollection).not.toHaveBeenCalled();
   });
 });

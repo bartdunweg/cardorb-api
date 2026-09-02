@@ -184,14 +184,22 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // The single point of failure for every scan on the page: without the index
   // no set name can be resolved, so one refused request here is the difference
   // between a binder and a wall of empty slots. Hence the retries in json().
-  let sets: TcgSet[] = [];
+  //
+  // It used to swallow that failure and carry on without artwork, which was
+  // right when the only reader was a page a person could reload. Now the
+  // result is cached for a day and every client reads the cache: on
+  // 2026-09-02 one 404 from the index during a cold build left sixteen
+  // hundred cards without a scan, a price or a catalogue id for every app at
+  // once. So a missing index is an error, the build fails, and nothing is
+  // cached; the next request tries again.
+  let sets: TcgSet[];
   try {
     sets = (await json("https://api.tcgdex.net/v2/en/sets", "sets index")) as TcgSet[];
-  } catch {
-    console.error("No TCGdex set index: the collection will render without any artwork.");
+  } catch (err) {
+    throw new Error(`No TCGdex set index, so no set can be resolved: ${String(err)}`);
   }
 
-  const ids = sets.length ? resolveSetIds(setName, sets) : [];
+  const ids = resolveSetIds(setName, sets);
   // One at a time: the subsets of a set in turn rather than alongside it.
   const details = (await mapLimit(ids, 1, fetchSet)).filter(Boolean) as TcgSetDetail[];
   // The first is the set itself; the rest are its galleries, which have their
@@ -328,7 +336,7 @@ async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v2"], {
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v3"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
