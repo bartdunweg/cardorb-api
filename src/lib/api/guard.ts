@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createRateLimiter } from "./rate-limit";
+import { REFUSALS } from "./respond";
 import { SESSION_COOKIE } from "./session-cookie";
 import { configured } from "../storage/supabase";
 import { requestViewer, type Viewer } from "./viewer";
@@ -35,7 +36,7 @@ export type Refusal = { status: number; error: string };
  * says there is nowhere to write. Shared so the six places that send it can't
  * drift into six slightly different sentences.
  */
-export const NO_DATABASE_CONFIGURED = "This deployment has no database configured.";
+export const NO_DATABASE_CONFIGURED = REFUSALS.noDatabase.error;
 
 /**
  * Which origins may post here, from ALLOWED_ORIGINS, comma separated.

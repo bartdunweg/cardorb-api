@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
+import { refuse } from "@/lib/api/respond";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -125,10 +126,7 @@ export async function POST(req: Request) {
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return NextResponse.json(
-      { error: "This deployment has no database configured." },
-      { status: 503 },
-    );
+    return refuse("noDatabase");
   }
 
   const path = `${viewer.userId}/avatar.${ext}`;
@@ -179,10 +177,7 @@ export async function DELETE(req: Request) {
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return NextResponse.json(
-      { error: "This deployment has no database configured." },
-      { status: 503 },
-    );
+    return refuse("noDatabase");
   }
 
   await db.storage

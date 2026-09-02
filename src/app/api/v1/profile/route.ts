@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
+import { refuse } from "@/lib/api/respond";
 import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
@@ -81,10 +82,7 @@ export async function PATCH(req: Request) {
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return NextResponse.json(
-      { error: "This deployment has no database configured." },
-      { status: 503 },
-    );
+    return refuse("noDatabase");
   }
 
   try {
@@ -112,10 +110,7 @@ export async function GET(req: Request) {
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return NextResponse.json(
-      { error: "This deployment has no database configured." },
-      { status: 503 },
-    );
+    return refuse("noDatabase");
   }
 
   const profile = await ownProfile(db, viewer.userId);

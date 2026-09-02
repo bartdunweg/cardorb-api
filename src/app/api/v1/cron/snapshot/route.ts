@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { refuse } from "@/lib/api/respond";
 import { buildCollection } from "@/lib/core/collection/cards";
 import {
   cardPricesOf,
@@ -93,7 +94,7 @@ export async function GET(req: Request) {
   }
 
   const db = adminClient();
-  if (!db) return NextResponse.json({ error: "No database is connected here." }, { status: 503 });
+  if (!db) return refuse("noDatabase");
 
   const guide = (await (
     await fetch(GUIDE, { headers: { "User-Agent": "cardorb.com" } })

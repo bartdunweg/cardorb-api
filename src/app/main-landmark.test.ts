@@ -74,6 +74,7 @@ const DRAWN_BY: Record<string, string> = {
   "/": "src/app/page.tsx",
   "/app/ios": "src/app/app/ios/page.tsx",
   "/brand": "src/app/brand/page.tsx",
+  "/docs/api": "src/app/docs/api/page.tsx",
   "/cards/:param": "src/app/cards/[id]/page.tsx",
   "/user/:param": "src/features/collection/components/CardsView.tsx",
   "/welcome": "src/app/welcome/page.tsx",

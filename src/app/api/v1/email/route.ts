@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
+import { refuse } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
@@ -54,10 +55,7 @@ export async function POST(req: Request) {
 
   const db = await serverClient();
   if (!db) {
-    return NextResponse.json(
-      { error: "This deployment has no database configured." },
-      { status: 503 },
-    );
+    return refuse("noDatabase");
   }
 
   const { error } = await db.auth.updateUser(

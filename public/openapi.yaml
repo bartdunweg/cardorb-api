@@ -1,0 +1,1367 @@
+# The Card Orb API, as a contract.
+#
+# This file is the one description of what the API answers. A route handler
+# under src/app/api/v1 that is not in here fails src/app/api/openapi.test.ts,
+# and so does a path in here that no handler answers. Change the code and this
+# file in the same commit, or the test says which one you forgot.
+#
+# Served as-is at https://api.cardorb.com/openapi.yaml and read at build time
+# by /docs/api, which renders it without a script from anywhere else.
+openapi: 3.1.0
+
+info:
+  title: Card Orb API
+  version: 1.0.0
+  summary: A Pokémon card collection, priced, served to a web tool and an iOS app.
+  description: |
+    Card Orb keeps one person's Pokémon card collection in Postgres, matches it
+    against three card catalogues, prices it from Cardmarket, and serves it here.
+
+    **Two clients read this API and both are ours**: the web tool at cardorb.com
+    and the iOS app. Nothing here is designed for a third party yet.
+
+    **Every failure is `{ "error": "<sentence>" }`** at a status a client can
+    branch on. The sentence is for a person to read; the status is for the code.
+
+    **The version is in the path.** `/v1` changes only by addition: a new field,
+    a new route, a new optional query. Anything that removes or renames is `/v2`.
+  contact:
+    name: Card Orb
+    url: https://cardorb.com
+
+servers:
+  - url: https://api.cardorb.com
+    description: The API on its own host. `/v1/…` here is `/api/v1/…` on cardorb.com.
+  - url: https://cardorb.com/api
+    description: The same API under the web tool's own origin, which is what the browser uses.
+  - url: http://localhost:3000/api
+    description: Local development.
+
+tags:
+  - name: Collection
+    description: What the signed-in person owns, and the writes that change it.
+  - name: Catalogue
+    description: Every set and every card, whether owned or not. Read from pokemontcg.io, cached five minutes.
+  - name: Value
+    description: What the collection is worth, over time.
+  - name: Profile
+    description: The signed-in person's name, avatar and public flag.
+  - name: Account
+    description: Signing up, signing in, passwords and deletion. Browser-only, same-origin.
+  - name: Public
+    description: The three unkeyed routes behind /user/<name>. No prices, no inventory, own rate limiter.
+  - name: Import
+    description: Loading a collection from a CSV file.
+  - name: Platform
+    description: The health check and the nightly price snapshot. Not for clients.
+
+security:
+  - bearer: []
+  - session: []
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        A Supabase access token, `Authorization: Bearer <jwt>`. What the iOS app
+        sends. Verified locally against the project's signing keys.
+    session:
+      type: apiKey
+      in: cookie
+      name: binder_session
+      description: |
+        The browser's session cookie, set by `POST /v1/session`. What the web
+        tool sends. Scoped to cardorb.com, so it never reaches api.cardorb.com —
+        the browser calls `/api/v1` on its own origin instead.
+    passcode:
+      type: apiKey
+      in: header
+      name: x-cards-key
+      description: |
+        **Deprecated.** The one shared passcode, `CARDS_TOKEN`. Still accepted so
+        curl and the snapshot script keep working; every use is logged. It names
+        no session, so `GET /v1/value-history` answers it with an empty series.
+    cron:
+      type: http
+      scheme: bearer
+      description: Vercel's `CRON_SECRET`, on `/v1/cron/snapshot` only.
+
+  headers:
+    Cache-Control-Private:
+      description: Authorised answers are never cached by anything in between.
+      schema: { type: string, const: "private, no-store" }
+    Cache-Control-Public:
+      description: Public answers are cached at the CDN and revalidated behind the reader.
+      schema: { type: string, example: "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" }
+
+  responses:
+    BadRequest:
+      description: The request was understood and refused. The sentence says why.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Invalid request" }
+    Unauthorised:
+      description: No viewer. Sign in, or send a bearer token.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Sign in to see this." }
+    Forbidden:
+      description: The request came from an origin this deployment does not allow.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Forbidden" }
+    NotFound:
+      description: Nothing by that name.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    PayloadTooLarge:
+      description: The body is bigger than this route's `BODY_LIMIT`.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Payload too large" }
+    UnsupportedMediaType:
+      description: A write without `Content-Type application/json`, which is what forces a browser's preflight.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Invalid request" }
+    TooManyRequests:
+      description: Over this route's rate limit for this address.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "Too many requests" }
+    BadGateway:
+      description: A catalogue, the price guide or the database did not answer.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unavailable:
+      description: This deployment has no database, or the database is not answering.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "This deployment has no database configured." }
+
+  schemas:
+    Error:
+      type: object
+      description: The one shape every failure takes.
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: A sentence for a person. Branch on the status, not on this.
+      additionalProperties: true
+
+    Ok:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean, const: true }
+
+    Finish:
+      type: string
+      enum: [normal, reverse-holo, holo]
+      description: Which printing a copy is. `null` on a copy means "nobody has said", not `normal`.
+
+    Price:
+      type: object
+      description: One card's Cardmarket price, in euros.
+      properties:
+        low: { type: [number, "null"], description: "The lowest listing at any condition. A floor, not a price." }
+        market: { type: [number, "null"], description: "What one copy trades at." }
+        avg30: { type: [number, "null"], description: "The thirty-day average." }
+        nm:
+          type: [object, "null"]
+          description: An estimated English Near Mint asking range. `mid` is the number the grid shows.
+          properties:
+            low: { type: number }
+            mid: { type: number }
+            high: { type: number }
+
+    ImageSize:
+      type: [object, "null"]
+      properties:
+        width: { type: integer }
+        height: { type: integer }
+
+    Variant:
+      type: object
+      description: One copy of a card, or one wish for it.
+      required: [id, rarity, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, acquiredAt, excluded]
+      properties:
+        id: { type: [string, "null"], description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
+        rarity: { type: [string, "null"] }
+        owned: { type: boolean, description: "`false` is a wishlist entry." }
+        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        quantity: { type: [integer, "null"] }
+        condition: { type: [string, "null"] }
+        grade: { type: [string, "null"] }
+        purchasePrice: { type: [number, "null"] }
+        purchaseDate: { type: [string, "null"], format: date }
+        notes: { type: [string, "null"] }
+        isFavorite: { type: boolean }
+        acquiredAt: { type: [string, "null"], format: date-time }
+        excluded: { type: boolean, description: "Kept out of the public profile and the latest pull." }
+
+    OwnedCard:
+      type: object
+      description: A card as the collection groups it, with every copy under it.
+      required: [key, name, number, type, gen, image, imageHigh, imageSize, speciesId, variants, owned, price, priceHolo, tcgId]
+      properties:
+        key: { type: string }
+        name: { type: string }
+        number: { type: string }
+        type: { type: [string, "null"] }
+        gen: { type: [string, "null"], description: "The era, in TCGdex's words." }
+        image: { type: [string, "null"], description: "Small scan for a grid. Can be relative (`/api/cover?url=…`)." }
+        imageHigh: { type: [string, "null"], description: "Large scan. Only where TCGdex has the card." }
+        imageSize: { $ref: "#/components/schemas/ImageSize" }
+        speciesId: { type: [integer, "null"], description: "The National Pokédex number." }
+        variants: { type: array, items: { $ref: "#/components/schemas/Variant" } }
+        owned: { type: boolean }
+        price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        tcgId: { type: [string, "null"], description: "TCGdex's card id, for `GET /v1/cards/{tcgId}`." }
+
+    CardSet:
+      type: object
+      required: [name, title, logo, logoSize, releaseDate, total, cards]
+      properties:
+        name: { type: string, description: "The set as the collection names it. Addresses everything." }
+        title: { type: string, description: "The set as the catalogue names it. For reading." }
+        logo: { type: [string, "null"] }
+        logoSize: { $ref: "#/components/schemas/ImageSize" }
+        releaseDate: { type: [string, "null"] }
+        total: { type: [integer, "null"] }
+        cards: { type: array, items: { $ref: "#/components/schemas/OwnedCard" } }
+
+    Collection:
+      type: object
+      required: [sets]
+      properties:
+        sets: { type: array, items: { $ref: "#/components/schemas/CardSet" } }
+
+    CardDetail:
+      type: object
+      description: One card from TCGdex, with its price where the caller may see one.
+      required: [id, name, image, rarity, illustrator, hp, types, stage, evolveFrom, regulationMark, set, cmId, cmUrl, price, market]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        image: { type: [string, "null"] }
+        rarity: { type: [string, "null"] }
+        illustrator: { type: [string, "null"] }
+        hp: { type: [integer, "null"] }
+        types: { type: array, items: { type: string } }
+        stage: { type: [string, "null"] }
+        evolveFrom: { type: [string, "null"] }
+        regulationMark: { type: [string, "null"] }
+        set:
+          type: [object, "null"]
+          properties:
+            id: { type: string }
+            name: { type: string }
+            logo: { type: [string, "null"] }
+            total: { type: [integer, "null"] }
+        cmId: { type: [integer, "null"], description: "Cardmarket's product id." }
+        cmUrl: { type: string }
+        price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        market:
+          type: [object, "null"]
+          properties:
+            avg: { type: [number, "null"] }
+            trend: { type: [number, "null"] }
+            avg7: { type: [number, "null"] }
+
+    CardFields:
+      type: object
+      description: The select options the database currently holds.
+      required: [sets, rarities, gens, types]
+      properties:
+        sets: { type: array, items: { type: string } }
+        rarities: { type: array, items: { type: string } }
+        gens: { type: array, items: { type: string } }
+        types: { type: array, items: { type: string } }
+
+    CardDraft:
+      type: object
+      description: A card to add. Only `name` and `set` are required; the rest default.
+      required: [name, set]
+      properties:
+        name: { type: string }
+        number: { type: string }
+        set: { type: string }
+        rarity: { type: string }
+        gen: { type: string }
+        types: { type: array, items: { type: string }, maxItems: 10 }
+        collection: { type: boolean, default: true, description: "`false` puts it on the wishlist." }
+        excluded: { type: boolean, default: false }
+        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        quantity: { type: integer, minimum: 1, default: 1 }
+        condition: { type: [string, "null"] }
+        grade: { type: [string, "null"] }
+        purchasePrice: { type: [number, "null"] }
+        purchaseDate: { type: [string, "null"], format: date }
+        notes: { type: [string, "null"] }
+        isFavorite: { type: boolean, default: false }
+
+    CardPatch:
+      type: object
+      description: The inventory fields of one copy. Every key optional; `null` clears one.
+      properties:
+        owned: { type: boolean }
+        excluded: { type: boolean }
+        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        quantity: { type: integer, minimum: 1 }
+        condition: { type: [string, "null"] }
+        grade: { type: [string, "null"] }
+        purchasePrice: { type: [number, "null"] }
+        purchaseDate: { type: [string, "null"], format: date }
+        notes: { type: [string, "null"] }
+        isFavorite: { type: boolean }
+
+    CollectionRow:
+      type: object
+      description: One row as the database keeps it.
+      required: [id, name, number, setName, rarity, gen, types, owned, excluded, acquiredAt, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite]
+      properties:
+        id: { type: [string, "null"] }
+        name: { type: string }
+        number: { type: string }
+        setName: { type: string }
+        rarity: { type: [string, "null"] }
+        gen: { type: [string, "null"] }
+        types: { type: array, items: { type: string } }
+        owned: { type: boolean }
+        excluded: { type: boolean }
+        acquiredAt: { type: [string, "null"], format: date-time }
+        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        quantity: { type: integer }
+        condition: { type: [string, "null"] }
+        grade: { type: [string, "null"] }
+        purchasePrice: { type: [number, "null"] }
+        purchaseDate: { type: [string, "null"], format: date }
+        notes: { type: [string, "null"] }
+        isFavorite: { type: boolean }
+
+    CatalogueSet:
+      type: object
+      required: [id, name, series, releaseDate, total, printedTotal, logo, symbol]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        series: { type: string, description: "The era, as pokemontcg.io names it." }
+        releaseDate: { type: [string, "null"], description: "`YYYY/MM/DD`, sortable as a string." }
+        total: { type: integer, description: "Every card, secret rares included." }
+        printedTotal: { type: [integer, "null"], description: "The number printed on the cards." }
+        logo: { type: [string, "null"] }
+        symbol: { type: [string, "null"] }
+
+    CatalogueSetWithCounts:
+      allOf:
+        - $ref: "#/components/schemas/CatalogueSet"
+        - type: object
+          required: [ownedCount, wishlistCount]
+          properties:
+            ownedCount: { type: integer }
+            wishlistCount: { type: integer }
+
+    BrowseCard:
+      type: object
+      description: A catalogue card with the caller's own answer attached.
+      required: [id, number, name, setName, image, imageHigh, rarity, types, series, owned, wishlist, quantity, itemIds]
+      properties:
+        id: { type: string }
+        number: { type: string }
+        name: { type: string }
+        setName: { type: string }
+        image: { type: [string, "null"] }
+        imageHigh: { type: [string, "null"] }
+        rarity: { type: [string, "null"] }
+        types: { type: array, items: { type: string } }
+        series: { type: string }
+        owned: { type: boolean }
+        wishlist: { type: boolean }
+        quantity: { type: integer, description: "Summed over owned rows only." }
+        itemIds: { type: array, items: { type: string }, description: "Every collection row this card matched." }
+
+    ValueSnapshot:
+      type: object
+      required: [date, value, cards, priced, unpriced]
+      properties:
+        date: { type: string, format: date }
+        value: { type: integer, description: "Whole euros." }
+        cards: { type: integer, description: "Copies held on that date." }
+        priced: { type: integer }
+        unpriced: { type: integer }
+
+    LatestPull:
+      type: object
+      required: [name, number, image, imageHigh, rarity, speciesId, tcgId, setName, setTitle, acquiredAt]
+      properties:
+        name: { type: string }
+        number: { type: string }
+        image: { type: [string, "null"], description: "Can be relative; prefix `https://cardorb.com`." }
+        imageHigh: { type: [string, "null"] }
+        rarity: { type: [string, "null"] }
+        speciesId: { type: [integer, "null"] }
+        tcgId: { type: [string, "null"] }
+        setName: { type: string }
+        setTitle: { type: string }
+        acquiredAt: { type: string, format: date-time }
+
+    OwnProfile:
+      type: object
+      required: [username, displayName, isPublic, avatarUrl, onboardedAt, email]
+      properties:
+        username: { type: string, description: "The name in `/user/<name>`." }
+        displayName: { type: [string, "null"] }
+        isPublic: { type: boolean }
+        avatarUrl: { type: [string, "null"] }
+        onboardedAt: { type: [string, "null"], format: date-time }
+        email: { type: string }
+
+    ColumnMap:
+      type: object
+      description: Which column of the CSV holds which field, as zero-based indices.
+      properties:
+        name: { type: integer }
+        set: { type: integer }
+        number: { type: integer }
+        rarity: { type: integer }
+        gen: { type: integer }
+        types: { type: integer }
+        owned: { type: integer }
+        acquired: { type: integer }
+
+    ImportOutcome:
+      type: object
+      required: [seen, added, skipped, sample]
+      properties:
+        seen: { type: integer }
+        added: { type: integer }
+        skipped: { type: integer }
+        sample: { type: array, items: { $ref: "#/components/schemas/CollectionRow" } }
+
+    ImportRecord:
+      type: object
+      description: One past import, as the database keeps it. Snake-case on purpose; it is the row.
+      properties:
+        id: { type: string }
+        kind: { type: string }
+        status: { type: string }
+        rows_seen: { type: integer }
+        rows_added: { type: integer }
+        rows_skipped: { type: integer }
+        error: { type: [string, "null"] }
+        started_at: { type: string, format: date-time }
+        finished_at: { type: [string, "null"], format: date-time }
+
+    SnapshotOutcome:
+      type: object
+      required: [ok, date, written, prices, failed]
+      properties:
+        ok: { type: boolean }
+        date: { type: string, format: date }
+        written: { type: integer }
+        prices: { type: integer }
+        failed: { type: array, items: { type: string } }
+
+paths:
+  # ── Collection ────────────────────────────────────────────────────────────
+  /v1/collection:
+    get:
+      tags: [Collection]
+      operationId: getCollection
+      summary: The whole collection, grouped by set
+      description: |
+        Every set the caller owns a card from, with every card and every copy.
+        Prices included. An empty collection is `{ "sets": [] }`, not an error.
+      responses:
+        "200":
+          description: The collection.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Collection" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/cards:
+    post:
+      tags: [Collection]
+      operationId: addCard
+      summary: Add a card
+      description: Writes one collection row. `BODY_LIMIT.card`, 8 kB.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CardDraft" }
+      responses:
+        "200":
+          description: Added.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, id]
+                properties:
+                  ok: { type: boolean, const: true }
+                  id: { type: string, description: "The new row." }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    options:
+      tags: [Collection]
+      operationId: addCardPreflight
+      summary: CORS preflight for a cross-origin write
+      security: []
+      responses:
+        "204": { description: "Allowed. Carries the `Access-Control-Allow-*` headers." }
+        "403": { description: "That origin is not in `ALLOWED_ORIGINS`. Empty body." }
+
+  /v1/cards/{tcgId}:
+    get:
+      tags: [Collection]
+      operationId: getCard
+      summary: One card, its printings and its price
+      parameters:
+        - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
+      responses:
+        "200":
+          description: The card.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardDetail" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/collection/items/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string }, description: "The collection row, from `Variant.id` or `BrowseCard.itemIds`." }
+    patch:
+      tags: [Collection]
+      operationId: updateItem
+      summary: Change one copy's inventory fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CardPatch" }
+      responses:
+        "200":
+          description: Changed. The row as it now is.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, card]
+                properties:
+                  ok: { type: boolean, const: true }
+                  card: { $ref: "#/components/schemas/CollectionRow" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    delete:
+      tags: [Collection]
+      operationId: deleteItem
+      summary: Remove one copy
+      description: Needs `Content-Type application/json` even without a body; that is what forces the preflight.
+      responses:
+        "200":
+          description: Removed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    options:
+      tags: [Collection]
+      operationId: updateItemPreflight
+      summary: CORS preflight for a cross-origin write
+      security: []
+      responses:
+        "204": { description: "Allowed." }
+        "403": { description: "That origin is not in `ALLOWED_ORIGINS`. Empty body." }
+
+  /v1/fields:
+    get:
+      tags: [Collection]
+      operationId: getFields
+      summary: The database's select options
+      description: The cheapest call there is, so it is also how a client learns whether its credential still works.
+      responses:
+        "200":
+          description: The options.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardFields" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  # ── Catalogue ─────────────────────────────────────────────────────────────
+  /v1/catalog/sets:
+    get:
+      tags: [Catalogue]
+      operationId: listSets
+      summary: Every set, with how much of each the caller holds
+      responses:
+        "200":
+          description: The sets.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sets]
+                properties:
+                  sets: { type: array, items: { $ref: "#/components/schemas/CatalogueSetWithCounts" } }
+                  collectionUnavailable:
+                    type: boolean
+                    const: true
+                    description: Present only when the counts could not be read; the sets are still right.
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/catalog/sets/{setId}:
+    get:
+      tags: [Catalogue]
+      operationId: getSet
+      summary: One whole set, a page at a time
+      parameters:
+        - { name: setId, in: path, required: true, schema: { type: string }, description: "pokemontcg.io's set id, e.g. `swsh3`." }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 250, default: 60 }, description: "Clamped to 250." }
+      responses:
+        "200":
+          description: The page.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [set, cards, page, pageSize, totalCount, ownedCount, hasMore]
+                properties:
+                  set: { $ref: "#/components/schemas/CatalogueSet" }
+                  cards: { type: array, items: { $ref: "#/components/schemas/BrowseCard" } }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalCount: { type: integer }
+                  ownedCount: { type: integer }
+                  hasMore: { type: boolean }
+                  collectionUnavailable: { type: boolean, const: true }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/catalog/search:
+    get:
+      tags: [Catalogue]
+      operationId: searchCatalogue
+      summary: Find a card by name, number, set or type
+      description: |
+        Two modes. With any of `name`, `number`, `set`, `type` it filters; otherwise
+        `query` (two characters or more) is a free search.
+      parameters:
+        - { name: query, in: query, schema: { type: string, minLength: 2 } }
+        - { name: name, in: query, schema: { type: string } }
+        - { name: number, in: query, schema: { type: string } }
+        - { name: set, in: query, schema: { type: string } }
+        - { name: type, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+      responses:
+        "200":
+          description: The matches.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cards]
+                properties:
+                  cards: { type: array, items: { $ref: "#/components/schemas/BrowseCard" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  # ── Value ─────────────────────────────────────────────────────────────────
+  /v1/value-history:
+    get:
+      tags: [Value]
+      operationId: getValueHistory
+      summary: The caller's collection value over time, oldest first
+      description: Needs a bearer token or a session. The deprecated passcode names no session and gets an empty series.
+      responses:
+        "200":
+          description: The series.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [snapshots]
+                properties:
+                  snapshots: { type: array, items: { $ref: "#/components/schemas/ValueSnapshot" } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  # ── Profile ───────────────────────────────────────────────────────────────
+  /v1/profile:
+    get:
+      tags: [Profile]
+      operationId: getProfile
+      summary: The caller's own profile
+      responses:
+        "200":
+          description: The profile.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnProfile" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    patch:
+      tags: [Profile]
+      operationId: updateProfile
+      summary: Change the display name, the public flag, or mark onboarding done
+      description: Same-origin only. At least one key; `onboarded` accepts only `true`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName: { type: string, maxLength: 60, description: "Empty clears it." }
+                isPublic: { type: boolean }
+                onboarded: { type: boolean, const: true }
+      responses:
+        "200":
+          description: Changed. Echoes the keys that were applied.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: { type: boolean, const: true }
+                  displayName: { type: [string, "null"] }
+                  isPublic: { type: boolean }
+                  onboardedAt: { type: string, format: date-time }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "500": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/profile/avatar:
+    post:
+      tags: [Profile]
+      operationId: uploadAvatar
+      summary: Set the avatar
+      description: Same-origin only. A PNG, JPEG or WebP as a data URL, at most 2 MB decoded. Thirty an hour.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, description: "`data:image/png;base64,…`" }
+      responses:
+        "200":
+          description: Set.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, avatarUrl]
+                properties:
+                  ok: { type: boolean, const: true }
+                  avatarUrl: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    delete:
+      tags: [Profile]
+      operationId: removeAvatar
+      summary: Remove the avatar
+      responses:
+        "200":
+          description: Removed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/username:
+    post:
+      tags: [Profile]
+      operationId: claimUsername
+      summary: Claim a username
+      description: Same-origin only. Lower-cased and trimmed first; claiming your own name is a no-op that answers 200.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username: { type: string }
+      responses:
+        "200":
+          description: Claimed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, username]
+                properties:
+                  ok: { type: boolean, const: true }
+                  username: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: Taken, or reserved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "500": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/usernames/{name}:
+    get:
+      tags: [Profile]
+      operationId: checkUsername
+      summary: Is this name free?
+      description: Same-origin only, no viewer needed, sixty a minute. Answers 200 either way; a "no" carries the reason.
+      security: []
+      parameters:
+        - { name: name, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The answer.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available: { type: boolean }
+                  reason: { type: string, description: "Only when `available` is false." }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  # ── Account ───────────────────────────────────────────────────────────────
+  /v1/session:
+    post:
+      tags: [Account]
+      operationId: signIn
+      summary: Sign in
+      description: |
+        Same-origin only; the browser's form. Sets the session cookie. Twenty
+        attempts per address and five per address-and-email each fifteen minutes.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401":
+          description: That email or password is not right.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Wrong origin, or the address is not confirmed yet (then `unconfirmed` is `true`).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      unconfirmed: { type: boolean, const: true }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    delete:
+      tags: [Account]
+      operationId: signOut
+      summary: Sign out
+      description: Clears the session cookie. Always 200, even with no session.
+      security: []
+      responses:
+        "200":
+          description: Signed out.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+
+  /v1/signup:
+    post:
+      tags: [Account]
+      operationId: signUp
+      summary: Create an account
+      description: Same-origin only. Five per address each fifteen minutes. Sends a confirmation email; the account is `pending` until it is followed.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 10 }
+                name: { type: string, maxLength: 60 }
+      responses:
+        "200":
+          description: Created, pending confirmation.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, pending, email]
+                properties:
+                  ok: { type: boolean, const: true }
+                  pending: { type: boolean, const: true }
+                  email: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403":
+          description: Wrong origin, or new accounts are closed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: That address is already in use.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/confirmation:
+    post:
+      tags: [Account]
+      operationId: resendConfirmation
+      summary: Send the confirmation email again
+      description: Same-origin only. Always 200 so an address cannot be probed; over three per fifteen minutes it silently does nothing.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Accepted, whether or not a mail went out.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/password:
+    post:
+      tags: [Account]
+      operationId: changePassword
+      summary: Change the password
+      description: Same-origin, session only. `currentPassword` is required unless the caller arrived through recovery.
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 10 }
+                currentPassword: { type: string }
+      responses:
+        "200":
+          description: Changed.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/password/reset:
+    post:
+      tags: [Account]
+      operationId: requestPasswordReset
+      summary: Send a password reset email
+      description: Same-origin only. Always 200; over three per fifteen minutes it silently does nothing.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Accepted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/email:
+    post:
+      tags: [Account]
+      operationId: changeEmail
+      summary: Change the email address
+      description: Same-origin, session only. Ten per address each fifteen minutes. Supabase mails both addresses.
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Requested.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/account:
+    delete:
+      tags: [Account]
+      operationId: deleteAccount
+      summary: Delete the account and everything in it
+      description: Needs the password in the body, as confirmation. Irreversible.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string }
+      responses:
+        "200":
+          description: Deleted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Ok" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403":
+          description: Wrong origin, or that password is not right.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  # ── Import ────────────────────────────────────────────────────────────────
+  /v1/import/csv:
+    post:
+      tags: [Import]
+      operationId: importCsv
+      summary: Preview or commit a CSV import
+      description: |
+        Same-origin, session only. Without `commit` it is a dry run that answers
+        with the header, the guessed column map and a sample. With `commit: true`
+        it writes, ten times per person each fifteen minutes. 2 MB, 5,000 rows.
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [csv]
+              properties:
+                csv: { type: string }
+                map: { $ref: "#/components/schemas/ColumnMap" }
+                commit: { type: boolean, default: false }
+      responses:
+        "200":
+          description: The outcome. A preview also carries `header`, `guessed` and `skippedRows`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ImportOutcome"
+                  - type: object
+                    properties:
+                      header: { type: array, items: { type: string } }
+                      guessed: { $ref: "#/components/schemas/ColumnMap" }
+                      skippedRows:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            line: { type: integer }
+                            why: { type: string }
+        "400":
+          description: Refused. When the name and set columns could not be found, `header` and `guessed` come along so the client can ask.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      header: { type: array, items: { type: string } }
+                      guessed: { $ref: "#/components/schemas/ColumnMap" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/imports:
+    get:
+      tags: [Import]
+      operationId: listImports
+      summary: Recent imports
+      security: [{ session: [] }]
+      responses:
+        "200":
+          description: The most recent imports, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [imports]
+                properties:
+                  imports: { type: array, items: { $ref: "#/components/schemas/ImportRecord" } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  # ── Public ────────────────────────────────────────────────────────────────
+  /v1/public/{username}/collection:
+    get:
+      tags: [Public]
+      operationId: getPublicCollection
+      summary: A public collection, without prices
+      description: |
+        No key. Of each copy, only `rarity` and `owned` are published (R-API-002);
+        `imageHigh` is dropped too. Sixty a minute per address; cached five minutes at the CDN.
+      security: []
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The collection.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Collection" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /v1/public/{username}/cards/{tcgId}:
+    get:
+      tags: [Public]
+      operationId: getPublicCard
+      summary: One card from a public collection, without its price
+      security: []
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+        - { name: tcgId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The card, with `price` and `market` both `null`.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardDetail" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /v1/public/{username}/latest-pull:
+    get:
+      tags: [Public]
+      operationId: getLatestPull
+      summary: The most recent addition
+      description: |
+        The one route meant to be read from another site, so the one that sends
+        `Access-Control-Allow-Origin: *`. The newest owned, dated, non-excluded
+        printing. 404 means there is nothing to show.
+      security: []
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The card.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [latestPull]
+                properties:
+                  latestPull: { $ref: "#/components/schemas/LatestPull" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+    options:
+      tags: [Public]
+      operationId: getLatestPullPreflight
+      summary: CORS preflight
+      security: []
+      responses:
+        "204": { description: "Allowed for any origin." }
+
+  # ── Platform ──────────────────────────────────────────────────────────────
+  /v1/health:
+    get:
+      tags: [Platform]
+      operationId: getHealth
+      summary: Is the database reachable?
+      description: No key. Also the daily keepalive, so a free Supabase project does not pause.
+      security: []
+      responses:
+        "200":
+          description: Fine.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, database]
+                properties:
+                  ok: { type: boolean, const: true }
+                  database: { type: string, enum: [absent, reachable] }
+        "503":
+          description: The database is configured and not answering.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    required: [ok, database]
+                    properties:
+                      ok: { type: boolean, const: false }
+                      database: { type: string, const: unreachable }
+
+  /v1/cron/snapshot:
+    get:
+      tags: [Platform]
+      operationId: runSnapshot
+      summary: Record today's collection value for every account
+      description: Vercel's cron, with `CRON_SECRET` as the bearer. Sixty seconds at most.
+      security: [{ cron: [] }]
+      responses:
+        "200":
+          description: Every account written.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SnapshotOutcome" }
+        "207":
+          description: Some accounts written; `failed` names the rest.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SnapshotOutcome" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+

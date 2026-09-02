@@ -116,10 +116,14 @@ in the list.
 | R-API-003 | No paid third-party services. Recurring cost is a hard constraint. | reviewed | Bart declined the same spend twice; the free tier's failure rate is the price of that. |
 | R-API-004 | A route that reads a JSON body bounds it with `readJsonBody()` and a named `BODY_LIMIT`. | enforced — `src/lib/api/body.test.ts` | Nothing else does: Next sets no limit and neither does `next.config.ts`. |
 | R-API-005 | Two validation idioms, and the boundary decides. `zod` at process boundaries that run once and must fail loudly — today only `lib/core/env.ts`. Hand-written narrowing for request bodies, after `readJsonBody()` has bounded them. | reviewed | A schema for three fields costs more to read than the three `typeof` checks it replaces. |
+| R-API-006 | Every failure under `/api/v1` is `{ error: string }` at a status the client branches on. `lib/api/respond.ts` writes it; a new key beside `error` goes in the contract first. | enforced — `src/app/api/openapi.test.ts` holds every 4xx and 5xx to the `Error` schema | Two clients show the sentence and branch on the status, and a second shape would need a second reader in each. |
+| R-API-007 | `public/openapi.yaml` describes every route under `src/app/api/v1` and nothing else. Code and contract change in one commit. | enforced — `src/app/api/openapi.test.ts`, both directions | A contract nothing checks stops being true the first time somebody forgets it. |
+| R-API-008 | `/v1` changes only by addition. A removal, a rename or a type change is `/v2`, served beside `/v1` until the last client has moved. | reviewed | The iOS app reads these shapes and ships on Apple's schedule, not this repository's. |
 | R-PLAT-001 | Cloudflare stays DNS-only, never proxied. | reviewed | Proxying rewrites `x-forwarded-host`, which `sameOrigin()` in `lib/api/guard.ts` depends on. |
 | R-PLAT-002 | `NEXT_PUBLIC_SITE_URL` is set in Vercel's **Build** environment. | reviewed | `NEXT_PUBLIC_` is inlined at build time, so setting it only at runtime silently does nothing. |
 | R-PLAT-003 | Every screen renders exactly one `<main id="main-content">`, after its own navigation. The root layout does not. | enforced — `src/app/main-landmark.test.ts` | A landmark in the root layout wraps each screen's own, and the skip link then lands above the navigation. |
 | R-PLAT-004 | The `(app)` loading fallback may only draw what is true on all seven routes it covers. | reviewed | It is one file standing in for seven screens, so anything route-specific in it flashes wrong on six of them. |
+| R-PLAT-005 | `api.cardorb.com` is a host-conditional rewrite of this deployment, never a second one. The browser keeps calling `/api/v1` on its own origin; only bearer clients use the host. | enforced — `src/lib/api/api-host.test.ts` | The session cookie is scoped to cardorb.com and would not cross to the API host, while a bearer token does. |
 
 ## Build and verification
 

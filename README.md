@@ -12,6 +12,14 @@ number a collector would recognise. None of that was worth writing twice.
 
 ## The API
 
+**The contract is [`public/openapi.yaml`](public/openapi.yaml)**, served as-is at
+`/openapi.yaml` and rendered as plain HTML at [`/docs/api`](https://cardorb.com/docs/api).
+A test holds it against the route files in both directions, so a route that is not in it
+does not ship. On `api.cardorb.com` the same API is `/v1/…` and the reference is `/`; the
+browser keeps calling `/api/v1` on its own origin, because its session cookie does not
+cross hosts. Every failure is `{ "error": "<sentence>" }` at a status a client can branch
+on. `docs/api-design.md` has the reasoning.
+
 Every **data** route under `/api/v1/` needs a viewer, reading included. The key is
 `CARDS_TOKEN`, one shared passcode rather than an account system: one person edits
 this. The exceptions are not data: the bootstrap and health routes
