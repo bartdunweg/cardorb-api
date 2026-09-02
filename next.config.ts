@@ -113,10 +113,10 @@ const SECURITY_HEADERS = [
 ];
 
 /**
- * The API's own hostname. On this host `/v1/…` is the API and `/` is the
- * contract, `/openapi.yaml`, served as-is — the rendered reference moved to
- * the web app (`bartdunweg/cardorb-web`) with the rest of the UI, and until it
- * is live there the contract itself is what a visitor gets.
+ * The API's own hostname. On this host `/v1/…` is the API and `/openapi.yaml`
+ * the contract; `/` sends a visitor to the reference, which the web app draws
+ * from that contract in its own theme (cardorb.com/docs/api). A redirect rather
+ * than a rewrite, because the page lives on another deployment.
  *
  * A host-conditional rewrite rather than a second deployment (R-PLAT-005): one
  * project, one set of environment variables, one cron. The web app at
@@ -127,11 +127,20 @@ const SECURITY_HEADERS = [
  */
 export const API_HOST = "api.cardorb.com";
 
-/** Rewrites that only fire on the API host, in the order Next tries them. */
+/** Where the reference is drawn. */
+export const REFERENCE_URL = "https://cardorb.com/docs/api";
+
+const onApiHost = { has: [{ type: "host" as const, value: API_HOST }] };
+
+/** Rewrites that only fire on the API host. */
 export const API_HOST_REWRITES = [
-  { source: "/v1/:path*", destination: "/api/v1/:path*" },
-  { source: "/", destination: "/openapi.yaml" },
-].map((rewrite) => ({ ...rewrite, has: [{ type: "host" as const, value: API_HOST }] }));
+  { source: "/v1/:path*", destination: "/api/v1/:path*", ...onApiHost },
+];
+
+/** The one redirect on the API host: its root is the reference. Temporary, so it can move again. */
+export const API_HOST_REDIRECTS = [
+  { source: "/", destination: REFERENCE_URL, permanent: false, ...onApiHost },
+];
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -139,9 +148,10 @@ const nextConfig: NextConfig = {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },
   async rewrites() {
-    // beforeFiles, so the API host's root is answered before Next looks for a
-    // page that does not exist.
     return { beforeFiles: API_HOST_REWRITES, afterFiles: [], fallback: [] };
+  },
+  async redirects() {
+    return API_HOST_REDIRECTS;
   },
 };
 
