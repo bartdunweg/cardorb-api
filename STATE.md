@@ -81,11 +81,14 @@ needs `NPM_TOKEN`, which this workspace does not have. See `## Open`.
 - **102 hand-typed refusals remain.** `apiError()`/`refuse()` exist and the drifting wordings
   are gone, but most routes still build `{ error }` by hand. Each moves over when next opened;
   a sweep for its own sake was deliberately not done.
-- **CI is a paper gate right now.** GitHub Actions billing is blocked, so pushes to `main` run no
-  real check — every run fails in 3–5s with an empty step list, and `main` deploys straight to
-  production. `./scripts/verify.sh`, run by a person or an agent, is the only real gate. See the
-  `github-actions-billing-blocked` memory. `.github/workflows/check.yml`'s header comment
-  overstates what protects production while this holds.
+- **CI is red on every commit, `main` included, and the cause has moved.** It used to be
+  the GitHub Actions billing block; now the runner starts and `npm ci` fails with
+  `401 Unauthorized … Invalid API key` from `pkg.untitledui.com` (seen on PR #133's run and on
+  the last five runs on `main`). The `NPM_TOKEN` secret in the repository's Actions settings
+  is invalid or expired; refresh it and CI comes back. Until then `./scripts/verify.sh`, run
+  by a person with a working token, is the only real gate, and `main` still deploys straight
+  to production. `.github/workflows/check.yml`'s header comment overstates what protects
+  production while this holds.
 - **R-STRUCT-007 has known violations.** The eight bodies under `## Next` item 1 are decisions
   still inside a component. The rule is right and the code has not caught up.
 - **Two vendored avatar sub-components have no consumer** — `avatar-add-button.tsx` and
