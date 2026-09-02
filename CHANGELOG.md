@@ -31,6 +31,10 @@ if the two have drifted apart.
   of the site, from `/openapi.yaml` on this host. Until then `api.cardorb.com/` answers
   with the contract itself. Nothing under `/v1` changed.
 
+- `GET /v1/public/<username>/profile` answers the name to print and the picture, so a page
+  can draw a public collection's header without a key. No prices, no email, same limiter and
+  cache as its two siblings.
+
 ## 2026-08-23
 
 - You can now remove your profile picture, not only replace it — a Remove button sits beside Change, and it clears the picture from your profile and the public page.
