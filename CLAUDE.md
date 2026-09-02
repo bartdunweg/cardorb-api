@@ -98,11 +98,12 @@ later redaction. Record the shape instead: *the budget ceiling was reached*, not
 
 <!-- PRODUCT:BEGIN — product-specific. Edit freely; never overwritten by /apply-standards. -->
 
-# Card Orb
+# Card Orb API
 
-A Pokémon card collection (~1,600 cards) kept in Postgres (Supabase), matched against
-three card catalogues, priced, and served as an API that a web tool and an iOS app
-both read.
+The API behind Card Orb: a Pokémon card collection (~1,600 cards) kept in Postgres
+(Supabase), matched against three card catalogues, priced, and served at
+`api.cardorb.com` to a web tool and an iOS app. The web tool lives here too, as one of
+the API's two clients; the repository is `bartdunweg/cardorb-api`.
 
 - Profile: production
 - Platform: web

@@ -1,8 +1,9 @@
-# Card Orb
+# Card Orb API
 
-A Pokémon card collection: 1,600-odd cards kept in Postgres (Supabase), matched
-against three card catalogues, priced, and served as an API that a web tool and
-an iOS app both read.
+The API behind Card Orb: a Pokémon card collection of 1,600-odd cards kept in
+Postgres (Supabase), matched against three card catalogues, priced, and served at
+`api.cardorb.com` to two clients, the web tool at cardorb.com and the iOS app. The
+web tool lives in this repository too, as one of those clients.
 
 It began as `/cards` on [bartdunweg.com](https://bartdunweg.com), which is why
 the first commit is not a scaffold. Two years of work sit in `lib/core`: matching
