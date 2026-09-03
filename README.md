@@ -228,8 +228,8 @@ supabase/                         auth and session backing store, migrations, th
 
 `types/` does not exist: types live beside what defines them.
 
-**The rules that hold this together are in [`CONVENTIONS.md`](./CONVENTIONS.md).**
-Each says whether a check enforces it or a person has to notice.
+**The rules that hold this together are in [`CLAUDE.md`](./CLAUDE.md) and, per folder,
+in [`.claude/rules/`](./.claude/rules/).** Where a test enforces one, the rule names it.
 
 The web tool that used to live here — the portfolio's `/cards`, moved rather than
 rewritten — was removed on 2026-09-02 when cardorb.com moved to its own repository.
