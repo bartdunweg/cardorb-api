@@ -22,7 +22,9 @@ vi.mock("@/lib/core/collection/collection", () => ({
   getCollection: (...a: unknown[]) => getCollection(...a),
 }));
 vi.mock("@/lib/storage/collection", () => ({ createRow: vi.fn() }));
-vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
+// items.ts now values the page's cards through cards.ts, which builds its set catalogue behind
+// unstable_cache at import time; the pass-through keeps that import loadable here.
+vi.mock("next/cache", () => ({ revalidateTag: vi.fn(), unstable_cache: (fn: unknown) => fn }));
 
 const { GET } = await import("./route");
 
