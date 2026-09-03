@@ -333,8 +333,8 @@ export const getValueHistory = cache(
  *
  * This comment used to say the cron revalidates the tag after it writes, so a
  * fresh week's prices reach the dashboard immediately. It does not. Grep
- * revalidateTag across src: the calls are CARDS_TAG, cardsTag() and
- * valueHistoryTag(). Never this one.
+ * revalidateTag across src: the calls are cardsTag() and valueHistoryTag().
+ * Never this one.
  *
  * So the one-hour TTL is the whole mechanism, and a fresh reading can be up to
  * an hour late on the dashboard. That may well be fine — it is a nightly series,

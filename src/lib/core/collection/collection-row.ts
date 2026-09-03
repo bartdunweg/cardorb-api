@@ -106,16 +106,6 @@ export type CollectionRow = {
 };
 
 /**
- * The tag on the store's own fetch, where the store is something Next can cache
- * by fetching — which today means Notion and tomorrow means nothing.
- *
- * It used to be "cards-notion" and live in cards.ts, which was two things this
- * file fixes: the name was about the store rather than about what is stored,
- * and it sat in the module that is meant not to know which store it is.
- */
-export const CARDS_TAG = "collection-rows";
-
-/**
  * The tag on one person's rows, shared by the reader and the writer so the two
  * cannot name it differently.
  *
