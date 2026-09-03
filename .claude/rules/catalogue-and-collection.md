@@ -21,6 +21,13 @@ paths:
   how a second vocabulary starts.
 - **Collection value is per user and counts copies held.** Prices come from the shared
   catalogue, so only the ownership side can make the figure yours.
+- **Every read or write of one person's rows names their `userId` in the query itself, and a
+  write checks that a row changed.** Row level security is the wall against seeing what is
+  private; it is not the application saying whose rows it wants. The `cards` policy lets a
+  public profile's rows through to any signed-in reader, so a query without `userId` handed a
+  brand new account the public collection as its own, and an unscoped write no-ops silently.
+  This was the web app's R-SEC-002 until it stopped querying the database (its R-DATA-003);
+  the query runs here now, so the rule lives here.
 - **`lib/core/` is `catalogue/`, `collection/` and `account/`.** Only what both domains need
   (config, env, util) stays at its root. Thirty files on one heap gave no hint which of them a
   change could reach.
