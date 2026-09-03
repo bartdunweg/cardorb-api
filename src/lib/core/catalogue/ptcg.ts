@@ -14,7 +14,7 @@
  * with it and the page is exactly as complete as TCGdex is.
  */
 
-import { DAY, norm } from "../util";
+import { DAY, norm, catalogueTimeout } from "../util";
 import { sameCard } from "./matching";
 import { isGalleryNumber, ptcgSetName } from "./set-aliases";
 
@@ -42,7 +42,10 @@ function sets(): Promise<Map<string, PtcgSet>> {
   index ??= (async () => {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const res = await fetch("https://api.pokemontcg.io/v2/sets", { next: { revalidate: DAY } });
+        const res = await fetch("https://api.pokemontcg.io/v2/sets", {
+          next: { revalidate: DAY },
+          signal: catalogueTimeout(),
+        });
         if (!res.ok) throw new Error(String(res.status));
         const body = (await res.json()) as { data?: PtcgSet[] };
         const out = new Map<string, PtcgSet>();
@@ -126,7 +129,7 @@ function namesIn(setId: string): Promise<Map<string, string>> {
   pending = (async () => {
     const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=number,name&pageSize=250`;
     try {
-      const res = await fetch(url, { next: { revalidate: DAY } });
+      const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
       if (!res.ok) throw new Error(String(res.status));
       const body = (await res.json()) as { data?: { number?: string; name?: string }[] };
       const out = new Map<string, string>();
@@ -187,7 +190,11 @@ export async function ptcgScan(
   }
   const url = `https://images.pokemontcg.io/${set.id}/${n}.png`;
   try {
-    const head = await fetch(url, { method: "HEAD", next: { revalidate: DAY } });
+    const head = await fetch(url, {
+      method: "HEAD",
+      next: { revalidate: DAY },
+      signal: catalogueTimeout(),
+    });
     return head.ok ? url : null;
   } catch {
     return null;

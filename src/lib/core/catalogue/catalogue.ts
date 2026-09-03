@@ -40,7 +40,7 @@
  * allowed to import (see eslint.config.mjs).
  */
 
-import { DAY, localise, mapLimit, norm, numberForms } from "../util";
+import { DAY, localise, mapLimit, norm, numberForms, catalogueTimeout } from "../util";
 import { ptcgLogo } from "./ptcg";
 import type { Price } from "../price-basis.mjs";
 import { unstable_cache } from "next/cache";
@@ -301,7 +301,11 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   let setHasScans = true;
   if (probe) {
     try {
-      const res = await fetch(`${probe}/low.webp`, { method: "HEAD", next: { revalidate: DAY } });
+      const res = await fetch(`${probe}/low.webp`, {
+        method: "HEAD",
+        next: { revalidate: DAY },
+        signal: catalogueTimeout(),
+      });
       setHasScans = res.ok;
     } catch {
       // A probe that cannot be made is not proof of absence: assume the scans

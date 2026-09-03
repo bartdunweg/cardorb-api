@@ -2,7 +2,7 @@
  * Resolving scans that TCGdex does not have. Split out of cards.ts, where this
  * sat beside matching and collection assembly with no seam between them.
  */
-import { DAY, numberForms } from "../util";
+import { DAY, numberForms, catalogueTimeout } from "../util";
 
 /**
  * Limitless publishes scans as soon as a set is out, at a path built from the
@@ -19,7 +19,11 @@ export async function limitlessScan(code: string, number: string): Promise<strin
   for (const id of numberForms(number)) {
     const guess = `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/${code}/${code}_${id}_R_EN_LG.png`;
     try {
-      const head = await fetch(guess, { method: "HEAD", next: { revalidate: DAY } });
+      const head = await fetch(guess, {
+        method: "HEAD",
+        next: { revalidate: DAY },
+        signal: catalogueTimeout(),
+      });
       if (head.ok) return `/api/cover?url=${encodeURIComponent(guess)}`;
     } catch {
       // try the next form
