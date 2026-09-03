@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - A catalogue that accepts the connection and never answers is given up after eight seconds instead of holding the request until the platform's limit, so an outage like TCGdex's on 2026-09-02 costs a moment rather than minutes per page.
 
+- `GET /v1/stats` says what the collection is worth today (`value`, in euros) and how many copies carry no price (`unpriced`), so a dashboard can show the figure without adding up pages.
+
 ## 2026-09-02
 
 - The API now has a contract and a home of its own. `openapi.yaml` describes every

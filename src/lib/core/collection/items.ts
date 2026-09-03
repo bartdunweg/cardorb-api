@@ -1,4 +1,6 @@
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
+import { shownPrice, variantPrice } from "./cards";
+import { heldValue } from "./cards-stats";
 import type { DexEntry } from "./pokedex";
 import type { Finish } from "./collection-row";
 import { UUID } from "./collection-row";
@@ -164,6 +166,14 @@ export function pageOf<T>(items: T[], page: Page): { items: T[]; total: number }
 /**
  * The dashboard's numbers. Copies count what is held (`quantity`), cards count
  * rows: a person with three of one card has three copies and one card.
+ *
+ * `value` is what the copies held trade at today, in euros, printing by
+ * printing (heldValue(), the same sum the value tile and the nightly snapshot
+ * use — R-DATA-006). It is a whole-collection figure, which is why it lives
+ * here rather than on a page of a hundred cards: summing a page would state a
+ * value for a collection it had not seen. `unpriced` is how many of those
+ * copies Cardmarket has no number for, so a reader can tell "€900" from
+ * "€900 plus whatever these 40 are worth".
  */
 export type Stats = {
   cards: number;
@@ -172,10 +182,22 @@ export type Stats = {
   favorites: number;
   /** Sets with at least one owned copy. */
   sets: number;
+  /** Today's value of every copy held, in euros, to the cent. */
+  value: number;
+  /** Copies held that carry no price and so add nothing to `value`. */
+  unpriced: number;
 };
 
 export function countStats(sets: CardSet[]): Stats {
-  const stats: Stats = { cards: 0, copies: 0, wishlist: 0, favorites: 0, sets: 0 };
+  const stats: Stats = {
+    cards: 0,
+    copies: 0,
+    wishlist: 0,
+    favorites: 0,
+    sets: 0,
+    value: 0,
+    unpriced: 0,
+  };
   for (const set of sets) {
     let ownedHere = false;
     for (const card of set.cards) {
@@ -189,10 +211,14 @@ export function countStats(sets: CardSet[]): Stats {
         stats.cards += 1;
         stats.copies += v.quantity ?? 1;
         if (v.isFavorite) stats.favorites += 1;
+        if (shownPrice(variantPrice(card, v)) == null)
+          stats.unpriced += Math.max(0, v.quantity ?? 1);
       }
+      stats.value += heldValue(card);
     }
     if (ownedHere) stats.sets += 1;
   }
+  stats.value = Math.round(stats.value * 100) / 100;
   return stats;
 }
 
