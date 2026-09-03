@@ -125,11 +125,14 @@ export const SORTS = ["set", "name", "price", "added"] as const;
 export type Sort = (typeof SORTS)[number];
 export type Order = "asc" | "desc";
 
-/** What a copy is worth: its own printing's price where Cardmarket prices the foil apart. */
+/**
+ * What a copy is worth: the foil price for a reverse holo, the plain price for
+ * everything else — the same rule as variantPrice() in cards.ts, which says
+ * why `holo` does not read the foil fields. This used to read them for `holo`
+ * too, so the sort valued a holo copy differently from every other figure.
+ */
 const copyPrice = (it: CardItem): number | null =>
-  shownPrice(
-    (it.finish === "holo" || it.finish === "reverse-holo" ? it.priceHolo : null) ?? it.price,
-  );
+  shownPrice((it.finish === "reverse-holo" ? it.priceHolo : null) ?? it.price);
 
 /**
  * A new list in the asked order. `set` is the assembly's own order (set by set,
