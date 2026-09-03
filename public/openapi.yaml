@@ -86,8 +86,11 @@ components:
       description: Authorised answers are never cached by anything in between.
       schema: { type: string, const: "private, no-store" }
     Cache-Control-Public:
-      description: Public answers are cached at the CDN and revalidated behind the reader.
-      schema: { type: string, example: "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" }
+      description: Public answers are cached at the CDN for a minute and never served stale, so a profile turned private is gone within that minute.
+      schema: { type: string, example: "public, max-age=0, s-maxage=60" }
+    Cache-Control-Public-Catalogue:
+      description: A public card is catalogue data, the same for everyone and nobody's to hide, so it is cached at the CDN for an hour and served stale for a day while it refreshes.
+      schema: { type: string, example: "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400" }
 
   responses:
     BadRequest:
@@ -709,6 +712,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -727,6 +731,7 @@ paths:
               schema: { $ref: "#/components/schemas/Ok" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "502": { $ref: "#/components/responses/BadGateway" }
@@ -1595,12 +1600,13 @@ paths:
       responses:
         "200":
           description: The card, with `price` and `market` both `null`.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public-Catalogue" } }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CardDetail" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/public/{username}/latest-pull:
     get:

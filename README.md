@@ -97,7 +97,7 @@ The one route meant to be read from a different domain, so it is the one route t
 sends `Access-Control-Allow-Origin: *`. **No key**: a key shipped in a public site's
 JavaScript is not a secret, only an extra thing to keep in sync, and this route carries
 no auth, no cookies and no prices. Rate-limited at 60/minute per address and cached for
-five minutes at the CDN, so a widget should fetch it and not think about it.
+one minute at the CDN, so a widget should fetch it and not think about it.
 
 ```js
 const res = await fetch("https://api.cardorb.com/v1/public/bartdunweg/latest-pull");

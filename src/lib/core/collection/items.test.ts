@@ -120,7 +120,13 @@ describe("sortItems", () => {
         "Snorlax",
         [
           variant({ id: "c", acquiredAt: "2026-02-01" }),
+          // A holo takes the plain price and a reverse holo the foil price,
+          // the same rule variantPrice() in cards.ts applies everywhere else:
+          // a card that exists only as a holo is what the plain fields
+          // already describe, and the `-holo` fields there are a thinner,
+          // different market.
           variant({ id: "d", finish: "holo", acquiredAt: null }),
+          variant({ id: "e", finish: "reverse-holo", acquiredAt: null }),
         ],
         { price, priceHolo },
       ),
@@ -131,19 +137,19 @@ describe("sortItems", () => {
     sortItems(items, sort, order).map((i) => i.id);
 
   it("set order is the order the assembly came in, and desc reverses it", () => {
-    expect(ids("set")).toEqual(["a", "b", "c", "d"]);
-    expect(ids("set", "desc")).toEqual(["d", "c", "b", "a"]);
+    expect(ids("set")).toEqual(["a", "b", "c", "d", "e"]);
+    expect(ids("set", "desc")).toEqual(["e", "d", "c", "b", "a"]);
   });
   it("by name, with set order breaking a tie", () => {
-    expect(ids("name")).toEqual(["b", "a", "c", "d"]);
+    expect(ids("name")).toEqual(["b", "a", "c", "d", "e"]);
   });
   it("by price, the copy's own printing, and the unpriced last either way", () => {
-    expect(ids("price")).toEqual(["a", "c", "d", "b"]);
-    expect(ids("price", "desc")).toEqual(["d", "a", "c", "b"]);
+    expect(ids("price")).toEqual(["a", "c", "d", "e", "b"]);
+    expect(ids("price", "desc")).toEqual(["e", "a", "c", "d", "b"]);
   });
   it("by the day it was added, newest first by default, and the undated last", () => {
-    expect(ids("added")).toEqual(["b", "c", "a", "d"]);
-    expect(ids("added", "asc")).toEqual(["a", "c", "b", "d"]);
+    expect(ids("added")).toEqual(["b", "c", "a", "d", "e"]);
+    expect(ids("added", "asc")).toEqual(["a", "c", "b", "d", "e"]);
   });
   it("does not touch the list it was given", () => {
     const before = items.map((i) => i.id);

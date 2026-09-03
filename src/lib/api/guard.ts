@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { createRateLimiter } from "./rate-limit";
-import { REFUSALS } from "./respond";
+import { apiError, refuse, REFUSALS } from "./respond";
 import { SESSION_COOKIE } from "./session-cookie";
+import { StoreNotConfigured } from "../storage/errors";
 import { configured } from "../storage/supabase";
 import { requestViewer, type Viewer } from "./viewer";
 
@@ -213,24 +213,20 @@ export async function authoriseWrite(req: Request): Promise<Refusal | Viewer> {
  * next person who asks without one.
  */
 /**
- * Turns a failed store call into the response two read routes were building by
- * hand, identically. The store's own words, because the only person who can
- * read this is the one who can act on it, and "something went wrong" would
- * send them to the logs for a message that is already here.
+ * Turns a failed store call into the response every write route was building
+ * by hand. The store's own words go to the log and nowhere else: they carry
+ * PostgREST's table, column and constraint names, and this used to put them
+ * on the wire for anyone with a token. The client gets `operation` as a
+ * sentence — "Updating a card failed." — and a status to branch on.
  *
  * A deployment with no store at all is a 503 rather than a 502: nothing
- * refused, there is simply nothing to ask. Told apart on the message rather
- * than on a type, because there is one shape of failure the store raises
- * before it has tried anything.
+ * refused, there is simply nothing to ask. Told apart by type, because the
+ * regex this used to match never agreed with the sentence the store threw.
  */
-export function storeErrorResponse(err: unknown, req: Request, logPrefix: string) {
-  const message = err instanceof Error ? err.message : "The collection did not answer.";
-  console.error(`${logPrefix}:`, message);
-  const unconfigured = /not connected|not wired up/.test(message);
-  return NextResponse.json(
-    { error: message },
-    { status: unconfigured ? 503 : 502, headers: readHeaders(req) },
-  );
+export function storeErrorResponse(err: unknown, req: Request, operation: string) {
+  console.error(`${operation}:`, err instanceof Error ? err.message : err);
+  if (err instanceof StoreNotConfigured) return refuse("noDatabase", { headers: readHeaders(req) });
+  return apiError(502, `${operation}.`, undefined, { headers: readHeaders(req) });
 }
 
 export function readHeaders(req: Request): Record<string, string> {

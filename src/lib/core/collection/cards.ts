@@ -33,7 +33,7 @@
 
 import { localise, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue } from "../catalogue/catalogue";
-import type { CardPrices } from "../catalogue/tcgdex-client";
+import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
 import { LOCALE } from "../config";
 import { limitlessScan } from "../catalogue/artwork";
@@ -794,8 +794,10 @@ export type CardDetail = {
  * pays for them once per set, and the detail page needs everything for exactly
  * one card. Fetching the set to render a single card would be the wrong shape.
  *
- * Fails soft like the rest: a card TCGdex does not have, or an outage, returns
- * null and the route 404s rather than rendering an empty frame.
+ * Null only for a card TCGdex does not have, which the route answers 404. An
+ * outage is rethrown: it used to be null as well, and both card routes turned
+ * a TCGdex that was down into "No such card." — a 404 a CDN would keep for an
+ * hour. The route answers that with a 503 nothing caches.
  */
 export async function getCardDetail(id: string): Promise<CardDetail | null> {
   let card;
@@ -833,8 +835,9 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
         };
       };
     } | null;
-  } catch {
-    return null;
+  } catch (err) {
+    if (err instanceof CatalogueNotFound) return null;
+    throw err;
   }
   if (!card?.id || !card.name) return null;
   const cm = card.pricing?.cardmarket;

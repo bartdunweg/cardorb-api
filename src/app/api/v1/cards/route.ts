@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
-import { CARDS_TAG, cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
+import { cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
 import { createRow } from "@/lib/storage/collection";
 import {
   authorise,
@@ -91,10 +91,10 @@ export async function POST(req: Request) {
     return storeErrorResponse(err, req, "Adding a card failed");
   }
 
-  // Two caches stand between the row and /v1/collection, and they are two
-  // because the store is fetched over HTTP: CARDS_TAG drops the store's own
-  // query, cardsTag() drops the rows cached for the person who just wrote.
-  // Both, because dropping only one leaves the other answering.
+  // One cache stands between the row and /v1/collection: cardsTag() drops the
+  // rows cached for the person who just wrote. There used to be a second tag
+  // on the store's own HTTP fetch, from when the store was Notion; Postgres is
+  // not fetched, so nothing carries that tag any more and it is gone.
   //
   // There used to be a third — a promise memoised in this process, cleared here
   // by forgetCollection(). It is gone, and with it the whole read-your-own-write
@@ -109,7 +109,6 @@ export async function POST(req: Request) {
   // from before this row while the new one is fetched behind them. Expiring at
   // zero is what makes the card the writer's own write rather than the one
   // after it.
-  revalidateTag(CARDS_TAG, { expire: 0 });
   revalidateTag(cardsTag(who.userId), { expire: 0 });
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });

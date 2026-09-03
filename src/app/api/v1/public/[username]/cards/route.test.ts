@@ -90,6 +90,11 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect((await get("?limit=0")).status).toBe(400);
   });
 
+  it("is cached at the CDN for a minute, and not served while stale", async () => {
+    const res = await get();
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+  });
+
   it("is a 503 nothing caches when the read failed, and a 404 for no such profile", async () => {
     getPublicCollection.mockResolvedValue({ sets: [], failed: true });
     const res = await get();

@@ -30,7 +30,6 @@ vi.mock("@/lib/storage/postgres", () => ({
   updateProfile: (...a: unknown[]) => updateProfile(...a),
   ownProfile: (...a: unknown[]) => ownProfile(...a),
 }));
-vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 
 const { PATCH } = await import("./route");
 

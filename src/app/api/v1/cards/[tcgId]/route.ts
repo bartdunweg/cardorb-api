@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
@@ -29,7 +29,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   }
 
   const { tcgId } = await params;
-  const card = await getCardDetail(tcgId);
+  let card;
+  try {
+    card = await getCardDetail(tcgId);
+  } catch (err) {
+    // The catalogue did not answer. Not a 404: that would say the card is
+    // gone, and a client may keep it.
+    console.error(`Card ${tcgId} could not be read:`, err);
+    return unavailable("That card could not be read. Try again in a moment.");
+  }
   if (!card) {
     return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });
   }
