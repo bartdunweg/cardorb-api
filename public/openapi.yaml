@@ -139,10 +139,11 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
           example: { error: "Too many requests" }
     BadGateway:
-      description: A catalogue, the price guide or the database did not answer.
+      description: A catalogue, the price guide or the database did not answer. A sentence a client can show, never a slug.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "The catalogue did not answer. Try again in a moment." }
     Unavailable:
       description: This deployment has no database, or the database is not answering.
       content:
