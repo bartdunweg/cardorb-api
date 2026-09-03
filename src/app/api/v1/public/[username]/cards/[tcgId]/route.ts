@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, unavailable } from "@/lib/api/respond";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { ownerOf } from "@/lib/core/collection/collection";
@@ -60,7 +60,15 @@ export async function GET(
     return apiError(404, "No such collection.");
   }
 
-  const card = await getCardDetail(tcgId);
+  let card;
+  try {
+    card = await getCardDetail(tcgId);
+  } catch (err) {
+    // The catalogue did not answer. Not a 404: the CDN below would keep that
+    // for an hour and the card would look gone for everyone.
+    console.error(`Card ${tcgId} could not be read:`, err);
+    return unavailable();
+  }
   if (!card) {
     return apiError(404, "No such card.");
   }

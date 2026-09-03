@@ -108,6 +108,15 @@ describe("GET /api/v1/public/[username]/cards/[tcgId]", () => {
     expect((await GET(req(), params(PUBLIC_USERNAME))).status).toBe(404);
   });
 
+  it("503s, uncached, when the catalogue does not answer", async () => {
+    // Not a 404: a CDN would keep that for an hour and the card would look
+    // gone for everyone until it expired.
+    getCardDetail.mockRejectedValue(new Error("fetch failed"));
+    const res = await GET(req(), params(PUBLIC_USERNAME));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+  });
+
   it("may be cached by a shared cache, unlike every keyed read", async () => {
     const res = await GET(req(), params(PUBLIC_USERNAME));
     expect(res.headers.get("Cache-Control")).toContain("public");

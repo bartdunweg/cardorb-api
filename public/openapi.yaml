@@ -1603,6 +1603,7 @@ paths:
               schema: { $ref: "#/components/schemas/CardDetail" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/public/{username}/latest-pull:
     get:

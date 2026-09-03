@@ -27,6 +27,21 @@ export type TcgSetDetail = {
 };
 
 /**
+ * TCGdex answered 404: the thing asked for is not in the catalogue.
+ *
+ * Its own class because it is the one failure a caller has to tell apart. A
+ * card that is not there is a 404 for the client; a catalogue that does not
+ * answer is a 503 nothing may cache. Both used to arrive as `Error("404")`
+ * and `Error("503")`, and getCardDetail() treated every one as "not there".
+ */
+export class CatalogueNotFound extends Error {
+  constructor(label: string) {
+    super(`TCGdex has no ${label}`);
+    this.name = "CatalogueNotFound";
+  }
+}
+
+/**
  * A cached GET with a couple of retries.
  *
  * Everything artwork-related goes through here, and the retries are not
@@ -34,14 +49,19 @@ export type TcgSetDetail = {
  * gets some of them refused, and each refusal used to be swallowed. One of
  * those refusals landing on the sets index took the artwork off all 1904 cards
  * at once, because without the index no set can be resolved at all.
+ *
+ * A 404 is not retried: it is an answer, and asking twice more only costs two
+ * round trips before the same one.
  */
 export async function json(url: string, label: string) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
+      if (res.status === 404) throw new CatalogueNotFound(label);
       if (!res.ok) throw new Error(`${res.status}`);
       return await res.json();
     } catch (err) {
+      if (err instanceof CatalogueNotFound) throw err;
       const message = err instanceof Error ? err.message : String(err);
       if (attempt < 2) {
         await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
