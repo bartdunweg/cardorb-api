@@ -390,7 +390,7 @@ export async function updateRow(
   db: SupabaseClient,
   id: string,
   patch: CardPatch,
-): Promise<CollectionRow> {
+): Promise<CollectionRow | null> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("owned" in patch) row.owned = patch.owned;
   if ("excluded" in patch) row.excluded = patch.excluded;
@@ -404,10 +404,18 @@ export async function updateRow(
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
 
-  const { data, error } = await db.from("cards").update(row).eq("id", id).select(COLUMNS).single();
+  // maybeSingle(), not single(): a row that is not there, or not the caller's,
+  // is zero rows under RLS. single() turns zero rows into a PostgREST error and
+  // the route read that as the store failing; null lets it say 404 instead.
+  const { data, error } = await db
+    .from("cards")
+    .update(row)
+    .eq("id", id)
+    .select(COLUMNS)
+    .maybeSingle();
 
   if (error) throw new Error(`That card could not be updated: ${error.message}`);
-  return toRow(data as CardRecord);
+  return data ? toRow(data as CardRecord) : null;
 }
 
 export type InsertResult = { added: number; skipped: number };
@@ -484,9 +492,14 @@ export async function createRows(
   return { added, skipped: rows.length - added };
 }
 
-export async function deleteRow(db: SupabaseClient, id: string): Promise<void> {
-  const { error } = await db.from("cards").delete().eq("id", id);
+/** Removes one card. True when a row went; false when nothing matched. */
+export async function deleteRow(db: SupabaseClient, id: string): Promise<boolean> {
+  // select("id") so the answer says what went: a delete that matched nothing
+  // (no such row, or somebody else's under RLS) used to succeed silently and
+  // the route answered 200 for a card it never touched.
+  const { data, error } = await db.from("cards").delete().eq("id", id).select("id");
   if (error) throw new Error(`The card could not be removed: ${error.message}`);
+  return (data?.length ?? 0) > 0;
 }
 
 /**

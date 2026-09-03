@@ -35,31 +35,31 @@ vi.mock("next/cache", () => ({ revalidateTag: () => {} }));
 const { PATCH, DELETE } = await import("./route");
 
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
-const params = Promise.resolve({ id: "card-1" });
+const ID = "11111111-1111-1111-1111-111111111111";
 
-const patch = (body: unknown) =>
+const patch = (body: unknown, id = ID) =>
   PATCH(
-    new Request("https://cardorb.com/api/v1/cards/card-1", {
+    new Request(`https://cardorb.com/api/v1/collection/items/${id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json", authorization: "Bearer t.o.k.e.n" },
       body: JSON.stringify(body),
     }),
-    { params },
+    { params: Promise.resolve({ id }) },
   );
 
-const del = () =>
+const del = (id = ID) =>
   DELETE(
-    new Request("https://cardorb.com/api/v1/cards/card-1", {
+    new Request(`https://cardorb.com/api/v1/collection/items/${id}`, {
       method: "DELETE",
       headers: { "content-type": "application/json", authorization: "Bearer t.o.k.e.n" },
     }),
-    { params },
+    { params: Promise.resolve({ id }) },
   );
 
 beforeEach(() => {
   authoriseWrite.mockResolvedValue(VIEWER);
-  updateRow.mockResolvedValue({ id: "card-1", isFavorite: true });
-  deleteRow.mockResolvedValue(undefined);
+  updateRow.mockResolvedValue({ id: ID, isFavorite: true });
+  deleteRow.mockResolvedValue(true);
 });
 afterEach(() => {
   updateRow.mockClear();
@@ -79,7 +79,7 @@ describe("PATCH /api/v1/cards/[id]", () => {
     // touched — the path segment is the only id this route trusts, and
     // cards_update only ever lets it reach a row the caller owns anyway.
     await patch({ isFavorite: true, id: "someone-elses-card" });
-    expect(updateRow).toHaveBeenCalledWith("card-1", { isFavorite: true }, "t.o.k.e.n");
+    expect(updateRow).toHaveBeenCalledWith(ID, { isFavorite: true }, "t.o.k.e.n");
   });
 
   it("refuses a body with nothing recognisable in it", async () => {
@@ -99,6 +99,21 @@ describe("PATCH /api/v1/cards/[id]", () => {
     const res = await patch({ isFavorite: true });
     expect(res.status).toBeGreaterThanOrEqual(400);
   });
+
+  it("404s a card that is not there or not the caller's", async () => {
+    // RLS turns somebody else's row into no row at all; the store hands that
+    // back as null and the route must not dress it up as a store failure.
+    updateRow.mockResolvedValue(null);
+    const res = await patch({ isFavorite: true });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: "No such card." });
+  });
+
+  it("404s an id that cannot be a row, before asking the store", async () => {
+    const res = await patch({ isFavorite: true }, "not-a-uuid");
+    expect(res.status).toBe(404);
+    expect(updateRow).not.toHaveBeenCalled();
+  });
 });
 
 describe("DELETE /api/v1/cards/[id]", () => {
@@ -112,6 +127,19 @@ describe("DELETE /api/v1/cards/[id]", () => {
   it("deletes by the path id with the caller's own token", async () => {
     const res = await del();
     expect(res.status).toBe(200);
-    expect(deleteRow).toHaveBeenCalledWith("card-1", "t.o.k.e.n");
+    expect(deleteRow).toHaveBeenCalledWith(ID, "t.o.k.e.n");
+  });
+
+  it("404s when nothing went, rather than claiming it did", async () => {
+    deleteRow.mockResolvedValue(false);
+    const res = await del();
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: "No such card." });
+  });
+
+  it("404s an id that cannot be a row, before asking the store", async () => {
+    const res = await del("not-a-uuid");
+    expect(res.status).toBe(404);
+    expect(deleteRow).not.toHaveBeenCalled();
   });
 });

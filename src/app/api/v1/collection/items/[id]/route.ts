@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
-import { CARDS_TAG, cardsTag, validateCardPatch } from "@/lib/core/collection/collection-row";
+import { cardsTag, UUID, validateCardPatch } from "@/lib/core/collection/collection-row";
 import { updateRow, deleteRow } from "@/lib/storage/collection";
 import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
@@ -30,12 +30,16 @@ import { bearer } from "@/lib/api/viewer";
  * revalidation. The one real difference is the id in the path: neither
  * handler below trusts a `user_id` in the body the way an insert could not
  * either — cards_update/cards_delete are `using (user_id = auth.uid())`, so a
- * caller can only ever reach their own row, whatever id they name.
+ * caller can only ever reach their own row, whatever id they name. A row that
+ * is not theirs, or not there, is zero rows, and both handlers answer that
+ * with a 404 rather than a store error or a hollow `ok`.
  */
 /* The cap is BODY_LIMIT.patch in lib/api/body.ts — "a patch: a few inventory
    fields", the same 4,096 this file used to declare for itself. See the note in
    ../../../cards/route.ts: readJsonBody() was extracted from these two handlers
    and neither was moved onto it. */
+
+const NOT_FOUND = "No such card.";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
@@ -43,6 +47,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const { id } = await params;
+  if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   const read = await readJsonBody(req, BODY_LIMIT.patch);
   if (read.kind === "too-large") {
@@ -63,8 +68,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   } catch (err) {
     return storeErrorResponse(err, req, "Updating a card failed");
   }
+  // Zero rows is what RLS makes of somebody else's card, and it is what a
+  // deleted one looks like too: the same 404 for both, so an id cannot be used
+  // to ask whether a row exists.
+  if (!row) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
-  revalidateTag(CARDS_TAG, { expire: 0 });
   revalidateTag(cardsTag(who.userId), { expire: 0 });
 
   return NextResponse.json({ ok: true, card: row }, { headers: readHeaders(req) });
@@ -76,14 +84,16 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
   const { id } = await params;
+  if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
+  let gone: boolean;
   try {
-    await deleteRow(id, bearer(req) ?? undefined);
+    gone = await deleteRow(id, bearer(req) ?? undefined);
   } catch (err) {
     return storeErrorResponse(err, req, "Deleting a card failed");
   }
+  if (!gone) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
-  revalidateTag(CARDS_TAG, { expire: 0 });
   revalidateTag(cardsTag(who.userId), { expire: 0 });
 
   return NextResponse.json({ ok: true }, { headers: readHeaders(req) });

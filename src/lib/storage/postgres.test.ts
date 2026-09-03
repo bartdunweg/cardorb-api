@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { listRows, listValueSnapshots } from "./postgres";
+import { deleteRow, listRows, listValueSnapshots, updateRow } from "./postgres";
 
 /**
  * Whose rows, asked out loud.
@@ -128,5 +128,43 @@ describe("listValueSnapshots", () => {
   it("answers with nothing for an account that has never been snapshotted", async () => {
     const { db } = fakeDb();
     expect(await listValueSnapshots(db, "u")).toEqual([]);
+  });
+});
+
+/**
+ * A write that reached no row says so instead of failing or pretending.
+ *
+ * Row level security turns "somebody else's card" into "no such row": the
+ * query is well formed and simply matches nothing. `.single()` made that a
+ * PostgREST error the route answered as a 502, and an unchecked delete
+ * answered 200 for a card it never touched. Both are the caller's mistake, and
+ * the store has to hand it back as a plain answer so the route can say 404.
+ */
+function fakeWriteDb(returned: unknown[]) {
+  const chain: Record<string, unknown> = {
+    update: () => chain,
+    delete: () => chain,
+    eq: () => chain,
+    select: () => chain,
+    maybeSingle: async () => ({ data: returned[0] ?? null, error: null }),
+    then: (resolve: (v: unknown) => unknown) => resolve({ data: returned, error: null }),
+  };
+  return { from: () => chain } as unknown as SupabaseClient;
+}
+
+describe("updateRow", () => {
+  it("answers null, not an error, when no row matched", async () => {
+    const row = await updateRow(fakeWriteDb([]), "11111111-1111-1111-1111-111111111111", {
+      isFavorite: true,
+    });
+    expect(row).toBeNull();
+  });
+});
+
+describe("deleteRow", () => {
+  it("says whether a row went", async () => {
+    const id = "11111111-1111-1111-1111-111111111111";
+    expect(await deleteRow(fakeWriteDb([{ id }]), id)).toBe(true);
+    expect(await deleteRow(fakeWriteDb([]), id)).toBe(false);
   });
 });

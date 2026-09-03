@@ -110,19 +110,19 @@ export async function createRow(draft: CardDraft, token?: string): Promise<strin
   return postgres.createRow(db, draft);
 }
 
-/** Changes one card's owner-facing fields. */
+/** Changes one card's owner-facing fields; null when no row of the caller's matched. */
 export async function updateRow(
   id: string,
   patch: CardPatch,
   token?: string,
-): Promise<CollectionRow> {
+): Promise<CollectionRow | null> {
   const db = await clientFor(token);
   if (!db) throw new Error("No database is connected here.");
   return postgres.updateRow(db, id, patch);
 }
 
-/** Removes one card. */
-export async function deleteRow(id: string, token?: string): Promise<void> {
+/** Removes one card. True when a row went. */
+export async function deleteRow(id: string, token?: string): Promise<boolean> {
   const db = await clientFor(token);
   if (!db) throw new Error("No database is connected here.");
   return postgres.deleteRow(db, id);
