@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, refuse } from "@/lib/api/respond";
 import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
 import { withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
 import { getRows } from "@/lib/core/collection/collection";
@@ -35,7 +35,9 @@ const intParam = (raw: string | null, fallback: number, max: number) => {
 export async function GET(req: Request, { params }: { params: Promise<{ setId: string }> }) {
   const who = await authorise(req);
   if (refused(who)) {
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
   }
 
   const { setId } = await params;
@@ -59,7 +61,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
        the thing that 502s below. */
     cards = await withTcgdexScans(set, await setCards(setId));
   } catch {
-    return apiError(502, "catalog-unavailable", undefined, { headers: readHeaders(req) });
+    return refuse("catalogue", { headers: readHeaders(req) });
   }
 
   const { rows, failed } = await getRows(who.userId, bearer(req) ?? undefined);

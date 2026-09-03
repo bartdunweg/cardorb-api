@@ -150,11 +150,11 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect((await (await open("pageSize=5000")).json()).pageSize).toBe(250);
   });
 
-  it("answers 502 with a distinct error when the catalogue refused", async () => {
+  it("answers 502 with a sentence a client can show when the catalogue refused", async () => {
     setCards.mockRejectedValue(new Error("pokemontcg.io set base1 unavailable"));
     const res = await open();
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe("catalog-unavailable");
+    expect((await res.json()).error).toBe("The catalogue did not answer. Try again in a moment.");
   });
 
   it("still serves the set when the collection could not be read, and says so", async () => {

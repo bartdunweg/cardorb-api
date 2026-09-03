@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, refuse } from "@/lib/api/respond";
 import { searchCards } from "@/lib/core/catalogue/ptcg-search";
 import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -48,7 +48,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who)) {
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
   }
 
   const url = new URL(req.url);
@@ -84,6 +86,6 @@ export async function GET(req: Request) {
       { headers: readHeaders(req) },
     );
   } catch {
-    return apiError(502, "search-unavailable", undefined, { headers: readHeaders(req) });
+    return refuse("catalogue", { headers: readHeaders(req) });
   }
 }

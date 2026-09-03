@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, refuse } from "@/lib/api/respond";
 import { listSets } from "@/lib/core/catalogue/ptcg-browse";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
@@ -31,7 +31,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who)) {
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
   }
 
   let sets;
@@ -39,9 +41,9 @@ export async function GET(req: Request) {
     sets = await listSets();
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
-       refused, the request is worth retrying, and the client can say so. Same
-       shape as search's `search-unavailable`. */
-    return apiError(502, "catalog-unavailable", undefined, { headers: readHeaders(req) });
+       refused, the request is worth retrying, and the client can say so. The
+       one sentence every catalogue route sends, from REFUSALS. */
+    return refuse("catalogue", { headers: readHeaders(req) });
   }
 
   /* A store outage costs the ownership marks, not the shelf. getRows() already
