@@ -1,0 +1,12 @@
+-- Signups have been failing since 2026-09-02, and nobody signed up to notice.
+--
+-- That day EXECUTE on handle_new_user() was revoked from public, anon and authenticated, which is
+-- right: a signed-in person has no business calling a SECURITY DEFINER function that writes
+-- profiles. But the trigger on auth.users runs as the role that inserts the row, and that role is
+-- supabase_auth_admin — Supabase Auth itself — which lost its EXECUTE with the rest. Checked on the
+-- live database on 2026-09-03: has_function_privilege('supabase_auth_admin',
+-- 'public.handle_new_user()', 'execute') was false. Every insert into auth.users would have failed
+-- at the trigger, and with it every signup.
+--
+-- One grant, to the one role that fires the trigger. The public/anon/authenticated revokes stand.
+grant execute on function public.handle_new_user() to supabase_auth_admin;
