@@ -52,6 +52,18 @@ describe("validateCardDraft", () => {
     expect(ok({ name: "P", set: "B", types: ["Fire,Water"] }).types).toEqual(["Fire,Water"]);
   });
 
+  it("refuses a finish that is not one of the three, and keeps null as 'nobody has said'", () => {
+    // It used to turn "shiny" into null so an import would not lose the card.
+    // No import sends a finish any more (csv.ts writes null itself), and the
+    // one client that does is a form or an app editing a field on purpose,
+    // where a typo silently becoming a blank is the wrong kind of kindness.
+    // The same rule as validateCardPatch(), in the same sentence.
+    expect(ok({ name: "P", set: "B", finish: null }).finish).toBeNull();
+    expect(ok({ name: "P", set: "B" }).finish).toBeNull();
+    expect(ok({ name: "P", set: "B", finish: "reverse-holo" }).finish).toBe("reverse-holo");
+    expect(why({ name: "P", set: "B", finish: "shiny" })).toMatch(/finish must be null/);
+  });
+
   it("caps the number of types rather than refusing the card", () => {
     const many = Array.from({ length: MAX.types + 5 }, (_, i) => `t${i}`);
     expect(ok({ name: "P", set: "B", types: many }).types).toHaveLength(MAX.types);
@@ -164,10 +176,9 @@ describe("validateCardPatch", () => {
     expect(refused({ excluded: "no", finish: "shiny" })).toMatch(/excluded must be/);
   });
 
-  it("refuses an unknown finish, unlike a draft", () => {
-    // The deliberate disagreement with validateCardDraft: a draft turns an odd
-    // finish into null so an import does not lose the card, but a PATCH is
-    // somebody editing one field on purpose, so a typo is told.
+  it("refuses an unknown finish, as a draft does", () => {
+    // The two used to disagree — a draft turned an odd finish into null so an
+    // import would not lose the card — and now say the same sentence.
     expect(patched({ finish: null })).toEqual({ finish: null });
     expect(refused({ finish: "shiny" })).toMatch(/finish must be null/);
   });

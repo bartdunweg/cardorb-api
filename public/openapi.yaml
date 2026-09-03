@@ -41,7 +41,7 @@ tags:
   - name: Collection
     description: What the signed-in person owns, and the writes that change it.
   - name: Catalogue
-    description: Every set and every card, whether owned or not. Read from pokemontcg.io, cached five minutes.
+    description: Every set and every card, whether owned or not. Read from pokemontcg.io and cached for a day; the caller's own counts are read fresh.
   - name: Value
     description: What the collection is worth, over time.
   - name: Profile
@@ -307,7 +307,9 @@ components:
         types: { type: array, items: { type: string }, maxItems: 10 }
         collection: { type: boolean, default: true, description: "`false` puts it on the wishlist." }
         excluded: { type: boolean, default: false }
-        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        finish:
+          oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }]
+          description: "Absent or `null` is 'nobody has said'. Anything else that is not one of the three is a 400, as on `CardPatch`."
         quantity: { type: integer, minimum: 1, default: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -487,7 +489,7 @@ components:
         id: { type: string, format: uuid }
         name: { type: string }
         createdAt: { type: string, format: date-time }
-        count: { type: integer, description: "Owned copies filed in it. On the list only." }
+        count: { type: integer, description: "Owned copies filed in it. On `GET /v1/folders` and on a folder just made (`0`); a renamed folder comes back without it." }
 
     FolderDraft:
       type: object
@@ -617,6 +619,8 @@ paths:
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 }, description: "Above 500 is read as 500. Not a whole number, or below 1, is a 400." }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 }, description: "Not a whole number, or below 0, is a 400." }
       responses:
         "200":
           description: The page, in the asked order (set order when none was), and the total behind it.

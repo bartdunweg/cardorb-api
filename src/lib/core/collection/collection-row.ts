@@ -246,10 +246,11 @@ export function validateCardDraft(body: unknown): CardValidation {
       .slice(0, MAX.types),
     collection: collection !== false,
     excluded: excluded === true,
-    // Anything that is not one of the three is "not recorded" rather than an
-    // error: this arrives from a form, an import and a future Notion sync, and
-    // refusing a card because its finish was spelled oddly would lose the card
-    // to save a field that is allowed to be empty.
+    // null and undefined are both "nobody has said". Anything else that is not
+    // one of the three is refused below, the same rule and sentence as
+    // validateCardPatch(): this used to become null so an import would not
+    // lose the card, but no import sends a finish (csv.ts writes null itself)
+    // and a form or an app that misspells one should be told, not blanked.
     finish: isFinish(finish) ? finish : null,
     quantity: Number.isFinite(Number(quantity)) ? Math.trunc(Number(quantity)) : 1,
     condition: optionalText(condition),
@@ -265,6 +266,9 @@ export function validateCardDraft(body: unknown): CardValidation {
 
   if (!draft.name) return { kind: "invalid", error: "A card needs a name." };
   if (!draft.set) return { kind: "invalid", error: "A card needs a set." };
+  if (finish !== null && finish !== undefined && !isFinish(finish)) {
+    return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
+  }
   if (draft.name.length > MAX.name) return { kind: "invalid", error: "That name is too long." };
   if (draft.number.length > MAX.number)
     return { kind: "invalid", error: "That number is too long." };
