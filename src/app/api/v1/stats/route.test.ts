@@ -31,7 +31,7 @@ describe("GET /api/v1/stats", () => {
     const res = await get();
     expect(getCollection).toHaveBeenCalledWith("me-uuid", "t");
     expect(await res.json()).toEqual({
-      stats: { cards: 0, copies: 0, wishlist: 0, favorites: 0, sets: 0 },
+      stats: { cards: 0, copies: 0, wishlist: 0, favorites: 0, sets: 0, value: 0, unpriced: 0 },
     });
   });
 
