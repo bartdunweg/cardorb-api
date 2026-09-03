@@ -60,6 +60,11 @@ not the database password.
 
 ## Open
 
+- **`.claude/settings.json` chooses the `library` plugin set plus `vercel`, and Meridian's
+  `project-drift.sh` reads any `package.json` as a web app and reports drift** (added
+  2026-09-03). This repository has no UI, so `meridian-web`, `interfaces` and `emil-skills`
+  are off on purpose. The drift script has no way to declare a type; a candidate for
+  `strakzat/meridian`. Do not switch the UI plugins back on to silence it.
 - **`/v1/session` and the cookie helpers stay although no browser client lives here.**
   Removing them is a `/v2` question (R-API-008), not a cleanup.
 - **`cards.collection_id` is `on delete set null` on the live database** (read on
