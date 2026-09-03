@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-03
 
+- `GET /v1/cards` sorts (`sort=set|name|price|added`, `order=asc|desc`) and narrows to one set or one rarity (`set=`, `rarity=`), so a list can be ordered by value or by the day a card came in without fetching the whole collection.
+
 - A catalogue that accepts the connection and never answers is given up after eight seconds instead of holding the request until the platform's limit, so an outage like TCGdex's on 2026-09-02 costs a moment rather than minutes per page.
 
 - `GET /v1/stats` says what the collection is worth today (`value`, in euros) and how many copies carry no price (`unpriced`), so a dashboard can show the figure without adding up pages.

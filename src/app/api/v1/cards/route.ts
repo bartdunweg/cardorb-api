@@ -11,7 +11,13 @@ import {
   storeErrorResponse,
 } from "@/lib/api/guard";
 import { getCollection } from "@/lib/core/collection/collection";
-import { filterItems, flattenItems, pageOf, readItemQuery } from "@/lib/core/collection/items";
+import {
+  filterItems,
+  flattenItems,
+  pageOf,
+  readItemQuery,
+  sortItems,
+} from "@/lib/core/collection/items";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
@@ -49,7 +55,11 @@ export async function GET(req: Request) {
 
   const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
   if (failed) return unavailable();
-  const { items, total } = pageOf(filterItems(flattenItems(sets), read.query), read.query);
+  const { sort, order } = read.query;
+  const { items, total } = pageOf(
+    sortItems(filterItems(flattenItems(sets), read.query), sort, order),
+    read.query,
+  );
   return NextResponse.json({ cards: items, total }, { headers: readHeaders(req) });
 }
 

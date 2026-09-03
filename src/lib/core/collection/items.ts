@@ -100,24 +100,76 @@ export type ItemFilter = {
   favorite?: boolean;
   /** A folder id. */
   collection?: string;
+  /** A set, whole, as the catalogue names it (`set`) or titles it (`setTitle`); case does not matter. */
+  set?: string;
+  /** A rarity, whole, in the catalogue's words; case does not matter. */
+  rarity?: string;
 };
 
 export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const q = f.q?.trim().toLowerCase();
+  const set = f.set?.trim().toLowerCase();
+  const rarity = f.rarity?.trim().toLowerCase();
   return items.filter((it) => {
     if (f.owned !== undefined && it.owned !== f.owned) return false;
     if (f.favorite && !it.isFavorite) return false;
     if (f.collection && it.collectionId !== f.collection) return false;
+    if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
+    if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
     if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
     return true;
   });
+}
+
+export const SORTS = ["set", "name", "price", "added"] as const;
+export type Sort = (typeof SORTS)[number];
+export type Order = "asc" | "desc";
+
+/** What a copy is worth: its own printing's price where Cardmarket prices the foil apart. */
+const copyPrice = (it: CardItem): number | null =>
+  shownPrice(
+    (it.finish === "holo" || it.finish === "reverse-holo" ? it.priceHolo : null) ?? it.price,
+  );
+
+/**
+ * A new list in the asked order. `set` is the assembly's own order (set by set,
+ * number by number), which is what the list shows when nobody asked. Within
+ * any sort that order breaks a tie, so two equal names keep their places.
+ *
+ * Each sort has the direction a person means when they do not say: a price
+ * or a name reads up, "added" reads newest first. A copy that has no value
+ * for the key (no price, no date) goes last whichever way the list runs;
+ * putting it first on `desc` would head a list of dearest cards with the
+ * ones nobody could price.
+ */
+export function sortItems(items: CardItem[], sort: Sort = "set", order?: Order): CardItem[] {
+  const dir = (order ?? (sort === "added" ? "desc" : "asc")) === "asc" ? 1 : -1;
+  const indexed = items.map((it, i) => ({ it, i }));
+  if (sort === "set") {
+    return (dir === 1 ? indexed : indexed.reverse()).map((x) => x.it);
+  }
+  const key = (it: CardItem): string | number | null =>
+    sort === "name" ? it.name : sort === "price" ? copyPrice(it) : it.acquiredAt;
+  indexed.sort((a, b) => {
+    const ka = key(a.it);
+    const kb = key(b.it);
+    if (ka === null && kb === null) return a.i - b.i;
+    if (ka === null) return 1;
+    if (kb === null) return -1;
+    const c =
+      typeof ka === "number" && typeof kb === "number"
+        ? ka - kb
+        : String(ka).localeCompare(String(kb));
+    return c !== 0 ? c * dir : a.i - b.i;
+  });
+  return indexed.map((x) => x.it);
 }
 
 export const PAGE = { default: 100, max: 500 } as const;
 
 export type Page = { limit: number; offset: number };
 
-export type ItemQuery = ItemFilter & Page;
+export type ItemQuery = ItemFilter & Page & { sort?: Sort; order?: Order };
 
 /**
  * The query string, read strictly: an unknown value is an error rather than
@@ -146,6 +198,24 @@ export function readItemQuery(
     if (!UUID.test(collection))
       return { kind: "invalid", error: "collection must be a folder id." };
     query.collection = collection;
+  }
+  for (const key of ["set", "rarity"] as const) {
+    const v = params.get(key);
+    if (v === null) continue;
+    if (!v.trim() || v.length > 100) return { kind: "invalid", error: `${key} must name one.` };
+    query[key] = v.trim();
+  }
+  const sort = params.get("sort");
+  if (sort !== null) {
+    if (!(SORTS as readonly string[]).includes(sort))
+      return { kind: "invalid", error: `sort must be one of ${SORTS.join(", ")}.` };
+    query.sort = sort as Sort;
+  }
+  const order = params.get("order");
+  if (order !== null) {
+    if (order !== "asc" && order !== "desc")
+      return { kind: "invalid", error: "order must be asc or desc." };
+    query.order = order;
   }
   for (const key of ["limit", "offset"] as const) {
     const v = params.get(key);
