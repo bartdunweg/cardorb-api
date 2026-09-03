@@ -9,6 +9,7 @@ import {
   publicItems,
   readItemQuery,
   readPublicQuery,
+  sortItems,
   summariseDex,
 } from "./items";
 
@@ -98,6 +99,57 @@ describe("filterItems", () => {
     expect(filterItems(items, { collection: "f-1" }).map((i) => i.id)).toEqual(["a"]);
     expect(filterItems(items, { collection: "f-2" })).toEqual([]);
   });
+  it("a set or a rarity is matched whole, in any case", () => {
+    expect(filterItems(items, { set: "jungle" }).map((i) => i.id)).toEqual(["c", "d"]);
+    expect(filterItems(items, { set: "Jung" })).toEqual([]);
+    expect(filterItems(items, { rarity: "common" }).map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
+    expect(filterItems(items, { rarity: "Rare" })).toEqual([]);
+  });
+});
+
+describe("sortItems", () => {
+  const price = { market: 2, nm: { low: 1.8, mid: 2, high: 2.2 } } as unknown as Price;
+  const priceHolo = { market: 5, nm: { low: 4.5, mid: 5, high: 5.5 } } as unknown as Price;
+  const sets: CardSet[] = [
+    set("Base Set", [
+      card("Pikachu", [variant({ id: "a", acquiredAt: "2026-01-02" })], { price }),
+      card("Charizard", [variant({ id: "b", acquiredAt: "2026-03-01" })]),
+    ]),
+    set("Jungle", [
+      card(
+        "Snorlax",
+        [
+          variant({ id: "c", acquiredAt: "2026-02-01" }),
+          variant({ id: "d", finish: "holo", acquiredAt: null }),
+        ],
+        { price, priceHolo },
+      ),
+    ]),
+  ];
+  const items = flattenItems(sets);
+  const ids = (sort: Parameters<typeof sortItems>[1], order?: Parameters<typeof sortItems>[2]) =>
+    sortItems(items, sort, order).map((i) => i.id);
+
+  it("set order is the order the assembly came in, and desc reverses it", () => {
+    expect(ids("set")).toEqual(["a", "b", "c", "d"]);
+    expect(ids("set", "desc")).toEqual(["d", "c", "b", "a"]);
+  });
+  it("by name, with set order breaking a tie", () => {
+    expect(ids("name")).toEqual(["b", "a", "c", "d"]);
+  });
+  it("by price, the copy's own printing, and the unpriced last either way", () => {
+    expect(ids("price")).toEqual(["a", "c", "d", "b"]);
+    expect(ids("price", "desc")).toEqual(["d", "a", "c", "b"]);
+  });
+  it("by the day it was added, newest first by default, and the undated last", () => {
+    expect(ids("added")).toEqual(["b", "c", "a", "d"]);
+    expect(ids("added", "asc")).toEqual(["a", "c", "b", "d"]);
+  });
+  it("does not touch the list it was given", () => {
+    const before = items.map((i) => i.id);
+    sortItems(items, "name");
+    expect(items.map((i) => i.id)).toEqual(before);
+  });
 });
 
 describe("readItemQuery", () => {
@@ -113,6 +165,15 @@ describe("readItemQuery", () => {
   it("caps a page at five hundred", () => {
     const r = read("limit=9999&offset=200&owned=true&q=%20pika%20");
     expect(r).toEqual({ kind: "ok", query: { limit: 500, offset: 200, owned: true, q: "pika" } });
+  });
+  it("reads a sort, an order, a set and a rarity, and refuses what it cannot mean", () => {
+    expect(read("sort=price&order=desc&set=Jungle&rarity=Rare")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, sort: "price", order: "desc", set: "Jungle", rarity: "Rare" },
+    });
+    expect(read("sort=colour").kind).toBe("invalid");
+    expect(read("order=up").kind).toBe("invalid");
+    expect(read("set=").kind).toBe("invalid");
   });
 });
 

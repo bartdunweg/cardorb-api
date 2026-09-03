@@ -604,11 +604,13 @@ paths:
         - { name: owned, in: query, schema: { type: boolean }, description: "`true` the collection, `false` the wishlist, absent both." }
         - { name: favorite, in: query, schema: { type: boolean } }
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id." }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
-        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
+        - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
+        - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection." }
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
       responses:
         "200":
-          description: The page, in set order, and the total behind it.
+          description: The page, in the asked order (set order when none was), and the total behind it.
           headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
           content:
             application/json:
