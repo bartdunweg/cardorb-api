@@ -57,6 +57,8 @@ describe("GET /api/v1/cards/[tcgId]", () => {
     const res = await get();
     expect(res.status).toBe(503);
     expect(res.headers.get("Cache-Control")).toBe("no-store");
-    expect(await res.json()).toMatchObject({ error: expect.any(String) });
+    expect(await res.json()).toEqual({
+      error: "That card could not be read. Try again in a moment.",
+    });
   });
 });

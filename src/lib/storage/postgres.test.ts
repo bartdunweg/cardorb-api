@@ -132,39 +132,98 @@ describe("listValueSnapshots", () => {
 });
 
 /**
- * A write that reached no row says so instead of failing or pretending.
+ * A write that reached no row says so instead of failing or pretending, and
+ * every write names whose row it means.
  *
  * Row level security turns "somebody else's card" into "no such row": the
  * query is well formed and simply matches nothing. `.single()` made that a
  * PostgREST error the route answered as a 502, and an unchecked delete
  * answered 200 for a card it never touched. Both are the caller's mistake, and
  * the store has to hand it back as a plain answer so the route can say 404.
+ *
+ * The user_id clause is the rule in .claude/rules/catalogue-and-collection.md:
+ * RLS is the wall, the query still says whose rows it wants.
  */
 function fakeWriteDb(returned: unknown[]) {
+  const calls: { column: string; value: unknown }[] = [];
   const chain: Record<string, unknown> = {
     update: () => chain,
     delete: () => chain,
-    eq: () => chain,
+    eq: (column: string, value: unknown) => {
+      calls.push({ column, value });
+      return chain;
+    },
     select: () => chain,
     maybeSingle: async () => ({ data: returned[0] ?? null, error: null }),
     then: (resolve: (v: unknown) => unknown) => resolve({ data: returned, error: null }),
   };
-  return { from: () => chain } as unknown as SupabaseClient;
+  return { db: { from: () => chain } as unknown as SupabaseClient, calls };
 }
 
+const ME = "22222222-2222-2222-2222-222222222222";
+const ROW = "11111111-1111-1111-1111-111111111111";
+
+const record = {
+  id: ROW,
+  name: "Pikachu",
+  number: "25",
+  set_name: "Base Set",
+  rarity: "Common",
+  gen: "Base",
+  types: ["Lightning"],
+  owned: true,
+  excluded: false,
+  acquired_at: "2026-01-02T00:00:00.000Z",
+  finish: "holo",
+  quantity: 2,
+  condition: "NM",
+  grade: null,
+  purchase_price: 4.5,
+  purchase_date: "2026-01-02",
+  notes: "first pull",
+  is_favorite: true,
+  collection_id: null,
+};
+
 describe("updateRow", () => {
-  it("answers null, not an error, when no row matched", async () => {
-    const row = await updateRow(fakeWriteDb([]), "11111111-1111-1111-1111-111111111111", {
+  it("hands the matched row back in the collection's own shape", async () => {
+    const { db } = fakeWriteDb([record]);
+    const row = await updateRow(db, ME, ROW, { isFavorite: true });
+    expect(row).toMatchObject({
+      id: ROW,
+      name: "Pikachu",
+      setName: "Base Set",
+      finish: "holo",
+      quantity: 2,
+      purchasePrice: 4.5,
       isFavorite: true,
+      collectionId: null,
     });
-    expect(row).toBeNull();
+  });
+
+  it("answers null, not an error, when no row matched", async () => {
+    const { db } = fakeWriteDb([]);
+    expect(await updateRow(db, ME, ROW, { isFavorite: true })).toBeNull();
+  });
+
+  it("names the owner as well as the row", async () => {
+    const { db, calls } = fakeWriteDb([record]);
+    await updateRow(db, ME, ROW, { isFavorite: true });
+    expect(calls).toContainEqual({ column: "id", value: ROW });
+    expect(calls).toContainEqual({ column: "user_id", value: ME });
   });
 });
 
 describe("deleteRow", () => {
   it("says whether a row went", async () => {
-    const id = "11111111-1111-1111-1111-111111111111";
-    expect(await deleteRow(fakeWriteDb([{ id }]), id)).toBe(true);
-    expect(await deleteRow(fakeWriteDb([]), id)).toBe(false);
+    expect(await deleteRow(fakeWriteDb([{ id: ROW }]).db, ME, ROW)).toBe(true);
+    expect(await deleteRow(fakeWriteDb([]).db, ME, ROW)).toBe(false);
+  });
+
+  it("names the owner as well as the row", async () => {
+    const { db, calls } = fakeWriteDb([{ id: ROW }]);
+    await deleteRow(db, ME, ROW);
+    expect(calls).toContainEqual({ column: "id", value: ROW });
+    expect(calls).toContainEqual({ column: "user_id", value: ME });
   });
 });

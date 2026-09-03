@@ -36,7 +36,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.
     console.error(`Card ${tcgId} could not be read:`, err);
-    return unavailable();
+    return unavailable("That card could not be read. Try again in a moment.");
   }
   if (!card) {
     return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });

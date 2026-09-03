@@ -115,6 +115,9 @@ describe("GET /api/v1/public/[username]/cards/[tcgId]", () => {
     const res = await GET(req(), params(PUBLIC_USERNAME));
     expect(res.status).toBe(503);
     expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      error: "That card could not be read. Try again in a moment.",
+    });
   });
 
   it("may be cached by a shared cache, unlike every keyed read", async () => {

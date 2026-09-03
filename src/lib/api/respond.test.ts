@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REFUSALS, apiError, refuse } from "./respond";
+import { REFUSALS, apiError, refuse, unavailable } from "./respond";
 
 describe("apiError", () => {
   it("answers { error } at the status it was given", async () => {
@@ -30,5 +30,25 @@ describe("refuse", () => {
 
   it("words no-database once, and it is a full sentence", () => {
     expect(REFUSALS.noDatabase.error).toBe("This deployment has no database configured.");
+  });
+});
+
+describe("unavailable", () => {
+  it("is a 503 nothing caches, about the collection unless told otherwise", async () => {
+    const res = unavailable();
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      error: "The collection could not be read. Try again in a moment.",
+    });
+  });
+
+  it("says the sentence it was given, at the same status and headers", async () => {
+    const res = unavailable("That card could not be read. Try again in a moment.");
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      error: "That card could not be read. Try again in a moment.",
+    });
   });
 });

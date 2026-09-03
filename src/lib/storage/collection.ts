@@ -113,20 +113,21 @@ export async function createRow(draft: CardDraft, token?: string): Promise<strin
 
 /** Changes one card's owner-facing fields; null when no row of the caller's matched. */
 export async function updateRow(
+  userId: string,
   id: string,
   patch: CardPatch,
   token?: string,
 ): Promise<CollectionRow | null> {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
-  return postgres.updateRow(db, id, patch);
+  return postgres.updateRow(db, userId, id, patch);
 }
 
-/** Removes one card. True when a row went. */
-export async function deleteRow(id: string, token?: string): Promise<boolean> {
+/** Removes one card of the caller's. True when a row went. */
+export async function deleteRow(userId: string, id: string, token?: string): Promise<boolean> {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
-  return postgres.deleteRow(db, id);
+  return postgres.deleteRow(db, userId, id);
 }
 
 /**

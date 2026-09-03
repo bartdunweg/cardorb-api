@@ -370,24 +370,29 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
 }
 
 /**
- * Changes to one printing, by its owner.
+ * Changes to one printing, by its owner. Null when no row of theirs matched.
  *
  * The same shape as updateProfile(): only the keys present in `patch` are
  * touched, so a client that sends `{ isFavorite: true }` cannot accidentally
- * clear a note it never saw. No user_id in the query — cards_update is
- * `using (user_id = auth.uid()) with check (user_id = auth.uid())`, and the id
- * alone is enough for the policy to either find the row or refuse it; adding a
- * second copy of that check here is a second place it could disagree with the
- * database.
+ * clear a note it never saw.
  *
- * `.select().single()` rather than a bare update: the caller needs the row
- * back to hand a client its own write, and a row that RLS refused to update
- * comes back as zero rows here rather than as a thrown error from Postgres —
- * `.single()` is what turns that into the "not found" a wrong id or somebody
- * else's row should read as.
+ * Both the id and the user_id are in the query. cards_update is
+ * `using (user_id = auth.uid())`, so the policy alone would find or refuse the
+ * row — but the rule in .claude/rules/catalogue-and-collection.md stands:
+ * every write of one person's rows names their userId in the query itself.
+ * RLS is the wall against reaching what is private; it is not the application
+ * saying whose row it wants, and an unscoped write no-ops silently the day a
+ * policy loosens. renameFolder() and deleteFolder() below already do this.
+ *
+ * `.select().maybeSingle()` rather than a bare update: the caller needs the
+ * row back to hand a client its own write, and a row that is not there or not
+ * the caller's is zero rows, which maybeSingle() hands back as null. That null
+ * is what the route answers 404 with. `.single()` used to sit here and made
+ * zero rows a PostgREST error the route read as the store failing.
  */
 export async function updateRow(
   db: SupabaseClient,
+  userId: string,
   id: string,
   patch: CardPatch,
 ): Promise<CollectionRow | null> {
@@ -404,13 +409,11 @@ export async function updateRow(
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
 
-  // maybeSingle(), not single(): a row that is not there, or not the caller's,
-  // is zero rows under RLS. single() turns zero rows into a PostgREST error and
-  // the route read that as the store failing; null lets it say 404 instead.
   const { data, error } = await db
     .from("cards")
     .update(row)
     .eq("id", id)
+    .eq("user_id", userId)
     .select(COLUMNS)
     .maybeSingle();
 
@@ -492,12 +495,20 @@ export async function createRows(
   return { added, skipped: rows.length - added };
 }
 
-/** Removes one card. True when a row went; false when nothing matched. */
-export async function deleteRow(db: SupabaseClient, id: string): Promise<boolean> {
+/**
+ * Removes one card of the caller's. True when a row went; false when nothing
+ * matched. The user_id clause is the same rule updateRow() explains.
+ */
+export async function deleteRow(db: SupabaseClient, userId: string, id: string): Promise<boolean> {
   // select("id") so the answer says what went: a delete that matched nothing
-  // (no such row, or somebody else's under RLS) used to succeed silently and
-  // the route answered 200 for a card it never touched.
-  const { data, error } = await db.from("cards").delete().eq("id", id).select("id");
+  // (no such row, or somebody else's) used to succeed silently and the route
+  // answered 200 for a card it never touched.
+  const { data, error } = await db
+    .from("cards")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select("id");
   if (error) throw new Error(`The card could not be removed: ${error.message}`);
   return (data?.length ?? 0) > 0;
 }

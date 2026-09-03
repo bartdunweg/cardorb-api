@@ -30,9 +30,11 @@ import { bearer } from "@/lib/api/viewer";
  * revalidation. The one real difference is the id in the path: neither
  * handler below trusts a `user_id` in the body the way an insert could not
  * either — cards_update/cards_delete are `using (user_id = auth.uid())`, so a
- * caller can only ever reach their own row, whatever id they name. A row that
- * is not theirs, or not there, is zero rows, and both handlers answer that
- * with a 404 rather than a store error or a hollow `ok`.
+ * caller can only ever reach their own row, whatever id they name — and the
+ * query names `who.userId` as well, per the rule in
+ * .claude/rules/catalogue-and-collection.md. A row that is not theirs, or not
+ * there, is zero rows, and both handlers answer that with a 404 rather than a
+ * store error or a hollow `ok`.
  */
 /* The cap is BODY_LIMIT.patch in lib/api/body.ts — "a patch: a few inventory
    fields", the same 4,096 this file used to declare for itself. See the note in
@@ -64,7 +66,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   let row;
   try {
-    row = await updateRow(id, result.patch, bearer(req) ?? undefined);
+    row = await updateRow(who.userId, id, result.patch, bearer(req) ?? undefined);
   } catch (err) {
     return storeErrorResponse(err, req, "Updating a card failed");
   }
@@ -88,7 +90,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   let gone: boolean;
   try {
-    gone = await deleteRow(id, bearer(req) ?? undefined);
+    gone = await deleteRow(who.userId, id, bearer(req) ?? undefined);
   } catch (err) {
     return storeErrorResponse(err, req, "Deleting a card failed");
   }

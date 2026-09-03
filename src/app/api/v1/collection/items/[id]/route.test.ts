@@ -74,12 +74,12 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(updateRow).not.toHaveBeenCalled();
   });
 
-  it("passes the id from the path and the bearer token, not anything from the body", async () => {
+  it("passes the caller, the id from the path and the bearer token, not anything from the body", async () => {
     // A body naming a different id must change nothing about which row is
     // touched — the path segment is the only id this route trusts, and
     // cards_update only ever lets it reach a row the caller owns anyway.
     await patch({ isFavorite: true, id: "someone-elses-card" });
-    expect(updateRow).toHaveBeenCalledWith(ID, { isFavorite: true }, "t.o.k.e.n");
+    expect(updateRow).toHaveBeenCalledWith("me-uuid", ID, { isFavorite: true }, "t.o.k.e.n");
   });
 
   it("refuses a body with nothing recognisable in it", async () => {
@@ -124,10 +124,10 @@ describe("DELETE /api/v1/cards/[id]", () => {
     expect(deleteRow).not.toHaveBeenCalled();
   });
 
-  it("deletes by the path id with the caller's own token", async () => {
+  it("deletes by the path id, as the caller, with the caller's own token", async () => {
     const res = await del();
     expect(res.status).toBe(200);
-    expect(deleteRow).toHaveBeenCalledWith(ID, "t.o.k.e.n");
+    expect(deleteRow).toHaveBeenCalledWith("me-uuid", ID, "t.o.k.e.n");
   });
 
   it("404s when nothing went, rather than claiming it did", async () => {

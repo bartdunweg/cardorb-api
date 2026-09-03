@@ -67,7 +67,7 @@ export async function GET(
     // The catalogue did not answer. Not a 404: the CDN below would keep that
     // for an hour and the card would look gone for everyone.
     console.error(`Card ${tcgId} could not be read:`, err);
-    return unavailable();
+    return unavailable("That card could not be read. Try again in a moment.");
   }
   if (!card) {
     return apiError(404, "No such card.");

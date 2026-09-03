@@ -78,12 +78,17 @@ export function refuse(
 export const PUBLIC_READ_CACHE = "public, max-age=0, s-maxage=60";
 
 /**
- * The collection could not be built — the store or a catalogue was
- * unreachable — and nothing should cache that. A 503 rather than an empty
- * 200: an app that got `[]` would show a person their collection is gone.
+ * Something could not be read — the store or a catalogue was unreachable —
+ * and nothing should cache that. A 503 rather than an empty 200: an app that
+ * got `[]` would show a person their collection is gone.
+ *
+ * The sentence is about the collection unless the route says otherwise; the
+ * two card-detail routes name the card, since a person reading "the
+ * collection could not be read" over one card would go looking for a bigger
+ * problem than there is.
  */
-export function unavailable(): NextResponse<ApiError> {
-  return apiError(503, "The collection could not be read. Try again in a moment.", undefined, {
-    headers: { "Cache-Control": "no-store" },
-  });
+export function unavailable(
+  sentence = "The collection could not be read. Try again in a moment.",
+): NextResponse<ApiError> {
+  return apiError(503, sentence, undefined, { headers: { "Cache-Control": "no-store" } });
 }
