@@ -100,6 +100,11 @@ describe("GET /api/v1/public/[username]/latest-pull", () => {
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
   });
 
+  it("is cached at the CDN for a minute, and not served while stale", async () => {
+    const res = await GET(req(), params("owner"));
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+  });
+
   it("404s an unknown username without walking the collection", async () => {
     ownerOf.mockResolvedValue(null);
     const res = await GET(req(), params("someone-else"));

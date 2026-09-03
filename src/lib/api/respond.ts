@@ -63,6 +63,21 @@ export function refuse(
 }
 
 /**
+ * The Cache-Control a public read carries: a minute at the CDN, nothing in
+ * the browser, and no serving while stale.
+ *
+ * One string for the four routes under /v1/public/<username>/ so the window
+ * cannot drift between them, because the window is the whole privacy
+ * mechanism. Nothing purges this host's CDN when a profile turns private —
+ * the route handlers are dynamic, so revalidatePath() has no entry to drop,
+ * and a purge of the edge cache would need Vercel's API and a token. Sixty
+ * seconds, with no stale-while-revalidate, is the longest a collection stays
+ * visible after its owner asked for it not to be. It used to be five minutes
+ * plus an hour of stale serving.
+ */
+export const PUBLIC_READ_CACHE = "public, max-age=0, s-maxage=60";
+
+/**
  * The collection could not be built — the store or a catalogue was
  * unreachable — and nothing should cache that. A 503 rather than an empty
  * 200: an app that got `[]` would show a person their collection is gone.

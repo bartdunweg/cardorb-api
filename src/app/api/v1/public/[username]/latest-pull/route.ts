@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, PUBLIC_READ_CACHE } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { latestPull } from "@/lib/core/collection/cards";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -25,7 +25,7 @@ const CORS_HEADERS = {
 
 /**
  * The public routes never go through authorise(), so this is the only throttle
- * in front of them. Generous on purpose: one widget behind the five-minute CDN
+ * in front of them. Generous on purpose: one widget behind the one-minute CDN
  * cache below should never come near 60, and anything that does is not a
  * portfolio page.
  */
@@ -63,10 +63,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   return NextResponse.json(
     { latestPull: pull },
     {
-      headers: {
-        ...CORS_HEADERS,
-        "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
-      },
+      headers: { ...CORS_HEADERS, "Cache-Control": PUBLIC_READ_CACHE },
     },
   );
 }

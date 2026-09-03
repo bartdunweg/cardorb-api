@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
-import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
@@ -90,12 +89,12 @@ export async function PATCH(req: Request) {
     return apiError(500, "That change could not be saved.");
   }
 
-  // The public page is dynamic, so there is no ISR entry to drop — but it is
-  // rendered from a profile lookup that Next may still be holding for this
-  // request tree, and a visitor who just turned sharing off should not be able
-  // to refresh into their own cached page. Cheap, and it removes a class of
-  // "it says it is private but it is still there".
-  revalidatePath(`/user/${viewer.username}`);
+  // Nothing to purge here. This used to call revalidatePath("/user/<name>"),
+  // a page that lives in the web app and not on this host, so it dropped
+  // nothing. What this host serves for a profile — the four routes under
+  // /v1/public/<name>/ — are dynamic handlers cached only at the CDN by their
+  // own header, and that header (PUBLIC_READ_CACHE) is the mechanism: a
+  // profile turned private is gone from every edge within a minute.
 
   return NextResponse.json({ ok: true, ...patch });
 }

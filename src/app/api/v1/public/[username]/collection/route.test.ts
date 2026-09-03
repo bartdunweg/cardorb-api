@@ -30,7 +30,9 @@ describe("GET /api/v1/public/{username}/collection", () => {
     const res = await get();
     expect(getPublicCollection).toHaveBeenCalledWith("owner-1");
     expect(res.status).toBe(200);
-    expect(res.headers.get("cache-control")).toContain("public");
+    // A minute at the CDN and no serving while stale: turning a profile
+    // private is only as quick as this window, since nothing purges the host.
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
     expect(await res.json()).toEqual({ sets: [] });
   });
 

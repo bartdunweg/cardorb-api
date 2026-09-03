@@ -86,8 +86,8 @@ components:
       description: Authorised answers are never cached by anything in between.
       schema: { type: string, const: "private, no-store" }
     Cache-Control-Public:
-      description: Public answers are cached at the CDN and revalidated behind the reader.
-      schema: { type: string, example: "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" }
+      description: Public answers are cached at the CDN for a minute and never served stale, so a profile turned private is gone within that minute.
+      schema: { type: string, example: "public, max-age=0, s-maxage=60" }
 
   responses:
     BadRequest:
