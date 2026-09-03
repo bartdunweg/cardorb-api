@@ -26,7 +26,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const token = bearer(req) ?? undefined;
   let folders;
@@ -42,6 +44,8 @@ export async function GET(req: Request) {
   // cannot be read counts nothing rather than failing the list; the sidebar tolerates that.
   // During a TCGdex outage the assembly has no speciesId and no catalogue titles, so a rule
   // count is low; the flag rides along so a client can say so.
+  // When the rows themselves could not be read every count is 0, and `collectionUnavailable`
+  // says that is why, not that the folders are empty.
   const { sets, failed, catalogueUnavailable } = await getCollection(who.userId, token);
   const items = failed ? [] : flattenItems(sets);
   const filed = new Map<string, number>();
@@ -61,6 +65,7 @@ export async function GET(req: Request) {
     {
       folders: folders.map((f) => ({ ...f, count: count(f) })),
       ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
+      ...(failed ? { collectionUnavailable: true } : {}),
     },
     { headers: readHeaders(req) },
   );
@@ -69,7 +74,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const read = await readJsonBody(req, BODY_LIMIT.folder);
   if (read.kind === "too-large")
