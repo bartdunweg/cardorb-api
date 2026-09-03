@@ -10,6 +10,8 @@ if the two have drifted apart.
 
 - A catalogue that accepts the connection and never answers is given up after eight seconds instead of holding the request until the platform's limit, so an outage like TCGdex's on 2026-09-02 costs a moment rather than minutes per page.
 
+- Five answers put right. `PATCH` and `DELETE /v1/collection/items/{id}` say `404 No such card.` for a copy that is not there or not yours, where they used to answer 502 or a hollow `ok`. A store failure answers one fixed sentence per operation instead of the database's own words, and a deployment with no database answers the documented 503. `GET /v1/cards/{tcgId}` and `GET /v1/public/{username}/cards/{tcgId}` answer 503, uncached, when TCGdex is down, and 404 only for a card it does not have. Sorting `GET /v1/cards` by price values a holo copy at the plain price, as every other figure already did. The four public routes are cached at the CDN for a minute and never served stale, so a profile turned private is gone within that minute rather than up to an hour later.
+
 - `GET /v1/stats` says what the collection is worth today (`value`, in euros) and how many copies carry no price (`unpriced`), so a dashboard can show the figure without adding up pages.
 
 ## 2026-09-02
