@@ -12,6 +12,7 @@ which serve a public profile without prices.
 
 ## Stack
 
+- Project type: api
 - Next.js 16 (App Router, route handlers only) on Vercel, Node 24 (`.nvmrc`)
 - TypeScript 5.9, Vitest, ESLint (`--max-warnings 0`), Prettier
 - Supabase: Postgres, auth, migrations under `supabase/`
