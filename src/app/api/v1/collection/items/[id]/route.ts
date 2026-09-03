@@ -46,7 +46,9 @@ const NOT_FOUND = "No such card.";
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const { id } = await params;
   if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
@@ -83,7 +85,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const { id } = await params;
   if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });

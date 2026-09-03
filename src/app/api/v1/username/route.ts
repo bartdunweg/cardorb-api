@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
   let wanted = "";
   const read = await readJsonBody<{ username?: unknown }>(req, BODY_LIMIT.profile);

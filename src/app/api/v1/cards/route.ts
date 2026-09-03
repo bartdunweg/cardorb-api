@@ -47,14 +47,16 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const read = readItemQuery(new URL(req.url).searchParams);
   if (read.kind === "invalid")
     return apiError(400, read.error, undefined, { headers: readHeaders(req) });
 
   const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
-  if (failed) return unavailable();
+  if (failed) return unavailable(undefined, readHeaders(req));
   const { sort, order } = read.query;
   const { items, total } = pageOf(
     sortItems(filterItems(flattenItems(sets), read.query), sort, order),
@@ -66,7 +68,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const read = await readJsonBody(req, BODY_LIMIT.card);
   if (read.kind === "too-large") {

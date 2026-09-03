@@ -30,7 +30,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who)) {
-    return apiError(who.status, who.error);
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
   }
 
   // Whose collection, which is the whole of what changed here. It used to be
@@ -38,7 +40,7 @@ export async function GET(req: Request) {
   // had been asked. The token, not just the id: getCards() needs the caller's
   // own connection to satisfy row level security, see its own comment.
   const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
-  if (failed) return unavailable();
+  if (failed) return unavailable(undefined, readHeaders(req));
 
   // "An empty collection is never true" used to live here, and it threw. It was
   // right: there was one collection, it had sixteen hundred cards in it, and an

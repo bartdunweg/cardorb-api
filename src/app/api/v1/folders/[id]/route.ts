@@ -19,7 +19,9 @@ const NOT_FOUND = { error: "No folder by that id." };
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const { id } = await params;
   if (!UUID.test(id))
@@ -49,7 +51,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const { id } = await params;
   if (!UUID.test(id))

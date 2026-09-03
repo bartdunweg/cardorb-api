@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, retryAfter } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -96,10 +96,15 @@ export async function POST(req: Request) {
   else if (typeof body.key === "string") password = body.key;
 
   const ip = clientIp(req);
-  if (byAddress(ip) || byAccount(accountKey(ip, email))) {
+  // Both limiters are asked so both count the attempt; the longer wait is the
+  // one the client is told, because the shorter one would still be refused.
+  const wait = Math.max(byAddress(ip), byAccount(accountKey(ip, email)));
+  if (wait) {
     // The same vagueness as a wrong password, and for the same reason: "too
     // many attempts on that account" tells a stranger the account exists.
-    return apiError(429, "Too many attempts. Try again in a few minutes.");
+    return apiError(429, "Too many attempts. Try again in a few minutes.", undefined, {
+      headers: retryAfter(wait),
+    });
   }
 
   const { error } = await db.auth.signInWithPassword({ email, password });

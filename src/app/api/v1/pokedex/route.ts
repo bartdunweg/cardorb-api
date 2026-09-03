@@ -16,10 +16,12 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
-  if (failed) return unavailable();
+  if (failed) return unavailable(undefined, readHeaders(req));
   return NextResponse.json(
     { entries: summariseDex(getPokedex(sets)) },
     { headers: readHeaders(req) },

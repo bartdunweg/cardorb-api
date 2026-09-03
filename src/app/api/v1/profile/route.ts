@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
-import { sameOrigin } from "@/lib/api/guard";
+import { readHeaders, sameOrigin } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { ownProfile, updateProfile } from "@/lib/storage/postgres";
@@ -33,7 +33,7 @@ export async function PATCH(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
   const read = await readJsonBody<Record<string, unknown>>(req, BODY_LIMIT.profile);
   if (read.kind === "too-large") return apiError(413, "Payload too large");
@@ -101,17 +101,21 @@ export async function PATCH(req: Request) {
 
 /** What the settings screen renders from. */
 export async function GET(req: Request) {
+  // readHeaders() on every answer, as on every other keyed read: without the
+  // CORS pair a browser on an allowed origin cannot read the 401 or the 503,
+  // and without `private, no-store` a shared cache could keep the profile.
+  const headers = readHeaders(req);
   const viewer = await requestViewer(req);
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn", { headers });
 
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();
   if (!db) {
-    return refuse("noDatabase");
+    return refuse("noDatabase", { headers });
   }
 
   const profile = await ownProfile(db, viewer.userId);
-  if (!profile) return apiError(404, "No profile.");
+  if (!profile) return apiError(404, "No profile.", undefined, { headers });
 
-  return NextResponse.json({ ...profile, email: viewer.email });
+  return NextResponse.json({ ...profile, email: viewer.email }, { headers });
 }

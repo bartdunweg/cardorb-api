@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { REFUSALS, apiError, refuse, unavailable } from "./respond";
+import { REFUSALS, apiError, refuse, retryAfter, unavailable } from "./respond";
 
 describe("apiError", () => {
   it("answers { error } at the status it was given", async () => {
@@ -30,6 +30,19 @@ describe("refuse", () => {
 
   it("words no-database once, and it is a full sentence", () => {
     expect(REFUSALS.noDatabase.error).toBe("This deployment has no database configured.");
+  });
+
+  it("words a catalogue that did not answer once, as a sentence and not a slug", () => {
+    expect(REFUSALS.catalogue).toEqual({
+      status: 502,
+      error: "The catalogue did not answer. Try again in a moment.",
+    });
+  });
+});
+
+describe("retryAfter", () => {
+  it("is the one header a 429 carries, in whole seconds", () => {
+    expect(retryAfter(60)).toEqual({ "Retry-After": "60" });
   });
 });
 

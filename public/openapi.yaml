@@ -104,7 +104,7 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Sign in to see this." }
+          example: { error: "Sign in first." }
     Forbidden:
       description: The request came from an origin this deployment does not allow.
       content:
@@ -129,7 +129,11 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
           example: { error: "Invalid request" }
     TooManyRequests:
-      description: Over this route's rate limit for this address.
+      description: Over this route's rate limit for this address. Every 429 carries `Retry-After`.
+      headers:
+        Retry-After:
+          description: Whole seconds until one more request would be let through. Never zero.
+          schema: { type: integer, minimum: 1 }
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
