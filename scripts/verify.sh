@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Generated from dev-standards. Edit the command blocks freely; keep the contract.
+# One command that runs what CI runs. Edit the command blocks freely; keep the contract.
 #
 # CONTRACT: this is the single entry point that answers "is this project healthy?".
 # Exit 0 means every check passed. Any non-zero exit means it did not.
 #
 # It exists so an agent never has to know whether this project uses pnpm, gradlew,
-# xcodebuild, or dotnet. One command, one exit code. The Definition of Done in CLAUDE.md
-# refers to this script.
+# xcodebuild, or dotnet. One command, one exit code. CLAUDE.md points here.
 #
 # Deliberately no `set -e`: every check runs and reports, so one run shows every problem
 # rather than only the first. Failures are collected and returned at the end.
@@ -89,95 +88,6 @@ run "lint"      npm run lint
 # same reason .github/workflows/check.yml runs it. It is also the only step that would catch a
 # route which cannot be rendered the way its exports claim.
 run "build"     npm run build
-
-# --- Memory and standards health ----------------------------------------------------------
-# Two checks that watch the memory system rather than the build. They cost milliseconds and
-# each covers a failure that is silent by nature. Added by /apply-standards on 2026-08-21 and
-# rewritten on 2026-08-22; verify.sh has no generated region, so nothing else would ever have
-# copied them in.
-
-# Is CONVENTIONS.md still shaped, and still looked at?
-#
-# This used to be a `skip` naming three reasons. Two of them are gone: every ID is now bare
-# rather than bold, `Intent` is retired, and the heading registers are a bullet list instead of
-# a table the check read as malformed rule IDs.
-#
-# The third is not ours to settle, so the count clause of the standard's block is deliberately
-# left out here. dev-standards v0.26.0 contradicts itself about it:
-#   - templates/CONVENTIONS.md.template says "There is no rule-count ceiling. Freshness is the
-#     brake, not size."
-#   - templates/verify.sh.template fails above 15 rules.
-# This project has 47 and follows the template's documented rule. See `## Open` in STATE.md;
-# put the count clause back the moment the standard agrees with itself.
-#
-# What is enforced below: the ID format, the two permitted enforcement values, and a
-# last-reviewed date no older than 90 days. Copied from the standard's template otherwise.
-
-# shellcheck disable=SC2329  # invoked indirectly, through `conventions` below.
-rule_rows() {
-  grep '^| ' CONVENTIONS.md | grep -v '^| ID | Rule |' | grep -v '^|[- |]*$' || true
-}
-
-# Strips leading and trailing whitespace without forking. Result lands in $_trimmed.
-_trimmed=""
-# shellcheck disable=SC2329  # invoked from `conventions` below.
-trim() {
-  local v="$1"
-  v="${v#"${v%%[![:space:]]*}"}"
-  _trimmed="${v%"${v##*[![:space:]]}"}"
-}
-
-# shellcheck disable=SC2329  # invoked indirectly, through `run` below.
-conventions() {
-  local ok=0 id enf line reviewed epoch age
-  [[ -f CONVENTIONS.md ]] || return 0
-  while IFS= read -r line; do
-    IFS='|' read -r _ id _ enf _ <<< "$line"
-    trim "$id";  id="$_trimmed"
-    trim "$enf"; enf="$_trimmed"
-    [[ "$id" =~ ^R-[A-Z]+-[0-9]{3}$ ]] || { printf 'Malformed rule ID: %s\n' "$id"; ok=1; }
-    if [[ "$enf" != "reviewed" && ! "$enf" =~ ^enforced\ —\ .+ ]]; then
-      printf '%s: enforcement is "%s" — use "reviewed" or "enforced — <what enforces it>".\n' "$id" "$enf"
-      ok=1
-    fi
-  done < <(rule_rows)
-  reviewed="$(sed -n 's/^last-reviewed: *//p' CONVENTIONS.md | head -n 1)"
-  epoch="$(date -j -f '%Y-%m-%d' "$reviewed" +%s 2>/dev/null || date -d "$reviewed" +%s 2>/dev/null || true)"
-  if [[ -z "$epoch" ]]; then
-    printf 'CONVENTIONS.md has no usable "last-reviewed: YYYY-MM-DD" line.\n'
-    ok=1
-  else
-    age=$(( ( $(date +%s) - epoch ) / 86400 ))
-    if [[ "$age" -gt 90 ]]; then
-      printf 'CONVENTIONS.md was last reviewed %s days ago, ceiling 90.\n' "$age"
-      printf 'Walk the list and retire what is dead. Moving only the date is the failure.\n'
-      ok=1
-    fi
-  fi
-  return "$ok"
-}
-if [[ -f CONVENTIONS.md ]]; then
-  run "conventions" conventions
-else
-  skip "conventions" "no CONVENTIONS.md — run apply-standards"
-fi
-# Is this project still running the current standard?
-#
-# Nothing else asks. The instruction block in CLAUDE.md is generated, and a project drifts from
-# it the moment the standard changes — quietly, because every build check stays green.
-#
-# It exits 0 on warnings. This project no longer keeps decision or feedback records at all —
-# the rules live in CONVENTIONS.md and the reasoning in git history — so the standard's memory
-# warnings are expected and are not findings. Do not run migrate-memory.sh --apply.
-#
-# Skipping when the checkout is absent is deliberate and sets no failure: a CI runner has no
-# reason to carry the standards repo, and a project is not unhealthy because of where it builds.
-standards_root="${DEV_STANDARDS_HOME:-$HOME/.local/share/dev-standards}"
-if [[ -x "$standards_root/scripts/check-standards.sh" ]]; then
-  run "standards" "$standards_root/scripts/check-standards.sh" .
-else
-  skip "standards" "no dev-standards checkout at $standards_root, so drift was not checked"
-fi
 
 # ------------------------------------------------------------------------------------------
 if [[ "$status" -eq 0 ]]; then

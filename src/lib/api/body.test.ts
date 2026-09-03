@@ -66,7 +66,7 @@ describe("every route that reads a body caps it", () => {
    * read their bodies with `req.text()` + `JSON.parse`, which never matched a
    * pattern looking for `req.json()`; and both declared a local `MAX_BODY_BYTES`,
    * which the exemption accepted as evidence of a cap. So the rule read
-   * `Enforced` in CONVENTIONS.md while the only two routes breaking it were
+   * as enforced in the project rules while the only two routes breaking it were
    * invisible to the thing enforcing it.
    *
    * `req.text()` is the one that mattered. A new handler written that way with no
