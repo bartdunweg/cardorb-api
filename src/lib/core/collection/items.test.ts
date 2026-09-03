@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CardSet, OwnedCard, Variant } from "./cards";
+import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import {
   countStats,
   filterItems,
@@ -124,7 +124,37 @@ describe("pageOf", () => {
 
 describe("countStats", () => {
   it("counts copies from quantity, cards from rows, and the wishlist apart", () => {
-    expect(countStats(SETS)).toEqual({ cards: 3, copies: 5, wishlist: 1, favorites: 1, sets: 2 });
+    expect(countStats(SETS)).toEqual({
+      cards: 3,
+      copies: 5,
+      wishlist: 1,
+      favorites: 1,
+      sets: 2,
+      value: 0,
+      unpriced: 5,
+    });
+  });
+
+  it("values the copies held at today's price, printing by printing, and counts the unpriced apart", () => {
+    const price = { market: 2, nm: { low: 1.8, mid: 2, high: 2.2 } } as unknown as Price;
+    const priceHolo = { market: 5, nm: { low: 4.5, mid: 5, high: 5.5 } } as unknown as Price;
+    const sets: CardSet[] = [
+      {
+        ...(SETS[0] as CardSet),
+        cards: [
+          card(
+            "Priced",
+            [variant({ quantity: 2 }), variant({ id: "v2", finish: "reverse-holo", quantity: 1 })],
+            { price, priceHolo },
+          ),
+          card("Unpriced", [variant({ quantity: 3 })]),
+        ],
+      },
+    ];
+    const stats = countStats(sets);
+    expect(stats.value).toBe(9);
+    expect(stats.unpriced).toBe(3);
+    expect(stats.copies).toBe(6);
   });
 });
 

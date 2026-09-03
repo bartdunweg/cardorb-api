@@ -442,13 +442,15 @@ components:
     Stats:
       type: object
       description: The dashboard's numbers. Copies count what is held; cards count rows.
-      required: [cards, copies, wishlist, favorites, sets]
+      required: [cards, copies, wishlist, favorites, sets, value, unpriced]
       properties:
         cards: { type: integer }
         copies: { type: integer }
         wishlist: { type: integer }
         favorites: { type: integer }
         sets: { type: integer, description: "Sets with at least one owned copy." }
+        value: { type: number, description: "Today's value of every copy held, in euros, to the cent. Printing by printing: a reverse holo at its own price." }
+        unpriced: { type: integer, description: "Copies held that carry no price and add nothing to value." }
 
     DexCard:
       type: object
