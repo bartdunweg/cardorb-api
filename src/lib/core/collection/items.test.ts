@@ -3,10 +3,10 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import {
   countStats,
   filterItems,
-  filterPublicItems,
   flattenItems,
   pageOf,
   publicItems,
+  publicPage,
   readItemQuery,
   readPublicQuery,
   sortItems,
@@ -71,6 +71,15 @@ describe("flattenItems", () => {
   it("makes one item per copy, in set order, and skips the public shape", () => {
     const sets = [...SETS, set("Public", [card("Mew", [variant({ id: null })])])];
     expect(flattenItems(sets).map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("carries the card's key, so a Pokédex tile can be joined to its copies", () => {
+    expect(flattenItems(SETS).map((it) => it.key)).toEqual([
+      "Pikachu",
+      "Charizard",
+      "Snorlax",
+      "Snorlax",
+    ]);
   });
 
   it("carries the folder, the image and the row's own facts", () => {
@@ -260,12 +269,102 @@ describe("publicItems", () => {
     ]);
     expect(Object.keys(items[0] ?? {})).not.toContain("purchasePrice");
   });
+});
 
-  it("searches by name or set, and reads only q, limit and offset", () => {
-    expect(filterPublicItems(publicItems(SETS), "jungle").map((i) => i.name)).toEqual(["Snorlax"]);
-    expect(readPublicQuery(new URLSearchParams("q=x&owned=false&limit=5"))).toEqual({
+describe("readPublicQuery", () => {
+  const read = (qs: string) => readPublicQuery(new URLSearchParams(qs));
+
+  it("reads what the keyed list reads, less the wishlist, favourites and folders", () => {
+    // owned=false is dropped unread rather than refused: a public page has no
+    // wishlist to show, and the parameter is not the reader's mistake.
+    expect(read("q=x&owned=false&limit=5")).toEqual({
       kind: "ok",
       query: { q: "x", limit: 5, offset: 0 },
     });
+    expect(read("set=Jungle&rarity=Rare&sort=name&order=desc&offset=10")).toEqual({
+      kind: "ok",
+      query: { set: "Jungle", rarity: "Rare", sort: "name", order: "desc", limit: 100, offset: 10 },
+    });
+  });
+
+  it("refuses by the keyed list's rules, and refuses a sort by price outright", () => {
+    expect(read("limit=0").kind).toBe("invalid");
+    expect(read("set=").kind).toBe("invalid");
+    expect(read("order=up").kind).toBe("invalid");
+    // A public entry carries no price, so an order by one is refused rather
+    // than ignored — and the sentence names the three sorts there are.
+    expect(read("sort=price")).toEqual({
+      kind: "invalid",
+      error: "sort must be one of set, name, added.",
+    });
+  });
+});
+
+describe("publicPage", () => {
+  const dated = (id: string, acquiredAt: string | null, owned = true) =>
+    variant({ id, acquiredAt, owned, purchasePrice: 40, notes: "private" });
+  const PUBLIC: CardSet[] = [
+    set("Base Set", [
+      card("Pikachu", [dated("a", "2026-01-05"), dated("b", "2026-03-01")]),
+      card("Charizard", [dated("c", null)]),
+      card("Mew", [dated("d", "2026-09-01", false)]),
+    ]),
+    set("Jungle", [
+      card("Snorlax", [variant({ id: "e", rarity: "Rare", acquiredAt: "2026-02-01" })]),
+    ]),
+  ];
+  const page = (q: Partial<Parameters<typeof publicPage>[1]> = {}) =>
+    publicPage(PUBLIC, { limit: 100, offset: 0, ...q });
+
+  it("narrows to a set or a rarity, whole and in any case, like the keyed list", () => {
+    expect(page({ set: "jungle" }).cards.map((c) => c.name)).toEqual(["Snorlax"]);
+    expect(page({ rarity: "rare" }).cards.map((c) => c.name)).toEqual(["Snorlax"]);
+    expect(page({ q: "char" }).cards.map((c) => c.name)).toEqual(["Charizard"]);
+  });
+
+  it("sorts by name or by the day the newest copy came in, newest first, the undated last", () => {
+    expect(page({ sort: "name" }).cards.map((c) => c.name)).toEqual([
+      "Charizard",
+      "Pikachu",
+      "Snorlax",
+    ]);
+    expect(page({ sort: "added" }).cards.map((c) => c.name)).toEqual([
+      "Pikachu",
+      "Snorlax",
+      "Charizard",
+    ]);
+    expect(page({ sort: "added", order: "asc" }).cards.map((c) => c.name)).toEqual([
+      "Snorlax",
+      "Pikachu",
+      "Charizard",
+    ]);
+  });
+
+  it("pages after narrowing and sorting, and counts the sets over the whole collection", () => {
+    const out = page({ sort: "name", limit: 1, offset: 1 });
+    expect(out.cards.map((c) => c.name)).toEqual(["Pikachu"]);
+    expect(out.total).toBe(3);
+    expect(out.sets).toBe(2);
+  });
+
+  it("publishes the PublicItem fields and nothing of the copies it read the dates from", () => {
+    // Read from the assembly before forPublic(), so the allow-list is this
+    // function's own: exactly these keys, whatever the variants carried.
+    expect(Object.keys(page().cards[0] ?? {}).sort()).toEqual(
+      [
+        "copies",
+        "gen",
+        "image",
+        "key",
+        "name",
+        "number",
+        "rarity",
+        "set",
+        "setTitle",
+        "speciesId",
+        "tcgId",
+        "type",
+      ].sort(),
+    );
   });
 });

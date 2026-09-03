@@ -401,9 +401,10 @@ components:
     CardItem:
       type: object
       description: One copy of a card, flat, for a list that pages. `GET /v1/cards`.
-      required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, acquiredAt, collectionId, price, priceHolo]
+      required: [id, key, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, acquiredAt, collectionId, price, priceHolo]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
+        key: { type: string, description: "The card's key in `GET /v1/collection` and on a Pokédex tile (`DexCard.key`); every copy of one card shares it, so a tile can be joined to its copies." }
         name: { type: string }
         number: { type: string }
         set: { type: string, description: "The set's name as the catalogue spells it." }
@@ -1528,7 +1529,7 @@ paths:
       summary: A public collection, without prices
       description: |
         No key. Of each copy, only `rarity` and `owned` are published (R-API-002);
-        `imageHigh` is dropped too. Sixty a minute per address; cached five minutes at the CDN.
+        `imageHigh` is dropped too. Sixty a minute per address; cached a minute at the CDN.
       security: []
       parameters:
         - { name: username, in: path, required: true, schema: { type: string } }
@@ -1548,7 +1549,7 @@ paths:
       tags: [Public]
       operationId: getPublicProfile
       summary: The name to print and the picture, for a public profile's header
-      description: No key. Sixty a minute per address; cached five minutes at the CDN.
+      description: No key. Sixty a minute per address; cached a minute at the CDN.
       security: []
       parameters:
         - { name: username, in: path, required: true, schema: { type: string } }
@@ -1575,17 +1576,23 @@ paths:
       summary: One page of a public collection as a flat list
       description: |
         For a page that shows a hundred cards at a time and should not fetch the whole
-        collection to do it. One entry per card with owned copies, nothing private. No key;
-        sixty a minute per address; cached five minutes at the CDN.
+        collection to do it. One entry per card with owned copies, nothing private. Narrows
+        and sorts by the same rules as `GET /v1/cards`, less `sort=price`: a page without
+        prices refuses an order by one with a 400. `owned`, `favorite` and `collection` are
+        not read. No key; sixty a minute per address; cached a minute at the CDN.
       security: []
       parameters:
         - { name: username, in: path, required: true, schema: { type: string } }
-        - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set." }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
-        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set, anywhere, in any case." }
+        - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
+        - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
+        - { name: sort, in: query, schema: { type: string, enum: [set, name, added], default: set }, description: "`set` is the assembly's order (set by set, number by number). `added` is the day the newest owned copy joined the collection. `price` is a 400 here." }
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, `added` reads newest first and the rest up. A card without a date goes last either way." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 }, description: "Above 500 is read as 500. Not a whole number, or below 1, is a 400." }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 }, description: "Not a whole number, or below 0, is a 400." }
       responses:
         "200":
-          description: The page, in set order, the total behind it, and how many sets the whole spans.
+          description: The page, in the asked order (set order when none was), the total behind it, and how many sets the whole spans.
           headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
           content:
             application/json:

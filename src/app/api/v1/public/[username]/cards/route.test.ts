@@ -90,6 +90,16 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect((await get("?limit=0")).status).toBe(400);
   });
 
+  it("narrows and sorts like the keyed list, and refuses a sort by price", async () => {
+    // The route the web app's public page is moving onto: `set`, `rarity`,
+    // `sort` and `order` used to be read by /v1/cards and silently ignored here.
+    expect((await (await get("?set=base%20set&sort=name&order=desc")).json()).total).toBe(1);
+    expect((await (await get("?rarity=Rare")).json()).total).toBe(0);
+    const res = await get("?sort=price");
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "sort must be one of set, name, added." });
+  });
+
   it("is cached at the CDN for a minute, and not served while stale", async () => {
     const res = await get();
     expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");

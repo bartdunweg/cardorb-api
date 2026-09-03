@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
-import { forPublic } from "@/lib/core/collection/cards";
-import { filterPublicItems, pageOf, publicItems, readPublicQuery } from "@/lib/core/collection/items";
+import { publicPage, readPublicQuery } from "@/lib/core/collection/items";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +11,11 @@ export const dynamic = "force-dynamic";
  * hundred cards at a time and should not fetch nineteen hundred to do it.
  * The grouped whole stays at the sibling route. No key, same limiter and
  * cache as its siblings; a failed read is a 503 nothing caches.
+ *
+ * Narrows and sorts by the keyed list's rules (`set`, `rarity`, `sort`,
+ * `order`), less a sort by price, which a page without prices refuses. The
+ * page is cut in publicPage(), which is also the allow-list: it builds each
+ * entry field by field from the assembly and publishes nothing of the copies.
  */
 const byAddress = createRateLimiter(60_000, 60);
 
@@ -37,14 +41,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       headers: { "Cache-Control": "no-store" },
     });
 
-  const shown = forPublic(sets);
-  const { items, total } = pageOf(filterPublicItems(publicItems(shown), read.query.q), read.query);
-  // How many sets the owned cards span, for the line under the profile's name; a page of a
-  // hundred cannot count that for itself, and the whole collection is what this route exists
-  // to spare the reader.
-  const setCount = shown.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
-  return NextResponse.json(
-    { cards: items, total, sets: setCount },
-    { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
-  );
+  return NextResponse.json(publicPage(sets, read.query), {
+    headers: { "Cache-Control": PUBLIC_READ_CACHE },
+  });
 }

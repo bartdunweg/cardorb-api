@@ -21,6 +21,8 @@ import { UUID } from "./collection-row";
 export type CardItem = {
   /** The collection row, for `PATCH /v1/collection/items/{id}`. */
   id: string;
+  /** The card's key in `GET /v1/collection` and on a Pokédex tile (`DexCard.key`), shared by every copy of it. */
+  key: string;
   name: string;
   number: string;
   /** The set's name as the catalogue spells it, and its title for a heading. */
@@ -66,6 +68,7 @@ export function flattenItems(sets: CardSet[]): CardItem[] {
 
 const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem => ({
   id,
+  key: card.key,
   name: card.name,
   number: card.number,
   set: set.name,
@@ -106,18 +109,33 @@ export type ItemFilter = {
   rarity?: string;
 };
 
-export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
+/** The fields the text filters read; both a copy and a public entry carry them. */
+type Named = { name: string; set: string; setTitle: string; rarity: string | null };
+type TextFilter = Pick<ItemFilter, "q" | "set" | "rarity">;
+
+/**
+ * Whether an entry passes `q`, `set` and `rarity`. One matcher for the keyed
+ * list and the public one, so "whole set, any case" cannot mean two things.
+ */
+function matchesText(f: TextFilter): (it: Named) => boolean {
   const q = f.q?.trim().toLowerCase();
   const set = f.set?.trim().toLowerCase();
   const rarity = f.rarity?.trim().toLowerCase();
-  return items.filter((it) => {
-    if (f.owned !== undefined && it.owned !== f.owned) return false;
-    if (f.favorite && !it.isFavorite) return false;
-    if (f.collection && it.collectionId !== f.collection) return false;
+  return (it) => {
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
     if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
     return true;
+  };
+}
+
+export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
+  const text = matchesText(f);
+  return items.filter((it) => {
+    if (f.owned !== undefined && it.owned !== f.owned) return false;
+    if (f.favorite && !it.isFavorite) return false;
+    if (f.collection && it.collectionId !== f.collection) return false;
+    return text(it);
   });
 }
 
@@ -146,13 +164,27 @@ const copyPrice = (it: CardItem): number | null =>
  * ones nobody could price.
  */
 export function sortItems(items: CardItem[], sort: Sort = "set", order?: Order): CardItem[] {
+  return sortBy(items, sort, order, (it) =>
+    sort === "name" ? it.name : sort === "price" ? copyPrice(it) : it.acquiredAt,
+  );
+}
+
+/**
+ * The sort itself, over anything: `key` reads the value the sort compares, or
+ * null for an entry that has none. `set` never calls it — set order is the
+ * order the list came in.
+ */
+function sortBy<T>(
+  items: T[],
+  sort: Sort,
+  order: Order | undefined,
+  key: (it: T) => string | number | null,
+): T[] {
   const dir = (order ?? (sort === "added" ? "desc" : "asc")) === "asc" ? 1 : -1;
   const indexed = items.map((it, i) => ({ it, i }));
   if (sort === "set") {
     return (dir === 1 ? indexed : indexed.reverse()).map((x) => x.it);
   }
-  const key = (it: CardItem): string | number | null =>
-    sort === "name" ? it.name : sort === "price" ? copyPrice(it) : it.acquiredAt;
   indexed.sort((a, b) => {
     const ka = key(a.it);
     const kb = key(b.it);
@@ -357,26 +389,84 @@ export function publicItems(sets: CardSet[]): PublicItem[] {
   return out;
 }
 
-export function filterPublicItems(items: PublicItem[], q?: string): PublicItem[] {
-  const needle = q?.trim().toLowerCase();
-  if (!needle) return items;
-  return items.filter(
-    (it) => it.name.toLowerCase().includes(needle) || it.set.toLowerCase().includes(needle),
-  );
-}
+/**
+ * The sorts a public page may ask for: the keyed list's, less `price`. A
+ * public entry carries no price, so ordering by one would either say nothing
+ * or leak the figure through the order; it is refused rather than ignored.
+ */
+export const PUBLIC_SORTS = ["set", "name", "added"] as const;
+export type PublicSort = (typeof PUBLIC_SORTS)[number];
 
-/** `q`, `limit` and `offset` only: a public page has no wishlist, favourites or folders. */
+export type PublicQuery = TextFilter & Page & { sort?: PublicSort; order?: Order };
+
+/**
+ * The public query string: `q`, `set`, `rarity`, `sort`, `order`, `limit`
+ * and `offset`, read by the same rules as the keyed list — the parsing is
+ * readItemQuery()'s. `owned`, `favorite` and `collection` are dropped
+ * unread: a public page has no wishlist, favourites or folders.
+ */
 export function readPublicQuery(
   params: URLSearchParams,
-): { kind: "ok"; query: { q?: string } & Page } | { kind: "invalid"; error: string } {
+): { kind: "ok"; query: PublicQuery } | { kind: "invalid"; error: string } {
+  const sort = params.get("sort");
+  if (sort !== null && !(PUBLIC_SORTS as readonly string[]).includes(sort)) {
+    return { kind: "invalid", error: `sort must be one of ${PUBLIC_SORTS.join(", ")}.` };
+  }
+  const kept = ["q", "set", "rarity", "sort", "order", "limit", "offset"];
   const read = readItemQuery(
     new URLSearchParams(
-      Object.fromEntries(
-        [...params.entries()].filter(([k]) => ["q", "limit", "offset"].includes(k)),
-      ),
+      Object.fromEntries([...params.entries()].filter(([k]) => kept.includes(k))),
     ),
   );
   if (read.kind === "invalid") return read;
-  const { q, limit, offset } = read.query;
-  return { kind: "ok", query: { ...(q ? { q } : {}), limit, offset } };
+  const { q, set, rarity, order, limit, offset } = read.query;
+  return {
+    kind: "ok",
+    query: {
+      ...(q ? { q } : {}),
+      ...(set ? { set } : {}),
+      ...(rarity ? { rarity } : {}),
+      ...(sort ? { sort: sort as PublicSort } : {}),
+      ...(order ? { order } : {}),
+      limit,
+      offset,
+    },
+  };
+}
+
+/**
+ * One page of a public collection, and the two whole-collection counts a page
+ * cannot work out for itself.
+ *
+ * Read from the assembly before forPublic() rather than after, because `added`
+ * sorts on the day the newest owned copy came in and forPublic() has already
+ * nulled every date by then. Nothing of the copies reaches the answer: each
+ * entry is built by publicItems(), which writes the PublicItem fields and no
+ * other — the same allow-list as before, only applied here instead of
+ * upstream. The date is read for the order and dropped.
+ */
+export function publicPage(
+  sets: CardSet[],
+  query: PublicQuery,
+): { cards: PublicItem[]; total: number; sets: number } {
+  const added = new Map<string, string | null>();
+  for (const set of sets) {
+    for (const card of set.cards) {
+      let newest: string | null = null;
+      for (const v of card.variants) {
+        if (v.owned && v.acquiredAt && (!newest || v.acquiredAt > newest)) newest = v.acquiredAt;
+      }
+      added.set(card.key, newest);
+    }
+  }
+  const items = publicItems(sets).filter(matchesText(query));
+  const ordered = sortBy(items, query.sort ?? "set", query.order, (it) =>
+    query.sort === "name" ? it.name : (added.get(it.key) ?? null),
+  );
+  const { items: cards, total } = pageOf(ordered, query);
+  // How many sets the owned cards span, for the line under the profile's name.
+  const setCount = sets.filter((set) =>
+    set.cards.some((c) => c.variants.some((v) => v.owned)),
+  ).length;
+  return { cards, total, sets: setCount };
 }
