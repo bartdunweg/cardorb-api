@@ -25,7 +25,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const token = bearer(req) ?? undefined;
   let folders;
@@ -36,8 +38,10 @@ export async function GET(req: Request) {
   }
 
   // How many copies are filed in each, from the cached rows rather than a
-  // count query per folder.
-  const { rows } = await getRows(who.userId, token);
+  // count query per folder. getRows() fails soft and says so, and `failed` is
+  // passed on the way /v1/catalog/sets does: a client shown `count: 0` on
+  // every folder should be able to tell an empty binder from a store outage.
+  const { rows, failed } = await getRows(who.userId, token);
   const counts = new Map<string, number>();
   for (const row of rows) {
     if (row.collectionId && row.owned)
@@ -45,7 +49,10 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json(
-    { folders: folders.map((f) => ({ ...f, count: counts.get(f.id) ?? 0 })) },
+    {
+      folders: folders.map((f) => ({ ...f, count: counts.get(f.id) ?? 0 })),
+      ...(failed ? { collectionUnavailable: true } : {}),
+    },
     { headers: readHeaders(req) },
   );
 }
@@ -53,7 +60,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const read = await readJsonBody(req, BODY_LIMIT.folder);
   if (read.kind === "too-large")
