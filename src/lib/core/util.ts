@@ -12,6 +12,20 @@
 export const DAY = 86400;
 
 /**
+ * How long one request to a catalogue may take before it is given up.
+ *
+ * fetch() has no limit of its own: a server that accepts the connection and
+ * never answers — assets.tcgdex.net did exactly that for a while on
+ * 2026-09-02 — holds the function until Vercel's own limit, and with it every
+ * collection build that needed the set. Eight seconds is longer than any of
+ * these endpoints takes when it works and shorter than a reader waits. A
+ * refusal this way is an error like any other, so json()'s retries and every
+ * fail-soft catch treat it as one.
+ */
+export const CATALOGUE_TIMEOUT_MS = 8_000;
+export const catalogueTimeout = () => AbortSignal.timeout(CATALOGUE_TIMEOUT_MS);
+
+/**
  * Fold a string down to what it means rather than how it is typed: lowercase,
  * accents off, punctuation out. Copied from the portfolio's lib/normalise.ts,
  * where it has the same job for six other catalogues.

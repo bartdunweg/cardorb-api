@@ -1,4 +1,5 @@
 import { holoPriceOf, priceOf } from "../price-basis.mjs";
+import { catalogueTimeout } from "../util";
 import type { CardPrices } from "./tcgdex-client";
 import type { GuideRow, PriceGuide, ProductIds } from "../collection/snapshot";
 
@@ -18,7 +19,10 @@ export const GUIDE_URL =
   "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json";
 
 export async function fetchPriceGuide(): Promise<PriceGuide> {
-  const res = await fetch(GUIDE_URL, { headers: { "User-Agent": "cardorb.com" } });
+  const res = await fetch(GUIDE_URL, {
+    headers: { "User-Agent": "cardorb.com" },
+    signal: catalogueTimeout(),
+  });
   if (!res.ok) throw new Error(`The price guide answered ${res.status}.`);
   const guide = (await res.json()) as PriceGuide;
   if (!guide?.priceGuides?.length || !guide.createdAt) {

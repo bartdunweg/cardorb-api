@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-03
+
+- A catalogue that accepts the connection and never answers is given up after eight seconds instead of holding the request until the platform's limit, so an outage like TCGdex's on 2026-09-02 costs a moment rather than minutes per page.
+
 ## 2026-09-02
 
 - The API now has a contract and a home of its own. `openapi.yaml` describes every

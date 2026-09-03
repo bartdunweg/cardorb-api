@@ -17,6 +17,7 @@
  * against the same host but not the same contract, and mixing the two would
  * blur what ptcg.ts's own comment promises it is.
  */
+import { catalogueTimeout } from "../util";
 
 /** One candidate from a search, with everything the add-card form can use. */
 export type CatalogueMatch = {
@@ -169,7 +170,11 @@ export async function searchCards(
   const ATTEMPTS = 3;
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     try {
-      const res = await fetch(url, { headers, next: { revalidate: 300 } });
+      const res = await fetch(url, {
+        headers,
+        next: { revalidate: 300 },
+        signal: catalogueTimeout(),
+      });
       if (!res.ok) throw new Error(String(res.status));
       const body = (await res.json()) as { data?: PtcgCard[] };
       return (body.data ?? [])

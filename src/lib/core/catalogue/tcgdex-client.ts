@@ -8,7 +8,7 @@
  * collection.ts so the eventual move to `use cache` stays a two-file change.
  * This file only ever runs inside a call that one of those two already cached.
  */
-import { DAY, mapLimit } from "../util";
+import { DAY, mapLimit, catalogueTimeout } from "../util";
 import { priceOf, holoPriceOf } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 
@@ -38,7 +38,7 @@ export type TcgSetDetail = {
 export async function json(url: string, label: string) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(url, { next: { revalidate: DAY } });
+      const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
       if (!res.ok) throw new Error(`${res.status}`);
       return await res.json();
     } catch (err) {

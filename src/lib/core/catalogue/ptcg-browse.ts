@@ -36,7 +36,7 @@
  * entire purpose is the set. See the decision record for the long version.
  */
 
-import { DAY } from "../util";
+import { DAY, catalogueTimeout } from "../util";
 import { escapeTerm, type CatalogueMatch } from "./ptcg-search";
 
 /** One set, with enough to render a tile and sort a shelf. */
@@ -98,7 +98,11 @@ async function get<T>(url: string, label: string): Promise<T> {
   const ATTEMPTS = 3;
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     try {
-      const res = await fetch(url, { headers: headers(), next: { revalidate: DAY } });
+      const res = await fetch(url, {
+        headers: headers(),
+        next: { revalidate: DAY },
+        signal: catalogueTimeout(),
+      });
       if (!res.ok) throw new Error(String(res.status));
       return (await res.json()) as T;
     } catch (err) {
