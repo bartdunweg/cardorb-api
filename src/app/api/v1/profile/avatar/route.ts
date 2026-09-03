@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
-import { revalidatePath } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { bearer, requestViewer } from "@/lib/api/viewer";
@@ -148,8 +147,6 @@ export async function POST(req: Request) {
     return apiError(500, "That change could not be saved.");
   }
 
-  revalidatePath(`/user/${viewer.username}`);
-
   return NextResponse.json({ ok: true, avatarUrl });
 }
 
@@ -186,8 +183,6 @@ export async function DELETE(req: Request) {
     console.error("Clearing the avatar failed:", err);
     return apiError(500, "That change could not be saved.");
   }
-
-  revalidatePath(`/user/${viewer.username}`);
 
   return NextResponse.json({ ok: true });
 }
