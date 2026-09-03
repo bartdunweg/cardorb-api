@@ -48,6 +48,11 @@ not the database password.
 
 `./scripts/verify.sh` exits 0 here.
 
+- **`GET /v1/cards` sorts and narrows (#151).** `sort=set|name|price|added`, `order=asc|desc`,
+  `set=` and `rarity=` (whole, any case). `price` is the copy's own printing; a copy without the
+  key goes last either way. The web app's cards page can now offer a sort menu and set or rarity
+  filters; nothing there uses the parameters yet.
+
 ## Next
 
 1. **Move the web app's public page onto `GET /v1/public/<username>/cards`** so it stops
