@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse, apiError } from "@/lib/api/respond";
+import { refuse, apiError, retryAfter } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { bearer, requestViewer } from "@/lib/api/viewer";
@@ -76,10 +76,13 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
-  if (byAccount(viewer.userId)) {
-    return apiError(429, "Too many uploads. Try again shortly.");
+  const wait = byAccount(viewer.userId);
+  if (wait) {
+    return apiError(429, "Too many uploads. Try again shortly.", undefined, {
+      headers: retryAfter(wait),
+    });
   }
 
   const read = await readJsonBody<{ image?: unknown }>(req, BODY_LIMIT.avatar);
@@ -164,7 +167,7 @@ export async function DELETE(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await requestViewer(req);
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
   const token = bearer(req);
   const db = token ? userClient(token) : await serverClient();

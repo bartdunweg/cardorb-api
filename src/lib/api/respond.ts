@@ -33,8 +33,24 @@ export const REFUSALS = {
   tooLarge: { status: 413, error: "Payload too large" },
   notJson: { status: 415, error: "Invalid request" },
   tooMany: { status: 429, error: "Too many requests" },
+  /**
+   * pokemontcg.io or TCGdex did not answer. 502 rather than 503: the request
+   * was fine and this deployment is fine, the party behind it was not. Three
+   * routes used to send a slug here ("catalog-unavailable"), the one place a
+   * client was handed a token to translate instead of a sentence to show.
+   */
+  catalogue: { status: 502, error: "The catalogue did not answer. Try again in a moment." },
   noDatabase: { status: 503, error: "This deployment has no database configured." },
 } as const;
+
+/**
+ * The header every 429 carries: how many whole seconds until one more request
+ * would be let through, as createRateLimiter() answers it. A client that gets
+ * the status alone can only retry blind.
+ */
+export const retryAfter = (seconds: number): Record<string, string> => ({
+  "Retry-After": String(seconds),
+});
 
 /**
  * A refusal, as the response a route returns.
@@ -86,9 +102,16 @@ export const PUBLIC_READ_CACHE = "public, max-age=0, s-maxage=60";
  * two card-detail routes name the card, since a person reading "the
  * collection could not be read" over one card would go looking for a bigger
  * problem than there is.
+ *
+ * `headers` is for a keyed route's readHeaders(): without the CORS pair a
+ * browser on an allowed origin cannot read the 503 at all, only that
+ * something failed. `Cache-Control` stays `no-store` whatever is passed.
  */
 export function unavailable(
   sentence = "The collection could not be read. Try again in a moment.",
+  headers?: Record<string, string>,
 ): NextResponse<ApiError> {
-  return apiError(503, sentence, undefined, { headers: { "Cache-Control": "no-store" } });
+  return apiError(503, sentence, undefined, {
+    headers: { ...headers, "Cache-Control": "no-store" },
+  });
 }

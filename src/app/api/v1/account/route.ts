@@ -28,7 +28,8 @@ import { adminClient, readClient } from "@/lib/storage/supabase";
  */
 export async function DELETE(req: Request) {
   const viewer = await authorise(req);
-  if (refused(viewer)) return apiError(viewer.status, viewer.error);
+  if (refused(viewer))
+    return apiError(viewer.status, viewer.error, undefined, { headers: viewer.headers });
 
   const read = await readJsonBody<{ password?: unknown }>(req, BODY_LIMIT.credentials);
   if (read.kind === "too-large") return refuse("tooLarge");

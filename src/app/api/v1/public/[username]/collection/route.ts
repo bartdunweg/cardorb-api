@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError, PUBLIC_READ_CACHE } from "@/lib/api/respond";
+import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { forGrid, forPublic } from "@/lib/core/collection/cards";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -20,7 +20,8 @@ const addressOf = (req: Request) =>
   "unknown";
 
 export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
-  if (byAddress(addressOf(req))) return apiError(429, "Too many requests");
+  const wait = byAddress(addressOf(req));
+  if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
   const { username } = await params;
   const owner = await ownerOf(username);

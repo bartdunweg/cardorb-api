@@ -148,10 +148,10 @@ describe("authorise", () => {
     });
   });
 
-  it("refuses a request with no session at all with 401", async () => {
+  it("refuses a request with no session at all with 401, in the one sentence every route uses", async () => {
     viewer = null;
     const r = await authorise(req());
-    expect(r).toMatchObject({ status: 401 });
+    expect(r).toMatchObject({ status: 401, error: "Sign in first." });
   });
 
   it("refuses a cross-site origin with 403, before it looks at any credential", async () => {
@@ -172,6 +172,15 @@ describe("authorise", () => {
     for (let i = 0; i < 10; i++) await authorise(req({ ip }));
     const r = await authorise(req({ ip }));
     expect(r).toMatchObject({ status: 429 });
+  });
+
+  it("tells a refused address when to come back", async () => {
+    // The refusal carries the header a route sends on: without it the client
+    // knows it was refused and nothing about when a retry would be let through.
+    const ip = "10.9.9.4";
+    for (let i = 0; i < 10; i++) await authorise(req({ ip }));
+    const r = await authorise(req({ ip }));
+    expect(r).toMatchObject({ status: 429, headers: { "Retry-After": "60" } });
   });
 
   it("does not let one address spend another's budget", async () => {

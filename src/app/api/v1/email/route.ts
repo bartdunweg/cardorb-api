@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse, apiError } from "@/lib/api/respond";
+import { refuse, apiError, retryAfter } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
 import { serverClient } from "@/lib/storage/supabase";
@@ -28,10 +28,11 @@ const addressOf = (req: Request) =>
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
-  if (byAddress(addressOf(req))) return apiError(429, "Too many requests");
+  const wait = byAddress(addressOf(req));
+  if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
   const viewer = await currentViewer();
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
   let email = "";
   const read = await readJsonBody<{ email?: unknown }>(req, BODY_LIMIT.credentials);
