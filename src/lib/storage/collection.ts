@@ -46,6 +46,7 @@ import type {
   CollectionRow,
 } from "../core/collection/collection-row";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
+import { StoreNotConfigured } from "./errors";
 import * as postgres from "./postgres";
 import { readClient, serverClient, userClient } from "./supabase";
 
@@ -106,7 +107,7 @@ export async function listSnapshots(
  */
 export async function createRow(draft: CardDraft, token?: string): Promise<string> {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.createRow(db, draft);
 }
 
@@ -117,14 +118,14 @@ export async function updateRow(
   token?: string,
 ): Promise<CollectionRow | null> {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.updateRow(db, id, patch);
 }
 
 /** Removes one card. True when a row went. */
 export async function deleteRow(id: string, token?: string): Promise<boolean> {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.deleteRow(db, id);
 }
 
@@ -141,31 +142,31 @@ export type { Folder } from "./postgres";
 
 export async function listFolders(userId: string, token?: string) {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.listFolders(db, userId);
 }
 
 export async function createFolder(userId: string, name: string, token?: string) {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.createFolder(db, userId, name);
 }
 
 export async function renameFolder(userId: string, id: string, name: string, token?: string) {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.renameFolder(db, userId, id, name);
 }
 
 export async function deleteFolder(userId: string, id: string, token?: string) {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.deleteFolder(db, userId, id);
 }
 
 export async function optionsFor(token?: string): Promise<CardFields> {
   const db = await clientFor(token);
-  if (!db) throw new Error("No database is connected here.");
+  if (!db) throw new StoreNotConfigured();
   return postgres.optionsFor(db);
 }
 

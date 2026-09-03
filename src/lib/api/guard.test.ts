@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Viewer } from "./viewer";
+import { StoreNotConfigured } from "../storage/errors";
 
 /**
  * Who the request turns out to be, per test.
@@ -15,8 +16,15 @@ vi.mock("./viewer", () => ({ requestViewer: async () => viewer }));
 let hasDatabase = true;
 vi.mock("../storage/supabase", () => ({ configured: () => hasDatabase }));
 
-const { authorise, authoriseWrite, originAllowed, readHeaders, refused, sameOrigin } =
-  await import("./guard");
+const {
+  authorise,
+  authoriseWrite,
+  originAllowed,
+  readHeaders,
+  refused,
+  sameOrigin,
+  storeErrorResponse,
+} = await import("./guard");
 
 const SOMEBODY: Viewer = {
   userId: "user-1",
@@ -233,5 +241,49 @@ describe("readHeaders", () => {
     const h = readHeaders(req({ origin: "https://evil.example" }));
     expect(h["Access-Control-Allow-Origin"]).toBeUndefined();
     expect(h["Access-Control-Allow-Credentials"]).toBeUndefined();
+  });
+});
+
+/**
+ * What the client is told when the store fails.
+ *
+ * The store's own words used to go straight through, which put PostgREST's
+ * table names, column names and constraint names on the wire for anyone with
+ * a token. The words go to the log, where the one person who can act on them
+ * reads them; the client gets one fixed sentence per operation and a status.
+ */
+describe("storeErrorResponse", () => {
+  const request = () => new Request("https://cardorb.example/api/v1/x");
+
+  it("logs the store's words and answers a fixed sentence at 502", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = storeErrorResponse(
+      new Error('relation "cards" violates constraint cards_user_id_fkey'),
+      request(),
+      "Updating a card failed",
+    );
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: "Updating a card failed." });
+    expect(spy.mock.calls.flat().join(" ")).toContain("cards_user_id_fkey");
+    spy.mockRestore();
+  });
+
+  it("answers 503 for a store that is not configured, by type rather than by wording", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = storeErrorResponse(new StoreNotConfigured(), request(), "Adding a card failed");
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: "This deployment has no database configured." });
+    vi.restoreAllMocks();
+  });
+
+  it("does not read 'not connected' in an ordinary failure as unconfigured", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = storeErrorResponse(
+      new Error("client not connected: socket closed"),
+      request(),
+      "Listing folders failed",
+    );
+    expect(res.status).toBe(502);
+    vi.restoreAllMocks();
   });
 });

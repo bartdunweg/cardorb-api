@@ -32,6 +32,6 @@ export async function GET(req: Request) {
       headers: readHeaders(req),
     });
   } catch (err) {
-    return storeErrorResponse(err, req, "Card fields failed");
+    return storeErrorResponse(err, req, "Reading the card fields failed");
   }
 }
