@@ -102,6 +102,12 @@ describe("GET /api/v1/cards", () => {
     expect(body.cards[0]).toMatchObject({ id: "a", name: "Pikachu", set: "Base Set", owned: true });
   });
 
+  it("names the sets and rarities held, whatever the page asked for", async () => {
+    const body = await (await get("?owned=false")).json();
+    expect(body.total).toBe(1);
+    expect(body.facets).toEqual({ sets: [{ name: "Base Set", title: "Base Set" }], rarities: [] });
+  });
+
   it("refuses a query it would have to guess at", async () => {
     const res = await get("?owned=maybe");
     expect(res.status).toBe(400);

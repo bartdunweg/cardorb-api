@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-04
 
+- The card list (`GET /v1/cards`) now names the sets and rarities you hold beside every page, so a list page no longer has to fetch the whole collection to draw its filter menus.
+
 - A public collection can be narrowed by set or rarity and sorted by name, and its page names every set and rarity it holds, so a visitor can filter someone's collection the way the owner filters their own.
 
 - A public collection's rarity menu names each rarity once, even where the catalogues spell it two ways.
