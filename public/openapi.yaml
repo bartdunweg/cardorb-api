@@ -386,8 +386,12 @@ components:
         - type: object
           required: [ownedCount, wishlistCount]
           properties:
-            ownedCount: { type: integer }
-            wishlistCount: { type: integer }
+            ownedCount:
+              type: integer
+              description: Distinct cards of this set you own, so never more than `total`. Copies do not add up.
+            wishlistCount:
+              type: integer
+              description: Cards of this set on your wishlist.
 
     BrowseCard:
       type: object
