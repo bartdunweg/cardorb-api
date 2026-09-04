@@ -319,7 +319,11 @@ describe("public filters, sort and facets", () => {
     ]);
   });
 
-  it("offers the sets in set order and the rarities A to Z, without a null", () => {
+  it("offers the sets in set order and the rarities A to Z, without a null, one spelling each", () => {
+    expect(publicFacets([...items, item("Ditto", "base", "RARE")]).rarities).toEqual([
+      "Common",
+      "Rare",
+    ]);
     expect(publicFacets(items)).toEqual({
       sets: [
         { name: "jungle", title: "JUNGLE" },

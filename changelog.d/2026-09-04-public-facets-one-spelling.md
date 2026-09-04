@@ -1,0 +1,1 @@
+- A public collection's rarity menu names each rarity once, even where the catalogues spell it two ways.
