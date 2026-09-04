@@ -97,6 +97,23 @@ export type SetCatalogue = {
 };
 
 /**
+ * TCGdex could not be reached, or would not answer for a set it lists: the
+ * outage, told apart from every other failure so the collection can be served
+ * from the rows alone rather than not at all. See getCollection() in
+ * collection/collection.ts, which is what catches it.
+ *
+ * Matched by name there rather than by instanceof: the error crosses
+ * unstable_cache and mapLimit on its way up, and a test that mocks this
+ * module does not carry the class.
+ */
+export class CatalogueUnavailable extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CatalogueUnavailable";
+  }
+}
+
+/**
  * Promo sets are the one place the two vocabularies genuinely disagree rather
  * than merely differing in punctuation, and no amount of loose matching bridges
  * them: "SV" and "SVP" share no substring with "Scarlet & Violet", and the
@@ -196,7 +213,9 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   try {
     sets = (await json("https://api.tcgdex.net/v2/en/sets", "sets index")) as TcgSet[];
   } catch (err) {
-    throw new Error(`No TCGdex set index, so no set can be resolved: ${String(err)}`);
+    throw new CatalogueUnavailable(
+      `No TCGdex set index, so no set can be resolved: ${String(err)}`,
+    );
   }
 
   const ids = resolveSetIds(setName, sets);
@@ -210,7 +229,7 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // set without a scan or a catalogue id for every app until the entry aged
   // out. Throwing keeps it out of the cache; the next request tries again.
   if (ids.length > 0 && details.length === 0) {
-    throw new Error(
+    throw new CatalogueUnavailable(
       `TCGdex lists ${setName} as ${ids.join(", ")} but answered for none of them; not caching an empty catalogue`,
     );
   }

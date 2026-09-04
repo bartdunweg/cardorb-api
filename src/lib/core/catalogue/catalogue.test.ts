@@ -32,6 +32,29 @@ describe("loadSetCatalogue", () => {
     await expect(loadSetCatalogue("Pitch Black")).rejects.toThrow(/answered for none/);
   }, 15_000);
 
+  it("names the outage when the index itself cannot be fetched, so the collection can be served without it", async () => {
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error("fetch failed");
+    }) as typeof fetch;
+
+    await expect(loadSetCatalogue("Pitch Black")).rejects.toMatchObject({
+      name: "CatalogueUnavailable",
+      message: expect.stringMatching(/No TCGdex set index/),
+    });
+  }, 15_000);
+
+  it("names the outage the same way when the index knows the set and none of its records arrive", async () => {
+    globalThis.fetch = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/v2/en/sets")) return new Response(JSON.stringify(index), { status: 200 });
+      throw new Error("fetch failed");
+    }) as typeof fetch;
+
+    await expect(loadSetCatalogue("Pitch Black")).rejects.toMatchObject({
+      name: "CatalogueUnavailable",
+    });
+  }, 15_000);
+
   it("resolves to no cards, and caches that, for a set the index does not know", async () => {
     globalThis.fetch = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);

@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - The card list (`GET /v1/cards`) now names the sets and rarities you hold beside every page, so a list page no longer has to fetch the whole collection to draw its filter menus.
 
+- The collection survives a TCGdex outage. `GET /v1/cards`, `/v1/collection`, `/v1/stats`, `/v1/pokedex` and the three public routes used to answer 503 for as long as TCGdex was unreachable, which took every page of the web app down with them; they now serve the rows alone, without a scan, a catalogue id or a price, with `catalogueUnavailable: true` beside the answer. Nothing caches an outage answer: the hour-long entry stays empty until TCGdex is back, and the public routes send `no-store` for it.
+
 - A public collection can be narrowed by set or rarity and sorted by name, and its page names every set and rarity it holds, so a visitor can filter someone's collection the way the owner filters their own.
 
 - A public collection's rarity menu names each rarity once, even where the catalogues spell it two ways.

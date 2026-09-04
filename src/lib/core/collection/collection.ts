@@ -180,17 +180,62 @@ const cachedCollection = (userId: string, db: SupabaseClient | null) =>
  * about its own empty collection. The distinction is here rather than guessed
  * at by the caller because here is the only place that knows.
  */
-export const getCollection = cache(
-  async (userId: string, token?: string): Promise<{ sets: CardSet[]; failed: boolean }> => {
-    try {
-      const db = token ? userClient(token) : await serverClient();
-      return { sets: await cachedCollection(userId, db), failed: false };
-    } catch (err) {
-      console.error("Card collection walk failed, retrying on the next render:", err);
-      return { sets: [], failed: true };
+export type Collection = {
+  sets: CardSet[];
+  failed: boolean;
+  /**
+   * Present only when TCGdex could not be reached: the sets are the rows alone,
+   * without a scan, a catalogue id or a price, and nothing has cached them.
+   */
+  catalogueUnavailable?: true;
+};
+
+/**
+ * TCGdex is down, not the store. A `CatalogueUnavailable` thrown by
+ * loadSetCatalogue(), matched by name because it has crossed unstable_cache
+ * and mapLimit on its way here, and because a test that mocks the catalogue
+ * module does not carry the class.
+ */
+const isCatalogueOutage = (err: unknown): boolean =>
+  err instanceof Error && err.name === "CatalogueUnavailable";
+
+/**
+ * The rows without the catalogue, for the duration of an outage.
+ *
+ * Built afresh on every request and cached nowhere: the hour-long entry is
+ * the whole collection, and an entry with no scans, ids or prices in it would
+ * be served for an hour after TCGdex came back (which is what happened once,
+ * see loadSetCatalogue()). The rows themselves are still the cached ones, so
+ * this costs the assembly and no round trip.
+ */
+const offlineCollection = async (
+  userId: string,
+  db: SupabaseClient | null,
+): Promise<Collection> => ({
+  sets: await buildCollection(await cachedRows(userId, db), { offline: true }),
+  failed: false,
+  catalogueUnavailable: true,
+});
+
+export const getCollection = cache(async (userId: string, token?: string): Promise<Collection> => {
+  let db: SupabaseClient | null = null;
+  try {
+    db = token ? userClient(token) : await serverClient();
+    return { sets: await cachedCollection(userId, db), failed: false };
+  } catch (err) {
+    if (isCatalogueOutage(err)) {
+      console.error("Catalogue unreachable, serving the rows without it:", err);
+      try {
+        return await offlineCollection(userId, db);
+      } catch (inner) {
+        console.error("Card collection walk failed, retrying on the next render:", inner);
+        return { sets: [], failed: true };
+      }
     }
-  },
-);
+    console.error("Card collection walk failed, retrying on the next render:", err);
+    return { sets: [], failed: true };
+  }
+});
 
 /**
  * The rows themselves, joined to nothing.
@@ -242,18 +287,25 @@ export const getCards = async (userId: string, token?: string): Promise<CardSet[
  * `failed` is handed back rather than swallowed: a public answer is cached at
  * the CDN, and an empty collection cached for an hour is worse than a 503.
  */
-export const getPublicCollection = cache(
-  async (userId: string): Promise<{ sets: CardSet[]; failed: boolean }> => {
-    try {
-      const db = adminClient();
-      if (!db) return { sets: [], failed: true };
-      return { sets: await cachedCollection(userId, db), failed: false };
-    } catch (err) {
-      console.error("Public collection walk failed, retrying on the next request:", err);
-      return { sets: [], failed: true };
+export const getPublicCollection = cache(async (userId: string): Promise<Collection> => {
+  const db = adminClient();
+  if (!db) return { sets: [], failed: true };
+  try {
+    return { sets: await cachedCollection(userId, db), failed: false };
+  } catch (err) {
+    if (isCatalogueOutage(err)) {
+      console.error("Catalogue unreachable, serving the public rows without it:", err);
+      try {
+        return await offlineCollection(userId, db);
+      } catch (inner) {
+        console.error("Public collection walk failed, retrying on the next request:", inner);
+        return { sets: [], failed: true };
+      }
     }
-  },
-);
+    console.error("Public collection walk failed, retrying on the next request:", err);
+    return { sets: [], failed: true };
+  }
+});
 
 /**
  * The readings, cached across requests under a tag that names their owner.

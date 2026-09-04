@@ -50,7 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   if (!owner)
     return apiError(404, "No such collection.", undefined, { headers: CORS_HEADERS });
 
-  const { sets, failed } = await getPublicCollection(owner.id);
+  const { sets, failed, catalogueUnavailable } = await getPublicCollection(owner.id);
   if (failed)
     return NextResponse.json(
       { error: "The collection could not be read. Try again in a moment." },
@@ -63,7 +63,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   return NextResponse.json(
     { latestPull: pull },
     {
-      headers: { ...CORS_HEADERS, "Cache-Control": PUBLIC_READ_CACHE },
+      // An outage answer carries no picture; the CDN must not keep it.
+      headers: {
+        ...CORS_HEADERS,
+        "Cache-Control": catalogueUnavailable ? "no-store" : PUBLIC_READ_CACHE,
+      },
     },
   );
 }

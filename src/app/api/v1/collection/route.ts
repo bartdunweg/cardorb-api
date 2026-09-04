@@ -37,7 +37,10 @@ export async function GET(req: Request) {
   // the collection, singular, and the endpoint could not have said whose if it
   // had been asked. The token, not just the id: getCards() needs the caller's
   // own connection to satisfy row level security, see its own comment.
-  const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
+  const { sets, failed, catalogueUnavailable } = await getCollection(
+    who.userId,
+    bearer(req) ?? undefined,
+  );
   if (failed) return unavailable();
 
   // "An empty collection is never true" used to live here, and it threw. It was
@@ -58,5 +61,10 @@ export async function GET(req: Request) {
   // person who asks, key or no key, which would quietly undo the check above.
   // readHeaders now says `private, no-store`. The walk itself is still
   // memoised inside getCards(), so this costs a round trip and not a rebuild.
-  return NextResponse.json({ sets }, { headers: readHeaders(req) });
+  // During a TCGdex outage the sets are the rows alone — no scan, id or price —
+  // and the flag says so, for an app that would otherwise cache them as the truth.
+  return NextResponse.json(
+    { sets, ...(catalogueUnavailable ? { catalogueUnavailable } : {}) },
+    { headers: readHeaders(req) },
+  );
 }

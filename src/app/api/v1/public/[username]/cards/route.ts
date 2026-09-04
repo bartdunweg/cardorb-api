@@ -39,7 +39,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const owner = await ownerOf(username);
   if (!owner) return apiError(404, "No such collection.");
 
-  const { sets, failed } = await getPublicCollection(owner.id);
+  const { sets, failed, catalogueUnavailable } = await getPublicCollection(owner.id);
   if (failed)
     return apiError(503, "The collection could not be read. Try again in a moment.", undefined, {
       headers: { "Cache-Control": "no-store" },
@@ -58,6 +58,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const setCount = shown.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
   return NextResponse.json(
     { cards: items, total, sets: setCount, facets: publicFacets(all) },
-    { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
+    // A page without scans is an outage answer, not the collection; the CDN
+    // must not hand it out for the minute after TCGdex comes back.
+    { headers: { "Cache-Control": catalogueUnavailable ? "no-store" : PUBLIC_READ_CACHE } },
   );
 }

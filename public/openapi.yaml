@@ -261,6 +261,10 @@ components:
       required: [sets]
       properties:
         sets: { type: array, items: { $ref: "#/components/schemas/CardSet" } }
+        catalogueUnavailable:
+          type: boolean
+          const: true
+          description: "Present only when TCGdex could not be reached: the cards are the rows alone, without a scan, a catalogue id or a price, and nothing has cached them. An app should not cache these sets as the collection."
 
     CardDetail:
       type: object
@@ -645,6 +649,10 @@ paths:
                   cards: { type: array, items: { $ref: "#/components/schemas/CardItem" } }
                   total: { type: integer }
                   facets: { $ref: "#/components/schemas/Facets" }
+                  catalogueUnavailable:
+                    type: boolean
+                    const: true
+                    description: "Present only when TCGdex could not be reached: the cards are the rows alone, without a scan, a catalogue id or a price, and nothing has cached them."
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -896,6 +904,10 @@ paths:
                 required: [stats]
                 properties:
                   stats: { $ref: "#/components/schemas/Stats" }
+                  catalogueUnavailable:
+                    type: boolean
+                    const: true
+                    description: "Present only when TCGdex could not be reached; the counts stand, the value is zero for want of prices."
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -918,6 +930,10 @@ paths:
                 required: [entries]
                 properties:
                   entries: { type: array, items: { $ref: "#/components/schemas/DexSummary" } }
+                  catalogueUnavailable:
+                    type: boolean
+                    const: true
+                    description: "Present only when TCGdex could not be reached; the counts stand, the pictures do not."
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }

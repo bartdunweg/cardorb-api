@@ -13,7 +13,15 @@ export async function GET(req: Request) {
   if (refused(who))
     return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
-  const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
+  const { sets, failed, catalogueUnavailable } = await getCollection(
+    who.userId,
+    bearer(req) ?? undefined,
+  );
   if (failed) return unavailable();
-  return NextResponse.json({ stats: countStats(sets) }, { headers: readHeaders(req) });
+  // Flagged during a TCGdex outage: the counts are right, the value is zero for
+  // want of prices, and a client should not read that as a collection worth nothing.
+  return NextResponse.json(
+    { stats: countStats(sets), ...(catalogueUnavailable ? { catalogueUnavailable } : {}) },
+    { headers: readHeaders(req) },
+  );
 }

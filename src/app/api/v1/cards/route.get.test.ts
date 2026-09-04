@@ -108,6 +108,20 @@ describe("GET /api/v1/cards", () => {
     expect(body.facets).toEqual({ sets: [{ name: "Base Set", title: "Base Set" }], rarities: [] });
   });
 
+  it("says when the catalogue was unreachable, beside the rows it could still list", async () => {
+    getCollection.mockResolvedValue({ sets: SETS, failed: false, catalogueUnavailable: true });
+    const res = await get();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.catalogueUnavailable).toBe(true);
+    expect(body.cards).toHaveLength(2);
+  });
+
+  it("says nothing about the catalogue when it answered", async () => {
+    const body = await (await get()).json();
+    expect("catalogueUnavailable" in body).toBe(false);
+  });
+
   it("refuses a query it would have to guess at", async () => {
     const res = await get("?owned=maybe");
     expect(res.status).toBe(400);
