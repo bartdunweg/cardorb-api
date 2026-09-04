@@ -54,7 +54,10 @@ export async function GET(req: Request) {
   if (read.kind === "invalid")
     return apiError(400, read.error, undefined, { headers: readHeaders(req) });
 
-  const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
+  const { sets, failed, catalogueUnavailable } = await getCollection(
+    who.userId,
+    bearer(req) ?? undefined,
+  );
   if (failed) return unavailable();
   const { sort, order } = read.query;
   const all = flattenItems(sets);
@@ -62,7 +65,14 @@ export async function GET(req: Request) {
   // The facets ride along with every page, over the whole owned collection whatever the
   // filters: the web app used to fetch GET /v1/collection — a megabyte — to draw the two menus.
   return NextResponse.json(
-    { cards: items, total, facets: facetsOf(all) },
+    // The flag rides along during a TCGdex outage: the page is the rows without a
+    // scan, an id or a price, and a client may say so rather than show empty squares.
+    {
+      cards: items,
+      total,
+      facets: facetsOf(all),
+      ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
+    },
     { headers: readHeaders(req) },
   );
 }

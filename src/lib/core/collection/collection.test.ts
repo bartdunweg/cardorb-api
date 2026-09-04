@@ -275,6 +275,25 @@ describe("buildCollection", () => {
     expect(await buildCollection([row({ name: "" })])).toEqual([]);
   });
 
+  it("builds every set from the rows alone when the catalogue is offline, asking nothing over the network", async () => {
+    const sets = await buildCollection(
+      [row(), row({ name: "Charizard", number: "004", setName: "Jungle" })],
+      { offline: true },
+    );
+    expect(setCatalogue).not.toHaveBeenCalled();
+    expect(pricesFor).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(sets.map((s) => s.name).sort()).toEqual(["Base", "Jungle"]);
+    for (const set of sets) {
+      // The owner's own name stands in for the catalogue's, and nothing else is known.
+      expect(set.title).toBe(set.name);
+      expect(set.logo).toBeNull();
+      for (const card of set.cards) {
+        expect(card).toMatchObject({ image: null, imageHigh: null, tcgId: null, price: null });
+      }
+    }
+  });
+
   it("answers an empty collection without asking the catalogue anything", async () => {
     // What makes a deployment with no store cheap rather than merely empty.
     expect(await buildCollection([])).toEqual([]);

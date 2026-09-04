@@ -32,7 +32,7 @@
  */
 
 import { localise, mapLimit, measure, numberForms } from "../util";
-import { json, pricesFor, setCatalogue } from "../catalogue/catalogue";
+import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
 import { LOCALE } from "../config";
@@ -509,11 +509,32 @@ export type BuildOptions = {
    * passes `prices: false` and never reaches this.
    */
   priceSource?: (ids: string[]) => Promise<Map<string, CardPrices>>;
+  /**
+   * The catalogue is unreachable, so build from the rows alone: every set
+   * under the name its owner typed, every card without a scan, a catalogue id
+   * or a price, and no fallback lookups either. An answer for the duration of
+   * a TCGdex outage, and one nothing must cache; getCollection() is the caller
+   * and keeps it out of the hour-long entry.
+   */
+  offline?: boolean;
+};
+
+/** What the catalogue knows about a set it cannot be asked about: nothing. */
+const OFFLINE_CATALOGUE: SetCatalogue = {
+  byNumber: {},
+  assetBase: null,
+  officialName: null,
+  code: null,
+  setHasScans: false,
+  logo: null,
+  releaseDate: null,
+  total: null,
+  prices: {},
 };
 
 export async function buildCollection(
   rows: CollectionRow[],
-  { prices = true, priceSource = pricesFor }: BuildOptions = {},
+  { prices = true, priceSource = pricesFor, offline = false }: BuildOptions = {},
 ): Promise<CardSet[]> {
   if (!rows.length) return [];
 
@@ -541,14 +562,17 @@ export async function buildCollection(
   // lib/core/catalogue/catalogue.ts), so on a warm cache this loop is a lookup rather
   // than a walk and the limit costs nothing.
   const out = await mapLimit([...grouped.entries()], 3, async ([setName, setRows]) => {
-    const cat = await setCatalogue(setName);
+    const cat = offline ? OFFLINE_CATALOGUE : await setCatalogue(setName);
     const { assetBase, code, setHasScans } = cat;
 
     // The fallback is one to three HEAD requests per card, so on a set TCGdex
     // does not know at all it would fire hundreds and find nothing. A cap keeps
     // it useful for the handful of cards from a set too new to be indexed,
     // which is the only case it was ever for.
-    let fallbacks = 40;
+    //
+    // None at all offline: the fallbacks are the other two catalogues, and an
+    // outage answer should cost the rows and nothing over the network.
+    let fallbacks = offline ? 0 : 40;
 
     // One entry per printing first, then folded together below. Splitting it
     // this way keeps the artwork lookup running eight at a time over the rows

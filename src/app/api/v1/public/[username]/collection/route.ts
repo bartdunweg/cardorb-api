@@ -25,7 +25,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const { username } = await params;
   const owner = await ownerOf(username);
   if (!owner) return apiError(404, "No such collection.");
-  const { sets, failed } = await getPublicCollection(owner.id);
+  const { sets, failed, catalogueUnavailable } = await getPublicCollection(owner.id);
   // Never cache a failure: the CDN would hand an empty collection to every
   // visitor for an hour, which is what happened once.
   if (failed)
@@ -36,6 +36,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
 
   return NextResponse.json(
     { sets: forGrid(forPublic(sets)) },
-    { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
+    // An outage answer (no scans) is served but not cached, for the same reason.
+    { headers: { "Cache-Control": catalogueUnavailable ? "no-store" : PUBLIC_READ_CACHE } },
   );
 }

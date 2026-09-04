@@ -18,10 +18,17 @@ export async function GET(req: Request) {
   if (refused(who))
     return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
 
-  const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
+  const { sets, failed, catalogueUnavailable } = await getCollection(
+    who.userId,
+    bearer(req) ?? undefined,
+  );
   if (failed) return unavailable();
+  // Flagged during a TCGdex outage: the counts stand, the pictures do not.
   return NextResponse.json(
-    { entries: summariseDex(getPokedex(sets)) },
+    {
+      entries: summariseDex(getPokedex(sets)),
+      ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
+    },
     { headers: readHeaders(req) },
   );
 }
