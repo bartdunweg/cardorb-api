@@ -8,7 +8,9 @@ import {
   pageOf,
   publicItems,
   readItemQuery,
+  publicFacets,
   readPublicQuery,
+  sortPublicItems,
   sortItems,
   summariseDex,
 } from "./items";
@@ -262,10 +264,79 @@ describe("publicItems", () => {
   });
 
   it("searches by name or set, and reads only q, limit and offset", () => {
-    expect(filterPublicItems(publicItems(SETS), "jungle").map((i) => i.name)).toEqual(["Snorlax"]);
+    expect(filterPublicItems(publicItems(SETS), { q: "jungle" }).map((i) => i.name)).toEqual([
+      "Snorlax",
+    ]);
     expect(readPublicQuery(new URLSearchParams("q=x&owned=false&limit=5"))).toEqual({
       kind: "ok",
       query: { q: "x", limit: 5, offset: 0 },
     });
+  });
+});
+
+describe("public filters, sort and facets", () => {
+  const item = (name: string, set: string, rarity: string | null) => ({
+    key: `${set}-${name}`,
+    name,
+    number: "1",
+    set,
+    setTitle: set.toUpperCase(),
+    rarity,
+    gen: null,
+    type: null,
+    image: null,
+    speciesId: null,
+    tcgId: null,
+    copies: 1,
+  });
+  const items = [
+    item("Snorlax", "jungle", "Rare"),
+    item("Abra", "base", "Common"),
+    item("Mew", "jungle", null),
+  ];
+
+  it("narrows by a set (by name or title) and a rarity, whole and in any case", () => {
+    expect(filterPublicItems(items, { set: "JUNGLE" }).map((i) => i.name)).toEqual([
+      "Snorlax",
+      "Mew",
+    ]);
+    expect(filterPublicItems(items, { rarity: "rare" }).map((i) => i.name)).toEqual(["Snorlax"]);
+    expect(filterPublicItems(items, { set: "jung" })).toEqual([]);
+  });
+
+  it("sorts by name either way and keeps set order otherwise", () => {
+    expect(sortPublicItems(items, "name").map((i) => i.name)).toEqual(["Abra", "Mew", "Snorlax"]);
+    expect(sortPublicItems(items, "name", "desc").map((i) => i.name)).toEqual([
+      "Snorlax",
+      "Mew",
+      "Abra",
+    ]);
+    expect(sortPublicItems(items).map((i) => i.name)).toEqual(["Snorlax", "Abra", "Mew"]);
+    expect(sortPublicItems(items, "set", "desc").map((i) => i.name)).toEqual([
+      "Mew",
+      "Abra",
+      "Snorlax",
+    ]);
+  });
+
+  it("offers the sets in set order and the rarities A to Z, without a null", () => {
+    expect(publicFacets(items)).toEqual({
+      sets: [
+        { name: "jungle", title: "JUNGLE" },
+        { name: "base", title: "BASE" },
+      ],
+      rarities: ["Common", "Rare"],
+    });
+  });
+
+  it("reads set, rarity, sort and order, and refuses a sort a public page cannot do", () => {
+    expect(
+      readPublicQuery(new URLSearchParams("set=jungle&rarity=Rare&sort=name&order=desc")),
+    ).toEqual({
+      kind: "ok",
+      query: { set: "jungle", rarity: "Rare", sort: "name", order: "desc", limit: 100, offset: 0 },
+    });
+    expect(readPublicQuery(new URLSearchParams("sort=price")).kind).toBe("invalid");
+    expect(readPublicQuery(new URLSearchParams("sort=added")).kind).toBe("invalid");
   });
 });
