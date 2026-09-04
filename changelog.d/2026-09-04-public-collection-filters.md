@@ -1,0 +1,1 @@
+- A public collection can be narrowed by set or rarity and sorted by name, and its page names every set and rarity it holds, so a visitor can filter someone's collection the way the owner filters their own.

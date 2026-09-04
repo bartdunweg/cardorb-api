@@ -357,26 +357,83 @@ export function publicItems(sets: CardSet[]): PublicItem[] {
   return out;
 }
 
-export function filterPublicItems(items: PublicItem[], q?: string): PublicItem[] {
-  const needle = q?.trim().toLowerCase();
-  if (!needle) return items;
-  return items.filter(
-    (it) => it.name.toLowerCase().includes(needle) || it.set.toLowerCase().includes(needle),
-  );
+/** What a visitor can narrow a public collection by: the same words as `ItemFilter`, minus what is personal. */
+export type PublicFilter = Pick<ItemFilter, "q" | "set" | "rarity">;
+
+export function filterPublicItems(items: PublicItem[], f: PublicFilter): PublicItem[] {
+  const q = f.q?.trim().toLowerCase();
+  const set = f.set?.trim().toLowerCase();
+  const rarity = f.rarity?.trim().toLowerCase();
+  return items.filter((it) => {
+    if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
+    if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
+    if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
+    return true;
+  });
 }
 
-/** `q`, `limit` and `offset` only: a public page has no wishlist, favourites or folders. */
+/** A public page carries no price and no date, so it sorts by set order or by name only. */
+export const PUBLIC_SORTS = ["set", "name"] as const;
+export type PublicSort = (typeof PUBLIC_SORTS)[number];
+
+export function sortPublicItems(
+  items: PublicItem[],
+  sort: PublicSort = "set",
+  order: Order = "asc",
+): PublicItem[] {
+  const dir = order === "asc" ? 1 : -1;
+  if (sort === "set") return dir === 1 ? items : [...items].reverse();
+  const indexed = items.map((it, i) => ({ it, i }));
+  indexed.sort((a, b) => a.it.name.localeCompare(b.it.name) * dir || a.i - b.i);
+  return indexed.map((x) => x.it);
+}
+
+export type PublicFacets = { sets: { name: string; title: string }[]; rarities: string[] };
+
+/** What a filter menu can offer over the whole public collection: its sets in set order, its rarities A to Z. */
+export function publicFacets(items: PublicItem[]): PublicFacets {
+  const sets = new Map<string, string>();
+  const rarities = new Set<string>();
+  for (const it of items) {
+    if (!sets.has(it.set)) sets.set(it.set, it.setTitle);
+    if (it.rarity) rarities.add(it.rarity);
+  }
+  return {
+    sets: [...sets].map(([name, title]) => ({ name, title })),
+    rarities: [...rarities].sort((a, b) => a.localeCompare(b)),
+  };
+}
+
+export type PublicQuery = PublicFilter & Page & { sort?: PublicSort; order?: Order };
+
+/**
+ * `q`, `set`, `rarity`, `sort`, `order`, `limit` and `offset`: a public page has no wishlist,
+ * favourites or folders, and no price or date to sort by. Read as strictly as the owner's list.
+ */
 export function readPublicQuery(
   params: URLSearchParams,
-): { kind: "ok"; query: { q?: string } & Page } | { kind: "invalid"; error: string } {
+): { kind: "ok"; query: PublicQuery } | { kind: "invalid"; error: string } {
+  const kept = ["q", "set", "rarity", "sort", "order", "limit", "offset"];
+  const sort = params.get("sort");
+  if (sort !== null && !(PUBLIC_SORTS as readonly string[]).includes(sort))
+    return { kind: "invalid", error: `sort must be one of ${PUBLIC_SORTS.join(", ")}.` };
   const read = readItemQuery(
     new URLSearchParams(
-      Object.fromEntries(
-        [...params.entries()].filter(([k]) => ["q", "limit", "offset"].includes(k)),
-      ),
+      Object.fromEntries([...params.entries()].filter(([k]) => kept.includes(k))),
     ),
   );
   if (read.kind === "invalid") return read;
-  const { q, limit, offset } = read.query;
-  return { kind: "ok", query: { ...(q ? { q } : {}), limit, offset } };
+  const { q, set, rarity, order, limit, offset } = read.query;
+  return {
+    kind: "ok",
+    query: {
+      ...(q ? { q } : {}),
+      ...(set ? { set } : {}),
+      ...(rarity ? { rarity } : {}),
+      ...(sort ? { sort: sort as PublicSort } : {}),
+      ...(order ? { order } : {}),
+      limit,
+      offset,
+    },
+  };
 }

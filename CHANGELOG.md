@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-04
+
+- A public collection can be narrowed by set or rarity and sorted by name, and its page names every set and rarity it holds, so a visitor can filter someone's collection the way the owner filters their own.
+
 ## 2026-09-03
 
 - `GET /v1/cards` sorts (`sort=set|name|price|added`, `order=asc|desc`) and narrows to one set or one rarity (`set=`, `rarity=`), so a list can be ordered by value or by the day a card came in without fetching the whole collection.

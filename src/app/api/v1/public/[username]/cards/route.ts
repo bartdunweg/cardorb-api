@@ -2,16 +2,25 @@ import { NextResponse } from "next/server";
 import { apiError, PUBLIC_READ_CACHE } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { forPublic } from "@/lib/core/collection/cards";
-import { filterPublicItems, pageOf, publicItems, readPublicQuery } from "@/lib/core/collection/items";
+import {
+  filterPublicItems,
+  pageOf,
+  publicFacets,
+  publicItems,
+  readPublicQuery,
+  sortPublicItems,
+} from "@/lib/core/collection/items";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /**
  * One page of a public collection as a flat list — for a page that shows a
- * hundred cards at a time and should not fetch nineteen hundred to do it.
- * The grouped whole stays at the sibling route. No key, same limiter and
- * cache as its siblings; a failed read is a 503 nothing caches.
+ * hundred cards at a time and should not fetch nineteen hundred to do it —
+ * narrowed by a search, a set or a rarity and sorted by set order or name,
+ * with the facets a filter menu needs over the whole collection. The
+ * grouped whole stays at the sibling route. No key, same limiter and cache
+ * as its siblings; a failed read is a 503 nothing caches.
  */
 const byAddress = createRateLimiter(60_000, 60);
 
@@ -37,13 +46,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     });
 
   const shown = forPublic(sets);
-  const { items, total } = pageOf(filterPublicItems(publicItems(shown), read.query.q), read.query);
+  const all = publicItems(shown);
+  const { sort, order } = read.query;
+  const { items, total } = pageOf(
+    sortPublicItems(filterPublicItems(all, read.query), sort, order),
+    read.query,
+  );
   // How many sets the owned cards span, for the line under the profile's name; a page of a
   // hundred cannot count that for itself, and the whole collection is what this route exists
   // to spare the reader.
   const setCount = shown.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
   return NextResponse.json(
-    { cards: items, total, sets: setCount },
+    { cards: items, total, sets: setCount, facets: publicFacets(all) },
     { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
   );
 }

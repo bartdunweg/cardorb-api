@@ -1562,27 +1562,48 @@ paths:
       summary: One page of a public collection as a flat list
       description: |
         For a page that shows a hundred cards at a time and should not fetch the whole
-        collection to do it. One entry per card with owned copies, nothing private. No key;
-        sixty a minute per address; cached five minutes at the CDN.
+        collection to do it. One entry per card with owned copies, nothing private. Narrowed
+        by a search, a set or a rarity; sorted by set order or by name, since a public page
+        carries no price and no date. `facets` names every set and rarity in the whole
+        collection, for a filter menu. No key; sixty a minute per address; cached at the CDN.
       security: []
       parameters:
         - { name: username, in: path, required: true, schema: { type: string } }
         - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set." }
+        - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
+        - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
+        - { name: sort, in: query, schema: { type: string, enum: [set, name], default: set }, description: "`set` is the assembly's order (set by set, number by number)." }
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
       responses:
         "200":
-          description: The page, in set order, the total behind it, and how many sets the whole spans.
+          description: The page, the total behind it, how many sets the whole spans, and the facets over the whole.
           headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
           content:
             application/json:
               schema:
                 type: object
-                required: [cards, total, sets]
+                required: [cards, total, sets, facets]
                 properties:
                   cards: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
-                  total: { type: integer }
+                  total: { type: integer, description: "Cards behind the page, after the filters." }
                   sets: { type: integer, description: "Sets with at least one owned card, over the whole collection rather than the page." }
+                  facets:
+                    type: object
+                    description: Over the whole collection, whatever the filters; what a filter menu offers.
+                    required: [sets, rarities]
+                    properties:
+                      sets:
+                        type: array
+                        description: In set order.
+                        items:
+                          type: object
+                          required: [name, title]
+                          properties:
+                            name: { type: string, description: "What `set` matches." }
+                            title: { type: string }
+                      rarities: { type: array, items: { type: string }, description: "A to Z." }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
