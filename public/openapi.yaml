@@ -147,6 +147,21 @@ components:
           example: { error: "This deployment has no database configured." }
 
   schemas:
+    Facets:
+      type: object
+      description: Over the whole owned collection, whatever the filters; what a filter menu offers.
+      required: [sets, rarities]
+      properties:
+        sets:
+          type: array
+          description: In set order.
+          items:
+            type: object
+            required: [name, title]
+            properties:
+              name: { type: string, description: "What `set` matches." }
+              title: { type: string }
+        rarities: { type: array, items: { type: string }, description: "A to Z." }
     Error:
       type: object
       description: The one shape every failure takes.
@@ -602,6 +617,8 @@ paths:
         The shape a list with a search box wants; `GET /v1/collection` is the same
         collection grouped by set. Read from the same cached assembly, so a page
         is a filter over memory. A value the query cannot mean is a 400, never a guess.
+        `facets` names every set and rarity among the owned copies, whatever the filters,
+        for a filter menu — so a list page never needs the whole collection.
       parameters:
         - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set, anywhere, in any case." }
         - { name: owned, in: query, schema: { type: boolean }, description: "`true` the collection, `false` the wishlist, absent both." }
@@ -613,16 +630,17 @@ paths:
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
       responses:
         "200":
-          description: The page, in the asked order (set order when none was), and the total behind it.
+          description: The page, in the asked order (set order when none was), the total behind it, and the facets over the owned whole.
           headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
           content:
             application/json:
               schema:
                 type: object
-                required: [cards, total]
+                required: [cards, total, facets]
                 properties:
                   cards: { type: array, items: { $ref: "#/components/schemas/CardItem" } }
                   total: { type: integer }
+                  facets: { $ref: "#/components/schemas/Facets" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -1589,21 +1607,7 @@ paths:
                   cards: { type: array, items: { $ref: "#/components/schemas/PublicItem" } }
                   total: { type: integer, description: "Cards behind the page, after the filters." }
                   sets: { type: integer, description: "Sets with at least one owned card, over the whole collection rather than the page." }
-                  facets:
-                    type: object
-                    description: Over the whole collection, whatever the filters; what a filter menu offers.
-                    required: [sets, rarities]
-                    properties:
-                      sets:
-                        type: array
-                        description: In set order.
-                        items:
-                          type: object
-                          required: [name, title]
-                          properties:
-                            name: { type: string, description: "What `set` matches." }
-                            title: { type: string }
-                      rarities: { type: array, items: { type: string }, description: "A to Z." }
+                  facets: { $ref: "#/components/schemas/Facets" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }

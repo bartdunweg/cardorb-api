@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/guard";
 import { getCollection } from "@/lib/core/collection/collection";
 import {
+  facetsOf,
   filterItems,
   flattenItems,
   pageOf,
@@ -56,11 +57,14 @@ export async function GET(req: Request) {
   const { sets, failed } = await getCollection(who.userId, bearer(req) ?? undefined);
   if (failed) return unavailable();
   const { sort, order } = read.query;
-  const { items, total } = pageOf(
-    sortItems(filterItems(flattenItems(sets), read.query), sort, order),
-    read.query,
+  const all = flattenItems(sets);
+  const { items, total } = pageOf(sortItems(filterItems(all, read.query), sort, order), read.query);
+  // The facets ride along with every page, over the whole owned collection whatever the
+  // filters: the web app used to fetch GET /v1/collection — a megabyte — to draw the two menus.
+  return NextResponse.json(
+    { cards: items, total, facets: facetsOf(all) },
+    { headers: readHeaders(req) },
   );
-  return NextResponse.json({ cards: items, total }, { headers: readHeaders(req) });
 }
 
 export async function POST(req: Request) {

@@ -388,17 +388,24 @@ export function sortPublicItems(
   return indexed.map((x) => x.it);
 }
 
-export type PublicFacets = { sets: { name: string; title: string }[]; rarities: string[] };
+export type Facets = { sets: { name: string; title: string }[]; rarities: string[] };
+export type PublicFacets = Facets;
 
 /**
- * What a filter menu can offer over the whole public collection: its sets in set order, its
- * rarities A to Z. The catalogues spell a rarity two ways ("Illustration rare", "Illustration
- * Rare"); the filter matches either, so the menu names each rarity once, in its first spelling.
+ * What a filter menu can offer over a whole collection: its sets in set order, its rarities
+ * A to Z. The catalogues spell a rarity two ways ("Illustration rare", "Illustration Rare");
+ * the filter matches either, so the menu names each rarity once, in its first spelling.
+ *
+ * Over the owned copies only: a wishlist card puts no set in the menu of what you hold. The
+ * public list is owned copies by construction; the owner's list says so per item.
  */
-export function publicFacets(items: PublicItem[]): PublicFacets {
+export function facetsOf(
+  items: { set: string; setTitle: string; rarity: string | null; owned?: boolean }[],
+): Facets {
   const sets = new Map<string, string>();
   const rarities = new Map<string, string>();
   for (const it of items) {
+    if (it.owned === false) continue;
     if (!sets.has(it.set)) sets.set(it.set, it.setTitle);
     if (it.rarity && !rarities.has(it.rarity.toLowerCase()))
       rarities.set(it.rarity.toLowerCase(), it.rarity);
@@ -408,6 +415,8 @@ export function publicFacets(items: PublicItem[]): PublicFacets {
     rarities: [...rarities.values()].sort((a, b) => a.localeCompare(b)),
   };
 }
+
+export const publicFacets = (items: PublicItem[]): PublicFacets => facetsOf(items);
 
 export type PublicQuery = PublicFilter & Page & { sort?: PublicSort; order?: Order };
 
