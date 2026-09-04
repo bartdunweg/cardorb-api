@@ -143,12 +143,15 @@ export const markOwnership = (index: OwnershipIndex, cards: CatalogueMatch[]): B
  * So this counts rows rather than matching cards: it cannot name *which* twelve,
  * and it does not have to.
  *
- * Counted per printing rather than per distinct card, which is the honest
- * reading of a collection that files one row per printing (see
- * collection-row.ts): two copies of the same Charizard are two rows and the
- * number goes up. It can therefore exceed the set's total on a heavily
- * duplicated set, which is true rather than wrong — the caller clamps it if the
- * sentence it is writing needs it to be a fraction.
+ * Counted per distinct card, not per copy: two Charizard are one card of the
+ * set, as they are on the set page (setId route), which marks each catalogue
+ * card once. This used to count copies, on the reasoning that a collection
+ * files one row per printing and the caller could clamp; both clients did
+ * clamp, and a set with duplicates still read further along than it was, since
+ * a second copy stood in for a missing card (#162). A card is its canonical
+ * number within the set ("088" and "88" are one), the same key the card match
+ * uses. The wishlist count stays per row: a wish is a wanted card, and one row
+ * is one wish.
  *
  * A gallery set counts only the gallery-numbered rows of its parent, because
  * that is where the collection files them: without that test "Silver Tempest
@@ -163,11 +166,11 @@ export function setCounts(
     .flatMap((name) => index.bySet.get(name) ?? [])
     .filter((row) => isGalleryNumber(row.number) === gallery);
 
-  let ownedCount = 0;
+  const owned = new Set<string>();
   let wishlistCount = 0;
   for (const row of new Set(rows)) {
-    if (row.owned) ownedCount += row.quantity > 0 ? row.quantity : 1;
+    if (row.owned) owned.add(canonNumber(row.number));
     else wishlistCount += 1;
   }
-  return { ownedCount, wishlistCount };
+  return { ownedCount: owned.size, wishlistCount };
 }

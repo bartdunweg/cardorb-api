@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - A public collection's rarity menu names each rarity once, even where the catalogues spell it two ways.
 
+- The set list (`GET /v1/catalog/sets`) counts the distinct cards you own of each set, not copies: a second Charizard no longer reads as one card closer to complete, and `ownedCount` never exceeds `total` (#162).
+
 ## 2026-09-03
 
 - `GET /v1/cards` sorts (`sort=set|name|price|added`, `order=asc|desc`) and narrows to one set or one rarity (`set=`, `rarity=`), so a list can be ordered by value or by the day a card came in without fetching the whole collection.

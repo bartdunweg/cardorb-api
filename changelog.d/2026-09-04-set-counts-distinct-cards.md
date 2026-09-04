@@ -1,0 +1,1 @@
+- The set list (`GET /v1/catalog/sets`) counts the distinct cards you own of each set, not copies: a second Charizard no longer reads as one card closer to complete, and `ownedCount` never exceeds `total` (#162).

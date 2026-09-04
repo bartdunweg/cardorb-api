@@ -155,9 +155,19 @@ describe("markOwnership", () => {
 });
 
 describe("setCounts", () => {
-  it("counts printings rather than distinct cards", () => {
+  it("counts distinct cards, not copies: two Charizard are one card of the set", () => {
     const rows = [row({ id: "a", quantity: 2 }), row({ id: "b", number: "007", name: "Squirtle" })];
-    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 3, wishlistCount: 0 });
+    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 2, wishlistCount: 0 });
+  });
+
+  it("reads a padded and an unpadded number as the same card", () => {
+    const rows = [row({ id: "a", number: "088" }), row({ id: "b", number: "88" })];
+    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 1, wishlistCount: 0 });
+  });
+
+  it("does not let a wishlist row for a card you also own count twice", () => {
+    const rows = [row({ id: "a" }), row({ id: "w", owned: false })];
+    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 1, wishlistCount: 1 });
   });
 
   it("counts a wishlist row separately, never as owned", () => {
