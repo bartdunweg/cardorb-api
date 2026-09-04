@@ -390,17 +390,22 @@ export function sortPublicItems(
 
 export type PublicFacets = { sets: { name: string; title: string }[]; rarities: string[] };
 
-/** What a filter menu can offer over the whole public collection: its sets in set order, its rarities A to Z. */
+/**
+ * What a filter menu can offer over the whole public collection: its sets in set order, its
+ * rarities A to Z. The catalogues spell a rarity two ways ("Illustration rare", "Illustration
+ * Rare"); the filter matches either, so the menu names each rarity once, in its first spelling.
+ */
 export function publicFacets(items: PublicItem[]): PublicFacets {
   const sets = new Map<string, string>();
-  const rarities = new Set<string>();
+  const rarities = new Map<string, string>();
   for (const it of items) {
     if (!sets.has(it.set)) sets.set(it.set, it.setTitle);
-    if (it.rarity) rarities.add(it.rarity);
+    if (it.rarity && !rarities.has(it.rarity.toLowerCase()))
+      rarities.set(it.rarity.toLowerCase(), it.rarity);
   }
   return {
     sets: [...sets].map(([name, title]) => ({ name, title })),
-    rarities: [...rarities].sort((a, b) => a.localeCompare(b)),
+    rarities: [...rarities.values()].sort((a, b) => a.localeCompare(b)),
   };
 }
 
