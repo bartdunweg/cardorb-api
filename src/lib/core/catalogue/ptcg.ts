@@ -7,9 +7,11 @@
  * hat) has no scan. Neither is going to be fixed by asking again, and both
  * exist at pokemontcg.io.
  *
- * So this is a fallback and nothing else. It is consulted only where the first
- * source came back empty, one index request per build, and it never overrides
- * anything TCGdex does have. Keeping it here rather than in lib/cards.ts is the
+ * So for pictures this is a fallback and nothing else: consulted only where the
+ * first source came back empty, one index request per build, and it never
+ * overrides anything TCGdex does have. For prices it is the second market:
+ * TCGplayer's numbers for a whole set, once a day, averaged into the shown
+ * figure (see ptcgPrices and blendPrices in price-basis.mjs). Keeping it here rather than in lib/cards.ts is the
  * point: the day it goes away, one file's worth of picture-of-last-resort goes
  * with it and the page is exactly as complete as TCGdex is.
  */
@@ -239,13 +241,26 @@ const PRINTINGS = [
  * outage must not become a day without the second price.
  */
 export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice> | null> {
+  // An index that could not be read is not an answer either: null, or an outage of the index
+  // would be cached for a day as "nothing to price" for every set asked in it.
+  if ((await sets()).size === 0) return null;
   const set = await find(setName);
   // A set pokemontcg.io does not know is an answer: nothing to price, cache that.
   if (!set) return new Map();
   const headers: Record<string, string> = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
   // A search that failed is not an answer: null, so the caller keeps yesterday's or asks again.
-  return ptcgSetPrices(set.id, headers);
+  const own = await ptcgSetPrices(set.id, headers);
+  if (!own) return null;
+  // A set's gallery (Trainer Gallery, Galarian Gallery) is a set of its own there and filed under
+  // the parent here: its TG/GG numbers are prefixed, so they merge in without a collision.
+  const gallery = await findGallery(setName);
+  if (gallery) {
+    const more = await ptcgSetPrices(gallery.id, headers);
+    if (!more) return null;
+    for (const [k, v] of more) if (!own.has(k)) own.set(k, v);
+  }
+  return own;
 }
 
 const SEARCH_TIMEOUT_MS = 12_000;
@@ -289,7 +304,7 @@ async function ptcgSetPrices(
       const printed = cardNumber(card.number);
       const digits = printed.replace(/^[A-Z]+/, "").replace(/^0+(?=\d)/, "");
       out.set(printed, price);
-      if (digits && digits !== printed) alias.set(digits, price);
+      if (digits && digits !== printed && !alias.has(digits)) alias.set(digits, price);
     }
     if ((body.data?.length ?? 0) < 250 || (body.totalCount ?? 0) <= page * 250) break;
   }

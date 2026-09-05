@@ -17,7 +17,11 @@ vi.mock("../catalogue/catalogue", () => ({
   json: async () => null,
 }));
 // The rate is read before the outage is known; a test that counts fetches must not count it.
-vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: async () => null }));
+vi.mock("../catalogue/rates", () => ({
+  fetchUsdToEur: async () => {
+    throw new Error("offline");
+  },
+}));
 vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,

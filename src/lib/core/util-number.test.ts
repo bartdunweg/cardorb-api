@@ -10,3 +10,10 @@ describe("cardNumber", () => {
     expect(cardNumber("0")).toBe("0");
   });
 });
+
+describe("cardNumber with a prefix", () => {
+  it("drops zeros after the letters as well", () => {
+    expect(cardNumber("SV01")).toBe("SV1");
+    expect(cardNumber("TG04")).toBe("TG4");
+  });
+});
