@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError, PUBLIC_READ_CACHE } from "@/lib/api/respond";
+import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { latestPull } from "@/lib/core/collection/cards";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -42,8 +42,8 @@ export async function OPTIONS() {
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ username: string }> }) {
-  if (byAddress(addressOf(req)))
-    return apiError(429, "Too many requests", undefined, { headers: CORS_HEADERS });
+  const wait = byAddress(addressOf(req));
+  if (wait) return refuse("tooMany", { headers: { ...CORS_HEADERS, ...retryAfter(wait) } });
 
   const { username } = await params;
   const owner = await ownerOf(username);

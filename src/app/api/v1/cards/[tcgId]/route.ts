@@ -25,7 +25,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // behind the door, not because the answer depends on who opened it.
   const who = await authorise(req);
   if (refused(who)) {
-    return apiError(who.status, who.error);
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
   }
 
   const { tcgId } = await params;
@@ -36,7 +38,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.
     console.error(`Card ${tcgId} could not be read:`, err);
-    return unavailable("That card could not be read. Try again in a moment.");
+    return unavailable("That card could not be read. Try again in a moment.", readHeaders(req));
   }
   if (!card) {
     return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });

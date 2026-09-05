@@ -96,11 +96,13 @@ describe("GET /api/v1/catalog/sets", () => {
     expect(out[0]).toMatchObject({ ownedCount: 0, wishlistCount: 0 });
   });
 
-  it("answers 502 with a distinct error when the catalogue refused", async () => {
+  it("answers 502 with a sentence a client can show when the catalogue refused", async () => {
     listSets.mockRejectedValue(new Error("pokemontcg.io set list unavailable"));
     const res = await sets();
     expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe("catalog-unavailable");
+    /* A sentence, not a slug: this used to be "catalog-unavailable", the one
+       error under /v1 a client had to translate rather than display. */
+    expect((await res.json()).error).toBe("The catalogue did not answer. Try again in a moment.");
     /* The shelf failed, so there was no reason to read the collection. */
     expect(getRows).not.toHaveBeenCalled();
   });

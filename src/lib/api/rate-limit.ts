@@ -6,6 +6,13 @@
  * Copied from the portfolio it shares a database with, where it has been
  * guarding a contact form. Every awkward line in it was put there by a real
  * failure mode and is worth keeping.
+ *
+ * The answer is a number of seconds, not a boolean: `0` lets the request
+ * through, anything else is how long the caller has to wait before one more
+ * request would be let through, whole seconds rounded up and never below one.
+ * That number is what a route puts in `Retry-After`. It used to be `true`,
+ * which told a client it was refused and nothing about when to come back, so
+ * the web app retried blind.
  */
 export function createRateLimiter(windowMs: number, maxPerWindow: number, maxKeys = 10_000) {
   const hits = new Map<string, number[]>();
@@ -19,7 +26,7 @@ export function createRateLimiter(windowMs: number, maxPerWindow: number, maxKey
     }
   };
 
-  return function rateLimited(key: string, now: number = Date.now()): boolean {
+  return function rateLimited(key: string, now: number = Date.now()): number {
     let recent = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
     recent.push(now);
     // `> maxPerWindow` only needs the newest maxPerWindow + 1 timestamps, so a
@@ -54,6 +61,11 @@ export function createRateLimiter(windowMs: number, maxPerWindow: number, maxKey
         }
       }
     }
-    return recent.length > maxPerWindow;
+    if (recent.length <= maxPerWindow) return 0;
+    // This refusal counts too, so the next request is let through once only
+    // maxPerWindow - 1 hits are left in the window: every hit up to and
+    // including the one at index length - maxPerWindow has to age out first.
+    const frees = (recent[recent.length - maxPerWindow] ?? now) + windowMs;
+    return Math.max(1, Math.ceil((frees - now) / 1000));
   };
 }

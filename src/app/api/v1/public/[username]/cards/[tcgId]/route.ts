@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError, unavailable } from "@/lib/api/respond";
+import { apiError, refuse, retryAfter, unavailable } from "@/lib/api/respond";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { ownerOf } from "@/lib/core/collection/collection";
@@ -51,9 +51,8 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ username: string; tcgId: string }> },
 ) {
-  if (byAddress(addressOf(req))) {
-    return apiError(429, "Too many requests");
-  }
+  const wait = byAddress(addressOf(req));
+  if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
   const { username, tcgId } = await params;
   if (!(await ownerOf(username))) {

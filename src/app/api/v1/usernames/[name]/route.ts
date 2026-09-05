@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, refuse, retryAfter } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { adminClient } from "@/lib/storage/supabase";
@@ -49,9 +49,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ name: st
     req.headers.get("x-real-ip")?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
-  if (byAddress(ip)) {
-    return apiError(429, "Too many requests");
-  }
+  const wait = byAddress(ip);
+  if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
   const { name } = await params;
   const username = name.trim().toLowerCase();

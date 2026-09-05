@@ -11,13 +11,15 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const { sets, failed, catalogueUnavailable } = await getCollection(
     who.userId,
     bearer(req) ?? undefined,
   );
-  if (failed) return unavailable();
+  if (failed) return unavailable(undefined, readHeaders(req));
   // Flagged during a TCGdex outage: the counts are right, the value is zero for
   // want of prices, and a client should not read that as a collection worth nothing.
   return NextResponse.json(

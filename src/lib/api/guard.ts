@@ -1,5 +1,5 @@
 import { createRateLimiter } from "./rate-limit";
-import { apiError, refuse, REFUSALS } from "./respond";
+import { apiError, refuse, REFUSALS, retryAfter } from "./respond";
 import { SESSION_COOKIE } from "./session-cookie";
 import { StoreNotConfigured } from "../storage/errors";
 import { configured } from "../storage/supabase";
@@ -43,7 +43,12 @@ const carriesCredential = (req: Request): boolean =>
   /^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "") ||
   (req.headers.get("cookie") ?? "").includes(`${SESSION_COOKIE}=`);
 
-export type Refusal = { status: number; error: string };
+/**
+ * What a route sends instead of the viewer. `headers` is the rare extra a
+ * refusal carries beyond the sentence — today only `Retry-After` on a 429 —
+ * and a route spreads it over readHeaders() when it answers.
+ */
+export type Refusal = { status: number; error: string; headers?: Record<string, string> };
 
 /**
  * The one message every route reaches for when serverClient()/configured()
@@ -167,8 +172,8 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
     req.headers.get("x-real-ip")?.trim() ||
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "unknown";
-  if ((carriesCredential(req) ? withCredential : guessing)(ip))
-    return { status: 429, error: "Too many requests" };
+  const wait = (carriesCredential(req) ? withCredential : guessing)(ip);
+  if (wait) return { ...REFUSALS.tooMany, headers: retryAfter(wait) };
 
   // Told apart from a wrong credential on purpose, and kept in the same place
   // in the order. A deployment with no database is not somebody getting it
@@ -180,7 +185,9 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
   }
 
   const viewer = await requestViewer(req);
-  if (!viewer) return { status: 401, error: "Sign in to see this." };
+  // The same sentence the cookie-only routes send through refuse("signIn"):
+  // two wordings for one condition had the clients showing either.
+  if (!viewer) return { ...REFUSALS.signIn };
   return viewer;
 }
 

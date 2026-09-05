@@ -50,7 +50,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const who = await authorise(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const read = readItemQuery(new URL(req.url).searchParams);
   if (read.kind === "invalid")
@@ -79,7 +81,7 @@ export async function GET(req: Request) {
   }
 
   const { sets, failed, catalogueUnavailable } = await getCollection(who.userId, token);
-  if (failed) return unavailable();
+  if (failed) return unavailable(undefined, readHeaders(req));
   const { sort, order } = read.query;
   const all = flattenItems(sets);
   // A rule folder holds owned copies only, whatever `owned` says: the rule is the filter,
@@ -108,7 +110,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const who = await authoriseWrite(req);
   if (refused(who))
-    return apiError(who.status, who.error, undefined, { headers: readHeaders(req) });
+    return apiError(who.status, who.error, undefined, {
+      headers: { ...readHeaders(req), ...who.headers },
+    });
 
   const read = await readJsonBody(req, BODY_LIMIT.card);
   if (read.kind === "too-large") {

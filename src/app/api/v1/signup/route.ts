@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, retryAfter } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -61,8 +61,11 @@ export async function POST(req: Request) {
     return apiError(503, NO_DATABASE_CONFIGURED);
   }
 
-  if (bySignup(clientIp(req))) {
-    return apiError(429, "Too many accounts from here. Try again in a few minutes.");
+  const wait = bySignup(clientIp(req));
+  if (wait) {
+    return apiError(429, "Too many accounts from here. Try again in a few minutes.", undefined, {
+      headers: retryAfter(wait),
+    });
   }
 
   let email = "";

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse, apiError } from "@/lib/api/respond";
+import { refuse, apiError, retryAfter } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
 
   const viewer = await currentViewer();
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
   let csv = "";
   let map: Partial<ColumnMap> | undefined;
@@ -66,8 +66,11 @@ export async function POST(req: Request) {
 
   // After the body is read, because the flag deciding whether this call is
   // expensive is in it. A preview is not counted; see the note on byAccount.
-  if (doCommit && byAccount(viewer.userId)) {
-    return apiError(429, "Too many imports. Try again shortly.");
+  const wait = doCommit ? byAccount(viewer.userId) : 0;
+  if (wait) {
+    return apiError(429, "Too many imports. Try again shortly.", undefined, {
+      headers: retryAfter(wait),
+    });
   }
 
   if (!csv.trim()) return apiError(400, "That file is empty.");

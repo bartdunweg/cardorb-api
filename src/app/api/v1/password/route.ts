@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, refuse, retryAfter } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
 import { currentViewer } from "@/lib/api/viewer";
@@ -44,10 +44,11 @@ const addressOf = (req: Request) =>
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
-  if (byAddress(addressOf(req))) return apiError(429, "Too many requests");
+  const wait = byAddress(addressOf(req));
+  if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
   const viewer = await currentViewer();
-  if (!viewer) return apiError(401, "Sign in first.");
+  if (!viewer) return refuse("signIn");
 
   let password = "";
   let currentPassword: string | undefined;

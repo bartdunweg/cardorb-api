@@ -24,7 +24,9 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const viewer = await authorise(req);
   if (refused(viewer))
-    return apiError(viewer.status, viewer.error, undefined, { headers: readHeaders(req) });
+    return apiError(viewer.status, viewer.error, undefined, {
+      headers: { ...readHeaders(req), ...viewer.headers },
+    });
 
   const snapshots = await getValueHistory(viewer.userId, bearer(req) ?? undefined);
   return NextResponse.json({ snapshots }, { headers: readHeaders(req) });

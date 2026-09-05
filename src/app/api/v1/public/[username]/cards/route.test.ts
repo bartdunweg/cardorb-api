@@ -95,6 +95,23 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
   });
 
+  it("tells a flooding address when to come back", async () => {
+    // The limiter is per process and keyed by address; a distinct address
+    // keeps this test's budget its own.
+    const flood = () =>
+      GET(
+        new Request("https://api.cardorb.com/v1/public/bart/cards", {
+          headers: { "x-real-ip": "10.7.7.7" },
+        }),
+        { params: Promise.resolve({ username: "bart" }) },
+      );
+    for (let i = 0; i < 60; i++) await flood();
+    const res = await flood();
+    expect(res.status).toBe(429);
+    expect(res.headers.get("Retry-After")).toBe("60");
+    expect(await res.json()).toEqual({ error: "Too many requests" });
+  });
+
   it("is a 503 nothing caches when the read failed, and a 404 for no such profile", async () => {
     getPublicCollection.mockResolvedValue({ sets: [], failed: true });
     const res = await get();

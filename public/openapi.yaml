@@ -41,7 +41,7 @@ tags:
   - name: Collection
     description: What the signed-in person owns, and the writes that change it.
   - name: Catalogue
-    description: Every set and every card, whether owned or not. Read from pokemontcg.io, cached five minutes.
+    description: Every set and every card, whether owned or not. Read from pokemontcg.io and cached for a day; the caller's own counts are read fresh.
   - name: Value
     description: What the collection is worth, over time.
   - name: Profile
@@ -104,7 +104,7 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
-          example: { error: "Sign in to see this." }
+          example: { error: "Sign in first." }
     Forbidden:
       description: The request came from an origin this deployment does not allow.
       content:
@@ -129,16 +129,21 @@ components:
           schema: { $ref: "#/components/schemas/Error" }
           example: { error: "Invalid request" }
     TooManyRequests:
-      description: Over this route's rate limit for this address.
+      description: Over this route's rate limit for this address. Every 429 carries `Retry-After`.
+      headers:
+        Retry-After:
+          description: Whole seconds until one more request would be let through. Never zero.
+          schema: { type: integer, minimum: 1 }
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
           example: { error: "Too many requests" }
     BadGateway:
-      description: A catalogue, the price guide or the database did not answer.
+      description: A catalogue, the price guide or the database did not answer. A sentence a client can show, never a slug.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+          example: { error: "The catalogue did not answer. Try again in a moment." }
     Unavailable:
       description: This deployment has no database, or the database is not answering.
       content:
@@ -321,7 +326,9 @@ components:
         types: { type: array, items: { type: string }, maxItems: 10 }
         collection: { type: boolean, default: true, description: "`false` puts it on the wishlist." }
         excluded: { type: boolean, default: false }
-        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        finish:
+          oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }]
+          description: "Absent or `null` is 'nobody has said'. Anything else that is not one of the three is a 400, as on `CardPatch`."
         quantity: { type: integer, minimum: 1, default: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -515,7 +522,7 @@ components:
             - { $ref: "#/components/schemas/FolderRule" }
             - { type: "null" }
         createdAt: { type: string, format: date-time }
-        count: { type: integer, description: "Owned copies filed in it, or, for a rule folder, matching its rule. On the list only." }
+        count: { type: integer, description: "Owned copies filed in it, or, for a rule folder, matching its rule. On `GET /v1/folders` and on a folder just made (`0`); a patched folder comes back without it." }
 
     FolderRule:
       type: object
@@ -706,6 +713,8 @@ paths:
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 }, description: "Above 500 is read as 500. Not a whole number, or below 1, is a 400." }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 }, description: "Not a whole number, or below 0, is a 400." }
       responses:
         "200":
           description: The page, in the asked order (set order when none was), the total behind it, and the facets over the owned whole.
@@ -1033,9 +1042,14 @@ paths:
                     type: boolean
                     const: true
                     description: "Present only when TCGdex could not be reached; a rule folder's `count` is then low, for want of Pokédex numbers and set titles."
+                  collectionUnavailable:
+                    type: boolean
+                    const: true
+                    description: Present only when the rows could not be read, so every `count` is 0 for that reason and not because the folders are empty.
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
     post:
       tags: [Collection]
@@ -1064,6 +1078,7 @@ paths:
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/folders/{id}:
@@ -1096,6 +1111,7 @@ paths:
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
     delete:
       tags: [Collection]
@@ -1112,6 +1128,7 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
   # ── Value ─────────────────────────────────────────────────────────────────

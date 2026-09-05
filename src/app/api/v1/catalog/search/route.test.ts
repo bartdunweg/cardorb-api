@@ -132,12 +132,12 @@ describe("GET /api/v1/catalog/search", () => {
     expect(searchCards).toHaveBeenCalledWith("char", 1);
   });
 
-  it("answers 502 with a distinct error, not 400, when searchCards fails", async () => {
+  it("answers 502 with a sentence, not 400, when searchCards fails", async () => {
     searchCards.mockRejectedValueOnce(new Error("pokemontcg.io search unavailable"));
     const res = await search(new URLSearchParams({ query: "char" }));
     expect(res.status).toBe(502);
     const body = await res.json();
-    expect(body.error).toBe("search-unavailable");
+    expect(body.error).toBe("The catalogue did not answer. Try again in a moment.");
   });
 
   it("marks a result the viewer already holds", async () => {
