@@ -25,6 +25,8 @@ if the two have drifted apart.
 
 - A folder can be shown on your public profile: `isPublic` on `POST` and `PATCH /v1/folders`, off by default. `GET /v1/public/{username}/folders` lists the ones you show, with how many cards each holds, and `GET /v1/public/{username}/cards?collection=` narrows the public list to one of them.
 
+- A public card carries `imageHigh`, the larger scan, so a public page draws the same picture the owner sees.
+
 - The wishlist can show on a public profile: `wishlistPublic` on `PATCH /v1/profile`, off by default, read back on the profile and on `GET /v1/public/{username}/profile`; `GET /v1/public/{username}/cards?list=wishlist` lists the cards the owner is looking for.
 
 - Three answers put right after review. `GET /v1/cards?collection=` on a rule folder now

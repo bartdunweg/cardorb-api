@@ -361,6 +361,8 @@ export type PublicItem = {
   gen: string | null;
   type: string | null;
   image: string | null;
+  /** The larger scan, where the catalogue has two sizes; a tile on a phone draws it. */
+  imageHigh: string | null;
   speciesId: number | null;
   tcgId: string | null;
   /** Owned copies. A card with only wishes is not on a public page. */
@@ -383,6 +385,7 @@ export function publicItems(sets: CardSet[]): PublicItem[] {
         gen: card.gen,
         type: card.type,
         image: card.image,
+        imageHigh: card.imageHigh,
         speciesId: card.speciesId,
         tcgId: card.tcgId,
         copies,
@@ -413,6 +416,7 @@ export function publicWishes(sets: CardSet[]): PublicItem[] {
         gen: card.gen,
         type: card.type,
         image: card.image,
+        imageHigh: card.imageHigh,
         speciesId: card.speciesId,
         tcgId: card.tcgId,
         copies,

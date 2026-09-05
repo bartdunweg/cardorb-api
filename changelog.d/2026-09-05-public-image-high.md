@@ -1,0 +1,1 @@
+- A public card carries `imageHigh`, the larger scan, so a public page draws the same picture the owner sees.
