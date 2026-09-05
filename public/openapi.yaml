@@ -720,6 +720,7 @@ paths:
         - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set, anywhere, in any case." }
         - { name: owned, in: query, schema: { type: boolean }, description: "`true` the collection, `false` the wishlist, absent both." }
         - { name: favorite, in: query, schema: { type: boolean } }
+        - { name: priced, in: query, schema: { type: boolean }, description: "`true` the copies with a price, `false` the ones nothing prices, absent both." }
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id. A rule folder answers with the owned copies its rule matches, whatever `owned` says. An id that is no folder of the caller's is a 404." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }

@@ -1,0 +1,1 @@
+- `GET /v1/cards?priced=false` lists the copies nothing prices, the ones the collection value leaves out; `priced=true` the rest.

@@ -23,6 +23,8 @@ if the two have drifted apart.
 
 - A card Cardmarket has only a lowest listing for shows that listing as its price, rather than no price; the collection's value counts it.
 
+- `GET /v1/cards?priced=false` lists the copies nothing prices, the ones the collection value leaves out; `priced=true` the rest.
+
 - A folder can be shown on your public profile: `isPublic` on `POST` and `PATCH /v1/folders`, off by default. `GET /v1/public/{username}/folders` lists the ones you show, with how many cards each holds, and `GET /v1/public/{username}/cards?collection=` narrows the public list to one of them.
 
 - A public card carries `imageHigh`, the larger scan, so a public page draws the same picture the owner sees.

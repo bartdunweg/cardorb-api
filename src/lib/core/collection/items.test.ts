@@ -91,6 +91,18 @@ describe("flattenItems", () => {
 
 describe("filterItems", () => {
   const items = flattenItems(SETS);
+  it("keeps the copies with a price, or the ones without, as priced says", () => {
+    const priced = {
+      ...items[0]!,
+      id: "p",
+      price: { low: 1, market: 4.5, avg30: 4, nm: null },
+      priceHolo: null,
+    };
+    const free = { ...items[0]!, id: "f", price: null, priceHolo: null };
+    expect(filterItems([priced, free], { priced: true }).map((it) => it.id)).toEqual(["p"]);
+    expect(filterItems([priced, free], { priced: false }).map((it) => it.id)).toEqual(["f"]);
+    expect(filterItems([priced, free], {}).map((it) => it.id)).toEqual(["p", "f"]);
+  });
   it("owned=false is the wishlist", () => {
     expect(filterItems(items, { owned: false }).map((i) => i.id)).toEqual(["b"]);
   });
