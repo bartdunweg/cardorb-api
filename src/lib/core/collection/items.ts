@@ -105,6 +105,8 @@ export type ItemFilter = {
   set?: string;
   /** A rarity, whole, in the catalogue's words; case does not matter. */
   rarity?: string;
+  /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
+  priced?: boolean;
   /**
    * A rule folder's rule, resolved by the route from `collection`. Owned copies only,
    * whatever `owned` says: a wished copy is in no folder that fills itself.
@@ -124,6 +126,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (f.collection && it.collectionId !== f.collection) return false;
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
+    if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
     if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
     return true;
   });
@@ -224,7 +227,7 @@ export function readItemQuery(
     if (q.length > 100) return { kind: "invalid", error: "q is too long." };
     if (q.trim()) query.q = q.trim();
   }
-  for (const key of ["owned", "favorite"] as const) {
+  for (const key of ["owned", "favorite", "priced"] as const) {
     const v = params.get(key);
     if (v === null) continue;
     if (v !== "true" && v !== "false")
