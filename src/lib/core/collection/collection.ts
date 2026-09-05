@@ -41,7 +41,6 @@ import {
   buildCollection,
   type CardIdentity,
   type CardSet,
-  type FactsSource,
   identityKey,
   resolveSetFacts,
 } from "./cards";
@@ -150,12 +149,36 @@ const cachedGuidePrices = () =>
  * list goes to TCGdex, which is slow but was the only path until today.
  */
 export async function pricesFromGuideThenTcgdex(ids: string[]): Promise<Map<string, CardPrices>> {
-  let known: Record<string, CardPrices> = {};
+  return guideThenTcgdex(ids, await guideForRequest());
+}
+
+/**
+ * The guide's map, once per request, read at the top level. Read from inside
+ * a cache callback it is not read at all: Next runs an unstable_cache nested
+ * in another uncached, "similar to fetches", and the fourteen-megabyte guide
+ * was being downloaded once per set on every rebuild. Fails soft to an empty
+ * map, which sends every card to TCGdex, the path that was the only one once.
+ */
+const guideForRequest = cache(async (): Promise<Record<string, CardPrices>> => {
   try {
-    known = await cachedGuidePrices();
+    return await cachedGuidePrices();
   } catch (err) {
     console.error("Price guide unavailable, pricing card by card:", err);
+    return {};
   }
+});
+
+function guideThenTcgdex(
+  ids: string[],
+  known: Record<string, CardPrices>,
+): Promise<Map<string, CardPrices>> {
+  return tcgdexForMissing(ids, known);
+}
+
+async function tcgdexForMissing(
+  ids: string[],
+  known: Record<string, CardPrices>,
+): Promise<Map<string, CardPrices>> {
   const out = new Map<string, CardPrices>();
   const missing: string[] = [];
   for (const id of ids) {
@@ -226,37 +249,56 @@ export const findFolder = cache(
  * A day, like the set catalogue and the price guide this reads through; a
  * price moves once a night. Not keyed by user: the entry carries no row, no
  * copy, nothing anyone owns.
+ *
+ * Called at the top level of a request, never from inside another cache's
+ * callback. Next runs a nested unstable_cache uncached — "similar to fetches"
+ * — and the first version of this sat inside the hour-long collection entry,
+ * where every one of its fifty-two reads was a miss on every write; so was
+ * the set catalogue's, which is why the old rebuild fetched every set from
+ * TCGdex again each time. On a miss here the set catalogue read *is* nested
+ * and goes to TCGdex; a miss is once a day per set, or a card added to one.
  */
 const factsSignature = (identities: CardIdentity[]): string =>
   createHash("sha1").update(identities.map(identityKey).join("\u0001")).digest("hex");
 
-const cachedSetFacts: FactsSource = (setName, identities) =>
+const cachedSetFacts = (
+  setName: string,
+  identities: CardIdentity[],
+  priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
+) =>
   timedCache(`cache set-facts ${setName}`, (ran) =>
     unstable_cache(
       () => {
         ran();
-        return resolveSetFacts(setName, identities, { priceSource: pricesFromGuideThenTcgdex });
+        return resolveSetFacts(setName, identities, { priceSource });
       },
-      ["set-facts", "v1", setName, factsSignature(identities)],
+      ["set-facts", "v2", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
 
-const cachedCollection = (userId: string, db: SupabaseClient | null) =>
-  timedCache("cache collection", (ran) =>
-    unstable_cache(
-      async () => {
-        ran();
-        const rows = await cachedRows(userId, db);
-        const start = performance.now();
-        const sets = await buildCollection(rows, { factsSource: cachedSetFacts });
-        logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
-        return sets;
-      },
-      ["collection", userId],
-      { revalidate: 3600, tags: [cardsTag(userId)] },
-    )(),
-  );
+/**
+ * The collection, put together for this request: the rows from their cache,
+ * the guide from its, one entry of facts per set from theirs, and the join.
+ *
+ * Not cached across requests as a whole any more. The hour-long entry that
+ * did that was the reason nothing under it was ever cached (see above), so a
+ * warm read was one cache read and a read after a write was the whole world
+ * again. Now a read is a handful of cache reads at once and a join in memory,
+ * warm or not, and a write moves only the rows. React's cache() on the two
+ * callers keeps it to once per request.
+ */
+async function assemble(userId: string, db: SupabaseClient | null): Promise<CardSet[]> {
+  const rows = await cachedRows(userId, db);
+  const known = await guideForRequest();
+  const priceSource = (ids: string[]) => guideThenTcgdex(ids, known);
+  const start = performance.now();
+  const sets = await buildCollection(rows, {
+    factsSource: (setName, identities) => cachedSetFacts(setName, identities, priceSource),
+  });
+  logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
+  return sets;
+}
 
 /**
  * The collection, built.
@@ -323,7 +365,7 @@ export const getCollection = cache(async (userId: string, token?: string): Promi
   let db: SupabaseClient | null = null;
   try {
     db = token ? userClient(token) : await serverClient();
-    return { sets: await cachedCollection(userId, db), failed: false };
+    return { sets: await assemble(userId, db), failed: false };
   } catch (err) {
     if (isCatalogueOutage(err)) {
       console.error("Catalogue unreachable, serving the rows without it:", err);
@@ -393,7 +435,7 @@ export const getPublicCollection = cache(async (userId: string): Promise<Collect
   const db = adminClient();
   if (!db) return { sets: [], failed: true };
   try {
-    return { sets: await cachedCollection(userId, db), failed: false };
+    return { sets: await assemble(userId, db), failed: false };
   } catch (err) {
     if (isCatalogueOutage(err)) {
       console.error("Catalogue unreachable, serving the public rows without it:", err);
