@@ -457,7 +457,7 @@ components:
     PublicItem:
       type: object
       description: One card on a public profile, with how many copies the owner holds. Nothing private.
-      required: [key, name, number, set, setTitle, rarity, gen, type, image, speciesId, tcgId, copies]
+      required: [key, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, copies]
       properties:
         key: { type: string }
         name: { type: string }
@@ -468,6 +468,7 @@ components:
         gen: { type: [string, "null"] }
         type: { type: [string, "null"] }
         image: { type: [string, "null"] }
+        imageHigh: { type: [string, "null"], description: "The larger scan, where the catalogue has two sizes." }
         speciesId: { type: [integer, "null"] }
         tcgId: { type: [string, "null"] }
         copies: { type: integer, minimum: 1 }
