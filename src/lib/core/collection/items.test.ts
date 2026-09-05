@@ -312,6 +312,7 @@ describe("public filters, sort and facets", () => {
     gen: null,
     type: null,
     image: null,
+    imageHigh: null,
     speciesId: null,
     tcgId: null,
     copies: 1,
