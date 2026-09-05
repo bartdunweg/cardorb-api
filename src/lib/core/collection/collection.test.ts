@@ -365,6 +365,7 @@ describe("facts source", () => {
               matchedName: i.name,
               number: i.number,
               price: null,
+              usd: null,
               priceHolo: null,
             },
           ]),

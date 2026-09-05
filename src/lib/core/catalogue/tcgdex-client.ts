@@ -9,6 +9,7 @@
  * This file only ever runs inside a call that one of those two already cached.
  */
 import { DAY, mapLimit, catalogueTimeout } from "../util";
+import type { UsdPrice } from "./ptcg";
 import { priceOf, holoPriceOf } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 
@@ -113,7 +114,42 @@ export async function fetchSet(id: string): Promise<TcgSetDetail | null> {
  * null; see its comment for why reading them raw would value a reverse holo at
  * nothing.
  */
-export type CardPrices = { price: Price; holo: Price | null };
+export type CardPrices = {
+  /** Cardmarket's, in euros; null on a card Cardmarket does not price (an old promo) but TCGplayer does. */
+  price: Price | null;
+  holo: Price | null;
+  /** TCGplayer's, in dollars, as TCGdex relays them: the second market for a card pokemontcg.io cannot reach. */
+  usd?: UsdPrice | null;
+};
+
+/** The printings TCGdex lists TCGplayer's numbers under, in the order one is taken: the plain card first. */
+const TCGPLAYER_PRINTINGS = [
+  "normal",
+  "holofoil",
+  "reverse-holofoil",
+  "1st-edition",
+  "1st-edition-holofoil",
+  "unlimited",
+  "unlimited-holofoil",
+];
+
+/** TCGplayer's market and low for the first printing that has a market, or null. */
+function usdOf(
+  tp:
+    | Record<string, { marketPrice?: number | null; lowPrice?: number | null } | null | undefined>
+    | null
+    | undefined,
+): UsdPrice | null {
+  if (!tp) return null;
+  const printing = TCGPLAYER_PRINTINGS.map((p) => tp[p]).find(
+    (p) => p && typeof p.marketPrice === "number",
+  );
+  if (!printing) return null;
+  return {
+    market: printing.marketPrice ?? null,
+    low: typeof printing.lowPrice === "number" ? printing.lowPrice : null,
+  };
+}
 
 export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>> {
   const out = new Map<string, CardPrices>();
@@ -128,12 +164,17 @@ export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>>
           "trend-holo"?: number | null;
           "avg30-holo"?: number | null;
         };
+        tcgplayer?: Record<
+          string,
+          { marketPrice?: number | null; lowPrice?: number | null } | null | undefined
+        > | null;
       };
     } | null;
     const cm = card?.pricing?.cardmarket;
-    if (!cm) return;
-    const price = priceOf(cm);
-    if (price) out.set(id, { price, holo: holoPriceOf(cm) });
+    const price = cm ? priceOf(cm) : null;
+    const usd = usdOf(card?.pricing?.tcgplayer);
+    // Either market is worth keeping: a promo Cardmarket does not price is still a card TCGplayer does.
+    if (price || usd) out.set(id, { price, holo: cm ? holoPriceOf(cm) : null, usd });
   });
   return out;
 }

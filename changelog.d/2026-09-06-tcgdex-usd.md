@@ -1,0 +1,1 @@
+- A card TCGdex is asked about carries TCGplayer's dollars too, so a promo Cardmarket does not price gets its second price from TCGdex when pokemontcg.io has none or is down.

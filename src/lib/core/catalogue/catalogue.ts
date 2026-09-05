@@ -346,7 +346,9 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
     // holoOfId() in cards.ts, where a pre-priced card therefore falls back to
     // the normal price for its foil. Invisible while pre-pricing is off, which
     // it is by default.
-    prices = Object.fromEntries([...(await pricesFor(ids))].map(([id, p]) => [id, p.price]));
+    prices = Object.fromEntries(
+      [...(await pricesFor(ids))].flatMap(([id, p]) => (p.price ? [[id, p.price] as const] : [])),
+    );
   }
 
   return {
