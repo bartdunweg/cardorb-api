@@ -1,0 +1,1 @@
+- TCGplayer's set prices are asked for with a longer wait and three tries, and card by card where the search still fails, so a slow or failing pokemontcg.io no longer leaves a set without its second price for a day.

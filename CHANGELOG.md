@@ -48,6 +48,8 @@ if the two have drifted apart.
 
 - A card Cardmarket publishes nothing for is priced from TCGplayer, in euros at the day's ECB rate; old promos in a collection count towards its value now.
 
+- TCGplayer's set prices are asked for with a longer wait and three tries, and card by card where the search still fails, so a slow or failing pokemontcg.io no longer leaves a set without its second price for a day.
+
 ## 2026-09-04
 
 - The card list (`GET /v1/cards`) now names the sets and rarities you hold beside every page, so a list page no longer has to fetch the whole collection to draw its filter menus.
