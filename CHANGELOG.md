@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-05
 
+- Starring a card, changing how many you hold or adding a note no longer makes the next screen wait for the whole collection to be matched and priced again: what the catalogue says about each card is kept per set for a day, and only your own rows are read afresh.
+
 - Making a folder no longer drops the assembled collection from the cache, only the folder
   list: a new folder changes no card, and the rebuild cost every read after it twenty seconds
   on a large binder. Deleting a folder still drops both, since that unfiles cards.

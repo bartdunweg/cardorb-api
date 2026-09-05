@@ -517,6 +517,13 @@ export type BuildOptions = {
    * and keeps it out of the hour-long entry.
    */
   offline?: boolean;
+  /**
+   * Where each set's catalogue facts come from. Left out, resolveSetFacts()
+   * runs here with the options above; collection.ts hands in a day-long cache
+   * in front of it, keyed by set and by which printings are asked about, so a
+   * write to a row costs a read of the rows and not the matching again.
+   */
+  factsSource?: FactsSource;
 };
 
 /** What the catalogue knows about a set it cannot be asked about: nothing. */
@@ -532,9 +539,198 @@ const OFFLINE_CATALOGUE: SetCatalogue = {
   prices: {},
 };
 
+/** What a row says about which card it is. With the set name, all the catalogue is asked. */
+export type CardIdentity = { number: string; name: string };
+
+/** One identity as the facts map keys it. A NUL cannot come out of a form, so it cannot collide. */
+export const identityKey = ({ number, name }: CardIdentity): string => `${number}\u0000${name}`;
+/**
+ * The identities of a set's rows, each once, in one order. What the facts of a
+ * set are a function of, and so what a cache may key them on: two rows of the
+ * same printing, or the same rows in another order, must ask the same question.
+ */
+export function setIdentities(rows: CollectionRow[]): CardIdentity[] {
+  const seen = new Map<string, CardIdentity>();
+  for (const row of rows) {
+    const identity = { number: row.number, name: row.name };
+    seen.set(identityKey(identity), identity);
+  }
+  return [...seen.keys()].sort().map((key) => seen.get(key)!);
+}
+
+/**
+ * What the catalogues say about one printing: facts about the card, none about
+ * the copy. Kept apart from the row's own fields so a star, a quantity or a
+ * note can change without any of this being asked again.
+ */
+export type CardFacts = {
+  image: string | null;
+  imageHigh: string | null;
+  /** TCGdex's id for this card, or null where nothing matched. */
+  tcgId: string | null;
+  /** TCGdex's name where the row matched a card; the Dex files under it. See speciesId. */
+  matchedName: string | null;
+  price: Price | null;
+  priceHolo: Price | null;
+};
+
+/** A set as the catalogue knows it, and the facts of each printing asked about. */
+export type SetFacts = {
+  title: string | null;
+  logo: string | null;
+  releaseDate: string | null;
+  total: number | null;
+  /** By identityKey(). Every identity asked for has an entry, matched or not. */
+  cards: Record<string, CardFacts>;
+};
+
+/** Where a set's facts come from: resolveSetFacts(), or a cache in front of it. */
+export type FactsSource = (setName: string, identities: CardIdentity[]) => Promise<SetFacts>;
+
+export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offline">;
+
+/**
+ * The catalogue half of a set: which card each printing is, its scan, and what
+ * it is worth. A pure function of the set name and the identities, and the
+ * whole of what a rebuild used to pay for — one to three lookups per card the
+ * set catalogue does not place, and one TCGdex request per card the price
+ * guide does not know. Twenty seconds for this collection, paid again on every
+ * write until the caller put a day-long cache in front of it (collection.ts).
+ */
+export async function resolveSetFacts(
+  setName: string,
+  identities: CardIdentity[],
+  { prices = true, priceSource = pricesFor, offline = false }: ResolveOptions = {},
+): Promise<SetFacts> {
+  const cat = offline ? OFFLINE_CATALOGUE : await setCatalogue(setName);
+  const { assetBase, code, setHasScans } = cat;
+
+  // The fallback is one to three HEAD requests per card, so on a set TCGdex
+  // does not know at all it would fire hundreds and find nothing. A cap keeps
+  // it useful for the handful of cards from a set too new to be indexed,
+  // which is the only case it was ever for.
+  //
+  // None at all offline: the fallbacks are the other two catalogues, and an
+  // outage answer should cost the rows and nothing over the network.
+  let fallbacks = offline ? 0 : 40;
+
+  // Eight at a time, as the rows were walked before this was a function of
+  // identities. The set catalogue is one cached read; the fallbacks are what
+  // the limit is for.
+  const resolved = await mapLimit(identities, 8, async (identity) => {
+    const { name, number } = identity;
+    const match = numberForms(number)
+      .map((form) => cat.byNumber[form.toLowerCase()])
+      .find(Boolean);
+    // A number that resolves to a different Pokémon means the numbering does
+    // not line up, and a wrong scan is worse than a missing one.
+    const matched = match?.name && !sameCard(match.name, name) ? undefined : match;
+
+    // low, not high. TCGdex publishes both; high is around 600px wide and
+    // 77kB, low is 245px and 22kB. The grid draws these at 104 to 132px and
+    // the list view at 44px, and there is no detail view anywhere on the
+    // route, so every one of those 55 extra kilobytes was decoded and thrown
+    // away. It is the page's LCP element, measured at seven seconds on a
+    // throttled phone.
+    //
+    // Through localise(), which is the identity function here (see ./util). This was the
+    // one place that skipped it: scripts/localise-images.mjs had already
+    // pulled 1,449 of these scans into public/artwork/cards, the manifest
+    // mapped every one of them, and nothing read it. Every card on the page
+    // was still being fetched from TCGdex' CDN, which is why the sets that
+    // happen to sit on a cold edge there load visibly slower than the rest.
+    //
+    // The size the grid draws at is a slider now, and past about 180px the
+    // 245px file is being stretched. So the big one is resolved too and
+    // handed over beside the small one, for the browser to ask for only if
+    // the reader ever pushes the grid up that far. Only from TCGdex, whose
+    // URLs carry the size as the last segment: the two fallbacks below
+    // publish one file each and there is no larger one to name.
+    const tcgBase = !setHasScans
+      ? null
+      : (matched?.image ??
+        (matched?.localId && assetBase ? `${assetBase}/${matched.localId}` : null));
+    let image = tcgBase ? localise(`${tcgBase}/low.webp`) : null;
+    let imageHigh = tcgBase ? localise(`${tcgBase}/high.webp`) : null;
+    if (!image && number && fallbacks > 0) {
+      fallbacks--;
+      // Limitless first, where the set has a code there. Not every set does,
+      // and the second catalogue does not need one: it is asked by set name.
+      //
+      // Never for a gallery number, though: Limitless renumbers those into the
+      // parent set's run, so TG04 would be asked for under the parent's 04 and
+      // answer with a different card. That is the offset lib/core/catalogue/catalogue.ts
+      // declines to guess, and it is why this line keeps the letter check the
+      // one below no longer needs.
+      if (code && !/^[A-Za-z]/.test(number)) image = await limitlessScan(code, number);
+      // The last resort, for the cards neither TCGdex nor Limitless has. This
+      // is the one that finds the €440 Pikachu with the grey felt hat, the
+      // most expensive card in the binder and the only one on the dashboard
+      // with an empty square where its picture goes.
+      image ??= await ptcgScan(setName, number, name);
+      // A fallback scan is one file, so there is no larger version of it to
+      // offer and the grid keeps drawing the one it has.
+      imageHigh = null;
+    }
+
+    return {
+      key: identityKey(identity),
+      image,
+      imageHigh,
+      tcgId: matched?.id ?? null,
+      matchedName: matched?.name ?? null,
+    };
+  });
+
+  // One pass over the whole set rather than a request inside the map above:
+  // that map already runs eight at a time, and a nested fetch would have made
+  // it eight times eight.
+  //
+  // Whatever the catalogue already priced is free; the rest is asked for
+  // here. With pre-pricing off — which is the default — that is every matched
+  // card, exactly as before. With it on, this list is usually empty.
+  const wanted = [...new Set(resolved.map((r) => r.tcgId).filter(Boolean))] as string[];
+  const missing = prices ? wanted.filter((id) => !(id in cat.prices)) : [];
+  const fetched = missing.length ? await priceSource(missing) : new Map<string, CardPrices>();
+  const priceOfId = (id: string | null) =>
+    (prices && id && (fetched.get(id)?.price ?? cat.prices[id])) || null;
+  /**
+   * The foil price, where the fetch found one.
+   *
+   * Only from the fetch, never from cat.prices: the set catalogue pre-prices
+   * a whole set into a Record<string, Price> and has no second slot, so a
+   * pre-priced card has no foil figure and falls back to the normal one.
+   * That is invisible today — pre-pricing ships off (CATALOGUE_SET_PRICING_MAX
+   * defaults to 0) — and is the reason this is a lookup rather than a field
+   * on that Record: widening the catalogue's shape is a bigger change than
+   * the one this is part of, and it would want its own cache version bump.
+   */
+  const holoOfId = (id: string | null) => (prices && id && fetched.get(id)?.holo) || null;
+
+  const cards: Record<string, CardFacts> = {};
+  for (const r of resolved) {
+    cards[r.key] = {
+      image: r.image,
+      imageHigh: r.imageHigh,
+      tcgId: r.tcgId,
+      matchedName: r.matchedName,
+      price: priceOfId(r.tcgId),
+      priceHolo: holoOfId(r.tcgId),
+    };
+  }
+
+  return {
+    title: cat.officialName,
+    logo: cat.logo,
+    releaseDate: cat.releaseDate,
+    total: cat.total,
+    cards,
+  };
+}
+
 export async function buildCollection(
   rows: CollectionRow[],
-  { prices = true, priceSource = pricesFor, offline = false }: BuildOptions = {},
+  { prices = true, priceSource = pricesFor, offline = false, factsSource }: BuildOptions = {},
 ): Promise<CardSet[]> {
   if (!rows.length) return [];
 
@@ -556,83 +752,24 @@ export async function buildCollection(
   }
   if (!grouped.size) return [];
 
+  const facts: FactsSource =
+    factsSource ??
+    ((setName, identities) =>
+      resolveSetFacts(setName, identities, { prices, priceSource, offline }));
+
   // Three at a time. Forty-eight sets going at once was enough for TCGdex to
   // start refusing, and a refusal is a whole section of the page with no
   // artwork. The per-set work itself is behind a shared cache now (see
   // lib/core/catalogue/catalogue.ts), so on a warm cache this loop is a lookup rather
   // than a walk and the limit costs nothing.
   const out = await mapLimit([...grouped.entries()], 3, async ([setName, setRows]) => {
-    const cat = offline ? OFFLINE_CATALOGUE : await setCatalogue(setName);
-    const { assetBase, code, setHasScans } = cat;
+    const set = await facts(setName, setIdentities(setRows));
 
-    // The fallback is one to three HEAD requests per card, so on a set TCGdex
-    // does not know at all it would fire hundreds and find nothing. A cap keeps
-    // it useful for the handful of cards from a set too new to be indexed,
-    // which is the only case it was ever for.
-    //
-    // None at all offline: the fallbacks are the other two catalogues, and an
-    // outage answer should cost the rows and nothing over the network.
-    let fallbacks = offline ? 0 : 40;
-
-    // One entry per printing first, then folded together below. Splitting it
-    // this way keeps the artwork lookup running eight at a time over the rows
-    // as they arrived, rather than over an already-grouped structure.
-    const printings = await mapLimit(setRows, 8, async (row) => {
+    // One entry per printing first, then folded together below: the facts of
+    // the card from the catalogue, the facts of the copy from the row.
+    const printings = setRows.map((row) => {
       const { name, number } = row;
-      const match = numberForms(number)
-        .map((form) => cat.byNumber[form.toLowerCase()])
-        .find(Boolean);
-      // A number that resolves to a different Pokémon means the numbering does
-      // not line up, and a wrong scan is worse than a missing one.
-      const matched = match?.name && !sameCard(match.name, name) ? undefined : match;
-
-      // low, not high. TCGdex publishes both; high is around 600px wide and
-      // 77kB, low is 245px and 22kB. The grid draws these at 104 to 132px and
-      // the list view at 44px, and there is no detail view anywhere on the
-      // route, so every one of those 55 extra kilobytes was decoded and thrown
-      // away. It is the page's LCP element, measured at seven seconds on a
-      // throttled phone.
-      //
-      // Through localise(), which is the identity function here (see ./util). This was the
-      // one place that skipped it: scripts/localise-images.mjs had already
-      // pulled 1,449 of these scans into public/artwork/cards, the manifest
-      // mapped every one of them, and nothing read it. Every card on the page
-      // was still being fetched from TCGdex' CDN, which is why the sets that
-      // happen to sit on a cold edge there load visibly slower than the rest.
-      //
-      // The size the grid draws at is a slider now, and past about 180px the
-      // 245px file is being stretched. So the big one is resolved too and
-      // handed over beside the small one, for the browser to ask for only if
-      // the reader ever pushes the grid up that far. Only from TCGdex, whose
-      // URLs carry the size as the last segment: the two fallbacks below
-      // publish one file each and there is no larger one to name.
-      const tcgBase = !setHasScans
-        ? null
-        : (matched?.image ??
-          (matched?.localId && assetBase ? `${assetBase}/${matched.localId}` : null));
-      let image = tcgBase ? localise(`${tcgBase}/low.webp`) : null;
-      let imageHigh = tcgBase ? localise(`${tcgBase}/high.webp`) : null;
-      if (!image && number && fallbacks > 0) {
-        fallbacks--;
-        // Limitless first, where the set has a code there. Not every set does,
-        // and the second catalogue does not need one: it is asked by set name.
-        //
-        // Never for a gallery number, though: Limitless renumbers those into the
-        // parent set's run, so TG04 would be asked for under the parent's 04 and
-        // answer with a different card. That is the offset lib/core/catalogue/catalogue.ts
-        // declines to guess, and it is why this line keeps the letter check the
-        // one below no longer needs.
-        if (code && !/^[A-Za-z]/.test(number)) image = await limitlessScan(code, number);
-        // The last resort, for the cards neither TCGdex nor Limitless has. This
-        // is the one that finds the €440 Pikachu with the grey felt hat, the
-        // most expensive card in the binder and the only one on the dashboard
-        // with an empty square where its picture goes.
-        image ??= await ptcgScan(setName, number, name);
-        // A fallback scan is one file, so there is no larger version of it to
-        // offer and the grid keeps drawing the one it has.
-        imageHigh = null;
-      }
-
+      const card = set.cards[identityKey(row)];
       return {
         key: `${setName}-${number || name}`,
         name,
@@ -643,9 +780,9 @@ export async function buildCollection(
         // card to match is a separate change with its own blast radius.
         type: row.types.join(", ") || null,
         gen: row.gen,
-        image,
-        imageHigh,
-        imageSize: measure(image),
+        image: card?.image ?? null,
+        imageHigh: card?.imageHigh ?? null,
+        imageSize: measure(card?.image ?? null),
         // TCGdex' name where the row matched one, the row's own where it did
         // not. Which Pokémon a card shows is a fact about the card rather than
         // about how it was typed, and the Dex is the one place a misspelling
@@ -653,10 +790,10 @@ export async function buildCollection(
         // simply was not filed anywhere and Tyranitar read as uncaught. The
         // scans and the prices survive a typo now (see sameCard); this is the
         // rest of that.
-        speciesId: speciesOf(matched?.name ?? name),
-        // Kept only long enough to look the price up below: it is TCGdex's id
-        // for this card, and the price endpoint is the only thing that wants it.
-        tcgId: matched?.id ?? null,
+        speciesId: speciesOf(card?.matchedName ?? name),
+        tcgId: card?.tcgId ?? null,
+        price: card?.price ?? null,
+        priceHolo: card?.priceHolo ?? null,
         rarity: row.rarity,
         owned: row.owned,
         // The row's own id and inventory facts, carried through untouched so
@@ -676,31 +813,6 @@ export async function buildCollection(
         collectionId: row.collectionId,
       };
     });
-
-    // One pass over the whole set rather than a request inside the map above:
-    // that map already runs eight at a time, and a nested fetch would have made
-    // it eight times eight.
-    //
-    // Whatever the catalogue already priced is free; the rest is asked for
-    // here. With pre-pricing off — which is the default — that is every matched
-    // card, exactly as before. With it on, this list is usually empty.
-    const wanted = [...new Set(printings.map((p) => p.tcgId).filter(Boolean))] as string[];
-    const missing = prices ? wanted.filter((id) => !(id in cat.prices)) : [];
-    const fetched = missing.length ? await priceSource(missing) : new Map<string, CardPrices>();
-    const priceOfId = (id: string | null) =>
-      (prices && id && (fetched.get(id)?.price ?? cat.prices[id])) || null;
-    /**
-     * The foil price, where the fetch found one.
-     *
-     * Only from the fetch, never from cat.prices: the set catalogue pre-prices
-     * a whole set into a Record<string, Price> and has no second slot, so a
-     * pre-priced card has no foil figure and falls back to the normal one.
-     * That is invisible today — pre-pricing ships off (CATALOGUE_SET_PRICING_MAX
-     * defaults to 0) — and is the reason this is a lookup rather than a field
-     * on that Record: widening the catalogue's shape is a bigger change than
-     * the one this is part of, and it would want its own cache version bump.
-     */
-    const holoOfId = (id: string | null) => (prices && id && fetched.get(id)?.holo) || null;
 
     // Holding a card normally and again as a reverse holo is one card with two
     // printings, not two cards. 317 of them in this collection, and shown twice
@@ -740,8 +852,8 @@ export async function buildCollection(
         // goes for the price: a card held twice is one card, and whichever of
         // its rows TCGdex matched is the one that knows what it is worth.
         existing.image ??= p.image;
-        existing.price ??= priceOfId(p.tcgId);
-        existing.priceHolo ??= holoOfId(p.tcgId);
+        existing.price ??= p.price;
+        existing.priceHolo ??= p.priceHolo;
         existing.tcgId ??= p.tcgId;
         continue;
       }
@@ -755,8 +867,8 @@ export async function buildCollection(
         imageHigh: p.imageHigh,
         imageSize: p.imageSize,
         speciesId: p.speciesId,
-        price: priceOfId(p.tcgId),
-        priceHolo: holoOfId(p.tcgId),
+        price: p.price,
+        priceHolo: p.priceHolo,
         tcgId: p.tcgId,
         variants: [variant],
         owned: p.owned,
@@ -766,11 +878,11 @@ export async function buildCollection(
 
     return {
       name: setName,
-      title: cat.officialName ?? setName,
-      logo: cat.logo,
-      logoSize: measure(cat.logo),
-      releaseDate: cat.releaseDate,
-      total: cat.total,
+      title: set.title ?? setName,
+      logo: set.logo,
+      logoSize: measure(set.logo),
+      releaseDate: set.releaseDate,
+      total: set.total,
       // Ascending by number, which is the order the cards sit in a binder. The
       // gallery cards are lettered (TG01), so they sort to the front on a
       // numeric parse of 0; comparing the raw string keeps them together at
