@@ -53,7 +53,13 @@ import IDS from "../cardmarket-ids.generated.json";
 import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
-import { getFolder, listCardPrices, listFolders, type Folder } from "../../storage/postgres";
+import {
+  getFolder,
+  listCardPrices,
+  listFolders,
+  listPublicFolders,
+  type Folder,
+} from "../../storage/postgres";
 import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -207,6 +213,27 @@ const cachedFolders = (userId: string, db: SupabaseClient | null) =>
     revalidate: 3600,
     tags: [foldersTag(userId)],
   })();
+
+/**
+ * The folders one person shows on their public profile, for a visitor.
+ *
+ * Through the service role, like the public collection: the visitor has no account to act
+ * as, and the anonymous role may not read this table at all. The store scopes the read to the
+ * one owner and to public rows. Cached an hour under the owner's folders tag, so a folder made
+ * public shows on the next request; and an owner whose profile is private is never asked for
+ * (ownerOf() answers null first, in every public route).
+ */
+const cachedPublicFolders = (userId: string, db: SupabaseClient) =>
+  unstable_cache(() => listPublicFolders(db, userId), ["public-folders", userId], {
+    revalidate: 3600,
+    tags: [foldersTag(userId)],
+  })();
+
+export const getPublicFolders = cache(async (userId: string): Promise<Folder[]> => {
+  const db = adminClient();
+  if (!db) return [];
+  return cachedPublicFolders(userId, db);
+});
 
 export const getFolders = cache(async (userId: string, token?: string): Promise<Folder[]> => {
   const db = token ? userClient(token) : await serverClient();

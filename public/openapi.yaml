@@ -508,11 +508,12 @@ components:
       description: >-
         A folder the person made. One filled by hand holds the copies filed in it; one with a
         rule fills itself from the owned copies the rule matches. A folder keeps its kind.
-      required: [id, name, kind, rule, pokedex, createdAt]
+      required: [id, name, kind, rule, pokedex, isPublic, createdAt]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
         kind: { type: string, enum: [manual, rule] }
+        isPublic: { type: boolean, description: "Shown on the owner's public profile, as a filter over the public cards, while the profile itself is public. Off by default." }
         pokedex:
           oneOf:
             - { $ref: "#/components/schemas/PokedexSetting" }
@@ -567,17 +568,19 @@ components:
         name: { type: string, minLength: 1, maxLength: 60 }
         rule: { $ref: "#/components/schemas/FolderRule" }
         pokedex: { $ref: "#/components/schemas/PokedexSetting" }
+        isPublic: { type: boolean, default: false }
 
     FolderPatch:
       type: object
       description: >-
-        A name, a rule, a Pokédex setting, or any of them together. A folder filled by hand
-        cannot be given a rule, and a rule folder cannot lose its rule; either is a 400 with a
-        sentence.
+        A name, a rule, a Pokédex setting, whether it is public, or any of them together. A
+        folder filled by hand cannot be given a rule, and a rule folder cannot lose its rule;
+        either is a 400 with a sentence.
       minProperties: 1
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
         rule: { $ref: "#/components/schemas/FolderRule" }
+        isPublic: { type: boolean }
         pokedex:
           description: "`null` turns the Pokédex setting off."
           oneOf:
@@ -1714,6 +1717,7 @@ paths:
         - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
+        - { name: collection, in: query, schema: { type: string, format: uuid }, description: "One of the owner's public folders (`GET /v1/public/{username}/folders`): the copies filed in it, or the owned copies its rule matches. Any other id is a 404." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name], default: set }, description: "`set` is the assembly's order (set by set, number by number)." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
@@ -1733,6 +1737,44 @@ paths:
                   sets: { type: integer, description: "Sets with at least one owned card, over the whole collection rather than the page." }
                   facets: { $ref: "#/components/schemas/Facets" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/public/{username}/folders:
+    get:
+      tags: [Public]
+      operationId: listPublicFolders
+      summary: The folders a person shows on their public profile, oldest first
+      description: |
+        Only folders their owner marked public, and only while the profile itself is public:
+        a private profile is a 404 here as everywhere under this prefix. Each carries how many
+        owned cards it holds, counted the way the public list counts them (one per card, not
+        per copy), so a filter chip can say it. No key; sixty a minute per address; cached at
+        the CDN.
+      security: []
+      parameters:
+        - { name: username, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The public folders.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Public" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [folders]
+                properties:
+                  folders:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, kind, count]
+                      properties:
+                        id: { type: string, format: uuid }
+                        name: { type: string }
+                        kind: { type: string, enum: [manual, rule] }
+                        count: { type: integer, description: "Cards with an owned copy in it." }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }

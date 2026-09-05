@@ -156,7 +156,7 @@ describe("GET /api/v1/folders", () => {
 describe("POST /api/v1/folders", () => {
   it("creates a folder with a trimmed name", async () => {
     const res = await post(JSON.stringify({ name: "  Binder   two " }));
-    expect(createFolder).toHaveBeenCalledWith("me-uuid", "Binder two", null, null, "t");
+    expect(createFolder).toHaveBeenCalledWith("me-uuid", "Binder two", null, null, false, "t");
     expect(await res.json()).toEqual({ ok: true, folder: { ...FOLDER, count: 0 } });
   });
 
@@ -180,6 +180,7 @@ describe("POST /api/v1/folders", () => {
       "Kanto",
       { dex: { from: 1, to: 151 }, sets: ["Base Set"] },
       null,
+      false,
       "t",
     );
     expect(await res.json()).toEqual({ ok: true, folder: { ...KANTO, count: 0 } });

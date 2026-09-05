@@ -738,6 +738,8 @@ export type Folder = {
   rule: FolderRule | null;
   /** Shown as a Pokédex, with its settings; null for a plain list. */
   pokedex: PokedexSetting | null;
+  /** Shown on the owner's public profile, while the profile itself is public. */
+  isPublic: boolean;
   createdAt: string;
 };
 
@@ -746,10 +748,11 @@ type FolderRecord = {
   name: string;
   rule: unknown;
   pokedex: unknown;
+  is_public: boolean;
   created_at: string;
 };
 
-const FOLDER_COLUMNS = "id,name,rule,pokedex,created_at";
+const FOLDER_COLUMNS = "id,name,rule,pokedex,is_public,created_at";
 
 const toFolder = (r: FolderRecord): Folder => {
   const rule = (r.rule as FolderRule | null) ?? null;
@@ -760,6 +763,7 @@ const toFolder = (r: FolderRecord): Folder => {
     kind: rule ? "rule" : "manual",
     rule,
     pokedex,
+    isPublic: r.is_public,
     createdAt: r.created_at,
   };
 };
@@ -796,17 +800,23 @@ export async function createFolder(
   name: string,
   rule: FolderRule | null,
   pokedex: PokedexSetting | null = null,
+  isPublic = false,
 ): Promise<Folder> {
   const { data, error } = await db
     .from("collections")
-    .insert({ user_id: userId, name, rule, pokedex })
+    .insert({ user_id: userId, name, rule, pokedex, is_public: isPublic })
     .select(FOLDER_COLUMNS)
     .single();
   if (error) throw new Error(`That folder could not be created: ${error.message}`);
   return toFolder(data as FolderRecord);
 }
 
-export type FolderPatch = { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null };
+export type FolderPatch = {
+  name?: string;
+  rule?: FolderRule;
+  pokedex?: PokedexSetting | null;
+  isPublic?: boolean;
+};
 
 /** null when no folder of the caller's has that id. Only what the patch names changes. */
 export async function updateFolder(
@@ -815,15 +825,35 @@ export async function updateFolder(
   id: string,
   patch: FolderPatch,
 ): Promise<Folder | null> {
+  // The column is snake_case where the body is camelCase; the rest share their names.
+  const { isPublic, ...rest } = patch;
+  const changes = { ...rest, ...(isPublic !== undefined ? { is_public: isPublic } : {}) };
   const { data, error } = await db
     .from("collections")
-    .update({ ...patch, updated_at: new Date().toISOString() })
+    .update({ ...changes, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", userId)
     .select(FOLDER_COLUMNS)
     .maybeSingle();
   if (error) throw new Error(`That folder could not be changed: ${error.message}`);
   return data ? toFolder(data as FolderRecord) : null;
+}
+
+/**
+ * The folders one person shows on their public profile, oldest first. Read through the
+ * service role by the public routes (see getPublicFolders in lib/core/collection/collection.ts):
+ * scoped to the one owner and to is_public rows here, in the query, since that client answers
+ * to no policy.
+ */
+export async function listPublicFolders(db: SupabaseClient, userId: string): Promise<Folder[]> {
+  const { data, error } = await db
+    .from("collections")
+    .select(FOLDER_COLUMNS)
+    .eq("user_id", userId)
+    .eq("is_public", true)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(`Reading the public folders failed: ${error.message}`);
+  return ((data ?? []) as FolderRecord[]).map(toFolder);
 }
 
 /**

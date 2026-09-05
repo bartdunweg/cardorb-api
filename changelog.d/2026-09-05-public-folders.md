@@ -1,0 +1,1 @@
+- A folder can be shown on your public profile: `isPublic` on `POST` and `PATCH /v1/folders`, off by default. `GET /v1/public/{username}/folders` lists the ones you show, with how many cards each holds, and `GET /v1/public/{username}/cards?collection=` narrows the public list to one of them.

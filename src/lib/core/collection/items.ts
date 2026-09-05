@@ -456,7 +456,8 @@ export function facetsOf(
 
 export const publicFacets = (items: PublicItem[]): PublicFacets => facetsOf(items);
 
-export type PublicQuery = PublicFilter & Page & { sort?: PublicSort; order?: Order };
+export type PublicQuery = PublicFilter &
+  Page & { sort?: PublicSort; order?: Order; collection?: string };
 
 /**
  * `q`, `set`, `rarity`, `sort`, `order`, `limit` and `offset`: a public page has no wishlist,
@@ -465,7 +466,7 @@ export type PublicQuery = PublicFilter & Page & { sort?: PublicSort; order?: Ord
 export function readPublicQuery(
   params: URLSearchParams,
 ): { kind: "ok"; query: PublicQuery } | { kind: "invalid"; error: string } {
-  const kept = ["q", "set", "rarity", "sort", "order", "limit", "offset"];
+  const kept = ["q", "set", "rarity", "sort", "order", "limit", "offset", "collection"];
   const sort = params.get("sort");
   if (sort !== null && !(PUBLIC_SORTS as readonly string[]).includes(sort))
     return { kind: "invalid", error: `sort must be one of ${PUBLIC_SORTS.join(", ")}.` };
@@ -475,13 +476,14 @@ export function readPublicQuery(
     ),
   );
   if (read.kind === "invalid") return read;
-  const { q, set, rarity, order, limit, offset } = read.query;
+  const { q, set, rarity, order, limit, offset, collection } = read.query;
   return {
     kind: "ok",
     query: {
       ...(q ? { q } : {}),
       ...(set ? { set } : {}),
       ...(rarity ? { rarity } : {}),
+      ...(collection ? { collection } : {}),
       ...(sort ? { sort: sort as PublicSort } : {}),
       ...(order ? { order } : {}),
       limit,

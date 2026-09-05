@@ -153,11 +153,12 @@ export async function createFolder(
   name: string,
   rule: FolderRule | null,
   pokedex: PokedexSetting | null,
+  isPublic: boolean,
   token?: string,
 ) {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
-  return postgres.createFolder(db, userId, name, rule, pokedex);
+  return postgres.createFolder(db, userId, name, rule, pokedex, isPublic);
 }
 
 export async function updateFolder(
