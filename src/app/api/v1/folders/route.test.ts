@@ -130,6 +130,13 @@ describe("GET /api/v1/folders", () => {
       ],
     });
   });
+
+  it("says when the catalogue was down, because a rule count is then low", async () => {
+    getCollection.mockResolvedValue({ sets: SETS, failed: false, catalogueUnavailable: true });
+    const body = await (await get()).json();
+    expect(body.catalogueUnavailable).toBe(true);
+    expect(body.folders).toHaveLength(2);
+  });
 });
 
 describe("POST /api/v1/folders", () => {

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
-  matchesRule,
   readFolderBody,
+  ruleMatcher,
   validateFolderRule,
+  type FolderRule,
   type RuleSubject,
   validatePokedexSetting,
 } from "./folders";
+
+const matchesRule = (it: RuleSubject, rule: FolderRule) => ruleMatcher(rule)(it);
 
 const copy = (over: Partial<RuleSubject> = {}): RuleSubject => ({
   speciesId: 25,

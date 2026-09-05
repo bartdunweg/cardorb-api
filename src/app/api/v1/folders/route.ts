@@ -40,7 +40,9 @@ export async function GET(req: Request) {
   // folder: filed copies for a folder filled by hand, matching copies for one with a rule
   // (a dex rule needs speciesId, which only the assembled item carries). A collection that
   // cannot be read counts nothing rather than failing the list; the sidebar tolerates that.
-  const { sets, failed } = await getCollection(who.userId, token);
+  // During a TCGdex outage the assembly has no speciesId and no catalogue titles, so a rule
+  // count is low; the flag rides along so a client can say so.
+  const { sets, failed, catalogueUnavailable } = await getCollection(who.userId, token);
   const items = failed ? [] : flattenItems(sets);
   const filed = new Map<string, number>();
   for (const it of items) {
@@ -56,7 +58,10 @@ export async function GET(req: Request) {
   };
 
   return NextResponse.json(
-    { folders: folders.map((f) => ({ ...f, count: count(f) })) },
+    {
+      folders: folders.map((f) => ({ ...f, count: count(f) })),
+      ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
+    },
     { headers: readHeaders(req) },
   );
 }

@@ -169,8 +169,6 @@ export function ruleMatcher(rule: FolderRule): (it: RuleSubject) => boolean {
   };
 }
 
-export const matchesRule = (it: RuleSubject, rule: FolderRule): boolean => ruleMatcher(rule)(it);
-
 export type FolderBody = { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null };
 
 /**
