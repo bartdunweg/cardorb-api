@@ -19,6 +19,8 @@ if the two have drifted apart.
   Pokémon show and the range collected, `null` turns it off; the built-in Pokédex takes the same
   setting from `PATCH /v1/profile { pokedex }`.
 
+- A folder can be shown on your public profile: `isPublic` on `POST` and `PATCH /v1/folders`, off by default. `GET /v1/public/{username}/folders` lists the ones you show, with how many cards each holds, and `GET /v1/public/{username}/cards?collection=` narrows the public list to one of them.
+
 - Three answers put right after review. `GET /v1/cards?collection=` on a rule folder now
   keeps its matches when `owned=false` is also given, as the contract said. A folder body may
   be 8 kB, so a rule with twenty sets and twenty rarities is no longer refused as too large.

@@ -169,13 +169,18 @@ export function ruleMatcher(rule: FolderRule): (it: RuleSubject) => boolean {
   };
 }
 
-export type FolderBody = { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null };
+export type FolderBody = {
+  name?: string;
+  rule?: FolderRule;
+  pokedex?: PokedexSetting | null;
+  isPublic?: boolean;
+};
 
 /**
- * A folder's body, for both routes: on create a name is required and a rule and a Pokédex
- * setting may come with it; on patch any of the three. `pokedex: null` turns the setting off,
- * unlike `rule`, which a folder keeps. Nothing else is accepted, so a client cannot send a field
- * the API silently drops.
+ * A folder's body, for both routes: on create a name is required and a rule, a Pokédex
+ * setting and `isPublic` may come with it; on patch any of the four. `pokedex: null` turns the
+ * setting off, unlike `rule`, which a folder keeps. Nothing else is accepted, so a client cannot
+ * send a field the API silently drops.
  */
 export function readFolderBody(
   body: unknown,
@@ -206,15 +211,21 @@ export function readFolderBody(
       out.pokedex = setting.setting;
     }
   }
+  if (body.isPublic !== undefined) {
+    if (typeof body.isPublic !== "boolean")
+      return { kind: "invalid", error: "isPublic is true or false." };
+    out.isPublic = body.isPublic;
+  }
   if (
     mode === "patch" &&
     out.name === undefined &&
     out.rule === undefined &&
-    out.pokedex === undefined
+    out.pokedex === undefined &&
+    out.isPublic === undefined
   )
     return {
       kind: "invalid",
-      error: "Nothing to change: send a name, a rule or a Pokédex setting.",
+      error: "Nothing to change: send a name, a rule, a Pokédex setting or isPublic.",
     };
   return { kind: "ok", body: out };
 }

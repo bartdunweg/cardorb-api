@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter } from "@/lib/api/respond";
-import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
+import { getPublicCollection, getPublicFolders, ownerOf } from "@/lib/core/collection/collection";
 import { forPublic } from "@/lib/core/collection/cards";
 import {
+  filterItems,
   filterPublicItems,
+  flattenItems,
   pageOf,
   publicFacets,
   publicItems,
@@ -48,9 +50,29 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
 
   const shown = forPublic(sets);
   const all = publicItems(shown);
+
+  // A folder narrows the page to what it holds: the copies filed in it, or the owned copies
+  // its rule matches. Only a folder its owner shows; any other id is a 404, the same answer
+  // as a folder that does not exist, so a visitor cannot tell one from the other. The match
+  // runs on the private items, which know their folder and their rule's facts, and only the
+  // card keys come across to the public list.
+  let listed = all;
+  if (read.query.collection) {
+    const folder = (await getPublicFolders(owner.id)).find((f) => f.id === read.query.collection);
+    if (!folder) return apiError(404, "No such folder.");
+    const filter = folder.rule
+      ? { owned: undefined, rule: folder.rule }
+      : { owned: true, collection: folder.id };
+    // A copy names its card the way the assembly keys it (cards.ts): the set, then the number or the name.
+    const keys = new Set(
+      filterItems(flattenItems(sets), filter).map((it) => `${it.set}-${it.number || it.name}`),
+    );
+    listed = all.filter((it) => keys.has(it.key));
+  }
+
   const { sort, order } = read.query;
   const { items, total } = pageOf(
-    sortPublicItems(filterPublicItems(all, read.query), sort, order),
+    sortPublicItems(filterPublicItems(listed, read.query), sort, order),
     read.query,
   );
   // How many sets the owned cards span, for the line under the profile's name; a page of a

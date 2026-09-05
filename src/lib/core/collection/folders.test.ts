@@ -83,6 +83,17 @@ describe("readFolderBody", () => {
       body: { name: "Kanto", rule: { dex: { from: 1, to: 151 } } },
     });
   });
+  it("takes isPublic as a boolean and nothing else", () => {
+    expect(readFolderBody({ isPublic: true }, "patch")).toEqual({
+      kind: "ok",
+      body: { isPublic: true },
+    });
+    expect(readFolderBody({ isPublic: "yes" }, "patch").kind).toBe("invalid");
+    expect(readFolderBody({ name: "Kanto", isPublic: false }, "create")).toEqual({
+      kind: "ok",
+      body: { name: "Kanto", isPublic: false },
+    });
+  });
   it("wants at least one change on patch and never a null rule", () => {
     expect(readFolderBody({}, "patch").kind).toBe("invalid");
     expect(readFolderBody({ rule: null }, "patch").kind).toBe("invalid");
