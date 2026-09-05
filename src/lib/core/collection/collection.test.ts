@@ -363,6 +363,7 @@ describe("facts source", () => {
               imageHigh: null,
               tcgId: `base1-${i.number}`,
               matchedName: i.name,
+              number: i.number,
               price: null,
               priceHolo: null,
             },

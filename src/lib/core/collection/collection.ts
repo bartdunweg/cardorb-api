@@ -44,7 +44,9 @@ import {
   identityKey,
   resolveSetFacts,
 } from "./cards";
-import { DAY } from "../util";
+import { DAY, cardNumber } from "../util";
+import { ptcgPrices, type UsdPrice } from "../catalogue/ptcg";
+import { blendPrices, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
@@ -293,18 +295,74 @@ const cachedSetFacts = (
   setName: string,
   identities: CardIdentity[],
   priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
-  usdToEur: number | null,
 ) =>
   timedCache(`cache set-facts ${setName}`, (ran) =>
     unstable_cache(
       () => {
         ran();
-        return resolveSetFacts(setName, identities, { priceSource, usdToEur });
+        return resolveSetFacts(setName, identities, { priceSource });
       },
-      ["set-facts", "v6", setName, factsSignature(identities)],
+      ["set-facts", "v7", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
+
+/**
+ * TCGplayer's prices for a set, a day at a time, in a cache of their own rather than inside
+ * the set's facts: pokemontcg.io fails now and then, and a failure baked into a day-long
+ * entry was a day without the second price. Here a failure throws, so nothing is cached and
+ * the next request asks again; the facts, from steadier sources, keep their own day.
+ * An object rather than a Map: a Map does not survive the Data Cache (see SetCatalogue).
+ */
+const cachedUsdPrices = (setName: string) =>
+  timedCache(`cache tcgplayer ${setName}`, (ran) =>
+    unstable_cache(
+      async (): Promise<Record<string, UsdPrice>> => {
+        ran();
+        const prices = await ptcgPrices(setName);
+        if (!prices) throw new Error(`TCGplayer prices unavailable for ${setName}`);
+        return Object.fromEntries(prices);
+      },
+      ["tcgplayer", "v1", setName],
+      { revalidate: DAY, tags: ["catalogue"] },
+    )(),
+  );
+
+/**
+ * While pokemontcg.io is down, ten minutes without asking: a request that waited twelve
+ * seconds per set, twice, for fifty sets would be minutes long. Per instance, so a warm
+ * function remembers and a cold one finds out for itself.
+ */
+let ptcgQuietUntil = 0;
+const usdForSet = async (setName: string): Promise<Record<string, UsdPrice>> => {
+  if (Date.now() < ptcgQuietUntil) return {};
+  try {
+    return await cachedUsdPrices(setName);
+  } catch (err) {
+    ptcgQuietUntil = Date.now() + 10 * 60_000;
+    console.error("TCGplayer prices unavailable, Cardmarket's alone for now:", err);
+    return {};
+  }
+};
+
+/** The set's facts with the second market blended into every price, where the rate allows. */
+async function factsWithUsd(
+  setName: string,
+  identities: CardIdentity[],
+  priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
+  usdToEur: number | null,
+) {
+  const facts = await cachedSetFacts(setName, identities, priceSource);
+  if (usdToEur == null) return facts;
+  const usd = await usdForSet(setName);
+  const cards = Object.fromEntries(
+    Object.entries(facts.cards).map(([key, f]) => {
+      const p = usd[cardNumber(f.number)];
+      return [key, { ...f, price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null) }];
+    }),
+  );
+  return { ...facts, cards };
+}
 
 /**
  * The day's dollar rate, once per request and a day across them, read at the top level
@@ -349,8 +407,7 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
   const priceSource = (ids: string[]) => guideThenTcgdex(ids, known);
   const start = performance.now();
   const sets = await buildCollection(rows, {
-    factsSource: (setName, identities) =>
-      cachedSetFacts(setName, identities, priceSource, usdToEur),
+    factsSource: (setName, identities) => factsWithUsd(setName, identities, priceSource, usdToEur),
   });
   logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
   return sets;

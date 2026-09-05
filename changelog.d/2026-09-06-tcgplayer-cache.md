@@ -1,0 +1,1 @@
+- TCGplayer's prices live in a day-long cache of their own per set, blended into the set's facts on read; a failed pokemontcg.io call is not cached, so an outage costs the second price for minutes, not a day.

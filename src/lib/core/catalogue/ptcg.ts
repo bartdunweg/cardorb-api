@@ -234,24 +234,21 @@ const PRINTINGS = [
  * keyless limit.
  *
  * pokemontcg.io is slow and flaky: a set's page takes seconds, and now and then answers 502.
- * So the search gets a longer leash than the catalogue's eight seconds and three tries, and
- * where it still fails the given numbers are asked for one by one, the old way, so an outage
- * of the search costs a set its blend and not its promos' only price. The answer is cached
- * for a day by the caller, which is why a failure must not quietly be an empty map.
+ * So the search gets a longer leash than the catalogue's eight seconds and a second try, and a
+ * failure is null rather than an empty map: the caller caches an answer for a day, and an
+ * outage must not become a day without the second price.
  */
-export async function ptcgPrices(
-  setName: string,
-  numbers: string[] = [],
-): Promise<Map<string, UsdPrice>> {
+export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice> | null> {
   const set = await find(setName);
+  // A set pokemontcg.io does not know is an answer: nothing to price, cache that.
   if (!set) return new Map();
   const headers: Record<string, string> = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
-  const whole = await ptcgSetPrices(set.id, headers);
-  return whole ?? ptcgCardPrices(set.id, numbers, headers);
+  // A search that failed is not an answer: null, so the caller keeps yesterday's or asks again.
+  return ptcgSetPrices(set.id, headers);
 }
 
-const SEARCH_TIMEOUT_MS = 20_000;
+const SEARCH_TIMEOUT_MS = 12_000;
 
 type SearchPage = { data?: (PtcgPriceCard & { number?: string })[]; totalCount?: number };
 
@@ -267,7 +264,7 @@ async function ptcgSetPrices(
       `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${setId}`)}` +
       `&select=id,number,tcgplayer&pageSize=250&page=${page}`;
     let body: SearchPage | null = null;
-    for (let attempt = 0; attempt < 3 && !body; attempt++) {
+    for (let attempt = 0; attempt < 2 && !body; attempt++) {
       try {
         const res = await fetch(url, {
           headers,
@@ -279,7 +276,7 @@ async function ptcgSetPrices(
       } catch {
         // Timed out or the network failed: the next attempt follows.
       }
-      if (!body && attempt < 2) await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      if (!body && attempt < 1) await new Promise((r) => setTimeout(r, 500));
     }
     if (!body) return null;
     for (const card of body.data ?? []) {
@@ -297,37 +294,6 @@ async function ptcgSetPrices(
     if ((body.data?.length ?? 0) < 250 || (body.totalCount ?? 0) <= page * 250) break;
   }
   for (const [k, v] of alias) if (!out.has(k)) out.set(k, v);
-  return out;
-}
-
-/** The given numbers one by one, four at a time and capped at forty, as the search's fallback. */
-async function ptcgCardPrices(
-  setId: string,
-  numbers: string[],
-  headers: Record<string, string>,
-): Promise<Map<string, UsdPrice>> {
-  const out = new Map<string, UsdPrice>();
-  const wanted = numbers.map(cardNumber).filter(Boolean).slice(0, 40);
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(4, wanted.length) }, async () => {
-      while (next < wanted.length) {
-        const n = wanted[next++]!;
-        try {
-          const res = await fetch(
-            `https://api.pokemontcg.io/v2/cards/${setId}-${encodeURIComponent(n)}?select=id,tcgplayer`,
-            { headers, next: { revalidate: DAY }, signal: catalogueTimeout() },
-          );
-          if (!res.ok) continue;
-          const body = (await res.json()) as { data?: PtcgPriceCard };
-          const price = body.data && usdOf(body.data);
-          if (price) out.set(n, price);
-        } catch {
-          // This card stays unpriced; the next one is still asked for.
-        }
-      }
-    }),
-  );
   return out;
 }
 
