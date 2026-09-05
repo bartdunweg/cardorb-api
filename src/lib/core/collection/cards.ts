@@ -31,7 +31,7 @@
  * to know about. This file is what assembles their answers into a collection.
  */
 
-import { localise, mapLimit, measure, numberForms } from "../util";
+import { cardNumber, localise, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
@@ -725,7 +725,7 @@ export async function resolveSetFacts(
         )
       : new Map<string, { market: number | null; low: number | null }>();
   const secondOf = (number: string) => {
-    const p = usd.get(number.replace(/^0+/, ""));
+    const p = usd.get(cardNumber(number));
     return p && usdToEur != null ? priceFromUsd(p, usdToEur) : null;
   };
 
