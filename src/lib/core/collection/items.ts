@@ -129,7 +129,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   });
 }
 
-export const SORTS = ["set", "name", "price", "added"] as const;
+export const SORTS = ["set", "name", "price", "added", "dex"] as const;
 export type Sort = (typeof SORTS)[number];
 export type Order = "asc" | "desc";
 
@@ -139,8 +139,28 @@ export type Order = "asc" | "desc";
  * why `holo` does not read the foil fields. This used to read them for `holo`
  * too, so the sort valued a holo copy differently from every other figure.
  */
-const copyPrice = (it: CardItem): number | null =>
+export const copyPrice = (it: CardItem): number | null =>
   shownPrice((it.finish === "reverse-holo" ? it.priceHolo : null) ?? it.price);
+
+export type ListValue = { value: number; unpriced: number };
+
+/**
+ * What a list is worth: over the whole filtered list, never a page, so the figure is for the
+ * cards a person asked about and not for the hundred that happened to load. An owned copy
+ * counts `quantity` times, a wish once; `unpriced` counts the copies no price was found for,
+ * the same convention as countStats(). Euros to the cent.
+ */
+export function sumValue(items: CardItem[]): ListValue {
+  let value = 0;
+  let unpriced = 0;
+  for (const it of items) {
+    const n = it.owned ? Math.max(0, it.quantity) : 1;
+    const price = copyPrice(it);
+    if (price == null) unpriced += n;
+    else value += price * n;
+  }
+  return { value: Math.round(value * 100) / 100, unpriced };
+}
 
 /**
  * A new list in the asked order. `set` is the assembly's own order (set by set,
@@ -159,8 +179,15 @@ export function sortItems(items: CardItem[], sort: Sort = "set", order?: Order):
   if (sort === "set") {
     return (dir === 1 ? indexed : indexed.reverse()).map((x) => x.it);
   }
+  // `dex`: the national number; a trainer or energy has none and goes last like any missing key.
   const key = (it: CardItem): string | number | null =>
-    sort === "name" ? it.name : sort === "price" ? copyPrice(it) : it.acquiredAt;
+    sort === "name"
+      ? it.name
+      : sort === "price"
+        ? copyPrice(it)
+        : sort === "dex"
+          ? it.speciesId
+          : it.acquiredAt;
   indexed.sort((a, b) => {
     const ka = key(a.it);
     const kb = key(b.it);
@@ -409,11 +436,14 @@ export type PublicFacets = Facets;
  */
 export function facetsOf(
   items: { set: string; setTitle: string; rarity: string | null; owned?: boolean }[],
+  /** `owned: false` draws the menus from the wishes instead: a wishlist filters by its own sets. */
+  over: { owned?: boolean } = {},
 ): Facets {
   const sets = new Map<string, string>();
   const rarities = new Map<string, string>();
+  const wanted = over.owned === false ? false : true;
   for (const it of items) {
-    if (it.owned === false) continue;
+    if ((it.owned ?? true) !== wanted) continue;
     if (!sets.has(it.set)) sets.set(it.set, it.setTitle);
     if (it.rarity && !rarities.has(it.rarity.toLowerCase()))
       rarities.set(it.rarity.toLowerCase(), it.rarity);

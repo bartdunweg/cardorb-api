@@ -80,7 +80,13 @@ export async function POST(req: Request) {
 
   let folder;
   try {
-    folder = await createFolder(who.userId, name, body.body.rule ?? null, bearer(req) ?? undefined);
+    folder = await createFolder(
+      who.userId,
+      name,
+      body.body.rule ?? null,
+      body.body.pokedex ?? null,
+      bearer(req) ?? undefined,
+    );
   } catch (err) {
     return storeErrorResponse(err, req, "Creating a folder failed");
   }

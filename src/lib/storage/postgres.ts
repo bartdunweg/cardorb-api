@@ -20,7 +20,7 @@
  * lists.
  */
 
-import type { FolderKind, FolderRule } from "@/lib/core/collection/folders";
+import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   isFinish,
@@ -613,6 +613,8 @@ export type OwnProfile = {
   avatarUrl: string | null;
   /** Null until the welcome flow has been finished or skipped past. */
   onboardedAt: string | null;
+  /** How the built-in Pokédex shows; null means every slot, missing ones too. */
+  pokedex: PokedexSetting | null;
 };
 
 /**
@@ -630,7 +632,7 @@ export type OwnProfile = {
 export async function ownProfile(db: SupabaseClient, userId: string): Promise<OwnProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("username,display_name,is_public,avatar_url,onboarded_at")
+    .select("username,display_name,is_public,avatar_url,onboarded_at,pokedex")
     .eq("id", userId)
     .maybeSingle();
 
@@ -643,6 +645,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     is_public: boolean;
     avatar_url: string | null;
     onboarded_at: string | null;
+    pokedex: unknown;
   };
   return {
     username: row.username,
@@ -650,6 +653,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     isPublic: row.is_public,
     avatarUrl: row.avatar_url,
     onboardedAt: row.onboarded_at,
+    pokedex: (row.pokedex as PokedexSetting | null) ?? null,
   };
 }
 
@@ -674,6 +678,7 @@ export async function updateProfile(
     isPublic?: boolean;
     avatarUrl?: string | null;
     onboardedAt?: string;
+    pokedex?: PokedexSetting | null;
   },
 ): Promise<void> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -684,6 +689,7 @@ export async function updateProfile(
   // nothing in the app un-happens it. The route that sets this only ever
   // accepts `onboarded: true`, so the type here has no null in it either.
   if ("onboardedAt" in patch) row.onboarded_at = patch.onboardedAt;
+  if ("pokedex" in patch) row.pokedex = patch.pokedex;
 
   const { error } = await db.from("profiles").update(row).eq("id", userId);
   if (error) throw new Error(`That change could not be saved: ${error.message}`);
@@ -730,16 +736,32 @@ export type Folder = {
   /** Derived from `rule`, never stored: a folder with a rule fills itself. */
   kind: FolderKind;
   rule: FolderRule | null;
+  /** Shown as a Pokédex, with its settings; null for a plain list. */
+  pokedex: PokedexSetting | null;
   createdAt: string;
 };
 
-type FolderRecord = { id: string; name: string; rule: unknown; created_at: string };
+type FolderRecord = {
+  id: string;
+  name: string;
+  rule: unknown;
+  pokedex: unknown;
+  created_at: string;
+};
 
-const FOLDER_COLUMNS = "id,name,rule,created_at";
+const FOLDER_COLUMNS = "id,name,rule,pokedex,created_at";
 
 const toFolder = (r: FolderRecord): Folder => {
   const rule = (r.rule as FolderRule | null) ?? null;
-  return { id: r.id, name: r.name, kind: rule ? "rule" : "manual", rule, createdAt: r.created_at };
+  const pokedex = (r.pokedex as PokedexSetting | null) ?? null;
+  return {
+    id: r.id,
+    name: r.name,
+    kind: rule ? "rule" : "manual",
+    rule,
+    pokedex,
+    createdAt: r.created_at,
+  };
 };
 
 /** null when no folder of the caller's has that id. */
@@ -773,17 +795,18 @@ export async function createFolder(
   userId: string,
   name: string,
   rule: FolderRule | null,
+  pokedex: PokedexSetting | null = null,
 ): Promise<Folder> {
   const { data, error } = await db
     .from("collections")
-    .insert({ user_id: userId, name, rule })
+    .insert({ user_id: userId, name, rule, pokedex })
     .select(FOLDER_COLUMNS)
     .single();
   if (error) throw new Error(`That folder could not be created: ${error.message}`);
   return toFolder(data as FolderRecord);
 }
 
-export type FolderPatch = { name?: string; rule?: FolderRule };
+export type FolderPatch = { name?: string; rule?: FolderRule; pokedex?: PokedexSetting | null };
 
 /** null when no folder of the caller's has that id. Only what the patch names changes. */
 export async function updateFolder(

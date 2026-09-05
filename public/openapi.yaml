@@ -501,11 +501,15 @@ components:
       description: >-
         A folder the person made. One filled by hand holds the copies filed in it; one with a
         rule fills itself from the owned copies the rule matches. A folder keeps its kind.
-      required: [id, name, kind, rule, createdAt]
+      required: [id, name, kind, rule, pokedex, createdAt]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
         kind: { type: string, enum: [manual, rule] }
+        pokedex:
+          oneOf:
+            - { $ref: "#/components/schemas/PokedexSetting" }
+            - { type: "null" }
         rule:
           oneOf:
             - { $ref: "#/components/schemas/FolderRule" }
@@ -532,12 +536,30 @@ components:
         sets: { type: array, minItems: 1, maxItems: 20, items: { type: string, minLength: 1, maxLength: 100 } }
         rarities: { type: array, minItems: 1, maxItems: 20, items: { type: string, minLength: 1, maxLength: 100 } }
 
+    PokedexSetting:
+      type: object
+      description: >-
+        A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon.
+        `missing` shows the slots the folder has no card of; `dex` is the range collected, all
+        of it when absent.
+      required: [missing]
+      additionalProperties: false
+      properties:
+        missing: { type: boolean }
+        dex:
+          type: object
+          required: [from, to]
+          properties:
+            from: { type: integer, minimum: 1, maximum: 1025 }
+            to: { type: integer, minimum: 1, maximum: 1025 }
+
     FolderDraft:
       type: object
       required: [name]
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
         rule: { $ref: "#/components/schemas/FolderRule" }
+        pokedex: { $ref: "#/components/schemas/PokedexSetting" }
 
     FolderPatch:
       type: object
@@ -548,6 +570,11 @@ components:
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
         rule: { $ref: "#/components/schemas/FolderRule" }
+        pokedex:
+          description: "`null` turns the Pokédex setting off."
+          oneOf:
+            - { $ref: "#/components/schemas/PokedexSetting" }
+            - { type: "null" }
 
     ValueSnapshot:
       type: object
@@ -576,13 +603,18 @@ components:
 
     OwnProfile:
       type: object
-      required: [username, displayName, isPublic, avatarUrl, onboardedAt, email]
+      required: [username, displayName, isPublic, avatarUrl, onboardedAt, pokedex, email]
       properties:
         username: { type: string, description: "The name in `/user/<name>`." }
         displayName: { type: [string, "null"] }
         isPublic: { type: boolean }
         avatarUrl: { type: [string, "null"] }
         onboardedAt: { type: [string, "null"], format: date-time }
+        pokedex:
+          description: How the built-in Pokédex shows; null is every slot, missing ones too.
+          oneOf:
+            - { $ref: "#/components/schemas/PokedexSetting" }
+            - { type: "null" }
         email: { type: string }
 
     ColumnMap:
@@ -671,7 +703,7 @@ paths:
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id. A rule folder answers with the owned copies its rule matches, whatever `owned` says. An id that is no folder of the caller's is a 404." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
-        - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection." }
+        - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
       responses:
         "200":
@@ -681,10 +713,12 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [cards, total, facets]
+                required: [cards, total, value, unpriced, facets]
                 properties:
                   cards: { type: array, items: { $ref: "#/components/schemas/CardItem" } }
                   total: { type: integer }
+                  value: { type: number, description: "What the whole filtered list is worth, in euros to the cent: not the page. An owned copy counts as many times as held, a wish once." }
+                  unpriced: { type: integer, description: "Copies in the filtered list no price was found for." }
                   facets: { $ref: "#/components/schemas/Facets" }
                   catalogueUnavailable:
                     type: boolean
@@ -1128,6 +1162,11 @@ paths:
                 displayName: { type: string, maxLength: 60, description: "Empty clears it." }
                 isPublic: { type: boolean }
                 onboarded: { type: boolean, const: true }
+                pokedex:
+                  description: How the built-in Pokédex shows; null restores the default.
+                  oneOf:
+                    - { $ref: "#/components/schemas/PokedexSetting" }
+                    - { type: "null" }
       responses:
         "200":
           description: Changed. Echoes the keys that were applied.
@@ -1141,6 +1180,10 @@ paths:
                   displayName: { type: [string, "null"] }
                   isPublic: { type: boolean }
                   onboardedAt: { type: string, format: date-time }
+                  pokedex:
+                    oneOf:
+                      - { $ref: "#/components/schemas/PokedexSetting" }
+                      - { type: "null" }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }

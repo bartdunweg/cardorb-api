@@ -38,7 +38,7 @@
  * unstable_cache boundary rather than inside it.
  */
 
-import type { FolderRule } from "@/lib/core/collection/folders";
+import type { FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CardDraft,
@@ -158,11 +158,12 @@ export async function createFolder(
   userId: string,
   name: string,
   rule: FolderRule | null,
+  pokedex: PokedexSetting | null,
   token?: string,
 ) {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
-  return postgres.createFolder(db, userId, name, rule);
+  return postgres.createFolder(db, userId, name, rule, pokedex);
 }
 
 export async function updateFolder(
