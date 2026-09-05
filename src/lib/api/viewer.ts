@@ -26,6 +26,7 @@ import "server-only";
 import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { serverClient, userClient } from "../storage/supabase";
+import { timed } from "../core/timing";
 
 export type Viewer = {
   userId: string;
@@ -82,16 +83,18 @@ export function bearer(req: Request): string | null {
  * to know.
  */
 async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | null> {
-  const { data, error } = await db.auth.getClaims(jwt);
+  const { data, error } = await timed("auth getClaims", () => db.auth.getClaims(jwt));
   if (error || !data?.claims?.sub) return null;
 
   const { sub, email } = data.claims as { sub: string; email?: string };
 
-  const { data: profile } = await db
-    .from("profiles")
-    .select("username,display_name,avatar_url,onboarded_at")
-    .eq("id", sub)
-    .maybeSingle();
+  const { data: profile } = await timed("store profile", async () =>
+    db
+      .from("profiles")
+      .select("username,display_name,avatar_url,onboarded_at")
+      .eq("id", sub)
+      .maybeSingle(),
+  );
 
   const p = profile as {
     username?: string;

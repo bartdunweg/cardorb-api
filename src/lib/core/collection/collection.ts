@@ -46,6 +46,7 @@ import {
   resolveSetFacts,
 } from "./cards";
 import { DAY } from "../util";
+import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
@@ -92,10 +93,16 @@ export { valueHistoryTag } from "./value-snapshot";
  * plain data that carries no session of its own.
  */
 const cachedRows = (userId: string, db: SupabaseClient | null) =>
-  unstable_cache(() => listRows(userId, db), ["collection-rows", userId], {
-    revalidate: 3600,
-    tags: [cardsTag(userId)],
-  })();
+  timedCache("cache rows", (ran) =>
+    unstable_cache(
+      () => {
+        ran();
+        return timed("store listRows", () => listRows(userId, db));
+      },
+      ["collection-rows", userId],
+      { revalidate: 3600, tags: [cardsTag(userId)] },
+    )(),
+  );
 
 /**
  * The collection, assembled, cached across requests under the same tag as the
@@ -125,14 +132,17 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
 export const PRICE_GUIDE_TAG = "price-guide";
 
 const cachedGuidePrices = () =>
-  unstable_cache(
-    async (): Promise<Record<string, CardPrices>> => {
-      const ids = Object.keys(IDS as ProductIds);
-      return Object.fromEntries(guidePrices(ids, await fetchPriceGuide(), IDS as ProductIds));
-    },
-    ["guide-prices"],
-    { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
-  )();
+  timedCache("cache guide-prices", (ran) =>
+    unstable_cache(
+      async (): Promise<Record<string, CardPrices>> => {
+        ran();
+        const ids = Object.keys(IDS as ProductIds);
+        return Object.fromEntries(guidePrices(ids, await fetchPriceGuide(), IDS as ProductIds));
+      },
+      ["guide-prices"],
+      { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
+    )(),
+  );
 
 /**
  * The guide first, TCGdex for what the guide does not know — a card added
@@ -153,7 +163,14 @@ export async function pricesFromGuideThenTcgdex(ids: string[]): Promise<Map<stri
     if (hit) out.set(id, hit);
     else missing.push(id);
   }
-  if (missing.length) for (const [id, p] of await pricesFor(missing)) out.set(id, p);
+  if (missing.length) {
+    const fetched = await timed(
+      "tcgdex pricesFor",
+      () => pricesFor(missing),
+      `${missing.length} cards`,
+    );
+    for (const [id, p] of fetched) out.set(id, p);
+  }
   return out;
 }
 
@@ -214,18 +231,32 @@ const factsSignature = (identities: CardIdentity[]): string =>
   createHash("sha1").update(identities.map(identityKey).join("\u0001")).digest("hex");
 
 const cachedSetFacts: FactsSource = (setName, identities) =>
-  unstable_cache(
-    () => resolveSetFacts(setName, identities, { priceSource: pricesFromGuideThenTcgdex }),
-    ["set-facts", "v1", setName, factsSignature(identities)],
-    { revalidate: DAY, tags: ["catalogue"] },
-  )();
+  timedCache(`cache set-facts ${setName}`, (ran) =>
+    unstable_cache(
+      () => {
+        ran();
+        return resolveSetFacts(setName, identities, { priceSource: pricesFromGuideThenTcgdex });
+      },
+      ["set-facts", "v1", setName, factsSignature(identities)],
+      { revalidate: DAY, tags: ["catalogue"] },
+    )(),
+  );
 
 const cachedCollection = (userId: string, db: SupabaseClient | null) =>
-  unstable_cache(
-    async () => buildCollection(await cachedRows(userId, db), { factsSource: cachedSetFacts }),
-    ["collection", userId],
-    { revalidate: 3600, tags: [cardsTag(userId)] },
-  )();
+  timedCache("cache collection", (ran) =>
+    unstable_cache(
+      async () => {
+        ran();
+        const rows = await cachedRows(userId, db);
+        const start = performance.now();
+        const sets = await buildCollection(rows, { factsSource: cachedSetFacts });
+        logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
+        return sets;
+      },
+      ["collection", userId],
+      { revalidate: 3600, tags: [cardsTag(userId)] },
+    )(),
+  );
 
 /**
  * The collection, built.
