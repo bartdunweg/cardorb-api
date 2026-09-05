@@ -44,7 +44,7 @@ import IDS from "../cardmarket-ids.generated.json";
 import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
-import { listCardPrices, listFolders, type Folder } from "../../storage/postgres";
+import { getFolder, listCardPrices, listFolders, type Folder } from "../../storage/postgres";
 import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -163,6 +163,21 @@ export const getFolders = cache(async (userId: string, token?: string): Promise<
   const db = token ? userClient(token) : await serverClient();
   return cachedFolders(userId, db);
 });
+
+/**
+ * One folder by id: the cached list first, the store on a miss. A folder made a moment ago can
+ * be missing from the list for the second it takes a revalidated tag to reach every instance,
+ * and the client that made it asks for its cards right away. The store read costs a query only
+ * on that miss, or for an id that is no folder at all.
+ */
+export const findFolder = cache(
+  async (userId: string, id: string, token?: string): Promise<Folder | null> => {
+    const listed = (await getFolders(userId, token)).find((f) => f.id === id);
+    if (listed) return listed;
+    const db = token ? userClient(token) : await serverClient();
+    return db ? getFolder(db, userId, id) : null;
+  },
+);
 
 const cachedCollection = (userId: string, db: SupabaseClient | null) =>
   unstable_cache(

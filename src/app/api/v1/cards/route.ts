@@ -10,7 +10,7 @@ import {
   refused,
   storeErrorResponse,
 } from "@/lib/api/guard";
-import { getCollection, getFolders } from "@/lib/core/collection/collection";
+import { findFolder, getCollection } from "@/lib/core/collection/collection";
 import type { FolderRule } from "@/lib/core/collection/folders";
 import {
   facetsOf,
@@ -58,14 +58,14 @@ export async function GET(req: Request) {
   const token = bearer(req) ?? undefined;
 
   // A folder id names either the copies filed in it or, for a rule folder, its rule. Read
-  // from the cached folder list, so it costs a query only after a folder changed. An id that
-  // is no folder is a 404, not an empty page.
+  // from the cached folder list, the store on a miss. An id that is no folder is a 404, not an
+  // empty page.
   let rule: FolderRule | undefined;
   let collection = read.query.collection;
   if (collection) {
     let folder;
     try {
-      folder = (await getFolders(who.userId, token)).find((f) => f.id === collection);
+      folder = await findFolder(who.userId, collection, token);
     } catch (err) {
       return storeErrorResponse(err, req, "Reading the folder failed");
     }

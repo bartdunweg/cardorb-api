@@ -1,4 +1,4 @@
-import { getFolders } from "@/lib/core/collection/collection";
+import { findFolder } from "@/lib/core/collection/collection";
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
@@ -70,9 +70,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof result.patch.collectionId === "string") {
     let target;
     try {
-      target = (await getFolders(who.userId, bearer(req) ?? undefined)).find(
-        (f) => f.id === result.patch.collectionId,
-      );
+      target = await findFolder(who.userId, result.patch.collectionId, bearer(req) ?? undefined);
     } catch (err) {
       return storeErrorResponse(err, req, "Reading the folder failed");
     }
