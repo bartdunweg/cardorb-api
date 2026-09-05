@@ -139,11 +139,17 @@ describe("GET /api/v1/folders", () => {
   });
 
   it("still lists the folders when the rows could not be read, and says so", async () => {
-    getRows.mockResolvedValue({ rows: [], failed: true });
+    getCollection.mockResolvedValue({ sets: [], failed: true });
     const body = await (await get()).json();
     /* Without this every folder reads `count: 0` during a store outage, which
        is the same answer as an empty binder. */
-    expect(body).toEqual({ folders: [{ ...FOLDER, count: 0 }], collectionUnavailable: true });
+    expect(body).toEqual({
+      folders: [
+        { ...FOLDER, count: 0 },
+        { ...KANTO, count: 0 },
+      ],
+      collectionUnavailable: true,
+    });
   });
 });
 
