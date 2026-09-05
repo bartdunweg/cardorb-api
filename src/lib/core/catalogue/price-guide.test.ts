@@ -27,7 +27,7 @@ describe("guidePrices", () => {
       holo: null,
     });
     // A trend far above the thirty-day average is capped to it, as the snapshot does.
-    expect(prices.get("b-2")?.price.market).toBe(12);
+    expect(prices.get("b-2")?.price?.market).toBe(12);
     expect(prices.get("b-2")?.holo?.market).toBe(25);
   });
 

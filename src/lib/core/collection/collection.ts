@@ -302,7 +302,7 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
-      ["set-facts", "v7", setName, factsSignature(identities)],
+      ["set-facts", "v8", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -357,7 +357,8 @@ async function factsWithUsd(
   const usd = await usdForSet(setName);
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
-      const p = usd[cardNumber(f.number)];
+      // pokemontcg.io's number for the set first; TCGdex's for the card where that has none or is down.
+      const p = usd[cardNumber(f.number)] ?? f.usd;
       return [key, { ...f, price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null) }];
     }),
   );

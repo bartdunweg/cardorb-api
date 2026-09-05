@@ -39,7 +39,7 @@ import { LOCALE } from "../config";
 import { limitlessScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
-import { ptcgScan } from "../catalogue/ptcg";
+import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
 import type { CollectionRow, Finish } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
@@ -574,6 +574,8 @@ export type CardFacts = {
   number: string;
   /** Cardmarket's alone; TCGplayer is blended in by the caller, from a cache of its own. */
   price: Price | null;
+  /** TCGplayer's dollars as TCGdex relays them, where the card was fetched there: the blend's fallback. */
+  usd: UsdPrice | null;
   priceHolo: Price | null;
 };
 
@@ -720,6 +722,7 @@ export async function resolveSetFacts(
       matchedName: r.matchedName,
       number: r.number,
       price: priceOfId(r.tcgId),
+      usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
       priceHolo: holoOfId(r.tcgId),
     };
   }
