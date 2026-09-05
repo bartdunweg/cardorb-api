@@ -334,14 +334,25 @@ const cachedUsdPrices = (setName: string) =>
  * function remembers and a cold one finds out for itself.
  */
 let ptcgQuietUntil = 0;
+/**
+ * The last answer that came, per set, for the minutes pokemontcg.io is down: a price that was
+ * right an hour ago beats a card that suddenly says it is worth nothing and then is not. Per
+ * instance, like the quiet period; a cold instance starts without it.
+ */
+const lastGoodUsd = new Map<string, Record<string, UsdPrice>>();
 const usdForSet = async (setName: string): Promise<Record<string, UsdPrice>> => {
-  if (Date.now() < ptcgQuietUntil) return {};
+  if (Date.now() < ptcgQuietUntil) return lastGoodUsd.get(setName) ?? {};
   try {
-    return await cachedUsdPrices(setName);
+    const prices = await cachedUsdPrices(setName);
+    lastGoodUsd.set(setName, prices);
+    return prices;
   } catch (err) {
     ptcgQuietUntil = Date.now() + 10 * 60_000;
-    console.error("TCGplayer prices unavailable, Cardmarket's alone for now:", err);
-    return {};
+    console.error(
+      "TCGplayer prices unavailable, the last answer or Cardmarket's alone for now:",
+      err,
+    );
+    return lastGoodUsd.get(setName) ?? {};
   }
 };
 
