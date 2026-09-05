@@ -45,6 +45,7 @@ import {
   resolveSetFacts,
 } from "./cards";
 import { DAY } from "../util";
+import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
@@ -292,17 +293,44 @@ const cachedSetFacts = (
   setName: string,
   identities: CardIdentity[],
   priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
+  usdToEur: number | null,
 ) =>
   timedCache(`cache set-facts ${setName}`, (ran) =>
     unstable_cache(
       () => {
         ran();
-        return resolveSetFacts(setName, identities, { priceSource });
+        return resolveSetFacts(setName, identities, { priceSource, usdToEur });
       },
-      ["set-facts", "v2", setName, factsSignature(identities)],
+      ["set-facts", "v3", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
+
+/**
+ * The day's dollar rate, once per request and a day across them, read at the top level
+ * like the guide: inside a set's facts callback it would be fetched again per set. Null
+ * keeps every TCGplayer price out rather than showing one at a guessed rate.
+ */
+const cachedUsdToEur = () =>
+  timedCache("cache usd-eur", (ran) =>
+    unstable_cache(
+      () => {
+        ran();
+        return fetchUsdToEur();
+      },
+      ["usd-eur"],
+      { revalidate: DAY, tags: ["catalogue"] },
+    )(),
+  );
+
+const usdToEurForRequest = cache(async (): Promise<number | null> => {
+  try {
+    return await cachedUsdToEur();
+  } catch (err) {
+    console.error("Dollar rate unavailable, TCGplayer prices withheld:", err);
+    return null;
+  }
+});
 
 /**
  * The collection, put together for this request: the rows from their cache,
@@ -317,11 +345,12 @@ const cachedSetFacts = (
  */
 async function assemble(userId: string, db: SupabaseClient | null): Promise<CardSet[]> {
   const rows = await cachedRows(userId, db);
-  const known = await guideForRequest();
+  const [known, usdToEur] = await Promise.all([guideForRequest(), usdToEurForRequest()]);
   const priceSource = (ids: string[]) => guideThenTcgdex(ids, known);
   const start = performance.now();
   const sets = await buildCollection(rows, {
-    factsSource: (setName, identities) => cachedSetFacts(setName, identities, priceSource),
+    factsSource: (setName, identities) =>
+      cachedSetFacts(setName, identities, priceSource, usdToEur),
   });
   logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
   return sets;

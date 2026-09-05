@@ -10,6 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 import { holoPriceOf, priceOf, shownPrice } from "./cards";
+import { priceFromUsd } from "../price-basis.mjs";
 
 /** label, Cardmarket's own low/trend/avg30, and the English Near Mint "From" on the page. */
 const MEASURED = [
@@ -136,5 +137,18 @@ describe("holoPriceOf", () => {
     const p = holoPriceOf({ "low-holo": 0, "trend-holo": 12, "avg30-holo": 12 });
     expect(p?.market).toBe(12);
     expect(p?.low).toBeNull();
+  });
+});
+
+describe("priceFromUsd", () => {
+  it("turns TCGplayer's dollars into euros to the cent, market as the price, low as the floor", () => {
+    const p = priceFromUsd({ market: 12.34, low: 9.99 }, 0.92)!;
+    expect(p.market).toBe(11.35);
+    expect(p.low).toBe(9.19);
+    expect(p.nm).toBeNull();
+    expect(shownPrice(p)).toBe(11.35);
+  });
+  it("is nothing when TCGplayer has nothing", () => {
+    expect(priceFromUsd({ market: null, low: null }, 0.92)).toBeNull();
   });
 });

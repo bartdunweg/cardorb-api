@@ -200,3 +200,78 @@ export async function ptcgScan(
     return null;
   }
 }
+
+/** TCGplayer's numbers for one printing, in dollars, as pokemontcg.io relays them. */
+export type UsdPrice = { market: number | null; low: number | null };
+
+type PtcgPriceCard = {
+  tcgplayer?: {
+    prices?: Record<string, { low?: number | null; market?: number | null } | undefined>;
+  };
+};
+
+/**
+ * The printings TCGplayer lists a card under, in the order one is taken: the plain card
+ * first, then its foil forms. A card here has one row in the collection, so one number.
+ */
+const PRINTINGS = [
+  "normal",
+  "holofoil",
+  "reverseHolofoil",
+  "unlimited",
+  "unlimitedHolofoil",
+  "1stEdition",
+  "1stEditionHolofoil",
+];
+
+/**
+ * TCGplayer's price for the given numbers of a set, by number, from pokemontcg.io.
+ *
+ * The second price source, asked only for a card Cardmarket publishes nothing for (old
+ * promos, mostly), so a card is priced rather than shown as worth nothing. One request per
+ * card, four at a time, capped like the scan fallback: a set nobody prices would otherwise
+ * cost a hundred requests to learn that. A number pokemontcg.io does not know, or knows
+ * without a price, is simply absent from the answer; every failure is one card's, not the
+ * set's.
+ */
+export async function ptcgPrices(
+  setName: string,
+  numbers: string[],
+): Promise<Map<string, UsdPrice>> {
+  const out = new Map<string, UsdPrice>();
+  if (!numbers.length) return out;
+  const set = await find(setName);
+  if (!set) return out;
+  const headers: Record<string, string> = {};
+  if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
+
+  const wanted = numbers.slice(0, 40);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(4, wanted.length) }, async () => {
+      while (next < wanted.length) {
+        const number = wanted[next++]!;
+        const n = number.replace(/^0+/, "");
+        if (!n) continue;
+        try {
+          const res = await fetch(
+            `https://api.pokemontcg.io/v2/cards/${set.id}-${encodeURIComponent(n)}?select=id,tcgplayer`,
+            { headers, next: { revalidate: DAY }, signal: catalogueTimeout() },
+          );
+          if (!res.ok) continue;
+          const body = (await res.json()) as { data?: PtcgPriceCard };
+          const prices = body.data?.tcgplayer?.prices ?? {};
+          const printing = PRINTINGS.map((p) => prices[p]).find((p) => p && p.market != null);
+          if (!printing) continue;
+          out.set(number, {
+            market: typeof printing.market === "number" ? printing.market : null,
+            low: typeof printing.low === "number" ? printing.low : null,
+          });
+        } catch {
+          // This card stays unpriced; the next one is still asked for.
+        }
+      }
+    }),
+  );
+  return out;
+}

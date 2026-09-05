@@ -1,0 +1,1 @@
+- A card Cardmarket publishes nothing for is priced from TCGplayer, in euros at the day's ECB rate; old promos in a collection count towards its value now.
