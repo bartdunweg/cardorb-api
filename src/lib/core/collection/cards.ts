@@ -757,12 +757,13 @@ export async function buildCollection(
     ((setName, identities) =>
       resolveSetFacts(setName, identities, { prices, priceSource, offline }));
 
-  // Three at a time. Forty-eight sets going at once was enough for TCGdex to
+  // Six at a time. Forty-eight sets going at once was enough for TCGdex to
   // start refusing, and a refusal is a whole section of the page with no
-  // artwork. The per-set work itself is behind a shared cache now (see
-  // lib/core/catalogue/catalogue.ts), so on a warm cache this loop is a lookup rather
-  // than a walk and the limit costs nothing.
-  const out = await mapLimit([...grouped.entries()], 3, async ([setName, setRows]) => {
+  // artwork; three was the number while every set went there. Now a set's
+  // facts are one cached read on every request but the first, and fifty-two
+  // reads three at a time is a second of waiting on nothing; six keeps a
+  // cold day's fetches well under the refusal and halves the warm wait.
+  const out = await mapLimit([...grouped.entries()], 6, async ([setName, setRows]) => {
     const set = await facts(setName, setIdentities(setRows));
 
     // One entry per printing first, then folded together below: the facts of
