@@ -142,4 +142,11 @@ describe("validatePokedexSetting and the body that carries it", () => {
       body: { pokedex: null },
     });
   });
+
+  it("keeps the kinds a Pokédex setting names, and refuses an empty or oversized list", () => {
+    const ok = validatePokedexSetting({ missing: true, kinds: ["V", "ex", " V "] });
+    expect(ok.kind === "ok" && ok.setting.kinds).toEqual(["V", "ex"]);
+    expect(validatePokedexSetting({ missing: true, kinds: [] }).kind).toBe("invalid");
+    expect(validatePokedexSetting({ missing: true, kinds: ["x".repeat(21)] }).kind).toBe("invalid");
+  });
 });

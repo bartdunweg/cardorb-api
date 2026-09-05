@@ -44,17 +44,23 @@ export function readDexRange(
  * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
  * shows the slots the folder has no card of; `dex` is the range a person collects, all of it
  * when absent; `rarities` keeps only cards of those rarities in the slots (a full-art Pokédex),
- * every card when absent. Any folder may carry it; the built-in Pokédex is All cards with the
- * profile's.
+ * every card when absent; `kinds` keeps only cards of those kinds (V, ex, GX, …, as the web
+ * reads them off a name), every kind when absent. Any folder may carry it; the built-in Pokédex
+ * is All cards with the profile's.
  */
-export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[] };
+export type PokedexSetting = {
+  missing: boolean;
+  dex?: DexRange;
+  rarities?: string[];
+  kinds?: string[];
+};
 
 export function validatePokedexSetting(
   value: unknown,
 ): { kind: "ok"; setting: PokedexSetting } | { kind: "invalid"; error: string } {
   if (!isRecord(value)) return { kind: "invalid", error: "A Pokédex setting is an object." };
   for (const key of Object.keys(value))
-    if (key !== "missing" && key !== "dex" && key !== "rarities")
+    if (key !== "missing" && key !== "dex" && key !== "rarities" && key !== "kinds")
       return { kind: "invalid", error: `A Pokédex setting has no field called ${key}.` };
   if (typeof value.missing !== "boolean")
     return { kind: "invalid", error: "A Pokédex setting says whether to show the missing ones." };
@@ -76,6 +82,19 @@ export function validatePokedexSetting(
         error: "A Pokédex setting's rarities are one to twenty names, each at most 60 characters.",
       };
     setting.rarities = [...new Set((value.rarities as string[]).map((r) => r.trim()))];
+  }
+  if (value.kinds !== undefined) {
+    if (
+      !Array.isArray(value.kinds) ||
+      value.kinds.length === 0 ||
+      value.kinds.length > 20 ||
+      !value.kinds.every((k) => typeof k === "string" && k.trim() && k.trim().length <= 20)
+    )
+      return {
+        kind: "invalid",
+        error: "A Pokédex setting's kinds are one to twenty names, each at most 20 characters.",
+      };
+    setting.kinds = [...new Set((value.kinds as string[]).map((k) => k.trim()))];
   }
   return { kind: "ok", setting };
 }
