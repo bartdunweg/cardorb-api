@@ -55,6 +55,10 @@ describe("priceOf", () => {
     expect(shownPrice(null)).toBeNull();
   });
 
+  it("shows the floor only when it is the only number Cardmarket has", () => {
+    expect(shownPrice(priceOf({ low: 1.2, trend: null, avg30: null }))).toBe(1.2);
+    expect(shownPrice(priceOf({ low: 1.2, trend: 3.4, avg30: 3.1 }))).not.toBe(1.2);
+  });
   it("keeps Cardmarket's low as a floor rather than as the price", () => {
     const price = priceOf({ low: 45.0, trend: 72.65, avg30: 66.74 });
     expect(price?.low).toBe(45.0);
