@@ -89,7 +89,7 @@ vi.mock("../catalogue/ptcg", () => ({
   ptcgLogo: async () => null,
 }));
 
-const { buildCollection } = await import("./cards");
+const { buildCollection, identityKey, setIdentities } = await import("./cards");
 
 const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   id: null,
@@ -338,5 +338,79 @@ describe("buildCollection", () => {
     expect(set!.logo).toContain("logo.webp");
     expect(set!.releaseDate).toBe("1999-01-09");
     expect(set!.total).toBe(102);
+  });
+});
+
+/**
+ * The seam a write no longer crosses. The catalogue half of a set is asked for
+ * through one function of the set and its printings, so a cache can stand in
+ * front of it; the copy half comes from the rows, fresh, every time.
+ */
+describe("facts source", () => {
+  it("asks once per set, for its printings each once and in one order, and lays the rows over the answer", async () => {
+    const source = vi.fn(
+      async (_setName: string, identities: { number: string; name: string }[]) => ({
+        title: "Base Set",
+        logo: null,
+        releaseDate: "1999-01-09",
+        total: 102,
+        cards: Object.fromEntries(
+          identities.map((i) => [
+            identityKey(i),
+            {
+              image: `img/${i.number}`,
+              imageHigh: null,
+              tcgId: `base1-${i.number}`,
+              matchedName: i.name,
+              price: null,
+              priceHolo: null,
+            },
+          ]),
+        ),
+      }),
+    );
+
+    const sets = await buildCollection(
+      [
+        row({ id: "a", isFavorite: true, quantity: 3 }),
+        row({ id: "b", number: "004", name: "Charizard" }),
+        row({ id: "c", rarity: "Reverse Holo" }),
+      ],
+      { factsSource: source },
+    );
+
+    expect(source).toHaveBeenCalledTimes(1);
+    expect(source.mock.calls[0]![0]).toBe("Base");
+    expect(source.mock.calls[0]![1]).toEqual([
+      { number: "004", name: "Charizard" },
+      { number: "088", name: "Pikachu" },
+    ]);
+    // Nothing else was asked: the catalogue and the prices are the source's business.
+    expect(setCatalogue).not.toHaveBeenCalled();
+    expect(pricesFor).not.toHaveBeenCalled();
+
+    const [set] = sets;
+    expect(set!.title).toBe("Base Set");
+    const pikachu = set!.cards.find((c) => c.number === "088")!;
+    expect(pikachu.image).toBe("img/088");
+    expect(pikachu.tcgId).toBe("base1-088");
+    expect(pikachu.variants.map((v) => [v.id, v.isFavorite, v.quantity, v.rarity])).toEqual([
+      ["a", true, 3, null],
+      ["c", false, 1, "Reverse Holo"],
+    ]);
+  });
+
+  it("names the same printings for the same rows whatever their order or number of copies", () => {
+    const ids = setIdentities([
+      row({ id: "a" }),
+      row({ id: "b", number: "004", name: "Charizard" }),
+      row({ id: "c" }),
+    ]);
+    const again = setIdentities([
+      row({ id: "c" }),
+      row({ id: "b", number: "004", name: "Charizard" }),
+    ]);
+    expect(ids).toEqual(again);
+    expect(ids.map(identityKey)).toEqual(["004\u0000Charizard", "088\u0000Pikachu"]);
   });
 });

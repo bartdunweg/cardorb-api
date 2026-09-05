@@ -36,7 +36,16 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { buildCollection, type CardSet } from "./cards";
+import { createHash } from "node:crypto";
+import {
+  buildCollection,
+  type CardIdentity,
+  type CardSet,
+  type FactsSource,
+  identityKey,
+  resolveSetFacts,
+} from "./cards";
+import { DAY } from "../util";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
@@ -179,10 +188,41 @@ export const findFolder = cache(
   },
 );
 
+/**
+ * What the catalogues say about one set's printings, kept a day.
+ *
+ * The rebuild after a write used to be twenty seconds for this collection, and
+ * almost none of it was about the write: a star on one card dropped the whole
+ * assembly, and the next read matched every printing against the set
+ * catalogue again, probed two more catalogues for every card without a scan,
+ * and asked TCGdex the price of every card the guide does not know. Those are
+ * facts about cards, the same whoever owns them, so they are cached here as
+ * such — under the catalogue's tag, never under the person's — and a write
+ * costs the rows and the join.
+ *
+ * Keyed by the set and by *which* printings are asked about, in one order
+ * (setIdentities), so the same set with a card added is a new entry and the
+ * same rows starred, counted or noted are the old one. A signature rather than
+ * the list itself: the key is part of every read, and a hundred identities
+ * would put kilobytes in it.
+ *
+ * A day, like the set catalogue and the price guide this reads through; a
+ * price moves once a night. Not keyed by user: the entry carries no row, no
+ * copy, nothing anyone owns.
+ */
+const factsSignature = (identities: CardIdentity[]): string =>
+  createHash("sha1").update(identities.map(identityKey).join("\u0001")).digest("hex");
+
+const cachedSetFacts: FactsSource = (setName, identities) =>
+  unstable_cache(
+    () => resolveSetFacts(setName, identities, { priceSource: pricesFromGuideThenTcgdex }),
+    ["set-facts", "v1", setName, factsSignature(identities)],
+    { revalidate: DAY, tags: ["catalogue"] },
+  )();
+
 const cachedCollection = (userId: string, db: SupabaseClient | null) =>
   unstable_cache(
-    async () =>
-      buildCollection(await cachedRows(userId, db), { priceSource: pricesFromGuideThenTcgdex }),
+    async () => buildCollection(await cachedRows(userId, db), { factsSource: cachedSetFacts }),
     ["collection", userId],
     { revalidate: 3600, tags: [cardsTag(userId)] },
   )();
