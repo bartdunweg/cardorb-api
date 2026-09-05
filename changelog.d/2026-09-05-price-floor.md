@@ -1,0 +1,1 @@
+- A card Cardmarket has only a lowest listing for shows that listing as its price, rather than no price; the collection's value counts it.

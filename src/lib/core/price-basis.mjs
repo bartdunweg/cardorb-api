@@ -34,14 +34,18 @@
  * The one number a card is shown at, ranked by and totalled on.
  *
  * The middle of the Near Mint range where there is one, and the plain market
- * price under €5 where there is not. Everything that puts a figure on a card
- * goes through here, so the grid, the dashboard total, the sort order and the
- * home page's chart cannot disagree about what a card is worth.
+ * price under €5 where there is not. Where Cardmarket has published no trend
+ * and no month's average, only its lowest listing, that floor is the number:
+ * a card shown at its cheapest listing is nearer the truth than a card shown
+ * as worth nothing, which is what thirty-odd new promos read as. Everything
+ * that puts a figure on a card goes through here, so the grid, the dashboard
+ * total, the sort order and the home page's chart cannot disagree about what
+ * a card is worth.
  *
  * @param {Price | null | undefined} p
  * @returns {number | null}
  */
-export const shownPrice = (p) => (p ? (p.nm?.mid ?? p.market) : null);
+export const shownPrice = (p) => (p ? (p.nm?.mid ?? p.market ?? p.low) : null);
 
 /**
  * @param {unknown} v
