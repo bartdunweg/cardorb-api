@@ -43,16 +43,18 @@ export function readDexRange(
 /**
  * A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon. `missing`
  * shows the slots the folder has no card of; `dex` is the range a person collects, all of it
- * when absent. Any folder may carry it; the built-in Pokédex is All cards with the profile's.
+ * when absent; `rarities` keeps only cards of those rarities in the slots (a full-art Pokédex),
+ * every card when absent. Any folder may carry it; the built-in Pokédex is All cards with the
+ * profile's.
  */
-export type PokedexSetting = { missing: boolean; dex?: DexRange };
+export type PokedexSetting = { missing: boolean; dex?: DexRange; rarities?: string[] };
 
 export function validatePokedexSetting(
   value: unknown,
 ): { kind: "ok"; setting: PokedexSetting } | { kind: "invalid"; error: string } {
   if (!isRecord(value)) return { kind: "invalid", error: "A Pokédex setting is an object." };
   for (const key of Object.keys(value))
-    if (key !== "missing" && key !== "dex")
+    if (key !== "missing" && key !== "dex" && key !== "rarities")
       return { kind: "invalid", error: `A Pokédex setting has no field called ${key}.` };
   if (typeof value.missing !== "boolean")
     return { kind: "invalid", error: "A Pokédex setting says whether to show the missing ones." };
@@ -61,6 +63,19 @@ export function validatePokedexSetting(
     const dex = readDexRange(value.dex);
     if (dex.kind === "invalid") return dex;
     setting.dex = dex.range;
+  }
+  if (value.rarities !== undefined) {
+    if (
+      !Array.isArray(value.rarities) ||
+      value.rarities.length === 0 ||
+      value.rarities.length > 20 ||
+      !value.rarities.every((r) => typeof r === "string" && r.trim() && r.trim().length <= 60)
+    )
+      return {
+        kind: "invalid",
+        error: "A Pokédex setting's rarities are one to twenty names, each at most 60 characters.",
+      };
+    setting.rarities = [...new Set((value.rarities as string[]).map((r) => r.trim()))];
   }
   return { kind: "ok", setting };
 }

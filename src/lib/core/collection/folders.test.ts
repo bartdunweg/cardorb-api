@@ -105,6 +105,19 @@ describe("readFolderBody", () => {
 });
 
 describe("validatePokedexSetting and the body that carries it", () => {
+  it("takes rarities, trimmed and each once, and refuses an empty or an oversize list", () => {
+    expect(
+      validatePokedexSetting({
+        missing: true,
+        rarities: [" Illustration rare ", "Illustration rare", "Hyper rare"],
+      }),
+    ).toEqual({
+      kind: "ok",
+      setting: { missing: true, rarities: ["Illustration rare", "Hyper rare"] },
+    });
+    expect(validatePokedexSetting({ missing: true, rarities: [] }).kind).toBe("invalid");
+    expect(validatePokedexSetting({ missing: true, rarities: [3] }).kind).toBe("invalid");
+  });
   it("wants the missing flag, takes a range, refuses the rest", () => {
     expect(validatePokedexSetting({ missing: true })).toEqual({
       kind: "ok",

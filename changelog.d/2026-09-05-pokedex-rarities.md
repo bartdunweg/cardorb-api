@@ -1,0 +1,1 @@
+- A Pokédex setting can name `rarities`: only cards of those rarities fill the slots, for a Pokédex of full-art cards. On the profile's setting and on any folder shown as a Pokédex.
