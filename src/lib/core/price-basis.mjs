@@ -235,6 +235,9 @@ export function blendPrices(cardmarket, tcgplayer) {
   const a = shownPrice(cardmarket);
   const b = tcgplayer ? tcgplayer.market : null;
   if (a === null && b === null) return null;
+  // One market alone keeps its own shape: Cardmarket's with its band, TCGplayer's as converted.
+  if (b === null) return cardmarket;
+  if (a === null) return tcgplayer;
   const market = a !== null && b !== null ? Math.round(((a + b) / 2) * 100) / 100 : (a ?? b);
   const lows = [cardmarket?.low, tcgplayer?.low].filter((v) => typeof v === "number");
   const low = lows.length ? Math.min(...lows) : null;

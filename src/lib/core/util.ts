@@ -103,7 +103,8 @@ export async function mapLimit<T, R>(items: T[], limit: number, work: (item: T) 
  * number with its set (SWSH282) where the collection keeps the digits; see ptcgPrices().
  */
 export const cardNumber = (n: string) =>
+  // Zeros after a letter prefix go too: "SV01" is SV1, as pokemontcg.io writes it.
   n
     .trim()
-    .replace(/^0+(?=\d)/, "")
-    .toUpperCase();
+    .toUpperCase()
+    .replace(/^([A-Z]*)0+(?=\d)/, "$1");

@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - A Pokédex setting can name `kinds` of card (V, ex, GX, …) beside `rarities`, for what a rarity cannot tell apart: a full-art V and a full-art ex are both Ultra Rare.
 
+- An unreadable pokemontcg.io index is no longer cached for a day as "nothing to price"; a set's gallery cards get their TCGplayer price too; a card one market prices keeps that market's shape; "SV01" and "SV1" are one number.
+
 - TCGplayer's price finds a promo whose number it prefixes (SWSH282, XY150a) from the collection's plain number.
 
 - A public item's `favorite` is read off the owner's copy, so `list=favorites` lists the starred cards rather than nothing; unset for everyone whose favorites are not shown.

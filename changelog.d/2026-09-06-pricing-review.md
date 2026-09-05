@@ -1,0 +1,1 @@
+- An unreadable pokemontcg.io index is no longer cached for a day as "nothing to price"; a set's gallery cards get their TCGplayer price too; a card one market prices keeps that market's shape; "SV01" and "SV1" are one number.

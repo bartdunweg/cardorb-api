@@ -15,7 +15,7 @@ info:
   summary: A Pokémon card collection, priced, served to a web tool and an iOS app.
   description: |
     Card Orb keeps one person's Pokémon card collection in Postgres, matches it
-    against three card catalogues, prices it from Cardmarket, and serves it here.
+    against three card catalogues, prices it from Cardmarket and TCGplayer, and serves it here.
 
     **Two clients read this API and both are ours**: the web tool at cardorb.com
     and the iOS app. Nothing here is designed for a third party yet.
@@ -190,7 +190,7 @@ components:
 
     Price:
       type: object
-      description: One card's Cardmarket price, in euros.
+      description: "One card's price, in euros. Cardmarket's where it stands alone, with its Near Mint band; the average of Cardmarket and TCGplayer (at the ECB rate) where both exist, and then `nm` is null and `market` is the shown figure."
       properties:
         low: { type: [number, "null"], description: "The lowest listing at any condition. A floor, not a price." }
         market: { type: [number, "null"], description: "What one copy trades at." }

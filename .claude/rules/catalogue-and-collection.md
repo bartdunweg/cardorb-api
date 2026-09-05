@@ -33,8 +33,9 @@ paths:
   change could reach.
 - **A card's price is the average of two markets, in euros**: Cardmarket (the daily guide at
   build time, cached as a small map; TCGdex for a card the guide does not know) and TCGplayer
-  (pokemontcg.io, one request per set, dollars at the ECB's daily rate). Where one market has
-  nothing the other stands alone. The algorithm that turns them into the one shown figure is
+  (pokemontcg.io, one request per set and its gallery, TCGdex's relay for a card it lacks;
+  dollars at the ECB's daily rate). Where one market has nothing the other stands alone, in its
+  own shape. The foil price is Cardmarket's alone. The algorithm that turns them into the one shown figure is
   `lib/core/price-basis.mjs`, and nothing else.
 - **Migrations are applied and recorded through `supabase db query --linked` and
   `supabase migration repair`**, which need the CLI login and not the database password.
