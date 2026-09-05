@@ -199,3 +199,23 @@ export function holoPriceOf(cm) {
   if (low === null && market === null && avg30 === null) return null;
   return { low, market, avg30, nm: nmRange(market) };
 }
+
+/**
+ * A price out of TCGplayer's dollars, for a card Cardmarket publishes nothing for.
+ *
+ * The market figure converted at the day's rate is the price; the low is kept as the
+ * floor it is. No month's average and no Near Mint band: those are Cardmarket's numbers
+ * and the band was calibrated on them, so shownPrice() takes the market directly. To the
+ * cent, since a converted figure otherwise carries a tail no shop would print.
+ *
+ * @param {{ market: number | null, low: number | null }} usd
+ * @param {number} rate euros per dollar
+ * @returns {Price | null}
+ */
+export function priceFromUsd(usd, rate) {
+  const cents = (v) => (v == null ? null : Math.round(v * rate * 100) / 100);
+  const market = cents(num(usd.market));
+  const low = cents(num(usd.low));
+  if (market === null && low === null) return null;
+  return { low, market, avg30: null, nm: null };
+}

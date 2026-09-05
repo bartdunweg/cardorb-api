@@ -16,7 +16,13 @@ vi.mock("../catalogue/catalogue", () => ({
   pricesFor: async () => new Map(),
   json: async () => null,
 }));
-vi.mock("../catalogue/ptcg", () => ({ ptcgScan: async () => null, ptcgLogo: async () => null }));
+// The rate is read before the outage is known; a test that counts fetches must not count it.
+vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: async () => null }));
+vi.mock("../catalogue/ptcg", () => ({
+  ptcgScan: async () => null,
+  ptcgLogo: async () => null,
+  ptcgPrices: async () => new Map(),
+}));
 vi.mock("../catalogue/price-guide", () => ({
   fetchPriceGuide: async () => null,
   guidePrices: () => [],

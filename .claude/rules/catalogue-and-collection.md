@@ -32,7 +32,9 @@ paths:
   (config, env, util) stays at its root. Thirty files on one heap gave no hint which of them a
   change could reach.
 - **Prices come from Cardmarket's daily guide at build time**, cached as a small map. TCGdex
-  is asked only for a card the guide does not know.
+  is asked only for a card the guide does not know, and TCGplayer (pokemontcg.io, dollars at
+  the ECB's rate) only for a card neither prices, old promos mostly. The algorithm that turns
+  any of them into the one shown figure is `lib/core/price-basis.mjs`, and nothing else.
 - **Migrations are applied and recorded through `supabase db query --linked` and
   `supabase migration repair`**, which need the CLI login and not the database password.
 - **`cards.collection_id` is `on delete set null` on the live database**, so `deleteFolder()`

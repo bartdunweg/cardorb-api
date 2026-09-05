@@ -46,6 +46,8 @@ if the two have drifted apart.
   `PATCH /v1/collection/items/{id}` refuses to file a copy into a rule folder. A folder keeps
   its kind: a manual one cannot be given a rule, and a rule one cannot lose it.
 
+- A card Cardmarket publishes nothing for is priced from TCGplayer, in euros at the day's ECB rate; old promos in a collection count towards its value now.
+
 ## 2026-09-04
 
 - The card list (`GET /v1/cards`) now names the sets and rarities you hold beside every page, so a list page no longer has to fetch the whole collection to draw its filter menus.

@@ -39,7 +39,8 @@ import { LOCALE } from "../config";
 import { limitlessScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
-import { ptcgScan } from "../catalogue/ptcg";
+import { ptcgPrices, ptcgScan } from "../catalogue/ptcg";
+import { priceFromUsd } from "../price-basis.mjs";
 import type { CollectionRow, Finish } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
@@ -518,6 +519,11 @@ export type BuildOptions = {
    */
   offline?: boolean;
   /**
+   * Euros per dollar, for TCGplayer's prices on the cards Cardmarket publishes nothing for;
+   * absent or null, that source is not asked. Read once per request by collection.ts.
+   */
+  usdToEur?: number | null;
+  /**
    * Where each set's catalogue facts come from. Left out, resolveSetFacts()
    * runs here with the options above; collection.ts hands in a day-long cache
    * in front of it, keyed by set and by which printings are asked about, so a
@@ -587,7 +593,7 @@ export type SetFacts = {
 /** Where a set's facts come from: resolveSetFacts(), or a cache in front of it. */
 export type FactsSource = (setName: string, identities: CardIdentity[]) => Promise<SetFacts>;
 
-export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offline">;
+export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offline" | "usdToEur">;
 
 /**
  * The catalogue half of a set: which card each printing is, its scan, and what
@@ -600,7 +606,7 @@ export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offl
 export async function resolveSetFacts(
   setName: string,
   identities: CardIdentity[],
-  { prices = true, priceSource = pricesFor, offline = false }: ResolveOptions = {},
+  { prices = true, priceSource = pricesFor, offline = false, usdToEur = null }: ResolveOptions = {},
 ): Promise<SetFacts> {
   const cat = offline ? OFFLINE_CATALOGUE : await setCatalogue(setName);
   const { assetBase, code, setHasScans } = cat;
@@ -675,6 +681,7 @@ export async function resolveSetFacts(
 
     return {
       key: identityKey(identity),
+      number,
       image,
       imageHigh,
       tcgId: matched?.id ?? null,
@@ -707,6 +714,24 @@ export async function resolveSetFacts(
    */
   const holoOfId = (id: string | null) => (prices && id && fetched.get(id)?.holo) || null;
 
+  // The second source, for what the first two left unpriced: TCGplayer, by the printed
+  // number, in dollars turned into euros at the day's rate. Only with a rate to turn them
+  // at, only online, and only for the cards that still have nothing.
+  const unpriced =
+    prices && !offline && usdToEur != null
+      ? resolved.filter((r) => priceOfId(r.tcgId) === null)
+      : [];
+  const usd = unpriced.length
+    ? await ptcgPrices(
+        setName,
+        unpriced.map((r) => r.number),
+      )
+    : new Map<string, { market: number | null; low: number | null }>();
+  const secondOf = (number: string) => {
+    const p = usd.get(number);
+    return p && usdToEur != null ? priceFromUsd(p, usdToEur) : null;
+  };
+
   const cards: Record<string, CardFacts> = {};
   for (const r of resolved) {
     cards[r.key] = {
@@ -714,7 +739,7 @@ export async function resolveSetFacts(
       imageHigh: r.imageHigh,
       tcgId: r.tcgId,
       matchedName: r.matchedName,
-      price: priceOfId(r.tcgId),
+      price: priceOfId(r.tcgId) ?? secondOf(r.number),
       priceHolo: holoOfId(r.tcgId),
     };
   }
