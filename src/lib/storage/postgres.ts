@@ -113,15 +113,12 @@ const toRow = (r: CardRecord): CollectionRow => ({
  * that column exists at all.
  */
 export async function listRows(db: SupabaseClient, userId?: string): Promise<CollectionRow[]> {
-  const rows: CollectionRow[] = [];
-  let total = Number.POSITIVE_INFINITY;
-
-  for (let page = 0; page < MAX_PAGES && rows.length < total; page++) {
+  const pageOf = (page: number, counted: boolean) => {
     let q = db
       .from("cards")
-      // Counted once, on the first page, so the loop below knows what finished
-      // looks like rather than guessing from the size of a response.
-      .select(COLUMNS, page === 0 ? { count: "exact" } : {})
+      // Counted once, on the first page, so the read knows what finished looks
+      // like rather than guessing from the size of a response.
+      .select(COLUMNS, counted ? { count: "exact" } : {})
       .order("acquired_at", { ascending: false })
       // The tiebreak, and it is load-bearing rather than tidy. acquired_at is
       // not unique — a pack opened in one sitting gives dozens of rows the same
@@ -130,24 +127,34 @@ export async function listRows(db: SupabaseClient, userId?: string): Promise<Col
       // unique after it makes the order total, and the pages disjoint.
       .order("id", { ascending: true })
       .range(page * PAGE, page * PAGE + PAGE - 1);
-
     // Only ever narrows what the policies already allow. Needed for the public
     // page, which reads somebody else's collection through a client that is not
     // them: without it the policy would hand over their own rows as well.
     if (userId) q = q.eq("user_id", userId);
+    return q;
+  };
 
-    const { data, error, count } = await q;
-    // Thrown rather than broken out of, for the same reason the Notion cursor
-    // throws: a truncated binder is not a collection, it is an outage wearing
-    // one, and the caller above knows how to fail soft.
-    if (error) throw new Error(`Reading the collection failed: ${error.message}`);
-    if (page === 0 && typeof count === "number") total = count;
+  // The first page alone, for the count; the rest at once. A binder of two
+  // thousand rows is two pages, and the second used to wait for the first:
+  // after every write, the read that fills the row cache again is the one the
+  // person is waiting on.
+  const first = await pageOf(0, true);
+  // Thrown rather than broken out of, for the same reason the Notion cursor
+  // throws: a truncated binder is not a collection, it is an outage wearing
+  // one, and the caller above knows how to fail soft.
+  if (first.error) throw new Error(`Reading the collection failed: ${first.error.message}`);
+  const total = typeof first.count === "number" ? first.count : Number.POSITIVE_INFINITY;
+  const rows: CollectionRow[] = ((first.data ?? []) as CardRecord[]).map(toRow);
 
-    const batch = (data ?? []) as CardRecord[];
-    // An empty page before the count is reached means the two disagree, and
-    // continuing would spin. Fall through to the check below, which says so.
-    if (!batch.length) break;
-    rows.push(...batch.map(toRow));
+  const pages = Number.isFinite(total) ? Math.min(MAX_PAGES, Math.ceil(total / PAGE)) : 1;
+  if (pages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: pages - 1 }, (_, i) => pageOf(i + 1, false)),
+    );
+    for (const page of rest) {
+      if (page.error) throw new Error(`Reading the collection failed: ${page.error.message}`);
+      rows.push(...((page.data ?? []) as CardRecord[]).map(toRow));
+    }
   }
 
   // Loud rather than short. A collection that is missing a third of itself and
