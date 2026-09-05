@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
-const renameFolder = vi.fn();
+const getFolder = vi.fn();
+const updateFolder = vi.fn();
 const deleteFolder = vi.fn();
 const revalidateTag = vi.fn();
 
@@ -16,7 +17,8 @@ vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 vi.mock("@/lib/storage/collection", () => ({
-  renameFolder: (...a: unknown[]) => renameFolder(...a),
+  getFolder: (...a: unknown[]) => getFolder(...a),
+  updateFolder: (...a: unknown[]) => updateFolder(...a),
   deleteFolder: (...a: unknown[]) => deleteFolder(...a),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: (...a: unknown[]) => revalidateTag(...a) }));
@@ -24,7 +26,8 @@ vi.mock("next/cache", () => ({ revalidateTag: (...a: unknown[]) => revalidateTag
 const { PATCH, DELETE } = await import("./route");
 
 const ID = "11111111-1111-4111-8111-111111111111";
-const FOLDER = { id: ID, name: "Shiny", createdAt: "2026-09-02" };
+const FOLDER = { id: ID, name: "Shiny", kind: "manual", rule: null, createdAt: "2026-09-02" };
+const RULED = { ...FOLDER, kind: "rule", rule: { dex: { from: 1, to: 151 } } };
 
 const patch = (id: string, body: string) =>
   PATCH(
@@ -47,22 +50,51 @@ const del = (id: string) =>
 beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
-  renameFolder.mockResolvedValue(FOLDER);
+  getFolder.mockResolvedValue(FOLDER);
+  updateFolder.mockResolvedValue(FOLDER);
   deleteFolder.mockResolvedValue(true);
 });
 
 describe("PATCH /api/v1/folders/{id}", () => {
   it("renames the caller's folder", async () => {
     const res = await patch(ID, JSON.stringify({ name: "Shiny" }));
-    expect(renameFolder).toHaveBeenCalledWith("me-uuid", ID, "Shiny", "t");
+    expect(updateFolder).toHaveBeenCalledWith("me-uuid", ID, { name: "Shiny" }, "t");
     expect(await res.json()).toEqual({ ok: true, folder: FOLDER });
   });
 
+  it("changes a rule folder's rule, and refuses to give one to a folder filled by hand", async () => {
+    getFolder.mockResolvedValue(RULED);
+    updateFolder.mockResolvedValue({ ...RULED, rule: { dex: { from: 152, to: 251 } } });
+    const res = await patch(ID, JSON.stringify({ rule: { dex: { from: 152, to: 251 } } }));
+    expect(updateFolder).toHaveBeenCalledWith(
+      "me-uuid",
+      ID,
+      { rule: { dex: { from: 152, to: 251 } } },
+      "t",
+    );
+    expect(res.status).toBe(200);
+
+    getFolder.mockResolvedValue(FOLDER);
+    const refused = await patch(ID, JSON.stringify({ rule: { dex: { from: 1, to: 9 } } }));
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toEqual({
+      error: "This folder is filled by hand; it cannot take a rule.",
+    });
+    expect(updateFolder).toHaveBeenCalledTimes(1);
+  });
+
+  it("never lets a rule folder lose its rule, and wants something to change", async () => {
+    expect((await patch(ID, JSON.stringify({ rule: null }))).status).toBe(400);
+    expect((await patch(ID, JSON.stringify({}))).status).toBe(400);
+    expect(updateFolder).not.toHaveBeenCalled();
+  });
+
   it("is a 404 for a folder that is not the caller's, and for an id that is not one", async () => {
-    renameFolder.mockResolvedValue(null);
+    getFolder.mockResolvedValue(null);
     expect((await patch(ID, JSON.stringify({ name: "x" }))).status).toBe(404);
     expect((await patch("nope", JSON.stringify({ name: "x" }))).status).toBe(404);
-    expect(renameFolder).toHaveBeenCalledTimes(1);
+    expect(getFolder).toHaveBeenCalledTimes(1);
+    expect(updateFolder).not.toHaveBeenCalled();
   });
 });
 

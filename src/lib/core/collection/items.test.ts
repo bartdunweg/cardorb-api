@@ -101,6 +101,31 @@ describe("filterItems", () => {
     expect(filterItems(items, { collection: "f-1" }).map((i) => i.id)).toEqual(["a"]);
     expect(filterItems(items, { collection: "f-2" })).toEqual([]);
   });
+  it("a rule narrows to the owned copies it matches, whatever owned says", () => {
+    const dexed = [
+      set("Base Set", [
+        card("Pikachu", [variant({ id: "a", rarity: "Common" })], { speciesId: 25 }),
+        card("Charizard", [variant({ id: "b", owned: false, rarity: "Rare" })], { speciesId: 6 }),
+        card("Mew", [variant({ id: "e", rarity: "Rare" })], { speciesId: 151 }),
+        card("Chikorita", [variant({ id: "f", rarity: "Common" })], { speciesId: 152 }),
+        card("Potion", [variant({ id: "g", rarity: "Common" })]),
+      ]),
+    ];
+    const all = flattenItems(dexed);
+    expect(filterItems(all, { rule: { dex: { from: 1, to: 151 } } }).map((i) => i.id)).toEqual([
+      "a",
+      "e",
+    ]);
+    expect(filterItems(all, { rule: { dex: { from: 1, to: 151 } }, owned: false })).toEqual([]);
+    expect(
+      filterItems(all, { rule: { sets: ["base set"], rarities: ["Common"] } }).map((i) => i.id),
+    ).toEqual(["a", "f", "g"]);
+    expect(
+      filterItems(all, { rule: { dex: { from: 1, to: 151 }, rarities: ["Rare"] } }).map(
+        (i) => i.id,
+      ),
+    ).toEqual(["e"]);
+  });
   it("a set or a rarity is matched whole, in any case", () => {
     expect(filterItems(items, { set: "jungle" }).map((i) => i.id)).toEqual(["c", "d"]);
     expect(filterItems(items, { set: "Jung" })).toEqual([]);

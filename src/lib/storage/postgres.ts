@@ -20,6 +20,7 @@
  * lists.
  */
 
+import type { FolderKind, FolderRule } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   isFinish,
@@ -723,13 +724,39 @@ export async function claimUsername(db: SupabaseClient, wanted: string): Promise
  * security: a client that can only see its own rows still should not be able
  * to *say* another's id and get a silent no-op back as success.
  */
-export type Folder = { id: string; name: string; createdAt: string };
+export type Folder = {
+  id: string;
+  name: string;
+  /** Derived from `rule`, never stored: a folder with a rule fills itself. */
+  kind: FolderKind;
+  rule: FolderRule | null;
+  createdAt: string;
+};
 
-type FolderRecord = { id: string; name: string; created_at: string };
+type FolderRecord = { id: string; name: string; rule: unknown; created_at: string };
 
-const FOLDER_COLUMNS = "id,name,created_at";
+const FOLDER_COLUMNS = "id,name,rule,created_at";
 
-const toFolder = (r: FolderRecord): Folder => ({ id: r.id, name: r.name, createdAt: r.created_at });
+const toFolder = (r: FolderRecord): Folder => {
+  const rule = (r.rule as FolderRule | null) ?? null;
+  return { id: r.id, name: r.name, kind: rule ? "rule" : "manual", rule, createdAt: r.created_at };
+};
+
+/** null when no folder of the caller's has that id. */
+export async function getFolder(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<Folder | null> {
+  const { data, error } = await db
+    .from("collections")
+    .select(FOLDER_COLUMNS)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(`Reading that folder failed: ${error.message}`);
+  return data ? toFolder(data as FolderRecord) : null;
+}
 
 export async function listFolders(db: SupabaseClient, userId: string): Promise<Folder[]> {
   const { data, error } = await db
@@ -745,31 +772,34 @@ export async function createFolder(
   db: SupabaseClient,
   userId: string,
   name: string,
+  rule: FolderRule | null,
 ): Promise<Folder> {
   const { data, error } = await db
     .from("collections")
-    .insert({ user_id: userId, name })
+    .insert({ user_id: userId, name, rule })
     .select(FOLDER_COLUMNS)
     .single();
   if (error) throw new Error(`That folder could not be created: ${error.message}`);
   return toFolder(data as FolderRecord);
 }
 
-/** null when no folder of the caller's has that id. */
-export async function renameFolder(
+export type FolderPatch = { name?: string; rule?: FolderRule };
+
+/** null when no folder of the caller's has that id. Only what the patch names changes. */
+export async function updateFolder(
   db: SupabaseClient,
   userId: string,
   id: string,
-  name: string,
+  patch: FolderPatch,
 ): Promise<Folder | null> {
   const { data, error } = await db
     .from("collections")
-    .update({ name, updated_at: new Date().toISOString() })
+    .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", userId)
     .select(FOLDER_COLUMNS)
     .maybeSingle();
-  if (error) throw new Error(`That folder could not be renamed: ${error.message}`);
+  if (error) throw new Error(`That folder could not be changed: ${error.message}`);
   return data ? toFolder(data as FolderRecord) : null;
 }
 

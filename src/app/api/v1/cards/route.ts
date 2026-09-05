@@ -10,7 +10,8 @@ import {
   refused,
   storeErrorResponse,
 } from "@/lib/api/guard";
-import { getCollection } from "@/lib/core/collection/collection";
+import { getCollection, getFolders } from "@/lib/core/collection/collection";
+import type { FolderRule } from "@/lib/core/collection/folders";
 import {
   facetsOf,
   filterItems,
@@ -54,14 +55,34 @@ export async function GET(req: Request) {
   if (read.kind === "invalid")
     return apiError(400, read.error, undefined, { headers: readHeaders(req) });
 
-  const { sets, failed, catalogueUnavailable } = await getCollection(
-    who.userId,
-    bearer(req) ?? undefined,
-  );
+  const token = bearer(req) ?? undefined;
+
+  // A folder id names either the copies filed in it or, for a rule folder, its rule. Read
+  // from the cached folder list, so it costs a query only after a folder changed. An id that
+  // is no folder is a 404, not an empty page.
+  let rule: FolderRule | undefined;
+  let collection = read.query.collection;
+  if (collection) {
+    let folder;
+    try {
+      folder = (await getFolders(who.userId, token)).find((f) => f.id === collection);
+    } catch (err) {
+      return storeErrorResponse(err, req, "Reading the folder failed");
+    }
+    if (!folder)
+      return apiError(404, "No folder by that id.", undefined, { headers: readHeaders(req) });
+    if (folder.rule) {
+      rule = folder.rule;
+      collection = undefined;
+    }
+  }
+
+  const { sets, failed, catalogueUnavailable } = await getCollection(who.userId, token);
   if (failed) return unavailable();
   const { sort, order } = read.query;
   const all = flattenItems(sets);
-  const { items, total } = pageOf(sortItems(filterItems(all, read.query), sort, order), read.query);
+  const filter = { ...read.query, collection, rule };
+  const { items, total } = pageOf(sortItems(filterItems(all, filter), sort, order), read.query);
   // The facets ride along with every page, over the whole owned collection whatever the
   // filters: the web app used to fetch GET /v1/collection — a megabyte — to draw the two menus.
   return NextResponse.json(

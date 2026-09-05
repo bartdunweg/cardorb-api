@@ -40,8 +40,8 @@ export const BODY_LIMIT = {
   card: 8_192,
   /** A patch: a few inventory fields. */
   patch: 4_096,
-  /** A folder: one name. */
-  folder: 1_024,
+  /** A folder: a name and a rule of up to twenty set titles. */
+  folder: 4_096,
   /** A profile: a display name, a username, a URL. */
   profile: 8_192,
   /**

@@ -38,6 +38,7 @@
  * unstable_cache boundary rather than inside it.
  */
 
+import type { FolderRule } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CardDraft,
@@ -139,7 +140,7 @@ export async function deleteRow(userId: string, id: string, token?: string): Pro
  * lists rather than an error — worth knowing if a filter picker looks
  * emptier than the collection actually is.
  */
-export type { Folder } from "./postgres";
+export type { Folder, FolderPatch } from "./postgres";
 
 export async function listFolders(userId: string, token?: string) {
   const db = await clientFor(token);
@@ -147,16 +148,32 @@ export async function listFolders(userId: string, token?: string) {
   return postgres.listFolders(db, userId);
 }
 
-export async function createFolder(userId: string, name: string, token?: string) {
+export async function getFolder(userId: string, id: string, token?: string) {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
-  return postgres.createFolder(db, userId, name);
+  return postgres.getFolder(db, userId, id);
 }
 
-export async function renameFolder(userId: string, id: string, name: string, token?: string) {
+export async function createFolder(
+  userId: string,
+  name: string,
+  rule: FolderRule | null,
+  token?: string,
+) {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
-  return postgres.renameFolder(db, userId, id, name);
+  return postgres.createFolder(db, userId, name, rule);
+}
+
+export async function updateFolder(
+  userId: string,
+  id: string,
+  patch: postgres.FolderPatch,
+  token?: string,
+) {
+  const db = await clientFor(token);
+  if (!db) throw new StoreNotConfigured();
+  return postgres.updateFolder(db, userId, id, patch);
 }
 
 export async function deleteFolder(userId: string, id: string, token?: string) {
