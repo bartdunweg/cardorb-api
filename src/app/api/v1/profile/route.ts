@@ -44,6 +44,7 @@ export async function PATCH(req: Request) {
   const patch: {
     displayName?: string | null;
     isPublic?: boolean;
+    wishlistPublic?: boolean;
     onboardedAt?: string;
     pokedex?: PokedexSetting | null;
   } = {};
@@ -64,6 +65,13 @@ export async function PATCH(req: Request) {
       return apiError(400, "Invalid request");
     }
     patch.isPublic = body.isPublic;
+  }
+
+  if ("wishlistPublic" in body) {
+    if (typeof body.wishlistPublic !== "boolean") {
+      return apiError(400, "Invalid request");
+    }
+    patch.wishlistPublic = body.wishlistPublic;
   }
 
   // One way only. `onboarded: true` stamps the clock; nothing else is

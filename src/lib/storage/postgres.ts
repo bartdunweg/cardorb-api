@@ -540,6 +540,8 @@ export type PublicProfile = {
   username: string;
   displayName: string | null;
   avatarUrl: string | null;
+  /** The wishlist shows on the public page too. */
+  wishlistPublic: boolean;
 };
 
 /**
@@ -559,7 +561,7 @@ export async function profileByUsername(
 ): Promise<PublicProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("id,username,display_name,avatar_url")
+    .select("id,username,display_name,avatar_url,wishlist_public")
     .eq("username", username)
     .eq("is_public", true)
     .maybeSingle();
@@ -572,12 +574,14 @@ export async function profileByUsername(
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    wishlist_public: boolean;
   };
   return {
     id: row.id,
     username: row.username,
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
+    wishlistPublic: row.wishlist_public,
   };
 }
 
@@ -610,6 +614,8 @@ export type OwnProfile = {
   username: string;
   displayName: string | null;
   isPublic: boolean;
+  /** The wishlist on the public page too, while isPublic. */
+  wishlistPublic: boolean;
   avatarUrl: string | null;
   /** Null until the welcome flow has been finished or skipped past. */
   onboardedAt: string | null;
@@ -632,7 +638,7 @@ export type OwnProfile = {
 export async function ownProfile(db: SupabaseClient, userId: string): Promise<OwnProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("username,display_name,is_public,avatar_url,onboarded_at,pokedex")
+    .select("username,display_name,is_public,wishlist_public,avatar_url,onboarded_at,pokedex")
     .eq("id", userId)
     .maybeSingle();
 
@@ -643,6 +649,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     username: string;
     display_name: string | null;
     is_public: boolean;
+    wishlist_public: boolean;
     avatar_url: string | null;
     onboarded_at: string | null;
     pokedex: unknown;
@@ -651,6 +658,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     username: row.username,
     displayName: row.display_name,
     isPublic: row.is_public,
+    wishlistPublic: row.wishlist_public,
     avatarUrl: row.avatar_url,
     onboardedAt: row.onboarded_at,
     pokedex: (row.pokedex as PokedexSetting | null) ?? null,
@@ -676,6 +684,7 @@ export async function updateProfile(
   patch: {
     displayName?: string | null;
     isPublic?: boolean;
+    wishlistPublic?: boolean;
     avatarUrl?: string | null;
     onboardedAt?: string;
     pokedex?: PokedexSetting | null;
@@ -684,6 +693,7 @@ export async function updateProfile(
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("displayName" in patch) row.display_name = patch.displayName;
   if ("isPublic" in patch) row.is_public = patch.isPublic;
+  if ("wishlistPublic" in patch) row.wishlist_public = patch.wishlistPublic;
   if ("avatarUrl" in patch) row.avatar_url = patch.avatarUrl;
   // Never null: finishing the welcome flow is a thing that happened, and
   // nothing in the app un-happens it. The route that sets this only ever

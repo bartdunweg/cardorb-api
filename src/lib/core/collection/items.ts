@@ -392,6 +392,36 @@ export function publicItems(sets: CardSet[]): PublicItem[] {
   return out;
 }
 
+/**
+ * The wishes as public items: one per card the owner is looking for, `copies` the wishes. Only
+ * for an owner who shows the wishlist; a card held as well is not a wish.
+ */
+export function publicWishes(sets: CardSet[]): PublicItem[] {
+  const out: PublicItem[] = [];
+  for (const set of sets) {
+    for (const card of set.cards) {
+      if (card.variants.some((v) => v.owned)) continue;
+      const copies = card.variants.filter((v) => !v.owned).length;
+      if (copies === 0) continue;
+      out.push({
+        key: card.key,
+        name: card.name,
+        number: card.number,
+        set: set.name,
+        setTitle: set.title,
+        rarity: card.variants[0]?.rarity ?? null,
+        gen: card.gen,
+        type: card.type,
+        image: card.image,
+        speciesId: card.speciesId,
+        tcgId: card.tcgId,
+        copies,
+      });
+    }
+  }
+  return out;
+}
+
 /** What a visitor can narrow a public collection by: the same words as `ItemFilter`, minus what is personal. */
 export type PublicFilter = Pick<ItemFilter, "q" | "set" | "rarity">;
 
@@ -457,7 +487,7 @@ export function facetsOf(
 export const publicFacets = (items: PublicItem[]): PublicFacets => facetsOf(items);
 
 export type PublicQuery = PublicFilter &
-  Page & { sort?: PublicSort; order?: Order; collection?: string };
+  Page & { sort?: PublicSort; order?: Order; collection?: string; list?: "wishlist" };
 
 /**
  * `q`, `set`, `rarity`, `sort`, `order`, `limit` and `offset`: a public page has no wishlist,
@@ -467,6 +497,9 @@ export function readPublicQuery(
   params: URLSearchParams,
 ): { kind: "ok"; query: PublicQuery } | { kind: "invalid"; error: string } {
   const kept = ["q", "set", "rarity", "sort", "order", "limit", "offset", "collection"];
+  const list = params.get("list");
+  if (list !== null && list !== "wishlist")
+    return { kind: "invalid", error: "list must be wishlist." };
   const sort = params.get("sort");
   if (sort !== null && !(PUBLIC_SORTS as readonly string[]).includes(sort))
     return { kind: "invalid", error: `sort must be one of ${PUBLIC_SORTS.join(", ")}.` };
@@ -484,6 +517,7 @@ export function readPublicQuery(
       ...(set ? { set } : {}),
       ...(rarity ? { rarity } : {}),
       ...(collection ? { collection } : {}),
+      ...(list ? { list: "wishlist" as const } : {}),
       ...(sort ? { sort: sort as PublicSort } : {}),
       ...(order ? { order } : {}),
       limit,

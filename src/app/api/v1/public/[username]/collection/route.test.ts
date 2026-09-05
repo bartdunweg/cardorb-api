@@ -21,7 +21,7 @@ const get = (name = "bart") =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null });
+  ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null , wishlistPublic: false});
   getPublicCollection.mockResolvedValue({ sets: [], failed: false });
 });
 
