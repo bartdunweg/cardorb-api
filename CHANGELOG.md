@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-06
 
+- A public item's `favorite` is read off the owner's copy, so `list=favorites` lists the starred cards rather than nothing; unset for everyone whose favorites are not shown.
+
 - The favorites and the Pokédex can show on the public profile, each behind its own flag (`favoritesPublic`, `pokedexPublic` on the profile); `GET /v1/public/{username}/cards` takes `list=favorites` and `list=pokedex`, a public item says whether it is a favorite, and the public profile carries the owner's Pokédex setting while the Pokédex is shown.
 
 ## 2026-09-05
