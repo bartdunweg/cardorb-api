@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-06
+
+- The favorites and the Pokédex can show on the public profile, each behind its own flag (`favoritesPublic`, `pokedexPublic` on the profile); `GET /v1/public/{username}/cards` takes `list=favorites` and `list=pokedex`, a public item says whether it is a favorite, and the public profile carries the owner's Pokédex setting while the Pokédex is shown.
+
 ## 2026-09-05
 
 - Starring a card, changing how many you hold or adding a note no longer makes the next screen wait for the whole collection to be matched and priced again: what the catalogue says about each card is kept per set for a day, and only your own rows are read afresh.

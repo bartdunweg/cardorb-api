@@ -81,7 +81,7 @@ const sets = [
 
 beforeEach(() => {
   vi.clearAllMocks();
-  ownerOf.mockResolvedValue({ id: "u", username: "bart", displayName: "Bart", avatarUrl: null , wishlistPublic: false});
+  ownerOf.mockResolvedValue({ id: "u", username: "bart", displayName: "Bart", avatarUrl: null, wishlistPublic: false, favoritesPublic: false, pokedexPublic: false, pokedex: null });
   getPublicCollection.mockResolvedValue({ sets, failed: false });
 });
 
