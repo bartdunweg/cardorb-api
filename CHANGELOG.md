@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - The favorites and the Pokédex can show on the public profile, each behind its own flag (`favoritesPublic`, `pokedexPublic` on the profile); `GET /v1/public/{username}/cards` takes `list=favorites` and `list=pokedex`, a public item says whether it is a favorite, and the public profile carries the owner's Pokédex setting while the Pokédex is shown.
 
+- The dollar rate is read from frankfurter's new host, and a failed read is not cached: a null kept for a day was a day without TCGplayer prices.
+
 - TCGplayer's prices live in a day-long cache of their own per set, blended into the set's facts on read; a failed pokemontcg.io call is not cached, so an outage costs the second price for minutes, not a day.
 
 ## 2026-09-05
