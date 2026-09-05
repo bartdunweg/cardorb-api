@@ -40,7 +40,7 @@ import { limitlessScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgPrices, ptcgScan } from "../catalogue/ptcg";
-import { priceFromUsd } from "../price-basis.mjs";
+import { blendPrices, priceFromUsd } from "../price-basis.mjs";
 import type { CollectionRow, Finish } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
@@ -714,21 +714,15 @@ export async function resolveSetFacts(
    */
   const holoOfId = (id: string | null) => (prices && id && fetched.get(id)?.holo) || null;
 
-  // The second source, for what the first two left unpriced: TCGplayer, by the printed
-  // number, in dollars turned into euros at the day's rate. Only with a rate to turn them
-  // at, only online, and only for the cards that still have nothing.
-  const unpriced =
+  // The second market, for every card: TCGplayer's numbers for the whole set, in dollars
+  // turned into euros at the day's rate, and each card priced as the average of the two
+  // (blendPrices). Only with a rate to turn them at, and only online.
+  const usd =
     prices && !offline && usdToEur != null
-      ? resolved.filter((r) => priceOfId(r.tcgId) === null)
-      : [];
-  const usd = unpriced.length
-    ? await ptcgPrices(
-        setName,
-        unpriced.map((r) => r.number),
-      )
-    : new Map<string, { market: number | null; low: number | null }>();
+      ? await ptcgPrices(setName)
+      : new Map<string, { market: number | null; low: number | null }>();
   const secondOf = (number: string) => {
-    const p = usd.get(number);
+    const p = usd.get(number.replace(/^0+/, ""));
     return p && usdToEur != null ? priceFromUsd(p, usdToEur) : null;
   };
 
@@ -739,7 +733,7 @@ export async function resolveSetFacts(
       imageHigh: r.imageHigh,
       tcgId: r.tcgId,
       matchedName: r.matchedName,
-      price: priceOfId(r.tcgId) ?? secondOf(r.number),
+      price: blendPrices(priceOfId(r.tcgId), secondOf(r.number)),
       priceHolo: holoOfId(r.tcgId),
     };
   }

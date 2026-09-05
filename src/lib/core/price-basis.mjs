@@ -219,3 +219,24 @@ export function priceFromUsd(usd, rate) {
   if (market === null && low === null) return null;
   return { low, market, avg30: null, nm: null };
 }
+
+/**
+ * One price out of the two markets: the average of Cardmarket's shown figure and TCGplayer's
+ * market in euros, where both exist; whichever exists where one does not. The low is the
+ * lower of the two floors. Cardmarket's month's average rides along for the trend check that
+ * already happened; no Near Mint band, since the band was calibrated on Cardmarket alone and
+ * the blend already is the shown figure. Null only where neither market has a number.
+ *
+ * @param {Price | null} cardmarket
+ * @param {Price | null} tcgplayer already in euros, from priceFromUsd()
+ * @returns {Price | null}
+ */
+export function blendPrices(cardmarket, tcgplayer) {
+  const a = shownPrice(cardmarket);
+  const b = tcgplayer ? tcgplayer.market : null;
+  if (a === null && b === null) return null;
+  const market = a !== null && b !== null ? Math.round(((a + b) / 2) * 100) / 100 : (a ?? b);
+  const lows = [cardmarket?.low, tcgplayer?.low].filter((v) => typeof v === "number");
+  const low = lows.length ? Math.min(...lows) : null;
+  return { low, market, avg30: cardmarket?.avg30 ?? null, nm: null };
+}
