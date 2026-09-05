@@ -11,7 +11,7 @@ import {
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 import { getCollection, getFolders } from "@/lib/core/collection/collection";
-import { cardsTag, foldersTag } from "@/lib/core/collection/collection-row";
+import { foldersTag } from "@/lib/core/collection/collection-row";
 import { readFolderBody, ruleMatcher } from "@/lib/core/collection/folders";
 import { flattenItems } from "@/lib/core/collection/items";
 import { createFolder } from "@/lib/storage/collection";
@@ -96,8 +96,10 @@ export async function POST(req: Request) {
     return storeErrorResponse(err, req, "Creating a folder failed");
   }
 
+  // The folder list only: a new folder changes no row, and the assembled collection under
+  // cardsTag is the expensive one to rebuild (every row against the catalogues, twenty seconds
+  // for a large binder). Deleting a folder does unfile rows and drops both.
   revalidateTag(foldersTag(who.userId), { expire: 0 });
-  revalidateTag(cardsTag(who.userId), { expire: 0 });
   return NextResponse.json(
     { ok: true, folder: { ...folder, count: 0 } },
     { headers: readHeaders(req) },

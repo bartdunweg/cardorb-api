@@ -6,12 +6,22 @@ if the two have drifted apart.
 
 ## 2026-09-05
 
+- Making a folder no longer drops the assembled collection from the cache, only the folder
+  list: a new folder changes no card, and the rebuild cost every read after it twenty seconds
+  on a large binder. Deleting a folder still drops both, since that unfiles cards.
+
 - `GET /v1/cards` says what the list is worth: `value` and `unpriced`, over the whole filtered
   list rather than the page, and a wishlist's facets now name its own sets and rarities. `sort=dex`
   puts the copies in national Pokédex order, trainers and energy last. A folder may be shown as a
   Pokédex: `pokedex` on `POST /v1/folders` and `PATCH /v1/folders/{id}` takes whether the missing
   Pokémon show and the range collected, `null` turns it off; the built-in Pokédex takes the same
   setting from `PATCH /v1/profile { pokedex }`.
+
+- Three answers put right after review. `GET /v1/cards?collection=` on a rule folder now
+  keeps its matches when `owned=false` is also given, as the contract said. A folder body may
+  be 8 kB, so a rule with twenty sets and twenty rarities is no longer refused as too large.
+  `GET /v1/folders` carries `catalogueUnavailable` during a TCGdex outage, when a rule
+  folder's `count` is low for want of Pokédex numbers and set titles.
 
 - Three answers put right after review. `GET /v1/cards?collection=` on a rule folder now
   keeps its matches when `owned=false` is also given, as the contract said. A folder body may
