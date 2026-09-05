@@ -14,7 +14,7 @@
  * with it and the page is exactly as complete as TCGdex is.
  */
 
-import { DAY, norm, catalogueTimeout } from "../util";
+import { DAY, cardNumber, norm, catalogueTimeout } from "../util";
 import { sameCard } from "./matching";
 import { isGalleryNumber, ptcgSetName } from "./set-aliases";
 
@@ -261,6 +261,7 @@ async function ptcgSetPrices(
   headers: Record<string, string>,
 ): Promise<Map<string, UsdPrice> | null> {
   const out = new Map<string, UsdPrice>();
+  const alias = new Map<string, UsdPrice>();
   for (let page = 1; page <= 4; page++) {
     const url =
       `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${setId}`)}` +
@@ -284,10 +285,18 @@ async function ptcgSetPrices(
     for (const card of body.data ?? []) {
       if (!card.number) continue;
       const price = usdOf(card);
-      if (price) out.set(card.number.replace(/^0+/, ""), price);
+      if (!price) continue;
+      // Under the number as printed, and under its digits alone: a promo is "SWSH282" there and
+      // "282" in the collection, "XY150a" and "150A". The printed form wins where both exist, so
+      // a gallery card (TG12) never answers for the main set's 12.
+      const printed = cardNumber(card.number);
+      const digits = printed.replace(/^[A-Z]+/, "").replace(/^0+(?=\d)/, "");
+      out.set(printed, price);
+      if (digits && digits !== printed) alias.set(digits, price);
     }
     if ((body.data?.length ?? 0) < 250 || (body.totalCount ?? 0) <= page * 250) break;
   }
+  for (const [k, v] of alias) if (!out.has(k)) out.set(k, v);
   return out;
 }
 
@@ -298,10 +307,7 @@ async function ptcgCardPrices(
   headers: Record<string, string>,
 ): Promise<Map<string, UsdPrice>> {
   const out = new Map<string, UsdPrice>();
-  const wanted = numbers
-    .map((n) => n.replace(/^0+/, ""))
-    .filter(Boolean)
-    .slice(0, 40);
+  const wanted = numbers.map(cardNumber).filter(Boolean).slice(0, 40);
   let next = 0;
   await Promise.all(
     Array.from({ length: Math.min(4, wanted.length) }, async () => {

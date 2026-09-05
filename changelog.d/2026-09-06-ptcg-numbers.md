@@ -1,0 +1,1 @@
+- TCGplayer's price finds a promo whose number it prefixes (SWSH282, XY150a) from the collection's plain number.

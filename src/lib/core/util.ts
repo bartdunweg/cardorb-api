@@ -96,3 +96,14 @@ export async function mapLimit<T, R>(items: T[], limit: number, work: (item: T) 
   );
   return out;
 }
+
+/**
+ * A printed card number the way two catalogues can be compared on it: leading zeros off
+ * ("014" is 14), letters upper-case ("XY150a" is XY150A). pokemontcg.io prefixes a promo's
+ * number with its set (SWSH282) where the collection keeps the digits; see ptcgPrices().
+ */
+export const cardNumber = (n: string) =>
+  n
+    .trim()
+    .replace(/^0+(?=\d)/, "")
+    .toUpperCase();
