@@ -61,7 +61,7 @@ const get = (qs = "", name = "bart") =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null , wishlistPublic: false});
+  ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: false, pokedexPublic: false, pokedex: null });
   getPublicCollection.mockResolvedValue({ sets: SETS, failed: false });
 });
 
@@ -83,6 +83,7 @@ describe("GET /api/v1/public/{username}/cards", () => {
       speciesId: null,
       tcgId: null,
       copies: 2,
+      favorite: false,
     });
   });
 
@@ -120,5 +121,17 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     ownerOf.mockResolvedValue(null);
     expect((await get("", "nobody")).status).toBe(404);
+  });
+
+  it("shows the favorites and the Pokédex only for an owner who does, and refuses another list", async () => {
+    expect((await get("?list=favorites")).status).toBe(404);
+    expect((await get("?list=pokedex")).status).toBe(404);
+    expect((await get("?list=binder")).status).toBe(400);
+    ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: true, pokedexPublic: true, pokedex: null });
+    const favorites = await (await get("?list=favorites")).json();
+    expect(favorites.cards.every((c: { favorite: boolean }) => c.favorite)).toBe(true);
+    const all = await (await get()).json();
+    const dex = await (await get("?list=pokedex")).json();
+    expect(dex.total).toBe(all.total);
   });
 });

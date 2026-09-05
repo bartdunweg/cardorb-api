@@ -328,6 +328,7 @@ describe("public filters, sort and facets", () => {
     speciesId: null,
     tcgId: null,
     copies: 1,
+    favorite: false,
   });
   const items = [
     item("Snorlax", "jungle", "Rare"),

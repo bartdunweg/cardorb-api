@@ -457,7 +457,7 @@ components:
     PublicItem:
       type: object
       description: One card on a public profile, with how many copies the owner holds. Nothing private.
-      required: [key, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, copies]
+      required: [key, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, copies, favorite]
       properties:
         key: { type: string }
         name: { type: string }
@@ -472,6 +472,7 @@ components:
         speciesId: { type: [integer, "null"] }
         tcgId: { type: [string, "null"] }
         copies: { type: integer, minimum: 1 }
+        favorite: { type: boolean, description: "One of the owned copies is starred; always false on a wish." }
 
     Stats:
       type: object
@@ -622,12 +623,14 @@ components:
 
     OwnProfile:
       type: object
-      required: [username, displayName, isPublic, wishlistPublic, avatarUrl, onboardedAt, pokedex, email]
+      required: [username, displayName, isPublic, wishlistPublic, favoritesPublic, pokedexPublic, avatarUrl, onboardedAt, pokedex, email]
       properties:
         username: { type: string, description: "The name in `/user/<name>`." }
         displayName: { type: [string, "null"] }
         isPublic: { type: boolean }
         wishlistPublic: { type: boolean, description: "The wishlist shows on the public page too, while isPublic." }
+        favoritesPublic: { type: boolean, description: "The favorites show on the public page too, while isPublic." }
+        pokedexPublic: { type: boolean, description: "The Pokédex shows on the public page too, while isPublic." }
         avatarUrl: { type: [string, "null"] }
         onboardedAt: { type: [string, "null"], format: date-time }
         pokedex:
@@ -1197,6 +1200,8 @@ paths:
                 displayName: { type: string, maxLength: 60, description: "Empty clears it." }
                 isPublic: { type: boolean }
                 wishlistPublic: { type: boolean, description: "The wishlist on the public page too, while isPublic." }
+                favoritesPublic: { type: boolean, description: "The favorites on the public page too, while isPublic." }
+                pokedexPublic: { type: boolean, description: "The Pokédex on the public page too, while isPublic." }
                 onboarded: { type: boolean, const: true }
                 pokedex:
                   description: How the built-in Pokédex shows; null restores the default.
@@ -1216,6 +1221,8 @@ paths:
                   displayName: { type: [string, "null"] }
                   isPublic: { type: boolean }
                   wishlistPublic: { type: boolean }
+                  favoritesPublic: { type: boolean }
+                  pokedexPublic: { type: boolean }
                   onboardedAt: { type: string, format: date-time }
                   pokedex:
                     oneOf:
@@ -1704,12 +1711,19 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [username, displayName, avatarUrl, wishlistPublic]
+                required: [username, displayName, avatarUrl, wishlistPublic, favoritesPublic, pokedexPublic, pokedex]
                 properties:
                   username: { type: string }
                   displayName: { type: [string, "null"] }
                   avatarUrl: { type: [string, "null"] }
                   wishlistPublic: { type: boolean, description: "Whether `GET /v1/public/{username}/cards?list=wishlist` answers." }
+                  favoritesPublic: { type: boolean, description: "Whether `?list=favorites` answers." }
+                  pokedexPublic: { type: boolean, description: "Whether `?list=pokedex` answers." }
+                  pokedex:
+                    description: The owner's Pokédex setting, for drawing theirs the way they see it; null unless pokedexPublic.
+                    oneOf:
+                      - { $ref: "#/components/schemas/PokedexSetting" }
+                      - { type: "null" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
 
@@ -1731,7 +1745,7 @@ paths:
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "One of the owner's public folders (`GET /v1/public/{username}/folders`): the copies filed in it, or the owned copies its rule matches. Any other id is a 404." }
-        - { name: list, in: query, schema: { type: string, enum: [wishlist] }, description: "The owner's wishlist instead of the collection: the cards they are looking for, `copies` the wishes. Only while the profile shows it (`wishlistPublic`); otherwise a 404. `collection` is ignored with it." }
+        - { name: list, in: query, schema: { type: string, enum: [wishlist, favorites, pokedex] }, description: "A list beside the collection: `wishlist` is the cards the owner is looking for (`copies` the wishes), `favorites` the owned cards they starred, `pokedex` the whole owned collection for a page that draws it as a Pokédex. Each only while the profile shows it (`wishlistPublic`, `favoritesPublic`, `pokedexPublic`); otherwise a 404. `collection` is ignored with any of them." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name], default: set }, description: "`set` is the assembly's order (set by set, number by number)." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }

@@ -50,11 +50,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     });
 
   const shown = forPublic(sets);
-  // The wishlist only for an owner who shows it; asked of one who does not, the same 404 as a
-  // folder nobody shows. A folder and the wishlist do not combine: a wish is in no folder.
-  if (read.query.list === "wishlist" && !owner.wishlistPublic)
-    return apiError(404, "No such list.");
-  const all = read.query.list === "wishlist" ? publicWishes(shown) : publicItems(shown);
+  // A list beside the collection only for an owner who shows it; asked of one who does not, the
+  // same 404 as a folder nobody shows. A folder and a list do not combine: a wish is in no
+  // folder, and the favorites and the Pokédex are the whole collection seen another way.
+  const { list } = read.query;
+  const listShown =
+    list === "wishlist"
+      ? owner.wishlistPublic
+      : list === "favorites"
+        ? owner.favoritesPublic
+        : list === "pokedex"
+          ? owner.pokedexPublic
+          : true;
+  if (!listShown) return apiError(404, "No such list.");
+  const owned = publicItems(shown);
+  const all =
+    list === "wishlist"
+      ? publicWishes(shown)
+      : list === "favorites"
+        ? owned.filter((it) => it.favorite)
+        : owned;
 
   // A folder narrows the page to what it holds: the copies filed in it, or the owned copies
   // its rule matches. Only a folder its owner shows; any other id is a 404, the same answer
@@ -62,7 +77,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   // runs on the private items, which know their folder and their rule's facts, and only the
   // card keys come across to the public list.
   let listed = all;
-  if (read.query.collection && read.query.list !== "wishlist") {
+  if (read.query.collection && !list) {
     const folder = (await getPublicFolders(owner.id)).find((f) => f.id === read.query.collection);
     if (!folder) return apiError(404, "No such folder.");
     const filter = folder.rule

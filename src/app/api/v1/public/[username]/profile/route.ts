@@ -31,6 +31,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       displayName: owner.displayName,
       avatarUrl: owner.avatarUrl,
       wishlistPublic: owner.wishlistPublic,
+      favoritesPublic: owner.favoritesPublic,
+      pokedexPublic: owner.pokedexPublic,
+      // The owner's Pokédex setting, so a visitor sees the same range, the same slots.
+      pokedex: owner.pokedexPublic ? owner.pokedex : null,
     },
     { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
   );

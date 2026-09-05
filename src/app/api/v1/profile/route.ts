@@ -45,6 +45,8 @@ export async function PATCH(req: Request) {
     displayName?: string | null;
     isPublic?: boolean;
     wishlistPublic?: boolean;
+    favoritesPublic?: boolean;
+    pokedexPublic?: boolean;
     onboardedAt?: string;
     pokedex?: PokedexSetting | null;
   } = {};
@@ -67,11 +69,14 @@ export async function PATCH(req: Request) {
     patch.isPublic = body.isPublic;
   }
 
-  if ("wishlistPublic" in body) {
-    if (typeof body.wishlistPublic !== "boolean") {
-      return apiError(400, "Invalid request");
+  // The three lists beside the collection, each its own flag on the public page.
+  for (const key of ["wishlistPublic", "favoritesPublic", "pokedexPublic"] as const) {
+    if (key in body) {
+      if (typeof body[key] !== "boolean") {
+        return apiError(400, "Invalid request");
+      }
+      patch[key] = body[key];
     }
-    patch.wishlistPublic = body.wishlistPublic;
   }
 
   // One way only. `onboarded: true` stamps the clock; nothing else is

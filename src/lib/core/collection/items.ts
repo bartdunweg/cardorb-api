@@ -370,6 +370,8 @@ export type PublicItem = {
   tcgId: string | null;
   /** Owned copies. A card with only wishes is not on a public page. */
   copies: number;
+  /** One of the owned copies is starred. Always false on a wish. */
+  favorite: boolean;
 };
 
 export function publicItems(sets: CardSet[]): PublicItem[] {
@@ -392,6 +394,7 @@ export function publicItems(sets: CardSet[]): PublicItem[] {
         speciesId: card.speciesId,
         tcgId: card.tcgId,
         copies,
+        favorite: card.variants.some((v) => v.owned && v.isFavorite),
       });
     }
   }
@@ -423,6 +426,7 @@ export function publicWishes(sets: CardSet[]): PublicItem[] {
         speciesId: card.speciesId,
         tcgId: card.tcgId,
         copies,
+        favorite: false,
       });
     }
   }
@@ -493,8 +497,12 @@ export function facetsOf(
 
 export const publicFacets = (items: PublicItem[]): PublicFacets => facetsOf(items);
 
+/** The lists beside the collection an owner can show: each behind its own flag on the profile. */
+export const PUBLIC_LISTS = ["wishlist", "favorites", "pokedex"] as const;
+export type PublicList = (typeof PUBLIC_LISTS)[number];
+
 export type PublicQuery = PublicFilter &
-  Page & { sort?: PublicSort; order?: Order; collection?: string; list?: "wishlist" };
+  Page & { sort?: PublicSort; order?: Order; collection?: string; list?: PublicList };
 
 /**
  * `q`, `set`, `rarity`, `sort`, `order`, `limit` and `offset`: a public page has no wishlist,
@@ -505,8 +513,8 @@ export function readPublicQuery(
 ): { kind: "ok"; query: PublicQuery } | { kind: "invalid"; error: string } {
   const kept = ["q", "set", "rarity", "sort", "order", "limit", "offset", "collection"];
   const list = params.get("list");
-  if (list !== null && list !== "wishlist")
-    return { kind: "invalid", error: "list must be wishlist." };
+  if (list !== null && !(PUBLIC_LISTS as readonly string[]).includes(list))
+    return { kind: "invalid", error: `list must be one of ${PUBLIC_LISTS.join(", ")}.` };
   const sort = params.get("sort");
   if (sort !== null && !(PUBLIC_SORTS as readonly string[]).includes(sort))
     return { kind: "invalid", error: `sort must be one of ${PUBLIC_SORTS.join(", ")}.` };
@@ -524,7 +532,7 @@ export function readPublicQuery(
       ...(set ? { set } : {}),
       ...(rarity ? { rarity } : {}),
       ...(collection ? { collection } : {}),
-      ...(list ? { list: "wishlist" as const } : {}),
+      ...(list ? { list: list as PublicList } : {}),
       ...(sort ? { sort: sort as PublicSort } : {}),
       ...(order ? { order } : {}),
       limit,
