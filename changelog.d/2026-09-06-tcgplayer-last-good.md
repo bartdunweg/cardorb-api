@@ -1,0 +1,1 @@
+- While pokemontcg.io is down, a set keeps the TCGplayer prices it last got on that instance rather than showing its cards unpriced for the quiet minutes.
