@@ -79,6 +79,7 @@ describe("GET /api/v1/public/{username}/cards", () => {
       gen: null,
       type: null,
       image: "/Pikachu.png",
+      imageHigh: "/hi.png",
       speciesId: null,
       tcgId: null,
       copies: 2,
