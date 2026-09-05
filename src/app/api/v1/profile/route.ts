@@ -1,3 +1,4 @@
+import { type PokedexSetting, validatePokedexSetting } from "@/lib/core/collection/folders";
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
@@ -40,7 +41,12 @@ export async function PATCH(req: Request) {
   if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
 
-  const patch: { displayName?: string | null; isPublic?: boolean; onboardedAt?: string } = {};
+  const patch: {
+    displayName?: string | null;
+    isPublic?: boolean;
+    onboardedAt?: string;
+    pokedex?: PokedexSetting | null;
+  } = {};
 
   if ("displayName" in body) {
     const raw = typeof body.displayName === "string" ? body.displayName.trim() : "";
@@ -66,6 +72,16 @@ export async function PATCH(req: Request) {
   // through survives every later PATCH.
   if (body.onboarded === true) {
     patch.onboardedAt = new Date().toISOString();
+  }
+
+  // How the built-in Pokédex shows: null is the default, every slot with the missing ones.
+  if ("pokedex" in body) {
+    if (body.pokedex === null) patch.pokedex = null;
+    else {
+      const setting = validatePokedexSetting(body.pokedex);
+      if (setting.kind === "invalid") return apiError(400, setting.error);
+      patch.pokedex = setting.setting;
+    }
   }
 
   if (!Object.keys(patch).length) {

@@ -19,6 +19,7 @@ import {
   pageOf,
   readItemQuery,
   sortItems,
+  sumValue,
 } from "@/lib/core/collection/items";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
@@ -82,7 +83,8 @@ export async function GET(req: Request) {
   const { sort, order } = read.query;
   const all = flattenItems(sets);
   const filter = { ...read.query, collection, rule };
-  const { items, total } = pageOf(sortItems(filterItems(all, filter), sort, order), read.query);
+  const shown = sortItems(filterItems(all, filter), sort, order);
+  const { items, total } = pageOf(shown, read.query);
   // The facets ride along with every page, over the whole owned collection whatever the
   // filters: the web app used to fetch GET /v1/collection — a megabyte — to draw the two menus.
   return NextResponse.json(
@@ -91,7 +93,9 @@ export async function GET(req: Request) {
     {
       cards: items,
       total,
-      facets: facetsOf(all),
+      // The value and the unpriced count are over the whole filtered list, not the page.
+      ...sumValue(shown),
+      facets: facetsOf(all, { owned: read.query.owned }),
       ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
     },
     { headers: readHeaders(req) },

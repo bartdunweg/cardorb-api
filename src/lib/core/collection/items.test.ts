@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import {
   countStats,
+  facetsOf,
   filterItems,
   filterPublicItems,
+  sumValue,
   flattenItems,
   pageOf,
   publicItems,
@@ -367,5 +369,53 @@ describe("public filters, sort and facets", () => {
     });
     expect(readPublicQuery(new URLSearchParams("sort=price")).kind).toBe("invalid");
     expect(readPublicQuery(new URLSearchParams("sort=added")).kind).toBe("invalid");
+  });
+});
+
+describe("sumValue", () => {
+  const price = (market: number) => ({
+    low: market,
+    market,
+    avg30: market,
+    nm: { low: market, mid: market, high: market },
+  });
+  it("values the whole list: owned copies by quantity, a wish once, the unpriced counted", () => {
+    const items = flattenItems([
+      set("Base Set", [
+        card("Pikachu", [variant({ id: "a", quantity: 3 })], { price: price(2) }),
+        card("Charizard", [variant({ id: "b", owned: false })], { price: price(100) }),
+        card("Snorlax", [variant({ id: "c", quantity: 2 })]),
+      ]),
+    ]);
+    expect(sumValue(items)).toEqual({ value: 106, unpriced: 2 });
+    expect(sumValue([])).toEqual({ value: 0, unpriced: 0 });
+  });
+});
+
+describe("sortItems by dex", () => {
+  it("runs the national order with the numberless last", () => {
+    const items = flattenItems([
+      set("Base Set", [
+        card("Mew", [variant({ id: "m" })], { speciesId: 151 }),
+        card("Potion", [variant({ id: "p" })]),
+        card("Bulbasaur", [variant({ id: "b" })], { speciesId: 1 }),
+      ]),
+    ]);
+    expect(sortItems(items, "dex").map((i) => i.id)).toEqual(["b", "m", "p"]);
+    expect(sortItems(items, "dex", "desc").map((i) => i.id)).toEqual(["m", "b", "p"]);
+  });
+});
+
+describe("facetsOf over the wishes", () => {
+  it("names the sets of the wished copies when asked for owned=false", () => {
+    const items = flattenItems([
+      set("Jungle", [card("Snorlax", [variant({ id: "c" })])]),
+      set("Fossil", [card("Aerodactyl", [variant({ id: "d", owned: false, rarity: "Rare" })])]),
+    ]);
+    expect(facetsOf(items).sets.map((s) => s.name)).toEqual(["Jungle"]);
+    expect(facetsOf(items, { owned: false })).toEqual({
+      sets: [{ name: "Fossil", title: "Fossil" }],
+      rarities: ["Rare"],
+    });
   });
 });

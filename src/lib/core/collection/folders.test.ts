@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { matchesRule, readFolderBody, validateFolderRule, type RuleSubject } from "./folders";
+import {
+  matchesRule,
+  readFolderBody,
+  validateFolderRule,
+  type RuleSubject,
+  validatePokedexSetting,
+} from "./folders";
 
 const copy = (over: Partial<RuleSubject> = {}): RuleSubject => ({
   speciesId: 25,
@@ -80,6 +86,33 @@ describe("readFolderBody", () => {
     expect(readFolderBody({ name: "Johto" }, "patch")).toEqual({
       kind: "ok",
       body: { name: "Johto" },
+    });
+  });
+});
+
+describe("validatePokedexSetting and the body that carries it", () => {
+  it("wants the missing flag, takes a range, refuses the rest", () => {
+    expect(validatePokedexSetting({ missing: true })).toEqual({
+      kind: "ok",
+      setting: { missing: true },
+    });
+    expect(validatePokedexSetting({ missing: false, dex: { from: 1, to: 151 } })).toEqual({
+      kind: "ok",
+      setting: { missing: false, dex: { from: 1, to: 151 } },
+    });
+    expect(validatePokedexSetting({}).kind).toBe("invalid");
+    expect(validatePokedexSetting({ missing: "yes" }).kind).toBe("invalid");
+    expect(validatePokedexSetting({ missing: true, dex: { from: 9, to: 1 } }).kind).toBe("invalid");
+    expect(validatePokedexSetting({ missing: true, sets: [] }).kind).toBe("invalid");
+  });
+  it("comes with a folder, and null turns it off on patch", () => {
+    expect(readFolderBody({ name: "Dex", pokedex: { missing: true } }, "create")).toEqual({
+      kind: "ok",
+      body: { name: "Dex", pokedex: { missing: true } },
+    });
+    expect(readFolderBody({ pokedex: null }, "patch")).toEqual({
+      kind: "ok",
+      body: { pokedex: null },
     });
   });
 });
