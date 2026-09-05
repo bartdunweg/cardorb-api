@@ -82,11 +82,14 @@ export async function GET(req: Request) {
   if (failed) return unavailable();
   const { sort, order } = read.query;
   const all = flattenItems(sets);
-  const filter = { ...read.query, collection, rule };
+  // A rule folder holds owned copies only, whatever `owned` says: the rule is the filter,
+  // and `owned=false` would otherwise empty it.
+  const filter = { ...read.query, owned: rule ? undefined : read.query.owned, collection, rule };
   const shown = sortItems(filterItems(all, filter), sort, order);
   const { items, total } = pageOf(shown, read.query);
-  // The facets ride along with every page, over the whole owned collection whatever the
-  // filters: the web app used to fetch GET /v1/collection — a megabyte — to draw the two menus.
+  // The facets ride along with every page, over the owned collection (the wishes when
+  // `owned=false`) whatever the other filters: the web app used to fetch GET /v1/collection —
+  // a megabyte — to draw the two menus.
   return NextResponse.json(
     // The flag rides along during a TCGdex outage: the page is the rows without a
     // scan, an id or a price, and a client may say so rather than show empty squares.

@@ -142,12 +142,6 @@ export async function deleteRow(userId: string, id: string, token?: string): Pro
  */
 export type { Folder, FolderPatch } from "./postgres";
 
-export async function listFolders(userId: string, token?: string) {
-  const db = await clientFor(token);
-  if (!db) throw new StoreNotConfigured();
-  return postgres.listFolders(db, userId);
-}
-
 export async function getFolder(userId: string, id: string, token?: string) {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();

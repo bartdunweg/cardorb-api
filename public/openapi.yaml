@@ -564,8 +564,9 @@ components:
     FolderPatch:
       type: object
       description: >-
-        A name, a rule, or both. A folder filled by hand cannot be given a rule, and a rule
-        folder cannot lose its rule; either is a 400 with a sentence.
+        A name, a rule, a Pokédex setting, or any of them together. A folder filled by hand
+        cannot be given a rule, and a rule folder cannot lose its rule; either is a 400 with a
+        sentence.
       minProperties: 1
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
@@ -1028,6 +1029,10 @@ paths:
                 required: [folders]
                 properties:
                   folders: { type: array, items: { $ref: "#/components/schemas/Folder" } }
+                  catalogueUnavailable:
+                    type: boolean
+                    const: true
+                    description: "Present only when TCGdex could not be reached; a rule folder's `count` is then low, for want of Pokédex numbers and set titles."
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -1036,7 +1041,7 @@ paths:
       tags: [Collection]
       operationId: createFolder
       summary: Make a folder, by hand or from a rule
-      description: "`BODY_LIMIT.folder`, 4 kB. The name is trimmed and inner whitespace collapsed. With a `rule` the folder fills itself; its `count` in the answer is 0 until the next list."
+      description: "`BODY_LIMIT.folder`, 8 kB. The name is trimmed and inner whitespace collapsed. With a `rule` the folder fills itself; its `count` in the answer is 0 until the next list."
       requestBody:
         required: true
         content:

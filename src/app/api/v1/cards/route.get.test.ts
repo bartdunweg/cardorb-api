@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
 const getCollection = vi.fn();
+const findFolder = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
@@ -20,6 +21,7 @@ vi.mock("@/lib/api/viewer", () => ({
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getCollection: (...a: unknown[]) => getCollection(...a),
+  findFolder: (...a: unknown[]) => findFolder(...a),
 }));
 vi.mock("@/lib/storage/collection", () => ({ createRow: vi.fn() }));
 // items.ts now values the page's cards through cards.ts, which builds its set catalogue behind
@@ -90,6 +92,24 @@ beforeEach(() => {
 });
 
 describe("GET /api/v1/cards", () => {
+  it("answers a rule folder with its owned matches, whatever `owned` says", async () => {
+    findFolder.mockResolvedValue({
+      id: "0b6e2c1a-1111-4a5b-9c3d-000000000001",
+      name: "Kanto",
+      kind: "rule",
+      rule: { dex: { from: 1, to: 151 } },
+      pokedex: null,
+      createdAt: "2026-09-05T00:00:00Z",
+    });
+    const body = await (
+      await get("?collection=0b6e2c1a-1111-4a5b-9c3d-000000000001&owned=false")
+    ).json();
+    // Pikachu is Gen 1: the owned copy is in, the wished copy is not, and `owned=false`
+    // does not empty the folder.
+    expect(body.total).toBe(1);
+    expect(body.cards[0]).toMatchObject({ id: "a", owned: true });
+  });
+
   it("reads the caller's own collection with the caller's own credential", async () => {
     await get();
     expect(getCollection).toHaveBeenCalledWith("me-uuid", "t.o.k.e.n");

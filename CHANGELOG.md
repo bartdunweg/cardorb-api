@@ -13,6 +13,12 @@ if the two have drifted apart.
   Pokémon show and the range collected, `null` turns it off; the built-in Pokédex takes the same
   setting from `PATCH /v1/profile { pokedex }`.
 
+- Three answers put right after review. `GET /v1/cards?collection=` on a rule folder now
+  keeps its matches when `owned=false` is also given, as the contract said. A folder body may
+  be 8 kB, so a rule with twenty sets and twenty rarities is no longer refused as too large.
+  `GET /v1/folders` carries `catalogueUnavailable` during a TCGdex outage, when a rule
+  folder's `count` is low for want of Pokédex numbers and set titles.
+
 - A folder may now carry a rule and fill itself: `rule` on `POST /v1/folders` and
   `PATCH /v1/folders/{id}` takes a Pokédex range (`dex.from`–`dex.to`), sets and rarities, AND
   between the fields and OR within a list, and the folder then shows every owned copy that

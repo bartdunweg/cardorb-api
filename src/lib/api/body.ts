@@ -40,8 +40,8 @@ export const BODY_LIMIT = {
   card: 8_192,
   /** A patch: a few inventory fields. */
   patch: 4_096,
-  /** A folder: a name and a rule of up to twenty set titles. */
-  folder: 4_096,
+  /** A folder: a name, a Pokédex setting and a rule of two lists of twenty (sets, rarities). */
+  folder: 8_192,
   /** A profile: a display name, a username, a URL. */
   profile: 8_192,
   /**
