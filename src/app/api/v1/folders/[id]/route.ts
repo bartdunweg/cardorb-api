@@ -10,9 +10,9 @@ import {
 } from "@/lib/api/guard";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
-import { cardsTag, UUID } from "@/lib/core/collection/collection-row";
-import { validateFolderName } from "@/lib/core/collection/folders";
-import { deleteFolder, renameFolder } from "@/lib/storage/collection";
+import { cardsTag, foldersTag, UUID } from "@/lib/core/collection/collection-row";
+import { readFolderBody } from "@/lib/core/collection/folders";
+import { deleteFolder, getFolder, updateFolder } from "@/lib/storage/collection";
 
 const NOT_FOUND = { error: "No folder by that id." };
 
@@ -31,18 +31,29 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (read.kind === "invalid")
     return apiError(400, "Invalid request", undefined, { headers: readHeaders(req) });
 
-  const name = validateFolderName((read.body as { name?: unknown })?.name);
-  if (name.kind === "invalid")
-    return apiError(400, name.error, undefined, { headers: readHeaders(req) });
+  const body = readFolderBody(read.body, "patch");
+  if (body.kind === "invalid")
+    return apiError(400, body.error, undefined, { headers: readHeaders(req) });
 
+  // A folder keeps its kind: one filled by hand cannot take a rule, and the reader above
+  // already refuses a null rule. The read before the write turns "wrong kind" into a 400
+  // the client can show rather than a silent no-op.
+  const token = bearer(req) ?? undefined;
   let folder;
   try {
-    folder = await renameFolder(who.userId, id, name.name, bearer(req) ?? undefined);
+    const before = await getFolder(who.userId, id, token);
+    if (!before) return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
+    if (body.body.rule && !before.rule)
+      return apiError(400, "This folder is filled by hand; it cannot take a rule.", undefined, {
+        headers: readHeaders(req),
+      });
+    folder = await updateFolder(who.userId, id, body.body, token);
   } catch (err) {
-    return storeErrorResponse(err, req, "Renaming a folder failed");
+    return storeErrorResponse(err, req, "Changing a folder failed");
   }
   if (!folder) return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
 
+  revalidateTag(foldersTag(who.userId), { expire: 0 });
   return NextResponse.json({ ok: true, folder }, { headers: readHeaders(req) });
 }
 
@@ -63,7 +74,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   }
   if (!gone) return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
 
-  // The cards that were filed in it changed, so the cached rows are stale.
+  // The cards that were filed in it changed, so the cached rows are stale; so is the list.
   revalidateTag(cardsTag(who.userId), { expire: 0 });
+  revalidateTag(foldersTag(who.userId), { expire: 0 });
   return NextResponse.json({ ok: true }, { headers: readHeaders(req) });
 }

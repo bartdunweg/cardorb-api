@@ -1,3 +1,4 @@
+import { getFolders } from "@/lib/core/collection/collection";
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
@@ -62,6 +63,28 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const result = validateCardPatch(read.body);
   if (result.kind === "invalid") {
     return apiError(400, result.error, undefined, { headers: readHeaders(req) });
+  }
+
+  // Filing a copy: the folder must be the caller's, and one filled by hand. A rule folder
+  // decides its own contents.
+  if (typeof result.patch.collectionId === "string") {
+    let target;
+    try {
+      target = (await getFolders(who.userId, bearer(req) ?? undefined)).find(
+        (f) => f.id === result.patch.collectionId,
+      );
+    } catch (err) {
+      return storeErrorResponse(err, req, "Reading the folder failed");
+    }
+    if (!target)
+      return apiError(404, "No folder by that id.", undefined, { headers: readHeaders(req) });
+    if (target.rule)
+      return apiError(
+        400,
+        "That folder fills itself from a rule. Cards cannot be filed in it.",
+        undefined,
+        { headers: readHeaders(req) },
+      );
   }
 
   let row;

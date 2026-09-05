@@ -4,6 +4,17 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-05
+
+- A folder may now carry a rule and fill itself: `rule` on `POST /v1/folders` and
+  `PATCH /v1/folders/{id}` takes a Pokédex range (`dex.from`–`dex.to`), sets and rarities, AND
+  between the fields and OR within a list, and the folder then shows every owned copy that
+  matches. `GET /v1/folders` says each folder's `kind` (`manual` or `rule`) and its `rule`, with
+  `count` counting what it holds either way. `GET /v1/cards?collection=` answers a rule folder
+  with its matches, and an id that is no folder is a 404 rather than an empty page.
+  `PATCH /v1/collection/items/{id}` refuses to file a copy into a rule folder. A folder keeps
+  its kind: a manual one cannot be given a rule, and a rule one cannot lose it.
+
 ## 2026-09-04
 
 - The card list (`GET /v1/cards`) now names the sets and rarities you hold beside every page, so a list page no longer has to fetch the whole collection to draw its filter menus.

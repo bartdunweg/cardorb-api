@@ -41,10 +41,10 @@ import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
 import IDS from "../cardmarket-ids.generated.json";
-import { cardsTag, type CollectionRow } from "./collection-row";
+import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
-import { listCardPrices } from "../../storage/postgres";
+import { listCardPrices, listFolders, type Folder } from "../../storage/postgres";
 import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -147,6 +147,22 @@ export async function pricesFromGuideThenTcgdex(ids: string[]): Promise<Map<stri
   if (missing.length) for (const [id, p] of await pricesFor(missing)) out.set(id, p);
   return out;
 }
+
+/**
+ * The person's folders, cached an hour under their own tag. `/v1/cards?collection=` reads
+ * them to learn whether the id is a rule folder; every folder write revalidates the tag, so
+ * the next read sees the new rule. Same client-outside-the-cache pattern as cachedRows().
+ */
+const cachedFolders = (userId: string, db: SupabaseClient | null) =>
+  unstable_cache(() => (db ? listFolders(db, userId) : Promise.resolve([])), ["folders", userId], {
+    revalidate: 3600,
+    tags: [foldersTag(userId)],
+  })();
+
+export const getFolders = cache(async (userId: string, token?: string): Promise<Folder[]> => {
+  const db = token ? userClient(token) : await serverClient();
+  return cachedFolders(userId, db);
+});
 
 const cachedCollection = (userId: string, db: SupabaseClient | null) =>
   unstable_cache(

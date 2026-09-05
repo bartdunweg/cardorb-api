@@ -1,3 +1,4 @@
+import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
 import { heldValue } from "./cards-stats";
@@ -104,13 +105,20 @@ export type ItemFilter = {
   set?: string;
   /** A rarity, whole, in the catalogue's words; case does not matter. */
   rarity?: string;
+  /**
+   * A rule folder's rule, resolved by the route from `collection`. Owned copies only,
+   * whatever `owned` says: a wished copy is in no folder that fills itself.
+   */
+  rule?: FolderRule;
 };
 
 export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const q = f.q?.trim().toLowerCase();
   const set = f.set?.trim().toLowerCase();
   const rarity = f.rarity?.trim().toLowerCase();
+  const inRule = f.rule ? ruleMatcher(f.rule) : null;
   return items.filter((it) => {
+    if (inRule && !inRule(it)) return false;
     if (f.owned !== undefined && it.owned !== f.owned) return false;
     if (f.favorite && !it.isFavorite) return false;
     if (f.collection && it.collectionId !== f.collection) return false;

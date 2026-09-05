@@ -498,19 +498,56 @@ components:
 
     Folder:
       type: object
-      description: A folder the person made to sort cards into. The web app's copy calls it a collection.
-      required: [id, name, createdAt]
+      description: >-
+        A folder the person made. One filled by hand holds the copies filed in it; one with a
+        rule fills itself from the owned copies the rule matches. A folder keeps its kind.
+      required: [id, name, kind, rule, createdAt]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
+        kind: { type: string, enum: [manual, rule] }
+        rule:
+          oneOf:
+            - { $ref: "#/components/schemas/FolderRule" }
+            - { type: "null" }
         createdAt: { type: string, format: date-time }
-        count: { type: integer, description: "Owned copies filed in it. On the list only." }
+        count: { type: integer, description: "Owned copies filed in it, or, for a rule folder, matching its rule. On the list only." }
+
+    FolderRule:
+      type: object
+      description: >-
+        What a rule folder shows: every owned copy that matches. AND between the fields, OR
+        within a list. A trainer or energy has no Pokédex number and never matches a `dex`
+        clause. Sets match by the name the catalogue spells or the title it shows; case does
+        not matter, for rarities either.
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        dex:
+          type: object
+          required: [from, to]
+          properties:
+            from: { type: integer, minimum: 1, maximum: 1025 }
+            to: { type: integer, minimum: 1, maximum: 1025 }
+        sets: { type: array, minItems: 1, maxItems: 20, items: { type: string, minLength: 1, maxLength: 100 } }
+        rarities: { type: array, minItems: 1, maxItems: 20, items: { type: string, minLength: 1, maxLength: 100 } }
 
     FolderDraft:
       type: object
       required: [name]
       properties:
         name: { type: string, minLength: 1, maxLength: 60 }
+        rule: { $ref: "#/components/schemas/FolderRule" }
+
+    FolderPatch:
+      type: object
+      description: >-
+        A name, a rule, or both. A folder filled by hand cannot be given a rule, and a rule
+        folder cannot lose its rule; either is a 400 with a sentence.
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 60 }
+        rule: { $ref: "#/components/schemas/FolderRule" }
 
     ValueSnapshot:
       type: object
@@ -631,7 +668,7 @@ paths:
         - { name: q, in: query, schema: { type: string, maxLength: 100 }, description: "Matches the name or the set, anywhere, in any case." }
         - { name: owned, in: query, schema: { type: boolean }, description: "`true` the collection, `false` the wishlist, absent both." }
         - { name: favorite, in: query, schema: { type: boolean } }
-        - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id." }
+        - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id. A rule folder answers with the owned copies its rule matches, whatever `owned` says. An id that is no folder of the caller's is a 404." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection." }
@@ -655,6 +692,7 @@ paths:
                     description: "Present only when TCGdex could not be reached: the cards are the rows alone, without a scan, a catalogue id or a price, and nothing has cached them."
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
@@ -721,6 +759,7 @@ paths:
       - { name: id, in: path, required: true, schema: { type: string }, description: "The collection row, from `Variant.id` or `BrowseCard.itemIds`." }
     patch:
       tags: [Collection]
+      description: "Filing it into a folder (`collectionId`) needs one filled by hand: a rule folder decides its own contents, and naming one is a 400; a folder that is not the caller's is a 404."
       operationId: updateItem
       summary: Change one copy's inventory fields
       requestBody:
@@ -943,7 +982,7 @@ paths:
     get:
       tags: [Collection]
       operationId: listFolders
-      summary: The caller's folders, oldest first, with how many owned copies sit in each
+      summary: The caller's folders, oldest first, each with its kind, its rule and how many owned copies it holds
       responses:
         "200":
           description: The folders.
@@ -962,8 +1001,8 @@ paths:
     post:
       tags: [Collection]
       operationId: createFolder
-      summary: Make a folder
-      description: "`BODY_LIMIT.folder`, 1 kB. The name is trimmed and inner whitespace collapsed."
+      summary: Make a folder, by hand or from a rule
+      description: "`BODY_LIMIT.folder`, 4 kB. The name is trimmed and inner whitespace collapsed. With a `rule` the folder fills itself; its `count` in the answer is 0 until the next list."
       requestBody:
         required: true
         content:
@@ -994,15 +1033,15 @@ paths:
     patch:
       tags: [Collection]
       operationId: renameFolder
-      summary: Rename a folder
+      summary: Rename a folder, or change a rule folder's rule
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/FolderDraft" }
+            schema: { $ref: "#/components/schemas/FolderPatch" }
       responses:
         "200":
-          description: Renamed.
+          description: Changed.
           content:
             application/json:
               schema:

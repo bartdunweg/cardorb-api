@@ -10,10 +10,11 @@ import {
 } from "@/lib/api/guard";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
-import { getRows } from "@/lib/core/collection/collection";
-import { cardsTag } from "@/lib/core/collection/collection-row";
-import { validateFolderName } from "@/lib/core/collection/folders";
-import { createFolder, listFolders } from "@/lib/storage/collection";
+import { getCollection, getFolders } from "@/lib/core/collection/collection";
+import { cardsTag, foldersTag } from "@/lib/core/collection/collection-row";
+import { readFolderBody, ruleMatcher } from "@/lib/core/collection/folders";
+import { flattenItems } from "@/lib/core/collection/items";
+import { createFolder } from "@/lib/storage/collection";
 
 export const dynamic = "force-dynamic";
 
@@ -30,22 +31,32 @@ export async function GET(req: Request) {
   const token = bearer(req) ?? undefined;
   let folders;
   try {
-    folders = await listFolders(who.userId, token);
+    folders = await getFolders(who.userId, token);
   } catch (err) {
     return storeErrorResponse(err, req, "Listing folders failed");
   }
 
-  // How many copies are filed in each, from the cached rows rather than a
-  // count query per folder.
-  const { rows } = await getRows(who.userId, token);
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    if (row.collectionId && row.owned)
-      counts.set(row.collectionId, (counts.get(row.collectionId) ?? 0) + 1);
+  // How many copies each holds, from the cached assembly rather than a count query per
+  // folder: filed copies for a folder filled by hand, matching copies for one with a rule
+  // (a dex rule needs speciesId, which only the assembled item carries). A collection that
+  // cannot be read counts nothing rather than failing the list; the sidebar tolerates that.
+  const { sets, failed } = await getCollection(who.userId, token);
+  const items = failed ? [] : flattenItems(sets);
+  const filed = new Map<string, number>();
+  for (const it of items) {
+    if (it.collectionId && it.owned)
+      filed.set(it.collectionId, (filed.get(it.collectionId) ?? 0) + 1);
   }
+  const count = (f: (typeof folders)[number]) => {
+    if (!f.rule) return filed.get(f.id) ?? 0;
+    const inRule = ruleMatcher(f.rule);
+    let n = 0;
+    for (const it of items) if (inRule(it)) n += 1;
+    return n;
+  };
 
   return NextResponse.json(
-    { folders: folders.map((f) => ({ ...f, count: counts.get(f.id) ?? 0 })) },
+    { folders: folders.map((f) => ({ ...f, count: count(f) })) },
     { headers: readHeaders(req) },
   );
 }
@@ -61,17 +72,20 @@ export async function POST(req: Request) {
   if (read.kind === "invalid")
     return apiError(400, "Invalid request", undefined, { headers: readHeaders(req) });
 
-  const name = validateFolderName((read.body as { name?: unknown })?.name);
-  if (name.kind === "invalid")
-    return apiError(400, name.error, undefined, { headers: readHeaders(req) });
+  const body = readFolderBody(read.body, "create");
+  if (body.kind === "invalid")
+    return apiError(400, body.error, undefined, { headers: readHeaders(req) });
+  // The reader requires the name on create.
+  const name = body.body.name ?? "";
 
   let folder;
   try {
-    folder = await createFolder(who.userId, name.name, bearer(req) ?? undefined);
+    folder = await createFolder(who.userId, name, body.body.rule ?? null, bearer(req) ?? undefined);
   } catch (err) {
     return storeErrorResponse(err, req, "Creating a folder failed");
   }
 
+  revalidateTag(foldersTag(who.userId), { expire: 0 });
   revalidateTag(cardsTag(who.userId), { expire: 0 });
   return NextResponse.json(
     { ok: true, folder: { ...folder, count: 0 } },

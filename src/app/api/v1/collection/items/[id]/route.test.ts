@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authoriseWrite = vi.fn();
 const updateRow = vi.fn();
 const deleteRow = vi.fn();
+const getFolders = vi.fn();
 
 // The real guard.ts pulls in lib/api/viewer.ts, which is `import "server-only"`
 // — fine under Next's bundler, fatal under plain vitest. Every route test here
@@ -29,6 +30,9 @@ vi.mock("@/lib/api/viewer", () => ({
 vi.mock("@/lib/storage/collection", () => ({
   updateRow: (...a: unknown[]) => updateRow(...a),
   deleteRow: (...a: unknown[]) => deleteRow(...a),
+}));
+vi.mock("@/lib/core/collection/collection", () => ({
+  getFolders: (...a: unknown[]) => getFolders(...a),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: () => {} }));
 
@@ -56,8 +60,21 @@ const del = (id = ID) =>
     { params: Promise.resolve({ id }) },
   );
 
+const BINDER = "33333333-3333-4333-8333-333333333333";
+const KANTO = "44444444-4444-4444-8444-444444444444";
+
 beforeEach(() => {
   authoriseWrite.mockResolvedValue(VIEWER);
+  getFolders.mockResolvedValue([
+    { id: BINDER, name: "Binder", kind: "manual", rule: null, createdAt: "2026-09-02" },
+    {
+      id: KANTO,
+      name: "Kanto",
+      kind: "rule",
+      rule: { dex: { from: 1, to: 151 } },
+      createdAt: "2026-09-03",
+    },
+  ]);
   updateRow.mockResolvedValue({ id: ID, isFavorite: true });
   deleteRow.mockResolvedValue(true);
 });
@@ -112,6 +129,26 @@ describe("PATCH /api/v1/cards/[id]", () => {
   it("404s an id that cannot be a row, before asking the store", async () => {
     const res = await patch({ isFavorite: true }, "not-a-uuid");
     expect(res.status).toBe(404);
+    expect(updateRow).not.toHaveBeenCalled();
+  });
+});
+
+describe("PATCH /api/v1/collection/items/{id} filing", () => {
+  it("files a copy in a folder filled by hand", async () => {
+    updateRow.mockResolvedValue({ id: ID, collectionId: BINDER });
+    const res = await patch({ collectionId: BINDER });
+    expect(res.status).toBe(200);
+    expect(updateRow).toHaveBeenCalledWith("me-uuid", ID, { collectionId: BINDER }, "t.o.k.e.n");
+  });
+
+  it("refuses a rule folder, and a folder that is not the caller's", async () => {
+    const ruled = await patch({ collectionId: KANTO });
+    expect(ruled.status).toBe(400);
+    expect(await ruled.json()).toEqual({
+      error: "That folder fills itself from a rule. Cards cannot be filed in it.",
+    });
+    const unknown = await patch({ collectionId: "55555555-5555-4555-8555-555555555555" });
+    expect(unknown.status).toBe(404);
     expect(updateRow).not.toHaveBeenCalled();
   });
 });

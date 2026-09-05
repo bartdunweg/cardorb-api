@@ -116,6 +116,8 @@ export type CollectionRow = {
  * costs nothing and means the shape does not have to change later.
  */
 export const cardsTag = (userId: string) => `cards:${userId}`;
+/** The folder list, apart from the cards: a rule edit must not drop the assembled collection. */
+export const foldersTag = (userId: string) => `folders:${userId}`;
 
 /** The columns the database actually has, as the form sees them. */
 export type CardDraft = {
