@@ -1,0 +1,1 @@
+- The wishlist can show on a public profile: `wishlistPublic` on `PATCH /v1/profile`, off by default, read back on the profile and on `GET /v1/public/{username}/profile`; `GET /v1/public/{username}/cards?list=wishlist` lists the cards the owner is looking for.

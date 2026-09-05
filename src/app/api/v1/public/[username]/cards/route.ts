@@ -9,6 +9,7 @@ import {
   pageOf,
   publicFacets,
   publicItems,
+  publicWishes,
   readPublicQuery,
   sortPublicItems,
 } from "@/lib/core/collection/items";
@@ -49,7 +50,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     });
 
   const shown = forPublic(sets);
-  const all = publicItems(shown);
+  // The wishlist only for an owner who shows it; asked of one who does not, the same 404 as a
+  // folder nobody shows. A folder and the wishlist do not combine: a wish is in no folder.
+  if (read.query.list === "wishlist" && !owner.wishlistPublic)
+    return apiError(404, "No such list.");
+  const all = read.query.list === "wishlist" ? publicWishes(shown) : publicItems(shown);
 
   // A folder narrows the page to what it holds: the copies filed in it, or the owned copies
   // its rule matches. Only a folder its owner shows; any other id is a 404, the same answer
@@ -57,7 +62,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   // runs on the private items, which know their folder and their rule's facts, and only the
   // card keys come across to the public list.
   let listed = all;
-  if (read.query.collection) {
+  if (read.query.collection && read.query.list !== "wishlist") {
     const folder = (await getPublicFolders(owner.id)).find((f) => f.id === read.query.collection);
     if (!folder) return apiError(404, "No such folder.");
     const filter = folder.rule

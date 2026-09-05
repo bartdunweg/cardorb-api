@@ -12,13 +12,24 @@ const get = (name = "bart") =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  ownerOf.mockResolvedValue({ id: "u", username: "bart", displayName: "Bart", avatarUrl: "/a.png" });
+  ownerOf.mockResolvedValue({
+    id: "u",
+    username: "bart",
+    displayName: "Bart",
+    avatarUrl: "/a.png",
+    wishlistPublic: true,
+  });
 });
 
 describe("GET /api/v1/public/{username}/profile", () => {
   it("prints the name and the picture, and nothing else about the person", async () => {
     const res = await get();
-    expect(await res.json()).toEqual({ username: "bart", displayName: "Bart", avatarUrl: "/a.png" });
+    expect(await res.json()).toEqual({
+      username: "bart",
+      displayName: "Bart",
+      avatarUrl: "/a.png",
+      wishlistPublic: true,
+    });
     expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
   });
 

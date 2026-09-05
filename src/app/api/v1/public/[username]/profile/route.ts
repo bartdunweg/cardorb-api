@@ -26,7 +26,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   if (!owner) return apiError(404, "No such collection.");
 
   return NextResponse.json(
-    { username: owner.username, displayName: owner.displayName, avatarUrl: owner.avatarUrl },
+    {
+      username: owner.username,
+      displayName: owner.displayName,
+      avatarUrl: owner.avatarUrl,
+      wishlistPublic: owner.wishlistPublic,
+    },
     { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
   );
 }
