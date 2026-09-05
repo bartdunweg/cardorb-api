@@ -719,7 +719,10 @@ export async function resolveSetFacts(
   // (blendPrices). Only with a rate to turn them at, and only online.
   const usd =
     prices && !offline && usdToEur != null
-      ? await ptcgPrices(setName)
+      ? await ptcgPrices(
+          setName,
+          resolved.filter((r) => priceOfId(r.tcgId) === null).map((r) => r.number),
+        )
       : new Map<string, { market: number | null; low: number | null }>();
   const secondOf = (number: string) => {
     const p = usd.get(number.replace(/^0+/, ""));
