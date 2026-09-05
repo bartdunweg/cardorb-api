@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 import { holoPriceOf, priceOf, shownPrice } from "./cards";
-import { priceFromUsd } from "../price-basis.mjs";
+import { blendPrices, priceFromUsd } from "../price-basis.mjs";
 
 /** label, Cardmarket's own low/trend/avg30, and the English Near Mint "From" on the page. */
 const MEASURED = [
@@ -150,5 +150,21 @@ describe("priceFromUsd", () => {
   });
   it("is nothing when TCGplayer has nothing", () => {
     expect(priceFromUsd({ market: null, low: null }, 0.92)).toBeNull();
+  });
+});
+
+describe("blendPrices", () => {
+  const cm = priceOf({ low: 8, trend: 10, avg30: 10 });
+  const tp = priceFromUsd({ market: 11, low: 9 }, 1);
+  it("averages the two markets and keeps the lower floor", () => {
+    const p = blendPrices(cm, tp)!;
+    expect(p.market).toBeCloseTo((shownPrice(cm)! + 11) / 2, 2);
+    expect(p.low).toBe(8);
+    expect(shownPrice(p)).toBe(p.market);
+  });
+  it("is the one market where the other is missing, and nothing where both are", () => {
+    expect(shownPrice(blendPrices(cm, null))).toBe(shownPrice(cm));
+    expect(shownPrice(blendPrices(null, tp))).toBe(11);
+    expect(blendPrices(null, null)).toBeNull();
   });
 });

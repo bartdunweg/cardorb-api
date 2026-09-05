@@ -225,53 +225,46 @@ const PRINTINGS = [
 ];
 
 /**
- * TCGplayer's price for the given numbers of a set, by number, from pokemontcg.io.
+ * TCGplayer's prices for a whole set, by printed number, from pokemontcg.io.
  *
- * The second price source, asked only for a card Cardmarket publishes nothing for (old
- * promos, mostly), so a card is priced rather than shown as worth nothing. One request per
- * card, four at a time, capped like the scan fallback: a set nobody prices would otherwise
- * cost a hundred requests to learn that. A number pokemontcg.io does not know, or knows
- * without a price, is simply absent from the answer; every failure is one card's, not the
- * set's.
+ * The second price source, read for every card so each can be priced as the average of the
+ * two markets (see blendPrices in price-basis.mjs). One request per set rather than one per
+ * card: a search on the set's id with the price fields selected, 250 to a page, paged on
+ * the rare set that has more. Fifty-odd requests a day for this collection, well under the
+ * keyless limit. A set pokemontcg.io does not know, or a request that fails, is an empty
+ * map: every card then carries Cardmarket's number alone, and nothing is worse for it.
  */
-export async function ptcgPrices(
-  setName: string,
-  numbers: string[],
-): Promise<Map<string, UsdPrice>> {
+export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice>> {
   const out = new Map<string, UsdPrice>();
-  if (!numbers.length) return out;
   const set = await find(setName);
   if (!set) return out;
   const headers: Record<string, string> = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
 
-  const wanted = numbers.slice(0, 40);
-  let next = 0;
-  await Promise.all(
-    Array.from({ length: Math.min(4, wanted.length) }, async () => {
-      while (next < wanted.length) {
-        const number = wanted[next++]!;
-        const n = number.replace(/^0+/, "");
-        if (!n) continue;
-        try {
-          const res = await fetch(
-            `https://api.pokemontcg.io/v2/cards/${set.id}-${encodeURIComponent(n)}?select=id,tcgplayer`,
-            { headers, next: { revalidate: DAY }, signal: catalogueTimeout() },
-          );
-          if (!res.ok) continue;
-          const body = (await res.json()) as { data?: PtcgPriceCard };
-          const prices = body.data?.tcgplayer?.prices ?? {};
-          const printing = PRINTINGS.map((p) => prices[p]).find((p) => p && p.market != null);
-          if (!printing) continue;
-          out.set(number, {
-            market: typeof printing.market === "number" ? printing.market : null,
-            low: typeof printing.low === "number" ? printing.low : null,
-          });
-        } catch {
-          // This card stays unpriced; the next one is still asked for.
-        }
-      }
-    }),
-  );
+  for (let page = 1; page <= 4; page++) {
+    let body: { data?: (PtcgPriceCard & { number?: string })[]; totalCount?: number };
+    try {
+      const res = await fetch(
+        `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${set.id}`)}` +
+          `&select=id,number,tcgplayer&pageSize=250&page=${page}`,
+        { headers, next: { revalidate: DAY }, signal: catalogueTimeout() },
+      );
+      if (!res.ok) break;
+      body = (await res.json()) as typeof body;
+    } catch {
+      break;
+    }
+    for (const card of body.data ?? []) {
+      if (!card.number) continue;
+      const prices = card.tcgplayer?.prices ?? {};
+      const printing = PRINTINGS.map((p) => prices[p]).find((p) => p && p.market != null);
+      if (!printing) continue;
+      out.set(card.number.replace(/^0+/, ""), {
+        market: typeof printing.market === "number" ? printing.market : null,
+        low: typeof printing.low === "number" ? printing.low : null,
+      });
+    }
+    if ((body.data?.length ?? 0) < 250 || (body.totalCount ?? 0) <= page * 250) break;
+  }
   return out;
 }
