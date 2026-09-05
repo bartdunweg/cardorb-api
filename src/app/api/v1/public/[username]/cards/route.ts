@@ -63,7 +63,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
           ? owner.pokedexPublic
           : true;
   if (!listShown) return apiError(404, "No such list.");
-  const owned = publicItems(shown);
+  // The star is a fact about the owner's copy, so forPublic() strips it with the rest; it is read
+  // here off the private items, the way a folder's contents are below, and only when the owner
+  // shows the favorites. Everyone else gets a list on which nothing is starred.
+  const sameCard = (it: { set: string; number: string; name: string }) =>
+    `${it.set}\u0000${it.number}\u0000${it.name}`;
+  const starred = owner.favoritesPublic
+    ? new Set(filterItems(flattenItems(sets), { owned: true, favorite: true }).map(sameCard))
+    : new Set<string>();
+  const owned = publicItems(shown).map((it) => ({ ...it, favorite: starred.has(sameCard(it)) }));
   const all =
     list === "wishlist"
       ? publicWishes(shown)

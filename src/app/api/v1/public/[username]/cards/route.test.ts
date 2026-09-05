@@ -129,6 +129,7 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect((await get("?list=binder")).status).toBe(400);
     ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: true, pokedexPublic: true, pokedex: null });
     const favorites = await (await get("?list=favorites")).json();
+    expect(favorites.cards.length).toBeGreaterThan(0);
     expect(favorites.cards.every((c: { favorite: boolean }) => c.favorite)).toBe(true);
     const all = await (await get()).json();
     const dex = await (await get("?list=pokedex")).json();
