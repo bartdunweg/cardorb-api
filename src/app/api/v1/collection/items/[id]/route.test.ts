@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authoriseWrite = vi.fn();
 const updateRow = vi.fn();
 const deleteRow = vi.fn();
-const getFolders = vi.fn();
+const findFolder = vi.fn();
 
 // The real guard.ts pulls in lib/api/viewer.ts, which is `import "server-only"`
 // — fine under Next's bundler, fatal under plain vitest. Every route test here
@@ -32,7 +32,7 @@ vi.mock("@/lib/storage/collection", () => ({
   deleteRow: (...a: unknown[]) => deleteRow(...a),
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
-  getFolders: (...a: unknown[]) => getFolders(...a),
+  findFolder: (...a: unknown[]) => findFolder(...a),
 }));
 vi.mock("next/cache", () => ({ revalidateTag: () => {} }));
 
@@ -65,7 +65,7 @@ const KANTO = "44444444-4444-4444-8444-444444444444";
 
 beforeEach(() => {
   authoriseWrite.mockResolvedValue(VIEWER);
-  getFolders.mockResolvedValue([
+  const folders = [
     { id: BINDER, name: "Binder", kind: "manual", rule: null, createdAt: "2026-09-02" },
     {
       id: KANTO,
@@ -74,7 +74,10 @@ beforeEach(() => {
       rule: { dex: { from: 1, to: 151 } },
       createdAt: "2026-09-03",
     },
-  ]);
+  ];
+  findFolder.mockImplementation(
+    async (_u: string, id: string) => folders.find((f) => f.id === id) ?? null,
+  );
   updateRow.mockResolvedValue({ id: ID, isFavorite: true });
   deleteRow.mockResolvedValue(true);
 });
