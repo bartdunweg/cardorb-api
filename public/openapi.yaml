@@ -552,7 +552,8 @@ components:
         A folder shown as a Pokédex: its cards in the national order, one slot per Pokémon.
         `missing` shows the slots the folder has no card of; `dex` is the range collected, all
         of it when absent; `rarities` keeps only cards of those rarities in the slots (a full-art
-        Pokédex), every card when absent.
+        Pokédex), every card when absent; `kinds` keeps only cards of those kinds (V, ex, GX, …),
+        every kind when absent.
       required: [missing]
       additionalProperties: false
       properties:
@@ -563,6 +564,12 @@ components:
           maxItems: 20
           items: { type: string, minLength: 1, maxLength: 60 }
           description: "Rarities in the catalogue's words; case does not matter to the reader."
+        kinds:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 20 }
+          description: "Kinds of card, as the reader names them: regular, ex, EX, GX, tag-team, V, VMAX, VSTAR, mega, radiant, break."
         dex:
           type: object
           required: [from, to]
