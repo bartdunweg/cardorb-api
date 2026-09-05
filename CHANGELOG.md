@@ -19,6 +19,8 @@ if the two have drifted apart.
   Pokémon show and the range collected, `null` turns it off; the built-in Pokédex takes the same
   setting from `PATCH /v1/profile { pokedex }`.
 
+- A Pokédex setting can name `rarities`: only cards of those rarities fill the slots, for a Pokédex of full-art cards. On the profile's setting and on any folder shown as a Pokédex.
+
 - A folder can be shown on your public profile: `isPublic` on `POST` and `PATCH /v1/folders`, off by default. `GET /v1/public/{username}/folders` lists the ones you show, with how many cards each holds, and `GET /v1/public/{username}/cards?collection=` narrows the public list to one of them.
 
 - The wishlist can show on a public profile: `wishlistPublic` on `PATCH /v1/profile`, off by default, read back on the profile and on `GET /v1/public/{username}/profile`; `GET /v1/public/{username}/cards?list=wishlist` lists the cards the owner is looking for.
