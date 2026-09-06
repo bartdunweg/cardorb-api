@@ -147,7 +147,7 @@ const cachedGuidePrices = () =>
         const ids = Object.keys(IDS as ProductIds);
         return Object.fromEntries(guidePrices(ids, await fetchPriceGuide(), IDS as ProductIds));
       },
-      ["guide-prices", "v3"],
+      ["guide-prices", "v4"],
       { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
     )(),
   );
@@ -302,7 +302,7 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
-      ["set-facts", "v10", setName, factsSignature(identities)],
+      ["set-facts", "v11", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
