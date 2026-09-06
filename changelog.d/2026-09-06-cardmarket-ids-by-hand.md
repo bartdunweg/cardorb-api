@@ -1,0 +1,1 @@
+- Two Cardmarket products TCGdex does not link are set by hand: the Wizards Black Star Promo Pikachu (#1) and Ancient Mew, so both are priced from the guide.

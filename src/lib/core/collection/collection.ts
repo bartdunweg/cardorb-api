@@ -147,7 +147,7 @@ const cachedGuidePrices = () =>
         const ids = Object.keys(IDS as ProductIds);
         return Object.fromEntries(guidePrices(ids, await fetchPriceGuide(), IDS as ProductIds));
       },
-      ["guide-prices"],
+      ["guide-prices", "v2"],
       { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
     )(),
   );
