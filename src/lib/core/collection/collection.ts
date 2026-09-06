@@ -442,6 +442,14 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
  * instance serves one collector's screens at a time. Not the Data Cache: a whole-collection
  * entry there was the nested cache that hid every cache under it (see above).
  */
+/**
+ * The assembled collection for a cron that holds the admin client rather than a
+ * person's session: the same join, memo and blended prices as every request,
+ * so what the night writes is what the day shows.
+ */
+export const assembleFor = (userId: string, db: SupabaseClient): Promise<CardSet[]> =>
+  assemble(userId, db);
+
 const assembled = new Map<string, { sets: CardSet[]; until: number }>();
 const ASSEMBLED_TTL_MS = 10 * 60_000;
 const ASSEMBLED_MAX = 8;

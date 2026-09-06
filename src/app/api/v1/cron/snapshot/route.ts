@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { refuse, apiError } from "@/lib/api/respond";
-import { buildCollection } from "@/lib/core/collection/cards";
-import {
-  cardPricesOf,
-  snapshotOf,
-  type PriceGuide,
-  type ProductIds,
-} from "@/lib/core/collection/snapshot";
+import { assembleFor } from "@/lib/core/collection/collection";
+import { cardPricesFromSets, snapshotFromSets } from "@/lib/core/collection/snapshot";
 import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
@@ -16,8 +11,6 @@ import {
   writeValueSnapshot,
 } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
-import IDS from "@/lib/core/cardmarket-ids.generated.json";
-import { fetchPriceGuide } from "@/lib/core/catalogue/price-guide";
 
 /**
  * One value reading per account, once a night.
@@ -52,27 +45,21 @@ import { fetchPriceGuide } from "@/lib/core/catalogue/price-guide";
  * this route and a stranger writing to everyone's history is CRON_SECRET, and
  * a missing secret is treated as a closed door rather than an open one.
  *
- * ── Why the price guide rather than each card's own price ──────────────────
+ * ── Each card's own price, the one the app shows ───────────────────────────
  *
- * `{ prices: false }` on the build below, and then Cardmarket's public guide
- * for the numbers. With CATALOGUE_SET_PRICING_MAX at 0 — the default — pricing
- * through buildCollection() costs one TCGdex request per matched card, so this
- * job would make sixteen hundred requests per account to reach figures that
- * arrive in one file. The matching is still buildCollection's, because there is
- * one implementation of that and this is not going to become the second.
- *
- * The ids come from lib/core/cardmarket-ids.generated.json, committed, which is
- * what makes this cheap: resolving a tcgId to a Cardmarket idProduct is the
- * genuinely slow part and it never moves. A card added since that file was last
- * written has no entry, so it counts as unpriced until somebody runs
- * scripts/snapshot-collection-value.mjs, which refreshes it. That is a visible
- * degradation — `unpriced` goes up and the page says so — rather than a silent
- * one, which is the only reason it is acceptable.
+ * This used to price through Cardmarket's public guide alone, with the build
+ * told `{ prices: false }`, because pricing a collection card by card cost a
+ * TCGdex request each. The assembly no longer does: it reads the daily guide
+ * once, then TCGplayer for what the guide lacks, per set and cached
+ * (collection.ts, factsWithUsd). So the night reads the same assembly every
+ * request reads — the warm cron has usually just built it — and writes the
+ * blended figure. Before, a folder's line ended under its live number and a
+ * card's sheet said one price above a line that ended at another.
  */
 
 export const dynamic = "force-dynamic";
 /**
- * The guide is fourteen megabytes and there is one build per account. Sixty
+ * One assembly per account, memoised for ten minutes and mostly warm. Sixty
  * seconds is the ceiling this plan allows, and the work is ordered so that a
  * timeout loses the accounts not yet reached rather than corrupting the ones
  * already written: each is committed as it finishes.
@@ -94,21 +81,13 @@ export async function GET(req: Request) {
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 
-  let guide: PriceGuide;
-  try {
-    guide = await fetchPriceGuide();
-  } catch (err) {
-    // Better to write nothing than to write a day where everything is unpriced:
-    // that draws as the morning the collection became worthless.
-    console.error("[cron] the price guide could not be read:", err);
-    return apiError(502, "The price guide came back empty.");
-  }
-
-  const ids = IDS as ProductIds;
+  // Dated by the night it runs, in UTC: the assembly's guide is today's, and the per-card
+  // readings share the date so a folder's line and the collection's agree on the day.
+  const date = new Date().toISOString().slice(0, 10);
   const written: { user: string; value: number; cards: number }[] = [];
   const failed: string[] = [];
   /** Card prices, gathered across every account and written once at the end. */
-  const prices = new Map<string, ReturnType<typeof cardPricesOf>[number]>();
+  const prices = new Map<string, ReturnType<typeof cardPricesFromSets>[number]>();
 
   for (const userId of await listAccountIds(db)) {
     try {
@@ -118,8 +97,10 @@ export async function GET(req: Request) {
       // was once worth nothing, which is not the same as not knowing.
       if (!rows.length) continue;
 
-      const sets = await buildCollection(rows, { prices: false });
-      const point = snapshotOf(sets, guide, ids);
+      // The same assembly every request reads, blended prices and memo included: what the
+      // night writes is what the day shows, and the warm cron has usually just built it.
+      const sets = await assembleFor(userId, db);
+      const point = snapshotFromSets(sets, date);
       await writeValueSnapshot(db, userId, point);
       // The read path caches for an hour under this tag and nothing else can
       // drop it — the manual script writes from plain node, where this does not
@@ -129,7 +110,7 @@ export async function GET(req: Request) {
       // Every held card's own price, for the movers list. Deduped across
       // accounts as it goes: two people holding the same card is one price, and
       // writing it twice would only make the two able to disagree.
-      for (const p of cardPricesOf(sets, guide, ids)) prices.set(p.tcgId, p);
+      for (const p of cardPricesFromSets(sets, date)) prices.set(p.tcgId, p);
 
       written.push({ user: userId, value: Math.round(point.value), cards: point.cards });
     } catch (err) {
@@ -157,7 +138,7 @@ export async function GET(req: Request) {
   return NextResponse.json(
     {
       ok: failed.length === 0,
-      date: guide.createdAt.slice(0, 10),
+      date,
       written: written.length,
       prices: prices.size,
       failed,

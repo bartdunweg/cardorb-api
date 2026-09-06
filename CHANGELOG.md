@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - An instance keeps the collection it assembled for ten minutes, by the rows' version, so the screens that read it together (`/folders`, `/stats`, `/cards`, a Pokédex) pay the join once; a card's species is looked up once per name; `facets=0` on `/v1/cards` skips the facets pass.
 
+- The nightly reading values every card at the price the app shows (Cardmarket, TCGplayer where Cardmarket has nothing), so the value lines end where today's number stands.
+
 - `GET /v1/cards/{tcgId}/prices` gives one card's price day by day over the last ninety days.
 
 - Card price history is read in pages, so a series over more than a thousand readings no longer stops early (a folder's value line, the movers).

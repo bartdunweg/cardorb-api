@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { snapshotOf, type PriceGuide, type ProductIds } from "./snapshot";
+import {
+  cardPricesFromSets,
+  snapshotFromSets,
+  snapshotOf,
+  type PriceGuide,
+  type ProductIds,
+} from "./snapshot";
 import type { CardSet, OwnedCard, Variant } from "./cards";
 
 /**
@@ -122,5 +128,74 @@ describe("snapshotOf", () => {
 
   it("survives an empty collection", () => {
     expect(valueOf([])).toMatchObject({ value: 0, cards: 0, priced: 0, unpriced: 0 });
+  });
+});
+
+describe("snapshotFromSets and cardPricesFromSets", () => {
+  const priced = (market: number, holo: number | null = null, over: Partial<OwnedCard> = {}) =>
+    card({
+      price: { market, low: null, nm: null } as unknown as OwnedCard["price"],
+      priceHolo:
+        holo == null
+          ? null
+          : ({ market: holo, low: null, nm: null } as unknown as OwnedCard["priceHolo"]),
+      ...over,
+    });
+
+  it("values every held copy at the card's own price, the foil for a reverse holo", () => {
+    const sets = [
+      set([
+        priced(10, 30, {
+          variants: [variant({ quantity: 2 }), variant({ id: "row-2", finish: "reverse-holo" })],
+        }),
+        priced(5, null, { tcgId: "sv03-126", key: "k2" }),
+      ]),
+    ];
+    expect(snapshotFromSets(sets, "2026-09-07")).toEqual({
+      date: "2026-09-07",
+      value: 55,
+      cards: 4,
+      priced: 2,
+      unpriced: 0,
+    });
+  });
+
+  it("counts a held card with no price as unpriced and leaves wishes out", () => {
+    const sets = [
+      set([
+        card({ variants: [variant()] }),
+        priced(9, null, {
+          tcgId: "w",
+          key: "w",
+          owned: false,
+          variants: [variant({ owned: false })],
+        }),
+      ]),
+    ];
+    expect(snapshotFromSets(sets, "2026-09-07")).toEqual({
+      date: "2026-09-07",
+      value: 0,
+      cards: 1,
+      priced: 0,
+      unpriced: 1,
+    });
+  });
+
+  it("lists one point per held card with a price", () => {
+    const sets = [
+      set([
+        priced(10, 30),
+        card({ tcgId: "none", key: "n" }),
+        priced(9, null, {
+          tcgId: "w",
+          key: "w",
+          owned: false,
+          variants: [variant({ owned: false })],
+        }),
+      ]),
+    ];
+    expect(cardPricesFromSets(sets, "2026-09-07")).toEqual([
+      { tcgId: "sv03-125", date: "2026-09-07", market: 10, holo: 30 },
+    ]);
   });
 });
