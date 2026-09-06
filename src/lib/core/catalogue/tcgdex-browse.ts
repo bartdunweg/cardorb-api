@@ -1,5 +1,7 @@
 import { json } from "./tcgdex-client";
 import JA_NAMES from "./set-names.ja.json";
+import ZH_NAMES from "./set-names.zh.json";
+import ZH_CN_NAMES from "./set-names.zh-cn.json";
 import type { CatalogueSet } from "./ptcg-browse";
 import type { CatalogueMatch } from "./ptcg-search";
 
@@ -25,8 +27,15 @@ import type { CatalogueMatch } from "./ptcg-search";
  * says. A set the list does not know keeps its own name. The list is a
  * translation, not a catalogue fact: correct it, do not trust it.
  */
+// The Chinese and Korean catalogues print the Japanese sets under the same ids (S12a, SV9), so
+// the Japanese list names those; the sets those languages have of their own get their own lists.
+const JA = JA_NAMES as Record<string, string>;
+const ZH = ZH_NAMES as Record<string, string>;
 const ENGLISH: Partial<Record<BrowseLanguage, Record<string, string>>> = {
-  ja: JA_NAMES as Record<string, string>,
+  ja: JA,
+  ko: JA,
+  "zh-tw": { ...JA, ...ZH },
+  "zh-cn": { ...JA, ...ZH, ...(ZH_CN_NAMES as Record<string, string>) },
 };
 
 const named = (
@@ -81,7 +90,9 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
         releaseDate: null,
         total: s.cardCount?.total ?? 0,
         printedTotal: s.cardCount?.official ?? null,
-        logo: null,
+        // No logo anywhere for these sets; the first card's scan stands for the set (its
+        // address follows the pattern, number 001 in every set checked).
+        logo: scan(lang, serie.id, s.id, "001", "low"),
         symbol: null,
       });
     }
@@ -112,7 +123,11 @@ export async function setIn(
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
-    logo: detail.logo ? `${detail.logo}.png` : null,
+    logo: detail.logo
+      ? `${detail.logo}.png`
+      : serieId && detail.cards?.[0]
+        ? scan(lang, serieId, detail.id, detail.cards[0].localId, "low")
+        : null,
     symbol: detail.symbol ? `${detail.symbol}.png` : null,
   };
   const cards: CatalogueMatch[] = (detail.cards ?? []).map((c) => ({
