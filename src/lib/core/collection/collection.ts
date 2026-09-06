@@ -716,6 +716,12 @@ export const cardPricesTag = (userId: string) => `card-prices:${userId}`;
 
 const WINDOW_DAYS = 90;
 
+/** The asked ids as one short key: order does not matter, the set does. */
+const idsKey = (tcgIds: string[]) =>
+  createHash("sha1")
+    .update([...tcgIds].sort().join("\n"))
+    .digest("hex");
+
 export const getCardPrices = cache(
   async (userId: string, tcgIds: string[], token?: string): Promise<CardPricePoint[]> => {
     if (!tcgIds.length) return [];
@@ -729,9 +735,11 @@ export const getCardPrices = cache(
       const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
       return await unstable_cache(
         () => listCardPrices(db, tcgIds, since),
-        // v2: the reader pages now (#206); the entries the truncated reader left
-        // behind would otherwise stand for an hour after that deploy.
-        ["card-prices", "v2", userId, since],
+        // v3: the ids are part of the key. They were not, so the first asker's
+        // list (a folder's, or one card's) was the answer for every later ask
+        // under the same person and day: a card's own line came back as nine
+        // thousand points of the whole collection.
+        ["card-prices", "v3", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
     } catch (err) {

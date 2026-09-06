@@ -51,6 +51,16 @@ describe("GET /api/v1/cards/{tcgId}/prices", () => {
     });
   });
 
+  it("hands out this card's points only, whatever wider answer the reader gives", async () => {
+    getCardPrices.mockResolvedValue([
+      { tcgId: "base1-4", date: "2026-09-01", market: 120.5, holo: null },
+      { tcgId: "base1-5", date: "2026-09-01", market: 3, holo: null },
+    ]);
+    expect(await (await get()).json()).toEqual({
+      points: [{ date: "2026-09-01", market: 120.5, holo: null }],
+    });
+  });
+
   it("is an empty list for a card with no readings, not a 404", async () => {
     getCardPrices.mockResolvedValue([]);
     const res = await get("nobody-1");

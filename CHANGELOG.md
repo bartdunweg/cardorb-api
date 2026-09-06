@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - Card price history is read in pages, so a series over more than a thousand readings no longer stops early (a folder's value line, the movers).
 
+- A card's price history is its own again: the cached reading is keyed by the cards asked for, so one card's line no longer comes back as the whole collection's.
+
 - Two Cardmarket products TCGdex does not link are set by hand: the Wizards Black Star Promo Pikachu (#1) and Ancient Mew, so both are priced from the guide.
 
 - `scripts/cardmarket-ids-fill.mjs` links the Cardmarket products TCGdex does not, from Cardmarket's product list; eleven Wizards promos linked with it.

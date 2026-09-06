@@ -24,7 +24,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   const { tcgId } = await params;
   const points = await getCardPrices(who.userId, [tcgId], bearer(req) ?? undefined);
   return NextResponse.json(
-    { points: points.map((p) => ({ date: p.date, market: p.market, holo: p.holo })) },
+    // The reader answers for the ids it was asked; filtered once more here so a
+    // wider cached answer can never be handed out as one card's line.
+    {
+      points: points
+        .filter((p) => p.tcgId === tcgId)
+        .map((p) => ({ date: p.date, market: p.market, holo: p.holo })),
+    },
     { headers: readHeaders(req) },
   );
 }
