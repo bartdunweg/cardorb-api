@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - `scripts/cardmarket-ids-fill.mjs` links the Cardmarket products TCGdex does not, from Cardmarket's product list; eleven Wizards promos linked with it.
 
+- A warm-up cron every ten minutes assembles every account's collection, so the first read after a deploy is paid on nobody's screen.
+
 - An owner's `/v1/cards` page can be 2,000 long, so a Pokédex reads the whole collection in one request rather than four; a public page stays at 500.
 
 - A Pokédex setting can name `kinds` of card (V, ex, GX, …) beside `rarities`, for what a rarity cannot tell apart: a full-art V and a full-art ex are both Ultra Rare.
