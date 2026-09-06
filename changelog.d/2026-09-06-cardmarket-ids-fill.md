@@ -1,0 +1,1 @@
+- `scripts/cardmarket-ids-fill.mjs` links the Cardmarket products TCGdex does not, from Cardmarket's product list; eleven Wizards promos linked with it.
