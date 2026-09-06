@@ -50,6 +50,7 @@ const set = (over: Partial<CatalogueSet> = {}): CatalogueSet => ({
   printedTotal: 102,
   logo: null,
   symbol: null,
+  localName: null,
   ...over,
 });
 

@@ -1,0 +1,1 @@
+- Japanese sets are named in English where a translation is known (`name`), with the Japanese name beside it (`localName`).

@@ -60,6 +60,7 @@ describe("listSets", () => {
         printedTotal: 165,
         logo: "https://img/logo.png",
         symbol: "https://img/symbol.png",
+        localName: null,
       },
     ]);
   });
