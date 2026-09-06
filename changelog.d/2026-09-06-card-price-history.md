@@ -1,0 +1,1 @@
+- `GET /v1/cards/{tcgId}/prices` gives one card's price day by day over the last ninety days.

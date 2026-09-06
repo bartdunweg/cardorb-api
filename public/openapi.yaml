@@ -613,6 +613,14 @@ components:
         priced: { type: integer }
         unpriced: { type: integer }
 
+    CardPricePoint:
+      type: object
+      required: [date, market, holo]
+      properties:
+        date: { type: string, format: date }
+        market: { type: [number, "null"], description: "The normal printing, in euros; null where Cardmarket published nothing." }
+        holo: { type: [number, "null"], description: "The foil, or null where there is no separate foil price." }
+
     LatestPull:
       type: object
       required: [name, number, image, imageHigh, rarity, speciesId, tcgId, setName, setTitle, acquiredAt]
@@ -818,6 +826,30 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/cards/{tcgId}/prices:
+    get:
+      tags: [Value]
+      operationId: getCardPrices
+      summary: One card's price, day by day, over the last ninety days
+      description: The nightly readings for a held card. A card with no readings answers an empty list, not a 404.
+      parameters:
+        - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
+      responses:
+        "200":
+          description: The points, oldest first.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [points]
+                properties:
+                  points: { type: array, items: { $ref: "#/components/schemas/CardPricePoint" } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
