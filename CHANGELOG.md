@@ -16,6 +16,8 @@ if the two have drifted apart.
 
 - A copy has a language (`language`: en, de, fr, it, es, pt, nl, ja, ko, zh, or null for not recorded) on every card shape, settable on add and on PATCH.
 
+- `GET /v1/cards/{tcgId}` says which Western languages the card was printed in (`languages`), asked of each catalogue; a copy can be one of those and no other.
+
 - `GET /v1/cards/{tcgId}/prices` gives one card's price day by day over the last ninety days.
 
 - Card price history is read in pages, so a series over more than a thousand readings no longer stops early (a folder's value line, the movers).
