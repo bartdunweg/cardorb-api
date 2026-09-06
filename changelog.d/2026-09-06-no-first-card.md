@@ -1,0 +1,1 @@
+- A set of another language shows no picture again until a logo exists for it; the first card stood in and read as the wrong thing.

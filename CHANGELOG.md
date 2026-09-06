@@ -34,6 +34,8 @@ if the two have drifted apart.
 
 - Japanese sets are named in English where a translation is known (`name`), with the Japanese name beside it (`localName`).
 
+- A set of another language shows no picture again until a logo exists for it; the first card stood in and read as the wrong thing.
+
 - An owner's `/v1/cards` page can be 2,000 long, so a Pokédex reads the whole collection in one request rather than four; a public page stays at 500.
 
 - A Pokédex setting can name `kinds` of card (V, ex, GX, …) beside `rarities`, for what a rarity cannot tell apart: a full-art V and a full-art ex are both Ultra Rare.

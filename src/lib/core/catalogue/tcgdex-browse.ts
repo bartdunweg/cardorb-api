@@ -90,9 +90,8 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
         releaseDate: null,
         total: s.cardCount?.total ?? 0,
         printedTotal: s.cardCount?.official ?? null,
-        // No logo anywhere for these sets; the first card's scan stands for the set (its
-        // address follows the pattern, number 001 in every set checked).
-        logo: scan(lang, serie.id, s.id, "001", "low"),
+        // No logo anywhere for these sets; a card stood in for a while and read as the wrong thing.
+        logo: null,
         symbol: null,
       });
     }
@@ -123,11 +122,7 @@ export async function setIn(
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
-    logo: detail.logo
-      ? `${detail.logo}.png`
-      : serieId && detail.cards?.[0]
-        ? scan(lang, serieId, detail.id, detail.cards[0].localId, "low")
-        : null,
+    logo: detail.logo ? `${detail.logo}.png` : null,
     symbol: detail.symbol ? `${detail.symbol}.png` : null,
   };
   const cards: CatalogueMatch[] = (detail.cards ?? []).map((c) => ({
