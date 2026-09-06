@@ -80,7 +80,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   }
 
   const { rows, failed } = await getRows(who.userId, bearer(req) ?? undefined);
-  const index = ownershipIndex(rows);
+  // Another language's catalogue is marked by nothing yet: the rows know no language, and a
+  // Japanese set named like an English one (Black Bolt) would otherwise count the English cards
+  // as its own. Step 2 keys the index by language; until then the marks are for English.
+  const index = ownershipIndex(isBrowseLanguage(language) ? [] : rows);
   const marked = markOwnership(index, cards);
   const start = (page - 1) * pageSize;
 
