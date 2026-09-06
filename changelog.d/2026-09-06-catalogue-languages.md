@@ -1,0 +1,1 @@
+- The shelf and a set page can be asked for another language's catalogue: `GET /v1/catalog/sets?language=ja|zh-tw|zh-cn|ko` and `GET /v1/catalog/sets/{id}?language=` read TCGdex's Japanese, Chinese and Korean catalogues, with their own ids, names and scans.

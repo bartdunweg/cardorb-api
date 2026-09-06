@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
+import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
 import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -45,21 +46,35 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   const page = intParam(url.searchParams.get("page"), 1, Number.MAX_SAFE_INTEGER);
   const pageSize = intParam(url.searchParams.get("pageSize"), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
 
+  const language = url.searchParams.get("language");
+  if (language && language !== "en" && !isBrowseLanguage(language))
+    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+      headers: readHeaders(req),
+    });
+
   let set;
   let cards;
   try {
-    set = await findSet(setId);
-    /* Checked before the cards are asked for: an id nobody carries is a 404, not
+    if (isBrowseLanguage(language)) {
+      // That language's catalogue, pictures and all: TCGdex has the set whole.
+      const found = await setIn(language, setId);
+      if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
+      set = found.set;
+      cards = found.cards;
+    } else {
+      set = await findSet(setId);
+      /* Checked before the cards are asked for: an id nobody carries is a 404, not
        an empty set, and finding that out from a card list that came back with
        nothing would conflate the two. */
-    if (!set) {
-      return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
-    }
-    /* pokemontcg.io answers what is in the set; TCGdex, where it has the same
+      if (!set) {
+        return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
+      }
+      /* pokemontcg.io answers what is in the set; TCGdex, where it has the same
        card, answers it with a picture a seventh of the size. See
        browse-artwork.ts for the measurement — it fails soft, so this cannot be
        the thing that 502s below. */
-    cards = await withTcgdexScans(set, await setCards(setId));
+      cards = await withTcgdexScans(set, await setCards(setId));
+    }
   } catch {
     return refuse("catalogue", { headers: readHeaders(req) });
   }
