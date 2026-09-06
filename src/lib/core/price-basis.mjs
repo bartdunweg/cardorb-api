@@ -33,9 +33,14 @@
 /**
  * The one number a card is shown at, ranked by and totalled on.
  *
- * The middle of the Near Mint range where there is one, and the plain market
- * price under €5 where there is not. Where Cardmarket has published no trend
- * and no month's average, only its lowest listing, that floor is the number:
+ * Cardmarket's own trend (the month's average where the trend has run off;
+ * marketPrice() below), the number Cardmarket itself heads a product with. It
+ * used to be the middle of the Near Mint range above, an estimate of an asking
+ * price; on dear cards that ran a fifth above what a person sees on the site
+ * (SVP 085 Pikachu: €999 shown, trend €831), so the estimate stays in the
+ * payload as `nm` for anyone who wants a range and the headline is the trend.
+ * Where Cardmarket has published no trend and no month's average, only its
+ * lowest listing, that floor is the number:
  * a card shown at its cheapest listing is nearer the truth than a card shown
  * as worth nothing, which is what thirty-odd new promos read as. Everything
  * that puts a figure on a card goes through here, so the grid, the dashboard
@@ -45,7 +50,7 @@
  * @param {Price | null | undefined} p
  * @returns {number | null}
  */
-export const shownPrice = (p) => (p ? (p.nm?.mid ?? p.market ?? p.low) : null);
+export const shownPrice = (p) => (p ? (p.market ?? p.nm?.mid ?? p.low) : null);
 
 /**
  * @param {unknown} v
