@@ -1,0 +1,1 @@
+- A card's price history is its own again: the cached reading is keyed by the cards asked for, so one card's line no longer comes back as the whole collection's.
