@@ -167,3 +167,49 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
     unpriced,
   };
 }
+
+/**
+ * The reading off an assembled collection: the card's own blended price, the one
+ * the tile and the sheet show, so the line ends where the number stands. Printing
+ * by printing as snapshotOf() does it; a card with no price on it is unpriced.
+ * The guide's date is not to hand here, so the caller dates it.
+ */
+export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
+  let value = 0;
+  let copies = 0;
+  let priced = 0;
+  let unpriced = 0;
+  for (const set of sets) {
+    for (const card of set.cards) {
+      const held = copiesHeld(card);
+      if (!held) continue;
+      copies += held;
+      let any = false;
+      for (const v of card.variants) {
+        if (!v.owned) continue;
+        const each = shownPrice((v.finish === "reverse-holo" && card.priceHolo) || card.price);
+        if (each == null) continue;
+        value += each * Math.max(0, v.quantity ?? 0);
+        any = true;
+      }
+      if (any) priced++;
+      else unpriced++;
+    }
+  }
+  return { date, value, cards: copies, priced, unpriced };
+}
+
+/** Every held card's own blended price on this day, for the movers and the lines. Deduped on tcgId. */
+export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoint[] {
+  const seen = new Map<string, CardPricePoint>();
+  for (const set of sets) {
+    for (const card of set.cards) {
+      if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
+      const market = shownPrice(card.price);
+      const holo = shownPrice(card.priceHolo);
+      if (market == null && holo == null) continue;
+      seen.set(card.tcgId, { tcgId: card.tcgId, date, market, holo });
+    }
+  }
+  return [...seen.values()];
+}

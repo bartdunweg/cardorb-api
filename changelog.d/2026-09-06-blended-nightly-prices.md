@@ -1,0 +1,1 @@
+- The nightly reading values every card at the price the app shows (Cardmarket, TCGplayer where Cardmarket has nothing), so the value lines end where today's number stands.
