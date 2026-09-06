@@ -28,6 +28,8 @@ if the two have drifted apart.
 
 - While pokemontcg.io is down, a set keeps the TCGplayer prices it last got on that instance rather than showing its cards unpriced for the quiet minutes.
 
+- Yveltal-EX XY150a is linked to its Cardmarket product by hand, the last card the guide could price and did not.
+
 ## 2026-09-05
 
 - Starring a card, changing how many you hold or adding a note no longer makes the next screen wait for the whole collection to be matched and priced again: what the catalogue says about each card is kept per set for a day, and only your own rows are read afresh.
