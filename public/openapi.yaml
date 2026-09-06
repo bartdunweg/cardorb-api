@@ -338,6 +338,7 @@ components:
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
         isFavorite: { type: boolean, default: false }
+        collectionId: { type: [string, "null"], format: uuid, description: "A folder of the caller's, filled by hand, to file the card in at once." }
 
     CardPatch:
       type: object
@@ -355,6 +356,28 @@ components:
         notes: { type: [string, "null"] }
         isFavorite: { type: boolean }
         collectionId: { type: [string, "null"], format: uuid, description: "The folder to file it in; null takes it out of its folder." }
+        acquiredAt: { type: string, format: date-time, description: "When the copy was pulled; not in the future. Decides Newest first." }
+
+    CopyChanges:
+      type: object
+      description: What a copy differs in from the row it comes from. Every key optional; `null` clears one. Not the card's identity, not quantity, owned or the star.
+      properties:
+        finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        condition: { type: [string, "null"] }
+        grade: { type: [string, "null"] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null] }
+        purchasePrice: { type: [number, "null"] }
+        purchaseDate: { type: [string, "null"], format: date }
+        notes: { type: [string, "null"] }
+        collectionId: { type: [string, "null"], format: uuid, description: "A folder of the caller's, filled by hand; a rule folder is a 400." }
+        acquiredAt: { type: string, format: date-time, description: "When the copy was pulled; not in the future." }
+
+    CopyBody:
+      allOf:
+        - $ref: "#/components/schemas/CopyChanges"
+        - type: object
+          properties:
+            count: { type: integer, minimum: 1, maximum: 999, default: 1, description: "How many copies." }
 
     CollectionRow:
       type: object
@@ -747,6 +770,7 @@ paths:
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id. A rule folder answers with the owned copies its rule matches, whatever `owned` says. An id that is no folder of the caller's is a 404." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
+        - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole, as printed; with `set` it names one card's every row." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }
@@ -857,6 +881,89 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/collection/items/{id}/copies:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string }, description: "The row the copy comes from." }
+    post:
+      tags: [Collection]
+      operationId: addCopy
+      summary: One more copy of a row, as a row of its own
+      description: The same card and inventory as the row, with the differences given, `count` held, pulled now unless `acquiredAt` says when. The row is untouched. An empty body is one more identical copy.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CopyBody" }
+      responses:
+        "201":
+          description: The new row.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, card]
+                properties:
+                  ok: { type: boolean, const: true }
+                  card: { $ref: "#/components/schemas/CollectionRow" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    options:
+      tags: [Collection]
+      operationId: addCopyPreflight
+      summary: CORS preflight
+      responses:
+        "204": { description: Allowed origin. }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /v1/collection/items/{id}/split:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string }, description: "The row some of whose copies are different." }
+    post:
+      tags: [Collection]
+      operationId: splitItem
+      summary: Some of a row's copies as a row of their own
+      description: The row loses `count`; the copy is born with the differences and the row's acquired date. At least one difference; `count` at or above the quantity is a 400 (that is every copy; change the row).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CopyBody" }
+      responses:
+        "201":
+          description: The new row and the row it came from, as they now are.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, card, source]
+                properties:
+                  ok: { type: boolean, const: true }
+                  card: { $ref: "#/components/schemas/CollectionRow" }
+                  source: { $ref: "#/components/schemas/CollectionRow" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    options:
+      tags: [Collection]
+      operationId: splitItemPreflight
+      summary: CORS preflight
+      responses:
+        "204": { description: Allowed origin. }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
   /v1/collection/items/{id}:
     parameters:

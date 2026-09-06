@@ -130,6 +130,24 @@ export async function POST(req: Request) {
   if (result.kind === "invalid") {
     return apiError(400, result.error, undefined, { headers: readHeaders(req) });
   }
+  // A folder named must be the caller's and filled by hand, as PATCH requires.
+  if (result.draft.collectionId) {
+    let target;
+    try {
+      target = await findFolder(who.userId, result.draft.collectionId, bearer(req) ?? undefined);
+    } catch (err) {
+      return storeErrorResponse(err, req, "Reading the folder failed");
+    }
+    if (!target)
+      return apiError(404, "No folder by that id.", undefined, { headers: readHeaders(req) });
+    if (target.rule)
+      return apiError(
+        400,
+        "That folder fills itself from a rule. Cards cannot be filed in it.",
+        undefined,
+        { headers: readHeaders(req) },
+      );
+  }
 
   let id: string;
   try {

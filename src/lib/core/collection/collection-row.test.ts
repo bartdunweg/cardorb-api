@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { MAX, rowFromDraft, validateCardDraft, validateCardPatch } from "./collection-row";
+import {
+  MAX,
+  rowFromDraft,
+  validateCardDraft,
+  validateCardPatch,
+  validateCopyBody,
+} from "./collection-row";
 
 const ok = (body: unknown) => {
   const result = validateCardDraft(body);
@@ -225,5 +231,41 @@ describe("validateCardPatch", () => {
     expect(patched({ purchaseDate: null }).purchaseDate).toBeNull();
     expect(refused({ purchaseDate: "yesterday" })).toMatch(/not valid/);
     expect(refused({ purchaseDate: 20260131 })).toMatch(/date string or null/);
+  });
+});
+
+describe("validateCopyBody", () => {
+  it("defaults count to one and passes the changes through", () => {
+    expect(validateCopyBody({ language: "ja" }, true)).toEqual({
+      kind: "ok",
+      count: 1,
+      changes: { language: "ja" },
+    });
+  });
+
+  it("refuses a count that is no count", () => {
+    for (const count of [0, 1.5, "3", 1000]) {
+      expect(validateCopyBody({ language: "ja", count }, true).kind).toBe("invalid");
+    }
+  });
+
+  it("refuses the card's identity, quantity, owned and the star", () => {
+    for (const body of [{ name: "x" }, { quantity: 2 }, { owned: false }, { isFavorite: true }]) {
+      const r = validateCopyBody(body, false);
+      expect(r.kind).toBe("invalid");
+      if (r.kind === "invalid") expect(r.error).toContain("A copy keeps its card");
+    }
+  });
+
+  it("wants at least one difference for a split, none for a copy", () => {
+    expect(validateCopyBody({}, true).kind).toBe("invalid");
+    expect(validateCopyBody({}, false)).toEqual({ kind: "ok", count: 1, changes: {} });
+  });
+
+  it("takes an acquired date that is past and refuses one in the future", () => {
+    const past = validateCopyBody({ acquiredAt: "2026-01-02" }, true);
+    expect(past.kind).toBe("ok");
+    if (past.kind === "ok") expect(past.changes.acquiredAt).toMatch(/^2026-01-0[12]T/);
+    expect(validateCopyBody({ acquiredAt: "2999-01-01" }, true).kind).toBe("invalid");
   });
 });

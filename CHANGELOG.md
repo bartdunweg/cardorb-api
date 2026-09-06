@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `npm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-07
+
+- A row's copies can differ: `POST /v1/collection/items/{id}/copies` adds one more copy as a row of its own, `POST /v1/collection/items/{id}/split` moves some of a row's copies to a row with their own language, condition, grade, finish, folder, price or acquired date. `GET /v1/cards` takes `number` beside `set`; a new card can be filed in a folder at once (`collectionId` on the draft); PATCH takes `acquiredAt`.
+
 ## 2026-09-06
 
 - An instance keeps the collection it assembled for ten minutes, by the rows' version, so the screens that read it together (`/folders`, `/stats`, `/cards`, a Pokédex) pay the join once; a card's species is looked up once per name; `facets=0` on `/v1/cards` skips the facets pass.

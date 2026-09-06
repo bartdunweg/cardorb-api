@@ -107,6 +107,8 @@ export type ItemFilter = {
   set?: string;
   /** A rarity, whole, in the catalogue's words; case does not matter. */
   rarity?: string;
+  /** A card number, whole, as printed; with `set` it names one card's every row. */
+  number?: string;
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
@@ -120,6 +122,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const q = f.q?.trim().toLowerCase();
   const set = f.set?.trim().toLowerCase();
   const rarity = f.rarity?.trim().toLowerCase();
+  const number = f.number?.trim().toLowerCase();
   const inRule = f.rule ? ruleMatcher(f.rule) : null;
   return items.filter((it) => {
     if (inRule && !inRule(it)) return false;
@@ -128,6 +131,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (f.collection && it.collectionId !== f.collection) return false;
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
+    if (number && it.number.toLowerCase() !== number) return false;
     if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
     if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
     return true;
@@ -247,7 +251,7 @@ export function readItemQuery(
       return { kind: "invalid", error: "collection must be a folder id." };
     query.collection = collection;
   }
-  for (const key of ["set", "rarity"] as const) {
+  for (const key of ["set", "rarity", "number"] as const) {
     const v = params.get(key);
     if (v === null) continue;
     if (!v.trim() || v.length > 100) return { kind: "invalid", error: `${key} must name one.` };
