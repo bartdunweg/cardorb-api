@@ -100,7 +100,11 @@ export async function GET(req: Request) {
       total,
       // The value and the unpriced count are over the whole filtered list, not the page.
       ...sumValue(shown),
-      facets: facetsOf(all, { owned: read.query.owned }),
+      // `facets=0` from a caller that will not read them (a count, a further batch on scroll)
+      // skips the pass over every item.
+      ...(new URL(req.url).searchParams.get("facets") === "0"
+        ? {}
+        : { facets: facetsOf(all, { owned: read.query.owned }) }),
       ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
     },
     { headers: readHeaders(req) },

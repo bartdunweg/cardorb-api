@@ -416,13 +416,54 @@ const usdToEurForRequest = cache(async (): Promise<number | null> => {
 async function assemble(userId: string, db: SupabaseClient | null): Promise<CardSet[]> {
   const rows = await cachedRows(userId, db);
   const [known, usdToEur] = await Promise.all([guideForRequest(), usdToEurForRequest()]);
+  // The same rows, guide and rate on the same instance within minutes: the same sets. A write
+  // changes the rows (their cache is dropped by tag), so the key changes and the join runs
+  // again; /folders, /stats and /cards on one screen, or the Pokédex's read after the count's,
+  // do not each pay the ~100 cache reads and the join over two thousand rows.
+  const key = `${userId}:${rowsVersion(rows)}:${Object.keys(known).length}:${usdToEur ?? "-"}`;
+  const kept = assembled.get(key);
+  if (kept && kept.until > Date.now()) {
+    logTiming("cache assemble hit", 0, `${rows.length} rows`);
+    return kept.sets;
+  }
   const priceSource = (ids: string[]) => guideThenTcgdex(ids, known);
   const start = performance.now();
   const sets = await buildCollection(rows, {
     factsSource: (setName, identities) => factsWithUsd(setName, identities, priceSource, usdToEur),
   });
   logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
+  remember(key, sets);
   return sets;
+}
+
+/**
+ * The assembled collections this instance has seen lately, by rows version. Ten minutes and a
+ * handful of entries: the facts and prices under them are a day old at most anyway, and an
+ * instance serves one collector's screens at a time. Not the Data Cache: a whole-collection
+ * entry there was the nested cache that hid every cache under it (see above).
+ */
+const assembled = new Map<string, { sets: CardSet[]; until: number }>();
+const ASSEMBLED_TTL_MS = 10 * 60_000;
+const ASSEMBLED_MAX = 8;
+
+function remember(key: string, sets: CardSet[]) {
+  assembled.set(key, { sets, until: Date.now() + ASSEMBLED_TTL_MS });
+  while (assembled.size > ASSEMBLED_MAX) {
+    const oldest = assembled.keys().next().value;
+    if (oldest === undefined) break;
+    assembled.delete(oldest);
+  }
+}
+
+/** What of the rows the join reads: their ids, their inventory fields and when they changed. */
+function rowsVersion(rows: CollectionRow[]): string {
+  const hash = createHash("sha1");
+  for (const r of rows) {
+    hash.update(
+      `${r.id}|${r.owned}|${r.quantity}|${r.finish}|${r.isFavorite}|${r.collectionId}|${r.excluded}|${r.rarity}|${r.name}|${r.setName}|${r.number}|${r.condition}|${r.grade}|${r.purchasePrice}|${r.purchaseDate}|${r.notes}|${r.acquiredAt}\u0001`,
+    );
+  }
+  return hash.digest("hex");
 }
 
 /**
