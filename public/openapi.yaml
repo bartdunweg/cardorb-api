@@ -1169,7 +1169,7 @@ paths:
           in: query
           required: false
           schema: { type: string }
-          description: A folder id, or `favorites`.
+          description: A folder id, `favorites`, or `wishlist` (what the wished cards would cost).
       responses:
         "200":
           description: The series.

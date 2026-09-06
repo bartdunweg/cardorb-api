@@ -1,0 +1,1 @@
+- `GET /v1/value-history?folder=wishlist` gives what the wishlist would have cost, day by day.

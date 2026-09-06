@@ -63,6 +63,17 @@ describe("folderSeries", () => {
     ]);
   });
 
+  it("values the wishlist: every wish once, owned copies left out", () => {
+    const items = [copy({ owned: false, quantity: 3 }), copy({ tcgId: "base1-4" })];
+    const prices = [
+      { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
+      { tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
+    ];
+    expect(folderSeries(items, prices, "wishlist")).toEqual([
+      { date: "2026-09-01", value: 10, cards: 1, priced: 1, unpriced: 0 },
+    ]);
+  });
+
   it("is empty without readings", () => {
     expect(folderSeries([copy({})], [])).toEqual([]);
   });

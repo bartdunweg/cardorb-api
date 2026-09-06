@@ -169,6 +169,26 @@ describe("GET /api/v1/value-history", () => {
       ]);
     });
 
+    it("values the wishlist from the wishes", async () => {
+      getCollection.mockResolvedValue({
+        sets: [
+          {
+            name: "base1",
+            title: "Base Set",
+            cards: [
+              card("base1-25", [variant({ owned: false })]),
+              card("base1-4", [variant({ id: "other" })]),
+            ],
+          },
+        ],
+        failed: false,
+      });
+      const body = await (await get("t.o.k.e.n", "?folder=wishlist")).json();
+      expect(body.snapshots).toEqual([
+        { date: "2026-09-01", value: 10, cards: 1, priced: 1, unpriced: 0 },
+      ]);
+    });
+
     it("is a 404 for an id that is no folder, and a 400 for a value that is no id", async () => {
       findFolder.mockResolvedValue(null);
       expect((await get("t.o.k.e.n", `?folder=${FOLDER}`)).status).toBe(404);

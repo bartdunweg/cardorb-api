@@ -44,6 +44,8 @@ if the two have drifted apart.
 
 - While pokemontcg.io is down, a set keeps the TCGplayer prices it last got on that instance rather than showing its cards unpriced for the quiet minutes.
 
+- `GET /v1/value-history?folder=wishlist` gives what the wishlist would have cost, day by day.
+
 - Yveltal-EX XY150a is linked to its Cardmarket product by hand, the last card the guide could price and did not.
 
 ## 2026-09-05
