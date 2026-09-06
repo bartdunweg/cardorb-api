@@ -729,7 +729,9 @@ export const getCardPrices = cache(
       const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
       return await unstable_cache(
         () => listCardPrices(db, tcgIds, since),
-        ["card-prices", userId, since],
+        // v2: the reader pages now (#206); the entries the truncated reader left
+        // behind would otherwise stand for an hour after that deploy.
+        ["card-prices", "v2", userId, since],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
     } catch (err) {
