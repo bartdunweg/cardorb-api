@@ -64,8 +64,16 @@ const BY_LENGTH = SPECIES.map((name, i) => ({ id: i + 1, name, key: normalise(na
 export function speciesOf(cardName: string): number | null {
   const key = normalise(cardName);
   if (!key) return null;
-  return BY_LENGTH.find((s) => key.includes(s.key))?.id ?? null;
+  const known = SPECIES_OF.get(key);
+  if (known !== undefined) return known;
+  const id = BY_LENGTH.find((s) => key.includes(s.key))?.id ?? null;
+  // A collection names the same card many times over (its printings, its copies, every
+  // request): the scan down a thousand names runs once per distinct name per instance.
+  if (SPECIES_OF.size < 20_000) SPECIES_OF.set(key, id);
+  return id;
 }
+
+const SPECIES_OF = new Map<string, number | null>();
 
 /**
  * The whole Dex, in order, with the collection filed into it.
