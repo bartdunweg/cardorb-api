@@ -140,6 +140,10 @@ curl localhost:3000/api/v1/collection | jq '.sets | length'
 `npm run check` is prettier, typecheck, tests and lint together; `./scripts/verify.sh` adds
 the secrets scan, the changelog check and `next build`.
 
+When a card has no price (`/dashboard/cards?unpriced=1` on the web app), run
+`node scripts/cardmarket-ids-fill.mjs`: it links the Cardmarket products TCGdex does not, sets
+the sure ones with `--write`, and prints the rest with their prices to pick by hand.
+
 ## Production
 
 Deployed on Vercel, DNS on Cloudflare (DNS-only, not proxied — Cloudflare in front of

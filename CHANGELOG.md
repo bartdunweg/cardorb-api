@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - Two Cardmarket products TCGdex does not link are set by hand: the Wizards Black Star Promo Pikachu (#1) and Ancient Mew, so both are priced from the guide.
 
+- `scripts/cardmarket-ids-fill.mjs` links the Cardmarket products TCGdex does not, from Cardmarket's product list; eleven Wizards promos linked with it.
+
 - A Pokédex setting can name `kinds` of card (V, ex, GX, …) beside `rarities`, for what a rarity cannot tell apart: a full-art V and a full-art ex are both Ultra Rare.
 
 - An unreadable pokemontcg.io index is no longer cached for a day as "nothing to price"; a set's gallery cards get their TCGplayer price too; a card one market prices keeps that market's shape; "SV01" and "SV1" are one number.
