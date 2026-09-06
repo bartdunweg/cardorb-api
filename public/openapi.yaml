@@ -282,6 +282,7 @@ components:
         image: { type: [string, "null"] }
         rarity: { type: [string, "null"] }
         illustrator: { type: [string, "null"] }
+        languages: { type: array, items: { type: string, enum: [en, de, fr, it, es, pt, nl] }, description: "The Western languages the card was printed in, from the catalogues that carry its id; a copy can be one of these and no other." }
         hp: { type: [integer, "null"] }
         types: { type: array, items: { type: string } }
         stage: { type: [string, "null"] }

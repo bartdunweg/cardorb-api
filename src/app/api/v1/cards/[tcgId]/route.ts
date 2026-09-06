@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
+import { westernLanguagesOf } from "@/lib/core/catalogue/card-languages";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
 /**
@@ -32,8 +33,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
 
   const { tcgId } = await params;
   let card;
+  let languages;
   try {
-    card = await getCardDetail(tcgId);
+    // The printings beside the card: which Western catalogues carry this id.
+    [card, languages] = await Promise.all([getCardDetail(tcgId), westernLanguagesOf(tcgId)]);
   } catch (err) {
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.
@@ -47,5 +50,5 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // holding one person's answer and handing it to the next asker without a key
   // would undo the check above. getCardDetail memoises upstream, so what this
   // costs is the round trip, not the walk.
-  return NextResponse.json(card, { headers: readHeaders(req) });
+  return NextResponse.json({ ...card, languages }, { headers: readHeaders(req) });
 }

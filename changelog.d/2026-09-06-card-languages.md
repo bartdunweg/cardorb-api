@@ -1,0 +1,1 @@
+- `GET /v1/cards/{tcgId}` says which Western languages the card was printed in (`languages`), asked of each catalogue; a copy can be one of those and no other.
