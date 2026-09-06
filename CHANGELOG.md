@@ -26,6 +26,8 @@ if the two have drifted apart.
 
 - `scripts/cardmarket-ids-fill.mjs` links the Cardmarket products TCGdex does not, from Cardmarket's product list; eleven Wizards promos linked with it.
 
+- The shelf and a set page can be asked for another language's catalogue: `GET /v1/catalog/sets?language=ja|zh-tw|zh-cn|ko` and `GET /v1/catalog/sets/{id}?language=` read TCGdex's Japanese, Chinese and Korean catalogues, with their own ids, names and scans.
+
 - A warm-up cron every ten minutes assembles every account's collection, so the first read after a deploy is paid on nobody's screen.
 
 - The value-over-time series can be asked for one folder or the favorites (`GET /v1/value-history?folder=`), built from the daily card prices.

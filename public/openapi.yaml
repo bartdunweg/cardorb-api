@@ -1050,6 +1050,8 @@ paths:
       tags: [Catalogue]
       operationId: listSets
       summary: Every set, with how much of each the caller holds
+      parameters:
+        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja, zh-tw, zh-cn, ko] }, description: "That language's own catalogue (TCGdex); left out, English. Sets and cards there have their own ids and names." }
       responses:
         "200":
           description: The sets.
@@ -1077,6 +1079,7 @@ paths:
       operationId: getSet
       summary: One whole set, a page at a time
       parameters:
+        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja, zh-tw, zh-cn, ko] }, description: "That language's own catalogue (TCGdex); left out, English." }
         - { name: setId, in: path, required: true, schema: { type: string }, description: "pokemontcg.io's set id, e.g. `swsh3`." }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 250, default: 60 }, description: "Clamped to 250." }

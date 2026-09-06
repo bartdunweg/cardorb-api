@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { listSets } from "@/lib/core/catalogue/ptcg-browse";
+import { isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -36,9 +37,15 @@ export async function GET(req: Request) {
     });
   }
 
+  // `?language=ja|zh-tw|zh-cn|ko`: that language's own catalogue (TCGdex); left out, English.
+  const language = new URL(req.url).searchParams.get("language");
+  if (language && language !== "en" && !isBrowseLanguage(language))
+    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+      headers: readHeaders(req),
+    });
   let sets;
   try {
-    sets = await listSets();
+    sets = isBrowseLanguage(language) ? await listSetsIn(language) : await listSets();
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
        refused, the request is worth retrying, and the client can say so. The
