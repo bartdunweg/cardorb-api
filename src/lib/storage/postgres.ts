@@ -293,22 +293,34 @@ export async function listCardPrices(
   since: string,
 ): Promise<CardPricePoint[]> {
   const out: CardPricePoint[] = [];
+  // PostgREST answers a thousand rows at most, whatever the query asks, and two
+  // hundred cards over a few weeks of readings is more than that. So each chunk
+  // is read in pages until one comes back short; before this, the later dates of
+  // every chunk were silently missing and a folder's line stopped weeks early.
+  const PAGE = 1000;
   for (let i = 0; i < tcgIds.length; i += 200) {
     const chunk = tcgIds.slice(i, i + 200);
-    const { data, error } = await db
-      .from("card_prices")
-      .select("tcg_id,snapshot_date,market_cents,holo_cents")
-      .in("tcg_id", chunk)
-      .gte("snapshot_date", since)
-      .order("snapshot_date", { ascending: true });
-    if (error) throw new Error(`Reading card prices failed: ${error.message}`);
-    for (const r of (data ?? []) as PriceRecord[]) {
-      out.push({
-        tcgId: r.tcg_id,
-        date: r.snapshot_date,
-        market: r.market_cents == null ? null : r.market_cents / 100,
-        holo: r.holo_cents == null ? null : r.holo_cents / 100,
-      });
+    for (let page = 0; ; page++) {
+      const { data, error } = await db
+        .from("card_prices")
+        .select("tcg_id,snapshot_date,market_cents,holo_cents")
+        .in("tcg_id", chunk)
+        .gte("snapshot_date", since)
+        .order("snapshot_date", { ascending: true })
+        // The tiebreak that makes the pages disjoint: many rows share a date.
+        .order("tcg_id", { ascending: true })
+        .range(page * PAGE, page * PAGE + PAGE - 1);
+      if (error) throw new Error(`Reading card prices failed: ${error.message}`);
+      const rows = (data ?? []) as PriceRecord[];
+      for (const r of rows) {
+        out.push({
+          tcgId: r.tcg_id,
+          date: r.snapshot_date,
+          market: r.market_cents == null ? null : r.market_cents / 100,
+          holo: r.holo_cents == null ? null : r.holo_cents / 100,
+        });
+      }
+      if (rows.length < PAGE) break;
     }
   }
   return out;
