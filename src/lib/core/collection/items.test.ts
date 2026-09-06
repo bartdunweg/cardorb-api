@@ -209,9 +209,9 @@ describe("readItemQuery", () => {
     expect(read("limit=0").kind).toBe("invalid");
     expect(read("collection=not-a-uuid").kind).toBe("invalid");
   });
-  it("caps a page at five hundred", () => {
+  it("caps a page at two thousand", () => {
     const r = read("limit=9999&offset=200&owned=true&q=%20pika%20");
-    expect(r).toEqual({ kind: "ok", query: { limit: 500, offset: 200, owned: true, q: "pika" } });
+    expect(r).toEqual({ kind: "ok", query: { limit: 2000, offset: 200, owned: true, q: "pika" } });
   });
   it("reads a sort, an order, a set and a rarity, and refuses what it cannot mean", () => {
     expect(read("sort=price&order=desc&set=Jungle&rarity=Rare")).toEqual({
