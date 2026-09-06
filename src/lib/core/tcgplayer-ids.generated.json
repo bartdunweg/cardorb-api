@@ -1,0 +1,8842 @@
+{
+  "base1-1": {
+    "productId": 42346,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-10": {
+    "productId": 42347,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-100": {
+    "productId": 42348,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-101": {
+    "productId": 42349,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-102": {
+    "productId": 42350,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-11": {
+    "productId": 42351,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-12": {
+    "productId": 42352,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-13": {
+    "productId": 42353,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-14": {
+    "productId": 42354,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-15": {
+    "productId": 42355,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-16": {
+    "productId": 42356,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-17": {
+    "productId": 42357,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-18": {
+    "productId": 42358,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-19": {
+    "productId": 42359,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-2": {
+    "productId": 42360,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-20": {
+    "productId": 42361,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-21": {
+    "productId": 42362,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-22": {
+    "productId": 42363,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-23": {
+    "productId": 42364,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-24": {
+    "productId": 42365,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-25": {
+    "productId": 42366,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-26": {
+    "productId": 42367,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-27": {
+    "productId": 42368,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-28": {
+    "productId": 42369,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-29": {
+    "productId": 42370,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-3": {
+    "productId": 42371,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-30": {
+    "productId": 42372,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-31": {
+    "productId": 42373,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-32": {
+    "productId": 42374,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-33": {
+    "productId": 42375,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-34": {
+    "productId": 42376,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-35": {
+    "productId": 42377,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-36": {
+    "productId": 42378,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-37": {
+    "productId": 42379,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-38": {
+    "productId": 42380,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-39": {
+    "productId": 42381,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-4": {
+    "productId": 42382,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-40": {
+    "productId": 42383,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-41": {
+    "productId": 42384,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-42": {
+    "productId": 42385,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-43": {
+    "productId": 42386,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-44": {
+    "productId": 42387,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-45": {
+    "productId": 42388,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-46": {
+    "productId": 42389,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-47": {
+    "productId": 42390,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-48": {
+    "productId": 42391,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-49": {
+    "productId": 42392,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-5": {
+    "productId": 42393,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-50": {
+    "productId": 42394,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-51": {
+    "productId": 42395,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-52": {
+    "productId": 42396,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-53": {
+    "productId": 42397,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-54": {
+    "productId": 42398,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-56": {
+    "productId": 42400,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-57": {
+    "productId": 42401,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-58": {
+    "productId": 42402,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-59": {
+    "productId": 42403,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-6": {
+    "productId": 42404,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-60": {
+    "productId": 42405,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-61": {
+    "productId": 42406,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-62": {
+    "productId": 42407,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-63": {
+    "productId": 42408,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-64": {
+    "productId": 42409,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-65": {
+    "productId": 42410,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-66": {
+    "productId": 42411,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-67": {
+    "productId": 42412,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-69": {
+    "productId": 42414,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-7": {
+    "productId": 42415,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-70": {
+    "productId": 42416,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-71": {
+    "productId": 42417,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-72": {
+    "productId": 42418,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-74": {
+    "productId": 42420,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-75": {
+    "productId": 42421,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-76": {
+    "productId": 42422,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-77": {
+    "productId": 108648,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-78": {
+    "productId": 42423,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-79": {
+    "productId": 42424,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-8": null,
+  "base1-80": {
+    "productId": 42426,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-81": {
+    "productId": 42427,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-82": {
+    "productId": 42428,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-83": {
+    "productId": 42429,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-84": {
+    "productId": 42430,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-85": {
+    "productId": 108646,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-86": {
+    "productId": 108647,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-87": {
+    "productId": 108645,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-88": {
+    "productId": 42431,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-89": {
+    "productId": 42432,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-9": {
+    "productId": 42433,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "base1-90": {
+    "productId": 42434,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-91": {
+    "productId": 42435,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-92": {
+    "productId": 42436,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-93": {
+    "productId": 42437,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-94": {
+    "productId": 42438,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-95": {
+    "productId": 42439,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-96": {
+    "productId": 42440,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-97": {
+    "productId": 42441,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-98": {
+    "productId": 42442,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base1-99": {
+    "productId": 42443,
+    "variants": [
+      "normal"
+    ]
+  },
+  "base2-1": {
+    "productId": 45120,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-10": {
+    "productId": 45121,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-11": {
+    "productId": 45122,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-12": {
+    "productId": 45123,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-13": {
+    "productId": 45124,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-14": {
+    "productId": 45125,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-15": {
+    "productId": 45126,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-16": {
+    "productId": 45127,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-17": {
+    "productId": 106979,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-18": {
+    "productId": 106980,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-19": {
+    "productId": 106981,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-2": {
+    "productId": 45128,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-20": {
+    "productId": 106982,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-21": {
+    "productId": 106983,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-22": {
+    "productId": 106984,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-23": {
+    "productId": 106985,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-24": {
+    "productId": 106986,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-25": {
+    "productId": 106987,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-26": {
+    "productId": 106988,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-27": {
+    "productId": 106989,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-28": {
+    "productId": 106990,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-29": {
+    "productId": 106991,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-3": {
+    "productId": 45129,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-30": {
+    "productId": 106992,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-31": {
+    "productId": 106993,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-32": {
+    "productId": 106994,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-33": {
+    "productId": 45136,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-34": {
+    "productId": 45137,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-35": {
+    "productId": 45138,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-36": {
+    "productId": 45139,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-37": {
+    "productId": 45140,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-38": {
+    "productId": 45141,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-39": {
+    "productId": 45142,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-4": {
+    "productId": 45130,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-40": {
+    "productId": 45143,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-41": {
+    "productId": 45144,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-42": {
+    "productId": 45145,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-43": {
+    "productId": 45146,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-44": {
+    "productId": 45147,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-45": {
+    "productId": 45148,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-46": {
+    "productId": 45149,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-47": {
+    "productId": 45150,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-48": {
+    "productId": 45151,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-49": {
+    "productId": 45152,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-5": {
+    "productId": 45131,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-50": {
+    "productId": 45153,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-51": {
+    "productId": 45154,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-52": {
+    "productId": 45155,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-53": {
+    "productId": 45156,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-54": {
+    "productId": 45157,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-55": {
+    "productId": 45158,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-56": {
+    "productId": 45159,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-58": {
+    "productId": 45161,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-59": {
+    "productId": 45162,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-6": {
+    "productId": 45132,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-60": {
+    "productId": 45163,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-61": {
+    "productId": 45164,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-62": {
+    "productId": 45165,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-63": {
+    "productId": 45166,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base2-64": null,
+  "base2-7": {
+    "productId": 45133,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-8": {
+    "productId": 45134,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base2-9": {
+    "productId": 45135,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-1": {
+    "productId": 44418,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-10": {
+    "productId": 44419,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-11": {
+    "productId": 44420,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-12": {
+    "productId": 44421,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-13": {
+    "productId": 44422,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-14": {
+    "productId": 44423,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-15": {
+    "productId": 44424,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-16": {
+    "productId": 106526,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-17": {
+    "productId": 44425,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-18": {
+    "productId": 44426,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-19": {
+    "productId": 44427,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-2": {
+    "productId": 106518,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-20": {
+    "productId": 44428,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-21": {
+    "productId": 44429,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-22": {
+    "productId": 44430,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-23": {
+    "productId": 44431,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-24": {
+    "productId": 44432,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-25": {
+    "productId": 106527,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-26": {
+    "productId": 106528,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-27": {
+    "productId": 106529,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-28": {
+    "productId": 106530,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-29": {
+    "productId": 106531,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-3": {
+    "productId": 106519,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-30": {
+    "productId": 106532,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-31": {
+    "productId": 44433,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-32": {
+    "productId": 44434,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-33": {
+    "productId": 44435,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-34": {
+    "productId": 44436,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-35": {
+    "productId": 44437,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-36": {
+    "productId": 44438,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-37": {
+    "productId": 44439,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-38": {
+    "productId": 44440,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-39": {
+    "productId": 44441,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-4": {
+    "productId": 106520,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-40": {
+    "productId": 44442,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-41": {
+    "productId": 44443,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-42": {
+    "productId": 44444,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-43": {
+    "productId": 44445,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-44": {
+    "productId": 44446,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-45": {
+    "productId": 44447,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-46": {
+    "productId": 44448,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-47": {
+    "productId": 44449,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-48": {
+    "productId": 44450,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-49": {
+    "productId": 44451,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-5": {
+    "productId": 106521,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-50": {
+    "productId": 44452,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-51": {
+    "productId": 44453,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-52": {
+    "productId": 44454,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-53": {
+    "productId": 44455,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-54": {
+    "productId": 44456,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-55": {
+    "productId": 44457,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-56": {
+    "productId": 44458,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-57": {
+    "productId": 44459,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-58": {
+    "productId": 44460,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-59": {
+    "productId": 44461,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-6": {
+    "productId": 106522,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-60": {
+    "productId": 44462,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-61": {
+    "productId": 44463,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-62": {
+    "productId": 44464,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base3-7": {
+    "productId": 106523,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-8": {
+    "productId": 106524,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base3-9": {
+    "productId": 106525,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-1": {
+    "productId": 84559,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-10": {
+    "productId": 84619,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-11": {
+    "productId": 84624,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-12": {
+    "productId": 84654,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-13": {
+    "productId": 84667,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-14": {
+    "productId": 84671,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-15": {
+    "productId": 86073,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-16": {
+    "productId": 88791,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-17": {
+    "productId": 88550,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-18": {
+    "productId": 84560,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-19": {
+    "productId": 84564,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-2": {
+    "productId": 84563,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-20": {
+    "productId": 84570,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-21": {
+    "productId": 84573,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-22": {
+    "productId": 84586,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-23": {
+    "productId": 84589,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-24": {
+    "productId": 84602,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-25": {
+    "productId": 84607,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-26": {
+    "productId": 84614,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-27": {
+    "productId": 84620,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-28": {
+    "productId": 84625,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-29": {
+    "productId": 84655,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-3": {
+    "productId": 84568,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-30": {
+    "productId": 84668,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-31": {
+    "productId": 84672,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-32": {
+    "productId": 84574,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-33": {
+    "productId": 84580,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-34": {
+    "productId": 84590,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-35": {
+    "productId": 84597,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-36": {
+    "productId": 84600,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-37": {
+    "productId": 84604,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-38": {
+    "productId": 84617,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-39": {
+    "productId": 84618,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-4": {
+    "productId": 84572,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-40": {
+    "productId": 84621,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-41": {
+    "productId": 84630,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-42": {
+    "productId": 84639,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-43": {
+    "productId": 84641,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-44": {
+    "productId": 84648,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-45": {
+    "productId": 84665,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-46": {
+    "productId": 84670,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-47": {
+    "productId": 87021,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-48": {
+    "productId": 88304,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-49": {
+    "productId": 83445,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-5": {
+    "productId": 84584,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-50": {
+    "productId": 84204,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-51": {
+    "productId": 84649,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-52": {
+    "productId": 84819,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-53": {
+    "productId": 84928,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-54": {
+    "productId": 84969,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-55": {
+    "productId": 85078,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-56": {
+    "productId": 85099,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-57": {
+    "productId": 85905,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-58": {
+    "productId": 86491,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-59": {
+    "productId": 86987,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-6": {
+    "productId": 84588,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-60": {
+    "productId": 87068,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-61": {
+    "productId": 87170,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-62": {
+    "productId": 87313,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-63": {
+    "productId": 87837,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-64": {
+    "productId": 88281,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-65": {
+    "productId": 88431,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-66": {
+    "productId": 88611,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-67": {
+    "productId": 89322,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-68": {
+    "productId": 89484,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-69": {
+    "productId": 90409,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-7": {
+    "productId": 84601,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-70": {
+    "productId": 90767,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-71": {
+    "productId": 86074,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-72": {
+    "productId": 88792,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-73": {
+    "productId": 89894,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-74": {
+    "productId": 84159,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-75": {
+    "productId": 84815,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-76": {
+    "productId": 86270,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-77": {
+    "productId": 87755,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-78": {
+    "productId": 85841,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-79": {
+    "productId": 89301,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-8": {
+    "productId": 84606,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-80": {
+    "productId": 88551,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-81": {
+    "productId": 85584,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-82": {
+    "productId": 88350,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ]
+  },
+  "base5-83": {
+    "productId": 84647,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "base5-9": {
+    "productId": 84613,
+    "variants": [
+      "1st-edition-holofoil",
+      "unlimited-holofoil"
+    ]
+  },
+  "dc1-1": {
+    "productId": 97047,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-10": {
+    "productId": 97056,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-11": {
+    "productId": 97057,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-12": {
+    "productId": 97058,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-13": {
+    "productId": 97059,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-14": {
+    "productId": 97060,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-15": {
+    "productId": 97061,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "dc1-16": {
+    "productId": 97063,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-17": {
+    "productId": 97062,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-18": {
+    "productId": 97064,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-19": {
+    "productId": 97065,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-2": {
+    "productId": 97048,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-20": {
+    "productId": 97066,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-21": {
+    "productId": 97067,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-22": {
+    "productId": 97068,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-23": {
+    "productId": 97069,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-24": {
+    "productId": 97070,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-25": {
+    "productId": 97071,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-26": {
+    "productId": 97072,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-27": {
+    "productId": 97073,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-28": {
+    "productId": 97074,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-29": {
+    "productId": 97075,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-3": {
+    "productId": 97049,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-30": {
+    "productId": 97076,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-31": {
+    "productId": 97077,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-32": {
+    "productId": 97078,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-33": {
+    "productId": 97079,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-34": {
+    "productId": 97080,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-4": {
+    "productId": 97050,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-5": {
+    "productId": 97051,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-6": {
+    "productId": 97052,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "dc1-7": {
+    "productId": 97053,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-8": {
+    "productId": 97054,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "dc1-9": {
+    "productId": 97055,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "me01-133": {
+    "productId": 654472,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-134": {
+    "productId": 654473,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-135": {
+    "productId": 654474,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-136": {
+    "productId": 654475,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-137": {
+    "productId": 654476,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-138": {
+    "productId": 654477,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-139": {
+    "productId": 654478,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-140": {
+    "productId": 654479,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-141": {
+    "productId": 654480,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-142": {
+    "productId": 654481,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-143": {
+    "productId": 654482,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-144": {
+    "productId": 654483,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-145": {
+    "productId": 654484,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-146": {
+    "productId": 654485,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-147": {
+    "productId": 654486,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-148": {
+    "productId": 654487,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-149": {
+    "productId": 654488,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-150": {
+    "productId": 654489,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-151": {
+    "productId": 654490,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-152": {
+    "productId": 654491,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-153": {
+    "productId": 654492,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me01-154": {
+    "productId": 654493,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-095": {
+    "productId": 662180,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-096": {
+    "productId": 662204,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-097": {
+    "productId": 662152,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-098": {
+    "productId": 662215,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-099": {
+    "productId": 662243,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-100": {
+    "productId": 662245,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-101": {
+    "productId": 662160,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-102": {
+    "productId": 662209,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-103": {
+    "productId": 662235,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-104": {
+    "productId": 662233,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-105": {
+    "productId": 662240,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-106": {
+    "productId": 662195,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-107": {
+    "productId": 662128,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02-126": {
+    "productId": 662222,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-218": {
+    "productId": 676030,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-219": {
+    "productId": 676031,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-220": {
+    "productId": 676032,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-221": {
+    "productId": 676033,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-222": {
+    "productId": 676034,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-223": {
+    "productId": 676035,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-224": {
+    "productId": 676036,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-225": {
+    "productId": 676037,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-226": {
+    "productId": 676038,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-227": {
+    "productId": 676039,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-228": {
+    "productId": 676040,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-229": {
+    "productId": 676041,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-230": {
+    "productId": 676042,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-231": {
+    "productId": 676043,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-232": {
+    "productId": 676044,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-233": {
+    "productId": 676045,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-234": {
+    "productId": 676046,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-235": {
+    "productId": 676047,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-236": {
+    "productId": 676048,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-237": {
+    "productId": 676049,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-238": {
+    "productId": 676050,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-239": {
+    "productId": 676051,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-240": {
+    "productId": 676052,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-241": {
+    "productId": 676053,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-242": {
+    "productId": 676054,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-243": {
+    "productId": 676055,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-244": {
+    "productId": 676056,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-245": {
+    "productId": 676057,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-246": {
+    "productId": 676058,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-247": {
+    "productId": 676059,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-248": {
+    "productId": 676060,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-249": {
+    "productId": 676061,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-250": {
+    "productId": 676062,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me02.5-289": {
+    "productId": 676101,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-089": {
+    "productId": 684365,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-090": {
+    "productId": 684368,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-091": {
+    "productId": 684406,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-092": {
+    "productId": 684357,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-093": {
+    "productId": 684413,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-094": {
+    "productId": 684415,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-095": {
+    "productId": 684418,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-096": {
+    "productId": 684424,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-097": {
+    "productId": 684434,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-098": {
+    "productId": 684380,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me03-099": {
+    "productId": 684439,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-087": {
+    "productId": 693462,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-088": {
+    "productId": 693489,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-089": {
+    "productId": 693491,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-090": {
+    "productId": 693446,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-091": {
+    "productId": 693564,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-092": {
+    "productId": 693467,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-093": {
+    "productId": 693471,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-094": {
+    "productId": 693524,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-095": {
+    "productId": 693546,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-096": {
+    "productId": 693553,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-097": {
+    "productId": 693560,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me04-119": {
+    "productId": 693465,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-085": {
+    "productId": 704842,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-086": {
+    "productId": 704843,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-087": {
+    "productId": 704844,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-088": {
+    "productId": 704845,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-089": {
+    "productId": 704846,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-090": {
+    "productId": 704847,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-091": {
+    "productId": 704848,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-092": {
+    "productId": 704849,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-093": {
+    "productId": 704850,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-094": {
+    "productId": 704851,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-095": {
+    "productId": 704852,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "me05-117": {
+    "productId": 704874,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-211": {
+    "productId": 201331,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-216": {
+    "productId": 201250,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-222": {
+    "productId": 201339,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-227": {
+    "productId": 201307,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-237": {
+    "productId": 201348,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-238": {
+    "productId": 201349,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-239": {
+    "productId": 201350,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-240": {
+    "productId": 201351,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-241": {
+    "productId": 201352,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-242": {
+    "productId": 201353,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-243": {
+    "productId": 201354,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-244": {
+    "productId": 201355,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-245": {
+    "productId": 201356,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-246": {
+    "productId": 201357,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-247": {
+    "productId": 201358,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sm12-248": {
+    "productId": 201359,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-199": {
+    "productId": 490293,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-200": {
+    "productId": 486622,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-201": {
+    "productId": 490049,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-202": {
+    "productId": 490062,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-203": {
+    "productId": 490063,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-204": {
+    "productId": 490064,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-205": {
+    "productId": 490066,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-206": {
+    "productId": 490067,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-207": {
+    "productId": 487060,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-208": {
+    "productId": 490068,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-209": {
+    "productId": 490069,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-210": {
+    "productId": 490070,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-211": {
+    "productId": 490071,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-212": {
+    "productId": 490072,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-213": {
+    "productId": 487086,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-214": {
+    "productId": 490073,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-215": {
+    "productId": 490074,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-216": {
+    "productId": 489631,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-217": {
+    "productId": 490075,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-218": {
+    "productId": 490076,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-219": {
+    "productId": 490077,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-220": {
+    "productId": 490078,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-221": {
+    "productId": 490079,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-222": {
+    "productId": 490080,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-223": {
+    "productId": 490081,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-227": {
+    "productId": 490085,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-228": {
+    "productId": 490086,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-230": {
+    "productId": 490088,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-231": {
+    "productId": 490089,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv01-233": {
+    "productId": 490091,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-194": {
+    "productId": 497597,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-195": {
+    "productId": 497598,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-196": {
+    "productId": 497599,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-197": {
+    "productId": 497600,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-198": {
+    "productId": 497601,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-199": {
+    "productId": 497602,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-200": {
+    "productId": 497603,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-201": {
+    "productId": 497604,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-202": {
+    "productId": 497605,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-203": {
+    "productId": 497606,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-204": {
+    "productId": 497607,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-205": {
+    "productId": 497608,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-206": {
+    "productId": 497609,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-207": {
+    "productId": 497610,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-208": {
+    "productId": 497611,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-209": {
+    "productId": 497612,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-211": {
+    "productId": 497614,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-212": {
+    "productId": 497615,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-213": {
+    "productId": 497616,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-215": {
+    "productId": 497618,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-218": {
+    "productId": 497621,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-219": {
+    "productId": 497622,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-220": {
+    "productId": 497623,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-221": {
+    "productId": 497624,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-222": {
+    "productId": 497625,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-223": {
+    "productId": 497626,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-224": {
+    "productId": 497627,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-225": {
+    "productId": 497628,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-226": {
+    "productId": 497629,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-228": {
+    "productId": 497631,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-229": {
+    "productId": 497633,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-256": {
+    "productId": 497675,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-257": {
+    "productId": 497676,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-258": {
+    "productId": 497677,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-259": {
+    "productId": 497678,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-260": {
+    "productId": 497679,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-261": {
+    "productId": 497680,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-262": {
+    "productId": 497681,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-263": {
+    "productId": 497682,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv02-264": {
+    "productId": 497684,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-198": {
+    "productId": 509944,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-199": {
+    "productId": 509945,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-200": {
+    "productId": 509946,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-201": {
+    "productId": 509948,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-202": {
+    "productId": 509949,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-203": {
+    "productId": 509950,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-204": {
+    "productId": 509951,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-205": {
+    "productId": 509952,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-206": {
+    "productId": 509954,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-207": {
+    "productId": 509955,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-208": {
+    "productId": 509956,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-209": {
+    "productId": 509957,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-222": {
+    "productId": 509979,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-224": {
+    "productId": 509982,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03-225": {
+    "productId": 509983,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-001": {
+    "productId": 502552,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-002": {
+    "productId": 502553,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-003": {
+    "productId": 502554,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-004": {
+    "productId": 502555,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-005": {
+    "productId": 502557,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-006": {
+    "productId": 502558,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-007": {
+    "productId": 502548,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-008": {
+    "productId": 502550,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-009": {
+    "productId": 502551,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-010": {
+    "productId": 502559,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-011": {
+    "productId": 502560,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-012": {
+    "productId": 502561,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-013": {
+    "productId": 502562,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-014": {
+    "productId": 502563,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-015": {
+    "productId": 502564,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-016": {
+    "productId": 502565,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-017": {
+    "productId": 502566,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-018": {
+    "productId": 502567,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-019": {
+    "productId": 502568,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-020": {
+    "productId": 502569,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-021": {
+    "productId": 502587,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-022": {
+    "productId": 502589,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-023": {
+    "productId": 515955,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-024": {
+    "productId": 515956,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-025": {
+    "productId": 517033,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-026": {
+    "productId": 515957,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-027": {
+    "productId": 515978,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-028": {
+    "productId": 515989,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-029": {
+    "productId": 515994,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-030": {
+    "productId": 516000,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-031": {
+    "productId": 516004,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-032": {
+    "productId": 516006,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-033": {
+    "productId": 516016,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-034": {
+    "productId": 516024,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-035": {
+    "productId": 516030,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-036": {
+    "productId": 516036,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-037": {
+    "productId": 516060,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-038": {
+    "productId": 516072,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-039": {
+    "productId": 516108,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-040": {
+    "productId": 516145,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-041": {
+    "productId": 516150,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-042": {
+    "productId": 516152,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-043": {
+    "productId": 516156,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-044": {
+    "productId": 516157,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-045": {
+    "productId": 516159,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-046": {
+    "productId": 516163,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-047": {
+    "productId": 516170,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-048": {
+    "productId": 516206,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-049": {
+    "productId": 516213,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-050": {
+    "productId": 516215,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-051": {
+    "productId": 516216,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-052": {
+    "productId": 516221,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-053": {
+    "productId": 516223,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-054": {
+    "productId": 516231,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-055": {
+    "productId": 516232,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-056": {
+    "productId": 516242,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-057": {
+    "productId": 516246,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-058": {
+    "productId": 516247,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-059": {
+    "productId": 516248,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-060": {
+    "productId": 516249,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-061": {
+    "productId": 516250,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-062": {
+    "productId": 516251,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-063": {
+    "productId": 516268,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-064": {
+    "productId": 516269,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-065": {
+    "productId": 516381,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-066": {
+    "productId": 516382,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-067": {
+    "productId": 516383,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-068": {
+    "productId": 516385,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-069": {
+    "productId": 516560,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-070": {
+    "productId": 516563,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-071": {
+    "productId": 516564,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-072": {
+    "productId": 516565,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-073": {
+    "productId": 516567,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-074": {
+    "productId": 516569,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-075": {
+    "productId": 516572,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-076": {
+    "productId": 516574,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-077": {
+    "productId": 516601,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-078": {
+    "productId": 516607,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-079": {
+    "productId": 516650,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-080": {
+    "productId": 516651,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-081": {
+    "productId": 516648,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-082": {
+    "productId": 516649,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-083": {
+    "productId": 516652,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-084": {
+    "productId": 516653,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-085": {
+    "productId": 516654,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-086": {
+    "productId": 516655,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-087": {
+    "productId": 516656,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-088": {
+    "productId": 516657,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-089": {
+    "productId": 516658,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-090": {
+    "productId": 516659,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-091": {
+    "productId": 516660,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-092": {
+    "productId": 516661,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-093": {
+    "productId": 516662,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-094": {
+    "productId": 516663,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-095": {
+    "productId": 516664,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-096": {
+    "productId": 516665,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-097": {
+    "productId": 516666,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-098": {
+    "productId": 516667,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-099": {
+    "productId": 516668,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-100": {
+    "productId": 516669,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-101": {
+    "productId": 516670,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-102": {
+    "productId": 516671,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-103": {
+    "productId": 516672,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-104": {
+    "productId": 516673,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-105": {
+    "productId": 516674,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-106": {
+    "productId": 516675,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-107": {
+    "productId": 516676,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-108": {
+    "productId": 516677,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-109": {
+    "productId": 516679,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-110": {
+    "productId": 516680,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-111": {
+    "productId": 516570,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-112": {
+    "productId": 516573,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-113": {
+    "productId": 516575,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-114": {
+    "productId": 516579,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-115": {
+    "productId": 516581,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-116": {
+    "productId": 516583,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-117": {
+    "productId": 516584,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-118": {
+    "productId": 516681,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-119": {
+    "productId": 516682,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-120": {
+    "productId": 516683,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-121": {
+    "productId": 516684,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-122": {
+    "productId": 516685,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-123": {
+    "productId": 516686,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-124": {
+    "productId": 516687,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-125": {
+    "productId": 516688,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-126": {
+    "productId": 516689,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-127": {
+    "productId": 516690,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-128": {
+    "productId": 516691,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-129": {
+    "productId": 516692,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-130": {
+    "productId": 516693,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-131": {
+    "productId": 516694,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-132": {
+    "productId": 516695,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-133": {
+    "productId": 516696,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-134": {
+    "productId": 516697,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-135": {
+    "productId": 516698,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-136": {
+    "productId": 516699,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-137": {
+    "productId": 516700,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-138": {
+    "productId": 516701,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-139": {
+    "productId": 516702,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-140": {
+    "productId": 516703,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-141": {
+    "productId": 516704,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-142": {
+    "productId": 516705,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-143": {
+    "productId": 516706,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-144": {
+    "productId": 516707,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-145": {
+    "productId": 516708,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-146": {
+    "productId": 516709,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-147": {
+    "productId": 516710,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-148": {
+    "productId": 516711,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-149": {
+    "productId": 516712,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-150": {
+    "productId": 516713,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv03.5-151": {
+    "productId": 516566,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-152": {
+    "productId": 516714,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-153": {
+    "productId": 516715,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-154": {
+    "productId": 516716,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-155": {
+    "productId": 516717,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-156": {
+    "productId": 516718,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-157": {
+    "productId": 516719,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-158": {
+    "productId": 516720,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-159": {
+    "productId": 516721,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv03.5-160": {
+    "productId": 516722,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-161": {
+    "productId": 516723,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-162": {
+    "productId": 516724,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-163": {
+    "productId": 516725,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-164": {
+    "productId": 516726,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-165": {
+    "productId": 516727,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv03.5-166": {
+    "productId": 516997,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-167": {
+    "productId": 516998,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-168": {
+    "productId": 502556,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-169": {
+    "productId": 517018,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-170": {
+    "productId": 502549,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-171": {
+    "productId": 517038,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-172": {
+    "productId": 517016,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-173": {
+    "productId": 513721,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-174": {
+    "productId": 517029,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-175": {
+    "productId": 517035,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-176": {
+    "productId": 517034,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-177": {
+    "productId": 517025,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-178": {
+    "productId": 517036,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-179": {
+    "productId": 517028,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-180": {
+    "productId": 517031,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-181": {
+    "productId": 517020,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-182": {
+    "productId": 517037,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-183": {
+    "productId": 517017,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-184": {
+    "productId": 517015,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-185": {
+    "productId": 517014,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-186": {
+    "productId": 517030,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-187": {
+    "productId": 517039,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-188": {
+    "productId": 517013,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-189": {
+    "productId": 517021,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-190": {
+    "productId": 517024,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-191": {
+    "productId": 517023,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-192": {
+    "productId": 517040,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-193": {
+    "productId": 517027,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-194": {
+    "productId": 517041,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-195": {
+    "productId": 517042,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-196": {
+    "productId": 517176,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-197": {
+    "productId": 517043,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-198": {
+    "productId": 517044,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-199": {
+    "productId": 517045,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-200": {
+    "productId": 517046,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-201": {
+    "productId": 517047,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-202": {
+    "productId": 517048,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-203": {
+    "productId": 517049,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-204": {
+    "productId": 517050,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-205": {
+    "productId": 517051,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-206": {
+    "productId": 517052,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv03.5-207": {
+    "productId": 517053,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-183": {
+    "productId": 523864,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-184": {
+    "productId": 523865,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-185": {
+    "productId": 523866,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-186": {
+    "productId": 523867,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-187": {
+    "productId": 523868,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-188": {
+    "productId": 523869,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-189": {
+    "productId": 523870,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-190": {
+    "productId": 523871,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-191": {
+    "productId": 523872,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-192": {
+    "productId": 523873,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-193": {
+    "productId": 523874,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-194": {
+    "productId": 523875,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-195": {
+    "productId": 523876,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-196": {
+    "productId": 523877,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-198": {
+    "productId": 523879,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-199": {
+    "productId": 523880,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-200": {
+    "productId": 523881,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-201": {
+    "productId": 523882,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-202": {
+    "productId": 523883,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-203": {
+    "productId": 523884,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-204": {
+    "productId": 523885,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-205": {
+    "productId": 523886,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-206": {
+    "productId": 523887,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-207": {
+    "productId": 523888,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-208": {
+    "productId": 523889,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-209": {
+    "productId": 523890,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-210": {
+    "productId": 523891,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-211": {
+    "productId": 523892,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-212": {
+    "productId": 523893,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-213": {
+    "productId": 523894,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-214": {
+    "productId": 523895,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-215": {
+    "productId": 523896,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-216": {
+    "productId": 523897,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-232": {
+    "productId": 523913,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-246": {
+    "productId": 523927,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-247": {
+    "productId": 523928,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-248": {
+    "productId": 523929,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-249": {
+    "productId": 523930,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-250": {
+    "productId": 523931,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-251": {
+    "productId": 523932,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04-252": {
+    "productId": 523933,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04.5-224": {
+    "productId": 534731,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04.5-225": {
+    "productId": 534736,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04.5-226": {
+    "productId": 534739,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04.5-232": {
+    "productId": 534919,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv04.5-233": {
+    "productId": 535085,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-163": {
+    "productId": 542884,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-164": {
+    "productId": 542885,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-165": {
+    "productId": 542886,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-166": {
+    "productId": 542887,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-167": {
+    "productId": 542888,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-168": {
+    "productId": 542889,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-169": {
+    "productId": 542890,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-170": {
+    "productId": 542891,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-171": {
+    "productId": 542892,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-172": {
+    "productId": 542893,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-173": {
+    "productId": 542894,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-174": {
+    "productId": 542895,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-175": {
+    "productId": 542896,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-176": {
+    "productId": 542897,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-177": {
+    "productId": 542898,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-178": {
+    "productId": 542899,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-179": {
+    "productId": 542900,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-180": {
+    "productId": 542901,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-181": {
+    "productId": 542902,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-182": {
+    "productId": 542903,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-183": {
+    "productId": 542904,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-184": {
+    "productId": 542905,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-203": {
+    "productId": 542924,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-204": {
+    "productId": 542925,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-205": {
+    "productId": 542926,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-206": {
+    "productId": 542927,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-207": {
+    "productId": 542928,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv05-208": {
+    "productId": 542929,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-168": {
+    "productId": 550212,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-169": {
+    "productId": 550213,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-170": {
+    "productId": 550214,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-171": {
+    "productId": 550215,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-172": {
+    "productId": 550216,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-173": {
+    "productId": 550217,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-174": {
+    "productId": 550218,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-175": {
+    "productId": 550219,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-176": {
+    "productId": 550220,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-177": {
+    "productId": 550221,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-178": {
+    "productId": 550222,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-179": {
+    "productId": 550223,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-180": {
+    "productId": 550224,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-181": {
+    "productId": 550225,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-182": {
+    "productId": 550226,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-183": {
+    "productId": 550227,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-184": {
+    "productId": 550228,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-185": {
+    "productId": 550229,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-186": {
+    "productId": 550230,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-187": {
+    "productId": 550231,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-188": {
+    "productId": 550232,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-210": {
+    "productId": 550254,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06-216": {
+    "productId": 550260,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-065": {
+    "productId": 560376,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-066": {
+    "productId": 560377,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-067": {
+    "productId": 560378,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-068": {
+    "productId": 560379,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-069": {
+    "productId": 560380,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-070": {
+    "productId": 560381,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-071": {
+    "productId": 560382,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-072": {
+    "productId": 560383,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-073": {
+    "productId": 560384,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-074": {
+    "productId": 560385,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-075": {
+    "productId": 560386,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-076": {
+    "productId": 560387,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-077": {
+    "productId": 560388,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-078": {
+    "productId": 560389,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-079": {
+    "productId": 560390,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-090": {
+    "productId": 560401,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-091": {
+    "productId": 560402,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-092": {
+    "productId": 560403,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv06.5-093": {
+    "productId": 560404,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-143": {
+    "productId": 567418,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-144": {
+    "productId": 567420,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-145": {
+    "productId": 567421,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-146": {
+    "productId": 567424,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-147": {
+    "productId": 567427,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-148": {
+    "productId": 567429,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-149": {
+    "productId": 567431,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-150": {
+    "productId": 567433,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-151": {
+    "productId": 567434,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-152": {
+    "productId": 567435,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-153": {
+    "productId": 567436,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-154": {
+    "productId": 567439,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-155": {
+    "productId": 567441,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-167": {
+    "productId": 567472,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv07-169": {
+    "productId": 567476,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-192": {
+    "productId": 589941,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-193": {
+    "productId": 590090,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-194": {
+    "productId": 590046,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-195": {
+    "productId": 589888,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-196": {
+    "productId": 589982,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-197": {
+    "productId": 589891,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-198": {
+    "productId": 589944,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-199": {
+    "productId": 590063,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-200": {
+    "productId": 589884,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-201": {
+    "productId": 589894,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-202": {
+    "productId": 590065,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-203": {
+    "productId": 589987,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-204": {
+    "productId": 590003,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-205": {
+    "productId": 590024,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-206": {
+    "productId": 590086,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-207": {
+    "productId": 589904,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-208": {
+    "productId": 589857,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-209": {
+    "productId": 590052,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-210": {
+    "productId": 589947,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-211": {
+    "productId": 589865,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-212": {
+    "productId": 590057,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-213": {
+    "productId": 589975,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-214": {
+    "productId": 589879,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-236": {
+    "productId": 589930,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-237": {
+    "productId": 590006,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-239": {
+    "productId": 589985,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08-241": {
+    "productId": 589869,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-151": {
+    "productId": 610506,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-154": {
+    "productId": 610509,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-157": {
+    "productId": 610512,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-158": {
+    "productId": 610513,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-159": {
+    "productId": 610514,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-162": {
+    "productId": 610517,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-163": {
+    "productId": 610518,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-164": {
+    "productId": 610519,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-166": {
+    "productId": 610521,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv08.5-168": {
+    "productId": 610523,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-160": {
+    "productId": 623587,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-161": {
+    "productId": 623588,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-163": {
+    "productId": 623590,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-164": {
+    "productId": 623591,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-165": {
+    "productId": 623592,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-166": {
+    "productId": 623593,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-167": {
+    "productId": 624677,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-168": {
+    "productId": 623595,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-169": {
+    "productId": 623596,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-170": {
+    "productId": 623597,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-173": {
+    "productId": 623600,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-176": {
+    "productId": 623603,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-182": {
+    "productId": 623609,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-185": {
+    "productId": 623612,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv09-187": {
+    "productId": 623614,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-183": {
+    "productId": 632983,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-184": {
+    "productId": 632984,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-185": {
+    "productId": 632985,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-186": {
+    "productId": 632986,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-187": {
+    "productId": 632987,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-188": {
+    "productId": 632988,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-189": {
+    "productId": 632989,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-190": {
+    "productId": 632990,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-191": {
+    "productId": 632991,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-192": {
+    "productId": 632992,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-193": {
+    "productId": 632993,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-194": {
+    "productId": 632994,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-195": {
+    "productId": 632995,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-196": {
+    "productId": 632996,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-197": {
+    "productId": 632997,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-198": {
+    "productId": 632998,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-199": {
+    "productId": 632999,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-200": {
+    "productId": 633000,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-201": {
+    "productId": 633001,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-202": {
+    "productId": 633002,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-203": {
+    "productId": 633003,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-204": {
+    "productId": 633004,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-228": {
+    "productId": 633028,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-229": {
+    "productId": 633029,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-230": {
+    "productId": 633030,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-231": {
+    "productId": 633031,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-232": {
+    "productId": 633032,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-233": {
+    "productId": 633033,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-234": {
+    "productId": 633034,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10-235": {
+    "productId": 633035,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-001": {
+    "productId": 642450,
+    "variants": [
+      "holofoil",
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-002": {
+    "productId": 642451,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-003": {
+    "productId": 642452,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-004": {
+    "productId": 642453,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-005": {
+    "productId": 642454,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-006": {
+    "productId": 642455,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-007": {
+    "productId": 642456,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-008": {
+    "productId": 642457,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-009": {
+    "productId": 642458,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-010": {
+    "productId": 642459,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-011": {
+    "productId": 642460,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-012": {
+    "productId": 642461,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5b-013": {
+    "productId": 642462,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-015": {
+    "productId": 642467,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-016": {
+    "productId": 642468,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-017": {
+    "productId": 642469,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-018": {
+    "productId": 642470,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-019": {
+    "productId": 642471,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-020": {
+    "productId": 642472,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-021": {
+    "productId": 642473,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-022": {
+    "productId": 642474,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-023": {
+    "productId": 642475,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5b-024": {
+    "productId": 642476,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-025": {
+    "productId": 642477,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-026": {
+    "productId": 642478,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5b-027": {
+    "productId": 642479,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-028": {
+    "productId": 642480,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-029": {
+    "productId": 642481,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-030": {
+    "productId": 642482,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-031": {
+    "productId": 642483,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-032": {
+    "productId": 642484,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-033": {
+    "productId": 642485,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-034": {
+    "productId": 642486,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-035": {
+    "productId": 642487,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-036": {
+    "productId": 642488,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-037": {
+    "productId": 642489,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-038": {
+    "productId": 642490,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-039": {
+    "productId": 642491,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-040": {
+    "productId": 642492,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-041": {
+    "productId": 642493,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-042": {
+    "productId": 642494,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-043": {
+    "productId": 642495,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-044": {
+    "productId": 642496,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-045": {
+    "productId": 642497,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-046": {
+    "productId": 642498,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-047": {
+    "productId": 642499,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-048": {
+    "productId": 642500,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-049": {
+    "productId": 642501,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5b-050": {
+    "productId": 642502,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-051": {
+    "productId": 642503,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-052": {
+    "productId": 642504,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-053": {
+    "productId": 642505,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-054": {
+    "productId": 642506,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-055": {
+    "productId": 642507,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-056": {
+    "productId": 642508,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-057": {
+    "productId": 642509,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-058": {
+    "productId": 642510,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-059": {
+    "productId": 642511,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-060": {
+    "productId": 642514,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-061": {
+    "productId": 642180,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-062": {
+    "productId": 642181,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-063": {
+    "productId": 642182,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5b-064": {
+    "productId": 642515,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-065": {
+    "productId": 642516,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-066": {
+    "productId": 642517,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-067": {
+    "productId": 642518,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-068": {
+    "productId": 642519,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-069": {
+    "productId": 642520,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-070": {
+    "productId": 642521,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-071": {
+    "productId": 642522,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-072": {
+    "productId": 642523,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-073": {
+    "productId": 642524,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-074": {
+    "productId": 642525,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-075": {
+    "productId": 642526,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-076": {
+    "productId": 642527,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-077": {
+    "productId": 642191,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-078": {
+    "productId": 642192,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-079": {
+    "productId": 642531,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-080": {
+    "productId": 642529,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-081": {
+    "productId": 642528,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-082": {
+    "productId": 642534,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-083": {
+    "productId": 642532,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5b-084": {
+    "productId": 642530,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-086": {
+    "productId": 642535,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5b-087": {
+    "productId": 642536,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-088": {
+    "productId": 642537,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-089": {
+    "productId": 642538,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-090": {
+    "productId": 642539,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-091": {
+    "productId": 642540,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-092": {
+    "productId": 642541,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-093": {
+    "productId": 642542,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-094": {
+    "productId": 642543,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-095": {
+    "productId": 642544,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-096": {
+    "productId": 642545,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-097": {
+    "productId": 642547,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-098": {
+    "productId": 642548,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-099": {
+    "productId": 642552,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-100": {
+    "productId": 642553,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-101": {
+    "productId": 642554,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-102": {
+    "productId": 642555,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-103": {
+    "productId": 642556,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-104": {
+    "productId": 642557,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-105": {
+    "productId": 642558,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-106": {
+    "productId": 642559,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-107": {
+    "productId": 642560,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-108": {
+    "productId": 642561,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-109": {
+    "productId": 642562,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-110": {
+    "productId": 642563,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-111": {
+    "productId": 642564,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-112": {
+    "productId": 642565,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-113": {
+    "productId": 642566,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-114": {
+    "productId": 642567,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-115": {
+    "productId": 642568,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-116": {
+    "productId": 642570,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-117": {
+    "productId": 642571,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-118": {
+    "productId": 642572,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-119": {
+    "productId": 642573,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-120": {
+    "productId": 642575,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-121": {
+    "productId": 642576,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-122": {
+    "productId": 642577,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-123": {
+    "productId": 642578,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-124": {
+    "productId": 642579,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-125": {
+    "productId": 642580,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-126": {
+    "productId": 642581,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-127": {
+    "productId": 642582,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-128": {
+    "productId": 642583,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-129": {
+    "productId": 642584,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-130": {
+    "productId": 642585,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-131": {
+    "productId": 642586,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-132": {
+    "productId": 642587,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-133": {
+    "productId": 642588,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-134": {
+    "productId": 642589,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-135": {
+    "productId": 642590,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-136": {
+    "productId": 642591,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-137": {
+    "productId": 642592,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-138": {
+    "productId": 642595,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-139": {
+    "productId": 642261,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-140": {
+    "productId": 642262,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-141": {
+    "productId": 642263,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-142": {
+    "productId": 642596,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-143": {
+    "productId": 642597,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-144": {
+    "productId": 642598,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-145": {
+    "productId": 642599,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-146": {
+    "productId": 642600,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-147": {
+    "productId": 642601,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-148": {
+    "productId": 642602,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-149": {
+    "productId": 642603,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-150": {
+    "productId": 642604,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-151": {
+    "productId": 642605,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-152": {
+    "productId": 642606,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-153": {
+    "productId": 642607,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-154": {
+    "productId": 642271,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-155": {
+    "productId": 642272,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-156": {
+    "productId": 642608,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-157": {
+    "productId": 642609,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-158": {
+    "productId": 642610,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-159": {
+    "productId": 642611,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-160": {
+    "productId": 642612,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-161": {
+    "productId": 642613,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-162": {
+    "productId": 642615,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-163": {
+    "productId": 642614,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-164": {
+    "productId": 642616,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-165": {
+    "productId": 642617,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-166": {
+    "productId": 642618,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-167": {
+    "productId": 642619,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-168": {
+    "productId": 642620,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-169": {
+    "productId": 642621,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5b-170": {
+    "productId": 642622,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-001": {
+    "productId": 642116,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-002": {
+    "productId": 642117,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-003": {
+    "productId": 642118,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-004": {
+    "productId": 642119,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-005": {
+    "productId": 642120,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-006": {
+    "productId": 642121,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-007": {
+    "productId": 642122,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-008": {
+    "productId": 642123,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-009": {
+    "productId": 642124,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-010": {
+    "productId": 642125,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-011": {
+    "productId": 642126,
+    "variants": [
+      "holofoil",
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-012": {
+    "productId": 642127,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-013": {
+    "productId": 642128,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5w-014": {
+    "productId": 642129,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-015": {
+    "productId": 642130,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-016": {
+    "productId": 642464,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-017": {
+    "productId": 642465,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-018": {
+    "productId": 642466,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-019": {
+    "productId": 642131,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-020": {
+    "productId": 642132,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-021": {
+    "productId": 642133,
+    "variants": [
+      "holofoil",
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-022": {
+    "productId": 642134,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-023": {
+    "productId": 642135,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-024": {
+    "productId": 642136,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-025": {
+    "productId": 642137,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-026": {
+    "productId": 642138,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-027": {
+    "productId": 642139,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-028": {
+    "productId": 642140,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-029": {
+    "productId": 642141,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-030": {
+    "productId": 642142,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-031": {
+    "productId": 642143,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-032": {
+    "productId": 642144,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-033": {
+    "productId": 642145,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-034": {
+    "productId": 642146,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-035": {
+    "productId": 642147,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-036": {
+    "productId": 642148,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-037": {
+    "productId": 642149,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-038": {
+    "productId": 642150,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-039": {
+    "productId": 642151,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-040": {
+    "productId": 642152,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5w-041": {
+    "productId": 642153,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-042": {
+    "productId": 642154,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-043": {
+    "productId": 642155,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5w-044": {
+    "productId": 642156,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-045": {
+    "productId": 642157,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-046": {
+    "productId": 642158,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-047": {
+    "productId": 642159,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-048": {
+    "productId": 642160,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-049": {
+    "productId": 642161,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-050": {
+    "productId": 642162,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-051": {
+    "productId": 642163,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-052": {
+    "productId": 642164,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-053": {
+    "productId": 642165,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-054": {
+    "productId": 642166,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-055": {
+    "productId": 642167,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-056": {
+    "productId": 642168,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-057": {
+    "productId": 642169,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-058": {
+    "productId": 642170,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-059": {
+    "productId": 642171,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-060": {
+    "productId": 642172,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-061": {
+    "productId": 642173,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-062": {
+    "productId": 642174,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ]
+  },
+  "sv10.5w-063": {
+    "productId": 642512,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-064": {
+    "productId": 642513,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-065": {
+    "productId": 642175,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-066": {
+    "productId": 642176,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-067": {
+    "productId": 642177,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-068": {
+    "productId": 642178,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-069": {
+    "productId": 642179,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-070": {
+    "productId": 642183,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-071": {
+    "productId": 642184,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-072": {
+    "productId": 642185,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-073": {
+    "productId": 642186,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-074": {
+    "productId": 642187,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-075": {
+    "productId": 642188,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-076": {
+    "productId": 642189,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-077": {
+    "productId": 642190,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-078": {
+    "productId": 642193,
+    "variants": [
+      "holofoil",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-079": {
+    "productId": 642196,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-080": {
+    "productId": 642197,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-081": {
+    "productId": 642199,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-082": {
+    "productId": 642194,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-083": {
+    "productId": 642198,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-084": {
+    "productId": 642200,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-085": {
+    "productId": 642195,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ]
+  },
+  "sv10.5w-086": {
+    "productId": 642201,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ]
+  },
+  "sv10.5w-087": {
+    "productId": 642202,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-088": {
+    "productId": 642203,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-089": {
+    "productId": 642204,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-090": {
+    "productId": 642205,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-091": {
+    "productId": 642206,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-092": {
+    "productId": 642207,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-093": {
+    "productId": 642208,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-094": {
+    "productId": 642209,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-095": {
+    "productId": 642210,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-096": {
+    "productId": 642211,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-097": {
+    "productId": 642212,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-098": {
+    "productId": 642213,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-099": {
+    "productId": 642214,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-100": {
+    "productId": 642215,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-101": {
+    "productId": 642549,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-102": {
+    "productId": 642550,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-103": {
+    "productId": 642551,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-105": {
+    "productId": 642217,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-106": {
+    "productId": 642218,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-107": {
+    "productId": 642219,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-108": {
+    "productId": 642220,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-109": {
+    "productId": 642221,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-110": {
+    "productId": 642222,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-111": {
+    "productId": 642223,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-112": {
+    "productId": 642224,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-113": {
+    "productId": 642225,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-114": {
+    "productId": 642226,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-115": {
+    "productId": 642227,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-116": {
+    "productId": 642228,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-117": {
+    "productId": 642229,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-118": {
+    "productId": 642230,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-119": {
+    "productId": 642231,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-120": {
+    "productId": 642232,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-121": {
+    "productId": 642233,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-122": {
+    "productId": 642234,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-123": {
+    "productId": 642235,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-124": {
+    "productId": 642236,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-125": {
+    "productId": 642237,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-126": {
+    "productId": 642239,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-127": {
+    "productId": 642240,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-128": {
+    "productId": 642241,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-129": {
+    "productId": 642242,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-130": {
+    "productId": 642243,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-131": {
+    "productId": 642244,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-132": {
+    "productId": 642245,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-133": {
+    "productId": 642246,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-134": {
+    "productId": 642247,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-135": {
+    "productId": 642248,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-136": {
+    "productId": 642249,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-137": {
+    "productId": 642250,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-138": {
+    "productId": 642251,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-139": {
+    "productId": 642252,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-140": {
+    "productId": 642253,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-141": {
+    "productId": 642254,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-142": {
+    "productId": 642255,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-143": {
+    "productId": 642256,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-144": {
+    "productId": 642593,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-145": {
+    "productId": 642594,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-146": {
+    "productId": 642257,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-147": {
+    "productId": 642258,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-148": {
+    "productId": 642259,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-149": {
+    "productId": 642260,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-150": {
+    "productId": 642264,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-151": {
+    "productId": 642265,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-152": {
+    "productId": 642266,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-153": {
+    "productId": 642267,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-154": {
+    "productId": 642268,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-155": {
+    "productId": 642269,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-156": {
+    "productId": 642270,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-157": {
+    "productId": 642274,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-158": {
+    "productId": 642275,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-159": {
+    "productId": 642276,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-160": {
+    "productId": 642277,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-161": {
+    "productId": 642278,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-162": {
+    "productId": 642279,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-163": {
+    "productId": 642280,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-164": {
+    "productId": 642281,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-165": {
+    "productId": 642282,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-166": {
+    "productId": 642283,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-167": {
+    "productId": 642284,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-168": {
+    "productId": 642285,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-169": {
+    "productId": 642286,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-170": {
+    "productId": 642287,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "sv10.5w-171": {
+    "productId": 642288,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "svp-013": null,
+  "svp-014": null,
+  "svp-027": null,
+  "svp-043": null,
+  "svp-044": null,
+  "svp-051": null,
+  "svp-052": null,
+  "svp-053": null,
+  "svp-058": null,
+  "svp-065": null,
+  "svp-075": null,
+  "svp-085": null,
+  "svp-088": null,
+  "svp-097": null,
+  "svp-098": null,
+  "svp-123": null,
+  "svp-129": null,
+  "svp-130": null,
+  "svp-131": null,
+  "svp-132": null,
+  "svp-141": null,
+  "svp-159": null,
+  "svp-189": null,
+  "svp-203": null,
+  "svp-206": null,
+  "svp-207": null,
+  "svp-208": null,
+  "svp-209": null,
+  "svp-210": null,
+  "svp-211": null,
+  "svp-212": null,
+  "swsh10-161": {
+    "productId": 272413,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10-163": {
+    "productId": 272415,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10-167": {
+    "productId": 272419,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10-172": {
+    "productId": 272422,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10-174": {
+    "productId": 272424,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10-177": {
+    "productId": 272427,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10.5-072": {
+    "productId": 274470,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh10.5-074": {
+    "productId": 277004,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh11-177": {
+    "productId": 284119,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh11-180": {
+    "productId": 284122,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh11-184": {
+    "productId": 284135,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh11-186": {
+    "productId": 284137,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh12-177": {
+    "productId": 451825,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh12-181": {
+    "productId": 451829,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh12-184": {
+    "productId": 451832,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh12-186": {
+    "productId": 451834,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh12.5-160": {
+    "productId": 478103,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh12.5gg-GG01": null,
+  "swsh12.5gg-GG02": null,
+  "swsh12.5gg-GG03": null,
+  "swsh12.5gg-GG04": null,
+  "swsh12.5gg-GG05": null,
+  "swsh12.5gg-GG06": null,
+  "swsh12.5gg-GG07": null,
+  "swsh12.5gg-GG08": null,
+  "swsh12.5gg-GG09": null,
+  "swsh12.5gg-GG10": null,
+  "swsh12.5gg-GG11": null,
+  "swsh12.5gg-GG12": null,
+  "swsh12.5gg-GG13": null,
+  "swsh12.5gg-GG14": null,
+  "swsh12.5gg-GG15": null,
+  "swsh12.5gg-GG16": null,
+  "swsh12.5gg-GG17": null,
+  "swsh12.5gg-GG18": null,
+  "swsh12.5gg-GG19": null,
+  "swsh12.5gg-GG20": null,
+  "swsh12.5gg-GG21": null,
+  "swsh12.5gg-GG22": null,
+  "swsh12.5gg-GG23": null,
+  "swsh12.5gg-GG24": null,
+  "swsh12.5gg-GG25": null,
+  "swsh12.5gg-GG26": null,
+  "swsh12.5gg-GG27": null,
+  "swsh12.5gg-GG28": null,
+  "swsh12.5gg-GG29": null,
+  "swsh12.5gg-GG30": null,
+  "swsh12.5gg-GG31": null,
+  "swsh12.5gg-GG32": null,
+  "swsh12.5gg-GG33": null,
+  "swsh12.5gg-GG34": null,
+  "swsh12.5gg-GG35": null,
+  "swsh12.5gg-GG36": null,
+  "swsh12.5gg-GG37": null,
+  "swsh12.5gg-GG38": null,
+  "swsh12.5gg-GG39": null,
+  "swsh12.5gg-GG40": null,
+  "swsh12.5gg-GG41": null,
+  "swsh12.5gg-GG43": null,
+  "swsh12.5gg-GG44": null,
+  "swsh12.5gg-GG46": null,
+  "swsh12.5gg-GG48": null,
+  "swsh12.5gg-GG49": null,
+  "swsh12.5gg-GG50": null,
+  "swsh12.5gg-GG51": null,
+  "swsh12.5gg-GG52": null,
+  "swsh12.5gg-GG53": null,
+  "swsh12.5gg-GG54": null,
+  "swsh12.5gg-GG55": null,
+  "swsh12.5gg-GG56": null,
+  "swsh12.5gg-GG67": null,
+  "swsh12.5gg-GG69": null,
+  "swsh12.5gg-GG70": null,
+  "swsh5-146": {
+    "productId": 234043,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh5-151": {
+    "productId": 234052,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh5-153": {
+    "productId": 234056,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh5-155": {
+    "productId": 234060,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-164": {
+    "productId": 241700,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-166": {
+    "productId": 241712,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-168": {
+    "productId": 241872,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-170": {
+    "productId": 241719,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-172": {
+    "productId": 241737,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-174": {
+    "productId": 241747,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-177": {
+    "productId": 241768,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-179": {
+    "productId": 241772,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-183": {
+    "productId": 241798,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh6-185": {
+    "productId": 241805,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-167": {
+    "productId": 246688,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-175": {
+    "productId": 246747,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-180": {
+    "productId": 246689,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-182": {
+    "productId": 246695,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-184": {
+    "productId": 246700,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-186": {
+    "productId": 246707,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-189": {
+    "productId": 246719,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-192": {
+    "productId": 246758,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-194": {
+    "productId": 246728,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-196": {
+    "productId": 246745,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh7-198": {
+    "productId": 246750,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh8-245": {
+    "productId": 253138,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh8-251": {
+    "productId": 253147,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh8-255": {
+    "productId": 253155,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh8-257": {
+    "productId": 253157,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh9-154": {
+    "productId": 263873,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh9-156": {
+    "productId": 263875,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh9-162": {
+    "productId": 263881,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swsh9-166": {
+    "productId": 263885,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "swshp-SWSH020": null,
+  "swshp-SWSH179": null,
+  "swshp-SWSH181": null,
+  "swshp-SWSH183": null,
+  "swshp-SWSH260": null,
+  "swshp-SWSH262": null,
+  "swshp-SWSH291": {
+    "productId": 475642,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xy10-125": {
+    "productId": 117896,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xy11-115": {
+    "productId": 121239,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xy11-116": {
+    "productId": 121240,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xy6-77a": null,
+  "xy8-163": {
+    "productId": 107282,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xy8-164": {
+    "productId": 107283,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xy9-123": {
+    "productId": 111531,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xyp-XY110": null,
+  "xyp-XY111": null,
+  "xyp-XY112": null,
+  "xyp-XY113": null,
+  "xyp-XY114": null,
+  "xyp-XY115": null,
+  "xyp-XY117": null,
+  "xyp-XY118": null,
+  "xyp-XY119": null,
+  "xyp-XY120": null,
+  "xyp-XY121": {
+    "productId": 117267,
+    "variants": [
+      "holofoil"
+    ]
+  },
+  "xyp-XY122": null,
+  "xyp-XY185": null,
+  "xyp-XY186": null,
+  "xyp-XY28": null,
+  "xyp-XY67a": null,
+  "xyp-XY74": null,
+  "xyp-XY75": null,
+  "xyp-XY76": null,
+  "xyp-XY77": null,
+  "xyp-XY78": null,
+  "xyp-XY79": null,
+  "xyp-XY80": null,
+  "xyp-XY81": null,
+  "xyp-XY82": null,
+  "xyp-XY83": null
+}

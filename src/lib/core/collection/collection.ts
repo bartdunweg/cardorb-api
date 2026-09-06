@@ -748,7 +748,8 @@ export const getCardPrices = cache(
       // keys on the arguments, and a date built inside would be a new key
       // every day *and* a stale window on a hit. Outside, it is part of the
       // key, so the window moves with the day and the cache follows it.
-      const since = from ?? new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+      const since =
+        from ?? new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
       return await unstable_cache(
         () => listCardPrices(db, tcgIds, since),
         // v3: the ids are part of the key. They were not, so the first asker's
