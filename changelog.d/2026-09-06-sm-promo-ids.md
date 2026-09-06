@@ -1,0 +1,1 @@
+- The twelve SM tag-team promos and Fennekin MEP 080 linked to their Cardmarket products by hand; every card in the collection now has one.

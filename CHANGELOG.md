@@ -26,6 +26,8 @@ if the two have drifted apart.
 
 - Set facts rebuilt once, so the two products set by hand price their cards today rather than tomorrow.
 
+- The twelve SM tag-team promos and Fennekin MEP 080 linked to their Cardmarket products by hand; every card in the collection now has one.
+
 - A card TCGdex is asked about carries TCGplayer's dollars too, so a promo Cardmarket does not price gets its second price from TCGdex when pokemontcg.io has none or is down.
 
 - TCGplayer's prices live in a day-long cache of their own per set, blended into the set's facts on read; a failed pokemontcg.io call is not cached, so an outage costs the second price for minutes, not a day.
