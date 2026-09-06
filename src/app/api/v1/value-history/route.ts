@@ -26,7 +26,7 @@ import { filterItems, flattenItems } from "@/lib/core/collection/items";
  * level security has to see the caller who is actually asking, and this table's
  * only policy is `user_id = auth.uid()`.
  *
- * `?folder=<id>` or `?folder=favorites` answers for that list instead, built from
+ * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, built from
  * the per-card daily readings (see folderSeries): the same shape, a shorter
  * history, since the readings start where the nightly card prices do.
  */
@@ -46,12 +46,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ snapshots }, { headers: readHeaders(req) });
   }
 
-  if (folder !== "favorites" && !UUID.test(folder))
-    return apiError(400, "folder must be a folder id or `favorites`.", undefined, {
+  if (folder !== "favorites" && folder !== "wishlist" && !UUID.test(folder))
+    return apiError(400, "folder must be a folder id, `favorites` or `wishlist`.", undefined, {
       headers: readHeaders(req),
     });
-  let filter: Parameters<typeof filterItems>[1] = { owned: true, favorite: true };
-  if (folder !== "favorites") {
+  let filter: Parameters<typeof filterItems>[1] =
+    folder === "wishlist" ? { owned: false } : { owned: true, favorite: true };
+  if (folder !== "favorites" && folder !== "wishlist") {
     const found = await findFolder(viewer.userId, folder, token);
     if (!found)
       return apiError(404, "No folder by that id.", undefined, { headers: readHeaders(req) });
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
   const ids = [...new Set(items.flatMap((it) => (it.tcgId ? [it.tcgId] : [])))];
   const prices = await getCardPrices(viewer.userId, ids, token);
   return NextResponse.json(
-    { snapshots: folderSeries(items, prices) },
+    { snapshots: folderSeries(items, prices, folder === "wishlist" ? "wishlist" : "owned") },
     { headers: readHeaders(req) },
   );
 }
