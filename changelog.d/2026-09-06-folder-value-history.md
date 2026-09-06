@@ -1,0 +1,1 @@
+- The value-over-time series can be asked for one folder or the favorites (`GET /v1/value-history?folder=`), built from the daily card prices.

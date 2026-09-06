@@ -1160,7 +1160,16 @@ paths:
       tags: [Value]
       operationId: getValueHistory
       summary: The caller's collection value over time, oldest first
-      description: Needs a bearer token or a session.
+      description: >-
+        Needs a bearer token or a session. Without `folder`, the nightly readings of the whole
+        collection. With one, the same shape for that list, built from the daily per-card prices:
+        a shorter history, starting where those do.
+      parameters:
+        - name: folder
+          in: query
+          required: false
+          schema: { type: string }
+          description: A folder id, or `favorites`.
       responses:
         "200":
           description: The series.
@@ -1172,8 +1181,10 @@ paths:
                 required: [snapshots]
                 properties:
                   snapshots: { type: array, items: { $ref: "#/components/schemas/ValueSnapshot" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
