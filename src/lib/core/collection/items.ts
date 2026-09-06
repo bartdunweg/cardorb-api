@@ -206,7 +206,12 @@ export function sortItems(items: CardItem[], sort: Sort = "set", order?: Order):
   return indexed.map((x) => x.it);
 }
 
-export const PAGE = { default: 100, max: 500 } as const;
+/**
+ * An owner's page: up to the whole collection in one request, for the Pokédex, which needs
+ * every card and used to fetch it in four pages of 500. A public page stays at 500 (PUBLIC_PAGE).
+ */
+export const PAGE = { default: 100, max: 2000 } as const;
+export const PUBLIC_PAGE_MAX = 500;
 
 export type Page = { limit: number; offset: number };
 
@@ -524,7 +529,8 @@ export function readPublicQuery(
     ),
   );
   if (read.kind === "invalid") return read;
-  const { q, set, rarity, order, limit, offset, collection } = read.query;
+  const { q, set, rarity, order, offset, collection } = read.query;
+  const limit = Math.min(read.query.limit, PUBLIC_PAGE_MAX);
   return {
     kind: "ok",
     query: {
