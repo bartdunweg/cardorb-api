@@ -1,1 +1,0 @@
-- A card's shown price is Cardmarket's trend itself, no longer our Near Mint estimate on top of it; the estimate stays in the payload as `nm`.
