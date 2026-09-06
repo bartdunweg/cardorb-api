@@ -79,7 +79,7 @@ components:
     cron:
       type: http
       scheme: bearer
-      description: Vercel's `CRON_SECRET`, on `/v1/cron/snapshot` only.
+      description: Vercel's `CRON_SECRET`, on `/v1/cron/snapshot` and `/v1/cron/warm` only.
 
   headers:
     Cache-Control-Private:
@@ -1920,5 +1920,36 @@ paths:
               schema: { $ref: "#/components/schemas/SnapshotOutcome" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/cron/warm:
+    get:
+      tags: [Platform]
+      operationId: warmCollections
+      summary: Assemble every account's collection so its caches are warm
+      description: Vercel's cron, every ten minutes, with `CRON_SECRET` as the bearer. The first read after a deploy rebuilds every set; this pays it on nobody's screen.
+      security: [{ cron: [] }]
+      responses:
+        "200":
+          description: Every account assembled; `warmed` lists each with its sets and milliseconds.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [warmed, failed]
+                properties:
+                  warmed: { type: array, items: { type: object, required: [user, sets, ms], properties: { user: { type: string }, sets: { type: integer }, ms: { type: integer } } } }
+                  failed: { type: array, items: { type: string } }
+        "207":
+          description: Some accounts assembled; `failed` names the rest.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [warmed, failed]
+                properties:
+                  warmed: { type: array, items: { type: object, required: [user, sets, ms], properties: { user: { type: string }, sets: { type: integer }, ms: { type: integer } } } }
+                  failed: { type: array, items: { type: string } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
