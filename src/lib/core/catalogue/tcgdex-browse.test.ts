@@ -60,7 +60,7 @@ describe("tcgdex-browse", () => {
       releaseDate: null,
       total: 120,
       printedTotal: 83,
-      logo: null,
+      logo: "https://assets.tcgdex.net/ja/M/M4/001/low.webp",
       symbol: null,
     });
     // A set the translation list does not know keeps its own name.
