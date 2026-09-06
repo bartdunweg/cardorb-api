@@ -1,0 +1,1 @@
+- Card price history is read in pages, so a series over more than a thousand readings no longer stops early (a folder's value line, the movers).
