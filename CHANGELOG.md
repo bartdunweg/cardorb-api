@@ -10,6 +10,8 @@ if the two have drifted apart.
 
 - The nightly reading values every card at the price the app shows (Cardmarket, TCGplayer where Cardmarket has nothing), so the value lines end where today's number stands.
 
+- A copy has a language (`language`: en, de, fr, it, es, pt, nl, ja, ko, zh, or null for not recorded) on every card shape, settable on add and on PATCH.
+
 - `GET /v1/cards/{tcgId}/prices` gives one card's price day by day over the last ninety days.
 
 - Card price history is read in pages, so a series over more than a thousand readings no longer stops early (a folder's value line, the movers).

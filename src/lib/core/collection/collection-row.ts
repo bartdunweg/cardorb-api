@@ -28,6 +28,12 @@
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const FINISHES = ["normal", "reverse-holo", "holo"] as const;
+
+/** The languages a card is printed in, as Cardmarket and TCGdex code them. */
+export const LANGUAGES = ["en", "de", "fr", "it", "es", "pt", "nl", "ja", "ko", "zh"] as const;
+export type Language = (typeof LANGUAGES)[number];
+export const isLanguage = (v: unknown): v is Language =>
+  typeof v === "string" && (LANGUAGES as readonly string[]).includes(v);
 export type Finish = (typeof FINISHES)[number];
 
 export const isFinish = (v: unknown): v is Finish =>
@@ -96,6 +102,8 @@ export type CollectionRow = {
   quantity: number;
   condition: string | null;
   grade: string | null;
+  /** Two-letter code from LANGUAGES, or null for "not recorded" (read as English). */
+  language: Language | null;
   purchasePrice: number | null;
   /** ISO date (no time — a purchase is a day, not a moment). */
   purchaseDate: string | null;
@@ -136,6 +144,8 @@ export type CardDraft = {
   quantity: number;
   condition: string | null;
   grade: string | null;
+  /** Two-letter code from LANGUAGES, or null for "not recorded" (read as English). */
+  language: Language | null;
   purchasePrice: number | null;
   purchaseDate: string | null;
   notes: string | null;
@@ -224,6 +234,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     quantity = 1,
     condition = null,
     grade = null,
+    language = null,
     purchasePrice = null,
     purchaseDate = null,
     notes = null,
@@ -257,6 +268,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     quantity: Number.isFinite(Number(quantity)) ? Math.trunc(Number(quantity)) : 1,
     condition: optionalText(condition),
     grade: optionalText(grade),
+    language: isLanguage(language) ? language : null,
     purchasePrice:
       purchasePrice === null || purchasePrice === undefined || purchasePrice === ""
         ? null
@@ -324,6 +336,7 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     quantity: draft.quantity,
     condition: draft.condition,
     grade: draft.grade,
+    language: draft.language,
     purchasePrice: draft.purchasePrice,
     purchaseDate: draft.purchaseDate,
     notes: draft.notes,
@@ -348,6 +361,8 @@ export type CardPatch = Partial<{
   quantity: number;
   condition: string | null;
   grade: string | null;
+  /** Two-letter code from LANGUAGES, or null for "not recorded" (read as English). */
+  language: Language | null;
   purchasePrice: number | null;
   purchaseDate: string | null;
   notes: string | null;
@@ -417,6 +432,11 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
       }
       patch[key] = cleaned;
     }
+  }
+  if ("language" in b) {
+    if (b.language !== null && !isLanguage(b.language))
+      return { kind: "invalid", error: `language must be null or one of ${LANGUAGES.join(", ")}.` };
+    patch.language = b.language as Language | null;
   }
   if ("notes" in b) {
     const value = b.notes;

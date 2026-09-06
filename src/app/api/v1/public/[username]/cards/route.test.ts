@@ -18,6 +18,7 @@ const variant = (id: string, owned = true) => ({
   quantity: 1,
   condition: null,
   grade: null,
+  language: null,
   purchasePrice: 12,
   purchaseDate: null,
   notes: "private",

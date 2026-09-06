@@ -1,0 +1,1 @@
+- A copy has a language (`language`: en, de, fr, it, es, pt, nl, ja, ko, zh, or null for not recorded) on every card shape, settable on add and on PATCH.

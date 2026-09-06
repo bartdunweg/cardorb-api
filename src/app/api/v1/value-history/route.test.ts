@@ -111,6 +111,7 @@ describe("GET /api/v1/value-history", () => {
       rarity: null,
       condition: null,
       grade: null,
+      language: null,
       purchasePrice: null,
       purchaseDate: null,
       notes: null,

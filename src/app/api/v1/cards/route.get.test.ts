@@ -40,6 +40,7 @@ const variant = (id: string, owned = true) => ({
   quantity: 1,
   condition: null,
   grade: null,
+  language: null,
   purchasePrice: null,
   purchaseDate: null,
   notes: null,
