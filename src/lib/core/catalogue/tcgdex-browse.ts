@@ -1,4 +1,5 @@
 import { json } from "./tcgdex-client";
+import JA_NAMES from "./set-names.ja.json";
 import type { CatalogueSet } from "./ptcg-browse";
 import type { CatalogueMatch } from "./ptcg-search";
 
@@ -17,7 +18,25 @@ import type { CatalogueMatch } from "./ptcg-search";
  * every scan has — language, serie, set, number. So the address is built, not
  * read. A card the assets do not have draws as the name, the way an unpictured
  * English promo does.
+ *
+ * Names: a Japanese set is shown under an English name where set-names.ja.json
+ * has one — the katakana of an English phrase, or Bulbapedia's rendering — with
+ * the Japanese name kept beside it as `localName`, since that is what the pack
+ * says. A set the list does not know keeps its own name. The list is a
+ * translation, not a catalogue fact: correct it, do not trust it.
  */
+const ENGLISH: Partial<Record<BrowseLanguage, Record<string, string>>> = {
+  ja: JA_NAMES as Record<string, string>,
+};
+
+const named = (
+  lang: BrowseLanguage,
+  id: string,
+  own: string,
+): { name: string; localName: string | null } => {
+  const english = ENGLISH[lang]?.[id];
+  return english ? { name: english, localName: own } : { name: own, localName: null };
+};
 export const BROWSE_LANGUAGES = ["ja", "zh-tw", "zh-cn", "ko"] as const;
 export type BrowseLanguage = (typeof BROWSE_LANGUAGES)[number];
 
@@ -57,7 +76,7 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
     for (const s of [...(serie.sets ?? [])].reverse()) {
       out.push({
         id: s.id,
-        name: s.name,
+        ...named(lang, s.id, s.name),
         series: serie.name,
         releaseDate: null,
         total: s.cardCount?.total ?? 0,
@@ -88,7 +107,7 @@ export async function setIn(
   const serieId = detail.serie?.id ?? "";
   const set: CatalogueSet = {
     id: detail.id,
-    name: detail.name,
+    ...named(lang, detail.id, detail.name),
     series: detail.serie?.name ?? "",
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
@@ -100,7 +119,7 @@ export async function setIn(
     id: c.id,
     number: c.localId,
     name: c.name,
-    setName: detail.name,
+    setName: set.name,
     image: serieId ? scan(lang, serieId, detail.id, c.localId, "low") : null,
     imageHigh: serieId ? scan(lang, serieId, detail.id, c.localId, "high") : null,
     rarity: null,

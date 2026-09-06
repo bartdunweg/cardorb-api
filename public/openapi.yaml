@@ -417,6 +417,7 @@ components:
         printedTotal: { type: [integer, "null"], description: "The number printed on the cards." }
         logo: { type: [string, "null"] }
         symbol: { type: [string, "null"] }
+        localName: { type: [string, "null"], description: "The set's name in its own language where `name` is a translation (a Japanese set); null for English." }
 
     CatalogueSetWithCounts:
       allOf:

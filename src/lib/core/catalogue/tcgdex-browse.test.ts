@@ -54,7 +54,8 @@ describe("tcgdex-browse", () => {
     expect(sets.map((s) => s.id)).toEqual(["M4", "M1", "PMCG1"]);
     expect(sets[0]).toEqual({
       id: "M4",
-      name: "四",
+      name: "Ninja Spinner",
+      localName: "四",
       series: "MEGA",
       releaseDate: null,
       total: 120,
@@ -62,6 +63,8 @@ describe("tcgdex-browse", () => {
       logo: null,
       symbol: null,
     });
+    // A set the translation list does not know keeps its own name.
+    expect(sets[1]).toMatchObject({ id: "M1", name: "一", localName: null });
   });
 
   it("reads a set with its cards and builds each scan's address", async () => {
@@ -72,7 +75,7 @@ describe("tcgdex-browse", () => {
       id: "M4-001",
       number: "001",
       name: "ビードル",
-      setName: "四",
+      setName: "Ninja Spinner",
       image: "https://assets.tcgdex.net/ja/M/M4/001/low.webp",
       imageHigh: "https://assets.tcgdex.net/ja/M/M4/001/high.webp",
       rarity: null,

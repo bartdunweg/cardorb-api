@@ -52,6 +52,8 @@ export type CatalogueSet = {
   printedTotal: number | null;
   logo: string | null;
   symbol: string | null;
+  /** The set's name in its own language where `name` is a translation (a Japanese set); null for English. */
+  localName: string | null;
 };
 
 type PtcgSetJson = {
@@ -153,6 +155,7 @@ export async function listSets(): Promise<CatalogueSet[]> {
       printedTotal: s.printedTotal ?? null,
       logo: s.images?.logo ?? null,
       symbol: s.images?.symbol ?? null,
+      localName: null,
     }))
     .sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
 }
