@@ -150,6 +150,8 @@ export type CardDraft = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** A folder of the caller's, filled by hand, to file the new card in at once. */
+  collectionId: string | null;
 };
 
 /**
@@ -239,6 +241,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     purchaseDate = null,
     notes = null,
     isFavorite = false,
+    collectionId = null,
   } = (body ?? {}) as Record<string, unknown>;
 
   const optionalText = (value: unknown): string | null => {
@@ -276,6 +279,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     purchaseDate: optionalText(purchaseDate),
     notes: optionalText(notes),
     isFavorite: isFavorite === true,
+    collectionId: typeof collectionId === "string" && UUID.test(collectionId) ? collectionId : null,
   };
 
   if (!draft.name) return { kind: "invalid", error: "A card needs a name." };
@@ -341,7 +345,7 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     purchaseDate: draft.purchaseDate,
     notes: draft.notes,
     isFavorite: draft.isFavorite,
-    collectionId: null,
+    collectionId: draft.collectionId,
   };
 }
 
@@ -369,6 +373,8 @@ export type CardPatch = Partial<{
   isFavorite: boolean;
   /** null takes the copy out of its folder. */
   collectionId: string | null;
+  /** When the copy was pulled: an ISO date or timestamp, not in the future. Decides Newest first. */
+  acquiredAt: string;
 }>;
 
 export type CardPatchValidation =
@@ -461,6 +467,13 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
       patch.purchasePrice = n;
     }
   }
+  if ("acquiredAt" in b) {
+    const value = b.acquiredAt;
+    const at = typeof value === "string" ? Date.parse(value) : NaN;
+    if (Number.isNaN(at) || at > Date.now() + 86_400_000)
+      return { kind: "invalid", error: "acquiredAt must be a date, not in the future." };
+    patch.acquiredAt = new Date(at).toISOString();
+  }
   if ("purchaseDate" in b) {
     const value = b.purchaseDate;
     if (value !== null && typeof value !== "string") {
@@ -482,4 +495,75 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
 
   if (!Object.keys(patch).length) return { kind: "invalid", error: "Nothing to change." };
   return { kind: "ok", patch };
+}
+
+/**
+ * What a copy may differ in from the row it comes from: the inventory facts,
+ * never the identity (that is another card) and never quantity, owned or the
+ * star (those are the row's, or the copy's own count).
+ */
+export type CopyChanges = Pick<
+  CardPatch,
+  | "finish"
+  | "condition"
+  | "grade"
+  | "language"
+  | "purchasePrice"
+  | "purchaseDate"
+  | "notes"
+  | "collectionId"
+  | "acquiredAt"
+>;
+
+const COPY_KEYS = [
+  "finish",
+  "condition",
+  "grade",
+  "language",
+  "purchasePrice",
+  "purchaseDate",
+  "notes",
+  "collectionId",
+  "acquiredAt",
+] as const;
+
+export type CopyBodyValidation =
+  { kind: "invalid"; error: string } | { kind: "ok"; count: number; changes: CopyChanges };
+
+/**
+ * The body of POST …/copies and …/split: `count` (default 1) and the changes.
+ * `atLeastOne`: a split of identical copies is no split (raise or lower the
+ * quantity instead); a new copy may be identical (it is one more of the same).
+ */
+export function validateCopyBody(body: unknown, atLeastOne: boolean): CopyBodyValidation {
+  if (!body || typeof body !== "object" || Array.isArray(body))
+    return { kind: "invalid", error: "Invalid request" };
+  const b = body as Record<string, unknown>;
+  for (const key of Object.keys(b)) {
+    if (key === "count") continue;
+    if (!(COPY_KEYS as readonly string[]).includes(key))
+      return {
+        kind: "invalid",
+        error: `${key} is not something a copy differs in. A copy keeps its card; change the row instead.`,
+      };
+  }
+  let count = 1;
+  if ("count" in b) {
+    const n = b.count;
+    if (typeof n !== "number" || !Number.isInteger(n) || n < 1 || n > 999)
+      return { kind: "invalid", error: "count must be a whole number from 1 to 999." };
+    count = n;
+  }
+  const rest: Record<string, unknown> = { ...b };
+  delete rest.count;
+  // An empty body is a copy identical in every way; validateCardPatch() would call that nothing.
+  let changes: CopyChanges = {};
+  if (Object.keys(rest).length > 0) {
+    const checked = validateCardPatch(rest);
+    if (checked.kind === "invalid") return checked;
+    changes = checked.patch as CopyChanges;
+  }
+  if (atLeastOne && Object.keys(changes).length === 0)
+    return { kind: "invalid", error: "Same in every way: change the quantity instead." };
+  return { kind: "ok", count, changes };
 }

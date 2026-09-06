@@ -46,9 +46,11 @@ import type {
   CardPatch,
   CollectionRow,
 } from "../core/collection/collection-row";
+import type { CopyChanges } from "../core/collection/collection-row";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
 import { StoreNotConfigured } from "./errors";
 import * as postgres from "./postgres";
+import type { SplitResult } from "./postgres";
 import { readClient, serverClient, userClient } from "./supabase";
 
 /** The right Postgres client for this caller: their own, or nobody's. */
@@ -207,4 +209,30 @@ export async function publicUsernames(): Promise<string[]> {
     console.error("Listing public profiles for the sitemap failed:", err);
     return [];
   }
+}
+
+/** One more copy of the caller's row, as a row of its own. Null where the row is not theirs. */
+export async function copyRow(
+  userId: string,
+  id: string,
+  count: number,
+  changes: CopyChanges,
+  token?: string,
+): Promise<CollectionRow | null> {
+  const db = await clientFor(token);
+  if (!db) throw new StoreNotConfigured();
+  return postgres.copyRow(db, userId, id, count, changes);
+}
+
+/** Some of a row's copies as a row of their own; see postgres.splitRow. */
+export async function splitRow(
+  userId: string,
+  id: string,
+  count: number,
+  changes: CopyChanges,
+  token?: string,
+): Promise<SplitResult> {
+  const db = await clientFor(token);
+  if (!db) throw new StoreNotConfigured();
+  return postgres.splitRow(db, userId, id, count, changes);
 }

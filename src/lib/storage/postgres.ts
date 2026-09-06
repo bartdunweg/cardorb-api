@@ -20,7 +20,7 @@
  * lists.
  */
 
-import { isLanguage } from "@/lib/core/collection/collection-row";
+import { type CopyChanges, isLanguage } from "@/lib/core/collection/collection-row";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -384,6 +384,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       purchase_date: draft.purchaseDate,
       notes: draft.notes,
       is_favorite: draft.isFavorite,
+      collection_id: draft.collectionId,
       source: "manual",
     })
     .select("id")
@@ -433,6 +434,7 @@ export async function updateRow(
   if ("notes" in patch) row.notes = patch.notes;
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
+  if ("acquiredAt" in patch) row.acquired_at = patch.acquiredAt;
 
   const { data, error } = await db
     .from("cards")
@@ -943,4 +945,113 @@ export async function deleteFolder(
     .select("id");
   if (error) throw new Error(`That folder could not be deleted: ${error.message}`);
   return (data ?? []).length > 0;
+}
+
+/** One row of the caller's, or null. */
+export async function getRow(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<CollectionRow | null> {
+  const { data, error } = await db
+    .from("cards")
+    .select(COLUMNS)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error(`Reading a card failed: ${error.message}`);
+  return data ? toRow(data as CardRecord) : null;
+}
+
+const columnsFor = (changes: CopyChanges): Record<string, unknown> => {
+  const out: Record<string, unknown> = {};
+  if ("finish" in changes) out.finish = changes.finish;
+  if ("condition" in changes) out.condition = changes.condition;
+  if ("grade" in changes) out.grade = changes.grade;
+  if ("language" in changes) out.language = changes.language;
+  if ("purchasePrice" in changes) out.purchase_price = changes.purchasePrice;
+  if ("purchaseDate" in changes) out.purchase_date = changes.purchaseDate;
+  if ("notes" in changes) out.notes = changes.notes;
+  if ("collectionId" in changes) out.collection_id = changes.collectionId;
+  if ("acquiredAt" in changes) out.acquired_at = changes.acquiredAt;
+  return out;
+};
+
+/**
+ * One more copy of a row, as its own row: the source's identity and inventory,
+ * the changes applied, `count` held, pulled now unless the changes say when.
+ * The source is untouched. Null where the source is not the caller's.
+ */
+export async function copyRow(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+  count: number,
+  changes: CopyChanges,
+): Promise<CollectionRow | null> {
+  const src = await getRow(db, userId, id);
+  if (!src) return null;
+  const { data, error } = await db
+    .from("cards")
+    .insert({
+      user_id: userId,
+      name: src.name,
+      number: src.number,
+      set_name: src.setName,
+      rarity: src.rarity,
+      gen: src.gen,
+      types: src.types,
+      owned: src.owned,
+      excluded: src.excluded,
+      finish: src.finish,
+      quantity: count,
+      condition: src.condition,
+      grade: src.grade,
+      language: src.language,
+      purchase_price: src.purchasePrice,
+      purchase_date: src.purchaseDate,
+      notes: src.notes,
+      is_favorite: src.isFavorite,
+      collection_id: src.collectionId,
+      source: "manual",
+      ...columnsFor(changes),
+    })
+    .select(COLUMNS)
+    .single();
+  if (error) throw new Error(`Copying a card failed: ${error.message}`);
+  return toRow(data as CardRecord);
+}
+
+export type SplitResult =
+  | { kind: "ok"; source: CollectionRow; copy: CollectionRow }
+  | { kind: "missing" }
+  | { kind: "too-many" };
+
+/**
+ * Some of a row's copies as a row of their own: the database function
+ * split_card does both writes in one transaction and hands back the copy, then
+ * the source. `count` at or above the quantity is "too-many": that is every
+ * copy, and changing the row is the honest edit.
+ */
+export async function splitRow(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+  count: number,
+  changes: CopyChanges,
+): Promise<SplitResult> {
+  const { data, error } = await db.rpc("split_card", {
+    p_id: id,
+    p_user_id: userId,
+    p_count: count,
+    p_changes: changes,
+  });
+  if (error) {
+    if (error.message.includes("split-count")) return { kind: "too-many" };
+    throw new Error(`Splitting a card failed: ${error.message}`);
+  }
+  const rows = ((data ?? []) as CardRecord[]).map(toRow);
+  const [copy, source] = rows;
+  if (!copy || !source) return { kind: "missing" };
+  return { kind: "ok", copy, source };
 }
