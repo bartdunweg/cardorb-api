@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - An unreadable pokemontcg.io index is no longer cached for a day as "nothing to price"; a set's gallery cards get their TCGplayer price too; a card one market prices keeps that market's shape; "SV01" and "SV1" are one number.
 
+- Fourteen more promos linked to their Cardmarket product by hand: the Wizards Black Star Promos 2 to 22 (their product ids run in number order), the three Galarian birds and Darmanitan Black Bolt 014.
+
 - TCGplayer's price finds a promo whose number it prefixes (SWSH282, XY150a) from the collection's plain number.
 
 - A public item's `favorite` is read off the owner's copy, so `list=favorites` lists the starred cards rather than nothing; unset for everyone whose favorites are not shown.
