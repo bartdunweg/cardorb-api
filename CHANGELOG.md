@@ -20,6 +20,8 @@ if the two have drifted apart.
 
 - The dollar rate is read from frankfurter's new host, and a failed read is not cached: a null kept for a day was a day without TCGplayer prices.
 
+- Set facts rebuilt once, so the two products set by hand price their cards today rather than tomorrow.
+
 - A card TCGdex is asked about carries TCGplayer's dollars too, so a promo Cardmarket does not price gets its second price from TCGdex when pokemontcg.io has none or is down.
 
 - TCGplayer's prices live in a day-long cache of their own per set, blended into the set's facts on read; a failed pokemontcg.io call is not cached, so an outage costs the second price for minutes, not a day.

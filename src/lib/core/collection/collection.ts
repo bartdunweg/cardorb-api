@@ -302,7 +302,7 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
-      ["set-facts", "v8", setName, factsSignature(identities)],
+      ["set-facts", "v9", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
