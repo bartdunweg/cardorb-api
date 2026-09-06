@@ -107,7 +107,12 @@ function buildFilterQuery(filters: SearchFilters): string {
   const clauses: string[] = [];
   if (filters.name?.trim()) clauses.push(fieldClause("name", filters.name, { wrap: true }));
   if (filters.number?.trim()) clauses.push(fieldClause("number", filters.number, { wrap: false }));
-  if (filters.set?.trim()) clauses.push(fieldClause("set.name", filters.set, { wrap: true }));
+  /* A set's name is a phrase, in quotes: most have a space in them ("Base Set 2",
+     "Black & White"), and pokemontcg.io's parser splits an unquoted value on
+     whitespace into three clauses that together match nothing — the same trap
+     buildQuickQuery's comment describes. Quoted, the name is matched whole, as
+     the catalogue spells it. */
+  if (filters.set?.trim()) clauses.push(`set.name:"${escapeTerm(filters.set.trim())}"`);
   if (filters.type?.trim())
     clauses.push(fieldClause("types", filters.type, { wrap: false, titleCase: true }));
   return clauses.join(" ");
