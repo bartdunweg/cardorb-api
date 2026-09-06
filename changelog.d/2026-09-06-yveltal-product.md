@@ -1,0 +1,1 @@
+- Yveltal-EX XY150a is linked to its Cardmarket product by hand, the last card the guide could price and did not.
