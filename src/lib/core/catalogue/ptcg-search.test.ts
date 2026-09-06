@@ -141,7 +141,16 @@ describe("searchCards", () => {
 
     await searchCards({ name: "charizard", set: "151" });
     const q = new URL(calls[0]!.url).searchParams.get("q");
-    expect(q).toBe("name:*charizard* set.name:*151*");
+    expect(q).toBe('name:*charizard* set.name:"151"');
+  });
+
+  it("matches a set's name whole, so a space in it does not split the clause", async () => {
+    installFetch(200, { data: [] });
+    const { searchCards } = await load();
+
+    await searchCards({ name: "charizard", set: "Base Set 2" });
+    const q = new URL(calls[0]!.url).searchParams.get("q");
+    expect(q).toBe('name:*charizard* set.name:"Base Set 2"');
   });
 
   it("only includes filter fields that were actually filled in", async () => {
