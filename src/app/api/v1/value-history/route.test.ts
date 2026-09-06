@@ -24,8 +24,14 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
+const findFolder = vi.fn();
+const getCollection = vi.fn();
+const getCardPrices = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   getValueHistory: (...a: unknown[]) => getValueHistory(...a),
+  findFolder: (...a: unknown[]) => findFolder(...a),
+  getCollection: (...a: unknown[]) => getCollection(...a),
+  getCardPrices: (...a: unknown[]) => getCardPrices(...a),
 }));
 
 const { GET } = await import("./route");
@@ -40,9 +46,9 @@ const SNAPSHOT = {
   unpriced: 313,
 };
 
-const get = (token = "t.o.k.e.n") =>
+const get = (token = "t.o.k.e.n", query = "") =>
   GET(
-    new Request("https://cardorb.com/api/v1/value-history", {
+    new Request(`https://cardorb.com/api/v1/value-history${query}`, {
       headers: { authorization: `Bearer ${token}` },
     }),
   );
@@ -90,5 +96,83 @@ describe("GET /api/v1/value-history", () => {
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: "Who are you?" });
     expect(getValueHistory).not.toHaveBeenCalled();
+  });
+
+  describe("?folder", () => {
+    const FOLDER = "11111111-1111-4111-8111-111111111111";
+    // The assembly's shape: a card with its printings, each a row.
+    const variant = (over: Record<string, unknown>) => ({
+      id: "row",
+      owned: true,
+      finish: null,
+      quantity: 1,
+      isFavorite: false,
+      collectionId: null,
+      rarity: null,
+      condition: null,
+      grade: null,
+      purchasePrice: null,
+      purchaseDate: null,
+      notes: null,
+      acquiredAt: null,
+      ...over,
+    });
+    const card = (tcgId: string, variants: unknown[]) => ({
+      name: "Pikachu",
+      number: "25",
+      gen: null,
+      type: null,
+      image: null,
+      imageHigh: null,
+      speciesId: 25,
+      tcgId,
+      price: null,
+      priceHolo: null,
+      variants,
+    });
+
+    beforeEach(() => {
+      getCollection.mockResolvedValue({
+        sets: [
+          {
+            name: "base1",
+            title: "Base Set",
+            cards: [
+              card("base1-25", [variant({ collectionId: FOLDER, quantity: 2 })]),
+              card("base1-4", [variant({ id: "other", isFavorite: true })]),
+            ],
+          },
+        ],
+        failed: false,
+      });
+      getCardPrices.mockResolvedValue([
+        { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
+        { tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
+      ]);
+    });
+
+    it("builds a manual folder's line from the copies filed in it", async () => {
+      findFolder.mockResolvedValue({ id: FOLDER, rule: null });
+      const body = await (await get("t.o.k.e.n", `?folder=${FOLDER}`)).json();
+      expect(getValueHistory).not.toHaveBeenCalled();
+      expect(getCardPrices).toHaveBeenCalledWith("me-uuid", ["base1-25"], "t.o.k.e.n");
+      expect(body).toEqual({
+        snapshots: [{ date: "2026-09-01", value: 20, cards: 2, priced: 2, unpriced: 0 }],
+      });
+    });
+
+    it("answers favorites from the starred copies", async () => {
+      const body = await (await get("t.o.k.e.n", "?folder=favorites")).json();
+      expect(findFolder).not.toHaveBeenCalled();
+      expect(body.snapshots).toEqual([
+        { date: "2026-09-01", value: 100, cards: 1, priced: 1, unpriced: 0 },
+      ]);
+    });
+
+    it("is a 404 for an id that is no folder, and a 400 for a value that is no id", async () => {
+      findFolder.mockResolvedValue(null);
+      expect((await get("t.o.k.e.n", `?folder=${FOLDER}`)).status).toBe(404);
+      expect((await get("t.o.k.e.n", "?folder=all")).status).toBe(400);
+    });
   });
 });
