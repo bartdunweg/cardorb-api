@@ -197,7 +197,7 @@ components:
         avg30: { type: [number, "null"], description: "The thirty-day average." }
         nm:
           type: [object, "null"]
-          description: An estimated English Near Mint asking range. `mid` is the number the grid shows.
+          description: An estimated English Near Mint asking range, for a client that wants one; the number shown is `market`.
           properties:
             low: { type: number }
             mid: { type: number }
