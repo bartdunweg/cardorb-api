@@ -40,7 +40,7 @@ import { limitlessScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
-import type { CollectionRow, Finish } from "./collection-row";
+import type { CollectionRow, Finish, Language } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
 export { highScan } from "../catalogue/artwork";
@@ -85,6 +85,8 @@ export type Variant = {
   quantity: number | null;
   condition: string | null;
   grade: string | null;
+  /** Two-letter code, or null for not recorded (read as English). */
+  language: Language | null;
   purchasePrice: number | null;
   purchaseDate: string | null;
   notes: string | null;
@@ -402,6 +404,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
         quantity: null,
         condition: null,
         grade: null,
+        language: null,
         purchasePrice: null,
         purchaseDate: null,
         notes: null,
@@ -813,6 +816,7 @@ export async function buildCollection(
         quantity: row.quantity,
         condition: row.condition,
         grade: row.grade,
+        language: row.language,
         purchasePrice: row.purchasePrice,
         purchaseDate: row.purchaseDate,
         notes: row.notes,
@@ -845,6 +849,7 @@ export async function buildCollection(
         quantity: p.quantity,
         condition: p.condition,
         grade: p.grade,
+        language: p.language,
         purchasePrice: p.purchasePrice,
         purchaseDate: p.purchaseDate,
         notes: p.notes,

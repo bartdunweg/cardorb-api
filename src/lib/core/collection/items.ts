@@ -39,6 +39,7 @@ export type CardItem = {
   quantity: number;
   condition: string | null;
   grade: string | null;
+  language: string | null;
   purchasePrice: number | null;
   purchaseDate: string | null;
   notes: string | null;
@@ -83,6 +84,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   quantity: v.quantity ?? 1,
   condition: v.condition,
   grade: v.grade,
+  language: v.language,
   purchasePrice: v.purchasePrice,
   purchaseDate: v.purchaseDate,
   notes: v.notes,

@@ -55,6 +55,7 @@ const copy = (id: string, over: Record<string, unknown>) => ({
   quantity: 1,
   condition: null,
   grade: null,
+  language: null,
   purchasePrice: null,
   purchaseDate: null,
   notes: null,

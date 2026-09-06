@@ -221,6 +221,7 @@ components:
         quantity: { type: [integer, "null"] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -332,6 +333,7 @@ components:
         quantity: { type: integer, minimum: 1, default: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -347,6 +349,7 @@ components:
         quantity: { type: integer, minimum: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -372,6 +375,7 @@ components:
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -445,6 +449,7 @@ components:
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }

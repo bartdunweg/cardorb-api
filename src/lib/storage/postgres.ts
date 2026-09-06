@@ -20,6 +20,7 @@
  * lists.
  */
 
+import { isLanguage } from "@/lib/core/collection/collection-row";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -48,6 +49,7 @@ type CardRecord = {
   quantity: number;
   condition: string | null;
   grade: string | null;
+  language: string | null;
   purchase_price: number | null;
   purchase_date: string | null;
   notes: string | null;
@@ -56,7 +58,7 @@ type CardRecord = {
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,quantity,condition,grade,purchase_price,purchase_date,notes,is_favorite,collection_id";
+  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -96,6 +98,7 @@ const toRow = (r: CardRecord): CollectionRow => ({
   quantity: r.quantity ?? 1,
   condition: r.condition,
   grade: r.grade,
+  language: isLanguage(r.language) ? r.language : null,
   purchasePrice: r.purchase_price,
   purchaseDate: r.purchase_date,
   notes: r.notes,
@@ -375,6 +378,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       finish: draft.finish,
       quantity: draft.quantity,
       condition: draft.condition,
+      language: draft.language,
       grade: draft.grade,
       purchase_price: draft.purchasePrice,
       purchase_date: draft.purchaseDate,
@@ -423,6 +427,7 @@ export async function updateRow(
   if ("quantity" in patch) row.quantity = patch.quantity;
   if ("condition" in patch) row.condition = patch.condition;
   if ("grade" in patch) row.grade = patch.grade;
+  if ("language" in patch) row.language = patch.language;
   if ("purchasePrice" in patch) row.purchase_price = patch.purchasePrice;
   if ("purchaseDate" in patch) row.purchase_date = patch.purchaseDate;
   if ("notes" in patch) row.notes = patch.notes;

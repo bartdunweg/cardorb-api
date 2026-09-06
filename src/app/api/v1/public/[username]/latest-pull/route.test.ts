@@ -33,6 +33,7 @@ const sets: CardSet[] = [
             quantity: 1,
             condition: null,
             grade: null,
+            language: null,
             purchasePrice: 199,
             purchaseDate: null,
             notes: "won it in a trade",

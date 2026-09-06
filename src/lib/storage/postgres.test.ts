@@ -178,6 +178,7 @@ const record = {
   quantity: 2,
   condition: "NM",
   grade: null,
+  language: null,
   purchase_price: 4.5,
   purchase_date: "2026-01-02",
   notes: "first pull",

@@ -60,6 +60,7 @@ const pikachu: CollectionRow = {
   quantity: 1,
   condition: null,
   grade: null,
+  language: null,
   purchasePrice: null,
   purchaseDate: null,
   notes: null,

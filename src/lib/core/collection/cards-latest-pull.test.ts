@@ -10,6 +10,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   quantity: 1,
   condition: null,
   grade: null,
+  language: null,
   purchasePrice: null,
   purchaseDate: null,
   notes: null,
