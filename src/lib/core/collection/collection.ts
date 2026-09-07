@@ -302,11 +302,17 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v15: #238 added `abbreviation` to what this resolves, and left the key alone. Every
+      // entry cached under v14 is a SetFacts without the field, so `setAbbr` reached the web
+      // as null and every tile went on writing its set out in full — for a day, per set,
+      // silently. Measured on production: TCGdex answers "PBL" for Pitch Black and the
+      // collection still said null.
+      //
       // v14: the scan fixes of 2026-09-07 (#232, #233, and the paging one after them) each
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v14", setName, factsSignature(identities)],
+      ["set-facts", "v15", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
