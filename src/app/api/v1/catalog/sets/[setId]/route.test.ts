@@ -131,6 +131,31 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.cards.find((c: { id: string }) => c.id !== "base1-4").price).toBeNull();
   });
 
+  it("prices by the TCGdex id, which is the only one anything is keyed by", async () => {
+    /* The bug this test exists for: pokemontcg.io numbers a card `me5-85` and every price in
+       this repo is keyed the TCGdex way, `me05-085`. Looking up by the catalogue's own id
+       matched nothing at all, silently, and shipped a field that was always null. */
+    setCards.mockResolvedValue([{ ...card("85", "Fomantis"), id: "me5-85", tcgId: "me05-085" }]);
+    getRows.mockResolvedValue({ rows: [], failed: false });
+    guidePricesFor.mockResolvedValue(
+      new Map([["me05-085", { price: { market: 2.81 }, holo: null }]]),
+    );
+    const body = await (await open()).json();
+
+    expect(guidePricesFor).toHaveBeenLastCalledWith(["me05-085"]);
+    expect(body.cards[0].price).toEqual({ market: 2.81 });
+  });
+
+  it("falls back to the card's own id where the catalogues were never matched", async () => {
+    // The other-language path: those cards are TCGdex's already, so `id` is the right key.
+    setCards.mockResolvedValue([{ ...card("85"), id: "me05-085" }]);
+    getRows.mockResolvedValue({ rows: [], failed: false });
+    guidePricesFor.mockResolvedValue(new Map([["me05-085", { price: { market: 1 }, holo: null }]]));
+    const body = await (await open()).json();
+
+    expect(body.cards[0].price).toEqual({ market: 1 });
+  });
+
   it("prices only the page it returns, not the whole set", async () => {
     getRows.mockResolvedValue({ rows: [], failed: false });
     guidePricesFor.mockResolvedValue(new Map());

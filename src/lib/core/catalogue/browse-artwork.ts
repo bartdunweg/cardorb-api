@@ -99,6 +99,9 @@ export async function withTcgdexScans(
        card larger — the same pair OwnedCard has carried since cards.ts. */
     return {
       ...card,
+      // The match is already made here, so the id travels with the pictures rather than being
+      // worked out a second time by whoever wants to price the card.
+      tcgId: match.id || null,
       image: localise(`${base}/low.webp`),
       imageHigh: localise(`${base}/high.webp`),
     };

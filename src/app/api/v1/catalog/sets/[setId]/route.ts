@@ -92,15 +92,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      rather than as a checklist. Only the page's cards are priced, and only from the guide that
      is already cached for the day: the whole set would be up to 250 lookups, and the TCGdex
      fallback behind them would be a request each for the many cards Cardmarket does not price. */
-  const prices = await guidePricesFor(shown.map((c) => c.id));
+  /* Keyed by the TCGdex id, not the catalogue's own: on the English path these cards come from
+     pokemontcg.io (`me5-85`) and every price in this repo is keyed the TCGdex way (`me05-085`).
+     On the other-language path `id` already is the TCGdex one, so the fallback is right there. */
+  const priceKey = (c: (typeof shown)[number]) => c.tcgId ?? c.id;
+  const prices = await guidePricesFor(shown.map(priceKey));
 
   return NextResponse.json(
     {
       set,
       cards: shown.map((c) => ({
         ...c,
-        price: prices.get(c.id)?.price ?? null,
-        priceHolo: prices.get(c.id)?.holo ?? null,
+        price: prices.get(priceKey(c))?.price ?? null,
+        priceHolo: prices.get(priceKey(c))?.holo ?? null,
       })),
       page,
       pageSize,
