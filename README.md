@@ -131,13 +131,13 @@ request rather than a failed card.
 ## Running it
 
 ```
-npm install
+pnpm install
 cp .env.example .env.local   # then fill in the Supabase vars and OWNER_EMAIL
-npm run dev
+pnpm run dev
 curl localhost:3000/api/v1/collection | jq '.sets | length'
 ```
 
-`npm run check` is prettier, typecheck, tests and lint together; `./scripts/verify.sh` adds
+`pnpm run check` is prettier, typecheck, tests and lint together; `./scripts/verify.sh` adds
 the secrets scan, the changelog check and `next build`.
 
 When a card has no price (`/dashboard/cards?unpriced=1` on the web app), run

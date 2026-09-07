@@ -62,9 +62,9 @@ else
 fi
 
 # --- Project checks -----------------------------------------------------------------------
-# Split rather than one `npm run check`, deliberately. That script chains with && and stops
+# Split rather than one `pnpm run check`, deliberately. That script chains with && and stops
 # at the first failure, which is the opposite of what this file promises: every check runs so
-# one pass shows every problem. The commands are the same ones `npm run check` composes, so
+# one pass shows every problem. The commands are the same ones `pnpm run check` composes, so
 # the two cannot drift.
 
 # --check, never --write. A verify script that fixes what it finds reports a pass on a
@@ -79,15 +79,15 @@ run "format"    npx prettier --check .
 # the run red, which is the whole reason the collector exists rather than a note
 # asking people to remember.
 run "changelog" node scripts/collect-changelog.mjs --check
-run "typecheck" npm run typecheck
-run "test"      npm run test
-run "lint"      npm run lint
+run "typecheck" pnpm run typecheck
+run "test"      pnpm run test
+run "lint"      pnpm run lint
 
 # The build is not redundant next to typecheck. It is the only step that parses the CSS, and a
 # broken selector has reached main that way before with tests and typecheck both green — the
 # same reason .github/workflows/check.yml runs it. It is also the only step that would catch a
 # route which cannot be rendered the way its exports claim.
-run "build"     npm run build
+run "build"     pnpm run build
 
 # ------------------------------------------------------------------------------------------
 if [[ "$status" -eq 0 ]]; then
