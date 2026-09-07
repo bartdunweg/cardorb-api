@@ -1,0 +1,1 @@
+- A set's cards carry a price. `GET /catalog/sets/{setId}` puts Cardmarket's number on every card of the page it returns, from the guide already cached for the day and with no per-card fallback behind it, so a set can be read the way the collection's own lists are rather than as a checklist.

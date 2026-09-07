@@ -3,7 +3,7 @@ import { apiError, refuse } from "@/lib/api/respond";
 import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
 import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
-import { getRows } from "@/lib/core/collection/collection";
+import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -86,11 +86,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   const index = ownershipIndex(isBrowseLanguage(language) ? [] : rows);
   const marked = markOwnership(index, cards);
   const start = (page - 1) * pageSize;
+  const shown = marked.slice(start, start + pageSize);
+
+  /* A price under every card, so a set page can be read the way the collection's own lists are
+     rather than as a checklist. Only the page's cards are priced, and only from the guide that
+     is already cached for the day: the whole set would be up to 250 lookups, and the TCGdex
+     fallback behind them would be a request each for the many cards Cardmarket does not price. */
+  const prices = await guidePricesFor(shown.map((c) => c.id));
 
   return NextResponse.json(
     {
       set,
-      cards: marked.slice(start, start + pageSize),
+      cards: shown.map((c) => ({
+        ...c,
+        price: prices.get(c.id)?.price ?? null,
+        priceHolo: prices.get(c.id)?.holo ?? null,
+      })),
       page,
       pageSize,
       totalCount: marked.length,

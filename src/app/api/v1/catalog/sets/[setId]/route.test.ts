@@ -4,6 +4,7 @@ const authorise = vi.fn();
 const findSet = vi.fn();
 const setCards = vi.fn();
 const getRows = vi.fn();
+const guidePricesFor = vi.fn();
 
 /* Same three server-only modules replaced wholesale as in the sibling route's
    test; the ownership join is the real, pure one. */
@@ -15,6 +16,7 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
+  guidePricesFor: (...a: unknown[]) => guidePricesFor(...a),
 }));
 vi.mock("@/lib/core/catalogue/ptcg-browse", () => ({
   findSet: (...a: unknown[]) => findSet(...a),
@@ -85,6 +87,7 @@ beforeEach(() => {
   findSet.mockResolvedValue(SET);
   setCards.mockResolvedValue([card("1"), card("2"), card("4", "Charizard")]);
   getRows.mockResolvedValue({ rows: [], failed: false });
+  guidePricesFor.mockResolvedValue(new Map());
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -112,6 +115,29 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.ownedCount).toBe(1);
     expect(body.cards.map((c: { owned: boolean }) => c.owned)).toEqual([false, false, true]);
     expect(body.cards[2]).toMatchObject({ quantity: 3, itemIds: ["row-1"] });
+  });
+
+  it("prices the page's cards, and asks after those cards only", async () => {
+    getRows.mockResolvedValue({ rows: [], failed: false });
+    guidePricesFor.mockResolvedValue(
+      new Map([["base1-4", { price: { market: 340 }, holo: null }]]),
+    );
+    const body = await (await open()).json();
+
+    const charizard = body.cards.find((c: { id: string }) => c.id === "base1-4");
+    expect(charizard.price).toEqual({ market: 340 });
+    expect(charizard.priceHolo).toBeNull();
+    // A card the guide does not price is a blank line, not a missing field.
+    expect(body.cards.find((c: { id: string }) => c.id !== "base1-4").price).toBeNull();
+  });
+
+  it("prices only the page it returns, not the whole set", async () => {
+    getRows.mockResolvedValue({ rows: [], failed: false });
+    guidePricesFor.mockResolvedValue(new Map());
+    await open("pageSize=1");
+
+    // 250 lookups for a page of one is the cost this route was careful not to pay.
+    expect(guidePricesFor).toHaveBeenLastCalledWith(expect.objectContaining({ length: 1 }));
   });
 
   it("counts owned over the whole set rather than over the page", async () => {

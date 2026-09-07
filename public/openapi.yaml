@@ -471,6 +471,12 @@ components:
         wishlist: { type: boolean }
         quantity: { type: integer, description: "Summed over owned rows only." }
         itemIds: { type: array, items: { type: string }, description: "Every collection row this card matched." }
+        price:
+          $ref: "#/components/schemas/Price"
+          description: "Cardmarket's price, from the day's guide. Null where the guide does not price the card; only sent by GET /catalog/sets/{setId}."
+        priceHolo:
+          $ref: "#/components/schemas/Price"
+          description: "The foil's price, on the same terms as price."
 
     CardItem:
       type: object
