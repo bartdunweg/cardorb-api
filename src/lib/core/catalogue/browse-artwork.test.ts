@@ -68,6 +68,7 @@ afterEach(() => {
 describe("withTcgdexScans", () => {
   it("swaps in the low/high pair built from the set's asset base", async () => {
     const [out] = await withTcgdexScans(set(), [card()]);
+    if (!out) throw new Error("no card came back");
     expect(out).toMatchObject({
       image: `${BASE}/006/low.webp`,
       imageHigh: `${BASE}/006/high.webp`,
@@ -92,6 +93,7 @@ describe("withTcgdexScans", () => {
       }),
     );
     const [out] = await withTcgdexScans(set(), [card()]);
+    if (!out) throw new Error("no card came back");
     expect(out!.image).toBe(`${BASE}/006/low.webp`);
   });
 
@@ -173,5 +175,29 @@ describe("withTcgdexScans", () => {
   it("does not ask at all for an empty set", async () => {
     expect(await withTcgdexScans(set(), [])).toEqual([]);
     expect(setCatalogue).not.toHaveBeenCalled();
+  });
+
+  /* The id, not just the picture. Everything priced in this repo is keyed the TCGdex way
+     (`sv03.5-006`), and the browse card carries pokemontcg.io's (`sv3pt5-6`); #241 looked a
+     price up by the second and matched nothing at all, silently, on every card of every set.
+     The match is made here, so this is where the id has to be picked up. */
+  it("carries the TCGdex id of every card it matched", async () => {
+    setCatalogue.mockResolvedValue(catalogue());
+    const [out] = await withTcgdexScans(set(), [card()]);
+    if (!out) throw new Error("no card came back");
+
+    expect(out.tcgId).toBe("sv03.5-006");
+    // The picture and the id come from one match, so one cannot arrive without the other.
+    expect(out.image).toBe(`${BASE}/006/low.webp`);
+  });
+
+  it("leaves the id unset where it kept the PNG", async () => {
+    setCatalogue.mockResolvedValue(catalogue({ byNumber: {} }));
+    const [out] = await withTcgdexScans(set(), [card()]);
+    if (!out) throw new Error("no card came back");
+
+    // No match, no id: a price keyed by a guess is worse than no price at all.
+    expect(out.tcgId).toBeUndefined();
+    expect(out.image).toBe(PNG);
   });
 });
