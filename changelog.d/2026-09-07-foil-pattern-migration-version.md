@@ -1,0 +1,1 @@
+- The foil-pattern migration carries the version the database recorded when it was applied. The file and the history had two different timestamps for one change, which is enough to make `supabase db push` refuse every migration after it.

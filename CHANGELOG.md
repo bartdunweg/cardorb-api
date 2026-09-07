@@ -18,6 +18,8 @@ if the two have drifted apart.
 
 - A copy's `finish` can be `poke-ball` or `master-ball`: the patterned reverse holos of 151 and Prismatic Evolutions. Both are priced as a reverse holo (the foil price where Cardmarket publishes one). Readers with a closed list of finishes must add the two before a copy carries them.
 
+- The foil-pattern migration carries the version the database recorded when it was applied. The file and the history had two different timestamps for one change, which is enough to make `supabase db push` refuse every migration after it.
+
 - The foil's pattern can be set when you add a card and changed afterwards, like the printing: one card is commonly held both as a patterned holo and as a plain one, and 115 in a real collection are.
 
 - A copy can record what its foil looks like — cosmos, cracked ice, starlight, confetti or vertical line — beside what it is worth. An import keeps the pattern where the file names one; it is not shown on a public profile, for the same reason the printing is not.
