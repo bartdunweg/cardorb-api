@@ -502,6 +502,7 @@ components:
         number: { type: string }
         set: { type: string, description: "The set's name as the catalogue spells it." }
         setTitle: { type: string }
+        setAbbr: { type: [string, "null"], description: "The code printed on the card — MEW, SFA, DEX — for a label that has to be short. Null where the catalogue names but does not code the set." }
         rarity: { type: [string, "null"] }
         gen: { type: [string, "null"] }
         type: { type: [string, "null"] }
