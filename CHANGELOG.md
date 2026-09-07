@@ -20,6 +20,8 @@ if the two have drifted apart.
 
 - Two more set names the collection and pokemontcg.io disagree on: "Set 1 Unlimited" (and its shadowless and unqualified siblings) is that catalogue's "Base", and "Scarlet & Violet Base" is its "Scarlet & Violet". Until now a card in either set was unmatched wherever the two vocabularies meet — unowned in the catalogue search, missing from a set's progress on Browse — which in the one collection here is 132 cards, a Base Set Charizard among them.
 
+- A scan path the assembly works out for itself is checked before it is used. TCGdex lists a gallery subset's cards without an `image` while the files do exist under the parent set, so the path is built rather than given up on — but it also lists cards it has no scan of at all, and there the built path is a 404 that looked like artwork and kept the Limitless and pokemontcg.io fallbacks from ever running. Fourteen cards in the collection here showed an empty square for that reason, the tag-team GX promos among them.
+
 ## 2026-09-06
 
 - An instance keeps the collection it assembled for ten minutes, by the rows' version, so the screens that read it together (`/folders`, `/stats`, `/cards`, a Pokédex) pay the join once; a card's species is looked up once per name; `facets=0` on `/v1/cards` skips the facets pass.
