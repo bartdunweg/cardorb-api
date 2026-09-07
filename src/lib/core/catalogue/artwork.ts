@@ -33,6 +33,35 @@ export async function limitlessScan(code: string, number: string): Promise<strin
 }
 
 /**
+ * Is there a file behind a TCGdex path we worked out ourselves?
+ *
+ * TCGdex lists a gallery subset's cards with no `image` at all while the files
+ * do exist, filed under the parent set — which is why cards.ts builds the path
+ * from the set's asset base rather than giving up. The same is true of cards
+ * TCGdex simply has no scan of, and there the built path is a 404: Mewtwo & Mew
+ * GX (SM Black Star Promos SM191) is one, and pokemontcg.io has that scan, but
+ * the fallback chain never ran because a fabricated URL is not a missing one.
+ *
+ * So the guess is checked before it is handed out, the way the Limitless guess
+ * beside it always has been. A day's cache, because a scan that appears does so
+ * once.
+ */
+export async function tcgdexScan(base: string): Promise<string | null> {
+  try {
+    const head = await fetch(`${base}/low.webp`, {
+      method: "HEAD",
+      next: { revalidate: DAY },
+      signal: catalogueTimeout(),
+    });
+    return head.ok ? base : null;
+  } catch {
+    // A probe that cannot be made is not proof of absence: hand the path over
+    // and let the browser find out, which is what happened before this existed.
+    return base;
+  }
+}
+
+/**
  * The large scan for a card, worked out rather than carried.
  *
  * `imageHigh` used to travel with every card and it is pure redundancy: over

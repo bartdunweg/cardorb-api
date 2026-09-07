@@ -12,11 +12,12 @@
  * name*. Two catalogues, two vocabularies, and folding them into one record
  * would mean a lookup that cannot say which of the two it answered.
  *
- * Short on purpose. Of 174 sets, only the promos genuinely disagree — "SV" and
- * "Scarlet & Violet" share no substring, and the collection writes "Wizard"
- * where pokemontcg.io writes "Wizards". Everything else matches on the
- * normalised name, which is why this is a list of exceptions rather than a
- * mapping table for every set.
+ * Short on purpose. Of this collection's 49 sets, five disagree: the promos —
+ * "SV" and "Scarlet & Violet" share no substring, and the collection writes
+ * "Wizard" where pokemontcg.io writes "Wizards" — plus the two sets the
+ * collection names by their print run or their place in a series. Everything
+ * else matches on the normalised name, which is why this is a list of
+ * exceptions rather than a mapping table for every set.
  */
 
 import { norm } from "../util";
@@ -30,6 +31,16 @@ const ALIAS: Record<string, string> = {
   svblackstarpromos: "Scarlet & Violet Black Star Promos",
   svpblackstarpromos: "Scarlet & Violet Black Star Promos",
   wizardblackstarpromos: "Wizards Black Star Promos",
+  // A print run, not a set, as catalogue.ts already says for TCGdex: the collection files the
+  // 1999 base set under the run it came from and pokemontcg.io calls the whole thing "Base".
+  // 102 rows in this collection, every one of them unmatched until this line existed: a Charizard
+  // in the binder showed as missing on Browse and as unowned in the search.
+  set1unlimited: "Base",
+  set1shadowless: "Base",
+  set1: "Base",
+  // The collection names the first Scarlet & Violet set after its series, as the sets that
+  // followed are named after theirs; pokemontcg.io gives the series' own name to that set. 30 rows.
+  scarletvioletbase: "Scarlet & Violet",
 };
 
 /** What pokemontcg.io calls a set this collection names `setName`, or null. */

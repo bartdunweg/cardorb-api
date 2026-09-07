@@ -36,7 +36,7 @@ import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/c
 import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
 import { LOCALE } from "../config";
-import { limitlessScan } from "../catalogue/artwork";
+import { limitlessScan, tcgdexScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
@@ -655,10 +655,15 @@ export async function resolveSetFacts(
     // the reader ever pushes the grid up that far. Only from TCGdex, whose
     // URLs carry the size as the last segment: the two fallbacks below
     // publish one file each and there is no larger one to name.
+    // A path we built ourselves is checked before it is used: TCGdex lists a
+    // gallery's cards without an `image` and the files are there under the
+    // parent set, but it also lists cards it has no scan of at all, and those
+    // paths are 404s that looked like artwork and so kept the fallbacks below
+    // from ever running.
+    const guessed = matched?.localId && assetBase ? `${assetBase}/${matched.localId}` : null;
     const tcgBase = !setHasScans
       ? null
-      : (matched?.image ??
-        (matched?.localId && assetBase ? `${assetBase}/${matched.localId}` : null));
+      : (matched?.image ?? (guessed ? await tcgdexScan(guessed) : null));
     let image = tcgBase ? localise(`${tcgBase}/low.webp`) : null;
     let imageHigh = tcgBase ? localise(`${tcgBase}/high.webp`) : null;
     if (!image && number && fallbacks > 0) {

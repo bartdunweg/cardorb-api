@@ -112,20 +112,24 @@ export async function ptcgLogo(setName: string): Promise<string | null> {
 }
 
 /**
- * The names in one of their sets, by number, fetched once per set and cached
+ * The cards in one of their sets, by number, fetched once per set and cached
  * for a day.
  *
- * Only ever asked for a gallery set, and only to answer "is TG04 the card this
- * row says it is". That question is worth a request because the collection's
- * gallery numbering does not line up with anyone's: every one of the 23 gallery
- * rows in it is filed under a number that belongs to a different card, so the
- * URL this file would otherwise build lands on the wrong Pokémon every time.
- * The whole point of the second catalogue is the pictures TCGdex lacks; a wrong
- * one is worse than the empty slot it replaces.
+ * Asked for two things. A gallery set, to answer "is TG04 the card this row
+ * says it is": the collection's gallery numbering does not line up with
+ * anyone's — every one of the 23 gallery rows in it is filed under a number
+ * that belongs to a different card — so the URL this file would otherwise
+ * build lands on the wrong Pokémon every time. And a promo set, where this
+ * host numbers a card "SM191" and the collection writes "191", so the picture
+ * is filed under a name the row does not know. Both answers are the same
+ * shape: their number, and the name at it to check the answer against.
+ *
+ * The whole point of the second catalogue is the pictures TCGdex lacks; a
+ * wrong one is worse than the empty slot it replaces.
  */
-const cardNames = new Map<string, Promise<Map<string, string>>>();
+const cardNames = new Map<string, Promise<Map<string, { number: string; name: string }>>>();
 
-function namesIn(setId: string): Promise<Map<string, string>> {
+function namesIn(setId: string): Promise<Map<string, { number: string; name: string }>> {
   let pending = cardNames.get(setId);
   if (pending) return pending;
   pending = (async () => {
@@ -134,8 +138,9 @@ function namesIn(setId: string): Promise<Map<string, string>> {
       const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
       if (!res.ok) throw new Error(String(res.status));
       const body = (await res.json()) as { data?: { number?: string; name?: string }[] };
-      const out = new Map<string, string>();
-      for (const c of body.data ?? []) if (c.number && c.name) out.set(norm(c.number), c.name);
+      const out = new Map<string, { number: string; name: string }>();
+      for (const c of body.data ?? [])
+        if (c.number && c.name) out.set(norm(c.number), { number: c.number, name: c.name });
       if (!out.size) throw new Error("empty card list");
       return out;
     } catch (err) {
@@ -144,7 +149,7 @@ function namesIn(setId: string): Promise<Map<string, string>> {
       // build. An empty map means "unverifiable", which the caller reads as no.
       console.error(`pokemontcg.io card list unavailable for ${setId}:`, err);
       cardNames.delete(setId);
-      return new Map<string, string>();
+      return new Map<string, { number: string; name: string }>();
     }
   })();
   cardNames.set(setId, pending);
@@ -188,9 +193,30 @@ export async function ptcgScan(
     // No name to check against, no card at that number, a card by another name,
     // or a card list this host would not hand over: all of them mean the empty
     // slot stays. Only a number that demonstrably holds this card gets a picture.
-    if (!name || !theirs || !sameCard(theirs, name)) return null;
+    if (!name || !theirs || !sameCard(theirs.name, name)) return null;
   }
-  const url = `https://images.pokemontcg.io/${set.id}/${n}.png`;
+  const found = await published(set.id, n);
+  if (found) return found;
+
+  // A promo set numbers its cards after itself — "SM191", "SWSH282" — where the
+  // collection keeps the digits it can read off the card. The bare number is a
+  // 404 there, and it was: thirteen promos in this collection had no picture
+  // because of it, the tag-team GX ones among them. So the set's own list says
+  // what it calls the card, and the name at that number has to agree before the
+  // picture is used, exactly as a gallery's does.
+  if (!name || /^[A-Za-z]/.test(n)) return null;
+  const digits = n.replace(/^0+/, "");
+  for (const theirs of (await namesIn(set.id)).values()) {
+    if (theirs.number.replace(/^[A-Za-z]*0*/, "") !== digits) continue;
+    if (!sameCard(theirs.name, name)) continue;
+    return await published(set.id, theirs.number);
+  }
+  return null;
+}
+
+/** Their file for a set and a number, when there is one behind the address. */
+async function published(setId: string, number: string): Promise<string | null> {
+  const url = `https://images.pokemontcg.io/${setId}/${number}.png`;
   try {
     const head = await fetch(url, {
       method: "HEAD",

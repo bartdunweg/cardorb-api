@@ -394,6 +394,38 @@ describe("public filters, sort and facets", () => {
     });
   });
 
+  it("puts the newest card first when asked, and a card nobody dated last", () => {
+    const sets = [
+      set("Jungle", [
+        card("Snorlax", [variant({ id: "a", acquiredAt: "2024-01-01T00:00:00Z" })]),
+        card("Eevee", [variant({ id: "b", acquiredAt: null })]),
+      ]),
+      set("Base", [card("Charizard", [variant({ id: "c", acquiredAt: "2026-05-05T00:00:00Z" })])]),
+    ];
+    expect(publicItems(sets, { newestFirst: true }).map((i) => i.name)).toEqual([
+      "Charizard",
+      "Snorlax",
+      "Eevee",
+    ]);
+    // Untouched without the flag: the assembly's own order, set by set.
+    expect(publicItems(sets).map((i) => i.name)).toEqual(["Snorlax", "Eevee", "Charizard"]);
+    // No date reaches the reader either way.
+    expect(Object.keys(publicItems(sets, { newestFirst: true })[0]!)).not.toContain("acquiredAt");
+
+    // Newest first is the order the list arrives in, so `desc` leaves it alone and `asc` reverses it.
+    const newest = publicItems(sets, { newestFirst: true });
+    expect(sortPublicItems(newest, "added", "desc").map((i) => i.name)).toEqual([
+      "Charizard",
+      "Snorlax",
+      "Eevee",
+    ]);
+    expect(sortPublicItems(newest, "added", "asc").map((i) => i.name)).toEqual([
+      "Eevee",
+      "Snorlax",
+      "Charizard",
+    ]);
+  });
+
   it("reads set, rarity, sort and order, and refuses a sort a public page cannot do", () => {
     expect(
       readPublicQuery(new URLSearchParams("set=jungle&rarity=Rare&sort=name&order=desc")),
@@ -402,7 +434,12 @@ describe("public filters, sort and facets", () => {
       query: { set: "jungle", rarity: "Rare", sort: "name", order: "desc", limit: 100, offset: 0 },
     });
     expect(readPublicQuery(new URLSearchParams("sort=price")).kind).toBe("invalid");
-    expect(readPublicQuery(new URLSearchParams("sort=added")).kind).toBe("invalid");
+    // "added" is a public sort now: newest first, without publishing the dates behind it.
+    expect(readPublicQuery(new URLSearchParams("sort=added"))).toEqual({
+      kind: "ok",
+      query: { sort: "added", limit: 100, offset: 0 },
+    });
+    expect(readPublicQuery(new URLSearchParams("sort=dex")).kind).toBe("invalid");
   });
 });
 

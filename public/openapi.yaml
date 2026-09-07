@@ -1951,7 +1951,7 @@ paths:
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "One of the owner's public folders (`GET /v1/public/{username}/folders`): the copies filed in it, or the owned copies its rule matches. Any other id is a 404." }
         - { name: list, in: query, schema: { type: string, enum: [wishlist, favorites, pokedex] }, description: "A list beside the collection: `wishlist` is the cards the owner is looking for (`copies` the wishes), `favorites` the owned cards they starred, `pokedex` the whole owned collection for a page that draws it as a Pokédex. Each only while the profile shows it (`wishlistPublic`, `favoritesPublic`, `pokedexPublic`); otherwise a 404. `collection` is ignored with any of them." }
-        - { name: sort, in: query, schema: { type: string, enum: [set, name], default: set }, description: "`set` is the assembly's order (set by set, number by number)." }
+        - { name: sort, in: query, schema: { type: string, enum: [set, name, added], default: set }, description: "`set` is the assembly's order (set by set, number by number). `added` is newest first, by the day each card was got; the dates themselves are not published, and a card nobody dated goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
