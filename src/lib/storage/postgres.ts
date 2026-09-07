@@ -503,6 +503,16 @@ export async function createRows(
       types: r.types,
       owned: r.owned,
       excluded: r.excluded,
+      // What the copy is, where the file said. These used to be left out, so an
+      // export carrying three reverse-holo copies of a card imported as one
+      // normal one — the row was right in the file, right in CollectionRow, and
+      // dropped on the last step before Postgres. createRow(), the one-card
+      // path, has always written them.
+      quantity: r.quantity,
+      finish: r.finish,
+      condition: r.condition,
+      language: r.language,
+      notes: r.notes,
       // The one field an import must carry and a manual add must not. Null
       // falls back to the column default, which is now(), and the import says
       // out loud when that happened.

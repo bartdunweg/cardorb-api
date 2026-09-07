@@ -1,0 +1,1 @@
+- A CSV export can be imported into your collection, and an export from Dex is recognised on sight: its copy counts, its printings and its wishlist all come across, and the thousands of checklist lines for cards you do not own are left where they are. Every import shows you what it would do — including how many of the cards you already have — before it does anything.

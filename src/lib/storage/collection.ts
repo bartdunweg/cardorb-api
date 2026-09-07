@@ -53,8 +53,15 @@ import * as postgres from "./postgres";
 import type { SplitResult } from "./postgres";
 import { readClient, serverClient, userClient } from "./supabase";
 
-/** The right Postgres client for this caller: their own, or nobody's. */
-async function clientFor(token?: string): Promise<SupabaseClient | null> {
+/**
+ * The right Postgres client for this caller: their own, or nobody's.
+ *
+ * Exported because the CSV import needs one connection for three things — read
+ * what the collection holds, write the rows, write the import's own record —
+ * and building it once beside them is the only way those three agree about who
+ * is asking.
+ */
+export async function clientFor(token?: string): Promise<SupabaseClient | null> {
   return token ? userClient(token) : serverClient();
 }
 

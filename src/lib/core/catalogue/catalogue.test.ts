@@ -66,3 +66,58 @@ describe("loadSetCatalogue", () => {
     expect(Object.keys(cat.byNumber)).toHaveLength(0);
   }, 15_000);
 });
+
+/**
+ * The other half of the file: which TCGdex sets a collection's own set name
+ * covers. Every case here was found by running a real export's 68 set names
+ * through it — three of them were matching the wrong set silently, which is
+ * worse than matching nothing, because a card drawn from the wrong set has art
+ * and a price and no sign that either belongs to something else.
+ */
+const { resolveSetIds } = await import("./catalogue");
+
+const SETS = [
+  { id: "ex3", name: "Dragon" },
+  { id: "ex15", name: "Dragon Frontiers" },
+  { id: "bw6", name: "Dragons Exalted" },
+  { id: "dv1", name: "Dragon Vault" },
+  { id: "swsh1", name: "Sword & Shield" },
+  { id: "swsh10", name: "Astral Radiance" },
+  { id: "swsh10tg", name: "Astral Radiance Trainer Gallery" },
+  { id: "swshp", name: "SWSH Black Star Promos" },
+  { id: "xy1", name: "XY" },
+  { id: "xyp", name: "XY Black Star Promos" },
+  { id: "tk-xy-n", name: "XY trainer Kit (Noivern)" },
+] as never;
+
+describe("resolveSetIds", () => {
+  it("keeps a set's own galleries and vaults, which share its id", () => {
+    expect(resolveSetIds("Astral Radiance", SETS)).toEqual(["swsh10", "swsh10tg"]);
+  });
+
+  it("does not let a set swallow the ones whose name merely starts the same", () => {
+    // ex15, bw6 and dv1 all begin "Dragon"; none is filed under ex3.
+    expect(resolveSetIds("Dragon", SETS)).toEqual(["ex3"]);
+    expect(resolveSetIds("XY", SETS)).toEqual(["xy1"]);
+  });
+
+  it("does not let a low-numbered set swallow its higher-numbered siblings", () => {
+    // swsh10's id starts with swsh1, but its name is not Sword & Shield's.
+    expect(resolveSetIds("Sword & Shield", SETS)).toEqual(["swsh1"]);
+  });
+
+  it("takes the longest overlap, not the first one listed", () => {
+    // "EX Dragon Frontiers" contains "Dragon" too, and Dragon is listed first.
+    expect(resolveSetIds("EX Dragon Frontiers", SETS)).toEqual(["ex15"]);
+    expect(resolveSetIds("EX Dragon", SETS)).toEqual(["ex3"]);
+  });
+
+  it("sends an export's promo set names to the promos, not to the era's base set", () => {
+    expect(resolveSetIds("Sword & Shield Promos", SETS)).toEqual(["swshp"]);
+    expect(resolveSetIds("XY Promos", SETS)).toEqual(["xyp"]);
+  });
+
+  it("answers nothing for a set no catalogue knows", () => {
+    expect(resolveSetIds("EX Trainer Kit: Plusle Half Deck", SETS)).toEqual([]);
+  });
+});

@@ -137,6 +137,15 @@ const SET_ALIASES: Record<string, string> = {
   "hgss black star promos": "hgssp",
   "dp black star promos": "dpp",
   "nintendo black star promos": "np",
+  // What an export from Dex calls the same five sets. Without these each one
+  // resolves, by substring, to the era's *base* set — "Sword & Shield Promos"
+  // finds "Sword & Shield" — and a promo then wears the art and the price of
+  // whatever card holds its number in that set. Wrong, and silently so.
+  "sword & shield promos": "swshp",
+  "scarlet & violet promos": "svp",
+  "sun & moon promos": "smp",
+  "xy promos": "xyp",
+  "mega evolution promos": "mep",
 };
 
 /**
@@ -157,13 +166,32 @@ export function resolveSetIds(setName: string, sets: TcgSet[]): string[] {
   if (alias) return [alias];
 
   const exact = sets.find((s) => norm(s.name) === wanted);
+  // The longest overlap wins, not the first one in the list. "EX Dragon
+  // Frontiers" contains both "Dragon Frontiers" and "Dragon", and TCGdex lists
+  // Dragon (ex3) twelve sets before Dragon Frontiers (ex15), so taking the
+  // first match filed every Dragon Frontiers card under the wrong set — with
+  // the wrong scan and the wrong price, and no sign that anything went wrong.
   const main =
-    exact ?? sets.find((s) => norm(s.name).includes(wanted) || wanted.includes(norm(s.name)));
+    exact ??
+    sets
+      .filter((s) => norm(s.name).includes(wanted) || wanted.includes(norm(s.name)))
+      .sort((a, b) => norm(b.name).length - norm(a.name).length)[0];
   if (!main) return [];
 
-  // Only extensions of the matched name, so "Evolutions" never drags in
-  // "Evolving Skies" and a parent never pulls in an unrelated set.
-  const subsets = sets.filter((s) => s.id !== main.id && norm(s.name).startsWith(norm(main.name)));
+  // Only extensions of the matched name *that TCGdex files under it*, so
+  // "Evolutions" never drags in "Evolving Skies" and a parent never pulls in an
+  // unrelated set.
+  //
+  // The name alone was not enough, and the case that showed it is "Dragon":
+  // "Dragon Frontiers", "Dragons Exalted", "Dragon Vault" and "Dragon Majesty"
+  // all start with it and are four other sets entirely, so a Dragon card could
+  // be drawn and priced as a Dragons Exalted one. A real subset shares its
+  // parent's id as well as its name — swsh10 has swsh10tg, swsh12.5 has
+  // swsh12.5gg — and neither test alone is safe: the id alone would give
+  // "Sword & Shield" (swsh1) every set from swsh10 to swsh12.5.
+  const subsets = sets.filter(
+    (s) => s.id !== main.id && norm(s.name).startsWith(norm(main.name)) && s.id.startsWith(main.id),
+  );
   return [main.id, ...subsets.map((s) => s.id)];
 }
 
