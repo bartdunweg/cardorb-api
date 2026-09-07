@@ -457,7 +457,7 @@ components:
     CardItem:
       type: object
       description: One copy of a card, flat, for a list that pages. `GET /v1/cards`.
-      required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, acquiredAt, collectionId, price, priceHolo]
+      required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price, priceHolo]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
         name: { type: string }
@@ -481,6 +481,7 @@ components:
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
         isFavorite: { type: boolean }
+        excluded: { type: boolean, description: "Kept out of the public profile and the latest pull." }
         acquiredAt: { type: [string, "null"], format: date-time }
         collectionId: { type: [string, "null"], format: uuid }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
