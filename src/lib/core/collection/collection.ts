@@ -302,10 +302,11 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
-      // v13: the two scan fixes of 2026-09-07 (#232, #233) change what this resolves to for a
-      // card TCGdex has no picture of, and yesterday's answer would have stood for a day —
-      // fourteen cards here kept their empty square through a deploy that had already fixed them.
-      ["set-facts", "v13", setName, factsSignature(identities)],
+      // v14: the scan fixes of 2026-09-07 (#232, #233, and the paging one after them) each
+      // change what this resolves to for a card TCGdex has no picture of, and yesterday's
+      // answer would have stood for a day — fourteen cards here kept their empty square
+      // through a deploy that had already fixed them.
+      ["set-facts", "v14", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
