@@ -282,17 +282,27 @@ export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice>
      seconds each, by exactly the same host that is down. A test that never answers a request
      found it: the call still took the full test timeout. A wall around the outside cannot be
      got round by whichever inner path is slow this week. */
-  return await Promise.race([
-    pricesFor(setName),
-    new Promise<null>((resolve) =>
-      setTimeout(() => {
-        console.error(
-          `pokemontcg.io prices for ${setName} gave up after ${SET_PRICES_BUDGET_MS}ms`,
-        );
-        resolve(null);
-      }, SET_PRICES_BUDGET_MS).unref?.(),
-    ),
-  ]);
+  /* The timer is held and cleared, which the first version did not do: a warm rebuild prices
+     about sixty sets, every one of them answered in milliseconds, and every one of them still
+     wrote "gave up after 8000ms" eight seconds later. Sixty false alarms in the window you are
+     watching for the real ones. */
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      pricesFor(setName),
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => {
+          console.error(
+            `pokemontcg.io prices for ${setName} gave up after ${SET_PRICES_BUDGET_MS}ms`,
+          );
+          resolve(null);
+        }, SET_PRICES_BUDGET_MS);
+        timer.unref?.();
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function pricesFor(setName: string): Promise<Map<string, UsdPrice> | null> {
@@ -335,7 +345,10 @@ const SEARCH_TIMEOUT_MS = 12_000;
  * does not arrive the card keeps its price and loses a second opinion, which is not worth a
  * minute and a half of somebody's evening.
  */
-const SET_PRICES_BUDGET_MS = Number(process.env.PTCG_PRICES_BUDGET_MS ?? 8_000);
+const budget = Number(process.env.PTCG_PRICES_BUDGET_MS ?? 8_000);
+/* Checked rather than trusted: a typo in the Vercel value makes this NaN, setTimeout(NaN) fires
+   in a millisecond, and every set would resolve to "no prices" instantly and quietly. */
+const SET_PRICES_BUDGET_MS = Number.isFinite(budget) && budget > 0 ? budget : 8_000;
 
 type SearchPage = { data?: (PtcgPriceCard & { number?: string })[]; totalCount?: number };
 
