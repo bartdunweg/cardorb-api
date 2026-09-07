@@ -1,0 +1,1 @@
+- A card imported from an export now keeps its foil where the export names a pattern for it — Cosmos, Cracked Ice, Starlight, Confetti and Vertical Line all arrive as holo instead of arriving as nothing. A Play! Pokémon "Master Ball League" promo is no longer filed as the Master Ball reverse from 151, which was reading the wrong price.

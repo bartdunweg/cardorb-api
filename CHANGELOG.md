@@ -12,7 +12,15 @@ if the two have drifted apart.
 
 - A row's copies can differ: `POST /v1/collection/items/{id}/copies` adds one more copy as a row of its own, `POST /v1/collection/items/{id}/split` moves some of a row's copies to a row with their own language, condition, grade, finish, folder, price or acquired date. `GET /v1/cards` takes `number` beside `set`; a new card can be filed in a folder at once (`collectionId` on the draft); PATCH takes `acquiredAt`.
 
+- A CSV export can be imported into your collection, and an export from Dex is recognised on sight: its copy counts, its printings and its wishlist all come across, and the thousands of checklist lines for cards you do not own are left where they are. Every import shows you what it would do — including how many of the cards you already have — before it does anything.
+
+- A card imported from an export now keeps its foil where the export names a pattern for it — Cosmos, Cracked Ice, Starlight, Confetti and Vertical Line all arrive as holo instead of arriving as nothing. A Play! Pokémon "Master Ball League" promo is no longer filed as the Master Ball reverse from 151, which was reading the wrong price.
+
 - A copy's `finish` can be `poke-ball` or `master-ball`: the patterned reverse holos of 151 and Prismatic Evolutions. Both are priced as a reverse holo (the foil price where Cardmarket publishes one). Readers with a closed list of finishes must add the two before a copy carries them.
+
+- An import now adds every card in the file, including ones you already have — a second copy is a normal thing to own. The preview says how many of them you already hold, so importing the same file twice is something you see coming.
+
+- An import tells apart the cards a file says you do not own from the rows it could not read. Most of an export from Dex is the first kind — the checklist of everything a set contains — and reporting those as unusable made a working import look half broken.
 
 - A card's price line goes back to November 2022 where the American market has it: `GET /v1/cards/{tcgId}/prices` answers every reading a card has, not the last ninety days. The years before the nightly Cardmarket reading (2026-08-16) come from TCGplayer, turned into euros at each day's ECB rate: the market price from tcgcsv.com's archive, weekly from February 2024, and before that weekly averages of TCGplayer sales from tcgdex/price-history for the older sets. `card_prices.source` says which; `scripts/backfill-card-prices.mjs` fills it in and can be rerun.
 
@@ -23,6 +31,8 @@ if the two have drifted apart.
 - Two more set names the collection and pokemontcg.io disagree on: "Set 1 Unlimited" (and its shadowless and unqualified siblings) is that catalogue's "Base", and "Scarlet & Violet Base" is its "Scarlet & Violet". Until now a card in either set was unmatched wherever the two vocabularies meet — unowned in the catalogue search, missing from a set's progress on Browse — which in the one collection here is 132 cards, a Base Set Charizard among them.
 
 - A scan path the assembly works out for itself is checked before it is used. TCGdex lists a gallery subset's cards without an `image` while the files do exist under the parent set, so the path is built rather than given up on — but it also lists cards it has no scan of at all, and there the built path is a 404 that looked like artwork and kept the Limitless and pokemontcg.io fallbacks from ever running. Fourteen cards in the collection here showed an empty square for that reason, the tag-team GX promos among them.
+
+- Cards from an EX Trainer Kit deck now find their scan and price: the catalogue files those sets under the deck's Pokémon, and an export names the product.
 
 ## 2026-09-06
 

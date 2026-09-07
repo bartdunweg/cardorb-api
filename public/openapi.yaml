@@ -700,14 +700,35 @@ components:
         types: { type: integer }
         owned: { type: integer }
         acquired: { type: integer }
+        quantity: { type: integer }
+        variant: { type: integer }
+        condition: { type: integer }
+        language: { type: integer }
+        notes: { type: integer }
 
     ImportOutcome:
       type: object
-      required: [seen, added, skipped, sample]
+      required: [seen, added, skipped, notOwned, existing, sample]
       properties:
         seen: { type: integer }
         added: { type: integer }
         skipped: { type: integer }
+        notOwned:
+          type: integer
+          description: |
+            Of `skipped`, the rows left out because the file says the card is not
+            owned — a quantity of zero outside the wishlist. Told apart because
+            they are not a problem: an export lists every printing of every set
+            it has shown you, and on a real file this is more than half the
+            lines. A client should not call these unusable.
+        existing:
+          type: integer
+          description: |
+            Rows naming a card the collection already holds, matched on set,
+            printed number and name without its card-type suffix. Reported, not
+            acted on — every row is written. A client shows it before a commit,
+            because a CSV row has no source_id and nothing in the database stops
+            the same file being imported twice.
         sample: { type: array, items: { $ref: "#/components/schemas/CollectionRow" } }
 
     ImportRecord:
@@ -1772,10 +1793,21 @@ paths:
       operationId: importCsv
       summary: Preview or commit a CSV import
       description: |
-        Same-origin, session only. Without `commit` it is a dry run that answers
-        with the header, the guessed column map and a sample. With `commit: true`
-        it writes, ten times per person each fifteen minutes. 2 MB, 5,000 rows.
-      security: [{ session: [] }]
+        A bearer token or a session. Without `commit` it is a dry run that
+        answers with the header, the guessed column map, a sample and how many
+        rows you already hold. With `commit: true` it writes, ten times per
+        person each fifteen minutes. 2 MB, 5,000 rows.
+
+        `csv` is text, so its encoding is the caller's problem: read a UTF-16
+        file with a decoder before sending it. The delimiter is not — comma,
+        semicolon and tab are sniffed from the header.
+
+        An export this endpoint recognises (`source: "dex"`) is read by its own
+        rules and ignores `map`: its columns are fixed, and three of them —
+        a quantity of zero meaning "not owned", a folder meaning the wishlist,
+        and a `Type` column that is not an energy type — cannot be expressed as
+        a column mapping. Anything else is `source: "generic"`.
+      security: [{ bearer: [] }, { session: [] }]
       requestBody:
         required: true
         content:
@@ -1789,7 +1821,7 @@ paths:
                 commit: { type: boolean, default: false }
       responses:
         "200":
-          description: The outcome. A preview also carries `header`, `guessed` and `skippedRows`.
+          description: The outcome, plus `source`. A preview also carries `header`, `guessed` and `skippedRows`.
           content:
             application/json:
               schema:
@@ -1797,6 +1829,7 @@ paths:
                   - $ref: "#/components/schemas/ImportOutcome"
                   - type: object
                     properties:
+                      source: { type: string, enum: [dex, generic] }
                       header: { type: array, items: { type: string } }
                       guessed: { $ref: "#/components/schemas/ColumnMap" }
                       skippedRows:
@@ -1829,7 +1862,7 @@ paths:
       tags: [Import]
       operationId: listImports
       summary: Recent imports
-      security: [{ session: [] }]
+      security: [{ bearer: [] }, { session: [] }]
       responses:
         "200":
           description: The most recent imports, newest first.

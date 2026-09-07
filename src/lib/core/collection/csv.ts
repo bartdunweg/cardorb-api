@@ -1,4 +1,5 @@
 import type { CollectionRow } from "./collection-row";
+import { isFinish, isLanguage, type Finish, type Language } from "./collection-row";
 
 /**
  * A spreadsheet somebody exported, turned into rows.
@@ -11,7 +12,50 @@ import type { CollectionRow } from "./collection-row";
  *
  * Pure, so every case below is a unit test rather than a fixture uploaded
  * through a form.
+ *
+ * What this file does *not* do is decide the character encoding. By the time a
+ * CSV reaches here it is a JavaScript string, and that question was already
+ * answered by whoever read the bytes — the web app, which sniffs the byte order
+ * mark and decodes UTF-16 itself. A UTF-16 file read as UTF-8 does not arrive
+ * here looking odd; it arrives looking like nothing at all.
  */
+
+/**
+ * Which character separates the fields.
+ *
+ * The comma used to be assumed, which is what the format is named after and
+ * what half of the world exports. The other half exports semicolons — every
+ * Excel on a machine whose decimal separator is the comma does, and so does
+ * Dex — and a semicolon file parsed on commas is one enormous single-column
+ * row that matches no header and imports as nothing.
+ *
+ * Counted outside quotes on the header line alone: a quoted field may contain
+ * any of these, and the header is the one line guaranteed to have a separator
+ * between every column. Ties go to the comma, which is the format's own name.
+ */
+export function sniffDelimiter(text: string): string {
+  const counts: Record<string, number> = { ",": 0, ";": 0, "\t": 0 };
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]!;
+    if (quoted) {
+      if (c === '"') {
+        if (text[i + 1] === '"') i++;
+        else quoted = false;
+      }
+      continue;
+    }
+    if (c === '"') quoted = true;
+    else if (c === "\n" || c === "\r") break;
+    else if (c in counts) counts[c]!++;
+  }
+
+  const best = (Object.keys(counts) as string[]).reduce((a, b) =>
+    counts[b]! > counts[a]! ? b : a,
+  );
+  return counts[best]! > 0 ? best : ",";
+}
 
 /**
  * Split a CSV into rows of fields.
@@ -21,15 +65,19 @@ import type { CollectionRow } from "./collection-row";
  * line endings from anything that has been near Excel. Plus the byte order mark
  * Excel puts at the front of a UTF-8 file, which is invisible and turns the
  * first header into something that matches nothing.
+ *
+ * `delimiter` is sniffed from the header when it is not given, so a caller that
+ * knows better — a test, mostly — can still say.
  */
-export function parseCsv(text: string): string[][] {
+export function parseCsv(text: string, delimiter = sniffDelimiter(text)): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
   let quoted = false;
 
   // The BOM. Not stripping it means the first column is called "﻿name"
-  // and no mapping ever finds it.
+  // and no mapping ever finds it. UTF-16's own mark is gone by now — the
+  // decoder eats it — but a UTF-8 one survives into the string.
   const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 
   for (let i = 0; i < src.length; i++) {
@@ -47,7 +95,7 @@ export function parseCsv(text: string): string[][] {
     }
 
     if (c === '"') quoted = true;
-    else if (c === ",") {
+    else if (c === delimiter) {
       row.push(field);
       field = "";
     } else if (c === "\n" || c === "\r") {
@@ -80,6 +128,11 @@ export type ColumnMap = {
   types?: number;
   owned?: number;
   acquired?: number;
+  quantity?: number;
+  variant?: number;
+  condition?: number;
+  language?: number;
+  notes?: number;
 };
 
 /**
@@ -112,11 +165,96 @@ export function guessColumns(header: string[]): Partial<ColumnMap> {
     types: find(/^type/),
     owned: find(/owned|have|in ?collection|binder/),
     acquired: find(/acquired|added|date|bought|obtained/),
+    // Deliberately not /count/: a "Count" column in an export is as often the
+    // number of a set you have completed as it is copies of one card.
+    quantity: find(/^(qty|quantity|copies|amount)$/, /quantity|copies/),
+    variant: find(/^(variant|finish|printing|foil)$/, /variant|finish|printing/),
+    condition: find(/^(condition|cond|grade)$/, /condition/),
+    language: find(/^(language|lang|locale)$/, /language/),
+    notes: find(/^(notes?|comment|remark)s?$/, /^note/),
   };
 }
 
+/**
+ * The reason a row is left out when the file itself says the card is not owned.
+ *
+ * Named rather than typed twice, because two readers act on it: the outcome
+ * counts these apart from rows it could not read, and a screen phrases them
+ * very differently. Half of a real Dex export is this.
+ */
+export const NOT_OWNED = "not owned (quantity 0)";
+
 /** Values a person plausibly writes for "no". Everything else is yes. */
 const NO = /^(false|no|n|0|wishlist|want|wanted)$/i;
+
+/**
+ * The printed number, as the catalogue writes it.
+ *
+ * Exports print the number the way the card does — "48/108", "174/165" — and
+ * TCGdex stores the left half alone. numberForms() tries a bare number with and
+ * without leading zeros and never thinks to drop a denominator, so a whole
+ * import of "48/108" matches nothing, has no scan and no price, and looks like
+ * a catalogue outage rather than a formatting difference.
+ *
+ * Only when what follows the slash is digits. "TG12/TG30" keeps its left half
+ * for the same reason, but "H1/H32" and a genuine name with a slash in it are
+ * left alone rather than guessed at.
+ */
+export const cardNumber = (n: string): string => {
+  const m = /^(\S+)\/\d+$/.exec(n.trim());
+  return m ? m[1]! : n.trim();
+};
+
+/**
+ * Which printing a copy is, from whatever the export called it.
+ *
+ * One export named 137 different variants of the cards in one collection, and
+ * this app stores five. That is not a gap to widen: FINISHES is the distinction
+ * Cardmarket prices, and a copy is worth what its *foil* is worth — a stamp in
+ * the corner does not change which price field to read. So the job here is to
+ * find the foil inside somebody else's vocabulary and drop the rest.
+ *
+ * Order is the whole of it, and each step is a mistake that was made first.
+ *
+ * The ball patterns are matched before anything else and only on their own,
+ * because "Master Ball League" is a Play! Pokémon league promo and matching it
+ * on its first two words filed it as the Master Ball reverse from 151 — which
+ * reads the foil price. A stamp named after a ball is not a ball pattern.
+ *
+ * Reverse before holo, because "Reverse Holo" contains both and is not a holo.
+ *
+ * Then holo anywhere in the name rather than only at the front, which is what
+ * "Cracked Ice Holo", "Starlight Holo", "Confetti Holo" and "Vertical Line
+ * Holo" need: those are holo cards with another foil pattern, and leaving them
+ * with no finish said we did not know what they were when we plainly did.
+ *
+ * Null for anything still unrecognised rather than a guess at normal: a wrong
+ * finish reads the wrong price field (see isReverseFinish), and "I do not know"
+ * is a thing this app can show.
+ */
+export function finishFrom(variant: string): Finish | null {
+  const v = variant.trim().toLowerCase();
+  if (!v) return null;
+  if (isFinish(v)) return v;
+
+  // The 151 and Prismatic Evolutions reverse patterns, and nothing that merely
+  // shares their name. "Master Ball League", "Ultra Ball League", "Great Ball
+  // League" are league promos and fall through to the tests below.
+  const ball = /^(pok[eé] ?ball|master ?ball)( reverse| holo| reverse holo)?$/.exec(v);
+  if (ball) return ball[1]!.startsWith("master") ? "master-ball" : "poke-ball";
+
+  if (v.includes("reverse")) return "reverse-holo";
+  if (v.includes("holo")) return "holo";
+  if (v.startsWith("normal")) return "normal";
+  return null;
+}
+
+/** A copy count, or null where the column said nothing usable. */
+export function quantityFrom(raw: string): number | null {
+  if (!raw.trim()) return null;
+  const n = Number.parseInt(raw.trim(), 10);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
 
 export type CsvResult = {
   rows: CollectionRow[];
@@ -139,6 +277,14 @@ export type CsvResult = {
  * checkbox was read as `!== false`, and a spreadsheet that simply has no such
  * column is somebody's binder rather than somebody's wishlist. Getting it
  * backwards turns a collection into a shopping list, quietly, at scale.
+ *
+ * A quantity of zero is the exception to that, and it is why the rule needed a
+ * second sentence. An export that lists a whole set and writes 0 beside the
+ * cards you do not have is stating ownership in the quantity column rather than
+ * in an owned one; taking the default there would import somebody's checklist
+ * as their collection. Zero is dropped, not wishlisted — R-DATA-002 puts every
+ * card you do not own on the wishlist, so a row that is neither has no business
+ * being written at all.
  */
 export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): CsvResult {
   const rows: CollectionRow[] = [];
@@ -164,13 +310,22 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
     }
 
     const ownedRaw = at(r, map.owned);
+    const quantity = quantityFrom(at(r, map.quantity));
+    const owned = ownedRaw ? !NO.test(ownedRaw) : quantity === null || quantity > 0;
+
+    if (!owned && quantity === 0) {
+      skipped.push({ line, why: NOT_OWNED });
+      return;
+    }
+
     const acquired = at(r, map.acquired);
     const parsed = acquired ? new Date(acquired) : null;
+    const language = at(r, map.language).toLowerCase();
 
     rows.push({
       id: null,
       name,
-      number: at(r, map.number),
+      number: cardNumber(at(r, map.number)),
       setName: set,
       rarity: at(r, map.rarity) || null,
       gen: at(r, map.gen) || null,
@@ -181,23 +336,22 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
         .split(/[;|]/)
         .map((t) => t.trim())
         .filter(Boolean),
-      owned: !(ownedRaw && NO.test(ownedRaw)),
+      owned,
       excluded: false,
       // An unparseable date is dropped rather than becoming today: the value
       // history in the snapshot script is built on this column, and a wrong
       // date is worse than a missing one.
       acquiredAt: parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null,
-      // A spreadsheet import has never carried these.
-      // A spreadsheet has no column for this and guessing from a rarity
-      // string is what put the app in this position to begin with.
-      finish: null,
-      quantity: 1,
-      condition: null,
+      finish: finishFrom(at(r, map.variant)),
+      // One, where the file did not say. Not zero: a row that reached here is a
+      // card somebody has, and quantity is what the collection counts.
+      quantity: quantity && quantity > 0 ? quantity : 1,
+      condition: at(r, map.condition) || null,
       grade: null,
-      language: null,
+      language: isLanguage(language) ? (language as Language) : null,
       purchasePrice: null,
       purchaseDate: null,
-      notes: null,
+      notes: at(r, map.notes) || null,
       isFavorite: false,
       collectionId: null,
     });

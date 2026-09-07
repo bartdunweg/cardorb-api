@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
-import { refuse, apiError, retryAfter } from "@/lib/api/respond";
+import { apiError, retryAfter } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
-import { sameOrigin } from "@/lib/api/guard";
+import { authoriseWrite, refused } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
-import { currentViewer } from "@/lib/api/viewer";
-import { serverClient } from "@/lib/storage/supabase";
+import { bearer } from "@/lib/api/viewer";
+import { clientFor } from "@/lib/storage/collection";
 import { cardsTag } from "@/lib/core/collection/collection-row";
 import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/collection/csv";
-import { commit, preview } from "@/lib/storage/imports";
+import { looksLikeDex, dexRows } from "@/lib/core/collection/dex";
+import { commit, heldKeys, preview } from "@/lib/storage/imports";
 
 /**
  * A spreadsheet, previewed or committed.
@@ -20,6 +21,13 @@ import { commit, preview } from "@/lib/storage/imports";
  * destructive-looking operation with no preview is a trap — and because the
  * column mapping is a *guess*, so the only honest thing to do is show what the
  * guess produced before acting on it.
+ *
+ * Two kinds of file reach here. One is somebody's own list, whose headers can
+ * only be guessed at and corrected on screen. The other is an export from a
+ * collection app, where the columns are fixed and three of them mean things no
+ * column map can express — see dex.ts. The answer says which of the two this
+ * was, under `source`, so the screen can stop asking a question whose answer is
+ * not in doubt.
  */
 
 /** Two megabytes and five thousand rows. A collection, not a database dump. */
@@ -45,10 +53,19 @@ export const maxDuration = 300;
 const byAccount = createRateLimiter(15 * 60_000, 10);
 
 export async function POST(req: Request) {
-  if (!sameOrigin(req)) return apiError(403, "Forbidden");
-
-  const viewer = await currentViewer();
-  if (!viewer) return refuse("signIn");
+  /**
+   * authoriseWrite(), not sameOrigin() + currentViewer().
+   *
+   * currentViewer() reads the session from a cookie, which means a browser on
+   * this origin and nothing else. The web app calls this from its own server
+   * with the session as a bearer token, the way the iOS app does and the way
+   * every other write route here already accepts — so this endpoint existed,
+   * worked, and answered 401 to the only client that wanted it.
+   */
+  const viewer = await authoriseWrite(req);
+  if (refused(viewer)) {
+    return apiError(viewer.status, viewer.error, undefined, { headers: viewer.headers });
+  }
 
   let csv = "";
   let map: Partial<ColumnMap> | undefined;
@@ -88,43 +105,61 @@ export async function POST(req: Request) {
   }
 
   const header = grid[0]!;
-  const guessed = { ...guessColumns(header), ...map };
+  const dex = looksLikeDex(header);
+  const guessed = dex ? undefined : { ...guessColumns(header), ...map };
 
   // Two columns are not optional: without them a row cannot be placed or drawn,
-  // so the whole file would import as nothing.
-  if (guessed.name === undefined || guessed.set === undefined) {
+  // so the whole file would import as nothing. A recognised export is never
+  // asked, because its columns are not in question.
+  if (guessed && (guessed.name === undefined || guessed.set === undefined)) {
     return NextResponse.json(
       {
         error: "Point out which columns hold the card name and the set.",
         header,
         guessed,
+        source: "generic",
       },
       { status: 400 },
     );
   }
 
-  const { rows, skipped } = rowsFrom(grid, guessed as ColumnMap);
+  const { rows, skipped } = dex ? dexRows(grid) : rowsFrom(grid, guessed as ColumnMap);
+
+  /**
+   * What the collection already holds, read before either half answers.
+   *
+   * The preview needs it to make its promise and the commit needs it to keep
+   * that promise, so both are handed the same answer from the same read.
+   */
+  const db = await clientFor(bearer(req) ?? undefined);
+  if (!db) return apiError(503, "There is nowhere to write to.");
+
+  let held: Set<string>;
+  try {
+    held = await heldKeys(db, viewer.userId);
+  } catch (err) {
+    console.error("Reading the collection before an import failed:", err);
+    return apiError(502, "Your collection could not be read.");
+  }
+
+  const source = dex ? "dex" : "generic";
 
   if (!doCommit) {
     return NextResponse.json({
-      ...preview(rows, skipped.length),
+      ...preview(rows, skipped, held),
       header,
       guessed,
+      source,
       skippedRows: skipped.slice(0, 20),
     });
   }
 
-  const db = await serverClient();
-  if (!db) {
-    return refuse("noDatabase");
-  }
-
   try {
-    const outcome = await commit(db, viewer.userId, "csv", rows, skipped.length);
+    const outcome = await commit(db, viewer.userId, "csv", rows, skipped, held);
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });
-    return NextResponse.json(outcome);
+    return NextResponse.json({ ...outcome, source });
   } catch (err) {
     console.error("CSV import failed:", err);
     return apiError(500, "That import could not be finished.");
