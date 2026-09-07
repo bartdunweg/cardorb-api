@@ -498,9 +498,11 @@ export function sortPublicItems(
   order: Order = "asc",
 ): PublicItem[] {
   const dir = order === "asc" ? 1 : -1;
-  // "added" arrives already in that order from publicItems(), which alone can see the dates;
-  // like "set", the order is the one the list came in, and `desc` reads it backwards.
-  if (sort === "set" || sort === "added") return dir === 1 ? items : [...items].reverse();
+  // Both orders arrive built: "set" is the assembly's, ascending, and "added" is publicItems()'s,
+  // newest first, which is `desc`. So each is the identity in its own direction and a reversal in
+  // the other — the dates that would let this sort them are not on a public item.
+  const given = sort === "added" ? "desc" : "asc";
+  if (sort === "set" || sort === "added") return order === given ? items : [...items].reverse();
   const indexed = items.map((it, i) => ({ it, i }));
   indexed.sort((a, b) => a.it.name.localeCompare(b.it.name) * dir || a.i - b.i);
   return indexed.map((x) => x.it);

@@ -411,6 +411,19 @@ describe("public filters, sort and facets", () => {
     expect(publicItems(sets).map((i) => i.name)).toEqual(["Snorlax", "Eevee", "Charizard"]);
     // No date reaches the reader either way.
     expect(Object.keys(publicItems(sets, { newestFirst: true })[0]!)).not.toContain("acquiredAt");
+
+    // Newest first is the order the list arrives in, so `desc` leaves it alone and `asc` reverses it.
+    const newest = publicItems(sets, { newestFirst: true });
+    expect(sortPublicItems(newest, "added", "desc").map((i) => i.name)).toEqual([
+      "Charizard",
+      "Snorlax",
+      "Eevee",
+    ]);
+    expect(sortPublicItems(newest, "added", "asc").map((i) => i.name)).toEqual([
+      "Eevee",
+      "Snorlax",
+      "Charizard",
+    ]);
   });
 
   it("reads set, rarity, sort and order, and refuses a sort a public page cannot do", () => {
