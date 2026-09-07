@@ -396,13 +396,21 @@ export type PublicItem = {
   favorite: boolean;
 };
 
-export function publicItems(sets: CardSet[]): PublicItem[] {
+/**
+ * The owned cards as a public list. `newestFirst` orders by the day each card was got, which is
+ * what a profile opens on; a card nobody dated goes last, as it does in the owner's own list.
+ */
+export function publicItems(sets: CardSet[], { newestFirst = false } = {}): PublicItem[] {
+  const dated: { item: PublicItem; at: number }[] = [];
   const out: PublicItem[] = [];
   for (const set of sets) {
     for (const card of set.cards) {
       const copies = card.variants.filter((v) => v.owned).length;
       if (copies === 0) continue;
-      out.push({
+      const at = card.variants
+        .filter((v) => v.owned && v.acquiredAt)
+        .reduce((newest, v) => Math.max(newest, Date.parse(v.acquiredAt!) || 0), 0);
+      const item: PublicItem = {
         key: card.key,
         name: card.name,
         number: card.number,
@@ -417,10 +425,15 @@ export function publicItems(sets: CardSet[]): PublicItem[] {
         tcgId: card.tcgId,
         copies,
         favorite: card.variants.some((v) => v.owned && v.isFavorite),
-      });
+      };
+      if (newestFirst) dated.push({ item, at });
+      else out.push(item);
     }
   }
-  return out;
+  if (!newestFirst) return out;
+  // A card without a date is a card whose day nobody wrote down: it goes after the dated ones,
+  // in the order the assembly listed it, rather than pretending to be the oldest.
+  return dated.sort((a, b) => b.at - a.at || 0).map((d) => d.item);
 }
 
 /**
@@ -471,7 +484,12 @@ export function filterPublicItems(items: PublicItem[], f: PublicFilter): PublicI
 }
 
 /** A public page carries no price and no date, so it sorts by set order or by name only. */
-export const PUBLIC_SORTS = ["set", "name"] as const;
+/**
+ * What a public list may be sorted by. "added" is newest first: the profile opens on what its
+ * owner pulled last. The date itself stays off the wire — `publicItems` orders by it and drops
+ * it, so a visitor learns which card is newest without learning when every card was got.
+ */
+export const PUBLIC_SORTS = ["set", "name", "added"] as const;
 export type PublicSort = (typeof PUBLIC_SORTS)[number];
 
 export function sortPublicItems(
@@ -480,7 +498,9 @@ export function sortPublicItems(
   order: Order = "asc",
 ): PublicItem[] {
   const dir = order === "asc" ? 1 : -1;
-  if (sort === "set") return dir === 1 ? items : [...items].reverse();
+  // "added" arrives already in that order from publicItems(), which alone can see the dates;
+  // like "set", the order is the one the list came in, and `desc` reads it backwards.
+  if (sort === "set" || sort === "added") return dir === 1 ? items : [...items].reverse();
   const indexed = items.map((it, i) => ({ it, i }));
   indexed.sort((a, b) => a.it.name.localeCompare(b.it.name) * dir || a.i - b.i);
   return indexed.map((x) => x.it);
