@@ -71,7 +71,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const starred = owner.favoritesPublic
     ? new Set(filterItems(flattenItems(sets), { owned: true, favorite: true }).map(sameCard))
     : new Set<string>();
-  const owned = publicItems(shown).map((it) => ({ ...it, favorite: starred.has(sameCard(it)) }));
+  // Newest first is built here, not sorted later: only these items still know their dates, and
+  // the dates do not go out with them.
+  const owned = publicItems(shown, { newestFirst: read.query.sort === "added" }).map((it) => ({
+    ...it,
+    favorite: starred.has(sameCard(it)),
+  }));
   const all =
     list === "wishlist"
       ? publicWishes(shown)

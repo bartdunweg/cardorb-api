@@ -16,6 +16,8 @@ if the two have drifted apart.
 
 - A card's price line goes back to November 2022 where the American market has it: `GET /v1/cards/{tcgId}/prices` answers every reading a card has, not the last ninety days. The years before the nightly Cardmarket reading (2026-08-16) come from TCGplayer, turned into euros at each day's ECB rate: the market price from tcgcsv.com's archive, weekly from February 2024, and before that weekly averages of TCGplayer sales from tcgdex/price-history for the older sets. `card_prices.source` says which; `scripts/backfill-card-prices.mjs` fills it in and can be rerun.
 
+- A public collection can be sorted `added`: newest first, by the day each card was got. The dates stay off the wire — the list is built in that order and hands out the same fields as before — and a card nobody dated goes last.
+
 ## 2026-09-06
 
 - An instance keeps the collection it assembled for ten minutes, by the rows' version, so the screens that read it together (`/folders`, `/stats`, `/cards`, a Pokédex) pay the join once; a card's species is looked up once per name; `facets=0` on `/v1/cards` skips the facets pass.
