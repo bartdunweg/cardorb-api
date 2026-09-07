@@ -1,0 +1,1 @@
+- The second catalogue's card list is read to the end. It hands out 250 cards at a time and SWSH Black Star Promos has 304, so the Galarian birds (SWSH282–284) sat outside the one page that was asked for, which reads exactly like a card that host does not have. With the set-facts key bumped alongside, a fix to a picture is seen today rather than tomorrow.

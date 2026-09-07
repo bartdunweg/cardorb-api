@@ -26,6 +26,8 @@ if the two have drifted apart.
 
 - The second catalogue's scan of a promo is found under the number that catalogue uses. It writes "SM191" or "SWSH282" where the collection keeps the digits printed on the card, so the address built from the row's own number was a 404 and thirteen promos here — the tag-team GX ones, the Galarian birds — kept an empty square while the picture sat one name away. The bare number is still tried first, and a picture is only used when the name at that number agrees with the row's.
 
+- The second catalogue's card list is read to the end. It hands out 250 cards at a time and SWSH Black Star Promos has 304, so the Galarian birds (SWSH282–284) sat outside the one page that was asked for, which reads exactly like a card that host does not have. With the set-facts key bumped alongside, a fix to a picture is seen today rather than tomorrow.
+
 - A public collection can be sorted `added`: newest first, by the day each card was got. The dates stay off the wire — the list is built in that order and hands out the same fields as before — and a card nobody dated goes last.
 
 - Two more set names the collection and pokemontcg.io disagree on: "Set 1 Unlimited" (and its shadowless and unqualified siblings) is that catalogue's "Base", and "Scarlet & Violet Base" is its "Scarlet & Violet". Until now a card in either set was unmatched wherever the two vocabularies meet — unowned in the catalogue search, missing from a set's progress on Browse — which in the one collection here is 132 cards, a Base Set Charizard among them.

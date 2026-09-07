@@ -133,14 +133,23 @@ function namesIn(setId: string): Promise<Map<string, { number: string; name: str
   let pending = cardNames.get(setId);
   if (pending) return pending;
   pending = (async () => {
-    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=number,name&pageSize=250`;
+    const PAGE = 250;
     try {
-      const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
-      if (!res.ok) throw new Error(String(res.status));
-      const body = (await res.json()) as { data?: { number?: string; name?: string }[] };
       const out = new Map<string, { number: string; name: string }>();
-      for (const c of body.data ?? [])
-        if (c.number && c.name) out.set(norm(c.number), { number: c.number, name: c.name });
+      // Paged, because a promo set outgrew one page: SWSH Black Star Promos has 304 cards, and
+      // asking for 250 of them left the Galarian birds (SWSH282–284) outside the answer, which
+      // reads the same as "this host does not have them". Four pages is a thousand cards, past
+      // any set there has been; the loop stops at a short page either way.
+      for (let page = 1; page <= 4; page++) {
+        const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=number,name&pageSize=${PAGE}&page=${page}`;
+        const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
+        if (!res.ok) throw new Error(String(res.status));
+        const body = (await res.json()) as { data?: { number?: string; name?: string }[] };
+        const rows = body.data ?? [];
+        for (const c of rows)
+          if (c.number && c.name) out.set(norm(c.number), { number: c.number, name: c.name });
+        if (rows.length < PAGE) break;
+      }
       if (!out.size) throw new Error("empty card list");
       return out;
     } catch (err) {
