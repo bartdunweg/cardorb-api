@@ -177,6 +177,24 @@ const guideForRequest = cache(async (): Promise<Record<string, CardPrices>> => {
   }
 });
 
+/**
+ * The guide's prices for these cards and nothing else — no TCGdex fallback.
+ *
+ * For a browse surface, where the cards are the catalogue's rather than the viewer's: a set page
+ * asks after up to 250 cards at once and most of a big set is unpriced by Cardmarket, so the
+ * fallback would be hundreds of requests to put a number under cards nobody is buying. A missing
+ * price on a set page is a blank line; a set page that takes ten seconds is a broken one.
+ */
+export const guidePricesFor = async (ids: string[]): Promise<Map<string, CardPrices>> => {
+  const known = await guideForRequest();
+  const out = new Map<string, CardPrices>();
+  for (const id of ids) {
+    const found = known[id];
+    if (found) out.set(id, found);
+  }
+  return out;
+};
+
 function guideThenTcgdex(
   ids: string[],
   known: Record<string, CardPrices>,

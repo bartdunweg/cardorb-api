@@ -46,6 +46,8 @@ if the two have drifted apart.
 
 - Set codes reach the collection. #238 added the code printed on a set's cards but left the set-facts cache key at v14, so every entry cached before it deployed was a set without one, and the card tiles wrote their set out in full for a day. v15.
 
+- A set's cards carry a price. `GET /catalog/sets/{setId}` puts Cardmarket's number on every card of the page it returns, from the guide already cached for the day and with no per-card fallback behind it, so a set can be read the way the collection's own lists are rather than as a checklist.
+
 - A scan path the assembly works out for itself is checked before it is used. TCGdex lists a gallery subset's cards without an `image` while the files do exist under the parent set, so the path is built rather than given up on — but it also lists cards it has no scan of at all, and there the built path is a 404 that looked like artwork and kept the Limitless and pokemontcg.io fallbacks from ever running. Fourteen cards in the collection here showed an empty square for that reason, the tag-team GX promos among them.
 
 - Cards from an EX Trainer Kit deck now find their scan and price: the catalogue files those sets under the deck's Pokémon, and an export names the product.
