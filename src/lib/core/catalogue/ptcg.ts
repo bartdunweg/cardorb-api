@@ -276,6 +276,26 @@ const PRINTINGS = [
  * outage must not become a day without the second price.
  */
 export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice> | null> {
+  /* One budget around the whole thing, not around the paging alone.
+     The first version of this deadline covered ptcgSetPrices() and left find() and
+     findGallery() outside it — and those read the set's card names, four pages at eight
+     seconds each, by exactly the same host that is down. A test that never answers a request
+     found it: the call still took the full test timeout. A wall around the outside cannot be
+     got round by whichever inner path is slow this week. */
+  return await Promise.race([
+    pricesFor(setName),
+    new Promise<null>((resolve) =>
+      setTimeout(() => {
+        console.error(
+          `pokemontcg.io prices for ${setName} gave up after ${SET_PRICES_BUDGET_MS}ms`,
+        );
+        resolve(null);
+      }, SET_PRICES_BUDGET_MS).unref?.(),
+    ),
+  ]);
+}
+
+async function pricesFor(setName: string): Promise<Map<string, UsdPrice> | null> {
   // An index that could not be read is not an answer either: null, or an outage of the index
   // would be cached for a day as "nothing to price" for every set asked in it.
   if ((await sets()).size === 0) return null;
@@ -285,13 +305,16 @@ export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice>
   const headers: Record<string, string> = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
   // A search that failed is not an answer: null, so the caller keeps yesterday's or asks again.
-  const own = await ptcgSetPrices(set.id, headers);
+  /* One budget for the set and its gallery together: two calls, one deadline, so a gallery
+     cannot double the wait. */
+  const deadline = AbortSignal.timeout(SET_PRICES_BUDGET_MS);
+  const own = await ptcgSetPrices(set.id, headers, deadline);
   if (!own) return null;
   // A set's gallery (Trainer Gallery, Galarian Gallery) is a set of its own there and filed under
   // the parent here: its TG/GG numbers are prefixed, so they merge in without a collision.
   const gallery = await findGallery(setName);
   if (gallery) {
-    const more = await ptcgSetPrices(gallery.id, headers);
+    const more = await ptcgSetPrices(gallery.id, headers, deadline);
     if (!more) return null;
     for (const [k, v] of more) if (!own.has(k)) own.set(k, v);
   }
@@ -299,6 +322,20 @@ export async function ptcgPrices(setName: string): Promise<Map<string, UsdPrice>
 }
 
 const SEARCH_TIMEOUT_MS = 12_000;
+/**
+ * How long the whole of one set's prices may take, pages and retries together.
+ *
+ * The per-request timeout above is per *request*, and this reads up to four pages with two
+ * attempts each: 4 × 2 × 12 s is ninety-seven seconds for one set, and ptcgPrices() can run it
+ * twice for a set with a gallery. usdForSet() falls quiet for ten minutes after a failure, but
+ * only once it has been told there was one — so a cold instance paid the whole ninety-seven
+ * before the brake it already has could come on, and a collection appeared to hang.
+ *
+ * Eight seconds for the lot. This price is a blend into one Cardmarket already answered; when it
+ * does not arrive the card keeps its price and loses a second opinion, which is not worth a
+ * minute and a half of somebody's evening.
+ */
+const SET_PRICES_BUDGET_MS = Number(process.env.PTCG_PRICES_BUDGET_MS ?? 8_000);
 
 type SearchPage = { data?: (PtcgPriceCard & { number?: string })[]; totalCount?: number };
 
@@ -306,10 +343,15 @@ type SearchPage = { data?: (PtcgPriceCard & { number?: string })[]; totalCount?:
 async function ptcgSetPrices(
   setId: string,
   headers: Record<string, string>,
+  /* One deadline for the whole call, shared by every page and every retry, so the pages
+     multiply the wait no further. Passed in, so a set and its gallery share one budget
+     rather than each getting its own. */
+  deadline: AbortSignal = AbortSignal.timeout(SET_PRICES_BUDGET_MS),
 ): Promise<Map<string, UsdPrice> | null> {
   const out = new Map<string, UsdPrice>();
   const alias = new Map<string, UsdPrice>();
   for (let page = 1; page <= 4; page++) {
+    if (deadline.aborted) return null;
     const url =
       `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(`set.id:${setId}`)}` +
       `&select=id,number,tcgplayer&pageSize=250&page=${page}`;
@@ -319,14 +361,15 @@ async function ptcgSetPrices(
         const res = await fetch(url, {
           headers,
           next: { revalidate: DAY },
-          signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS),
+          signal: AbortSignal.any([deadline, AbortSignal.timeout(SEARCH_TIMEOUT_MS)]),
         });
         if (res.ok) body = (await res.json()) as SearchPage;
         else if (res.status < 500) return null;
       } catch {
         // Timed out or the network failed: the next attempt follows.
       }
-      if (!body && attempt < 1) await new Promise((r) => setTimeout(r, 500));
+      // No point sleeping into a deadline that has already passed.
+      if (!body && attempt < 1 && !deadline.aborted) await new Promise((r) => setTimeout(r, 500));
     }
     if (!body) return null;
     for (const card of body.data ?? []) {
