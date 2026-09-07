@@ -1,0 +1,1 @@
+- A card says which printings of it exist and what each one's foil looks like, so a form can stop offering a reverse holo of a card that was never printed as one, or a cosmos foil beside a printing that never had one.

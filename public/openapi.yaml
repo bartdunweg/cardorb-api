@@ -286,7 +286,7 @@ components:
     CardDetail:
       type: object
       description: One card from TCGdex, with its price where the caller may see one.
-      required: [id, name, image, rarity, illustrator, hp, types, stage, evolveFrom, regulationMark, variants, set, cmId, cmUrl, price, market]
+      required: [id, name, image, rarity, illustrator, hp, types, stage, evolveFrom, regulationMark, printings, set, cmId, cmUrl, price, market]
       properties:
         id: { type: string }
         name: { type: string }
@@ -299,22 +299,26 @@ components:
         stage: { type: [string, "null"] }
         evolveFrom: { type: [string, "null"] }
         regulationMark: { type: [string, "null"] }
-        variants:
-          type: object
-          required: [normal, holo, reverse]
+        printings:
+          type: array
           description: |
-            Which printings of this card exist. A form should offer no finish
-            that is false here — listing every finish this app can store offers
-            somebody a reverse holo of a card never printed as one. Absent from
-            the catalogue reads as all three, so a recorded finish is never lost.
+            Every printing of this card that exists: what each one is, and what its foil looks
+            like where the catalogue says. A pair rather than two lists, because a pattern belongs
+            to a printing — a Horsea of Shrouded Fable is a normal, a holo whose foil is cosmos,
+            and a reverse, so offering cosmos beside its normal offers something never made.
 
-            The Poké Ball and Master Ball prints are not a type TCGdex names;
-            they exist in 151 and Prismatic Evolutions and nowhere else, so a
-            client goes by the set for those.
-          properties:
-            normal: { type: boolean }
-            holo: { type: boolean }
-            reverse: { type: boolean }
+            A form should offer no finish and no pattern that is not here. Empty means the
+            catalogue has no answer, not that none exist, so a client offers everything then and
+            keeps whatever is already recorded either way.
+
+            The Poké Ball and Master Ball prints are not a type TCGdex names; they are reverses,
+            and share the reverses' test.
+          items:
+            type: object
+            required: [finish, foilPattern]
+            properties:
+              finish: { type: string, enum: [normal, holo, reverse-holo] }
+              foilPattern: { type: [string, "null"] }
         set:
           type: [object, "null"]
           properties:

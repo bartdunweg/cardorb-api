@@ -1,1 +1,0 @@
-- A card says which printings of it exist — normal, holo, reverse — so a form can stop offering a reverse holo of a card that was never printed as one.

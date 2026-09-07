@@ -8,7 +8,7 @@ if the two have drifted apart.
 
 - A card in `GET /v1/cards` says whether it is `excluded`: kept out of the public profile and the latest pull. `PATCH /v1/collection/items/{id}` has taken the flag all along; a client could set it but never read it back, so no screen could show what it had set.
 
-- A card says which printings of it exist — normal, holo, reverse — so a form can stop offering a reverse holo of a card that was never printed as one.
+- A card says which printings of it exist and what each one's foil looks like, so a form can stop offering a reverse holo of a card that was never printed as one, or a cosmos foil beside a printing that never had one.
 
 - `GET /v1/cards` filters by `gen` and `type`, each one whole and case-insensitively, as `set` and `rarity` do. The response's facets carry `gens` (in the collection's own, chronological order) and `types` (A to Z) beside the sets and rarities, so a filter menu is built from one read.
 

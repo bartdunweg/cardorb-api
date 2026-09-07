@@ -956,20 +956,22 @@ export type CardDetail = {
   evolveFrom: string | null;
   regulationMark: string | null;
   /**
-   * Which printings of this card exist, as TCGdex publishes them.
+   * Every printing of this card that exists, as TCGdex lists them: what each one is, and what
+   * its foil looks like where the catalogue says.
    *
-   * The point of carrying it is a form: a screen that lists every finish this
-   * app can store is offering somebody a reverse holo of a card that was never
-   * printed as one. Checked against a real collection — twenty owned copies
-   * across four eras, every one of them a printing TCGdex agrees exists — and
-   * against the other direction too: an export listed a reverse Espeon that
-   * TCGdex says does not exist, and its owner does not have one.
+   * A pair rather than two lists, because that is what a printing is. A Horsea of Shrouded Fable
+   * is a normal, a holo whose foil is cosmos, and a reverse — so "cosmos" is not a thing that
+   * card has, it is a thing its *holo* has, and a form offering cosmos beside a normal is
+   * offering something that was never made.
    *
-   * Only these three. The Poké Ball and Master Ball prints are not a `type`
-   * TCGdex names, so a client that wants to offer those has the set to go on:
-   * they exist in 151 and Prismatic Evolutions and nowhere else.
+   * Read from `variants_detailed`, which carries the foil; the `variants` object beside it is
+   * three booleans and cannot say which printing a pattern belongs to. Empty where the catalogue
+   * lists none, which a client must read as "no answer" rather than "none exist".
+   *
+   * The Poké Ball and Master Ball prints are not a type TCGdex names. They are reverses, so a
+   * client offering them has the same test the reverses have.
    */
-  variants: { normal: boolean; holo: boolean; reverse: boolean };
+  printings: { finish: "normal" | "holo" | "reverse-holo"; foilPattern: string | null }[];
   set: { id: string; name: string; logo: string | null; total: number | null } | null;
   /** Cardmarket's product id, which is how a card is addressed on their site. */
   cmId: number | null;
@@ -1016,7 +1018,7 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
       stage?: string;
       evolveFrom?: string;
       regulationMark?: string;
-      variants?: { normal?: boolean; holo?: boolean; reverse?: boolean };
+      variants_detailed?: { type?: string; foil?: string }[];
       set?: { id?: string; name?: string; logo?: string; cardCount?: { total?: number } };
       pricing?: {
         cardmarket?: {
@@ -1046,15 +1048,24 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
     stage: card.stage ?? null,
     evolveFrom: card.evolveFrom ?? null,
     regulationMark: card.regulationMark ?? null,
-    // Absent reads as "all three", not "none": an older card whose record has
-    // no variants block must not lose the finish somebody already recorded.
-    variants: card.variants
-      ? {
-          normal: card.variants.normal === true,
-          holo: card.variants.holo === true,
-          reverse: card.variants.reverse === true,
-        }
-      : { normal: true, holo: true, reverse: true },
+    // TCGdex's own words for a printing, in ours. Anything it calls something else is dropped
+    // rather than guessed at: an unknown type is a printing this app has no finish for.
+    printings: (card.variants_detailed ?? [])
+      .map((v) => ({
+        finish:
+          v.type === "reverse"
+            ? ("reverse-holo" as const)
+            : v.type === "holo"
+              ? ("holo" as const)
+              : v.type === "normal"
+                ? ("normal" as const)
+                : null,
+        foilPattern: v.foil ?? null,
+      }))
+      .filter(
+        (v): v is { finish: "normal" | "holo" | "reverse-holo"; foilPattern: string | null } =>
+          v.finish !== null,
+      ),
     set: card.set?.id
       ? {
           id: card.set.id,
