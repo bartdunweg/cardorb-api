@@ -27,6 +27,8 @@ export type CardItem = {
   /** The set's name as the catalogue spells it, and its title for a heading. */
   set: string;
   setTitle: string;
+  /** The code printed on the card: MEW, SFA, DEX. Null where the catalogue names but does not code the set. */
+  setAbbr: string | null;
   rarity: string | null;
   gen: string | null;
   type: string | null;
@@ -76,6 +78,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   number: card.number,
   set: set.name,
   setTitle: set.title,
+  setAbbr: set.abbreviation,
   rarity: v.rarity,
   gen: card.gen,
   type: card.type,
