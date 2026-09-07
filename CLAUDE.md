@@ -75,6 +75,10 @@ route handlers and the domain code are in `.claude/rules/`.
   cold build once left every card without a picture, price or id, cached for a day.
 - **Every catalogue fetch gives up after eight seconds** — a cold build was minutes, paid by
   the first visitor after a deploy.
+- **A field added to anything cached bumps that cache's version** — the Data Cache survives a
+  deploy, so the old entry, without the new field, stands for its whole TTL. #238 gave a set the
+  code printed on its cards and left `set-facts` at v14; every tile wrote its set out in full for
+  a day, and nothing failed while it did.
 
 ## Notices
 

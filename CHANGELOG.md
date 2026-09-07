@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-07
 
+- A note for the next person: adding a field to something cached means bumping that cache's version, or the old entry stands for its whole TTL. Written down after it cost a day of set codes.
+
 - A card in `GET /v1/cards` says whether it is `excluded`: kept out of the public profile and the latest pull. `PATCH /v1/collection/items/{id}` has taken the flag all along; a client could set it but never read it back, so no screen could show what it had set.
 
 - `GET /v1/cards` filters by `gen` and `type`, each one whole and case-insensitively, as `set` and `rarity` do. The response's facets carry `gens` (in the collection's own, chronological order) and `types` (A to Z) beside the sets and rarities, so a filter menu is built from one read.
