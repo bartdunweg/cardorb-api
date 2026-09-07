@@ -57,16 +57,56 @@ export type CardItem = {
 };
 
 /** One item per copy, in the assembly's order: set by set, number by number. */
+/**
+ * Everything that makes one copy different from another, as one string.
+ *
+ * The store keeps a row per purchase, so four copies bought on four evenings are four rows even
+ * when they agree on every word of what they are. Rows agreeing on all of this are the same copy
+ * several times over, and a list that draws them separately draws the same tile four times with
+ * nothing to tell them apart.
+ *
+ * Deliberately not in here: purchase price, purchase date, acquired date and notes. Those are
+ * facts about a *transaction*, and two copies you cannot tell apart on the shelf are one line
+ * whatever you paid for each. The sheet still holds every row behind that line.
+ */
+const sameness = (v: Variant) =>
+  [
+    v.owned ? "1" : "0",
+    v.language ?? "",
+    v.finish ?? "",
+    v.foilPattern ?? "",
+    v.condition ?? "",
+    v.grade ?? "",
+    v.collectionId ?? "",
+    v.isFavorite ? "1" : "0",
+  ].join("|");
+
+/**
+ * One item per kind of copy, with how many of that kind there are.
+ *
+ * It was one per row, so a card held four times drew four tiles reading the same name, the same
+ * set code and the same price — and paging, totals and the count under the title all counted
+ * those four as four different things. Grouped here rather than in the browser because the list
+ * is paged: merging tiles after the fact would leave `total` and the offsets describing a
+ * different list than the one on screen, and a group could straddle a page.
+ *
+ * The first row's id leads, so a tap opens the sheet on a real row; the sheet reads the rest.
+ */
 export function flattenItems(sets: CardSet[]): CardItem[] {
   const out: CardItem[] = [];
   for (const set of sets) {
     for (const card of set.cards) {
+      const groups = new Map<string, CardItem>();
       for (const v of card.variants) {
         // A variant without a row id is a public-payload shape, never a copy
         // somebody can page through or patch.
         if (v.id === null) continue;
-        out.push(itemOf(set, card, v, v.id));
+        const key = sameness(v);
+        const found = groups.get(key);
+        if (found) found.quantity += v.quantity ?? 1;
+        else groups.set(key, itemOf(set, card, v, v.id));
       }
+      out.push(...groups.values());
     }
   }
   return out;
