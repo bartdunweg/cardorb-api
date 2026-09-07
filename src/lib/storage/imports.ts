@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CollectionRow } from "../core/collection/collection-row";
+import { NOT_OWNED } from "../core/collection/csv";
 import { importKey, splitExisting } from "../core/collection/import-match";
 import { createRows } from "./postgres";
 
@@ -16,10 +17,21 @@ import { createRows } from "./postgres";
  * needs an answer, and the answer is a row with counts on it.
  */
 
+/** One row that was not written, with the line a person would count to. */
+export type SkippedRow = { line: number; why: string };
+
 export type ImportOutcome = {
   seen: number;
   added: number;
   skipped: number;
+  /**
+   * Of `skipped`, the rows left out because the file says the card is not
+   * owned. Told apart from the rest because they are not a problem: an export
+   * from Dex lists every printing of every set it has ever shown you, and on a
+   * real file this is more than half the lines. Calling those "could not be
+   * used" reads as an import that half failed.
+   */
+  notOwned: number;
   /**
    * Rows naming a card the collection already holds. Reported, not acted on:
    * every row is written. It is here so a screen can say "93 of these you
@@ -72,14 +84,15 @@ export async function heldKeys(db: SupabaseClient, userId: string): Promise<Set<
  */
 export function preview(
   rows: CollectionRow[],
-  skipped: number,
+  skipped: SkippedRow[],
   held: ReadonlySet<string>,
 ): ImportOutcome {
   const { existing } = splitExisting(rows, held);
   return {
-    seen: rows.length + skipped,
+    seen: rows.length + skipped.length,
     added: 0,
-    skipped,
+    skipped: skipped.length,
+    notOwned: skipped.filter((s) => s.why === NOT_OWNED).length,
     existing: existing.length,
     sample: rows.slice(0, 5),
   };
@@ -113,10 +126,11 @@ export async function commit(
   userId: string,
   kind: "csv",
   rows: CollectionRow[],
-  skippedCount: number,
+  skippedRows: SkippedRow[],
   held: ReadonlySet<string>,
 ): Promise<ImportOutcome> {
   const { existing } = splitExisting(rows, held);
+  const skippedCount = skippedRows.length;
 
   const { data: started } = await db
     .from("imports")
@@ -146,6 +160,7 @@ export async function commit(
       seen: rows.length + skippedCount,
       added,
       skipped,
+      notOwned: skippedRows.filter((s) => s.why === NOT_OWNED).length,
       existing: existing.length,
       sample: [],
     };

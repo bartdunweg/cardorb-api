@@ -1,0 +1,1 @@
+- An import tells apart the cards a file says you do not own from the rows it could not read. Most of an export from Dex is the first kind — the checklist of everything a set contains — and reporting those as unusable made a working import look half broken.

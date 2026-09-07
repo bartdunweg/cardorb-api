@@ -708,11 +708,19 @@ components:
 
     ImportOutcome:
       type: object
-      required: [seen, added, skipped, existing, sample]
+      required: [seen, added, skipped, notOwned, existing, sample]
       properties:
         seen: { type: integer }
         added: { type: integer }
         skipped: { type: integer }
+        notOwned:
+          type: integer
+          description: |
+            Of `skipped`, the rows left out because the file says the card is not
+            owned — a quantity of zero outside the wishlist. Told apart because
+            they are not a problem: an export lists every printing of every set
+            it has shown you, and on a real file this is more than half the
+            lines. A client should not call these unusable.
         existing:
           type: integer
           description: |

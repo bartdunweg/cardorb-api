@@ -1,5 +1,5 @@
 import type { CollectionRow } from "./collection-row";
-import { cardNumber, finishFrom, quantityFrom, type CsvResult } from "./csv";
+import { NOT_OWNED, cardNumber, finishFrom, quantityFrom, type CsvResult } from "./csv";
 
 /**
  * An export from Dex, which is not a spreadsheet with lucky column names.
@@ -103,7 +103,7 @@ export function dexRows(grid: string[][]): CsvResult {
     // not-owned, because R-DATA-002 says a card you do not own belongs on the
     // wishlist, and this is not on anybody's wishlist either.
     if (!wanted && quantity === 0) {
-      skipped.push({ line, why: "not owned (quantity 0)" });
+      skipped.push({ line, why: NOT_OWNED });
       return;
     }
 

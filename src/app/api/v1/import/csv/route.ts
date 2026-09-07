@@ -146,7 +146,7 @@ export async function POST(req: Request) {
 
   if (!doCommit) {
     return NextResponse.json({
-      ...preview(rows, skipped.length, held),
+      ...preview(rows, skipped, held),
       header,
       guessed,
       source,
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const outcome = await commit(db, viewer.userId, "csv", rows, skipped.length, held);
+    const outcome = await commit(db, viewer.userId, "csv", rows, skipped, held);
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });

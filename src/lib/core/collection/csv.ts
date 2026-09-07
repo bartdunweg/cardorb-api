@@ -175,6 +175,15 @@ export function guessColumns(header: string[]): Partial<ColumnMap> {
   };
 }
 
+/**
+ * The reason a row is left out when the file itself says the card is not owned.
+ *
+ * Named rather than typed twice, because two readers act on it: the outcome
+ * counts these apart from rows it could not read, and a screen phrases them
+ * very differently. Half of a real Dex export is this.
+ */
+export const NOT_OWNED = "not owned (quantity 0)";
+
 /** Values a person plausibly writes for "no". Everything else is yes. */
 const NO = /^(false|no|n|0|wishlist|want|wanted)$/i;
 
@@ -286,7 +295,7 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
     const owned = ownedRaw ? !NO.test(ownedRaw) : quantity === null || quantity > 0;
 
     if (!owned && quantity === 0) {
-      skipped.push({ line, why: "not owned" });
+      skipped.push({ line, why: NOT_OWNED });
       return;
     }
 
