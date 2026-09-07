@@ -1,0 +1,1 @@
+- A note for the next person: adding a field to something cached means bumping that cache's version, or the old entry stands for its whole TTL. Written down after it cost a day of set codes.
