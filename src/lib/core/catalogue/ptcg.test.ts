@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  */
 const SETS = [
   { id: "swsh12", name: "Silver Tempest" },
+  { id: "smp", name: "SM Black Star Promos" },
   { id: "swsh12tg", name: "Silver Tempest Trainer Gallery" },
   { id: "swsh12pt5", name: "Crown Zenith" },
   { id: "swsh12pt5gg", name: "Crown Zenith Galarian Gallery" },
@@ -20,6 +21,11 @@ const CARDS: Record<string, { number: string; name: string }[]> = {
     { number: "TG17", name: "Mawile V" },
   ],
   swsh12pt5gg: [{ number: "GG01", name: "Chikorita" }],
+  /** A promo set numbers its cards after itself, where the collection keeps the digits. */
+  smp: [
+    { number: "SM190", name: "Detective Pikachu" },
+    { number: "SM191", name: "Mewtwo & Mew-GX" },
+  ],
 };
 
 /** Every URL this served 200, in call order. */
@@ -161,5 +167,30 @@ describe("isGalleryNumber", () => {
     for (const n of ["TG01", "tg20", "GG01", " TG04 "]) expect(isGalleryNumber(n)).toBe(true);
     // A letter prefix is not enough: these are ordinary numbers in their own sets.
     for (const n of ["004", "TG", "SV044", "XY67a", "143A"]) expect(isGalleryNumber(n)).toBe(false);
+  });
+});
+
+describe("ptcgScan on a promo set", () => {
+  it("asks the set what it calls the card when the bare number is a 404", async () => {
+    installFetch(["https://images.pokemontcg.io/smp/SM191.png"]);
+    const { ptcgScan } = await load();
+    // The collection writes "191"; this host files the picture under "SM191".
+    expect(await ptcgScan("SM Black Star Promos", "191", "Mewtwo & Mew GX")).toBe(
+      "https://images.pokemontcg.io/smp/SM191.png",
+    );
+    // The bare number is tried first, because that is right for every other set.
+    expect(asked[0]).toBe("https://images.pokemontcg.io/smp/191.png");
+  });
+
+  it("will not hand over a picture whose name disagrees with the row", async () => {
+    installFetch(["https://images.pokemontcg.io/smp/SM190.png"]);
+    const { ptcgScan } = await load();
+    expect(await ptcgScan("SM Black Star Promos", "190", "Mewtwo & Mew GX")).toBeNull();
+  });
+
+  it("says nothing rather than guessing when the row has no name to check against", async () => {
+    installFetch(["https://images.pokemontcg.io/smp/SM191.png"]);
+    const { ptcgScan } = await load();
+    expect(await ptcgScan("SM Black Star Promos", "191")).toBeNull();
   });
 });
