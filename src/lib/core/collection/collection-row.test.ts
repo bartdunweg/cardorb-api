@@ -113,6 +113,7 @@ describe("rowFromDraft", () => {
       owned: true,
       excluded: false,
       finish: null,
+      foilPattern: null,
       quantity: 1,
       condition: null,
       grade: null,

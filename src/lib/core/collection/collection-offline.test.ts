@@ -57,6 +57,7 @@ const pikachu: CollectionRow = {
   excluded: false,
   acquiredAt: null,
   finish: null,
+  foilPattern: null,
   quantity: 1,
   condition: null,
   grade: null,

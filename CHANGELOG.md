@@ -18,6 +18,8 @@ if the two have drifted apart.
 
 - A copy's `finish` can be `poke-ball` or `master-ball`: the patterned reverse holos of 151 and Prismatic Evolutions. Both are priced as a reverse holo (the foil price where Cardmarket publishes one). Readers with a closed list of finishes must add the two before a copy carries them.
 
+- A copy can record what its foil looks like — cosmos, cracked ice, starlight, confetti or vertical line — beside what it is worth. An import keeps the pattern where the file names one; it is not shown on a public profile, for the same reason the printing is not.
+
 - An import now adds every card in the file, including ones you already have — a second copy is a normal thing to own. The preview says how many of them you already hold, so importing the same file twice is something you see coming.
 
 - An import tells apart the cards a file says you do not own from the rows it could not read. Most of an export from Dex is the first kind — the checklist of everything a set contains — and reporting those as unusable made a working import look half broken.

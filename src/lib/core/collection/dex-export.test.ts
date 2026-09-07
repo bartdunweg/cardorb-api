@@ -65,6 +65,19 @@ describe("a real Dex export", () => {
     ]);
   });
 
+  it("keeps the foil pattern beside the finish", () => {
+    const rows = dexRows(grid).rows;
+    const cosmos = rows.filter((r) => r.foilPattern === "cosmos");
+
+    // A Cosmos Holo is a holo card whose foil is cosmos. finish picks the price,
+    // foilPattern picks the look, and losing the second was losing the only
+    // thing that told these apart from any other holo.
+    expect(cosmos.length).toBeGreaterThan(0);
+    expect(cosmos.every((r) => r.finish === "holo" || r.finish === "reverse-holo")).toBe(true);
+    // Nothing else claims one. In the full export this was 3 rows of 2,097.
+    expect(rows.filter((r) => r.foilPattern && r.foilPattern !== "cosmos")).toEqual([]);
+  });
+
   it("takes nothing from the columns that would be a lie", () => {
     const rows = dexRows(grid).rows;
 

@@ -190,6 +190,14 @@ components:
       enum: [normal, reverse-holo, holo, poke-ball, master-ball]
       description: Which printing a copy is; `poke-ball` and `master-ball` are the patterned reverse holos of 151 and Prismatic Evolutions, priced as a reverse holo. `null` on a copy means "nobody has said", not `normal`.
 
+    FoilPattern:
+      type: string
+      enum: [cosmos, cracked-ice, starlight, confetti, vertical-line]
+      description: |
+        What the foil on a copy looks like. Says nothing about price — that is
+        `finish`, which chooses between the two series Cardmarket publishes and
+        holds the ball patterns because those two are priced apart. Null means
+        not recorded, which is every card added by hand.
     Price:
       type: object
       description: "One card's price, in euros. Cardmarket's where it stands alone, with its Near Mint band; the average of Cardmarket and TCGplayer (at the ECB rate) where both exist, and then `nm` is null and `market` is the shown figure."
@@ -220,6 +228,7 @@ components:
         rarity: { type: [string, "null"] }
         owned: { type: boolean, description: "`false` is a wishlist entry." }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
         quantity: { type: [integer, "null"] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -350,6 +359,7 @@ components:
         owned: { type: boolean }
         excluded: { type: boolean }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
         quantity: { type: integer, minimum: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -366,6 +376,7 @@ components:
       description: What a copy differs in from the row it comes from. Every key optional; `null` clears one. Not the card's identity, not quantity, owned or the star.
       properties:
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
         language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, null] }
@@ -398,6 +409,7 @@ components:
         excluded: { type: boolean }
         acquiredAt: { type: [string, "null"], format: date-time }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -473,6 +485,7 @@ components:
         tcgId: { type: [string, "null"] }
         owned: { type: boolean, description: "`false` is a wishlist entry." }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
+        foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }

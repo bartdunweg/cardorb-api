@@ -1,0 +1,1 @@
+- A copy can record what its foil looks like — cosmos, cracked ice, starlight, confetti or vertical line — beside what it is worth. An import keeps the pattern where the file names one; it is not shown on a public profile, for the same reason the printing is not.

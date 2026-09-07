@@ -40,7 +40,13 @@ import { limitlessScan, tcgdexScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
-import { type CollectionRow, type Finish, type Language, isReverseFinish } from "./collection-row";
+import {
+  type CollectionRow,
+  type Finish,
+  type FoilPattern,
+  type Language,
+  isReverseFinish,
+} from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
 export { highScan } from "../catalogue/artwork";
@@ -77,6 +83,16 @@ export type Variant = {
    * as being told it is normal.
    */
   finish: Finish | null;
+  /**
+   * What that foil looks like, where anything told us: cosmos, cracked ice,
+   * starlight, confetti, vertical line. Null is "not recorded" — which is every
+   * row that came from Notion and every card added by hand.
+   *
+   * Beside `finish` rather than inside it, because the two answer different
+   * questions: finish decides which price this copy reads, and no catalogue
+   * prices a cosmos holo apart from a plain one. See FOIL_PATTERNS.
+   */
+  foilPattern: FoilPattern | null;
   /**
    * How many of this printing. Null on a public payload rather than absent —
    * see forPublic(), which nulls it because how many of a card somebody has is
@@ -402,6 +418,10 @@ export function forPublic(sets: CardSet[]): CardSet[] {
         // allow-list here is meant to be argued past rather than added to by
         // habit.
         finish: null,
+        // The same argument as finish, one line up: what somebody's own copy
+        // looks like is theirs, and the public page shows the cards rather
+        // than the collection.
+        foilPattern: null,
         quantity: null,
         condition: null,
         grade: null,
@@ -819,6 +839,7 @@ export async function buildCollection(
         // comment for why these travel this far.
         id: row.id,
         finish: row.finish,
+        foilPattern: row.foilPattern,
         quantity: row.quantity,
         condition: row.condition,
         grade: row.grade,
@@ -852,6 +873,7 @@ export async function buildCollection(
         rarity: p.rarity,
         owned: p.owned,
         finish: p.finish,
+        foilPattern: p.foilPattern,
         quantity: p.quantity,
         condition: p.condition,
         grade: p.grade,

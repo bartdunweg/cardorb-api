@@ -468,7 +468,7 @@ function rowsVersion(rows: CollectionRow[]): string {
   const hash = createHash("sha1");
   for (const r of rows) {
     hash.update(
-      `${r.id}|${r.owned}|${r.quantity}|${r.finish}|${r.isFavorite}|${r.collectionId}|${r.excluded}|${r.rarity}|${r.name}|${r.setName}|${r.number}|${r.condition}|${r.grade}|${r.purchasePrice}|${r.purchaseDate}|${r.notes}|${r.acquiredAt}\u0001`,
+      `${r.id}|${r.owned}|${r.quantity}|${r.finish}|${r.foilPattern}|${r.isFavorite}|${r.collectionId}|${r.excluded}|${r.rarity}|${r.name}|${r.setName}|${r.number}|${r.condition}|${r.grade}|${r.purchasePrice}|${r.purchaseDate}|${r.notes}|${r.acquiredAt}\u0001`,
     );
   }
   return hash.digest("hex");
