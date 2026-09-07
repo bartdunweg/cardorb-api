@@ -109,6 +109,10 @@ export type ItemFilter = {
   rarity?: string;
   /** A card number, whole, as printed; with `set` it names one card's every row. */
   number?: string;
+  /** A generation, whole, as the catalogue names its series; case does not matter. */
+  gen?: string;
+  /** An energy type, whole, as the catalogue names it; case does not matter. */
+  type?: string;
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
@@ -123,6 +127,8 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const set = f.set?.trim().toLowerCase();
   const rarity = f.rarity?.trim().toLowerCase();
   const number = f.number?.trim().toLowerCase();
+  const gen = f.gen?.trim().toLowerCase();
+  const type = f.type?.trim().toLowerCase();
   const inRule = f.rule ? ruleMatcher(f.rule) : null;
   return items.filter((it) => {
     if (inRule && !inRule(it)) return false;
@@ -132,6 +138,8 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
     if (number && it.number.toLowerCase() !== number) return false;
+    if (gen && (it.gen ?? "").toLowerCase() !== gen) return false;
+    if (type && (it.type ?? "").toLowerCase() !== type) return false;
     if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
     if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
     return true;
@@ -251,7 +259,7 @@ export function readItemQuery(
       return { kind: "invalid", error: "collection must be a folder id." };
     query.collection = collection;
   }
-  for (const key of ["set", "rarity", "number"] as const) {
+  for (const key of ["set", "rarity", "number", "gen", "type"] as const) {
     const v = params.get(key);
     if (v === null) continue;
     if (!v.trim() || v.length > 100) return { kind: "invalid", error: `${key} must name one.` };
@@ -475,7 +483,12 @@ export function sortPublicItems(
   return indexed.map((x) => x.it);
 }
 
-export type Facets = { sets: { name: string; title: string }[]; rarities: string[] };
+export type Facets = {
+  sets: { name: string; title: string }[];
+  rarities: string[];
+  gens: string[];
+  types: string[];
+};
 export type PublicFacets = Facets;
 
 /**
@@ -487,22 +500,38 @@ export type PublicFacets = Facets;
  * public list is owned copies by construction; the owner's list says so per item.
  */
 export function facetsOf(
-  items: { set: string; setTitle: string; rarity: string | null; owned?: boolean }[],
+  items: {
+    set: string;
+    setTitle: string;
+    rarity: string | null;
+    gen?: string | null;
+    type?: string | null;
+    owned?: boolean;
+  }[],
   /** `owned: false` draws the menus from the wishes instead: a wishlist filters by its own sets. */
   over: { owned?: boolean } = {},
 ): Facets {
   const sets = new Map<string, string>();
   const rarities = new Map<string, string>();
+  // Generations keep the order the collection lists them in — the catalogue's series order,
+  // which is chronological. Types and rarities are named things with no order of their own,
+  // so they go A to Z.
+  const gens = new Map<string, string>();
+  const types = new Map<string, string>();
   const wanted = over.owned === false ? false : true;
   for (const it of items) {
     if ((it.owned ?? true) !== wanted) continue;
     if (!sets.has(it.set)) sets.set(it.set, it.setTitle);
     if (it.rarity && !rarities.has(it.rarity.toLowerCase()))
       rarities.set(it.rarity.toLowerCase(), it.rarity);
+    if (it.gen && !gens.has(it.gen.toLowerCase())) gens.set(it.gen.toLowerCase(), it.gen);
+    if (it.type && !types.has(it.type.toLowerCase())) types.set(it.type.toLowerCase(), it.type);
   }
   return {
     sets: [...sets].map(([name, title]) => ({ name, title })),
     rarities: [...rarities.values()].sort((a, b) => a.localeCompare(b)),
+    gens: [...gens.values()],
+    types: [...types.values()].sort((a, b) => a.localeCompare(b)),
   };
 }
 

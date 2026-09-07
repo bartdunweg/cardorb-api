@@ -107,6 +107,16 @@ describe("filterItems", () => {
   it("owned=false is the wishlist", () => {
     expect(filterItems(items, { owned: false }).map((i) => i.id)).toEqual(["b"]);
   });
+  it("narrows to one generation or one type, whole, in any case", () => {
+    const kanto = { ...items[0]!, id: "k", gen: "Base", type: "Lightning" };
+    const johto = { ...items[0]!, id: "j", gen: "Neo", type: "Grass" };
+    const plain = { ...items[0]!, id: "n", gen: null, type: null };
+    const all = [kanto, johto, plain];
+    expect(filterItems(all, { gen: "base" }).map((i) => i.id)).toEqual(["k"]);
+    expect(filterItems(all, { type: "GRASS" }).map((i) => i.id)).toEqual(["j"]);
+    expect(filterItems(all, { gen: "Base", type: "Grass" })).toEqual([]);
+    expect(filterItems(all, {}).map((i) => i.id)).toEqual(["k", "j", "n"]);
+  });
   it("matches a search against the name or the set, in any case", () => {
     expect(filterItems(items, { q: "JUNG" }).map((i) => i.id)).toEqual(["c", "d"]);
     expect(filterItems(items, { q: "pika" }).map((i) => i.id)).toEqual(["a"]);
@@ -209,6 +219,13 @@ describe("readItemQuery", () => {
     expect(read("owned=yes").kind).toBe("invalid");
     expect(read("limit=0").kind).toBe("invalid");
     expect(read("collection=not-a-uuid").kind).toBe("invalid");
+  });
+  it("reads a generation and a type as it reads a set", () => {
+    expect(read("gen=Base&type=Lightning")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, gen: "Base", type: "Lightning" },
+    });
+    expect(read("gen=").kind).toBe("invalid");
   });
   it("caps a page at two thousand", () => {
     const r = read("limit=9999&offset=200&owned=true&q=%20pika%20");
@@ -372,6 +389,8 @@ describe("public filters, sort and facets", () => {
         { name: "base", title: "BASE" },
       ],
       rarities: ["Common", "Rare"],
+      gens: [],
+      types: [],
     });
   });
 
@@ -431,6 +450,16 @@ describe("facetsOf over the wishes", () => {
     expect(facetsOf(items, { owned: false })).toEqual({
       sets: [{ name: "Fossil", title: "Fossil" }],
       rarities: ["Rare"],
+      gens: [],
+      types: [],
     });
+
+    // A generation and a type join the menus the same way, each named once.
+    const withFacts = flattenItems([
+      set("Jungle", [card("Snorlax", [variant({ id: "e" })], { gen: "Base", type: "Colorless" })]),
+      set("Fossil", [card("Zapdos", [variant({ id: "f" })], { gen: "Base", type: "Lightning" })]),
+    ]);
+    expect(facetsOf(withFacts).gens).toEqual(["Base"]);
+    expect(facetsOf(withFacts).types).toEqual(["Colorless", "Lightning"]);
   });
 });

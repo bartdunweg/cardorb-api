@@ -126,7 +126,12 @@ describe("GET /api/v1/cards", () => {
   it("names the sets and rarities held, whatever the page asked for", async () => {
     const body = await (await get("?owned=false")).json();
     expect(body.total).toBe(1);
-    expect(body.facets).toEqual({ sets: [{ name: "Base Set", title: "Base Set" }], rarities: [] });
+    expect(body.facets).toEqual({
+      sets: [{ name: "Base Set", title: "Base Set" }],
+      rarities: [],
+      gens: [],
+      types: [],
+    });
   });
 
   it("says when the catalogue was unreachable, beside the rows it could still list", async () => {
