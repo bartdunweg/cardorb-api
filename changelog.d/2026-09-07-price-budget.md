@@ -1,0 +1,1 @@
+- Asking pokemontcg.io for a set's dollar prices is bounded at eight seconds, all pages and retries together. Four pages at two attempts and twelve seconds each meant one set could take ninety-seven seconds, twice that with a gallery, and the ten-minute brake only came on once that had been paid — which is what made a collection look like it had hung while that host was unwell.

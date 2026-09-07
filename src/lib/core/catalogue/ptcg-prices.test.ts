@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ptcgPrices } from "./ptcg";
+
+// A short budget for the test that waits out a dead host: the behaviour under test is that the
+// call is bounded at all, not the particular number of seconds it is bounded at.
+process.env.PTCG_PRICES_BUDGET_MS = "300";
+const { ptcgPrices } = await import("./ptcg");
 
 const SETS = {
   data: [
@@ -49,4 +53,26 @@ describe("ptcgPrices", () => {
     vi.stubGlobal("fetch", stub({}));
     expect((await ptcgPrices("No Such Set"))?.size).toBe(0);
   });
+
+  it("gives up on the whole set rather than paying per page and per retry", async () => {
+    /* The bug: four pages, two attempts each, twelve seconds a request — ninety-seven seconds
+       for one set, twice that for a set with a gallery, and usdForSet()'s ten-minute brake only
+       comes on once it has been told there was a failure. A collection looked like it hung.
+       One deadline for the lot now, so a dead host costs seconds rather than minutes. */
+    const started = Date.now();
+    // Never answers: every request hangs until something aborts it.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: { signal?: AbortSignal }) => {
+        if (url.endsWith("/v2/sets")) return new Response(JSON.stringify(SETS), { status: 200 });
+        return await new Promise<Response>((_, reject) =>
+          init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))),
+        );
+      }),
+    );
+
+    expect(await ptcgPrices("Silver Tempest")).toBeNull();
+    // Comfortably under the budget's own 8 s, and nowhere near the 97 s it used to be able to take.
+    expect(Date.now() - started).toBeLessThan(3_000);
+  }, 20_000);
 });

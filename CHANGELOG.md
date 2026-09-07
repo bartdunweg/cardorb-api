@@ -32,6 +32,8 @@ if the two have drifted apart.
 
 - An import tells apart the cards a file says you do not own from the rows it could not read. Most of an export from Dex is the first kind — the checklist of everything a set contains — and reporting those as unusable made a working import look half broken.
 
+- Asking pokemontcg.io for a set's dollar prices is bounded at eight seconds, all pages and retries together. Four pages at two attempts and twelve seconds each meant one set could take ninety-seven seconds, twice that with a gallery, and the ten-minute brake only came on once that had been paid — which is what made a collection look like it had hung while that host was unwell.
+
 - A card's price line goes back to November 2022 where the American market has it: `GET /v1/cards/{tcgId}/prices` answers every reading a card has, not the last ninety days. The years before the nightly Cardmarket reading (2026-08-16) come from TCGplayer, turned into euros at each day's ECB rate: the market price from tcgcsv.com's archive, weekly from February 2024, and before that weekly averages of TCGplayer sales from tcgdex/price-history for the older sets. `card_prices.source` says which; `scripts/backfill-card-prices.mjs` fills it in and can be rerun.
 
 - The second catalogue's scan of a promo is found under the number that catalogue uses. It writes "SM191" or "SWSH282" where the collection keeps the digits printed on the card, so the address built from the row's own number was a 404 and thirteen promos here — the tag-team GX ones, the Galarian birds — kept an empty square while the picture sat one name away. The bare number is still tried first, and a picture is only used when the name at that number agrees with the row's.
