@@ -1,0 +1,1 @@
+- The prices #241 put on a set's cards were always null: they were looked up by pokemontcg.io's id (`me5-85`) while everything priced here is keyed by TCGdex's (`me05-085`). The match was already being made for the artwork, so the id travels with it now.
