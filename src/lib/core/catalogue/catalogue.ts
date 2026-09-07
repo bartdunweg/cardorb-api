@@ -407,7 +407,10 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v3"], {
+// v4: #230 changed what an entry contains — five promo aliases, and resolveSetIds now takes the
+// longest overlap and requires a shared id prefix. The key stayed at v3, so for a whole day every
+// set already in the Data Cache kept a byNumber built by the old rule.
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v4"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });

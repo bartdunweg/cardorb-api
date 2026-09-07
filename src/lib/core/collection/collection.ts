@@ -107,7 +107,9 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
         ran();
         return timed("store listRows", () => listRows(userId, db));
       },
-      ["collection-rows", userId],
+      // The version belongs here too: #234 added foilPattern to what toRow builds, and without a
+      // version part there was no way to say so — every cached row kept the shape it had before.
+      ["collection-rows", "v2", userId],
       { revalidate: 3600, tags: [cardsTag(userId)] },
     )(),
   );

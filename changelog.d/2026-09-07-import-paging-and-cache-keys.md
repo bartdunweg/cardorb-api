@@ -1,0 +1,4 @@
+- The import's "you already have these" count is read in pages. Unpaged, PostgREST capped it at a thousand rows and said so by handing over a thousand rows, so a collection larger than that under-counted what it held — and that count is the only thing standing between a person and a doubled collection.
+- Two cache keys carry a version they were missing: set-catalogue is v4 (its contents changed when the promo aliases and the set-id rule did) and collection-rows is v2 (it gained foilPattern). A fix behind an unbumped key does nothing for the whole TTL.
+- A set's price budget clears its own timer, so a rebuild no longer writes a "gave up" line for every set that answered in time. The budget is checked for being a number.
+- BrowseCard's `series` may be null in the contract, which is what every route that builds it has always sent.

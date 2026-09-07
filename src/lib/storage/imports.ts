@@ -54,24 +54,53 @@ export type ImportOutcome = {
  * Three columns of every row: for a collection of a few thousand that is one
  * indexed read of a few hundred kilobytes, and it is the only way to know what
  * is already there without asking the database once per line.
+ *
+ * Paged, and counted first, for the reason listRows is: PostgREST caps a
+ * response at a thousand rows and announces it by handing over a thousand rows.
+ * Unpaged, a collection of 1,634 answered with an arbitrary thousand of them —
+ * so the preview under-counted what it already held by a third and the commit
+ * agreed with it, which is the one number standing between a person and a
+ * doubled collection. A CSV row carries no source_id, so the unique index never
+ * catches the second copy.
  */
-export async function heldKeys(db: SupabaseClient, userId: string): Promise<Set<string>> {
-  const { data, error } = await db
-    .from("cards")
-    .select("name,set_name,number")
-    .eq("user_id", userId);
+const KEY_PAGE = 1_000;
 
-  if (error) throw new Error(`Reading the collection failed: ${error.message}`);
+type Row = { name?: string; set_name?: string; number?: string };
+
+export async function heldKeys(db: SupabaseClient, userId: string): Promise<Set<string>> {
+  const pageOf = (page: number, counted: boolean) =>
+    db
+      .from("cards")
+      .select("name,set_name,number", counted ? { count: "exact" } : {})
+      // A total order, so the pages are disjoint: id alone is unique and enough.
+      .order("id", { ascending: true })
+      .eq("user_id", userId)
+      .range(page * KEY_PAGE, page * KEY_PAGE + KEY_PAGE - 1);
+
+  const first = await pageOf(0, true);
+  if (first.error) throw new Error(`Reading the collection failed: ${first.error.message}`);
+
+  const rows = [...((first.data ?? []) as Row[])];
+  const total = typeof first.count === "number" ? first.count : rows.length;
+  const pages = Math.ceil(total / KEY_PAGE);
+  if (pages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: pages - 1 }, (_, i) => pageOf(i + 1, false)),
+    );
+    for (const page of rest) {
+      if (page.error) throw new Error(`Reading the collection failed: ${page.error.message}`);
+      rows.push(...((page.data ?? []) as Row[]));
+    }
+  }
 
   return new Set(
-    (data ?? []).map((r) => {
-      const row = r as { name?: string; set_name?: string; number?: string };
-      return importKey({
+    rows.map((row) =>
+      importKey({
         name: row.name ?? "",
         setName: row.set_name ?? "",
         number: row.number ?? "",
-      });
-    }),
+      }),
+    ),
   );
 }
 

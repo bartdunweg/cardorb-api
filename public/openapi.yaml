@@ -456,7 +456,7 @@ components:
     BrowseCard:
       type: object
       description: A catalogue card with the caller's own answer attached.
-      required: [id, number, name, setName, image, imageHigh, rarity, types, series, owned, wishlist, quantity, itemIds]
+      required: [id, number, name, setName, image, imageHigh, rarity, types, owned, wishlist, quantity, itemIds]
       properties:
         id: { type: string }
         number: { type: string }
@@ -466,7 +466,7 @@ components:
         imageHigh: { type: [string, "null"] }
         rarity: { type: [string, "null"] }
         types: { type: array, items: { type: string } }
-        series: { type: string }
+        series: { type: [string, "null"], description: "Null where the catalogue has no series for the set — TCGdex leaves it out on some non-English sets." }
         owned: { type: boolean }
         wishlist: { type: boolean }
         quantity: { type: integer, description: "Summed over owned rows only." }
