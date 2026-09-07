@@ -955,6 +955,21 @@ export type CardDetail = {
   stage: string | null;
   evolveFrom: string | null;
   regulationMark: string | null;
+  /**
+   * Which printings of this card exist, as TCGdex publishes them.
+   *
+   * The point of carrying it is a form: a screen that lists every finish this
+   * app can store is offering somebody a reverse holo of a card that was never
+   * printed as one. Checked against a real collection — twenty owned copies
+   * across four eras, every one of them a printing TCGdex agrees exists — and
+   * against the other direction too: an export listed a reverse Espeon that
+   * TCGdex says does not exist, and its owner does not have one.
+   *
+   * Only these three. The Poké Ball and Master Ball prints are not a `type`
+   * TCGdex names, so a client that wants to offer those has the set to go on:
+   * they exist in 151 and Prismatic Evolutions and nowhere else.
+   */
+  variants: { normal: boolean; holo: boolean; reverse: boolean };
   set: { id: string; name: string; logo: string | null; total: number | null } | null;
   /** Cardmarket's product id, which is how a card is addressed on their site. */
   cmId: number | null;
@@ -1001,6 +1016,7 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
       stage?: string;
       evolveFrom?: string;
       regulationMark?: string;
+      variants?: { normal?: boolean; holo?: boolean; reverse?: boolean };
       set?: { id?: string; name?: string; logo?: string; cardCount?: { total?: number } };
       pricing?: {
         cardmarket?: {
@@ -1030,6 +1046,15 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
     stage: card.stage ?? null,
     evolveFrom: card.evolveFrom ?? null,
     regulationMark: card.regulationMark ?? null,
+    // Absent reads as "all three", not "none": an older card whose record has
+    // no variants block must not lose the finish somebody already recorded.
+    variants: card.variants
+      ? {
+          normal: card.variants.normal === true,
+          holo: card.variants.holo === true,
+          reverse: card.variants.reverse === true,
+        }
+      : { normal: true, holo: true, reverse: true },
     set: card.set?.id
       ? {
           id: card.set.id,

@@ -286,7 +286,7 @@ components:
     CardDetail:
       type: object
       description: One card from TCGdex, with its price where the caller may see one.
-      required: [id, name, image, rarity, illustrator, hp, types, stage, evolveFrom, regulationMark, set, cmId, cmUrl, price, market]
+      required: [id, name, image, rarity, illustrator, hp, types, stage, evolveFrom, regulationMark, variants, set, cmId, cmUrl, price, market]
       properties:
         id: { type: string }
         name: { type: string }
@@ -299,6 +299,22 @@ components:
         stage: { type: [string, "null"] }
         evolveFrom: { type: [string, "null"] }
         regulationMark: { type: [string, "null"] }
+        variants:
+          type: object
+          required: [normal, holo, reverse]
+          description: |
+            Which printings of this card exist. A form should offer no finish
+            that is false here — listing every finish this app can store offers
+            somebody a reverse holo of a card never printed as one. Absent from
+            the catalogue reads as all three, so a recorded finish is never lost.
+
+            The Poké Ball and Master Ball prints are not a type TCGdex names;
+            they exist in 151 and Prismatic Evolutions and nowhere else, so a
+            client goes by the set for those.
+          properties:
+            normal: { type: boolean }
+            holo: { type: boolean }
+            reverse: { type: boolean }
         set:
           type: [object, "null"]
           properties:

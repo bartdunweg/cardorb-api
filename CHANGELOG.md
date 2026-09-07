@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - A card in `GET /v1/cards` says whether it is `excluded`: kept out of the public profile and the latest pull. `PATCH /v1/collection/items/{id}` has taken the flag all along; a client could set it but never read it back, so no screen could show what it had set.
 
+- A card says which printings of it exist — normal, holo, reverse — so a form can stop offering a reverse holo of a card that was never printed as one.
+
 - `GET /v1/cards` filters by `gen` and `type`, each one whole and case-insensitively, as `set` and `rarity` do. The response's facets carry `gens` (in the collection's own, chronological order) and `types` (A to Z) beside the sets and rarities, so a filter menu is built from one read.
 
 - A row's copies can differ: `POST /v1/collection/items/{id}/copies` adds one more copy as a row of its own, `POST /v1/collection/items/{id}/split` moves some of a row's copies to a row with their own language, condition, grade, finish, folder, price or acquired date. `GET /v1/cards` takes `number` beside `set`; a new card can be filed in a folder at once (`collectionId` on the draft); PATCH takes `acquiredAt`.
