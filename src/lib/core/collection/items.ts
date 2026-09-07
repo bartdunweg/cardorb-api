@@ -44,6 +44,8 @@ export type CardItem = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** Kept out of the public profile and the latest pull. */
+  excluded: boolean;
   acquiredAt: string | null;
   collectionId: string | null;
   price: Price | null;
@@ -89,6 +91,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   purchaseDate: v.purchaseDate,
   notes: v.notes,
   isFavorite: v.isFavorite,
+  excluded: v.excluded,
   acquiredAt: v.acquiredAt,
   collectionId: v.collectionId,
   price: card.price,
