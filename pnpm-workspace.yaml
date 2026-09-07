@@ -1,0 +1,7 @@
+# pnpm settings (pnpm 11 moved these out of package.json). Same file, same reason, as the web
+# repository: ESLint's native module resolver has an install script, and pnpm does not run one
+# unless it is named here.
+allowBuilds:
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - unrs-resolver

@@ -20,12 +20,12 @@ which serve a public profile without prices.
 
 ## Commands
 
-- Install: `npm install`
-- Dev: `npm run dev`
-- Test: `npm run test`
-- Lint: `npm run lint`
-- Typecheck: `npm run typecheck`
-- Iteration: `npm run check` (format, typecheck, test, lint)
+- Install: `pnpm install`
+- Dev: `pnpm run dev`
+- Test: `pnpm run test`
+- Lint: `pnpm run lint`
+- Typecheck: `pnpm run typecheck`
+- Iteration: `pnpm run check` (format, typecheck, test, lint)
 - Before a commit or PR: `./scripts/verify.sh` — the same run CI does, with `next build`
 
 ## Folders
@@ -42,7 +42,7 @@ src/lib/core/{config,env,util}.ts what both domains need, and nothing else at th
 src/lib/storage/                  Postgres and Supabase
 public/openapi.yaml               the contract; public/artwork the scans the API links to
 supabase/                         auth and session backing store, migrations, the auth emails
-changelog.d/                      one fragment per user-visible change; npm run changelog collects
+changelog.d/                      one fragment per user-visible change; pnpm run changelog collects
 docs/*.md, docs/*.json            open data worklists and rollback files for the live database
 ```
 

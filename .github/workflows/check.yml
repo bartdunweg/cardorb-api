@@ -1,4 +1,4 @@
-# The gate npm run check was written to be.
+# The gate pnpm run check was written to be.
 #
 # Deploys go straight off a push to main, and Vercel does not wait for this
 # workflow, so a red run here does not stop a deploy: it tells you one went
@@ -17,6 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm before setup-node, because setup-node's cache: pnpm needs the binary
+      # to ask where the store is. Same order as the web repository's workflow.
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           # Matches the Node Vercel actually runs this on, which is 24.x —
@@ -28,15 +32,15 @@ jobs:
           # April anyway. That floor is in package.json's engines; this line is
           # the ceiling, and the two are different numbers on purpose.
           node-version: 24
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       # typecheck, then the tests, then lint. The script already exists and is
       # what a person runs locally; running the same one here means the two
       # cannot drift.
-      - run: npm run check
+      - run: pnpm run check
 
       # Needs no secrets: every route handler is rendered on demand, so the
       # build compiles them without a database behind them.
-      - run: npm run build
+      - run: pnpm run build

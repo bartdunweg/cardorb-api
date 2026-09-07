@@ -92,13 +92,13 @@ const days = [...byDate.keys()].sort().reverse();
 
 const markdown =
   `# Changelog\n\n` +
-  `Generated from the fragments in \`changelog.d/\` by \`npm run changelog\`.\n` +
+  `Generated from the fragments in \`changelog.d/\` by \`pnpm run changelog\`.\n` +
   `Do not hand-edit this file; add a fragment instead. \`scripts/verify.sh\` fails\n` +
   `if the two have drifted apart.\n\n` +
   days.map((date) => `## ${date}\n\n${byDate.get(date).join("\n\n")}\n`).join("\n");
 
 // No Prettier round-trip, unlike extract-theme-values.mjs. That script formats
-// its output because `npm run check` runs Prettier over the tree and would
+// its output because `pnpm run check` runs Prettier over the tree and would
 // otherwise turn a correct generated file red. Markdown is different:
 // .prettierignore excludes `*.md` outright, because every document here is
 // hand-wrapped and Prettier reflows prose. Running it anyway would be a no-op
@@ -110,7 +110,7 @@ const summary = `${entries} entries across ${days.length} days, from ${fragments
 if (process.argv.includes("--check")) {
   const current = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
   if (current !== formatted) {
-    console.error(`\n  ${OUT} does not match ${DIR}/.\n  Run: npm run changelog\n`);
+    console.error(`\n  ${OUT} does not match ${DIR}/.\n  Run: pnpm run changelog\n`);
     process.exit(1);
   }
   console.log(`  ${OUT} is up to date (${summary})`);

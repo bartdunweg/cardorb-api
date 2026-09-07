@@ -18,6 +18,8 @@
 # wins every time it runs.
 *.generated.json
 *.undo.json
+# pnpm writes and reads this one; a reflow of it is a merge conflict waiting to happen.
+pnpm-lock.yaml
 # Rows lifted verbatim out of Postgres so they can be pasted back. Reformatting
 # them would be editing a record of what the database held.
 docs/*.json

@@ -1,6 +1,6 @@
 # Changelog
 
-Generated from the fragments in `changelog.d/` by `npm run changelog`.
+Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
@@ -31,6 +31,8 @@ if the two have drifted apart.
 - An import now adds every card in the file, including ones you already have — a second copy is a normal thing to own. The preview says how many of them you already hold, so importing the same file twice is something you see coming.
 
 - An import tells apart the cards a file says you do not own from the rows it could not read. Most of an export from Dex is the first kind — the checklist of everything a set contains — and reporting those as unusable made a working import look half broken.
+
+- This repository installs with pnpm, like the web one. Same package manager, same lockfile format, same CI shape in both — so a shared package between them later is a move rather than a migration.
 
 - Asking pokemontcg.io for a set's dollar prices is bounded at eight seconds, all pages and retries together. Four pages at two attempts and twelve seconds each meant one set could take ninety-seven seconds, twice that with a gallery, and the ten-minute brake only came on once that had been paid — which is what made a collection look like it had hung while that host was unwell.
 
