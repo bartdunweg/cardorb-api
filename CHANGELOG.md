@@ -36,6 +36,8 @@ if the two have drifted apart.
 
 - A public collection can be sorted `added`: newest first, by the day each card was got. The dates stay off the wire — the list is built in that order and hands out the same fields as before — and a card nobody dated goes last.
 
+- A set carries the code printed on its cards — MEW for 151, SFA for Shrouded Fable — so a card can be labelled with the three letters a collector reads off it instead of a whole set name.
+
 - Two more set names the collection and pokemontcg.io disagree on: "Set 1 Unlimited" (and its shadowless and unqualified siblings) is that catalogue's "Base", and "Scarlet & Violet Base" is its "Scarlet & Violet". Until now a card in either set was unmatched wherever the two vocabularies meet — unowned in the catalogue search, missing from a set's progress on Browse — which in the one collection here is 132 cards, a Base Set Charizard among them.
 
 - The set-facts cache key moves to v13. Yesterday's answer for a card's picture is a day old by design, so the two scan fixes shipped alongside it would not have been seen until tomorrow — fourteen cards here would have kept an empty square through the deploy that fixed them.

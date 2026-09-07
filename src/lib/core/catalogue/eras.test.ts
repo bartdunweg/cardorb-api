@@ -26,6 +26,7 @@ const set = (name: string, releaseDate: string | null, cards: OwnedCard[]): Card
   // this module groups by — the era is voted on by the cards — but required on
   // the type, and the fallback is the honest default for a set nobody indexed.
   title: name,
+  abbreviation: null,
   logo: null,
   logoSize: null,
   releaseDate,

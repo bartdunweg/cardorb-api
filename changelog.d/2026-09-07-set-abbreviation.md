@@ -1,0 +1,1 @@
+- A set carries the code printed on its cards — MEW for 151, SFA for Shrouded Fable — so a card can be labelled with the three letters a collector reads off it instead of a whole set name.
