@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "./csv";
+import { finishFrom, guessColumns, parseCsv, rowsFrom, type ColumnMap } from "./csv";
 
 const MAP: ColumnMap = { name: 0, set: 1, number: 2, owned: 3, types: 4, acquired: 5 };
 
@@ -133,5 +133,74 @@ describe("rowsFrom", () => {
     const { rows, skipped } = rowsFrom(grid("Pikachu,Base,58,,,", ",,,,,"), MAP);
     expect(rows).toHaveLength(1);
     expect(skipped).toEqual([]);
+  });
+});
+
+/**
+ * Every case here came from one real export, which named 137 variants of the
+ * cards in a single collection. The job is to find the foil inside somebody
+ * else's vocabulary — this app stores five finishes because that is the
+ * distinction Cardmarket prices — and to drop the rest rather than guess.
+ */
+describe("finishFrom", () => {
+  it("reads the three plain names", () => {
+    expect(finishFrom("Normal")).toBe("normal");
+    expect(finishFrom("Holo")).toBe("holo");
+    expect(finishFrom("Reverse Holo")).toBe("reverse-holo");
+  });
+
+  it("reads a foil pattern as the holo it is", () => {
+    // All of these are holo cards; the name is the pattern of the foil.
+    for (const v of [
+      "Cosmos Holo",
+      "Cracked Ice Holo",
+      "Starlight Holo",
+      "Confetti Holo",
+      "Vertical Line Holo",
+    ]) {
+      expect(finishFrom(v), v).toBe("holo");
+    }
+  });
+
+  it("keeps reverse ahead of holo, whatever is bracketed after it", () => {
+    expect(finishFrom("Reverse Holo (Cosmos)")).toBe("reverse-holo");
+    expect(finishFrom("Reverse Holo (No e-Reader Logo)")).toBe("reverse-holo");
+  });
+
+  it("reads the ball patterns, on their own", () => {
+    expect(finishFrom("Poké Ball")).toBe("poke-ball");
+    expect(finishFrom("Poke Ball Reverse")).toBe("poke-ball");
+    expect(finishFrom("Master Ball")).toBe("master-ball");
+    expect(finishFrom("Master Ball Holo")).toBe("master-ball");
+  });
+
+  it("does not mistake a league named after a ball for a ball pattern", () => {
+    // These are Play! Pokémon league promos. Matching them on their first two
+    // words filed a stamped promo as the Master Ball reverse from 151, which
+    // reads the foil price field.
+    expect(finishFrom("Master Ball League")).toBeNull();
+    expect(finishFrom("Master Ball League (Judge)")).toBeNull();
+    expect(finishFrom("Ultra Ball League")).toBeNull();
+    expect(finishFrom("Great Ball League")).toBeNull();
+  });
+
+  it("says nothing about where a card came from", () => {
+    // Provenance, not foil: this app has nowhere to put it and a wrong finish
+    // costs a wrong price.
+    for (const v of [
+      "Expansion Stamp",
+      "1st Edition",
+      "Play! Pokémon",
+      "Professor Program",
+      "Jumbo",
+      "World Championships Deck 2024: Ancient Toolbox by Sakuya Ota",
+    ]) {
+      expect(finishFrom(v), v).toBeNull();
+    }
+  });
+
+  it("says nothing for an empty column", () => {
+    expect(finishFrom("")).toBeNull();
+    expect(finishFrom("   ")).toBeNull();
   });
 });

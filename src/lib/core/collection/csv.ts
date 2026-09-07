@@ -208,24 +208,43 @@ export const cardNumber = (n: string): string => {
 /**
  * Which printing a copy is, from whatever the export called it.
  *
- * Matched on the front of the string rather than the whole of it, because the
- * qualifier an export adds is almost always a suffix: Dex writes "Reverse Holo
- * (Cosmos)" and "Holo (No e-Reader Logo)" for cards that are, for our purposes,
- * a reverse and a holo. Reverse is tested first — "Reverse Holo" starts with
- * neither "Holo" nor "Normal", but a naive contains() would call it holo.
+ * One export named 137 different variants of the cards in one collection, and
+ * this app stores five. That is not a gap to widen: FINISHES is the distinction
+ * Cardmarket prices, and a copy is worth what its *foil* is worth — a stamp in
+ * the corner does not change which price field to read. So the job here is to
+ * find the foil inside somebody else's vocabulary and drop the rest.
  *
- * Null for anything unrecognised rather than a guess at normal: a wrong finish
- * reads the wrong price field (see isReverseFinish), and "I do not know" is a
- * thing this app can show.
+ * Order is the whole of it, and each step is a mistake that was made first.
+ *
+ * The ball patterns are matched before anything else and only on their own,
+ * because "Master Ball League" is a Play! Pokémon league promo and matching it
+ * on its first two words filed it as the Master Ball reverse from 151 — which
+ * reads the foil price. A stamp named after a ball is not a ball pattern.
+ *
+ * Reverse before holo, because "Reverse Holo" contains both and is not a holo.
+ *
+ * Then holo anywhere in the name rather than only at the front, which is what
+ * "Cracked Ice Holo", "Starlight Holo", "Confetti Holo" and "Vertical Line
+ * Holo" need: those are holo cards with another foil pattern, and leaving them
+ * with no finish said we did not know what they were when we plainly did.
+ *
+ * Null for anything still unrecognised rather than a guess at normal: a wrong
+ * finish reads the wrong price field (see isReverseFinish), and "I do not know"
+ * is a thing this app can show.
  */
 export function finishFrom(variant: string): Finish | null {
   const v = variant.trim().toLowerCase();
   if (!v) return null;
   if (isFinish(v)) return v;
-  if (v.startsWith("reverse")) return "reverse-holo";
-  if (v.startsWith("master ball")) return "master-ball";
-  if (v.startsWith("poke ball") || v.startsWith("poké ball")) return "poke-ball";
-  if (v.startsWith("holo") || v.startsWith("cosmos holo")) return "holo";
+
+  // The 151 and Prismatic Evolutions reverse patterns, and nothing that merely
+  // shares their name. "Master Ball League", "Ultra Ball League", "Great Ball
+  // League" are league promos and fall through to the tests below.
+  const ball = /^(pok[eé] ?ball|master ?ball)( reverse| holo| reverse holo)?$/.exec(v);
+  if (ball) return ball[1]!.startsWith("master") ? "master-ball" : "poke-ball";
+
+  if (v.includes("reverse")) return "reverse-holo";
+  if (v.includes("holo")) return "holo";
   if (v.startsWith("normal")) return "normal";
   return null;
 }

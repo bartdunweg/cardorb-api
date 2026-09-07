@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - A CSV export can be imported into your collection, and an export from Dex is recognised on sight: its copy counts, its printings and its wishlist all come across, and the thousands of checklist lines for cards you do not own are left where they are. Every import shows you what it would do — including how many of the cards you already have — before it does anything.
 
+- A card imported from an export now keeps its foil where the export names a pattern for it — Cosmos, Cracked Ice, Starlight, Confetti and Vertical Line all arrive as holo instead of arriving as nothing. A Play! Pokémon "Master Ball League" promo is no longer filed as the Master Ball reverse from 151, which was reading the wrong price.
+
 - A copy's `finish` can be `poke-ball` or `master-ball`: the patterned reverse holos of 151 and Prismatic Evolutions. Both are priced as a reverse holo (the foil price where Cardmarket publishes one). Readers with a closed list of finishes must add the two before a copy carries them.
 
 - An import now adds every card in the file, including ones you already have — a second copy is a normal thing to own. The preview says how many of them you already hold, so importing the same file twice is something you see coming.
