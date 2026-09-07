@@ -12,6 +12,7 @@
  * dashboard.
  */
 
+import { isReverseFinish } from "./collection-row";
 import { copiesHeld } from "./cards-stats";
 import type { CardSet, OwnedCard } from "./cards";
 
@@ -56,7 +57,7 @@ function held(card: OwnedCard, point: CardPricePoint): number | null {
   let best: number | null = null;
   for (const v of card.variants) {
     if (!v.owned) continue;
-    const each = (v.finish === "reverse-holo" && point.holo) || point.market;
+    const each = (isReverseFinish(v.finish) && point.holo) || point.market;
     if (each != null && (best == null || each > best)) best = each;
   }
   return best;

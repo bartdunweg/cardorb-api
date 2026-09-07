@@ -1,3 +1,4 @@
+import { isReverseFinish } from "./collection-row";
 import type { CardItem } from "./items";
 import type { CardPricePoint } from "./movers";
 import type { ValueSnapshot } from "./value-snapshot";
@@ -40,7 +41,7 @@ export function folderSeries(
     for (const it of owned) {
       const n = list === "owned" ? Math.max(0, it.quantity) : 1;
       const p = it.tcgId ? day.get(it.tcgId) : undefined;
-      const price = p ? ((it.finish === "reverse-holo" ? p.holo : null) ?? p.market) : null;
+      const price = p ? ((isReverseFinish(it.finish) ? p.holo : null) ?? p.market) : null;
       cards += n;
       if (price == null) unpriced += n;
       else {

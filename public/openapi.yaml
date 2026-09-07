@@ -185,8 +185,8 @@ components:
 
     Finish:
       type: string
-      enum: [normal, reverse-holo, holo]
-      description: Which printing a copy is. `null` on a copy means "nobody has said", not `normal`.
+      enum: [normal, reverse-holo, holo, poke-ball, master-ball]
+      description: Which printing a copy is; `poke-ball` and `master-ball` are the patterned reverse holos of 151 and Prismatic Evolutions, priced as a reverse holo. `null` on a copy means "nobody has said", not `normal`.
 
     Price:
       type: object

@@ -40,7 +40,7 @@ import { limitlessScan } from "../catalogue/artwork";
 import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
-import type { CollectionRow, Finish, Language } from "./collection-row";
+import { type CollectionRow, type Finish, type Language, isReverseFinish } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
 export { highScan } from "../catalogue/artwork";
@@ -309,7 +309,8 @@ export function cardNeighbours(
  * because there is nothing else to describe. Whatever `-holo` holds there is a
  * thinner, different market, and preferring it halves the card.
  *
- * So: `reverse-holo` reads the foil fields, `holo` does not. A holo-only card
+ * So: `reverse-holo` (and the Poké Ball and Master Ball reverses) reads the foil
+ * fields, `holo` does not. A holo-only card
  * is priced by the plain fields, which is what they are. The imperfect case is
  * a card printed as both holo and reverse holo with no plain version at all —
  * five in a 210-card sample — where the holo copy takes the plain price. That
@@ -320,7 +321,7 @@ export function cardNeighbours(
  * which is the honest answer rather than a missing one.
  */
 export function variantPrice(card: OwnedCard, variant: Variant): Price | null {
-  return (variant.finish === "reverse-holo" && card.priceHolo) || card.price;
+  return (isReverseFinish(variant.finish) && card.priceHolo) || card.price;
 }
 
 /**

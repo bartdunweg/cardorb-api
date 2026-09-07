@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - A row's copies can differ: `POST /v1/collection/items/{id}/copies` adds one more copy as a row of its own, `POST /v1/collection/items/{id}/split` moves some of a row's copies to a row with their own language, condition, grade, finish, folder, price or acquired date. `GET /v1/cards` takes `number` beside `set`; a new card can be filed in a folder at once (`collectionId` on the draft); PATCH takes `acquiredAt`.
 
+- A copy's `finish` can be `poke-ball` or `master-ball`: the patterned reverse holos of 151 and Prismatic Evolutions. Both are priced as a reverse holo (the foil price where Cardmarket publishes one). Readers with a closed list of finishes must add the two before a copy carries them.
+
 ## 2026-09-06
 
 - An instance keeps the collection it assembled for ten minutes, by the rows' version, so the screens that read it together (`/folders`, `/stats`, `/cards`, a Pokédex) pay the join once; a card's species is looked up once per name; `facets=0` on `/v1/cards` skips the facets pass.

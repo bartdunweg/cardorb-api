@@ -26,6 +26,7 @@
  * being it — and that is a difference of source, not of method.
  */
 
+import { isReverseFinish } from "./collection-row";
 import { copiesHeld } from "./cards-stats";
 import { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
 import type { CardSet } from "./cards";
@@ -145,7 +146,7 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
         // reverse-holo only, never plain holo. See variantPrice() in cards.ts
         // for the measurement behind that: on a holo-only card the -holo fields
         // describe a different, thinner market at 0.47x the plain price.
-        const each = shownPrice((v.finish === "reverse-holo" && foil) || normal);
+        const each = shownPrice((isReverseFinish(v.finish) && foil) || normal);
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
         any = true;
@@ -187,7 +188,7 @@ export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
       let any = false;
       for (const v of card.variants) {
         if (!v.owned) continue;
-        const each = shownPrice((v.finish === "reverse-holo" && card.priceHolo) || card.price);
+        const each = shownPrice((isReverseFinish(v.finish) && card.priceHolo) || card.price);
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
         any = true;
