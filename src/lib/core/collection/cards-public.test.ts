@@ -59,6 +59,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
 const set = (cards: OwnedCard[]): CardSet => ({
   name: "Obsidian Flames",
   title: "Obsidian Flames",
+  abbreviation: null,
   logo: null,
   logoSize: null,
   releaseDate: "2023-08-11",
