@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const SETS = [
   { id: "swsh12", name: "Silver Tempest" },
   { id: "smp", name: "SM Black Star Promos" },
+  { id: "swshp", name: "SWSH Black Star Promos" },
   { id: "swsh12tg", name: "Silver Tempest Trainer Gallery" },
   { id: "swsh12pt5", name: "Crown Zenith" },
   { id: "swsh12pt5gg", name: "Crown Zenith Galarian Gallery" },
@@ -25,6 +26,11 @@ const CARDS: Record<string, { number: string; name: string }[]> = {
   smp: [
     { number: "SM190", name: "Detective Pikachu" },
     { number: "SM191", name: "Mewtwo & Mew-GX" },
+  ],
+  /** Longer than one page: the card wanted here is on the second, as SWSH282 really is. */
+  swshp: [
+    ...Array.from({ length: 250 }, (_, i) => ({ number: `SWSH${i + 1}`, name: `Filler ${i + 1}` })),
+    { number: "SWSH282", name: "Galarian Articuno" },
   ],
 };
 
@@ -46,7 +52,12 @@ function installFetch(has: string[], cardsDown = false) {
       if (url.includes("/v2/cards")) {
         if (cardsDown) return new Response("nope", { status: 502 });
         const id = url.match(/set\.id:([a-z0-9]+)/)?.[1] ?? "";
-        return new Response(JSON.stringify({ data: CARDS[id] ?? [] }), { status: 200 });
+        // As that host pages: 250 at a time, and the caller stops at a short page.
+        const page = Number(url.match(/page=(\d+)/)?.[1] ?? 1);
+        const all = CARDS[id] ?? [];
+        return new Response(JSON.stringify({ data: all.slice((page - 1) * 250, page * 250) }), {
+          status: 200,
+        });
       }
       if (init?.method === "HEAD") {
         asked.push(url);
@@ -192,5 +203,15 @@ describe("ptcgScan on a promo set", () => {
     installFetch(["https://images.pokemontcg.io/smp/SM191.png"]);
     const { ptcgScan } = await load();
     expect(await ptcgScan("SM Black Star Promos", "191")).toBeNull();
+  });
+});
+
+describe("ptcgScan on a set longer than one page", () => {
+  it("reads on to the second page, where a promo set keeps its highest numbers", async () => {
+    installFetch(["https://images.pokemontcg.io/swshp/SWSH282.png"]);
+    const { ptcgScan } = await load();
+    expect(await ptcgScan("SWSH Black Star Promos", "282", "Galarian Articuno")).toBe(
+      "https://images.pokemontcg.io/swshp/SWSH282.png",
+    );
   });
 });
