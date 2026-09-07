@@ -23,6 +23,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   rarity: "Illustration Rare",
   owned: true,
   finish: "reverse-holo",
+  foilPattern: "cosmos",
   quantity: 3,
   condition: "Near Mint",
   grade: "PSA 10",

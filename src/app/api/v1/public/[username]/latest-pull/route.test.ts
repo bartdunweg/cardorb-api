@@ -30,6 +30,7 @@ const sets: CardSet[] = [
             rarity: "Rare Holo",
             owned: true,
             finish: null,
+  foilPattern: null,
             quantity: 1,
             condition: null,
             grade: null,

@@ -1,5 +1,11 @@
 import type { CollectionRow } from "./collection-row";
-import { isFinish, isLanguage, type Finish, type Language } from "./collection-row";
+import {
+  isFinish,
+  isLanguage,
+  type Finish,
+  type FoilPattern,
+  type Language,
+} from "./collection-row";
 
 /**
  * A spreadsheet somebody exported, turned into rows.
@@ -249,6 +255,31 @@ export function finishFrom(variant: string): Finish | null {
   return null;
 }
 
+/**
+ * What the foil looks like, from the same string finishFrom() reads for price.
+ *
+ * Two questions of one word, and they are answered separately because they have
+ * different consequences. Get the finish wrong and a card is worth the wrong
+ * money; get the pattern wrong and a card looks like the wrong thing. The first
+ * is why FINISHES is short and this list is not part of it.
+ *
+ * Only the patterns FOIL_PATTERNS names, matched inside the string, because an
+ * export writes them as a qualifier: "Cosmos Holo", "Reverse Holo (Cosmos)",
+ * "Play! Pokémon (Vertical Line Holo)" all carry the pattern in the middle. The
+ * ball patterns are absent on purpose — `finish` already says so for those, and
+ * a fact in two columns is a fact that drifts.
+ */
+export function patternFrom(variant: string): FoilPattern | null {
+  const v = variant.trim().toLowerCase();
+  if (!v) return null;
+  if (v.includes("cosmos")) return "cosmos";
+  if (v.includes("cracked ice")) return "cracked-ice";
+  if (v.includes("starlight")) return "starlight";
+  if (v.includes("confetti")) return "confetti";
+  if (v.includes("vertical line")) return "vertical-line";
+  return null;
+}
+
 /** A copy count, or null where the column said nothing usable. */
 export function quantityFrom(raw: string): number | null {
   if (!raw.trim()) return null;
@@ -343,6 +374,7 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
       // date is worse than a missing one.
       acquiredAt: parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null,
       finish: finishFrom(at(r, map.variant)),
+      foilPattern: patternFrom(at(r, map.variant)),
       // One, where the file did not say. Not zero: a row that reached here is a
       // card somebody has, and quantity is what the collection counts.
       quantity: quantity && quantity > 0 ? quantity : 1,

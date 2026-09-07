@@ -35,6 +35,34 @@ export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-
 export const isReverseFinish = (f: string | null | undefined): boolean =>
   f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
 
+/**
+ * What the foil on a copy looks like, which is not what it is worth.
+ *
+ * FINISHES answers the money question — which of Cardmarket's two price series a copy reads —
+ * and holds five values rather than three only because the Poké Ball and Master Ball prints are
+ * patterns Cardmarket happens to price apart. Every pattern below has no price of its own: a
+ * Cosmos Holo Rare and a plain Holo Rare of one card are the same product and the same figure.
+ * Putting them in FINISHES would mean picking a price series for each, and the value history is
+ * built on that column.
+ *
+ * The ball patterns are deliberately not repeated here. `finish` already carries them, and one
+ * fact in two columns is a fact that drifts.
+ *
+ * These five are what a real export names. It is a list to grow, not a taxonomy: a pattern
+ * nothing can tell us about is a pattern nobody can record.
+ */
+export const FOIL_PATTERNS = [
+  "cosmos",
+  "cracked-ice",
+  "starlight",
+  "confetti",
+  "vertical-line",
+] as const;
+export type FoilPattern = (typeof FOIL_PATTERNS)[number];
+
+export const isFoilPattern = (v: unknown): v is FoilPattern =>
+  typeof v === "string" && (FOIL_PATTERNS as readonly string[]).includes(v);
+
 /** The languages a card is printed in, as Cardmarket and TCGdex code them. */
 export const LANGUAGES = ["en", "de", "fr", "it", "es", "pt", "nl", "ja", "ko", "zh"] as const;
 export type Language = (typeof LANGUAGES)[number];
@@ -100,6 +128,8 @@ export type CollectionRow = {
    * copy, and the two were never the same question.
    */
   finish: Finish | null;
+  /** What the foil looks like, where a source said. Null is "not recorded", never "plain". */
+  foilPattern: FoilPattern | null;
   /**
    * The nine — not eight — inventory facts added for per-printing detail
    * (2026-08-14 card-inventory-fields migration): quantity 1, isFavorite
@@ -148,6 +178,8 @@ export type CardDraft = {
   excluded: boolean;
   /** Which printing this copy is, or null where the person adding it did not say. */
   finish: Finish | null;
+  /** What the foil looks like, where a source said. Null is "not recorded", never "plain". */
+  foilPattern: FoilPattern | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -240,6 +272,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     collection = true,
     excluded = false,
     finish = null,
+    foilPattern = null,
     quantity = 1,
     condition = null,
     grade = null,
@@ -275,6 +308,11 @@ export function validateCardDraft(body: unknown): CardValidation {
     // lose the card, but no import sends a finish (csv.ts writes null itself)
     // and a form or an app that misspells one should be told, not blanked.
     finish: isFinish(finish) ? finish : null,
+    // Unrecognised reads as "not recorded" rather than being refused, unlike
+    // finish: a pattern costs nothing when it is wrong or absent — it buys no
+    // price and no placement — and the list is one somebody else's vocabulary
+    // gets mapped onto, so it will be short of a name before it is wrong.
+    foilPattern: isFoilPattern(foilPattern) ? foilPattern : null,
     quantity: Number.isFinite(Number(quantity)) ? Math.trunc(Number(quantity)) : 1,
     condition: optionalText(condition),
     grade: optionalText(grade),
@@ -344,6 +382,7 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     owned: draft.collection,
     excluded: draft.excluded,
     finish: draft.finish,
+    foilPattern: draft.foilPattern,
     quantity: draft.quantity,
     condition: draft.condition,
     grade: draft.grade,
@@ -369,6 +408,8 @@ export type CardPatch = Partial<{
   excluded: boolean;
   /** null clears it back to "not recorded", which is a thing somebody may mean. */
   finish: Finish | null;
+  /** The same, for the foil's pattern. Its own field: see FOIL_PATTERNS. */
+  foilPattern: FoilPattern | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -425,6 +466,15 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
     if (b.finish !== null && !isFinish(b.finish))
       return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
     patch.finish = b.finish as Finish | null;
+  }
+  if ("foilPattern" in b) {
+    // Refused rather than blanked, the same reasoning as finish one block up:
+    // one card can be held as a cosmos holo and as a plain one at the same
+    // time, so this is somebody choosing between two copies they own and a
+    // typo should be told.
+    if (b.foilPattern !== null && !isFoilPattern(b.foilPattern))
+      return { kind: "invalid", error: `foilPattern must be null, ${FOIL_PATTERNS.join(", ")}.` };
+    patch.foilPattern = b.foilPattern as FoilPattern | null;
   }
   if ("quantity" in b) {
     const q = Number(b.quantity);
@@ -512,6 +562,7 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
 export type CopyChanges = Pick<
   CardPatch,
   | "finish"
+  | "foilPattern"
   | "condition"
   | "grade"
   | "language"
@@ -524,6 +575,7 @@ export type CopyChanges = Pick<
 
 const COPY_KEYS = [
   "finish",
+  "foilPattern",
   "condition",
   "grade",
   "language",

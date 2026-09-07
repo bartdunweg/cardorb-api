@@ -29,6 +29,7 @@ import {
   type CardFields,
   type CardPatch,
   type CollectionRow,
+  isFoilPattern,
 } from "../core/collection/collection-row";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
 import type { CardPricePoint } from "../core/collection/movers";
@@ -46,6 +47,7 @@ type CardRecord = {
   excluded: boolean;
   acquired_at: string;
   finish: string | null;
+  foil_pattern: string | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -58,7 +60,7 @@ type CardRecord = {
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
+  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,foil_pattern,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -91,6 +93,7 @@ const toRow = (r: CardRecord): CollectionRow => ({
   owned: r.owned,
   excluded: r.excluded,
   acquiredAt: r.acquired_at ?? null,
+  foilPattern: isFoilPattern(r.foil_pattern) ? r.foil_pattern : null,
   // Whatever the column holds that is not one of the three reads as "not
   // recorded", which is also what a row written before this column existed
   // gives back.
@@ -376,6 +379,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       owned: draft.collection,
       excluded: draft.excluded,
       finish: draft.finish,
+      foil_pattern: draft.foilPattern,
       quantity: draft.quantity,
       condition: draft.condition,
       language: draft.language,
@@ -425,6 +429,7 @@ export async function updateRow(
   if ("owned" in patch) row.owned = patch.owned;
   if ("excluded" in patch) row.excluded = patch.excluded;
   if ("finish" in patch) row.finish = patch.finish;
+  if ("foilPattern" in patch) row.foil_pattern = patch.foilPattern;
   if ("quantity" in patch) row.quantity = patch.quantity;
   if ("condition" in patch) row.condition = patch.condition;
   if ("grade" in patch) row.grade = patch.grade;
@@ -510,6 +515,7 @@ export async function createRows(
       // path, has always written them.
       quantity: r.quantity,
       finish: r.finish,
+      foil_pattern: r.foilPattern,
       condition: r.condition,
       language: r.language,
       notes: r.notes,

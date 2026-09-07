@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { finishFrom, guessColumns, parseCsv, rowsFrom, type ColumnMap } from "./csv";
+import { finishFrom, guessColumns, parseCsv, patternFrom, rowsFrom, type ColumnMap } from "./csv";
 
 const MAP: ColumnMap = { name: 0, set: 1, number: 2, owned: 3, types: 4, acquired: 5 };
 
@@ -202,5 +202,42 @@ describe("finishFrom", () => {
   it("says nothing for an empty column", () => {
     expect(finishFrom("")).toBeNull();
     expect(finishFrom("   ")).toBeNull();
+  });
+});
+
+/**
+ * The other half of a variant string. finishFrom() answers what a copy is
+ * worth; this answers what it looks like, and they are read from the same
+ * words because an export writes both into one column.
+ */
+describe("patternFrom", () => {
+  it("finds the pattern wherever the export put it", () => {
+    expect(patternFrom("Cosmos Holo")).toBe("cosmos");
+    expect(patternFrom("Reverse Holo (Cosmos)")).toBe("cosmos");
+    expect(patternFrom("Play! Pokémon (Vertical Line Holo)")).toBe("vertical-line");
+    expect(patternFrom("Cracked Ice Holo")).toBe("cracked-ice");
+    expect(patternFrom("Starlight Holo")).toBe("starlight");
+    expect(patternFrom("Confetti Holo")).toBe("confetti");
+  });
+
+  it("says nothing where the foil has no pattern to name", () => {
+    for (const v of ["Normal", "Holo", "Reverse Holo", "Expansion Stamp", ""]) {
+      expect(patternFrom(v), v).toBeNull();
+    }
+  });
+
+  it("leaves the ball patterns to finish, which already carries them", () => {
+    // One fact in two columns is a fact that drifts.
+    expect(patternFrom("Poké Ball")).toBeNull();
+    expect(patternFrom("Master Ball")).toBeNull();
+  });
+
+  it("answers alongside the finish, not instead of it", () => {
+    // A Cosmos Holo is a holo card whose foil is cosmos. Both halves are true
+    // and they are worth different things: one picks a price, one picks a look.
+    expect(finishFrom("Cosmos Holo")).toBe("holo");
+    expect(patternFrom("Cosmos Holo")).toBe("cosmos");
+    expect(finishFrom("Reverse Holo (Cosmos)")).toBe("reverse-holo");
+    expect(patternFrom("Reverse Holo (Cosmos)")).toBe("cosmos");
   });
 });

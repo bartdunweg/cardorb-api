@@ -1,5 +1,12 @@
 import type { CollectionRow } from "./collection-row";
-import { NOT_OWNED, cardNumber, finishFrom, quantityFrom, type CsvResult } from "./csv";
+import {
+  NOT_OWNED,
+  cardNumber,
+  finishFrom,
+  patternFrom,
+  quantityFrom,
+  type CsvResult,
+} from "./csv";
 
 /**
  * An export from Dex, which is not a spreadsheet with lucky column names.
@@ -131,6 +138,9 @@ export function dexRows(grid: string[][]): CsvResult {
       // now() — applies, and the import says so.
       acquiredAt: null,
       finish: finishFrom(at(r, c.variant)),
+      // Dex names the foil pattern in the same column: "Cosmos Holo" is a holo
+      // whose foil is cosmos, and both halves of that are worth keeping.
+      foilPattern: patternFrom(at(r, c.variant)),
       // A wishlist row is a card you want one of, whatever Dex counted.
       quantity: wanted ? 1 : Math.max(1, quantity ?? 1),
       condition: null,

@@ -3,7 +3,7 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
 import { heldValue } from "./cards-stats";
 import type { DexEntry } from "./pokedex";
-import { type Finish, isReverseFinish } from "./collection-row";
+import { type Finish, type FoilPattern, isReverseFinish } from "./collection-row";
 import { UUID } from "./collection-row";
 
 /**
@@ -36,6 +36,8 @@ export type CardItem = {
   tcgId: string | null;
   owned: boolean;
   finish: Finish | null;
+  /** What the foil looks like, where anything told us. Null is "not recorded". */
+  foilPattern: FoilPattern | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -83,6 +85,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   tcgId: card.tcgId,
   owned: v.owned,
   finish: v.finish,
+  foilPattern: v.foilPattern,
   quantity: v.quantity ?? 1,
   condition: v.condition,
   grade: v.grade,
