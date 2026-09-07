@@ -429,6 +429,7 @@ export async function updateRow(
   if ("owned" in patch) row.owned = patch.owned;
   if ("excluded" in patch) row.excluded = patch.excluded;
   if ("finish" in patch) row.finish = patch.finish;
+  if ("foilPattern" in patch) row.foil_pattern = patch.foilPattern;
   if ("quantity" in patch) row.quantity = patch.quantity;
   if ("condition" in patch) row.condition = patch.condition;
   if ("grade" in patch) row.grade = patch.grade;

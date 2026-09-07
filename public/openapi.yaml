@@ -342,6 +342,9 @@ components:
         finish:
           oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }]
           description: "Absent or `null` is 'nobody has said'. Anything else that is not one of the three is a 400, as on `CardPatch`."
+        foilPattern:
+          oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }]
+          description: "What the foil looks like, which is not what it is worth. One card is commonly held both as a patterned holo and as a plain one, so this is a choice per copy."
         quantity: { type: integer, minimum: 1, default: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }

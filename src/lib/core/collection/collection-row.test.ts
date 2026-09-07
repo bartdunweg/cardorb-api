@@ -270,3 +270,38 @@ describe("validateCopyBody", () => {
     expect(validateCopyBody({ acquiredAt: "2999-01-01" }, true).kind).toBe("invalid");
   });
 });
+
+describe("foilPattern on a patch", () => {
+  const patch = (b: unknown) => validateCardPatch(b);
+  const ok = (b: unknown) => {
+    const r = patch(b);
+    if (r.kind !== "ok") throw new Error(`refused: ${r.error}`);
+    return r.patch;
+  };
+
+  it("takes a pattern, and null to clear it", () => {
+    // One card is held as a cosmos holo and as a plain one at the same time —
+    // 115 of them in a real export — so this is a choice between two copies
+    // somebody owns rather than a fact about the card.
+    expect(ok({ foilPattern: "cosmos" }).foilPattern).toBe("cosmos");
+    expect(ok({ foilPattern: null }).foilPattern).toBeNull();
+  });
+
+  it("refuses one it does not know, rather than blanking it", () => {
+    const r = patch({ foilPattern: "galaxy" });
+    expect(r.kind).toBe("invalid");
+    expect(r.kind === "invalid" && r.error).toMatch(/foilPattern must be null/);
+  });
+
+  it("is a copy's own, so a split or a second copy may set it", () => {
+    // COPY_KEYS is the allow-list for POST …/copies and …/split. A pattern is
+    // exactly the kind of thing one copy differs in: 115 cards in a real export
+    // are held both as a patterned holo and as a plain one.
+    const r = validateCopyBody({ foilPattern: "starlight", finish: "holo", count: 2 }, false);
+    expect(r.kind).toBe("ok");
+    expect(r.kind === "ok" && r.changes).toMatchObject({
+      foilPattern: "starlight",
+      finish: "holo",
+    });
+  });
+});

@@ -408,6 +408,8 @@ export type CardPatch = Partial<{
   excluded: boolean;
   /** null clears it back to "not recorded", which is a thing somebody may mean. */
   finish: Finish | null;
+  /** The same, for the foil's pattern. Its own field: see FOIL_PATTERNS. */
+  foilPattern: FoilPattern | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -464,6 +466,15 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
     if (b.finish !== null && !isFinish(b.finish))
       return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
     patch.finish = b.finish as Finish | null;
+  }
+  if ("foilPattern" in b) {
+    // Refused rather than blanked, the same reasoning as finish one block up:
+    // one card can be held as a cosmos holo and as a plain one at the same
+    // time, so this is somebody choosing between two copies they own and a
+    // typo should be told.
+    if (b.foilPattern !== null && !isFoilPattern(b.foilPattern))
+      return { kind: "invalid", error: `foilPattern must be null, ${FOIL_PATTERNS.join(", ")}.` };
+    patch.foilPattern = b.foilPattern as FoilPattern | null;
   }
   if ("quantity" in b) {
     const q = Number(b.quantity);
@@ -551,6 +562,7 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
 export type CopyChanges = Pick<
   CardPatch,
   | "finish"
+  | "foilPattern"
   | "condition"
   | "grade"
   | "language"
@@ -563,6 +575,7 @@ export type CopyChanges = Pick<
 
 const COPY_KEYS = [
   "finish",
+  "foilPattern",
   "condition",
   "grade",
   "language",

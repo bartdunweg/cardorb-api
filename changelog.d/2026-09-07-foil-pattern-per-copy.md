@@ -1,0 +1,1 @@
+- The foil's pattern can be set when you add a card and changed afterwards, like the printing: one card is commonly held both as a patterned holo and as a plain one, and 115 in a real collection are.
