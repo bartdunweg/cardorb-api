@@ -1858,7 +1858,7 @@ paths:
       tags: [Import]
       operationId: listImports
       summary: Recent imports
-      security: [{ session: [] }]
+      security: [{ bearer: [] }, { session: [] }]
       responses:
         "200":
           description: The most recent imports, newest first.
