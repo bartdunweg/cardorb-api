@@ -267,6 +267,9 @@ components:
       properties:
         name: { type: string, description: "The set as the collection names it. Addresses everything." }
         title: { type: string, description: "The set as the catalogue names it. For reading." }
+        abbreviation:
+          type: [string, "null"]
+          description: The code printed on the card in the set symbol's corner — MEW for 151, SFA for Shrouded Fable. Null for a set the catalogue names but does not code.
         logo: { type: [string, "null"] }
         logoSize: { $ref: "#/components/schemas/ImageSize" }
         releaseDate: { type: [string, "null"] }

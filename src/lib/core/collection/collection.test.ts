@@ -356,6 +356,7 @@ describe("facts source", () => {
     const source = vi.fn(
       async (_setName: string, identities: { number: string; name: string }[]) => ({
         title: "Base Set",
+        abbreviation: null,
         logo: null,
         releaseDate: "1999-01-09",
         total: 102,

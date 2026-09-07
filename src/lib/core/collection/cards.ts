@@ -237,6 +237,17 @@ export type CardSet = {
    * accounts — everybody arrives with their own names for things.
    */
   title: string;
+  /**
+   * The code printed on the card, in the set symbol's corner: MEW for 151, SFA for Shrouded
+   * Fable, DEX for Dark Explorers. Two or three letters, and the thing a collector reads off a
+   * card when they want to know which set it is — a full set name under a tile is a line of
+   * text you have to parse where three letters are recognised.
+   *
+   * Already read for the Limitless link guess (SetCatalogue.code); this only carries it out.
+   * Null for a set the catalogue names but does not code — of 69 sets in a real collection,
+   * exactly one, the Sword & Shield promos.
+   */
+  abbreviation: string | null;
   logo: string | null;
   /** The logo's size, for the same reason a card's scan carries one. */
   logoSize: ImageSize;
@@ -606,6 +617,8 @@ export type CardFacts = {
 /** A set as the catalogue knows it, and the facts of each printing asked about. */
 export type SetFacts = {
   title: string | null;
+  /** The code printed on the card; see CardSet.abbreviation. */
+  abbreviation: string | null;
   logo: string | null;
   releaseDate: string | null;
   total: number | null;
@@ -758,6 +771,7 @@ export async function resolveSetFacts(
 
   return {
     title: cat.officialName,
+    abbreviation: cat.code,
     logo: cat.logo,
     releaseDate: cat.releaseDate,
     total: cat.total,
@@ -921,6 +935,7 @@ export async function buildCollection(
     return {
       name: setName,
       title: set.title ?? setName,
+      abbreviation: set.abbreviation,
       logo: set.logo,
       logoSize: measure(set.logo),
       releaseDate: set.releaseDate,

@@ -5,6 +5,7 @@ const sets: CardSet[] = [
   {
     name: "Base",
     title: "Base Set",
+    abbreviation: null,
     logo: null,
     logoSize: null,
     releaseDate: null,
