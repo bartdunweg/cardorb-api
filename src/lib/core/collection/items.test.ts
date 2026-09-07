@@ -75,9 +75,38 @@ const SETS: CardSet[] = [
 ];
 
 describe("flattenItems", () => {
-  it("makes one item per copy, in set order, and skips the public shape", () => {
+  it("makes one item per kind of copy, in set order, and skips the public shape", () => {
     const sets = [...SETS, set("Public", [card("Mew", [variant({ id: null })])])];
-    expect(flattenItems(sets).map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
+    expect(flattenItems(sets).map((i) => i.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("counts copies that differ in nothing as one item", () => {
+    // Snorlax is held twice, on two rows, agreeing on every word of what it is.
+    const [snorlax] = flattenItems([
+      set("Jungle", [card("Snorlax", [variant({ id: "c" }), variant({ id: "d" })])]),
+    ]);
+
+    expect(snorlax?.id).toBe("c");
+    expect(snorlax?.quantity).toBe(2);
+  });
+
+  it("keeps copies apart when anything about them differs", () => {
+    const rows = [
+      variant({ id: "a" }),
+      variant({ id: "b", condition: "Excellent" }),
+      variant({ id: "c", language: "de" }),
+      variant({ id: "d", finish: "reverse-holo" }),
+      variant({ id: "e", collectionId: "f-2" }),
+      variant({ id: "f", isFavorite: true }),
+    ];
+
+    expect(flattenItems([set("Jungle", [card("Snorlax", rows)])])).toHaveLength(6);
+  });
+
+  it("sums the quantities rather than counting the rows", () => {
+    const rows = [variant({ id: "a", quantity: 3 }), variant({ id: "b", quantity: 2 })];
+
+    expect(flattenItems([set("Jungle", [card("Snorlax", rows)])])[0]?.quantity).toBe(5);
   });
 
   it("carries the folder, the image and the row's own facts", () => {
@@ -120,7 +149,7 @@ describe("filterItems", () => {
     expect(filterItems(all, {}).map((i) => i.id)).toEqual(["k", "j", "n"]);
   });
   it("matches a search against the name or the set, in any case", () => {
-    expect(filterItems(items, { q: "JUNG" }).map((i) => i.id)).toEqual(["c", "d"]);
+    expect(filterItems(items, { q: "JUNG" }).map((i) => i.id)).toEqual(["c"]);
     expect(filterItems(items, { q: "pika" }).map((i) => i.id)).toEqual(["a"]);
   });
   it("favourites and folders narrow", () => {
@@ -154,9 +183,9 @@ describe("filterItems", () => {
     ).toEqual(["e"]);
   });
   it("a set or a rarity is matched whole, in any case", () => {
-    expect(filterItems(items, { set: "jungle" }).map((i) => i.id)).toEqual(["c", "d"]);
+    expect(filterItems(items, { set: "jungle" }).map((i) => i.id)).toEqual(["c"]);
     expect(filterItems(items, { set: "Jung" })).toEqual([]);
-    expect(filterItems(items, { rarity: "common" }).map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
+    expect(filterItems(items, { rarity: "common" }).map((i) => i.id)).toEqual(["a", "b", "c"]);
     expect(filterItems(items, { rarity: "Rare" })).toEqual([]);
   });
 });

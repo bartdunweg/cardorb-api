@@ -1,0 +1,1 @@
+- A card held four times is one line of four, not four lines. The card list returned an item per stored row, so four copies agreeing on language, finish, condition, grade and folder drew four identical tiles — and paging, totals and the counts under a title all treated them as four different things. Grouped where the list is built, so the numbers describe what is on screen.
