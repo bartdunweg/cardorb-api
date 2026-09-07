@@ -1,0 +1,1 @@
+- The TCGdex id a browse card is matched to is covered by tests, so the price keyed to it cannot go missing the way it did in #241 without something failing.
