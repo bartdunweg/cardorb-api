@@ -18,7 +18,7 @@
 /**
  * Which printing a copy is.
  *
- * Three values and not more: this is the distinction Cardmarket prices, which
+ * Three kinds and not more: this is the distinction Cardmarket prices, which
  * publishes one plain set of figures and one `-holo` set per product. "holo"
  * covers the older Holo Rare and "reverse-holo" the modern reverse — they share
  * a price, so they share a lookup, but they are different things to own and a
@@ -27,7 +27,13 @@
 /** A folder id, as Postgres writes one. Checked before it reaches the store. */
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const FINISHES = ["normal", "reverse-holo", "holo"] as const;
+export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-ball"] as const;
+/**
+ * The finishes that are a reverse holo with a pattern on it — the Poké Ball and Master Ball
+ * printings of 151 and Prismatic Evolutions. They read the foil price fields as a reverse does.
+ */
+export const isReverseFinish = (f: string | null | undefined): boolean =>
+  f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
 
 /** The languages a card is printed in, as Cardmarket and TCGdex code them. */
 export const LANGUAGES = ["en", "de", "fr", "it", "es", "pt", "nl", "ja", "ko", "zh"] as const;
@@ -81,7 +87,8 @@ export type CollectionRow = {
    */
   acquiredAt: string | null;
   /**
-   * Which printing this copy is: "normal", "reverse-holo", "holo", or null.
+   * Which printing this copy is: "normal", "reverse-holo", "holo", "poke-ball",
+   * "master-ball", or null.
    *
    * Null is "nobody has said", not "normal", and the two are kept apart on
    * purpose — see the 20260816200000 migration. It is priced as normal either

@@ -3,7 +3,7 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
 import { heldValue } from "./cards-stats";
 import type { DexEntry } from "./pokedex";
-import type { Finish } from "./collection-row";
+import { type Finish, isReverseFinish } from "./collection-row";
 import { UUID } from "./collection-row";
 
 /**
@@ -149,7 +149,7 @@ export type Order = "asc" | "desc";
  * too, so the sort valued a holo copy differently from every other figure.
  */
 export const copyPrice = (it: CardItem): number | null =>
-  shownPrice((it.finish === "reverse-holo" ? it.priceHolo : null) ?? it.price);
+  shownPrice((isReverseFinish(it.finish) ? it.priceHolo : null) ?? it.price);
 
 export type ListValue = { value: number; unpriced: number };
 
