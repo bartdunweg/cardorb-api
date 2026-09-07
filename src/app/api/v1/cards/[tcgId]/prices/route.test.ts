@@ -12,6 +12,7 @@ vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
+  ALL_READINGS: "2000-01-01",
   getCardPrices: (...a: unknown[]) => getCardPrices(...a),
 }));
 
@@ -37,7 +38,7 @@ beforeEach(() => {
 describe("GET /api/v1/cards/{tcgId}/prices", () => {
   it("asks for the card's readings with the caller's id and credential", async () => {
     await get();
-    expect(getCardPrices).toHaveBeenCalledWith("me-uuid", ["base1-4"], "t.o.k.e.n");
+    expect(getCardPrices).toHaveBeenCalledWith("me-uuid", ["base1-4"], "t.o.k.e.n", "2000-01-01");
   });
 
   it("answers the dated points, oldest first, without the id repeated", async () => {

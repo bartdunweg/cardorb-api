@@ -15,3 +15,6 @@ docs/rarity-backfill-*.undo.json
 
 # Supabase CLI link state
 supabase/.temp/
+
+# Downloaded price archives the backfill script keeps between runs
+.cache/

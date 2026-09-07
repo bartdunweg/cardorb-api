@@ -723,6 +723,8 @@ export const getValueHistory = cache(
 export const cardPricesTag = (userId: string) => `card-prices:${userId}`;
 
 const WINDOW_DAYS = 90;
+/** A `since` before any reading: one card's own line is everything it has, back to the backfill. */
+export const ALL_READINGS = "2000-01-01";
 
 /** The asked ids as one short key: order does not matter, the set does. */
 const idsKey = (tcgIds: string[]) =>
@@ -731,7 +733,13 @@ const idsKey = (tcgIds: string[]) =>
     .digest("hex");
 
 export const getCardPrices = cache(
-  async (userId: string, tcgIds: string[], token?: string): Promise<CardPricePoint[]> => {
+  async (
+    userId: string,
+    tcgIds: string[],
+    token?: string,
+    /** The earliest date wanted, yyyy-mm-dd; the ninety-day window when left out. */
+    from?: string,
+  ): Promise<CardPricePoint[]> => {
     if (!tcgIds.length) return [];
     try {
       const db = token ? userClient(token) : await serverClient();
@@ -740,7 +748,8 @@ export const getCardPrices = cache(
       // keys on the arguments, and a date built inside would be a new key
       // every day *and* a stale window on a hit. Outside, it is part of the
       // key, so the window moves with the day and the cache follows it.
-      const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+      const since =
+        from ?? new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
       return await unstable_cache(
         () => listCardPrices(db, tcgIds, since),
         // v3: the ids are part of the key. They were not, so the first asker's
