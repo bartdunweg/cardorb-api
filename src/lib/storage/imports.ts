@@ -20,7 +20,12 @@ export type ImportOutcome = {
   seen: number;
   added: number;
   skipped: number;
-  /** Rows the collection already holds, by set, number and name. */
+  /**
+   * Rows naming a card the collection already holds. Reported, not acted on:
+   * every row is written. It is here so a screen can say "93 of these you
+   * already have" before somebody imports the same file for the second time,
+   * which is the way this operation goes wrong.
+   */
   existing: number;
   /** A few rows as they will be stored, so a person can check before committing. */
   sample: CollectionRow[];
@@ -70,13 +75,13 @@ export function preview(
   skipped: number,
   held: ReadonlySet<string>,
 ): ImportOutcome {
-  const { fresh, existing } = splitExisting(rows, held);
+  const { existing } = splitExisting(rows, held);
   return {
     seen: rows.length + skipped,
     added: 0,
     skipped,
     existing: existing.length,
-    sample: fresh.slice(0, 5),
+    sample: rows.slice(0, 5),
   };
 }
 
@@ -91,10 +96,17 @@ export function preview(
  * the end, because the rows are held for an hour and a successful import that
  * shows nothing for an hour reads as a failed one.
  *
- * `includeExisting` is the screen's own checkbox, off by default. The database
- * cannot refuse a second copy of a CSV row — cards_source_idx is unique on a
- * source_id that a CSV row does not have, and NULLs never collide — so this is
- * the only thing standing between somebody and two of every card.
+ * **Every row is written, including the ones naming a card already held.** A
+ * file is a list of copies somebody has, and a second copy of a card is a
+ * normal thing to own — the check that would skip them cannot tell a duplicate
+ * from a second printing, because a finish is not part of the key and a
+ * collection filled from Notion mostly has none. Refusing the row would lose a
+ * card silently; writing it costs a row somebody can delete.
+ *
+ * What that leaves is the real danger, and it is untouched: cards_source_idx is
+ * unique on a source_id that a CSV row does not have, and NULLs never collide,
+ * so importing the same file twice writes everything twice and nothing stops
+ * it. `existing` is reported so the screen can say so out loud beforehand.
  */
 export async function commit(
   db: SupabaseClient,
@@ -103,10 +115,8 @@ export async function commit(
   rows: CollectionRow[],
   skippedCount: number,
   held: ReadonlySet<string>,
-  includeExisting = false,
 ): Promise<ImportOutcome> {
-  const { fresh, existing } = splitExisting(rows, held);
-  const writing = includeExisting ? rows : fresh;
+  const { existing } = splitExisting(rows, held);
 
   const { data: started } = await db
     .from("imports")
@@ -117,7 +127,7 @@ export async function commit(
   const id = (started as { id: string } | null)?.id;
 
   try {
-    const { added } = await createRows(db, userId, writing, kind);
+    const { added } = await createRows(db, userId, rows, kind);
     const skipped = rows.length - added + skippedCount;
 
     if (id) {
@@ -136,7 +146,7 @@ export async function commit(
       seen: rows.length + skippedCount,
       added,
       skipped,
-      existing: includeExisting ? 0 : existing.length,
+      existing: existing.length,
       sample: [],
     };
   } catch (err) {

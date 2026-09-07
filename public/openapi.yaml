@@ -716,8 +716,11 @@ components:
         existing:
           type: integer
           description: |
-            Rows the collection already holds, matched on set, printed number and
-            name without its card-type suffix. Skipped unless `includeExisting`.
+            Rows naming a card the collection already holds, matched on set,
+            printed number and name without its card-type suffix. Reported, not
+            acted on — every row is written. A client shows it before a commit,
+            because a CSV row has no source_id and nothing in the database stops
+            the same file being imported twice.
         sample: { type: array, items: { $ref: "#/components/schemas/CollectionRow" } }
 
     ImportRecord:
@@ -1808,13 +1811,6 @@ paths:
                 csv: { type: string }
                 map: { $ref: "#/components/schemas/ColumnMap" }
                 commit: { type: boolean, default: false }
-                includeExisting:
-                  type: boolean
-                  default: false
-                  description: |
-                    Write rows the collection already holds. Off by default: a
-                    CSV row has no source_id, so nothing in the database stops
-                    the same file being imported twice.
       responses:
         "200":
           description: The outcome, plus `source`. A preview also carries `header`, `guessed` and `skippedRows`.

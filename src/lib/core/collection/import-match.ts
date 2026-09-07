@@ -5,14 +5,19 @@ import { norm } from "../util";
 /**
  * Which rows of an import the collection already holds.
  *
- * This exists because an import is the one thing this app does that cannot be
- * taken back. `cards_source_idx` is unique on (user_id, source, source_id) and
- * a CSV row has no source_id, and NULLs never collide in Postgres — so running
- * the same file twice writes every card twice, and nothing stops it. The
- * screen's promise ("696 you already have, I will skip those") is kept here.
+ * It counts; it does not decide. Every row of a file is written — a file is a
+ * list of copies somebody has, and a second copy of a card is a normal thing to
+ * own. What this is for is the sentence the screen shows first: "93 of these
+ * name a card you already have."
+ *
+ * That sentence is the only warning there is. `cards_source_idx` is unique on
+ * (user_id, source, source_id), a CSV row has no source_id, and NULLs never
+ * collide in Postgres — so importing the same file twice writes every card
+ * twice and nothing in the database stops it. Somebody about to do that sees
+ * a number equal to their whole file.
  *
  * Pure and separate from storage/imports.ts on purpose: reading the collection
- * is a query, deciding is a rule, and only the rule is worth testing.
+ * is a query, counting is a rule, and only the rule is worth testing.
  */
 
 /**
@@ -31,16 +36,16 @@ const TYPE_SUFFIX = /\s+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\s?x
  * Two things are deliberately *not* in the key.
  *
  * The finish is not, so a card you own in any printing counts as one you have.
- * That over-matches: somebody who owns the normal and is importing the reverse
- * is told they have it already. The other way round writes a duplicate that
- * cannot be undone, and between a card you add by hand and a collection you
- * prune by hand, this is the cheaper mistake.
+ * That over-matches — the normal you own answers for the reverse you are
+ * importing — and it is the right way to be wrong for a count whose job is to
+ * catch a whole file being imported twice: a collection filled from Notion has
+ * no finish on most of its rows, so keying on one would report nothing and warn
+ * nobody. It would be the wrong way to be wrong if this decided what to write.
+ * It does not.
  *
  * And sameCard()'s tolerance for misspellings is not, because it is neither
- * symmetric nor hashable and, more to the point, a wrong match here silently
- * drops a card somebody meant to import. Both sides of this comparison are one
- * person's own data; the fuzziness that earns its place when matching a
- * hand-kept row against a catalogue does not earn it here.
+ * symmetric nor hashable, and a count is not worth an edit-distance pass over
+ * two thousand rows squared.
  */
 export const importKey = (row: { name: string; setName: string; number: string }): string =>
   [

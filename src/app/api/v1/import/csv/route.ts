@@ -70,20 +70,16 @@ export async function POST(req: Request) {
   let csv = "";
   let map: Partial<ColumnMap> | undefined;
   let doCommit = false;
-  let includeExisting = false;
-  const read = await readJsonBody<{
-    csv?: unknown;
-    map?: unknown;
-    commit?: unknown;
-    includeExisting?: unknown;
-  }>(req, BODY_LIMIT.csv);
+  const read = await readJsonBody<{ csv?: unknown; map?: unknown; commit?: unknown }>(
+    req,
+    BODY_LIMIT.csv,
+  );
   if (read.kind === "too-large") return apiError(413, "That file is too large.");
   if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.csv === "string") csv = body.csv;
   if (body.map && typeof body.map === "object") map = body.map as Partial<ColumnMap>;
   doCommit = body.commit === true;
-  includeExisting = body.includeExisting === true;
 
   // After the body is read, because the flag deciding whether this call is
   // expensive is in it. A preview is not counted; see the note on byAccount.
@@ -159,15 +155,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const outcome = await commit(
-      db,
-      viewer.userId,
-      "csv",
-      rows,
-      skipped.length,
-      held,
-      includeExisting,
-    );
+    const outcome = await commit(db, viewer.userId, "csv", rows, skipped.length, held);
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });

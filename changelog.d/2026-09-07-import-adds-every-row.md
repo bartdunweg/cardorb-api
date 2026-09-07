@@ -1,0 +1,1 @@
+- An import now adds every card in the file, including ones you already have — a second copy is a normal thing to own. The preview says how many of them you already hold, so importing the same file twice is something you see coming.
