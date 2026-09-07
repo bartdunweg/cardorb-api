@@ -1,0 +1,1 @@
+- Cards from an EX Trainer Kit deck now find their scan and price: the catalogue files those sets under the deck's Pokémon, and an export names the product.

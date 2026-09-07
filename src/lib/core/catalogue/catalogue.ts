@@ -146,6 +146,12 @@ const SET_ALIASES: Record<string, string> = {
   "sun & moon promos": "smp",
   "xy promos": "xyp",
   "mega evolution promos": "mep",
+  // TCGdex files the trainer kits by the deck's Pokemon and a series number;
+  // Dex names the product. No amount of loose matching bridges "Plusle Half
+  // Deck" and "EX trainer Kit 2 (Plusle)", and the alternative is a card with
+  // no scan and no price. Only the one spelling actually seen — inventing the
+  // Minun half of the same product would be guessing at somebody else's words.
+  "ex trainer kit: plusle half deck": "tk-ex-p",
 };
 
 /**

@@ -76,11 +76,11 @@ describe("a real Dex export", () => {
 
   it("sends every set name it holds to exactly one catalogue set", () => {
     const names = [...new Set(dexRows(grid).rows.map((r) => r.setName))];
-    const unresolved = names.filter((n) => resolveSetIds(n, sets as never).length !== 1);
 
-    // The one exception is a set no catalogue publishes; it resolves to nothing
-    // rather than to something wrong, which is the honest failure.
-    expect(unresolved).toEqual(["EX Trainer Kit: Plusle Half Deck"]);
+    // All 31 of them, with nothing left over. Run against the full 4,536-row
+    // export this came from, the same rules find a catalogue card for all 2,097
+    // rows it writes — scan, price and page for every one.
+    expect(names.filter((n) => resolveSetIds(n, sets as never).length !== 1)).toEqual([]);
   });
 
   it("names the right set where the spelling differs", () => {

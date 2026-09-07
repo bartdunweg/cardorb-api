@@ -88,6 +88,7 @@ const SETS = [
   { id: "xy1", name: "XY" },
   { id: "xyp", name: "XY Black Star Promos" },
   { id: "tk-xy-n", name: "XY trainer Kit (Noivern)" },
+  { id: "tk-ex-p", name: "EX trainer Kit 2 (Plusle)" },
 ] as never;
 
 describe("resolveSetIds", () => {
@@ -117,7 +118,13 @@ describe("resolveSetIds", () => {
     expect(resolveSetIds("XY Promos", SETS)).toEqual(["xyp"]);
   });
 
+  it("knows the trainer kits an export names after the product", () => {
+    // TCGdex files these by the deck's Pokemon and a series number. Nothing
+    // bridges that to "Plusle Half Deck" but the table.
+    expect(resolveSetIds("EX Trainer Kit: Plusle Half Deck", SETS)).toEqual(["tk-ex-p"]);
+  });
+
   it("answers nothing for a set no catalogue knows", () => {
-    expect(resolveSetIds("EX Trainer Kit: Plusle Half Deck", SETS)).toEqual([]);
+    expect(resolveSetIds("Some Set That Does Not Exist", SETS)).toEqual([]);
   });
 });
