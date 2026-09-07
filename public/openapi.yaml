@@ -155,7 +155,7 @@ components:
     Facets:
       type: object
       description: Over the whole owned collection, whatever the filters; what a filter menu offers.
-      required: [sets, rarities]
+      required: [sets, rarities, gens, types]
       properties:
         sets:
           type: array
@@ -167,6 +167,8 @@ components:
               name: { type: string, description: "What `set` matches." }
               title: { type: string }
         rarities: { type: array, items: { type: string }, description: "A to Z." }
+        gens: { type: array, items: { type: string }, description: "In the collection's own order, which is the catalogue's series order." }
+        types: { type: array, items: { type: string }, description: "A to Z." }
     Error:
       type: object
       description: The one shape every failure takes.
@@ -773,6 +775,8 @@ paths:
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "One set, whole, by its name or its title; case does not matter." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "One rarity, whole, in the catalogue's words; case does not matter." }
         - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole, as printed; with `set` it names one card's every row." }
+        - { name: gen, in: query, schema: { type: string, maxLength: 100 }, description: "One generation, whole, as the catalogue names its series; case does not matter." }
+        - { name: type, in: query, schema: { type: string, maxLength: 100 }, description: "One energy type, whole, as the catalogue names it; case does not matter." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }

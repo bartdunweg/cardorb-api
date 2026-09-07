@@ -1,0 +1,1 @@
+- `GET /v1/cards` filters by `gen` and `type`, each one whole and case-insensitively, as `set` and `rarity` do. The response's facets carry `gens` (in the collection's own, chronological order) and `types` (A to Z) beside the sets and rarities, so a filter menu is built from one read.

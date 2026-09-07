@@ -6,9 +6,13 @@ if the two have drifted apart.
 
 ## 2026-09-07
 
+- `GET /v1/cards` filters by `gen` and `type`, each one whole and case-insensitively, as `set` and `rarity` do. The response's facets carry `gens` (in the collection's own, chronological order) and `types` (A to Z) beside the sets and rarities, so a filter menu is built from one read.
+
 - A row's copies can differ: `POST /v1/collection/items/{id}/copies` adds one more copy as a row of its own, `POST /v1/collection/items/{id}/split` moves some of a row's copies to a row with their own language, condition, grade, finish, folder, price or acquired date. `GET /v1/cards` takes `number` beside `set`; a new card can be filed in a folder at once (`collectionId` on the draft); PATCH takes `acquiredAt`.
 
 - A copy's `finish` can be `poke-ball` or `master-ball`: the patterned reverse holos of 151 and Prismatic Evolutions. Both are priced as a reverse holo (the foil price where Cardmarket publishes one). Readers with a closed list of finishes must add the two before a copy carries them.
+
+- A card's price line goes back to November 2022 where the American market has it: `GET /v1/cards/{tcgId}/prices` answers every reading a card has, not the last ninety days. The years before the nightly Cardmarket reading (2026-08-16) come from TCGplayer, turned into euros at each day's ECB rate: the market price from tcgcsv.com's archive, weekly from February 2024, and before that weekly averages of TCGplayer sales from tcgdex/price-history for the older sets. `card_prices.source` says which; `scripts/backfill-card-prices.mjs` fills it in and can be rerun.
 
 ## 2026-09-06
 
