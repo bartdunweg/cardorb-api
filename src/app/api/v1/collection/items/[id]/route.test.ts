@@ -41,6 +41,31 @@ const { PATCH, DELETE } = await import("./route");
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
 const ID = "11111111-1111-1111-1111-111111111111";
 
+/** The row a delete hands back, as the store would: everything a restore needs. */
+const REMOVED = {
+  id: ID,
+  name: "Pikachu",
+  number: "25",
+  setName: "Base Set",
+  rarity: "Common",
+  gen: "Base",
+  types: ["Lightning"],
+  owned: true,
+  excluded: false,
+  acquiredAt: "2026-01-02T00:00:00.000Z",
+  finish: "holo",
+  foilPattern: null,
+  quantity: 2,
+  condition: "NM",
+  grade: null,
+  language: null,
+  purchasePrice: 4.5,
+  purchaseDate: "2026-01-02",
+  notes: "first pull",
+  isFavorite: true,
+  collectionId: null,
+};
+
 const patch = (body: unknown, id = ID) =>
   PATCH(
     new Request(`https://cardorb.com/api/v1/collection/items/${id}`, {
@@ -79,7 +104,7 @@ beforeEach(() => {
     async (_u: string, id: string) => folders.find((f) => f.id === id) ?? null,
   );
   updateRow.mockResolvedValue({ id: ID, isFavorite: true });
-  deleteRow.mockResolvedValue(true);
+  deleteRow.mockResolvedValue(REMOVED);
 });
 afterEach(() => {
   updateRow.mockClear();
@@ -170,8 +195,18 @@ describe("DELETE /api/v1/cards/[id]", () => {
     expect(deleteRow).toHaveBeenCalledWith("me-uuid", ID, "t.o.k.e.n");
   });
 
+  it("hands back the row it removed, in the `card` the PATCH above answers with", async () => {
+    // The only moment this row can be read: it is gone, and nothing here
+    // remembers it. A client offering an undo keeps what comes back and posts
+    // it to POST /v1/cards, acquiredAt among the fields, which is the whole
+    // reason that create takes one.
+    const res = await del();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, card: REMOVED });
+  });
+
   it("404s when nothing went, rather than claiming it did", async () => {
-    deleteRow.mockResolvedValue(false);
+    deleteRow.mockResolvedValue(null);
     const res = await del();
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: "No such card." });

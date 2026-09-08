@@ -133,8 +133,12 @@ export async function updateRow(
   return postgres.updateRow(db, userId, id, patch);
 }
 
-/** Removes one card of the caller's. True when a row went. */
-export async function deleteRow(userId: string, id: string, token?: string): Promise<boolean> {
+/** Removes one card of the caller's and hands back the row it removed; null when none matched. */
+export async function deleteRow(
+  userId: string,
+  id: string,
+  token?: string,
+): Promise<CollectionRow | null> {
   const db = await clientFor(token);
   if (!db) throw new StoreNotConfigured();
   return postgres.deleteRow(db, userId, id);

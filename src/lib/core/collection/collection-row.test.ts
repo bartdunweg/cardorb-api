@@ -92,6 +92,23 @@ describe("validateCardDraft", () => {
     expect(why({ name: "P", set: "s".repeat(MAX.option) })).toBeNull();
   });
 
+  it("takes an acquired date, by the same rule a patch is held to", () => {
+    // What makes a restore a restore: the row that was just removed had a day,
+    // and putting it back today would move it to the top of Newest first.
+    expect(ok({ name: "P", set: "B", acquiredAt: "2026-01-02" }).acquiredAt).toMatch(
+      /^2026-01-0[12]T/,
+    );
+    expect(why({ name: "P", set: "B", acquiredAt: "2999-01-01" })).toMatch(/not in the future/i);
+    expect(why({ name: "P", set: "B", acquiredAt: "the other day" })).toMatch(/acquiredAt/);
+  });
+
+  it("leaves the acquired date absent when nobody named one", () => {
+    // Absent is what makes the column default stand. Null says the same, the
+    // way every other optional field here reads it, rather than being refused.
+    expect(ok({ name: "P", set: "B" })).not.toHaveProperty("acquiredAt");
+    expect(ok({ name: "P", set: "B", acquiredAt: null })).not.toHaveProperty("acquiredAt");
+  });
+
   it("survives a body that is not an object", () => {
     expect(why(null)).toMatch(/name/i);
     expect(why("Pikachu")).toMatch(/name/i);
@@ -129,6 +146,15 @@ describe("rowFromDraft", () => {
   it("carries the wishlist flag across as owned", () => {
     const row = rowFromDraft(ok({ name: "P", set: "B", collection: false }));
     expect(row.owned).toBe(false);
+  });
+
+  it("carries an acquired date across, and leaves the key out when there is none", () => {
+    // Out rather than undefined: a store spreading this into an insert would
+    // write a null over the column default, and a card added by hand is pulled
+    // now, not never.
+    const dated = rowFromDraft(ok({ name: "P", set: "B", acquiredAt: "2026-01-02" }));
+    expect(dated.acquiredAt).toMatch(/^2026-01-0[12]T/);
+    expect(rowFromDraft(ok({ name: "P", set: "B" }))).not.toHaveProperty("acquiredAt");
   });
 });
 

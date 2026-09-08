@@ -2,7 +2,12 @@ import { findFolder } from "@/lib/core/collection/collection";
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
-import { cardsTag, UUID, validateCardPatch } from "@/lib/core/collection/collection-row";
+import {
+  type CollectionRow,
+  cardsTag,
+  UUID,
+  validateCardPatch,
+} from "@/lib/core/collection/collection-row";
 import { updateRow, deleteRow } from "@/lib/storage/collection";
 import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
@@ -113,7 +118,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const { id } = await params;
   if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
-  let gone: boolean;
+  let gone: CollectionRow | null;
   try {
     gone = await deleteRow(who.userId, id, bearer(req) ?? undefined);
   } catch (err) {
@@ -123,7 +128,12 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
 
-  return NextResponse.json({ ok: true }, { headers: readHeaders(req) });
+  // The row as it was, in the same `card` the PATCH above answers with, so a
+  // client parses one shape for both. It is what an undo needs and the only
+  // moment it can be had: the row is gone, and nothing here remembers it.
+  // Putting it back is POST /v1/cards with these fields, `acquiredAt` among
+  // them, which is why that create takes one.
+  return NextResponse.json({ ok: true, card: gone }, { headers: readHeaders(req) });
 }
 
 /** Same preflight POST /v1/cards answers, for the same reason. */
