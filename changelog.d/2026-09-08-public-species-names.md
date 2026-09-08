@@ -1,0 +1,1 @@
+- `GET /v1/public/species` answers every National Pokédex number and its name, with no key and no username: a signed-out visitor's Pokédex tab on a public profile said "No cards found" because the only route carrying those names, `GET /v1/pokedex`, also carries the caller's own counts and rightly refuses a stranger.
