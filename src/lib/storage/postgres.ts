@@ -361,10 +361,13 @@ export async function writeCardPrices(
 /**
  * Writes one card and hands back its id.
  *
- * acquired_at is left to the column default, which is now(). That is right for
- * a card being added by hand — you are adding it because you just pulled it —
- * and wrong for an import, which is why createRows() below takes the date
- * explicitly instead.
+ * acquired_at is left to the column default, which is now(), unless the draft
+ * names one. That default is right for a card being added by hand — you are
+ * adding it because you just pulled it — and wrong for an import, which is why
+ * createRows() below takes the date explicitly, and wrong for a restore, which
+ * is putting back a row that already had one. The key is spread in or left out
+ * entirely: a null here would write over the default rather than fall back to
+ * it.
  */
 export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<string> {
   const { data, error } = await db
@@ -389,6 +392,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       notes: draft.notes,
       is_favorite: draft.isFavorite,
       collection_id: draft.collectionId,
+      ...(draft.acquiredAt ? { acquired_at: draft.acquiredAt } : {}),
       source: "manual",
     })
     .select("id")
@@ -539,21 +543,31 @@ export async function createRows(
 }
 
 /**
- * Removes one card of the caller's. True when a row went; false when nothing
- * matched. The user_id clause is the same rule updateRow() explains.
+ * Removes one card of the caller's and hands back the row as it was; null when
+ * nothing matched. The user_id clause is the same rule updateRow() explains.
+ *
+ * The select is what says a row went at all: a delete that matched nothing (no
+ * such row, or somebody else's) used to succeed silently and the route answered
+ * 200 for a card it never touched. It asks for the whole row rather than the id
+ * because this is the only moment the row can still be read — the delete has
+ * already happened by the time the answer comes back, and a client that wants
+ * to offer an undo has nowhere else to get what it held. Nothing is kept
+ * server-side for that: putting it back is an ordinary create.
  */
-export async function deleteRow(db: SupabaseClient, userId: string, id: string): Promise<boolean> {
-  // select("id") so the answer says what went: a delete that matched nothing
-  // (no such row, or somebody else's) used to succeed silently and the route
-  // answered 200 for a card it never touched.
+export async function deleteRow(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<CollectionRow | null> {
   const { data, error } = await db
     .from("cards")
     .delete()
     .eq("id", id)
     .eq("user_id", userId)
-    .select("id");
+    .select(COLUMNS)
+    .maybeSingle();
   if (error) throw new Error(`The card could not be removed: ${error.message}`);
-  return (data?.length ?? 0) > 0;
+  return data ? toRow(data as CardRecord) : null;
 }
 
 /**

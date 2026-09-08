@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { deleteRow, listRows, listValueSnapshots, updateRow } from "./postgres";
+import { createRow, deleteRow, listRows, listValueSnapshots, updateRow } from "./postgres";
+import type { CardDraft } from "@/lib/core/collection/collection-row";
 
 /**
  * Whose rows, asked out loud.
@@ -216,15 +217,79 @@ describe("updateRow", () => {
 });
 
 describe("deleteRow", () => {
-  it("says whether a row went", async () => {
-    expect(await deleteRow(fakeWriteDb([{ id: ROW }]).db, ME, ROW)).toBe(true);
-    expect(await deleteRow(fakeWriteDb([]).db, ME, ROW)).toBe(false);
+  it("hands back the row that went, whole, and null when none did", async () => {
+    // Whole rather than the id alone: after the delete there is nowhere else to
+    // read it, and a client offering an undo has to be able to put it back.
+    const row = await deleteRow(fakeWriteDb([record]).db, ME, ROW);
+    expect(row).toMatchObject({
+      id: ROW,
+      name: "Pikachu",
+      setName: "Base Set",
+      acquiredAt: "2026-01-02T00:00:00.000Z",
+      quantity: 2,
+      purchasePrice: 4.5,
+      isFavorite: true,
+    });
+    expect(await deleteRow(fakeWriteDb([]).db, ME, ROW)).toBeNull();
   });
 
   it("names the owner as well as the row", async () => {
-    const { db, calls } = fakeWriteDb([{ id: ROW }]);
+    const { db, calls } = fakeWriteDb([record]);
     await deleteRow(db, ME, ROW);
     expect(calls).toContainEqual({ column: "id", value: ROW });
     expect(calls).toContainEqual({ column: "user_id", value: ME });
+  });
+});
+
+/** Just enough to catch the insert: createRow() ends `.select("id").single()`. */
+function fakeInsertDb() {
+  const written: Record<string, unknown>[] = [];
+  const chain: Record<string, unknown> = {
+    insert: (row: Record<string, unknown>) => {
+      written.push(row);
+      return chain;
+    },
+    select: () => chain,
+    single: async () => ({ data: { id: ROW }, error: null }),
+  };
+  return { db: { from: () => chain } as unknown as SupabaseClient, written };
+}
+
+const draft = (over: Partial<CardDraft> = {}): CardDraft => ({
+  name: "Pikachu",
+  number: "25",
+  set: "Base Set",
+  rarity: "",
+  gen: "",
+  types: [],
+  collection: true,
+  excluded: false,
+  finish: null,
+  foilPattern: null,
+  quantity: 1,
+  condition: null,
+  grade: null,
+  language: null,
+  purchasePrice: null,
+  purchaseDate: null,
+  notes: null,
+  isFavorite: false,
+  collectionId: null,
+  ...over,
+});
+
+describe("createRow", () => {
+  it("leaves acquired_at out of the insert when the draft names no date", async () => {
+    // Out, not null: the column default is now(), and a null written over it
+    // would turn "you just pulled this" into a card with no date at all.
+    const { db, written } = fakeInsertDb();
+    await createRow(db, draft());
+    expect(written[0]).not.toHaveProperty("acquired_at");
+  });
+
+  it("writes the date a restore carries, so a card put back keeps the day it was got", async () => {
+    const { db, written } = fakeInsertDb();
+    await createRow(db, draft({ acquiredAt: "2026-01-02T00:00:00.000Z" }));
+    expect(written[0]).toMatchObject({ acquired_at: "2026-01-02T00:00:00.000Z" });
   });
 });

@@ -331,7 +331,7 @@ components:
 
     CardDraft:
       type: object
-      description: A card to add. Only `name` and `set` are required; the rest default.
+      description: A card to add. Only `name` and `set` are required; the rest default. One create can put a removed row back whole, `acquiredAt` included.
       required: [name, set]
       properties:
         name: { type: string }
@@ -357,6 +357,7 @@ components:
         notes: { type: [string, "null"] }
         isFavorite: { type: boolean, default: false }
         collectionId: { type: [string, "null"], format: uuid, description: "A folder of the caller's, filled by hand, to file the card in at once." }
+        acquiredAt: { type: string, format: date-time, description: "When the copy was pulled; not in the future, read exactly as `CardPatch.acquiredAt`. Absent — every card added by hand — it is pulled now. Send back what `DELETE /v1/collection/items/{id}` handed over to restore a removed row with its own date." }
 
     CardPatch:
       type: object
@@ -1056,13 +1057,22 @@ paths:
       tags: [Collection]
       operationId: deleteItem
       summary: Remove one copy
-      description: Needs `Content-Type application/json` even without a body; that is what forces the preflight.
+      description: |
+        Needs `Content-Type application/json` even without a body; that is what forces the preflight.
+        The row it removed comes back in `card`, the same shape `PATCH` answers with. That is the
+        only moment it can be read — the delete is a delete, nothing is kept — so a client offering
+        an undo keeps it and posts it to `POST /v1/cards`, `acquiredAt` and all.
       responses:
         "200":
-          description: Removed.
+          description: Removed. The row as it was.
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Ok" }
+              schema:
+                type: object
+                required: [ok, card]
+                properties:
+                  ok: { type: boolean, const: true }
+                  card: { $ref: "#/components/schemas/CollectionRow" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }

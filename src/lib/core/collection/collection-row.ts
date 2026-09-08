@@ -191,6 +191,13 @@ export type CardDraft = {
   isFavorite: boolean;
   /** A folder of the caller's, filled by hand, to file the new card in at once. */
   collectionId: string | null;
+  /**
+   * When the copy was pulled, where the caller knows. Left out — which is every
+   * card added by hand — the column default stands, and that is the point:
+   * you are adding it because you just pulled it. A restore is the one create
+   * that knows better, because the row it puts back already had a date.
+   */
+  acquiredAt?: string;
 };
 
 /**
@@ -230,6 +237,25 @@ export const MAX = {
   conditionOrGrade: 40,
   notes: 2000,
 };
+
+export type AcquiredAtValidation = { kind: "invalid"; error: string } | { kind: "ok"; at: string };
+
+/**
+ * The one reading of `acquiredAt`, for every body that carries one: the patch,
+ * a copy, and a create that is putting a removed row back.
+ *
+ * A day's slack on "not in the future" rather than none, because the date is a
+ * day somebody picked in their own zone and a card pulled this evening in
+ * Auckland is already tomorrow to a server in Frankfurt. Further ahead than
+ * that is a typo or a wrong clock, and it would sort the collection wrong for
+ * as long as it took anybody to notice.
+ */
+export function readAcquiredAt(value: unknown): AcquiredAtValidation {
+  const at = typeof value === "string" ? Date.parse(value) : NaN;
+  if (Number.isNaN(at) || at > Date.now() + 86_400_000)
+    return { kind: "invalid", error: "acquiredAt must be a date, not in the future." };
+  return { kind: "ok", at: new Date(at).toISOString() };
+}
 
 /**
  * One line, whatever arrived.
@@ -282,6 +308,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     notes = null,
     isFavorite = false,
     collectionId = null,
+    acquiredAt,
   } = (body ?? {}) as Record<string, unknown>;
 
   const optionalText = (value: unknown): string | null => {
@@ -358,6 +385,15 @@ export function validateCardDraft(body: unknown): CardValidation {
   if (draft.purchaseDate !== null && Number.isNaN(Date.parse(draft.purchaseDate))) {
     return { kind: "invalid", error: "That purchase date is not valid." };
   }
+  // Absent, and null, which every optional field here reads as absent: the
+  // column default stands and the card is pulled now. Present, it is read by
+  // the same rule the PATCH is, so a restore cannot put a date in that an edit
+  // would have refused.
+  if (acquiredAt !== null && acquiredAt !== undefined) {
+    const read = readAcquiredAt(acquiredAt);
+    if (read.kind === "invalid") return read;
+    draft.acquiredAt = read.at;
+  }
 
   return { kind: "ok", draft };
 }
@@ -371,7 +407,9 @@ export function validateCardDraft(body: unknown): CardValidation {
  * empty strings become nulls because a rarity nobody filled in is absent rather
  * than blank.
  */
-export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acquiredAt"> {
+export function rowFromDraft(
+  draft: CardDraft,
+): Omit<CollectionRow, "id" | "acquiredAt"> & Partial<Pick<CollectionRow, "acquiredAt">> {
   return {
     name: draft.name,
     number: draft.number,
@@ -392,6 +430,11 @@ export function rowFromDraft(draft: CardDraft): Omit<CollectionRow, "id" | "acqu
     notes: draft.notes,
     isFavorite: draft.isFavorite,
     collectionId: draft.collectionId,
+    // The key is there or it is not — never there holding undefined. A store
+    // that spreads this into an insert would write a null over the column
+    // default, and "nobody said when" would become "no date", which is a
+    // different thing and sorts last.
+    ...(draft.acquiredAt ? { acquiredAt: draft.acquiredAt } : {}),
   };
 }
 
@@ -525,11 +568,9 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
     }
   }
   if ("acquiredAt" in b) {
-    const value = b.acquiredAt;
-    const at = typeof value === "string" ? Date.parse(value) : NaN;
-    if (Number.isNaN(at) || at > Date.now() + 86_400_000)
-      return { kind: "invalid", error: "acquiredAt must be a date, not in the future." };
-    patch.acquiredAt = new Date(at).toISOString();
+    const read = readAcquiredAt(b.acquiredAt);
+    if (read.kind === "invalid") return read;
+    patch.acquiredAt = read.at;
   }
   if ("purchaseDate" in b) {
     const value = b.purchaseDate;
