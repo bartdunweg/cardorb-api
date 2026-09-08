@@ -115,3 +115,16 @@ export function getPokedex(sets: CardSet[]): DexEntry[] {
 
 /** How many species the collection can show at all. */
 export const caught = (dex: DexEntry[]) => dex.filter((e) => e.owned > 0).length;
+
+/**
+ * Every species there is, by National Dex number — the names alone, with no
+ * collection behind them.
+ *
+ * getPokedex() answers the same names, but only after a collection has been
+ * assembled, which is why a caller who owns nothing and holds no key could not
+ * get at them. They are catalogue-level facts: the same 1,025 strings for
+ * everyone, so a stranger reading a public profile's Pokédex can label its
+ * slots without being told anything about whose profile it is.
+ */
+export const speciesList = (): { id: number; name: string }[] =>
+  SPECIES.map((name, i) => ({ id: i + 1, name }));

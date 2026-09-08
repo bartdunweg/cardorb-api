@@ -49,7 +49,7 @@ tags:
   - name: Account
     description: Signing up, signing in, passwords and deletion. Browser-only, same-origin.
   - name: Public
-    description: The three unkeyed routes behind /user/<name>. No prices, no inventory, own rate limiter.
+    description: The unkeyed routes — a public profile behind /user/<name>, and the species list, which is nobody's. No prices, no inventory, own rate limiter.
   - name: Import
     description: Loading a collection from a CSV file.
   - name: Platform
@@ -91,6 +91,9 @@ components:
     Cache-Control-Public-Catalogue:
       description: A public card is catalogue data, the same for everyone and nobody's to hide, so it is cached at the CDN for an hour and served stale for a day while it refreshes.
       schema: { type: string, example: "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400" }
+    Cache-Control-Species:
+      description: The species list is the same for every caller and changes only when a deploy carries a new generation, so it is cached for an hour in the browser, a day at the CDN, and served stale for a week. The minute the profile routes use is a privacy window; there is nothing here to make private.
+      schema: { type: string, example: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" }
 
   responses:
     BadRequest:
@@ -1913,6 +1916,38 @@ paths:
         "503": { $ref: "#/components/responses/Unavailable" }
 
   # ── Public ────────────────────────────────────────────────────────────────
+  /v1/public/species:
+    get:
+      tags: [Public]
+      operationId: listSpecies
+      summary: Every National Pokédex number and the name that goes with it
+      description: |
+        No key, and no username: there is no person in this answer. The same 1,025 names for
+        every caller, in Dex order, so a page drawing a Pokédex — a public profile's tab
+        included — can label its slots. `GET /v1/pokedex` carries these two fields as well,
+        but next to how many cards the caller owns, so it keeps asking for a key.
+        Sixty a minute per address; cached properly, since nothing here is anybody's.
+      security: []
+      responses:
+        "200":
+          description: The species, by number.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Species" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [entries]
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name]
+                      properties:
+                        id: { type: integer, minimum: 1, maximum: 1025, description: "National Dex number." }
+                        name: { type: string, example: Bulbasaur }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
   /v1/public/{username}/collection:
     get:
       tags: [Public]
