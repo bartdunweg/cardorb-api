@@ -161,11 +161,18 @@ export async function commit(
   const { existing } = splitExisting(rows, held);
   const skippedCount = skippedRows.length;
 
-  const { data: started } = await db
+  // The error was being discarded here. If this insert is refused the import
+  // still runs and still writes every card, but no record of it is ever made:
+  // the history screen shows nothing, and a run that then dies halfway leaves
+  // the one thing this row exists to leave behind — a trace — missing. It is
+  // not worth refusing the import over, so it is logged and the run goes on
+  // without an id, which the calls below already tolerate.
+  const { data: started, error: startError } = await db
     .from("imports")
     .insert({ kind, status: "running", rows_seen: rows.length + skippedCount })
     .select("id")
     .single();
+  if (startError) console.error("Import started with no record of it:", startError.message);
 
   const id = (started as { id: string } | null)?.id;
 

@@ -466,11 +466,23 @@ export type InsertResult = { added: number; skipped: number };
  * either works or loses all of it, and because PostgREST has opinions about
  * body size that are easier to stay under than to discover.
  *
- * `ignoreDuplicates` against the partial unique index on
- * (user_id, source, source_id) is the whole of what makes an import idempotent:
- * run it again next month and only the pages that are new arrive. It is also
- * why the count below is a subtraction rather than a length — Postgres will not
- * tell you what it declined to insert, only what it inserted.
+ * **This is not idempotent, and it used to say it was.** `ignoreDuplicates`
+ * names `cards_source_idx`, unique on (user_id, source, source_id) — and a CSV
+ * row carries no source_id, so the column is null and in Postgres every null is
+ * distinct. The conflict target never matches, nothing is ever declined, and
+ * importing the same file twice writes it twice.
+ *
+ * That is deliberate, and commit() above argues it: a file is a list of copies
+ * somebody has, a second copy of a card is a normal thing to own, and a check
+ * that skipped them could not tell a duplicate from a second printing. The
+ * import screen says so before you press the button, counting the cards in the
+ * file you already hold. What was wrong was this comment, which promised the
+ * opposite of what its own caller documents — and the reader who believes it is
+ * the one deciding whether a failed import is safe to retry.
+ *
+ * `ignoreDuplicates` stays because it is right for a source that *does* carry
+ * an id. It is also why the count below is a subtraction rather than a length:
+ * Postgres will not tell you what it declined to insert, only what it inserted.
  */
 export async function createRows(
   db: SupabaseClient,
