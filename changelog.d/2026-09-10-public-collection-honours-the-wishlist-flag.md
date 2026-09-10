@@ -1,0 +1,1 @@
+- `GET /v1/public/{username}/collection` now reads the owner's `wishlistPublic` flag, as its sibling `GET /v1/public/{username}/cards` already did. A card with no owned variant is a wish, and this route sent them to anybody whatever the flag said; with the wishlist off they are left out, and a set holding nothing else goes with them.
