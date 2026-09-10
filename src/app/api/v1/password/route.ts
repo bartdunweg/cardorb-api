@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { apiError, refuse, retryAfter } from "@/lib/api/respond";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { NO_DATABASE_CONFIGURED, sameOrigin } from "@/lib/api/guard";
@@ -16,31 +17,78 @@ const addressOf = (req: Request) =>
   "unknown";
 
 /**
+ * Whether the session on this request was established with a password. See the
+ * route's own note below for why that, and not "was this recovery", is the
+ * question asked.
+ *
+ * `amr` comes back in either shape the claim allows — RFC-8176's bare strings,
+ * or Supabase's entries with a timestamp — so both are read. It is the token's
+ * own claim either way: getClaims() verifies the signature against the
+ * project's published keys, or falls back to asking the auth server, and hands
+ * back the payload only once one of those two has held. Nothing the browser
+ * writes reaches it.
+ *
+ * Here rather than in lib/api/viewer.ts, where the rest of the claim-reading
+ * lives, because one route asks this and a Viewer that carried `amr` would
+ * invite the next route to draw its own conclusion from it. If a second caller
+ * ever needs it, that is the moment it moves.
+ */
+async function provedAPassword(db: SupabaseClient): Promise<boolean> {
+  const { data } = await db.auth.getClaims();
+  const amr = data?.claims?.amr;
+  // Not knowing is treated as yes: it costs a keystroke, and the other way
+  // round it costs the account.
+  if (!Array.isArray(amr) || amr.length === 0) return true;
+  return amr.some((entry) => (typeof entry === "string" ? entry : entry?.method) === "password");
+}
+
+/**
  * Setting a new password, for somebody who is already holding a session.
  *
- * Two ways to be holding one, and this route now cares which: signed in
- * normally and changing it, or arrived through a recovery link that exchanged
- * itself for a session at /auth/confirm. A session alone is not enough for the
- * first case — a borrowed, unlocked browser is a session — so that path sends
- * the current password and this route passes it on.
+ * Two ways to be holding one, and this route decides which: signed in normally
+ * and changing it, or arrived through a recovery link that exchanged itself for
+ * a session at /auth/confirm. A session alone is not enough for the first case
+ * — a borrowed, unlocked browser is a session — so that path must send the
+ * current password, and a request that does not is refused here.
  *
- * **The check is Supabase's, not this file's.** `current_password` is a
- * parameter on `updateUser`; when it is present the provider verifies it on its
- * own server before changing anything. Nothing here compares passwords, and
- * nothing here decides who has to supply one — the client sends it when its
- * form asked for it, and a request that omits it simply does not get the check.
+ * **Verifying the password is Supabase's job; requiring one is this file's.**
+ * `current_password` is a parameter on `updateUser`, and when it is present the
+ * provider checks it on its own server before changing anything. Nothing here
+ * compares passwords. But which caller has to supply one cannot be left to the
+ * caller: this route used to send the parameter on exactly when the client
+ * chose to include it, so the attacker the paragraph above describes — sitting
+ * at the borrowed browser — simply left the field out of the JSON and took the
+ * account. The docstring named the threat and then let the client answer it.
  *
- * That sounds like a hole and is not, because of what the two paths actually
- * are. Recovery already proved possession of the account's mailbox, through a
- * single-use token this route's own /auth/confirm spent. The signed-in path
- * proved only that a browser has a valid cookie. So the parameter is required
- * exactly where the proof is weaker, which is the point.
+ * So the session is asked instead, through `amr` on its own access token: the
+ * authentication methods that established it, signed by the auth server and not
+ * writable from the browser. A session that ever proved a password is one this
+ * route makes prove it again. A session that never did is a session somebody
+ * reached by spending a single-use token out of their own mailbox — recovery,
+ * and the only kind of session this app issues without a password — and asking
+ * that person for the password they came here because they do not have would
+ * lock them out of their own account.
  *
- * This docstring used to argue the opposite — no current-password field at all,
- * on the grounds that Supabase's `secure_password_change` applied the rule
- * properly to both halves. That setting is *"require reauthentication"* and
- * counts a session as recent for 24 hours, so against a borrowed unlocked
- * browser it did approximately nothing.
+ * Asked as "was there a password" rather than "was it recovery" on purpose.
+ * Both are readable from `amr`, but only the first fails the safe way: which
+ * exact method name a mail-link verification records is the auth server's
+ * business and it has renamed such things before, and if that name ever changes
+ * a rule written the other way round stops recognising recovery and asks a
+ * locked-out person for their old password. Written this way, an unfamiliar
+ * method is simply not a password, and the check it skips is one that arrival
+ * had already passed by other means. A missing or unreadable `amr` is treated
+ * as a password session, which asks somebody for one keystroke too many rather
+ * than letting the borrowed browser through.
+ *
+ * The `orb-recovery` cookie (lib/api/recovery.ts) is not consulted and must not
+ * be: its own comment says it is a UX signal, anybody can set it in their own
+ * browser, and that is precisely the request this check exists to refuse.
+ *
+ * This docstring used to argue for no current-password field at all, on the
+ * grounds that Supabase's `secure_password_change` applied the rule properly to
+ * both halves. That setting is *"require reauthentication"* and counts a
+ * session as recent for 24 hours, so against a borrowed unlocked browser it did
+ * approximately nothing.
  */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return apiError(403, "Forbidden");
@@ -77,6 +125,14 @@ export async function POST(req: Request) {
   const db = await serverClient();
   if (!db) {
     return apiError(503, NO_DATABASE_CONFIGURED);
+  }
+
+  // The refusal the client cannot opt out of. Asked of the session, after the
+  // length floor so that somebody who typed both fields badly hears about the
+  // new password first, and before updateUser so a request without the proof
+  // never reaches the auth server at all.
+  if (!currentPassword && (await provedAPassword(db))) {
+    return apiError(400, "Enter your current password.");
   }
 
   // Spread rather than passed as undefined: sending the key with no value is
