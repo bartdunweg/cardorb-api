@@ -4,6 +4,60 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-11
+
+- Removed `getCardsStats()`, the whole-collection tally left behind when the web tool moved to its own repository. Nothing but its own tests had referenced it since; `/v1/stats` is answered by `countStats()`. It also carried a live arithmetic fault its own comment forbade — a `movement` percentage pairing the blended market price against Cardmarket's raw thirty-day average, which reported +13.75% for a card that had not moved at all — and twenty-one green tests said the arithmetic was fine. What moved is answered by the movers, out of the recorded daily readings.
+
+- A value history that could not be read is a 503 rather than an empty series. `GET /v1/value-history` answered `200 {"snapshots": []}` when the store was unreachable — the same payload as an account that has never been snapshotted, which both clients draw as the brand-new empty state — while the same route's `?folder=` branch already answered 503 to the same failure. `GET /v1/cards/{tcgId}/prices` had the same shape: its own documentation calls an empty list the honest answer for a card whose history has not started, and an outage was sending it too. Both now say which happened, the way the collection routes already did.
+
+- Five tests were asserting less than they said. The public collection route's test ran over an empty fixture, so every assertion in it passed with the call that strips prices, purchase prices, conditions, grades, notes and row ids deleted from the route. The API host's test read four exported constants and never called `nextConfig.rewrites()`, so returning nothing from it kept the suite green while `api.cardorb.com/v1/*` would have 404ed for both clients. The body-size check asked its question per file rather than per handler, so an uncapped new handler beside a capped one was invisible, and it never looked at the limit being passed. The public-variant allow-list filtered by value over a fixture that nulled two of the fields it was meant to guard. And no test anywhere asserted the sentence a folder 404 sends. Each is now held to what it claimed, and each was checked by breaking the thing it guards and watching it go red.
+- `openapi.yaml` is now held to the statuses its handlers can answer, not only to their paths and methods — read out of the route sources, one handler at a time. That is the check the ten undocumented statuses above went through.
+
+- Two database reads that stopped at PostgREST's thousand-row cap now page. The value snapshots are ordered oldest first, so the cap would have dropped the *newest* readings: at a thousand nightly points — around mid-2029 on this deployment — the value chart would have frozen at a date and gone on drawing, with nothing reporting a fault. The account list feeds the nightly snapshot and the warm cron, so past a thousand accounts the rest would never have been valued or warmed. Both now read every page, driven by the count, and throw rather than hand back a short list — the same paging the collection read has always used, now written once and shared by four callers.
+
+- `public/openapi.yaml` now describes ten statuses the routes could already answer and it did not: a 404 from `POST /v1/cards` for a folder that is not yours, a 400 from both `/v1/catalog/sets` routes and from `GET /v1/cards/{tcgId}` for a language nobody has, 403 and 429 from `GET /v1/imports`, 415 and 502 from `POST /v1/import/csv`, and the 502s two folder reads can send. `facets` is a documented query parameter at last, and no longer marked required in the answer — `facets=0` leaves it out, which a generated client with a non-optional field could not decode.
+- `POST /v1/collection/items/{id}/copies` accepts the empty body its own description promises. An empty body reached `JSON.parse("")`, which throws, so the documented way to ask for one more identical copy was the one way that was refused; `{}` always worked and still does.
+- Two store reads that could throw past their route — the folder lookup on `/v1/value-history` and the profile read on `GET /v1/profile` — answer `{ error: string }` at a documented status instead of Next's generic 500.
+
+## 2026-09-10
+
+- `GET /v1/cards/{tcgId}?language=ja|zh-tw|zh-cn|ko` reads the card from that catalogue. These ids exist only there, so without it a card added from one of those shelves had no detail to open. `languages` comes back empty for such a card: the Western catalogues share the English ids, so a copy of it can only be its own language.
+
+- A set in the collection says which catalogue its cards came from (`CardSet.language`, null for English), and a card from another one carries that in its `key`. A collector who holds Black Bolt in both keeps two sets rather than one set whose halves overwrite each other's pictures and prices.
+
+- A card from the Japanese, Korean or Chinese catalogue can be added and looks right. `POST /v1/cards` takes `tcgId`, the catalogue's own id for the printing; with a `language` of `ja`, `ko` or `zh` the collection resolves that card against its own catalogue by id — picture, rarity, set, release date and Cardmarket's euros — instead of by number within a set found by English name, which no Japanese set has.
+
+- A copy keeps what its foil looks like. `foilPattern` was accepted by both copy routes and
+  written by neither: `columnsFor` never mapped it, `copyRow` never inherited it from the source,
+  and `split_card` predates the column entirely. The API answered 201 and the pattern was gone.
+
+- Changing your password really does ask for the current one now. `POST /v1/password` only passed `current_password` to Supabase when the request happened to carry it, so a session that left the field out changed the password without it — which is the borrowed unlocked browser the check was written for. The route reads the session's own `amr` claim instead: a session that ever signed in with a password must supply it, and a session that arrived through a reset link, which never had one, still does not. A signed-in request without it is a 400, "Enter your current password."
+
+- `createRows` no longer claims a CSV import is idempotent. It never was: the conflict target
+  names a `source_id` a CSV row does not carry, and in Postgres every null is distinct. Writing
+  the file twice writes every card twice, which is deliberate and argued where the decision
+  actually lives — the comment was the part that was wrong.
+- A refused `imports` row is logged instead of discarded, so an import can no longer run with no
+  record that it started.
+
+- Fixed one failed set costing every later set its second price source for ten minutes. A single pokemontcg.io hiccup put the whole instance quiet, and the nightly snapshot always runs on a cold one with no earlier answers to fall back on — so the rest of that run was priced on Cardmarket alone, recording every card over €20 about 12% high in a history that is permanent. The quiet period is now per set, and only goes site-wide once three sets in a row have failed, which is what an outage actually looks like.
+
+- Fixed the value chart being able to step by around 12% with nothing to explain it. `scripts/snapshot-collection-value.mjs` upserted into the same `(user_id, snapshot_date)` row the nightly cron writes, but priced from Cardmarket's guide alone where the cron blends Cardmarket and TCGplayer — on a €100 card, €127.50 against €113.75. The script now reports its readings and records none; the cron owns that table. Recording an archived reading again would need a column saying which basis it was taken on, since the second market has no history for those days to blend against.
+- Fixed a Poké Ball or Master Ball copy being valued at the plain printing's price by that script while every other valuation path used the foil price, which runs at a median of twice as much. The rule for which price series a copy reads now has one definition, in `lib/core/price-basis.mjs`, and `collection-row.ts` re-exports it.
+- Fixed `snapshot-collection-value.mjs`, `cardmarket-links.mjs` and `backfill-finish.mjs` looking for their cached data under `lib/core/` after it moved to `src/lib/core/`. The first re-resolved all 1,553 Cardmarket ids from TCGdex on every run and then died with `ENOENT` before keeping any of them; the other two could not start.
+
+- Browsing a Japanese, Korean or Chinese set shows what you own of it. The marks are joined on the card's own catalogue id, so they are exact — and a card from one of those catalogues no longer counts towards the English set it happens to be named after.
+
+- `GET /v1/public/{username}/collection` now reads the owner's `wishlistPublic` flag, as its sibling `GET /v1/public/{username}/cards` already did. A card with no owned variant is a wish, and this route sent them to anybody whatever the flag said; with the wishlist off they are left out, and a set holding nothing else goes with them.
+
+- The reserved usernames — `admin`, `support`, `security`, `cardorb` and the rest — hold at signup too. `handle_new_user()` took the name out of the caller's own signup metadata and never consulted the list, so a signup made straight against Supabase with the public anon key, rather than through this API's signup route, could take one. A reserved name now falls through to the generated `u…` name, the way a signup with no name at all already did.
+
+## 2026-09-08
+
+- `GET /v1/public/species` answers every National Pokédex number and its name, with no key and no username: a signed-out visitor's Pokédex tab on a public profile said "No cards found" because the only route carrying those names, `GET /v1/pokedex`, also carries the caller's own counts and rightly refuses a stranger.
+
+- Removing a card now answers with the row it removed, in the same shape a change to one answers with, and `POST /v1/cards` accepts the date a card was got (`acquiredAt`) — so a client can offer Undo on a removal and put the card back exactly as it was, acquired date included, rather than as a card pulled today. Nothing is kept on the server for it: a removal is still a removal, no read changed, and a card gone from one client is gone in the other.
+
 ## 2026-09-07
 
 - The TCGdex id a browse card is matched to is covered by tests, so the price keyed to it cannot go missing the way it did in #241 without something failing.

@@ -7,6 +7,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * It is also read against the owner's `wishlistPublic` flag. The fixture below
  * set that flag to false from the day it was written and never asserted on it,
  * so the whole time this route ignored it the test said everything was fine.
+ *
+ * And the same shape once more, on the thing that matters most here. Every
+ * assertion in this file used to be about which cards come back — names, sets,
+ * statuses — over a fixture whose default was `{ sets: [] }`. forPublic() is
+ * what strips the price, the purchase price, the condition, the grade, the
+ * notes, the quantity and the row id before any of this leaves the building,
+ * and not one line held it to that: the whole file passed with `forPublic`
+ * deleted from the route. cards-public.test.ts proves the function; this is the
+ * one place that proves the route calls it, and it is an unkeyed route.
  */
 const ownerOf = vi.fn();
 const getPublicCollection = vi.fn();
@@ -18,23 +27,27 @@ vi.mock("@/lib/core/collection/collection", () => ({
 
 const { GET } = await import("./route");
 
+/**
+ * Every private field carries a value a `JSON.stringify` search can find, which
+ * is the point: a null in a fixture cannot prove it was nulled on purpose.
+ */
 const variant = (owned: boolean) => ({
-  id: "v",
+  id: "row-abcdef",
   rarity: "Common",
   owned,
-  finish: null,
-  foilPattern: null,
-  quantity: 1,
-  condition: null,
-  grade: null,
-  language: null,
-  purchasePrice: 12,
-  purchaseDate: null,
-  notes: "private",
-  isFavorite: false,
-  acquiredAt: null,
-  excluded: false,
-  collectionId: null,
+  finish: "reverse-holo",
+  foilPattern: "cosmos",
+  quantity: 7,
+  condition: "Near Mint",
+  grade: "PSA 10",
+  language: "ja",
+  purchasePrice: 42.5,
+  purchaseDate: "2026-01-02",
+  notes: "bought at the shop on the corner",
+  isFavorite: true,
+  acquiredAt: "2026-01-02",
+  excluded: true,
+  collectionId: "88888888-8888-4888-8888-888888888888",
 });
 const card = (name: string, owned: boolean) => ({
   key: name,
@@ -48,8 +61,8 @@ const card = (name: string, owned: boolean) => ({
   speciesId: null,
   variants: [variant(owned)],
   owned,
-  price: { market: 9 },
-  priceHolo: null,
+  price: { low: 1, market: 90, avg30: 95, nm: { low: 95, mid: 100, high: 110 } },
+  priceHolo: { low: 2, market: 180, avg30: 190, nm: null },
   tcgId: null,
 });
 const set = (name: string, cards: ReturnType<typeof card>[]) => ({
@@ -100,6 +113,47 @@ describe("GET /api/v1/public/{username}/collection", () => {
     expect(res.status).toBe(503);
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(await res.json()).toMatchObject({ error: expect.any(String) });
+  });
+
+  it("publishes nothing of the owner's own copy but its rarity and whether it is held", async () => {
+    // The assertion this file did not have. forPublic() is the only thing
+    // between an unkeyed route and what somebody paid for every card, in what
+    // condition, graded how, with their notes attached and how many they hold —
+    // and every test here passed with the call deleted.
+    getPublicCollection.mockResolvedValue({ sets: SETS, failed: false });
+    const body = await (await get()).json();
+    const [copy] = body.sets[0].cards[0].variants;
+    expect(copy).toMatchObject({ rarity: "Common", owned: true });
+    for (const key of [
+      "id",
+      "finish",
+      "foilPattern",
+      "quantity",
+      "condition",
+      "grade",
+      "language",
+      "purchasePrice",
+      "purchaseDate",
+      "notes",
+      "acquiredAt",
+      "collectionId",
+    ]) {
+      expect(copy[key], `${key} reached a stranger`).toBeNull();
+    }
+    expect(copy.isFavorite).toBe(false);
+    expect(copy.excluded).toBe(false);
+    expect(body.sets[0].cards[0].price).toBeNull();
+    expect(body.sets[0].cards[0].priceHolo).toBeNull();
+  });
+
+  it("carries none of it anywhere in the serialised payload either", async () => {
+    // The belt to the braces: whatever shape a card takes next, none of these
+    // strings may appear in what crosses the wire to somebody with no account.
+    getPublicCollection.mockResolvedValue({ sets: SETS, failed: false });
+    const json = JSON.stringify(await (await get()).json());
+    for (const secret of ["42.5", "PSA 10", "Near Mint", "corner", "row-abcdef", "88888888"]) {
+      expect(json, `${secret} reached a stranger`).not.toContain(secret);
+    }
   });
 
   it("is a 404 for a profile that is not public", async () => {

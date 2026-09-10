@@ -29,12 +29,15 @@ const ID = "11111111-1111-1111-1111-111111111111";
 const FOLDER = "22222222-2222-4222-8222-222222222222";
 const ROW = { id: "row-2", name: "Pikachu", quantity: 1 };
 
-const post = (body: unknown, id = ID) =>
+const post = (body: unknown, id = ID) => postRaw(JSON.stringify(body), id);
+
+/** The body exactly as sent, so "no bytes at all" can be one of the cases. */
+const postRaw = (body: string, id = ID) =>
   POST(
     new Request(`https://cardorb.com/api/v1/collection/items/${id}/copies`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: "Bearer t.o.k.e.n" },
-      body: JSON.stringify(body),
+      body,
     }),
     { params: Promise.resolve({ id }) },
   );
@@ -88,5 +91,24 @@ describe("POST /api/v1/collection/items/{id}/copies", () => {
     expect(res.status).toBe(201);
     expect(store).toHaveBeenCalledWith("me-uuid", ID, 1, {}, "t.o.k.e.n");
     expect(await res.json()).toEqual({ ok: true, card: ROW });
+  });
+});
+
+describe("the empty body the contract promises", () => {
+  it("takes no bytes at all as one more identical copy", async () => {
+    // `{}` always worked; an empty body did not, because readJsonBody() reached
+    // JSON.parse("") and threw — so the one shape the description named as the
+    // way to ask for an identical copy was the one shape refused.
+    const res = await postRaw("");
+    expect(res.status).toBe(201);
+    expect(store).toHaveBeenCalledWith("me-uuid", ID, 1, {}, "t.o.k.e.n");
+  });
+
+  it("still refuses a body that is malformed rather than absent", async () => {
+    // The distinction the empty case must not erase: nothing sent is a copy of
+    // the row, half a JSON object is a mistake worth reporting.
+    const res = await postRaw("{not json");
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Invalid request" });
   });
 });

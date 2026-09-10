@@ -55,6 +55,27 @@ describe("readJsonBody", () => {
     // wrong thing.
     expect(await readJsonBody(req("{not json"), 100)).toEqual({ kind: "invalid" });
   });
+
+  it("calls no bytes at all invalid, unless the caller says what they mean", async () => {
+    // JSON.parse("") throws, so an empty body was a 400 everywhere — including
+    // on POST …/copies, whose own contract calls an empty body "one more
+    // identical copy". Opt-in, because on every other route an empty body is a
+    // caller that forgot one.
+    expect(await readJsonBody(req(""), 100)).toEqual({ kind: "invalid" });
+    expect(await readJsonBody(req(""), 100, { emptyIs: {} })).toEqual({ kind: "ok", body: {} });
+    expect(await readJsonBody(req("  \n "), 100, { emptyIs: {} })).toEqual({
+      kind: "ok",
+      body: {},
+    });
+  });
+
+  it("still calls a malformed body malformed, whatever an empty one means", async () => {
+    // The distinction emptyIs must not erase: nothing sent and half an object
+    // are different mistakes, and only one of them is a request.
+    expect(await readJsonBody(req("{not json"), 100, { emptyIs: {} })).toEqual({
+      kind: "invalid",
+    });
+  });
 });
 
 describe("every route that reads a body caps it", () => {
@@ -94,6 +115,19 @@ describe("every route that reads a body caps it", () => {
    * test that cannot tell an element from a sentence about one is a test that
    * punishes writing the sentence. The comment-stripping is lifted from there
    * rather than reinvented.
+   *
+   * ── And two more, which are why this reads handlers rather than files ──────
+   *
+   *   3. `reads` and `caps` were evaluated over the whole file. A route file
+   *      holds up to four handlers, and one of them calling readJsonBody() made
+   *      the file "capped": a new POST beside a capped PATCH could read its body
+   *      by hand, uncapped, and never appear here. The walk below splits a file
+   *      at each `export function <METHOD>` and asks the question per handler,
+   *      which is the unit the rule is actually about.
+   *   4. Nothing looked at the limit. `readJsonBody(req, 100_000_000)` satisfied
+   *      "calls readJsonBody()" completely, and R-API-004 asks for a *named*
+   *      BODY_LIMIT — the number is meant to be arguable at the call site, which
+   *      a literal is not. Every call is now held to `BODY_LIMIT.<something>`.
    */
 
   /** The source with its comments removed — see main-landmark.test.ts. */
@@ -102,21 +136,50 @@ describe("every route that reads a body caps it", () => {
       .replace(/\/\*[\s\S]*?\*\//g, "") // /* block */ and /** doc */
       .replace(/^\s*\/\/.*$/gm, ""); // // line
 
-  it("finds no uncapped body read, in either spelling", () => {
-    const offenders: string[] = [];
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir)) {
-        const path = join(dir, entry);
-        if (statSync(path).isDirectory()) walk(path);
-        else if (entry === "route.ts") {
-          const src = code(readFileSync(path, "utf8"));
-          const reads = /\breq(uest)?\.(json|text)\(\)/.test(src);
-          const caps = /\breadJsonBody\s*\(/.test(src);
-          if (reads && !caps) offenders.push(path);
-        }
+  const METHODS = ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"];
+
+  /** Every route.ts under src/app/api, comments already gone. */
+  function routes(dir = "src/app/api"): { path: string; src: string }[] {
+    const out: { path: string; src: string }[] = [];
+    for (const entry of readdirSync(dir)) {
+      const path = join(dir, entry);
+      if (statSync(path).isDirectory()) out.push(...routes(path));
+      else if (entry === "route.ts") out.push({ path, src: code(readFileSync(path, "utf8")) });
+    }
+    return out;
+  }
+
+  /** One entry per exported handler, carrying only that handler's own body. */
+  function handlers(): { where: string; body: string }[] {
+    const out: { where: string; body: string }[] = [];
+    for (const { path, src } of routes()) {
+      const marks: { method: string; at: number }[] = [];
+      for (const m of src.matchAll(/export (?:async )?function ([A-Z]+)\b/g)) {
+        if (METHODS.includes(m[1]!)) marks.push({ method: m[1]!, at: m.index! });
       }
-    };
-    walk("src/app/api");
+      marks.sort((a, b) => a.at - b.at);
+      for (const [i, mark] of marks.entries()) {
+        out.push({
+          where: `${mark.method} ${path}`,
+          body: src.slice(mark.at, marks[i + 1]?.at ?? src.length),
+        });
+      }
+    }
+    return out;
+  }
+
+  it("reads at least one handler per route file, or the walk below proves nothing", () => {
+    // The check every source-reading test needs and this one did not have: a
+    // regex that stops matching reports an empty list of offenders, which reads
+    // exactly like a clean repository.
+    expect(handlers().length).toBeGreaterThan(routes().length);
+  });
+
+  it("finds no uncapped body read, in either spelling, in any single handler", () => {
+    const offenders = handlers()
+      .filter(({ body }) => /\breq(uest)?\.(json|text)\(\)/.test(body))
+      .filter(({ body }) => !/\breadJsonBody\s*(<[^(]*>)?\s*\(/.test(body))
+      .map(({ where }) => where);
 
     // Nothing else bounds these: Next puts no limit on a route handler's body
     // and next.config.ts sets none. An uncapped handler lets the caller decide
@@ -126,6 +189,37 @@ describe("every route that reads a body caps it", () => {
       `These read a JSON body with no size limit. Use readJsonBody() from ` +
         `@/lib/api/body with the right BODY_LIMIT:\n${offenders.join("\n")}`,
     ).toEqual([]);
+  });
+
+  it("passes a named BODY_LIMIT, never a number written at the call site", () => {
+    const limits: { where: string; limit: string }[] = [];
+    for (const { where, body } of handlers()) {
+      for (const m of body.matchAll(/\breadJsonBody\s*(?:<[^(]*>)?\s*\(\s*[^,()]+,\s*([^,)]+)/g)) {
+        limits.push({ where, limit: m[1]!.trim() });
+      }
+    }
+
+    // A regex that has quietly stopped matching would otherwise report a clean
+    // repository. Ten handlers read a body; this must find all of them.
+    expect(limits.length).toBeGreaterThanOrEqual(8);
+
+    const unnamed = limits
+      .filter(({ limit }) => !/^BODY_LIMIT\.\w+$/.test(limit))
+      .map(({ where, limit }) => `${where} → ${limit}`);
+    expect(
+      unnamed,
+      `R-API-004 asks for a named BODY_LIMIT, so the number is arguable where it ` +
+        `is used: a password is not a CSV. These wrote one instead:\n${unnamed.join("\n")}`,
+    ).toEqual([]);
+
+    // And every name it passes has to be one that exists — `BODY_LIMIT.cards`
+    // for `BODY_LIMIT.card` is `undefined`, which compares false against every
+    // size there is and caps nothing at all.
+    const unknown = limits
+      .map(({ where, limit }) => ({ where, key: limit.slice("BODY_LIMIT.".length) }))
+      .filter(({ key }) => key in BODY_LIMIT === false)
+      .map(({ where, key }) => `${where} → BODY_LIMIT.${key}`);
+    expect(unknown).toEqual([]);
   });
 
   it("has a limit for every shape", () => {

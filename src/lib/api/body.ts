@@ -65,10 +65,21 @@ export const BODY_LIMIT = {
  * the two failures need different answers: 413 for too large and 400 for
  * malformed. A caller that cannot tell them apart tells the sender to fix the
  * wrong thing.
+ *
+ * `emptyIs` says what no bytes at all mean, for the routes where that is a
+ * request rather than a mistake. Without it an empty body reaches
+ * `JSON.parse("")`, which throws, so `POST …/copies` answered 400 to exactly
+ * the request its own contract describes as "one more identical copy" — while
+ * `{}` worked. Opt-in rather than a default, because on every other route here
+ * an empty body really is a caller that forgot one, and turning it into `{}`
+ * would move that refusal from this line to a validator further in for no gain.
+ * Whitespace counts as empty; a malformed body still comes back `invalid`,
+ * which is the distinction that matters.
  */
 export async function readJsonBody<T = unknown>(
   req: Request,
   limit: number,
+  options?: { emptyIs: T },
 ): Promise<BodyResult<T>> {
   const declared = Number(req.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > limit) return { kind: "too-large" };
@@ -81,6 +92,7 @@ export async function readJsonBody<T = unknown>(
     // 1.5 kB of CJK. The declared content-length above is already in bytes, so
     // the two halves of this guard were measuring different things.
     if (new TextEncoder().encode(raw).length > limit) return { kind: "too-large" };
+    if (options && raw.trim() === "") return { kind: "ok", body: options.emptyIs };
     return { kind: "ok", body: JSON.parse(raw) as T };
   } catch {
     return { kind: "invalid" };

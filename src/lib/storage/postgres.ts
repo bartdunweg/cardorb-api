@@ -67,21 +67,94 @@ const COLUMNS =
  * Supabase caps a response at a thousand rows and says so only by handing over
  * a thousand rows.
  *
- * This page size has to be at or under that cap, and the first version of this
- * file got it wrong in the most instructive way: it asked for two thousand at a
- * time and stopped when a page came back shorter than asked for. The server
- * capped the first page at a thousand, "shorter than asked for" was true
- * immediately, and the loop exited having read half the collection. A 1,968
- * card binder rendered as 836 cards across 41 of its 52 sets, and nothing
- * anywhere reported an error — it simply looked like a smaller collection.
- *
- * So: page at the cap, and do not infer completeness from the shape of a
- * response. The count below is asked for explicitly and the loop runs until it
- * has that many rows, which is the only version of this that stays correct if
- * the cap ever changes.
+ * A page has to be at or under that cap. MAX_PAGES is the ceiling on how many
+ * are asked for: a hundred thousand rows is far past anything this stores, and
+ * a read that hits it throws rather than answering short. What both numbers are
+ * for, and what was learned by getting them wrong, is on readAllPages() below.
  */
 const PAGE = 1_000;
 const MAX_PAGES = 100;
+
+/**
+ * One page of a PostgREST read, as much of the answer as anything here needs.
+ *
+ * `count` is a number only on the page that asked for it; PostgREST leaves it
+ * null otherwise, and a query against a store that has not answered at all
+ * carries the error instead.
+ */
+type PageResult<T> = {
+  data: T[] | null;
+  error: { message: string } | null;
+  count?: number | null;
+};
+
+/**
+ * Every row a query matches, read a page at a time, driven by the count.
+ *
+ * This was written three times before it was written once — listRows here,
+ * listCardPrices below it, heldKeys in ./imports.ts — and twice it was not
+ * written at all: listValueSnapshots and listAccountIds asked PostgREST a
+ * plain question and took whatever came back, which is a thousand rows and no
+ * word about the rest. The value chart froze at a date and kept drawing; the
+ * nightly cron simply never visited account 1,001.
+ *
+ * The rules it holds, all three learned the hard way and all three the reason
+ * this is one function rather than a pattern people copy:
+ *
+ * - **Page at the cap, never above it.** The first version of listRows asked
+ *   for two thousand at a time and stopped when a page came back shorter than
+ *   asked for. The server capped the first page at a thousand, "shorter than
+ *   asked" was true immediately, and the loop exited having read half the
+ *   collection: a 1,968 card binder rendered as 836 cards across 41 of its 52
+ *   sets, with nothing anywhere reporting an error.
+ * - **Ask the count; do not infer completeness from a page's size.** It is the
+ *   only version of this that stays correct if the cap ever changes.
+ *   `queryOf` is handed `counted` so exactly one page pays for the count.
+ * - **Throw rather than return short.** A collection missing a third of itself
+ *   renders as a smaller binder, which is indistinguishable from having sold
+ *   some cards. The callers above know how to fail soft; this does not get to
+ *   decide that for them.
+ *
+ * What it does *not* do is order the read. The caller passes a query that is
+ * already totally ordered — a unique column, or one made unique by a tiebreak —
+ * because paging an unstable order lets the database return a row on two pages
+ * and another on none. Which column that is differs per table, and getting it
+ * wrong is silent, so it stays at the call site where the table is in view.
+ *
+ * `what` names the thing being read, for the two sentences this throws.
+ */
+export async function readAllPages<T>(
+  what: string,
+  queryOf: (page: number, counted: boolean) => PromiseLike<PageResult<T>>,
+): Promise<T[]> {
+  const first = await queryOf(0, true);
+  if (first.error) throw new Error(`Reading ${what} failed: ${first.error.message}`);
+  const total = typeof first.count === "number" ? first.count : Number.POSITIVE_INFINITY;
+  const rows: T[] = [...(first.data ?? [])];
+
+  // The first page alone, for the count; the rest at once. A binder of two
+  // thousand rows is two pages, and the second used to wait for the first:
+  // after every write, the read that fills the row cache again is the one the
+  // person is waiting on.
+  const pages = Number.isFinite(total) ? Math.min(MAX_PAGES, Math.ceil(total / PAGE)) : 1;
+  if (pages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: pages - 1 }, (_, i) => queryOf(i + 1, false)),
+    );
+    for (const page of rest) {
+      if (page.error) throw new Error(`Reading ${what} failed: ${page.error.message}`);
+      rows.push(...(page.data ?? []));
+    }
+  }
+
+  if (Number.isFinite(total) && rows.length < total) {
+    throw new Error(`Read ${rows.length} of ${total}: ${what} came back truncated.`);
+  }
+  return rows;
+}
+
+/** The range one page covers, so no call site does the arithmetic twice. */
+export const pageRange = (page: number): [number, number] => [page * PAGE, page * PAGE + PAGE - 1];
 
 const toRow = (r: CardRecord): CollectionRow => ({
   id: r.id,
@@ -125,7 +198,7 @@ const toRow = (r: CardRecord): CollectionRow => ({
  * that column exists at all.
  */
 export async function listRows(db: SupabaseClient, userId?: string): Promise<CollectionRow[]> {
-  const pageOf = (page: number, counted: boolean) => {
+  const rows = await readAllPages<CardRecord>("the collection", (page, counted) => {
     let q = db
       .from("cards")
       // Counted once, on the first page, so the read knows what finished looks
@@ -138,46 +211,14 @@ export async function listRows(db: SupabaseClient, userId?: string): Promise<Col
       // return a row on two pages and another on none. Sorting by something
       // unique after it makes the order total, and the pages disjoint.
       .order("id", { ascending: true })
-      .range(page * PAGE, page * PAGE + PAGE - 1);
+      .range(...pageRange(page));
     // Only ever narrows what the policies already allow. Needed for the public
     // page, which reads somebody else's collection through a client that is not
     // them: without it the policy would hand over their own rows as well.
     if (userId) q = q.eq("user_id", userId);
     return q;
-  };
-
-  // The first page alone, for the count; the rest at once. A binder of two
-  // thousand rows is two pages, and the second used to wait for the first:
-  // after every write, the read that fills the row cache again is the one the
-  // person is waiting on.
-  const first = await pageOf(0, true);
-  // Thrown rather than broken out of, for the same reason the Notion cursor
-  // throws: a truncated binder is not a collection, it is an outage wearing
-  // one, and the caller above knows how to fail soft.
-  if (first.error) throw new Error(`Reading the collection failed: ${first.error.message}`);
-  const total = typeof first.count === "number" ? first.count : Number.POSITIVE_INFINITY;
-  const rows: CollectionRow[] = ((first.data ?? []) as CardRecord[]).map(toRow);
-
-  const pages = Number.isFinite(total) ? Math.min(MAX_PAGES, Math.ceil(total / PAGE)) : 1;
-  if (pages > 1) {
-    const rest = await Promise.all(
-      Array.from({ length: pages - 1 }, (_, i) => pageOf(i + 1, false)),
-    );
-    for (const page of rest) {
-      if (page.error) throw new Error(`Reading the collection failed: ${page.error.message}`);
-      rows.push(...((page.data ?? []) as CardRecord[]).map(toRow));
-    }
-  }
-
-  // Loud rather than short. A collection that is missing a third of itself and
-  // says nothing is the failure this whole function is written against: it
-  // renders as a smaller binder, which is indistinguishable from having sold
-  // some cards.
-  if (Number.isFinite(total) && rows.length < total) {
-    throw new Error(`Read ${rows.length} of ${total} cards: the collection came back truncated.`);
-  }
-
-  return rows;
+  });
+  return rows.map(toRow);
 }
 
 /** The snapshot row as the table has it. See the 20260816140000 migration. */
@@ -194,8 +235,20 @@ type SnapshotRecord = {
  *
  * Oldest first because the card that draws them treats `snapshots[0]` as where
  * the record starts — "since December 2024" is that row's date — and reverses
- * nothing. The list is tens of rows even for a collection recorded weekly for
- * years, so there is no paging loop here and no cap to page under.
+ * nothing.
+ *
+ * That order is why this had to learn to page, and why not paging was worse
+ * here than almost anywhere else. This comment used to say the list is "tens of
+ * rows even for a collection recorded weekly for years, so there is no paging
+ * loop here and no cap to page under" — true of a weekly series, and the cron
+ * has run nightly since 2026-09-06. At a thousand readings PostgREST caps the
+ * response, and because the order is ascending the rows it drops are the
+ * *newest*: the chart would stop at a date and go on drawing, with nothing
+ * anywhere reporting a fault. Around mid-2029, on this deployment.
+ *
+ * No tiebreak on the order, unlike listRows: `(user_id, snapshot_date)` is
+ * unique — writeValueSnapshot() upserts on it — so one person's readings are
+ * already totally ordered by date alone.
  *
  * `.eq("user_id", userId)` is here even though this file's own header says there
  * is no user_id anywhere below, and the exception is deliberate rather than an
@@ -214,18 +267,20 @@ export async function listValueSnapshots(
   db: SupabaseClient,
   userId: string,
 ): Promise<ValueSnapshot[]> {
-  const { data, error } = await db
-    .from("collection_value_snapshots")
-    .select("snapshot_date,value_cents,cards,priced,unpriced")
-    .eq("user_id", userId)
-    .order("snapshot_date", { ascending: true });
+  // Thrown rather than swallowed — readAllPages does both throws — for the same
+  // reason listRows throws: a series with holes in it draws as a collection
+  // that lost value, and the caller above knows how to fail soft without
+  // inventing a shape.
+  const data = await readAllPages<SnapshotRecord>("the value history", (page, counted) =>
+    db
+      .from("collection_value_snapshots")
+      .select("snapshot_date,value_cents,cards,priced,unpriced", counted ? { count: "exact" } : {})
+      .eq("user_id", userId)
+      .order("snapshot_date", { ascending: true })
+      .range(...pageRange(page)),
+  );
 
-  // Thrown rather than swallowed, for the same reason listRows throws: a series
-  // with holes in it draws as a collection that lost value, and the caller
-  // above knows how to fail soft without inventing a shape.
-  if (error) throw new Error(`Reading the value history failed: ${error.message}`);
-
-  return ((data ?? []) as SnapshotRecord[]).map((r) => ({
+  return data.map((r) => ({
     date: r.snapshot_date,
     value: Math.round(r.value_cents / 100),
     cards: r.cards,
@@ -246,11 +301,22 @@ export async function listValueSnapshots(
  * bounded table and one request answers it. The cost is that an account with an
  * empty collection is visited and skipped; the saving is that a sixteen-hundred
  * row read is not made to find that out.
+ *
+ * Small and bounded is not the same as under a thousand, which is what this
+ * read assumed by not paging. Past the cap the accounts beyond it never get a
+ * nightly reading and never get warmed — and the cron would report a clean run,
+ * because it never learned there were more. Ordered by `id`, which is the
+ * primary key and so a total order on its own.
  */
 export async function listAccountIds(db: SupabaseClient): Promise<string[]> {
-  const { data, error } = await db.from("profiles").select("id");
-  if (error) throw new Error(`Listing accounts failed: ${error.message}`);
-  return ((data ?? []) as { id: string }[]).map((r) => r.id);
+  const rows = await readAllPages<{ id: string }>("the accounts", (page, counted) =>
+    db
+      .from("profiles")
+      .select("id", counted ? { count: "exact" } : {})
+      .order("id", { ascending: true })
+      .range(...pageRange(page)),
+  );
+  return rows.map((r) => r.id);
 }
 
 /**

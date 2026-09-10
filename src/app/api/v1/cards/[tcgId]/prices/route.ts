@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
+import { apiError, unavailable } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 import { ALL_READINGS, getCardPrices } from "@/lib/core/collection/collection";
@@ -10,6 +10,13 @@ import { ALL_READINGS, getCardPrices } from "@/lib/core/collection/collection";
  * backfill's, TCGplayer's dollars turned into euros (scripts/backfill-card-prices.mjs).
  * A card nobody holds has none, and an empty list is the honest answer rather
  * than a 404: the card exists, its history does not yet.
+ *
+ * Which is exactly why a failed read may not answer the same thing. The reader
+ * used to swallow its own error and hand back `[]`, so an unreachable store and
+ * a card whose history has not started were one payload — and the sentence
+ * above says what a client reads that payload as. `failed` now comes back
+ * beside the points and is a 503 here, the same as everywhere else a read that
+ * could not happen must not be drawn as an answer.
  *
  * Authorised like the card itself. Read through getCardPrices so the caller's
  * own hour of caching and the paged store read are the same as the movers'.
@@ -23,7 +30,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
       headers: { ...readHeaders(req), ...who.headers },
     });
   const { tcgId } = await params;
-  const points = await getCardPrices(who.userId, [tcgId], bearer(req) ?? undefined, ALL_READINGS);
+  const { points, failed } = await getCardPrices(
+    who.userId,
+    [tcgId],
+    bearer(req) ?? undefined,
+    ALL_READINGS,
+  );
+  if (failed)
+    return unavailable(
+      "That card's price history could not be read. Try again in a moment.",
+      readHeaders(req),
+    );
   return NextResponse.json(
     // The reader answers for the ids it was asked; filtered once more here so a
     // wider cached answer can never be handed out as one card's line.

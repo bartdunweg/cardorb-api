@@ -2,7 +2,7 @@ import { type PokedexSetting, validatePokedexSetting } from "@/lib/core/collecti
 import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
-import { readHeaders, sameOrigin } from "@/lib/api/guard";
+import { readHeaders, sameOrigin, storeErrorResponse } from "@/lib/api/guard";
 import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { ownProfile, updateProfile } from "@/lib/storage/postgres";
@@ -143,7 +143,16 @@ export async function GET(req: Request) {
     return refuse("noDatabase", { headers });
   }
 
-  const profile = await ownProfile(db, viewer.userId);
+  // Wrapped, like every other store read behind a route here. Unwrapped this
+  // rejected out of the handler and Next wrote its own 500: a status the
+  // contract does not carry, in a body that is not `{ error: string }` — the
+  // one shape both clients branch on.
+  let profile;
+  try {
+    profile = await ownProfile(db, viewer.userId);
+  } catch (err) {
+    return storeErrorResponse(err, req, "Reading the profile failed");
+  }
   if (!profile) return apiError(404, "No profile.", undefined, { headers });
 
   return NextResponse.json({ ...profile, email: viewer.email }, { headers });

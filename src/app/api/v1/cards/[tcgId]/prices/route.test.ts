@@ -29,10 +29,13 @@ const get = (tcgId = "base1-4") =>
 beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
-  getCardPrices.mockResolvedValue([
-    { tcgId: "base1-4", date: "2026-09-01", market: 120.5, holo: null },
-    { tcgId: "base1-4", date: "2026-09-02", market: 121, holo: 300 },
-  ]);
+  getCardPrices.mockResolvedValue({
+    points: [
+      { tcgId: "base1-4", date: "2026-09-01", market: 120.5, holo: null },
+      { tcgId: "base1-4", date: "2026-09-02", market: 121, holo: 300 },
+    ],
+    failed: false,
+  });
 });
 
 describe("GET /api/v1/cards/{tcgId}/prices", () => {
@@ -53,20 +56,35 @@ describe("GET /api/v1/cards/{tcgId}/prices", () => {
   });
 
   it("hands out this card's points only, whatever wider answer the reader gives", async () => {
-    getCardPrices.mockResolvedValue([
-      { tcgId: "base1-4", date: "2026-09-01", market: 120.5, holo: null },
-      { tcgId: "base1-5", date: "2026-09-01", market: 3, holo: null },
-    ]);
+    getCardPrices.mockResolvedValue({
+      points: [
+        { tcgId: "base1-4", date: "2026-09-01", market: 120.5, holo: null },
+        { tcgId: "base1-5", date: "2026-09-01", market: 3, holo: null },
+      ],
+      failed: false,
+    });
     expect(await (await get()).json()).toEqual({
       points: [{ date: "2026-09-01", market: 120.5, holo: null }],
     });
   });
 
   it("is an empty list for a card with no readings, not a 404", async () => {
-    getCardPrices.mockResolvedValue([]);
+    getCardPrices.mockResolvedValue({ points: [], failed: false });
     const res = await get("nobody-1");
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ points: [] });
+  });
+
+  it("answers 503 when the readings could not be read, never an empty list", async () => {
+    // An empty list is documented as the honest answer for a card whose history
+    // has not started. That is exactly why an outage may not answer it too.
+    getCardPrices.mockResolvedValue({ points: [], failed: true });
+    const res = await get();
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      error: "That card's price history could not be read. Try again in a moment.",
+    });
   });
 
   it("refuses a caller the guard refuses", async () => {

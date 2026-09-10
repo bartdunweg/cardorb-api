@@ -26,6 +26,8 @@ vi.mock("next/cache", () => ({ revalidateTag: (...a: unknown[]) => revalidateTag
 const { PATCH, DELETE } = await import("./route");
 
 const ID = "11111111-1111-4111-8111-111111111111";
+/** The sentence itself, because a client shows it and nothing else asserted it. */
+const NOT_FOUND = "No folder by that id.";
 const FOLDER = { id: ID, name: "Shiny", kind: "manual", rule: null, createdAt: "2026-09-02" };
 const RULED = { ...FOLDER, kind: "rule", rule: { dex: { from: 1, to: 151 } } };
 
@@ -90,11 +92,30 @@ describe("PATCH /api/v1/folders/{id}", () => {
   });
 
   it("is a 404 for a folder that is not the caller's, and for an id that is not one", async () => {
+    // The sentence as well as the status. Both refusals were asserted by number
+    // alone, and a 404 with no body — or with a different sentence in it — is
+    // what a client shows a person: `{ error: string }` is the contract, and it
+    // was not held to anywhere in the repository for this wording.
     getFolder.mockResolvedValue(null);
-    expect((await patch(ID, JSON.stringify({ name: "x" }))).status).toBe(404);
-    expect((await patch("nope", JSON.stringify({ name: "x" }))).status).toBe(404);
+    const mine = await patch(ID, JSON.stringify({ name: "x" }));
+    expect(mine.status).toBe(404);
+    expect(await mine.json()).toEqual({ error: NOT_FOUND });
+
+    const nonsense = await patch("nope", JSON.stringify({ name: "x" }));
+    expect(nonsense.status).toBe(404);
+    expect(await nonsense.json()).toEqual({ error: NOT_FOUND });
+
     expect(getFolder).toHaveBeenCalledTimes(1);
     expect(updateFolder).not.toHaveBeenCalled();
+  });
+
+  it("is a 404 in the same words when the write itself reached no row", async () => {
+    // Row level security turns somebody else's folder into "no such row", so
+    // this is the same refusal arriving one step later.
+    updateFolder.mockResolvedValue(null);
+    const res = await patch(ID, JSON.stringify({ name: "x" }));
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: NOT_FOUND });
   });
 });
 
@@ -106,9 +127,18 @@ describe("DELETE /api/v1/folders/{id}", () => {
     expect(revalidateTag).toHaveBeenCalledWith("cards:me-uuid", { expire: 0 });
   });
 
-  it("is a 404 when nothing was deleted", async () => {
+  it("is a 404 when nothing was deleted, and says which id it means", async () => {
     deleteFolder.mockResolvedValue(false);
-    expect((await del(ID)).status).toBe(404);
+    const res = await del(ID);
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: NOT_FOUND });
     expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it("is a 404 in the same words for an id that is no id", async () => {
+    const res = await del("nope");
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: NOT_FOUND });
+    expect(deleteFolder).not.toHaveBeenCalled();
   });
 });
