@@ -1008,6 +1008,9 @@ export async function getRow(
 const columnsFor = (changes: CopyChanges): Record<string, unknown> => {
   const out: Record<string, unknown> = {};
   if ("finish" in changes) out.finish = changes.finish;
+  // Was missing while COPY_KEYS accepted it, so "one more, but Cosmos" answered 201 and wrote
+  // null. A pattern the reader stated is a fact; null means nobody has said.
+  if ("foilPattern" in changes) out.foil_pattern = changes.foilPattern;
   if ("condition" in changes) out.condition = changes.condition;
   if ("grade" in changes) out.grade = changes.grade;
   if ("language" in changes) out.language = changes.language;
@@ -1046,6 +1049,8 @@ export async function copyRow(
       owned: src.owned,
       excluded: src.excluded,
       finish: src.finish,
+      // Inherited like every other inventory field: a copy of a Cosmos holo is a Cosmos holo.
+      foil_pattern: src.foilPattern,
       quantity: count,
       condition: src.condition,
       grade: src.grade,
