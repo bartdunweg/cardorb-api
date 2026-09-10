@@ -358,28 +358,69 @@ const cachedUsdPrices = (setName: string) =>
     )(),
   );
 
+const PTCG_QUIET_MS = 10 * 60_000;
+
 /**
- * While pokemontcg.io is down, ten minutes without asking: a request that waited twelve
- * seconds per set, twice, for fifty sets would be minutes long. Per instance, so a warm
- * function remembers and a cold one finds out for itself.
+ * How many different sets have to fail, with nothing succeeding in between, before this is
+ * pokemontcg.io being down rather than one set being odd.
+ *
+ * buildCollection() resolves six sets at a time (mapLimit in cards.ts), so a real outage
+ * arrives as a whole wave failing together and trips this on the first one: one round of
+ * timeouts, then every set after it is skipped without asking. That is the latency the
+ * global quiet period below was built for, and it is kept. A single set that times out on
+ * its own never reaches three, and the other forty-nine keep their second market.
+ */
+const PTCG_OUTAGE_SETS = 3;
+
+/**
+ * Ten minutes without asking again: per set, and site-wide only once several sets in a row
+ * have failed.
+ *
+ * It used to be one deadline for the whole instance, tripped by one failure, and the cost of
+ * that was money rather than latency. The 04:00 snapshot cron always runs on a cold
+ * instance, where lastGoodUsd below is empty, so a single pokemontcg.io hiccup on the first
+ * set left every later set of that run with no second market at all — not a stale blend, no
+ * blend. shownPrice() then reads Cardmarket's Near Mint band instead of the blended market,
+ * which above €20 is market × 1.275 against a blend of (1.275 + 1) / 2 = 1.1375: the value
+ * recorded for every dear card steps up about 12%, and it is upserted into permanent history
+ * behind one console.error, with the chart saying nothing.
+ *
+ * Both are per instance, like the last answers: a warm function remembers and a cold one
+ * finds out for itself.
  */
 let ptcgQuietUntil = 0;
+const ptcgQuietSets = new Map<string, number>();
+/** The sets that have failed since the last one succeeded. Any answer at all clears it. */
+const ptcgFailing = new Set<string>();
 /**
  * The last answer that came, per set, for the minutes pokemontcg.io is down: a price that was
  * right an hour ago beats a card that suddenly says it is worth nothing and then is not. Per
  * instance, like the quiet period; a cold instance starts without it.
  */
 const lastGoodUsd = new Map<string, Record<string, UsdPrice>>();
-const usdForSet = async (setName: string): Promise<Record<string, UsdPrice>> => {
-  if (Date.now() < ptcgQuietUntil) return lastGoodUsd.get(setName) ?? {};
+/** Exported for its test rather than for any caller: the rule above is about money. */
+export const usdForSet = async (setName: string): Promise<Record<string, UsdPrice>> => {
+  const now = Date.now();
+  if (now < ptcgQuietUntil || now < (ptcgQuietSets.get(setName) ?? 0)) {
+    return lastGoodUsd.get(setName) ?? {};
+  }
   try {
     const prices = await cachedUsdPrices(setName);
     lastGoodUsd.set(setName, prices);
+    // An answer means pokemontcg.io is up, so whatever failed before it was about a set.
+    ptcgFailing.clear();
+    ptcgQuietUntil = 0;
+    ptcgQuietSets.delete(setName);
     return prices;
   } catch (err) {
-    ptcgQuietUntil = Date.now() + 10 * 60_000;
+    ptcgQuietSets.set(setName, Date.now() + PTCG_QUIET_MS);
+    ptcgFailing.add(setName);
+    const down = ptcgFailing.size >= PTCG_OUTAGE_SETS;
+    if (down) ptcgQuietUntil = Date.now() + PTCG_QUIET_MS;
     console.error(
-      "TCGplayer prices unavailable, the last answer or Cardmarket's alone for now:",
+      `TCGplayer prices unavailable for ${setName}, the last answer or Cardmarket's alone for now` +
+        (down ? ` (${ptcgFailing.size} sets running: treating pokemontcg.io as down)` : "") +
+        ":",
       err,
     );
     return lastGoodUsd.get(setName) ?? {};

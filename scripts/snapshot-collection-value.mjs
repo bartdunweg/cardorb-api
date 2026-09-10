@@ -1,17 +1,36 @@
 /**
- * What one person's binder was worth, one dated point at a time, into
- * public.collection_value_snapshots.
+ * What one person's binder was worth, one dated point at a time. It reports the
+ * readings; it does not record them.
  *
  *   npx next start -p 3111                     # or SITE=https://cardorb.com
  *   node scripts/snapshot-collection-value.mjs --user <uuid>
  *   node scripts/snapshot-collection-value.mjs --user <uuid> --token <jwt>
- *   node scripts/snapshot-collection-value.mjs --user <uuid> --seed   # add the archived points too
+ *   node scripts/snapshot-collection-value.mjs --user <uuid> --seed   # the archived days too
  *
- * It writes rows now, not lib/core/collection-value.generated.json. That file
- * was a single committed series which components/custom/CollectionValueCard.tsx
- * imported directly, so every account on the deployment read one account's
- * history under its own value tile. See lib/core/value-history.ts and the
- * 20260816140000 migration.
+ * ── Why it no longer writes to collection_value_snapshots ──────────────────
+ *
+ * It used to upsert on (user_id, snapshot_date): the same row, under the same key, that
+ * /api/v1/cron/snapshot writes every night. The two did not agree, and could not.
+ *
+ * The cron prices a card at the blended two-market figure — Cardmarket's shown price and
+ * TCGplayer's market in euros, averaged; blendPrices() in lib/core/price-basis.mjs, over
+ * the same assembly every request reads. This script prices from Cardmarket's guide
+ * alone, which above €20 is the middle of the Near Mint band. On a €100 card that is
+ * 100 × 1.275 = 127.50 against (127.50 + 100) / 2 = 113.75, a step of 12% into a chart
+ * that is permanent and that says nothing about why it stepped. Below the band it steps
+ * the other way: a €10 card reads 10 × 0.865 = 8.65 here against (8.65 + 10) / 2 = 9.33
+ * there, 7% low. A series measured with two instruments is not a series.
+ *
+ * Teaching it to blend is not on offer. Its reason to exist is the two archived captures
+ * below, and there is no second market for 2024-12-30 or 2026-06-17 to blend against:
+ * TCGdex' free price-history repo is TCGplayer in dollars, covers 745 of this
+ * collection's 1,553 cards, and stopped in June 2025. Its third point, today's, is the
+ * cron's own row computed a different way — duplication with a disagreement built in.
+ *
+ * So it prints, and the numbers are real and worth reading by eye. What was not honest
+ * was filing two of them onto a chart of blended ones with no column to say which is
+ * which. Recording them again wants that column first: a basis on
+ * collection_value_snapshots, and a reader that knows what to do with two of them.
  *
  * --token is how a *private* collection is snapshotted: it is an access token
  * for the account named by --user, and it is what the site's own API is asked
@@ -25,7 +44,8 @@
  * NM_BANDS in lib/price-basis.mjs, which ran into the same wall). TCGdex' free
  * price-history repo is TCGplayer in dollars, covers 745 of this collection's
  * 1,553 cards, and stopped in June 2025. So the series does not exist to be
- * fetched. It has to be recorded, and every run of this file records one point.
+ * fetched. It has to be recorded, and the nightly cron is what records it; this file
+ * reads the past back out of the archive so it can be looked at.
  *
  * The past is not completely lost, which is what --seed is for. Cardmarket
  * publishes its whole price guide as one public file, and the Internet Archive
@@ -61,19 +81,27 @@
  * On the service-role client below: lib/storage/supabase.ts says the service key
  * has exactly one legitimate caller, and that rule is about adminClient() inside
  * a request, where a client that cannot name the person it acts for is a hole.
- * This is an offline script, run by a human who typed the uuid, that already read
- * `cards` this way — as do backfill-rarity-types.mjs and audit-collection.mjs.
- * Writing where it already reads is not a widening.
+ * This is an offline script, run by a human who typed the uuid, that reads `cards`
+ * this way — as do backfill-rarity-types.mjs and audit-collection.mjs. It reads
+ * only; the write it used to do is gone for the reason above.
  */
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { priceOf, holoPriceOf, shownPrice } from "../src/lib/core/price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice, isReverseFinish } from "../src/lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-/** tcgId -> Cardmarket idProduct. Cached because it costs 1,553 requests and never moves. */
-const IDS = join(ROOT, "lib", "core", "cardmarket-ids.generated.json");
+/**
+ * tcgId -> Cardmarket idProduct. Cached because it costs 1,553 requests and never moves.
+ *
+ * `src` is not decoration. ROOT is the repository root, because the .env read below and
+ * docs/ are there, and lib/core moved under src/ — so this resolved to a directory that
+ * does not exist. existsSync() then said "no cache", every run re-resolved all 1,553 ids
+ * from TCGdex, and writeFileSync() ended the run with ENOENT before anything was kept.
+ * scripts/backfill-card-prices.mjs had it right, which is how the other three were missed.
+ */
+const IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.generated.json");
 
 // .env.local, read by hand. The script is run with plain node, which does not
 // load it, and adding a dotenv dependency for a handful of lines would be the
@@ -369,8 +397,11 @@ function valueAt(guide, cards, ids, acquisitions) {
 
     let any = false;
     for (const r of mine) {
-      // reverse-holo only — see variantPrice() in lib/core/collection/cards.ts.
-      const each = shownPrice((r.finish === "reverse-holo" && foil) || normal);
+      // Which price series this copy reads, from price-basis.mjs, which is the only
+      // place that rule is written. This line used to test `=== "reverse-holo"` by hand
+      // and so priced a Poké Ball or Master Ball copy off the plain series while every
+      // other valuation path used the foil one.
+      const each = shownPrice((isReverseFinish(r.finish) && foil) || normal);
       if (each == null) continue;
       value += each * r.quantity;
       any = true;
@@ -421,35 +452,12 @@ async function archivedGuide({ url, at }) {
     } catch (err) {
       if (attempt === 3) {
         console.warn(`\n  !! ${what} is unavailable (${err.message}).`);
-        console.warn(`     That point is NOT being recorded. Re-run --seed later to add it.\n`);
+        console.warn(`     That reading is missing from this run. Re-run --seed later for it.\n`);
         return null;
       }
       await new Promise((r) => setTimeout(r, attempt * 5000));
     }
   }
-}
-
-/**
- * The points, into the table, one row per person per day.
- *
- * Upserted on (user_id, snapshot_date) so running this twice in a morning
- * corrects the reading rather than doubling it. Cents here and only here: the
- * total is carried unrounded through valueAt() so the rounding happens once, at
- * the boundary, rather than accumulating.
- */
-async function writeSnapshots(db, points) {
-  const { error } = await db.from("collection_value_snapshots").upsert(
-    points.map((p) => ({
-      user_id: userId,
-      snapshot_date: p.date,
-      value_cents: Math.round(p.value * 100),
-      cards: p.cards,
-      priced: p.priced,
-      unpriced: p.unpriced,
-    })),
-    { onConflict: "user_id,snapshot_date" },
-  );
-  if (error) throw new Error(`Writing snapshots: ${error.message}`);
 }
 
 const db = adminDb();
@@ -473,11 +481,10 @@ if (SEED) {
 /**
  * One point per date, because two guides can claim the same day.
  *
- * The upsert below targets (user_id, snapshot_date), and Postgres refuses a
- * batch that hits the same conflict target twice — "ON CONFLICT DO UPDATE
- * command cannot affect row a second time" — so this is load-bearing rather
- * than tidy. The version of this that wrote a JSON file had the same Map for
- * the same reason; it was lost in the move to rows and the database caught it.
+ * It was load-bearing when this upserted — Postgres refuses a batch that hits one
+ * conflict target twice, "ON CONFLICT DO UPDATE command cannot affect row a second
+ * time" — and it stays because printing one day's value twice, at two different
+ * figures, is the same lie in a smaller place.
  *
  * It happens for a real reason worth seeing rather than smoothing over: asked
  * for a capture it cannot serve, web.archive.org will hand back a *different*
@@ -493,9 +500,7 @@ for (const guide of guides) {
     console.warn(
       `  !! two guides both report ${point.date} — the archive served a capture other than the one asked for.`,
     );
-    console.warn(
-      `     Keeping one. That other point is NOT recorded; re-run --seed later to try again.`,
-    );
+    console.warn(`     Keeping one. Re-run --seed later to see the other.`);
   }
   byDate.set(point.date, point);
 }
@@ -507,7 +512,18 @@ for (const p of [...points].sort((a, b) => a.date.localeCompare(b.date))) {
   );
 }
 
-await writeSnapshots(db, points);
+/**
+ * Nothing is written, and that is the change rather than an oversight.
+ *
+ * These are Cardmarket-guide readings; /api/v1/cron/snapshot writes the blended
+ * two-market figure to the same (user_id, snapshot_date) row every night. Putting
+ * both on one chart makes it step by about 12% above the Near Mint band's floor and
+ * about 7% the other way below it, with nothing on the page to say why. See the top
+ * of this file for the arithmetic and for what recording these again would need.
+ */
 console.log(
-  `\n${points.length} point${points.length === 1 ? "" : "s"} written for ${profile.username}.`,
+  `\n${points.length} reading${points.length === 1 ? "" : "s"} for ${profile.username}, none recorded.`,
+);
+console.log(
+  `The nightly cron owns collection_value_snapshots and prices both markets; these price one.`,
 );
