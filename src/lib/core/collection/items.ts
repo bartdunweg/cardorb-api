@@ -353,6 +353,24 @@ export function pageOf<T>(items: T[], page: Page): { items: T[]; total: number }
  * value for a collection it had not seen. `unpriced` is how many of those
  * copies Cardmarket has no number for, so a reader can tell "€900" from
  * "€900 plus whatever these 40 are worth".
+ *
+ * ── Two things this is not, both inherited from the tally it replaced ──────
+ *
+ * `value` is on the shown price, which is what a single copy trades at, and not
+ * on Cardmarket's `low`. That is a measurement rather than a preference: `low`
+ * is the cheapest listing at any condition in any language, 421 of this
+ * collection's 1,211 priced cards list under €0.10 because their cheapest
+ * listing is a bulk lot, and the same cards totalled €9,355 that way against
+ * €25,880 valued one at a time. A third of the binder as a rounding error.
+ *
+ * There is no `movement` here, and there is not going to be one out of a Price.
+ * The obvious version — today's `market` against `avg30` — is wrong on a
+ * blended price, which is every price this app carries: `market` is the average
+ * of Cardmarket's Near Mint estimate and TCGplayer's dollars in euros while
+ * `avg30` stays Cardmarket's raw month, so a card that has not moved reports
+ * +13.75%. It cost getCardsStats() its life (see ./cards-stats.ts). "What
+ * moved" is answered by ./movers.ts, out of the recorded daily readings, where
+ * both sides of the comparison are the same measurement taken twice.
  */
 export type Stats = {
   cards: number;

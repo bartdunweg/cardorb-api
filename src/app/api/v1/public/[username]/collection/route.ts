@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter } from "@/lib/api/respond";
+import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter, unavailable } from "@/lib/api/respond";
 import { getPublicCollection, ownerOf } from "@/lib/core/collection/collection";
 import { forGrid, forPublic } from "@/lib/core/collection/cards";
 import type { CardSet } from "@/lib/core/collection/cards";
@@ -54,11 +54,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const { sets, failed, catalogueUnavailable } = await getPublicCollection(owner.id);
   // Never cache a failure: the CDN would hand an empty collection to every
   // visitor for an hour, which is what happened once.
-  if (failed)
-    return NextResponse.json(
-      { error: "The collection could not be read. Try again in a moment." },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
+  // unavailable() is that 503 and that Cache-Control, written once. This route
+  // spelled both out by hand, which is a second copy of the sentence and a
+  // second chance to forget the `no-store` that is the whole point of it.
+  if (failed) return unavailable();
 
   // The wishlist is the owner's to show. Off — and off is the default — the
   // cards nobody owns yet never leave the building; the sibling /cards route

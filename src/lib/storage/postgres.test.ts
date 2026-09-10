@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createRow, deleteRow, listRows, listValueSnapshots, updateRow } from "./postgres";
+import {
+  createRow,
+  deleteRow,
+  listAccountIds,
+  listRows,
+  listValueSnapshots,
+  updateRow,
+} from "./postgres";
 import type { CardDraft } from "@/lib/core/collection/collection-row";
 
 /**
@@ -292,5 +299,96 @@ describe("createRow", () => {
     const { db, written } = fakeInsertDb();
     await createRow(db, draft({ acquiredAt: "2026-01-02T00:00:00.000Z" }));
     expect(written[0]).toMatchObject({ acquired_at: "2026-01-02T00:00:00.000Z" });
+  });
+});
+
+/**
+ * PostgREST's thousand-row cap, made real.
+ *
+ * fakeDb above hands back the same list to every request, so a query that does
+ * not page and one that does are indistinguishable to it — which is how these
+ * two reads went years without anybody noticing they stop at a thousand rows.
+ * This one answers *by range*, caps every page the way the server does, and
+ * puts the true size only in `count`. A read that does not page comes back
+ * short here, exactly as it does in production.
+ *
+ * `from()` builds a fresh chain per call because the pages after the first are
+ * built together and awaited together: a shared builder would have the last
+ * `range()` win for all of them.
+ */
+function pagedDb(rows: unknown[], cap = 1_000, { losePagesAfterTheFirst = false } = {}) {
+  const ranges: [number, number][] = [];
+  const from = () => {
+    let start = 0;
+    let end = cap - 1;
+    let counted = false;
+    const chain: Record<string, unknown> = {
+      select: (_columns: string, opts?: { count?: string }) => {
+        counted = opts?.count === "exact";
+        return chain;
+      },
+      order: () => chain,
+      eq: () => chain,
+      range: (a: number, b: number) => {
+        start = a;
+        end = b;
+        ranges.push([a, b]);
+        return chain;
+      },
+      then: (resolve: (v: unknown) => unknown) =>
+        resolve({
+          // The cap is the server's, not the caller's: asking for more than a
+          // thousand gets a thousand, silently.
+          data:
+            losePagesAfterTheFirst && start > 0
+              ? []
+              : rows.slice(start, Math.min(end + 1, start + cap)),
+          error: null,
+          count: counted ? rows.length : null,
+        }),
+    };
+    return chain;
+  };
+  return { db: { from } as unknown as SupabaseClient, ranges };
+}
+
+describe("reading past PostgREST's thousand-row cap", () => {
+  it("listValueSnapshots keeps the newest readings, which the cap drops first", async () => {
+    // Ordered oldest first, so an unpaged read of 2,300 readings loses the last
+    // 1,300 — the recent end. The chart freezes at a date and goes on drawing,
+    // which is the failure this cannot announce on its own.
+    const rows = Array.from({ length: 2_300 }, (_, i) =>
+      snapshot({ snapshot_date: `d${String(i).padStart(4, "0")}`, value_cents: i * 100 }),
+    );
+    const { db } = pagedDb(rows);
+    const out = await listValueSnapshots(db, "u");
+    expect(out).toHaveLength(2_300);
+    expect(out.at(-1)).toMatchObject({ date: "d2299", value: 2_299 });
+  });
+
+  it("listAccountIds visits every account, not the first thousand", async () => {
+    // It feeds the nightly snapshot and the warm cron. Past a thousand accounts
+    // the rest simply never get a reading, and nothing reports it.
+    const rows = Array.from({ length: 1_400 }, (_, i) => ({ id: `acct-${i}` }));
+    const { db } = pagedDb(rows);
+    const ids = await listAccountIds(db);
+    expect(ids).toHaveLength(1_400);
+    expect(ids.at(-1)).toBe("acct-1399");
+  });
+
+  it("throws rather than hand back a short list, on either read", async () => {
+    // listRows already does this: a collection missing a third of itself reads
+    // as somebody having sold some cards. A frozen chart and a skipped account
+    // are the same kind of quiet, so they get the same loud.
+    // Pages after the first come back empty while `count` still says 2,300:
+    // the shape a store takes when it stops answering halfway through.
+    const short = (rows: unknown[]) => pagedDb(rows, 1_000, { losePagesAfterTheFirst: true }).db;
+    const readings = Array.from({ length: 2_300 }, (_, i) =>
+      snapshot({ snapshot_date: `d${String(i).padStart(4, "0")}` }),
+    );
+    await expect(listValueSnapshots(short(readings), "u")).rejects.toThrow(/truncated/);
+    await expect(
+      listAccountIds(short(Array.from({ length: 2_300 }, (_, i) => ({ id: `a${i}` })))),
+    ).rejects.toThrow(/truncated/);
   });
 });

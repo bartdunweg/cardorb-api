@@ -763,22 +763,34 @@ const cachedSnapshots = (userId: string, db: SupabaseClient | null) =>
  * getCollection()'s own comment. It matters more here: value_snapshots_own has
  * no public branch to fall back on, so a client that names nobody gets nothing.
  *
- * Fails soft to an empty history. That is not ambiguous the way an empty
- * collection was — no `failed` flag beside it — because the card draws nothing
- * either way, and a chart is not something to write an error state for.
+ * `failed` rides beside the readings, exactly as it does on Collection above,
+ * and this comment used to argue the opposite: that a chart draws nothing
+ * either way, so an outage need not be told apart from an account that has
+ * never been snapshotted. That is true of the pixels and false of the
+ * sentence. A collector with six hundred readings, during a minute when the
+ * store is unreachable, was handed `200 {"snapshots": []}` — the payload both
+ * clients use to draw the brand-new-account empty state. "You have no value
+ * history" is a claim about their collection, and the store had not said it.
+ *
+ * So the three states are the three the collection path already tells apart:
+ * read it and it is empty, read it and it is not, could not read it. The
+ * store's own `!db` (this deployment has no database at all, which is how CI
+ * builds with no secrets) stays an ordinary empty, the same as listRows.
  *
  * Not directly tested: unstable_cache throws `incrementalCache missing` outside
  * a Next request, which is why collection.test.ts mocks at the module seam. The
  * coverage that matters is on listValueSnapshots below it and the route above.
  */
+export type ValueHistory = { snapshots: ValueSnapshot[]; failed: boolean };
+
 export const getValueHistory = cache(
-  async (userId: string, token?: string): Promise<ValueSnapshot[]> => {
+  async (userId: string, token?: string): Promise<ValueHistory> => {
     try {
       const db = token ? userClient(token) : await serverClient();
-      return await cachedSnapshots(userId, db);
+      return { snapshots: await cachedSnapshots(userId, db), failed: false };
     } catch (err) {
       console.error("Value history unavailable, retrying on the next render:", err);
-      return [];
+      return { snapshots: [], failed: true };
     }
   },
 );
@@ -823,6 +835,18 @@ const idsKey = (tcgIds: string[]) =>
     .update([...tcgIds].sort().join("\n"))
     .digest("hex");
 
+/**
+ * The readings and whether they could be read at all.
+ *
+ * Same shape and same reason as ValueHistory above. `/v1/cards/{tcgId}/prices`
+ * documents an empty list as the honest answer for a card whose history has
+ * not started yet, which it is — and which made a store outage answer the
+ * identical payload. One of those two states is a fact about the card and the
+ * other is a fact about this minute, and a client cannot tell them apart from
+ * `{"points": []}`.
+ */
+export type CardPriceHistory = { points: CardPricePoint[]; failed: boolean };
+
 export const getCardPrices = cache(
   async (
     userId: string,
@@ -830,18 +854,20 @@ export const getCardPrices = cache(
     token?: string,
     /** The earliest date wanted, yyyy-mm-dd; the ninety-day window when left out. */
     from?: string,
-  ): Promise<CardPricePoint[]> => {
-    if (!tcgIds.length) return [];
+  ): Promise<CardPriceHistory> => {
+    if (!tcgIds.length) return { points: [], failed: false };
     try {
       const db = token ? userClient(token) : await serverClient();
-      if (!db) return [];
+      // No database at all is not an outage: it is a deployment without one,
+      // and listRows answers it the same way.
+      if (!db) return { points: [], failed: false };
       // Computed here rather than inside the cache callback: unstable_cache
       // keys on the arguments, and a date built inside would be a new key
       // every day *and* a stale window on a hit. Outside, it is part of the
       // key, so the window moves with the day and the cache follows it.
       const since =
         from ?? new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
-      return await unstable_cache(
+      const points = await unstable_cache(
         () => listCardPrices(db, tcgIds, since),
         // v3: the ids are part of the key. They were not, so the first asker's
         // list (a folder's, or one card's) was the answer for every later ask
@@ -850,9 +876,10 @@ export const getCardPrices = cache(
         ["card-prices", "v3", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
+      return { points, failed: false };
     } catch (err) {
       console.error("Card price history unavailable, retrying on the next render:", err);
-      return [];
+      return { points: [], failed: true };
     }
   },
 );

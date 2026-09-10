@@ -11,7 +11,7 @@ openapi: 3.1.0
 
 info:
   title: Card Orb API
-  version: 1.0.0
+  version: 1.1.0
   summary: A Pokémon card collection, priced, served to a web tool and an iOS app.
   description: |
     Card Orb keeps one person's Pokémon card collection in Postgres, matches it
@@ -852,6 +852,7 @@ paths:
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 }, description: "Not a whole number, or below 0, is a 400." }
+        - { name: facets, in: query, schema: { type: string, enum: ["0"] }, description: "`facets=0` leaves `facets` out of the answer, for a caller that will not read them (a count, a further batch on scroll): the pass over every item is skipped. Any other value, or none, and they come along. It was undocumented while the response schema marked `facets` required, so a generated client with a non-optional field could not decode the answer it had asked for." }
       responses:
         "200":
           description: The page, in the asked order (set order when none was), the total behind it, and the facets over the owned whole.
@@ -860,13 +861,15 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [cards, total, value, unpriced, facets]
+                required: [cards, total, value, unpriced]
                 properties:
                   cards: { type: array, items: { $ref: "#/components/schemas/CardItem" } }
                   total: { type: integer }
                   value: { type: number, description: "What the whole filtered list is worth, in euros to the cent: not the page. An owned copy counts as many times as held, a wish once." }
                   unpriced: { type: integer, description: "Copies in the filtered list no price was found for." }
-                  facets: { $ref: "#/components/schemas/Facets" }
+                  facets:
+                    allOf: [{ $ref: "#/components/schemas/Facets" }]
+                    description: "Present unless `facets=0` was asked for. Not required for that reason; every request that does not pass `facets=0` carries them."
                   catalogueUnavailable:
                     type: boolean
                     const: true
@@ -876,6 +879,7 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
     post:
       tags: [Collection]
@@ -901,6 +905,9 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404":
+          description: "`collectionId` names no folder of the caller's."
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
         "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -930,6 +937,7 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CardDetail" }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -958,7 +966,11 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
-        "503": { $ref: "#/components/responses/Unavailable" }
+        "503":
+          description: >-
+            The readings could not be read. Never an empty `points`, which is documented above as
+            the honest answer for a card whose history has not started yet.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
   /v1/collection/items/{id}/copies:
     parameters:
@@ -967,9 +979,9 @@ paths:
       tags: [Collection]
       operationId: addCopy
       summary: One more copy of a row, as a row of its own
-      description: The same card and inventory as the row, with the differences given, `count` held, pulled now unless `acquiredAt` says when. The row is untouched. An empty body is one more identical copy.
+      description: The same card and inventory as the row, with the differences given, `count` held, pulled now unless `acquiredAt` says when. The row is untouched. An empty body — no bytes at all, or `{}` — is one more identical copy.
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema: { $ref: "#/components/schemas/CopyBody" }
@@ -997,9 +1009,10 @@ paths:
       tags: [Collection]
       operationId: addCopyPreflight
       summary: CORS preflight
+      security: []
       responses:
-        "204": { description: Allowed origin. }
-        "403": { $ref: "#/components/responses/Forbidden" }
+        "204": { description: "Allowed. Carries the `Access-Control-Allow-*` headers." }
+        "403": { description: "That origin is not in `ALLOWED_ORIGINS`. Empty body." }
 
   /v1/collection/items/{id}/split:
     parameters:
@@ -1039,9 +1052,10 @@ paths:
       tags: [Collection]
       operationId: splitItemPreflight
       summary: CORS preflight
+      security: []
       responses:
-        "204": { description: Allowed origin. }
-        "403": { $ref: "#/components/responses/Forbidden" }
+        "204": { description: "Allowed. Carries the `Access-Control-Allow-*` headers." }
+        "403": { description: "That origin is not in `ALLOWED_ORIGINS`. Empty body." }
 
   /v1/collection/items/{id}:
     parameters:
@@ -1154,6 +1168,7 @@ paths:
                     type: boolean
                     const: true
                     description: Present only when the counts could not be read; the sets are still right.
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
@@ -1188,6 +1203,7 @@ paths:
                   ownedCount: { type: integer }
                   hasMore: { type: boolean }
                   collectionUnavailable: { type: boolean, const: true }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -1420,7 +1436,12 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
-        "503": { $ref: "#/components/responses/Unavailable" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503":
+          description: >-
+            The readings could not be read. Never an empty `snapshots` — that payload means the
+            account has never been snapshotted, and both clients draw it as such.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
   # ── Profile ───────────────────────────────────────────────────────────────
   /v1/profile:
@@ -1436,6 +1457,7 @@ paths:
               schema: { $ref: "#/components/schemas/OwnProfile" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
     patch:
       tags: [Profile]
@@ -1912,8 +1934,12 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "500": { $ref: "#/components/responses/BadGateway" }
+        "502":
+          description: The collection could not be read to say what is already held, so nothing was written.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
         "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/imports:
@@ -1933,6 +1959,8 @@ paths:
                 properties:
                   imports: { type: array, items: { $ref: "#/components/schemas/ImportRecord" } }
         "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
   # ── Public ────────────────────────────────────────────────────────────────

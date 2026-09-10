@@ -31,7 +31,7 @@ vi.mock("@/lib/storage/postgres", () => ({
   ownProfile: (...a: unknown[]) => ownProfile(...a),
 }));
 
-const { PATCH } = await import("./route");
+const { GET, PATCH } = await import("./route");
 
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
 
@@ -157,5 +157,41 @@ describe("PATCH /api/v1/profile", () => {
     const res = await patch({ nothing: "here" });
     expect(res.status).toBe(400);
     expect(updateProfile).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/v1/profile", () => {
+  const get = () =>
+    GET(
+      new Request("https://cardorb.com/api/v1/profile", {
+        headers: { authorization: "Bearer t.o.k.e.n" },
+      }),
+    );
+
+  it("answers the caller's own profile with their email beside it", async () => {
+    ownProfile.mockResolvedValue({ id: "me-uuid", username: "me", isPublic: false });
+    const res = await get();
+    expect(ownProfile).toHaveBeenCalledWith(expect.anything(), "me-uuid");
+    expect(await res.json()).toEqual({
+      id: "me-uuid",
+      username: "me",
+      isPublic: false,
+      email: "me@example.com",
+    });
+  });
+
+  it("answers a store that threw in the { error } shape, not Next's generic 500", async () => {
+    // Unwrapped, this rejected out of the handler and Next wrote its own 500:
+    // a status the contract does not carry, in a body neither client can read.
+    // The identical pattern in cards/route.ts was already wrapped.
+    ownProfile.mockRejectedValue(new Error("PostgREST said no"));
+    const res = await get();
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ error: "Reading the profile failed." });
+  });
+
+  it("is a 404 for a signed-in caller with no profile row", async () => {
+    ownProfile.mockResolvedValue(null);
+    expect((await get()).status).toBe(404);
   });
 });

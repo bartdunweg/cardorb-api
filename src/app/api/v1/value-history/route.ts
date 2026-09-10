@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiError } from "@/lib/api/respond";
-import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { apiError, unavailable } from "@/lib/api/respond";
+import { authorise, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 import {
   findFolder,
@@ -29,6 +29,13 @@ import { filterItems, flattenItems } from "@/lib/core/collection/items";
  * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, built from
  * the per-card daily readings (see folderSeries): the same shape, a shorter
  * history, since the readings start where the nightly card prices do.
+ *
+ * Both branches answer 503 when the read behind them failed, and that used to
+ * be true of one of them. The folder branch already refused to draw a line out
+ * of a collection it could not read; the plain branch answered `200
+ * {"snapshots": []}` — the payload that means "this account has never been
+ * snapshotted" — for a store that was simply down. One route file, two answers
+ * to the same question.
  */
 export const dynamic = "force-dynamic";
 
@@ -42,7 +49,12 @@ export async function GET(req: Request) {
   const token = bearer(req) ?? undefined;
   const folder = new URL(req.url).searchParams.get("folder");
   if (!folder) {
-    const snapshots = await getValueHistory(viewer.userId, token);
+    const { snapshots, failed } = await getValueHistory(viewer.userId, token);
+    if (failed)
+      return unavailable(
+        "The value history could not be read. Try again in a moment.",
+        readHeaders(req),
+      );
     return NextResponse.json({ snapshots }, { headers: readHeaders(req) });
   }
 
@@ -53,7 +65,16 @@ export async function GET(req: Request) {
   let filter: Parameters<typeof filterItems>[1] =
     folder === "wishlist" ? { owned: false } : { owned: true, favorite: true };
   if (folder !== "favorites" && folder !== "wishlist") {
-    const found = await findFolder(viewer.userId, folder, token);
+    // Wrapped like the identical call in cards/route.ts. Unwrapped, a store
+    // that throws here left Next to write its own 500 — a status the contract
+    // does not carry, in a body that is not `{ error: string }`, to two clients
+    // that show the sentence and branch on the status.
+    let found;
+    try {
+      found = await findFolder(viewer.userId, folder, token);
+    } catch (err) {
+      return storeErrorResponse(err, req, "Reading the folder failed");
+    }
     if (!found)
       return apiError(404, "No folder by that id.", undefined, { headers: readHeaders(req) });
     filter = found.rule ? { rule: found.rule } : { owned: true, collection: folder };
@@ -66,8 +87,15 @@ export async function GET(req: Request) {
   const items = filterItems(flattenItems(sets), filter);
   const ids = [...new Set(items.flatMap((it) => (it.tcgId ? [it.tcgId] : [])))];
   const prices = await getCardPrices(viewer.userId, ids, token);
+  if (prices.failed)
+    return unavailable(
+      "The value history could not be read. Try again in a moment.",
+      readHeaders(req),
+    );
   return NextResponse.json(
-    { snapshots: folderSeries(items, prices, folder === "wishlist" ? "wishlist" : "owned") },
+    {
+      snapshots: folderSeries(items, prices.points, folder === "wishlist" ? "wishlist" : "owned"),
+    },
     { headers: readHeaders(req) },
   );
 }

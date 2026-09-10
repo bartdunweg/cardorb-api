@@ -14,7 +14,17 @@ import { cardsTag, foldersTag, UUID } from "@/lib/core/collection/collection-row
 import { readFolderBody } from "@/lib/core/collection/folders";
 import { deleteFolder, getFolder, updateFolder } from "@/lib/storage/collection";
 
-const NOT_FOUND = { error: "No folder by that id." };
+/**
+ * One sentence for the five places this route says it, through apiError() like
+ * every other refusal here.
+ *
+ * It used to be an object handed to NextResponse.json() — a hand-rolled `{
+ * error }` beside the helper written to stop exactly that (R-API-006). Nothing
+ * was wrong with the body it produced; what was wrong is that the shape was
+ * being re-typed, which is how the four wordings of "there is no database"
+ * happened. This route was open, so it moved.
+ */
+const NOT_FOUND = "No folder by that id.";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const who = await authoriseWrite(req);
@@ -24,8 +34,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     });
 
   const { id } = await params;
-  if (!UUID.test(id))
-    return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
+  if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   const read = await readJsonBody(req, BODY_LIMIT.folder);
   if (read.kind === "too-large")
@@ -44,7 +53,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   let folder;
   try {
     const before = await getFolder(who.userId, id, token);
-    if (!before) return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
+    if (!before) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
     if (body.body.rule && !before.rule)
       return apiError(400, "This folder is filled by hand; it cannot take a rule.", undefined, {
         headers: readHeaders(req),
@@ -53,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   } catch (err) {
     return storeErrorResponse(err, req, "Changing a folder failed");
   }
-  if (!folder) return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
+  if (!folder) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(foldersTag(who.userId), { expire: 0 });
   return NextResponse.json({ ok: true, folder }, { headers: readHeaders(req) });
@@ -67,8 +76,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     });
 
   const { id } = await params;
-  if (!UUID.test(id))
-    return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
+  if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   let gone: boolean;
   try {
@@ -76,7 +84,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   } catch (err) {
     return storeErrorResponse(err, req, "Deleting a folder failed");
   }
-  if (!gone) return NextResponse.json(NOT_FOUND, { status: 404, headers: readHeaders(req) });
+  if (!gone) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   // The cards that were filed in it changed, so the cached rows are stale; so is the list.
   revalidateTag(cardsTag(who.userId), { expire: 0 });

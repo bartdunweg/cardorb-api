@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CollectionRow } from "../core/collection/collection-row";
 import { NOT_OWNED } from "../core/collection/csv";
 import { importKey, splitExisting } from "../core/collection/import-match";
-import { createRows } from "./postgres";
+import { createRows, pageRange, readAllPages } from "./postgres";
 
 /**
  * Running an import, and writing down that it ran.
@@ -62,36 +62,25 @@ export type ImportOutcome = {
  * agreed with it, which is the one number standing between a person and a
  * doubled collection. A CSV row carries no source_id, so the unique index never
  * catches the second copy.
+ *
+ * Through readAllPages() rather than its own loop, which is what this was: the
+ * fourth copy of the same twenty lines, and the one that quietly dropped the
+ * truncation check the other three keep. It now throws on a short read like
+ * they do — which is right here more than anywhere, since a short read is
+ * exactly how a collection gets imported twice.
  */
-const KEY_PAGE = 1_000;
-
 type Row = { name?: string; set_name?: string; number?: string };
 
 export async function heldKeys(db: SupabaseClient, userId: string): Promise<Set<string>> {
-  const pageOf = (page: number, counted: boolean) =>
+  const rows = await readAllPages<Row>("the collection", (page, counted) =>
     db
       .from("cards")
       .select("name,set_name,number", counted ? { count: "exact" } : {})
       // A total order, so the pages are disjoint: id alone is unique and enough.
       .order("id", { ascending: true })
       .eq("user_id", userId)
-      .range(page * KEY_PAGE, page * KEY_PAGE + KEY_PAGE - 1);
-
-  const first = await pageOf(0, true);
-  if (first.error) throw new Error(`Reading the collection failed: ${first.error.message}`);
-
-  const rows = [...((first.data ?? []) as Row[])];
-  const total = typeof first.count === "number" ? first.count : rows.length;
-  const pages = Math.ceil(total / KEY_PAGE);
-  if (pages > 1) {
-    const rest = await Promise.all(
-      Array.from({ length: pages - 1 }, (_, i) => pageOf(i + 1, false)),
-    );
-    for (const page of rest) {
-      if (page.error) throw new Error(`Reading the collection failed: ${page.error.message}`);
-      rows.push(...((page.data ?? []) as Row[]));
-    }
-  }
+      .range(...pageRange(page)),
+  );
 
   return new Set(
     rows.map((row) =>

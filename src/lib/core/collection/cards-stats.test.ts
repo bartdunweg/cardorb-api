@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { copiesHeld, getCardsStats } from "./cards-stats";
-import type { CardSet, OwnedCard, Variant } from "./cards";
+import { copiesHeld, heldValue } from "./cards-stats";
+import type { OwnedCard, Variant } from "./cards";
 
 const variant = (over: Partial<Variant> = {}): Variant => ({
   id: "row-1",
@@ -48,18 +48,6 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   ...over,
 });
 
-const set = (name: string, cards: OwnedCard[], total: number | null = null): CardSet => ({
-  language: null,
-  name,
-  title: name,
-  abbreviation: null,
-  logo: null,
-  logoSize: null,
-  releaseDate: null,
-  total,
-  cards,
-});
-
 describe("copiesHeld", () => {
   it("sums the owned printings and ignores the wanted ones", () => {
     const c = card({
@@ -87,6 +75,15 @@ describe("copiesHeld", () => {
   });
 });
 
+/**
+ * The foil rules, on heldValue() itself.
+ *
+ * These used to run through getCardsStats().value — a whole-collection tally
+ * that no route ever called — so five assertions about one card's arithmetic
+ * were paying for a set fixture and a dashboard's worth of flattening. The
+ * tally is gone; the rules are the same, and they are what countStats(),
+ * movers.ts and the nightly snapshot all add up.
+ */
 describe("heldValue with a foil printing", () => {
   const NORMAL = { low: 1, market: 10, avg30: 10, nm: null };
   const FOIL = { low: 2, market: 20, avg30: 20, nm: null };
@@ -94,8 +91,8 @@ describe("heldValue with a foil printing", () => {
   it("prices a reverse holo as a reverse holo, and its normal twin as normal", () => {
     // The whole reason the finish column exists: one card, two copies, two
     // prices. This used to come to 20 — the normal price, twice.
-    const s = getCardsStats([
-      set("A", [
+    expect(
+      heldValue(
         card({
           price: NORMAL,
           priceHolo: FOIL,
@@ -104,9 +101,8 @@ describe("heldValue with a foil printing", () => {
             variant({ id: "b", finish: "reverse-holo" }),
           ],
         }),
-      ]),
-    ]);
-    expect(s.value).toBe(30);
+      ),
+    ).toBe(30);
   });
 
   it("prices a plain holo from the plain fields, not the foil ones", () => {
@@ -114,225 +110,47 @@ describe("heldValue with a foil printing", () => {
     // plain fields already describe the holo — there is no other printing — and
     // its -holo fields are a thinner market at 0.47x. Treating a holo like a
     // reverse holo dropped this collection by €2,488.
-    const s = getCardsStats([
-      set("A", [card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: "holo" })] })]),
-    ]);
-    expect(s.value).toBe(10);
+    expect(
+      heldValue(card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: "holo" })] })),
+    ).toBe(10);
   });
 
   it("falls back to the normal price where Cardmarket has no foil listing", () => {
     // 865 of this collection's 1,526 products are in exactly this position.
     // The copy really is a reverse holo; there is simply no separate price.
-    const s = getCardsStats([
-      set("A", [
+    expect(
+      heldValue(
         card({ price: NORMAL, priceHolo: null, variants: [variant({ finish: "reverse-holo" })] }),
-      ]),
-    ]);
-    expect(s.value).toBe(10);
+      ),
+    ).toBe(10);
   });
 
   it("prices an unclassified copy as normal", () => {
     // null is "nobody has said", which is every row in this collection until
     // somebody fills it in. It must not be worth nothing, and it must not
     // silently claim the foil price either.
-    const s = getCardsStats([
-      set("A", [card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: null })] })]),
-    ]);
-    expect(s.value).toBe(10);
+    expect(
+      heldValue(card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: null })] })),
+    ).toBe(10);
   });
 
   it("multiplies the foil price by that printing's own quantity", () => {
-    const s = getCardsStats([
-      set("A", [
+    expect(
+      heldValue(
         card({
           price: NORMAL,
           priceHolo: FOIL,
           variants: [variant({ id: "a", finish: "reverse-holo", quantity: 3 })],
         }),
-      ]),
-    ]);
-    expect(s.value).toBe(60);
-  });
-});
-
-describe("getCardsStats", () => {
-  it("counts the wishlist apart from the binder", () => {
-    const s = getCardsStats([
-      set("A", [card({ key: "1" }), card({ key: "2", owned: false })]),
-      set("B", [card({ key: "3" })]),
-    ]);
-    expect(s.cards).toBe(3);
-    expect(s.owned).toBe(2);
-    expect(s.wishlist).toBe(1);
-    expect(s.sets).toBe(2);
+      ),
+    ).toBe(60);
   });
 
-  it("adds up only held cards that have a price", () => {
-    const s = getCardsStats([
-      set("A", [
-        card({ key: "1", price: { low: 10, market: 10, avg30: 12, nm: null } }),
-        // Wanted, not held: counting it would price a binder that does not
-        // contain it.
-        card({ key: "2", owned: false, price: { low: 1000, market: 1000, avg30: 1000, nm: null } }),
-        // Held but unpriced: unknown, not free.
-        card({ key: "3", price: null }),
-      ]),
-    ]);
-    expect(s.value).toBe(10);
-    expect(s.priced).toBe(1);
-  });
-
-  it("values every copy held, not one per card", () => {
-    const s = getCardsStats([
-      set("A", [
-        card({
-          key: "1",
-          price: { low: 10, market: 10, avg30: 12, nm: null },
-          variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b", quantity: 1 })],
-        }),
-      ]),
-    ]);
-    expect(s.value).toBe(30);
-    // Coverage, not holdings: one card had a price, however many of it there is.
-    expect(s.priced).toBe(1);
-  });
-
-  it("ranks the priciest cards per copy, so a stack of commons cannot outrank a chase", () => {
-    const s = getCardsStats([
-      set("A", [
-        card({
-          key: "bulk",
-          name: "Bulk",
-          price: { low: 1, market: 1, avg30: 1, nm: null },
-          variants: [variant({ quantity: 500 })],
-        }),
-        card({ key: "chase", name: "Chase", price: { low: 90, market: 90, avg30: 90, nm: null } }),
-      ]),
-    ]);
-    expect(s.top.map((t) => t.card.name)).toEqual(["Chase", "Bulk"]);
-    // The value tile still knows about the stack, though.
-    expect(s.value).toBe(590);
-  });
-
-  it("ranks the priciest held cards and leaves the wishlist out", () => {
-    const s = getCardsStats([
-      set("A", [
-        card({ key: "cheap", name: "Cheap", price: { low: 2, market: 2, avg30: 2, nm: null } }),
-        card({ key: "dear", name: "Dear", price: { low: 90, market: 90, avg30: 95, nm: null } }),
-        card({
-          key: "want",
-          name: "Want",
-          owned: false,
-          price: { low: 5000, market: 5000, avg30: 5000, nm: null },
-        }),
-      ]),
-    ]);
-    expect(s.top.map((t) => t.card.name)).toEqual(["Dear", "Cheap"]);
-    // The set rides along, because "Charizard, €300" without it is half an answer.
-    expect(s.top[0]?.set).toBe("A");
-  });
-
-  it("honours the top count", () => {
-    const cards = Array.from({ length: 20 }, (_, i) =>
-      card({ key: String(i), price: { low: i, market: i, avg30: i, nm: null } }),
-    );
-    expect(getCardsStats([set("A", cards)], 3).top).toHaveLength(3);
-    expect(getCardsStats([set("A", cards)]).top).toHaveLength(10);
-  });
-
-  it("tallies eras and types commonest first, ignoring blanks", () => {
-    const s = getCardsStats([
-      set("A", [
-        card({ key: "1", gen: "Base", type: "Fire" }),
-        card({ key: "2", gen: "Base", type: null }),
-        card({ key: "3", gen: "Sword & Shield", type: "Fire" }),
-        card({ key: "4", gen: null, type: "Water" }),
-      ]),
-    ]);
-    expect(s.byEra).toEqual([
-      { value: "Base", count: 2 },
-      { value: "Sword & Shield", count: 1 },
-    ]);
-    expect(s.byType).toEqual([
-      { value: "Fire", count: 2 },
-      { value: "Water", count: 1 },
-    ]);
-  });
-
-  it("prices the wishlist per card, not per copy, and leaves the binder out", () => {
-    const s = getCardsStats([
-      set("A", [
-        card({ key: "held", price: { low: 5, market: 5, avg30: 5, nm: null } }),
-        card({
-          key: "want",
-          owned: false,
-          price: { low: 30, market: 30, avg30: 30, nm: null },
-          // Two wanted printings of one card is still one card to buy.
-          variants: [variant({ id: "a", owned: false }), variant({ id: "b", owned: false })],
-        }),
-      ]),
-    ]);
-    expect(s.wishlistValue).toBe(30);
-    expect(s.wishlistPriced).toBe(1);
-    // And the held card is not in it.
-    expect(s.value).toBe(5);
-  });
-
-  describe("movement", () => {
-    const at = (market: number, avg30: number | null) => ({ low: 1, market, avg30, nm: null });
-
-    it("compares market against the 30-day average, over copies held", () => {
-      const s = getCardsStats([
-        set("A", [
-          card({ key: "1", price: at(110, 100), variants: [variant({ quantity: 2 })] }),
-          card({ key: "2", price: at(90, 100) }),
-        ]),
-      ]);
-      // 220 now against 200 then, plus 90 against 100: 310 / 300.
-      expect(s.movement).toMatchObject({ now: 310, avg30: 300, cards: 2 });
-      expect(s.movement!.pct).toBeCloseTo(310 / 300 - 1);
-    });
-
-    it("never compares the Near Mint estimate against a raw average", () => {
-      // shownPrice() answers with nm.mid, which is market times a band. If that
-      // fed the comparison, a market sitting exactly on its average would
-      // report a permanent premium that never moves. Same number both sides:
-      // the honest answer is zero.
-      const s = getCardsStats([
-        set("A", [
-          card({
-            price: { low: 1, market: 100, avg30: 100, nm: { low: 105, mid: 115, high: 125 } },
-          }),
-        ]),
-      ]);
-      expect(s.movement!.pct).toBe(0);
-      // The value tile still uses the Near Mint estimate — that part is right.
-      expect(s.value).toBe(115);
-    });
-
-    it("counts only cards that carry both figures", () => {
-      const s = getCardsStats([
-        set("A", [
-          card({ key: "1", price: at(110, 100) }),
-          card({ key: "2", price: at(50, null) }),
-        ]),
-      ]);
-      expect(s.movement).toMatchObject({ now: 110, avg30: 100, cards: 1 });
-    });
-
-    it("is absent rather than zero when nothing can be compared", () => {
-      // A binder nobody could price has not held steady — it is unknown, and
-      // the two read the same on a page unless one of them is missing.
-      expect(getCardsStats([set("A", [card({ price: null })])]).movement).toBeNull();
-      expect(
-        getCardsStats([set("A", [card({ owned: false, price: at(9, 9) })])]).movement,
-      ).toBeNull();
-    });
-  });
-
-  it("survives an empty collection", () => {
-    const s = getCardsStats([]);
-    expect(s).toMatchObject({ cards: 0, owned: 0, wishlist: 0, sets: 0, value: 0, priced: 0 });
-    expect(s.top).toEqual([]);
+  it("counts a wished printing as nothing, however it is priced", () => {
+    // `owned` gates the sum rather than filtering after it: a card on the
+    // wishlist is not worth anything to a binder that does not hold it.
+    expect(
+      heldValue(card({ price: NORMAL, variants: [variant({ owned: false, quantity: 4 })] })),
+    ).toBe(0);
   });
 });

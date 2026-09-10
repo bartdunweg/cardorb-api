@@ -14,6 +14,20 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
  * The allow-list below is deliberately the assertion rather than a deny-list of
  * the fields that leaked: a new column on `cards` becomes a new field on
  * Variant, and a deny-list would let it through by default. This fails instead.
+ *
+ * ── Two holes in that, both in the fixture rather than in the assertion ────
+ *
+ * The whole-allow-list check below filtered the carried keys *by value* —
+ * anything not `null` and not `false` — over a fixture that gave two fields a
+ * null of their own. So `language: null` and `collectionId: null` in the
+ * fixture meant forPublic() could carry either of them straight through and
+ * this file would still say only rarity and owned came out. Language is a fact
+ * about somebody's copy and the folder id is the name they filed it under;
+ * neither is a stranger's business, and neither was actually guarded.
+ *
+ * Every field below now carries a value, so "was it stripped" is a question the
+ * fixture can answer, and the key list is asserted whole beside it: a
+ * sixteenth field on Variant has to be spelled here before it can leave.
  */
 
 const PRICE: Price = { low: 1, market: 90, avg30: 95, nm: { low: 95, mid: 100, high: 110 } };
@@ -27,16 +41,41 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   quantity: 3,
   condition: "Near Mint",
   grade: "PSA 10",
-  language: null,
+  language: "ja",
   purchasePrice: 42.5,
   purchaseDate: "2026-01-01",
   notes: "bought at the shop on the corner",
   isFavorite: true,
   acquiredAt: "2026-01-01",
   excluded: true,
-  collectionId: null,
+  collectionId: "88888888-8888-4888-8888-888888888888",
   ...over,
 });
+
+/**
+ * Exactly what a public variant is made of: the two carried fields and the
+ * thirteen written as null or false. Spelled out rather than derived from
+ * Variant, because deriving it from the type would make the type the assertion
+ * — and the type is the thing that grows.
+ */
+const PUBLIC_VARIANT_KEYS = [
+  "acquiredAt",
+  "collectionId",
+  "condition",
+  "excluded",
+  "finish",
+  "foilPattern",
+  "grade",
+  "id",
+  "isFavorite",
+  "language",
+  "notes",
+  "owned",
+  "purchaseDate",
+  "purchasePrice",
+  "quantity",
+  "rarity",
+];
 
 const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   key: "sv03-125",
@@ -90,11 +129,17 @@ describe("forPublic", () => {
       purchaseDate: null,
       condition: null,
       grade: null,
+      // Both of these were null in the fixture too, so neither was guarded by
+      // anything: forPublic() could have spread them through untouched.
       language: null,
+      collectionId: null,
+      finish: null,
+      foilPattern: null,
       notes: null,
       quantity: null,
       acquiredAt: null,
       isFavorite: false,
+      excluded: false,
     });
   });
 
@@ -105,14 +150,24 @@ describe("forPublic", () => {
   });
 
   it("carries the two allowed fields and nulls every other one", () => {
-    // The allow-list, asserted as a whole rather than one key at a time. This
-    // is the test that fails when a thirteenth field is added to Variant and
-    // somebody spreads it in here by habit.
+    // The allow-list, asserted as a whole rather than one key at a time, and in
+    // two halves because one of them alone was not enough.
+    //
+    // The keys, first: a sixteenth field on Variant has to be written into
+    // forPublic() or the object stops type-checking, and it has to be written
+    // here before this passes. That is the moment somebody decides whether a
+    // stranger may see it, which is the decision this file exists to force.
+    //
+    // Then the values — over a fixture where every private field carries one,
+    // so "carried through" and "nulled" are different answers. Filtering by
+    // value alone was the whole check, and it let `language` and `collectionId`
+    // through because the fixture nulled them itself.
     //
     // `null`, not absent — see the note in forPublic about why the keys are
-    // still written. When that changes, this assertion becomes
-    // `Object.keys(variant)` equalling exactly ["owned", "rarity"].
+    // still written. When that changes, the first assertion becomes exactly
+    // ["owned", "rarity"] and the second falls away.
     const variant = only(forPublic([set([card()])])).variants[0]!;
+    expect(Object.keys(variant).sort()).toEqual(PUBLIC_VARIANT_KEYS);
     const carried = Object.entries(variant).filter(([, v]) => v !== null && v !== false);
     expect(carried.map(([k]) => k).sort()).toEqual(["owned", "rarity"]);
   });
@@ -121,7 +176,7 @@ describe("forPublic", () => {
     // The belt to the braces above: whatever shape a future Variant takes, none
     // of these strings may appear in what crosses the wire.
     const json = JSON.stringify(forGrid(forPublic([set([card()])])));
-    for (const secret of ["42.5", "PSA 10", "Near Mint", "corner", "row-1", "90"]) {
+    for (const secret of ["42.5", "PSA 10", "Near Mint", "corner", "row-1", "90", "88888888"]) {
       expect(json).not.toContain(secret);
     }
   });

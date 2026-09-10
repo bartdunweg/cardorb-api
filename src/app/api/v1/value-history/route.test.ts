@@ -20,6 +20,12 @@ vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
+  // The real helper's own contract, not a bare status: it is what turns a store
+  // throw into `{ error: "<operation>." }` at 502, and guard.test.ts holds it to
+  // that. A stub answering `new Response(null, …)` would let this route assert a
+  // status while publishing no body at all.
+  storeErrorResponse: (_err: unknown, _req: Request, operation: string) =>
+    Response.json({ error: `${operation}.` }, { status: 502 }),
 }));
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
@@ -56,7 +62,7 @@ const get = (token = "t.o.k.e.n", query = "") =>
 beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue(VIEWER);
-  getValueHistory.mockResolvedValue([SNAPSHOT]);
+  getValueHistory.mockResolvedValue({ snapshots: [SNAPSHOT], failed: false });
 });
 
 describe("GET /api/v1/value-history", () => {
@@ -69,7 +75,7 @@ describe("GET /api/v1/value-history", () => {
 
   it("does not hand one account another's series", async () => {
     authorise.mockResolvedValue({ ...VIEWER, userId: "someone-else" });
-    getValueHistory.mockResolvedValue([]);
+    getValueHistory.mockResolvedValue({ snapshots: [], failed: false });
     const body = await (await get()).json();
     expect(getValueHistory).toHaveBeenCalledWith("someone-else", "t.o.k.e.n");
     expect(body).toEqual({ snapshots: [] });
@@ -84,10 +90,23 @@ describe("GET /api/v1/value-history", () => {
   it("answers an account that has never been snapshotted with an empty series", async () => {
     // Not a 404 and not an error: having no history is the ordinary state of
     // every account but one, and the card draws nothing for it.
-    getValueHistory.mockResolvedValue([]);
+    getValueHistory.mockResolvedValue({ snapshots: [], failed: false });
     const res = await get();
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ snapshots: [] });
+  });
+
+  it("answers 503 when the readings could not be read, never an empty series", async () => {
+    // The whole point of the change this guards: a collector with six hundred
+    // readings and an unreachable store used to be handed the payload that
+    // means "this account has never been snapshotted".
+    getValueHistory.mockResolvedValue({ snapshots: [], failed: true });
+    const res = await get();
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    expect(await res.json()).toEqual({
+      error: "The value history could not be read. Try again in a moment.",
+    });
   });
 
   it("passes a refusal through rather than turning it into an empty 200", async () => {
@@ -146,10 +165,13 @@ describe("GET /api/v1/value-history", () => {
         ],
         failed: false,
       });
-      getCardPrices.mockResolvedValue([
-        { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
-        { tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
-      ]);
+      getCardPrices.mockResolvedValue({
+        points: [
+          { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
+          { tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
+        ],
+        failed: false,
+      });
     });
 
     it("builds a manual folder's line from the copies filed in it", async () => {
@@ -188,6 +210,23 @@ describe("GET /api/v1/value-history", () => {
       expect(body.snapshots).toEqual([
         { date: "2026-09-01", value: 10, cards: 1, priced: 1, unpriced: 0 },
       ]);
+    });
+
+    it("answers 503 when the per-card readings could not be read", async () => {
+      findFolder.mockResolvedValue({ id: FOLDER, rule: null });
+      getCardPrices.mockResolvedValue({ points: [], failed: true });
+      const res = await get("t.o.k.e.n", `?folder=${FOLDER}`);
+      expect(res.status).toBe(503);
+    });
+
+    it("answers a store that threw looking for the folder in the { error } shape", async () => {
+      // Unwrapped, this reached Next's generic 500: not in the contract and not
+      // the shape either client branches on. The identical call in
+      // cards/route.ts was already wrapped.
+      findFolder.mockRejectedValue(new Error("PostgREST said no"));
+      const res = await get("t.o.k.e.n", `?folder=${FOLDER}`);
+      expect(res.status).toBe(502);
+      expect(await res.json()).toEqual({ error: "Reading the folder failed." });
     });
 
     it("is a 404 for an id that is no folder, and a 400 for a value that is no id", async () => {

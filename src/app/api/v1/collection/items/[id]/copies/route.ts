@@ -28,13 +28,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   if (!UUID.test(id)) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
-  const read = await readJsonBody(req, BODY_LIMIT.patch);
+  // `emptyIs: {}` is the contract's own sentence, made true: an empty body is
+  // one more identical copy. It used to reach JSON.parse("") and come back as
+  // a 400, so the documented way to ask for a plain duplicate was the one way
+  // that did not work.
+  const read = await readJsonBody<Record<string, unknown>>(req, BODY_LIMIT.patch, { emptyIs: {} });
   if (read.kind === "too-large")
     return apiError(413, "Payload too large", undefined, { headers: readHeaders(req) });
   if (read.kind === "invalid")
     return apiError(400, "Invalid request", undefined, { headers: readHeaders(req) });
 
-  const result = validateCopyBody(read.body ?? {}, false);
+  const result = validateCopyBody(read.body, false);
   if (result.kind === "invalid")
     return apiError(400, result.error, undefined, { headers: readHeaders(req) });
 
