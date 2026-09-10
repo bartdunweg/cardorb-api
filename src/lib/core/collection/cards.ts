@@ -1073,7 +1073,9 @@ export async function buildCollection(
           // simply was not filed anywhere and Tyranitar read as uncaught. The
           // scans and the prices survive a typo now (see sameCard); this is the
           // rest of that.
-          speciesId: speciesOf(card?.matchedName ?? name),
+          // With the shelf it came from: a Japanese card is named in Japanese, and the
+          // English list cannot place it, so it used to land in no slot at all.
+          speciesId: speciesOf(card?.matchedName ?? name, card?.catalogue),
           tcgId: card?.tcgId ?? null,
           price: card?.price ?? null,
           priceHolo: card?.priceHolo ?? null,
