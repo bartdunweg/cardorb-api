@@ -1,0 +1,1 @@
+- `GET /v1/cards/{tcgId}?language=ja|zh-tw|zh-cn|ko` reads the card from that catalogue. These ids exist only there, so without it a card added from one of those shelves had no detail to open. `languages` comes back empty for such a card: the Western catalogues share the English ids, so a copy of it can only be its own language.

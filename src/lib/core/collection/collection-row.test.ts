@@ -28,6 +28,17 @@ describe("validateCardDraft", () => {
     expect(why({ name: "Pikachu", set: "Base" })).toBeNull();
   });
 
+  it("takes a catalogue card id, and refuses one that is not", () => {
+    // Told rather than blanked, unlike foilPattern: this is the only thing that
+    // finds a Japanese card again, so a wrong one costs the card its picture,
+    // its rarity and its price without anything failing.
+    expect(ok({ name: "P", set: "B", tcgId: "SV1a-007" }).tcgId).toBe("SV1a-007");
+    expect(ok({ name: "P", set: "B" }).tcgId).toBeNull();
+    expect(ok({ name: "P", set: "B", tcgId: null }).tcgId).toBeNull();
+    expect(why({ name: "P", set: "B", tcgId: "sv1" })).toMatch(/card id/i);
+    expect(why({ name: "P", set: "B", tcgId: "../../sets" })).toMatch(/card id/i);
+  });
+
   it("treats a missing collection flag as held, and a missing excluded as not", () => {
     // The whole database reads this way — a row with no checkbox is a card in
     // the binder — and the Postgres column defaults to true for the same reason.
@@ -127,6 +138,7 @@ describe("rowFromDraft", () => {
       rarity: null,
       gen: null,
       types: [],
+      tcgId: null,
       owned: true,
       excluded: false,
       finish: null,

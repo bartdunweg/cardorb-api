@@ -358,6 +358,10 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
       name,
       number: cardNumber(at(r, map.number)),
       setName: set,
+      // No export names a catalogue id, so an imported card is found the way
+      // every card was found before this column was read: by number within the
+      // set its name resolves to.
+      tcgId: null,
       rarity: at(r, map.rarity) || null,
       gen: at(r, map.gen) || null,
       // Semicolons, because the comma is the field separator. A file that uses

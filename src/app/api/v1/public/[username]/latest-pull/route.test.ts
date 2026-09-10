@@ -4,6 +4,7 @@ import type { CardSet } from "@/lib/core/collection/cards";
 const sets: CardSet[] = [
   {
     name: "Base",
+    language: null,
     title: "Base Set",
     abbreviation: null,
     logo: null,

@@ -12,6 +12,7 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   rarity: null,
   gen: null,
   types: [],
+  tcgId: null,
   owned: true,
   excluded: false,
   acquiredAt: null,
@@ -206,5 +207,94 @@ describe("setCounts", () => {
       ownedCount: 0,
       wishlistCount: 0,
     });
+  });
+});
+
+/**
+ * The shelf a language other than English browses, and the shelf it must not mark.
+ *
+ * STATE.md recorded this as open: the index matched by English set name, so a
+ * Japanese set shown as "Black Bolt" counted the English Black Bolt cards, and
+ * the routes worked around it by handing the index no rows at all — which is
+ * why a Japanese set has never shown a single ownership mark. Both halves are
+ * closed here, by the row's own catalogue id.
+ */
+describe("ownership across two catalogues", () => {
+  const japanese = (over: Partial<CollectionRow> = {}) =>
+    row({
+      id: "ja-1",
+      name: "マスカーニャex",
+      number: "007",
+      setName: "Triplet Beat",
+      language: "ja",
+      tcgId: "SV1a-007",
+      ...over,
+    });
+  const jaCard = card({
+    id: "SV1a-007",
+    number: "007",
+    name: "マスカーニャex",
+    setName: "Triplet Beat",
+  });
+
+  it("marks a Japanese card by its id, with no name or number to get wrong", () => {
+    const index = ownershipIndex([japanese()], "ja");
+    expect(ownershipOf(index, jaCard)).toMatchObject({
+      owned: true,
+      quantity: 1,
+      itemIds: ["ja-1"],
+    });
+  });
+
+  it("does not let a Japanese row mark the English set of the same name", () => {
+    // "Black Bolt" and "Triplet Beat" are both real English sets and the names
+    // the shelf shows two Japanese sets under. A row filed under one of those
+    // names is not a card of the other.
+    const english = card({
+      id: "me01-007",
+      number: "007",
+      name: "Meowscarada ex",
+      setName: "Triplet Beat",
+    });
+    expect(ownershipOf(ownershipIndex([japanese()]), english)).toMatchObject({ owned: false });
+    expect(
+      setCounts(ownershipIndex([japanese()]), set({ id: "me01", name: "Triplet Beat" })),
+    ).toEqual({
+      ownedCount: 0,
+      wishlistCount: 0,
+    });
+  });
+
+  it("does not let an English row mark the Japanese shelf either", () => {
+    const english = row({
+      id: "en-1",
+      number: "007",
+      setName: "Triplet Beat",
+      name: "Meowscarada ex",
+    });
+    expect(ownershipOf(ownershipIndex([english], "ja"), jaCard)).toMatchObject({ owned: false });
+  });
+
+  it("counts a Japanese set by the id its rows carry, one card per printing", () => {
+    const rows = [
+      japanese(),
+      japanese({ id: "ja-2" }),
+      japanese({ id: "ja-3", tcgId: "SV1a-008", number: "008" }),
+      japanese({ id: "ja-4", tcgId: "SV1a-009", number: "009", owned: false }),
+    ];
+    expect(
+      setCounts(ownershipIndex(rows, "ja"), set({ id: "SV1a", name: "トリプレットビート" })),
+    ).toEqual({
+      ownedCount: 2,
+      wishlistCount: 1,
+    });
+  });
+
+  it("leaves a Japanese row with no catalogue id on the English shelf, where it was", () => {
+    // Nothing addresses it in its own catalogue, so the only join it can take
+    // part in is the one it always did.
+    const rows = [japanese({ tcgId: null, name: "Charizard", number: "004", setName: "Base" })];
+    expect(ownershipOf(ownershipIndex(rows), card())).toMatchObject({ owned: true });
+    expect(ownershipOf(ownershipIndex(rows, "ja"), jaCard)).toMatchObject({ owned: false });
   });
 });

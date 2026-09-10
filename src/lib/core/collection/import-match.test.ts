@@ -10,6 +10,7 @@ const card = (over: Partial<CollectionRow>): CollectionRow => ({
   rarity: null,
   gen: null,
   types: [],
+  tcgId: null,
   owned: true,
   excluded: false,
   acquiredAt: null,

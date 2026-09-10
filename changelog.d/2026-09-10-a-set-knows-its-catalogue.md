@@ -1,0 +1,1 @@
+- A set in the collection says which catalogue its cards came from (`CardSet.language`, null for English), and a card from another one carries that in its `key`. A collector who holds Black Bolt in both keeps two sets rather than one set whose halves overwrite each other's pictures and prices.

@@ -266,9 +266,18 @@ components:
 
     CardSet:
       type: object
-      required: [name, title, logo, logoSize, releaseDate, total, cards]
+      required: [name, language, title, logo, logoSize, releaseDate, total, cards]
       properties:
         name: { type: string, description: "The set as the collection names it. Addresses everything." }
+        language:
+          type: [string, "null"]
+          enum: [ja, zh-tw, zh-cn, ko, null]
+          description: >
+            Which catalogue the cards in it came from; null for the English one. The one thing
+            `name` cannot say: a collector holding Black Bolt in English and in Japanese has two
+            sets here, both called Black Bolt, because the shelf shows a Japanese set under an
+            English name of ours and some of those are real English sets. A card's `key` carries
+            the same prefix, so a flat list of both has no duplicate id in it.
         title: { type: string, description: "The set as the catalogue names it. For reading." }
         abbreviation:
           type: [string, "null"]
@@ -343,6 +352,15 @@ components:
         rarity: { type: string }
         gen: { type: string }
         types: { type: array, items: { type: string }, maxItems: 10 }
+        tcgId:
+          type: [string, "null"]
+          description: >
+            The catalogue's own id for this printing, where the client picked the card off a shelf
+            rather than typing it — `sv03-125`, `SV1a-007`. Stored on the row. For an English card it
+            is a note and nothing reads it; together with a `language` of `ja`, `ko` or `zh` it is
+            the whole address, and the only way the card is found again — a Japanese set has no
+            English name to look one up by. Present and not an id is a 400, not a blank: a wrong one
+            costs the card its picture, its rarity and its price with nothing failing.
         collection: { type: boolean, default: true, description: "`false` puts it on the wishlist." }
         excluded: { type: boolean, default: false }
         finish:
@@ -415,6 +433,7 @@ components:
         rarity: { type: [string, "null"] }
         gen: { type: [string, "null"] }
         types: { type: array, items: { type: string } }
+        tcgId: { type: [string, "null"], description: "The catalogue's id for this printing; see `CardDraft.tcgId`." }
         owned: { type: boolean }
         excluded: { type: boolean }
         acquiredAt: { type: [string, "null"], format: date-time }
@@ -903,6 +922,7 @@ paths:
       summary: One card, its printings and its price
       parameters:
         - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
+        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja, zh-tw, zh-cn, ko] }, description: "Which catalogue holds this id; left out, English. A Japanese id is a 404 in the English catalogue and the other way round. `languages` comes back empty for one of the four: the Western catalogues share the English ids, so a copy of it can only be its own language." }
       responses:
         "200":
           description: The card.

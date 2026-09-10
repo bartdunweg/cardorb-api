@@ -125,6 +125,8 @@ export function dexRows(grid: string[][]): CsvResult {
       // "48/108" as the card prints it; the catalogue files it under "48".
       number: cardNumber(at(r, c.number)),
       setName: set,
+      // A Dex export carries no catalogue id; see the same line in csv.ts.
+      tcgId: null,
       rarity: at(r, c.rarity) || null,
       // Dex's "Series" is the era — "Black & White", "EX", "Scarlet & Violet" —
       // which is what gen holds for every row that came from Notion.

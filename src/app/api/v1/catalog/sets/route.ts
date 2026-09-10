@@ -58,10 +58,11 @@ export async function GET(req: Request) {
      swallowed — a client that shows "0 of 207" everywhere should be able to
      tell that apart from a genuinely empty collection. */
   const { rows, failed } = await getRows(who.userId, bearer(req) ?? undefined);
-  // Another language's catalogue is marked by nothing yet: the rows know no language, and a
-  // Japanese set named like an English one (Black Bolt) would otherwise count the English cards
-  // as its own. Step 2 keys the index by language; until then the marks are for English.
-  const index = ownershipIndex(isBrowseLanguage(language) ? [] : rows);
+  /* Keyed by the catalogue being shown. A row of that language carrying that catalogue's card
+     id marks its own shelf exactly, by id; every other row marks the English one. Both
+     directions matter, because a Japanese set named like an English one (Black Bolt) would
+     otherwise be counted by the English cards, and was. */
+  const index = ownershipIndex(rows, isBrowseLanguage(language) ? language : null);
 
   return NextResponse.json(
     {
