@@ -7,9 +7,28 @@ paths:
 
 # Route handlers and the contract
 
-- **Everything under `/api/v1` requires a viewer** except the three routes under
-  `/api/v1/public/<username>/`. Those are open on purpose, carry no prices, and each has its
-  own rate limiter; anything wider hands out a keyed API for free.
+- **Everything under `/api/v1` requires a viewer** except the open set below. Anything wider
+  hands out a keyed API for free, so a new route is authorised until someone argues otherwise
+  here. The set, and it is checked by counting rather than remembered:
+
+  ```
+  find src/app/api/v1 -name route.ts | while read f; do
+    grep -qE 'authorise|requestViewer|CRON_SECRET' "$f" || echo "${f#src/app/api/v1}"
+  done | sort
+  ```
+
+  - **Five under `/api/v1/public/`** — four per person (`<username>/profile`, `/cards`,
+    `/cards/<tcgId>`, `/folders`), which carry no prices and answer 404 for a profile that is
+    not public, and `/public/species`, which is the catalogue of Pokémon names and belongs to
+    nobody. Each has its own rate limiter, because none of them passes through `authorise()`.
+  - **The doors themselves** — `/session`, `/signup`, `/password`, `/password/reset`,
+    `/confirmation`, `/email`. You cannot be signed in to sign in.
+  - **`/usernames/<name>`**, whether a name is free. It is the one open route that uses the
+    service-role key, which bypasses RLS: it must never grow a field beyond taken/free.
+  - **`/health`**.
+
+  It said "the three routes under `/api/v1/public/<username>/`" and there were four of those
+  even then, none of the doors, and no species route yet.
 - **`/api/v1/collection` and `/api/v1/cards/:tcgId` call `authorise()`** and refuse an
   anonymous caller. They used to be open; they were closed when the public profile shipped,
   and each route's docstring says why. Do not "fix" the guard back off.
