@@ -49,6 +49,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
 });
 
 const set = (name: string, cards: OwnedCard[], total: number | null = null): CardSet => ({
+  language: null,
   name,
   title: name,
   abbreviation: null,

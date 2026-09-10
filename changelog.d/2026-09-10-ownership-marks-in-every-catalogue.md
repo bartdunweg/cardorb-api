@@ -1,0 +1,1 @@
+- Browsing a Japanese, Korean or Chinese set shows what you own of it. The marks are joined on the card's own catalogue id, so they are exact — and a card from one of those catalogues no longer counts towards the English set it happens to be named after.

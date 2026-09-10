@@ -34,9 +34,11 @@
 import { sameCard } from "../catalogue/matching";
 import { norm } from "../util";
 import { collectionSetNames, galleryParent, isGalleryNumber } from "../catalogue/set-aliases";
+import { cataloguesFor, setIdOf } from "../catalogue/tcgdex-language";
 import type { CollectionRow } from "./collection-row";
 import type { CatalogueMatch } from "../catalogue/ptcg-search";
 import type { CatalogueSet } from "../catalogue/ptcg-browse";
+import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 
 /** What the viewer has of one catalogue card. */
 export type Ownership = {
@@ -77,24 +79,64 @@ export const canonNumber = (n: string): string => {
 const keyFor = (setName: string, number: string) => `${norm(setName)}|${canonNumber(number)}`;
 
 export type OwnershipIndex = {
-  /** `normalised set name|canonical number` to every row filed there. */
+  /**
+   * Which catalogue this index answers for: null for the English shelf, one of
+   * the four for its own.
+   *
+   * It decides what a key even is. The English shelf joins on set name and
+   * number, because that is all an English row has ever carried. A shelf of its
+   * own joins on the catalogue's card id, which the row carries exactly, so
+   * there is no name to normalise, no number to fold and no chance of a wrong
+   * match at all.
+   */
+  language: BrowseLanguage | null;
+  /** `normalised set name|canonical number`, or the card id, to every row filed there. */
   byCard: Map<string, CollectionRow[]>;
-  /** Normalised set name to its rows, for the counts the set list shows. */
+  /** Normalised set name, or the catalogue's set id, to its rows: the counts the set list shows. */
   bySet: Map<string, CollectionRow[]>;
 };
 
-/** Build the join side once, then ask it as many times as there are cards. */
-export function ownershipIndex(rows: CollectionRow[]): OwnershipIndex {
+/**
+ * Build the join side once, then ask it as many times as there are cards.
+ *
+ * `language` says which shelf is being marked, and the rows are split by the
+ * same rule in both directions. A shelf of its own sees only rows that name
+ * that catalogue and carry an id there; the English shelf sees everything else.
+ *
+ * Both halves of that matter, and the second is the one that was already
+ * wrong-in-waiting. A Japanese set is shown under an English name, and some of
+ * those names are real English sets — Black Bolt is both — so a Japanese row
+ * filed under "Black Bolt" would have counted towards the English set's "12 of
+ * 207" and drawn an English card as owned. The routes worked around the other
+ * direction by passing no rows at all for a language shelf, which is why
+ * nothing there has ever shown a mark.
+ */
+export function ownershipIndex(
+  rows: CollectionRow[],
+  language: BrowseLanguage | null = null,
+): OwnershipIndex {
   const byCard = new Map<string, CollectionRow[]>();
   const bySet = new Map<string, CollectionRow[]>();
+  const put = (map: Map<string, CollectionRow[]>, key: string, row: CollectionRow) =>
+    map.set(key, [...(map.get(key) ?? []), row]);
   for (const row of rows) {
     if (!row.setName || !row.name) continue;
-    const card = keyFor(row.setName, row.number);
-    byCard.set(card, [...(byCard.get(card) ?? []), row]);
-    const set = norm(row.setName);
-    bySet.set(set, [...(bySet.get(set) ?? []), row]);
+    const own = row.tcgId && cataloguesFor(row.language).includes(language as BrowseLanguage);
+    if (language) {
+      if (!own) continue;
+      const setId = setIdOf(row.tcgId!);
+      put(byCard, row.tcgId!.toLowerCase(), row);
+      if (setId) put(bySet, setId.toLowerCase(), row);
+      continue;
+    }
+    // A row that belongs to a catalogue of its own is not on this shelf. Its
+    // language says which set it is really from, and the name it is filed under
+    // is a translation of ours.
+    if (cataloguesFor(row.language).length && row.tcgId) continue;
+    put(byCard, keyFor(row.setName, row.number), row);
+    put(bySet, norm(row.setName), row);
   }
-  return { byCard, bySet };
+  return { language, byCard, bySet };
 }
 
 /**
@@ -103,6 +145,10 @@ export function ownershipIndex(rows: CollectionRow[]): OwnershipIndex {
  * bearing its name.
  */
 function rowsFor(index: OwnershipIndex, card: CatalogueMatch): CollectionRow[] {
+  // The id is the identity, so there is nothing else to check: no set name to
+  // alias, no number to canonicalise, and no sameCard() — which reads Latin
+  // letters and could not tell マスカーニャex from トロピウス anyway.
+  if (index.language) return index.byCard.get(card.id.toLowerCase()) ?? [];
   const number = canonNumber(card.number);
   const out: CollectionRow[] = [];
   for (const setName of collectionSetNames(card.setName)) {
@@ -161,6 +207,18 @@ export function setCounts(
   index: OwnershipIndex,
   set: CatalogueSet,
 ): { ownedCount: number; wishlistCount: number } {
+  if (index.language) {
+    // Distinct cards by their catalogue id rather than by number: the number on
+    // the row is whatever the client wrote down, and the id is what the row was
+    // actually filed under.
+    const owned = new Set<string>();
+    let wanted = 0;
+    for (const row of new Set(index.bySet.get(set.id.toLowerCase()) ?? [])) {
+      if (row.owned) owned.add(row.tcgId!.toLowerCase());
+      else wanted += 1;
+    }
+    return { ownedCount: owned.size, wishlistCount: wanted };
+  }
   const gallery = galleryParent(set.name) !== null;
   const rows = collectionSetNames(set.name)
     .flatMap((name) => index.bySet.get(name) ?? [])

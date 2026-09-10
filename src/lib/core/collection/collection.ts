@@ -322,6 +322,12 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v16: a card from a catalogue that is not the English one resolves here now, and
+      // CardFacts grew `rarity` and `catalogue` for it. An entry cached under v15 is a
+      // SetFacts without either — which for a Japanese card means no rarity and, worse, a
+      // `catalogue` of undefined, which factsWithUsd() below would read as an English card
+      // and hand a dollar price meant for whatever English card holds that number.
+      //
       // v15: #238 added `abbreviation` to what this resolves, and left the key alone. Every
       // entry cached under v14 is a SetFacts without the field, so `setAbbr` reached the web
       // as null and every tile went on writing its set out in full — for a day, per set,
@@ -332,7 +338,7 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v15", setName, factsSignature(identities)],
+      ["set-facts", "v16", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -436,9 +442,23 @@ async function factsWithUsd(
 ) {
   const facts = await cachedSetFacts(setName, identities, priceSource);
   if (usdToEur == null) return facts;
-  const usd = await usdForSet(setName);
+  /**
+   * Not asked at all for a set held only in another catalogue's language.
+   *
+   * pokemontcg.io indexes the English game and is asked by English set name, so
+   * for a Japanese set it would either fail — costing that set its second
+   * market for ten minutes, and every set after it if three in a row go the
+   * same way (see usdForSet) — or, worse, answer: "Black Bolt" is a real
+   * English set as well as the name the shelf gives ブラックボルト, and its
+   * dollars would be blended into Japanese cards at the same numbers.
+   */
+  const anyEnglish = identities.some((i) => !i.card);
+  const usd = anyEnglish ? await usdForSet(setName) : {};
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
+      // A card that came from its own catalogue keeps Cardmarket's figure alone: there is no
+      // TCGplayer price for a Japanese printing, and the set's dollars are another card's.
+      if (f.catalogue) return [key, f];
       // pokemontcg.io's number for the set first; TCGdex's for the card where that has none or is down.
       const p = usd[cardNumber(f.number)] ?? f.usd;
       return [key, { ...f, price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null) }];

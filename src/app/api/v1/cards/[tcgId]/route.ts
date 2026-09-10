@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { westernLanguagesOf } from "@/lib/core/catalogue/card-languages";
+import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
 /**
@@ -32,11 +33,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   }
 
   const { tcgId } = await params;
+  /* `?language=ja|zh-tw|zh-cn|ko`: that catalogue rather than the English one, because these
+     ids are only in their own. Left out, English, which is every card this route has ever
+     been asked about. */
+  const language = new URL(req.url).searchParams.get("language");
+  if (language && language !== "en" && !isBrowseLanguage(language))
+    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+      headers: readHeaders(req),
+    });
+  const own = isBrowseLanguage(language) ? language : null;
   let card;
   let languages;
   try {
     // The printings beside the card: which Western catalogues carry this id.
-    [card, languages] = await Promise.all([getCardDetail(tcgId), westernLanguagesOf(tcgId)]);
+    // None can, for a card from a catalogue of its own — the Western ones share
+    // the English ids, so asking them would be six 404s to say so. Its own
+    // language is the only one a copy of it can be.
+    [card, languages] = await Promise.all([
+      getCardDetail(tcgId, own),
+      own ? Promise.resolve([]) : westernLanguagesOf(tcgId),
+    ]);
   } catch (err) {
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.

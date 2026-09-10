@@ -21,6 +21,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
 });
 
 const set = (name: string, releaseDate: string | null, cards: OwnedCard[]): CardSet => ({
+  language: null,
   name,
   // What the catalogue calls it, falling back to what its owner does. Not what
   // this module groups by — the era is voted on by the cards — but required on

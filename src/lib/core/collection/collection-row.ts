@@ -24,6 +24,13 @@
  * a price, so they share a lookup, but they are different things to own and a
  * collector would not thank us for merging them into "foil".
  */
+/**
+ * Whether a string could be a catalogue card id. Defined beside the catalogues
+ * that use one (tcgdex-language.ts) rather than here, so the shape a URL is
+ * built from and the shape a request is checked against are one definition.
+ */
+import { isTcgId } from "../catalogue/tcgdex-language";
+
 /** A folder id, as Postgres writes one. Checked before it reaches the store. */
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -96,6 +103,18 @@ export type CollectionRow = {
   rarity: string | null;
   gen: string | null;
   types: string[];
+  /**
+   * The catalogue's own id for this printing, where whoever wrote the row knew
+   * it. `cards.tcg_id`.
+   *
+   * For an English row it is a note: the card is found the way it always was,
+   * by number within the set the name resolves to, and nothing here reads this.
+   * For a row in one of the four languages with a catalogue of its own it is
+   * the whole address — see tcgdex-language.ts, and resolveSetFacts(), which
+   * has no other way to find a Japanese card because a Japanese set has no
+   * English name to look up.
+   */
+  tcgId: string | null;
   /**
    * In the binder rather than on the wishlist. Notion's Collection checkbox,
    * where a missing value meant owned — which is why every store below has to
@@ -176,6 +195,14 @@ export type CardDraft = {
   rarity: string;
   gen: string;
   types: string[];
+  /**
+   * The catalogue's id for the card being added, where the client picked it off
+   * a shelf rather than typing it. See CollectionRow.tcgId: for a Japanese,
+   * Korean or Chinese card it is the only thing that finds the card again.
+   * Refused when it is present and not an id, rather than blanked — a wrong one
+   * costs the card its picture and its price, silently.
+   */
+  tcgId: string | null;
   /** In the binder rather than on the wishlist. */
   collection: boolean;
   /** Kept out of the "latest pull" on bartdunweg.com. */
@@ -299,6 +326,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     rarity = "",
     gen = "",
     types = [],
+    tcgId = null,
     collection = true,
     excluded = false,
     finish = null,
@@ -331,6 +359,7 @@ export function validateCardDraft(body: unknown): CardValidation {
       .map((t) => cleanText(String(t)))
       .filter(Boolean)
       .slice(0, MAX.types),
+    tcgId: isTcgId(tcgId) ? tcgId : null,
     collection: collection !== false,
     excluded: excluded === true,
     // null and undefined are both "nobody has said". Anything else that is not
@@ -362,6 +391,12 @@ export function validateCardDraft(body: unknown): CardValidation {
   if (!draft.set) return { kind: "invalid", error: "A card needs a set." };
   if (finish !== null && finish !== undefined && !isFinish(finish)) {
     return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
+  }
+  // Told rather than blanked, unlike foilPattern: a foil nobody named costs
+  // nothing, and a card id nobody can parse costs a Japanese card its picture,
+  // its rarity and its price with no sign that anything went wrong.
+  if (tcgId !== null && tcgId !== undefined && !isTcgId(tcgId)) {
+    return { kind: "invalid", error: "tcgId must be a catalogue card id, like sv03-125." };
   }
   if (draft.name.length > MAX.name) return { kind: "invalid", error: "That name is too long." };
   if (draft.number.length > MAX.number)
@@ -421,6 +456,7 @@ export function rowFromDraft(
     rarity: draft.rarity || null,
     gen: draft.gen || null,
     types: draft.types,
+    tcgId: draft.tcgId,
     owned: draft.collection,
     excluded: draft.excluded,
     finish: draft.finish,

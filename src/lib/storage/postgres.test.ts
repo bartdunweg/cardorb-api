@@ -262,6 +262,7 @@ const draft = (over: Partial<CardDraft> = {}): CardDraft => ({
   rarity: "",
   gen: "",
   types: [],
+  tcgId: null,
   collection: true,
   excluded: false,
   finish: null,

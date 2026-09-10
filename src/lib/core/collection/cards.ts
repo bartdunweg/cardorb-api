@@ -41,6 +41,14 @@ import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
 import {
+  cataloguesFor,
+  languageCard,
+  languageSet,
+  setIdOf,
+  type LanguageCard,
+} from "../catalogue/tcgdex-language";
+import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
+import {
   type CollectionRow,
   type Finish,
   type FoilPattern,
@@ -222,6 +230,16 @@ export type CardSet = {
    * changing it changes what a card is.
    */
   name: string;
+  /**
+   * Which catalogue the cards in it came from, or null for the English one.
+   *
+   * The one thing `name` cannot say. A collector who holds Black Bolt in both
+   * English and Japanese has two sets here, both called Black Bolt, and this is
+   * what tells them apart — a Japanese set has no English name of the
+   * catalogue's own, so its `title` is either the Japanese one or the same
+   * string again.
+   */
+  language: BrowseLanguage | null;
   /**
    * The same set, as the catalogues name it, for anywhere it is read rather
    * than matched.
@@ -574,11 +592,65 @@ const OFFLINE_CATALOGUE: SetCatalogue = {
   prices: {},
 };
 
-/** What a row says about which card it is. With the set name, all the catalogue is asked. */
-export type CardIdentity = { number: string; name: string };
+/**
+ * What a row says about which card it is. With the set name, all the catalogue
+ * is asked.
+ *
+ * `card` is the second address, and it is only ever set for the four languages
+ * that have a catalogue of their own: a Japanese set has no English name, so a
+ * number within a set found by English name finds nothing at all. See
+ * catalogueAddress() below and tcgdex-language.ts.
+ */
+export type CardIdentity = {
+  number: string;
+  name: string;
+  card?: CatalogueAddress;
+};
 
-/** One identity as the facts map keys it. A NUL cannot come out of a form, so it cannot collide. */
-export const identityKey = ({ number, name }: CardIdentity): string => `${number}\u0000${name}`;
+/**
+ * One identity as the facts map keys it. A NUL cannot come out of a form, so it
+ * cannot collide.
+ *
+ * An English identity keys exactly as it always did — two segments, the same
+ * bytes — which is what keeps the question asked about the 1,955 rows that
+ * exist today the question that was asked yesterday. A card with a catalogue of
+ * its own adds two more segments, so a Japanese card and an English one at the
+ * same number of a set with the same name are two questions rather than one.
+ */
+export const identityKey = ({ number, name, card }: CardIdentity): string =>
+  card
+    ? `${number}\u0000${name}\u0000${card.language}\u0000${card.tcgId}`
+    : `${number}\u0000${name}`;
+
+/** Which catalogue a card lives in, where it is not the English one, and its id there. */
+export type CatalogueAddress = { language: Language; tcgId: string };
+
+/**
+ * The address of a row's card, or null for the English catalogue.
+ *
+ * Both halves are needed and neither is enough on its own. The language cannot
+ * find the card — the Japanese catalogue is not searchable by an English set
+ * name, and the English name the shelf shows a Japanese set under is ours
+ * rather than the catalogue's. The id does not say which catalogue, because the
+ * Chinese and Korean ones print the Japanese sets under the same ids. A row
+ * that carries only one of the two resolves the English way, which is what
+ * every row in this collection does today.
+ */
+export function catalogueAddress(
+  row: Pick<CollectionRow, "language" | "tcgId">,
+): CatalogueAddress | null {
+  if (!row.language || !row.tcgId) return null;
+  return cataloguesFor(row.language).length ? { language: row.language, tcgId: row.tcgId } : null;
+}
+
+/** A row as the facts map asks about it: the one place the two addresses are put together. */
+export const identityOf = (row: CollectionRow): CardIdentity => {
+  const card = catalogueAddress(row);
+  return card
+    ? { number: row.number, name: row.name, card }
+    : { number: row.number, name: row.name };
+};
+
 /**
  * The identities of a set's rows, each once, in one order. What the facts of a
  * set are a function of, and so what a cache may key them on: two rows of the
@@ -587,7 +659,7 @@ export const identityKey = ({ number, name }: CardIdentity): string => `${number
 export function setIdentities(rows: CollectionRow[]): CardIdentity[] {
   const seen = new Map<string, CardIdentity>();
   for (const row of rows) {
-    const identity = { number: row.number, name: row.name };
+    const identity = identityOf(row);
     seen.set(identityKey(identity), identity);
   }
   return [...seen.keys()].sort().map((key) => seen.get(key)!);
@@ -612,6 +684,22 @@ export type CardFacts = {
   /** TCGplayer's dollars as TCGdex relays them, where the card was fetched there: the blend's fallback. */
   usd: UsdPrice | null;
   priceHolo: Price | null;
+  /**
+   * TCGdex's word for how rare this printing is, from a catalogue that is not
+   * the English one — and null on every English card, always.
+   *
+   * The English path never fills this and must not start: rarity has been the
+   * row's own column since the catalogue backfill, and a second source for it
+   * is the drift .claude/rules/catalogue-and-collection.md is written against.
+   * The other catalogues do not publish it on a set's card list at all, so the
+   * shelf a Japanese card is added from cannot send one — and the per-card
+   * request this path already makes for the price carries it, for free. Null
+   * here leaves the row's own rarity standing, which is the same answer an
+   * English card gives.
+   */
+  rarity: string | null;
+  /** Which catalogue answered, or null for the English one. Kept so the blend can skip these. */
+  catalogue: BrowseLanguage | null;
 };
 
 /** A set as the catalogue knows it, and the facts of each printing asked about. */
@@ -632,19 +720,100 @@ export type FactsSource = (setName: string, identities: CardIdentity[]) => Promi
 export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offline">;
 
 /**
+ * One card from a catalogue that is not the English one, as CardFacts.
+ *
+ * Null where that catalogue has never heard of the id — which is the one case
+ * that must not be an error: the row says it is a Japanese copy and carries an
+ * English id, or an id that was mistyped, and the honest answer is to let it
+ * fall back to the English path below rather than to show nothing.
+ */
+function factsOfLanguageCard(
+  identity: CardIdentity,
+  card: LanguageCard,
+  prices: boolean,
+): CardFacts {
+  return {
+    // The same two addresses the English path builds, off the base the
+    // catalogue hands over: low for the grid, high for the slider past 180px.
+    image: card.image ? localise(`${card.image}/low.webp`) : null,
+    imageHigh: card.image ? localise(`${card.image}/high.webp`) : null,
+    tcgId: card.id,
+    matchedName: card.name || null,
+    number: card.number || identity.number,
+    // Cardmarket's own figure for this exact printing, through the same
+    // priceOf() the English path uses, so "no price" is a null on both — the
+    // distinction the whole value chart is built on. Japanese cards mostly
+    // carry a Cardmarket product; Chinese ones almost never do, and those read
+    // as unpriced rather than as worth nothing.
+    price: prices ? card.price : null,
+    priceHolo: prices ? card.holo : null,
+    // No second market: pokemontcg.io indexes the English game only, so there
+    // is nothing to blend and nothing to look one up by.
+    usd: null,
+    rarity: card.rarity,
+    catalogue: card.catalogue,
+  };
+}
+
+/**
  * The catalogue half of a set: which card each printing is, its scan, and what
  * it is worth. A pure function of the set name and the identities, and the
  * whole of what a rebuild used to pay for — one to three lookups per card the
  * set catalogue does not place, and one TCGdex request per card the price
  * guide does not know. Twenty seconds for this collection, paid again on every
  * write until the caller put a day-long cache in front of it (collection.ts).
+ *
+ * ── Two paths, and the first one is untouched ──────────────────────────────
+ *
+ * Everything below the language block is what it always was: the set catalogue
+ * found by English name, every printing matched by number within it, the
+ * Limitless and pokemontcg.io fallbacks, one price request per card the guide
+ * does not know. A set with no card of its own catalogue never enters the new
+ * code and never pays a request for it.
+ *
+ * The second path is for a row that names a catalogue of its own — a Japanese,
+ * Korean or Chinese card, with the id it has there. It does not match anything:
+ * the id *is* the match, so there is no set to resolve by name, no number to
+ * fold, no name to check, and none of the three artwork fallbacks (all English).
+ * One request per card answers the picture, the rarity and the price at once.
+ *
+ * A row whose id that catalogue does not have joins the English identities
+ * afterwards and is resolved the old way. That is the whole of what happens
+ * when somebody marks an English row as a Japanese copy: it costs one 404 and
+ * then behaves exactly as it did before.
  */
 export async function resolveSetFacts(
   setName: string,
   identities: CardIdentity[],
   { prices = true, priceSource = pricesFor, offline = false }: ResolveOptions = {},
 ): Promise<SetFacts> {
-  const cat = offline ? OFFLINE_CATALOGUE : await setCatalogue(setName);
+  // Offline is the rows and nothing else, so a row with a catalogue of its own
+  // takes the same empty answer every other row takes rather than a request.
+  const addressed = offline ? [] : identities.filter((i) => i.card);
+  const foreign: Record<string, CardFacts> = {};
+  const unfound: CardIdentity[] = [];
+  let answered: LanguageCard | null = null;
+  if (addressed.length) {
+    // Eight at a time, as the English map below runs: one request each, and
+    // json() has cached every one of them for a day for everybody.
+    const found = await mapLimit(addressed, 8, async (identity) => ({
+      identity,
+      card: await languageCard(cataloguesFor(identity.card!.language), identity.card!.tcgId),
+    }));
+    for (const { identity, card } of found) {
+      if (!card) unfound.push(identity);
+      else {
+        foreign[identityKey(identity)] = factsOfLanguageCard(identity, card, prices);
+        answered ??= card;
+      }
+    }
+  }
+  const english = offline ? identities : [...identities.filter((i) => !i.card), ...unfound];
+
+  // Not asked for at all where nothing needs it: a set held only in Japanese
+  // would otherwise resolve an English set by a name that is a translation of
+  // ours, and wear its logo, its date and its card count.
+  const cat = offline || english.length === 0 ? OFFLINE_CATALOGUE : await setCatalogue(setName);
   const { assetBase, code, setHasScans } = cat;
 
   // The fallback is one to three HEAD requests per card, so on a set TCGdex
@@ -659,7 +828,7 @@ export async function resolveSetFacts(
   // Eight at a time, as the rows were walked before this was a function of
   // identities. The set catalogue is one cached read; the fallbacks are what
   // the limit is for.
-  const resolved = await mapLimit(identities, 8, async (identity) => {
+  const resolved = await mapLimit(english, 8, async (identity) => {
     const { name, number } = identity;
     const match = numberForms(number)
       .map((form) => cat.byNumber[form.toLowerCase()])
@@ -766,16 +935,48 @@ export async function resolveSetFacts(
       price: priceOfId(r.tcgId),
       usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
       priceHolo: holoOfId(r.tcgId),
+      // Always null on this path. See CardFacts.rarity: the row's own column is
+      // the one source for an English card's rarity and is to stay so.
+      rarity: null,
+      catalogue: null,
     };
   }
+  // After the English cards, so an entry keyed the same way cannot be
+  // overwritten by one — it cannot be, the keys differ by construction, and
+  // this order says which would win if that ever stopped being true.
+  Object.assign(cards, foreign);
+
+  // The heading over a set nobody holds an English card of. Its own catalogue
+  // is the only one that knows the set at all, and even it publishes no logo
+  // for these, so the tile draws the name — as an unpictured English promo does.
+  const own = answered && english.length === 0 ? await ownSetFacts(answered) : null;
 
   return {
-    title: cat.officialName,
+    title: own?.name ?? cat.officialName,
     abbreviation: cat.code,
     logo: cat.logo,
-    releaseDate: cat.releaseDate,
-    total: cat.total,
+    releaseDate: own?.releaseDate ?? cat.releaseDate,
+    total: own?.total ?? cat.total,
     cards,
+  };
+}
+
+/**
+ * The set behind a card that came from its own catalogue: one request, for the
+ * release date.
+ *
+ * The card's record already names and counts its set, so this is asked for the
+ * date alone — which is what sorts the collection newest set first, and without
+ * it every Japanese set would sort last on an empty string. Null on anything
+ * short of an answer; the set then reads under the name its owner typed.
+ */
+async function ownSetFacts(card: LanguageCard) {
+  const setId = card.setId ?? setIdOf(card.id);
+  const set = setId ? await languageSet(card.catalogue, setId) : null;
+  return {
+    name: set?.name ?? card.setName,
+    releaseDate: set?.releaseDate ?? null,
+    total: set?.total ?? null,
   };
 }
 
@@ -791,15 +992,35 @@ export async function buildCollection(
   // allow, so across a whole grid they would be a wall of blocked images rather
   // than the one that was picked. TCGdex and Limitless are both allowed (see
   // next.config.ts).
-  const grouped = new Map<string, CollectionRow[]>();
+  /**
+   * By set name, and by which catalogue the cards in it come from.
+   *
+   * The second half is new and it is not a refinement. A Japanese set and an
+   * English one are routinely filed under the same name — the shelf shows
+   * トリプレットビート as "Triplet Beat" and ブラックボルト as "Black Bolt",
+   * and both of those are real English sets too — and one group is resolved
+   * once, against one catalogue. Grouped by name alone, a binder holding both
+   * would ask the English catalogue about the Japanese cards or the other way
+   * round, and every card of the losing half would come back with the other
+   * one's picture and price.
+   *
+   * The row's own language, not the catalogue that ends up answering: grouping
+   * has to be a fact about the row, decidable without a request.
+   */
+  const grouped = new Map<
+    string,
+    { setName: string; language: BrowseLanguage | null; rows: CollectionRow[] }
+  >();
   for (const row of rows) {
     // The same two guards as ever: a row with no set cannot be placed and a row
     // with no name cannot be drawn. Every adapter applies them when it makes
     // the row, so this is the floor rather than the check.
     if (!row.setName || !row.name) continue;
-    const bucket = grouped.get(row.setName) ?? [];
-    bucket.push(row);
-    grouped.set(row.setName, bucket);
+    const language = catalogueAddress(row) ? (row.language as BrowseLanguage) : null;
+    const key = language ? `${language}\u0000${row.setName}` : row.setName;
+    const bucket = grouped.get(key) ?? { setName: row.setName, language, rows: [] };
+    bucket.rows.push(row);
+    grouped.set(key, bucket);
   }
   if (!grouped.size) return [];
 
@@ -814,144 +1035,161 @@ export async function buildCollection(
   // facts are one cached read on every request but the first, and fifty-two
   // reads three at a time is a second of waiting on nothing; six keeps a
   // cold day's fetches well under the refusal and halves the warm wait.
-  const out = await mapLimit([...grouped.entries()], 6, async ([setName, setRows]) => {
-    const set = await facts(setName, setIdentities(setRows));
+  const out = await mapLimit(
+    [...grouped.values()],
+    6,
+    async ({ setName, language, rows: setRows }) => {
+      const set = await facts(setName, setIdentities(setRows));
 
-    // One entry per printing first, then folded together below: the facts of
-    // the card from the catalogue, the facts of the copy from the row.
-    const printings = setRows.map((row) => {
-      const { name, number } = row;
-      const card = set.cards[identityKey(row)];
-      return {
-        key: `${setName}-${number || name}`,
-        name,
-        number,
-        // Joined back into one string, which is what OwnedCard.type has always
-        // been and what CardsView, FilterOptions and cards-stats.ts all read.
-        // The row carries a list because a multi-select is a list; widening the
-        // card to match is a separate change with its own blast radius.
-        type: row.types.join(", ") || null,
-        gen: row.gen,
-        image: card?.image ?? null,
-        imageHigh: card?.imageHigh ?? null,
-        imageSize: measure(card?.image ?? null),
-        // TCGdex' name where the row matched one, the row's own where it did
-        // not. Which Pokémon a card shows is a fact about the card rather than
-        // about how it was typed, and the Dex is the one place a misspelling
-        // was silently destructive: "Tyrantirar" is not a species, so the card
-        // simply was not filed anywhere and Tyranitar read as uncaught. The
-        // scans and the prices survive a typo now (see sameCard); this is the
-        // rest of that.
-        speciesId: speciesOf(card?.matchedName ?? name),
-        tcgId: card?.tcgId ?? null,
-        price: card?.price ?? null,
-        priceHolo: card?.priceHolo ?? null,
-        rarity: row.rarity,
-        owned: row.owned,
-        // The row's own id and inventory facts, carried through untouched so
-        // the merge below can build one Variant per row. See Variant's own
-        // comment for why these travel this far.
-        id: row.id,
-        finish: row.finish,
-        foilPattern: row.foilPattern,
-        quantity: row.quantity,
-        condition: row.condition,
-        grade: row.grade,
-        language: row.language,
-        purchasePrice: row.purchasePrice,
-        purchaseDate: row.purchaseDate,
-        notes: row.notes,
-        isFavorite: row.isFavorite,
-        acquiredAt: row.acquiredAt,
-        excluded: row.excluded,
-        collectionId: row.collectionId,
-      };
-    });
-
-    // Holding a card normally and again as a reverse holo is one card with two
-    // printings, not two cards. 317 of them in this collection, and shown twice
-    // they read as a duplicate rather than as something worth knowing. The
-    // rarities become tags under a single scan.
-    //
-    // Deduped on the row's own id rather than on (rarity, owned): two rows
-    // sharing both used to collapse into one Variant, silently dropping the
-    // second row's own acquired_at and, now, its own quantity/condition/price/
-    // notes — exactly the facts the per-variant inventory fields exist to
-    // keep separate. An id is unique per row by construction, so this is
-    // strictly more precise, not just differently precise.
-    const merged = new Map<string, OwnedCard>();
-    for (const p of printings) {
-      const existing = merged.get(p.key);
-      const variant: Variant = {
-        id: p.id,
-        rarity: p.rarity,
-        owned: p.owned,
-        finish: p.finish,
-        foilPattern: p.foilPattern,
-        quantity: p.quantity,
-        condition: p.condition,
-        grade: p.grade,
-        language: p.language,
-        purchasePrice: p.purchasePrice,
-        purchaseDate: p.purchaseDate,
-        notes: p.notes,
-        isFavorite: p.isFavorite,
-        acquiredAt: p.acquiredAt,
-        excluded: p.excluded,
-        collectionId: p.collectionId,
-      };
-      if (existing) {
-        if (variant.id === null || !existing.variants.some((v) => v.id === variant.id))
-          existing.variants.push(variant);
-        existing.owned ||= p.owned;
-        // The first row of a card may be the one with no artwork, and the same
-        // goes for the price: a card held twice is one card, and whichever of
-        // its rows TCGdex matched is the one that knows what it is worth.
-        existing.image ??= p.image;
-        existing.price ??= p.price;
-        existing.priceHolo ??= p.priceHolo;
-        existing.tcgId ??= p.tcgId;
-        continue;
-      }
-      merged.set(p.key, {
-        key: p.key,
-        name: p.name,
-        number: p.number,
-        type: p.type,
-        gen: p.gen,
-        image: p.image,
-        imageHigh: p.imageHigh,
-        imageSize: p.imageSize,
-        speciesId: p.speciesId,
-        price: p.price,
-        priceHolo: p.priceHolo,
-        tcgId: p.tcgId,
-        variants: [variant],
-        owned: p.owned,
+      // One entry per printing first, then folded together below: the facts of
+      // the card from the catalogue, the facts of the copy from the row.
+      const printings = setRows.map((row) => {
+        const { name, number } = row;
+        const card = set.cards[identityKey(identityOf(row))];
+        return {
+          // Prefixed by the catalogue where there is one, and by nothing at all
+          // where there is not — so every key in this collection today is the key
+          // it was yesterday. Without the prefix, a Japanese and an English card
+          // at the same number of two sets spelled the same are one key in a flat
+          // list, which is a duplicate id in whatever draws it.
+          key: language
+            ? `${language}:${setName}-${number || name}`
+            : `${setName}-${number || name}`,
+          name,
+          number,
+          // Joined back into one string, which is what OwnedCard.type has always
+          // been and what CardsView, FilterOptions and cards-stats.ts all read.
+          // The row carries a list because a multi-select is a list; widening the
+          // card to match is a separate change with its own blast radius.
+          type: row.types.join(", ") || null,
+          gen: row.gen,
+          image: card?.image ?? null,
+          imageHigh: card?.imageHigh ?? null,
+          imageSize: measure(card?.image ?? null),
+          // TCGdex' name where the row matched one, the row's own where it did
+          // not. Which Pokémon a card shows is a fact about the card rather than
+          // about how it was typed, and the Dex is the one place a misspelling
+          // was silently destructive: "Tyrantirar" is not a species, so the card
+          // simply was not filed anywhere and Tyranitar read as uncaught. The
+          // scans and the prices survive a typo now (see sameCard); this is the
+          // rest of that.
+          speciesId: speciesOf(card?.matchedName ?? name),
+          tcgId: card?.tcgId ?? null,
+          price: card?.price ?? null,
+          priceHolo: card?.priceHolo ?? null,
+          // The catalogue's word where it has one, the row's where it does not.
+          // Only a card from its own catalogue ever carries the first — the
+          // shelves those are added from publish no rarity, so a row written from
+          // one has nothing in this column, and the per-card request the price
+          // already costs carries the answer. See CardFacts.rarity.
+          rarity: card?.rarity ?? row.rarity,
+          owned: row.owned,
+          // The row's own id and inventory facts, carried through untouched so
+          // the merge below can build one Variant per row. See Variant's own
+          // comment for why these travel this far.
+          id: row.id,
+          finish: row.finish,
+          foilPattern: row.foilPattern,
+          quantity: row.quantity,
+          condition: row.condition,
+          grade: row.grade,
+          language: row.language,
+          purchasePrice: row.purchasePrice,
+          purchaseDate: row.purchaseDate,
+          notes: row.notes,
+          isFavorite: row.isFavorite,
+          acquiredAt: row.acquiredAt,
+          excluded: row.excluded,
+          collectionId: row.collectionId,
+        };
       });
-    }
-    const cards = [...merged.values()];
 
-    return {
-      name: setName,
-      title: set.title ?? setName,
-      abbreviation: set.abbreviation,
-      logo: set.logo,
-      logoSize: measure(set.logo),
-      releaseDate: set.releaseDate,
-      total: set.total,
-      // Ascending by number, which is the order the cards sit in a binder. The
-      // gallery cards are lettered (TG01), so they sort to the front on a
-      // numeric parse of 0; comparing the raw string keeps them together at
-      // the end where a collector expects them.
-      cards: cards.sort((a, b) => {
-        const na = parseInt(a.number, 10);
-        const nb = parseInt(b.number, 10);
-        if (Number.isNaN(na) || Number.isNaN(nb)) return a.number.localeCompare(b.number, LOCALE);
-        return na - nb;
-      }),
-    };
-  });
+      // Holding a card normally and again as a reverse holo is one card with two
+      // printings, not two cards. 317 of them in this collection, and shown twice
+      // they read as a duplicate rather than as something worth knowing. The
+      // rarities become tags under a single scan.
+      //
+      // Deduped on the row's own id rather than on (rarity, owned): two rows
+      // sharing both used to collapse into one Variant, silently dropping the
+      // second row's own acquired_at and, now, its own quantity/condition/price/
+      // notes — exactly the facts the per-variant inventory fields exist to
+      // keep separate. An id is unique per row by construction, so this is
+      // strictly more precise, not just differently precise.
+      const merged = new Map<string, OwnedCard>();
+      for (const p of printings) {
+        const existing = merged.get(p.key);
+        const variant: Variant = {
+          id: p.id,
+          rarity: p.rarity,
+          owned: p.owned,
+          finish: p.finish,
+          foilPattern: p.foilPattern,
+          quantity: p.quantity,
+          condition: p.condition,
+          grade: p.grade,
+          language: p.language,
+          purchasePrice: p.purchasePrice,
+          purchaseDate: p.purchaseDate,
+          notes: p.notes,
+          isFavorite: p.isFavorite,
+          acquiredAt: p.acquiredAt,
+          excluded: p.excluded,
+          collectionId: p.collectionId,
+        };
+        if (existing) {
+          if (variant.id === null || !existing.variants.some((v) => v.id === variant.id))
+            existing.variants.push(variant);
+          existing.owned ||= p.owned;
+          // The first row of a card may be the one with no artwork, and the same
+          // goes for the price: a card held twice is one card, and whichever of
+          // its rows TCGdex matched is the one that knows what it is worth.
+          existing.image ??= p.image;
+          existing.price ??= p.price;
+          existing.priceHolo ??= p.priceHolo;
+          existing.tcgId ??= p.tcgId;
+          continue;
+        }
+        merged.set(p.key, {
+          key: p.key,
+          name: p.name,
+          number: p.number,
+          type: p.type,
+          gen: p.gen,
+          image: p.image,
+          imageHigh: p.imageHigh,
+          imageSize: p.imageSize,
+          speciesId: p.speciesId,
+          price: p.price,
+          priceHolo: p.priceHolo,
+          tcgId: p.tcgId,
+          variants: [variant],
+          owned: p.owned,
+        });
+      }
+      const cards = [...merged.values()];
+
+      return {
+        name: setName,
+        language,
+        title: set.title ?? setName,
+        abbreviation: set.abbreviation,
+        logo: set.logo,
+        logoSize: measure(set.logo),
+        releaseDate: set.releaseDate,
+        total: set.total,
+        // Ascending by number, which is the order the cards sit in a binder. The
+        // gallery cards are lettered (TG01), so they sort to the front on a
+        // numeric parse of 0; comparing the raw string keeps them together at
+        // the end where a collector expects them.
+        cards: cards.sort((a, b) => {
+          const na = parseInt(a.number, 10);
+          const nb = parseInt(b.number, 10);
+          if (Number.isNaN(na) || Number.isNaN(nb)) return a.number.localeCompare(b.number, LOCALE);
+          return na - nb;
+        }),
+      };
+    },
+  );
 
   // Newest set first. A set TCGdex has never heard of has no date to sort on
   // and goes last rather than jumping to the front on an empty string.
@@ -992,7 +1230,10 @@ export type CardDetail = {
  * a TCGdex that was down into "No such card." — a 404 a CDN would keep for an
  * hour. The route answers that with a 503 nothing caches.
  */
-export async function getCardDetail(id: string): Promise<CardDetail | null> {
+export async function getCardDetail(
+  id: string,
+  language: BrowseLanguage | null = null,
+): Promise<CardDetail | null> {
   let card;
   try {
     // Encoded, not interpolated raw. This id reaches here straight off a URL
@@ -1003,8 +1244,11 @@ export async function getCardDetail(id: string): Promise<CardDetail | null> {
     // outbound request and the next person to copy this line may not have a
     // fixed host.
     card = (await json(
-      `https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(id)}`,
-      `card ${id}`,
+      // The catalogue the caller named, English by default. A Japanese id is a
+      // 404 in the English catalogue and the other way round, so this is the
+      // whole of what the language parameter does: pick which one is asked.
+      `https://api.tcgdex.net/v2/${language ?? "en"}/cards/${encodeURIComponent(id)}`,
+      `${language ?? "en"} card ${id}`,
     )) as {
       id?: string;
       name?: string;

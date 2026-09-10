@@ -56,6 +56,7 @@ const card = (name: string, variants: Variant[], over: Partial<OwnedCard> = {}):
 });
 
 const set = (name: string, cards: OwnedCard[]): CardSet => ({
+  language: null,
   name,
   title: name,
   abbreviation: null,

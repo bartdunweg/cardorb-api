@@ -43,6 +43,7 @@ type CardRecord = {
   rarity: string | null;
   gen: string | null;
   types: string[] | null;
+  tcg_id: string | null;
   owned: boolean;
   excluded: boolean;
   acquired_at: string;
@@ -60,7 +61,7 @@ type CardRecord = {
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,owned,excluded,acquired_at,finish,foil_pattern,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
+  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -90,6 +91,11 @@ const toRow = (r: CardRecord): CollectionRow => ({
   rarity: r.rarity,
   gen: r.gen,
   types: r.types ?? [],
+  // Read at last. The column has been on the table since August and 1,946 of
+  // 1,955 rows carry one; nothing above this line has ever asked for it. It is
+  // how a card from a catalogue that is not the English one is found again —
+  // see resolveSetFacts().
+  tcgId: r.tcg_id ?? null,
   owned: r.owned,
   excluded: r.excluded,
   acquiredAt: r.acquired_at ?? null,
@@ -379,6 +385,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       rarity: draft.rarity || null,
       gen: draft.gen || null,
       types: draft.types,
+      tcg_id: draft.tcgId,
       owned: draft.collection,
       excluded: draft.excluded,
       finish: draft.finish,
@@ -522,6 +529,7 @@ export async function createRows(
       rarity: r.rarity,
       gen: r.gen,
       types: r.types,
+      tcg_id: r.tcgId,
       owned: r.owned,
       excluded: r.excluded,
       // What the copy is, where the file said. These used to be left out, so an
@@ -1046,6 +1054,9 @@ export async function copyRow(
       rarity: src.rarity,
       gen: src.gen,
       types: src.types,
+      // A copy keeps its card, and for a Japanese one this *is* the card: drop
+      // it and the second copy resolves against nothing at all.
+      tcg_id: src.tcgId,
       owned: src.owned,
       excluded: src.excluded,
       finish: src.finish,
