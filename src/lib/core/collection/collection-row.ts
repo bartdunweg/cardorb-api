@@ -31,9 +31,13 @@ export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-
 /**
  * The finishes that are a reverse holo with a pattern on it — the Poké Ball and Master Ball
  * printings of 151 and Prismatic Evolutions. They read the foil price fields as a reverse does.
+ *
+ * Defined in ../price-basis.mjs and re-exported here, where callers look for it. It is a rule
+ * about which price series a copy reads, and the one other thing that has to obey it —
+ * scripts/snapshot-collection-value.mjs — runs on plain node and cannot import this file. It
+ * kept its own copy of the rule and the copy drifted; see the function's own comment.
  */
-export const isReverseFinish = (f: string | null | undefined): boolean =>
-  f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
+export { isReverseFinish } from "../price-basis.mjs";
 
 /**
  * What the foil on a copy looks like, which is not what it is worth.

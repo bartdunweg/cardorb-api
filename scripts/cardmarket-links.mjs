@@ -39,9 +39,15 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-/** tcgId -> Cardmarket idProduct, written by scripts/snapshot-collection-value.mjs. */
-const IDS = join(ROOT, "lib", "core", "cardmarket-ids.generated.json");
-const OUT = join(ROOT, "lib", "core", "cardmarket-links.generated.json");
+/**
+ * tcgId -> Cardmarket idProduct, written by scripts/snapshot-collection-value.mjs.
+ *
+ * Under src/, where lib/core lives; ROOT is the repository root because .env and docs/ are
+ * there. Without the segment this read a path that does not exist and the script died on
+ * its first line of work.
+ */
+const IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.generated.json");
+const OUT = join(ROOT, "src", "lib", "core", "cardmarket-links.generated.json");
 
 /** Every Pokémon single they sell, rebuilt nightly. Public, no login. 13MB. */
 const CATALOGUE =

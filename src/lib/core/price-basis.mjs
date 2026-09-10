@@ -54,6 +54,29 @@ export const shownPrice = (p) => (p ? (p.nm?.mid ?? p.market ?? p.low) : null);
 export const num = (v) => (typeof v === "number" ? v : null);
 
 /**
+ * Which copies read the foil price series rather than the plain one.
+ *
+ * The reverse holo, and the Poké Ball and Master Ball printings of 151 and Prismatic
+ * Evolutions, which are a reverse holo with a pattern on it. Never the plain holo: on a
+ * holo-only card the `-holo` fields describe a different, thinner market at 0.47x the plain
+ * price. holoPriceOf() below is what those fields are.
+ *
+ * It lives here rather than beside FINISHES in collection/collection-row.ts, which now
+ * re-exports it, for the reason at the top of this file: the script that values a binder
+ * runs on plain node and cannot import a .ts file, so a rule kept over there gets copied
+ * over here by hand. It was. scripts/snapshot-collection-value.mjs carried its own
+ * `finish === "reverse-holo"`, so it valued a Poké Ball copy at the plain price while every
+ * other valuation path valued it at the foil one — and where Cardmarket publishes a foil
+ * figure at all, the foil runs at a median of twice the normal printing. Two definitions of
+ * a money rule is one definition and one drift.
+ *
+ * @param {string | null | undefined} f
+ * @returns {boolean}
+ */
+export const isReverseFinish = (f) =>
+  f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
+
+/**
  * How far trend may run ahead of the month's average before it is disbelieved.
  *
  * Cardmarket's trend is drawn from recent sales and a single absurd one drags it

@@ -54,8 +54,14 @@ import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-/** tcgId -> which printings exist. Cached: it costs one request per card and never moves. */
-const CACHE = join(ROOT, "lib", "core", "card-variants.generated.json");
+/**
+ * tcgId -> which printings exist. Cached: it costs one request per card and never moves.
+ *
+ * Under src/, where lib/core lives; ROOT stays the repository root for the .env read below
+ * and for WORKLIST. Without the segment the cache was never found and never written, so
+ * every run paid one TCGdex request per card again.
+ */
+const CACHE = join(ROOT, "src", "lib", "core", "card-variants.generated.json");
 const WORKLIST = join(ROOT, "docs", "finish-backfill-unresolved.md");
 
 for (const file of [".env.local", ".env"]) {
