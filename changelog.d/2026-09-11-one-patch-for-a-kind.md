@@ -1,0 +1,1 @@
+- Added `PATCH /v1/collection/items`: the same inventory change on up to a hundred rows at once, `ids` beside the fields `PATCH /v1/collection/items/{id}` already takes. Four identical copies are four rows in the store, and saying "these are Near Mint" about them was four round trips from the web app, each folding the rows on its own; it is one statement now, folded once.

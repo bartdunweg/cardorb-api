@@ -528,6 +528,30 @@ export type CardPatch = Partial<{
   acquiredAt: string;
 }>;
 
+/** How many rows one PATCH may name. A kind is rarely more than a handful of rows; a hundred is a script. */
+export const MAX_ITEMS_PER_PATCH = 100;
+
+export type ItemIdsValidation = { kind: "invalid"; error: string } | { kind: "ok"; ids: string[] };
+
+/**
+ * The `ids` of a PATCH on many rows: a list of one to MAX_ITEMS_PER_PATCH row ids, each a
+ * UUID, none twice. Checked by hand like the patch beside it.
+ */
+export function validateItemIds(value: unknown): ItemIdsValidation {
+  if (!Array.isArray(value) || value.length === 0)
+    return { kind: "invalid", error: "ids must be a list of at least one row id." };
+  if (value.length > MAX_ITEMS_PER_PATCH)
+    return { kind: "invalid", error: `ids may name at most ${MAX_ITEMS_PER_PATCH} rows.` };
+  const ids: string[] = [];
+  for (const id of value) {
+    if (typeof id !== "string" || !UUID.test(id))
+      return { kind: "invalid", error: "Every id must be a row id." };
+    if (ids.includes(id)) return { kind: "invalid", error: "ids names a row twice." };
+    ids.push(id);
+  }
+  return { kind: "ok", ids };
+}
+
 export type CardPatchValidation =
   { kind: "invalid"; error: string } | { kind: "ok"; patch: CardPatch };
 

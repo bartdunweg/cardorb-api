@@ -133,6 +133,18 @@ export async function updateRow(
   return postgres.updateRow(db, userId, id, patch);
 }
 
+/** The same patch on many of the caller's rows at once; the rows as they are now, one each, the unmatched ids silent. */
+export async function updateRows(
+  userId: string,
+  ids: readonly string[],
+  patch: CardPatch,
+  token?: string,
+): Promise<CollectionRow[]> {
+  const db = await clientFor(token);
+  if (!db) throw new StoreNotConfigured();
+  return postgres.updateRows(db, userId, ids, patch);
+}
+
 /** Removes one card of the caller's and hands back the row it removed; null when none matched. */
 export async function deleteRow(
   userId: string,

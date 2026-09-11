@@ -505,12 +505,8 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
  * is what the route answers 404 with. `.single()` used to sit here and made
  * zero rows a PostgREST error the route read as the store failing.
  */
-export async function updateRow(
-  db: SupabaseClient,
-  userId: string,
-  id: string,
-  patch: CardPatch,
-): Promise<CollectionRow | null> {
+/** The columns a patch touches, and only those: a key left out of the patch is a column left alone. */
+function patchColumns(patch: CardPatch): Record<string, unknown> {
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if ("owned" in patch) row.owned = patch.owned;
   if ("excluded" in patch) row.excluded = patch.excluded;
@@ -526,10 +522,18 @@ export async function updateRow(
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
   if ("acquiredAt" in patch) row.acquired_at = patch.acquiredAt;
+  return row;
+}
 
+export async function updateRow(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+  patch: CardPatch,
+): Promise<CollectionRow | null> {
   const { data, error } = await db
     .from("cards")
-    .update(row)
+    .update(patchColumns(patch))
     .eq("id", id)
     .eq("user_id", userId)
     .select(COLUMNS)
@@ -540,6 +544,43 @@ export async function updateRow(
   // A patch to what makes a kind can make this row the same kind as another one held;
   // then they are one row, this one. A note or a price cannot, so nothing is asked.
   return KIND_KEYS.some((k) => k in patch) ? foldCard(db, userId, id) : toRow(data as CardRecord);
+}
+
+/**
+ * The same patch on many of the caller's rows, in one statement.
+ *
+ * Four identical copies are four rows, and "these are Near Mint" is said about all four; said
+ * row by row that was four round trips from the client, each folding on its own. Rows that
+ * are not there or not the caller's are simply not among the ids matched, the way RLS makes
+ * nothing of them; the caller sees what changed and nothing about the rest.
+ *
+ * A patch to what makes a kind is followed by one fold per row, in the order given: the first
+ * fold gathers the rows that have just become its kind into it, and a later one finds its row
+ * already gone and hands back nothing. What comes back is each surviving row once.
+ */
+export async function updateRows(
+  db: SupabaseClient,
+  userId: string,
+  ids: readonly string[],
+  patch: CardPatch,
+): Promise<CollectionRow[]> {
+  const { data, error } = await db
+    .from("cards")
+    .update(patchColumns(patch))
+    .in("id", ids)
+    .eq("user_id", userId)
+    .select(COLUMNS);
+
+  if (error) throw new Error(`Those cards could not be updated: ${error.message}`);
+  const records = (data ?? []) as CardRecord[];
+  if (!KIND_KEYS.some((k) => k in patch)) return records.map(toRow);
+
+  const rows: CollectionRow[] = [];
+  for (const record of records) {
+    const folded = await foldCard(db, userId, record.id);
+    if (folded) rows.push(folded);
+  }
+  return rows;
 }
 
 /** The fields that make one copy a different kind from another; `sameness` in items.ts compares the same. */
