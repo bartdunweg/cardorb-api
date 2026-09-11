@@ -67,6 +67,16 @@ beforeEach(() => {
 });
 
 describe("GET /api/v1/public/{username}/cards", () => {
+  it("says how many of a card the owner holds from the rows' quantities, which the public shape drops", async () => {
+    getPublicCollection.mockResolvedValue({
+      sets: [{ ...SETS[0], cards: [card("Pikachu", [{ ...variant("a"), quantity: 3 }, variant("w", false)])] }],
+      failed: false,
+    });
+    const body = await (await get()).json();
+    expect(body.cards[0].copies).toBe(3);
+    expect(body.copies).toBe(3);
+  });
+
   it("lists owned cards with a copy count and nothing private", async () => {
     const body = await (await get()).json();
     expect(body.total).toBe(1);

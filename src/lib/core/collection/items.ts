@@ -490,7 +490,8 @@ export function publicItems(sets: CardSet[], { newestFirst = false } = {}): Publ
   for (const set of sets) {
     for (const card of set.cards) {
       // Copies as a person counts them — a row's quantity, not the rows — the way every list
-      // counts since 2026-09-11: three of one card in one row is ×3 on the public page too.
+      // counts since 2026-09-11. The public shape carries no quantity (forPublic), so from it
+      // this is the rows, and the public cards route lays the true count over each item.
       let copies = 0;
       for (const v of card.variants) if (v.owned) copies += Math.max(0, v.quantity ?? 1);
       if (copies === 0) continue;
