@@ -243,10 +243,10 @@ async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
 export async function searchCards(
   input: string | SearchFilters,
   page: number = 1,
-): Promise<CatalogueMatch[]> {
+): Promise<{ cards: CatalogueMatch[]; total: number }> {
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
-  if (!params) return [];
+  if (!params) return { cards: [], total: 0 };
 
   const url = new URL(`${CATALOGUE}/cards`);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
@@ -280,5 +280,8 @@ export async function searchCards(
 
   const matched = quick?.words.length ? hits.filter((c) => matchesWords(c, quick.words)) : hits;
   const from = (Math.max(1, page) - 1) * MAX_RESULTS;
-  return withFacts(matched.slice(from, from + MAX_RESULTS));
+  /* `total` is what the window holds, so a screen can say "125 cards" above the twenty it
+     shows. A window filled to WINDOW means at least that many: the client reads 250 as "250 or
+     more", which is the honest thing a capped count can say. */
+  return { cards: await withFacts(matched.slice(from, from + MAX_RESULTS)), total: matched.length };
 }

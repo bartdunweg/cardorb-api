@@ -57,6 +57,15 @@ const load = async () => {
   return import("./tcgdex-search");
 };
 
+/** The hits alone: what most of these tests are about. `total` has its own test below. */
+const loadCards = async () => {
+  const { searchCards } = await load();
+  return {
+    searchCards: async (...args: Parameters<typeof searchCards>) =>
+      (await searchCards(...args)).cards,
+  };
+};
+
 const listCall = () => calls.find((c) => c.url.includes("/en/cards?"));
 const listParams = () => new URL(listCall()!.url).searchParams;
 
@@ -74,7 +83,7 @@ describe("searchCards", () => {
       list: [brief("pl4-1", "1", "Charizard", "https://assets.tcgdex.net/en/pl/pl4/1")],
       facts: { c0: { rarity: "Holo Rare", types: ["Fire"] } },
     });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     expect(await searchCards("char")).toEqual([
       {
@@ -94,7 +103,7 @@ describe("searchCards", () => {
 
   it("asks TCGdex's list for the name, cached briefly, and reads a window rather than a page", async () => {
     installFetch({ list: [] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards("charizard");
 
     const params = listParams();
@@ -111,7 +120,7 @@ describe("searchCards", () => {
         brief("sv03-151", "151", "Charizard"),
       ],
     });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     const hits = await searchCards("charizard 151");
     expect(hits.map((h) => h.id)).toEqual(["sv03.5-006", "sv03-151"]);
@@ -120,7 +129,7 @@ describe("searchCards", () => {
 
   it("turns a word that is an energy type into the type filter", async () => {
     installFetch({ list: [] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards("charizard fire");
 
     expect(listParams().get("name")).toBe("like:charizard");
@@ -129,7 +138,7 @@ describe("searchCards", () => {
 
   it("asks for a number when nothing typed could be a name", async () => {
     installFetch({ list: [] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards("151");
 
     expect(listParams().get("localId")).toBe("like:151");
@@ -138,7 +147,7 @@ describe("searchCards", () => {
 
   it("caps the number of words a query can grow to", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     // Six words are matched; the seventh, which nothing matches, is dropped.
     expect(await searchCards("charizard 1 arceus char ard zard nothing")).toHaveLength(1);
@@ -151,7 +160,7 @@ describe("searchCards", () => {
         { id: "pl4-2", name: "Charizard" },
       ],
     });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     expect(await searchCards("char")).toEqual([]);
   });
@@ -159,7 +168,7 @@ describe("searchCards", () => {
   it("leaves rarity and types empty when the facts cannot be read, rather than losing the hit", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard")], factsStatus: 500 });
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     const hit = (await searchCards("char"))[0]!;
     expect(hit.name).toBe("Charizard");
@@ -178,7 +187,7 @@ describe("searchCards", () => {
         return Response.json([brief("pl4-1", "1", "Charizard")]);
       }),
     );
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     const hit = (await searchCards("char"))[0]!;
     expect(hit.setName).toBe("pl4");
@@ -187,7 +196,7 @@ describe("searchCards", () => {
 
   it("reads the set index once for many searches", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards("char");
     await searchCards("chari");
 
@@ -197,14 +206,14 @@ describe("searchCards", () => {
   it("throws once the list cannot be read, rather than returning empty", async () => {
     installFetch({ listStatus: 500 });
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     await expect(searchCards("char")).rejects.toThrow();
   });
 
   it("targets each filter field precisely, AND'd by the host", async () => {
     installFetch({ list: [] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards({ name: "char", number: "4", set: "Base Set", type: "fire" });
 
     const params = listParams();
@@ -216,7 +225,7 @@ describe("searchCards", () => {
 
   it("only includes filter fields that were actually filled in", async () => {
     installFetch({ list: [] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards({ name: "char", number: "", set: "  ", type: "" });
 
     const params = listParams();
@@ -228,7 +237,7 @@ describe("searchCards", () => {
 
   it("returns no results and makes no request for empty filters", async () => {
     installFetch({ list: [] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     expect(await searchCards({})).toEqual([]);
     expect(await searchCards("   ")).toEqual([]);
@@ -240,7 +249,7 @@ describe("searchCards", () => {
       brief(`pl4-${i + 1}`, String(i + 1), "Charizard"),
     );
     installFetch({ list });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
 
     expect((await searchCards("char")).map((h) => h.number)).toEqual(
       list.slice(0, 20).map((c) => c.localId),
@@ -256,7 +265,7 @@ describe("searchCards", () => {
 
   it("asks for the facts of the page shown, in one query", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard"), brief("pl4-2", "2", "Charmeleon")] });
-    const { searchCards } = await load();
+    const { searchCards } = await loadCards();
     await searchCards("char");
 
     const facts = calls.filter((c) => c.body?.includes("card(id:"));
@@ -264,5 +273,19 @@ describe("searchCards", () => {
     const query = JSON.parse(facts[0]!.body!).query as string;
     expect(query).toContain('c0: card(id: "pl4-1")');
     expect(query).toContain('c1: card(id: "pl4-2")');
+  });
+
+  it("says how many the whole search matched, across every page", async () => {
+    const list = Array.from({ length: 25 }, (_, i) =>
+      brief(`pl4-${i + 1}`, String(i + 1), "Charizard"),
+    );
+    installFetch({ list });
+    const { searchCards } = await load();
+
+    const first = await searchCards("char");
+    expect(first.cards).toHaveLength(20);
+    expect(first.total).toBe(25);
+    expect((await searchCards("char", 2)).total).toBe(25);
+    expect((await searchCards({})).total).toBe(0);
   });
 });

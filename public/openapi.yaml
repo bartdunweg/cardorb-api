@@ -1234,9 +1234,10 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [cards]
+                required: [cards, total]
                 properties:
                   cards: { type: array, items: { $ref: "#/components/schemas/BrowseCard" } }
+                  total: { type: integer, description: "How many the whole search matched, across every page. At most 250, the window the search reads; that many means at least that many." }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }

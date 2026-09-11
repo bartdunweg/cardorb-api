@@ -1,0 +1,1 @@
+- `GET /v1/catalog/search` answers `total` beside `cards`: how many the whole search matched, so a client can say "125 cards" above the page it shows. At most the 250 the search reads, which then means "at least".
