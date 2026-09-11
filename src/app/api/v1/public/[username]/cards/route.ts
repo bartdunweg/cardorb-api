@@ -71,10 +71,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const starred = owner.favoritesPublic
     ? new Set(filterItems(flattenItems(sets), { owned: true, favorite: true }).map(sameCard))
     : new Set<string>();
+  // How many of each card the owner holds, off the private rows the way `starred` is: the
+  // public shape carries no quantity (forPublic, by design), so an item built from it could
+  // only count rows — 1,915 for 1,933 held, on 2026-09-11. The sum per card is what the page
+  // has always said under a card, and says nothing a row's condition or grade would.
+  const held = new Map<string, number>();
+  for (const it of filterItems(flattenItems(sets), { owned: true }))
+    held.set(sameCard(it), (held.get(sameCard(it)) ?? 0) + Math.max(0, it.quantity));
   // Newest first is built here, not sorted later: only these items still know their dates, and
   // the dates do not go out with them.
   const owned = publicItems(shown, { newestFirst: read.query.sort === "added" }).map((it) => ({
     ...it,
+    copies: held.get(sameCard(it)) ?? it.copies,
     favorite: starred.has(sameCard(it)),
   }));
   const all =
