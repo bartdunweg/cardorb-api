@@ -451,7 +451,7 @@ components:
 
     CatalogueSet:
       type: object
-      required: [id, name, series, releaseDate, total, printedTotal, logo, symbol]
+      required: [id, name, series, releaseDate, total, printedTotal, logo, symbol, cardsRecorded]
       properties:
         id: { type: string }
         name: { type: string }
@@ -462,6 +462,7 @@ components:
         logo: { type: [string, "null"] }
         symbol: { type: [string, "null"] }
         localName: { type: [string, "null"], description: "The set's name in its own language where `name` is a translation (a Japanese set); null for English." }
+        cardsRecorded: { type: boolean, description: "Whether the catalogue has recorded the set's cards, or only the set and its count. Always true for English; TCGdex lists many Japanese and most Korean sets with a count and no card yet." }
 
     CatalogueSetWithCounts:
       allOf:

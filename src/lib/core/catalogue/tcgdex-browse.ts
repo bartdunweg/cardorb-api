@@ -1,3 +1,7 @@
+import IDS_JA from "../cardmarket-ids.ja.generated.json";
+import IDS_KO from "../cardmarket-ids.ko.generated.json";
+import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
+import IDS_ZH_TW from "../cardmarket-ids.zh-tw.generated.json";
 import { json } from "./tcgdex-client";
 import JA_NAMES from "./set-names.ja.json";
 import ZH_NAMES from "./set-names.zh.json";
@@ -73,6 +77,34 @@ const scan = (lang: string, serie: string, set: string, localId: string, size: "
   `https://assets.tcgdex.net/${lang}/${serie}/${set}/${localId}/${size}.webp`;
 
 /** Every set of the language, series by series in TCGdex's order, newest serie first. */
+/**
+ * The sets a catalogue has recorded cards for, read off the committed Cardmarket id maps: a
+ * card is in there for every card TCGdex lists, product or none, so a set with no entry is a
+ * set TCGdex lists without a card. The shelf's own read (the series list) says "60 cards" for
+ * those too, and finding out live is one request per set — 184 for the Japanese shelf.
+ *
+ * As current as the last run of scripts/language-cardmarket-ids.mjs: a set TCGdex fills in
+ * after that reads as unrecorded until the next run, on the shelf only — its own page reads
+ * the cards live and shows them.
+ */
+const recordedSets = (() => {
+  const maps: Record<BrowseLanguage, Record<string, unknown>> = {
+    ja: IDS_JA,
+    ko: IDS_KO,
+    "zh-cn": IDS_ZH_CN,
+    "zh-tw": IDS_ZH_TW,
+  };
+  const known = new Map<BrowseLanguage, Set<string>>();
+  return (lang: BrowseLanguage): Set<string> => {
+    let sets = known.get(lang);
+    if (!sets) {
+      sets = new Set(Object.keys(maps[lang]).map((id) => id.slice(0, id.lastIndexOf("-"))));
+      known.set(lang, sets);
+    }
+    return sets;
+  };
+})();
+
 export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> {
   const series = (await json(`${HOST}/${lang}/series`, `${lang} series`)) as TcgSerieBrief[];
   const out: CatalogueSet[] = [];
@@ -90,6 +122,7 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
         releaseDate: null,
         total: s.cardCount?.total ?? 0,
         printedTotal: s.cardCount?.official ?? null,
+        cardsRecorded: recordedSets(lang).has(s.id),
         // No logo anywhere for these sets; a card stood in for a while and read as the wrong thing.
         logo: null,
         symbol: null,
@@ -122,6 +155,7 @@ export async function setIn(
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
+    cardsRecorded: (detail.cards ?? []).length > 0,
     logo: detail.logo ? `${detail.logo}.png` : null,
     symbol: detail.symbol ? `${detail.symbol}.png` : null,
   };

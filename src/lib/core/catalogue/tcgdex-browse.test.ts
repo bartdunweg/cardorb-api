@@ -1,5 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isBrowseLanguage, listSetsIn, setIn } from "./tcgdex-browse";
+
+// The committed id maps, which are also the record of which sets TCGdex has cards for: M4 has
+// them, M1 and PMCG1 are listed with a count and nothing under it.
+vi.mock("../cardmarket-ids.ja.generated.json", () => ({
+  default: { "M4-001": 1, "M4-002": null },
+}));
+vi.mock("../cardmarket-ids.ko.generated.json", () => ({ default: {} }));
+vi.mock("../cardmarket-ids.zh-tw.generated.json", () => ({ default: {} }));
+vi.mock("../cardmarket-ids.zh-cn.generated.json", () => ({ default: {} }));
+
+const { isBrowseLanguage, listSetsIn, setIn } = await import("./tcgdex-browse");
 
 const answers: Record<string, unknown> = {
   "/ja/series": [
@@ -34,12 +44,16 @@ const answers: Record<string, unknown> = {
 
 afterEach(() => vi.unstubAllGlobals());
 
-const stub = () =>
+const stub = () => {
+  const asked: string[] = [];
   vi.stubGlobal("fetch", async (url: string) => {
     const key = url.replace("https://api.tcgdex.net/v2", "");
+    asked.push(key);
     const body = answers[key];
     return new Response(body ? JSON.stringify(body) : "", { status: body ? 200 : 404 });
   });
+  return asked;
+};
 
 describe("tcgdex-browse", () => {
   it("knows the languages it can browse", () => {
@@ -62,9 +76,24 @@ describe("tcgdex-browse", () => {
       printedTotal: 83,
       logo: null,
       symbol: null,
+      cardsRecorded: true,
     });
     // A set the translation list does not know keeps its own name.
     expect(sets[1]).toMatchObject({ id: "M1", name: "一", localName: null });
+  });
+
+  it("says which sets the catalogue has recorded cards for, without asking it", async () => {
+    /* TCGdex lists 68 of 184 Japanese sets and 92 of 95 Korean ones with a count and no card,
+       and the series list — the shelf's one read — says "60 cards" for those too. The id maps
+       already know: a card is in them for every card TCGdex lists. No request per set. */
+    const asked = stub();
+    const sets = await listSetsIn("ja");
+    expect(sets.map((s) => [s.id, s.cardsRecorded])).toEqual([
+      ["M4", true],
+      ["M1", false],
+      ["PMCG1", false],
+    ]);
+    expect(asked.filter((a) => a.includes("/sets/"))).toEqual([]);
   });
 
   it("reads a set with its cards and builds each scan's address", async () => {

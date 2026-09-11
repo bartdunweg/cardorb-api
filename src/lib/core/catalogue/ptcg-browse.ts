@@ -54,6 +54,12 @@ export type CatalogueSet = {
   symbol: string | null;
   /** The set's name in its own language where `name` is a translation (a Japanese set); null for English. */
   localName: string | null;
+  /**
+   * Whether the catalogue has recorded the set's cards, or only the set and its count. Always
+   * true for English; TCGdex lists 68 of 184 Japanese sets and 92 of 95 Korean ones with a count
+   * and no card (2026-09-11), and a shelf that could not tell showed "0 of 60" for those.
+   */
+  cardsRecorded: boolean;
 };
 
 type PtcgSetJson = {
@@ -153,6 +159,7 @@ export async function listSets(): Promise<CatalogueSet[]> {
       releaseDate: s.releaseDate ?? null,
       total: s.total ?? 0,
       printedTotal: s.printedTotal ?? null,
+      cardsRecorded: true,
       logo: s.images?.logo ?? null,
       symbol: s.images?.symbol ?? null,
       localName: null,
