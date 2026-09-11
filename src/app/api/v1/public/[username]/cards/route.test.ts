@@ -84,6 +84,7 @@ describe("GET /api/v1/public/{username}/cards", () => {
       speciesId: null,
       tcgId: null,
       copies: 2,
+      localName: null,
       favorite: false,
     });
   });

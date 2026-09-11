@@ -556,6 +556,7 @@ components:
         image: { type: [string, "null"] }
         imageHigh: { type: [string, "null"], description: "The larger scan, where the catalogue has two sizes." }
         speciesId: { type: [integer, "null"] }
+        localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it; null on English cards." }
         tcgId: { type: [string, "null"] }
         copies: { type: integer, minimum: 1 }
         favorite: { type: boolean, description: "One of the owned copies is starred; always false on a wish." }

@@ -1,0 +1,1 @@
+- A public profile's cards carry `localName` too — what a Japanese, Korean or Chinese card prints, null on English cards — so a visitor's sheet can show it in brackets after the English name.
