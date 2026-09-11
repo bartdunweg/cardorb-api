@@ -16,6 +16,14 @@
  *                    per week, Near Mint and Lightly Played together, because a
  *                    single sale is not a price. Used for the weeks before
  *                    tcgcsv starts.
+ *   japanese         The same tcgcsv archive, its "Pokemon Japan" category
+ *                    (85), which it carries from 2024-08-24. TCGplayer sells
+ *                    the Japanese shelf too, and its set code and card number
+ *                    ("m5", "103/081") are TCGdex's Japanese id (M5-103), so
+ *                    the join needs no catalogue lookup at all: the map in
+ *                    tcgplayer-ids.ja.generated.json is built from TCGplayer's
+ *                    own group and product lists. Korean and Chinese cards
+ *                    TCGplayer does not sell; their lines start with the cron.
  *
  * A card is joined to TCGplayer through TCGdex, which lists the productId under
  * pricing.tcgplayer; the join is kept in tcgplayer-ids.generated.json so the
@@ -25,7 +33,7 @@
  * Writes only dates before the cron's first reading: a backfill fills in, it
  * never rewrites a Cardmarket reading. Re-running upserts the same rows.
  *
- *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales]
+ *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese]
  *
  * Service role, like snapshot-collection-value.mjs and for the same reason: an
  * offline script run by a person, writing a table about cards that belongs to
@@ -39,6 +47,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
+const IDS_JA = join(ROOT, "src", "lib", "core", "tcgplayer-ids.ja.generated.json");
 const CARDMARKET_IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.generated.json");
 const CACHE = join(ROOT, ".cache", "tcgcsv");
 
@@ -69,6 +78,12 @@ const show = (rows) => {
 const CRON_FROM = "2026-08-16";
 /** tcgcsv's first archive. */
 const TCGCSV_FROM = "2024-02-08";
+/** The first archive with the Japanese category in it. */
+const JAPAN_FROM = "2024-08-24";
+const TCGCSV = "https://tcgcsv.com/tcgplayer";
+/** TCGplayer's categories: Pokémon, and Pokémon Japan. */
+const CATEGORY_EN = 3;
+const CATEGORY_JA = 85;
 /** The oldest sale in tcgdex/price-history. */
 const SALES_FROM = "2022-11-01";
 
@@ -91,7 +106,10 @@ const weekOf = (iso) => {
 
 async function fetchJson(u, { optional = false } = {}) {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(u, { headers: { accept: "application/json" } });
+    // tcgcsv answers 401 to Node's default user agent; every source here is happy to be told who asks.
+    const res = await fetch(u, {
+      headers: { accept: "application/json", "User-Agent": "cardorb.com" },
+    });
     if (res.status === 404 && optional) return null;
     if (res.ok) return res.json();
     if (res.status === 429 || res.status >= 500) {
@@ -218,8 +236,8 @@ const cents = (usd, rate) => (usd == null || !(usd > 0) ? null : Math.round(usd 
 
 // ── tcgcsv: TCGplayer's market price, a day at a time ────────────────────────
 
-/** productId → { subTypeName → marketPrice } for one day, from the archive's Pokémon files. */
-function tcgcsvDay(date) {
+/** productId → { subTypeName → marketPrice } for one day, from the archive's files of one category. */
+function tcgcsvDay(date, category = CATEGORY_EN) {
   mkdirSync(CACHE, { recursive: true });
   const archive = join(CACHE, `prices-${date}.ppmd.7z`);
   if (!existsSync(archive)) {
@@ -230,12 +248,16 @@ function tcgcsvDay(date) {
       `https://tcgcsv.com/archive/tcgplayer/prices-${date}.ppmd.7z`,
     ]);
   }
-  const out = join(CACHE, "x");
+  // Named after the process, so two runs (one shelf each) do not empty each other's folder.
+  const out = join(CACHE, `x-${process.pid}`);
   rmSync(out, { recursive: true, force: true });
-  execFileSync("7zz", ["x", "-y", `-o${out}`, archive, `${date}/3/*`], { stdio: "ignore" });
+  execFileSync("7zz", ["x", "-y", `-o${out}`, archive, `${date}/${category}/*`], {
+    stdio: "ignore",
+  });
   const byProduct = new Map();
-  const groups = join(out, date, "3");
-  for (const group of readdirSync(groups)) {
+  const groups = join(out, date, String(category));
+  // An archive from before the category existed has no folder for it: an empty day.
+  for (const group of existsSync(groups) ? readdirSync(groups) : []) {
     const file = join(groups, group, "prices");
     if (!existsSync(file)) continue;
     const { results } = JSON.parse(readFileSync(file, "utf8"));
@@ -329,7 +351,102 @@ async function write(rows) {
   }
 }
 
+// ── The Japanese shelf: TCGplayer's own set codes and numbers ────────────────
+
+/**
+ * TCGdex Japanese id → TCGplayer productId, from TCGplayer's group list (its
+ * abbreviation is TCGdex's set id: "m5" is M5) and each group's products (the
+ * Number "103/081" is the localId "103"). Kept in tcgplayer-ids.ja.generated.json
+ * and only asked about for sets not yet in it; the 459 groups are one request
+ * each. An abbreviation two groups share (L2 is a set and two decks) is fine:
+ * every group is read and the number decides.
+ */
+async function japaneseIds() {
+  const known = existsSync(IDS_JA) ? JSON.parse(readFileSync(IDS_JA, "utf8")) : {};
+  const sets = await fetchJson("https://api.tcgdex.net/v2/ja/sets");
+  const setById = new Map(sets.map((s) => [s.id.toLowerCase(), s.id]));
+  const seen = new Set(Object.keys(known).map((id) => id.slice(0, id.lastIndexOf("-"))));
+  const { results: groups } = await fetchJson(`${TCGCSV}/${CATEGORY_JA}/groups`);
+  const wanted = groups.filter((g) => {
+    const set = setById.get((g.abbreviation ?? "").toLowerCase());
+    return set && !seen.has(set);
+  });
+  console.log(
+    `japanese: ${groups.length} TCGplayer groups, ${wanted.length} for sets not yet mapped`,
+  );
+  if (!wanted.length) return known;
+  const cards = new Map();
+  await mapLimit(
+    [...new Set(wanted.map((g) => setById.get(g.abbreviation.toLowerCase())))],
+    4,
+    async (set) => {
+      const body = await fetchJson(`https://api.tcgdex.net/v2/ja/sets/${encodeURIComponent(set)}`, {
+        optional: true,
+      });
+      cards.set(set, new Map((body?.cards ?? []).map((c) => [c.localId, c.id])));
+    },
+  );
+  let linked = 0;
+  await mapLimit(wanted, 4, async (g) => {
+    const set = setById.get(g.abbreviation.toLowerCase());
+    const { results } = await fetchJson(`${TCGCSV}/${CATEGORY_JA}/${g.groupId}/products`);
+    const local = cards.get(set) ?? new Map();
+    for (const p of results) {
+      const number = p.extendedData?.find((e) => e.name === "Number")?.value;
+      if (!number) continue;
+      const n = number.split("/")[0].trim();
+      // "001/081" is localId "001"; a numberless promo may carry "SV-P 123" style ids too.
+      const id = local.get(n) ?? local.get(String(Number(n))) ?? local.get(n.padStart(3, "0"));
+      if (!id || known[id]) continue;
+      known[id] = p.productId;
+      linked++;
+    }
+  });
+  const sorted = Object.fromEntries(
+    Object.keys(known)
+      .sort()
+      .map((k) => [k, known[k]]),
+  );
+  writeFileSync(IDS_JA, `${JSON.stringify(sorted, null, 2)}\n`);
+  console.log(`  ${linked} new links, ${Object.keys(known).length} Japanese cards mapped`);
+  return known;
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
+
+if (ONLY === "japanese") {
+  const products = await japaneseIds();
+  const ids = Object.keys(products).slice(0, LIMIT);
+  const rate = await rates(JAPAN_FROM, addDays(CRON_FROM, -1));
+  const step = DAILY ? 1 : 7;
+  const dates = [];
+  for (let d = addDays(CRON_FROM, -1); d >= JAPAN_FROM; d = addDays(d, -step)) dates.push(d);
+  dates.reverse();
+  console.log(`tcgcsv japan: ${dates.length} days, ${dates[0]} to ${dates[dates.length - 1]}`);
+  let written = 0;
+  for (const date of dates) {
+    const r = rate.get(date);
+    const prices = tcgcsvDay(date, CATEGORY_JA);
+    const rows = [];
+    for (const id of ids) {
+      const pick = pickTcgcsv(prices.get(products[id]));
+      if (!pick) continue;
+      rows.push({
+        tcg_id: id,
+        snapshot_date: date,
+        market_cents: cents(pick.market, r),
+        holo_cents: cents(pick.holo, r),
+        source: "tcgplayer",
+      });
+    }
+    await write(rows);
+    written += rows.length;
+    console.log(`  ${date}: ${rows.length} cards`);
+    show(rows);
+  }
+  console.log(`${DRY ? "Would write" : "Wrote"} ${written} readings.`);
+  process.exit(0);
+}
 
 const ids = (await pricedIds()).slice(0, LIMIT);
 console.log(`${ids.length} cards${DRY ? " (dry run: nothing is written)" : ""}`);
