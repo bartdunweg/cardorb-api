@@ -1,0 +1,1 @@
+- The Japanese set M3 (ムニキスゼロ, 2026-01-23) is titled Nihil Zero on the shelf, Bulbapedia's rendering; it was the last Japanese set shown in its own script.
