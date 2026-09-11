@@ -39,6 +39,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
+const CARDMARKET_IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.generated.json");
 const CACHE = join(ROOT, ".cache", "tcgcsv");
 
 for (const file of [".env.local", ".env"]) {
@@ -120,13 +121,17 @@ async function mapLimit(items, limit, fn) {
 // ── The cards ────────────────────────────────────────────────────────────────
 
 /**
- * Every card the cron prices: the ids under the latest Cardmarket reading. Those
+ * Every card the cron prices: the ids under the latest Cardmarket reading, and
+ * since 2026-09-11 every card of the English shelf as well — the committed id
+ * map is the whole catalogue now, and a card nobody holds gets a line too. The
+ * archives are TCGplayer's, an English market, so the other shelves have no
+ * past to fill in; their lines start the week the cron first wrote them. Those
  * are TCGdex ids, the handle card_prices is keyed on; cards.tcg_id is not the
  * same column (it holds pokemontcg.io's id, "sv3pt5-30" for TCGdex's "sv03.5-030")
  * and a first run of this script read it and found no TCGplayer product for
  * most of the collection.
  */
-async function heldIds() {
+async function pricedIds() {
   const { data: latest, error: e1 } = await db
     .from("card_prices")
     .select("snapshot_date")
@@ -136,7 +141,7 @@ async function heldIds() {
   if (e1) throw new Error(`Reading card prices failed: ${e1.message}`);
   const date = latest?.[0]?.snapshot_date;
   if (!date) throw new Error("No Cardmarket reading yet: nothing to fill in before.");
-  const ids = new Set();
+  const ids = new Set(Object.keys(JSON.parse(readFileSync(CARDMARKET_IDS, "utf8"))));
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db
       .from("card_prices")
@@ -314,8 +319,8 @@ async function write(rows) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
-const ids = (await heldIds()).slice(0, LIMIT);
-console.log(`${ids.length} held cards${DRY ? " (dry run: nothing is written)" : ""}`);
+const ids = (await pricedIds()).slice(0, LIMIT);
+console.log(`${ids.length} cards${DRY ? " (dry run: nothing is written)" : ""}`);
 const products = await tcgplayerIds(ids);
 const withProduct = ids.filter((id) => products[id]);
 console.log(`${withProduct.length} of them have a TCGplayer product`);

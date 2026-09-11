@@ -405,28 +405,37 @@ export async function listCardPrices(
 }
 
 /**
- * A week's prices, written in one go.
+ * A night's prices, written in one go.
  *
  * Chunked for body size rather than URL length, the same reason createRows()
  * chunks. Upserted on the primary key so a re-run corrects the day instead of
- * being refused.
+ * being refused. Four chunks in flight at a time: the weekly pass is forty
+ * thousand rows, eighty chunks, and one after another that is most of the
+ * sixty seconds the cron has; four abreast it is a quarter of them.
  */
 export async function writeCardPrices(
   db: SupabaseClient,
   points: CardPricePoint[],
   chunk = 500,
+  parallel = 4,
 ): Promise<void> {
-  for (let i = 0; i < points.length; i += chunk) {
-    const { error } = await db.from("card_prices").upsert(
-      points.slice(i, i + chunk).map((p) => ({
-        tcg_id: p.tcgId,
-        snapshot_date: p.date,
-        market_cents: p.market == null ? null : Math.round(p.market * 100),
-        holo_cents: p.holo == null ? null : Math.round(p.holo * 100),
-      })),
-      { onConflict: "tcg_id,snapshot_date" },
+  const chunks: CardPricePoint[][] = [];
+  for (let i = 0; i < points.length; i += chunk) chunks.push(points.slice(i, i + chunk));
+  for (let i = 0; i < chunks.length; i += parallel) {
+    await Promise.all(
+      chunks.slice(i, i + parallel).map(async (rows) => {
+        const { error } = await db.from("card_prices").upsert(
+          rows.map((p) => ({
+            tcg_id: p.tcgId,
+            snapshot_date: p.date,
+            market_cents: p.market == null ? null : Math.round(p.market * 100),
+            holo_cents: p.holo == null ? null : Math.round(p.holo * 100),
+          })),
+          { onConflict: "tcg_id,snapshot_date" },
+        );
+        if (error) throw new Error(`Writing card prices failed: ${error.message}`);
+      }),
     );
-    if (error) throw new Error(`Writing card prices failed: ${error.message}`);
   }
 }
 

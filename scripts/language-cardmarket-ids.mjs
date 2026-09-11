@@ -1,5 +1,5 @@
 /**
- * The Cardmarket product id of every card on the Japanese, Korean and Chinese shelves.
+ * The Cardmarket product id of every card on every shelf: English, Japanese, Korean, Chinese.
  *
  *   node scripts/language-cardmarket-ids.mjs            # every catalogue, print what it found
  *   node scripts/language-cardmarket-ids.mjs --write    # write the maps
@@ -21,6 +21,12 @@
  * One file per catalogue, because the ids are not unique between them: SM1S is a set in both
  * Japanese and Korean, and SM1S-001 is a different card in each.
  *
+ * English was the last shelf added, on 2026-09-11. Its map (cardmarket-ids.generated.json) was
+ * only ever filled by snapshot-collection-value.mjs, from the cards somebody owns: 1,634 cards
+ * in 58 sets, so an English set page priced the owner's cards and left every other one blank.
+ * Here it is filled the way the other shelves are, whole; the snapshot script keeps adding the
+ * odd card it meets first, and cardmarket-ids-fill.mjs keeps fixing the nulls.
+ *
  * Re-runnable. What is already mapped is kept, so a second run only asks about cards added
  * since the first, and a run that dies halfway loses nothing. Run it when a set is added.
  */
@@ -30,14 +36,17 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "lib", "core");
 const HOST = "https://api.tcgdex.net/v2";
-const LANGUAGES = ["ja", "zh-tw", "zh-cn", "ko"];
+const LANGUAGES = ["en", "ja", "zh-tw", "zh-cn", "ko"];
 
 const args = process.argv.slice(2);
 const write = args.includes("--write");
 const only = args.filter((a) => !a.startsWith("--"));
 const languages = only.length ? LANGUAGES.filter((l) => only.includes(l)) : LANGUAGES;
 
-const file = (lang) => join(ROOT, `cardmarket-ids.${lang}.generated.json`);
+/** The English map has no language in its name: it was the only one, once. */
+const fileName = (lang) =>
+  lang === "en" ? "cardmarket-ids.generated.json" : `cardmarket-ids.${lang}.generated.json`;
+const file = (lang) => join(ROOT, fileName(lang));
 
 /** One GET, with a retry: a catalogue that refuses once under load answers the second time. */
 async function json(url) {

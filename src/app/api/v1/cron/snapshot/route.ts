@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { refuse, apiError } from "@/lib/api/respond";
-import { assembleFor } from "@/lib/core/collection/collection";
-import { cardPricesFromSets, snapshotFromSets } from "@/lib/core/collection/snapshot";
+import { assembleFor, productIdsOf } from "@/lib/core/collection/collection";
+import { fetchPriceGuide } from "@/lib/core/catalogue/price-guide";
+import { BROWSE_LANGUAGES } from "@/lib/core/catalogue/tcgdex-browse";
+import {
+  cardPricesFromGuide,
+  cardPricesFromSets,
+  snapshotFromSets,
+} from "@/lib/core/collection/snapshot";
 import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
@@ -55,6 +61,19 @@ import { adminClient } from "@/lib/storage/supabase";
  * request reads — the warm cron has usually just built it — and writes the
  * blended figure. Before, a folder's line ended under its live number and a
  * card's sheet said one price above a line that ended at another.
+ *
+ * ── Every other card, once a week ──────────────────────────────────────────
+ *
+ * A card nobody held had no line at all: its sheet opened on an empty chart,
+ * and the set page's price was the only number it ever showed. Since
+ * 2026-09-11 the night of a Monday also writes the guide's price for every
+ * card the five id maps know, some forty thousand — one point a week, which
+ * is what a chart over years reads anyway and a fifth of a gigabyte a year
+ * rather than two. The held cards stay nightly and are written first, so the
+ * weekly pass never overwrites a blended figure with the guide's plain one.
+ * `?all=1` runs that pass on any day, for the first fill and for a week the
+ * cron missed. Mondays because the backfill's weekly points are Mondays too
+ * (scripts/backfill-card-prices.mjs, weekOf), so the two series line up.
  */
 
 export const dynamic = "force-dynamic";
@@ -122,6 +141,33 @@ export async function GET(req: Request) {
     }
   }
 
+  // The weekly pass, added after the held cards so a held card's nightly point
+  // is the one that stands. The guide is read directly rather than through the
+  // day's cache: the cache is sharded for the set page's sake and this wants
+  // every card of every catalogue exactly once.
+  const url = new URL(req.url);
+  const weekly = url.searchParams.get("all") === "1" || new Date().getUTCDay() === 1;
+  let everyCard = 0;
+  if (weekly) {
+    try {
+      const guide = await fetchPriceGuide();
+      for (const language of [null, ...BROWSE_LANGUAGES]) {
+        for (const p of cardPricesFromGuide(productIdsOf(language), guide, date)) {
+          // Catalogues share ids (SM1S-001 is Japanese and Korean); the first
+          // catalogue in, English, keeps the row, the same order the id maps
+          // are trusted in everywhere else.
+          if (!prices.has(p.tcgId)) {
+            prices.set(p.tcgId, p);
+            everyCard++;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[cron] weekly guide pass failed:", err);
+      failed.push("guide");
+    }
+  }
+
   // After the loop, not inside it: the same card held by two people is one
   // row, and one upsert of the union beats one per account.
   if (prices.size) {
@@ -141,6 +187,7 @@ export async function GET(req: Request) {
       date,
       written: written.length,
       prices: prices.size,
+      everyCard,
       failed,
     },
     { status: failed.length ? 207 : 200, headers: { "Cache-Control": "no-store" } },

@@ -140,8 +140,8 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
 /**
  * Every mapped card's price from Cardmarket's guide, as one plain object,
  * cached a day. The guide itself is fourteen megabytes and cannot sit in the
- * data cache; what it says about the sixteen hundred cards this deployment
- * knows a product id for is a couple of hundred kilobytes and can.
+ * data cache; what it says about the cards this deployment knows a product id
+ * for can, in shards (cachedGuidePrices below).
  */
 export const PRICE_GUIDE_TAG = "price-guide";
 
@@ -157,25 +157,67 @@ const LANGUAGE_IDS: Record<BrowseLanguage, ProductIds> = {
   "zh-tw": IDS_ZH_TW as ProductIds,
 };
 
+/** The id map of one catalogue; English is the one without a language in its file name. */
+export const productIdsOf = (language: BrowseLanguage | null): ProductIds =>
+  language ? LANGUAGE_IDS[language] : (IDS as ProductIds);
+
 /**
- * One catalogue's prices, cached a day under its own key.
+ * How many entries one catalogue's prices are cached in.
  *
- * Per catalogue rather than all of them in one entry, for the reason above and for a second:
- * the Japanese shelf alone is twelve thousand cards, and a single entry holding every catalogue
- * would be the one thing in this cache near the two-megabyte ceiling an entry has.
+ * A data cache entry holds two megabytes at most. A priced card is about 140 bytes of JSON, so
+ * one entry holds fourteen thousand of them: the English shelf, whole since 2026-09-11, is
+ * twenty-three thousand cards and would not fit — and an entry over the ceiling is not cached at
+ * all, which is the fourteen-megabyte guide downloaded on every set page. Four shards keep the
+ * biggest catalogue well under a megabyte each, with room for the shelves to grow.
  */
-const cachedGuidePrices = (language: BrowseLanguage | null = null) =>
-  timedCache(`cache guide-prices${language ? ` ${language}` : ""}`, (ran) =>
-    unstable_cache(
-      async (): Promise<Record<string, CardPrices>> => {
-        ran();
-        const map = language ? LANGUAGE_IDS[language] : (IDS as ProductIds);
-        return Object.fromEntries(guidePrices(Object.keys(map), await fetchPriceGuide(), map));
-      },
-      ["guide-prices", language ?? "en", "v6"],
-      { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
-    )(),
+const GUIDE_SHARDS = 4;
+
+/** Which shard an id lives in: a stable hash, so the same card is in the same entry every day. */
+const shardOf = (id: string): number => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h % GUIDE_SHARDS;
+};
+
+/**
+ * The guide, downloaded once per request however many shards are cold at the same time. The
+ * shards are read in parallel and each of the cold ones would fetch its own fourteen megabytes;
+ * React's cache() makes those one download. Outside the shard's cache callback on purpose: a
+ * function memoised inside one would be memoised per shard.
+ */
+const guideForShards = cache(() => fetchPriceGuide());
+
+/**
+ * One catalogue's prices, cached a day, in a few entries under one tag.
+ *
+ * Per catalogue rather than all of them in one entry, for the reason above: the ids collide
+ * between catalogues. And in shards rather than one entry per catalogue, for the size reason
+ * on GUIDE_SHARDS. Every shard is read on every call — a set page's cards hash to all four —
+ * and merged into the one plain object the callers have always had.
+ */
+const cachedGuidePrices = async (
+  language: BrowseLanguage | null = null,
+): Promise<Record<string, CardPrices>> => {
+  const map = productIdsOf(language);
+  const byShard: string[][] = Array.from({ length: GUIDE_SHARDS }, () => []);
+  for (const id of Object.keys(map)) byShard[shardOf(id)]?.push(id);
+  const shards = await Promise.all(
+    byShard.map((ids, shard) =>
+      timedCache(`cache guide-prices ${language ?? "en"}/${shard}`, (ran) =>
+        unstable_cache(
+          async (): Promise<Record<string, CardPrices>> => {
+            ran();
+            // The whole map, so the read stays what it was: which map is the fact under test.
+            return Object.fromEntries(guidePrices(ids, await guideForShards(), map));
+          },
+          ["guide-prices", language ?? "en", "v7", String(shard)],
+          { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
+        )(),
+      ),
+    ),
   );
+  return Object.assign({}, ...shards);
+};
 
 /**
  * The guide first, TCGdex for what the guide does not know — a card added
