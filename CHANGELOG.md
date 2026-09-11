@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-11
 
+- `scripts/backfill-card-prices.mjs` goes on when TCGdex refuses one card. With twenty thousand cards to ask about, one refusal at card 1,482 threw the other answers away and stopped the run; a refused card is now left out of the map, so the next run asks again, and the TCGplayer ids of the whole English shelf are committed: 19,067 of 23,622 cards have a product.
+
 - A card from the Japanese, Korean or Chinese shelves lands in its Pokédex slot. It is named in
   that language and the species list is English, so every one of them was filed nowhere — which
   on that page reads as "you do not own this". `scripts/pokedex.mjs` now writes the same 1,025
