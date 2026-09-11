@@ -1,0 +1,1 @@
+- The links in the confirmation and password-reset emails point at cardorb.com again, and the emails say the link lasts an hour, which it does.

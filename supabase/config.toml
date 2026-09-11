@@ -156,7 +156,12 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "env(SUPABASE_AUTH_SITE_URL)"
+#
+# Written out, not env(): a `config push` from a shell without the variable stored the literal
+# text "env(SUPABASE_AUTH_SITE_URL)", and every link in every auth email pointed at it (found
+# 2026-09-11: no sign-up could be confirmed, no password reset). The address is a constant of
+# this project either way — the redirect list below already spells it out.
+site_url = "https://cardorb.com"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
