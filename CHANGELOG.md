@@ -46,6 +46,8 @@ if the two have drifted apart.
 
 - The English shelf, the set pages and the search leave Pokémon TCG Pocket out: TCGdex carries the mobile game's fifteen sets beside the printed ones, and a binder cannot hold one. A Pocket set asked for by id answers 404.
 
+- Added `PATCH /v1/collection/items`: the same inventory change on up to a hundred rows at once, `ids` beside the fields `PATCH /v1/collection/items/{id}` already takes. Four identical copies are four rows in the store, and saying "these are Near Mint" about them was four round trips from the web app, each folding the rows on its own; it is one statement now, folded once.
+
 - A set id TCGdex lists twice on a shelf (CSV1C on the Simplified Chinese one: a 9-card Gem Pack and the 127-card 亘古开来) shows once, as the entry its own page opens on; the shelf drew both under one key and a link from either landed on the same page.
 
 - Searching the catalogue for a card to add asks TCGdex now, not pokemontcg.io. The old host had started refusing roughly three requests in five, and a search for "charizard" came back empty often enough to read as "no such card". Same one box, same answer shape; every hit now carries its TCGdex id, so a card added from search is priced from the day it is added.

@@ -977,6 +977,64 @@ paths:
             the honest answer for a card whose history has not started yet.
           content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
+  /v1/collection/items:
+    patch:
+      tags: [Collection]
+      operationId: updateItems
+      summary: Change the same inventory fields on many copies at once
+      description: |
+        The body `PATCH /v1/collection/items/{id}` takes, with `ids` beside it: one to a hundred
+        row ids, none twice. One statement, so four rows of one kind change together instead of
+        in four round trips. The same rules for a folder named in it. An id that is not there or
+        not the caller's is simply not among the rows that come back; none at all is a 404.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/CardPatch"
+                - type: object
+                  required: [ids]
+                  properties:
+                    ids:
+                      type: array
+                      minItems: 1
+                      maxItems: 100
+                      uniqueItems: true
+                      items: { type: string }
+                      description: "The rows to change, from `Variant.id` or `BrowseCard.itemIds`."
+      responses:
+        "200":
+          description: Changed. Each row as it now is, once — rows a change made the same kind are folded into one.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, cards]
+                properties:
+                  ok: { type: boolean, const: true }
+                  cards:
+                    type: array
+                    items: { $ref: "#/components/schemas/CollectionRow" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    options:
+      tags: [Collection]
+      operationId: updateItemsPreflight
+      summary: CORS preflight for a cross-origin write
+      security: []
+      responses:
+        "204": { description: "Allowed. Carries the `Access-Control-Allow-*` headers." }
+        "403": { description: "That origin is not in `ALLOWED_ORIGINS`. Empty body." }
+
   /v1/collection/items/{id}/copies:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string }, description: "The row the copy comes from." }
