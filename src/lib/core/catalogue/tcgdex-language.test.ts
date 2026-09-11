@@ -23,6 +23,19 @@ const answers: Record<string, unknown> = {
     image: "https://assets.tcgdex.net/zh-cn/CS/CS3aC/010",
     set: { id: "CS3aC", name: "朱＆紫" },
   },
+  // TCGdex has photographed SV1a-007; the HEAD the Japanese path spends says so.
+  "https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp": true,
+  // A card from a set TCGdex has recorded and not photographed — SV5M was 12 of 12 on
+  // 2026-09-11 — carries an address with no file behind it.
+  "/ja/cards/SV5M-001": {
+    id: "SV5M-001",
+    localId: "001",
+    name: "ストライク",
+    image: "https://assets.tcgdex.net/ja/SV/SV5M/001",
+    set: { id: "SV5M", name: "サイバージャッジ" },
+  },
+  // And one whose record does not name a picture at all.
+  "/ja/cards/SV5M-002": { id: "SV5M-002", localId: "002", name: "ハッサム", set: { id: "SV5M" } },
   "/ja/sets/SV1a": {
     id: "SV1a",
     name: "トリプレットビート",
@@ -35,10 +48,11 @@ afterEach(() => vi.unstubAllGlobals());
 
 const stub = (extra: Record<string, unknown> = {}) => {
   const asked: string[] = [];
-  vi.stubGlobal("fetch", async (url: string) => {
+  vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
     const key = url.replace("https://api.tcgdex.net/v2", "");
-    asked.push(key);
+    asked.push(init?.method === "HEAD" ? `HEAD ${key}` : key);
     const body = { ...answers, ...extra }[key];
+    if (body === true) return new Response("", { status: 200 });
     return new Response(body ? JSON.stringify(body) : "", { status: body ? 200 : 404 });
   });
   return asked;
@@ -99,6 +113,43 @@ describe("languageCard", () => {
     // trend-holo: 0 is Cardmarket saying it has no foil listing, not that the
     // foil is free. The same rule the English path reads it by.
     expect(card!.holo).toBeNull();
+  });
+
+  it("keeps TCGdex's own scan where the file is there, after one probe", async () => {
+    const asked = stub();
+    const card = await languageCard(["ja"], "SV1a-007");
+    expect(card!.scan).toBeNull();
+    expect(asked).toEqual([
+      "/ja/cards/SV1a-007",
+      "HEAD https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp",
+    ]);
+  });
+
+  it("names Limitless's pair where TCGdex has the card and not its picture", async () => {
+    stub();
+    const card = await languageCard(["ja"], "SV5M-001");
+    const cover = (f: string) =>
+      `/api/cover?url=${encodeURIComponent(`https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV5M/${f}`)}`;
+    expect(card!.scan).toEqual({
+      low: cover("SV5M_1_R_JP_SM.png"),
+      high: cover("SV5M_1_R_JP_LG.png"),
+    });
+    // TCGdex's address is still carried, as the row's record of where it looked.
+    expect(card!.image).toBe("https://assets.tcgdex.net/ja/SV/SV5M/001");
+  });
+
+  it("guesses without a probe where the record names no picture at all", async () => {
+    const asked = stub();
+    const card = await languageCard(["ja"], "SV5M-002");
+    expect(card!.scan?.low).toContain("SV5M_2_R_JP_SM.png");
+    expect(asked).toEqual(["/ja/cards/SV5M-002"]);
+  });
+
+  it("spends no probe on a Chinese card: Limitless has none of those", async () => {
+    const asked = stub();
+    const card = await languageCard(["zh-cn"], "CS3aC-010");
+    expect(card!.scan).toBeNull();
+    expect(asked).toEqual(["/zh-cn/cards/CS3aC-010"]);
   });
 
   it("falls through to simplified when traditional does not have the card", async () => {

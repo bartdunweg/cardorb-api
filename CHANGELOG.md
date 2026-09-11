@@ -22,6 +22,8 @@ if the two have drifted apart.
 
 - A value history that could not be read is a 503 rather than an empty series. `GET /v1/value-history` answered `200 {"snapshots": []}` when the store was unreachable — the same payload as an account that has never been snapshotted, which both clients draw as the brand-new empty state — while the same route's `?folder=` branch already answered 503 to the same failure. `GET /v1/cards/{tcgId}/prices` had the same shape: its own documentation calls an empty list the honest answer for a card whose history has not started, and an outage was sending it too. Both now say which happened, the way the collection routes already did.
 
+- A Japanese card you own from a set TCGdex has not photographed shows Limitless's scan, as the set page has since #262. The collection path resolves a card on its own, so it asks once per card whether TCGdex's file is there (a HEAD, cached a day) and hands over Limitless's guessed address where it is not; a probe that cannot be made keeps TCGdex's address. Korean and Chinese cards spend no probe. `GET /v1/collection`, `/v1/cards` and the public profile carry it.
+
 - Searching the catalogue for a card to add asks TCGdex now, not pokemontcg.io. The old host had started refusing roughly three requests in five, and a search for "charizard" came back empty often enough to read as "no such card". Same one box, same answer shape; every hit now carries its TCGdex id, so a card added from search is priced from the day it is added.
 
 - `GET /v1/catalog/search` answers `total` beside `cards`: how many the whole search matched, so a client can say "125 cards" above the page it shows. At most the 250 the search reads, which then means "at least".

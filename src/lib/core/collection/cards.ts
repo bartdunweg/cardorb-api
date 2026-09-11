@@ -735,8 +735,10 @@ function factsOfLanguageCard(
   return {
     // The same two addresses the English path builds, off the base the
     // catalogue hands over: low for the grid, high for the slider past 180px.
-    image: card.image ? localise(`${card.image}/low.webp`) : null,
-    imageHigh: card.image ? localise(`${card.image}/high.webp`) : null,
+    // Or Limitless's pair, where TCGdex has recorded the card and not photographed it —
+    // languageCard() found that out, once per card, and says so with `scan`.
+    image: card.scan?.low ?? (card.image ? localise(`${card.image}/low.webp`) : null),
+    imageHigh: card.scan?.high ?? (card.image ? localise(`${card.image}/high.webp`) : null),
     tcgId: card.id,
     matchedName: card.name || null,
     number: card.number || identity.number,
