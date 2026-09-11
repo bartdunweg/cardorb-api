@@ -16,6 +16,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestViewer = vi.fn();
 const updateProfile = vi.fn();
+const forgetOnTheWeb = vi.fn(async (_who: { userId: string; username: string }) => undefined);
+vi.mock("@/lib/api/web-cache", () => ({
+  forgetOnTheWeb: (who: { userId: string; username: string }) => forgetOnTheWeb(who),
+}));
 const ownProfile = vi.fn();
 
 vi.mock("@/lib/api/viewer", () => ({
@@ -52,6 +56,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   updateProfile.mockClear();
+  forgetOnTheWeb.mockClear();
 });
 
 describe("PATCH /api/v1/profile", () => {
@@ -85,6 +90,16 @@ describe("PATCH /api/v1/profile", () => {
     expect(res.status).toBe(200);
     expect(requestViewer).toHaveBeenCalled();
     expect(updateProfile).toHaveBeenCalledWith({}, "me-uuid", { isPublic: true });
+  });
+
+  it("tells the web whose profile changed, once the change is saved", async () => {
+    await patch({ isPublic: false });
+    expect(forgetOnTheWeb).toHaveBeenCalledWith({ userId: "me-uuid", username: "me" });
+  });
+
+  it("does not tell the web of a change that was refused", async () => {
+    await patch({ isPublic: "yes" });
+    expect(forgetOnTheWeb).not.toHaveBeenCalled();
   });
 
   it("saves the switch for the signed-in person and nobody else", async () => {
