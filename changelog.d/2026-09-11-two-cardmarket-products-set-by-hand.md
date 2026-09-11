@@ -1,0 +1,1 @@
+- Two more Cardmarket products are set by hand, so the last two unpriced cards in the collection are priced from the guide: Nidoran♀ (Jungle 57), which TCGdex does not link, and Pikachu EX (XY124), which TCGdex linked to a Pikachu with no price.
