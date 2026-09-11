@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authorise = vi.fn();
 const searchCards = vi.fn();
 const getRows = vi.fn();
+const guidePricesFor = vi.fn(async (..._a: unknown[]) => new Map());
 const englishSets = vi.fn(async () => [{ id: "base1", name: "Base" }]);
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
@@ -26,6 +27,7 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
    and then used for the ownership overlay the route attaches to every result. */
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
+  guidePricesFor: (...a: unknown[]) => guidePricesFor(...a),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 /* `import "server-only"` underneath, like the two above. The route hands the search the
@@ -76,11 +78,13 @@ beforeEach(() => {
         imageHigh: "https://img/base1/4/large",
         rarity: "Rare Holo",
         types: ["Fire"],
+        tcgId: "base1-4",
       },
     ],
   });
 });
 afterEach(() => {
+  guidePricesFor.mockClear();
   searchCards.mockClear();
   getRows.mockClear();
   englishSets.mockClear();
@@ -198,6 +202,23 @@ describe("GET /api/v1/catalog/search", () => {
   it("reads language=en as the English catalogue", async () => {
     await search(new URLSearchParams({ query: "char", language: "en" }));
     expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
+  });
+
+  it("prices every result from the guide, by the id everything priced is keyed by", async () => {
+    guidePricesFor.mockResolvedValueOnce(
+      new Map([["base1-4", { price: { market: 12.5 }, holo: { market: 40 } }]]),
+    );
+    const res = await search(new URLSearchParams({ query: "char", language: "ja" }));
+    const { cards } = await res.json();
+    expect(guidePricesFor).toHaveBeenCalledWith(["base1-4"], "ja");
+    expect(cards[0]).toMatchObject({ price: { market: 12.5 }, priceHolo: { market: 40 } });
+  });
+
+  it("leaves a null price under a result the guide does not price", async () => {
+    const res = await search(new URLSearchParams({ query: "char" }));
+    const { cards } = await res.json();
+    expect(guidePricesFor).toHaveBeenCalledWith(["base1-4"], null);
+    expect(cards[0]).toMatchObject({ price: null, priceHolo: null });
   });
 
   it("refuses a language it has no catalogue for", async () => {
