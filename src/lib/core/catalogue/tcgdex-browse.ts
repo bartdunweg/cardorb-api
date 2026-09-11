@@ -441,7 +441,7 @@ export async function resolveEnglishSetId(setId: string): Promise<string | null>
  */
 async function englishFacts(
   setId: string,
-): Promise<Map<string, { rarity: string | null; types: string[] }>> {
+): Promise<Map<string, { rarity: string | null; types: string[] }> | null> {
   const out = new Map<string, { rarity: string | null; types: string[] }>();
   try {
     const body = (await graphql(
@@ -455,6 +455,7 @@ async function englishFacts(
         out.set(c.id, { rarity: c.rarity ?? null, types: c.types ?? [] });
   } catch (err) {
     console.error(`TCGdex facts for ${setId} unavailable, set shown without them:`, err);
+    return null;
   }
   return out;
 }
@@ -486,6 +487,11 @@ export const inBinderOrder = (cards: CatalogueMatch[]): CatalogueMatch[] =>
  */
 export async function englishSet(
   setId: string,
+  /**
+   * Throw where the facts could not be read, rather than answer the set without them. A page
+   * is worth showing without rarity; a copy kept for days is not worth keeping without it.
+   */
+  { factsRequired = false }: { factsRequired?: boolean } = {},
 ): Promise<{ set: CatalogueSet; cards: CatalogueMatch[] } | null> {
   const id = await resolveEnglishSetId(setId);
   if (!id) return null;
@@ -499,10 +505,12 @@ export async function englishSet(
     if (err instanceof CatalogueNotFound) return null;
     throw err;
   }
-  const [index, facts] = await Promise.all([
+  const [index, read] = await Promise.all([
     englishSetIndex().catch(() => new Map<string, CatalogueSet>()),
     englishFacts(id),
   ]);
+  if (!read && factsRequired) throw new Error(`TCGdex facts for ${id} unavailable`);
+  const facts = read ?? new Map<string, { rarity: string | null; types: string[] }>();
   const known = index.get(id);
   const serieId = detail.serie?.id ?? "";
   const set: CatalogueSet = {

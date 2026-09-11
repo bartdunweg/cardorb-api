@@ -6,6 +6,7 @@ import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
+import { adminClient } from "@/lib/storage/supabase";
 
 /**
  * Finding a card to add, by anything: name, number, set, or type, in one box
@@ -83,9 +84,12 @@ export async function GET(req: Request) {
   }
 
   try {
+    /* The catalogue's copy (lib/core/catalogue/mirror.ts) is the service role's to read: no
+       person's data is in it, and the search reads it before it asks TCGdex. */
+    const store = adminClient();
     const { cards, total } = usingFilters
-      ? await searchCards(filters, page, language)
-      : await searchCards((url.searchParams.get("query") ?? "").trim(), page, language);
+      ? await searchCards(filters, page, language, store)
+      : await searchCards((url.searchParams.get("query") ?? "").trim(), page, language, store);
     /* After the search, not before: a search that is about to 502 should not
        have cost a collection read. getRows() fails soft, so a store outage
        leaves every result unmarked rather than taking the search down with it. */
