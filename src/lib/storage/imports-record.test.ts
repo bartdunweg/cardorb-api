@@ -17,6 +17,7 @@ describe("commit, when the imports row cannot be written", () => {
 
     const { commit } = await import("./imports");
     const db = {
+      rpc: async () => ({ data: 0, error: null }),
       from: (table: string) =>
         table === "imports"
           ? {

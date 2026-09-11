@@ -60,14 +60,14 @@ export type CardItem = {
 /**
  * Everything that makes one copy different from another, as one string.
  *
- * The store keeps a row per purchase, so four copies bought on four evenings are four rows even
- * when they agree on every word of what they are. Rows agreeing on all of this are the same copy
- * several times over, and a list that draws them separately draws the same tile four times with
- * nothing to tell them apart.
+ * The store keeps one row per kind since fold_card (2026-09-11): a write that would make a
+ * second row of a kind folds it into the first. This fold at read time is what did that before
+ * the store did, and it stays, because it costs nothing and a row the store has not folded yet
+ * (a migration is one run, a write is one call) still reads as one line.
  *
  * Deliberately not in here: purchase price, purchase date, acquired date and notes. Those are
  * facts about a *transaction*, and two copies you cannot tell apart on the shelf are one line
- * whatever you paid for each. The sheet still holds every row behind that line.
+ * whatever you paid for each. fold_card in the store compares the same fields.
  */
 const sameness = (v: Variant) =>
   [

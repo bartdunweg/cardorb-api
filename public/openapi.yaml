@@ -981,7 +981,7 @@ paths:
       tags: [Collection]
       operationId: addCopy
       summary: One more copy of a row, as a row of its own
-      description: The same card and inventory as the row, with the differences given, `count` held, pulled now unless `acquiredAt` says when. The row is untouched. An empty body — no bytes at all, or `{}` — is one more identical copy.
+      description: The same card and inventory as the row, with the differences given, `count` held, pulled now unless `acquiredAt` says when. The row is untouched. An empty body — no bytes at all, or `{}` — is one more identical copy. A copy that comes out the same kind as a row already held (same finish, foil pattern, condition, grade, language, binder and star) is folded into that row, whose quantity grows by `count`; the answer is that row. Rows are one per kind.
       requestBody:
         required: false
         content:

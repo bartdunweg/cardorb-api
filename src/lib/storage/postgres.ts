@@ -536,7 +536,39 @@ export async function updateRow(
     .maybeSingle();
 
   if (error) throw new Error(`That card could not be updated: ${error.message}`);
-  return data ? toRow(data as CardRecord) : null;
+  if (!data) return null;
+  // A patch to what makes a kind can make this row the same kind as another one held;
+  // then they are one row, this one. A note or a price cannot, so nothing is asked.
+  return KIND_KEYS.some((k) => k in patch) ? foldCard(db, userId, id) : toRow(data as CardRecord);
+}
+
+/** The fields that make one copy a different kind from another; `sameness` in items.ts compares the same. */
+const KIND_KEYS = [
+  "owned",
+  "finish",
+  "foilPattern",
+  "condition",
+  "grade",
+  "language",
+  "collectionId",
+  "isFavorite",
+] as const satisfies readonly (keyof CardPatch)[];
+
+/**
+ * Every row of the same card and the same kind as this one, folded into it: their quantities
+ * added to its, the rows gone. The store keeps one row per kind, and this is what keeps it so
+ * after a write that could have made a second one. The database function does the fold in one
+ * transaction and hands back the row as it is now.
+ */
+async function foldCard(
+  db: SupabaseClient,
+  userId: string,
+  id: string,
+): Promise<CollectionRow | null> {
+  const { data, error } = await db.rpc("fold_card", { p_id: id, p_user_id: userId });
+  if (error) throw new Error(`That card could not be folded: ${error.message}`);
+  const [row] = (data ?? []) as CardRecord[];
+  return row ? toRow(row) : null;
 }
 
 export type InsertResult = { added: number; skipped: number };
@@ -634,6 +666,13 @@ export async function createRows(
   }
 
   const added = (await count()) - before;
+
+  // A file lists copies, and a second copy of a card already held is a normal thing to own;
+  // written, it is one more of that row. Folded after the count, so `added` still says how
+  // many rows the file put in and not how many survived being the same as one held.
+  const { error: foldError } = await db.rpc("fold_identical_cards", { p_user_id: userId });
+  if (foldError) throw new Error(`Folding the import failed: ${foldError.message}`);
+
   return { added, skipped: rows.length - added };
 }
 
@@ -1152,13 +1191,17 @@ export async function copyRow(
     .select(COLUMNS)
     .single();
   if (error) throw new Error(`Copying a card failed: ${error.message}`);
-  return toRow(data as CardRecord);
+  // One more of a kind already held is that row with a bigger quantity, not a second row.
+  const folded = await foldCard(db, userId, (data as CardRecord).id);
+  return folded ?? toRow(data as CardRecord);
 }
 
 export type SplitResult =
   | { kind: "ok"; source: CollectionRow; copy: CollectionRow }
   | { kind: "missing" }
-  | { kind: "too-many" };
+  | { kind: "too-many" }
+  /** The changes make no other kind: the copies would fold straight back into the row. */
+  | { kind: "same" };
 
 /**
  * Some of a row's copies as a row of their own: the database function
@@ -1181,6 +1224,7 @@ export async function splitRow(
   });
   if (error) {
     if (error.message.includes("split-count")) return { kind: "too-many" };
+    if (error.message.includes("split-same")) return { kind: "same" };
     throw new Error(`Splitting a card failed: ${error.message}`);
   }
   const rows = ((data ?? []) as CardRecord[]).map(toRow);

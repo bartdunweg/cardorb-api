@@ -45,6 +45,8 @@ describe("copyRow and the foil pattern", () => {
 
   const dbThatCaptures = (written: Record<string, unknown>[]) =>
     ({
+      // The copy folds into a row of its kind afterwards; none is, so the fold hands it back.
+      rpc: async () => ({ data: [{ ...source, ...written[0], id: "new-1" }], error: null }),
       from: () => ({
         select: () => ({
           eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: source, error: null }) }) }),

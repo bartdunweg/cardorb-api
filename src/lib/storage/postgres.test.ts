@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  copyRow,
   createRow,
+  createRows,
   deleteRow,
   listAccountIds,
   listRows,
@@ -165,7 +167,10 @@ function fakeWriteDb(returned: unknown[]) {
     maybeSingle: async () => ({ data: returned[0] ?? null, error: null }),
     then: (resolve: (v: unknown) => unknown) => resolve({ data: returned, error: null }),
   };
-  return { db: { from: () => chain } as unknown as SupabaseClient, calls };
+  // A patch to what makes a kind folds afterwards; here nothing is the same kind, so the
+  // fold hands the row back as written.
+  const rpc = async () => ({ data: returned, error: null });
+  return { db: { from: () => chain, rpc } as unknown as SupabaseClient, calls };
 }
 
 const ME = "22222222-2222-2222-2222-222222222222";
@@ -390,5 +395,65 @@ describe("reading past PostgREST's thousand-row cap", () => {
     await expect(
       listAccountIds(short(Array.from({ length: 2_300 }, (_, i) => ({ id: `a${i}` })))),
     ).rejects.toThrow(/truncated/);
+  });
+});
+
+/**
+ * A write that can make two rows the same kind folds the row it wrote: the
+ * store keeps one row per kind, and `fold_card` in the database is what keeps
+ * it so. The fake answers the write from `returned` and the fold from `folded`,
+ * and notes which functions were called.
+ */
+function fakeFoldDb(returned: unknown[], folded: unknown[]) {
+  const rpcs: { fn: string; args: Record<string, unknown> }[] = [];
+  const chain: Record<string, unknown> = {
+    update: () => chain,
+    insert: () => chain,
+    upsert: async () => ({ error: null }),
+    eq: () => chain,
+    select: () => chain,
+    single: async () => ({ data: returned[0] ?? null, error: null }),
+    maybeSingle: async () => ({ data: returned[0] ?? null, error: null }),
+    then: (resolve: (v: unknown) => unknown) =>
+      resolve({ data: returned, error: null, count: returned.length }),
+  };
+  const db = {
+    from: () => chain,
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      rpcs.push({ fn, args });
+      return { data: folded, error: null };
+    },
+  } as unknown as SupabaseClient;
+  return { db, rpcs };
+}
+
+describe("one row per kind", () => {
+  const OTHER = "33333333-3333-3333-3333-333333333333";
+
+  it("folds after a patch to what makes a kind, and answers with the folded row", async () => {
+    const { db, rpcs } = fakeFoldDb([record], [{ ...record, quantity: 5 }]);
+    const row = await updateRow(db, ME, ROW, { condition: "Near Mint" });
+    expect(rpcs).toEqual([{ fn: "fold_card", args: { p_id: ROW, p_user_id: ME } }]);
+    expect(row?.quantity).toBe(5);
+  });
+
+  it("does not fold after a note or a price: those make no other kind", async () => {
+    const { db, rpcs } = fakeFoldDb([record], []);
+    const row = await updateRow(db, ME, ROW, { notes: "PSA next week", purchasePrice: 3 });
+    expect(rpcs).toEqual([]);
+    expect(row?.quantity).toBe(2);
+  });
+
+  it("folds a copy into the row already held of that kind", async () => {
+    const { db, rpcs } = fakeFoldDb([{ ...record, id: OTHER }], [{ ...record, quantity: 3 }]);
+    const row = await copyRow(db, ME, ROW, 1, {});
+    expect(rpcs).toEqual([{ fn: "fold_card", args: { p_id: OTHER, p_user_id: ME } }]);
+    expect(row).toMatchObject({ id: ROW, quantity: 3 });
+  });
+
+  it("folds an import into what is held", async () => {
+    const { db, rpcs } = fakeFoldDb([], []);
+    await createRows(db, ME, [], "csv");
+    expect(rpcs).toEqual([{ fn: "fold_identical_cards", args: { p_user_id: ME } }]);
   });
 });
