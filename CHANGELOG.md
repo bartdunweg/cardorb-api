@@ -6,6 +6,14 @@ if the two have drifted apart.
 
 ## 2026-09-11
 
+- A card from the Japanese, Korean or Chinese shelves lands in its Pokédex slot. It is named in
+  that language and the species list is English, so every one of them was filed nowhere — which
+  on that page reads as "you do not own this". `scripts/pokedex.mjs` now writes the same 1,025
+  species in those languages beside the English ones, and the matching takes the longest name in
+  whichever script the card is written in.
+- `scripts/pokedex.mjs` writes where the file actually lives. It resolved `lib/core` rather than
+  `src/lib/core`, so it threw before writing anything — the fourth script with that gap.
+
 - Removed `getCardsStats()`, the whole-collection tally left behind when the web tool moved to its own repository. Nothing but its own tests had referenced it since; `/v1/stats` is answered by `countStats()`. It also carried a live arithmetic fault its own comment forbade — a `movement` percentage pairing the blended market price against Cardmarket's raw thirty-day average, which reported +13.75% for a card that had not moved at all — and twenty-one green tests said the arithmetic was fine. What moved is answered by the movers, out of the recorded daily readings.
 
 - A value history that could not be read is a 503 rather than an empty series. `GET /v1/value-history` answered `200 {"snapshots": []}` when the store was unreachable — the same payload as an account that has never been snapshotted, which both clients draw as the brand-new empty state — while the same route's `?folder=` branch already answered 503 to the same failure. `GET /v1/cards/{tcgId}/prices` had the same shape: its own documentation calls an empty list the honest answer for a card whose history has not started, and an outage was sending it too. Both now say which happened, the way the collection routes already did.
