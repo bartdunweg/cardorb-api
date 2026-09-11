@@ -1,0 +1,1 @@
+- Searching the catalogue for a card to add asks TCGdex now, not pokemontcg.io. The old host had started refusing roughly three requests in five, and a search for "charizard" came back empty often enough to read as "no such card". Same one box, same answer shape; every hit now carries its TCGdex id, so a card added from search is priced from the day it is added.

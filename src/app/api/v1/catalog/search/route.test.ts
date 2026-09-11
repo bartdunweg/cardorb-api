@@ -11,7 +11,7 @@ vi.mock("@/lib/api/guard", () => ({
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
 }));
-vi.mock("@/lib/core/catalogue/ptcg-search", () => ({
+vi.mock("@/lib/core/catalogue/tcgdex-search", () => ({
   searchCards: (...a: unknown[]) => searchCards(...a),
 }));
 /* Both of these are `import "server-only"` underneath — viewer.ts directly,
