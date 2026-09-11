@@ -36,6 +36,8 @@ if the two have drifted apart.
 
 - A Japanese, Korean or Chinese set page names its cards in English — "Charizard ex", not リザードンex — with the printed name beside it as `localName` for a sheet to show in brackets. The names come from Cardmarket's product list through the committed product id maps, and for a Pokémon Cardmarket does not sell, from its species and printed suffix: 12,308 of 12,781 Japanese cards, 6,582 of 7,436 Traditional Chinese, 823 of 877 Simplified, all 239 Korean. A trainer or energy neither source knows — old-era Japanese promos, mostly — keeps its printed name. `scripts/language-card-names.mjs` writes the maps.
 
+- Identical copies are one row with a quantity, in the store and not only on screen. Pressing minus on a card held as several identical rows used to raise the count instead of lowering it, and changing a condition split the copies in two; every write now folds what it makes into the row already held.
+
 - `cmUrl` on `GET /v1/cards/{tcgId}` and the public card is null, on purpose. The address was built from the card's name and the set's, and the button it fed landed on the wrong page or on nothing; Cardmarket publishes its product ids but not the expansion half of a product's address, and its site answers every probe with a bot check, so the right page cannot be guaranteed. Null hides "Buy on Cardmarket" in the iOS app without a release; the web had not drawn it since #215. The links map and `cardmarketUrl()` stay for when the address can be made to hold.
 
 - The English shelf, the set pages and the search leave Pokémon TCG Pocket out: TCGdex carries the mobile game's fifteen sets beside the printed ones, and a binder cannot hold one. A Pocket set asked for by id answers 404.

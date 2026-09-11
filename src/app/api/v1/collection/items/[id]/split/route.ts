@@ -65,6 +65,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   if (split.kind === "missing")
     return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
+  if (split.kind === "same")
+    return apiError(400, "Same in every way: change the quantity instead.", undefined, {
+      headers: readHeaders(req),
+    });
   if (split.kind === "too-many")
     return apiError(400, "That is every copy. Change the row instead of splitting it.", undefined, {
       headers: readHeaders(req),

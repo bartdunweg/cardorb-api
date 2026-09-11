@@ -132,7 +132,8 @@ export function preview(
  * normal thing to own — the check that would skip them cannot tell a duplicate
  * from a second printing, because a finish is not part of the key and a
  * collection filled from Notion mostly has none. Refusing the row would lose a
- * card silently; writing it costs a row somebody can delete.
+ * card silently; writing it costs nothing, because createRows() then folds every
+ * row that is the same kind as one held into that row — one more of it.
  *
  * What that leaves is the real danger, and it is untouched: cards_source_idx is
  * unique on a source_id that a CSV row does not have, and NULLs never collide,
