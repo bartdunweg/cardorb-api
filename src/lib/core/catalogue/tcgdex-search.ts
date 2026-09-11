@@ -205,6 +205,15 @@ export async function searchCards(
   // against: リザードンex is what its record says. The committed English names are scanned here.
   if (language && typeof input === "string" && /[A-Za-z]/.test(input))
     return searchEnglishNames(language, input, page);
+  // The fielded search on another shelf, as the palette's chips ask it: the set chip names a set
+  // the way that shelf shows it (its English title, or its own name), and the term is an English
+  // name or nothing. A type is not asked: TCGdex publishes none on these shelves (setIn).
+  if (
+    language &&
+    typeof input !== "string" &&
+    (input.set?.trim() || /[A-Za-z]/.test(input.name ?? ""))
+  )
+    return searchEnglishNames(language, input.name ?? "", page, { set: input.set });
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
   if (!params) return { cards: [], total: 0 };
@@ -279,20 +288,42 @@ async function searchEnglishNames(
   language: BrowseLanguage,
   term: string,
   page: number,
+  /** A set to stay within, as the shelf names it: its English title, its own name, or its id. */
+  within: { set?: string } = {},
 ): Promise<{ cards: CatalogueMatch[]; total: number }> {
   const words = term.trim().toLowerCase().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS);
-  if (!words.length) return { cards: [], total: 0 };
+  const wantedSet = within.set?.trim().toLowerCase() ?? "";
+  if (!words.length && !wantedSet) return { cards: [], total: 0 };
+
+  // The shelf's order: the set index is newest first, as listSetsIn writes it.
+  const shelf = await languageSetIndex(language).catch(() => new Map<string, CatalogueSet>());
+  const setOf = (id: string) => setIdOf(id) ?? id;
+  // The sets the chip's word names: by English title, by printed name, or by id — a title the
+  // list gives two sets (a Japanese set and its Korean printing share ids, not titles) keeps both.
+  const inSets = wantedSet
+    ? new Set(
+        [...shelf.values()]
+          .filter(
+            (s) =>
+              s.name.toLowerCase() === wantedSet ||
+              s.localName?.toLowerCase() === wantedSet ||
+              s.id.toLowerCase() === wantedSet,
+          )
+          .map((s) => s.id),
+      )
+    : null;
+  if (inSets && !inSets.size) return { cards: [], total: 0 };
+
   const names = englishCardNames(language);
   const ids = Object.keys(names).filter((id) => {
+    if (inSets && !inSets.has(setOf(id))) return false;
+    if (!words.length) return true;
     const name = names[id]?.toLowerCase();
     return !!name && words.every((w) => name.includes(w));
   });
   if (!ids.length) return { cards: [], total: 0 };
 
-  // The shelf's order: the set index is newest first, as listSetsIn writes it.
-  const shelf = await languageSetIndex(language).catch(() => new Map<string, CatalogueSet>());
   const rank = new Map([...shelf.keys()].map((id, i) => [id, i]));
-  const setOf = (id: string) => setIdOf(id) ?? id;
   const collate = new Intl.Collator("en", { numeric: true });
   ids.sort(
     (a, b) =>
