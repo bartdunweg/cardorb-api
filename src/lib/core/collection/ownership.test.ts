@@ -48,6 +48,7 @@ const set = (over: Partial<CatalogueSet> = {}): CatalogueSet => ({
   name: "Base",
   series: "Base",
   releaseDate: "1999/01/09",
+  cardsRecorded: true,
   total: 102,
   printedTotal: 102,
   logo: null,

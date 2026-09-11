@@ -61,6 +61,7 @@ describe("listSets", () => {
         logo: "https://img/logo.png",
         symbol: "https://img/symbol.png",
         localName: null,
+        cardsRecorded: true,
       },
     ]);
   });
