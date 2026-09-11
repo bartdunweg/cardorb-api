@@ -7,8 +7,8 @@
  * every browse file and the ownership join already import it from this path,
  * and a rename across nine files buys nothing a comment does not.
  *
- * escapeTerm() stays for ptcg-browse.ts, which still builds a `set.id:` query
- * against pokemontcg.io for the English shelf and needs Lucene escaping.
+ * escapeTerm() stays for ptcg.ts, which still builds `set.id:` queries against
+ * pokemontcg.io for TCGplayer's prices and needs Lucene escaping.
  */
 /** One candidate from a search, with everything the add-card form can use. */
 export type CatalogueMatch = {
@@ -36,8 +36,9 @@ export type CatalogueMatch = {
    * pokemontcg.io numbers a set `me5-85` and TCGdex numbers it `me05-085`, and everything priced
    * in this repo is keyed by the second — `cardmarket-ids.generated.json` is 1,634 TCGdex ids.
    * A price looked up by the pokemontcg.io id matches nothing at all, silently, which is exactly
-   * what shipped in #241. Filled by withTcgdexScans(), which has already done the match, and
-   * by tcgdex-search.ts, whose hits are TCGdex ids to begin with.
+   * what shipped in #241. Filled by the English set page and the search (tcgdex-browse.ts,
+   * tcgdex-search.ts), whose hits are TCGdex ids to begin with; the language shelves carry
+   * the same id as `id`.
    */
   tcgId?: string | null;
 };

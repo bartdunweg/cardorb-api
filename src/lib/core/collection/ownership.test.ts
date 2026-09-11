@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { canonNumber, markOwnership, ownershipIndex, ownershipOf, setCounts } from "./ownership";
 import type { CollectionRow } from "./collection-row";
 import type { CatalogueMatch } from "../catalogue/ptcg-search";
-import type { CatalogueSet } from "../catalogue/ptcg-browse";
+import type { CatalogueSet } from "../catalogue/tcgdex-browse";
 
 const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   id: "row-1",
@@ -57,7 +57,21 @@ const set = (over: Partial<CatalogueSet> = {}): CatalogueSet => ({
   ...over,
 });
 
-const of = (rows: CollectionRow[], c: CatalogueMatch) => ownershipOf(ownershipIndex(rows), c);
+/**
+ * The English sets the join resolves a row's set name against, as the shelf
+ * hands them over: TCGdex's ids and names. "Base" the collection writes finds
+ * "Base Set" by the loose match, the promos by their alias (set-resolve.ts).
+ */
+const SETS = [
+  { id: "base1", name: "Base Set" },
+  { id: "base2", name: "Jungle" },
+  { id: "swsh12", name: "Silver Tempest" },
+  { id: "swsh12tg", name: "Silver Tempest Trainer Gallery" },
+  { id: "svp", name: "SVP Black Star Promos" },
+];
+
+const english = (rows: CollectionRow[]) => ownershipIndex(rows, null, SETS);
+const of = (rows: CollectionRow[], c: CatalogueMatch) => ownershipOf(english(rows), c);
 
 describe("canonNumber", () => {
   it("drops the padding the collection writes and the catalogues do not", () => {
@@ -139,7 +153,7 @@ describe("ownershipOf", () => {
       id: "svp-44",
       number: "44",
       name: "Pikachu",
-      setName: "Scarlet & Violet Black Star Promos",
+      setName: "SVP Black Star Promos",
     });
     expect(of(rows, promo).owned).toBe(true);
   });
@@ -147,7 +161,7 @@ describe("ownershipOf", () => {
 
 describe("markOwnership", () => {
   it("keeps the catalogue fields and adds the four of its own", () => {
-    const [marked] = markOwnership(ownershipIndex([row()]), [card({ rarity: "Rare Holo" })]);
+    const [marked] = markOwnership(english([row()]), [card({ rarity: "Rare Holo" })]);
     expect(marked).toMatchObject({
       id: "base1-4",
       name: "Charizard",
@@ -162,22 +176,22 @@ describe("markOwnership", () => {
 describe("setCounts", () => {
   it("counts distinct cards, not copies: two Charizard are one card of the set", () => {
     const rows = [row({ id: "a", quantity: 2 }), row({ id: "b", number: "007", name: "Squirtle" })];
-    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 2, wishlistCount: 0 });
+    expect(setCounts(english(rows), set())).toEqual({ ownedCount: 2, wishlistCount: 0 });
   });
 
   it("reads a padded and an unpadded number as the same card", () => {
     const rows = [row({ id: "a", number: "088" }), row({ id: "b", number: "88" })];
-    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 1, wishlistCount: 0 });
+    expect(setCounts(english(rows), set())).toEqual({ ownedCount: 1, wishlistCount: 0 });
   });
 
   it("does not let a wishlist row for a card you also own count twice", () => {
     const rows = [row({ id: "a" }), row({ id: "w", owned: false })];
-    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 1, wishlistCount: 1 });
+    expect(setCounts(english(rows), set())).toEqual({ ownedCount: 1, wishlistCount: 1 });
   });
 
   it("counts a wishlist row separately, never as owned", () => {
     const rows = [row({ owned: false, quantity: 4 })];
-    expect(setCounts(ownershipIndex(rows), set())).toEqual({ ownedCount: 0, wishlistCount: 1 });
+    expect(setCounts(english(rows), set())).toEqual({ ownedCount: 0, wishlistCount: 1 });
   });
 
   it("leaves gallery rows out of the parent set's count", () => {
@@ -188,7 +202,7 @@ describe("setCounts", () => {
       row({ id: "a", setName: "Silver Tempest" }),
       row({ id: "tg", setName: "Silver Tempest", number: "TG12", name: "Zeraora" }),
     ];
-    expect(setCounts(ownershipIndex(rows), set({ name: "Silver Tempest" }))).toEqual({
+    expect(setCounts(english(rows), set({ id: "swsh12", name: "Silver Tempest" }))).toEqual({
       ownedCount: 1,
       wishlistCount: 0,
     });
@@ -199,12 +213,15 @@ describe("setCounts", () => {
       row({ id: "a", setName: "Silver Tempest" }),
       row({ id: "b", setName: "Silver Tempest", number: "TG12", name: "Zeraora" }),
     ];
-    const counts = setCounts(ownershipIndex(rows), set({ name: "Silver Tempest Trainer Gallery" }));
+    const counts = setCounts(
+      english(rows),
+      set({ id: "swsh12tg", name: "Silver Tempest Trainer Gallery" }),
+    );
     expect(counts).toEqual({ ownedCount: 1, wishlistCount: 0 });
   });
 
   it("is zero for a set nothing is filed under", () => {
-    expect(setCounts(ownershipIndex([row()]), set({ name: "Jungle" }))).toEqual({
+    expect(setCounts(english([row()]), set({ id: "base2", name: "Jungle" }))).toEqual({
       ownedCount: 0,
       wishlistCount: 0,
     });
@@ -295,7 +312,7 @@ describe("ownership across two catalogues", () => {
     // Nothing addresses it in its own catalogue, so the only join it can take
     // part in is the one it always did.
     const rows = [japanese({ tcgId: null, name: "Charizard", number: "004", setName: "Base" })];
-    expect(ownershipOf(ownershipIndex(rows), card())).toMatchObject({ owned: true });
+    expect(ownershipOf(english(rows), card())).toMatchObject({ owned: true });
     expect(ownershipOf(ownershipIndex(rows, "ja"), jaCard)).toMatchObject({ owned: false });
   });
 });

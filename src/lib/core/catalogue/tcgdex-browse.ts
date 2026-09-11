@@ -2,15 +2,64 @@ import IDS_JA from "../cardmarket-ids.ja.generated.json";
 import IDS_KO from "../cardmarket-ids.ko.generated.json";
 import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
 import IDS_ZH_TW from "../cardmarket-ids.zh-tw.generated.json";
-import { json } from "./tcgdex-client";
+import { CatalogueNotFound, graphql, json } from "./tcgdex-client";
 import JA_NAMES from "./set-names.ja.json";
 import ZH_NAMES from "./set-names.zh.json";
 import ZH_CN_NAMES from "./set-names.zh-cn.json";
-import type { CatalogueSet } from "./ptcg-browse";
+import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
 
+/** One set, with enough to render a tile and sort a shelf. */
+export type CatalogueSet = {
+  id: string;
+  name: string;
+  /** The era, as TCGdex names it — its serie. */
+  series: string;
+  /** "YYYY/MM/DD" — sortable as a string. */
+  releaseDate: string | null;
+  /** Every card in the set, secret rares included. */
+  total: number;
+  /** The number printed on the cards ("165" of a set that actually holds 207). */
+  printedTotal: number | null;
+  logo: string | null;
+  symbol: string | null;
+  /** The set's name in its own language where `name` is a translation (a Japanese set); null for English. */
+  localName: string | null;
+  /**
+   * Whether the catalogue has recorded the set's cards, or only the set and its count. Always
+   * true for English; TCGdex lists 68 of 184 Japanese sets and 92 of 95 Korean ones with a count
+   * and no card (2026-09-11), and a shelf that could not tell showed "0 of 60" for those.
+   */
+  cardsRecorded: boolean;
+};
+
 /**
- * The shelf and the set pages for a language other than English.
+ * The shelf and the set pages: every language TCGdex carries, English included.
+ *
+ * ── English, since 2026-09-11 ────────────────────────────────────────────────
+ *
+ * The English shelf asked pokemontcg.io (ptcg-browse.ts, now gone) for the
+ * reason its header gave: TCGdex's set listing carries no rarity and no types,
+ * so a 207-card set would have been 207 requests. That was true of the REST
+ * listing and is not true of TCGdex's GraphQL endpoint, which filters cards by
+ * id and answers a whole set's rarities and types in one call (measured: 207
+ * of 207 for 151, 240 ms). And pokemontcg.io had started refusing three
+ * requests in five — measured the same day for the search (tcgdex-search.ts),
+ * and for these routes: 2 of 8 for the set list, 1 of 8 for a set's cards —
+ * behind a day-long cache that hid it until an entry went cold.
+ *
+ * So the English shelf reads like the other four: TCGdex's own ids, names,
+ * eras and scans. A set is two reads — its record and card list (a cached
+ * GET), and its rarities and types (GraphQL, memoised nowhere, 240 ms) — and
+ * the shelf is one, the set index below, held for a day per process.
+ *
+ * Set ids changed with the source: pokemontcg.io numbers 151 `sv3pt5`, TCGdex
+ * `sv03.5`. 122 of 174 are the same string; the other 52 are in
+ * ptcg-set-ids.json, and englishSet() reads a pokemontcg.io id through it, so
+ * a link from before this day still opens the set it opened. The contract
+ * (`GET /v1/catalog/sets/{setId}`) says which id the shelf now hands out.
+ *
+ * ── The other languages ──────────────────────────────────────────────────────
  *
  * pokemontcg.io knows the English game only. TCGdex carries a catalogue per
  * language — Japanese, Chinese (traditional and simplified), Korean — with its
@@ -171,4 +220,205 @@ export async function setIn(
     series: detail.serie?.name ?? null,
   }));
   return { set, cards };
+}
+
+// ── English ────────────────────────────────────────────────────────────────
+
+/** A TCGdex date, "YYYY-MM-DD", as every shelf writes it: "YYYY/MM/DD", sortable as a string. */
+const shelfDate = (d: string | null | undefined) => (d ? d.replaceAll("-", "/") : null);
+
+type TcgSetIndexJson = {
+  id: string;
+  name?: string | null;
+  logo?: string | null;
+  symbol?: string | null;
+  releaseDate?: string | null;
+  cardCount?: { official?: number | null; total?: number | null } | null;
+  serie?: { name?: string | null } | null;
+};
+
+/**
+ * Every English set TCGdex knows, newest first, held for a day per process.
+ *
+ * One GraphQL call for 218 sets with era, date, counts and art, where the REST
+ * listing has neither era nor date. Memoised as the promise, not the value, so
+ * ten shelves opened at once make one request; a failure is not kept, so the
+ * next shelf asks again. Read by the shelf, by the ownership join (which files
+ * a row under the set it resolves to) and by the search (which names a hit's
+ * set and era from the id).
+ */
+let english: { at: number; sets: Promise<CatalogueSet[]> } | null = null;
+const ENGLISH_TTL_MS = 86_400_000;
+
+async function fetchEnglishSets(): Promise<CatalogueSet[]> {
+  const body = (await graphql(
+    "{ sets { id name logo symbol releaseDate cardCount { official total } serie { name } } }",
+    "en set index",
+  )) as { sets?: (TcgSetIndexJson | null)[] } | null;
+  const out: CatalogueSet[] = [];
+  for (const s of body?.sets ?? []) {
+    if (!s?.name) continue;
+    out.push({
+      id: s.id,
+      name: s.name,
+      localName: null,
+      series: s.serie?.name ?? "Other",
+      releaseDate: shelfDate(s.releaseDate),
+      total: s.cardCount?.total ?? 0,
+      printedTotal: s.cardCount?.official ?? null,
+      cardsRecorded: true,
+      logo: s.logo ? `${s.logo}.webp` : null,
+      symbol: s.symbol ? `${s.symbol}.webp` : null,
+    });
+  }
+  if (!out.length) throw new Error("TCGdex answered no sets");
+  // Newest first, as every set list in the app reads: a collector opening the
+  // shelf is looking for the set that just came out far more often than for Base.
+  return out.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
+}
+
+export function englishSets(): Promise<CatalogueSet[]> {
+  if (english && Date.now() - english.at < ENGLISH_TTL_MS) return english.sets;
+  const sets = fetchEnglishSets().catch((err) => {
+    english = null;
+    throw err;
+  });
+  english = { at: Date.now(), sets };
+  return sets;
+}
+
+/** The same, by id. */
+export async function englishSetIndex(): Promise<Map<string, CatalogueSet>> {
+  const out = new Map<string, CatalogueSet>();
+  for (const s of await englishSets()) out.set(s.id, s);
+  return out;
+}
+
+/** Thrown away between tests, and by anything that wants the next shelf to re-read the index. */
+export const forgetEnglishSets = () => {
+  english = null;
+};
+
+/**
+ * The TCGdex id behind whatever id a client sent: TCGdex's own, the same one
+ * in another case, or pokemontcg.io's from before 2026-09-11, through the
+ * table. Null where nothing carries it.
+ *
+ * With the index unreachable the id is taken as given: the set's own record is
+ * a separate read, and a GraphQL outage should cost a set page its era and its
+ * facts, not the page.
+ */
+export async function resolveEnglishSetId(setId: string): Promise<string | null> {
+  const index = await englishSetIndex().catch(() => null);
+  if (!index) return setId;
+  if (index.has(setId)) return setId;
+  const lower = setId.toLowerCase();
+  const mapped = (PTCG_SET_IDS as Record<string, string>)[lower];
+  if (mapped && index.has(mapped)) return mapped;
+  for (const id of index.keys()) if (id.toLowerCase() === lower) return id;
+  return null;
+}
+
+/**
+ * Rarity and types for a whole set, by id, in one call.
+ *
+ * `id` is a contains-filter on TCGdex's side, so `sv03` would also answer
+ * `sv03.5`'s cards; the prefix check keeps the set's own. Fails soft: a card
+ * without facts keeps rarity null and types empty, which is what the other
+ * shelves have always shown, and a set is worth showing without them.
+ */
+async function englishFacts(
+  setId: string,
+): Promise<Map<string, { rarity: string | null; types: string[] }>> {
+  const out = new Map<string, { rarity: string | null; types: string[] }>();
+  try {
+    const body = (await graphql(
+      `{ cards(filters: { id: ${JSON.stringify(setId)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types } }`,
+      `en set ${setId} facts`,
+    )) as {
+      cards?: ({ id: string; rarity?: string | null; types?: string[] | null } | null)[];
+    } | null;
+    for (const c of body?.cards ?? [])
+      if (c?.id.startsWith(`${setId}-`))
+        out.set(c.id, { rarity: c.rarity ?? null, types: c.types ?? [] });
+  } catch (err) {
+    console.error(`TCGdex facts for ${setId} unavailable, set shown without them:`, err);
+  }
+  return out;
+}
+
+/**
+ * The number a card is filed under, split so it can be ordered the way a binder
+ * page is rather than the way a string sort is: a set's numbers are not all
+ * numbers — 151 runs 1–207, Silver Tempest's gallery runs TG01–TG30, and the
+ * promos run SVP001 — so the prefix decides the group and the digits the place.
+ */
+function numberOrder(number: string): [string, number, string] {
+  const m = /^([A-Za-z]*)0*(\d+)(.*)$/.exec(number.trim());
+  if (!m) return [number.toUpperCase(), Number.MAX_SAFE_INTEGER, number];
+  return [(m[1] ?? "").toUpperCase(), Number(m[2]), m[3] ?? ""];
+}
+
+export const inBinderOrder = (cards: CatalogueMatch[]): CatalogueMatch[] =>
+  [...cards].sort((a, b) => {
+    const [ap, an, ar] = numberOrder(a.number);
+    const [bp, bn, br] = numberOrder(b.number);
+    return ap.localeCompare(bp) || an - bn || ar.localeCompare(br);
+  });
+
+/**
+ * One English set with every card, in binder order, or null where no id —
+ * TCGdex's or pokemontcg.io's — carries it. The whole set rather than a page,
+ * because the route wants an exact total and an exact owned count, and the
+ * set's record is one cached GET shared by everybody.
+ */
+export async function englishSet(
+  setId: string,
+): Promise<{ set: CatalogueSet; cards: CatalogueMatch[] } | null> {
+  const id = await resolveEnglishSetId(setId);
+  if (!id) return null;
+  let detail: TcgSetDetail;
+  try {
+    detail = (await json(
+      `${HOST}/en/sets/${encodeURIComponent(id)}`,
+      `en set ${id}`,
+    )) as TcgSetDetail;
+  } catch (err) {
+    if (err instanceof CatalogueNotFound) return null;
+    throw err;
+  }
+  const [index, facts] = await Promise.all([
+    englishSetIndex().catch(() => new Map<string, CatalogueSet>()),
+    englishFacts(id),
+  ]);
+  const known = index.get(id);
+  const serieId = detail.serie?.id ?? "";
+  const set: CatalogueSet = {
+    id,
+    name: detail.name || known?.name || id,
+    localName: null,
+    series: known?.series ?? detail.serie?.name ?? "Other",
+    releaseDate: shelfDate(detail.releaseDate) ?? known?.releaseDate ?? null,
+    total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
+    printedTotal: detail.cardCount?.official ?? null,
+    cardsRecorded: (detail.cards ?? []).length > 0,
+    logo: detail.logo ? `${detail.logo}.webp` : (known?.logo ?? null),
+    symbol: detail.symbol ? `${detail.symbol}.webp` : (known?.symbol ?? null),
+  };
+  const cards = (detail.cards ?? []).map((c): CatalogueMatch => ({
+    id: c.id,
+    number: c.localId,
+    name: c.name,
+    setName: set.name,
+    series: set.series,
+    // The address is built, as the other shelves build it: the record often says nothing
+    // about a scan that is there all the same. A card the assets do not have draws as its name.
+    image: serieId ? scan("en", serieId, id, c.localId, "low") : null,
+    imageHigh: serieId ? scan("en", serieId, id, c.localId, "high") : null,
+    rarity: facts.get(c.id)?.rarity ?? null,
+    types: facts.get(c.id)?.types ?? [],
+    // TCGdex's id, because this is TCGdex: what every price in this repo is keyed by.
+    tcgId: c.id,
+  }));
+  return { set, cards: inBinderOrder(cards) };
 }

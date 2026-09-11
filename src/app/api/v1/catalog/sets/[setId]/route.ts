@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
-import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
-import { withLimitlessScans, withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
+import {
+  englishSet,
+  englishSets,
+  isBrowseLanguage,
+  setIn,
+} from "@/lib/core/catalogue/tcgdex-browse";
+import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
 import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -11,9 +15,9 @@ import { bearer } from "@/lib/api/viewer";
 /**
  * One set, all of it, with the viewer's own cards marked.
  *
- * Paged in memory rather than at the source, and that is deliberate: setCards()
- * fetches the whole set once and keeps it for a day (it is the same for
- * everybody), so slicing here costs nothing and buys two things a forwarded
+ * Paged in memory rather than at the source, and that is deliberate: the set
+ * is read whole once and kept for a day (it is the same for everybody), so
+ * slicing here costs nothing and buys two things a forwarded
  * page could not give — an exact `totalCount`, and an ownership mark that is
  * right for every card rather than for the twenty that happened to come back.
  *
@@ -64,18 +68,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
          whole sets at a time. Limitless has those; see browse-artwork.ts for the count. */
       cards = await withLimitlessScans(language, found.cards);
     } else {
-      set = await findSet(setId);
-      /* Checked before the cards are asked for: an id nobody carries is a 404, not
-       an empty set, and finding that out from a card list that came back with
-       nothing would conflate the two. */
-      if (!set) {
-        return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
-      }
-      /* pokemontcg.io answers what is in the set; TCGdex, where it has the same
-       card, answers it with a picture a seventh of the size. See
-       browse-artwork.ts for the measurement — it fails soft, so this cannot be
-       the thing that 502s below. */
-      cards = await withTcgdexScans(set, await setCards(setId));
+      /* TCGdex's own id, or pokemontcg.io's from before 2026-09-11, which the
+         shelf still reads (tcgdex-browse.ts). An id nobody carries is a 404, not
+         an empty set. */
+      const found = await englishSet(setId);
+      if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
+      set = found.set;
+      cards = found.cards;
     }
   } catch {
     return refuse("catalogue", { headers: readHeaders(req) });
@@ -86,7 +85,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      id marks its own shelf exactly, by id; every other row marks the English one. Both
      directions matter, because a Japanese set named like an English one (Black Bolt) would
      otherwise be counted by the English cards, and was. */
-  const index = ownershipIndex(rows, isBrowseLanguage(language) ? language : null);
+  const index = ownershipIndex(
+    rows,
+    isBrowseLanguage(language) ? language : null,
+    isBrowseLanguage(language) ? [] : await englishSets(),
+  );
   const marked = markOwnership(index, cards);
   const start = (page - 1) * pageSize;
   const shown = marked.slice(start, start + pageSize);
@@ -95,9 +98,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      rather than as a checklist. Only the page's cards are priced, and only from the guide that
      is already cached for the day: the whole set would be up to 250 lookups, and the TCGdex
      fallback behind them would be a request each for the many cards Cardmarket does not price. */
-  /* Keyed by the TCGdex id, not the catalogue's own: on the English path these cards come from
-     pokemontcg.io (`me5-85`) and every price in this repo is keyed the TCGdex way (`me05-085`).
-     On the other-language path `id` already is the TCGdex one, so the fallback is right there. */
+  /* Keyed by the TCGdex id. Every shelf's cards are TCGdex's now, so `tcgId` and `id` agree;
+     the fallback is for a card that came without the one. */
   /* From that catalogue's own map. A Japanese set page showed a blank line under all 92 cards
      of M1S while the guide priced every one of them: the only map from a card to its Cardmarket
      product held English cards somebody owns. Which map to read is a fact about the page, not

@@ -18,16 +18,15 @@
  * not needed here.
  *
  * What one search costs: one cached GET for the window of hits, one POST for the
- * rarity and types of the page shown, and, once a day per process, one POST for
- * the set index. The POSTs are not cached by Next — it caches GETs — which is
- * why the expensive half is the GET and the index is memoised here.
+ * rarity and types of the page shown, and the English set index the shelf holds
+ * (tcgdex-browse.ts, once a day per process), which names a hit's set and era
+ * from its id.
  */
-import { json } from "./tcgdex-client";
+import { graphql, json } from "./tcgdex-client";
+import { englishSetIndex, type CatalogueSet } from "./tcgdex-browse";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 
-const HOST = "https://api.tcgdex.net/v2";
-const CATALOGUE = `${HOST}/en`;
-const GRAPHQL = `${HOST}/graphql`;
+const CATALOGUE = "https://api.tcgdex.net/v2/en";
 
 /**
  * How many hits are read before the words that could not become a filter are
@@ -57,81 +56,15 @@ const ENERGY_TYPES = [
 /** What TCGdex's list answers with: a card brief, and nothing about the card itself. */
 type Brief = { id: string; localId?: string; name?: string; image?: string | null };
 
-/** A set as the index knows it: what to print for it, and which era it belongs to. */
-type SetFacts = { name: string; series: string };
-
 const lower = (s: string) => s.trim().toLowerCase();
 
 /**
  * A scan's address. TCGdex hands back the stem and leaves the size and the
- * format to the caller, the same way tcgdex-browse.ts builds one for a
- * Japanese card; a card whose scan has not been published carries no stem at
- * all and draws as its name.
+ * format to the caller; a card whose scan has not been published carries no
+ * stem at all and draws as its name.
  */
 const scan = (stem: string | null | undefined, size: "low" | "high") =>
   stem ? `${stem}/${size}.webp` : null;
-
-/**
- * Every set TCGdex knows, by id, with the era it sits in.
- *
- * The list endpoint's card brief carries no set at all, and browseCardSchema on
- * the web wants a set name and an era per hit, so the index supplies both from
- * the id — `pl4-1` is card 1 of `pl4`. One request for 218 sets, held for a day
- * per process: sets are published weekly at most, and a search may not pay for
- * the index more than once.
- *
- * Memoised as the promise, not the value, so ten keystrokes at once make one
- * request rather than ten. A failure is not kept: the next search tries again,
- * and until one succeeds a hit reads with its own id for a set name.
- */
-let indexed: { at: number; sets: Promise<Map<string, SetFacts>> } | null = null;
-const INDEX_TTL_MS = 86_400_000;
-
-async function fetchSetIndex(): Promise<Map<string, SetFacts>> {
-  const body = (await graphql("{ series { name sets { id name } } }", "set index")) as {
-    series?: { name?: string; sets?: { id: string; name?: string }[] }[];
-  } | null;
-  const out = new Map<string, SetFacts>();
-  for (const serie of body?.series ?? [])
-    for (const set of serie.sets ?? [])
-      out.set(set.id, { name: set.name ?? set.id, series: serie.name ?? "" });
-  if (!out.size) throw new Error("TCGdex answered no sets");
-  return out;
-}
-
-export function setIndex(): Promise<Map<string, SetFacts>> {
-  if (indexed && Date.now() - indexed.at < INDEX_TTL_MS) return indexed.sets;
-  const sets = fetchSetIndex().catch((err) => {
-    indexed = null;
-    throw err;
-  });
-  indexed = { at: Date.now(), sets };
-  return sets;
-}
-
-/** Thrown away between tests, and by anything that wants the next search to re-read the index. */
-export const forgetSetIndex = () => {
-  indexed = null;
-};
-
-/**
- * One GraphQL call. Not cached — Next caches GETs, and TCGdex's GraphQL
- * endpoint answers a GET with its playground — so this is used only for what a
- * cached GET cannot say: the set index (once a day) and the rarity and types of
- * the twenty cards on screen.
- */
-async function graphql(query: string, label: string): Promise<unknown> {
-  const res = await fetch(GRAPHQL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ query }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!res.ok) throw new Error(`TCGdex ${label} answered ${res.status}`);
-  const body = (await res.json()) as { data?: unknown };
-  return body.data ?? null;
-}
 
 /**
  * The filters TCGdex can answer itself, and the words it cannot.
@@ -254,7 +187,7 @@ export async function searchCards(
   url.searchParams.set("pagination:itemsPerPage", String(WINDOW));
 
   const brief = ((await json(url.toString(), "card search", { revalidate: 300 })) ?? []) as Brief[];
-  const sets = await setIndex().catch(() => new Map<string, SetFacts>());
+  const sets = await englishSetIndex().catch(() => new Map<string, CatalogueSet>());
 
   const hits = brief
     .filter((c): c is Brief & { localId: string; name: string } => !!c.localId && !!c.name)

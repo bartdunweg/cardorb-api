@@ -80,6 +80,29 @@ export async function json(
 }
 
 /**
+ * One GraphQL call.
+ *
+ * Not cached: Next caches GETs, and TCGdex's GraphQL endpoint answers a GET
+ * with its playground. So this is used only for what a cached GET cannot say
+ * in one request — the English set index with its eras and dates, a set's
+ * rarities and types, a page of search hits' facts — and the callers memoise
+ * what is worth keeping. A field GraphQL cannot fill for one item nulls that
+ * item alone, which is why every caller reads the answer as "maybe".
+ */
+export async function graphql(query: string, label: string): Promise<unknown> {
+  const res = await fetch("https://api.tcgdex.net/v2/graphql", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ query }),
+    cache: "no-store",
+    signal: catalogueTimeout(),
+  });
+  if (!res.ok) throw new Error(`TCGdex ${label} answered ${res.status}`);
+  const body = (await res.json()) as { data?: unknown };
+  return body.data ?? null;
+}
+
+/**
  * One set, with a retry.
  *
  * This used to swallow failures silently, which made a bad situation invisible:
