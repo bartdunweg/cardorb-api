@@ -33,6 +33,7 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
    being up. Replaced with the identity it degrades to when TCGdex is silent. */
 vi.mock("@/lib/core/catalogue/browse-artwork", () => ({
   withTcgdexScans: (_set: unknown, cards: unknown) => cards,
+  withLimitlessScans: (_lang: unknown, cards: unknown) => cards,
 }));
 
 const { GET } = await import("./route");
