@@ -18,9 +18,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueCardRecord,
   type CatalogueQuery,
+  catalogueCardsById,
   catalogueCopied,
+  catalogueVersion,
+  listCatalogueCards,
   listCatalogueSync,
+  readCatalogueIndex,
   searchCatalogueCards,
+  writeCatalogueIndex,
   writeCatalogueSet,
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
@@ -212,4 +217,70 @@ export async function syncMirror(
   report.left = queue.length;
   report.ms = Math.round(now() - start);
   return report;
+}
+
+// ── The document ────────────────────────────────────────────────────────────
+//
+// The whole copy as one document, for the browser to search in (see the catalogue_index
+// migration for why). Compact on purpose: a set's name, era, date and scan folder are written
+// once under its id, and each card is an array — id, set, number, name, rarity, types — with a
+// seventh element only where its scan is not at the set's folder. Twenty-three thousand cards
+// are about two megabytes plain and a few hundred kilobytes compressed.
+
+/** One card in the document. The seventh element is the scan's stem where it is not `${set.image}/${number}`, or null for none. */
+export type IndexCard = [string, string, string, string, string | null, string[], (string | null)?];
+export type IndexSet = {
+  name: string;
+  series: string | null;
+  date: string | null;
+  image: string | null;
+};
+export type CatalogueIndex = {
+  version: string;
+  sets: Record<string, IndexSet>;
+  cards: IndexCard[];
+};
+
+/** The sets' scan folder, off the first card that has one: every English scan sits at `folder/number`. */
+export function buildIndex(version: string, rows: CatalogueCardRecord[]): CatalogueIndex {
+  const sets: Record<string, IndexSet> = {};
+  for (const r of rows) {
+    const set = (sets[r.set_id] ??= {
+      name: r.set_name,
+      series: r.series,
+      date: r.release_date,
+      image: null,
+    });
+    if (!set.image && r.image && r.image.endsWith(`/${r.local_id}`))
+      set.image = r.image.slice(0, -r.local_id.length - 1);
+  }
+  const cards = rows.map((r): IndexCard => {
+    const folder = sets[r.set_id]?.image;
+    const card: IndexCard = [r.id, r.set_id, r.local_id, r.name, r.rarity, r.types];
+    if (r.image !== (folder ? `${folder}/${r.local_id}` : null)) card.push(r.image);
+    return card;
+  });
+  return { version, sets, cards };
+}
+
+/**
+ * The document, current to the copy: read as stored, rebuilt when the copy has been written
+ * since — the cron rebuilds it after every copy, and a request finding it behind (or absent,
+ * before the first cron) builds it once and keeps it. Null while the copy is empty.
+ */
+export async function catalogueIndex(
+  db: SupabaseClient,
+): Promise<{ version: string; body: string } | null> {
+  const version = await catalogueVersion(db);
+  if (!version) return null;
+  const stored = await readCatalogueIndex(db, "en");
+  if (stored && stored.version >= version) return stored;
+  const body = JSON.stringify(buildIndex(version, await listCatalogueCards(db)));
+  await writeCatalogueIndex(db, "en", version, body);
+  return { version, body };
+}
+
+/** These cards of the copy as the add-card form reads them, in the order asked; an id the copy lacks is left out. */
+export async function mirrorCards(db: SupabaseClient, ids: string[]): Promise<CatalogueMatch[]> {
+  return (await catalogueCardsById(db, ids)).map(matchOf);
 }
