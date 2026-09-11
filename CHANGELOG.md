@@ -59,6 +59,8 @@ if the two have drifted apart.
 - `GET /v1/catalog/search?language=ja|zh-tw|zh-cn|ko` with a Latin-letter term matches the English names those cards are shown under — "charizard" finds every Lizardon — off the committed maps, newest set first, with no request to the catalogue beyond the sets on the page shown. A term in the shelf's own script still asks TCGdex, as before.
 - The 46 Simplified Chinese sets and two coming MEGA sets (Abyss Eye, Storm Emeralda) have English titles in the hand-kept lists. The Chinese ones are literal renderings, not official names: correct them.
 
+- A public profile's cards carry `localName` too — what a Japanese, Korean or Chinese card prints, null on English cards — so a visitor's sheet can show it in brackets after the English name.
+
 - `GET /v1/catalog/search?language=ja&set=…` keeps to that set, named as the shelf shows it (its English title, its own name, or its id), with or without a name beside it — the palette's Set chip works on every shelf. A type is not asked on those shelves: TCGdex publishes none there.
 
 - 971 more English cards are priced: Gym Heroes and Gym Challenge whole, the Black & White and Sun & Moon promos, the XY trainer kits, and the printings Cardmarket lists several times under one name. `scripts/cardmarket-ids-fill.mjs` recognises a set nobody has linked a card in by which Cardmarket expansion carries its names, tells one printing from another by the attacks in Cardmarket's brackets, and skips the Pokémon TCG Pocket sets, which have no physical card to price. 232 stay unlinked, mostly names the two catalogues spell differently.

@@ -456,6 +456,11 @@ export type PublicItem = {
   /** The larger scan, where the catalogue has two sizes; a tile on a phone draws it. */
   imageHigh: string | null;
   speciesId: number | null;
+  /**
+   * What the card prints where `name` is the English for it (a Japanese card); null otherwise.
+   * Optional in the type, not the answer: the fixtures that build one by hand predate it.
+   */
+  localName?: string | null;
   tcgId: string | null;
   /** Owned copies. A card with only wishes is not on a public page. */
   copies: number;
@@ -489,6 +494,7 @@ export function publicItems(sets: CardSet[], { newestFirst = false } = {}): Publ
         image: card.image,
         imageHigh: card.imageHigh,
         speciesId: card.speciesId,
+        localName: card.localName ?? null,
         tcgId: card.tcgId,
         copies,
         favorite: card.variants.some((v) => v.owned && v.isFavorite),
@@ -526,6 +532,7 @@ export function publicWishes(sets: CardSet[]): PublicItem[] {
         image: card.image,
         imageHigh: card.imageHigh,
         speciesId: card.speciesId,
+        localName: card.localName ?? null,
         tcgId: card.tcgId,
         copies,
         favorite: false,
