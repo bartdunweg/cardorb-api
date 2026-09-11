@@ -26,6 +26,8 @@ if the two have drifted apart.
 
 - A Japanese card you own from a set TCGdex has not photographed shows Limitless's scan, as the set page has since #262. The collection path resolves a card on its own, so it asks once per card whether TCGdex's file is there (a HEAD, cached a day) and hands over Limitless's guessed address where it is not; a probe that cannot be made keeps TCGdex's address. Korean and Chinese cards spend no probe. `GET /v1/collection`, `/v1/cards` and the public profile carry it.
 
+- `cmUrl` on `GET /v1/cards/{tcgId}` and the public card is null, on purpose. The address was built from the card's name and the set's, and the button it fed landed on the wrong page or on nothing; Cardmarket publishes its product ids but not the expansion half of a product's address, and its site answers every probe with a bot check, so the right page cannot be guaranteed. Null hides "Buy on Cardmarket" in the iOS app without a release; the web had not drawn it since #215. The links map and `cardmarketUrl()` stay for when the address can be made to hold.
+
 - Searching the catalogue for a card to add asks TCGdex now, not pokemontcg.io. The old host had started refusing roughly three requests in five, and a search for "charizard" came back empty often enough to read as "no such card". Same one box, same answer shape; every hit now carries its TCGdex id, so a card added from search is priced from the day it is added.
 
 - `GET /v1/catalog/search` answers `total` beside `cards`: how many the whole search matched, so a client can say "125 cards" above the page it shows. At most the 250 the search reads, which then means "at least".

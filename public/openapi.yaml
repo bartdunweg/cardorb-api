@@ -322,7 +322,7 @@ components:
             logo: { type: [string, "null"] }
             total: { type: [integer, "null"] }
         cmId: { type: [integer, "null"], description: "Cardmarket's product id." }
-        cmUrl: { type: string }
+        cmUrl: { type: [string, "null"], description: "Where to buy it. Null since 2026-09-11: the address could not be guaranteed to land on the card's own page, so no client shows a button until it can." }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         market:
           type: [object, "null"]

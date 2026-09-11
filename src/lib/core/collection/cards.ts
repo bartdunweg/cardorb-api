@@ -37,7 +37,6 @@ import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
 import { LOCALE } from "../config";
 import { limitlessScan, tcgdexScan } from "../catalogue/artwork";
-import { cardmarketUrl } from "../catalogue/cardmarket";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
 import {
@@ -1215,8 +1214,15 @@ export type CardDetail = {
   set: { id: string; name: string; logo: string | null; total: number | null } | null;
   /** Cardmarket's product id, which is how a card is addressed on their site. */
   cmId: number | null;
-  /** Where to buy it. See cardmarketUrl. */
-  cmUrl: string;
+  /**
+   * Where to buy it. Null for now, on purpose: the address was built from the card's name and
+   * the set's, and the button it fed ("Buy on Cardmarket", in the iOS app) landed on the wrong
+   * page or on nothing. Cardmarket publishes its product ids but not the expansion half of a
+   * product's address, and its site answers every probe with a bot check, so the right page
+   * cannot be guaranteed from here. Null hides the button in every client without a release;
+   * cardmarketUrl() and the links map stay for when the address can be made to hold.
+   */
+  cmUrl: string | null;
   price: Price | null;
   /** The rest of Cardmarket's numbers, for the card's own page. */
   market: { avg: number | null; trend: number | null; avg7: number | null } | null;
@@ -1302,7 +1308,7 @@ export async function getCardDetail(
         }
       : null,
     cmId: num(cm?.idProduct),
-    cmUrl: cardmarketUrl(card.id, card.name),
+    cmUrl: null,
     price: cm ? priceOf(cm) : null,
     market: cm ? { avg: num(cm.avg), trend: num(cm.trend), avg7: num(cm.avg7) } : null,
   };
