@@ -55,18 +55,21 @@ const row = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   authorise.mockResolvedValue(VIEWER);
   getRows.mockResolvedValue({ rows: [], failed: false });
-  searchCards.mockResolvedValue([
-    {
-      id: "base1-4",
-      number: "4",
-      name: "Charizard",
-      setName: "Base",
-      image: "https://img/base1/4/small",
-      imageHigh: "https://img/base1/4/large",
-      rarity: "Rare Holo",
-      types: ["Fire"],
-    },
-  ]);
+  searchCards.mockResolvedValue({
+    total: 1,
+    cards: [
+      {
+        id: "base1-4",
+        number: "4",
+        name: "Charizard",
+        setName: "Base",
+        image: "https://img/base1/4/small",
+        imageHigh: "https://img/base1/4/large",
+        rarity: "Rare Holo",
+        types: ["Fire"],
+      },
+    ],
+  });
 });
 afterEach(() => {
   searchCards.mockClear();

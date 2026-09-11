@@ -74,7 +74,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const cards = usingFilters
+    const { cards, total } = usingFilters
       ? await searchCards(filters, page)
       : await searchCards((url.searchParams.get("query") ?? "").trim(), page);
     /* After the search, not before: a search that is about to 502 should not
@@ -82,7 +82,9 @@ export async function GET(req: Request) {
        leaves every result unmarked rather than taking the search down with it. */
     const { rows } = await getRows(who.userId, bearer(req) ?? undefined);
     return NextResponse.json(
-      { cards: markOwnership(ownershipIndex(rows), cards) },
+      /* `total` is how many the whole search matched, at most the window it reads (250,
+         which then means "at least"); a client shows it above the page. */
+      { cards: markOwnership(ownershipIndex(rows), cards), total },
       { headers: readHeaders(req) },
     );
   } catch {
