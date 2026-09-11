@@ -53,6 +53,11 @@ import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
 import IDS from "../cardmarket-ids.generated.json";
+import IDS_JA from "../cardmarket-ids.ja.generated.json";
+import IDS_KO from "../cardmarket-ids.ko.generated.json";
+import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
+import IDS_ZH_TW from "../cardmarket-ids.zh-tw.generated.json";
+import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
@@ -141,15 +146,34 @@ const cachedRows = (userId: string, db: SupabaseClient | null) =>
  */
 export const PRICE_GUIDE_TAG = "price-guide";
 
-const cachedGuidePrices = () =>
-  timedCache("cache guide-prices", (ran) =>
+/**
+ * The committed id maps, one per catalogue. The ids are not unique between them — SM1S is a set
+ * in Japanese and in Korean, and SM1S-001 is a different card in each — so they cannot be one
+ * map, and each is cached on its own. Built by scripts/language-cardmarket-ids.mjs.
+ */
+const LANGUAGE_IDS: Record<BrowseLanguage, ProductIds> = {
+  ja: IDS_JA as ProductIds,
+  ko: IDS_KO as ProductIds,
+  "zh-cn": IDS_ZH_CN as ProductIds,
+  "zh-tw": IDS_ZH_TW as ProductIds,
+};
+
+/**
+ * One catalogue's prices, cached a day under its own key.
+ *
+ * Per catalogue rather than all of them in one entry, for the reason above and for a second:
+ * the Japanese shelf alone is twelve thousand cards, and a single entry holding every catalogue
+ * would be the one thing in this cache near the two-megabyte ceiling an entry has.
+ */
+const cachedGuidePrices = (language: BrowseLanguage | null = null) =>
+  timedCache(`cache guide-prices${language ? ` ${language}` : ""}`, (ran) =>
     unstable_cache(
       async (): Promise<Record<string, CardPrices>> => {
         ran();
-        const ids = Object.keys(IDS as ProductIds);
-        return Object.fromEntries(guidePrices(ids, await fetchPriceGuide(), IDS as ProductIds));
+        const map = language ? LANGUAGE_IDS[language] : (IDS as ProductIds);
+        return Object.fromEntries(guidePrices(Object.keys(map), await fetchPriceGuide(), map));
       },
-      ["guide-prices", "v5"],
+      ["guide-prices", language ?? "en", "v6"],
       { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
     )(),
   );
@@ -170,14 +194,16 @@ export async function pricesFromGuideThenTcgdex(ids: string[]): Promise<Map<stri
  * was being downloaded once per set on every rebuild. Fails soft to an empty
  * map, which sends every card to TCGdex, the path that was the only one once.
  */
-const guideForRequest = cache(async (): Promise<Record<string, CardPrices>> => {
-  try {
-    return await cachedGuidePrices();
-  } catch (err) {
-    console.error("Price guide unavailable, pricing card by card:", err);
-    return {};
-  }
-});
+const guideForRequest = cache(
+  async (language: BrowseLanguage | null = null): Promise<Record<string, CardPrices>> => {
+    try {
+      return await cachedGuidePrices(language);
+    } catch (err) {
+      console.error("Price guide unavailable, pricing card by card:", err);
+      return {};
+    }
+  },
+);
 
 /**
  * The guide's prices for these cards and nothing else — no TCGdex fallback.
@@ -187,8 +213,12 @@ const guideForRequest = cache(async (): Promise<Record<string, CardPrices>> => {
  * fallback would be hundreds of requests to put a number under cards nobody is buying. A missing
  * price on a set page is a blank line; a set page that takes ten seconds is a broken one.
  */
-export const guidePricesFor = async (ids: string[]): Promise<Map<string, CardPrices>> => {
-  const known = await guideForRequest();
+export const guidePricesFor = async (
+  ids: string[],
+  /** Which catalogue the ids are from. A Japanese set page prices from the Japanese map. */
+  language: BrowseLanguage | null = null,
+): Promise<Map<string, CardPrices>> => {
+  const known = await guideForRequest(language);
   const out = new Map<string, CardPrices>();
   for (const id of ids) {
     const found = known[id];

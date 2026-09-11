@@ -144,6 +144,11 @@ When a card has no price (`/dashboard/cards?unpriced=1` on the web app), run
 `node scripts/cardmarket-ids-fill.mjs`: it links the Cardmarket products TCGdex does not, sets
 the sure ones with `--write`, and prints the rest with their prices to pick by hand.
 
+When a set appears on the Japanese, Korean or Chinese shelf, run
+`node scripts/language-cardmarket-ids.mjs --write`: it asks TCGdex about every card those
+catalogues hold that it has not asked about before, and keeps the Cardmarket product of each in
+`cardmarket-ids.<language>.generated.json`, which is what prices that shelf's set pages.
+
 ## Production
 
 Deployed on Vercel, DNS on Cloudflare (DNS-only, not proxied — Cloudflare in front of
