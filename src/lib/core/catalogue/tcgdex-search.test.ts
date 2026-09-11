@@ -356,6 +356,55 @@ describe("searchCards in another language", () => {
     expect(calls.some((c) => c.url.endsWith("/graphql"))).toBe(false);
   });
 
+  it("finds a card on that shelf by the English name the app shows it under, off its set", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        const url = String(input);
+        calls.push({ url });
+        if (url.endsWith("/ja/series")) return Response.json([{ id: "M", name: "MEGA" }]);
+        if (url.endsWith("/ja/series/M"))
+          return Response.json({
+            id: "M",
+            name: "MEGA",
+            sets: [{ id: "M4", name: "四", cardCount: { total: 2, official: 2 } }],
+          });
+        if (url.endsWith("/ja/sets/M4"))
+          return Response.json({
+            id: "M4",
+            name: "四",
+            serie: { id: "M", name: "MEGA" },
+            cardCount: { total: 2, official: 2 },
+            cards: [
+              { id: "M4-001", localId: "001", name: "ビードル" },
+              { id: "M4-002", localId: "002", name: "コクーン" },
+            ],
+          });
+        // Every other Weedle's set, of which the map holds a dozen: a set with no cards here,
+        // so those hits fall away and M4's stands alone.
+        const other = /\/ja\/sets\/([^/?]+)$/.exec(url);
+        if (other) return Response.json({ id: other[1], name: other[1], cards: [] });
+        return new Response("not here", { status: 500 });
+      }),
+    );
+    const { searchCards } = await load();
+    // M4-001 is Weedle in the committed map, and "ビードル" is what TCGdex would have matched.
+    const { cards } = await searchCards("weedle", 1, "ja");
+    const hit = cards.find((c) => c.id === "M4-001");
+    expect(hit).toMatchObject({
+      id: "M4-001",
+      number: "001",
+      name: "Weedle",
+      localName: "ビードル",
+      setName: "Ninja Spinner",
+      image: "https://assets.tcgdex.net/ja/M/M4/001/low.webp",
+      tcgId: "M4-001",
+    });
+    // No card search was asked of TCGdex: the names are ours, the set is the one read.
+    expect(calls.some((c) => c.url.includes("/ja/cards?"))).toBe(false);
+    expect(calls.some((c) => c.url.includes("/en/"))).toBe(false);
+  });
+
   it("leaves the English catalogue as it was when no language is named", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
     const { searchCards } = await load();

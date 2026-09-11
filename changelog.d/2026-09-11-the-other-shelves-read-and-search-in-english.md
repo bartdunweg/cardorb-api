@@ -1,0 +1,3 @@
+- A collection card off the Japanese, Korean or Chinese shelves carries what it prints as `localName` on `OwnedCard` and `CardItem`, for a sheet to show in brackets after the English name; null on English cards.
+- `GET /v1/catalog/search?language=ja|zh-tw|zh-cn|ko` with a Latin-letter term matches the English names those cards are shown under — "charizard" finds every Lizardon — off the committed maps, newest set first, with no request to the catalogue beyond the sets on the page shown. A term in the shelf's own script still asks TCGdex, as before.
+- The 46 Simplified Chinese sets and two coming MEGA sets (Abyss Eye, Storm Emeralda) have English titles in the hand-kept lists. The Chinese ones are literal renderings, not official names: correct them.

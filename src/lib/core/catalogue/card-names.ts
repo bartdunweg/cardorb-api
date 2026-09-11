@@ -25,6 +25,11 @@ export function englishCardName(lang: BrowseLanguage, id: string): string | null
   return NAMES[lang][id] ?? null;
 }
 
+/** The whole map of one catalogue, id → English name (null where none), for a search to scan. */
+export function englishCardNames(lang: BrowseLanguage): Readonly<Record<string, string | null>> {
+  return NAMES[lang];
+}
+
 /**
  * The two names a card shows under: `name` for the app, which is English throughout, and
  * `localName` for what the card itself says, where the two differ. An English name the maps do

@@ -258,6 +258,7 @@ components:
         imageHigh: { type: [string, "null"], description: "Large scan. Only where TCGdex has the card." }
         imageSize: { $ref: "#/components/schemas/ImageSize" }
         speciesId: { type: [integer, "null"], description: "The National Pokédex number." }
+        localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it (a Japanese, Korean or Chinese card); null on English cards." }
         variants: { type: array, items: { $ref: "#/components/schemas/Variant" } }
         owned: { type: boolean }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
@@ -520,6 +521,7 @@ components:
         image: { type: [string, "null"] }
         imageHigh: { type: [string, "null"] }
         speciesId: { type: [integer, "null"] }
+        localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it; null on English cards." }
         tcgId: { type: [string, "null"] }
         owned: { type: boolean, description: "`false` is a wishlist entry." }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }

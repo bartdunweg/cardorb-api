@@ -35,6 +35,8 @@ export type CardItem = {
   image: string | null;
   imageHigh: string | null;
   speciesId: number | null;
+  /** What the card prints where `name` is the English for it (a Japanese card); null otherwise. */
+  localName: string | null;
   tcgId: string | null;
   owned: boolean;
   finish: Finish | null;
@@ -125,6 +127,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   image: card.image,
   imageHigh: card.imageHigh,
   speciesId: card.speciesId,
+  localName: card.localName ?? null,
   tcgId: card.tcgId,
   owned: v.owned,
   finish: v.finish,
