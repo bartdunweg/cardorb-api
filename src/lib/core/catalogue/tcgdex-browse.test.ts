@@ -91,6 +91,16 @@ const INDEX = {
       cardCount: { official: 197, total: 230 },
       serie: { name: "Scarlet & Violet" },
     },
+    // The mobile game, which TCGdex files beside the printed sets and the shelf leaves out.
+    {
+      id: "A1",
+      name: "Genetic Apex",
+      logo: null,
+      symbol: null,
+      releaseDate: "2024-10-30",
+      cardCount: { official: 226, total: 286 },
+      serie: { id: "tcgp", name: "Pokémon TCG Pocket" },
+    },
   ],
 };
 const FACTS = {
@@ -264,6 +274,15 @@ describe("tcgdex-browse", () => {
       expect(await resolveEnglishSetId("nope")).toBeNull();
       expect((await englishSet("sv3pt5"))?.set.id).toBe("sv03.5");
       expect(await englishSet("nope")).toBeNull();
+    });
+
+    it("leaves the mobile game's sets out, and answers 404 for one asked by id", async () => {
+      stub();
+      const { englishSets, englishSet, isPocketSet } = await load();
+      expect((await englishSets()).map((s) => s.id)).not.toContain("A1");
+      expect(isPocketSet("A1")).toBe(true);
+      expect(isPocketSet("sv03.5")).toBe(false);
+      expect(await englishSet("A1")).toBeNull();
     });
 
     it("reads the index once for many reads", async () => {

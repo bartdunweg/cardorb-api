@@ -23,7 +23,7 @@
  * from its id.
  */
 import { graphql, json } from "./tcgdex-client";
-import { englishSetIndex, type CatalogueSet } from "./tcgdex-browse";
+import { englishSetIndex, isPocketSet, type CatalogueSet } from "./tcgdex-browse";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 
 const CATALOGUE = "https://api.tcgdex.net/v2/en";
@@ -191,6 +191,8 @@ export async function searchCards(
 
   const hits = brief
     .filter((c): c is Brief & { localId: string; name: string } => !!c.localId && !!c.name)
+    // The mobile game's cards are in the same catalogue; see tcgdex-browse.ts.
+    .filter((c) => !isPocketSet(c.id.slice(0, c.id.lastIndexOf("-"))))
     .map((c): CatalogueMatch => {
       const setId = c.id.slice(0, c.id.lastIndexOf("-"));
       const set = sets.get(setId);
