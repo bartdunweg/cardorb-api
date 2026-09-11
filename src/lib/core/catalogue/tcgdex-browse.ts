@@ -234,8 +234,21 @@ type TcgSetIndexJson = {
   symbol?: string | null;
   releaseDate?: string | null;
   cardCount?: { official?: number | null; total?: number | null } | null;
-  serie?: { name?: string | null } | null;
+  serie?: { id?: string | null; name?: string | null } | null;
 };
+
+/**
+ * The serie TCGdex files Pokémon TCG Pocket under: the mobile game's cards,
+ * fifteen sets of them, which TCGdex carries beside the printed ones and
+ * pokemontcg.io never did. A binder cannot hold one, so the shelf, the set
+ * pages and the search leave them out — the ids are kept so the search can
+ * tell a hit from one apart, and a page asked for one answers 404.
+ */
+const POCKET_SERIE = "tcgp";
+let pocketSets = new Set<string>();
+
+/** True for a set of the mobile game, which the English shelf does not show. */
+export const isPocketSet = (setId: string) => pocketSets.has(setId);
 
 /**
  * Every English set TCGdex knows, newest first, held for a day per process.
@@ -252,12 +265,17 @@ const ENGLISH_TTL_MS = 86_400_000;
 
 async function fetchEnglishSets(): Promise<CatalogueSet[]> {
   const body = (await graphql(
-    "{ sets { id name logo symbol releaseDate cardCount { official total } serie { name } } }",
+    "{ sets { id name logo symbol releaseDate cardCount { official total } serie { id name } } }",
     "en set index",
   )) as { sets?: (TcgSetIndexJson | null)[] } | null;
   const out: CatalogueSet[] = [];
+  const pocket = new Set<string>();
   for (const s of body?.sets ?? []) {
     if (!s?.name) continue;
+    if (s.serie?.id === POCKET_SERIE) {
+      pocket.add(s.id);
+      continue;
+    }
     out.push({
       id: s.id,
       name: s.name,
@@ -272,6 +290,7 @@ async function fetchEnglishSets(): Promise<CatalogueSet[]> {
     });
   }
   if (!out.length) throw new Error("TCGdex answered no sets");
+  pocketSets = pocket;
   // Newest first, as every set list in the app reads: a collector opening the
   // shelf is looking for the set that just came out far more often than for Base.
   return out.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
@@ -297,6 +316,7 @@ export async function englishSetIndex(): Promise<Map<string, CatalogueSet>> {
 /** Thrown away between tests, and by anything that wants the next shelf to re-read the index. */
 export const forgetEnglishSets = () => {
   english = null;
+  pocketSets = new Set();
 };
 
 /**

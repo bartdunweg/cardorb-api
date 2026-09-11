@@ -1,0 +1,1 @@
+- The English shelf, the set pages and the search leave Pokémon TCG Pocket out: TCGdex carries the mobile game's fifteen sets beside the printed ones, and a binder cannot hold one. A Pocket set asked for by id answers 404.

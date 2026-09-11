@@ -43,6 +43,12 @@ const INDEX = {
       serie: { name: "Scarlet & Violet" },
       releaseDate: "2023-08-11",
     },
+    {
+      id: "A1",
+      name: "Genetic Apex",
+      serie: { id: "tcgp", name: "Pokémon TCG Pocket" },
+      releaseDate: "2024-10-30",
+    },
   ],
 };
 
@@ -100,6 +106,16 @@ describe("searchCards", () => {
         tcgId: "pl4-1",
       },
     ]);
+  });
+
+  it("leaves a hit from the mobile game out, and out of the count", async () => {
+    installFetch({
+      list: [brief("pl4-1", "1", "Charizard"), brief("A1-036", "036", "Charizard ex")],
+    });
+    const { searchCards } = await load();
+    const { cards, total } = await searchCards("charizard");
+    expect(cards.map((c) => c.id)).toEqual(["pl4-1"]);
+    expect(total).toBe(1);
   });
 
   it("asks TCGdex's list for the name, cached briefly, and reads a window rather than a page", async () => {
