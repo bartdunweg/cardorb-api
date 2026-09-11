@@ -1,8 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
-const findSet = vi.fn();
-const setCards = vi.fn();
+const englishSet = vi.fn();
+
+const SET = {
+  id: "base1",
+  name: "Base",
+  series: "Base",
+  releaseDate: "1999/01/09",
+  total: 102,
+  printedTotal: 102,
+  logo: null,
+  symbol: null,
+};
+
 const getRows = vi.fn();
 const guidePricesFor = vi.fn();
 const setIn = vi.fn();
@@ -19,37 +30,23 @@ vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
   guidePricesFor: (...a: unknown[]) => guidePricesFor(...a),
 }));
-vi.mock("@/lib/core/catalogue/ptcg-browse", () => ({
-  findSet: (...a: unknown[]) => findSet(...a),
-  setCards: (...a: unknown[]) => setCards(...a),
-}));
-/* The other catalogue is a network read too; the language check is the real, pure one. */
+/* Both shelves are network reads; the language check is the real, pure one, and so is
+   the set index the ownership join resolves a row's set name against. */
 vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
   ...(await real<typeof import("@/lib/core/catalogue/tcgdex-browse")>()),
+  englishSet: (...a: unknown[]) => englishSet(...a),
+  englishSets: async () => [SET],
   setIn: (...a: unknown[]) => setIn(...a),
 }));
-/* The TCGdex scan swap is a real network call through setCatalogue() and has
-   its own tests; here it would only make these ones depend on a second host
-   being up. Replaced with the identity it degrades to when TCGdex is silent. */
+/* The Limitless probe is a network call with its own tests; replaced with the
+   identity it degrades to when the probe cannot be made. */
 vi.mock("@/lib/core/catalogue/browse-artwork", () => ({
-  withTcgdexScans: (_set: unknown, cards: unknown) => cards,
   withLimitlessScans: (_lang: unknown, cards: unknown) => cards,
 }));
 
 const { GET } = await import("./route");
 
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
-
-const SET = {
-  id: "base1",
-  name: "Base",
-  series: "Base",
-  releaseDate: "1999/01/09",
-  total: 102,
-  printedTotal: 102,
-  logo: null,
-  symbol: null,
-};
 
 const card = (number: string, name = "Bulbasaur") => ({
   id: `base1-${number}`,
@@ -91,8 +88,7 @@ const open = (query = "", setId = "base1") =>
 
 beforeEach(() => {
   authorise.mockResolvedValue(VIEWER);
-  findSet.mockResolvedValue(SET);
-  setCards.mockResolvedValue([card("1"), card("2"), card("4", "Charizard")]);
+  englishSet.mockResolvedValue({ set: SET, cards: [card("1"), card("2"), card("4", "Charizard")] });
   getRows.mockResolvedValue({ rows: [], failed: false });
   guidePricesFor.mockResolvedValue(new Map());
 });
@@ -103,14 +99,13 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     authorise.mockResolvedValue({ status: 401, error: "Sign in to see this." });
     const res = await open();
     expect(res.status).toBe(401);
-    expect(findSet).not.toHaveBeenCalled();
+    expect(englishSet).not.toHaveBeenCalled();
   });
 
   it("404s an id nobody carries, without asking for its cards", async () => {
-    findSet.mockResolvedValue(null);
+    englishSet.mockResolvedValue(null);
     const res = await open("", "nope");
     expect(res.status).toBe(404);
-    expect(setCards).not.toHaveBeenCalled();
   });
 
   it("answers the whole set with the viewer's cards marked", async () => {
@@ -142,7 +137,10 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     /* The bug this test exists for: pokemontcg.io numbers a card `me5-85` and every price in
        this repo is keyed the TCGdex way, `me05-085`. Looking up by the catalogue's own id
        matched nothing at all, silently, and shipped a field that was always null. */
-    setCards.mockResolvedValue([{ ...card("85", "Fomantis"), id: "me5-85", tcgId: "me05-085" }]);
+    englishSet.mockResolvedValue({
+      set: SET,
+      cards: [{ ...card("85", "Fomantis"), id: "me5-85", tcgId: "me05-085" }],
+    });
     getRows.mockResolvedValue({ rows: [], failed: false });
     guidePricesFor.mockResolvedValue(
       new Map([["me05-085", { price: { market: 2.81 }, holo: null }]]),
@@ -155,7 +153,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
 
   it("falls back to the card's own id where the catalogues were never matched", async () => {
     // The other-language path: those cards are TCGdex's already, so `id` is the right key.
-    setCards.mockResolvedValue([{ ...card("85"), id: "me05-085" }]);
+    englishSet.mockResolvedValue({ set: SET, cards: [{ ...card("85"), id: "me05-085" }] });
     getRows.mockResolvedValue({ rows: [], failed: false });
     guidePricesFor.mockResolvedValue(new Map([["me05-085", { price: { market: 1 }, holo: null }]]));
     const body = await (await open()).json();
@@ -229,7 +227,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
   });
 
   it("answers 502 with a sentence a client can show when the catalogue refused", async () => {
-    setCards.mockRejectedValue(new Error("pokemontcg.io set base1 unavailable"));
+    englishSet.mockRejectedValue(new Error("TCGdex en set base1 answered 503"));
     const res = await open();
     expect(res.status).toBe(502);
     expect((await res.json()).error).toBe("The catalogue did not answer. Try again in a moment.");

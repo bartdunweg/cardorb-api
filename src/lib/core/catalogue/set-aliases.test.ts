@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collectionSetNames, galleryParent, isGalleryNumber, ptcgSetName } from "./set-aliases";
+import { galleryParent, isGalleryNumber, ptcgSetName } from "./set-aliases";
 
 describe("set aliases", () => {
   it("names the sets the two vocabularies disagree on", () => {
@@ -15,17 +15,6 @@ describe("set aliases", () => {
   it("leaves a set both call the same thing alone", () => {
     expect(ptcgSetName("Jungle")).toBeNull();
     expect(ptcgSetName("Silver Tempest")).toBeNull();
-  });
-
-  it("answers the other way too, so a browse of a set finds the rows filed under its other names", () => {
-    expect(collectionSetNames("Base")).toEqual(
-      expect.arrayContaining(["base", "set1unlimited", "set1shadowless", "set1"]),
-    );
-    expect(collectionSetNames("Scarlet & Violet")).toEqual(
-      expect.arrayContaining(["scarletviolet", "scarletvioletbase"]),
-    );
-    // A gallery set is filed under its parent, which the join has to look under as well.
-    expect(collectionSetNames("Silver Tempest Trainer Gallery")).toContain("silvertempest");
   });
 
   it("knows a gallery by its name and its numbers", () => {

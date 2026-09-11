@@ -46,18 +46,6 @@ const ALIAS: Record<string, string> = {
 /** What pokemontcg.io calls a set this collection names `setName`, or null. */
 export const ptcgSetName = (setName: string): string | null => ALIAS[norm(setName)] ?? null;
 
-/* Built once, from the table above, so the two directions cannot drift apart:
-   several collection spellings can mean one pokemontcg.io set (SV and SVP both
-   do), which is why the value is an array. */
-const REVERSE = ((): Map<string, string[]> => {
-  const out = new Map<string, string[]>();
-  for (const [collection, ptcg] of Object.entries(ALIAS)) {
-    const key = norm(ptcg);
-    out.set(key, [...(out.get(key) ?? []), collection]);
-  }
-  return out;
-})();
-
 /**
  * The gallery suffix, as both catalogues write it: a Sword & Shield set keeps
  * its Trainer Gallery cards in a set of its own, named by extending the parent
@@ -88,59 +76,4 @@ export const isGalleryNumber = (number: string) => /^(TG|GG)\d/i.test(number.tri
 export const galleryParent = (ptcgName: string): string | null => {
   const parent = ptcgName.replace(GALLERY_SUFFIX, "");
   return parent && parent !== ptcgName ? parent : null;
-};
-
-/**
- * The name to hand `setCatalogue()` for a set pokemontcg.io calls `ptcgName`,
- * or null where there is no point asking.
- *
- * Checked against both catalogues' real set indexes: of pokemontcg.io's 174
- * sets, 171 resolve to the right TCGdex set on the name alone, through
- * `resolveSetIds()`'s exact-then-loose match. The three below do not, and two of
- * them fail *silently and wrongly* rather than finding nothing — "Scarlet &
- * Violet Black Star Promos" and "Scarlet & Violet Energies" both loosely match
- * TCGdex's "Scarlet & Violet", which would offer the base set's pictures for a
- * promo. The name-check on every card catches that anyway, but not asking is
- * cheaper than asking and disbelieving the answer.
- *
- * A gallery always resolves through its parent rather than through itself, the
- * same way buildCollection() does: TCGdex lists a gallery subset's cards with no
- * image of their own, and files the files under the parent's asset path
- * (swsh12.5/GG69, not swsh12.5gg/GG69). Asking for the subset directly would
- * pick up the wrong `assetBase` and build 404s. Asking for "Silver Tempest"
- * returns the parent *and* its Trainer Gallery, which is what is wanted.
- */
-const TCGDEX_SET_NAMES: Record<string, string> = {
-  /* TCGdex spells this one with the abbreviation the cards carry. The value
-     lands in catalogue.ts's own SET_ALIASES table, which maps it to `svp`. */
-  "scarlet & violet black star promos": "SVP Black Star Promos",
-  /* Singular there, plural here. */
-  "scarlet & violet energies": "Scarlet & Violet Energy",
-  /* Named for its year rather than for being a collection. */
-  "pokémon futsal collection": "Pokémon Futsal 2020",
-};
-
-export const tcgdexSetName = (ptcgName: string): string | null => {
-  const parent = galleryParent(ptcgName);
-  if (parent) return parent;
-  const name = ptcgName.trim();
-  if (!name) return null;
-  return TCGDEX_SET_NAMES[name.toLowerCase()] ?? name;
-};
-
-/**
- * Every normalised set name this collection might have used for a set
- * pokemontcg.io calls `ptcgName` — its own name first, then any alias, then the
- * parent it would file a gallery subset under.
- *
- * A list rather than one answer because all three can be true at once and the
- * caller wants the union: a row is this card's row whichever of the names it
- * happens to be filed under.
- */
-export const collectionSetNames = (ptcgName: string): string[] => {
-  const key = norm(ptcgName);
-  const names = [key, ...(REVERSE.get(key) ?? [])];
-  const parent = galleryParent(ptcgName);
-  if (parent) names.push(norm(parent));
-  return [...new Set(names.filter(Boolean))];
 };

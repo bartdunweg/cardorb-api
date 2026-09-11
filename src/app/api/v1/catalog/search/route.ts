@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
+import { englishSets } from "@/lib/core/catalogue/tcgdex-browse";
 import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
 import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -81,10 +82,13 @@ export async function GET(req: Request) {
        have cost a collection read. getRows() fails soft, so a store outage
        leaves every result unmarked rather than taking the search down with it. */
     const { rows } = await getRows(who.userId, bearer(req) ?? undefined);
+    // The English sets, for the join to file each row under the set it resolves to; the
+    // search has just read the same index, so this is the memoised promise, not a request.
+    const sets = await englishSets().catch(() => []);
     return NextResponse.json(
       /* `total` is how many the whole search matched, at most the window it reads (250,
          which then means "at least"); a client shows it above the page. */
-      { cards: markOwnership(ownershipIndex(rows), cards), total },
+      { cards: markOwnership(ownershipIndex(rows, null, sets), cards), total },
       { headers: readHeaders(req) },
     );
   } catch {

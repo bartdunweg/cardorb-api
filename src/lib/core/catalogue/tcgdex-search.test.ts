@@ -20,7 +20,7 @@ function installFetch(answers: Answers) {
       calls.push({ url, body: init?.body });
       if (url.endsWith("/graphql")) {
         const query = JSON.parse(init?.body ?? "{}").query as string;
-        if (query.includes("series")) return Response.json({ data: answers.index ?? INDEX });
+        if (query.includes("sets {")) return Response.json({ data: answers.index ?? INDEX });
         return new Response(JSON.stringify({ data: answers.facts ?? {} }), {
           status: answers.factsStatus ?? 200,
         });
@@ -32,15 +32,16 @@ function installFetch(answers: Answers) {
   );
 }
 
+/** The English set index as tcgdex-browse.ts asks for it. */
 const INDEX = {
-  series: [
-    { name: "Platinum", sets: [{ id: "pl4", name: "Arceus" }] },
+  sets: [
+    { id: "pl4", name: "Arceus", serie: { name: "Platinum" }, releaseDate: "2009-03-01" },
+    { id: "sv03.5", name: "151", serie: { name: "Scarlet & Violet" }, releaseDate: "2023-09-22" },
     {
-      name: "Scarlet & Violet",
-      sets: [
-        { id: "sv03.5", name: "151" },
-        { id: "sv03", name: "Obsidian Flames" },
-      ],
+      id: "sv03",
+      name: "Obsidian Flames",
+      serie: { name: "Scarlet & Violet" },
+      releaseDate: "2023-08-11",
     },
   ],
 };
@@ -181,7 +182,7 @@ describe("searchCards", () => {
       "fetch",
       vi.fn(async (input: string, init?: { body?: string }) => {
         const url = String(input);
-        if (url.endsWith("/graphql") && init?.body?.includes("series"))
+        if (url.endsWith("/graphql") && init?.body?.includes("sets {"))
           return new Response("", { status: 503 });
         if (url.endsWith("/graphql")) return Response.json({ data: {} });
         return Response.json([brief("pl4-1", "1", "Charizard")]);
@@ -200,7 +201,7 @@ describe("searchCards", () => {
     await searchCards("char");
     await searchCards("chari");
 
-    expect(calls.filter((c) => c.body?.includes("series"))).toHaveLength(1);
+    expect(calls.filter((c) => c.body?.includes("sets {"))).toHaveLength(1);
   });
 
   it("throws once the list cannot be read, rather than returning empty", async () => {

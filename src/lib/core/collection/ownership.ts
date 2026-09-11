@@ -33,12 +33,13 @@
 
 import { sameCard } from "../catalogue/matching";
 import { norm } from "../util";
-import { collectionSetNames, galleryParent, isGalleryNumber } from "../catalogue/set-aliases";
+import { galleryParent, isGalleryNumber } from "../catalogue/set-aliases";
+import { resolveSetIds } from "../catalogue/set-resolve";
 import { cataloguesFor, setIdOf } from "../catalogue/tcgdex-language";
 import type { CollectionRow } from "./collection-row";
 import type { CatalogueMatch } from "../catalogue/ptcg-search";
-import type { CatalogueSet } from "../catalogue/ptcg-browse";
-import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
+import type { BrowseLanguage, CatalogueSet } from "../catalogue/tcgdex-browse";
+import type { TcgSet } from "../catalogue/tcgdex-client";
 
 /** What the viewer has of one catalogue card. */
 export type Ownership = {
@@ -76,7 +77,10 @@ export const canonNumber = (n: string): string => {
   return m ? `${m[1] ?? ""}${Number(m[2])}${m[3] ?? ""}`.toLowerCase() : norm(n);
 };
 
-const keyFor = (setName: string, number: string) => `${norm(setName)}|${canonNumber(number)}`;
+/** The set half of a card's id: `sv03.5-006` is card 006 of `sv03.5`. */
+const setOf = (cardId: string) => cardId.slice(0, cardId.lastIndexOf("-")).toLowerCase();
+
+const keyFor = (setId: string, number: string) => `${setId.toLowerCase()}|${canonNumber(number)}`;
 
 export type OwnershipIndex = {
   /**
@@ -90,9 +94,9 @@ export type OwnershipIndex = {
    * match at all.
    */
   language: BrowseLanguage | null;
-  /** `normalised set name|canonical number`, or the card id, to every row filed there. */
+  /** `set id|canonical number` on the English shelf, the card id on a language's own, to every row filed there. */
   byCard: Map<string, CollectionRow[]>;
-  /** Normalised set name, or the catalogue's set id, to its rows: the counts the set list shows. */
+  /** The set's id, in the catalogue being shown, to its rows: the counts the set list shows. */
   bySet: Map<string, CollectionRow[]>;
 };
 
@@ -114,11 +118,24 @@ export type OwnershipIndex = {
 export function ownershipIndex(
   rows: CollectionRow[],
   language: BrowseLanguage | null = null,
+  /**
+   * The English sets, for the English shelf: a row is filed under the TCGdex
+   * set its own set name resolves to, by the same rule buildCollection() uses
+   * to match it (set-resolve.ts). Until 2026-09-11 the English join went by
+   * set *name*, in pokemontcg.io's spelling, through a table of the places
+   * the collection spelled it differently; the shelf reads TCGdex now, and
+   * the resolver already knows every one of those places.
+   */
+  sets: TcgSet[] = [],
 ): OwnershipIndex {
   const byCard = new Map<string, CollectionRow[]>();
   const bySet = new Map<string, CollectionRow[]>();
   const put = (map: Map<string, CollectionRow[]>, key: string, row: CollectionRow) =>
     map.set(key, [...(map.get(key) ?? []), row]);
+  /* A gallery set is a set of its own in TCGdex ("Silver Tempest Trainer Gallery"), and the
+     resolver hands a parent's name back with its galleries. Which of them a row belongs to is
+     its number: TG12 is in the gallery, 12 is not. */
+  const galleries = new Set(sets.filter((s) => galleryParent(s.name) !== null).map((s) => s.id));
   for (const row of rows) {
     if (!row.setName || !row.name) continue;
     const own = row.tcgId && cataloguesFor(row.language).includes(language as BrowseLanguage);
@@ -133,8 +150,14 @@ export function ownershipIndex(
     // language says which set it is really from, and the name it is filed under
     // is a translation of ours.
     if (cataloguesFor(row.language).length && row.tcgId) continue;
-    put(byCard, keyFor(row.setName, row.number), row);
-    put(bySet, norm(row.setName), row);
+    const ids = resolveSetIds(row.setName, sets);
+    const gallery = isGalleryNumber(row.number);
+    const mine = ids.filter((id) => galleries.has(id) === gallery);
+    // A row no set claims is a row this shelf cannot mark, and says nothing about.
+    for (const id of mine.length ? mine : ids) {
+      put(byCard, keyFor(id, row.number), row);
+      put(bySet, id.toLowerCase(), row);
+    }
   }
   return { language, byCard, bySet };
 }
@@ -149,16 +172,10 @@ function rowsFor(index: OwnershipIndex, card: CatalogueMatch): CollectionRow[] {
   // alias, no number to canonicalise, and no sameCard() — which reads Latin
   // letters and could not tell マスカーニャex from トロピウス anyway.
   if (index.language) return index.byCard.get(card.id.toLowerCase()) ?? [];
-  const number = canonNumber(card.number);
-  const out: CollectionRow[] = [];
-  for (const setName of collectionSetNames(card.setName)) {
-    for (const row of index.byCard.get(`${setName}|${number}`) ?? []) {
-      if (sameCard(row.name, card.name)) out.push(row);
-    }
-  }
-  /* Deduped because two of the alias names can resolve to the same bucket — a
-     gallery set whose parent is also spelled the same after normalising. */
-  return [...new Set(out)];
+  // The card's id names its set, so the set half of the key is not a name to alias
+  // either: only the number is folded, and the name is still checked.
+  const rows = index.byCard.get(keyFor(setOf(card.id), card.number)) ?? [];
+  return rows.filter((row) => sameCard(row.name, card.name));
 }
 
 /** Fold the matching rows into one answer. */
@@ -219,10 +236,9 @@ export function setCounts(
     }
     return { ownedCount: owned.size, wishlistCount: wanted };
   }
-  const gallery = galleryParent(set.name) !== null;
-  const rows = collectionSetNames(set.name)
-    .flatMap((name) => index.bySet.get(name) ?? [])
-    .filter((row) => isGalleryNumber(row.number) === gallery);
+  // The gallery question was settled when the row was filed: a TG row is under
+  // the gallery's id, not its parent's.
+  const rows = index.bySet.get(set.id.toLowerCase()) ?? [];
 
   const owned = new Set<string>();
   let wishlistCount = 0;

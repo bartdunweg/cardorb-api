@@ -18,8 +18,10 @@ vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
-vi.mock("@/lib/core/catalogue/ptcg-browse", () => ({
-  listSets: (...a: unknown[]) => listSets(...a),
+/* The shelf is a network read; the language check is the real, pure one. */
+vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
+  ...(await real<typeof import("@/lib/core/catalogue/tcgdex-browse")>()),
+  englishSets: (...a: unknown[]) => listSets(...a),
 }));
 
 const { GET } = await import("./route");
@@ -98,7 +100,7 @@ describe("GET /api/v1/catalog/sets", () => {
   });
 
   it("answers 502 with a sentence a client can show when the catalogue refused", async () => {
-    listSets.mockRejectedValue(new Error("pokemontcg.io set list unavailable"));
+    listSets.mockRejectedValue(new Error("TCGdex en set index answered 503"));
     const res = await sets();
     expect(res.status).toBe(502);
     /* A sentence, not a slug: this used to be "catalog-unavailable", the one

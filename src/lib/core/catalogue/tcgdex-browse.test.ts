@@ -29,6 +29,25 @@ const answers: Record<string, unknown> = {
     name: "旧裏",
     sets: [{ id: "PMCG1", name: "拡張パック", cardCount: { total: 102, official: 102 } }],
   },
+  "/en/sets/sv03.5": {
+    id: "sv03.5",
+    name: "151",
+    logo: "https://assets.tcgdex.net/en/sv/sv03.5/logo",
+    symbol: "https://assets.tcgdex.net/univ/sv/sv03.5/symbol",
+    releaseDate: "2023-09-22",
+    serie: { id: "sv", name: "Scarlet & Violet" },
+    cardCount: { total: 3, official: 2 },
+    cards: [
+      {
+        id: "sv03.5-010",
+        localId: "010",
+        name: "Caterpie",
+        image: "https://assets.tcgdex.net/en/sv/sv03.5/010",
+      },
+      { id: "sv03.5-002", localId: "002", name: "Ivysaur" },
+      { id: "sv03.5-TG01", localId: "TG01", name: "Bulbasaur" },
+    ],
+  },
   "/ja/sets/M4": {
     id: "M4",
     name: "四",
@@ -42,17 +61,77 @@ const answers: Record<string, unknown> = {
   },
 };
 
-afterEach(() => vi.unstubAllGlobals());
+/** What the two GraphQL reads answer: the English set index, and a set's facts. */
+const INDEX = {
+  sets: [
+    {
+      id: "sv03.5",
+      name: "151",
+      logo: "https://assets.tcgdex.net/en/sv/sv03.5/logo",
+      symbol: null,
+      releaseDate: "2023-09-22",
+      cardCount: { official: 165, total: 207 },
+      serie: { name: "Scarlet & Violet" },
+    },
+    {
+      id: "base1",
+      name: "Base Set",
+      logo: null,
+      symbol: null,
+      releaseDate: "1999-01-09",
+      cardCount: { official: 102, total: 102 },
+      serie: { name: "Base" },
+    },
+    {
+      id: "sv03",
+      name: "Obsidian Flames",
+      logo: null,
+      symbol: null,
+      releaseDate: "2023-08-11",
+      cardCount: { official: 197, total: 230 },
+      serie: { name: "Scarlet & Violet" },
+    },
+  ],
+};
+const FACTS = {
+  cards: [
+    { id: "sv03.5-010", rarity: "Common", types: ["Grass"] },
+    { id: "sv03.5-002", rarity: "Uncommon", types: ["Grass"] },
+    // A card of another set the contains-filter also answers, and one TCGdex could not fill.
+    { id: "sv03-010", rarity: "Rare", types: ["Fire"] },
+    null,
+  ],
+};
+
+let graphqlDown = false;
+/** Every GraphQL query sent, for the tests that count them. */
+let queries: string[] = [];
+afterEach(() => {
+  vi.unstubAllGlobals();
+  graphqlDown = false;
+  queries = [];
+});
 
 const stub = () => {
   const asked: string[] = [];
-  vi.stubGlobal("fetch", async (url: string) => {
+  vi.stubGlobal("fetch", async (url: string, init?: { body?: string }) => {
+    if (String(url).endsWith("/graphql")) {
+      queries.push((JSON.parse(init?.body ?? "{}").query as string) ?? "");
+      if (graphqlDown) return new Response("", { status: 503 });
+      const query = JSON.parse(init?.body ?? "{}").query as string;
+      return Response.json({ data: query.includes("sets {") ? INDEX : FACTS });
+    }
     const key = url.replace("https://api.tcgdex.net/v2", "");
     asked.push(key);
     const body = answers[key];
     return new Response(body ? JSON.stringify(body) : "", { status: body ? 200 : 404 });
   });
   return asked;
+};
+
+const load = async () => {
+  vi.resetModules();
+  return import("./tcgdex-browse");
 };
 
 describe("tcgdex-browse", () => {
@@ -116,5 +195,84 @@ describe("tcgdex-browse", () => {
   it("is null for a set the language does not have", async () => {
     stub();
     expect(await setIn("ja", "nope")).toBeNull();
+  });
+
+  describe("the English shelf", () => {
+    it("lists every set newest first, with era, date, counts and art from one index", async () => {
+      stub();
+      const { englishSets } = await load();
+      const sets = await englishSets();
+      expect(sets.map((s) => s.id)).toEqual(["sv03.5", "sv03", "base1"]);
+      expect(sets[0]).toEqual({
+        id: "sv03.5",
+        name: "151",
+        localName: null,
+        series: "Scarlet & Violet",
+        releaseDate: "2023/09/22",
+        total: 207,
+        printedTotal: 165,
+        logo: "https://assets.tcgdex.net/en/sv/sv03.5/logo.webp",
+        symbol: null,
+        cardsRecorded: true,
+      });
+    });
+
+    it("reads a set with its cards in binder order, each with its facts and its scan", async () => {
+      stub();
+      const { englishSet } = await load();
+      const got = await englishSet("sv03.5");
+      expect(got?.set).toMatchObject({
+        id: "sv03.5",
+        name: "151",
+        series: "Scarlet & Violet",
+        releaseDate: "2023/09/22",
+        total: 3,
+        printedTotal: 2,
+      });
+      expect(got?.cards.map((c) => c.number)).toEqual(["002", "010", "TG01"]);
+      expect(got?.cards[1]).toEqual({
+        id: "sv03.5-010",
+        number: "010",
+        name: "Caterpie",
+        setName: "151",
+        series: "Scarlet & Violet",
+        image: "https://assets.tcgdex.net/en/sv/sv03.5/010/low.webp",
+        imageHigh: "https://assets.tcgdex.net/en/sv/sv03.5/010/high.webp",
+        rarity: "Common",
+        types: ["Grass"],
+        tcgId: "sv03.5-010",
+      });
+      // A card the facts did not cover keeps what the other shelves show.
+      expect(got?.cards[2]).toMatchObject({ rarity: null, types: [] });
+    });
+
+    it("shows the set without facts when TCGdex's GraphQL is down, rather than not at all", async () => {
+      stub();
+      const { englishSet } = await load();
+      graphqlDown = true;
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const got = await englishSet("sv03.5");
+      expect(got?.cards).toHaveLength(3);
+      expect(got?.cards[0]).toMatchObject({ rarity: null, types: [] });
+    });
+
+    it("opens a set by pokemontcg.io's old id, and in the other case", async () => {
+      stub();
+      const { englishSet, resolveEnglishSetId } = await load();
+      expect(await resolveEnglishSetId("sv3pt5")).toBe("sv03.5");
+      expect(await resolveEnglishSetId("SV03.5")).toBe("sv03.5");
+      expect(await resolveEnglishSetId("nope")).toBeNull();
+      expect((await englishSet("sv3pt5"))?.set.id).toBe("sv03.5");
+      expect(await englishSet("nope")).toBeNull();
+    });
+
+    it("reads the index once for many reads", async () => {
+      stub();
+      const { englishSets, englishSet } = await load();
+      await englishSets();
+      await englishSet("sv03.5");
+      await englishSets();
+      expect(queries.filter((q) => q.includes("sets {"))).toHaveLength(1);
+    });
   });
 });

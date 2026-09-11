@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { listSets } from "@/lib/core/catalogue/ptcg-browse";
-import { isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
+import { englishSets, isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -17,7 +16,7 @@ import { bearer } from "@/lib/api/viewer";
  *
  * Each set carries the viewer's own counts, which is why it is behind
  * authorise() rather than public. The catalogue half is nobody's secret — it is
- * cached for a day and shared by everybody, see ptcg-browse.ts — but "12 of
+ * held for a day and shared by everybody, see tcgdex-browse.ts — but "12 of
  * 207" is, and a route that answers differently per caller has no business
  * being cacheable at the edge. Hence readHeaders()'s `private, no-store`, the
  * same as every other guarded read here.
@@ -45,7 +44,7 @@ export async function GET(req: Request) {
     });
   let sets;
   try {
-    sets = isBrowseLanguage(language) ? await listSetsIn(language) : await listSets();
+    sets = isBrowseLanguage(language) ? await listSetsIn(language) : await englishSets();
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
        refused, the request is worth retrying, and the client can say so. The
@@ -62,7 +61,7 @@ export async function GET(req: Request) {
      id marks its own shelf exactly, by id; every other row marks the English one. Both
      directions matter, because a Japanese set named like an English one (Black Bolt) would
      otherwise be counted by the English cards, and was. */
-  const index = ownershipIndex(rows, isBrowseLanguage(language) ? language : null);
+  const index = ownershipIndex(rows, isBrowseLanguage(language) ? language : null, sets);
 
   return NextResponse.json(
     {
