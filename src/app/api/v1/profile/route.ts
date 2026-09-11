@@ -7,6 +7,7 @@ import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { ownProfile, updateProfile } from "@/lib/storage/postgres";
 import { MAX_DISPLAY_NAME } from "@/lib/core/account/account";
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 
 /**
  * The things about a profile its owner may change.
@@ -118,12 +119,13 @@ export async function PATCH(req: Request) {
     return apiError(500, "That change could not be saved.");
   }
 
-  // Nothing to purge here. This used to call revalidatePath("/user/<name>"),
-  // a page that lives in the web app and not on this host, so it dropped
-  // nothing. What this host serves for a profile — the four routes under
-  // /v1/public/<name>/ — are dynamic handlers cached only at the CDN by their
-  // own header, and that header (PUBLIC_READ_CACHE) is the mechanism: a
-  // profile turned private is gone from every edge within a minute.
+  // Nothing of this host's to purge: what it serves for a profile — the four
+  // routes under /v1/public/<name>/ — are dynamic handlers cached only at the
+  // CDN by their own header (PUBLIC_READ_CACHE), and a profile turned private
+  // is gone from every edge within a minute. The web app keeps its own copy
+  // for five minutes and is told, so a switch made in the iOS app is not
+  // open on cardorb.com for the rest of them (cardorb-web, /api/revalidate).
+  await forgetOnTheWeb({ userId: viewer.userId, username: viewer.username });
 
   return NextResponse.json({ ok: true, ...patch });
 }
