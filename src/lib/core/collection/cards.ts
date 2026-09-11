@@ -191,6 +191,8 @@ export type OwnedCard = {
    * is the same for everyone and never changes, so the server can hold it.
    */
   speciesId: number | null;
+  /** The printed name of a card off another shelf, or null; see CardFacts.localName. */
+  localName?: string | null;
   /** Every printing held or wanted, in the order Notion returned them. */
   variants: Variant[];
   /** Whether any printing of it is actually in the binder. */
@@ -677,6 +679,13 @@ export type CardFacts = {
   tcgId: string | null;
   /** TCGdex's name where the row matched a card; the Dex files under it. See speciesId. */
   matchedName: string | null;
+  /**
+   * What the card prints, where that is not what the row says: a Japanese, Korean or Chinese
+   * card's own name, from its catalogue, for a sheet to show in brackets after the English one.
+   * Null on every English card — the row's name is the printed one there. Optional in the
+   * type, not the answer: every fixture that builds a card by hand predates it.
+   */
+  localName?: string | null;
   /** The printed number, for the second market's lookup outside these facts (collection.ts). */
   number: string;
   /** Cardmarket's alone; TCGplayer is blended in by the caller, from a cache of its own. */
@@ -741,6 +750,7 @@ function factsOfLanguageCard(
     imageHigh: card.scan?.high ?? (card.image ? localise(`${card.image}/high.webp`) : null),
     tcgId: card.id,
     matchedName: card.name || null,
+    localName: card.name || null,
     number: card.number || identity.number,
     // Cardmarket's own figure for this exact printing, through the same
     // priceOf() the English path uses, so "no price" is a null on both — the
@@ -933,6 +943,7 @@ export async function resolveSetFacts(
       imageHigh: r.imageHigh,
       tcgId: r.tcgId,
       matchedName: r.matchedName,
+      localName: null,
       number: r.number,
       price: priceOfId(r.tcgId),
       usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
@@ -1078,6 +1089,7 @@ export async function buildCollection(
           // With the shelf it came from: a Japanese card is named in Japanese, and the
           // English list cannot place it, so it used to land in no slot at all.
           speciesId: speciesOf(card?.matchedName ?? name, card?.catalogue),
+          localName: card?.localName ?? null,
           tcgId: card?.tcgId ?? null,
           price: card?.price ?? null,
           priceHolo: card?.priceHolo ?? null,
@@ -1151,11 +1163,13 @@ export async function buildCollection(
           existing.price ??= p.price;
           existing.priceHolo ??= p.priceHolo;
           existing.tcgId ??= p.tcgId;
+          existing.localName ??= p.localName;
           continue;
         }
         merged.set(p.key, {
           key: p.key,
           name: p.name,
+          localName: p.localName ?? null,
           number: p.number,
           type: p.type,
           gen: p.gen,

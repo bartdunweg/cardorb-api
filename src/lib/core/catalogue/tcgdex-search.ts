@@ -31,6 +31,9 @@ import {
   type CatalogueSet,
 } from "./tcgdex-browse";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
+import { englishCardNames } from "./card-names";
+import { setIdOf } from "./tcgdex-language";
+import { setIn } from "./tcgdex-browse";
 
 /* One catalogue per language. English is the one every search asked until 2026-09-11; the
    Japanese, Korean and Chinese ones are the same host under their own code, and a name typed in
@@ -197,6 +200,10 @@ export async function searchCards(
   /** Which catalogue to ask; null is the English one, the way every search before was. */
   language: BrowseLanguage | null = null,
 ): Promise<{ cards: CatalogueMatch[]; total: number }> {
+  // A Latin-letter term on another shelf is an English name, and TCGdex has none to match it
+  // against: リザードンex is what its record says. The committed English names are scanned here.
+  if (language && typeof input === "string" && /[A-Za-z]/.test(input))
+    return searchEnglishNames(language, input, page);
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
   if (!params) return { cards: [], total: 0 };
@@ -245,4 +252,58 @@ export async function searchCards(
   /* Rarity and type are the English catalogue's facts; the shelves of the other languages leave
      both empty (tcgdex-browse.ts, setIn), and a search in one of them does the same. */
   return { cards: language ? shown : await withFacts(shown), total: matched.length };
+}
+
+/**
+ * A card on the Japanese, Korean or Chinese shelf, by the English name the app shows it under.
+ *
+ * TCGdex can filter these catalogues by name, but only by the name the card prints, so
+ * "charizard" found nothing on the Japanese shelf while the set page showed Charizard ex under
+ * every Lizardon. The English names are ours (card-names.ts, one map per catalogue, committed),
+ * so the scan is a walk down twelve thousand strings in memory — no request — and every word
+ * typed has to be in the name. The hits are ordered as the shelf is, newest set first and by
+ * number within one, and paged as the English search pages.
+ *
+ * Only the page shown is read from the catalogue: the set each of those twenty cards is in
+ * (setIn, one cached GET a day per set), which is where the printed name, the scan's address
+ * and the set's English title already are. A set the catalogue lists without its cards (see
+ * CatalogueSet.cardsRecorded) has no id in the map and so no hit.
+ */
+async function searchEnglishNames(
+  language: BrowseLanguage,
+  term: string,
+  page: number,
+): Promise<{ cards: CatalogueMatch[]; total: number }> {
+  const words = term.trim().toLowerCase().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS);
+  if (!words.length) return { cards: [], total: 0 };
+  const names = englishCardNames(language);
+  const ids = Object.keys(names).filter((id) => {
+    const name = names[id]?.toLowerCase();
+    return !!name && words.every((w) => name.includes(w));
+  });
+  if (!ids.length) return { cards: [], total: 0 };
+
+  // The shelf's order: the set index is newest first, as listSetsIn writes it.
+  const shelf = await languageSetIndex(language).catch(() => new Map<string, CatalogueSet>());
+  const rank = new Map([...shelf.keys()].map((id, i) => [id, i]));
+  const setOf = (id: string) => setIdOf(id) ?? id;
+  const collate = new Intl.Collator("en", { numeric: true });
+  ids.sort(
+    (a, b) =>
+      (rank.get(setOf(a)) ?? Number.MAX_SAFE_INTEGER) -
+        (rank.get(setOf(b)) ?? Number.MAX_SAFE_INTEGER) || collate.compare(a, b),
+  );
+
+  const from = (Math.max(1, page) - 1) * MAX_RESULTS;
+  const shown = ids.slice(from, from + MAX_RESULTS);
+  const bySet = new Map<string, Map<string, CatalogueMatch>>();
+  for (const setId of new Set(shown.map(setOf))) {
+    const set = await setIn(language, setId);
+    bySet.set(setId, new Map((set?.cards ?? []).map((c) => [c.id, c])));
+  }
+  const cards = shown.flatMap((id) => {
+    const card = bySet.get(setOf(id))?.get(id);
+    return card ? [card] : [];
+  });
+  return { cards, total: ids.length };
 }
