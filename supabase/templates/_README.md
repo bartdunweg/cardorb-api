@@ -24,15 +24,25 @@ Plain HTML, inline styles, no images. A mail client is not a browser: half of
 them strip <style> blocks, and a remote image is both a tracking pixel to the
 suspicious and a broken box to anyone whose client blocks it by default.
 
+## Generated, not written here
+
+The three HTML files are the output of `pnpm emails:render` in cardorb-web, where
+the emails live as React components on Untitled UI's email kit
+(`src/emails/`, `src/components/emails/`). Change the wording or the look there,
+render, and copy the three files into this directory; a hand edit here is
+overwritten by the next render. The Go placeholders (`{{ .SiteURL }}`,
+`{{ .TokenHash }}`, `{{ .Email }}`, `{{ .NewEmail }}`) pass through the render as
+text, and the `&` between query parameters comes out as `&amp;`, which every
+mail client decodes.
+
 ## The shape of each one
 
 The same skeleton three times, so a person who has seen one recognises the next:
-the product's name above the card, a heading that says what the mail is for, one
-sentence of context, one button, the same link written out under it for the
-client that will not render a button, then the small print (how long the link
-lasts, what happens if you ignore it) and a footer that names the address it was
-sent to and why. A hidden first line gives the inbox its preview text.
+the product's name above, a heading that says what the mail is for, one sentence
+of context, one pill button, the same link written out under it for the client
+that will not render a button, then the small print (how long the link lasts,
+what happens if you ignore it) and a footer that names the address it was sent
+to and why. A hidden first line gives the inbox its preview text.
 
-Tables rather than divs for the container, because Outlook on Windows ignores
-`max-width` on a div and centres nothing. The `next=` parameter is gone from the
-links: the web app's `/auth/confirm` decides where to land from `type` alone.
+The `next=` parameter is gone from the links: the web app's `/auth/confirm`
+decides where to land from `type` alone.

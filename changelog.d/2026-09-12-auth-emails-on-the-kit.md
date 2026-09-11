@@ -1,0 +1,1 @@
+- The three auth emails are rendered from cardorb-web on Untitled UI's email kit: the same wording, the app's pill button and type.
