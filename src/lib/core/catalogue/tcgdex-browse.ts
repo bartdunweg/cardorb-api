@@ -218,6 +218,10 @@ export async function setIn(
     rarity: null,
     types: [],
     series: detail.serie?.name ?? null,
+    // TCGdex's id, the same as `id`: what a row of this language is filed under, and the only
+    // way POST /cards can find a card whose set has no English name (#257). The English shelf
+    // carried it from the start; this one sent none, and the web had nothing to send back.
+    tcgId: c.id,
   }));
   return { set, cards };
 }
