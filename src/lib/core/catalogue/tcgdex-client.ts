@@ -54,10 +54,15 @@ export class CatalogueNotFound extends Error {
  * A 404 is not retried: it is an answer, and asking twice more only costs two
  * round trips before the same one.
  */
-export async function json(url: string, label: string) {
+export async function json(
+  url: string,
+  label: string,
+  /** A day for artwork and sets; a search list asks for less, so a set published this week is found this week. */
+  { revalidate = DAY }: { revalidate?: number } = {},
+) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const res = await fetch(url, { next: { revalidate: DAY }, signal: catalogueTimeout() });
+      const res = await fetch(url, { next: { revalidate }, signal: catalogueTimeout() });
       if (res.status === 404) throw new CatalogueNotFound(label);
       if (!res.ok) throw new Error(`${res.status}`);
       return await res.json();

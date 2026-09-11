@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { searchCards } from "@/lib/core/catalogue/ptcg-search";
+import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
 import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -14,10 +14,10 @@ import { bearer } from "@/lib/api/viewer";
  * reasoning that a global search meant fetching every TCGdex set uncached per
  * keystroke. That reasoning was sound and the UX it produced was wrong —
  * "als je op plus klikt... 1 invoerveld voor alles" (see
- * git history) — so this asks
- * pokemontcg.io instead, which already indexes every card across every set
- * behind one query. See lib/core/catalogue/ptcg-search.ts for the query shape and why
- * it lives apart from ptcg.ts's narrower artwork-fallback job.
+ * git history) — so this asks one catalogue for every set at once. That was
+ * pokemontcg.io until 2026-09-11 and is TCGdex since: see
+ * lib/core/catalogue/tcgdex-search.ts for the query shape and for what the
+ * other host had started answering.
  *
  * `name`/`number`/`set`/`type` are a second, separate mode from `query`
  * (advanced filters rather than the quick search box) — see
@@ -25,7 +25,7 @@ import { bearer } from "@/lib/api/viewer";
  * alternative to the quick box is a more precise search rather than a way to
  * skip search and add an unmatched row.
  *
- * `page` (default 1) forwards straight to pokemontcg.io's own pagination, so
+ * `page` (default 1) is a page of MAX_RESULTS into the search's window, so
  * a broad query (a common name across a hundred printings) can be paged
  * through from the dialog's "Show more results" instead of capping out at
  * one page silently.
