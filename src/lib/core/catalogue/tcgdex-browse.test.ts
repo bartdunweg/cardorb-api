@@ -199,6 +199,7 @@ describe("tcgdex-browse", () => {
       rarity: null,
       types: [],
       series: "MEGA",
+      tcgId: "M4-001",
     });
   });
 
