@@ -23,6 +23,8 @@ export default defineConfig({
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },
   test: {
+    // The TCGdex breaker is per instance and a test file is one instance: closed before every test.
+    setupFiles: ["./vitest.setup.ts"],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

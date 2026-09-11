@@ -45,6 +45,52 @@ export class CatalogueNotFound extends Error {
 }
 
 /**
+ * TCGdex is down and was not asked: the breaker below is open.
+ *
+ * Its own class so a caller can tell "not asked" from "asked and refused",
+ * though every caller today treats both as the outage they are.
+ */
+export class CatalogueDown extends Error {
+  constructor(label: string) {
+    super(`TCGdex is down, ${label} not asked`);
+    this.name = "CatalogueDown";
+  }
+}
+
+/**
+ * The breaker. On the evening of 2026-09-04 TCGdex stopped answering, and
+ * every collection read then waited on three attempts — up to three eight-
+ * second timeouts and two pauses — before the rows came back without the
+ * catalogue (#164, #165). The app read as down when it was only slow.
+ *
+ * So after a call has failed its three attempts, every call on this instance
+ * for the next twenty seconds fails at once, without asking. When the window
+ * has passed the next call goes through and finds out; an answer closes the
+ * breaker, a failure opens it again. Per instance, because that is where the
+ * waiting happens: an instance that has just watched TCGdex time out three
+ * times has all the evidence it needs, and none to share.
+ *
+ * A 404 never trips it — that is an answer, not an outage.
+ */
+const BREAKER_MS = 20_000;
+let openUntil = 0;
+const refused = (label: string): void => {
+  if (Date.now() < openUntil) throw new CatalogueDown(label);
+};
+const tripped = (): void => {
+  openUntil = Date.now() + BREAKER_MS;
+};
+const answered = (): void => {
+  openUntil = 0;
+};
+/**
+ * For the tests alone: vitest.setup.ts closes the breaker before every test,
+ * because a test that plays an outage would otherwise leave the next test in
+ * the same file refused for twenty seconds. Nothing in src/ calls this.
+ */
+export const resetBreaker = answered;
+
+/**
  * A cached GET with a couple of retries.
  *
  * Everything artwork-related goes through here, and the retries are not
@@ -62,12 +108,15 @@ export async function json(
   /** A day for artwork and sets; a search list asks for less, so a set published this week is found this week. */
   { revalidate = DAY }: { revalidate?: number } = {},
 ) {
+  refused(label);
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetch(url, { next: { revalidate }, signal: catalogueTimeout() });
       if (res.status === 404) throw new CatalogueNotFound(label);
       if (!res.ok) throw new Error(`${res.status}`);
-      return await res.json();
+      const body = await res.json();
+      answered();
+      return body;
     } catch (err) {
       if (err instanceof CatalogueNotFound) throw err;
       const message = err instanceof Error ? err.message : String(err);
@@ -76,6 +125,7 @@ export async function json(
         continue;
       }
       console.error(`TCGdex ${label} failed after 3 attempts:`, message);
+      tripped();
       throw err;
     }
   }
@@ -92,6 +142,7 @@ export async function json(
  * item alone, which is why every caller reads the answer as "maybe".
  */
 export async function graphql(query: string, label: string): Promise<unknown> {
+  refused(label);
   const res = await fetch("https://api.tcgdex.net/v2/graphql", {
     method: "POST",
     headers: { "content-type": "application/json" },
