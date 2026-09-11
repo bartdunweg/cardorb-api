@@ -1,0 +1,1 @@
+- A set id TCGdex lists twice on a shelf (CSV1C on the Simplified Chinese one: a 9-card Gem Pack and the 127-card 亘古开来) shows once, as the entry its own page opens on; the shelf drew both under one key and a link from either landed on the same page.

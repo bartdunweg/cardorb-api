@@ -54,6 +54,24 @@ const answers: Record<string, unknown> = {
       { id: "sv03.5-TG01", localId: "TG01", name: "Bulbasaur" },
     ],
   },
+  "/zh-cn/series": [{ id: "SV", name: "朱&紫" }],
+  "/zh-cn/series/SV": {
+    id: "SV",
+    name: "朱&紫",
+    // TCGdex lists CSV1C twice; /sets/CSV1C opens on the second (tcgdex-browse.ts, onePerId).
+    sets: [
+      { id: "CSV1C", name: "宝石包 第一卷", cardCount: { total: 9, official: 9 } },
+      { id: "CSV1C", name: "亘古开来", cardCount: { total: 127, official: 127 } },
+      { id: "CSV2C", name: "奇迹启程", cardCount: { total: 100, official: 100 } },
+    ],
+  },
+  "/zh-cn/sets/CSV1C": {
+    id: "CSV1C",
+    name: "亘古开来",
+    serie: { id: "SV", name: "朱&紫" },
+    cardCount: { total: 127, official: 127 },
+    cards: [],
+  },
   "/ja/sets/M4": {
     id: "M4",
     name: "四",
@@ -184,6 +202,16 @@ describe("tcgdex-browse", () => {
     expect(sets.map((s) => s.id)).toEqual(["M4", "M1", "PMCG1"]);
     // PMCG1 records no card either, but nothing else on the shelf is called that: it stays.
     expect(sets.find((s) => s.id === "PMCG1")).toMatchObject({ cardsRecorded: false });
+  });
+
+  it("shows an id TCGdex lists twice once, as the entry its own page opens on", async () => {
+    const asked = stub();
+    const sets = await listSetsIn("zh-cn");
+    expect(sets.filter((s) => s.id === "CSV1C")).toHaveLength(1);
+    expect(sets.find((s) => s.id === "CSV1C")).toMatchObject({ localName: "亘古开来", total: 127 });
+    expect(sets.map((s) => s.id)).toEqual(["CSV2C", "CSV1C"]);
+    // One record read, for the one id that repeats; CSV2C cost nothing.
+    expect(asked.filter((a) => a.includes("/zh-cn/sets/"))).toEqual(["/zh-cn/sets/CSV1C"]);
   });
 
   it("says which sets the catalogue has recorded cards for, without asking it", async () => {

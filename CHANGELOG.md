@@ -44,6 +44,8 @@ if the two have drifted apart.
 
 - The English shelf, the set pages and the search leave Pokémon TCG Pocket out: TCGdex carries the mobile game's fifteen sets beside the printed ones, and a binder cannot hold one. A Pocket set asked for by id answers 404.
 
+- A set id TCGdex lists twice on a shelf (CSV1C on the Simplified Chinese one: a 9-card Gem Pack and the 127-card 亘古开来) shows once, as the entry its own page opens on; the shelf drew both under one key and a link from either landed on the same page.
+
 - Searching the catalogue for a card to add asks TCGdex now, not pokemontcg.io. The old host had started refusing roughly three requests in five, and a search for "charizard" came back empty often enough to read as "no such card". Same one box, same answer shape; every hit now carries its TCGdex id, so a card added from search is priced from the day it is added.
 
 - `GET /v1/catalog/search` answers `total` beside `cards`: how many the whole search matched, so a client can say "125 cards" above the page it shows. At most the 250 the search reads, which then means "at least".
