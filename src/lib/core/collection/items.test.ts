@@ -290,6 +290,16 @@ describe("pageOf", () => {
 });
 
 describe("countStats", () => {
+  it("says a public card's copies from quantity, not from rows", () => {
+    const rows = [
+      variant({ id: "a", quantity: 3 }),
+      variant({ id: "b", quantity: 1 }),
+      variant({ id: "w", owned: false }),
+    ];
+    const item = publicItems([set("Jungle", [card("Snorlax", rows)])])[0];
+    expect(item?.copies).toBe(4);
+  });
+
   it("counts copies from quantity, cards from rows, and the wishlist apart", () => {
     expect(countStats(SETS)).toEqual({
       cards: 3,
@@ -355,7 +365,7 @@ describe("publicItems", () => {
   it("shows one entry per card with owned copies, and never a card that is only wished for", () => {
     const items = publicItems(SETS);
     expect(items.map((i) => [i.name, i.copies])).toEqual([
-      ["Pikachu", 1],
+      ["Pikachu", 3],
       ["Snorlax", 2],
     ]);
     expect(Object.keys(items[0] ?? {})).not.toContain("purchasePrice");

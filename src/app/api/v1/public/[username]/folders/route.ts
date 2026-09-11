@@ -6,7 +6,7 @@ import {
   getPublicFolders,
   ownerOf,
 } from "@/lib/core/collection/collection";
-import { filterItems, flattenItems } from "@/lib/core/collection/items";
+import { countCopies, filterItems, flattenItems } from "@/lib/core/collection/items";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +45,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     });
 
   // The match runs on the private items, which know their folder and their rule's facts (the
-  // public shape has neither); only the count of distinct cards comes out.
+  // public shape has neither); only a count comes out — the copies held, the number every
+  // list says since 2026-09-11 (items.ts, countCopies), where it used to be distinct cards.
   const items = flattenItems(sets);
   const listed = folders.map((f) => {
     const filter = f.rule ? { owned: undefined, rule: f.rule } : { owned: true, collection: f.id };
-    const count = new Set(filterItems(items, filter).map((it) => `${it.set}-${it.number || it.name}`)).size;
+    const count = countCopies(filterItems(items, filter).filter((it) => it.owned));
     return { id: f.id, name: f.name, kind: f.kind, count };
   });
 
