@@ -40,6 +40,7 @@
  */
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
+import { limitlessJapaneseScan, tcgdexScan } from "./artwork";
 import { priceOf, holoPriceOf } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 import type { BrowseLanguage } from "./tcgdex-browse";
@@ -112,6 +113,14 @@ export type LanguageCard = {
   rarity: string | null;
   /** The scan's address without its size, exactly as the English catalogue hands one over. */
   image: string | null;
+  /**
+   * The picture pair to draw instead, where TCGdex's own is not there. Japanese only, from
+   * Limitless: TCGdex had no file behind 41 of 72 sampled Japanese cards on 2026-09-11, whole
+   * sets at a time, and a card you own from one of those sets showed its back on the shelf that
+   * had its picture (#262). One HEAD per card, cached a day, says which; a probe that cannot be
+   * made keeps TCGdex's address, as the shelf does. Null where the catalogue's own scan stands.
+   */
+  scan: { low: string; high: string } | null;
   setId: string | null;
   setName: string | null;
   /** Cardmarket's, in euros. Null where nothing prices it — never zero; see priceOf(). */
@@ -158,16 +167,23 @@ export async function languageCard(
     }
     if (!card) continue;
     const cm = card.pricing?.cardmarket;
+    const id = card.id ?? tcgId;
+    const number = card.localId ?? "";
+    const scan =
+      lang === "ja" && !(card.image && (await tcgdexScan(card.image)))
+        ? limitlessJapaneseScan(id, number)
+        : null;
     return {
       catalogue: lang,
-      id: card.id ?? tcgId,
-      number: card.localId ?? "",
+      id,
+      number,
       name: card.name ?? "",
       // The catalogues outside English do grade their cards, but not all of
       // them and not every card. Null is "this catalogue does not say", and the
       // row's own rarity stands where it does not.
       rarity: card.rarity ?? null,
       image: card.image ?? null,
+      scan,
       setId: card.set?.id ?? setIdOf(tcgId),
       setName: card.set?.name ?? null,
       // The same two functions the English path uses, so a Japanese card and an

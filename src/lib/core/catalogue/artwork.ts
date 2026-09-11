@@ -84,3 +84,28 @@ export function highScan(image: string | null): string | null {
     ? image.replace(/\/low\.webp$/, "/high.webp")
     : null;
 }
+
+/**
+ * Where Limitless keeps a Japanese card's scan, guessed the way the English
+ * one above is: from the set's printed abbreviation, which is the id TCGdex
+ * uses for a Japanese set, and the number without its padding — SV5M-001 is
+ * `tpc/SV5M/SV5M_1_R_JP_SM.png` there. Four sets checked by hand on
+ * 2026-09-11, four present. SM (274×381) does the grid's job, LG (460×640)
+ * the sheet's; through /api/cover, because Limitless sends no CORS header.
+ *
+ * Not checked here. The two callers decide differently whether to ask —
+ * a set page probes once per set, a collection once per card — and both
+ * hand the guess over unverified, which costs what a dead TCGdex address
+ * cost before: the browser finds out, and draws the card's back.
+ */
+export function limitlessJapaneseScan(id: string, number: string): { low: string; high: string } {
+  const set = id.slice(0, id.lastIndexOf("-"));
+  // A number that is not digits (a promo's "SV-P") is left as it is, and the
+  // guess is simply wrong for it.
+  const n = number.replace(/^0+(?=\d)/, "");
+  const at = (size: "SM" | "LG") =>
+    `/api/cover?url=${encodeURIComponent(
+      `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/${set}/${set}_${n}_R_JP_${size}.png`,
+    )}`;
+  return { low: at("SM"), high: at("LG") };
+}

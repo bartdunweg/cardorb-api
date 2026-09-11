@@ -38,7 +38,7 @@
  */
 
 import { setCatalogue } from "./catalogue";
-import { tcgdexScan } from "./artwork";
+import { limitlessJapaneseScan, tcgdexScan } from "./artwork";
 import { sameCard } from "./matching";
 import { localise, numberForms } from "../util";
 import { tcgdexSetName } from "./set-aliases";
@@ -120,12 +120,9 @@ export async function withTcgdexScans(
  * SM1M: 12 of 12), the odd card elsewhere (SV5a: 1 of 12). Traditional Chinese
  * was 44 of 60; English 1 of 96. A set page of grey boxes with names in them.
  *
- * Limitless has the Japanese scans, at an address built from the set's printed
- * abbreviation — which is what TCGdex uses as the set's id on this shelf, so
- * SV5M-001 is `tpc/SV5M/SV5M_1_R_JP_SM.png`. Checked on the four sets above:
- * four of four. The same guess the English fallback makes in artwork.ts, in
- * the other catalogue's folder. Japanese only: Limitless carries no Korean or
- * Chinese cards, and those shelves keep what they had.
+ * Limitless has the Japanese scans, at an address artwork.ts builds from the
+ * set's abbreviation and the number. Japanese only: Limitless carries no
+ * Korean or Chinese cards, and those shelves keep what they had.
  *
  * ── Why one probe per set and not one per card ─────────────────────────────
  *
@@ -151,17 +148,7 @@ export async function withLimitlessScans(
   if (await tcgdexScan(first.replace(/\/low\.webp$/, ""))) return cards;
 
   return cards.map((card) => {
-    // SV5M-001 is Limitless's SV5M_1: the set id as TCGdex writes it, the
-    // number without its padding. A number that is not digits (a promo's "SV-P")
-    // is left as it is, and the guess is simply wrong for it, as it is today.
-    const set = card.id.slice(0, card.id.lastIndexOf("-"));
-    const number = card.number.replace(/^0+(?=\d)/, "");
-    const at = (size: "SM" | "LG") =>
-      `/api/cover?url=${encodeURIComponent(
-        `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/${set}/${set}_${number}_R_JP_${size}.png`,
-      )}`;
-    // SM (274×381) for the grid, LG (460×640) for the sheet: the same two
-    // jobs TCGdex's low and high do, at the nearest sizes Limitless publishes.
-    return { ...card, image: at("SM"), imageHigh: at("LG") };
+    const { low, high } = limitlessJapaneseScan(card.id, card.number);
+    return { ...card, image: low, imageHigh: high };
   });
 }
