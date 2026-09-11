@@ -16,6 +16,12 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/core/collection/cards", () => ({
   getCardDetail: (...a: unknown[]) => getCardDetail(...a),
 }));
+/* The printings beside the card are five real TCGdex reads, three attempts each, when left
+   unmocked — which this test did, and the CI runner's 2026-09-11 15:39 run timed out on it at
+   5 s (main, #270's run), the only red thing in it. A unit test asks the network for nothing. */
+vi.mock("@/lib/core/catalogue/card-languages", () => ({
+  westernLanguagesOf: async () => ["en", "de"],
+}));
 
 const { GET } = await import("./route");
 
@@ -42,7 +48,11 @@ describe("GET /api/v1/cards/[tcgId]", () => {
   it("answers the card", async () => {
     const res = await get();
     expect(res.status).toBe(200);
-    expect((await res.json()).name).toBe("Charizard");
+    expect(await res.json()).toEqual({
+      id: "sv03-125",
+      name: "Charizard",
+      languages: ["en", "de"],
+    });
   });
 
   it("404s a card the catalogue does not know", async () => {
