@@ -1,0 +1,1 @@
+- Nidoran♂ (Base Set 55) is linked to its Cardmarket product by hand, so it is priced from the guide like the rest of the collection rather than by a request to TCGdex on every read.

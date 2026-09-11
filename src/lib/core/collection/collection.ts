@@ -223,7 +223,7 @@ const cachedGuidePrices = async (
             // The whole map, so the read stays what it was: which map is the fact under test.
             return Object.fromEntries(guidePrices(ids, await guideForShards(), map));
           },
-          ["guide-prices", language ?? "en", "v9", String(shard)],
+          ["guide-prices", language ?? "en", "v10", String(shard)],
           { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
         )(),
       ),
@@ -406,6 +406,8 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v18: base1-55 (Nidoran♂) linked by hand, the same way as v17.
+      //
       // v17: #299 relinked two Cardmarket products (Nidoran♀ Jungle 57, Pikachu EX XY124), and
       // the price a set entry holds was read when the entry was made. Under v16 both cards
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
@@ -427,7 +429,7 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v17", setName, factsSignature(identities)],
+      ["set-facts", "v18", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

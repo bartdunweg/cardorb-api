@@ -46,6 +46,8 @@ if the two have drifted apart.
 
 - The Japanese set M3 (ムニキスゼロ, 2026-01-23) is titled Nihil Zero on the shelf, Bulbapedia's rendering; it was the last Japanese set shown in its own script.
 
+- Nidoran♂ (Base Set 55) is linked to its Cardmarket product by hand, so it is priced from the guide like the rest of the collection rather than by a request to TCGdex on every read.
+
 - `cmUrl` on `GET /v1/cards/{tcgId}` and the public card is null, on purpose. The address was built from the card's name and the set's, and the button it fed landed on the wrong page or on nothing; Cardmarket publishes its product ids but not the expansion half of a product's address, and its site answers every probe with a bot check, so the right page cannot be guaranteed. Null hides "Buy on Cardmarket" in the iOS app without a release; the web had not drawn it since #215. The links map and `cardmarketUrl()` stay for when the address can be made to hold.
 
 - The English shelf, the set pages and the search leave Pokémon TCG Pocket out: TCGdex carries the mobile game's fifteen sets beside the printed ones, and a binder cannot hold one. A Pocket set asked for by id answers 404.
