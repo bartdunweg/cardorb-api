@@ -50,15 +50,16 @@ export async function GET(req: Request) {
   const { sets, failed, catalogueUnavailable } = await getCollection(who.userId, token);
   const items = failed ? [] : flattenItems(sets);
   const filed = new Map<string, number>();
+  // Copies, not rows: the count a binder shows is the one every list says (items.ts, countCopies).
   for (const it of items) {
     if (it.collectionId && it.owned)
-      filed.set(it.collectionId, (filed.get(it.collectionId) ?? 0) + 1);
+      filed.set(it.collectionId, (filed.get(it.collectionId) ?? 0) + Math.max(0, it.quantity));
   }
   const count = (f: (typeof folders)[number]) => {
     if (!f.rule) return filed.get(f.id) ?? 0;
     const inRule = ruleMatcher(f.rule);
     let n = 0;
-    for (const it of items) if (inRule(it)) n += 1;
+    for (const it of items) if (inRule(it)) n += it.owned ? Math.max(0, it.quantity) : 1;
     return n;
   };
 

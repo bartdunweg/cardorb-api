@@ -211,7 +211,19 @@ export type Order = "asc" | "desc";
 export const copyPrice = (it: CardItem): number | null =>
   shownPrice((isReverseFinish(it.finish) ? it.priceHolo : null) ?? it.price);
 
-export type ListValue = { value: number; unpriced: number };
+export type ListValue = { value: number; unpriced: number; copies: number };
+
+/**
+ * How many cards a list is, counted the way a person counts them: an owned copy `quantity`
+ * times, a wish once. The one number every screen says for a list since 2026-09-11 — the
+ * collection read 1,915 (rows), the public page 1,609 (distinct cards) and Home 1,933 (this)
+ * about the same binder, and each was right about something else.
+ */
+export function countCopies(items: CardItem[]): number {
+  let n = 0;
+  for (const it of items) n += it.owned ? Math.max(0, it.quantity) : 1;
+  return n;
+}
 
 /**
  * What a list is worth: over the whole filtered list, never a page, so the figure is for the
@@ -228,7 +240,7 @@ export function sumValue(items: CardItem[]): ListValue {
     if (price == null) unpriced += n;
     else value += price * n;
   }
-  return { value: Math.round(value * 100) / 100, unpriced };
+  return { value: Math.round(value * 100) / 100, unpriced, copies: countCopies(items) };
 }
 
 /**

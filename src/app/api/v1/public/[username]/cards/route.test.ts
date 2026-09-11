@@ -70,6 +70,8 @@ describe("GET /api/v1/public/{username}/cards", () => {
   it("lists owned cards with a copy count and nothing private", async () => {
     const body = await (await get()).json();
     expect(body.total).toBe(1);
+    // One row, two copies: the line under the name says two.
+    expect(body.copies).toBe(2);
     expect(body.cards[0]).toEqual({
       key: "Pikachu",
       name: "Pikachu",
