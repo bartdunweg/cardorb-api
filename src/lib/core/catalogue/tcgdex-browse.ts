@@ -206,6 +206,42 @@ const withoutPlaceholders = (sets: CatalogueSet[]): CatalogueSet[] => {
   return sets.filter((s) => s.cardsRecorded || (alike.get(key(s)) ?? 0) < 2);
 };
 
+/**
+ * One tile per id. TCGdex's Simplified Chinese listing carries CSV1C twice (2026-09-11): 宝石包
+ * 第一卷 with 9 cards and 亘古开来 with 127, and `/sets/CSV1C` opens on the second. A shelf drew
+ * both under one key, so React kept one tile and warned, and a link from either landed on the
+ * same page. The entry kept is the one that page shows — the set's own record says which, by
+ * count and then by name; one cached GET, and only for an id that repeats, which is one today.
+ * Where the record cannot be read, the last entry stands, as the page it opens does not exist
+ * to disagree.
+ */
+async function onePerId(lang: BrowseLanguage, sets: CatalogueSet[]): Promise<CatalogueSet[]> {
+  const seen = new Map<string, number>();
+  for (const s of sets) seen.set(s.id, (seen.get(s.id) ?? 0) + 1);
+  const repeated = [...seen].filter(([, n]) => n > 1).map(([id]) => id);
+  if (!repeated.length) return sets;
+  const keep = new Map<string, CatalogueSet>();
+  for (const id of repeated) {
+    const entries = sets.filter((s) => s.id === id);
+    let detail: TcgSetDetail | null = null;
+    try {
+      detail = (await json(
+        `${HOST}/${lang}/sets/${encodeURIComponent(id)}`,
+        `${lang} set ${id}`,
+      )) as TcgSetDetail;
+    } catch {
+      detail = null;
+    }
+    const own = detail?.cardCount?.total;
+    const chosen =
+      entries.find((s) => own != null && s.total === own) ??
+      entries.find((s) => detail?.name && (s.localName ?? s.name) === detail.name) ??
+      entries.at(-1)!;
+    keep.set(id, chosen);
+  }
+  return sets.filter((s) => !keep.has(s.id) || keep.get(s.id) === s);
+}
+
 export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> {
   const series = (await json(`${HOST}/${lang}/series`, `${lang} series`)) as TcgSerieBrief[];
   const out: CatalogueSet[] = [];
@@ -230,7 +266,7 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
       });
     }
   }
-  return withoutPlaceholders(out);
+  return onePerId(lang, withoutPlaceholders(out));
 }
 
 /** One set with its cards, or null where the language has no set by that id. */
