@@ -11,6 +11,10 @@ const authoriseWrite = vi.fn();
 const updateRow = vi.fn();
 const deleteRow = vi.fn();
 const findFolder = vi.fn();
+const forgetOnTheWeb = vi.fn(async (_who: { userId: string; username: string }) => undefined);
+vi.mock("@/lib/api/web-cache", () => ({
+  forgetOnTheWeb: (who: { userId: string; username: string }) => forgetOnTheWeb(who),
+}));
 
 // The real guard.ts pulls in lib/api/viewer.ts, which is `import "server-only"`
 // — fine under Next's bundler, fatal under plain vitest. Every route test here
@@ -125,6 +129,11 @@ describe("PATCH /api/v1/cards/[id]", () => {
     // cards_update only ever lets it reach a row the caller owns anyway.
     await patch({ isFavorite: true, id: "someone-elses-card" });
     expect(updateRow).toHaveBeenCalledWith("me-uuid", ID, { isFavorite: true }, "t.o.k.e.n");
+  });
+
+  it("tells the web whose collection changed, once the row is written", async () => {
+    await patch({ isFavorite: true });
+    expect(forgetOnTheWeb).toHaveBeenCalledWith(expect.objectContaining({ userId: "me-uuid" }));
   });
 
   it("refuses a body with nothing recognisable in it", async () => {

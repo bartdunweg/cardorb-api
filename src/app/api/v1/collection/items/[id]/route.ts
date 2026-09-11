@@ -13,6 +13,7 @@ import { authoriseWrite, readHeaders, refused, storeErrorResponse } from "@/lib/
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 /**
  * One printing, changed or removed.
  *
@@ -104,6 +105,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!row) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
 
   return NextResponse.json({ ok: true, card: row }, { headers: readHeaders(req) });
 }
@@ -127,6 +129,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (!gone) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
 
   // The row as it was, in the same `card` the PATCH above answers with, so a
   // client parses one shape for both. It is what an undo needs and the only

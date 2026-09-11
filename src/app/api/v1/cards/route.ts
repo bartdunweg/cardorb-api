@@ -24,6 +24,7 @@ import {
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
  * the key exists.
@@ -178,6 +179,7 @@ export async function POST(req: Request) {
   // zero is what makes the card the writer's own write rather than the one
   // after it.
   revalidateTag(cardsTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });
 }
