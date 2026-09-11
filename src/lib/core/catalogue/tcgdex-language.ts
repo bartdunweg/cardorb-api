@@ -31,12 +31,11 @@
  * traditional and simplified, so both are asked in order and the first that has
  * the card answers.
  *
- * Telling those two apart properly would mean adding `zh-tw` and `zh-cn` to
- * LANGUAGES — not a migration, since the column's check is only
- * `length(language) <= 5`, but a widening of an enum two clients decode, and
- * the iOS one ships on Apple's schedule. So it is the owner's call and not a
- * side effect of this. Until then the fallback is exact: a card comes back from
- * the catalogue that actually holds its id, or from neither.
+ * `zh-tw` and `zh-cn` are languages of their own since 2026-09-11 and name
+ * their catalogue exactly; `zh` stays for the rows that carry it, and for
+ * those the fallback is exact: a card comes back from the catalogue that
+ * actually holds its id, or from neither. (The iOS app decodes no language
+ * field at all, checked — so widening the list cost it nothing.)
  */
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
@@ -69,6 +68,10 @@ export function cataloguesFor(language: Language | null | undefined): readonly B
     // come back from the wrong catalogue — the id has to be *in* one.
     case "zh":
       return ["zh-tw", "zh-cn"];
+    case "zh-tw":
+      return ["zh-tw"];
+    case "zh-cn":
+      return ["zh-cn"];
     default:
       return [];
   }
