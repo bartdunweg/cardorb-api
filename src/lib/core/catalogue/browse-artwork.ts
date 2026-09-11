@@ -38,6 +38,7 @@
  */
 
 import { setCatalogue } from "./catalogue";
+import { tcgdexScan } from "./artwork";
 import { sameCard } from "./matching";
 import { localise, numberForms } from "../util";
 import { tcgdexSetName } from "./set-aliases";
@@ -105,5 +106,62 @@ export async function withTcgdexScans(
       image: localise(`${base}/low.webp`),
       imageHigh: localise(`${base}/high.webp`),
     };
+  });
+}
+
+/**
+ * Limitless's scans for a Japanese set TCGdex has not photographed.
+ *
+ * ── The measurement this exists for ────────────────────────────────────────
+ *
+ * The Japanese shelf hands out TCGdex's picture address for every card without
+ * asking whether a file is behind it, and on 2026-09-11 there was none behind
+ * 41 of 72 sampled cards across eight sets — whole sets at a time (SV5M, SM12a,
+ * SM1M: 12 of 12), the odd card elsewhere (SV5a: 1 of 12). Traditional Chinese
+ * was 44 of 60; English 1 of 96. A set page of grey boxes with names in them.
+ *
+ * Limitless has the Japanese scans, at an address built from the set's printed
+ * abbreviation — which is what TCGdex uses as the set's id on this shelf, so
+ * SV5M-001 is `tpc/SV5M/SV5M_1_R_JP_SM.png`. Checked on the four sets above:
+ * four of four. The same guess the English fallback makes in artwork.ts, in
+ * the other catalogue's folder. Japanese only: Limitless carries no Korean or
+ * Chinese cards, and those shelves keep what they had.
+ *
+ * ── Why one probe per set and not one per card ─────────────────────────────
+ *
+ * The gaps are mostly whole sets, so one HEAD on the first card says which
+ * kind of set this is: photographed, and every card keeps TCGdex's smaller
+ * file (19 kB against Limitless's 62 kB); or not, and every card gets the
+ * guess. The odd missing card in a photographed set stays a gap — that is one
+ * in twelve, against 250 HEADs a set to close it, and the page has a better
+ * answer for a single gap than a second catalogue. The guess itself is not
+ * checked either, for the same reason: the browser finds out, the way it did
+ * before this existed, and a 404 there costs exactly what it cost.
+ */
+export async function withLimitlessScans(
+  lang: string,
+  cards: CatalogueMatch[],
+): Promise<CatalogueMatch[]> {
+  if (lang !== "ja" || !cards.length) return cards;
+  const first = cards[0]!.image;
+  if (!first) return cards;
+  // The set's own scans exist: keep every card's. tcgdexScan() answers the
+  // path itself when the probe cannot be made, which reads as "keep" here —
+  // an unanswered check is not a reason to swap a whole set's pictures.
+  if (await tcgdexScan(first.replace(/\/low\.webp$/, ""))) return cards;
+
+  return cards.map((card) => {
+    // SV5M-001 is Limitless's SV5M_1: the set id as TCGdex writes it, the
+    // number without its padding. A number that is not digits (a promo's "SV-P")
+    // is left as it is, and the guess is simply wrong for it, as it is today.
+    const set = card.id.slice(0, card.id.lastIndexOf("-"));
+    const number = card.number.replace(/^0+(?=\d)/, "");
+    const at = (size: "SM" | "LG") =>
+      `/api/cover?url=${encodeURIComponent(
+        `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/${set}/${set}_${number}_R_JP_${size}.png`,
+      )}`;
+    // SM (274×381) for the grid, LG (460×640) for the sheet: the same two
+    // jobs TCGdex's low and high do, at the nearest sizes Limitless publishes.
+    return { ...card, image: at("SM"), imageHigh: at("LG") };
   });
 }

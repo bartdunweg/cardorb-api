@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { findSet, setCards } from "@/lib/core/catalogue/ptcg-browse";
 import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
-import { withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
+import { withLimitlessScans, withTcgdexScans } from "@/lib/core/catalogue/browse-artwork";
 import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -60,7 +60,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       const found = await setIn(language, setId);
       if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
       set = found.set;
-      cards = found.cards;
+      /* TCGdex has the set whole and, on the Japanese shelf, often none of its pictures —
+         whole sets at a time. Limitless has those; see browse-artwork.ts for the count. */
+      cards = await withLimitlessScans(language, found.cards);
     } else {
       set = await findSet(setId);
       /* Checked before the cards are asked for: an id nobody carries is a 404, not
