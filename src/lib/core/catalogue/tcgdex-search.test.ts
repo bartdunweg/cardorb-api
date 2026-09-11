@@ -327,6 +327,9 @@ describe("searchCards in another language", () => {
             ],
           });
         if (url.includes("/ja/cards?")) return Response.json(list);
+        // The scan probe: the file is there for every set but SV5M, which TCGdex has not photographed.
+        if (init?.method === "HEAD")
+          return new Response("", { status: url.includes("/SV5M/") ? 404 : 200 });
         return new Response("not here", { status: 500 });
       }),
     );
@@ -345,7 +348,9 @@ describe("searchCards in another language", () => {
       name: "リザードンex",
       // The shelf's own naming: the English title where the set has one (tcgdex-browse.ts, named).
       setName: "Pokémon Card 151",
-      image: "https://assets.tcgdex.net/ja/SV/SV2a/006/low.webp",
+      // Limitless's plain print: SV2a is the set TCGdex photographed as its Master Ball variant
+      // (artwork.ts), and a search hit goes through the same step a set page's card does.
+      image: `/api/cover?url=${encodeURIComponent("https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV2a/SV2a_6_R_JP_SM.png")}`,
       rarity: null,
       types: [],
       tcgId: "SV2a-006",
@@ -356,12 +361,41 @@ describe("searchCards in another language", () => {
     expect(calls.some((c) => c.url.endsWith("/graphql"))).toBe(false);
   });
 
+  it("gives a hit the record names no picture for Limitless's address, without a probe", async () => {
+    installJapanese([brief("SV1a-007", "007", "マスカーニャex", null)]);
+    const { searchCards } = await load();
+    const { cards } = await searchCards("マスカーニャ", 1, "ja");
+    expect(cards[0]!.image).toBe(
+      `/api/cover?url=${encodeURIComponent("https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV1a/SV1a_7_R_JP_SM.png")}`,
+    );
+    expect(calls.filter((c) => c.url.includes("low.webp"))).toHaveLength(0);
+  });
+
+  it("swaps the hits of a set TCGdex has not photographed, one probe per set on the page", async () => {
+    installJapanese([
+      brief("SV5M-001", "001", "ストライク", "https://assets.tcgdex.net/ja/SV/SV5M/001"),
+      brief("SV1a-007", "007", "マスカーニャex", "https://assets.tcgdex.net/ja/SV/SV1a/007"),
+      brief("SV5M-002", "002", "ハッサム", "https://assets.tcgdex.net/ja/SV/SV5M/002"),
+    ]);
+    const { searchCards } = await load();
+    const { cards } = await searchCards("ス", 1, "ja");
+    expect(cards.map((c) => c.id)).toEqual(["SV5M-001", "SV1a-007", "SV5M-002"]);
+    expect(cards[0]!.image).toContain("SV5M_1_R_JP_SM.png");
+    expect(cards[1]!.image).toBe("https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp");
+    expect(cards[2]!.image).toContain("SV5M_2_R_JP_SM.png");
+    expect(calls.filter((c) => c.url.includes("low.webp")).map((c) => c.url)).toEqual([
+      "https://assets.tcgdex.net/ja/SV/SV5M/001/low.webp",
+      "https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp",
+    ]);
+  });
+
   it("finds a card on that shelf by the English name the app shows it under, off its set", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: string) => {
+      vi.fn(async (input: string, init?: { method?: string }) => {
         const url = String(input);
         calls.push({ url });
+        if (init?.method === "HEAD") return new Response("", { status: 200 });
         if (url.endsWith("/ja/series")) return Response.json([{ id: "M", name: "MEGA" }]);
         if (url.endsWith("/ja/series/M"))
           return Response.json({

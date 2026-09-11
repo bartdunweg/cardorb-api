@@ -23,6 +23,7 @@
  * from its id.
  */
 import { graphql, json } from "./tcgdex-client";
+import { withLimitlessScansPerSet } from "./browse-artwork";
 import {
   type BrowseLanguage,
   englishSetIndex,
@@ -250,8 +251,13 @@ export async function searchCards(
      more", which is the honest thing a capped count can say. */
   const shown = matched.slice(from, from + MAX_RESULTS);
   /* Rarity and type are the English catalogue's facts; the shelves of the other languages leave
-     both empty (tcgdex-browse.ts, setIn), and a search in one of them does the same. */
-  return { cards: language ? shown : await withFacts(shown), total: matched.length };
+     both empty (tcgdex-browse.ts, setIn), and a search in one of them does the same. A Japanese
+     hit's picture goes through the same step the set page's does: Limitless's plain print where
+     TCGdex has no file, or the wrong one, or the record names none. */
+  return {
+    cards: language ? await withLimitlessScansPerSet(language, shown) : await withFacts(shown),
+    total: matched.length,
+  };
 }
 
 /**
@@ -305,5 +311,5 @@ async function searchEnglishNames(
     const card = bySet.get(setOf(id))?.get(id);
     return card ? [card] : [];
   });
-  return { cards, total: ids.length };
+  return { cards: await withLimitlessScansPerSet(language, cards), total: ids.length };
 }

@@ -62,6 +62,23 @@ describe("withLimitlessScans", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
+  it("gives a card the record names no picture for Limitless's, while the set keeps its own", async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: true } as Response);
+    const out = await withLimitlessScans("ja", [
+      card("001"),
+      card("002", { image: null, imageHigh: null }),
+    ]);
+    expect(out[0]!.image).toBe(`${TCGDEX}/001/low.webp`);
+    expect(out[1]!.image).toBe(cover("SV5M_2_R_JP_SM.png"));
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("guesses every card without a probe where none of them names a picture", async () => {
+    const out = await withLimitlessScans("ja", [card("001", { image: null, imageHigh: null })]);
+    expect(out[0]!.image).toBe(cover("SV5M_1_R_JP_SM.png"));
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("keeps the set's own pictures when the probe cannot be made", async () => {
     vi.mocked(fetch).mockRejectedValue(new Error("offline"));
     const cards = [card("001")];

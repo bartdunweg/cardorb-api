@@ -41,8 +41,16 @@ export async function withLimitlessScans(
   cards: CatalogueMatch[],
 ): Promise<CatalogueMatch[]> {
   if (lang !== "ja" || !cards.length) return cards;
-  const first = cards[0]!.image;
-  if (!first) return cards;
+  const guess = (card: CatalogueMatch): CatalogueMatch => {
+    const { low, high } = limitlessJapaneseScan(card.id, card.number);
+    return { ...card, image: low, imageHigh: high };
+  };
+  // A card whose record names no picture gets the guess without a probe, as
+  // the collection's resolve gives one (tcgdex-language.ts): there is no
+  // address to check. The set page never has these — setIn builds every
+  // address from the serie — but a search hit reads the record as it is.
+  const first = cards.find((c) => c.image)?.image;
+  if (!first) return cards.map(guess);
   // A set TCGdex photographed in its reverse variant is swapped without the
   // probe: the file is there, and it is the wrong print (artwork.ts).
   const setId = cards[0]!.id.slice(0, cards[0]!.id.lastIndexOf("-"));
@@ -50,10 +58,32 @@ export async function withLimitlessScans(
   // path itself when the probe cannot be made, which reads as "keep" here —
   // an unanswered check is not a reason to swap a whole set's pictures.
   if (!tcgdexScanIsReverse(setId) && (await tcgdexScan(first.replace(/\/low\.webp$/, ""))))
-    return cards;
+    return cards.map((card) => (card.image ? card : guess(card)));
 
-  return cards.map((card) => {
-    const { low, high } = limitlessJapaneseScan(card.id, card.number);
-    return { ...card, image: low, imageHigh: high };
-  });
+  return cards.map(guess);
+}
+
+/**
+ * The same, for a page of hits from many sets: withLimitlessScans() decides
+ * once per set, so the page is grouped by set, decided, and put back in its
+ * order. Twenty hits are at most twenty probes cold, each cached a day, and
+ * a set already opened on the shelf costs nothing here.
+ */
+export async function withLimitlessScansPerSet(
+  lang: string,
+  cards: CatalogueMatch[],
+): Promise<CatalogueMatch[]> {
+  if (lang !== "ja" || !cards.length) return cards;
+  const groups = new Map<string, CatalogueMatch[]>();
+  for (const card of cards) {
+    const setId = card.id.slice(0, card.id.lastIndexOf("-"));
+    groups.set(setId, [...(groups.get(setId) ?? []), card]);
+  }
+  const decided = new Map<string, CatalogueMatch>();
+  await Promise.all(
+    [...groups.values()].map(async (group) => {
+      for (const card of await withLimitlessScans(lang, group)) decided.set(card.id, card);
+    }),
+  );
+  return cards.map((card) => decided.get(card.id) ?? card);
 }
