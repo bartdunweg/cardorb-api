@@ -210,7 +210,7 @@ const cachedGuidePrices = async (
             // The whole map, so the read stays what it was: which map is the fact under test.
             return Object.fromEntries(guidePrices(ids, await guideForShards(), map));
           },
-          ["guide-prices", language ?? "en", "v7", String(shard)],
+          ["guide-prices", language ?? "en", "v8", String(shard)],
           { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
         )(),
       ),

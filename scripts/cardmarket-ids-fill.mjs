@@ -21,6 +21,16 @@
  *
  * Run it after snapshot-collection-value.mjs has added new ids, or whenever the unpriced list
  * on /dashboard/cards?unpriced=1 is not empty.
+ *
+ * ── A set nobody has linked a card in ──
+ *
+ * Since the English map holds the whole shelf (2026-09-11, language-cardmarket-ids.mjs), a
+ * set can be unlinked from top to bottom — Gym Heroes, Gym Challenge, the XY trainer kits —
+ * and then no card in it says which expansion it is. Those are found the other way round:
+ * the expansion whose products carry the most of the set's own card names is the set, when
+ * it carries at least half of them and clearly more than the runner-up. A set from the
+ * Pokémon TCG Pocket app (A1, B2a, …) is skipped outright: there is no physical card, so
+ * there is no product, and a null there is the right answer.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -72,21 +82,116 @@ const norm = (s) =>
     .replace(/\s+/g, " ")
     .trim();
 
+/** The digital game's sets, which have no product to find. */
+const isPocket = (set) => /^(A\d|B\d|P-A)/.test(set);
+
+// Every missing card's name first, so a set with no linked card can be recognised from all
+// of its names at once. Eight at a time; TCGdex tolerates that.
+const names = new Map();
+{
+  const asked = missing.filter((id) => !isPocket(setOf(id)));
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      for (let i = next++; i < asked.length; i = next++) {
+        const id = asked[i];
+        const card = await json(`https://api.tcgdex.net/v2/en/cards/${id}`).catch(() => null);
+        if (card?.name)
+          names.set(id, {
+            name: card.name,
+            attacks: (card.attacks ?? []).map((a) => norm(a.name ?? "")).filter(Boolean),
+          });
+      }
+    }),
+  );
+}
+
+/** Expansion → the set of product names in it, normalised, once. */
+const namesByExpansion = new Map();
+for (const p of products) {
+  const bag = namesByExpansion.get(p.idExpansion) ?? new Set();
+  bag.add(norm(p.name));
+  namesByExpansion.set(p.idExpansion, bag);
+}
+
+/**
+ * The expansion a set with no linked card must be: the one carrying most of its names.
+ * Returns the id, or a line saying why none could be picked.
+ */
+const recognise = (set) => {
+  const wanted = new Set();
+  for (const [id, c] of names) if (setOf(id) === set) wanted.add(norm(c.name));
+  if (!wanted.size) return { why: "no card of it has a name" };
+  const scored = [...namesByExpansion.entries()]
+    .map(([exp, bag]) => {
+      let hits = 0;
+      for (const n of wanted) if (bag.has(n)) hits++;
+      return { exp, share: hits / wanted.size, size: bag.size };
+    })
+    .filter((s) => s.share > 0)
+    .sort(
+      (a, b) =>
+        b.share - a.share || Math.abs(a.size - wanted.size) - Math.abs(b.size - wanted.size),
+    );
+  const [best, second] = scored;
+  if (!best || best.share < 0.5)
+    return { why: `no expansion carries half of its ${wanted.size} names` };
+  // Nine in ten names is the set whatever else carries them: a promo set's cards reappear
+  // in a later collection, and that collection carries them too, less completely.
+  if (second && best.share < 0.9 && second.share > best.share - 0.2)
+    return {
+      why: `two expansions carry its names: ${best.exp} (${Math.round(best.share * 100)}%, ${best.size} products) and ${second.exp} (${Math.round(second.share * 100)}%, ${second.size} products)`,
+    };
+  return { exp: best.exp, share: best.share };
+};
+const recognised = new Map();
+
 let set = 0;
+let pocket = 0;
 const undecided = [];
 for (const id of missing) {
-  const card = await json(`https://api.tcgdex.net/v2/en/cards/${id}`).catch(() => null);
-  if (!card?.name) {
+  if (isPocket(setOf(id))) {
+    pocket += 1;
+    continue;
+  }
+  const card = names.get(id);
+  if (!card) {
     undecided.push(`${id}: TCGdex does not know it`);
     continue;
   }
-  const exp = expansion(setOf(id));
+  let exp = expansion(setOf(id));
   if (exp === null) {
-    undecided.push(`${id} (${card.name}): no linked card in its set to learn the expansion from`);
-    continue;
+    if (!recognised.has(setOf(id))) {
+      const found = recognise(setOf(id));
+      recognised.set(setOf(id), found);
+      if (found.exp)
+        console.log(
+          `set ${setOf(id)} recognised as expansion ${found.exp} (${Math.round(found.share * 100)}% of its names)`,
+        );
+    }
+    const found = recognised.get(setOf(id));
+    if (!found.exp) {
+      undecided.push(`${id} (${card.name}): no linked card in its set, and ${found.why}`);
+      continue;
+    }
+    exp = found.exp;
   }
   const wanted = norm(card.name);
-  const candidates = products.filter((p) => p.idExpansion === exp && norm(p.name) === wanted);
+  let candidates = products.filter((p) => p.idExpansion === exp && norm(p.name) === wanted);
+  if (candidates.length > 1) {
+    // Several products by one name are the card's printings, told apart in Cardmarket's
+    // brackets by their attacks: "Pikachu [Growl | Thundershock]". TCGdex knows the attacks,
+    // so the products naming every one of the card's attacks are the card. Where that still
+    // leaves several, they are one printing listed more than once (a reprint, a staff stamp),
+    // and the lowest product id is the plain, first one.
+    const bracket = (p) => norm(p.name.match(/\[(.*?)\]/)?.[1] ?? "");
+    if (card.attacks.length) {
+      const byAttack = candidates.filter((p) => card.attacks.every((a) => bracket(p).includes(a)));
+      if (byAttack.length) candidates = byAttack;
+    }
+    const first = [...candidates].sort((a, b) => a.idProduct - b.idProduct)[0];
+    if (candidates.every((p) => bracket(p) === bracket(first))) candidates = [first];
+  }
   if (candidates.length === 1) {
     ids[id] = candidates[0].idProduct;
     set += 1;
@@ -104,6 +209,7 @@ for (const id of missing) {
   }
 }
 
+if (pocket) console.log(`\n${pocket} Pocket cards skipped: no physical card, no product.`);
 if (undecided.length) console.log(`\nUndecided (${undecided.length}):\n${undecided.join("\n")}`);
 if (write && set) {
   writeFileSync(
