@@ -162,6 +162,17 @@ describe("filterItems", () => {
     expect(filterItems(items, { q: "JUNG" }).map((i) => i.id)).toEqual(["c"]);
     expect(filterItems(items, { q: "pika" }).map((i) => i.id)).toEqual(["a"]);
   });
+  it("matches a search against the set's official name as well as the one it was filed under", () => {
+    const filed = {
+      ...items[0]!,
+      id: "s",
+      set: "SV Black Star Promos",
+      setTitle: "SVP Black Star Promos",
+    };
+    expect(filterItems([filed], { q: "svp" }).map((i) => i.id)).toEqual(["s"]);
+    expect(filterItems([filed], { q: "sv black" }).map((i) => i.id)).toEqual(["s"]);
+    expect(filterItems([filed], { q: "swsh" })).toEqual([]);
+  });
   it("favourites and folders narrow", () => {
     expect(filterItems(items, { favorite: true }).map((i) => i.id)).toEqual(["a"]);
     expect(filterItems(items, { collection: "f-1" }).map((i) => i.id)).toEqual(["a"]);
@@ -375,6 +386,12 @@ describe("publicItems", () => {
     expect(filterPublicItems(publicItems(SETS), { q: "jungle" }).map((i) => i.name)).toEqual([
       "Snorlax",
     ]);
+    const filed = {
+      ...publicItems(SETS)[0]!,
+      set: "SV Black Star Promos",
+      setTitle: "SVP Black Star Promos",
+    };
+    expect(filterPublicItems([filed], { q: "svp" })).toHaveLength(1);
     expect(readPublicQuery(new URLSearchParams("q=x&owned=false&limit=5"))).toEqual({
       kind: "ok",
       query: { q: "x", limit: 5, offset: 0 },
