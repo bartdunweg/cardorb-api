@@ -87,7 +87,6 @@ vi.mock("../catalogue/catalogue", () => ({
 vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
-  ptcgPrices: async () => new Map(),
 }));
 
 const { buildCollection, identityKey, setIdentities } = await import("./cards");

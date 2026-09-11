@@ -33,7 +33,8 @@ paths:
   change could reach.
 - **A card's price is the average of two markets, in euros**: Cardmarket (the daily guide at
   build time, cached as a small map; TCGdex for a card the guide does not know) and TCGplayer
-  (pokemontcg.io, one request per set and its gallery, TCGdex's relay for a card it lacks;
+  (TCGdex's relay of it, off the card's own record, a set's cards at a time for a day —
+  pokemontcg.io answered one set in eight by 2026-09-11 and is asked for no price any more;
   dollars at the ECB's daily rate). Where one market has nothing the other stands alone, in its
   own shape. The foil price is Cardmarket's alone. A card the guide cannot price is nearly always
   a null in `cardmarket-ids.generated.json`: `scripts/cardmarket-ids-fill.mjs` fills those from

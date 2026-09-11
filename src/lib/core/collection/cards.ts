@@ -38,7 +38,8 @@ import { speciesOf } from "./pokedex";
 import { LOCALE } from "../config";
 import { limitlessScan, tcgdexScan } from "../catalogue/artwork";
 import { sameCard } from "../catalogue/matching";
-import { ptcgScan, type UsdPrice } from "../catalogue/ptcg";
+import { ptcgScan } from "../catalogue/ptcg";
+import type { UsdPrice } from "../catalogue/tcgdex-client";
 import {
   cataloguesFor,
   languageCard,

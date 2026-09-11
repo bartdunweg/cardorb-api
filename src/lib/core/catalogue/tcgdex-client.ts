@@ -9,9 +9,11 @@
  * This file only ever runs inside a call that one of those two already cached.
  */
 import { DAY, mapLimit, catalogueTimeout } from "../util";
-import type { UsdPrice } from "./ptcg";
 import { priceOf, holoPriceOf } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
+
+/** TCGplayer's numbers for one printing, in dollars, as TCGdex relays them. */
+export type UsdPrice = { market: number | null; low: number | null };
 
 export type TcgSet = { id: string; name: string };
 export type TcgCard = { id: string; localId?: string; name?: string; image?: string };
@@ -162,7 +164,7 @@ const TCGPLAYER_PRINTINGS = [
 ];
 
 /** TCGplayer's market and low for the first printing that has a market, or null. */
-function usdOf(
+export function usdOf(
   tp:
     | Record<string, { marketPrice?: number | null; lowPrice?: number | null } | null | undefined>
     | null
@@ -204,5 +206,38 @@ export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>>
     // Either market is worth keeping: a promo Cardmarket does not price is still a card TCGplayer does.
     if (price || usd) out.set(id, { price, holo: cm ? holoPriceOf(cm) : null, usd });
   });
+  return out;
+}
+
+/**
+ * TCGplayer's price for a list of TCGdex card ids — the second market, from the
+ * catalogue that relays it.
+ *
+ * pokemontcg.io used to be asked per set for these, and by 2026-09-11 it answered
+ * one set in eight (measured as the API reads it, three tries and a budget), so
+ * the same card blended two markets on one instance and stood on Cardmarket
+ * alone on the next. TCGdex carries TCGplayer's number on the card's own record
+ * — 207 of 207 for 151 — the record pricesFor() already reads and json() keeps
+ * for a day. One request per card, eight at a time, once a day.
+ *
+ * Tolerant per card: a card TCGdex would not answer for is left out, not the
+ * set. Throws only when nothing at all came back for a list that asked for
+ * something, so an outage is not cached as "no second market" for a day.
+ */
+export async function usdFor(ids: string[]): Promise<Map<string, UsdPrice>> {
+  const out = new Map<string, UsdPrice>();
+  let answered = 0;
+  await mapLimit(ids, 8, async (id) => {
+    let card: { pricing?: { tcgplayer?: Parameters<typeof usdOf>[0] } } | null;
+    try {
+      card = (await json(`https://api.tcgdex.net/v2/en/cards/${id}`, `card ${id}`)) as typeof card;
+    } catch {
+      return;
+    }
+    answered += 1;
+    const usd = usdOf(card?.pricing?.tcgplayer);
+    if (usd) out.set(id, usd);
+  });
+  if (ids.length && !answered) throw new Error("TCGdex answered for none of the cards");
   return out;
 }
