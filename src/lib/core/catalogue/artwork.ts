@@ -98,6 +98,17 @@ export function highScan(image: string | null): string | null {
  * hand the guess over unverified, which costs what a dead TCGdex address
  * cost before: the browser finds out, and draws the card's back.
  */
+/**
+ * Japanese sets TCGdex photographed in a reverse-holo variant rather than the plain print.
+ * Pokémon Card 151 (SV2a): every one of its scans is the Master Ball print — 001, 011, 025 and
+ * 150 looked at on 2026-09-11 — so a shelf of commons read as a shelf of reverse holos. Both
+ * callers of limitlessJapaneseScan() take Limitless's plain print for these without asking
+ * TCGdex whether its file is there: it is, and it is the wrong one.
+ */
+const SCANNED_AS_REVERSE: ReadonlySet<string> = new Set(["SV2a"]);
+export const tcgdexScanIsReverse = (setId: string | null): boolean =>
+  !!setId && SCANNED_AS_REVERSE.has(setId);
+
 export function limitlessJapaneseScan(id: string, number: string): { low: string; high: string } {
   const set = id.slice(0, id.lastIndexOf("-"));
   // A number that is not digits (a promo's "SV-P") is left as it is, and the

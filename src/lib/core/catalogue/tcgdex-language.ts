@@ -39,7 +39,7 @@
  */
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
-import { limitlessJapaneseScan, tcgdexScan } from "./artwork";
+import { limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
 import { priceOf, holoPriceOf } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 import type { BrowseLanguage } from "./tcgdex-browse";
@@ -172,8 +172,12 @@ export async function languageCard(
     const cm = card.pricing?.cardmarket;
     const id = card.id ?? tcgId;
     const number = card.localId ?? "";
+    // Limitless's plain print where TCGdex has no file — or has the reverse
+    // variant's, which is worse than none (artwork.ts, SCANNED_AS_REVERSE).
     const scan =
-      lang === "ja" && !(card.image && (await tcgdexScan(card.image)))
+      lang === "ja" &&
+      (tcgdexScanIsReverse(card.set?.id ?? setIdOf(tcgId)) ||
+        !(card.image && (await tcgdexScan(card.image))))
         ? limitlessJapaneseScan(id, number)
         : null;
     return {

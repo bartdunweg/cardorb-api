@@ -50,6 +50,18 @@ describe("withLimitlessScans", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("swaps a set TCGdex photographed in its reverse variant, and spends no probe on it", async () => {
+    // Pokémon Card 151: every TCGdex scan is the Master Ball print, seen on 2026-09-11.
+    const cards = [
+      card("001", { id: "SV2a-001", image: "https://assets.tcgdex.net/ja/SV/SV2a/001/low.webp" }),
+    ];
+    const out = await withLimitlessScans("ja", cards);
+    expect(out[0]!.image).toBe(
+      `/api/cover?url=${encodeURIComponent("https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV2a/SV2a_1_R_JP_SM.png")}`,
+    );
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("keeps the set's own pictures when the probe cannot be made", async () => {
     vi.mocked(fetch).mockRejectedValue(new Error("offline"));
     const cards = [card("001")];
