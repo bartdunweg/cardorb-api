@@ -84,7 +84,9 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
-  guidePricesFor.mockClear();
+  // Reset, not cleared: one test gives the guide a lasting answer.
+  guidePricesFor.mockReset();
+  guidePricesFor.mockImplementation(async () => new Map());
   searchCards.mockClear();
   getRows.mockClear();
   englishSets.mockClear();
@@ -187,10 +189,13 @@ describe("GET /api/v1/catalog/search", () => {
     expect(cards[0]).toMatchObject({ owned: false, wishlist: false, quantity: 0, itemIds: [] });
   });
 
-  it("does not read the collection when the search itself failed", async () => {
-    searchCards.mockRejectedValueOnce(new Error("pokemontcg.io search unavailable"));
-    await search(new URLSearchParams({ query: "char" }));
-    expect(getRows).not.toHaveBeenCalled();
+  it("answers 502 when the search itself failed, whatever the rows read said", async () => {
+    /* The rows are read alongside the search since the four reads went parallel; a failed
+       search still fails the request, and the rows do not turn it into an empty answer. */
+    searchCards.mockRejectedValueOnce(new Error("catalogue search unavailable"));
+    getRows.mockResolvedValue({ rows: [row()], failed: false });
+    const res = await search(new URLSearchParams({ query: "char" }));
+    expect(res.status).toBe(502);
   });
   it("asks the catalogue named by ?language, and joins ownership by that language alone", async () => {
     const res = await search(new URLSearchParams({ query: "リザードン", language: "ja" }));
@@ -205,7 +210,9 @@ describe("GET /api/v1/catalog/search", () => {
   });
 
   it("prices every result from the guide, by the id everything priced is keyed by", async () => {
-    guidePricesFor.mockResolvedValueOnce(
+    // Not Once: the route reads the guide ahead, with no ids, so the map is in hand by the
+    // time the hits are priced.
+    guidePricesFor.mockResolvedValue(
       new Map([["base1-4", { price: { market: 12.5 }, holo: { market: 40 } }]]),
     );
     const res = await search(new URLSearchParams({ query: "char", language: "ja" }));

@@ -6,6 +6,7 @@ import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
+import { timed } from "@/lib/core/timing";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -94,18 +95,26 @@ export async function GET(req: Request) {
     /* The catalogue's copy (lib/core/catalogue/mirror.ts) is the service role's to read: no
        person's data is in it, and the search reads it before it asks TCGdex. */
     const store = adminClient();
-    const { cards, total } = usingFilters
-      ? await searchCards(filters, page, language, store)
-      : await searchCards((url.searchParams.get("query") ?? "").trim(), page, language, store);
-    /* After the search, not before: a search that is about to 502 should not
-       have cost a collection read. getRows() fails soft, so a store outage
-       leaves every result unmarked rather than taking the search down with it. */
-    const { rows } = await getRows(who.userId, bearer(req) ?? undefined);
-    // The English sets, for the join to file each row under the set it resolves to; the
-    // search has just read the same index, so this is the memoised promise, not a request.
-    /* Ownership by the catalogue asked, as the set page joins it: a row of that language carrying
-       that catalogue's id marks its own hit; every other row marks the English one. */
-    const sets = language ? [] : await englishSets().catch(() => []);
+    const term = (url.searchParams.get("query") ?? "").trim();
+    /* Four reads, none waiting on another: the hits from the copy, the person's rows for the
+       owned marks, the English set index the join files those rows under, and the price guide
+       the hits are priced from. In a row they were 0.8 to 1.1 s on 2026-09-11 (measured from
+       cardorb.com, the copy filled and the query itself 1 ms); every one is a hop to another
+       region, and the sum is what the person waits for. Together they cost the slowest one.
+       getRows() fails soft, so a store outage leaves every result unmarked rather than taking
+       the search down with it; a search that fails still fails the request (502 below). */
+    const [{ cards, total }, { rows }, sets] = await Promise.all([
+      timed("catalogue search", () =>
+        usingFilters
+          ? searchCards(filters, page, language, store)
+          : searchCards(term, page, language, store),
+      ),
+      timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)),
+      language ? Promise.resolve([]) : timed("en set index", () => englishSets().catch(() => [])),
+      // The guide's map is read once per request (guideForRequest); asking for nothing now
+      // means the ids below find it already in hand.
+      timed("guide prices", () => guidePricesFor([], language)),
+    ]);
     const marked = markOwnership(ownershipIndex(rows, language, sets), cards);
     /* Keyed by the TCGdex id, which every hit carries and which everything priced is keyed by;
        the fallback is the set route's, for a card that came without the one. */
