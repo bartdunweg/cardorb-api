@@ -1,0 +1,1 @@
+- `scripts/backfill-card-prices.mjs` goes on when TCGdex refuses one card. With twenty thousand cards to ask about, one refusal at card 1,482 threw the other answers away and stopped the run; a refused card is now left out of the map, so the next run asks again, and the TCGplayer ids of the whole English shelf are committed: 19,067 of 23,622 cards have a product.

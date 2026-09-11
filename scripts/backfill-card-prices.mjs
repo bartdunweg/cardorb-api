@@ -164,10 +164,21 @@ async function tcgplayerIds(ids) {
   const missing = ids.filter((id) => !(id in known));
   if (missing.length) {
     console.log(`Asking TCGdex for ${missing.length} TCGplayer ids…`);
+    let refused = 0;
     await mapLimit(missing, 6, async (id) => {
-      const card = await fetchJson(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(id)}`, {
-        optional: true,
-      });
+      let card;
+      try {
+        card = await fetchJson(`https://api.tcgdex.net/v2/en/cards/${encodeURIComponent(id)}`, {
+          optional: true,
+        });
+      } catch {
+        // A catalogue that refuses one card three times over is not a fact about the card.
+        // Left out of the map rather than written as null, so the next run asks again; and
+        // the run goes on, because with twenty thousand cards to ask about one refusal at
+        // card 1,482 used to throw the other 20,000 answers away with it.
+        refused++;
+        return;
+      }
       const t = card?.pricing?.tcgplayer;
       const variants = t
         ? Object.entries(t).filter(([, v]) => v && typeof v === "object" && v.productId)
@@ -183,6 +194,7 @@ async function tcgplayerIds(ids) {
         .map((k) => [k, known[k]]),
     );
     writeFileSync(IDS, `${JSON.stringify(sorted, null, 2)}\n`);
+    if (refused) console.log(`  ${refused} cards TCGdex refused; a re-run asks about them again.`);
   }
   return known;
 }
