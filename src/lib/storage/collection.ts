@@ -86,6 +86,16 @@ export async function listRows(
   return postgres.listRows(client, userId);
 }
 
+/** The person's cards version (see postgres.cardsVersion), or null where there is no store to ask. */
+export async function cardsVersion(
+  userId: string,
+  db?: SupabaseClient | null,
+): Promise<number | null> {
+  const client = db ?? readClient();
+  if (!client) return null;
+  return postgres.cardsVersion(client, userId);
+}
+
 /**
  * One person's value readings, or none where this deployment has no store.
  *

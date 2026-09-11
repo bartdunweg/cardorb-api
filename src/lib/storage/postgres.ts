@@ -197,6 +197,23 @@ const toRow = (r: CardRecord): CollectionRow => ({
  * best in. The sort is on acquired_at rather than created_at for the reason
  * that column exists at all.
  */
+/**
+ * How many times this person's cards have been written: `profiles.cards_version`, moved by a
+ * trigger on every statement that touches their rows. The rows cache is keyed on it, so a
+ * read from before a write can never be stored as the rows after it (migration
+ * 20260911200000). Null where the profile cannot be read — a store without the migration
+ * yet, or a client the policy refuses — and the cache falls back to its tag alone.
+ */
+export async function cardsVersion(db: SupabaseClient, userId: string): Promise<number | null> {
+  const { data, error } = await db
+    .from("profiles")
+    .select("cards_version")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error || !data || typeof data.cards_version !== "number") return null;
+  return data.cards_version;
+}
+
 export async function listRows(db: SupabaseClient, userId?: string): Promise<CollectionRow[]> {
   const rows = await readAllPages<CardRecord>("the collection", (page, counted) => {
     let q = db
