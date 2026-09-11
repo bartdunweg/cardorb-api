@@ -14,6 +14,7 @@ import { cardsTag, foldersTag, UUID } from "@/lib/core/collection/collection-row
 import { readFolderBody } from "@/lib/core/collection/folders";
 import { deleteFolder, getFolder, updateFolder } from "@/lib/storage/collection";
 
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 /**
  * One sentence for the five places this route says it, through apiError() like
  * every other refusal here.
@@ -65,6 +66,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!folder) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(foldersTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
   return NextResponse.json({ ok: true, folder }, { headers: readHeaders(req) });
 }
 
@@ -89,5 +91,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   // The cards that were filed in it changed, so the cached rows are stale; so is the list.
   revalidateTag(cardsTag(who.userId), { expire: 0 });
   revalidateTag(foldersTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
   return NextResponse.json({ ok: true }, { headers: readHeaders(req) });
 }

@@ -11,6 +11,7 @@ import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/col
 import { looksLikeDex, dexRows } from "@/lib/core/collection/dex";
 import { commit, heldKeys, preview } from "@/lib/storage/imports";
 
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 /**
  * A spreadsheet, previewed or committed.
  *
@@ -159,6 +160,7 @@ export async function POST(req: Request) {
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });
+    await forgetOnTheWeb(viewer);
     return NextResponse.json({ ...outcome, source });
   } catch (err) {
     console.error("CSV import failed:", err);

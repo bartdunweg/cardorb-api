@@ -16,6 +16,7 @@ import { readFolderBody, ruleMatcher } from "@/lib/core/collection/folders";
 import { flattenItems } from "@/lib/core/collection/items";
 import { createFolder } from "@/lib/storage/collection";
 
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 export const dynamic = "force-dynamic";
 
 /**
@@ -108,6 +109,7 @@ export async function POST(req: Request) {
   // cardsTag is the expensive one to rebuild (every row against the catalogues, twenty seconds
   // for a large binder). Deleting a folder does unfile rows and drops both.
   revalidateTag(foldersTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
   return NextResponse.json(
     { ok: true, folder: { ...folder, count: 0 } },
     { headers: readHeaders(req) },

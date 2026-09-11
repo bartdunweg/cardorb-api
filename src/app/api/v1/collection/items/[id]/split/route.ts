@@ -8,6 +8,7 @@ import { findFolder } from "@/lib/core/collection/collection";
 import { cardsTag, UUID, validateCopyBody } from "@/lib/core/collection/collection-row";
 import { splitRow } from "@/lib/storage/collection";
 
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 /**
  * Some of a row's copies as a row of their own: the source loses `count`, the copy
  * is born with the differences and the source's acquired date. Every copy at once
@@ -75,6 +76,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
+  await forgetOnTheWeb(who);
   return NextResponse.json(
     { ok: true, card: split.copy, source: split.source },
     { status: 201, headers: readHeaders(req) },

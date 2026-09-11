@@ -1,5 +1,3 @@
-import { catalogueTimeout } from "@/lib/core/util";
-
 /**
  * Tells cardorb.com that a person's profile changed, so it drops what it
  * remembers of them.
@@ -12,9 +10,15 @@ import { catalogueTimeout } from "@/lib/core/util";
  *
  * Best effort, and quick. A profile change that was saved is saved; the web
  * not answering only means it keeps its five minutes, so nothing here throws
- * and nothing waits past the catalogue's own timeout. Unconfigured — no URL,
- * no secret — it does nothing, which is what a preview of this API wants.
+ * and nothing waits past two seconds: a card write from the phone is answered
+ * in the time the write took, not in the time the web took. Unconfigured — no
+ * URL, no secret — it does nothing, which is what a preview of this API wants.
+ *
+ * Called after every write the web keeps a copy of: the profile, and since
+ * the card and folder routes joined, everything that changes what a
+ * dashboard or a public page shows.
  */
+const WEB_TIMEOUT_MS = 2_000;
 export async function forgetOnTheWeb(who: { userId: string; username: string }): Promise<void> {
   const url = process.env.WEB_REVALIDATE_URL?.trim();
   const secret = process.env.WEB_REVALIDATE_SECRET?.trim();
@@ -25,7 +29,7 @@ export async function forgetOnTheWeb(who: { userId: string; username: string }):
       headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
       body: JSON.stringify(who),
       cache: "no-store",
-      signal: catalogueTimeout(),
+      signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
     });
     if (!res.ok) console.error(`The web did not take the profile change: ${res.status}`);
   } catch (err) {
