@@ -1,0 +1,9 @@
+# What a CLI deploy (`vercel --prod`) uploads is the working tree, minus this. Without it the
+# upload was 9,000 files: node_modules, the build, and every worktree under .claude/ with
+# its own node_modules (2026-09-11). The GitHub integration never reads this file.
+node_modules
+.next
+.claude
+.git
+.cache
+*.tsbuildinfo
