@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { englishSets, isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
-import { getRows } from "@/lib/core/collection/collection";
+import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -43,6 +43,13 @@ import { bearer } from "@/lib/api/viewer";
  * add a second copy of a card they already have without meaning to. The shape
  * is additive: `{ cards }` is still `{ cards }`, and a client that ignores the
  * new fields is unaffected.
+ *
+ * And a price under every result, as the set page puts one under every card:
+ * a hit used to be a name to pick and nothing more, and the web's search opens
+ * the card's full sheet now, which says what the card trades at above its
+ * price line. From the guide already cached for the day and nothing else, for
+ * the reason guidePricesFor gives; a card the guide does not price carries
+ * null, as it does on the set page.
  */
 export const dynamic = "force-dynamic";
 
@@ -95,10 +102,22 @@ export async function GET(req: Request) {
     /* Ownership by the catalogue asked, as the set page joins it: a row of that language carrying
        that catalogue's id marks its own hit; every other row marks the English one. */
     const sets = language ? [] : await englishSets().catch(() => []);
+    const marked = markOwnership(ownershipIndex(rows, language, sets), cards);
+    /* Keyed by the TCGdex id, which every hit carries and which everything priced is keyed by;
+       the fallback is the set route's, for a card that came without the one. */
+    const priceKey = (c: (typeof marked)[number]) => c.tcgId ?? c.id;
+    const prices = await guidePricesFor(marked.map(priceKey), language);
     return NextResponse.json(
       /* `total` is how many the whole search matched, at most the window it reads (250,
          which then means "at least"); a client shows it above the page. */
-      { cards: markOwnership(ownershipIndex(rows, language, sets), cards), total },
+      {
+        cards: marked.map((c) => ({
+          ...c,
+          price: prices.get(priceKey(c))?.price ?? null,
+          priceHolo: prices.get(priceKey(c))?.holo ?? null,
+        })),
+        total,
+      },
       { headers: readHeaders(req) },
     );
   } catch {
