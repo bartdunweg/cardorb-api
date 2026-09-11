@@ -59,7 +59,7 @@ import IDS_ZH_TW from "../cardmarket-ids.zh-tw.generated.json";
 import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
-import { listRows, listSnapshots, publicProfile } from "../../storage/collection";
+import { cardsVersion, listRows, listSnapshots, publicProfile } from "../../storage/collection";
 import {
   getFolder,
   listCardPrices,
@@ -104,19 +104,32 @@ export { valueHistoryTag } from "./value-snapshot";
  * a miss the client is used once, for the one read that fills the cache with
  * plain data that carries no session of its own.
  */
-const cachedRows = (userId: string, db: SupabaseClient | null) =>
-  timedCache("cache rows", (ran) =>
+const cachedRows = async (userId: string, db: SupabaseClient | null) => {
+  // The store's count of writes to this person's cards, read before the rows and put in the
+  // key. The tag alone was a race: a read begun before a write finished after it and stored
+  // the rows from before under a tag the write had just dropped, and the list said ×4 behind
+  // a sheet saying 2 for an hour (cardorb-web #360). Under a version, that late read stores
+  // where nothing looks again. A store that cannot say (no migration yet, or a refused
+  // profile read) leaves the key as it was and the tag doing what it can.
+  const version = await timed("store cardsVersion", () =>
+    Promise.resolve()
+      .then(() => cardsVersion(userId, db))
+      .catch(() => null),
+  );
+  return timedCache("cache rows", (ran) =>
     unstable_cache(
       () => {
         ran();
         return timed("store listRows", () => listRows(userId, db));
       },
-      // The version belongs here too: #234 added foilPattern to what toRow builds, and without a
-      // version part there was no way to say so — every cached row kept the shape it had before.
-      ["collection-rows", "v2", userId],
+      // The shape version belongs here too: #234 added foilPattern to what toRow builds, and
+      // without a version part there was no way to say so — every cached row kept the shape it
+      // had before.
+      ["collection-rows", "v2", userId, version === null ? "-" : String(version)],
       { revalidate: 3600, tags: [cardsTag(userId)] },
     )(),
   );
+};
 
 /**
  * The collection, assembled, cached across requests under the same tag as the
