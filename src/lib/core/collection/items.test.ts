@@ -110,6 +110,15 @@ describe("flattenItems", () => {
     expect(flattenItems([set("Jungle", [card("Snorlax", rows)])])[0]?.quantity).toBe(5);
   });
 
+  it("counts a list as a person does: an owned copy quantity times, a wish once", () => {
+    const rows = [
+      variant({ id: "a", quantity: 3 }),
+      variant({ id: "b", quantity: 2, owned: false }),
+    ];
+    const items = flattenItems([set("Jungle", [card("Snorlax", rows)])]);
+    expect(sumValue(items).copies).toBe(4);
+  });
+
   it("carries the folder, the image and the row's own facts", () => {
     const [pikachu] = flattenItems(SETS);
     expect(pikachu).toMatchObject({
@@ -490,8 +499,8 @@ describe("sumValue", () => {
         card("Snorlax", [variant({ id: "c", quantity: 2 })]),
       ]),
     ]);
-    expect(sumValue(items)).toEqual({ value: 106, unpriced: 2 });
-    expect(sumValue([])).toEqual({ value: 0, unpriced: 0 });
+    expect(sumValue(items)).toEqual({ value: 106, unpriced: 2, copies: 6 });
+    expect(sumValue([])).toEqual({ value: 0, unpriced: 0, copies: 0 });
   });
 });
 

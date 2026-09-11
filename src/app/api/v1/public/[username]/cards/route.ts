@@ -104,16 +104,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   }
 
   const { sort, order } = read.query;
-  const { items, total } = pageOf(
-    sortPublicItems(filterPublicItems(listed, read.query), sort, order),
-    read.query,
-  );
+  const ordered = sortPublicItems(filterPublicItems(listed, read.query), sort, order);
+  const { items, total } = pageOf(ordered, read.query);
+  // The list as a person counts it — every copy held — which is what the line under the name
+  // says; `total` is the rows a page walks through. See countCopies() in items.ts.
+  let copies = 0;
+  for (const it of ordered) copies += it.copies;
   // How many sets the owned cards span, for the line under the profile's name; a page of a
   // hundred cannot count that for itself, and the whole collection is what this route exists
   // to spare the reader.
   const setCount = shown.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
   return NextResponse.json(
-    { cards: items, total, sets: setCount, facets: publicFacets(all) },
+    { cards: items, total, copies, sets: setCount, facets: publicFacets(all) },
     // A page without scans is an outage answer, not the collection; the CDN
     // must not hand it out for the minute after TCGdex comes back.
     { headers: { "Cache-Control": catalogueUnavailable ? "no-store" : PUBLIC_READ_CACHE } },

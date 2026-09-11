@@ -119,6 +119,8 @@ describe("GET /api/v1/cards", () => {
   it("answers one page of copies and the total behind it", async () => {
     const body = await (await get("?owned=true")).json();
     expect(body.total).toBe(1);
+    // The count a screen says for the list: copies, over the whole filtered list, beside the value.
+    expect(body.copies).toBe(1);
     expect(body.cards).toHaveLength(1);
     expect(body.cards[0]).toMatchObject({ id: "a", name: "Pikachu", set: "Base Set", owned: true });
   });
