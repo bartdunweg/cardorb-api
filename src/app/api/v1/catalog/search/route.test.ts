@@ -28,6 +28,9 @@ vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
+/* `import "server-only"` underneath, like the two above. The route hands the search the
+   service role's client for the catalogue's copy; here there is none, and the search is told so. */
+vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => null }));
 
 const { GET } = await import("./route");
 
@@ -105,7 +108,7 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("passes the trimmed query through and returns what it finds", async () => {
     const res = await search(new URLSearchParams({ query: "  char  " }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
     expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", rarity: "Rare Holo" });
@@ -117,6 +120,7 @@ describe("GET /api/v1/catalog/search", () => {
       { name: "char", number: "", set: "", type: "" },
       1,
       null,
+      null,
     );
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
@@ -125,7 +129,12 @@ describe("GET /api/v1/catalog/search", () => {
   it("does not require two characters in filter mode", async () => {
     const res = await search(new URLSearchParams({ number: "6" }));
     expect(res.status).toBe(200);
-    expect(searchCards).toHaveBeenCalledWith({ name: "", number: "6", set: "", type: "" }, 1, null);
+    expect(searchCards).toHaveBeenCalledWith(
+      { name: "", number: "6", set: "", type: "" },
+      1,
+      null,
+      null,
+    );
   });
 
   it("trims filter fields before checking whether any are present", async () => {
@@ -136,15 +145,15 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("forwards an explicit page number", async () => {
     await search(new URLSearchParams({ query: "char", page: "3" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 3, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 3, null, null);
   });
 
   it("falls back to page 1 for an invalid page value", async () => {
     await search(new URLSearchParams({ query: "char", page: "not-a-number" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
 
     await search(new URLSearchParams({ query: "char", page: "-1" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
   });
 
   it("answers 502 with a sentence, not 400, when searchCards fails", async () => {
@@ -182,13 +191,13 @@ describe("GET /api/v1/catalog/search", () => {
   it("asks the catalogue named by ?language, and joins ownership by that language alone", async () => {
     const res = await search(new URLSearchParams({ query: "リザードン", language: "ja" }));
     expect(res.status).toBe(200);
-    expect(searchCards).toHaveBeenCalledWith("リザードン", 1, "ja");
+    expect(searchCards).toHaveBeenCalledWith("リザードン", 1, "ja", null);
     expect(englishSets).not.toHaveBeenCalled();
   });
 
   it("reads language=en as the English catalogue", async () => {
     await search(new URLSearchParams({ query: "char", language: "en" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
   });
 
   it("refuses a language it has no catalogue for", async () => {

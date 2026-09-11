@@ -1273,3 +1273,133 @@ export async function splitRow(
   if (!copy || !source) return { kind: "missing" };
   return { kind: "ok", copy, source };
 }
+
+// ── The catalogue's copy ────────────────────────────────────────────────────
+//
+// The English catalogue, one row per card, written by the nightly cron and read by the search
+// (lib/core/catalogue/mirror.ts). No user_id anywhere, the same line card_prices draws: a fact
+// about a card is nobody's. Only the service role reaches these two tables, so every call here
+// takes adminClient()'s client, and the caller has already decided that is right.
+
+/** One card as the copy holds it, and the shape the sync writes. */
+export type CatalogueCardRecord = {
+  id: string;
+  set_id: string;
+  local_id: string;
+  name: string;
+  set_name: string;
+  series: string | null;
+  release_date: string | null;
+  rarity: string | null;
+  types: string[];
+  /** The scan's stem, without size or format; null where the record names none. */
+  image: string | null;
+};
+
+/** What the copy asks of a search: every word in the row's text, and the filters as typed. */
+export type CatalogueQuery = {
+  /** Each must appear in the name, the number or the set name. */
+  words: string[];
+  /** Filter mode's own fields; each matches its own column, as a contains. */
+  name?: string;
+  number?: string;
+  set?: string;
+  /** One energy type, as TCGdex spells it. */
+  type?: string;
+};
+
+/** One set the cron has copied, and when. */
+export type CatalogueSyncRecord = { setId: string; cards: number; syncedAt: string };
+
+/** Which sets the copy holds, so a run knows what is missing and what is oldest. */
+export async function listCatalogueSync(db: SupabaseClient): Promise<CatalogueSyncRecord[]> {
+  const rows = await readAllPages<{ set_id: string; cards: number; synced_at: string }>(
+    "the catalogue's sync record",
+    (page, counted) =>
+      db
+        .from("catalogue_sync")
+        .select("set_id, cards, synced_at", counted ? { count: "exact" } : {})
+        .order("set_id", { ascending: true })
+        .range(...pageRange(page)),
+  );
+  return rows.map((r) => ({ setId: r.set_id, cards: r.cards, syncedAt: r.synced_at }));
+}
+
+/** True once at least one set has been copied: the search may read the copy. */
+export async function catalogueCopied(db: SupabaseClient): Promise<boolean> {
+  const { count, error } = await db
+    .from("catalogue_sync")
+    .select("set_id", { count: "exact", head: true });
+  if (error) throw new Error(`Reading the catalogue's sync record failed: ${error.message}`);
+  return (count ?? 0) > 0;
+}
+
+/**
+ * One set's cards, written whole: the rows upserted, the set's rows the catalogue no longer
+ * lists dropped, and the sync record stamped. A set with no cards writes its record and
+ * nothing else, so the run does not ask for it again tomorrow ahead of everything else.
+ */
+export async function writeCatalogueSet(
+  db: SupabaseClient,
+  setId: string,
+  cards: CatalogueCardRecord[],
+  chunk = 500,
+): Promise<void> {
+  const now = new Date().toISOString();
+  for (let i = 0; i < cards.length; i += chunk) {
+    const { error } = await db.from("catalogue_cards").upsert(
+      cards.slice(i, i + chunk).map((c) => ({ ...c, synced_at: now })),
+      {
+        onConflict: "id",
+      },
+    );
+    if (error) throw new Error(`Writing the catalogue's ${setId} failed: ${error.message}`);
+  }
+  if (cards.length) {
+    // What the set held before and the catalogue lists no more: the rows this write did
+    // not touch. Only when something was written: an empty answer is not a reason to
+    // empty the set.
+    const gone = await db.from("catalogue_cards").delete().eq("set_id", setId).lt("synced_at", now);
+    if (gone.error)
+      throw new Error(`Dropping ${setId}'s stale cards failed: ${gone.error.message}`);
+  }
+  const stamped = await db
+    .from("catalogue_sync")
+    .upsert({ set_id: setId, cards: cards.length, synced_at: now }, { onConflict: "set_id" });
+  if (stamped.error)
+    throw new Error(`Recording ${setId} as copied failed: ${stamped.error.message}`);
+}
+
+/** `%word%` for PostgREST's ilike, with the pattern characters in the word made literal. */
+const contains = (word: string) => `%${word.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+
+/**
+ * One page of the copy, newest set first and by number within one, with how many the whole
+ * query matched. Every word is a contains on the search column, AND'd, which is what the
+ * trigram index answers; the filter mode's fields each take their own column.
+ */
+export async function searchCatalogueCards(
+  db: SupabaseClient,
+  query: CatalogueQuery,
+  page: number,
+  pageSize: number,
+): Promise<{ rows: CatalogueCardRecord[]; total: number }> {
+  let q = db
+    .from("catalogue_cards")
+    .select("id, set_id, local_id, name, set_name, series, release_date, rarity, types, image", {
+      count: "exact",
+    });
+  for (const word of query.words) q = q.ilike("search", contains(word.toLowerCase()));
+  if (query.name) q = q.ilike("name", contains(query.name));
+  if (query.number) q = q.ilike("local_id", contains(query.number));
+  if (query.set) q = q.ilike("set_name", contains(query.set));
+  if (query.type) q = q.contains("types", [query.type]);
+  const from = (Math.max(1, page) - 1) * pageSize;
+  const { data, count, error } = await q
+    .order("release_date", { ascending: false, nullsFirst: false })
+    .order("set_id", { ascending: true })
+    .order("local_id", { ascending: true })
+    .range(from, from + pageSize - 1);
+  if (error) throw new Error(`Searching the catalogue's copy failed: ${error.message}`);
+  return { rows: (data ?? []) as CatalogueCardRecord[], total: count ?? 0 };
+}

@@ -22,7 +22,9 @@
  * (tcgdex-browse.ts, once a day per process), which names a hit's set and era
  * from its id.
  */
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { graphql, json } from "./tcgdex-client";
+import { ENERGY_TYPES, MAX_WORDS, searchMirror } from "./mirror";
 import { withLimitlessScansPerSet } from "./browse-artwork";
 import {
   type BrowseLanguage,
@@ -56,24 +58,6 @@ async function languageSetIndex(language: BrowseLanguage): Promise<Map<string, C
  * MAX_RESULTS a page, and nobody pages that far looking for one card to add.
  */
 const WINDOW = 250;
-
-/** However many words end up in one query — past this it's a paste, not a search. */
-const MAX_WORDS = 6;
-
-/** The energy types a card can carry, as TCGdex names them. A word that is one is a type filter, not a name. */
-const ENERGY_TYPES = [
-  "Grass",
-  "Fire",
-  "Water",
-  "Lightning",
-  "Psychic",
-  "Fighting",
-  "Darkness",
-  "Metal",
-  "Fairy",
-  "Dragon",
-  "Colorless",
-];
 
 /** What TCGdex's list answers with: a card brief, and nothing about the card itself. */
 type Brief = { id: string; localId?: string; name?: string; image?: string | null };
@@ -200,6 +184,12 @@ export async function searchCards(
   page: number = 1,
   /** Which catalogue to ask; null is the English one, the way every search before was. */
   language: BrowseLanguage | null = null,
+  /**
+   * The store holding the English catalogue's copy (mirror.ts), the service role's client:
+   * an English search reads it and asks TCGdex only where the copy is empty. Null, or a store
+   * that will not answer, is the way every search before was.
+   */
+  store: SupabaseClient | null = null,
 ): Promise<{ cards: CatalogueMatch[]; total: number }> {
   // A Latin-letter term on another shelf is an English name, and TCGdex has none to match it
   // against: リザードンex is what its record says. The committed English names are scanned here.
@@ -214,6 +204,18 @@ export async function searchCards(
     (input.set?.trim() || /[A-Za-z]/.test(input.name ?? ""))
   )
     return searchEnglishNames(language, input.name ?? "", page, { set: input.set });
+  if (!language && store) {
+    const copied = await searchMirror(store, input, page).catch((err) => {
+      // The copy is a shortcut, not the catalogue: a store that will not answer costs this
+      // search its speed, not its answer.
+      console.error(
+        "Catalogue copy unavailable, asking TCGdex:",
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    });
+    if (copied) return copied;
+  }
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
   if (!params) return { cards: [], total: 0 };

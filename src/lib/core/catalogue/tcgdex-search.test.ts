@@ -308,6 +308,73 @@ describe("searchCards", () => {
   });
 });
 
+describe("searchCards with the catalogue's copy", () => {
+  /** A store whose copy holds one row, or nothing yet. Every builder call answers the seed. */
+  const store = (cards: unknown[], copied = true) => {
+    const chain: Record<string, unknown> = {};
+    let table = "";
+    for (const op of ["select", "ilike", "contains", "order", "range"]) chain[op] = () => chain;
+    chain.then = (resolve: (v: unknown) => unknown) =>
+      resolve(
+        table === "catalogue_sync"
+          ? { data: null, error: null, count: copied ? 1 : 0 }
+          : { data: cards, error: null, count: cards.length },
+      );
+    return {
+      from: (t: string) => {
+        table = t;
+        return chain;
+      },
+    } as never;
+  };
+  const copy = {
+    id: "sv03.5-006",
+    set_id: "sv03.5",
+    local_id: "006",
+    name: "Charizard ex",
+    set_name: "151",
+    series: "Scarlet & Violet",
+    release_date: "2023/09/22",
+    rarity: "Double Rare",
+    types: ["Fire"],
+    image: "https://assets.tcgdex.net/en/sv/sv03.5/006",
+  };
+
+  it("answers from the copy, rarity included, and asks TCGdex nothing", async () => {
+    installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
+    const { searchCards } = await load();
+    const { cards, total } = await searchCards("charizard", 1, null, store([copy]));
+    expect(cards.map((c) => [c.id, c.rarity, c.setName])).toEqual([
+      ["sv03.5-006", "Double Rare", "151"],
+    ]);
+    expect(total).toBe(1);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("asks TCGdex as before while the copy is empty", async () => {
+    installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
+    const { searchCards } = await load();
+    const { cards } = await searchCards("charizard", 1, null, store([], false));
+    expect(cards.map((c) => c.id)).toEqual(["pl4-1"]);
+    expect(listCall()).toBeDefined();
+  });
+
+  it("asks TCGdex when the store will not answer, rather than failing the search", async () => {
+    installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
+    const broken = { from: () => ({ select: () => Promise.reject(new Error("down")) }) } as never;
+    const { searchCards } = await load();
+    const { cards } = await searchCards("charizard", 1, null, broken);
+    expect(cards.map((c) => c.id)).toEqual(["pl4-1"]);
+  });
+
+  it("leaves the copy alone for another language's shelf", async () => {
+    installFetch({ list: [brief("sv1s-001", "001", "リザードン")], index: { sets: [] } });
+    const { searchCards } = await load();
+    await searchCards("リザードン", 1, "ja", store([copy]));
+    expect(calls.some((c) => c.url.includes("/ja/"))).toBe(true);
+  });
+});
+
 describe("searchCards in another language", () => {
   /** TCGdex's Japanese catalogue, by URL: the series list, one serie with its sets, the cards. */
   function installJapanese(list: unknown[]) {

@@ -1282,6 +1282,10 @@ paths:
       description: |
         Two modes. With any of `name`, `number`, `set`, `type` it filters; otherwise
         `query` (two characters or more) is a free search.
+
+        An English search reads the catalogue's nightly copy, rarity and types included;
+        the other languages ask the catalogue itself. A set the catalogue added today is
+        in the copy tomorrow.
       parameters:
         - { name: query, in: query, schema: { type: string, minLength: 2 } }
         - { name: name, in: query, schema: { type: string } }
@@ -2332,5 +2336,34 @@ paths:
                   warmed: { type: array, items: { type: object, required: [user, sets, ms], properties: { user: { type: string }, sets: { type: integer }, ms: { type: integer } } } }
                   failed: { type: array, items: { type: string } }
         "401": { $ref: "#/components/responses/Unauthorised" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/cron/catalogue:
+    get:
+      tags: [Platform]
+      operationId: copyCatalogue
+      summary: Copy the English catalogue in, set by set, as far as the minute allows
+      description: |
+        Vercel's cron, nightly, with `CRON_SECRET` as the bearer. Fills the copy the search
+        reads (`GET /v1/catalog/search`): rarity and types included, so a search is one query
+        and not two catalogue calls. Most needed first — a set the copy has never seen, then one
+        whose count moved, then the oldest — and each set committed as it finishes, so a run cut
+        short continues tomorrow where it stopped.
+      security: [{ cron: [] }]
+      responses:
+        "200":
+          description: What the run did; `left` is how many sets the budget did not reach.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [copied, failed, left, ms]
+                properties:
+                  copied: { type: array, items: { type: string } }
+                  failed: { type: array, items: { type: string } }
+                  left: { type: integer }
+                  ms: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
