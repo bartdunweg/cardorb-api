@@ -222,6 +222,7 @@ export async function searchCards(
         id: c.id,
         number: c.localId,
         name: c.name,
+        localName: null,
         setName: set?.name ?? setId,
         image: scan(c.image, "low"),
         imageHigh: scan(c.image, "high"),

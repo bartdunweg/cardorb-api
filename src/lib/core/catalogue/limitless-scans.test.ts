@@ -12,6 +12,7 @@ const card = (localId: string, over: Partial<CatalogueMatch> = {}): CatalogueMat
   id: `SV5M-${localId}`,
   number: localId,
   name: "ストライク",
+  localName: null,
   setName: "サイバージャッジ",
   image: `${TCGDEX}/${localId}/low.webp`,
   imageHigh: `${TCGDEX}/${localId}/high.webp`,

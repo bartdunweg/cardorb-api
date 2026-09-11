@@ -484,7 +484,8 @@ components:
       properties:
         id: { type: string }
         number: { type: string }
-        name: { type: string }
+        name: { type: string, description: "In English, on every shelf: a Japanese, Korean or Chinese card is named off Cardmarket's product list or its species. Falls back to the printed name where neither names the card." }
+        localName: { type: [string, "null"], description: "What the card itself prints, where `name` is a translation of it; null on English cards and where `name` is the printed one." }
         setName: { type: string }
         image: { type: [string, "null"] }
         imageHigh: { type: [string, "null"] }

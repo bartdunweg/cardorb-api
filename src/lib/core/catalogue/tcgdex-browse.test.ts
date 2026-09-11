@@ -189,10 +189,12 @@ describe("tcgdex-browse", () => {
     stub();
     const got = await setIn("ja", "M4");
     expect(got?.set.releaseDate).toBe("2026/03/13");
+    // Named in English off the committed map, with the printed name beside it.
     expect(got?.cards[0]).toEqual({
       id: "M4-001",
       number: "001",
-      name: "ビードル",
+      name: "Weedle",
+      localName: "ビードル",
       setName: "Ninja Spinner",
       image: "https://assets.tcgdex.net/ja/M/M4/001/low.webp",
       imageHigh: "https://assets.tcgdex.net/ja/M/M4/001/high.webp",
@@ -245,6 +247,7 @@ describe("tcgdex-browse", () => {
         id: "sv03.5-010",
         number: "010",
         name: "Caterpie",
+        localName: null,
         setName: "151",
         series: "Scarlet & Violet",
         image: "https://assets.tcgdex.net/en/sv/sv03.5/010/low.webp",

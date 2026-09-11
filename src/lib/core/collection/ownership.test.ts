@@ -34,6 +34,7 @@ const card = (over: Partial<CatalogueMatch> = {}): CatalogueMatch => ({
   id: "base1-4",
   number: "4",
   name: "Charizard",
+  localName: null,
   setName: "Base",
   image: null,
   imageHigh: null,
