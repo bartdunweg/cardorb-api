@@ -1,0 +1,1 @@
+- The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
