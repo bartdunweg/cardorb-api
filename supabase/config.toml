@@ -313,7 +313,7 @@ subject = "Confirm your Card Orb account"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Set a new Card Orb password"
+subject = "Reset your Card Orb password"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.email_change]

@@ -23,3 +23,16 @@ that reads as "the link is broken".
 Plain HTML, inline styles, no images. A mail client is not a browser: half of
 them strip <style> blocks, and a remote image is both a tracking pixel to the
 suspicious and a broken box to anyone whose client blocks it by default.
+
+## The shape of each one
+
+The same skeleton three times, so a person who has seen one recognises the next:
+the product's name above the card, a heading that says what the mail is for, one
+sentence of context, one button, the same link written out under it for the
+client that will not render a button, then the small print (how long the link
+lasts, what happens if you ignore it) and a footer that names the address it was
+sent to and why. A hidden first line gives the inbox its preview text.
+
+Tables rather than divs for the container, because Outlook on Windows ignores
+`max-width` on a div and centres nothing. The `next=` parameter is gone from the
+links: the web app's `/auth/confirm` decides where to land from `type` alone.
