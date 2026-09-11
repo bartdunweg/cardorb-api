@@ -174,6 +174,16 @@ export type ItemFilter = {
   rule?: FolderRule;
 };
 
+/**
+ * A search word against the card's name, or its set under either name: the one the card was
+ * filed under and the official one (`setTitle`). "SVP" found nothing of the SVP promos while
+ * their rows were filed as "SV Black Star Promos" — the title is the name a collector knows.
+ */
+const matchesWord = (it: { name: string; set: string; setTitle: string }, q: string): boolean =>
+  it.name.toLowerCase().includes(q) ||
+  it.set.toLowerCase().includes(q) ||
+  it.setTitle.toLowerCase().includes(q);
+
 export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const q = f.q?.trim().toLowerCase();
   const set = f.set?.trim().toLowerCase();
@@ -193,7 +203,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (gen && (it.gen ?? "").toLowerCase() !== gen) return false;
     if (type && (it.type ?? "").toLowerCase() !== type) return false;
     if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
-    if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
+    if (q && !matchesWord(it, q)) return false;
     return true;
   });
 }
@@ -568,7 +578,7 @@ export function filterPublicItems(items: PublicItem[], f: PublicFilter): PublicI
   return items.filter((it) => {
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
-    if (q && !it.name.toLowerCase().includes(q) && !it.set.toLowerCase().includes(q)) return false;
+    if (q && !matchesWord(it, q)) return false;
     return true;
   });
 }

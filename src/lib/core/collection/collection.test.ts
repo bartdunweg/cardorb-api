@@ -41,7 +41,20 @@ const catalogue = (over: Partial<SetCatalogue> = {}): SetCatalogue => ({
 });
 
 /** Which set names the stub knows. Anything else is a set TCGdex never heard of. */
-const KNOWN: Record<string, SetCatalogue> = { Base: catalogue() };
+const KNOWN: Record<string, SetCatalogue> = {
+  Base: catalogue(),
+  // One set filed under two names: the catalogue titles both the same.
+  "SV Black Star Promos": catalogue({
+    officialName: "SVP Black Star Promos",
+    code: "SVP",
+    total: 250,
+  }),
+  "SVP Black Star Promos": catalogue({
+    officialName: "SVP Black Star Promos",
+    code: "SVP",
+    total: 250,
+  }),
+};
 
 const empty = (): SetCatalogue => ({
   byNumber: {},
@@ -197,6 +210,29 @@ describe("buildCollection", () => {
     expect(set!.cards[0]!.variants).toHaveLength(1);
   });
 
+  it("names a set by its official name, and folds two filing names into one set", async () => {
+    // The SVP promos were filed as "SV Black Star Promos" for years and as "SVP
+    // Black Star Promos" since the catalogue add: two sets under one title. The
+    // title is the set's name; a card at one number in both is one card.
+    const sets = await buildCollection([
+      row({ id: "a", setName: "SV Black Star Promos", number: "027" }),
+      row({ id: "b", setName: "SVP Black Star Promos", number: "027" }),
+      row({ id: "c", setName: "SVP Black Star Promos", number: "088" }),
+      row({ id: "d", setName: "Base", number: "088" }),
+    ]);
+    expect(sets.map((s) => s.name)).toEqual(["SVP Black Star Promos", "Base Set"]);
+    const promos = sets[0]!;
+    expect(promos.title).toBe("SVP Black Star Promos");
+    expect(promos.cards.map((c) => c.number)).toEqual(["027", "088"]);
+    expect(promos.cards[0]!.variants.map((v) => v.id)).toEqual(["a", "b"]);
+  });
+
+  it("keeps a set the catalogue does not know under the name it was filed", async () => {
+    const [set] = await buildCollection([row({ id: "a", setName: "My binder" })]);
+    expect(set!.name).toBe("My binder");
+    expect(set!.title).toBe("My binder");
+  });
+
   it("counts a card as held when any one of its printings is", async () => {
     // The wishlist and the binder can name the same card: wanting a reverse
     // holo of something you already own does not make the card unowned.
@@ -318,17 +354,17 @@ describe("buildCollection", () => {
       row({ setName: "Nowhere", number: "001", name: "Mew" }),
       row({ setName: "Base" }),
     ]);
-    expect(sets.map((s) => s.name)).toEqual(["Base", "Nowhere"]);
+    expect(sets.map((s) => s.name)).toEqual(["Base Set", "Nowhere"]);
   });
 
-  it("shows the catalogue's name for a set and keeps the owner's for matching", async () => {
+  it("names a set by the catalogue's name, and keeps the card keys as filed", async () => {
     // "Set 1 Unlimited" is a print run filed as a set; the set is Base Set. The
-    // heading should say what the card is, and everything that groups, keys or
-    // selects should keep saying what its owner typed — change that and you
-    // change what a card is.
+    // set says what the card is (Bart, 2026-09-11: the official name is the
+    // truth); the card's key keeps the filing name, so no card changes id.
     const [set] = await buildCollection([row()]);
-    expect(set!.name).toBe("Base");
+    expect(set!.name).toBe("Base Set");
     expect(set!.title).toBe("Base Set");
+    expect(set!.cards[0]!.key).toBe("Base-088");
   });
 
   it("falls back to the owner's name for a set nobody has heard of", async () => {
