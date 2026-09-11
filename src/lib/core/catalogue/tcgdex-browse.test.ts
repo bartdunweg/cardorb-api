@@ -27,7 +27,13 @@ const answers: Record<string, unknown> = {
   "/ja/series/PMCG": {
     id: "PMCG",
     name: "旧裏",
-    sets: [{ id: "PMCG1", name: "拡張パック", cardCount: { total: 102, official: 102 } }],
+    sets: [
+      { id: "PMCG1", name: "拡張パック", cardCount: { total: 102, official: 102 } },
+      // TCGdex's placeholders: one record copied under Chinese-looking ids, no card behind
+      // either, on the Japanese, Chinese and Korean shelves alike (tcgdex-browse.ts).
+      { id: "CS1a", name: "トリプレットビート", cardCount: { total: 101, official: 101 } },
+      { id: "CS1b", name: "トリプレットビート", cardCount: { total: 101, official: 101 } },
+    ],
   },
   "/en/sets/sv03.5": {
     id: "sv03.5",
@@ -169,6 +175,15 @@ describe("tcgdex-browse", () => {
     });
     // A set the translation list does not know keeps its own name.
     expect(sets[1]).toMatchObject({ id: "M1", name: "一", localName: null });
+  });
+
+  it("leaves TCGdex's cloned placeholder sets off the shelf, and keeps a lone empty set", async () => {
+    stub();
+    const sets = await listSetsIn("ja");
+    // CS1a and CS1b share a name and a count and record no card: one placeholder, twice.
+    expect(sets.map((s) => s.id)).toEqual(["M4", "M1", "PMCG1"]);
+    // PMCG1 records no card either, but nothing else on the shelf is called that: it stays.
+    expect(sets.find((s) => s.id === "PMCG1")).toMatchObject({ cardsRecorded: false });
   });
 
   it("says which sets the catalogue has recorded cards for, without asking it", async () => {

@@ -189,6 +189,23 @@ const recordedSets = (() => {
   };
 })();
 
+/**
+ * TCGdex's placeholders. The Japanese, Traditional Chinese and Korean catalogues each list
+ * fifteen sets under the Chinese-looking ids CS1a … CS4Da — every one named Triplet Beat in
+ * that script, counted 101, dated 2024-04-26, with no card behind it, on every shelf alike
+ * (2026-09-11). No catalogue records a card for any of them: they are one record copied
+ * fifteen times, not fifteen sets, and a shelf showed fifteen "No cards in the catalogue yet"
+ * tiles under one name. A set that shares its name and its count with another on the same
+ * shelf and has no cards recorded is one of these and is left out; a real set with no cards
+ * yet (92 of the 95 Korean ones) shares its name with nothing and stays.
+ */
+const withoutPlaceholders = (sets: CatalogueSet[]): CatalogueSet[] => {
+  const alike = new Map<string, number>();
+  const key = (s: CatalogueSet) => `${s.localName ?? s.name}\u0000${s.total}`;
+  for (const s of sets) alike.set(key(s), (alike.get(key(s)) ?? 0) + 1);
+  return sets.filter((s) => s.cardsRecorded || (alike.get(key(s)) ?? 0) < 2);
+};
+
 export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> {
   const series = (await json(`${HOST}/${lang}/series`, `${lang} series`)) as TcgSerieBrief[];
   const out: CatalogueSet[] = [];
@@ -213,7 +230,7 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
       });
     }
   }
-  return out;
+  return withoutPlaceholders(out);
 }
 
 /** One set with its cards, or null where the language has no set by that id. */
