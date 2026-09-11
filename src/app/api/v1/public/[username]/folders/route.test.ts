@@ -87,7 +87,7 @@ beforeEach(() => {
 });
 
 describe("GET /api/v1/public/{username}/folders", () => {
-  it("lists the public folders with how many cards each holds, one per card", async () => {
+  it("lists the public folders with how many copies each holds", async () => {
     getPublicFolders.mockResolvedValue([
       { id: "f1", name: "Kanto", kind: "manual", rule: null, pokedex: null, isPublic: true, createdAt: "" },
       { id: "f2", name: "Starters", kind: "rule", rule: { dex: { from: 1, to: 9 } }, pokedex: null, isPublic: true, createdAt: "" },
@@ -95,7 +95,8 @@ describe("GET /api/v1/public/{username}/folders", () => {
     const res = await get();
     expect(await res.json()).toEqual({
       folders: [
-        { id: "f1", name: "Kanto", kind: "manual", count: 1 },
+        // Two owned rows of the one card filed in Kanto: two copies, where it used to count one card.
+        { id: "f1", name: "Kanto", kind: "manual", count: 2 },
         { id: "f2", name: "Starters", kind: "rule", count: 1 },
       ],
     });

@@ -59,7 +59,8 @@ export async function GET(req: Request) {
     if (!f.rule) return filed.get(f.id) ?? 0;
     const inRule = ruleMatcher(f.rule);
     let n = 0;
-    for (const it of items) if (inRule(it)) n += it.owned ? Math.max(0, it.quantity) : 1;
+    // Owned copies only: a rule folder holds those, whatever a wish would match.
+    for (const it of items) if (it.owned && inRule(it)) n += Math.max(0, it.quantity);
     return n;
   };
 
