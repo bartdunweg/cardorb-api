@@ -97,6 +97,7 @@ describe("searchCards", () => {
         id: "pl4-1",
         number: "1",
         name: "Charizard",
+        localName: null,
         setName: "Arceus",
         series: "Platinum",
         image: "https://assets.tcgdex.net/en/pl/pl4/1/low.webp",

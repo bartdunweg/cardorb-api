@@ -8,6 +8,7 @@ import ZH_NAMES from "./set-names.zh.json";
 import ZH_CN_NAMES from "./set-names.zh-cn.json";
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
+import { cardNamed } from "./card-names";
 
 /** One set, with enough to render a tile and sort a shelf. */
 export type CatalogueSet = {
@@ -79,6 +80,15 @@ export type CatalogueSet = {
  * the Japanese name kept beside it as `localName`, since that is what the pack
  * says. A set the list does not know keeps its own name. The list is a
  * translation, not a catalogue fact: correct it, do not trust it.
+ *
+ * The cards are named the same way, from a bigger source (card-names.ts):
+ * Cardmarket sells these cards to Europe under English names, and its product
+ * list — read through the committed product id maps — names 10,350 of the
+ * 12,781 Japanese cards; a Pokémon it does not sell is named by its species
+ * and printed suffix, for 12,308 in all (2026-09-11). The printed name rides
+ * beside as `localName`. The app is
+ * English throughout, and リザードンex under a card everyone here calls
+ * Charizard ex was the one place it was not.
  */
 // The Chinese and Korean catalogues print the Japanese sets under the same ids (S12a, SV9), so
 // the Japanese list names those; the sets those languages have of their own get their own lists.
@@ -99,6 +109,31 @@ const named = (
   const english = ENGLISH[lang]?.[id];
   return english ? { name: english, localName: own } : { name: own, localName: null };
 };
+
+/**
+ * The eras, by TCGdex's serie id, which the four catalogues share (S is Sword & Shield in all
+ * of them). TCGdex names each in the catalogue's own language — ポケモンカードゲーム
+ * スカーレット&バイオレット, 劍＆盾, 썬&문 — and the shelf groups its sets under that heading. The
+ * English is the era's, as the English shelf writes it; a serie this does not know keeps its own.
+ */
+const SERIES_ENGLISH: Record<string, string> = {
+  PMCG: "Original",
+  neo: "Neo",
+  VS: "VS",
+  web: "web",
+  e: "e-Card",
+  ADV: "ADV",
+  PCG: "PCG",
+  L: "LEGEND",
+  XY: "XY",
+  XYb: "XY BREAK",
+  SM: "Sun & Moon",
+  S: "Sword & Shield",
+  SV: "Scarlet & Violet",
+  M: "MEGA",
+};
+const seriesNamed = (serieId: string | undefined, own: string | undefined): string =>
+  (serieId && SERIES_ENGLISH[serieId]) || own || "";
 export const BROWSE_LANGUAGES = ["ja", "zh-tw", "zh-cn", "ko"] as const;
 export type BrowseLanguage = (typeof BROWSE_LANGUAGES)[number];
 
@@ -167,7 +202,7 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
       out.push({
         id: s.id,
         ...named(lang, s.id, s.name),
-        series: serie.name,
+        series: seriesNamed(brief.id, serie.name),
         releaseDate: null,
         total: s.cardCount?.total ?? 0,
         printedTotal: s.cardCount?.official ?? null,
@@ -200,7 +235,7 @@ export async function setIn(
   const set: CatalogueSet = {
     id: detail.id,
     ...named(lang, detail.id, detail.name),
-    series: detail.serie?.name ?? "",
+    series: seriesNamed(serieId, detail.serie?.name),
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
@@ -211,13 +246,13 @@ export async function setIn(
   const cards: CatalogueMatch[] = (detail.cards ?? []).map((c) => ({
     id: c.id,
     number: c.localId,
-    name: c.name,
+    ...cardNamed(lang, c.id, c.name),
     setName: set.name,
     image: serieId ? scan(lang, serieId, detail.id, c.localId, "low") : null,
     imageHigh: serieId ? scan(lang, serieId, detail.id, c.localId, "high") : null,
     rarity: null,
     types: [],
-    series: detail.serie?.name ?? null,
+    series: seriesNamed(serieId, detail.serie?.name) || null,
     // TCGdex's id, the same as `id`: what a row of this language is filed under, and the only
     // way POST /cards can find a card whose set has no English name (#257). The English shelf
     // carried it from the start; this one sent none, and the web had nothing to send back.
@@ -433,6 +468,7 @@ export async function englishSet(
     id: c.id,
     number: c.localId,
     name: c.name,
+    localName: null,
     setName: set.name,
     series: set.series,
     // The address is built, as the other shelves build it: the record often says nothing
