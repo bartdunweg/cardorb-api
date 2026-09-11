@@ -40,6 +40,8 @@ if the two have drifted apart.
 
 - Identical copies are one row with a quantity, in the store and not only on screen. Pressing minus on a card held as several identical rows used to raise the count instead of lowering it, and changing a condition split the copies in two; every write now folds what it makes into the row already held.
 
+- The Japanese set M3 (ムニキスゼロ, 2026-01-23) is titled Nihil Zero on the shelf, Bulbapedia's rendering; it was the last Japanese set shown in its own script.
+
 - `cmUrl` on `GET /v1/cards/{tcgId}` and the public card is null, on purpose. The address was built from the card's name and the set's, and the button it fed landed on the wrong page or on nothing; Cardmarket publishes its product ids but not the expansion half of a product's address, and its site answers every probe with a bot check, so the right page cannot be guaranteed. Null hides "Buy on Cardmarket" in the iOS app without a release; the web had not drawn it since #215. The links map and `cardmarketUrl()` stay for when the address can be made to hold.
 
 - The English shelf, the set pages and the search leave Pokémon TCG Pocket out: TCGdex carries the mobile game's fifteen sets beside the printed ones, and a binder cannot hold one. A Pocket set asked for by id answers 404.
