@@ -1312,6 +1312,79 @@ paths:
         "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
 
+  /v1/catalog/index:
+    get:
+      tags: [Catalogue]
+      operationId: getCatalogueIndex
+      summary: The English catalogue as one document, for searching in the browser
+      description: |
+        Every English card the nightly copy holds, compact: `sets` by id with name, era, release
+        date and scan folder; `cards` as arrays of id, set id, number, name, rarity and types,
+        with a seventh element only where the scan is not at `sets[set].image + "/" + number`
+        (a stem, or null for none). Cards come newest set first, by number within one. Cached a
+        day in the browser under its `ETag`; a request carrying `If-None-Match` gets 304. What
+        is personal or daily about a hit comes from `GET /v1/catalog/cards`.
+      responses:
+        "200":
+          description: The document.
+          headers:
+            Cache-Control: { schema: { type: string, const: "private, max-age=86400" } }
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, sets, cards]
+                properties:
+                  version: { type: string }
+                  sets:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      required: [name, series, date, image]
+                      properties:
+                        name: { type: string }
+                        series: { type: [string, "null"] }
+                        date: { type: [string, "null"], description: "YYYY/MM/DD" }
+                        image: { type: [string, "null"], description: "The set's scan folder." }
+                  cards:
+                    type: array
+                    items: { type: array, minItems: 6, maxItems: 7, items: {} }
+        "304": { description: The document the caller holds is current. }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/catalog/cards:
+    get:
+      tags: [Catalogue]
+      operationId: getCatalogueCards
+      summary: These cards, with the caller's own answer and the day's price
+      description: |
+        For a browser that searched `GET /v1/catalog/index` itself: the twenty hits on screen,
+        with owned, wishlist, quantity and price attached, the same shape a search hit has.
+        `ids` is comma-separated TCGdex ids, fifty at most; an id the copy lacks is left out.
+      parameters:
+        - { name: ids, in: query, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: The cards, in the order asked.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cards]
+                properties:
+                  cards: { type: array, items: { $ref: "#/components/schemas/BrowseCard" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
   /v1/stats:
     get:
       tags: [Collection]

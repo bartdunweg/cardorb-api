@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { syncMirror } from "@/lib/core/catalogue/mirror";
+import { catalogueIndex, syncMirror } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -32,6 +32,8 @@ export async function GET(req: Request) {
 
   try {
     const report = await syncMirror(db);
+    // The document the browser searches in, rebuilt from what was just copied (mirror.ts).
+    if (report.copied.length) await catalogueIndex(db);
     console.log(
       `[cron] catalogue: ${report.copied.length} sets copied, ${report.failed.length} failed, ${report.left} left, ${report.ms} ms`,
     );

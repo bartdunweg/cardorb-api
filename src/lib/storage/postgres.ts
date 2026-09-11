@@ -1420,3 +1420,74 @@ export async function searchCatalogueCards(
   if (error) throw new Error(`Searching the catalogue's copy failed: ${error.message}`);
   return { rows: (data ?? []) as CatalogueCardRecord[], total: count ?? 0 };
 }
+
+/** The copy's latest write, as the version everything built from it carries. Null before the first night. */
+export async function catalogueVersion(db: SupabaseClient): Promise<string | null> {
+  const { data, error } = await db
+    .from("catalogue_sync")
+    .select("synced_at")
+    .order("synced_at", { ascending: false })
+    .limit(1);
+  if (error) throw new Error(`Reading the catalogue's version failed: ${error.message}`);
+  return data?.[0]?.synced_at ?? null;
+}
+
+/** Every card in the copy, in the order every list reads: newest set first, by number within one. */
+export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueCardRecord[]> {
+  return readAllPages<CatalogueCardRecord>("the catalogue's copy", (page, counted) =>
+    db
+      .from("catalogue_cards")
+      .select(
+        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image",
+        counted ? { count: "exact" } : {},
+      )
+      .order("release_date", { ascending: false, nullsFirst: false })
+      .order("set_id", { ascending: true })
+      .order("local_id", { ascending: true })
+      .range(...pageRange(page)),
+  );
+}
+
+/** These cards of the copy, by id, in the order asked. An id the copy lacks is left out. */
+export async function catalogueCardsById(
+  db: SupabaseClient,
+  ids: string[],
+): Promise<CatalogueCardRecord[]> {
+  if (!ids.length) return [];
+  const { data, error } = await db
+    .from("catalogue_cards")
+    .select("id, set_id, local_id, name, set_name, series, release_date, rarity, types, image")
+    .in("id", ids);
+  if (error) throw new Error(`Reading cards from the catalogue's copy failed: ${error.message}`);
+  const byId = new Map((data as CatalogueCardRecord[]).map((r) => [r.id, r]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
+/** The document the browser searches in, and the version it was built from. Null before the first build. */
+export async function readCatalogueIndex(
+  db: SupabaseClient,
+  language: string,
+): Promise<{ version: string; body: string } | null> {
+  const { data, error } = await db
+    .from("catalogue_index")
+    .select("version, body")
+    .eq("language", language)
+    .maybeSingle();
+  if (error) throw new Error(`Reading the catalogue index failed: ${error.message}`);
+  return data ?? null;
+}
+
+export async function writeCatalogueIndex(
+  db: SupabaseClient,
+  language: string,
+  version: string,
+  body: string,
+): Promise<void> {
+  const { error } = await db
+    .from("catalogue_index")
+    .upsert(
+      { language, version, body, updated_at: new Date().toISOString() },
+      { onConflict: "language" },
+    );
+  if (error) throw new Error(`Writing the catalogue index failed: ${error.message}`);
+}

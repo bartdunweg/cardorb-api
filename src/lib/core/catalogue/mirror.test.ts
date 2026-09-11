@@ -8,7 +8,7 @@ vi.mock("./tcgdex-browse", () => ({
   englishSet: (...a: unknown[]) => englishSet(...a),
 }));
 
-const { forgetCopy, mirrorQuery, searchMirror, syncMirror } = await import("./mirror");
+const { buildIndex, forgetCopy, mirrorQuery, searchMirror, syncMirror } = await import("./mirror");
 
 type Call = { table: string; op: string; args: unknown[] };
 
@@ -291,5 +291,38 @@ describe("syncMirror", () => {
     ).toMatchObject({
       cards: 0,
     });
+  });
+});
+
+describe("buildIndex", () => {
+  it("writes a set once and each card as an array, with a seventh element only where the scan is elsewhere", () => {
+    const index = buildIndex("v1", [
+      row(),
+      row({
+        id: "sv03.5-007",
+        local_id: "007",
+        name: "Charmeleon",
+        rarity: "Uncommon",
+        types: ["Fire"],
+        image: "https://assets.tcgdex.net/en/sv/sv03.5/007",
+      }),
+      row({ id: "sv03.5-008", local_id: "008", name: "Nobody", image: null }),
+      row({ id: "sv03.5-009", local_id: "009", name: "Elsewhere", image: "https://limitless/x" }),
+    ]);
+    expect(index.version).toBe("v1");
+    expect(index.sets).toEqual({
+      "sv03.5": {
+        name: "151",
+        series: "Scarlet & Violet",
+        date: "2023/09/22",
+        image: "https://assets.tcgdex.net/en/sv/sv03.5",
+      },
+    });
+    expect(index.cards).toEqual([
+      ["sv03.5-006", "sv03.5", "006", "Charizard ex", "Double Rare", ["Fire"]],
+      ["sv03.5-007", "sv03.5", "007", "Charmeleon", "Uncommon", ["Fire"]],
+      ["sv03.5-008", "sv03.5", "008", "Nobody", "Double Rare", ["Fire"], null],
+      ["sv03.5-009", "sv03.5", "009", "Elsewhere", "Double Rare", ["Fire"], "https://limitless/x"],
+    ]);
   });
 });
