@@ -29,6 +29,7 @@
 import { isReverseFinish } from "./collection-row";
 import { copiesHeld } from "./cards-stats";
 import { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
+import { guidePrices } from "../catalogue/price-guide";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { CardPricePoint } from "./movers";
@@ -76,8 +77,8 @@ export type ProductIds = Record<string, number | null>;
  * written to a different table: this is about cards, that is about a person.
  * Deduped on tcgId — two people, or two printings, are one card and one price.
  *
- * Only cards that are held: pricing the whole catalogue weekly would be a
- * hundred thousand rows a week to answer questions about sixteen hundred cards.
+ * Only cards that are held; every other mapped card is priced once a week by
+ * cardPricesFromGuide(), since 2026-09-11.
  */
 export function cardPricesOf(
   sets: CardSet[],
@@ -198,6 +199,32 @@ export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
     }
   }
   return { date, value, cards: copies, priced, unpriced };
+}
+
+/**
+ * Every card the guide prices, on this day, for the lines under cards nobody holds.
+ *
+ * Read from one catalogue's id map against the guide, the way the set page prices; the shown
+ * figure is shownPrice() so a point here and a point from cardPricesFromSets() are the same
+ * kind of number. Written weekly rather than nightly by the cron: forty thousand cards a night
+ * is two gigabytes a year of readings about cards nobody is watching, and a chart over years
+ * reads the same at one point a week — the backfill has always been weekly for the same reason.
+ * A card somebody holds is written nightly by the other function and takes precedence.
+ */
+export function cardPricesFromGuide(
+  ids: ProductIds,
+  guide: PriceGuide,
+  date: string,
+): CardPricePoint[] {
+  const out: CardPricePoint[] = [];
+  for (const [tcgId, prices] of guidePrices(Object.keys(ids), guide, ids)) {
+    const market = shownPrice(prices.price);
+    const holo = shownPrice(prices.holo);
+    // A row of zeros is a card Cardmarket published nothing for, not a reading of nothing.
+    if (!market && !holo) continue;
+    out.push({ tcgId, date, market, holo });
+  }
+  return out;
 }
 
 /** Every held card's own blended price on this day, for the movers and the lines. Deduped on tcgId. */

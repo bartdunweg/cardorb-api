@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  cardPricesFromGuide,
   cardPricesFromSets,
   snapshotFromSets,
   snapshotOf,
@@ -201,5 +202,28 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
     expect(cardPricesFromSets(sets, "2026-09-07")).toEqual([
       { tcgId: "sv03-125", date: "2026-09-07", market: 10, holo: 30 },
     ]);
+  });
+});
+
+describe("cardPricesFromGuide", () => {
+  const guide: PriceGuide = {
+    createdAt: "2026-09-14T04:00:00Z",
+    priceGuides: [
+      { idProduct: 1, trend: 2.5, avg30: 2.4, low: 1 },
+      { idProduct: 2, trend: 0, avg30: 0, low: 0 },
+    ],
+  };
+  const ids: ProductIds = { "sv03-125": 1, "sv03-126": 2, "sv03-127": null };
+
+  it("prices every mapped card the guide has a number for, held or not", () => {
+    expect(cardPricesFromGuide(ids, guide, "2026-09-14")).toEqual([
+      { tcgId: "sv03-125", date: "2026-09-14", market: expect.any(Number), holo: null },
+    ]);
+  });
+
+  it("writes no reading of zero, and none for a card without a product", () => {
+    const points = cardPricesFromGuide(ids, guide, "2026-09-14").map((p) => p.tcgId);
+    expect(points).not.toContain("sv03-126");
+    expect(points).not.toContain("sv03-127");
   });
 });
