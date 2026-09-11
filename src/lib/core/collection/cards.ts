@@ -226,10 +226,19 @@ export type ImageSize = { width: number; height: number } | null;
 
 export type CardSet = {
   /**
-   * The name the collection uses, which is what groups it and what everything
-   * addresses it by: the selection in the rail, the card keys, the broken-logo
-   * set. It is somebody's own typing and it is not to be prettied up, because
-   * changing it changes what a card is.
+   * The set's name: the official one, where a catalogue knows the set, and the
+   * one the owner filed the cards under where none does. What everything
+   * addresses it by: the selection in the rail, the filters, the facets.
+   *
+   * Until 2026-09-11 this was the filing name, kept as typed because changing it
+   * changed what a card was. Bart's call: the official name is the truth, and a
+   * filing name is a personal decision, not a fact about the card. Rows are
+   * still grouped and resolved by what they were filed under (that is how the
+   * catalogue is found); the sets are then folded by title (mergeSetsByTitle),
+   * so "SV Black Star Promos" and "SVP Black Star Promos" are one set, named
+   * the second. The card keys keep the filing name, so no card changes id.
+   * A set from another language's catalogue keeps its filing name: its title
+   * is the Japanese (Korean, Chinese) one, and the app is English throughout.
    */
   name: string;
   /**
@@ -1211,7 +1220,75 @@ export async function buildCollection(
 
   // Newest set first. A set TCGdex has never heard of has no date to sort on
   // and goes last rather than jumping to the front on an empty string.
-  return out.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "", LOCALE));
+  return mergeSetsByTitle(out).sort((a, b) =>
+    (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "", LOCALE),
+  );
+}
+
+/** Ascending by number; the lettered gallery cards (TG01) sort together at the end. */
+const byNumber = (a: OwnedCard, b: OwnedCard): number => {
+  const na = parseInt(a.number, 10);
+  const nb = parseInt(b.number, 10);
+  if (Number.isNaN(na) || Number.isNaN(nb)) return a.number.localeCompare(b.number, LOCALE);
+  return na - nb;
+};
+
+/**
+ * One set per official name, named by it.
+ *
+ * Rows are grouped by the name they were filed under, and a set filed under two
+ * names came out as two sets under one title: the SVP promos as "SV Black Star
+ * Promos" and "SVP Black Star Promos", the Wizards promos as "Wizard" and
+ * "Wizards". The title is the set's name (see CardSet.name), so those fold into
+ * one, named the title. A card at one number in both folds into one card with
+ * every row's variants, as two rows of one printing do within a set; the first
+ * set's facts (logo, date, total) stand, and the other's fill what it lacks.
+ * A set from another language's catalogue is left as it is: its title is the
+ * Japanese (Korean, Chinese) name, and the app names every set in English —
+ * which, for those, is what the owner filed it under.
+ */
+export function mergeSetsByTitle(sets: CardSet[]): CardSet[] {
+  const byTitle = new Map<string, CardSet>();
+  const out: CardSet[] = [];
+  for (const set of sets) {
+    if (set.language !== null) {
+      out.push(set);
+      continue;
+    }
+    const found = byTitle.get(set.title);
+    if (!found) {
+      const named = { ...set, name: set.title, cards: [...set.cards] };
+      byTitle.set(set.title, named);
+      out.push(named);
+      continue;
+    }
+    found.abbreviation ??= set.abbreviation;
+    if (found.logo === null && set.logo !== null) {
+      found.logo = set.logo;
+      found.logoSize = set.logoSize;
+    }
+    found.releaseDate ??= set.releaseDate;
+    found.total ??= set.total;
+    for (const card of set.cards) {
+      const same = found.cards.find((c) => (c.number || c.name) === (card.number || card.name));
+      if (!same) {
+        found.cards.push(card);
+        continue;
+      }
+      for (const v of card.variants) {
+        if (v.id === null || !same.variants.some((mine) => mine.id === v.id)) same.variants.push(v);
+      }
+      same.owned ||= card.owned;
+      same.image ??= card.image;
+      same.imageHigh ??= card.imageHigh;
+      same.price ??= card.price;
+      same.priceHolo ??= card.priceHolo;
+      same.tcgId ??= card.tcgId;
+      same.localName ??= card.localName;
+    }
+    found.cards.sort(byNumber);
+  }
+  return out;
 }
 
 /** Everything TCGdex knows about one card, for the detail route. */
