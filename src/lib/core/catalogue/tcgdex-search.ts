@@ -23,10 +23,28 @@
  * from its id.
  */
 import { graphql, json } from "./tcgdex-client";
-import { englishSetIndex, isPocketSet, type CatalogueSet } from "./tcgdex-browse";
+import {
+  type BrowseLanguage,
+  englishSetIndex,
+  isPocketSet,
+  listSetsIn,
+  type CatalogueSet,
+} from "./tcgdex-browse";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 
-const CATALOGUE = "https://api.tcgdex.net/v2/en";
+/* One catalogue per language. English is the one every search asked until 2026-09-11; the
+   Japanese, Korean and Chinese ones are the same host under their own code, and a name typed in
+   their script is found only there — "リザードン" is in none of the English records. */
+const catalogueOf = (language: BrowseLanguage | null) =>
+  `https://api.tcgdex.net/v2/${language ?? "en"}`;
+
+/**
+ * A language's sets by id, for naming a hit's set the way the English index does. listSetsIn()
+ * is already cached per request behind json(); the map is rebuilt from it, which is cheap.
+ */
+async function languageSetIndex(language: BrowseLanguage): Promise<Map<string, CatalogueSet>> {
+  return new Map((await listSetsIn(language)).map((s) => [s.id, s]));
+}
 
 /**
  * How many hits are read before the words that could not become a filter are
@@ -176,18 +194,22 @@ async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
 export async function searchCards(
   input: string | SearchFilters,
   page: number = 1,
+  /** Which catalogue to ask; null is the English one, the way every search before was. */
+  language: BrowseLanguage | null = null,
 ): Promise<{ cards: CatalogueMatch[]; total: number }> {
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
   if (!params) return { cards: [], total: 0 };
 
-  const url = new URL(`${CATALOGUE}/cards`);
+  const url = new URL(`${catalogueOf(language)}/cards`);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
   url.searchParams.set("pagination:page", "1");
   url.searchParams.set("pagination:itemsPerPage", String(WINDOW));
 
   const brief = ((await json(url.toString(), "card search", { revalidate: 300 })) ?? []) as Brief[];
-  const sets = await englishSetIndex().catch(() => new Map<string, CatalogueSet>());
+  const sets = await (language ? languageSetIndex(language) : englishSetIndex()).catch(
+    () => new Map<string, CatalogueSet>(),
+  );
 
   const hits = brief
     .filter((c): c is Brief & { localId: string; name: string } => !!c.localId && !!c.name)
@@ -218,5 +240,8 @@ export async function searchCards(
   /* `total` is what the window holds, so a screen can say "125 cards" above the twenty it
      shows. A window filled to WINDOW means at least that many: the client reads 250 as "250 or
      more", which is the honest thing a capped count can say. */
-  return { cards: await withFacts(matched.slice(from, from + MAX_RESULTS)), total: matched.length };
+  const shown = matched.slice(from, from + MAX_RESULTS);
+  /* Rarity and type are the English catalogue's facts; the shelves of the other languages leave
+     both empty (tcgdex-browse.ts, setIn), and a search in one of them does the same. */
+  return { cards: language ? shown : await withFacts(shown), total: matched.length };
 }

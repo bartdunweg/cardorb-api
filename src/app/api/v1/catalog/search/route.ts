@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { englishSets } from "@/lib/core/catalogue/tcgdex-browse";
+import { englishSets, isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
 import { getRows } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -55,6 +55,14 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
+  /* `?language=ja|zh-tw|zh-cn|ko`: that catalogue rather than the English one, as the set route
+     reads it. Left out, English, which is every search this route had answered before. */
+  const languageParam = url.searchParams.get("language");
+  if (languageParam && languageParam !== "en" && !isBrowseLanguage(languageParam))
+    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+      headers: readHeaders(req),
+    });
+  const language = isBrowseLanguage(languageParam) ? languageParam : null;
   const filters = {
     name: url.searchParams.get("name")?.trim() ?? "",
     number: url.searchParams.get("number")?.trim() ?? "",
@@ -76,19 +84,21 @@ export async function GET(req: Request) {
 
   try {
     const { cards, total } = usingFilters
-      ? await searchCards(filters, page)
-      : await searchCards((url.searchParams.get("query") ?? "").trim(), page);
+      ? await searchCards(filters, page, language)
+      : await searchCards((url.searchParams.get("query") ?? "").trim(), page, language);
     /* After the search, not before: a search that is about to 502 should not
        have cost a collection read. getRows() fails soft, so a store outage
        leaves every result unmarked rather than taking the search down with it. */
     const { rows } = await getRows(who.userId, bearer(req) ?? undefined);
     // The English sets, for the join to file each row under the set it resolves to; the
     // search has just read the same index, so this is the memoised promise, not a request.
-    const sets = await englishSets().catch(() => []);
+    /* Ownership by the catalogue asked, as the set page joins it: a row of that language carrying
+       that catalogue's id marks its own hit; every other row marks the English one. */
+    const sets = language ? [] : await englishSets().catch(() => []);
     return NextResponse.json(
       /* `total` is how many the whole search matched, at most the window it reads (250,
          which then means "at least"); a client shows it above the page. */
-      { cards: markOwnership(ownershipIndex(rows, null, sets), cards), total },
+      { cards: markOwnership(ownershipIndex(rows, language, sets), cards), total },
       { headers: readHeaders(req) },
     );
   } catch {
