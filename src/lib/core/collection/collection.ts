@@ -406,6 +406,11 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v17: #299 relinked two Cardmarket products (Nidoran♀ Jungle 57, Pikachu EX XY124), and
+      // the price a set entry holds was read when the entry was made. Under v16 both cards
+      // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
+      // one did not.
+      //
       // v16: a card from a catalogue that is not the English one resolves here now, and
       // CardFacts grew `rarity` and `catalogue` for it. An entry cached under v15 is a
       // SetFacts without either — which for a Japanese card means no rarity and, worse, a
@@ -422,7 +427,7 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v16", setName, factsSignature(identities)],
+      ["set-facts", "v17", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

@@ -1,0 +1,1 @@
+- The two cards relinked in #299 are priced now rather than after a day: the per-set cache that holds a card's price moves to a new key, so the old entries with no price are not read.
