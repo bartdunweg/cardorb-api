@@ -1,43 +1,38 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { UsdPrice } from "../catalogue/ptcg";
+import type { UsdPrice } from "../catalogue/tcgdex-client";
 
 /**
- * What one failing set costs the sets after it.
+ * The second market, from TCGdex, a set at a time.
  *
- * The quiet period was one deadline for the whole instance, tripped by one failure. The
- * 04:00 snapshot cron always runs on a cold instance, where the last-good answers are
- * empty, so a single pokemontcg.io hiccup on the first set left every later set of that
- * run with no second market — and shownPrice() then reads Cardmarket's Near Mint band,
- * which above €20 is market × 1.275 against a blend of 1.1375: about 12% high, written
- * into permanent history behind one console.error.
- *
- * The latency the global deadline was for is real, so it is still here: it now takes
- * several sets failing in a row, which is what an outage actually looks like when
- * buildCollection() resolves six sets at a time.
+ * pokemontcg.io was asked per set for TCGplayer's prices until 2026-09-11, behind a quiet
+ * period and a per-instance last-good answer; this file guarded those. It answered one set
+ * in eight by then. TCGdex relays the same number on each card's record, and what is left
+ * to guard is smaller: a set is asked for by its cards, a card TCGdex would not answer for
+ * costs that card and not the set, and a read that answered for nothing is not kept.
  */
 
-const ptcgPrices = vi.fn<(setName: string) => Promise<Map<string, UsdPrice> | null>>();
+const usdFor = vi.fn<(ids: string[]) => Promise<Map<string, UsdPrice>>>();
 
 vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn, revalidateTag: vi.fn() }));
 vi.mock("../catalogue/catalogue", () => ({
-  setCatalogue: async () => null,
-  pricesFor: async () => new Map(),
+  setCatalogue: vi.fn(),
   json: async () => null,
 }));
 vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: async () => 0.9 }));
+vi.mock("../catalogue/tcgdex-client", () => ({
+  pricesFor: async () => new Map(),
+  usdFor: (ids: string[]) => usdFor(ids),
+}));
 vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
-  ptcgPrices: (setName: string) => ptcgPrices(setName),
 }));
 vi.mock("../catalogue/price-guide", () => ({
-  fetchPriceGuide: async () => null,
-  guidePrices: () => [],
+  guidePrices: async () => ({}),
 }));
 vi.mock("../../storage/supabase", () => ({
-  adminClient: () => ({}),
-  serverClient: async () => ({}),
-  userClient: () => ({}),
+  createServiceClient: () => null,
+  createClient: async () => null,
 }));
 vi.mock("../../storage/postgres", () => ({ listCardPrices: vi.fn() }));
 vi.mock("../../storage/collection", () => ({
@@ -46,64 +41,35 @@ vi.mock("../../storage/collection", () => ({
   publicProfile: vi.fn(),
 }));
 
-const PRICES = new Map<string, UsdPrice>([["004", { market: 100, low: 80 }]]);
-
-/**
- * A fresh module each time, because the quiet period and the last-good answers are
- * module state on purpose — per instance, so a warm function remembers. A test that
- * shared them would be testing whichever test ran first.
- */
 const fresh = async () => {
   vi.resetModules();
   return (await import("./collection")).usdForSet;
 };
 
 beforeEach(() => {
-  ptcgPrices.mockReset();
+  usdFor.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("usdForSet", () => {
-  it("does not take the next set's second market down with the one that failed", async () => {
-    ptcgPrices.mockImplementation(async (set) => (set === "Bad" ? null : PRICES));
+  it("asks TCGdex for the set's cards and keys the answer by card id", async () => {
+    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100, low: 80 }]]));
     const usdForSet = await fresh();
-
-    expect(await usdForSet("Bad")).toEqual({});
-    // The bug: this used to come back {} as well, for every remaining set of the run.
-    expect(await usdForSet("Good")).toEqual({ "004": { market: 100, low: 80 } });
-    expect(ptcgPrices).toHaveBeenCalledWith("Good");
+    expect(await usdForSet("Base", ["base1-4", "base1-2"])).toEqual({
+      "base1-4": { market: 100, low: 80 },
+    });
+    expect(usdFor).toHaveBeenCalledWith(["base1-4", "base1-2"]);
   });
 
-  it("does not ask the same failed set again inside the quiet period", async () => {
-    ptcgPrices.mockResolvedValue(null);
+  it("asks for nothing when there is nothing to ask for", async () => {
     const usdForSet = await fresh();
-
-    await usdForSet("Bad");
-    await usdForSet("Bad");
-    expect(ptcgPrices).toHaveBeenCalledTimes(1);
+    expect(await usdForSet("Base", [])).toEqual({});
+    expect(usdFor).not.toHaveBeenCalled();
   });
 
-  it("stops asking at all once several sets in a row have failed", async () => {
-    ptcgPrices.mockImplementation(async (set) => (set === "Good" ? PRICES : null));
+  it("reads Cardmarket alone for this request when TCGdex answered for nothing, rather than throwing", async () => {
+    usdFor.mockRejectedValue(new Error("TCGdex answered for none of the cards"));
     const usdForSet = await fresh();
-
-    for (const set of ["A", "B", "C"]) expect(await usdForSet(set)).toEqual({});
-    // Three different sets with nothing answering between them is pokemontcg.io being
-    // down, and the fourth set is not made to wait out its own timeout to find out.
-    expect(await usdForSet("Good")).toEqual({});
-    expect(ptcgPrices).not.toHaveBeenCalledWith("Good");
-  });
-
-  it("counts only failures with no answer between them", async () => {
-    ptcgPrices.mockImplementation(async (set) => (set.startsWith("Ok") ? PRICES : null));
-    const usdForSet = await fresh();
-
-    await usdForSet("A");
-    await usdForSet("Ok1");
-    await usdForSet("B");
-    await usdForSet("C");
-    // Two failures since the last answer, not three: a set that is simply odd never
-    // silences the market for the rest of the run.
-    expect(await usdForSet("Ok2")).toEqual({ "004": { market: 100, low: 80 } });
+    expect(await usdForSet("Base", ["base1-4"])).toEqual({});
   });
 });

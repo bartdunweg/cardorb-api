@@ -44,13 +44,12 @@ import {
   identityKey,
   resolveSetFacts,
 } from "./cards";
-import { DAY, cardNumber } from "../util";
-import { ptcgPrices, type UsdPrice } from "../catalogue/ptcg";
+import { DAY } from "../util";
 import { blendPrices, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
-import { pricesFor, type CardPrices } from "../catalogue/tcgdex-client";
+import { pricesFor, usdFor, type CardPrices, type UsdPrice } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
 import IDS from "../cardmarket-ids.generated.json";
 import IDS_JA from "../cardmarket-ids.ja.generated.json";
@@ -374,92 +373,42 @@ const cachedSetFacts = (
   );
 
 /**
- * TCGplayer's prices for a set, a day at a time, in a cache of their own rather than inside
- * the set's facts: pokemontcg.io fails now and then, and a failure baked into a day-long
- * entry was a day without the second price. Here a failure throws, so nothing is cached and
- * the next request asks again; the facts, from steadier sources, keep their own day.
- * An object rather than a Map: a Map does not survive the Data Cache (see SetCatalogue).
+ * TCGplayer's prices for a set's cards, a day at a time, from TCGdex.
+ *
+ * pokemontcg.io used to be asked per set, behind a quiet period and a per-instance
+ * last-good answer, and by 2026-09-11 it answered one set in eight: the same card
+ * blended two markets on one instance and stood on Cardmarket alone on the next.
+ * TCGdex relays TCGplayer's number on every card's own record (usdFor), the read
+ * pricesFor() already makes for a card the guide does not price.
+ *
+ * Keyed by the set and the cards asked for, so a set that gains a card is asked
+ * again. A read that answered for nothing throws, so an outage is not kept for a
+ * day; the caller reads Cardmarket alone for that request and asks again on the
+ * next. An object rather than a Map: a Map does not survive the Data Cache.
  */
-const cachedUsdPrices = (setName: string) =>
+const cachedTcgdexUsd = (setName: string, ids: string[]) =>
   timedCache(`cache tcgplayer ${setName}`, (ran) =>
     unstable_cache(
       async (): Promise<Record<string, UsdPrice>> => {
         ran();
-        const prices = await ptcgPrices(setName);
-        if (!prices) throw new Error(`TCGplayer prices unavailable for ${setName}`);
-        return Object.fromEntries(prices);
+        return Object.fromEntries(await usdFor(ids));
       },
-      ["tcgplayer", "v1", setName],
+      ["tcgdex-usd", "v1", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
 
-const PTCG_QUIET_MS = 10 * 60_000;
-
-/**
- * How many different sets have to fail, with nothing succeeding in between, before this is
- * pokemontcg.io being down rather than one set being odd.
- *
- * buildCollection() resolves six sets at a time (mapLimit in cards.ts), so a real outage
- * arrives as a whole wave failing together and trips this on the first one: one round of
- * timeouts, then every set after it is skipped without asking. That is the latency the
- * global quiet period below was built for, and it is kept. A single set that times out on
- * its own never reaches three, and the other forty-nine keep their second market.
- */
-const PTCG_OUTAGE_SETS = 3;
-
-/**
- * Ten minutes without asking again: per set, and site-wide only once several sets in a row
- * have failed.
- *
- * It used to be one deadline for the whole instance, tripped by one failure, and the cost of
- * that was money rather than latency. The 04:00 snapshot cron always runs on a cold
- * instance, where lastGoodUsd below is empty, so a single pokemontcg.io hiccup on the first
- * set left every later set of that run with no second market at all — not a stale blend, no
- * blend. shownPrice() then reads Cardmarket's Near Mint band instead of the blended market,
- * which above €20 is market × 1.275 against a blend of (1.275 + 1) / 2 = 1.1375: the value
- * recorded for every dear card steps up about 12%, and it is upserted into permanent history
- * behind one console.error, with the chart saying nothing.
- *
- * Both are per instance, like the last answers: a warm function remembers and a cold one
- * finds out for itself.
- */
-let ptcgQuietUntil = 0;
-const ptcgQuietSets = new Map<string, number>();
-/** The sets that have failed since the last one succeeded. Any answer at all clears it. */
-const ptcgFailing = new Set<string>();
-/**
- * The last answer that came, per set, for the minutes pokemontcg.io is down: a price that was
- * right an hour ago beats a card that suddenly says it is worth nothing and then is not. Per
- * instance, like the quiet period; a cold instance starts without it.
- */
-const lastGoodUsd = new Map<string, Record<string, UsdPrice>>();
-/** Exported for its test rather than for any caller: the rule above is about money. */
-export const usdForSet = async (setName: string): Promise<Record<string, UsdPrice>> => {
-  const now = Date.now();
-  if (now < ptcgQuietUntil || now < (ptcgQuietSets.get(setName) ?? 0)) {
-    return lastGoodUsd.get(setName) ?? {};
-  }
+/** Exported for its test rather than for any caller: the rule is about money. */
+export const usdForSet = async (
+  setName: string,
+  ids: string[],
+): Promise<Record<string, UsdPrice>> => {
+  if (!ids.length) return {};
   try {
-    const prices = await cachedUsdPrices(setName);
-    lastGoodUsd.set(setName, prices);
-    // An answer means pokemontcg.io is up, so whatever failed before it was about a set.
-    ptcgFailing.clear();
-    ptcgQuietUntil = 0;
-    ptcgQuietSets.delete(setName);
-    return prices;
+    return await cachedTcgdexUsd(setName, ids);
   } catch (err) {
-    ptcgQuietSets.set(setName, Date.now() + PTCG_QUIET_MS);
-    ptcgFailing.add(setName);
-    const down = ptcgFailing.size >= PTCG_OUTAGE_SETS;
-    if (down) ptcgQuietUntil = Date.now() + PTCG_QUIET_MS;
-    console.error(
-      `TCGplayer prices unavailable for ${setName}, the last answer or Cardmarket's alone for now` +
-        (down ? ` (${ptcgFailing.size} sets running: treating pokemontcg.io as down)` : "") +
-        ":",
-      err,
-    );
-    return lastGoodUsd.get(setName) ?? {};
+    console.error(`TCGplayer prices unavailable for ${setName}, Cardmarket's alone for now:`, err);
+    return {};
   }
 };
 
@@ -472,25 +421,18 @@ async function factsWithUsd(
 ) {
   const facts = await cachedSetFacts(setName, identities, priceSource);
   if (usdToEur == null) return facts;
-  /**
-   * Not asked at all for a set held only in another catalogue's language.
-   *
-   * pokemontcg.io indexes the English game and is asked by English set name, so
-   * for a Japanese set it would either fail — costing that set its second
-   * market for ten minutes, and every set after it if three in a row go the
-   * same way (see usdForSet) — or, worse, answer: "Black Bolt" is a real
-   * English set as well as the name the shelf gives ブラックボルト, and its
-   * dollars would be blended into Japanese cards at the same numbers.
-   */
-  const anyEnglish = identities.some((i) => !i.card);
-  const usd = anyEnglish ? await usdForSet(setName) : {};
+  /* Only the English cards, by their TCGdex id: a card from its own catalogue keeps
+     Cardmarket's figure alone, since there is no TCGplayer price for a Japanese printing.
+     A card whose facts already carry the dollar figure — priced by TCGdex because the guide
+     had nothing — is not asked for twice. */
+  const wanted = Object.values(facts.cards).flatMap((f) =>
+    !f.catalogue && f.tcgId && !f.usd ? [f.tcgId] : [],
+  );
+  const usd = await usdForSet(setName, [...new Set(wanted)]);
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
-      // A card that came from its own catalogue keeps Cardmarket's figure alone: there is no
-      // TCGplayer price for a Japanese printing, and the set's dollars are another card's.
       if (f.catalogue) return [key, f];
-      // pokemontcg.io's number for the set first; TCGdex's for the card where that has none or is down.
-      const p = usd[cardNumber(f.number)] ?? f.usd;
+      const p = f.usd ?? (f.tcgId ? usd[f.tcgId] : null) ?? null;
       return [key, { ...f, price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null) }];
     }),
   );

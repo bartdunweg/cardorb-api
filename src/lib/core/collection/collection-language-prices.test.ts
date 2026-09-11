@@ -21,7 +21,6 @@ vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: async () => null }));
 vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
-  ptcgPrices: async () => new Map(),
 }));
 vi.mock("../catalogue/price-guide", () => ({
   fetchPriceGuide: async () => ({ priceGuides: [], createdAt: "today" }),
