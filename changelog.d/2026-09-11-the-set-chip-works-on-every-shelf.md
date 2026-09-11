@@ -1,0 +1,1 @@
+- `GET /v1/catalog/search?language=ja&set=…` keeps to that set, named as the shelf shows it (its English title, its own name, or its id), with or without a name beside it — the palette's Set chip works on every shelf. A type is not asked on those shelves: TCGdex publishes none there.

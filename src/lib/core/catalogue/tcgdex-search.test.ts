@@ -439,6 +439,46 @@ describe("searchCards in another language", () => {
     expect(calls.some((c) => c.url.includes("/en/"))).toBe(false);
   });
 
+  it("keeps to the set the chip named, by the title the shelf shows it under", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        const url = String(input);
+        calls.push({ url });
+        if (url.endsWith("/ja/series")) return Response.json([{ id: "M", name: "MEGA" }]);
+        if (url.endsWith("/ja/series/M"))
+          return Response.json({
+            id: "M",
+            name: "MEGA",
+            sets: [{ id: "M4", name: "四", cardCount: { total: 2, official: 2 } }],
+          });
+        if (url.endsWith("/ja/sets/M4"))
+          return Response.json({
+            id: "M4",
+            name: "四",
+            serie: { id: "M", name: "MEGA" },
+            cardCount: { total: 2, official: 2 },
+            cards: [
+              { id: "M4-001", localId: "001", name: "ビードル" },
+              { id: "M4-002", localId: "002", name: "コクーン" },
+            ],
+          });
+        return new Response("not here", { status: 500 });
+      }),
+    );
+    const { searchCards } = await load();
+    // Ninja Spinner is M4's English title (set-names.ja.json); the shelf's other Weedles are out.
+    const named = await searchCards({ name: "weedle", set: "Ninja Spinner" }, 1, "ja");
+    expect(named.cards.map((c) => c.id)).toEqual(["M4-001"]);
+    expect(named.total).toBe(1);
+    // The set alone lists it whole, English name or none.
+    const whole = await searchCards({ set: "Ninja Spinner" }, 1, "ja");
+    expect(whole.cards.map((c) => c.id)).toEqual(["M4-001", "M4-002"]);
+    // A set the shelf does not know is an empty answer, not every card.
+    expect((await searchCards({ set: "Nowhere" }, 1, "ja")).total).toBe(0);
+    expect(calls.some((c) => c.url.includes("/ja/cards?"))).toBe(false);
+  });
+
   it("leaves the English catalogue as it was when no language is named", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
     const { searchCards } = await load();
