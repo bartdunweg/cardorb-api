@@ -96,8 +96,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   /* Keyed by the TCGdex id, not the catalogue's own: on the English path these cards come from
      pokemontcg.io (`me5-85`) and every price in this repo is keyed the TCGdex way (`me05-085`).
      On the other-language path `id` already is the TCGdex one, so the fallback is right there. */
+  /* From that catalogue's own map. A Japanese set page showed a blank line under all 92 cards
+     of M1S while the guide priced every one of them: the only map from a card to its Cardmarket
+     product held English cards somebody owns. Which map to read is a fact about the page, not
+     the id — SM1S-001 is a Japanese card and a different Korean one. */
   const priceKey = (c: (typeof shown)[number]) => c.tcgId ?? c.id;
-  const prices = await guidePricesFor(shown.map(priceKey));
+  const prices = await guidePricesFor(
+    shown.map(priceKey),
+    isBrowseLanguage(language) ? language : null,
+  );
 
   return NextResponse.json(
     {

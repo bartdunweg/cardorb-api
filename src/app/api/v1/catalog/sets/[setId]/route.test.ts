@@ -5,6 +5,7 @@ const findSet = vi.fn();
 const setCards = vi.fn();
 const getRows = vi.fn();
 const guidePricesFor = vi.fn();
+const setIn = vi.fn();
 
 /* Same three server-only modules replaced wholesale as in the sibling route's
    test; the ownership join is the real, pure one. */
@@ -21,6 +22,11 @@ vi.mock("@/lib/core/collection/collection", () => ({
 vi.mock("@/lib/core/catalogue/ptcg-browse", () => ({
   findSet: (...a: unknown[]) => findSet(...a),
   setCards: (...a: unknown[]) => setCards(...a),
+}));
+/* The other catalogue is a network read too; the language check is the real, pure one. */
+vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
+  ...(await real<typeof import("@/lib/core/catalogue/tcgdex-browse")>()),
+  setIn: (...a: unknown[]) => setIn(...a),
 }));
 /* The TCGdex scan swap is a real network call through setCatalogue() and has
    its own tests; here it would only make these ones depend on a second host
@@ -142,7 +148,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     );
     const body = await (await open()).json();
 
-    expect(guidePricesFor).toHaveBeenLastCalledWith(["me05-085"]);
+    expect(guidePricesFor).toHaveBeenLastCalledWith(["me05-085"], null);
     expect(body.cards[0].price).toEqual({ market: 2.81 });
   });
 
@@ -156,13 +162,32 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.cards[0].price).toEqual({ market: 1 });
   });
 
+  it("prices a Japanese set from the Japanese map, by the catalogue's own id", async () => {
+    /* A Japanese set page showed a blank line under every card. The guide priced them all;
+       the only map from a card to its Cardmarket product held English cards, and the route
+       asked it about M1S-001 — which it had never heard of. The map to read is the page's
+       catalogue: SM1S-001 is one card in Japanese and another in Korean. */
+    setIn.mockResolvedValue({
+      set: { ...SET, id: "M1S", name: "Mega Symphonia" },
+      cards: [{ ...card("001", "Tangela"), id: "M1S-001", setName: "Mega Symphonia" }],
+    });
+    getRows.mockResolvedValue({ rows: [], failed: false });
+    guidePricesFor.mockResolvedValue(
+      new Map([["M1S-001", { price: { market: 0.04 }, holo: null }]]),
+    );
+    const body = await (await open("language=ja", "M1S")).json();
+
+    expect(guidePricesFor).toHaveBeenLastCalledWith(["M1S-001"], "ja");
+    expect(body.cards[0].price).toEqual({ market: 0.04 });
+  });
+
   it("prices only the page it returns, not the whole set", async () => {
     getRows.mockResolvedValue({ rows: [], failed: false });
     guidePricesFor.mockResolvedValue(new Map());
     await open("pageSize=1");
 
     // 250 lookups for a page of one is the cost this route was careful not to pay.
-    expect(guidePricesFor).toHaveBeenLastCalledWith(expect.objectContaining({ length: 1 }));
+    expect(guidePricesFor).toHaveBeenLastCalledWith(expect.objectContaining({ length: 1 }), null);
   });
 
   it("counts owned over the whole set rather than over the page", async () => {
