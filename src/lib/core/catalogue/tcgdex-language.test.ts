@@ -72,6 +72,11 @@ describe("cataloguesFor", () => {
   it("tries both Chinese catalogues, traditional first", () => {
     expect(cataloguesFor("zh")).toEqual(["zh-tw", "zh-cn"]);
   });
+
+  it("asks one Chinese catalogue where the row names it", () => {
+    expect(cataloguesFor("zh-tw")).toEqual(["zh-tw"]);
+    expect(cataloguesFor("zh-cn")).toEqual(["zh-cn"]);
+  });
 });
 
 describe("setIdOf", () => {

@@ -75,7 +75,27 @@ export const isFoilPattern = (v: unknown): v is FoilPattern =>
   typeof v === "string" && (FOIL_PATTERNS as readonly string[]).includes(v);
 
 /** The languages a card is printed in, as Cardmarket and TCGdex code them. */
-export const LANGUAGES = ["en", "de", "fr", "it", "es", "pt", "nl", "ja", "ko", "zh"] as const;
+/**
+ * `zh-tw` and `zh-cn` beside `zh`: Chinese is two catalogues, traditional and simplified, and
+ * the shelves name them apart. `zh` stays for the rows that carry it and reads as "one of the
+ * two" — both are asked, the first that has the card answers (cataloguesFor). A card added from
+ * a Chinese shelf used to arrive as `zh-tw`, fail this list, and be stored with no language at
+ * all, after which it was looked up as an English card by its set's name (2026-09-11).
+ */
+export const LANGUAGES = [
+  "en",
+  "de",
+  "fr",
+  "it",
+  "es",
+  "pt",
+  "nl",
+  "ja",
+  "ko",
+  "zh",
+  "zh-tw",
+  "zh-cn",
+] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const isLanguage = (v: unknown): v is Language =>
   typeof v === "string" && (LANGUAGES as readonly string[]).includes(v);
