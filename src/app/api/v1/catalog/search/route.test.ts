@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authorise = vi.fn();
 const searchCards = vi.fn();
 const getRows = vi.fn();
+const englishSets = vi.fn(async () => [{ id: "base1", name: "Base" }]);
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
 // wholesale rather than importOriginal()-ed.
@@ -16,7 +17,8 @@ vi.mock("@/lib/core/catalogue/tcgdex-search", () => ({
 }));
 /* The English set index is a network read; the join resolves the fixture rows against this one. */
 vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
-  englishSets: async () => [{ id: "base1", name: "Base" }],
+  englishSets: () => englishSets(),
+  isBrowseLanguage: (v: unknown) => ["ja", "zh-tw", "zh-cn", "ko"].includes(v as string),
 }));
 /* Both of these are `import "server-only"` underneath — viewer.ts directly,
    collection.ts through the Supabase clients — which throws the moment vitest
@@ -78,6 +80,7 @@ beforeEach(() => {
 afterEach(() => {
   searchCards.mockClear();
   getRows.mockClear();
+  englishSets.mockClear();
 });
 
 describe("GET /api/v1/catalog/search", () => {
@@ -102,7 +105,7 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("passes the trimmed query through and returns what it finds", async () => {
     const res = await search(new URLSearchParams({ query: "  char  " }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
     expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", rarity: "Rare Holo" });
@@ -110,7 +113,11 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("switches to filter mode when any filter field is present, ignoring query", async () => {
     const res = await search(new URLSearchParams({ name: "char", query: "should be ignored" }));
-    expect(searchCards).toHaveBeenCalledWith({ name: "char", number: "", set: "", type: "" }, 1);
+    expect(searchCards).toHaveBeenCalledWith(
+      { name: "char", number: "", set: "", type: "" },
+      1,
+      null,
+    );
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
   });
@@ -118,7 +125,7 @@ describe("GET /api/v1/catalog/search", () => {
   it("does not require two characters in filter mode", async () => {
     const res = await search(new URLSearchParams({ number: "6" }));
     expect(res.status).toBe(200);
-    expect(searchCards).toHaveBeenCalledWith({ name: "", number: "6", set: "", type: "" }, 1);
+    expect(searchCards).toHaveBeenCalledWith({ name: "", number: "6", set: "", type: "" }, 1, null);
   });
 
   it("trims filter fields before checking whether any are present", async () => {
@@ -129,15 +136,15 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("forwards an explicit page number", async () => {
     await search(new URLSearchParams({ query: "char", page: "3" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 3);
+    expect(searchCards).toHaveBeenCalledWith("char", 3, null);
   });
 
   it("falls back to page 1 for an invalid page value", async () => {
     await search(new URLSearchParams({ query: "char", page: "not-a-number" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
 
     await search(new URLSearchParams({ query: "char", page: "-1" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
   });
 
   it("answers 502 with a sentence, not 400, when searchCards fails", async () => {
@@ -171,5 +178,22 @@ describe("GET /api/v1/catalog/search", () => {
     searchCards.mockRejectedValueOnce(new Error("pokemontcg.io search unavailable"));
     await search(new URLSearchParams({ query: "char" }));
     expect(getRows).not.toHaveBeenCalled();
+  });
+  it("asks the catalogue named by ?language, and joins ownership by that language alone", async () => {
+    const res = await search(new URLSearchParams({ query: "リザードン", language: "ja" }));
+    expect(res.status).toBe(200);
+    expect(searchCards).toHaveBeenCalledWith("リザードン", 1, "ja");
+    expect(englishSets).not.toHaveBeenCalled();
+  });
+
+  it("reads language=en as the English catalogue", async () => {
+    await search(new URLSearchParams({ query: "char", language: "en" }));
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null);
+  });
+
+  it("refuses a language it has no catalogue for", async () => {
+    const res = await search(new URLSearchParams({ query: "char", language: "de" }));
+    expect(res.status).toBe(400);
+    expect(searchCards).not.toHaveBeenCalled();
   });
 });

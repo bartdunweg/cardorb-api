@@ -306,3 +306,60 @@ describe("searchCards", () => {
     expect((await searchCards({})).total).toBe(0);
   });
 });
+
+describe("searchCards in another language", () => {
+  /** TCGdex's Japanese catalogue, by URL: the series list, one serie with its sets, the cards. */
+  function installJapanese(list: unknown[]) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string, init?: { method?: string; body?: string }) => {
+        const url = String(input);
+        calls.push({ url, body: init?.body });
+        if (url.endsWith("/ja/series"))
+          return Response.json([{ id: "sv", name: "スカーレット&バイオレット" }]);
+        if (url.endsWith("/ja/series/sv"))
+          return Response.json({
+            id: "sv",
+            name: "スカーレット&バイオレット",
+            sets: [
+              { id: "SV2a", name: "ポケモンカード151", cardCount: { total: 210, official: 165 } },
+            ],
+          });
+        if (url.includes("/ja/cards?")) return Response.json(list);
+        return new Response("not here", { status: 500 });
+      }),
+    );
+  }
+
+  it("asks that language's catalogue, names the set the way its shelf does, and asks no facts", async () => {
+    installJapanese([
+      brief("SV2a-006", "006", "リザードンex", "https://assets.tcgdex.net/ja/SV/SV2a/006"),
+    ]);
+    const { searchCards } = await load();
+    const { cards, total } = await searchCards("リザードン", 1, "ja");
+    expect(total).toBe(1);
+    expect(cards[0]).toMatchObject({
+      id: "SV2a-006",
+      number: "006",
+      name: "リザードンex",
+      // The shelf's own naming: the English title where the set has one (tcgdex-browse.ts, named).
+      setName: "Pokémon Card 151",
+      image: "https://assets.tcgdex.net/ja/SV/SV2a/006/low.webp",
+      rarity: null,
+      types: [],
+      tcgId: "SV2a-006",
+    });
+    const list = calls.find((c) => c.url.includes("/ja/cards?"));
+    expect(new URL(list!.url).searchParams.get("name")).toBe("like:リザードン");
+    expect(calls.some((c) => c.url.includes("/en/"))).toBe(false);
+    expect(calls.some((c) => c.url.endsWith("/graphql"))).toBe(false);
+  });
+
+  it("leaves the English catalogue as it was when no language is named", async () => {
+    installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
+    const { searchCards } = await load();
+    await searchCards("char", 1, null);
+    expect(listCall()).toBeDefined();
+    expect(calls.some((c) => c.url.includes("/ja/"))).toBe(false);
+  });
+});
