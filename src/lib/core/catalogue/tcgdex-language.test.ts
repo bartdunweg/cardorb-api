@@ -143,6 +143,22 @@ describe("languageCard", () => {
     expect(card!.image).toBe("https://assets.tcgdex.net/ja/SV/SV5M/001");
   });
 
+  it("names Limitless's pair, without a probe, for a set TCGdex photographed in its reverse variant", async () => {
+    // Pokémon Card 151: TCGdex's file is there and it is the Master Ball print of every card.
+    const asked = stub({
+      "/ja/cards/SV2a-011": {
+        id: "SV2a-011",
+        localId: "011",
+        name: "トランセル",
+        image: "https://assets.tcgdex.net/ja/SV/SV2a/011",
+        set: { id: "SV2a", name: "ポケモンカード151" },
+      },
+    });
+    const card = await languageCard(["ja"], "SV2a-011");
+    expect(card!.scan?.low).toContain("SV2a_11_R_JP_SM.png");
+    expect(asked).toEqual(["/ja/cards/SV2a-011"]);
+  });
+
   it("guesses without a probe where the record names no picture at all", async () => {
     const asked = stub();
     const card = await languageCard(["ja"], "SV5M-002");

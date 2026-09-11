@@ -7,7 +7,7 @@
  * so every English card arrives with the small scan already; what is left is
  * the Japanese shelf's gap, below.
  */
-import { limitlessJapaneseScan, tcgdexScan } from "./artwork";
+import { limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
 import type { CatalogueMatch } from "./ptcg-search";
 
 /**
@@ -43,10 +43,14 @@ export async function withLimitlessScans(
   if (lang !== "ja" || !cards.length) return cards;
   const first = cards[0]!.image;
   if (!first) return cards;
+  // A set TCGdex photographed in its reverse variant is swapped without the
+  // probe: the file is there, and it is the wrong print (artwork.ts).
+  const setId = cards[0]!.id.slice(0, cards[0]!.id.lastIndexOf("-"));
   // The set's own scans exist: keep every card's. tcgdexScan() answers the
   // path itself when the probe cannot be made, which reads as "keep" here —
   // an unanswered check is not a reason to swap a whole set's pictures.
-  if (await tcgdexScan(first.replace(/\/low\.webp$/, ""))) return cards;
+  if (!tcgdexScanIsReverse(setId) && (await tcgdexScan(first.replace(/\/low\.webp$/, ""))))
+    return cards;
 
   return cards.map((card) => {
     const { low, high } = limitlessJapaneseScan(card.id, card.number);
