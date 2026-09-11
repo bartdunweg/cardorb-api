@@ -18,6 +18,10 @@ export const dynamic = "force-dynamic";
  * The one public route with no username in its path, because there is no
  * person in the answer. It is the species list the catalogues agree on, the
  * same bytes for everyone.
+ *
+ * Each entry carries the URL of the species' official artwork, served by this
+ * API itself: a Pokédex draws it in the slot it holds no card of, so the slot
+ * says which Pokémon is missing and not only that one is.
  */
 
 /**
@@ -51,7 +55,7 @@ export function GET(req: Request) {
   if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
   return NextResponse.json(
-    { entries: speciesList() },
+    { entries: speciesList(new URL(req.url).origin) },
     { headers: { "Cache-Control": SPECIES_CACHE } },
   );
 }
