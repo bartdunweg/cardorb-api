@@ -2131,10 +2131,18 @@ paths:
                     type: array
                     items:
                       type: object
-                      required: [id, name]
+                      required: [id, name, artwork_url]
                       properties:
                         id: { type: integer, minimum: 1, maximum: 1025, description: "National Dex number." }
                         name: { type: string, example: Bulbasaur }
+                        artwork_url:
+                          type: string
+                          format: uri
+                          example: https://api.cardorb.com/artwork/pokedex/1.png
+                          description: |
+                            The species' official artwork, a 120 px PNG with a transparent
+                            background, served by this API. For the slot a Pokédex holds no
+                            card of.
         "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /v1/public/{username}/collection:

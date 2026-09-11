@@ -42,6 +42,8 @@ if the two have drifted apart.
 
 - A Japanese, Korean or Chinese set page names its cards in English — "Charizard ex", not リザードンex — with the printed name beside it as `localName` for a sheet to show in brackets. The names come from Cardmarket's product list through the committed product id maps, and for a Pokémon Cardmarket does not sell, from its species and printed suffix: 12,308 of 12,781 Japanese cards, 6,582 of 7,436 Traditional Chinese, 823 of 877 Simplified, all 239 Korean. A trainer or energy neither source knows — old-era Japanese promos, mostly — keeps its printed name. `scripts/language-card-names.mjs` writes the maps.
 
+- The public species list now carries each Pokémon's official artwork, so a Pokédex can show what is missing and not only that something is.
+
 - The Japanese, Traditional Chinese and Korean shelves no longer list TCGdex's fifteen placeholder sets (CS1a … CS4Da: one record named Triplet Beat, counted 101, with no card behind it, copied under fifteen ids on each shelf). A set that shares its name and count with another on the shelf and records no card is left out; a real set with no cards yet stays. CP5 is named Mythical & Legendary Dream Shine Collection.
 
 - Identical copies are one row with a quantity, in the store and not only on screen. Pressing minus on a card held as several identical rows used to raise the count instead of lowering it, and changing a condition split the copies in two; every write now folds what it makes into the row already held.

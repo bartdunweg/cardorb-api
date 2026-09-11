@@ -1,0 +1,1 @@
+- The public species list now carries each Pokémon's official artwork, so a Pokédex can show what is missing and not only that something is.

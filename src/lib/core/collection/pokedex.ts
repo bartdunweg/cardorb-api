@@ -182,5 +182,15 @@ export const caught = (dex: DexEntry[]) => dex.filter((e) => e.owned > 0).length
  * everyone, so a stranger reading a public profile's Pokédex can label its
  * slots without being told anything about whose profile it is.
  */
-export const speciesList = (): { id: number; name: string }[] =>
-  SPECIES.map((name, i) => ({ id: i + 1, name }));
+/**
+ * Every species with its official artwork, for the slots a Pokédex holds no
+ * card of. The picture is served by this API from public/artwork/pokedex, put
+ * there by scripts/pokedex-art.mjs; `origin` is where this API answers from,
+ * so a preview hands out its own copies and production its own.
+ */
+export const speciesList = (origin: string): { id: number; name: string; artwork_url: string }[] =>
+  SPECIES.map((name, i) => ({
+    id: i + 1,
+    name,
+    artwork_url: `${origin}/artwork/pokedex/${i + 1}.png`,
+  }));
