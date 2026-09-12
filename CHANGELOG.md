@@ -25,6 +25,8 @@ if the two have drifted apart.
 - A copy says which print run it is from: 1st Edition, Shadowless or Unlimited, a third axis beside the finish and the foil pattern. The CSV import reads it from Dex's Variant word and from a column of its own, the export writes it, and a 1st Edition copy is its own line rather than one more of the unlimited row.
 - The dollar price of a Jungle, Fossil, Team Rocket, Gym or Neo card is the ordinary run's, not the stamped one's: TCGplayer splits the two and the 1st Edition figure was taken first, so an unlimited Neo Genesis Lugia read $1,085 where it is $519.
 
+- Search results, the catalogue the browser searches in and a set's cards from the copy now list cards the way a binder holds them: XY2 before XY10, 20 before 100, and a set's Trainer Gallery after its main run instead of in the middle of it. They used to be sorted as text. The collection has sorted this way since #356; the catalogue now follows the same rule, worked out in the database so paging through a search stays in one order.
+
 - A card TCGdex has no scan of now carries a picture in search and on its set page, from the second catalogue, instead of an address with nothing behind it. Pikachu with Grey Felt Hat (svp-085) was the card that showed it: the collection has always found its picture, the search never did, so it drew a blank square right up to the moment it was added. The catalogue's copy checks these addresses while it is being filled, so a reader pays nothing for it.
 
 - A collection is read from one cache entry instead of one per set: a warm read on a fresh instance touched 112 entries and now touches 7, measured on the same collection.

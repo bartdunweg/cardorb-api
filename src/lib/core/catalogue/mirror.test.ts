@@ -22,7 +22,8 @@ vi.mock("./artwork", async (original) => ({
 }));
 vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as [])) }));
 
-const { buildIndex, forgetCopy, mirrorQuery, searchMirror, syncMirror } = await import("./mirror");
+const { buildIndex, catalogueIndex, forgetCopy, mirrorQuery, searchMirror, syncMirror } =
+  await import("./mirror");
 
 type Call = { table: string; op: string; args: unknown[] };
 
@@ -128,6 +129,18 @@ describe("mirrorQuery", () => {
 });
 
 describe("searchMirror", () => {
+  it("pages in binder order: the number_order column, never local_id as a string", async () => {
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "xyp" }],
+      catalogue_cards: [row()],
+    });
+    await searchMirror(db, "venusaur", 1);
+    const orders = calls
+      .filter((c) => c.table === "catalogue_cards" && c.op === "order")
+      .map((c) => c.args[0]);
+    expect(orders).toEqual(["release_date", "set_id", "number_order"]);
+  });
+
   it("answers null before the first night has copied anything", async () => {
     const { db, calls } = fakeStore();
     expect(await searchMirror(db, "charizard")).toBeNull();
@@ -556,5 +569,49 @@ describe("buildIndex", () => {
       ["sv03.5-008", "sv03.5", "008", "Nobody", "Double Rare", ["Fire"], null],
       ["sv03.5-009", "sv03.5", "009", "Elsewhere", "Double Rare", ["Fire"], "https://limitless/x"],
     ]);
+  });
+});
+
+describe("catalogueIndex", () => {
+  /** The three reads catalogueIndex makes, answered from a stored document and one card. */
+  const store = (stored: { version: string; body: string } | null) => {
+    const written: unknown[] = [];
+    const chain = (answer: unknown) => {
+      const c: Record<string, unknown> = {};
+      for (const op of ["select", "order", "limit", "eq", "range"]) c[op] = () => c;
+      c.maybeSingle = () => Promise.resolve({ data: stored, error: null });
+      c.then = (resolve: (v: unknown) => unknown) => resolve(answer);
+      return c;
+    };
+    const db = {
+      from: (table: string) => {
+        if (table === "catalogue_sync")
+          return chain({ data: [{ synced_at: "2026-09-12T02:00:00+00:00" }], error: null });
+        if (table === "catalogue_index")
+          return {
+            ...chain({ data: null, error: null }),
+            upsert: (v: unknown) => {
+              written.push(v);
+              return Promise.resolve({ error: null });
+            },
+          };
+        return chain({ data: [row()], error: null, count: 1 });
+      },
+    } as unknown as SupabaseClient;
+    return { db, written };
+  };
+
+  it("builds again a document stored before the cards were in binder order", async () => {
+    const { db, written } = store({ version: "2026-09-12T02:00:00+00:00", body: "{}" });
+    const index = await catalogueIndex(db);
+    expect(index?.version).toBe("2026-09-12T02:00:00+00:00#n2");
+    expect(written).toHaveLength(1);
+  });
+
+  it("keeps a document built in binder order from the same copy", async () => {
+    const stored = { version: "2026-09-12T02:00:00+00:00#n2", body: "{}" };
+    const { db, written } = store(stored);
+    expect(await catalogueIndex(db)).toEqual(stored);
+    expect(written).toHaveLength(0);
   });
 });
