@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
 
+- A collection is read from one cache entry instead of one per set: a warm read on a fresh instance touched 112 entries and now touches 7, measured on the same collection.
+
 - The collection can be exported as a CSV in the shape Dex writes (semicolons, the same columns), collection and wishlist in one file, with the condition, language and acquired date after Dex's columns; GET /v1/collection/export.
 
 - The CSV import counts a card as already held when the collection filed its set under another name (Notion wrote "Set 1 Unlimited" for Base Set): both sides are keyed through the set's official name.

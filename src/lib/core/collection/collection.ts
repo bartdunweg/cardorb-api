@@ -41,10 +41,12 @@ import {
   buildCollection,
   type CardIdentity,
   type CardSet,
+  type FactsGroup,
+  type SetFacts,
   identityKey,
   resolveSetFacts,
 } from "./cards";
-import { DAY } from "../util";
+import { DAY, mapLimit } from "../util";
 import { blendPrices, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
@@ -395,6 +397,51 @@ export const findFolder = cache(
 const factsSignature = (identities: CardIdentity[]): string =>
   createHash("sha1").update(identities.map(identityKey).join("\u0001")).digest("hex");
 
+/**
+ * Every set's facts for one person, in one Data Cache entry.
+ *
+ * The per-set entries below stay: they are the source of truth, a day old at most, and a card
+ * added to one set costs that set alone. What they are not is cheap to read a hundred of. On
+ * production on 2026-09-12 a set-facts hit was a median of 16 ms and a tcgplayer hit 15, so a
+ * fifty-two set collection paid a hundred and two reads and a megabyte over the network before
+ * anything was drawn: 5 to 9 seconds measured, where the same walk against a local cache is
+ * 0.16. This entry is that hundred and two collapsed into one.
+ *
+ * On a miss it reads them, so a miss costs what every request used to. The key carries every
+ * group and the printings asked of it, so a card added anywhere makes a new entry rather than a
+ * stale one, and the dollar rate too, since the prices inside were blended at it.
+ *
+ * Tagged `catalogue` like the entries it holds, so the nightly sync drops all of it together.
+ */
+const bundleSignature = (groups: FactsGroup[], usdToEur: number | null): string =>
+  createHash("sha1")
+    .update(groups.map((g) => `${g.key}\u0002${factsSignature(g.identities)}`).join("\u0001"))
+    .update(`\u0003${usdToEur ?? "-"}`)
+    .digest("hex");
+
+const cachedFactsBundle = (
+  userId: string,
+  groups: FactsGroup[],
+  priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
+  usdToEur: number | null,
+): Promise<Record<string, SetFacts>> =>
+  timedCache(`cache collection-facts`, (ran) =>
+    unstable_cache(
+      async () => {
+        ran();
+        const entries = await mapLimit(groups, 6, async (g) => {
+          const facts = await factsWithUsd(g.setName, g.identities, priceSource, usdToEur);
+          return [g.key, facts] as const;
+        });
+        // A plain object: a Map arrives from the Data Cache as `{}`, which here would be a
+        // collection with no artwork and no prices. The same line guide-prices draws.
+        return Object.fromEntries(entries);
+      },
+      ["collection-facts", "v1", userId, bundleSignature(groups, usdToEur)],
+      { revalidate: DAY, tags: ["catalogue"] },
+    )(),
+  );
+
 const cachedSetFacts = (
   setName: string,
   identities: CardIdentity[],
@@ -555,6 +602,7 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
   const start = performance.now();
   const sets = await buildCollection(rows, {
     factsSource: (setName, identities) => factsWithUsd(setName, identities, priceSource, usdToEur),
+    factsBundle: (groups) => cachedFactsBundle(userId, groups, priceSource, usdToEur),
   });
   logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
   remember(key, sets);
