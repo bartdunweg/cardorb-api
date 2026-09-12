@@ -1,37 +1,22 @@
 /**
- * What a collection is worth today, priced from Cardmarket's own guide.
+ * What a collection is worth on a day, and what each card it holds traded at.
  *
- * Pulled out as a pure function because two callers have to agree on it and one
- * of them cannot be tested: scripts/snapshot-collection-value.mjs, which fills
- * in history from the Internet Archive, and the weekly cron, which adds today's
- * point. If those two computed the value differently the chart would step every
- * time the cron took over from a manual run, and nothing would say why.
+ * Pure functions over an assembled collection, so the nightly cron and its tests read the same
+ * arithmetic. Every figure here is TCGplayer's since 2026-09-12, the same market every screen
+ * shows (see price-basis.mjs): the value point off the card's own price, the card points off
+ * TCGplayer's printings, and the weekly point for every card nobody holds off tcgcsv.
  *
- * ── Why the guide rather than the card's own price ─────────────────────────
- *
- * Every screen reads `card.price`, which buildCollection() resolves per card
- * from TCGdex. That is right for a page: it prices what is on screen, and the
- * collection cache holds it for an hour.
- *
- * It is wrong for a batch job. With CATALOGUE_SET_PRICING_MAX at 0 — the
- * default — resolving prices that way costs one TCGdex request per matched
- * card, so a weekly snapshot of a sixteen-hundred card binder would make
- * sixteen hundred requests to arrive at numbers Cardmarket publishes as a
- * single file. Hence `buildCollection(rows, { prices: false })` at the call
- * sites, and hence this function taking the guide.
- *
- * Both routes end at the same two functions, priceOf() and shownPrice(), so a
- * point on the chart and the tile above it are the same kind of number. They
- * are not the same number to the cent — TCGdex mirrors Cardmarket rather than
- * being it — and that is a difference of source, not of method.
+ * Cardmarket's guide used to price all three. The functions that read it (snapshotOf,
+ * cardPricesOf, cardPricesFromGuide) are gone with it; the guide's row types stay below only
+ * because the set page still reads the guide (catalogue/price-guide.ts).
  */
 
 import { copiesHeld } from "./cards-stats";
-import { priceOf, holoPriceOf, shownPrice, copyPriceOf } from "../price-basis.mjs";
-import { type RunProducts, guidePrices } from "../catalogue/price-guide";
+import { copyPriceOf, pointFromTcgplayer, shownPrice } from "../price-basis.mjs";
+import type { ShelfPrices } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
-import type { CardPricePoint } from "./movers";
+import type { SourcedPricePoint } from "./movers";
 
 /** One row of Cardmarket's public price guide, as much of it as is read. */
 export type GuideRow = {
@@ -55,144 +40,9 @@ export type PriceGuide = {
 export type ProductIds = Record<string, number | null>;
 
 /**
- * One dated reading over a built collection.
- *
- * `cards` counts copies rather than cards, matching copiesHeld() and therefore
- * the "Collection value" tile: a card held as a normal printing and again as a
- * reverse holo is two copies of one card, and valuing it once was the bug
- * was closed. `priced` and `unpriced` stay counts of distinct cards,
- * because they answer how much of the collection could be valued at all, which
- * is a question about coverage rather than about holdings.
- *
- * Deliberately no acquired_at filter, unlike the script's valueAt(). This
- * values the binder as it is now, and everything in it is in it today; the
- * script needs the filter because it prices a 2024 guide against a collection
- * that has grown since.
- */
-/**
- * Every card's price on this day, for the cards this collection actually holds.
- *
- * Separate from snapshotOf() because it answers a different question and is
- * written to a different table: this is about cards, that is about a person.
- * Deduped on tcgId — two people, or two printings, are one card and one price.
- *
- * Only cards that are held; every other mapped card is priced once a week by
- * cardPricesFromGuide(), since 2026-09-11.
- */
-export function cardPricesOf(
-  sets: CardSet[],
-  guide: PriceGuide,
-  ids: ProductIds,
-): CardPricePoint[] {
-  const byProduct = new Map(guide.priceGuides.map((r) => [r.idProduct, r]));
-  const date = guide.createdAt.slice(0, 10);
-  const seen = new Map<string, CardPricePoint>();
-
-  for (const set of sets) {
-    for (const card of set.cards) {
-      if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
-      const product = ids[card.tcgId];
-      const row = product == null ? undefined : byProduct.get(product);
-      if (!row) continue;
-      const normal = priceOf(row);
-      const foil = holoPriceOf(row);
-      // A card Cardmarket published nothing for is not a reading of zero.
-      if (!normal?.market && !foil?.market) continue;
-      seen.set(card.tcgId, {
-        tcgId: card.tcgId,
-        date,
-        market: normal?.market ?? null,
-        holo: foil?.market ?? null,
-      });
-    }
-  }
-  return [...seen.values()];
-}
-
-export function snapshotOf(
-  sets: CardSet[],
-  guide: PriceGuide,
-  ids: ProductIds,
-  /** Which product a card's print runs are filed as, where Cardmarket files one apart. */
-  runs: RunProducts = {},
-): ValueSnapshot {
-  const byProduct = new Map(guide.priceGuides.map((r) => [r.idProduct, r]));
-
-  let value = 0;
-  let copies = 0;
-  let priced = 0;
-  let unpriced = 0;
-
-  for (const set of sets) {
-    for (const card of set.cards) {
-      const held = copiesHeld(card);
-      if (!held) continue;
-      copies += held;
-
-      const product = card.tcgId ? ids[card.tcgId] : null;
-      const row = product == null ? undefined : byProduct.get(product);
-      const normal = row ? priceOf(row) : null;
-      const foil = row ? holoPriceOf(row) : null;
-      // The Shadowless run is a product of its own in this same guide, so the chart can read it
-      // where the tile does. Without this a Shadowless Base Set card counted as the ordinary
-      // printing, which on Charizard is €583 against €3,567.
-      const shadowless = card.tcgId ? runs[card.tcgId]?.shadowless : undefined;
-      const runRow = shadowless == null ? undefined : byProduct.get(shadowless);
-      const priceShadowless = runRow ? priceOf(runRow) : null;
-      if (!normal && !foil) {
-        unpriced++;
-        continue;
-      }
-
-      /**
-       * Printing by printing, exactly as heldValue() does it on the page.
-       *
-       * The two have to agree: this is the chart and that is the tile above it.
-       * The shape differs because the source does — here the two prices come
-       * out of one guide row rather than off the card — but the rule is the
-       * same one, and variantPrice() is the sentence it is written in.
-       */
-      let any = false;
-      for (const v of card.variants) {
-        if (!v.owned) continue;
-        /*
-         * The same rule as the page, out of the one place it is written.
-         *
-         * The Shadowless run is here, because Cardmarket files it as a product of its own and
-         * this is Cardmarket's guide. The stamped first run is not: its only figure is
-         * TCGplayer's, which this does not read, so a 1st Edition copy is valued at the ordinary
-         * price on the chart, as it is anywhere that figure is missing. The line and the tile
-         * agree wherever both can see the same market, which is what matters.
-         */
-        const each = shownPrice(
-          copyPriceOf(v, { price: normal, priceHolo: foil, priceShadowless }),
-        );
-        if (each == null) continue;
-        value += each * Math.max(0, v.quantity ?? 0);
-        any = true;
-      }
-      if (any) priced++;
-      else unpriced++;
-    }
-  }
-
-  return {
-    date: guide.createdAt.slice(0, 10),
-    // Euros, unrounded. ValueSnapshot documents whole euros because that is
-    // what comes back *out* of storage — listValueSnapshots() rounds on the way
-    // up. Going in, the writer converts to cents, so the one rounding happens
-    // at the boundary rather than accumulating a cent per card on the way here.
-    value,
-    cards: copies,
-    priced,
-    unpriced,
-  };
-}
-
-/**
  * The reading off an assembled collection: the card's own blended price, the one
  * the tile and the sheet show, so the line ends where the number stands. Printing
- * by printing as snapshotOf() does it; a card with no price on it is unpriced.
+ * by printing, through copyPriceOf(); a card with no price on it is unpriced.
  * The guide's date is not to hand here, so the caller dates it.
  */
 export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
@@ -221,27 +71,40 @@ export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
 }
 
 /**
- * Every card the guide prices, on this day, for the lines under cards nobody holds.
+ * Every card TCGplayer prices, on this day, for the lines under cards nobody holds.
  *
- * Read from one catalogue's id map against the guide, the way the set page prices; the shown
- * figure is shownPrice() so a point here and a point from cardPricesFromSets() are the same
- * kind of number. Written weekly rather than nightly by the cron: forty thousand cards a night
- * is two gigabytes a year of readings about cards nobody is watching, and a chart over years
- * reads the same at one point a week — the backfill has always been weekly for the same reason.
- * A card somebody holds is written nightly by the other function and takes precedence.
+ * Read from one shelf's product ids against that shelf's figures from tcgcsv, converted at the
+ * day's rate. Written weekly rather than nightly by the cron: some twenty-eight thousand cards a
+ * night is gigabytes a year of readings about cards nobody is watching, and a chart over years
+ * reads the same at one point a week. A card somebody holds is written nightly by
+ * cardPricesFromSets() and takes precedence.
+ *
+ * Until 2026-09-12 this read Cardmarket's guide, so a card nobody held had a line in one market
+ * and the card itself showed another.
+ *
+ * @param products tcgId to TCGplayer productId, as tcgplayer-ids.generated.json has it
+ * @param usdToEur euros per dollar on this day
  */
-export function cardPricesFromGuide(
-  ids: ProductIds,
-  guide: PriceGuide,
+export function cardPricesFromTcgcsv(
+  products: Record<string, number | null | undefined>,
+  shelf: ShelfPrices,
+  usdToEur: number,
   date: string,
-): CardPricePoint[] {
-  const out: CardPricePoint[] = [];
-  for (const [tcgId, prices] of guidePrices(Object.keys(ids), guide, ids)) {
-    const market = shownPrice(prices.price);
-    const holo = shownPrice(prices.holo);
-    // A row of zeros is a card Cardmarket published nothing for, not a reading of nothing.
-    if (!market && !holo) continue;
-    out.push({ tcgId, date, market, holo });
+): SourcedPricePoint[] {
+  const euros = (usd: number | null) =>
+    usd == null ? null : Math.round(usd * usdToEur * 100) / 100;
+  const out: SourcedPricePoint[] = [];
+  for (const [tcgId, productId] of Object.entries(products)) {
+    if (productId == null) continue;
+    const point = pointFromTcgplayer(shelf.get(productId));
+    if (!point) continue;
+    out.push({
+      tcgId,
+      date,
+      market: euros(point.market),
+      holo: euros(point.holo),
+      source: "tcgplayer",
+    });
   }
   return out;
 }
@@ -252,8 +115,8 @@ export function cardPricesFromGuide(
  * Both series are TCGplayer's since 2026-09-12; see the note inside for which printing each
  * reads. The holo series used to be Cardmarket's `-holo` fields.
  */
-export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoint[] {
-  const seen = new Map<string, CardPricePoint>();
+export function cardPricesFromSets(sets: CardSet[], date: string): SourcedPricePoint[] {
+  const seen = new Map<string, SourcedPricePoint>();
   for (const set of sets) {
     for (const card of set.cards) {
       if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
@@ -286,7 +149,7 @@ export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoin
         "1st-edition-holofoil",
       );
       if (market == null && holo == null) continue;
-      seen.set(card.tcgId, { tcgId: card.tcgId, date, market, holo });
+      seen.set(card.tcgId, { tcgId: card.tcgId, date, market, holo, source: "tcgplayer" });
     }
   }
   return [...seen.values()];

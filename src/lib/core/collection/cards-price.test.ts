@@ -10,7 +10,13 @@
 
 import { describe, expect, it } from "vitest";
 import { holoPriceOf, priceOf, shownPrice } from "./cards";
-import { copyPriceOf, priceFromMarket, priceFromUsd, printingPriceOf } from "../price-basis.mjs";
+import {
+  copyPriceOf,
+  pointFromTcgplayer,
+  priceFromMarket,
+  priceFromUsd,
+  printingPriceOf,
+} from "../price-basis.mjs";
 import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
 
 describe("priceOf", () => {
@@ -252,5 +258,44 @@ describe("printingKeysOf and printingPriceOf", () => {
     const card = { price: eur(20.72), pricePrintings: jungleScyther };
     expect(copyPriceOf({ finish: "holo" }, card)?.market).toBe(53.23);
     expect(copyPriceOf({ finish: "holo" }, { price: eur(20.72) })?.market).toBe(20.72);
+  });
+});
+
+/**
+ * Which of TCGplayer's printings, as tcgcsv names them, a price history point reads.
+ *
+ * The subtype names are tcgcsv's own, read off their groups on 2026-09-12: Base Set answers
+ * "Normal" and "Holofoil", Jungle and Neo Genesis answer "Unlimited", "1st Edition" and their
+ * holofoil pairs, a modern set answers "Normal" and "Reverse Holofoil".
+ */
+describe("pointFromTcgplayer", () => {
+  const of = (o: Record<string, number>) => new Map(Object.entries(o));
+
+  it("reads the plain printing for the market series and the foil for the holo one", () => {
+    expect(pointFromTcgplayer(of({ Normal: 0.25, "Reverse Holofoil": 1.4 }))).toEqual({
+      market: 0.25,
+      holo: 1.4,
+    });
+  });
+
+  it("takes the ordinary run before the stamped one, on a set printed twice", () => {
+    const jungle = of({
+      Unlimited: 15.19,
+      "1st Edition": 40,
+      "Unlimited Holofoil": 53.23,
+      "1st Edition Holofoil": 145.91,
+    });
+    expect(pointFromTcgplayer(jungle)).toEqual({ market: 15.19, holo: 53.23 });
+  });
+
+  // The same rule the nightly point follows (cardPricesFromSets): a card that exists only as a
+  // holo is its holo, on both lines, so the chart does not start blank for Base Set Charizard.
+  it("gives a holo-only card its holo figure as the market too", () => {
+    expect(pointFromTcgplayer(of({ Holofoil: 869.02 }))).toEqual({ market: 869.02, holo: 869.02 });
+  });
+
+  it("is nothing where TCGplayer has no market figure at all", () => {
+    expect(pointFromTcgplayer(of({}))).toBeNull();
+    expect(pointFromTcgplayer(undefined)).toBeNull();
   });
 });

@@ -1,10 +1,11 @@
 /**
- * Fills card_prices with the years before the nightly cron existed.
+ * Fills card_prices with TCGplayer's past, and replaces every Cardmarket reading in it.
  *
- * The cron has recorded Cardmarket's guide since 2026-08-16. Nobody publishes
- * Cardmarket's past, so the past comes from the American market instead, in two
- * pieces, and is turned into euros at each day's ECB rate (frankfurter.dev, the
- * same source lib/core/catalogue/rates.ts reads for today's):
+ * Every price the app shows is TCGplayer's since 2026-09-12, so every line under a card is too.
+ * The cron recorded Cardmarket's guide from 2026-08-16 until then; `--only recent` rewrites
+ * those weeks from TCGplayer's own archive and deletes the Cardmarket rows that nothing could
+ * replace. The years before come from the same market, in pieces, turned into euros at each
+ * day's ECB rate (frankfurter.dev, the same source lib/core/catalogue/rates.ts reads for today's):
  *
  *   tcgplayer        tcgcsv.com's daily archive of TCGplayer's market price,
  *                    from 2024-02-08. One 7z a day, every game inside; the
@@ -30,10 +31,18 @@
  * 1,500 requests happen once. The archive's own files are keyed by TCGdex set
  * and card number, so they need no join at all.
  *
- * Writes only dates before the cron's first reading: a backfill fills in, it
- * never rewrites a Cardmarket reading. Re-running upserts the same rows.
+ *   recent           2026-08-16 up to the newest archive tcgcsv has published: every
+ *                    reading the cron wrote is rewritten from that day's archive, English
+ *                    and Japanese shelf, and every Saturday gets a point for every card the
+ *                    id maps know, which is the day the weekly series has always been on.
+ *                    Then the Cardmarket rows left over, cards TCGplayer did not price that
+ *                    day, are deleted: a card with no TCGplayer figure has no point, the same
+ *                    "no price" it shows. Not on --dry, and not with --limit, since a
+ *                    limited run has not replaced what it would delete.
  *
- *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese]
+ * Re-running upserts the same rows, and `recent` a second time finds nothing to delete.
+ *
+ *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese|recent]
  *
  * Service role, like snapshot-collection-value.mjs and for the same reason: an
  * offline script run by a person, writing a table about cards that belongs to
@@ -44,6 +53,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
@@ -74,7 +84,7 @@ const show = (rows) => {
   if (VERBOSE) for (const r of rows.slice(0, 4)) console.log("   ", JSON.stringify(r));
 };
 
-/** The first day the cron wrote; nothing on or after it is touched. */
+/** The first day the cron wrote. The archive fills before it; `recent` rewrites from it on. */
 const CRON_FROM = "2026-08-16";
 /** tcgcsv's first archive. */
 const TCGCSV_FROM = "2024-02-08";
@@ -139,7 +149,7 @@ async function mapLimit(items, limit, fn) {
 // ── The cards ────────────────────────────────────────────────────────────────
 
 /**
- * Every card the cron prices: the ids under the latest Cardmarket reading, and
+ * Every card the cron prices: the ids under the latest reading, and
  * since 2026-09-11 every card of the English shelf as well — the committed id
  * map is the whole catalogue now, and a card nobody holds gets a line too. The
  * archives are TCGplayer's, an English market, so the other shelves have no
@@ -150,15 +160,16 @@ async function mapLimit(items, limit, fn) {
  * most of the collection.
  */
 async function pricedIds() {
+  // The newest day anything was written, whatever the market: since `recent` there are no
+  // Cardmarket rows to date the latest reading by.
   const { data: latest, error: e1 } = await db
     .from("card_prices")
     .select("snapshot_date")
-    .eq("source", "cardmarket")
     .order("snapshot_date", { ascending: false })
     .limit(1);
   if (e1) throw new Error(`Reading card prices failed: ${e1.message}`);
   const date = latest?.[0]?.snapshot_date;
-  if (!date) throw new Error("No Cardmarket reading yet: nothing to fill in before.");
+  if (!date) throw new Error("No reading yet: nothing to fill in before.");
   const ids = new Set(Object.keys(JSON.parse(readFileSync(CARDMARKET_IDS, "utf8"))));
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db
@@ -273,19 +284,11 @@ function tcgcsvDay(date, category = CATEGORY_EN) {
 }
 
 /**
- * The two figures a row carries, from a product's printings. The same rule as
- * the API's variantPrice: the plain printing is the market price, the foil is
- * the holo price; a card printed only as a holo is priced on that.
+ * The two figures a row carries, from a product's printings: pointFromTcgplayer() in
+ * price-basis.mjs, the rule the cron's weekly pass reads the same printings with, so a point
+ * from this script and a point from the cron are the same kind of number.
  */
-function pickTcgcsv(printings) {
-  if (!printings) return null;
-  const normal = printings.get("Normal") ?? null;
-  const holo = printings.get("Holofoil") ?? printings.get("1st Edition Holofoil") ?? null;
-  const reverse = printings.get("Reverse Holofoil") ?? null;
-  const market = normal ?? holo;
-  if (market == null) return null;
-  return { market, holo: reverse ?? (normal != null ? holo : null) };
-}
+const pickTcgcsv = pointFromTcgplayer;
 
 // ── tcgdex/price-history: sales, averaged per week ───────────────────────────
 
@@ -412,7 +415,156 @@ async function japaneseIds() {
   return known;
 }
 
+// ── Recent: the weeks the cron wrote Cardmarket's figures ─────────────────────
+
+const dow = (iso) => new Date(`${iso}T00:00:00Z`).getUTCDay();
+
+/** The newest day tcgcsv has an archive for; it publishes the evening's prices around 20:00 UTC. */
+function newestArchive() {
+  for (let d = day(new Date()), i = 0; i < 5; d = addDays(d, -1), i++) {
+    try {
+      execFileSync(
+        "curl",
+        ["-sfI", "-A", "cardorb.com", `https://tcgcsv.com/archive/tcgplayer/prices-${d}.ppmd.7z`],
+        { stdio: "ignore" },
+      );
+      return d;
+    } catch {
+      // Not published yet: the day before.
+    }
+  }
+  throw new Error("tcgcsv has published no archive in five days.");
+}
+
+/**
+ * A read, three times over. The query behind these is an index scan of a few milliseconds; what
+ * fails is Supabase's gateway, which answered one 504 on the first dry run (2026-09-12) and was
+ * fine a second later. Writes have always had this; the reads that decide what gets deleted need
+ * it more.
+ */
+async function retried(what, query) {
+  let last = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const result = await query();
+    if (!result.error) return result;
+    last = result.error;
+    await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+  }
+  throw new Error(`${what} failed: ${last.message}`);
+}
+
+/** Every tcg_id with a reading on one day, whatever market it is from. */
+async function idsOn(date) {
+  const ids = new Set();
+  for (let from = 0; ; from += 1000) {
+    const { data } = await retried("Reading card prices", () =>
+      db
+        .from("card_prices")
+        .select("tcg_id")
+        .eq("snapshot_date", date)
+        .order("tcg_id")
+        .range(from, from + 999),
+    );
+    for (const r of data) ids.add(r.tcg_id);
+    if (data.length < 1000) break;
+  }
+  return ids;
+}
+
+async function cardmarketRowsOn(date) {
+  const { count } = await retried("Counting Cardmarket rows", () =>
+    db
+      .from("card_prices")
+      .select("tcg_id", { count: "exact", head: true })
+      .eq("snapshot_date", date)
+      .eq("source", "cardmarket"),
+  );
+  return count ?? 0;
+}
+
+async function recent() {
+  const end = newestArchive();
+  const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(CARDMARKET_IDS, "utf8"))));
+  const japanese = await japaneseIds();
+  const everyCard = [
+    ...Object.keys(english).filter((id) => english[id]),
+    ...Object.keys(japanese).filter((id) => !english[id]),
+  ].slice(0, LIMIT);
+  const rate = await rates(CRON_FROM, end);
+  const dates = [];
+  for (let d = CRON_FROM; d <= end; d = addDays(d, 1)) dates.push(d);
+  console.log(
+    `recent: ${dates.length} days, ${CRON_FROM} to ${end}${DRY ? " (dry run: nothing is written)" : ""}`,
+  );
+
+  let written = 0;
+  let before = 0;
+  for (const date of dates) {
+    const r = rate.get(date);
+    const held = await idsOn(date);
+    before += await cardmarketRowsOn(date);
+    // Saturday is the weekly series' day: every card gets a point. Any other day, the cards
+    // that already had one, which is what the cron wrote.
+    const wanted = dow(date) === 6 ? new Set([...everyCard, ...held]) : held;
+    const en = tcgcsvDay(date, CATEGORY_EN);
+    const ja = tcgcsvDay(date, CATEGORY_JA);
+    const rows = [];
+    for (const id of wanted) {
+      const pick = english[id]
+        ? pickTcgcsv(en.get(english[id].productId))
+        : japanese[id]
+          ? pickTcgcsv(ja.get(japanese[id]))
+          : null;
+      if (!pick) continue;
+      rows.push({
+        tcg_id: id,
+        snapshot_date: date,
+        market_cents: cents(pick.market, r),
+        holo_cents: cents(pick.holo, r),
+        source: "tcgplayer",
+      });
+    }
+    await write(rows);
+    written += rows.length;
+    console.log(`  ${date}: ${rows.length} of ${wanted.size} cards priced`);
+    show(rows);
+  }
+  console.log(
+    `${DRY ? "Would write" : "Wrote"} ${written} TCGplayer readings over ${before} Cardmarket ones.`,
+  );
+
+  // Only after every day above wrote, and never on a partial run: what is left is what TCGplayer
+  // could not replace, and a limited or dry run has not tried to replace it.
+  if (DRY || LIMIT !== Infinity) {
+    console.log("Cardmarket rows left in place (dry or limited run).");
+    return;
+  }
+  let deleted = 0;
+  for (const date of dates) {
+    const left = await cardmarketRowsOn(date);
+    if (!left) continue;
+    await retried(`Deleting Cardmarket rows on ${date}`, () =>
+      db.from("card_prices").delete().eq("snapshot_date", date).eq("source", "cardmarket"),
+    );
+    deleted += left;
+  }
+  const { count: remaining } = await retried("Counting Cardmarket rows", () =>
+    db
+      .from("card_prices")
+      .select("tcg_id", { count: "exact", head: true })
+      .eq("source", "cardmarket"),
+  );
+  console.log(
+    `Deleted ${deleted} Cardmarket rows TCGplayer had no figure for. Cardmarket rows left: ${remaining}.`,
+  );
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
+
+if (ONLY === "recent") {
+  await recent();
+  process.exit(0);
+}
 
 if (ONLY === "japanese") {
   const products = await japaneseIds();

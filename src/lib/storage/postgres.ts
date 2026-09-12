@@ -34,7 +34,7 @@ import {
 } from "../core/collection/collection-row";
 import type { ScanMemory } from "../core/collection/remembered-scans";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
-import type { CardPricePoint } from "../core/collection/movers";
+import type { CardPricePoint, SourcedPricePoint } from "../core/collection/movers";
 
 /** The row as the table has it, before it is turned into the shape above. */
 type CardRecord = {
@@ -446,11 +446,11 @@ export async function listCardPrices(
  */
 export async function writeCardPrices(
   db: SupabaseClient,
-  points: CardPricePoint[],
+  points: SourcedPricePoint[],
   chunk = 500,
   parallel = 4,
 ): Promise<void> {
-  const chunks: CardPricePoint[][] = [];
+  const chunks: (typeof points)[] = [];
   for (let i = 0; i < points.length; i += chunk) chunks.push(points.slice(i, i + chunk));
   for (let i = 0; i < chunks.length; i += parallel) {
     await Promise.all(
@@ -461,6 +461,8 @@ export async function writeCardPrices(
             snapshot_date: p.date,
             market_cents: p.market == null ? null : Math.round(p.market * 100),
             holo_cents: p.holo == null ? null : Math.round(p.holo * 100),
+            // Always said: the column's default is 'cardmarket', which is not this.
+            source: p.source,
           })),
           { onConflict: "tcg_id,snapshot_date" },
         );

@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { refuse, apiError } from "@/lib/api/respond";
-import { assembleFor, productIdsOf } from "@/lib/core/collection/collection";
-import { fetchPriceGuide } from "@/lib/core/catalogue/price-guide";
-import { BROWSE_LANGUAGES } from "@/lib/core/catalogue/tcgdex-browse";
+import { assembleFor, usdToEurForRequest } from "@/lib/core/collection/collection";
+import { TCGCSV_CATEGORY, shelfPrices } from "@/lib/core/catalogue/tcgcsv";
 import {
-  cardPricesFromGuide,
   cardPricesFromSets,
+  cardPricesFromTcgcsv,
   snapshotFromSets,
 } from "@/lib/core/collection/snapshot";
+import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
+import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
 import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
@@ -24,11 +25,10 @@ import { adminClient } from "@/lib/storage/supabase";
  * It was once a week, which is why the chart on the dashboard had four points
  * in it eight months after the table shipped. Nightly is both the ceiling and
  * the right answer, and neither reason is a preference: this is a Vercel Hobby
- * project, where a cron may be triggered at most once a day, and the price
- * guide read below is itself only rebuilt nightly — running twice would write
- * the same number twice. It cannot make history, only density from here on;
- * scripts/snapshot-collection-value.mjs already went looking for an archive to
- * backfill from and found two copies of the guide, total.
+ * project, where a cron may be triggered at most once a day, and TCGplayer's
+ * figures as tcgcsv publishes them are rebuilt once a day too, so running twice
+ * would write the same number twice. The past a collection's value cannot be
+ * fetched; a card's own past can, and scripts/backfill-card-prices.mjs does.
  *
  * This is the half of per-user value history that was missing. The table it writes to shipped
  * with three points in it, put there by hand, and nothing added a fourth — a
@@ -53,27 +53,22 @@ import { adminClient } from "@/lib/storage/supabase";
  *
  * ── Each card's own price, the one the app shows ───────────────────────────
  *
- * This used to price through Cardmarket's public guide alone, with the build
- * told `{ prices: false }`, because pricing a collection card by card cost a
- * TCGdex request each. The assembly no longer does: it reads the daily guide
- * once, then TCGplayer for what the guide lacks, per set and cached
- * (collection.ts, factsWithUsd). So the night reads the same assembly every
- * request reads — the warm cron has usually just built it — and writes the
- * blended figure. Before, a folder's line ended under its live number and a
- * card's sheet said one price above a line that ended at another.
+ * The night reads the same assembly every request reads, and the warm cron has
+ * usually just built it, so what the night writes is what the day shows. Every
+ * figure in it is TCGplayer's since 2026-09-12 (price-basis.mjs), and every
+ * point says so in card_prices.source, whose default is 'cardmarket'.
  *
  * ── Every other card, once a week ──────────────────────────────────────────
  *
- * A card nobody held had no line at all: its sheet opened on an empty chart,
- * and the set page's price was the only number it ever showed. Since
- * 2026-09-11 the night of a Monday also writes the guide's price for every
- * card the five id maps know, some forty thousand — one point a week, which
- * is what a chart over years reads anyway and a fifth of a gigabyte a year
- * rather than two. The held cards stay nightly and are written first, so the
- * weekly pass never overwrites a blended figure with the guide's plain one.
- * `?all=1` runs that pass on any day, for the first fill and for a week the
- * cron missed. Mondays because the backfill's weekly points are Mondays too
- * (scripts/backfill-card-prices.mjs, weekOf), so the two series line up.
+ * A card nobody held had no line at all: its sheet opened on an empty chart.
+ * Since 2026-09-11 the night of a Monday also writes a point for every card the
+ * id maps know. It read Cardmarket's guide until 2026-09-12 and reads TCGplayer's
+ * figures from tcgcsv now, the English and the Japanese shelf: one market for
+ * every line. The held cards stay nightly and are written first, so the weekly
+ * pass never overwrites a card's own figure. `?all=1` runs that pass on any day,
+ * for a week the cron missed. Saturdays, because the 2.8 million weekly points the
+ * archive filled since 2024 are Saturdays (scripts/backfill-card-prices.mjs); this
+ * said Mondays and ran on Mondays until 2026-09-12, so the two series never met.
  */
 
 export const dynamic = "force-dynamic";
@@ -100,8 +95,7 @@ export async function GET(req: Request) {
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 
-  // Dated by the night it runs, in UTC: the assembly's guide is today's, and the per-card
-  // readings share the date so a folder's line and the collection's agree on the day.
+  // Dated by the night it runs, in UTC, and the per-card readings share the date so a folder's line and the collection's agree on the day.
   const date = new Date().toISOString().slice(0, 10);
   const written: { user: string; value: number; cards: number }[] = [];
   const failed: string[] = [];
@@ -142,20 +136,31 @@ export async function GET(req: Request) {
   }
 
   // The weekly pass, added after the held cards so a held card's nightly point
-  // is the one that stands. The guide is read directly rather than through the
-  // day's cache: the cache is sharded for the set page's sake and this wants
-  // every card of every catalogue exactly once.
+  // is the one that stands. TCGplayer's figures for both shelves it sells, from
+  // tcgcsv, in the one market every other line is in (since 2026-09-12; it read
+  // Cardmarket's guide before). Korean and Chinese cards TCGplayer does not sell,
+  // so they have no weekly point.
   const url = new URL(req.url);
-  const weekly = url.searchParams.get("all") === "1" || new Date().getUTCDay() === 1;
+  const weekly = url.searchParams.get("all") === "1" || new Date().getUTCDay() === 6;
   let everyCard = 0;
   if (weekly) {
     try {
-      const guide = await fetchPriceGuide();
-      for (const language of [null, ...BROWSE_LANGUAGES]) {
-        for (const p of cardPricesFromGuide(productIdsOf(language), guide, date)) {
-          // Catalogues share ids (SM1S-001 is Japanese and Korean); the first
-          // catalogue in, English, keeps the row, the same order the id maps
-          // are trusted in everywhere else.
+      const rate = await usdToEurForRequest();
+      // No rate, no pass: a week of dollars written as euros would stand in the chart for good.
+      if (rate == null) throw new Error("no dollar rate");
+      const english = Object.fromEntries(
+        Object.entries(TCGPLAYER_IDS as Record<string, { productId: number } | null>).map(
+          ([id, v]) => [id, v?.productId ?? null],
+        ),
+      );
+      const shelves: [Record<string, number | null>, number][] = [
+        [english, TCGCSV_CATEGORY.en],
+        [TCGPLAYER_IDS_JA as Record<string, number | null>, TCGCSV_CATEGORY.ja],
+      ];
+      for (const [products, category] of shelves) {
+        const shelf = await shelfPrices(category);
+        for (const p of cardPricesFromTcgcsv(products, shelf, rate, date)) {
+          // English first, so an id two shelves share keeps the English reading.
           if (!prices.has(p.tcgId)) {
             prices.set(p.tcgId, p);
             everyCard++;
@@ -163,8 +168,8 @@ export async function GET(req: Request) {
         }
       }
     } catch (err) {
-      console.error("[cron] weekly guide pass failed:", err);
-      failed.push("guide");
+      console.error("[cron] weekly TCGplayer pass failed:", err);
+      failed.push("tcgcsv");
     }
   }
 

@@ -21,11 +21,21 @@ export type CardPricePoint = {
   tcgId: string;
   /** ISO yyyy-mm-dd. */
   date: string;
-  /** The normal printing, or null where Cardmarket published nothing. */
+  /** The normal printing, or null where the market published nothing. */
   market: number | null;
   /** The foil, or null where there is no separate foil price. */
   holo: number | null;
+  /**
+   * Which market the reading is from, as card_prices.source stores it. Required on the way in:
+   * the column defaults to 'cardmarket', so a point written without one was labelled with the
+   * market it was not from (every nightly TCGplayer point, for the hours after 2026-09-12's
+   * change). Absent on the way out, where nothing reads it yet.
+   */
+  source?: "tcgplayer" | "tcgplayer-sales" | "cardmarket";
 };
+
+/** A reading on its way into card_prices, which always says which market it is from. */
+export type SourcedPricePoint = CardPricePoint & { source: NonNullable<CardPricePoint["source"]> };
 
 export type Mover = {
   card: OwnedCard;
