@@ -1,0 +1,1 @@
+- The Pokédex is a binder you make yourself now, not a fixture. The setting that lived on your profile became a binder called "Pokédex" carrying the same range, rarities and public flag, and it can be edited and deleted like any other binder.

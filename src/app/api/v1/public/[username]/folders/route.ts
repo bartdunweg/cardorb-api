@@ -45,13 +45,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
     });
 
   // The match runs on the private items, which know their folder and their rule's facts (the
-  // public shape has neither); only a count comes out — the copies held, the number every
+  // public shape has neither); only a count comes out, the copies held, the number every
   // list says since 2026-09-11 (items.ts, countCopies), where it used to be distinct cards.
+  //
+  // The rule stays private and `pokedex` does not: a binder shown as a Pokédex has to draw as one
+  // on a public profile, and that setting is how a visitor's page knows to. It says which Pokémon
+  // the owner collects, which is the thing the page in front of the visitor already shows.
   const items = flattenItems(sets);
   const listed = folders.map((f) => {
     const filter = f.rule ? { owned: undefined, rule: f.rule } : { owned: true, collection: f.id };
     const count = countCopies(filterItems(items, filter).filter((it) => it.owned));
-    return { id: f.id, name: f.name, kind: f.kind, count };
+    return { id: f.id, name: f.name, kind: f.kind, count, ...(f.pokedex ? { pokedex: f.pokedex } : {}) };
   });
 
   return NextResponse.json(

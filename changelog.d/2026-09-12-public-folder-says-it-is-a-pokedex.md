@@ -1,0 +1,1 @@
+- A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.

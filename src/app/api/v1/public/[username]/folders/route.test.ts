@@ -103,6 +103,24 @@ describe("GET /api/v1/public/{username}/folders", () => {
     expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
   });
 
+  it("says a folder is shown as a Pokédex, and never says what a rule is", async () => {
+    // A visitor's page has to draw a Pokédex binder as slots, which needs the setting. The rule
+    // stays private: it is the only other thing on a folder, and it is nobody else's business.
+    getPublicFolders.mockResolvedValue([
+      {
+        id: "f1",
+        name: "Pokédex",
+        kind: "manual",
+        rule: { dex: { from: 1, to: 151 } },
+        pokedex: { missing: true },
+        isPublic: true,
+        createdAt: "",
+      },
+    ]);
+    const { folders } = await (await get()).json();
+    expect(folders[0]).toEqual({ id: "f1", name: "Pokédex", kind: "manual", count: 3, pokedex: { missing: true } });
+  });
+
   it("answers an empty list without reading the collection", async () => {
     getPublicFolders.mockResolvedValue([]);
     const res = await get();

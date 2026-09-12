@@ -42,6 +42,10 @@ if the two have drifted apart.
 
 - A correction to the catalogue reaches the search the same day. The document the browser searches in was kept for a day without asking, so a card whose picture was fixed this afternoon stayed a blank square until that day was up; it is now checked against its version on every page load, which answers with no content where nothing has changed.
 
+- The Pokédex is a binder you make yourself now, not a fixture. The setting that lived on your profile became a binder called "Pokédex" carrying the same range, rarities and public flag, and it can be edited and deleted like any other binder.
+
+- A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
+
 - A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".
 
 - A set page shows the rarity of every card again. Sets with a short id (Sun & Moon, XY) lost it on the back half of the set, the full arts and the secret rares included.
