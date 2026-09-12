@@ -3,6 +3,7 @@
  *
  *   node scripts/cardmarket-ids-fill.mjs          # print what it would set, and what it cannot decide
  *   node scripts/cardmarket-ids-fill.mjs --write  # set the sure ones in lib/core/cardmarket-ids.generated.json
+ *   node scripts/cardmarket-ids-fill.mjs --audit  # check the links that are already there, and exit 1 on a bad one
  *
  * ── Why this exists ──
  *
@@ -21,6 +22,18 @@
  *
  * Run it after snapshot-collection-value.mjs has added new ids, or whenever the unpriced list
  * on /dashboard/cards?unpriced=1 is not empty.
+ *
+ * ── The audit ──
+ *
+ * The same knowledge, read backwards. --audit takes the links that are already in the map and
+ * asks whether each product sits in the expansion its set is, which is the one thing a name
+ * match cannot check for itself. Venusaur EX XY28 read €116.93 for months off a Japanese card
+ * by the same name, in an expansion holding Victory Ring and MSwampert EX, because nothing
+ * ever asked (#341).
+ *
+ * It cannot live in the test suite beside the collision check: it needs their 13MB catalogue
+ * and a test may not fetch. So it is a command, and it exits 1 when it finds one, which is
+ * what makes it usable from CI on a schedule rather than only by hand.
  *
  * ── A set nobody has linked a card in ──
  *
@@ -43,11 +56,12 @@ const PRODUCTS =
 const GUIDE = "https://downloads.s3.cardmarket.com/productCatalog/priceGuide/price_guide_6.json";
 
 const write = process.argv.includes("--write");
+const audit = process.argv.includes("--audit");
 
 /** @type {Record<string, number | null>} */
 const ids = JSON.parse(readFileSync(IDS, "utf8"));
 const missing = Object.keys(ids).filter((id) => ids[id] === null);
-if (!missing.length) {
+if (!missing.length && !audit) {
   console.log("Every id is linked.");
   process.exit(0);
 }
@@ -86,10 +100,12 @@ const norm = (s) =>
 const isPocket = (set) => /^(A\d|B\d|P-A)/.test(set);
 
 // Every missing card's name first, so a set with no linked card can be recognised from all
-// of its names at once. Eight at a time; TCGdex tolerates that.
+// of its names at once. Eight at a time; TCGdex tolerates that. An audit asks for none of
+// them: it reads the links that are there, and a linked card's name is in the catalogue
+// already downloaded.
 const names = new Map();
 {
-  const asked = missing.filter((id) => !isPocket(setOf(id)));
+  const asked = audit ? [] : missing.filter((id) => !isPocket(setOf(id)));
   let next = 0;
   await Promise.all(
     Array.from({ length: 8 }, async () => {
@@ -145,6 +161,57 @@ const recognise = (set) => {
   return { exp: best.exp, share: best.share };
 };
 const recognised = new Map();
+
+/**
+ * The links that are there, checked against the expansion their set sits in.
+ *
+ * A set's expansion is the one most of its linked cards are in, so a set needs enough cards
+ * linked for that vote to mean anything, and the winner has to be a winner: under five cards,
+ * or a majority thinner than three in five, and the set is not judged at all rather than
+ * judged on a guess. That leaves the answer to the sets where it is worth something, which is
+ * every set anyone holds more than a handful of cards from.
+ */
+function auditExpansions() {
+  const VOTES_NEEDED = 5;
+  const MAJORITY = 0.6;
+  const wrong = [];
+  let judged = 0;
+  let unjudged = 0;
+  for (const [set, votes] of expansionOf) {
+    const total = [...votes.values()].reduce((a, b) => a + b, 0);
+    const [home, count] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
+    if (total < VOTES_NEEDED || count / total < MAJORITY) {
+      unjudged += total;
+      continue;
+    }
+    judged += total;
+    for (const [id, product] of Object.entries(ids)) {
+      if (setOf(id) !== set) continue;
+      const p = product && byId.get(product);
+      if (!p || p.idExpansion === home) continue;
+      const g = guide.get(p.idProduct);
+      wrong.push(
+        `${id} -> ${p.idProduct} "${p.name}" in expansion ${p.idExpansion}, ` +
+          `not ${home} where ${count} of ${total} cards of ${set} sit (trend ${g?.trend ?? "-"})`,
+      );
+    }
+  }
+  console.log(
+    `Audited ${judged} links across judged sets; ${unjudged} left alone in sets too small or too split to judge.`,
+  );
+  if (!wrong.length) {
+    console.log("Every judged link sits in its set's own expansion.");
+    return 0;
+  }
+  console.log(`\nOut of their expansion (${wrong.length}):\n${wrong.join("\n")}`);
+  console.log(
+    "\nA product in another expansion is another card: the same name in another language, " +
+      "another set, or a sealed box. Pick the right one by hand and commit it, as #341 did.",
+  );
+  return 1;
+}
+
+if (audit) process.exit(auditExpansions());
 
 let set = 0;
 let pocket = 0;
