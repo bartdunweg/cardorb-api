@@ -835,8 +835,8 @@ components:
             Rows the caller struck off by hand with `exclude`. Apart from
             `skipped`, which is rows this endpoint could not use: told together,
             somebody who unticked half their file would be shown an import that
-            half failed. Always 0 on a preview, which has nothing to strike off
-            yet.
+            half failed. A preview counts it the same way, being the dry run of
+            the call it was given.
         total:
           type: integer
           description: |
@@ -851,7 +851,7 @@ components:
       description: |
         One row a preview would write, with the line of the file it came from.
         Enough to draw and to tick, not the whole CollectionRow.
-      required: [line, name, number, setName, owned, quantity]
+      required: [line, name, number, setName, owned, quantity, existing]
       properties:
         line:
           type: integer
@@ -865,6 +865,14 @@ components:
         finish: { type: [string, "null"] }
         foilPattern: { type: [string, "null"] }
         edition: { type: [string, "null"] }
+        existing:
+          type: boolean
+          description: |
+            This row names a card the collection already holds. The same
+            question `existing` answers in one number, asked of one row: a
+            client that lets rows be struck off has to say which ones it means.
+            It over-matches the way the count does, a card held in any printing
+            answering for the one being imported.
 
     ImportRecord:
       type: object
@@ -2160,6 +2168,11 @@ paths:
                     so a selection made against a preview still means what it
                     said by the time the commit arrives, whatever the client
                     sorted or filtered on screen. Unknown lines are ignored.
+
+                    A preview honours it too, being the same call stopping one
+                    step early: it answers for the import as asked for. A client
+                    that wants the whole list to tick rows off in sends no
+                    `exclude` until it commits.
       responses:
         "200":
           description: The outcome, plus `source`. A preview also carries `header`, `guessed`, `skippedRows` and `rows`.

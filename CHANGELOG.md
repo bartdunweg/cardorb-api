@@ -36,6 +36,8 @@ if the two have drifted apart.
 
 - The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
 
+- A CSV preview now says, per row, whether it names a card you already hold, not only how many of them there are. An import screen can point at the rows it means instead of leaving you to find them.
+
 - A CSV preview now hands back every row it would write, each with the line it came from, so an import screen can put a tick beside each one. Commit takes the lines you unticked as `exclude`, counts them apart from the rows it could not read, and answers with how many cards your collection holds when the writing is done.
 
 - A correction to the catalogue reaches the search the same day. The document the browser searches in was kept for a day without asking, so a card whose picture was fixed this afternoon stayed a blank square until that day was up; it is now checked against its version on every page load, which answers with no content where nothing has changed.
