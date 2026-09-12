@@ -112,7 +112,14 @@ export function preview(
     skipped: skipped.length,
     notOwned: skipped.filter((s) => s.why === NOT_OWNED).length,
     existing: existing.length,
-    sample: rows.slice(0, 5),
+    /*
+     * Twenty rows, not five. Five was a glimpse: it showed the first cards of a
+     * 2,000-row file and left the reader trusting the count. Twenty is what
+     * every import screen on Mobbin shows (Pipedrive says so in words), enough
+     * to see the set names and printings come through right, and still one
+     * request; the screen says how many more there are.
+     */
+    sample: rows.slice(0, 20),
   };
 }
 
