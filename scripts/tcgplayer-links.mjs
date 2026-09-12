@@ -57,7 +57,12 @@ const RUN_GROUPS = {
  * card is taken from one only when the number's total is the set's own count as well, so a
  * Charizard 4/102 there can only ever be Base Set's.
  */
-const BUCKET_GROUPS = new Set(["Deck Exclusives", "Alternate Art Promos"]);
+const BUCKET_GROUPS = new Set([
+  "Deck Exclusives",
+  "Alternate Art Promos",
+  // Pokémon Futsal's five "on the Ball" promos, "001/005 (Pokemon Futsal)".
+  "Miscellaneous Cards & Products",
+]);
 
 /**
  * Words in a product name that mark a variant rather than the card: WotC Promo 1 is both "Pikachu (1)"
@@ -164,10 +169,69 @@ const fold = (s) =>
 /** A product's card name, without TCGplayer's suffixes: " - 027", " (Pokemon Center Exclusive)", " [Staff]". */
 const baseName = (productName) => productName.replace(/\s*[([].*$/, "").split(" - ")[0];
 
-/** Whether a product is this card by name: without TCGplayer's suffixes, or with a "(F)" kept. */
-const sameName = (productName, cardName) =>
-  fold(baseName(productName)) === fold(cardName) ||
-  fold(productName.split(" - ")[0]) === fold(cardName);
+/** TCGplayer's one-letter energy types: "Unit Energy GRW" is Grass, Fire and Water. */
+const TYPE_LETTER = {
+  grass: "G",
+  fire: "R",
+  water: "W",
+  lightning: "L",
+  psychic: "P",
+  fighting: "F",
+  darkness: "D",
+  metal: "M",
+  fairy: "Y",
+  dragon: "N",
+  colorless: "C",
+};
+const TYPES = "Grass|Fire|Water|Lightning|Psychic|Fighting|Darkness|Metal|Fairy|Dragon|Colorless";
+
+/**
+ * A TCGdex card name as TCGplayer may spell it. Each rule was read off the English cards the linker
+ * could not place on 2026-09-12: "Cyrus ◇" is "Cyrus Prism Star", "Mudkip ☆" is "Mudkip Star",
+ * "Mew ☆ δ" is "Mew Star (Delta Species)", "Impostor Professor Oak" is "Imposter", "Unit Energy
+ * GrassFireWater" is "Unit Energy GRW", "Fairy Charm Grass" is "Fairy Charm G", "Head Ringer Team
+ * Flare Hyper Gear" is "Head Ringer", "Professor's Research (Professor Magnolia)" is "Professor's
+ * Research".
+ */
+const cardNames = (name) => {
+  const n = name
+    .replace(/◇/g, " Prism Star")
+    .replace(/☆/g, " Star")
+    .replace(/δ/g, " Delta Species")
+    .replace(/\bImpostor\b/gi, "Imposter");
+  const out = new Set([
+    n,
+    n.replace(/\s+Team Flare (Hyper )?Gear$/i, ""),
+    n.replace(/\s*\(.*\)\s*$/, ""),
+  ]);
+  const typed = n.match(
+    new RegExp(`^(.*\\b(?:Energy|Charm))\\s+((?:${TYPES})(?:\\s*(?:${TYPES}))*)$`, "i"),
+  );
+  if (typed) {
+    const letters = typed[2]
+      .match(new RegExp(TYPES, "gi"))
+      .map((t) => TYPE_LETTER[t.toLowerCase()]);
+    out.add(`${typed[1]} ${letters.join("")}`);
+  }
+  return [...out];
+};
+
+/** A TCGplayer product name without what it adds: "Basic ", " LV.X", " -BW47", " - 027", suffixes. */
+const productNames = (productName) => {
+  const out = new Set([baseName(productName), productName.split(" - ")[0]]);
+  for (const x of [...out]) {
+    out.add(x.replace(/^Basic\s+/i, ""));
+    out.add(x.replace(/\s+LV\.?X$/i, ""));
+    out.add(x.replace(/\s*-\s*[A-Z]*\d+[a-z]?(\/\d+)?$/, ""));
+  }
+  return [...out];
+};
+
+/** Whether a product is this card by name, by the spellings above. */
+const sameName = (productName, cardName) => {
+  const product = new Set(productNames(productName).map(fold));
+  return cardNames(cardName).some((n) => product.has(fold(n)));
+};
 
 /** The words of a set or group name that could identify it. */
 const words = (name) =>
@@ -192,6 +256,8 @@ const byNumber = new Map();
 const printingsOf = new Map();
 const groupOfProduct = new Map();
 const nameOfProduct = new Map();
+/** Every product by each spelling of its name, for a card whose number TCGplayer writes differently. */
+const byName = new Map();
 await mapLimit(groups, 8, async (g) => {
   const [products, prices] = await Promise.all([
     fetchJson(`https://tcgcsv.com/tcgplayer/3/${g.groupId}/products`),
@@ -208,6 +274,12 @@ await mapLimit(groups, 8, async (g) => {
     groupOfProduct.set(p.productId, g);
     nameOfProduct.set(p.productId, p.name);
     const number = p.extendedData?.find((e) => e.name === "Number")?.value;
+    for (const spelling of new Set(productNames(p.name).map(fold))) {
+      const list = byName.get(spelling);
+      const hit = { group: g, product: p, number: number ?? null };
+      if (list) list.push(hit);
+      else byName.set(spelling, [hit]);
+    }
     if (!number) continue;
     const key = numberKey(number);
     byNumber.set(key, [
@@ -233,10 +305,22 @@ const catalogues = await mapLimit(unlinkedSets, 6, async (set) => [
 
 const coverage = {};
 const digitalSets = [];
+let removed = 0;
 let linked = 0;
 for (const [set, catalogue] of catalogues) {
   if (catalogue && DIGITAL_SERIES.has(catalogue.serie?.id)) digitalSets.push(set);
-  if (!catalogue || DIGITAL_SERIES.has(catalogue.serie?.id)) continue;
+  // A set TCGdex no longer lists (swsh9.5tg and three more, 74 ids on 2026-09-12): its cards are
+  // not cards anybody can hold, so their empty entries leave the map rather than count as unlinked.
+  if (catalogue === null) {
+    for (const id of Object.keys(ids)) {
+      if (ids[id] === null && id.slice(0, id.lastIndexOf("-")) === set) {
+        delete ids[id];
+        removed++;
+      }
+    }
+    continue;
+  }
+  if (DIGITAL_SERIES.has(catalogue.serie?.id)) continue;
   const setWords = words(catalogue.name);
   // The groups TCGdex's own links for this set are in: its home, where it has one.
   const homes = new Map();
@@ -306,10 +390,58 @@ for (const [set, catalogue] of catalogues) {
         });
     }
     const ranked = [...scored.values()].sort((a, b) => b.shared - a.shared);
-    if (!named.length || !ranked.length) {
-      if (previous === null) row.notFound++;
+    if ((!named.length || !ranked.length) && previous === null) {
+      /*
+       * The number written another way. Celebrations' Classic Collection is "CC002" at TCGdex and
+       * "4/102" at TCGplayer; My First Battle's products carry no number at all. So a card may be
+       * taken by name alone, and only where that cannot pick a different printing: the product
+       * has no number, or a plain one against the card's code ("4/102" for "CC002"), it is in
+       * the set's own group (as above), and it is the only plain product of that name there.
+       */
+      const prefix = numberKey(card.localId).split("|")[0];
+      const byGroup = new Map();
+      for (const spelling of new Set(cardNames(card.name).map(fold))) {
+        for (const hit of byName.get(spelling) ?? []) {
+          if (BUCKET_GROUPS.has(hit.group.name) || VARIANT.test(hit.product.name)) continue;
+          // Another way of writing the number is a product with none, or a plain number against a
+          // card's code ("4/102" for "CC002"). Two different codes are two different promo lines:
+          // a BW promo Raichu is not "Raichu - DP21".
+          if (hit.number != null) {
+            const productPrefix = numberKey(hit.number).split("|")[0];
+            if (!(prefix && !productPrefix)) continue;
+          }
+          const entry = byGroup.get(hit.group.groupId) ?? { group: hit.group, products: new Map() };
+          entry.products.set(hit.product.productId, hit.product);
+          byGroup.set(hit.group.groupId, entry);
+        }
+      }
+      const own = [...byGroup.values()]
+        .map((e) => ({
+          ...e,
+          shared: homes.size
+            ? ownGroup(e.group)
+              ? 1
+              : 0
+            : [...words(e.group.name)].filter((w) => setWords.has(w)).length,
+        }))
+        .filter((e) => e.shared > 0)
+        .sort((a, b) => b.shared - a.shared);
+      const top = own[0];
+      if (top && (own.length === 1 || own[1].shared < top.shared) && top.products.size === 1) {
+        const [product] = top.products.values();
+        ids[card.id] = {
+          productId: product.productId,
+          variants: printingsOf.get(product.productId) ?? [],
+          groupId: top.group.groupId,
+        };
+        row.linked++;
+        linked++;
+        continue;
+      }
+      row.notFound++;
       continue;
     }
+    if (!named.length || !ranked.length) continue;
     if (ranked.length > 1 && ranked[0].shared === ranked[1].shared) {
       if (previous === null) row.ambiguous++;
       continue;
@@ -368,6 +500,7 @@ const totals = Object.values(coverage).reduce(
   }),
   { linked: 0, ambiguous: 0, notFound: 0 },
 );
+console.log(`Removed ${removed} empty ids of sets TCGdex no longer lists.`);
 console.log(
   `Linked ${linked} cards and ${runs} Shadowless runs. Left: ${totals.ambiguous} ambiguous, ${totals.notFound} not found.`,
 );
