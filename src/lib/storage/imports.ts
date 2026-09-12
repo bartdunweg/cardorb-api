@@ -41,6 +41,19 @@ export type ImportOutcome = {
    * which is the way this operation goes wrong.
    */
   existing: number;
+  /**
+   * Rows the caller struck off by hand, by line number. Not `skipped`: those
+   * are rows this code could not use, and this is a person saying no to a row
+   * it could have written. Counted together they would tell somebody their
+   * file was worse than it is.
+   */
+  excluded: number;
+  /**
+   * How many cards the collection holds once the writing is done. Only on a
+   * commit, and only where it could be counted: "1,204 added" is a number
+   * nobody can check without this one beside it.
+   */
+  total?: number;
   /** A few rows as they will be stored, so a person can check before committing. */
   sample: CollectionRow[];
 };
@@ -156,6 +169,9 @@ export function preview(
     skipped: skipped.length,
     notOwned: skipped.filter((s) => s.why === NOT_OWNED).length,
     existing: existing.length,
+    // A dry run strikes nothing off: the caller has not been shown the rows
+    // yet, so there is nothing for them to have said no to.
+    excluded: 0,
     /*
      * Twenty rows, not five. Five was a glimpse: it showed the first cards of a
      * 2,000-row file and left the reader trusting the count. Twenty is what
@@ -165,6 +181,27 @@ export function preview(
      */
     sample: rows.slice(0, 20),
   };
+}
+
+/**
+ * How many cards the collection holds. A count, not a read: the rows are
+ * megabytes and the only thing wanted here is the number.
+ *
+ * It never fails an import. This runs after the writing is finished, so a
+ * count that cannot be taken is a number left out of the answer rather than an
+ * error thrown over a write that already succeeded.
+ */
+export async function countCards(db: SupabaseClient, userId: string): Promise<number | undefined> {
+  const { count, error } = await db
+    .from("cards")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Counting the collection after an import failed:", error.message);
+    return undefined;
+  }
+  return count ?? undefined;
 }
 
 /**
@@ -199,6 +236,8 @@ export async function commit(
   skippedRows: SkippedRow[],
   held: ReadonlySet<string>,
   titleOf?: TitleOf,
+  /** Rows the caller struck off by hand. Already gone from `rows`; counted here so the answer can say so. */
+  excluded = 0,
 ): Promise<ImportOutcome> {
   const { existing } = splitExisting(rows, held, titleOf);
   const skippedCount = skippedRows.length;
@@ -211,7 +250,7 @@ export async function commit(
   // without an id, which the calls below already tolerate.
   const { data: started, error: startError } = await db
     .from("imports")
-    .insert({ kind, status: "running", rows_seen: rows.length + skippedCount })
+    .insert({ kind, status: "running", rows_seen: rows.length + skippedCount + excluded })
     .select("id")
     .single();
   if (startError) console.error("Import started with no record of it:", startError.message);
@@ -221,6 +260,7 @@ export async function commit(
   try {
     const { added } = await createRows(db, userId, rows, kind);
     const skipped = rows.length - added + skippedCount;
+    const total = await countCards(db, userId);
 
     if (id) {
       await db
@@ -228,18 +268,22 @@ export async function commit(
         .update({
           status: "done",
           rows_added: added,
-          rows_skipped: skipped,
+          rows_skipped: skipped + excluded,
           finished_at: new Date().toISOString(),
         })
         .eq("id", id);
     }
 
     return {
-      seen: rows.length + skippedCount,
+      // Every line the file held, the struck-off ones included: `seen` is the
+      // file, not what is left of it after the caller's ticking.
+      seen: rows.length + skippedCount + excluded,
       added,
       skipped,
       notOwned: skippedRows.filter((s) => s.why === NOT_OWNED).length,
       existing: existing.length,
+      excluded,
+      total,
       sample: [],
     };
   } catch (err) {

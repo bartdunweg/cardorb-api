@@ -315,6 +315,17 @@ export function quantityFrom(raw: string): number | null {
 
 export type CsvResult = {
   rows: CollectionRow[];
+  /**
+   * The line each row came from, aligned with `rows` by index.
+   *
+   * Beside the rows rather than inside them, because a CollectionRow is what
+   * the store writes and a file line is not one of its columns. It is here so a
+   * caller can name a row to somebody looking at their own spreadsheet, and so
+   * that a client can point back at one: a selection has to survive the round
+   * trip from preview to commit, and the line number is the only name a row
+   * has that both ends already agree on.
+   */
+  lines: number[];
   /** Rows that could not be used, with the line number and the reason. */
   skipped: { line: number; why: string }[];
 };
@@ -345,6 +356,7 @@ export type CsvResult = {
  */
 export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): CsvResult {
   const rows: CollectionRow[] = [];
+  const lines: number[] = [];
   const skipped: { line: number; why: string }[] = [];
 
   const at = (r: string[], i?: number) => (i === undefined ? "" : (r[i] ?? "").trim());
@@ -379,6 +391,7 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
     const parsed = acquired ? new Date(acquired) : null;
     const language = at(r, map.language).toLowerCase();
 
+    lines.push(line);
     rows.push({
       id: null,
       name,
@@ -421,5 +434,5 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
     });
   });
 
-  return { rows, skipped };
+  return { rows, lines, skipped };
 }

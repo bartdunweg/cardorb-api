@@ -1,0 +1,1 @@
+- A CSV preview now hands back every row it would write, each with the line it came from, so an import screen can put a tick beside each one. Commit takes the lines you unticked as `exclude`, counts them apart from the rows it could not read, and answers with how many cards your collection holds when the writing is done.
