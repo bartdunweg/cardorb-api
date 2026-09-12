@@ -154,11 +154,52 @@ describe("filterItems", () => {
     const plain = { ...items[0]!, id: "plain", tcgId: "swsh1-169" };
     const unknown = { ...items[0]!, id: "unknown", tcgId: null };
     const all = [art, plain, unknown];
-    const ids = new Set(["swsh1-208"]);
-    expect(filterItems(all, { fullArtIds: ids }).map((i) => i.id)).toEqual(["art"]);
+    const index = { ids: new Set(["swsh1-208"]), keys: new Set<string>() };
+    expect(filterItems(all, { fullArtIndex: index }).map((i) => i.id)).toEqual(["art"]);
     expect(filterItems(all, {}).map((i) => i.id)).toEqual(["art", "plain", "unknown"]);
-    expect(filterItems(all, { fullArtIds: new Set<string>() }).map((i) => i.id)).toEqual([]);
+    expect(
+      filterItems(all, { fullArtIndex: { ids: new Set<string>(), keys: new Set<string>() } }).map(
+        (i) => i.id,
+      ),
+    ).toEqual([]);
   });
+  /* A row and the copy do not always agree on an id: one written from the old catalogue files
+     151 as `sv3pt5-1` where the copy files it as `sv03.5-001`. Set and number are what they do
+     agree on, and without that second key 1,361 of one collection's 1,940 rows joined to
+     nothing (measured 2026-09-12). */
+  it("finds a full art by set and number where the two catalogues spell the id differently", () => {
+    const old = {
+      ...items[0]!,
+      id: "old",
+      tcgId: "sv3pt5-166",
+      set: "151",
+      setTitle: "151",
+      number: "166",
+    };
+    const plain = {
+      ...items[0]!,
+      id: "plain",
+      tcgId: "sv3pt5-1",
+      set: "151",
+      setTitle: "151",
+      number: "001",
+    };
+    // Filed under the name it was added with; the official title is what the copy spells.
+    const titled = {
+      ...items[0]!,
+      id: "titled",
+      tcgId: null,
+      set: "Pokemon 151",
+      setTitle: "151",
+      number: "167",
+    };
+    const index = { ids: new Set<string>(), keys: new Set(["151|166", "151|167"]) };
+    expect(filterItems([old, plain, titled], { fullArtIndex: index }).map((i) => i.id)).toEqual([
+      "old",
+      "titled",
+    ]);
+  });
+
   it("owned=false is the wishlist", () => {
     expect(filterItems(items, { owned: false }).map((i) => i.id)).toEqual(["b"]);
   });

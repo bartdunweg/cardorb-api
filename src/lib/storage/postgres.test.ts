@@ -5,11 +5,29 @@ import {
   createRow,
   createRows,
   deleteRow,
+  fullArtKey,
   listAccountIds,
   listRows,
   listValueSnapshots,
   updateRow,
 } from "./postgres";
+
+/* The key a collection row and the catalogue's copy are joined on where their ids disagree: a
+   row written from the old catalogue files 151 as `sv3pt5-1`, the copy as `sv03.5-001`. */
+describe("fullArtKey", () => {
+  it("reads a number with leading zeros and one without as the same card", () => {
+    expect(fullArtKey("151", "001")).toBe(fullArtKey("151", "1"));
+    expect(fullArtKey("151", "166")).toBe("151|166");
+  });
+
+  it("does not care how the set name is cased or spaced", () => {
+    expect(fullArtKey("  Silver Tempest ", "TG12")).toBe(fullArtKey("silver tempest", "tg12"));
+  });
+
+  it("keeps a number that is only zeros rather than emptying it", () => {
+    expect(fullArtKey("Promos", "000")).toBe("promos|0");
+  });
+});
 import type { CardDraft } from "@/lib/core/collection/collection-row";
 
 /**
