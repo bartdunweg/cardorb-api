@@ -25,6 +25,8 @@ import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
 import { forgetOnTheWeb } from "@/lib/api/web-cache";
+import { fullArtIdsAmong } from "@/lib/storage/postgres";
+import { adminClient } from "@/lib/storage/supabase";
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
  * the key exists.
@@ -85,9 +87,34 @@ export async function GET(req: Request) {
   if (failed) return unavailable(undefined, readHeaders(req));
   const { sort, order } = read.query;
   const all = flattenItems(sets);
+  /* `?fullArt=1`: only the copies whose illustration covers the whole card. Whether a printing
+     is a full art is a fact about the card and not about the row, and it takes the card's whole
+     set to work out (lib/core/catalogue/full-art.ts), so it is asked of the catalogue's copy,
+     which knows it already. One query for the collection's catalogue ids rather than a pass per
+     set; a row with no catalogue id, or one the copy has never seen, is not a full art here. */
+  let fullArtIds: Set<string> | undefined;
+  if (read.query.fullArt) {
+    const ids = [...new Set(all.flatMap((it) => (it.tcgId ? [it.tcgId] : [])))];
+    try {
+      const store = adminClient();
+      if (!store) throw new Error("no service role client");
+      fullArtIds = await fullArtIdsAmong(store, ids);
+    } catch (err) {
+      // The copy is the only place that knows. Answering the whole collection instead would be
+      // a page that says "full art" over cards that are not, which is worse than saying so.
+      console.error("Full art unavailable:", err instanceof Error ? err.message : err);
+      return unavailable(undefined, readHeaders(req));
+    }
+  }
   // A rule folder holds owned copies only, whatever `owned` says: the rule is the filter,
   // and `owned=false` would otherwise empty it.
-  const filter = { ...read.query, owned: rule ? undefined : read.query.owned, collection, rule };
+  const filter = {
+    ...read.query,
+    owned: rule ? undefined : read.query.owned,
+    collection,
+    rule,
+    fullArtIds,
+  };
   const shown = sortItems(filterItems(all, filter), sort, order);
   const { items, total } = pageOf(shown, read.query);
   // The facets ride along with every page, over the owned collection (the wishes when

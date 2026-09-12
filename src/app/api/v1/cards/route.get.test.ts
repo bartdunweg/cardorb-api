@@ -24,6 +24,8 @@ vi.mock("@/lib/core/collection/collection", () => ({
   findFolder: (...a: unknown[]) => findFolder(...a),
 }));
 vi.mock("@/lib/storage/collection", () => ({ createRow: vi.fn() }));
+// The route asks the catalogue's copy for the full arts, which is the service role's client.
+vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => null }));
 // items.ts now values the page's cards through cards.ts, which builds its set catalogue behind
 // unstable_cache at import time; the pass-through keeps that import loadable here.
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn(), unstable_cache: (fn: unknown) => fn }));

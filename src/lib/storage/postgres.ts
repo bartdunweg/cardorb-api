@@ -1328,6 +1328,12 @@ export type CatalogueCardRecord = {
   types: string[];
   /** The scan's stem, without size or format; null where the record names none. */
   image: string | null;
+  /** "Pokemon", "Trainer" or "Energy"; null until the copy has been past since 2026-09-12. */
+  category?: string | null;
+  /** For a trainer, which kind it is: "Supporter", "Item", "Tool", "Stadium". */
+  trainer_type?: string | null;
+  /** The illustration covers the whole card. Worked out per set: lib/core/catalogue/full-art.ts. */
+  full_art?: boolean;
 };
 
 /** What the copy asks of a search: every word in the row's text, and the filters as typed. */
@@ -1340,6 +1346,8 @@ export type CatalogueQuery = {
   set?: string;
   /** One energy type, as TCGdex spells it. */
   type?: string;
+  /** Only the cards whose illustration covers the whole card. */
+  fullArt?: boolean;
 };
 
 /** One set the cron has copied, and when. */
@@ -1420,14 +1428,18 @@ export async function searchCatalogueCards(
 ): Promise<{ rows: CatalogueCardRecord[]; total: number }> {
   let q = db
     .from("catalogue_cards")
-    .select("id, set_id, local_id, name, set_name, series, release_date, rarity, types, image", {
-      count: "exact",
-    });
+    .select(
+      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art",
+      {
+        count: "exact",
+      },
+    );
   for (const word of query.words) q = q.ilike("search", contains(word.toLowerCase()));
   if (query.name) q = q.ilike("name", contains(query.name));
   if (query.number) q = q.ilike("local_id", contains(query.number));
   if (query.set) q = q.ilike("set_name", contains(query.set));
   if (query.type) q = q.contains("types", [query.type]);
+  if (query.fullArt) q = q.eq("full_art", true);
   const from = (Math.max(1, page) - 1) * pageSize;
   const { data, count, error } = await q
     .order("release_date", { ascending: false, nullsFirst: false })
@@ -1455,7 +1467,7 @@ export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueC
     db
       .from("catalogue_cards")
       .select(
-        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image",
+        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art",
         counted ? { count: "exact" } : {},
       )
       .order("release_date", { ascending: false, nullsFirst: false })
@@ -1473,11 +1485,35 @@ export async function catalogueCardsById(
   if (!ids.length) return [];
   const { data, error } = await db
     .from("catalogue_cards")
-    .select("id, set_id, local_id, name, set_name, series, release_date, rarity, types, image")
+    .select(
+      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art",
+    )
     .in("id", ids);
   if (error) throw new Error(`Reading cards from the catalogue's copy failed: ${error.message}`);
   const byId = new Map((data as CatalogueCardRecord[]).map((r) => [r.id, r]));
   return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
+/**
+ * Which of these catalogue ids are full arts. One query for the whole collection rather than a
+ * pass per set: the copy already knows, and an id it does not hold answers no, which is what a
+ * row the copy has never seen (a Japanese card, a set copied after the row was written) is.
+ */
+export async function fullArtIdsAmong(db: SupabaseClient, ids: string[]): Promise<Set<string>> {
+  const out = new Set<string>();
+  // PostgREST puts the list in the URL, so it goes in bites rather than as one very long line.
+  const BITE = 500;
+  for (let at = 0; at < ids.length; at += BITE) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select("id")
+      .eq("full_art", true)
+      .in("id", ids.slice(at, at + BITE));
+    if (error)
+      throw new Error(`Reading the full arts from the catalogue's copy failed: ${error.message}`);
+    for (const row of (data ?? []) as { id: string }[]) out.add(row.id);
+  }
+  return out;
 }
 
 /** The document the browser searches in, and the version it was built from. Null before the first build. */

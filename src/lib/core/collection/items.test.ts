@@ -148,6 +148,18 @@ describe("filterItems", () => {
     expect(filterItems([priced, free], { priced: false }).map((it) => it.id)).toEqual(["f"]);
     expect(filterItems([priced, free], {}).map((it) => it.id)).toEqual(["p", "f"]);
   });
+  /* Whether a printing is full art takes its whole set to work out, so the route asks the
+     catalogue's copy and hands the ids down. A row the copy never saw is not one of them. */
+  it("keeps only the copies whose catalogue id is a full art", () => {
+    const art = { ...items[0]!, id: "art", tcgId: "swsh1-208" };
+    const plain = { ...items[0]!, id: "plain", tcgId: "swsh1-169" };
+    const unknown = { ...items[0]!, id: "unknown", tcgId: null };
+    const all = [art, plain, unknown];
+    const ids = new Set(["swsh1-208"]);
+    expect(filterItems(all, { fullArtIds: ids }).map((i) => i.id)).toEqual(["art"]);
+    expect(filterItems(all, {}).map((i) => i.id)).toEqual(["art", "plain", "unknown"]);
+    expect(filterItems(all, { fullArtIds: new Set<string>() }).map((i) => i.id)).toEqual([]);
+  });
   it("owned=false is the wishlist", () => {
     expect(filterItems(items, { owned: false }).map((i) => i.id)).toEqual(["b"]);
   });

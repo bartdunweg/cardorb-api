@@ -1,0 +1,1 @@
+- Search and the collection can be narrowed to full art cards: the ones whose illustration covers the whole card, wherever they sit in the rarities.
