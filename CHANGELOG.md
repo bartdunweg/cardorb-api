@@ -65,6 +65,8 @@ if the two have drifted apart.
 
 - A held card's price history is recorded in the market the card shows: TCGplayer's printings first (the ordinary run for the plain series, the foil for the holo one), Cardmarket's figure where TCGplayer prices nothing. Points before 2026-09-12 stay Cardmarket's, since no archive of TCGplayer's exists to redraw them from.
 
+- The Home chart's history is built again from the price history: what the collection held each Saturday since 2024-02-10 and each night since 2026-08-16, at that day's TCGplayer prices, a copy counting from the day it was added. It held what the nightly snapshot wrote at the time (Cardmarket's guide, its Near Mint estimate, then an average of two markets) and two points valued from archived Cardmarket guides, so the line ended some €8,000 above the collection's value and would have dropped overnight. The nightly cron rebuilds an account once, when its history still has a weekday before the nightly series or has none while the collection held cards then; `?history=1` rebuilds every account, for after the price history itself is rewritten.
+
 - A CSV row is recognised by the catalogue id where it has one: Dex writes it in its sixth column and this app read it as nothing, so a card whose set the collection filed under another name was matched by name and number instead of exactly.
 - The first import preview of the day no longer waits on a hundred set reads: only the names of rows with no catalogue id are resolved, which on a Dex export is usually none.
 
