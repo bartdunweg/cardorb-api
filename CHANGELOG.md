@@ -35,8 +35,6 @@ if the two have drifted apart.
 
 - The full art Venusaur EX (XY123) and Blastoise EX (XY122) are priced as themselves again. Both hung on the Cardmarket product of the plain promo of the same name, and the plain XY28 and XY30 hung on theirs, so each of the four read the other's price: Venusaur EX XY123 said €5.12 for a card that sells around €117.
 
-- The full art filter finds the cards it was missing: a card whose id the two catalogues spell differently is now matched on its set and number instead.
-
 - Search and the collection can be narrowed to full art cards: the ones whose illustration covers the whole card, wherever they sit in the rarities.
 
 - The catalogue copy can be asked to work every set out from scratch, for the day a new source of scans is added: the cards that were copied without a picture were told "no" by the sources of that day, and nothing would ask the new one about them otherwise. The nightly run never does this by itself.
@@ -81,6 +79,8 @@ if the two have drifted apart.
 - The four fields every page needs about the person asking are kept on the instance for a minute instead of read from Postgres on every request. The query is 0.1 ms in the database by its own statistics, but getting to it had a p90 of 8.4 seconds on production, so one page load in ten waited eight seconds on it.
 
 - Every keyed request used to wait on a Postgres read of your profile before it did anything else, whether it needed it or not. Nothing but a rename does, so nothing but a rename asks: the collection, the lists and the statistics answer without it.
+
+- The full art Venusaur EX (XY123) and Blastoise EX (XY122) are priced from the XY Black Star Promos products rather than from a Japanese card of the same name: €96.39 and €196.76 instead of €116.93 and €78.71. Cardmarket names a product after its attacks and never after its number, so three cards can carry one name inside one expansion and a dozen carry it across the catalogue; the expansion is the half that tells them apart.
 
 ## 2026-09-11
 

@@ -234,7 +234,7 @@ const cachedGuidePrices = async (
           },
           // v11: the entries now carry the Shadowless run's figure, and a cached v10 entry does
           // not (the Data Cache outlives a deploy, so a bump is the only way to be sure).
-          ["guide-prices", language ?? "en", "v12", String(shard)],
+          ["guide-prices", language ?? "en", "v13", String(shard)],
           { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
         )(),
       ),
@@ -461,7 +461,7 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
-      ["collection-facts", "v2", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v3", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -477,6 +477,9 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v20: the two dear halves of v19 pointed into a Japanese expansion and are now on the
+      // XY Black Star Promos products they belong to.
+      //
       // v19: four XY promo links swapped, the same way as v17 and v18. The signature above
       // hashes which cards a set holds, never what they are worth, so a relink is invisible
       // to it: the key is the only thing that reprices a card today rather than tomorrow.
@@ -506,7 +509,7 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v19", setName, factsSignature(identities)],
+      ["set-facts", "v20", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
