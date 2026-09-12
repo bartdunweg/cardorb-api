@@ -405,6 +405,14 @@ export function buildIndex(version: string, rows: CatalogueCardRecord[]): Catalo
 }
 
 /**
+ * Appended to the copy's version, so a document built before a change to its shape or its order
+ * is behind the copy and built again, and its ETag moves with it. "#n2": the cards in binder
+ * order (number_order) instead of by the number as a string. A stored version without it
+ * compares lower than the same copy with it, and a later copy compares higher than either.
+ */
+const INDEX_FORMAT = "#n2";
+
+/**
  * The document, current to the copy: read as stored, rebuilt when the copy has been written
  * since — the cron rebuilds it after every copy, and a request finding it behind (or absent,
  * before the first cron) builds it once and keeps it. Null while the copy is empty.
@@ -412,8 +420,9 @@ export function buildIndex(version: string, rows: CatalogueCardRecord[]): Catalo
 export async function catalogueIndex(
   db: SupabaseClient,
 ): Promise<{ version: string; body: string } | null> {
-  const version = await catalogueVersion(db);
-  if (!version) return null;
+  const copied = await catalogueVersion(db);
+  if (!copied) return null;
+  const version = `${copied}${INDEX_FORMAT}`;
   const stored = await readCatalogueIndex(db, "en");
   if (stored && stored.version >= version) return stored;
   const body = JSON.stringify(buildIndex(version, await listCatalogueCards(db)));

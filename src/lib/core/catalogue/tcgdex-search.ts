@@ -35,6 +35,7 @@ import {
 } from "./tcgdex-browse";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishCardNames } from "./card-names";
+import { compareCardNumbers } from "../util";
 import { setIdOf } from "./tcgdex-language";
 import { setIn } from "./tcgdex-browse";
 
@@ -350,11 +351,15 @@ async function searchEnglishNames(
   if (!ids.length) return { cards: [], total: 0 };
 
   const rank = new Map([...shelf.keys()].map((id, i) => [id, i]));
-  const collate = new Intl.Collator("en", { numeric: true });
+  // Within a set, by the number as a binder holds it (compareCardNumbers), the rule the copy's
+  // search and the collection sort by too; ids of two sets the shelf does not rank fall to the id.
+  const numberOf = (id: string) => id.slice(setOf(id).length + 1);
   ids.sort(
     (a, b) =>
       (rank.get(setOf(a)) ?? Number.MAX_SAFE_INTEGER) -
-        (rank.get(setOf(b)) ?? Number.MAX_SAFE_INTEGER) || collate.compare(a, b),
+        (rank.get(setOf(b)) ?? Number.MAX_SAFE_INTEGER) ||
+      (setOf(a) === setOf(b) ? 0 : setOf(a) < setOf(b) ? -1 : 1) ||
+      compareCardNumbers(numberOf(a), numberOf(b)),
   );
 
   const from = (Math.max(1, page) - 1) * MAX_RESULTS;

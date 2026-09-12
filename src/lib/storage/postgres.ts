@@ -1478,6 +1478,13 @@ export async function writeCatalogueSet(
     throw new Error(`Recording ${setId} as copied failed: ${stamped.error.message}`);
 }
 
+/*
+ * "By number" in the three reads below is `number_order`, not `local_id`: a stored column the
+ * database works out with card_number_sort_key(), which is compareCardNumbers() in SQL
+ * (migration 20260912191742). As a string, XY10 came before XY2, 100 before 20, and a set's
+ * TG cards sat inside its main run. The search pages on this order, so it has to be the query's.
+ */
+
 /** `%word%` for PostgREST's ilike, with the pattern characters in the word made literal. */
 const contains = (word: string) => `%${word.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 
@@ -1510,7 +1517,7 @@ export async function searchCatalogueCards(
   const { data, count, error } = await q
     .order("release_date", { ascending: false, nullsFirst: false })
     .order("set_id", { ascending: true })
-    .order("local_id", { ascending: true })
+    .order("number_order", { ascending: true })
     .range(from, from + pageSize - 1);
   if (error) throw new Error(`Searching the catalogue's copy failed: ${error.message}`);
   return { rows: (data ?? []) as CatalogueCardRecord[], total: count ?? 0 };
@@ -1538,7 +1545,7 @@ export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueC
       )
       .order("release_date", { ascending: false, nullsFirst: false })
       .order("set_id", { ascending: true })
-      .order("local_id", { ascending: true })
+      .order("number_order", { ascending: true })
       .range(...pageRange(page)),
   );
 }
@@ -1563,7 +1570,7 @@ export async function catalogueCardsBySets(
         .select(CARD_COLUMNS, counted ? { count: "exact" } : {})
         .in("set_id", setIds as string[])
         .order("set_id", { ascending: true })
-        .order("local_id", { ascending: true })
+        .order("number_order", { ascending: true })
         .range(...pageRange(page)),
   );
   const bySet = new Map<string, CatalogueCardRecord[]>(setIds.map((id) => [id, []]));
