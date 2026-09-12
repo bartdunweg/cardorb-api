@@ -1389,6 +1389,15 @@ export type CardDetail = {
   stage: string | null;
   evolveFrom: string | null;
   regulationMark: string | null;
+  /**
+   * Whether a stamped first run of this card exists, as TCGdex says.
+   *
+   * The whole point of relaying it is to stop a form asking a question with no answer: a card
+   * printed once was never a 1st Edition, and offering the choice there invites somebody to
+   * record something that does not exist. Null where the catalogue did not say, and then the
+   * form offers the runs rather than none, which is the rule the finishes already follow.
+   */
+  firstEdition: boolean | null;
   set: { id: string; name: string; logo: string | null; total: number | null } | null;
   /** Cardmarket's product id, which is how a card is addressed on their site. */
   cmId: number | null;
@@ -1448,6 +1457,8 @@ export async function getCardDetail(
       stage?: string;
       evolveFrom?: string;
       regulationMark?: string;
+      /** TCGdex says per card which runs and printings exist; only the stamped run is read here. */
+      variants?: { firstEdition?: boolean };
       set?: { id?: string; name?: string; logo?: string; cardCount?: { total?: number } };
       pricing?: {
         cardmarket?: {
@@ -1477,6 +1488,7 @@ export async function getCardDetail(
     stage: card.stage ?? null,
     evolveFrom: card.evolveFrom ?? null,
     regulationMark: card.regulationMark ?? null,
+    firstEdition: card.variants?.firstEdition ?? null,
     set: card.set?.id
       ? {
           id: card.set.id,

@@ -333,6 +333,15 @@ components:
         stage: { type: [string, "null"] }
         evolveFrom: { type: [string, "null"] }
         regulationMark: { type: [string, "null"] }
+        firstEdition:
+          type: [boolean, "null"]
+          description: |
+            Whether a stamped first run of this card exists, as TCGdex says. Null where the
+            catalogue did not answer. It is here so a form can stop asking which run a copy is
+            from on a card that was only ever printed once.
+        # required: firstEdition is sent on every answer; kept out of `required` so a client
+        # generated from an older contract still validates one.
+
         set:
           type: [object, "null"]
           properties:
