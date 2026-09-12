@@ -1,13 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// The committed id maps, which are also the record of which sets TCGdex has cards for: M4 has
-// them, M1 and PMCG1 are listed with a count and nothing under it.
-vi.mock("../cardmarket-ids.ja.generated.json", () => ({
-  default: { "M4-001": 1, "M4-002": null },
+// The record of which sets TCGdex has cards for: M4 has them, M1 and PMCG1 are listed with a
+// count and nothing under it.
+vi.mock("../recorded-sets.generated.json", () => ({
+  default: { ja: ["M4"], ko: [], "zh-tw": [], "zh-cn": [] },
 }));
-vi.mock("../cardmarket-ids.ko.generated.json", () => ({ default: {} }));
-vi.mock("../cardmarket-ids.zh-tw.generated.json", () => ({ default: {} }));
-vi.mock("../cardmarket-ids.zh-cn.generated.json", () => ({ default: {} }));
 
 const { isBrowseLanguage, listSetsIn, setIn } = await import("./tcgdex-browse");
 

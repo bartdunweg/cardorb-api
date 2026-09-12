@@ -1,8 +1,5 @@
 import { compareCardNumbers } from "../util";
-import IDS_JA from "../cardmarket-ids.ja.generated.json";
-import IDS_KO from "../cardmarket-ids.ko.generated.json";
-import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
-import IDS_ZH_TW from "../cardmarket-ids.zh-tw.generated.json";
+import RECORDED_SETS from "../recorded-sets.generated.json";
 import { CatalogueNotFound, graphql, json } from "./tcgdex-client";
 import JA_NAMES from "./set-names.ja.json";
 import ZH_NAMES from "./set-names.zh.json";
@@ -176,27 +173,21 @@ const scan = (lang: string, serie: string, set: string, localId: string, size: "
 
 /** Every set of the language, series by series in TCGdex's order, newest serie first. */
 /**
- * The sets a catalogue has recorded cards for, read off the committed Cardmarket id maps: a
- * card is in there for every card TCGdex lists, product or none, so a set with no entry is a
- * set TCGdex lists without a card. The shelf's own read (the series list) says "60 cards" for
- * those too, and finding out live is one request per set — 184 for the Japanese shelf.
+ * The sets a catalogue has recorded cards for, from recorded-sets.generated.json: a set TCGdex
+ * lists with no card behind it is not in there. The shelf's own read (the series list) says "60
+ * cards" for those too, and finding out live is one request per set, 184 for the Japanese shelf.
  *
- * As current as the last run of scripts/language-cardmarket-ids.mjs: a set TCGdex fills in
- * after that reads as unrecorded until the next run, on the shelf only — its own page reads
- * the cards live and shows them.
+ * As current as the last run of scripts/recorded-sets.mjs: a set TCGdex fills in after that reads
+ * as unrecorded until the next run, on the shelf only; its own page reads the cards live and shows
+ * them. The list used to be read off the Cardmarket id maps, which carried every card TCGdex
+ * listed; those maps went with Cardmarket (2026-09-12) and the sets were kept as they were.
  */
 const recordedSets = (() => {
-  const maps: Record<BrowseLanguage, Record<string, unknown>> = {
-    ja: IDS_JA,
-    ko: IDS_KO,
-    "zh-cn": IDS_ZH_CN,
-    "zh-tw": IDS_ZH_TW,
-  };
   const known = new Map<BrowseLanguage, Set<string>>();
   return (lang: BrowseLanguage): Set<string> => {
     let sets = known.get(lang);
     if (!sets) {
-      sets = new Set(Object.keys(maps[lang]).map((id) => id.slice(0, id.lastIndexOf("-"))));
+      sets = new Set((RECORDED_SETS as Record<BrowseLanguage, string[]>)[lang] ?? []);
       known.set(lang, sets);
     }
     return sets;

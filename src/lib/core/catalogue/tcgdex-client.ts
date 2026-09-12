@@ -227,7 +227,7 @@ export type CardPrices = {
   /**
    * The Shadowless run's euros, where Cardmarket files that run as a product of its own: Base
    * Set, every card of it. From the same nightly guide as `price`, under the product id
-   * cardmarket-ids.editions.generated.json holds. Null everywhere else.
+   * map held, which was deleted with Cardmarket on 2026-09-12. Null everywhere.
    */
   shadowless?: Price | null;
 };

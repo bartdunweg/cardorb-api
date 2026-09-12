@@ -83,7 +83,7 @@ const TYPE_SUFFIX = /[\s-]+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\
 const ROOT = new URL("..", import.meta.url).pathname;
 const WORKLIST = `${ROOT}docs/collection-audit-corrections.md`;
 
-// .env.local, read by hand — see scripts/snapshot-collection-value.mjs for why.
+// .env.local, read by hand: the same loader as scripts/backfill-card-prices.mjs.
 for (const file of [".env.local", ".env"]) {
   const path = `${ROOT}${file}`;
   if (!existsSync(path)) continue;
