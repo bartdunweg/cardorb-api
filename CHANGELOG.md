@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - A set no longer loses its cards, its prices or its pictures for a day because the catalogue had one bad second. An answer that contradicts itself, or a picture host that is briefly unreachable, is asked again instead of being written down as the truth.
 
+- The unlimited printing of a card is no longer priced as the holo of the same name. Jungle, Fossil and Team Rocket number their holo and their plain version apart, and 236 cards across those and other sets read the holo's Cardmarket product: Fossil Gengar 20/62 said €202.12 where the card sells at €29.05, and Team Rocket Dark Charizard 21/82 said €460.29 where it sells at €59.98. A collection holding them is worth less than it said, and says so now.
+
 - A card keeps the picture it has been seen with. The scan is still worked out from the catalogue on every read, so a better one is picked up the same day, but the card no longer goes blank when the catalogue is briefly silent about the set it is from.
 
 - The links in the confirmation and password-reset emails point at cardorb.com again, and the emails say the link lasts an hour, which it does.
@@ -57,6 +59,10 @@ if the two have drifted apart.
 - A binder shown as a Pokédex fills itself from the Pokémon in its range, rather than waiting for cards to be filed in it by hand. The binders made when the Pokédex stopped being a fixture said "0 cards"; they hold the collection again.
 
 - The two Pokédex fields on a profile are gone, and so is `GET /v1/pokedex` and the `list=pokedex` gate on a public profile. The Pokédex is a binder, and a binder carries its own setting; nothing is left on an account for a thing the app no longer has.
+
+- A card answers which printings of it exist. `variants_detailed` says per card what was printed and what its foil is called, so the finish and foil questions in the apps finally have an answer to narrow to: Pikachu with Grey Felt Hat is a plain normal, and stops offering a holo, a reverse and the two ball prints. The Poké Ball and Master Ball reverses are named per card too, where they used to be offered on anything with a reverse.
+- A card answers which print runs it can be from. TCGdex says whether a stamped first run exists; Cardmarket prices Shadowless as a product of its own and the map of those 102 products (all of Base Set) is in this repo. So a Jungle card offers 1st Edition and unlimited, where it used to offer a Shadowless run that was never printed.
+- Dutch is no longer asked of TCGdex. No Pokémon card is printed in it and TCGdex keeps no Dutch catalogue, so the question could only ever 404, and where nothing could answer the apps offered Dutch as a printing.
 
 - A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
 
