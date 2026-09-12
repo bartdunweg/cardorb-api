@@ -137504,7 +137504,13 @@
     ],
     "groupId": 1451
   },
-  "xyp-XY150a": null,
+  "xyp-XY150a": {
+    "productId": 148352,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 1938
+  },
   "xyp-XY151": {
     "productId": 121954,
     "variants": [
@@ -137706,7 +137712,13 @@
     ],
     "groupId": 1451
   },
-  "xyp-XY177a": null,
+  "xyp-XY177a": {
+    "productId": 148344,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 1938
+  },
   "xyp-XY178": {
     "productId": 158183,
     "variants": [
@@ -137868,7 +137880,13 @@
     ],
     "groupId": 1451
   },
-  "xyp-XY198a": null,
+  "xyp-XY198a": {
+    "productId": 148345,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 1938
+  },
   "xyp-XY199": {
     "productId": 129899,
     "variants": [
@@ -137890,7 +137908,13 @@
     ],
     "groupId": 1451
   },
-  "xyp-XY200a": null,
+  "xyp-XY200a": {
+    "productId": 148346,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 1938
+  },
   "xyp-XY201": {
     "productId": 129900,
     "variants": [
@@ -138289,7 +138313,13 @@
     ],
     "groupId": 1451
   },
-  "xyp-XY67a": null,
+  "xyp-XY67a": {
+    "productId": 148343,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 1938
+  },
   "xyp-XY68": {
     "productId": 108597,
     "variants": [
