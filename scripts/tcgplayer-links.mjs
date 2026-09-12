@@ -59,6 +59,38 @@ const RUN_GROUPS = {
  */
 const BUCKET_GROUPS = new Set(["Deck Exclusives", "Alternate Art Promos"]);
 
+/**
+ * Words in a product name that mark a variant rather than the card: WotC Promo 1 is both "Pikachu (1)"
+ * at $46.54 and "Pikachu (1) (Misprint)" with no price, and taking the first by name linked the
+ * misprint (2026-09-12).
+ */
+const VARIANT = /misprint|error|prerelease|staff|jumbo|oversized|exclusive|stamped/i;
+
+/**
+ * The product to take among several with the card's name and number in one group: a plain one
+ * before a variant, one whose name carries the card's number ("Pikachu (1)", "Eevee - 11/12")
+ * before one that does not, one with a market price before one without, fewer brackets before
+ * more. Measured on 2026-09-12: ranking by price first swapped a Participation promo for its Staff
+ * print and one Pikachu for another.
+ */
+const pick = (hits, localId) => {
+  const n = String(Number(String(localId).replace(/\D/g, "")) || localId);
+  const carriesNumber = (name) =>
+    new RegExp(`\\(\\s*0*${n}\\s*\\)|\\s-\\s*[A-Z]*0*${n}\\b`, "i").test(name);
+  const key = ({ product }) => [
+    Number(VARIANT.test(product.name)),
+    Number(!carriesNumber(product.name)),
+    Number(!printingsOf.has(product.productId)),
+    product.name.match(/[([]/g)?.length ?? 0,
+  ];
+  return [...hits].sort((a, b) => {
+    const ka = key(a);
+    const kb = key(b);
+    for (let i = 0; i < ka.length; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i];
+    return 0;
+  })[0];
+};
+
 /** TCGdex's series for Pokémon TCG Pocket: digital cards, which no market sells. */
 const DIGITAL_SERIES = new Set(["tcgp"]);
 
@@ -159,6 +191,7 @@ const { results: groups } = await fetchJson("https://tcgcsv.com/tcgplayer/3/grou
 const byNumber = new Map();
 const printingsOf = new Map();
 const groupOfProduct = new Map();
+const nameOfProduct = new Map();
 await mapLimit(groups, 8, async (g) => {
   const [products, prices] = await Promise.all([
     fetchJson(`https://tcgcsv.com/tcgplayer/3/${g.groupId}/products`),
@@ -173,6 +206,7 @@ await mapLimit(groups, 8, async (g) => {
   }
   for (const p of products?.results ?? []) {
     groupOfProduct.set(p.productId, g);
+    nameOfProduct.set(p.productId, p.name);
     const number = p.extendedData?.find((e) => e.name === "Number")?.value;
     if (!number) continue;
     const key = numberKey(number);
@@ -188,7 +222,7 @@ console.log(`tcgcsv: ${groups.length} groups, ${printingsOf.size} priced product
 const unlinkedSets = [
   ...new Set(
     Object.keys(ids)
-      .filter((id) => !ids[id])
+      .filter((id) => !ids[id] || ids[id].groupId != null)
       .map((id) => id.slice(0, id.lastIndexOf("-"))),
   ),
 ];
@@ -208,7 +242,8 @@ for (const [set, catalogue] of catalogues) {
   const homes = new Map();
   for (const card of catalogue.cards ?? []) {
     const link = ids[card.id];
-    const group = link && groupOfProduct.get(link.productId);
+    // TCGdex's own links only: a link this script made is not evidence of where the set lives.
+    const group = link && link.groupId == null && groupOfProduct.get(link.productId);
     if (group) homes.set(group.groupId, group.name);
   }
   const ownGroup = (group) =>
@@ -216,10 +251,38 @@ for (const [set, catalogue] of catalogues) {
     [...homes.values()].some((home) => group.name.startsWith(`${home}: `));
   const row = { name: catalogue.name, linked: 0, ambiguous: 0, notFound: 0 };
   for (const card of catalogue.cards ?? []) {
-    if (ids[card.id] !== null) continue;
+    // Unlinked cards, and this script's own earlier links to a product that is plainly a variant
+    // and has no price (the Pikachu misprint), which a better pick corrects. Never a product TCGdex
+    // gave, never a link that prices the card, and never an unpriced product that is simply another
+    // print of the promo (a Victory Cup from another season): which one the card is, is not ours
+    // to guess.
+    const previous = ids[card.id];
+    if (
+      previous !== null &&
+      (previous?.groupId == null ||
+        printingsOf.has(previous.productId) ||
+        !VARIANT.test(nameOfProduct.get(previous.productId) ?? ""))
+    )
+      continue;
     const named = (byNumber.get(numberKey(card.localId)) ?? []).filter(({ product }) =>
       sameName(product.name, card.name),
     );
+    // A link this script made keeps its group: only the product inside it is chosen again. Asked
+    // to find the group afresh, WotC Promo 1 went looking by words and landed on another Pikachu.
+    if (previous?.groupId != null) {
+      const same = named.filter((h) => h.group.groupId === previous.groupId);
+      const { product } = same.length ? pick(same, card.localId) : { product: null };
+      if (product && product.productId !== previous.productId) {
+        ids[card.id] = {
+          ...previous,
+          productId: product.productId,
+          variants: printingsOf.get(product.productId) ?? [],
+        };
+        row.linked++;
+        linked++;
+      }
+      continue;
+    }
     // A group of many sets counts as this set's own when the printed total is the set's count.
     const setCount = catalogue.cardCount?.official ?? null;
     const bucket = (hit) =>
@@ -244,16 +307,18 @@ for (const [set, catalogue] of catalogues) {
     }
     const ranked = [...scored.values()].sort((a, b) => b.shared - a.shared);
     if (!named.length || !ranked.length) {
-      row.notFound++;
+      if (previous === null) row.notFound++;
       continue;
     }
     if (ranked.length > 1 && ranked[0].shared === ranked[1].shared) {
-      row.ambiguous++;
+      if (previous === null) row.ambiguous++;
       continue;
     }
     const hits = ranked[0].hits;
-    const { product, group } = hits.find(({ product: p }) => !/[([]/.test(p.name)) ?? hits[0];
+    const { product, group } = pick(hits, card.localId);
+    if (previous?.productId === product.productId) continue;
     ids[card.id] = {
+      ...previous,
       productId: product.productId,
       variants: printingsOf.get(product.productId) ?? [],
       groupId: group.groupId,
@@ -285,7 +350,7 @@ for (const [set, name] of Object.entries(RUN_GROUPS)) {
             /shadowless/i.test(h.product.name) &&
             h.total === 102)),
     );
-    const hit = hits.find(({ product: p }) => !/[([]/.test(p.name)) ?? hits[0];
+    const hit = hits.length ? pick(hits, card.localId) : undefined;
     if (!hit) continue;
     ids[card.id] = {
       ...ids[card.id],

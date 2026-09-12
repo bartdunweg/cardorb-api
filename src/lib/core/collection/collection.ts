@@ -354,6 +354,8 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
+      // v10: WotC Promo 1 Pikachu relinked from its unpriced misprint to "Pikachu (1)".
+      //
       // v9: 60 more cards linked (Deck Exclusives, Alternate Art Promos, Nidoran F and M). The links
       // are read at request time, but a v8 entry holds these cards unpriced for its day.
       //
@@ -368,7 +370,7 @@ const cachedFactsBundle = (
       //
       // v5: a card's facts carry the printings and which market answered for a copy, and the
       // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-      ["collection-facts", "v9", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v10", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

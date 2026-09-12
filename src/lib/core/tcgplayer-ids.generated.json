@@ -6839,8 +6839,10 @@
     ]
   },
   "basep-1": {
-    "productId": 88065,
-    "variants": [],
+    "productId": 121772,
+    "variants": [
+      "normal"
+    ],
     "groupId": 1418
   },
   "basep-10": {

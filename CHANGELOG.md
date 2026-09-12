@@ -6,7 +6,11 @@ if the two have drifted apart.
 
 ## 2026-09-13
 
+- `GET /v1/cards` filters by a copy's `condition`, `finish` and `language`, each repeatable like `rarity`: any value of a key counts, every key must hold. A copy with no language is English and matches `language=en`; a copy with no condition or finish matches no value of that key. A finish outside the list is a 400. `facets` gains `conditions`, `finishes` and `languages`, and `counts=1` gains `condition`, `finish` and `language`. The public cards route is unchanged.
+
 - `GET /v1/cards?counts=1` says how many cards each filter option would leave, for a filter sheet that writes the number beside the option. `counts` has one tally per set (by title), rarity, generation and type, each over the cards the other filters leave with that key's own choice set aside, plus how many would remain with `fullArt=1` or `duplicates=1` added. Without `counts=1` the answer is unchanged.
+
+- Wizards Black Star Promo 1 Pikachu is priced ($46.54): it was linked to "Pikachu (1) (Misprint)", which TCGplayer prices at nothing, because the linker took the first product with the card's name and number. It now takes a plain product before a variant (misprint, error, prerelease, staff, jumbo, exclusive, stamped), then one whose name carries the card's number, then one with a price; and it corrects its own earlier link only where that link is a variant with no price, inside the same group. Two looser versions were tried and rejected: re-choosing every unpriced link swapped two Victory Cups to another season's print, and re-choosing the group sent Pikachu to "Pikachu (Ivy)".
 
 - `GET /v1/catalog/sets/{setId}` always answers `set.abbreviation`: the code printed in the corner of the set's cards (POR for Perfect Order), the same value a collection card's `setAbbr` carries, or null where the catalogue has none. English sets already sent it; other languages now send null instead of leaving it out. The set list does not carry it.
 
