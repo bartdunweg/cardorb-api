@@ -59,11 +59,12 @@ type CardRecord = {
   purchase_date: string | null;
   notes: string | null;
   is_favorite: boolean;
+  dex_face: boolean;
   collection_id: string | null;
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,edition,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
+  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,edition,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,dex_face,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -190,6 +191,7 @@ const toRow = (r: CardRecord): CollectionRow => ({
   purchaseDate: r.purchase_date,
   notes: r.notes,
   isFavorite: r.is_favorite ?? false,
+  dexFace: r.dex_face ?? false,
   collectionId: r.collection_id ?? null,
 });
 
@@ -496,6 +498,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       purchase_date: draft.purchaseDate,
       notes: draft.notes,
       is_favorite: draft.isFavorite,
+      dex_face: draft.dexFace,
       collection_id: draft.collectionId,
       ...(draft.acquiredAt ? { acquired_at: draft.acquiredAt } : {}),
       source: "manual",
@@ -544,6 +547,7 @@ function patchColumns(patch: CardPatch): Record<string, unknown> {
   if ("purchaseDate" in patch) row.purchase_date = patch.purchaseDate;
   if ("notes" in patch) row.notes = patch.notes;
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
+  if ("dexFace" in patch) row.dex_face = patch.dexFace;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
   if ("rarity" in patch) row.rarity = patch.rarity;
   if ("acquiredAt" in patch) row.acquired_at = patch.acquiredAt;

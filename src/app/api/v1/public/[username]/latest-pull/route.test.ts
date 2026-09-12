@@ -42,6 +42,7 @@ const sets: CardSet[] = [
             purchaseDate: null,
             notes: "won it in a trade",
             isFavorite: true,
+            dexFace: false,
             acquiredAt: "2026-08-10T12:00:00.000Z",
             excluded: false,
             collectionId: null,

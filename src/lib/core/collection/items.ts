@@ -53,6 +53,8 @@ export type CardItem = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** This copy is the one its Pokémon's Pokédex slot shows. */
+  dexFace: boolean;
   /** Kept out of the public profile and the latest pull. */
   excluded: boolean;
   acquiredAt: string | null;
@@ -149,6 +151,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   purchaseDate: v.purchaseDate,
   notes: v.notes,
   isFavorite: v.isFavorite,
+  dexFace: v.dexFace,
   excluded: v.excluded,
   acquiredAt: v.acquiredAt,
   collectionId: v.collectionId,

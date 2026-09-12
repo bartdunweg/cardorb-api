@@ -67,6 +67,7 @@ const pikachu: CollectionRow = {
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   collectionId: null,
 };
 

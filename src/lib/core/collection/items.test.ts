@@ -32,6 +32,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   acquiredAt: null,
   excluded: false,
   collectionId: null,
@@ -127,6 +128,7 @@ describe("flattenItems", () => {
       image: "/Pikachu.png",
       quantity: 3,
       isFavorite: true,
+      dexFace: false,
       collectionId: "f-1",
     });
   });

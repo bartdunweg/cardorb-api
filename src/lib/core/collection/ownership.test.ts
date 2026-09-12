@@ -27,6 +27,7 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   collectionId: null,
   ...over,
 });

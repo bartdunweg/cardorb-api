@@ -17,6 +17,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   acquiredAt: null,
   excluded: false,
   collectionId: null,

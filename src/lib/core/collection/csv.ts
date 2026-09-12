@@ -430,6 +430,7 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
       purchaseDate: null,
       notes: at(r, map.notes) || null,
       isFavorite: false,
+      dexFace: false,
       collectionId: null,
     });
   });

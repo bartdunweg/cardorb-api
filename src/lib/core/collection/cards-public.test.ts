@@ -47,6 +47,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   purchaseDate: "2026-01-01",
   notes: "bought at the shop on the corner",
   isFavorite: true,
+  dexFace: false,
   acquiredAt: "2026-01-01",
   excluded: true,
   collectionId: "88888888-8888-4888-8888-888888888888",
@@ -141,6 +142,7 @@ describe("forPublic", () => {
       quantity: null,
       acquiredAt: null,
       isFavorite: false,
+      dexFace: false,
       excluded: false,
     });
   });
