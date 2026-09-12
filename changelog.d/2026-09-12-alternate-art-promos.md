@@ -1,0 +1,1 @@
+- Five XY promo alternates are priced: Jirachi XY67a ($257.56), Yveltal-EX XY150a, Karen XY177a, M Camerupt-EX XY198a and M Sharpedo-EX XY200a. TCGplayer files them in its "Alternate Art Promos" group rather than beside the ordinary printing in "XY Promos", which is the only group `tcgplayer-links.mjs` looked in; a promo line now names every group its cards can be in.

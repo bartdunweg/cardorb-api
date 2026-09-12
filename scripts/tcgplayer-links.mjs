@@ -32,7 +32,12 @@ const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
 const DRY = process.argv.includes("--dry");
 
-/** TCGdex set id to tcgcsv group name, category 3. Read by hand on 2026-09-12. */
+/**
+ * TCGdex set id to the tcgcsv groups its cards are in, category 3, first match wins. Read by hand
+ * on 2026-09-12. A list, because TCGplayer files a promo line's alternate printings in a group of
+ * their own: Jirachi XY67a is in "Alternate Art Promos" at $257.56, not beside XY67 in "XY Promos"
+ * (Bart found it on TCGplayer when the app showed no price).
+ */
 const GROUPS = {
   "swsh12.5gg": "SWSH: Crown Zenith: Galarian Gallery",
   swsh9tg: "SWSH09: Brilliant Stars Trainer Gallery",
@@ -44,8 +49,8 @@ const GROUPS = {
   cel25cc: "Celebrations: Classic Collection",
   svp: "SV: Scarlet & Violet Promo Cards",
   swshp: "SWSH: Sword & Shield Promo Cards",
-  smp: "SM Promos",
-  xyp: "XY Promos",
+  smp: ["SM Promos", "Alternate Art Promos"],
+  xyp: ["XY Promos", "Alternate Art Promos"],
   hgssp: "HGSS Promos",
   basep: "WoTC Promo",
   mep: "ME: Mega Evolution Promo",
@@ -92,49 +97,56 @@ const { results: groups } = await fetchJson("https://tcgcsv.com/tcgplayer/3/grou
 const groupId = Object.fromEntries(groups.map((g) => [g.name, g.groupId]));
 
 let linked = 0;
-for (const [set, name] of Object.entries(GROUPS)) {
-  const gid = groupId[name];
-  if (!gid) {
-    console.log(`${set}: no tcgcsv group named "${name}"`);
-    continue;
-  }
-  const catalogue = await fetchJson(`https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(set)}`);
-  const { results: products } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/products`);
-  const { results: prices } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/prices`);
-  const printings = new Map();
-  for (const p of prices) {
-    if (!(p.marketPrice > 0)) continue;
-    printings.set(p.productId, [...(printings.get(p.productId) ?? []), printingKey(p.subTypeName)]);
-  }
-  const byNumber = new Map();
-  for (const p of products) {
-    const number = p.extendedData?.find((e) => e.name === "Number")?.value;
-    if (!number) continue;
-    const key = numberKey(number);
-    byNumber.set(key, [...(byNumber.get(key) ?? []), p]);
-  }
-  let here = 0;
-  let unmatched = 0;
-  for (const card of catalogue?.cards ?? []) {
-    if (ids[card.id]) continue;
-    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter((p) =>
-      fold(p.name).startsWith(fold(card.name)),
-    );
-    // The plain product before a stamped or exclusive one of the same number and name.
-    const product = named.find((p) => !p.name.includes("(")) ?? named[0];
-    if (!product) {
-      unmatched++;
+for (const [set, names] of Object.entries(GROUPS)) {
+  for (const name of [names].flat()) {
+    const gid = groupId[name];
+    if (!gid) {
+      console.log(`${set}: no tcgcsv group named "${name}"`);
       continue;
     }
-    ids[card.id] = {
-      productId: product.productId,
-      variants: printings.get(product.productId) ?? [],
-      groupId: gid,
-    };
-    here++;
+    const catalogue = await fetchJson(
+      `https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(set)}`,
+    );
+    const { results: products } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/products`);
+    const { results: prices } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/prices`);
+    const printings = new Map();
+    for (const p of prices) {
+      if (!(p.marketPrice > 0)) continue;
+      printings.set(p.productId, [
+        ...(printings.get(p.productId) ?? []),
+        printingKey(p.subTypeName),
+      ]);
+    }
+    const byNumber = new Map();
+    for (const p of products) {
+      const number = p.extendedData?.find((e) => e.name === "Number")?.value;
+      if (!number) continue;
+      const key = numberKey(number);
+      byNumber.set(key, [...(byNumber.get(key) ?? []), p]);
+    }
+    let here = 0;
+    let unmatched = 0;
+    for (const card of catalogue?.cards ?? []) {
+      if (ids[card.id]) continue;
+      const named = (byNumber.get(numberKey(card.localId)) ?? []).filter((p) =>
+        fold(p.name).startsWith(fold(card.name)),
+      );
+      // The plain product before a stamped or exclusive one of the same number and name.
+      const product = named.find((p) => !p.name.includes("(")) ?? named[0];
+      if (!product) {
+        unmatched++;
+        continue;
+      }
+      ids[card.id] = {
+        productId: product.productId,
+        variants: printings.get(product.productId) ?? [],
+        groupId: gid,
+      };
+      here++;
+    }
+    linked += here;
+    console.log(`${set} -> ${name}: ${here} linked, ${unmatched} left without a product`);
   }
-  linked += here;
-  console.log(`${set} -> ${name}: ${here} linked, ${unmatched} left without a product`);
 }
 
 /** One group's products by number, and which printings each is priced as. */
