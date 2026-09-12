@@ -68,10 +68,9 @@ export function printingsOf(variants: TcgVariant[] | null | undefined): Printing
 }
 
 /**
- * The cards TCGplayer prices a Shadowless run for, as tcgplayer-links.mjs linked them: 101 of
- * Base Set's 102. It was Cardmarket's list until 2026-09-12, which filed every Base Set card as
- * having one, Machamp included, for which TCGplayer has no Shadowless product.
- * A run is offered where the market the app prices from has a figure for it.
+ * The cards TCGplayer prices a Shadowless run for, as tcgplayer-links.mjs linked them: all 102 of
+ * Base Set, Machamp's from Deck Exclusives. It was Cardmarket's list until 2026-09-12. A run is
+ * offered where the market the app prices from has a figure for it.
  */
 const SHADOWLESS = new Set(
   Object.entries(TCGPLAYER_IDS as Record<string, { shadowless?: unknown } | null>).flatMap(
