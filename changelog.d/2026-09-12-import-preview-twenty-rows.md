@@ -1,0 +1,1 @@
+- The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
