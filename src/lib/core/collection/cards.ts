@@ -588,6 +588,17 @@ export type BuildOptions = {
    * write to a row costs a read of the rows and not the matching again.
    */
   factsSource?: FactsSource;
+  /**
+   * Every set's facts in one answer, asked once, before the sets are walked.
+   *
+   * `factsSource` is asked per set and collection.ts puts a day-long cache entry per set in
+   * front of it. That is one Data Cache read per set, and on production those are ~16 ms each
+   * over the network: fifty-two sets is a hundred and two reads and a megabyte pulled before
+   * anything is drawn, measured at 5 to 9 seconds on 2026-09-12 where the same walk against a
+   * local cache is 0.16. So the caller may hand in a bundle instead, which it can keep in one
+   * entry. Left out, nothing changes: the per-set source above still answers.
+   */
+  factsBundle?: FactsBundle;
 };
 
 /** What the catalogue knows about a set it cannot be asked about: nothing. */
@@ -734,6 +745,18 @@ export type SetFacts = {
 
 /** Where a set's facts come from: resolveSetFacts(), or a cache in front of it. */
 export type FactsSource = (setName: string, identities: CardIdentity[]) => Promise<SetFacts>;
+
+/** One group of rows as a bundle is asked about it: which set, which catalogue, which printings. */
+export type FactsGroup = {
+  /** The key the bundle's answer is filed under, and the one buildCollection groups by. */
+  key: string;
+  setName: string;
+  language: BrowseLanguage | null;
+  identities: CardIdentity[];
+};
+
+/** Every group's facts at once, keyed by `FactsGroup.key`. A plain object: a Map does not survive the Data Cache. */
+export type FactsBundle = (groups: FactsGroup[]) => Promise<Record<string, SetFacts>>;
 
 export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offline">;
 
@@ -1004,7 +1027,13 @@ async function ownSetFacts(card: LanguageCard) {
 
 export async function buildCollection(
   rows: CollectionRow[],
-  { prices = true, priceSource = pricesFor, offline = false, factsSource }: BuildOptions = {},
+  {
+    prices = true,
+    priceSource = pricesFor,
+    offline = false,
+    factsSource,
+    factsBundle,
+  }: BuildOptions = {},
 ): Promise<CardSet[]> {
   if (!rows.length) return [];
 
@@ -1046,10 +1075,31 @@ export async function buildCollection(
   }
   if (!grouped.size) return [];
 
-  const facts: FactsSource =
+  const perSet: FactsSource =
     factsSource ??
     ((setName, identities) =>
       resolveSetFacts(setName, identities, { prices, priceSource, offline }));
+
+  /*
+   * One question where there were fifty-two, when the caller can answer it that way.
+   *
+   * Asked here rather than per set below so the caller has something it can keep in a single
+   * cache entry; the groups are already worked out. A key the bundle did not answer for falls
+   * through to the per-set source, which is what makes this safe to hand in: a bundle that is
+   * short of a set is slower, never wrong.
+   */
+  const bundled = factsBundle
+    ? await factsBundle(
+        [...grouped.entries()].map(([key, g]) => ({
+          key,
+          setName: g.setName,
+          language: g.language,
+          identities: setIdentities(g.rows),
+        })),
+      )
+    : null;
+  const facts = async (key: string, setName: string, identities: CardIdentity[]) =>
+    bundled?.[key] ?? (await perSet(setName, identities));
 
   // Six at a time. Forty-eight sets going at once was enough for TCGdex to
   // start refusing, and a refusal is a whole section of the page with no
@@ -1058,10 +1108,10 @@ export async function buildCollection(
   // reads three at a time is a second of waiting on nothing; six keeps a
   // cold day's fetches well under the refusal and halves the warm wait.
   const out = await mapLimit(
-    [...grouped.values()],
+    [...grouped.entries()].map(([key, g]) => ({ key, ...g })),
     6,
-    async ({ setName, language, rows: setRows }) => {
-      const set = await facts(setName, setIdentities(setRows));
+    async ({ key: groupKey, setName, language, rows: setRows }) => {
+      const set = await facts(groupKey, setName, setIdentities(setRows));
 
       // One entry per printing first, then folded together below: the facts of
       // the card from the catalogue, the facts of the copy from the row.
