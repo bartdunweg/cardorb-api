@@ -37,6 +37,8 @@ if the two have drifted apart.
 - Which price series a copy reads is one function, copyPriceOf(), instead of the four copies of that sentence in cards.ts, items.ts and twice in snapshot.ts.
 - The card facts say whether a stamped first run of the card exists (TCGdex knows), so a form can stop asking which run a copy is from on a card that was printed once.
 
+- Every Mega Evolution card is priced. TCGdex writes "M Manectric EX" and Cardmarket writes "MManectric EX", one space apart, so no Mega ever matched a product and the whole of them stood without a price; the same space stood between Nidoran♀ and "Nidoran ♀". 52 cards are linked by it. Where one name covers a Mega and its own secret rare, the second card is left for a person rather than put on the first one's price.
+
 - The full art Venusaur EX (XY123) and Blastoise EX (XY122) are priced as themselves again. Both hung on the Cardmarket product of the plain promo of the same name, and the plain XY28 and XY30 hung on theirs, so each of the four read the other's price: Venusaur EX XY123 said €5.12 for a card that sells around €117.
 
 - Search and the collection can be narrowed to full art cards: the ones whose illustration covers the whole card, wherever they sit in the rarities.
@@ -87,6 +89,9 @@ if the two have drifted apart.
 - A collection now takes its sets from the catalogue's nightly copy in the database rather than asking TCGdex on every read. The pages come up faster, and a catalogue that is slow or unreachable no longer reaches the cards at all. A set published today is still fetched live, until the copy has been through it.
 
 - A Cardmarket link that points into the wrong expansion is now found rather than believed. `node scripts/cardmarket-ids-fill.mjs --audit` reads the links that are there and asks whether each product sits in the expansion its own set does; 73 of 20,907 do not, and none of them is a card this collection holds. It runs weekly on its own.
+
+- The languages a copy may be set to come from the source that can answer for the card's set. TCGdex answers per card for the sets its catalogues carry, which is the better grain; for the 47 sets before Black & White it does not carry them (its Spanish and Portuguese records for Base Set hold zero cards, its Italian one holds nothing for Fossil or Diamond & Pearl, and it keeps no Dutch catalogue at all), so those sets are answered from Bulbapedia's own per-set list, scraped and checked in. A Base Set card offers all seven languages it was printed in, Dutch included; EX Team Rocket Returns offers English and Portuguese, which is what it was released in.
+- Dutch is a printing language again. It was dropped this morning on the grounds that no card was printed in it, which is wrong: Base Set, Jungle and Fossil were released in Dutch, and nothing after. It is never asked of TCGdex, which has no Dutch catalogue; those three sets are in the map.
 
 - More of the cards TCGdex has no scan of get a picture: the catalogue's copy now asks Limitless as well as pokemontcg.io, which between them answer for cards neither did alone (Oddish, SVP 102, is Limitless's; the Pikachu with the grey felt hat is pokemontcg.io's). And a nightly refresh keeps the pictures it worked out before instead of asking after every one of them again, so the whole catalogue is fresh again in a night rather than two.
 
