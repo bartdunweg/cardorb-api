@@ -589,12 +589,36 @@ async function factsWithUsd(
        * give a number that is neither run's. TCGplayer alone, converted, or nothing.
        */
       const first = f.usdFirstEd ?? fetched?.firstEd ?? null;
+      /*
+       * Every printing TCGplayer prices, in euros, and the product id beside it.
+       *
+       * This is the market that tells a holo from the plain card and a stamped run from an
+       * unlimited one; Cardmarket files those together often enough to be wrong by multiples
+       * (a Jungle Scyther is one product there and two printings here). copyPriceOf() reads
+       * these first and falls back to Cardmarket, which is still the only figure for most
+       * promos. The ids travel so a person can open the page the figure came from.
+       */
+      const printings = f.usdPrintings ?? fetched?.printings ?? null;
+      const pricePrintings = printings
+        ? Object.fromEntries(
+            Object.entries(printings).map(([name, v]) => [name, priceFromUsd(v, usdToEur)]),
+          )
+        : null;
+      const printingIds = printings
+        ? Object.fromEntries(
+            Object.entries(printings).flatMap(([name, v]) =>
+              v.productId == null ? [] : [[name, v.productId]],
+            ),
+          )
+        : null;
       return [
         key,
         {
           ...f,
           price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null),
           priceFirstEd: first ? priceFromUsd(first, usdToEur) : null,
+          pricePrintings,
+          printingIds,
         },
       ];
     }),

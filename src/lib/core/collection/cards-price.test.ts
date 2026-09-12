@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 import { holoPriceOf, priceOf, shownPrice } from "./cards";
-import { blendPrices, copyPriceOf, priceFromUsd } from "../price-basis.mjs";
+import { blendPrices, copyPriceOf, priceFromUsd, printingPriceOf } from "../price-basis.mjs";
 import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
 
 /** label, Cardmarket's own low/trend/avg30, and the English Near Mint "From" on the page. */
@@ -236,5 +236,41 @@ describe("TCGplayer's two runs", () => {
     expect(usdFirstEdOf(lugia)?.market).toBe(1085.03);
     expect(usdFirstEdOf({ holofoil: { marketPrice: 12 } })).toBeNull();
     expect(usdFirstEdOf(null)).toBeNull();
+  });
+});
+
+/**
+ * Which printing of TCGplayer's a copy reads.
+ *
+ * The market that tells a holo from the plain card: a Jungle Scyther is two printings there and
+ * one product on Cardmarket, which is how a holo copy read the plain rare's figure.
+ */
+describe("printingKeysOf and printingPriceOf", () => {
+  const eur = (n: number) => ({ low: null, market: n, avg30: null, nm: null });
+  const jungleScyther = { holofoil: eur(53.23), normal: eur(15.19) };
+
+  it("reads the foil the copy is, not whichever printing came first", () => {
+    expect(printingPriceOf({ finish: "holo" }, jungleScyther)?.market).toBe(53.23);
+    expect(printingPriceOf({ finish: "normal" }, jungleScyther)?.market).toBe(15.19);
+  });
+
+  it("puts the run before the foil, and the ordinary run first where nobody has said", () => {
+    const runs = { "1st-edition-holofoil": eur(145.91), "unlimited-holofoil": eur(53.23) };
+    expect(printingPriceOf({ finish: "holo", edition: "1st-edition" }, runs)?.market).toBe(145.91);
+    expect(printingPriceOf({ finish: "holo", edition: "unlimited" }, runs)?.market).toBe(53.23);
+    // A copy that says nothing about its run is the ordinary one, as everywhere else.
+    expect(printingPriceOf({ finish: "holo" }, runs)?.market).toBe(53.23);
+  });
+
+  it("falls back through less and less of what it knows, and then answers nothing", () => {
+    expect(printingPriceOf({ finish: "reverse-holo" }, { holofoil: eur(9) })?.market).toBe(9);
+    expect(printingPriceOf({ finish: "holo" }, {})).toBeNull();
+    expect(printingPriceOf({ finish: "holo" }, null)).toBeNull();
+  });
+
+  it("is the first thing copyPriceOf reads, and Cardmarket answers where it is silent", () => {
+    const card = { price: eur(20.72), priceHolo: eur(19.69), pricePrintings: jungleScyther };
+    expect(copyPriceOf({ finish: "holo" }, card)?.market).toBe(53.23);
+    expect(copyPriceOf({ finish: "holo" }, { price: eur(20.72) })?.market).toBe(20.72);
   });
 });
