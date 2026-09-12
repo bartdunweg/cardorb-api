@@ -246,7 +246,12 @@ export function cardPricesFromGuide(
   return out;
 }
 
-/** Every held card's own blended price on this day, for the movers and the lines. Deduped on tcgId. */
+/**
+ * Every held card's own price on this day, for the movers and the lines. Deduped on tcgId.
+ *
+ * Both series are TCGplayer's since 2026-09-12; see the note inside for which printing each
+ * reads. The holo series used to be Cardmarket's `-holo` fields.
+ */
 export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoint[] {
   const seen = new Map<string, CardPricePoint>();
   for (const set of sets) {
@@ -256,14 +261,15 @@ export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoin
        * The same market the card itself shows, or the line disagrees with the figure above it.
        *
        * A point is two series, the ordinary printing and the foil, because that is what the
-       * chart draws and what Cardmarket publishes. TCGplayer names more printings than two, so
-       * each series takes the first of theirs that means it: the ordinary run before the plain
-       * card, the foil before the reverse. What they do not price falls back to Cardmarket's
-       * figure, which is what every point before today was.
+       * chart draws. TCGplayer names more printings than two, so each series takes the first of
+       * theirs that means it: the ordinary run before the plain card, the foil before the
+       * reverse. Then the card's own figure for the plain series, which is TCGplayer's too since
+       * 2026-09-12. No Cardmarket fallback for either: a card TCGplayer does not price has no
+       * point, the same "no price" the card shows.
        *
-       * The catalogue-wide weekly pass (cardPricesFromGuide) stays Cardmarket's: it prices forty
-       * thousand cards out of one file and there is no second market to read at that size. A card
-       * somebody holds is written nightly by this function and takes precedence.
+       * The catalogue-wide weekly pass (cardPricesFromGuide) is still Cardmarket's until it reads
+       * tcgcsv's archive. A card somebody holds is written nightly by this function and takes
+       * precedence.
        */
       const printing = (...names: string[]) => {
         for (const name of names) {
@@ -273,9 +279,12 @@ export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoin
         return null;
       };
       const market = printing("normal", "unlimited", "1st-edition") ?? shownPrice(card.price);
-      const holo =
-        printing("holofoil", "unlimited-holofoil", "reverse-holofoil", "1st-edition-holofoil") ??
-        shownPrice(card.priceHolo);
+      const holo = printing(
+        "holofoil",
+        "unlimited-holofoil",
+        "reverse-holofoil",
+        "1st-edition-holofoil",
+      );
       if (market == null && holo == null) continue;
       seen.set(card.tcgId, { tcgId: card.tcgId, date, market, holo });
     }

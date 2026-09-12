@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
+import { usdToEurForRequest } from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
 import { rarityOrNull } from "@/lib/core/collection/collection-row";
@@ -46,7 +47,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   const own = isBrowseLanguage(language) ? language : null;
   let card;
   try {
-    card = await getCardDetail(tcgId, own);
+    // The day's rate beside it: the price is TCGplayer's dollars, and a figure is only shown in
+    // the currency the collection is valued in.
+    card = await getCardDetail(tcgId, own, await usdToEurForRequest());
   } catch (err) {
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.

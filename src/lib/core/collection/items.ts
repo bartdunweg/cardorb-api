@@ -59,20 +59,26 @@ export type CardItem = {
   acquiredAt: string | null;
   collectionId: string | null;
   price: Price | null;
+  /**
+   * Always null since 2026-09-12. It was Cardmarket's foil series, and nothing reads Cardmarket
+   * for a price any more: a reverse holo's figure is TCGplayer's reverse-holofoil printing, in
+   * `printingPrice`. Sent as null rather than dropped so a client that still decodes it (the web
+   * app until it stops) keeps working through the deploy, and dropped once none does.
+   */
   priceHolo: Price | null;
-  /** The stamped first run's price, where anything prices that run apart. See OwnedCard.priceFirstEd. */
+  /** The stamped first run's price, where TCGplayer prices that run apart. See OwnedCard.priceFirstEd. */
   priceFirstEd?: Price | null;
-  /** The Shadowless run's price, where Cardmarket prices that run apart. See OwnedCard.priceShadowless. */
+  /** Always null since 2026-09-12, for the reason `priceHolo` is: it was Cardmarket's product. */
   priceShadowless?: Price | null;
   /**
    * Which market and which printing this copy's figure came from, and where to see it.
    *
-   * A figure with no source is a figure nobody can check, and the two markets disagree by a
-   * median of 42% on the owner's own cards (measured 2026-09-12). So the item says which one
-   * answered, which printing of the card it was, and the TCGplayer product id where there is
-   * one, which is an address a person can open.
+   * A figure with no source is a figure nobody can check. So the item says which market
+   * answered, which printing of the card it was, and the TCGplayer product id where there is one,
+   * which is an address a person can open. There is one market since 2026-09-12, so the answer
+   * is "tcgplayer" or nothing; the word stays so a client can say it rather than assume it.
    */
-  priceSource?: "tcgplayer" | "cardmarket" | null;
+  priceSource?: "tcgplayer" | null;
   pricePrinting?: string | null;
   tcgplayerId?: number | null;
   /**
@@ -178,9 +184,9 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   acquiredAt: v.acquiredAt,
   collectionId: v.collectionId,
   price: card.price,
-  priceHolo: card.priceHolo,
+  priceHolo: null,
   priceFirstEd: card.priceFirstEd ?? null,
-  priceShadowless: card.priceShadowless ?? null,
+  priceShadowless: null,
   ...sourceOf(v, card),
 });
 
@@ -193,7 +199,7 @@ function sourceOf(
   v: Variant,
   card: OwnedCard,
 ): {
-  priceSource: "tcgplayer" | "cardmarket" | null;
+  priceSource: "tcgplayer" | null;
   pricePrinting: string | null;
   tcgplayerId: number | null;
   printingPrice?: Price | null;
@@ -209,8 +215,10 @@ function sourceOf(
       printingPrice: card.pricePrintings?.[printing] ?? null,
     };
   }
-  const cardmarket = copyPriceOf(v, card);
-  return { priceSource: cardmarket ? "cardmarket" : null, pricePrinting: null, tcgplayerId: null };
+  // No printing of its own, and still TCGplayer's where there is a figure: the card's price is
+  // TCGplayer's since 2026-09-12, and a card it does not price has no source to name.
+  const own = copyPriceOf(v, card);
+  return { priceSource: own ? "tcgplayer" : null, pricePrinting: null, tcgplayerId: null };
 }
 
 export type ItemFilter = {
@@ -287,11 +295,13 @@ export type Sort = (typeof SORTS)[number];
 export type Order = "asc" | "desc";
 
 /**
- * What a copy is worth: the stamped run's price for a 1st Edition, the foil's for a reverse, the
- * plain one otherwise. The rule itself is copyPriceOf() in price-basis.mjs, which is where every
- * path that puts a figure on a copy now reads it from; this used to be a third copy of it.
+ * What a copy is worth: the TCGplayer printing it is, where that was priced, and the card's own
+ * figure otherwise. The rule itself is copyPriceOf() in price-basis.mjs; an item carries the
+ * printing it chose as `printingPrice` rather than every printing, so that is read first here.
+ * Without it, a reverse holo item sorted and totalled at the plain card's price.
  */
-export const copyPrice = (it: CardItem): number | null => shownPrice(copyPriceOf(it, it));
+export const copyPrice = (it: CardItem): number | null =>
+  shownPrice(it.printingPrice ?? copyPriceOf(it, it));
 
 export type ListValue = { value: number; unpriced: number; copies: number };
 

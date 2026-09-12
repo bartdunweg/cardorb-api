@@ -13,7 +13,12 @@ import { priceOf, holoPriceOf } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 
 /** TCGplayer's numbers for one printing, in dollars, as TCGdex relays them. */
-export type UsdPrice = { market: number | null; low: number | null };
+export type UsdPrice = {
+  market: number | null;
+  low: number | null;
+  /** TCGplayer's product id for the printing the figure is from: an address a person can open. */
+  productId?: number | null;
+};
 
 /**
  * A set as the index lists it. `cardCount` is the index's own count, and it is what tells a set
@@ -260,7 +265,12 @@ const TCGPLAYER_FIRST_ED = ["1st-edition-holofoil", "1st-edition"];
 /** TCGplayer's market and low for the first of `printings` that has a market, or null. */
 function firstWithMarket(
   tp:
-    | Record<string, { marketPrice?: number | null; lowPrice?: number | null } | null | undefined>
+    | Record<
+        string,
+        | { marketPrice?: number | null; lowPrice?: number | null; productId?: number | null }
+        | null
+        | undefined
+      >
     | null
     | undefined,
   printings: string[],
@@ -271,6 +281,7 @@ function firstWithMarket(
   return {
     market: printing.marketPrice ?? null,
     low: typeof printing.lowPrice === "number" ? printing.lowPrice : null,
+    productId: typeof printing.productId === "number" ? printing.productId : null,
   };
 }
 
@@ -329,7 +340,12 @@ export const usdPrintingsOf = (
 /** TCGplayer's market and low for the first printing that has a market, or null. */
 export function usdOf(
   tp:
-    | Record<string, { marketPrice?: number | null; lowPrice?: number | null } | null | undefined>
+    | Record<
+        string,
+        | { marketPrice?: number | null; lowPrice?: number | null; productId?: number | null }
+        | null
+        | undefined
+      >
     | null
     | undefined,
 ): UsdPrice | null {

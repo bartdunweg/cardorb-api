@@ -1,67 +1,37 @@
 /**
- * The price calibration, against the cards it was calibrated on.
+ * What a card is worth, and which market said so.
  *
- * Every case below is a real Cardmarket product page read by hand on 5 August
- * 2026 with the language filter on English and the condition filter on Near
- * Mint, so `from` here is the number Cardmarket actually showed. That is the
- * only reason these constants are defensible, and the only thing that would
- * catch someone tightening them on a hunch.
+ * The Near Mint calibration this file opened with is gone with the band it measured: seven
+ * Cardmarket product pages read by hand on 5 August 2026, which fitted a ratio to Cardmarket's
+ * trend. Nothing reads that trend any more (see price-basis.mjs), and a band measured against
+ * one market is not evidence about another. What is left here is the part that still decides
+ * money: which of a card's figures a copy reads, and that a card nobody prices has no price.
  */
 
 import { describe, expect, it } from "vitest";
 import { holoPriceOf, priceOf, shownPrice } from "./cards";
-import { blendPrices, copyPriceOf, priceFromUsd, printingPriceOf } from "../price-basis.mjs";
+import { copyPriceOf, priceFromMarket, priceFromUsd, printingPriceOf } from "../price-basis.mjs";
 import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
 
-/** label, Cardmarket's own low/trend/avg30, and the English Near Mint "From" on the page. */
-const MEASURED = [
-  ["Cynthia's Garchomp ex (DRI 232)", 145.0, 191.47, 233.33, 230.0],
-  ["Morpeko ex (PBL 117)", 45.0, 72.65, 66.74, 100.0],
-  ["Cinccino ex (CRI 119)", 22.0, 42.59, 46.47, 55.0],
-  ["Marnie's Grimmsnarl ex (ASC 287)", 20.0, 39.16, 43.17, 45.95],
-  ["Corviknight V (SIT TG18)", 9.0, 12.58, 11.81, 11.49],
-  ["Fletchinder (PAL 199)", 9.0, 12.72, 11.28, 11.0],
-  ["Miltank (CRZ GG24)", 5.0, 8.64, 8.5, 7.0],
-] as const;
-
 describe("priceOf", () => {
-  it.each(MEASURED)(
-    "brackets the real English Near Mint price of %s",
-    (_, low, trend, avg30, from) => {
-      const price = priceOf({ low, trend, avg30 });
-      expect(price?.nm).not.toBeNull();
-      expect(price!.nm!.low).toBeLessThanOrEqual(from);
-      expect(price!.nm!.high).toBeGreaterThanOrEqual(from);
-    },
-  );
-
-  // The grid and the totals show one figure rather than a range, so the middle
-  // of it carries the same burden the bounds do. Measured against the same seven
-  // pages it lands within 8.7%, so 10% is the line that catches a drift without
-  // failing on the spread that was always there.
-  it.each(MEASURED)(
-    "puts the middle of the range within 10%% for %s",
-    (_, low, trend, avg30, from) => {
-      const mid = shownPrice(priceOf({ low, trend, avg30 }))!;
-      expect(Math.abs(mid / from - 1)).toBeLessThan(0.1);
-    },
-  );
-
-  it("shows the market price itself where there is no range to take a middle of", () => {
-    const price = priceOf({ low: 0.02, trend: 0.45, avg30: 0.41 });
-    expect(price?.nm).toBeNull();
-    expect(shownPrice(price)).toBe(0.45);
+  // The band that used to sit on top of this is gone, so the guide's own market figure is the
+  // whole of what it answers. Kept as a test because the guide still feeds the price history
+  // until the cron reads TCGplayer too, and a band creeping back in would be silent money.
+  it("never invents a Near Mint range on top of the market figure", () => {
+    expect(priceOf({ low: 145.0, trend: 191.47, avg30: 233.33 })?.nm).toBeNull();
+    expect(priceOf({ low: 5.0, trend: 8.64, avg30: 8.5 })?.nm).toBeNull();
+    expect(shownPrice(priceOf({ low: 0.02, trend: 0.45, avg30: 0.41 }))).toBe(0.45);
   });
 
-  it("has nothing to show for a card Cardmarket has never listed", () => {
+  it("has nothing to show for a card nobody has listed", () => {
     expect(shownPrice(null)).toBeNull();
   });
 
-  it("shows the floor only when it is the only number Cardmarket has", () => {
+  it("shows the floor only when it is the only number there is", () => {
     expect(shownPrice(priceOf({ low: 1.2, trend: null, avg30: null }))).toBe(1.2);
     expect(shownPrice(priceOf({ low: 1.2, trend: 3.4, avg30: 3.1 }))).not.toBe(1.2);
   });
-  it("keeps Cardmarket's low as a floor rather than as the price", () => {
+  it("keeps the low as a floor rather than as the price", () => {
     const price = priceOf({ low: 45.0, trend: 72.65, avg30: 66.74 });
     expect(price?.low).toBe(45.0);
     expect(price?.market).toBe(72.65);
@@ -87,23 +57,12 @@ describe("priceOf", () => {
     expect(price?.market).toBe(12.58);
   });
 
-  // Under €5 the cheapest listing is usually a lot rather than a single card, so
-  // there is nothing there a range could be accurate about.
-  it("gives no range to a card too cheap to have one", () => {
-    expect(priceOf({ low: 0.02, trend: 0.45, avg30: 0.41 })?.nm).toBeNull();
-    expect(priceOf({ low: 2.0, trend: 3.84, avg30: 2.75 })?.nm).toBeNull();
-  });
-
-  it("still reports the market price for a card with no range", () => {
-    expect(priceOf({ low: 0.02, trend: 0.45, avg30: 0.41 })?.market).toBe(0.45);
-  });
-
   it("falls back to the month where there is no trend at all", () => {
     expect(priceOf({ low: 1.0, trend: null, avg30: 9.0 })?.market).toBe(9.0);
   });
 
   // A card TCGdex knows but has never seen listed is unknown, not free.
-  it("is null where Cardmarket has published nothing", () => {
+  it("is null where nothing has been published", () => {
     expect(priceOf({ low: null, trend: null, avg30: null })).toBeNull();
   });
 });
@@ -154,19 +113,24 @@ describe("priceFromUsd", () => {
   });
 });
 
-describe("blendPrices", () => {
+describe("priceFromMarket", () => {
   const cm = priceOf({ low: 8, trend: 10, avg30: 10 });
   const tp = priceFromUsd({ market: 11, low: 9 }, 1);
-  it("averages the two markets and keeps the lower floor", () => {
-    const p = blendPrices(cm, tp)!;
-    expect(p.market).toBeCloseTo((shownPrice(cm)! + 11) / 2, 2);
-    expect(p.low).toBe(8);
-    expect(shownPrice(p)).toBe(p.market);
+
+  it("is TCGplayer's figure, untouched by the other market", () => {
+    const p = priceFromMarket(cm, tp)!;
+    expect(p.market).toBe(11);
+    expect(p.low).toBe(9);
+    expect(shownPrice(p)).toBe(11);
   });
-  it("is the one market where the other is missing, and nothing where both are", () => {
-    expect(shownPrice(blendPrices(cm, null))).toBe(shownPrice(cm));
-    expect(shownPrice(blendPrices(null, tp))).toBe(11);
-    expect(blendPrices(null, null)).toBeNull();
+
+  // The whole point of the change. A card Cardmarket prices at €30.46 off a product it shares
+  // with the holo, and TCGplayer does not price at all, used to read €30.46. It now reads
+  // nothing, and the screen says so.
+  it("is nothing where TCGplayer says nothing, however much the other market says", () => {
+    expect(priceFromMarket(cm, null)).toBeNull();
+    expect(priceFromMarket(priceOf({ low: 30.46, trend: 30.46, avg30: 30.46 }), null)).toBeNull();
+    expect(priceFromMarket(null, null)).toBeNull();
   });
 });
 
@@ -181,9 +145,7 @@ describe("blendPrices", () => {
 describe("copyPriceOf", () => {
   const card = {
     price: { low: 1, market: 10, avg30: 10, nm: null },
-    priceHolo: { low: 2, market: 20, avg30: 20, nm: null },
     priceFirstEd: { low: 3, market: 30, avg30: 30, nm: null },
-    priceShadowless: { low: 4, market: 40, avg30: 40, nm: null },
   };
 
   it("reads the stamped run's price for a 1st Edition copy, whatever its finish", () => {
@@ -193,31 +155,33 @@ describe("copyPriceOf", () => {
     );
   });
 
-  it("reads the Shadowless run's price for a Shadowless copy, whatever its finish", () => {
-    // Cardmarket files the run as a product of its own and the guide carries it: base1-4
-    // Charizard is €3,567 there against €583 on the ordinary product, read 2026-09-12.
-    expect(copyPriceOf({ edition: "shadowless", finish: "holo" }, card)).toBe(card.priceShadowless);
-    expect(copyPriceOf({ edition: "shadowless", finish: "reverse-holo" }, card)).toBe(
-      card.priceShadowless,
-    );
+  // The run's own figure was Cardmarket's, and it left with Cardmarket: base1-4 Charizard was
+  // €3,567 on its Shadowless product against €583 on the ordinary one, read 2026-09-12.
+  // TCGplayer does not separate the run in what TCGdex relays, so a Shadowless copy reads the
+  // ordinary price and is understated. Held here so the day someone wires tcgcsv's Shadowless
+  // products in, this test is what they change.
+  it("reads the ordinary price for a Shadowless copy, the run having no figure of its own", () => {
+    expect(copyPriceOf({ edition: "shadowless", finish: "holo" }, card)).toBe(card.price);
   });
 
   it("falls back to the ordinary price for a run nothing prices apart", () => {
-    const plain = { price: card.price, priceHolo: card.priceHolo };
+    const plain = { price: card.price };
     expect(copyPriceOf({ edition: "shadowless", finish: "holo" }, plain)).toBe(card.price);
     expect(copyPriceOf({ edition: "1st-edition", finish: "holo" }, plain)).toBe(card.price);
   });
 
-  it("reads the foil series for a reverse and the plain one otherwise", () => {
-    expect(copyPriceOf({ finish: "reverse-holo" }, card)).toBe(card.priceHolo);
-    expect(copyPriceOf({ finish: "poke-ball" }, card)).toBe(card.priceHolo);
+  // The foil used to have a series of its own here, out of Cardmarket's `-holo` fields. It is
+  // TCGplayer's printings that tell a foil from the plain card now, and they are read above:
+  // what is left on the card itself is one figure, whatever the finish.
+  it("reads the card's own figure for every finish, the foil series having gone", () => {
+    expect(copyPriceOf({ finish: "reverse-holo" }, card)).toBe(card.price);
+    expect(copyPriceOf({ finish: "poke-ball" }, card)).toBe(card.price);
     expect(copyPriceOf({ finish: "holo" }, card)).toBe(card.price);
     expect(copyPriceOf({ finish: null, edition: "unlimited" }, card)).toBe(card.price);
   });
 
   it("falls back to the ordinary price where no stamped figure exists", () => {
-    const plain = { price: card.price, priceHolo: null };
-    expect(copyPriceOf({ edition: "1st-edition" }, plain)).toBe(card.price);
+    expect(copyPriceOf({ edition: "1st-edition" }, { price: card.price })).toBe(card.price);
     expect(copyPriceOf({ edition: "1st-edition" }, { price: null })).toBeNull();
   });
 });
@@ -262,14 +226,30 @@ describe("printingKeysOf and printingPriceOf", () => {
     expect(printingPriceOf({ finish: "holo" }, runs)?.market).toBe(53.23);
   });
 
+  // A copy nobody has classified is every row in this collection until somebody fills it in,
+  // and cards-stats.test.ts already says it "must not silently claim the foil price". Through
+  // TCGplayer's printings it did: a card priced as normal and reverse-holofoil handed an
+  // unclassified copy the reverse's figure, because the foil keys came before "normal". A
+  // modern common reads a reverse at several times its plain price, so every unclassified copy
+  // of one was being counted at the reverse's.
+  it("reads the plain printing for a copy whose finish nobody has said, never a reverse", () => {
+    const modern = { normal: eur(0.25), "reverse-holofoil": eur(1.4) };
+    expect(printingPriceOf({ finish: null }, modern)?.market).toBe(0.25);
+    expect(printingPriceOf({}, modern)?.market).toBe(0.25);
+    // A card that exists only as a holo: the plain card is the holo, so that is its price.
+    expect(printingPriceOf({ finish: null }, { holofoil: eur(53.23) })?.market).toBe(53.23);
+    // And a card TCGplayer prices only as a reverse has nothing to say about the plain copy.
+    expect(printingPriceOf({ finish: null }, { "reverse-holofoil": eur(1.4) })).toBeNull();
+  });
+
   it("falls back through less and less of what it knows, and then answers nothing", () => {
     expect(printingPriceOf({ finish: "reverse-holo" }, { holofoil: eur(9) })?.market).toBe(9);
     expect(printingPriceOf({ finish: "holo" }, {})).toBeNull();
     expect(printingPriceOf({ finish: "holo" }, null)).toBeNull();
   });
 
-  it("is the first thing copyPriceOf reads, and Cardmarket answers where it is silent", () => {
-    const card = { price: eur(20.72), priceHolo: eur(19.69), pricePrintings: jungleScyther };
+  it("is the first thing copyPriceOf reads, and the card's own figure answers where it is silent", () => {
+    const card = { price: eur(20.72), pricePrintings: jungleScyther };
     expect(copyPriceOf({ finish: "holo" }, card)?.market).toBe(53.23);
     expect(copyPriceOf({ finish: "holo" }, { price: eur(20.72) })?.market).toBe(20.72);
   });

@@ -17,8 +17,8 @@
  * It was deleted rather than kept warm, because it was not merely unused: its
  * `movement` paired `p.market` against `p.avg30`, which is the one pairing the
  * comment directly above it forbade. That reads honestly on a Cardmarket-only
- * price, where `market` is the raw trend — and this collection's prices are
- * blended (see blendPrices in ../price-basis.mjs), so `market` is the average
+ * price, where `market` is the raw trend, and this collection's prices were
+ * blended at the time (until 2026-09-12; see price-basis.mjs), so `market` was the average
  * of Cardmarket's Near Mint estimate and TCGplayer's dollars in euros, while
  * `avg30` stays Cardmarket's raw month. A card whose trend, month's average and
  * dollar market are all the same number reported +13.75%: the Near Mint band,

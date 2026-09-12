@@ -33,7 +33,7 @@
 
 import { localise, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
-import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
+import { CatalogueNotFound, type CardPrices, usdOf } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
 import {
   editionsOf,
@@ -162,7 +162,7 @@ export type Variant = {
  * number on a card as this file does, and Node 20 cannot import a .ts file. The
  * calibration comments moved with it; that file is where they are now.
  */
-import { priceOf, copyPriceOf } from "../price-basis.mjs";
+import { copyPriceOf, priceFromUsd } from "../price-basis.mjs";
 export { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
@@ -1491,8 +1491,19 @@ export type CardDetail = {
    * cardmarketUrl() and the links map stay for when the address can be made to hold.
    */
   cmUrl: string | null;
+  /**
+   * What the card trades at: TCGplayer's market figure and lowest listing, converted at the
+   * day's rate. Null where TCGplayer prices nothing or the rate could not be read. It was
+   * Cardmarket's until 2026-09-12; see price-basis.mjs for why one market.
+   */
   price: Price | null;
-  /** The rest of Cardmarket's numbers, for the card's own page. */
+  /** TCGplayer's product id for the printing that figure is from, for a link to check it by. */
+  tcgplayerId: number | null;
+  /**
+   * Always null since 2026-09-12. It was Cardmarket's average, trend and seven-day figure, shown
+   * beside a price from another market with nothing to say so. Sent as null rather than dropped
+   * so a client that still decodes it keeps working through the deploy.
+   */
   market: { avg: number | null; trend: number | null; avg7: number | null } | null;
 };
 
@@ -1511,6 +1522,8 @@ export type CardDetail = {
 export async function getCardDetail(
   id: string,
   language: BrowseLanguage | null = null,
+  /** The day's dollar rate. Null, or left out, gives no price: never one at a guessed rate. */
+  usdToEur: number | null = null,
 ): Promise<CardDetail | null> {
   let card;
   try {
@@ -1551,6 +1564,7 @@ export async function getCardDetail(
           trend?: number | null;
           avg7?: number | null;
         };
+        tcgplayer?: Parameters<typeof usdOf>[0];
       };
     } | null;
   } catch (err) {
@@ -1559,6 +1573,9 @@ export async function getCardDetail(
   }
   if (!card?.id || !card.name) return null;
   const cm = card.pricing?.cardmarket;
+  // A card from a catalogue of its own is not on TCGplayer's English shelf; TCGdex relays
+  // nothing for it, so this is null there without asking.
+  const usd = usdOf(card.pricing?.tcgplayer);
   return {
     id: card.id,
     name: card.name,
@@ -1583,7 +1600,8 @@ export async function getCardDetail(
       : null,
     cmId: num(cm?.idProduct),
     cmUrl: null,
-    price: cm ? priceOf(cm) : null,
-    market: cm ? { avg: num(cm.avg), trend: num(cm.trend), avg7: num(cm.avg7) } : null,
+    price: usd && usdToEur != null ? priceFromUsd(usd, usdToEur) : null,
+    tcgplayerId: usd?.productId ?? null,
+    market: null,
   };
 }

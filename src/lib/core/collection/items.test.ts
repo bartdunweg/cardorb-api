@@ -226,8 +226,11 @@ describe("filterItems", () => {
 });
 
 describe("sortItems", () => {
-  const price = { market: 2, nm: { low: 1.8, mid: 2, high: 2.2 } } as unknown as Price;
-  const priceHolo = { market: 5, nm: { low: 4.5, mid: 5, high: 5.5 } } as unknown as Price;
+  const price = { market: 2, low: null, nm: null } as unknown as Price;
+  const foil = { market: 5, low: null, nm: null } as unknown as Price;
+  // TCGplayer's printings: the foil is its reverse-holofoil, which is where a reverse holo's
+  // own figure comes from since Cardmarket's -holo fields stopped being read (2026-09-12).
+  const pricePrintings = { normal: price, "reverse-holofoil": foil };
   const sets: CardSet[] = [
     set("Base Set", [
       card("Pikachu", [variant({ id: "a", acquiredAt: "2026-01-02" })], { price }),
@@ -238,15 +241,12 @@ describe("sortItems", () => {
         "Snorlax",
         [
           variant({ id: "c", acquiredAt: "2026-02-01" }),
-          // A holo takes the plain price and a reverse holo the foil price,
-          // the same rule variantPrice() in cards.ts applies everywhere else:
-          // a card that exists only as a holo is what the plain fields
-          // already describe, and the `-holo` fields there are a thinner,
-          // different market.
+          // A holo takes the plain price and a reverse holo the foil price, the same rule
+          // copyPriceOf() applies everywhere else.
           variant({ id: "d", finish: "holo", acquiredAt: null }),
           variant({ id: "e", finish: "reverse-holo", acquiredAt: null }),
         ],
-        { price, priceHolo },
+        { price, pricePrintings },
       ),
     ]),
   ];
@@ -338,8 +338,9 @@ describe("countStats", () => {
   });
 
   it("values the copies held at today's price, printing by printing, and counts the unpriced apart", () => {
-    const price = { market: 2, nm: { low: 1.8, mid: 2, high: 2.2 } } as unknown as Price;
-    const priceHolo = { market: 5, nm: { low: 4.5, mid: 5, high: 5.5 } } as unknown as Price;
+    const price = { market: 2, low: null, nm: null } as unknown as Price;
+    const foil = { market: 5, low: null, nm: null } as unknown as Price;
+    const pricePrintings = { normal: price, "reverse-holofoil": foil };
     const sets: CardSet[] = [
       {
         ...(SETS[0] as CardSet),
@@ -347,7 +348,7 @@ describe("countStats", () => {
           card(
             "Priced",
             [variant({ quantity: 2 }), variant({ id: "v2", finish: "reverse-holo", quantity: 1 })],
-            { price, priceHolo },
+            { price, pricePrintings },
           ),
           card("Unpriced", [variant({ quantity: 3 })]),
         ],
