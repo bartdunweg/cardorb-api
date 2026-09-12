@@ -6,6 +6,7 @@ import { heldValue } from "./cards-stats";
 import type { DexEntry } from "./pokedex";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { UUID } from "./collection-row";
+import { type FullArtKeys, fullArtKey } from "@/lib/storage/postgres";
 
 /**
  * The collection as a flat list of copies, for a screen that pages through it.
@@ -184,12 +185,15 @@ export type ItemFilter = {
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
-   * The catalogue ids of the full arts, where the route asked for them: a copy counts when its
-   * own catalogue id is one. Resolved by the route from the catalogue's copy, because whether a
-   * card is full art is a fact about the printing and not about the row (full-art.ts). A row
-   * with no catalogue id, or one the copy has never seen, is not a full art here.
+   * The full arts of the catalogue, by id and by set and number both, where the route asked for
+   * them. Whether a card is full art is a fact about the printing and not about the row
+   * (full-art.ts), so the route reads it from the catalogue's copy and hands it down.
+   *
+   * Two keys because a row and the copy do not always agree on an id: a row written from the old
+   * catalogue files 151 as `sv3pt5-1` where the copy files it as `sv03.5-001`. Set and number are
+   * what they do agree on. A row that matches on neither is not a full art here.
    */
-  fullArtIds?: ReadonlySet<string>;
+  fullArtIndex?: FullArtKeys;
   /**
    * A rule folder's rule, resolved by the route from `collection`. Owned copies only,
    * whatever `owned` says: a wished copy is in no folder that fills itself.
@@ -207,6 +211,16 @@ const matchesWord = (it: { name: string; set: string; setTitle: string }, q: str
   it.set.toLowerCase().includes(q) ||
   it.setTitle.toLowerCase().includes(q);
 
+/**
+ * Whether this copy is one of the catalogue's full arts: by its catalogue id, or failing that by
+ * the set it is filed under and the number printed on it. Both names of the set are tried, the
+ * one it was filed under and the official one, the same pair a search word is matched against.
+ */
+const isFullArt = (it: CardItem, full: FullArtKeys): boolean =>
+  (it.tcgId !== null && full.ids.has(it.tcgId)) ||
+  full.keys.has(fullArtKey(it.set, it.number)) ||
+  full.keys.has(fullArtKey(it.setTitle, it.number));
+
 export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const q = f.q?.trim().toLowerCase();
   const set = f.set?.trim().toLowerCase();
@@ -222,7 +236,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (f.collection && it.collectionId !== f.collection) return false;
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
-    if (f.fullArtIds && !(it.tcgId && f.fullArtIds.has(it.tcgId))) return false;
+    if (f.fullArtIndex && !isFullArt(it, f.fullArtIndex)) return false;
     if (number && it.number.toLowerCase() !== number) return false;
     if (gen && (it.gen ?? "").toLowerCase() !== gen) return false;
     if (type && (it.type ?? "").toLowerCase() !== type) return false;

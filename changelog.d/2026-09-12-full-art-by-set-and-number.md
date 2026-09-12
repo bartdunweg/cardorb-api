@@ -1,0 +1,1 @@
+- The full art filter finds the cards it was missing: a card whose id the two catalogues spell differently is now matched on its set and number instead.

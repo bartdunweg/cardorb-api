@@ -1530,25 +1530,50 @@ export async function catalogueCardsById(
 }
 
 /**
- * Which of these catalogue ids are full arts. One query for the whole collection rather than a
- * pass per set: the copy already knows, and an id it does not hold answers no, which is what a
- * row the copy has never seen (a Japanese card, a set copied after the row was written) is.
+ * Every full art in the copy, by catalogue id and by set and number both.
+ *
+ * Two keys, because a collection row and the copy do not always agree on a card's id. A row
+ * written from the old catalogue files 151 as `sv3pt5-1` and the copy files it as `sv03.5-001`;
+ * measured on 2026-09-12, 1,361 of one collection's 1,940 rows would not join on the id at all,
+ * and 564 of them are full arts. Set name and number are what the two do agree on, so that is
+ * the second key: the set's name lowercased, and the number with any leading zeros taken off.
+ *
+ * The whole lot in one read rather than a lookup per collection. There are a few thousand full
+ * arts in a catalogue of twenty-odd thousand cards (2,544 on the day this was written), which is
+ * one page of ids and no filter to push down.
  */
-export async function fullArtIdsAmong(db: SupabaseClient, ids: string[]): Promise<Set<string>> {
-  const out = new Set<string>();
-  // PostgREST puts the list in the URL, so it goes in bites rather than as one very long line.
-  const BITE = 500;
-  for (let at = 0; at < ids.length; at += BITE) {
-    const { data, error } = await db
-      .from("catalogue_cards")
-      .select("id")
-      .eq("full_art", true)
-      .in("id", ids.slice(at, at + BITE));
-    if (error)
-      throw new Error(`Reading the full arts from the catalogue's copy failed: ${error.message}`);
-    for (const row of (data ?? []) as { id: string }[]) out.add(row.id);
+export type FullArtKeys = {
+  /** Catalogue ids. */
+  ids: ReadonlySet<string>;
+  /** `set name|number`, both as fullArtKey() spells them, for a row whose id does not join. */
+  keys: ReadonlySet<string>;
+};
+
+/** How a set name and a card number are spelled as one key, on both sides of the join. */
+export const fullArtKey = (setName: string, number: string): string =>
+  `${setName.trim().toLowerCase()}|${number
+    .trim()
+    .toLowerCase()
+    .replace(/^0+(?=.)/, "")}`;
+
+export async function readFullArtKeys(db: SupabaseClient): Promise<FullArtKeys> {
+  const rows = await readAllPages<{ id: string; set_name: string; local_id: string }>(
+    "the catalogue's full arts",
+    (page, counted) =>
+      db
+        .from("catalogue_cards")
+        .select("id, set_name, local_id", counted ? { count: "exact" } : {})
+        .eq("full_art", true)
+        .order("id", { ascending: true })
+        .range(...pageRange(page)),
+  );
+  const ids = new Set<string>();
+  const keys = new Set<string>();
+  for (const row of rows) {
+    ids.add(row.id);
+    keys.add(fullArtKey(row.set_name, row.local_id));
   }
-  return out;
+  return { ids, keys };
 }
 
 /** The document the browser searches in, and the version it was built from. Null before the first build. */
