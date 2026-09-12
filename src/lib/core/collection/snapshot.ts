@@ -252,8 +252,30 @@ export function cardPricesFromSets(sets: CardSet[], date: string): CardPricePoin
   for (const set of sets) {
     for (const card of set.cards) {
       if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
-      const market = shownPrice(card.price);
-      const holo = shownPrice(card.priceHolo);
+      /*
+       * The same market the card itself shows, or the line disagrees with the figure above it.
+       *
+       * A point is two series, the ordinary printing and the foil, because that is what the
+       * chart draws and what Cardmarket publishes. TCGplayer names more printings than two, so
+       * each series takes the first of theirs that means it: the ordinary run before the plain
+       * card, the foil before the reverse. What they do not price falls back to Cardmarket's
+       * figure, which is what every point before today was.
+       *
+       * The catalogue-wide weekly pass (cardPricesFromGuide) stays Cardmarket's: it prices forty
+       * thousand cards out of one file and there is no second market to read at that size. A card
+       * somebody holds is written nightly by this function and takes precedence.
+       */
+      const printing = (...names: string[]) => {
+        for (const name of names) {
+          const found = card.pricePrintings?.[name];
+          if (found) return shownPrice(found);
+        }
+        return null;
+      };
+      const market = printing("normal", "unlimited", "1st-edition") ?? shownPrice(card.price);
+      const holo =
+        printing("holofoil", "unlimited-holofoil", "reverse-holofoil", "1st-edition-holofoil") ??
+        shownPrice(card.priceHolo);
       if (market == null && holo == null) continue;
       seen.set(card.tcgId, { tcgId: card.tcgId, date, market, holo });
     }

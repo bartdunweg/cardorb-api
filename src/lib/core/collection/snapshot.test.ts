@@ -205,6 +205,25 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       { tcgId: "sv03-125", date: "2026-09-07", market: 10, holo: 30 },
     ]);
   });
+
+  it("records the market the card shows: TCGplayer's printings first, Cardmarket where they are silent", () => {
+    const eur = (market: number) => ({ market, low: null, avg30: null, nm: null });
+    const sets = [
+      set([
+        // A Jungle Scyther: one product on Cardmarket at €20.72, two printings on TCGplayer.
+        priced(20.72, 19.69, {
+          tcgId: "base2-10",
+          pricePrintings: { "unlimited-holofoil": eur(53.23), unlimited: eur(15.19) },
+        }),
+        // A promo TCGplayer does not price: the point stays what every point before today was.
+        priced(7, null, { tcgId: "svp-1", key: "k-promo" }),
+      ]),
+    ];
+    expect(cardPricesFromSets(sets, "2026-09-12")).toEqual([
+      { tcgId: "base2-10", date: "2026-09-12", market: 15.19, holo: 53.23 },
+      { tcgId: "svp-1", date: "2026-09-12", market: 7, holo: null },
+    ]);
+  });
 });
 
 describe("cardPricesFromGuide", () => {
