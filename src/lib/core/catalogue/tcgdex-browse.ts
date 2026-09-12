@@ -1,3 +1,4 @@
+import { compareCardNumbers } from "../util";
 import IDS_JA from "../cardmarket-ids.ja.generated.json";
 import IDS_KO from "../cardmarket-ids.ko.generated.json";
 import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
@@ -498,23 +499,12 @@ async function englishFacts(setId: string): Promise<Map<string, SetFact> | null>
 }
 
 /**
- * The number a card is filed under, split so it can be ordered the way a binder
- * page is rather than the way a string sort is: a set's numbers are not all
- * numbers — 151 runs 1–207, Silver Tempest's gallery runs TG01–TG30, and the
- * promos run SVP001 — so the prefix decides the group and the digits the place.
+ * A set's cards the way a binder page holds them rather than the way a string sort does: 151
+ * runs 1 to 207, Silver Tempest's gallery TG01 to TG30 after it, the promos XY1 to XY211. The
+ * rule is compareCardNumbers(), the one the collection sorts by too.
  */
-function numberOrder(number: string): [string, number, string] {
-  const m = /^([A-Za-z]*)0*(\d+)(.*)$/.exec(number.trim());
-  if (!m) return [number.toUpperCase(), Number.MAX_SAFE_INTEGER, number];
-  return [(m[1] ?? "").toUpperCase(), Number(m[2]), m[3] ?? ""];
-}
-
 export const inBinderOrder = (cards: CatalogueMatch[]): CatalogueMatch[] =>
-  [...cards].sort((a, b) => {
-    const [ap, an, ar] = numberOrder(a.number);
-    const [bp, bn, br] = numberOrder(b.number);
-    return ap.localeCompare(bp) || an - bn || ar.localeCompare(br);
-  });
+  [...cards].sort((a, b) => compareCardNumbers(a.number, b.number));
 
 /**
  * One English set with every card, in binder order, or null where no id —

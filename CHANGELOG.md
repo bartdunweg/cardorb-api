@@ -85,6 +85,8 @@ if the two have drifted apart.
 
 - Eighteen more sets say which languages they were printed in: the nine POP Series, the four EX and two DP and two HS trainer kits, and Pokémon Rumble, which was English only. The Black Star Promo sets and four odd ones out of the EX era are not there, because Bulbapedia does not say: a promo was handed out per region rather than released as a set, so those keep asking TCGdex per card.
 
+- Venusaur EX sits between Blastoise EX (122) and Pikachu EX (124) in XY Black Star Promos again, instead of at the bottom of the set. A promo number written with its set's letters (XY123, SWSH050) now sorts as the number it is, is saved without those letters like every other card of its set, and the database refuses one that still has them, so a script writing to it directly cannot bring the problem back. Trainer Gallery and other lettered subsets (TG01, RC5) keep their place after the main run.
+
 - A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
 
 - A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".

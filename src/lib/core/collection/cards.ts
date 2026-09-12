@@ -31,7 +31,7 @@
  * to know about. This file is what assembles their answers into a collection.
  */
 
-import { localise, mapLimit, measure, numberForms } from "../util";
+import { compareCardNumbers, localise, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices, usdOf } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
@@ -1359,16 +1359,8 @@ export async function buildCollection(
         logoSize: measure(set.logo),
         releaseDate: set.releaseDate,
         total: set.total,
-        // Ascending by number, which is the order the cards sit in a binder. The
-        // gallery cards are lettered (TG01), so they sort to the front on a
-        // numeric parse of 0; comparing the raw string keeps them together at
-        // the end where a collector expects them.
-        cards: cards.sort((a, b) => {
-          const na = parseInt(a.number, 10);
-          const nb = parseInt(b.number, 10);
-          if (Number.isNaN(na) || Number.isNaN(nb)) return a.number.localeCompare(b.number, LOCALE);
-          return na - nb;
-        }),
+        // The order the cards sit in a binder; compareCardNumbers() says what that is.
+        cards: cards.sort(byNumber),
       };
     },
   );
@@ -1380,13 +1372,12 @@ export async function buildCollection(
   );
 }
 
-/** Ascending by number; the lettered gallery cards (TG01) sort together at the end. */
-const byNumber = (a: OwnedCard, b: OwnedCard): number => {
-  const na = parseInt(a.number, 10);
-  const nb = parseInt(b.number, 10);
-  if (Number.isNaN(na) || Number.isNaN(nb)) return a.number.localeCompare(b.number, LOCALE);
-  return na - nb;
-};
+/**
+ * Binder order: the main run by number, a promo's XY123 as the 123 it is, the lettered subsets
+ * (TG01) together after the run. Two parseInt sorts used to live here and in buildCollection,
+ * and their fallback put XY123 after 83 at the bottom of the XY promos (cardorb-web, 2026-09-12).
+ */
+const byNumber = (a: OwnedCard, b: OwnedCard): number => compareCardNumbers(a.number, b.number);
 
 /**
  * One set per official name, named by it.

@@ -23,6 +23,7 @@
 import { type CopyChanges, isLanguage } from "@/lib/core/collection/collection-row";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { storedCardNumber } from "@/lib/core/util";
 import {
   isFinish,
   type CardDraft,
@@ -488,7 +489,8 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
     .from("cards")
     .insert({
       name: draft.name,
-      number: draft.number,
+      // One stored form: XY123 is written 123, like its siblings (storedCardNumber).
+      number: storedCardNumber(draft.number),
       set_name: draft.set,
       rarity: draft.rarity || null,
       gen: draft.gen || null,
@@ -739,7 +741,7 @@ export async function createRows(
   for (let i = 0; i < rows.length; i += chunk) {
     const batch = rows.slice(i, i + chunk).map((r) => ({
       name: r.name,
-      number: r.number,
+      number: storedCardNumber(r.number),
       set_name: r.setName,
       rarity: r.rarity,
       gen: r.gen,
@@ -1252,7 +1254,7 @@ export async function copyRow(
     .insert({
       user_id: userId,
       name: src.name,
-      number: src.number,
+      number: storedCardNumber(src.number),
       set_name: src.setName,
       rarity: src.rarity,
       gen: src.gen,
