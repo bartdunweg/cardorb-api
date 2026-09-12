@@ -13,10 +13,21 @@ import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
   listAccountIds,
+  listHistoryPrices,
   listRows,
+  listValueSnapshots,
+  replaceValueHistory,
   writeCardPrices,
   writeValueSnapshot,
 } from "@/lib/storage/postgres";
+import { holdingsSeries } from "@/lib/core/collection/folder-history";
+import { flattenItems } from "@/lib/core/collection/items";
+import {
+  HISTORY_DAILY_FROM,
+  HISTORY_FROM,
+  needsHistoryRebuild,
+  saturdaysBetween,
+} from "@/lib/core/collection/value-history";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -98,6 +109,9 @@ export async function GET(req: Request) {
   // Dated by the night it runs, in UTC, and the per-card readings share the date so a folder's line and the collection's agree on the day.
   const date = new Date().toISOString().slice(0, 10);
   const written: { user: string; value: number; cards: number }[] = [];
+  /** Accounts whose Home line was built again from the price history this run (value-history.ts). */
+  const rebuilt: { user: string; points: number }[] = [];
+  const forceHistory = new URL(req.url).searchParams.get("history") === "1";
   const failed: string[] = [];
   /** Card prices, gathered across every account and written once at the end. */
   const prices = new Map<string, ReturnType<typeof cardPricesFromSets>[number]>();
@@ -119,6 +133,42 @@ export async function GET(req: Request) {
       // drop it — the manual script writes from plain node, where this does not
       // exist. Here it does, so the new point is on the dashboard immediately.
       revalidateTag(valueHistoryTag(userId), { expire: 0 });
+
+      /*
+       * The Home line's past, built again where it still holds the old series: what the collection
+       * held each Saturday since 2024-02-10 and each night since 2026-08-16, at that day's
+       * TCGplayer prices (holdingsSeries). Once per account, by needsHistoryRebuild(); `?history=1`
+       * forces it, for after the price history itself is rewritten. After tonight's point, so a
+       * rebuild that fails costs the past and never the night.
+       */
+      try {
+        const items = flattenItems(sets);
+        const stored = await listValueSnapshots(db, userId);
+        if (
+          forceHistory ||
+          needsHistoryRebuild(
+            stored.map((p) => p.date),
+            items,
+          )
+        ) {
+          const ids = [...new Set(items.flatMap((it) => (it.owned && it.tcgId ? [it.tcgId] : [])))];
+          const readings = await listHistoryPrices(
+            db,
+            ids,
+            saturdaysBetween(HISTORY_FROM, HISTORY_DAILY_FROM),
+            HISTORY_DAILY_FROM,
+          );
+          const series = holdingsSeries(items, readings).filter((p) => p.date < date);
+          await replaceValueHistory(db, userId, series, date);
+          revalidateTag(valueHistoryTag(userId), { expire: 0 });
+          rebuilt.push({ user: userId, points: series.length });
+        }
+      } catch (err) {
+        // Its own failure, not the account's: tonight's point and the card prices below stand, and
+        // needsHistoryRebuild() still says yes tomorrow.
+        console.error(`[cron] value history rebuild failed for ${userId}:`, err);
+        failed.push(`history:${userId}`);
+      }
 
       // Every held card's own price, for the movers list. Deduped across
       // accounts as it goes: two people holding the same card is one price, and
@@ -191,6 +241,7 @@ export async function GET(req: Request) {
       ok: failed.length === 0,
       date,
       written: written.length,
+      rebuilt,
       prices: prices.size,
       everyCard,
       failed,

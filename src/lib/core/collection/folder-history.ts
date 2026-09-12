@@ -52,3 +52,30 @@ export function folderSeries(
     return { date, value: Math.round(value), cards, priced, unpriced };
   });
 }
+
+/**
+ * What the collection held on each day a reading exists, at that day's prices: the Home line.
+ *
+ * The same pricing as folderSeries (the foil for a reverse holo, the plain price otherwise,
+ * `quantity` times), with one difference that is the whole point: a copy counts only from the day
+ * it was added. Adding ten cards steps the line up, because the collection then holds ten more
+ * cards (Bart, 2026-09-12). A copy with no recorded date counts as held all along, and days on
+ * which nothing was held yet are left out rather than drawn as zero.
+ */
+export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): ValueSnapshot[] {
+  const owned = items.filter((it) => it.owned);
+  const byDate = new Map<string, CardPricePoint[]>();
+  for (const p of prices) {
+    const day = byDate.get(p.date);
+    // Pushed, not spread: a collection over two and a half years is a quarter of a million
+    // readings, and copying the day's list per reading is quadratic in it.
+    if (day) day.push(p);
+    else byDate.set(p.date, [p]);
+  }
+  return [...byDate.keys()].sort().flatMap((date) => {
+    const held = owned.filter((it) => !it.acquiredAt || it.acquiredAt.slice(0, 10) <= date);
+    // folderSeries prices the held copies against this one day's readings, and answers exactly
+    // one point for it: the day is in the readings by construction.
+    return held.length ? folderSeries(held, byDate.get(date)!) : [];
+  });
+}

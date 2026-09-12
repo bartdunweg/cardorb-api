@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folderSeries } from "./folder-history";
+import { folderSeries, holdingsSeries } from "./folder-history";
 import type { CardItem } from "./items";
 
 const copy = (over: Partial<CardItem>): CardItem =>
@@ -77,5 +77,60 @@ describe("folderSeries", () => {
 
   it("is empty without readings", () => {
     expect(folderSeries([copy({})], [])).toEqual([]);
+  });
+});
+
+describe("holdingsSeries", () => {
+  // The Home line (Bart, 2026-09-12): what the collection held on the day, at that day's price. A
+  // copy counts from the day it was added, so adding cards steps the line up, as holding more does.
+  it("counts a copy only from the day it was added", () => {
+    const items = [
+      copy({ tcgId: "base1-4", acquiredAt: "2024-02-12T10:00:00Z" }),
+      copy({ tcgId: "base1-25", acquiredAt: "2024-02-20T09:00:00Z", quantity: 2 }),
+    ];
+    const prices = [
+      { tcgId: "base1-4", date: "2024-02-17", market: 100, holo: null },
+      { tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
+      { tcgId: "base1-4", date: "2024-02-24", market: 110, holo: null },
+      { tcgId: "base1-25", date: "2024-02-24", market: 6, holo: null },
+    ];
+    expect(holdingsSeries(items, prices)).toEqual([
+      { date: "2024-02-17", value: 100, cards: 1, priced: 1, unpriced: 0 },
+      { date: "2024-02-24", value: 122, cards: 3, priced: 3, unpriced: 0 },
+    ]);
+  });
+
+  it("counts a copy with no date as held all along", () => {
+    const items = [
+      copy({ tcgId: "base1-4", acquiredAt: null }),
+      copy({ tcgId: "base1-25", acquiredAt: "2024-03-01T00:00:00Z" }),
+    ];
+    const prices = [
+      { tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
+      { tcgId: "base1-4", date: "2024-02-24", market: 100, holo: null },
+    ];
+    // 2024-02-17: only base1-25 is priced and it was not held yet, but base1-4 was held (no date) and
+    // unpriced that day: a point with nothing priced says so rather than drawing a zero.
+    expect(holdingsSeries(items, prices)).toEqual([
+      { date: "2024-02-17", value: 0, cards: 1, priced: 0, unpriced: 1 },
+      { date: "2024-02-24", value: 100, cards: 1, priced: 1, unpriced: 0 },
+    ]);
+  });
+
+  it("reads the foil series for a reverse copy, as a folder's line does", () => {
+    const items = [
+      copy({ tcgId: "sv01-1", finish: "reverse-holo", acquiredAt: "2024-01-01T00:00:00Z" }),
+    ];
+    const prices = [{ tcgId: "sv01-1", date: "2024-02-17", market: 1, holo: 4 }];
+    expect(holdingsSeries(items, prices)[0]?.value).toBe(4);
+  });
+
+  it("draws no point before the first copy was added", () => {
+    const items = [copy({ tcgId: "base1-4", acquiredAt: "2025-01-01T00:00:00Z" })];
+    const prices = [
+      { tcgId: "base1-4", date: "2024-02-17", market: 100, holo: null },
+      { tcgId: "base1-4", date: "2025-01-04", market: 120, holo: null },
+    ];
+    expect(holdingsSeries(items, prices).map((p) => p.date)).toEqual(["2025-01-04"]);
   });
 });
