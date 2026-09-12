@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authorise = vi.fn();
 const mirrorCards = vi.fn();
 const getRows = vi.fn();
-const guidePricesFor = vi.fn(async (..._a: unknown[]): Promise<Map<string, unknown>> => new Map());
+const tcgplayerPricesFor = vi.fn(
+  async (..._a: unknown[]): Promise<Map<string, unknown>> => new Map(),
+);
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
@@ -17,7 +19,7 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
-  guidePricesFor: (...a: unknown[]) => guidePricesFor(...a),
+  tcgplayerPricesFor: (...a: unknown[]) => tcgplayerPricesFor(...a),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
@@ -51,7 +53,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.clearAllMocks();
-  guidePricesFor.mockImplementation(async () => new Map());
+  tcgplayerPricesFor.mockImplementation(async () => new Map());
 });
 
 describe("GET /api/v1/catalog/cards", () => {
@@ -66,8 +68,8 @@ describe("GET /api/v1/catalog/cards", () => {
     expect((await get(Array.from({ length: 51 }, (_, i) => `x-${i}`).join(","))).status).toBe(400);
   });
 
-  it("answers the cards with the viewer's marks and the guide's price, asking the copy once per id", async () => {
-    guidePricesFor.mockImplementation(
+  it("answers the cards with the viewer's marks and TCGplayer's price, asking the copy once per id", async () => {
+    tcgplayerPricesFor.mockImplementation(
       async (...a: unknown[]) =>
         new Map((a[0] as string[]).map((id) => [id, { price: { market: 12.5 }, holo: null }])),
     );

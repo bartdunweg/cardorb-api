@@ -26,10 +26,6 @@ vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
 }));
-vi.mock("../catalogue/price-guide", () => ({
-  fetchPriceGuide: async () => null,
-  guidePrices: () => [],
-}));
 vi.mock("../../storage/supabase", () => ({
   adminClient: () => ({}),
   serverClient: async () => ({}),

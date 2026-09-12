@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authorise = vi.fn();
 const searchCards = vi.fn();
 const getRows = vi.fn();
-const guidePricesFor = vi.fn(async (..._a: unknown[]) => new Map());
+const tcgplayerPricesFor = vi.fn(async (..._a: unknown[]) => new Map());
 const englishSets = vi.fn(async () => [{ id: "base1", name: "Base" }]);
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
@@ -27,7 +27,7 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
    and then used for the ownership overlay the route attaches to every result. */
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
-  guidePricesFor: (...a: unknown[]) => guidePricesFor(...a),
+  tcgplayerPricesFor: (...a: unknown[]) => tcgplayerPricesFor(...a),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 /* `import "server-only"` underneath, like the two above. The route hands the search the
@@ -84,9 +84,9 @@ beforeEach(() => {
   });
 });
 afterEach(() => {
-  // Reset, not cleared: one test gives the guide a lasting answer.
-  guidePricesFor.mockReset();
-  guidePricesFor.mockImplementation(async () => new Map());
+  // Reset, not cleared: one test gives the prices a lasting answer.
+  tcgplayerPricesFor.mockReset();
+  tcgplayerPricesFor.mockImplementation(async () => new Map());
   searchCards.mockClear();
   getRows.mockClear();
   englishSets.mockClear();
@@ -221,22 +221,20 @@ describe("GET /api/v1/catalog/search", () => {
     expect(searchCards).toHaveBeenCalledWith("char", 1, null, null, { fullArt: false });
   });
 
-  it("prices every result from the guide, by the id everything priced is keyed by", async () => {
-    // Not Once: the route reads the guide ahead, with no ids, so the map is in hand by the
-    // time the hits are priced.
-    guidePricesFor.mockResolvedValue(
+  it("prices every result from TCGplayer, by the id everything priced is keyed by", async () => {
+    tcgplayerPricesFor.mockResolvedValue(
       new Map([["base1-4", { price: { market: 12.5 }, holo: { market: 40 } }]]),
     );
     const res = await search(new URLSearchParams({ query: "char", language: "ja" }));
     const { cards } = await res.json();
-    expect(guidePricesFor).toHaveBeenCalledWith(["base1-4"], "ja");
+    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], "ja");
     expect(cards[0]).toMatchObject({ price: { market: 12.5 }, priceHolo: { market: 40 } });
   });
 
-  it("leaves a null price under a result the guide does not price", async () => {
+  it("leaves a null price under a result TCGplayer does not price", async () => {
     const res = await search(new URLSearchParams({ query: "char" }));
     const { cards } = await res.json();
-    expect(guidePricesFor).toHaveBeenCalledWith(["base1-4"], null);
+    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], null);
     expect(cards[0]).toMatchObject({ price: null, priceHolo: null });
   });
 

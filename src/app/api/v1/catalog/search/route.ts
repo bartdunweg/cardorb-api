@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { englishSets, isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
-import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
+import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -49,8 +49,8 @@ import { adminClient } from "@/lib/storage/supabase";
  * And a price under every result, as the set page puts one under every card:
  * a hit used to be a name to pick and nothing more, and the web's search opens
  * the card's full sheet now, which says what the card trades at above its
- * price line. From the guide already cached for the day and nothing else, for
- * the reason guidePricesFor gives; a card the guide does not price carries
+ * price line. TCGplayer's, from the tcgcsv groups cached for the day, for the
+ * reason tcgplayerPricesFor gives; a card TCGplayer does not price carries
  * null, as it does on the set page.
  */
 export const dynamic = "force-dynamic";
@@ -101,9 +101,8 @@ export async function GET(req: Request) {
        person's data is in it, and the search reads it before it asks TCGdex. */
     const store = adminClient();
     const term = (url.searchParams.get("query") ?? "").trim();
-    /* Four reads, none waiting on another: the hits from the copy, the person's rows for the
-       owned marks, the English set index the join files those rows under, and the price guide
-       the hits are priced from. In a row they were 0.8 to 1.1 s on 2026-09-11 (measured from
+    /* Three reads, none waiting on another: the hits from the copy, the person's rows for the
+       owned marks, and the English set index the join files those rows under. In a row they were 0.8 to 1.1 s on 2026-09-11 (measured from
        cardorb.com, the copy filled and the query itself 1 ms); every one is a hop to another
        region, and the sum is what the person waits for. Together they cost the slowest one.
        getRows() fails soft, so a store outage leaves every result unmarked rather than taking
@@ -116,15 +115,14 @@ export async function GET(req: Request) {
       ),
       timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)),
       language ? Promise.resolve([]) : timed("en set index", () => englishSets().catch(() => [])),
-      // The guide's map is read once per request (guideForRequest); asking for nothing now
-      // means the ids below find it already in hand.
-      timed("guide prices", () => guidePricesFor([], language)),
     ]);
     const marked = markOwnership(ownershipIndex(rows, language, sets), cards);
     /* Keyed by the TCGdex id, which every hit carries and which everything priced is keyed by;
        the fallback is the set route's, for a card that came without the one. */
     const priceKey = (c: (typeof marked)[number]) => c.tcgId ?? c.id;
-    const prices = await guidePricesFor(marked.map(priceKey), language);
+    const prices = await timed("tcgplayer prices", () =>
+      tcgplayerPricesFor(marked.map(priceKey), language),
+    );
     return NextResponse.json(
       /* `total` is how many the whole search matched, at most the window it reads (250,
          which then means "at least"); a client shows it above the page. */

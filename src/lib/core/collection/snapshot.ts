@@ -7,8 +7,8 @@
  * TCGplayer's printings, and the weekly point for every card nobody holds off tcgcsv.
  *
  * Cardmarket's guide used to price all three. The functions that read it (snapshotOf,
- * cardPricesOf, cardPricesFromGuide) are gone with it; the guide's row types stay below only
- * because the set page still reads the guide (catalogue/price-guide.ts).
+ * cardPricesOf, cardPricesFromGuide) are gone with it, and since the set page and search moved
+ * too the guide is not read anywhere.
  */
 
 import { copiesHeld } from "./cards-stats";
@@ -17,27 +17,6 @@ import type { ShelfPrices } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { SourcedPricePoint } from "./movers";
-
-/** One row of Cardmarket's public price guide, as much of it as is read. */
-export type GuideRow = {
-  idProduct: number;
-  low?: number | null;
-  trend?: number | null;
-  avg30?: number | null;
-  /** The foil printing, priced separately. Often 0, which is not a price. */
-  "low-holo"?: number | null;
-  "trend-holo"?: number | null;
-  "avg30-holo"?: number | null;
-};
-
-export type PriceGuide = {
-  /** ISO timestamp. The day the guide was built, which dates the snapshot. */
-  createdAt: string;
-  priceGuides: GuideRow[];
-};
-
-/** tcgId to Cardmarket idProduct, as lib/core/cardmarket-ids.generated.json has it. */
-export type ProductIds = Record<string, number | null>;
 
 /**
  * The reading off an assembled collection: the card's own blended price, the one

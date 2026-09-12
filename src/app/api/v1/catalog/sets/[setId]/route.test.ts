@@ -15,7 +15,7 @@ const SET = {
 };
 
 const getRows = vi.fn();
-const guidePricesFor = vi.fn();
+const tcgplayerPricesFor = vi.fn();
 const setIn = vi.fn();
 
 /* Same three server-only modules replaced wholesale as in the sibling route's
@@ -28,7 +28,7 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
-  guidePricesFor: (...a: unknown[]) => guidePricesFor(...a),
+  tcgplayerPricesFor: (...a: unknown[]) => tcgplayerPricesFor(...a),
 }));
 /* Both shelves are network reads; the language check is the real, pure one, and so is
    the set index the ownership join resolves a row's set name against. */
@@ -99,7 +99,7 @@ beforeEach(() => {
   authorise.mockResolvedValue(VIEWER);
   englishSet.mockResolvedValue({ set: SET, cards: [card("1"), card("2"), card("4", "Charizard")] });
   getRows.mockResolvedValue({ rows: [], failed: false });
-  guidePricesFor.mockResolvedValue(new Map());
+  tcgplayerPricesFor.mockResolvedValue(new Map());
 });
 afterEach(() => vi.clearAllMocks());
 
@@ -168,7 +168,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
 
   it("prices the page's cards, and asks after those cards only", async () => {
     getRows.mockResolvedValue({ rows: [], failed: false });
-    guidePricesFor.mockResolvedValue(
+    tcgplayerPricesFor.mockResolvedValue(
       new Map([["base1-4", { price: { market: 340 }, holo: null }]]),
     );
     const body = await (await open()).json();
@@ -176,7 +176,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     const charizard = body.cards.find((c: { id: string }) => c.id === "base1-4");
     expect(charizard.price).toEqual({ market: 340 });
     expect(charizard.priceHolo).toBeNull();
-    // A card the guide does not price is a blank line, not a missing field.
+    // A card TCGplayer does not price is a blank line, not a missing field.
     expect(body.cards.find((c: { id: string }) => c.id !== "base1-4").price).toBeNull();
   });
 
@@ -189,12 +189,12 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
       cards: [{ ...card("85", "Fomantis"), id: "me5-85", tcgId: "me05-085" }],
     });
     getRows.mockResolvedValue({ rows: [], failed: false });
-    guidePricesFor.mockResolvedValue(
+    tcgplayerPricesFor.mockResolvedValue(
       new Map([["me05-085", { price: { market: 2.81 }, holo: null }]]),
     );
     const body = await (await open()).json();
 
-    expect(guidePricesFor).toHaveBeenLastCalledWith(["me05-085"], null);
+    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["me05-085"], null);
     expect(body.cards[0].price).toEqual({ market: 2.81 });
   });
 
@@ -202,38 +202,41 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     // The other-language path: those cards are TCGdex's already, so `id` is the right key.
     englishSet.mockResolvedValue({ set: SET, cards: [{ ...card("85"), id: "me05-085" }] });
     getRows.mockResolvedValue({ rows: [], failed: false });
-    guidePricesFor.mockResolvedValue(new Map([["me05-085", { price: { market: 1 }, holo: null }]]));
+    tcgplayerPricesFor.mockResolvedValue(
+      new Map([["me05-085", { price: { market: 1 }, holo: null }]]),
+    );
     const body = await (await open()).json();
 
     expect(body.cards[0].price).toEqual({ market: 1 });
   });
 
   it("prices a Japanese set from the Japanese map, by the catalogue's own id", async () => {
-    /* A Japanese set page showed a blank line under every card. The guide priced them all;
-       the only map from a card to its Cardmarket product held English cards, and the route
-       asked it about M1S-001 — which it had never heard of. The map to read is the page's
-       catalogue: SM1S-001 is one card in Japanese and another in Korean. */
+    /* The shelf is a fact about the page, not the id: a Japanese set page prices from the
+       Japanese shelf, and SM1S-001 is a Japanese card and a different Korean one. */
     setIn.mockResolvedValue({
       set: { ...SET, id: "M1S", name: "Mega Symphonia" },
       cards: [{ ...card("001", "Tangela"), id: "M1S-001", setName: "Mega Symphonia" }],
     });
     getRows.mockResolvedValue({ rows: [], failed: false });
-    guidePricesFor.mockResolvedValue(
+    tcgplayerPricesFor.mockResolvedValue(
       new Map([["M1S-001", { price: { market: 0.04 }, holo: null }]]),
     );
     const body = await (await open("language=ja", "M1S")).json();
 
-    expect(guidePricesFor).toHaveBeenLastCalledWith(["M1S-001"], "ja");
+    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["M1S-001"], "ja");
     expect(body.cards[0].price).toEqual({ market: 0.04 });
   });
 
   it("prices only the page it returns, not the whole set", async () => {
     getRows.mockResolvedValue({ rows: [], failed: false });
-    guidePricesFor.mockResolvedValue(new Map());
+    tcgplayerPricesFor.mockResolvedValue(new Map());
     await open("pageSize=1");
 
     // 250 lookups for a page of one is the cost this route was careful not to pay.
-    expect(guidePricesFor).toHaveBeenLastCalledWith(expect.objectContaining({ length: 1 }), null);
+    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(
+      expect.objectContaining({ length: 1 }),
+      null,
+    );
   });
 
   it("counts owned over the whole set rather than over the page", async () => {

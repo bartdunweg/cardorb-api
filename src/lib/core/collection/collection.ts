@@ -50,7 +50,6 @@ import { DAY, mapLimit } from "../util";
 import { priceFromMarket, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
-import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import {
   pricesFor,
   usdFirstEdOf,
@@ -60,15 +59,10 @@ import {
   type CardPrices,
   type UsdPair,
 } from "../catalogue/tcgdex-client";
-import { groupPrintings } from "../catalogue/tcgcsv";
+import { TCGCSV_CATEGORY, groupPrintings } from "../catalogue/tcgcsv";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
-import type { ProductIds } from "./snapshot";
-import IDS from "../cardmarket-ids.generated.json";
-import RUN_IDS from "../cardmarket-ids.editions.generated.json";
-import IDS_JA from "../cardmarket-ids.ja.generated.json";
-import IDS_KO from "../cardmarket-ids.ko.generated.json";
-import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
-import IDS_ZH_TW from "../cardmarket-ids.zh-tw.generated.json";
+import TCGPLAYER_IDS_JA from "../tcgplayer-ids.ja.generated.json";
+import TCGPLAYER_GROUPS from "../tcgplayer-groups.generated.json";
 import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
@@ -166,170 +160,59 @@ const cachedRows = async (userId: string, db: SupabaseClient | null) => {
  * the assembled collection can never be fresher than the rows it is built from.
  */
 /**
- * Every mapped card's price from Cardmarket's guide, as one plain object,
- * cached a day. The guide itself is fourteen megabytes and cannot sit in the
- * data cache; what it says about the cards this deployment knows a product id
- * for can, in shards (cachedGuidePrices below).
- */
-export const PRICE_GUIDE_TAG = "price-guide";
-
-/**
- * The committed id maps, one per catalogue. The ids are not unique between them — SM1S is a set
- * in Japanese and in Korean, and SM1S-001 is a different card in each — so they cannot be one
- * map, and each is cached on its own. Built by scripts/language-cardmarket-ids.mjs.
- */
-const LANGUAGE_IDS: Record<BrowseLanguage, ProductIds> = {
-  ja: IDS_JA as ProductIds,
-  ko: IDS_KO as ProductIds,
-  "zh-cn": IDS_ZH_CN as ProductIds,
-  "zh-tw": IDS_ZH_TW as ProductIds,
-};
-
-/** The id map of one catalogue; English is the one without a language in its file name. */
-export const productIdsOf = (language: BrowseLanguage | null): ProductIds =>
-  language ? LANGUAGE_IDS[language] : (IDS as ProductIds);
-
-/**
- * How many entries one catalogue's prices are cached in.
+ * TCGplayer's prices for these cards, from their tcgcsv groups: the browse surfaces' price.
  *
- * A data cache entry holds two megabytes at most. A priced card is about 140 bytes of JSON, so
- * one entry holds fourteen thousand of them: the English shelf, whole since 2026-09-11, is
- * twenty-three thousand cards and would not fit — and an entry over the ceiling is not cached at
- * all, which is the fourteen-megabyte guide downloaded on every set page. Four shards keep the
- * biggest catalogue well under a megabyte each, with room for the shelves to grow.
- */
-const GUIDE_SHARDS = 4;
-
-/** Which shard an id lives in: a stable hash, so the same card is in the same entry every day. */
-const shardOf = (id: string): number => {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return h % GUIDE_SHARDS;
-};
-
-/**
- * The guide, downloaded once per request however many shards are cold at the same time. The
- * shards are read in parallel and each of the cold ones would fetch its own fourteen megabytes;
- * React's cache() makes those one download. Outside the shard's cache callback on purpose: a
- * function memoised inside one would be memoised per shard.
- */
-const guideForShards = cache(() => fetchPriceGuide());
-
-/**
- * One catalogue's prices, cached a day, in a few entries under one tag.
+ * For a set page, a search and the catalogue's card list, where the cards are the catalogue's
+ * rather than the viewer's. A card's product comes from the shelf's id map and its group from
+ * tcgplayer-groups.generated.json; each group is one cached request a day, and every card of it is
+ * read out of that one answer, so a set page of 250 cards is a handful of cache reads. It read
+ * Cardmarket's guide until 2026-09-12, and a set page then showed one market while the collection
+ * showed another.
  *
- * Per catalogue rather than all of them in one entry, for the reason above: the ids collide
- * between catalogues. And in shards rather than one entry per catalogue, for the size reason
- * on GUIDE_SHARDS. Every shard is read on every call — a set page's cards hash to all four —
- * and merged into the one plain object the callers have always had.
+ * English and Japanese only: TCGplayer sells no Korean or Chinese cards, and those pages carry no
+ * price rather than another market's. A card with no product, or a group that does not answer,
+ * is left out; the caller draws a blank line.
  */
-const cachedGuidePrices = async (
-  language: BrowseLanguage | null = null,
-): Promise<Record<string, CardPrices>> => {
-  const map = productIdsOf(language);
-  const byShard: string[][] = Array.from({ length: GUIDE_SHARDS }, () => []);
-  for (const id of Object.keys(map)) byShard[shardOf(id)]?.push(id);
-  const shards = await Promise.all(
-    byShard.map((ids, shard) =>
-      timedCache(`cache guide-prices ${language ?? "en"}/${shard}`, (ran) =>
-        unstable_cache(
-          async (): Promise<Record<string, CardPrices>> => {
-            ran();
-            // The whole map, so the read stays what it was: which map is the fact under test.
-            // The run products only for English: Cardmarket prices no run of the other shelves,
-            // and the ids do not mean the same thing between catalogues.
-            return Object.fromEntries(
-              guidePrices(ids, await guideForShards(), map, language ? {} : RUN_IDS),
-            );
-          },
-          // v11: the entries now carry the Shadowless run's figure, and a cached v10 entry does
-          // not (the Data Cache outlives a deploy, so a bump is the only way to be sure).
-          ["guide-prices", language ?? "en", "v15", String(shard)],
-          { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
-        )(),
-      ),
-    ),
-  );
-  return Object.assign({}, ...shards);
-};
-
-/**
- * The guide first, TCGdex for what the guide does not know — a card added
- * before the id mapping learned it. If the guide is unreachable the whole
- * list goes to TCGdex, which is slow but was the only path until today.
- */
-export async function pricesFromGuideThenTcgdex(ids: string[]): Promise<Map<string, CardPrices>> {
-  return guideThenTcgdex(ids, await guideForRequest());
-}
-
-/**
- * The guide's map, once per request, read at the top level. Read from inside
- * a cache callback it is not read at all: Next runs an unstable_cache nested
- * in another uncached, "similar to fetches", and the fourteen-megabyte guide
- * was being downloaded once per set on every rebuild. Fails soft to an empty
- * map, which sends every card to TCGdex, the path that was the only one once.
- */
-const guideForRequest = cache(
-  async (language: BrowseLanguage | null = null): Promise<Record<string, CardPrices>> => {
-    try {
-      return await cachedGuidePrices(language);
-    } catch (err) {
-      console.error("Price guide unavailable, pricing card by card:", err);
-      return {};
-    }
-  },
-);
-
-/**
- * The guide's prices for these cards and nothing else — no TCGdex fallback.
- *
- * For a browse surface, where the cards are the catalogue's rather than the viewer's: a set page
- * asks after up to 250 cards at once and most of a big set is unpriced by Cardmarket, so the
- * fallback would be hundreds of requests to put a number under cards nobody is buying. A missing
- * price on a set page is a blank line; a set page that takes ten seconds is a broken one.
- */
-export const guidePricesFor = async (
+export const tcgplayerPricesFor = async (
   ids: string[],
-  /** Which catalogue the ids are from. A Japanese set page prices from the Japanese map. */
+  /** Which catalogue the ids are from. A Japanese set page prices from the Japanese shelf. */
   language: BrowseLanguage | null = null,
 ): Promise<Map<string, CardPrices>> => {
-  const known = await guideForRequest(language);
   const out = new Map<string, CardPrices>();
+  if (!ids.length || (language && language !== "ja")) return out;
+  const rate = await usdToEurForRequest();
+  if (rate == null) return out;
+  const category = language === "ja" ? TCGCSV_CATEGORY.ja : TCGCSV_CATEGORY.en;
+  const groupsOf =
+    (TCGPLAYER_GROUPS as Record<string, Record<string, number>>)[String(category)] ?? {};
+  const productOf = (id: string): number | null => {
+    if (language === "ja") return (TCGPLAYER_IDS_JA as Record<string, number | null>)[id] ?? null;
+    return TCGCSV_LINKS[id]?.productId ?? null;
+  };
+  const wanted = new Map<number, { id: string; productId: number }[]>();
   for (const id of ids) {
-    const found = known[id];
-    if (found) out.set(id, found);
+    const productId = productOf(id);
+    const groupId = productId == null ? undefined : groupsOf[String(productId)];
+    if (productId == null || groupId == null) continue;
+    wanted.set(groupId, [...(wanted.get(groupId) ?? []), { id, productId }]);
   }
+  await mapLimit([...wanted.keys()], 6, async (groupId) => {
+    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
+    try {
+      printings = await cachedGroupPrintings(groupId, category);
+    } catch (err) {
+      console.error(`tcgcsv group ${groupId} unavailable, its cards unpriced on this page:`, err);
+      return;
+    }
+    for (const { id, productId } of wanted.get(groupId) ?? []) {
+      const tp = printings[String(productId)];
+      const usd = tp ? usdOf(tp) : null;
+      const price = usd ? priceFromUsd(usd, rate) : null;
+      if (price) out.set(id, { price, holo: null });
+    }
+  });
   return out;
 };
-
-function guideThenTcgdex(
-  ids: string[],
-  known: Record<string, CardPrices>,
-): Promise<Map<string, CardPrices>> {
-  return tcgdexForMissing(ids, known);
-}
-
-async function tcgdexForMissing(
-  ids: string[],
-  known: Record<string, CardPrices>,
-): Promise<Map<string, CardPrices>> {
-  const out = new Map<string, CardPrices>();
-  const missing: string[] = [];
-  for (const id of ids) {
-    const hit = known[id];
-    if (hit) out.set(id, hit);
-    else missing.push(id);
-  }
-  if (missing.length) {
-    const fetched = await timed(
-      "tcgdex pricesFor",
-      () => pricesFor(missing),
-      `${missing.length} cards`,
-    );
-    for (const [id, p] of fetched) out.set(id, p);
-  }
-  return out;
-}
 
 /**
  * The person's folders, cached an hour under their own tag. `/v1/cards?collection=` reads
@@ -589,14 +472,15 @@ const TCGCSV_LINKS = TCGPLAYER_IDS as Record<
 >;
 
 /** One tcgcsv group's printings, a day at a time. A plain object: a Map comes back from the Data Cache as `{}`. */
-const cachedGroupPrintings = (groupId: number) =>
-  timedCache(`cache tcgcsv group ${groupId}`, (ran) =>
+const cachedGroupPrintings = (groupId: number, category: number = TCGCSV_CATEGORY.en) =>
+  timedCache(`cache tcgcsv group ${category}/${groupId}`, (ran) =>
     unstable_cache(
       async () => {
         ran();
-        return Object.fromEntries(await groupPrintings(groupId));
+        return Object.fromEntries(await groupPrintings(groupId, category));
       },
-      ["tcgcsv-group", "v1", String(groupId)],
+      // v2: keyed by the shelf too, now that the Japanese one is read the same way.
+      ["tcgcsv-group", "v2", String(category), String(groupId)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -822,18 +706,21 @@ export const usdToEurForRequest = cache(async (): Promise<number | null> => {
  */
 async function assemble(userId: string, db: SupabaseClient | null): Promise<CardSet[]> {
   const rows = await cachedRows(userId, db);
-  const [known, usdToEur] = await Promise.all([guideForRequest(), usdToEurForRequest()]);
-  // The same rows, guide and rate on the same instance within minutes: the same sets. A write
-  // changes the rows (their cache is dropped by tag), so the key changes and the join runs
-  // again; /folders, /stats and /cards on one screen, or the Pokédex's read after the count's,
-  // do not each pay the ~100 cache reads and the join over two thousand rows.
-  const key = `${userId}:${rowsVersion(rows)}:${Object.keys(known).length}:${usdToEur ?? "-"}`;
+  const usdToEur = await usdToEurForRequest();
+  // The same rows and rate on the same instance within minutes: the same sets. A write changes
+  // the rows (their cache is dropped by tag), so the key changes and the join runs again;
+  // /folders, /stats and /cards on one screen, or the Pokédex's read after the count's, do not
+  // each pay the ~100 cache reads and the join over two thousand rows.
+  const key = `${userId}:${rowsVersion(rows)}:${usdToEur ?? "-"}`;
   const kept = assembled.get(key);
   if (kept && kept.until > Date.now()) {
     logTiming("cache assemble hit", 0, `${rows.length} rows`);
     return kept.sets;
   }
-  const priceSource = (ids: string[]) => guideThenTcgdex(ids, known);
+  // TCGdex's record per card, which carries TCGplayer's printings; the Cardmarket guide that used
+  // to answer first is gone (2026-09-12), and TCGdex was already asked for every card after #354.
+  const priceSource = (ids: string[]) =>
+    timed("tcgdex pricesFor", () => pricesFor(ids), `${ids.length} cards`);
   const start = performance.now();
   const sets = await buildCollection(rows, {
     factsSource: (setName, identities) => factsWithUsd(setName, identities, priceSource, usdToEur),
