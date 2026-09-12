@@ -80,6 +80,10 @@ if the two have drifted apart.
 - A Shadowless copy is priced as the Shadowless product Cardmarket files it as, on the card, in the collection's total and on the value chart, where it used to read the unlimited printing's figure (base1-4 Charizard: €3,567 against €583).
 - Added `scripts/cardmarket-ids-editions.mjs`, which reads which product each of a card's print runs is from TCGdex's `variants_detailed` and commits the map. Of 23,548 English cards, the 102 of Base Set are the ones Cardmarket prices apart.
 
+- A copy reads TCGplayer's price for the printing it actually is (holo, reverse, 1st Edition, unlimited), where before every copy of a card read whichever printing that record listed first: a Jungle Scyther holo read the plain rare's figure.
+- TCGplayer's figure now answers before Cardmarket's, which files several printings of one card under a single product and was wrong by multiples on those. Cardmarket still answers for every card TCGplayer does not price.
+- An item says which market its figure came from, which printing it was, and TCGplayer's product id for that printing, so a figure can be opened and checked.
+
 - A collection now takes its sets from the catalogue's nightly copy in the database rather than asking TCGdex on every read. The pages come up faster, and a catalogue that is slow or unreachable no longer reaches the cards at all. A set published today is still fetched live, until the copy has been through it.
 
 - More of the cards TCGdex has no scan of get a picture: the catalogue's copy now asks Limitless as well as pokemontcg.io, which between them answer for cards neither did alone (Oddish, SVP 102, is Limitless's; the Pikachu with the grey felt hat is pokemontcg.io's). And a nightly refresh keeps the pictures it worked out before instead of asking after every one of them again, so the whole catalogue is fresh again in a night rather than two.

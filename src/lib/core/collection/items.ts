@@ -1,7 +1,7 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
-import { copyPriceOf } from "../price-basis.mjs";
+import { copyPriceOf, printingKeysOf } from "../price-basis.mjs";
 import { heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { UUID } from "./collection-row";
@@ -64,6 +64,17 @@ export type CardItem = {
   priceFirstEd?: Price | null;
   /** The Shadowless run's price, where Cardmarket prices that run apart. See OwnedCard.priceShadowless. */
   priceShadowless?: Price | null;
+  /**
+   * Which market and which printing this copy's figure came from, and where to see it.
+   *
+   * A figure with no source is a figure nobody can check, and the two markets disagree by a
+   * median of 42% on the owner's own cards (measured 2026-09-12). So the item says which one
+   * answered, which printing of the card it was, and the TCGplayer product id where there is
+   * one, which is an address a person can open.
+   */
+  priceSource?: "tcgplayer" | "cardmarket" | null;
+  pricePrinting?: string | null;
+  tcgplayerId?: number | null;
 };
 
 /** One item per copy, in the assembly's order: set by set, number by number. */
@@ -160,7 +171,35 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   priceHolo: card.priceHolo,
   priceFirstEd: card.priceFirstEd ?? null,
   priceShadowless: card.priceShadowless ?? null,
+  ...sourceOf(v, card),
 });
+
+/**
+ * Which market answered for this copy, which printing of the card it was, and the page it came
+ * from. The same order copyPriceOf() reads in, asked a second time: it returns a figure and not
+ * where the figure is from, and a price nobody can check is a price nobody believes.
+ */
+function sourceOf(
+  v: Variant,
+  card: OwnedCard,
+): {
+  priceSource: "tcgplayer" | "cardmarket" | null;
+  pricePrinting: string | null;
+  tcgplayerId: number | null;
+} {
+  const printing = card.pricePrintings
+    ? printingKeysOf(v).find((key) => card.pricePrintings?.[key])
+    : undefined;
+  if (printing) {
+    return {
+      priceSource: "tcgplayer",
+      pricePrinting: printing,
+      tcgplayerId: card.printingIds?.[printing] ?? null,
+    };
+  }
+  const cardmarket = copyPriceOf(v, card);
+  return { priceSource: cardmarket ? "cardmarket" : null, pricePrinting: null, tcgplayerId: null };
+}
 
 export type ItemFilter = {
   /** Matches the card's name or its set, case-insensitively, anywhere in the text. */

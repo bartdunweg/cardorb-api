@@ -237,6 +237,10 @@ export type OwnedCard = {
   priceFirstEd?: Price | null;
   /** The Shadowless run's price, where Cardmarket prices that run apart. See CardFacts.priceShadowless. */
   priceShadowless?: Price | null;
+  /** Every printing TCGplayer prices, in euros. Which of them a copy is worth is copyPriceOf()'s. */
+  pricePrintings?: Record<string, Price | null> | null;
+  /** The TCGplayer product id per printing, so a copy can be checked on the page its figure came from. */
+  printingIds?: Record<string, number> | null;
   /**
    * TCGdex's id for the printing this row matched ("sv03-125"), or null when
    * nothing matched. It is the only stable, URL-safe handle a card has, because `key`
@@ -761,6 +765,18 @@ export type CardFacts = {
    */
   priceShadowless?: Price | null;
   /**
+   * Every printing TCGplayer prices, in euros, by TCGplayer's own name for it, and the product
+   * id of each. This is the market that tells a holo from the plain card and a stamped run from
+   * an unlimited one; which of them a copy is worth is copyPriceOf()'s to answer.
+   */
+  pricePrintings?: Record<string, Price | null> | null;
+  printingIds?: Record<string, number> | null;
+  /** The same printings in dollars, as the catalogue relayed them, before the day's rate. */
+  usdPrintings?: Record<
+    string,
+    { market: number | null; low: number | null; productId: number | null }
+  > | null;
+  /**
    * TCGdex's word for how rare this printing is, from a catalogue that is not
    * the English one — and null on every English card, always.
    *
@@ -1225,6 +1241,8 @@ export async function buildCollection(
           priceHolo: card?.priceHolo ?? null,
           priceFirstEd: card?.priceFirstEd ?? null,
           priceShadowless: card?.priceShadowless ?? null,
+          pricePrintings: card?.pricePrintings ?? null,
+          printingIds: card?.printingIds ?? null,
           // The catalogue's word where it has one, the row's where it does not.
           // Only a card from its own catalogue ever carries the first — the
           // shelves those are added from publish no rarity, so a row written from
@@ -1320,6 +1338,8 @@ export async function buildCollection(
           priceHolo: p.priceHolo,
           priceFirstEd: p.priceFirstEd,
           priceShadowless: p.priceShadowless,
+          pricePrintings: p.pricePrintings,
+          printingIds: p.printingIds,
           tcgId: p.tcgId,
           variants: [variant],
           owned: p.owned,

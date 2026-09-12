@@ -97,10 +97,67 @@ export const isReverseFinish = (f) =>
  * read it).
  *
  * @param {{ finish?: string | null, edition?: string | null }} copy
- * @param {{ price?: Price | null, priceHolo?: Price | null, priceFirstEd?: Price | null, priceShadowless?: Price | null }} card
+ * @param {{ price?: Price | null, priceHolo?: Price | null, priceFirstEd?: Price | null, priceShadowless?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
  * @returns {Price | null}
  */
+/**
+ * Which of TCGplayer's printings this copy is, in the order one is taken.
+ *
+ * TCGplayer names a printing by its foil and its run: "holofoil", "reverse-holofoil",
+ * "1st-edition-holofoil", "unlimited". Which of them a copy is, is the same question `finish`
+ * and `edition` already answer, so it is answered here rather than guessed by taking whichever
+ * printing came first in the record — which handed a Jungle Scyther holo the plain rare's $17.
+ *
+ * A list rather than one name: a card priced as "holofoil" and nothing else is still the holo
+ * copy's price, and a run TCGplayer does not price falls back to the same card without the run.
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @returns {string[]}
+ */
+export const printingKeysOf = (copy) => {
+  const foil = isReverseFinish(copy.finish)
+    ? "reverse-holofoil"
+    : copy.finish === "holo"
+      ? "holofoil"
+      : copy.finish === "normal"
+        ? "normal"
+        : null;
+  const run =
+    copy.edition === "1st-edition"
+      ? "1st-edition"
+      : copy.edition === "shadowless"
+        ? null
+        : "unlimited";
+  const keys = [];
+  // The run and the foil together first, then the run, then the foil, then the plain card: every
+  // step drops the fact TCGplayer is least likely to price apart.
+  if (run && foil) keys.push(`${run}-${foil}`);
+  if (run) keys.push(run);
+  if (foil) keys.push(foil);
+  if (foil !== "normal") keys.push("holofoil", "reverse-holofoil");
+  keys.push("normal");
+  return [...new Set(keys)];
+};
+
+/**
+ * What this copy is worth out of the printings TCGplayer prices, where the card carries them.
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {Record<string, Price | null | undefined> | null | undefined} printings
+ * @returns {Price | null}
+ */
+export const printingPriceOf = (copy, printings) => {
+  if (!printings) return null;
+  for (const key of printingKeysOf(copy)) if (printings[key]) return printings[key];
+  return null;
+};
+
 export const copyPriceOf = (copy, card) =>
+  // TCGplayer's own printing first, where the card carries them: it is the one market that
+  // prices a holo apart from the plain card and a stamped run apart from an unlimited one, and
+  // Cardmarket files those together often enough to be wrong by multiples (Bart's call,
+  // 2026-09-12). Cardmarket answers where TCGplayer says nothing, which is most promos.
+  printingPriceOf(copy, card.pricePrintings) ||
   (copy.edition === "1st-edition" && card.priceFirstEd) ||
   (copy.edition === "shadowless" && card.priceShadowless) ||
   (isReverseFinish(copy.finish) && card.priceHolo) ||

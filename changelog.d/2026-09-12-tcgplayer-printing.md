@@ -1,0 +1,3 @@
+- A copy reads TCGplayer's price for the printing it actually is (holo, reverse, 1st Edition, unlimited), where before every copy of a card read whichever printing that record listed first: a Jungle Scyther holo read the plain rare's figure.
+- TCGplayer's figure now answers before Cardmarket's, which files several printings of one card under a single product and was wrong by multiples on those. Cardmarket still answers for every card TCGplayer does not price.
+- An item says which market its figure came from, which printing it was, and TCGplayer's product id for that printing, so a figure can be opened and checked.
