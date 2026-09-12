@@ -859,6 +859,7 @@ function factsOfLanguageCard(
     // market alone, so it is null here too: no Japanese set had a 1st Edition run anyway.
     usd: null,
     usdFirstEd: null,
+    usdPrintings: null,
     priceFirstEd: null,
     // No Japanese, Korean or Chinese set had a run of its own, and Cardmarket files none apart.
     priceShadowless: null,
@@ -1053,6 +1054,8 @@ export async function resolveSetFacts(
       price: priceOfId(r.tcgId),
       usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
       usdFirstEd: (prices && r.tcgId && fetched.get(r.tcgId)?.usdFirstEd) || null,
+      // Every printing TCGplayer prices, which is what tells this card's holo from its plain rare.
+      usdPrintings: (prices && r.tcgId && fetched.get(r.tcgId)?.usdPrintings) || null,
       priceHolo: holoOfId(r.tcgId),
       priceShadowless: (prices && r.tcgId && fetched.get(r.tcgId)?.shadowless) || null,
       // Always null on this path. See CardFacts.rarity: the row's own column is
