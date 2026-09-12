@@ -51,6 +51,14 @@ const RUN_GROUPS = {
   base1: "Base Set (Shadowless)",
 };
 
+/**
+ * Groups TCGplayer files cards of many sets in, under each card's own set number: Machamp 8/102 in
+ * "Deck Exclusives", Shaymin EX 77a/108 in "Alternate Art Promos" (Bart's own cards, 2026-09-12). A
+ * card is taken from one only when the number's total is the set's own count as well, so a
+ * Charizard 4/102 there can only ever be Base Set's.
+ */
+const BUCKET_GROUPS = new Set(["Deck Exclusives", "Alternate Art Promos"]);
+
 /** TCGdex's series for Pokémon TCG Pocket: digital cards, which no market sells. */
 const DIGITAL_SERIES = new Set(["tcgp"]);
 
@@ -102,9 +110,20 @@ const numberKey = (raw) => {
   return m ? `${m[1]}|${Number(m[2])}|${m[3]}` : n;
 };
 
-/** Letters and digits only, accents off: "Flabébé" and "Flabebe" are one name. */
+/** The "/108" of "077a/108", or null. */
+const numberTotal = (raw) => {
+  const m = String(raw).match(/\/\s*0*(\d+)\s*$/);
+  return m ? Number(m[1]) : null;
+};
+
+/**
+ * Letters and digits only, accents off: "Flabébé" and "Flabebe" are one name. The gender signs are
+ * the letters TCGplayer writes for them, so TCGdex's "Nidoran♀" is its "Nidoran F".
+ */
 const fold = (s) =>
   s
+    .replace(/♀/g, "F")
+    .replace(/♂/g, "M")
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
@@ -112,6 +131,11 @@ const fold = (s) =>
 
 /** A product's card name, without TCGplayer's suffixes: " - 027", " (Pokemon Center Exclusive)", " [Staff]". */
 const baseName = (productName) => productName.replace(/\s*[([].*$/, "").split(" - ")[0];
+
+/** Whether a product is this card by name: without TCGplayer's suffixes, or with a "(F)" kept. */
+const sameName = (productName, cardName) =>
+  fold(baseName(productName)) === fold(cardName) ||
+  fold(productName.split(" - ")[0]) === fold(cardName);
 
 /** The words of a set or group name that could identify it. */
 const words = (name) =>
@@ -152,7 +176,10 @@ await mapLimit(groups, 8, async (g) => {
     const number = p.extendedData?.find((e) => e.name === "Number")?.value;
     if (!number) continue;
     const key = numberKey(number);
-    byNumber.set(key, [...(byNumber.get(key) ?? []), { group: g, product: p }]);
+    byNumber.set(key, [
+      ...(byNumber.get(key) ?? []),
+      { group: g, product: p, total: numberTotal(number) },
+    ]);
   }
 });
 console.log(`tcgcsv: ${groups.length} groups, ${printingsOf.size} priced products`);
@@ -190,17 +217,25 @@ for (const [set, catalogue] of catalogues) {
   const row = { name: catalogue.name, linked: 0, ambiguous: 0, notFound: 0 };
   for (const card of catalogue.cards ?? []) {
     if (ids[card.id] !== null) continue;
-    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter(
-      ({ product }) => fold(baseName(product.name)) === fold(card.name),
+    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter(({ product }) =>
+      sameName(product.name, card.name),
     );
+    // A group of many sets counts as this set's own when the printed total is the set's count.
+    const setCount = catalogue.cardCount?.official ?? null;
+    const bucket = (hit) =>
+      BUCKET_GROUPS.has(hit.group.name) && setCount != null && hit.total === setCount;
     // Only groups whose name shares a word with the set's, the closest of those, and only one.
     const scored = new Map();
     for (const hit of named) {
-      const shared = homes.size
-        ? ownGroup(hit.group)
-          ? 1
-          : 0
-        : [...words(hit.group.name)].filter((w) => setWords.has(w)).length;
+      const shared = bucket(hit)
+        ? 1
+        : BUCKET_GROUPS.has(hit.group.name)
+          ? 0
+          : homes.size
+            ? ownGroup(hit.group)
+              ? 1
+              : 0
+            : [...words(hit.group.name)].filter((w) => setWords.has(w)).length;
       if (shared)
         scored.set(hit.group.groupId, {
           shared,
@@ -242,13 +277,19 @@ for (const [set, name] of Object.entries(RUN_GROUPS)) {
     if (!ids[card.id]) continue;
     const hits = (byNumber.get(numberKey(card.localId)) ?? []).filter(
       (h) =>
-        h.group.groupId === group.groupId && fold(baseName(h.product.name)) === fold(card.name),
+        sameName(h.product.name, card.name) &&
+        (h.group.groupId === group.groupId ||
+          // TCGplayer files a few Shadowless cards with the deck they came in: "Machamp - 8/102
+          // (Base Set Shadowless)" is in Deck Exclusives.
+          (BUCKET_GROUPS.has(h.group.name) &&
+            /shadowless/i.test(h.product.name) &&
+            h.total === 102)),
     );
     const hit = hits.find(({ product: p }) => !/[([]/.test(p.name)) ?? hits[0];
     if (!hit) continue;
     ids[card.id] = {
       ...ids[card.id],
-      shadowless: { productId: hit.product.productId, groupId: group.groupId },
+      shadowless: { productId: hit.product.productId, groupId: hit.group.groupId },
     };
     runs++;
   }
