@@ -45,6 +45,7 @@ import { ptcgLogo } from "./ptcg";
 import type { Price } from "../price-basis.mjs";
 import { unstable_cache } from "next/cache";
 import { json, fetchSet, pricesFor } from "./tcgdex-client";
+import { eraRaritiesOfSet, loadEraRarities } from "./era-rarities";
 import { resolveSetIds } from "./set-resolve";
 
 export { resolveSetIds } from "./set-resolve";
@@ -363,3 +364,19 @@ export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "
   revalidate: DAY,
   tags: ["catalogue"],
 });
+
+/**
+ * The rarities one era printed, a day old at most, one entry per series.
+ *
+ * Per series rather than per set, because that is the grain of the answer: the
+ * nineteen Scarlet & Violet sets share one vocabulary, and the promo set that
+ * needs it most is the one whose own cards say nothing.
+ */
+export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v1"], {
+  revalidate: DAY,
+  tags: ["catalogue"],
+});
+
+/** The rarities the era of one set printed, or null where the catalogue could not say. */
+export const raritiesOfEra = (setId: string): Promise<string[] | null> =>
+  eraRaritiesOfSet(setId, eraRarities);
