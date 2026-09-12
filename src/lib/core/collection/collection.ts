@@ -68,8 +68,10 @@ import {
   listCardPrices,
   listFolders,
   listPublicFolders,
+  rememberScans,
   type Folder,
 } from "../../storage/postgres";
+import { rememberedScans } from "./remembered-scans";
 import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -768,6 +770,29 @@ export const getCollection = cache(async (userId: string, token?: string): Promi
     return { sets: [], failed: true };
   }
 });
+
+/**
+ * Write the pictures of this collection down on its rows.
+ *
+ * The read has just worked every one of them out against the catalogue; this is what keeps that
+ * answer when the catalogue next goes quiet. See remembered-scans.ts for why a row is allowed
+ * to hold a catalogue fact at all, and buildCollection() for the side it is read on.
+ *
+ * Called by the warm cron rather than by a read: a GET does not write, and the warm run has the
+ * whole collection in hand every ten minutes anyway, so a card added at noon is remembered
+ * within ten minutes of being added. A write moves `cards_version` and so costs the rows cache,
+ * which is why this is careful to write only what actually changed: after the first pass that
+ * is nothing at all, on almost every run.
+ */
+export async function rememberCollectionScans(
+  userId: string,
+  sets: CardSet[],
+  db: SupabaseClient | null,
+): Promise<number> {
+  if (!db) return 0;
+  const memories = rememberedScans(await cachedRows(userId, db), sets);
+  return memories.length ? rememberScans(db, userId, memories) : 0;
+}
 
 /**
  * The rows themselves, joined to nothing.

@@ -221,6 +221,20 @@ export type CollectionRow = {
   dexFace: boolean;
   /** The folder this copy is filed in (`/v1/folders`), or null for none. */
   collectionId: string | null;
+  /**
+   * The scan the catalogue last gave for this card, low and high.
+   *
+   * A remembered answer, not a fact anybody keeps by hand: the catalogue still says what a card
+   * is, and whatever it answers wins. This is only what it answered last time, for the minutes
+   * it is silent. On 2026-09-12 one flaky answer for set 151 left every card of it without a
+   * picture, for every client, until the day-long entry aged out; a picture that has been seen
+   * once should not be losable that way.
+   *
+   * Optional in the type, not in the answer: every fixture that builds a row by hand predates
+   * the pair, and a row without them reads as a card nothing has resolved yet.
+   */
+  imageUrl?: string | null;
+  imageHighUrl?: string | null;
 };
 
 /**

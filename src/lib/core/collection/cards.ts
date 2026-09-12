@@ -1166,6 +1166,9 @@ export async function buildCollection(
       const printings = setRows.map((row) => {
         const { name, number } = row;
         const card = set.cards[identityKey(identityOf(row))];
+        const scan = card?.image
+          ? { image: card.image, imageHigh: card.imageHigh }
+          : { image: row.imageUrl ?? null, imageHigh: row.imageHighUrl ?? null };
         return {
           // Prefixed by the catalogue where there is one, and by nothing at all
           // where there is not — so every key in this collection today is the key
@@ -1183,9 +1186,18 @@ export async function buildCollection(
           // card to match is a separate change with its own blast radius.
           type: row.types.join(", ") || null,
           gen: row.gen,
-          image: card?.image ?? null,
-          imageHigh: card?.imageHigh ?? null,
-          imageSize: measure(card?.image ?? null),
+          // The catalogue's answer, and the row's memory of the last one where it has none.
+          // Which way round that is matters: a catalogue that answers always wins, so a better
+          // scan, a corrected match or a card that moved sets is picked up on the next read.
+          // The memory is only for the minutes the catalogue is silent - see
+          // CollectionRow.imageUrl, and rememberedScans(), which writes it.
+          //
+          // The pair moves together. A fallback scan is one file and carries no high version,
+          // so taking the catalogue's low beside a remembered high would draw two different
+          // resolutions of two different pictures as one card.
+          image: scan.image,
+          imageHigh: scan.imageHigh,
+          imageSize: measure(scan.image),
           // TCGdex' name where the row matched one, the row's own where it did
           // not. Which Pokémon a card shows is a fact about the card rather than
           // about how it was typed, and the Dex is the one place a misspelling

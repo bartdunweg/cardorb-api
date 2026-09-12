@@ -1,0 +1,1 @@
+- A card keeps the picture it has been seen with. The scan is still worked out from the catalogue on every read, so a better one is picked up the same day, but the card no longer goes blank when the catalogue is briefly silent about the set it is from.

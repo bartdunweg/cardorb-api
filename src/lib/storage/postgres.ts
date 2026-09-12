@@ -32,6 +32,7 @@ import {
   isFoilPattern,
   isEdition,
 } from "../core/collection/collection-row";
+import type { ScanMemory } from "../core/collection/remembered-scans";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
 import type { CardPricePoint } from "../core/collection/movers";
 
@@ -45,6 +46,8 @@ type CardRecord = {
   gen: string | null;
   types: string[] | null;
   tcg_id: string | null;
+  image_url: string | null;
+  image_high_url: string | null;
   owned: boolean;
   excluded: boolean;
   acquired_at: string;
@@ -64,7 +67,7 @@ type CardRecord = {
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,edition,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,dex_face,collection_id";
+  "id,name,number,set_name,rarity,gen,types,tcg_id,image_url,image_high_url,owned,excluded,acquired_at,finish,foil_pattern,edition,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,dex_face,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -172,6 +175,10 @@ const toRow = (r: CardRecord): CollectionRow => ({
   // how a card from a catalogue that is not the English one is found again —
   // see resolveSetFacts().
   tcgId: r.tcg_id ?? null,
+  // What the catalogue answered last time, for the minutes it answers nothing. See
+  // CollectionRow.imageUrl: the catalogue still wins whenever it speaks.
+  imageUrl: r.image_url ?? null,
+  imageHighUrl: r.image_high_url ?? null,
   owned: r.owned,
   excluded: r.excluded,
   acquiredAt: r.acquired_at ?? null,
@@ -552,6 +559,34 @@ function patchColumns(patch: CardPatch): Record<string, unknown> {
   if ("rarity" in patch) row.rarity = patch.rarity;
   if ("acquiredAt" in patch) row.acquired_at = patch.acquiredAt;
   return row;
+}
+
+/**
+ * Write down the pictures the catalogue just gave, one statement per picture.
+ *
+ * Fill-only in spirit, never a null: rememberedScans() hands over cards the catalogue answered
+ * for and nothing else, so an outage cannot reach this function with an absence to record.
+ *
+ * Scoped to the owner like every other write here, and a run where nothing moved makes no
+ * request at all, which is the usual night.
+ */
+export async function rememberScans(
+  db: SupabaseClient,
+  userId: string,
+  memories: readonly ScanMemory[],
+): Promise<number> {
+  let written = 0;
+  for (const memory of memories) {
+    const { data, error } = await db
+      .from("cards")
+      .update({ image_url: memory.image, image_high_url: memory.imageHigh })
+      .in("id", memory.ids)
+      .eq("user_id", userId)
+      .select("id");
+    if (error) throw new Error(`A card could not remember its picture: ${error.message}`);
+    written += (data ?? []).length;
+  }
+  return written;
 }
 
 export async function updateRow(
