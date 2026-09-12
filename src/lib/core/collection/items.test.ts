@@ -251,6 +251,20 @@ describe("filterItems", () => {
     expect(filterItems(items, { rarity: "common" }).map((i) => i.id)).toEqual(["a", "b", "c"]);
     expect(filterItems(items, { rarity: "Rare" })).toEqual([]);
   });
+
+  it("matches any of several values within a key, and every key across them", () => {
+    const kanto = { ...items[0]!, id: "k", gen: "Base", type: "Lightning" };
+    const johto = { ...items[0]!, id: "j", gen: "Neo", type: "Grass" };
+    const hoenn = { ...items[0]!, id: "h", gen: "EX", type: "Grass" };
+    const all = [kanto, johto, hoenn];
+    expect(filterItems(all, { gen: ["base", "NEO"] }).map((i) => i.id)).toEqual(["k", "j"]);
+    expect(filterItems(all, { gen: ["Base", "Neo"], type: ["grass"] }).map((i) => i.id)).toEqual([
+      "j",
+    ]);
+    expect(filterItems(all, { gen: ["Neo"] })).toEqual(filterItems(all, { gen: "Neo" }));
+    expect(filterItems(items, { set: ["jungle", "nowhere"] }).map((i) => i.id)).toEqual(["c"]);
+    expect(filterItems(all, { gen: [] })).toEqual(all);
+  });
 });
 
 describe("sortItems", () => {
@@ -324,7 +338,7 @@ describe("readItemQuery", () => {
   it("reads a generation and a type as it reads a set", () => {
     expect(read("gen=Base&type=Lightning")).toEqual({
       kind: "ok",
-      query: { limit: 100, offset: 0, gen: "Base", type: "Lightning" },
+      query: { limit: 100, offset: 0, gen: ["Base"], type: ["Lightning"] },
     });
     expect(read("gen=").kind).toBe("invalid");
   });
@@ -335,11 +349,39 @@ describe("readItemQuery", () => {
   it("reads a sort, an order, a set and a rarity, and refuses what it cannot mean", () => {
     expect(read("sort=price&order=desc&set=Jungle&rarity=Rare")).toEqual({
       kind: "ok",
-      query: { limit: 100, offset: 0, sort: "price", order: "desc", set: "Jungle", rarity: "Rare" },
+      query: {
+        limit: 100,
+        offset: 0,
+        sort: "price",
+        order: "desc",
+        set: ["Jungle"],
+        rarity: ["Rare"],
+      },
     });
     expect(read("sort=colour").kind).toBe("invalid");
     expect(read("order=up").kind).toBe("invalid");
     expect(read("set=").kind).toBe("invalid");
+  });
+  it("reads a repeated set, rarity, generation or type as several, trimmed and without repeats", () => {
+    expect(read("rarity=Rare&rarity=Rare%20Holo&rarity=%20Rare%20")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, rarity: ["Rare", "Rare Holo"] },
+    });
+    expect(read("set=Jungle&set=Fossil&type=Grass")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, set: ["Jungle", "Fossil"], type: ["Grass"] },
+    });
+    expect(read("gen=Base&gen=").kind).toBe("invalid");
+    expect(read(`rarity=${"x".repeat(101)}&rarity=Rare`).kind).toBe("invalid");
+  });
+  it("refuses more than fifty values for one key, and keeps number to one", () => {
+    const many = (n: number) => Array.from({ length: n }, (_, i) => `set=s${i}`).join("&");
+    expect(read(many(50)).kind).toBe("ok");
+    expect(read(many(51))).toEqual({ kind: "invalid", error: "set names too many." });
+    expect(read("number=4&number=5")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, number: "4" },
+    });
   });
 });
 
@@ -466,6 +508,20 @@ describe("public filters, sort and facets", () => {
     ]);
     expect(filterPublicItems(items, { rarity: "rare" }).map((i) => i.name)).toEqual(["Snorlax"]);
     expect(filterPublicItems(items, { set: "jung" })).toEqual([]);
+    expect(
+      filterPublicItems(items, { set: ["base", "JUNGLE"], rarity: ["rare", "common"] }).map(
+        (i) => i.name,
+      ),
+    ).toEqual(["Snorlax", "Abra"]);
+  });
+
+  it("keeps a repeated set or rarity through the public query", () => {
+    expect(
+      readPublicQuery(new URLSearchParams("set=jungle&set=base&rarity=Rare&rarity=Common&gen=Neo")),
+    ).toEqual({
+      kind: "ok",
+      query: { set: ["jungle", "base"], rarity: ["Rare", "Common"], limit: 100, offset: 0 },
+    });
   });
 
   it("sorts by name either way and keeps set order otherwise", () => {
@@ -536,7 +592,14 @@ describe("public filters, sort and facets", () => {
       readPublicQuery(new URLSearchParams("set=jungle&rarity=Rare&sort=name&order=desc")),
     ).toEqual({
       kind: "ok",
-      query: { set: "jungle", rarity: "Rare", sort: "name", order: "desc", limit: 100, offset: 0 },
+      query: {
+        set: ["jungle"],
+        rarity: ["Rare"],
+        sort: "name",
+        order: "desc",
+        limit: 100,
+        offset: 0,
+      },
     });
     expect(readPublicQuery(new URLSearchParams("sort=price")).kind).toBe("invalid");
     // "added" is a public sort now: newest first, without publishing the dates behind it.
