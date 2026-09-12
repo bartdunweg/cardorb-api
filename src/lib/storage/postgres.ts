@@ -30,6 +30,7 @@ import {
   type CardPatch,
   type CollectionRow,
   isFoilPattern,
+  isEdition,
 } from "../core/collection/collection-row";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
 import type { CardPricePoint } from "../core/collection/movers";
@@ -49,6 +50,7 @@ type CardRecord = {
   acquired_at: string;
   finish: string | null;
   foil_pattern: string | null;
+  edition: string | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -61,7 +63,7 @@ type CardRecord = {
 };
 
 const COLUMNS =
-  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
+  "id,name,number,set_name,rarity,gen,types,tcg_id,owned,excluded,acquired_at,finish,foil_pattern,edition,quantity,condition,grade,language,purchase_price,purchase_date,notes,is_favorite,collection_id";
 
 /**
  * Supabase caps a response at a thousand rows and says so only by handing over
@@ -173,6 +175,9 @@ const toRow = (r: CardRecord): CollectionRow => ({
   excluded: r.excluded,
   acquiredAt: r.acquired_at ?? null,
   foilPattern: isFoilPattern(r.foil_pattern) ? r.foil_pattern : null,
+  // The same again for the print run, and the same for a row written before the column was
+  // there: it reads as not recorded, which is what it is.
+  edition: isEdition(r.edition) ? r.edition : null,
   // Whatever the column holds that is not one of the three reads as "not
   // recorded", which is also what a row written before this column existed
   // gives back.
@@ -482,6 +487,7 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       excluded: draft.excluded,
       finish: draft.finish,
       foil_pattern: draft.foilPattern,
+      edition: draft.edition,
       quantity: draft.quantity,
       condition: draft.condition,
       language: draft.language,
@@ -529,6 +535,7 @@ function patchColumns(patch: CardPatch): Record<string, unknown> {
   if ("excluded" in patch) row.excluded = patch.excluded;
   if ("finish" in patch) row.finish = patch.finish;
   if ("foilPattern" in patch) row.foil_pattern = patch.foilPattern;
+  if ("edition" in patch) row.edition = patch.edition;
   if ("quantity" in patch) row.quantity = patch.quantity;
   if ("condition" in patch) row.condition = patch.condition;
   if ("grade" in patch) row.grade = patch.grade;
@@ -605,6 +612,7 @@ const KIND_KEYS = [
   "owned",
   "finish",
   "foilPattern",
+  "edition",
   "condition",
   "grade",
   "language",
@@ -705,6 +713,7 @@ export async function createRows(
       quantity: r.quantity,
       finish: r.finish,
       foil_pattern: r.foilPattern,
+      edition: r.edition,
       condition: r.condition,
       language: r.language,
       notes: r.notes,
@@ -1191,6 +1200,7 @@ const columnsFor = (changes: CopyChanges): Record<string, unknown> => {
   // Was missing while COPY_KEYS accepted it, so "one more, but Cosmos" answered 201 and wrote
   // null. A pattern the reader stated is a fact; null means nobody has said.
   if ("foilPattern" in changes) out.foil_pattern = changes.foilPattern;
+  if ("edition" in changes) out.edition = changes.edition;
   if ("condition" in changes) out.condition = changes.condition;
   if ("grade" in changes) out.grade = changes.grade;
   if ("language" in changes) out.language = changes.language;
@@ -1234,6 +1244,8 @@ export async function copyRow(
       finish: src.finish,
       // Inherited like every other inventory field: a copy of a Cosmos holo is a Cosmos holo.
       foil_pattern: src.foilPattern,
+      // The same: a copy of a 1st Edition is a 1st Edition.
+      edition: src.edition,
       quantity: count,
       condition: src.condition,
       grade: src.grade,

@@ -1,0 +1,2 @@
+- A copy says which print run it is from: 1st Edition, Shadowless or Unlimited, a third axis beside the finish and the foil pattern. The CSV import reads it from Dex's Variant word and from a column of its own, the export writes it, and a 1st Edition copy is its own line rather than one more of the unlimited row.
+- The dollar price of a Jungle, Fossil, Team Rocket, Gym or Neo card is the ordinary run's, not the stamped one's: TCGplayer splits the two and the 1st Edition figure was taken first, so an unlimited Neo Genesis Lugia read $1,085 where it is $519.

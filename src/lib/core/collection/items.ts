@@ -3,7 +3,7 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
 import { heldValue } from "./cards-stats";
 import type { DexEntry } from "./pokedex";
-import { type Finish, type FoilPattern, isReverseFinish } from "./collection-row";
+import { type Edition, type Finish, type FoilPattern, isReverseFinish } from "./collection-row";
 import { UUID } from "./collection-row";
 
 /**
@@ -42,6 +42,8 @@ export type CardItem = {
   finish: Finish | null;
   /** What the foil looks like, where anything told us. Null is "not recorded". */
   foilPattern: FoilPattern | null;
+  /** Which print run, where somebody said. Null is "not recorded", never "unlimited". */
+  edition: Edition | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -77,6 +79,9 @@ const sameness = (v: Variant) =>
     v.language ?? "",
     v.finish ?? "",
     v.foilPattern ?? "",
+    // A 1st Edition copy is its own line: it is a different card to a collector and a
+    // different figure. The store's fold_card compares the same field.
+    v.edition ?? "",
     v.condition ?? "",
     v.grade ?? "",
     v.collectionId ?? "",
@@ -132,6 +137,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   owned: v.owned,
   finish: v.finish,
   foilPattern: v.foilPattern,
+  edition: v.edition,
   quantity: v.quantity ?? 1,
   condition: v.condition,
   grade: v.grade,

@@ -23,6 +23,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   owned: true,
   finish: null,
   foilPattern: null,
+  edition: null,
   quantity: 1,
   condition: null,
   grade: null,

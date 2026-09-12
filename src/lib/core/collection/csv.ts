@@ -1,7 +1,9 @@
 import type { CollectionRow } from "./collection-row";
 import {
+  isEdition,
   isFinish,
   isLanguage,
+  type Edition,
   type Finish,
   type FoilPattern,
   type Language,
@@ -136,6 +138,7 @@ export type ColumnMap = {
   acquired?: number;
   quantity?: number;
   variant?: number;
+  edition?: number;
   condition?: number;
   language?: number;
   notes?: number;
@@ -175,6 +178,9 @@ export function guessColumns(header: string[]): Partial<ColumnMap> {
     // number of a set you have completed as it is copies of one card.
     quantity: find(/^(qty|quantity|copies|amount)$/, /quantity|copies/),
     variant: find(/^(variant|finish|printing|foil)$/, /variant|finish|printing/),
+    // Its own column where a file has one (this app's export writes it); otherwise the run is
+    // read out of the variant word, which is where Dex and TCGplayer put it.
+    edition: find(/^(edition|print ?run)$/, /edition/),
     condition: find(/^(condition|cond|grade)$/, /condition/),
     language: find(/^(language|lang|locale)$/, /language/),
     notes: find(/^(notes?|comment|remark)s?$/, /^note/),
@@ -280,6 +286,26 @@ export function patternFrom(variant: string): FoilPattern | null {
   return null;
 }
 
+/**
+ * Which print run, from the same string the finish and the pattern are read from.
+ *
+ * A third answer out of one word, for the same reason the pattern is a second: an export writes
+ * the run as a qualifier. Dex writes "1st Edition" on its own and TCGplayer's vocabulary pairs
+ * it with the finish ("1st Edition Holofoil"), so the word is looked for inside the string.
+ *
+ * "Unlimited" is read where a file says it, and only then: null is not unlimited (see EDITIONS).
+ * Shadowless comes from a file that says so and from nowhere else, because no catalogue knows it.
+ */
+export function editionFrom(variant: string): Edition | null {
+  const v = variant.trim().toLowerCase();
+  if (!v) return null;
+  if (isEdition(v)) return v;
+  if (/(^|[^a-z])1st\.? ?ed(ition)?([^a-z]|$)|first ?edition/.test(v)) return "1st-edition";
+  if (v.includes("shadowless")) return "shadowless";
+  if (v.includes("unlimited")) return "unlimited";
+  return null;
+}
+
 /** A copy count, or null where the column said nothing usable. */
 export function quantityFrom(raw: string): number | null {
   if (!raw.trim()) return null;
@@ -379,6 +405,8 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
       acquiredAt: parsed && !Number.isNaN(parsed.getTime()) ? parsed.toISOString() : null,
       finish: finishFrom(at(r, map.variant)),
       foilPattern: patternFrom(at(r, map.variant)),
+      // The edition's own column first, the variant word second.
+      edition: editionFrom(at(r, map.edition) || at(r, map.variant)),
       // One, where the file did not say. Not zero: a row that reached here is a
       // card somebody has, and quantity is what the collection counts.
       quantity: quantity && quantity > 0 ? quantity : 1,

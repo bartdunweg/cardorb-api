@@ -2,6 +2,7 @@ import { type CollectionRow, type Language, isLanguage } from "./collection-row"
 import {
   NOT_OWNED,
   cardNumber,
+  editionFrom,
   finishFrom,
   patternFrom,
   quantityFrom,
@@ -63,6 +64,7 @@ const columns = (header: string[]) => {
     // The four this app writes after Dex's own columns (dex-export.ts). Absent
     // from a file Dex wrote, and then every one of them reads as unknown.
     condition: at("condition"),
+    edition: at("edition"),
     language: at("language"),
     acquired: at("acquired"),
     purchase: at("purchase price"),
@@ -174,6 +176,9 @@ export function dexRows(grid: string[][]): CsvResult {
       // Dex names the foil pattern in the same column: "Cosmos Holo" is a holo
       // whose foil is cosmos, and both halves of that are worth keeping.
       foilPattern: patternFrom(at(r, c.variant)),
+      // Dex writes the run in its Variant column ("1st Edition"); this app's export gives it a
+      // column of its own, which is read first where it is there.
+      edition: editionFrom(at(r, c.edition) || at(r, c.variant)),
       // A wishlist row is a card you want one of, whatever Dex counted.
       quantity: wanted ? 1 : Math.max(1, quantity ?? 1),
       condition: at(r, c.condition) || null,

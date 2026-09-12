@@ -203,15 +203,25 @@ export type CardPrices = {
   usd?: UsdPrice | null;
 };
 
-/** The printings TCGdex lists TCGplayer's numbers under, in the order one is taken: the plain card first. */
+/**
+ * The printings TCGdex lists TCGplayer's numbers under, in the order one is taken: the plain
+ * card first, and the ordinary run before the stamped one.
+ *
+ * 1st Edition used to sit before unlimited, and TCGplayer splits the two for Jungle, Fossil,
+ * Team Rocket, Gym and Neo: Neo Genesis Lugia is $1,085 as a 1st Edition and $519 as an
+ * unlimited, and this figure is blended into the one price every copy of the card shows
+ * (factsWithUsd in collection/collection.ts). So a collection of unlimited copies read as the
+ * stamped run's money. A copy is the ordinary run unless somebody says otherwise, which is
+ * what `edition` on the row is for.
+ */
 const TCGPLAYER_PRINTINGS = [
   "normal",
   "holofoil",
   "reverse-holofoil",
-  "1st-edition",
-  "1st-edition-holofoil",
   "unlimited",
   "unlimited-holofoil",
+  "1st-edition",
+  "1st-edition-holofoil",
 ];
 
 /** TCGplayer's market and low for the first printing that has a market, or null. */
