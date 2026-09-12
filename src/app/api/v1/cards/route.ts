@@ -25,7 +25,7 @@ import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
 import { forgetOnTheWeb } from "@/lib/api/web-cache";
-import { type FullArtKeys, readFullArtKeys } from "@/lib/storage/postgres";
+import { fullArtIdsAmong } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
@@ -90,15 +90,18 @@ export async function GET(req: Request) {
   /* `?fullArt=1`: only the copies whose illustration covers the whole card. Whether a printing
      is a full art is a fact about the card and not about the row, and it takes the card's whole
      set to work out (lib/core/catalogue/full-art.ts), so it is asked of the catalogue's copy,
-     which knows it already. The whole index in one read, by id and by set and number both: a row
-     written from the old catalogue files 151 as `sv3pt5-1` where the copy files it as
-     `sv03.5-001`, and on the id alone 1,361 of one collection's 1,940 rows joined to nothing. */
-  let fullArtIndex: FullArtKeys | undefined;
+     which knows it already. One query for the collection's catalogue ids rather than a pass per
+     set. The ids line up because the collection resolves each row's catalogue id as it assembles
+     it: a row filed from the old catalogue stores `sv3pt5-1` and the item carries `sv03.5-001`.
+     Checked on 2026-09-12: all 1,915 rows of one collection carried a resolved id, none missing,
+     so no second key by set and number is needed (#336 added one and it matched nothing). */
+  let fullArtIds: Set<string> | undefined;
   if (read.query.fullArt) {
+    const ids = [...new Set(all.flatMap((it) => (it.tcgId ? [it.tcgId] : [])))];
     try {
       const store = adminClient();
       if (!store) throw new Error("no service role client");
-      fullArtIndex = await readFullArtKeys(store);
+      fullArtIds = await fullArtIdsAmong(store, ids);
     } catch (err) {
       // The copy is the only place that knows. Answering the whole collection instead would be
       // a page that says "full art" over cards that are not, which is worse than saying so.
@@ -113,7 +116,7 @@ export async function GET(req: Request) {
     owned: rule ? undefined : read.query.owned,
     collection,
     rule,
-    fullArtIndex,
+    fullArtIds,
   };
   const shown = sortItems(filterItems(all, filter), sort, order);
   const { items, total } = pageOf(shown, read.query);
