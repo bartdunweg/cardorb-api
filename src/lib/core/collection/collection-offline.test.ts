@@ -77,6 +77,17 @@ const outage = () => {
   return err;
 };
 
+/**
+ * The other outage: the breaker has already watched TCGdex fail three times and refuses to ask
+ * again, so nothing is asked and `CatalogueDown` comes back instead (tcgdex-client.ts). The same
+ * thing to everyone here, and for a while not the same thing to this file.
+ */
+const breakerOpen = () => {
+  const err = new Error("TCGdex is down, card base1-73 not asked");
+  err.name = "CatalogueDown";
+  return err;
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -102,6 +113,16 @@ describe("getCollection during a TCGdex outage", () => {
       owned: true,
     });
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  /* On the evening of 2026-09-12 TCGdex was down for half an hour. The first call tripped the
+     breaker and every call after it threw this name, which fell past the guard: the collection
+     answered 503 and the page said it could not load, while every row sat in the store. */
+  it("serves the rows when the breaker is open, not only when TCGdex refused", async () => {
+    setCatalogue.mockRejectedValue(breakerOpen());
+    const out = await getCollection("me", "t.o.k.e.n");
+    expect(out).toMatchObject({ failed: false, catalogueUnavailable: true });
+    expect(out.sets[0]?.cards[0]?.name).toBe("Pikachu");
   });
 
   it("does the same for a public profile", async () => {
