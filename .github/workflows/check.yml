@@ -10,6 +10,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The weekly links run opens its pull request with the workflow token, which starts no other
+  # workflow on its own; it dispatches this one on the branch instead (tcgplayer-links.yml).
+  workflow_dispatch:
 
 jobs:
   check:

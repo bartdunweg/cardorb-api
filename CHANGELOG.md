@@ -142,6 +142,8 @@ if the two have drifted apart.
 
 - Every keyed request used to wait on a Postgres read of your profile before it did anything else, whether it needed it or not. Nothing but a rename does, so nothing but a rename asks: the collection, the lists and the statistics answer without it.
 
+- New cards are linked to TCGplayer once a week without anyone remembering to. `.github/workflows/tcgplayer-links.yml` runs every Saturday: it adds the English cards TCGdex has published since the last run (`scripts/tcgplayer-ids.mjs`, which needs no database key, unlike the backfill it replaces for this), refreshes which tcgcsv group each product is in, links what `tcgplayer-links.mjs` can, and opens a pull request when anything changed, with the check dispatched on its branch. It needs "Allow GitHub Actions to create and approve pull requests" switched on for the repository.
+
 - The full art Venusaur EX (XY123) and Blastoise EX (XY122) are priced from the XY Black Star Promos products rather than from a Japanese card of the same name: €96.39 and €196.76 instead of €116.93 and €78.71. Cardmarket names a product after its attacks and never after its number, so three cards can carry one name inside one expansion and a dozen carry it across the catalogue; the expansion is the half that tells them apart.
 
 ## 2026-09-11
