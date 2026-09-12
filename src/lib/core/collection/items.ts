@@ -1,9 +1,10 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
+import { copyPriceOf } from "../price-basis.mjs";
 import { heldValue } from "./cards-stats";
 import type { DexEntry } from "./pokedex";
-import { type Edition, type Finish, type FoilPattern, isReverseFinish } from "./collection-row";
+import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { UUID } from "./collection-row";
 
 /**
@@ -58,6 +59,8 @@ export type CardItem = {
   collectionId: string | null;
   price: Price | null;
   priceHolo: Price | null;
+  /** The stamped first run's price, where anything prices that run apart. See OwnedCard.priceFirstEd. */
+  priceFirstEd?: Price | null;
 };
 
 /** One item per copy, in the assembly's order: set by set, number by number. */
@@ -151,6 +154,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   collectionId: v.collectionId,
   price: card.price,
   priceHolo: card.priceHolo,
+  priceFirstEd: card.priceFirstEd ?? null,
 });
 
 export type ItemFilter = {
@@ -219,13 +223,11 @@ export type Sort = (typeof SORTS)[number];
 export type Order = "asc" | "desc";
 
 /**
- * What a copy is worth: the foil price for a reverse holo, the plain price for
- * everything else — the same rule as variantPrice() in cards.ts, which says
- * why `holo` does not read the foil fields. This used to read them for `holo`
- * too, so the sort valued a holo copy differently from every other figure.
+ * What a copy is worth: the stamped run's price for a 1st Edition, the foil's for a reverse, the
+ * plain one otherwise. The rule itself is copyPriceOf() in price-basis.mjs, which is where every
+ * path that puts a figure on a copy now reads it from; this used to be a third copy of it.
  */
-export const copyPrice = (it: CardItem): number | null =>
-  shownPrice((isReverseFinish(it.finish) ? it.priceHolo : null) ?? it.price);
+export const copyPrice = (it: CardItem): number | null => shownPrice(copyPriceOf(it, it));
 
 export type ListValue = { value: number; unpriced: number; copies: number };
 

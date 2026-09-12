@@ -54,7 +54,6 @@ import {
   type FoilPattern,
   type Edition,
   type Language,
-  isReverseFinish,
 } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
@@ -154,7 +153,7 @@ export type Variant = {
  * number on a card as this file does, and Node 20 cannot import a .ts file. The
  * calibration comments moved with it; that file is where they are now.
  */
-import { priceOf } from "../price-basis.mjs";
+import { priceOf, copyPriceOf } from "../price-basis.mjs";
 export { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
@@ -219,6 +218,14 @@ export type OwnedCard = {
    * answered per variant. See variantPrice() below.
    */
   priceHolo: Price | null;
+  /**
+   * The stamped first run's price, where anything prices that run apart; null otherwise.
+   *
+   * A third price on one card for the same reason there is a second: which of them a copy is
+   * worth is a question about the copy, and it is answered in one place, copyPriceOf() in
+   * price-basis.mjs.
+   */
+  priceFirstEd?: Price | null;
   /**
    * TCGdex's id for the printing this row matched ("sv03-125"), or null when
    * nothing matched. It is the only stable, URL-safe handle a card has, because `key`
@@ -384,7 +391,7 @@ export function cardNeighbours(
  * which is the honest answer rather than a missing one.
  */
 export function variantPrice(card: OwnedCard, variant: Variant): Price | null {
-  return (isReverseFinish(variant.finish) && card.priceHolo) || card.price;
+  return copyPriceOf(variant, card);
 }
 
 /**
@@ -446,6 +453,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
       ...card,
       price: null,
       priceHolo: null,
+      priceFirstEd: null,
       // Eleven keys written as null rather than omitted, and that is 472.3 kB
       // of the 1,050 kB RSC flight payload on a 1,635-card profile — 45% of it,
       // measured. Omitting them instead is the obvious win and was attempted;
@@ -721,7 +729,18 @@ export type CardFacts = {
   price: Price | null;
   /** TCGplayer's dollars as TCGdex relays them, where the card was fetched there: the blend's fallback. */
   usd: UsdPrice | null;
+  /** The stamped first run's dollars, where TCGplayer prices that run apart. See CardPrices.usdFirstEd. */
+  usdFirstEd?: UsdPrice | null;
   priceHolo: Price | null;
+  /**
+   * What the stamped first run trades at, in euros, where anything prices that run apart.
+   *
+   * TCGplayer's figure converted and nothing else: Cardmarket publishes one price per card id
+   * and it is the ordinary run's, so there is nothing here to average it with. Null on every
+   * card nobody prices a stamped run for, which is most of them, and a 1st Edition copy of one
+   * of those falls back to the ordinary price. See copyPriceOf() in price-basis.mjs.
+   */
+  priceFirstEd?: Price | null;
   /**
    * TCGdex's word for how rare this printing is, from a catalogue that is not
    * the English one — and null on every English card, always.
@@ -801,8 +820,11 @@ function factsOfLanguageCard(
     price: prices ? card.price : null,
     priceHolo: prices ? card.holo : null,
     // No second market: pokemontcg.io indexes the English game only, so there
-    // is nothing to blend and nothing to look one up by.
+    // is nothing to blend and nothing to look one up by. The stamped run comes from that
+    // market alone, so it is null here too: no Japanese set had a 1st Edition run anyway.
     usd: null,
+    usdFirstEd: null,
+    priceFirstEd: null,
     rarity: card.rarity,
     catalogue: card.catalogue,
   };
@@ -988,6 +1010,7 @@ export async function resolveSetFacts(
       number: r.number,
       price: priceOfId(r.tcgId),
       usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
+      usdFirstEd: (prices && r.tcgId && fetched.get(r.tcgId)?.usdFirstEd) || null,
       priceHolo: holoOfId(r.tcgId),
       // Always null on this path. See CardFacts.rarity: the row's own column is
       // the one source for an English card's rarity and is to stay so.
@@ -1161,6 +1184,7 @@ export async function buildCollection(
           tcgId: card?.tcgId ?? null,
           price: card?.price ?? null,
           priceHolo: card?.priceHolo ?? null,
+          priceFirstEd: card?.priceFirstEd ?? null,
           // The catalogue's word where it has one, the row's where it does not.
           // Only a card from its own catalogue ever carries the first — the
           // shelves those are added from publish no rarity, so a row written from
@@ -1249,6 +1273,7 @@ export async function buildCollection(
           speciesId: p.speciesId,
           price: p.price,
           priceHolo: p.priceHolo,
+          priceFirstEd: p.priceFirstEd,
           tcgId: p.tcgId,
           variants: [variant],
           owned: p.owned,
@@ -1364,6 +1389,15 @@ export type CardDetail = {
   stage: string | null;
   evolveFrom: string | null;
   regulationMark: string | null;
+  /**
+   * Whether a stamped first run of this card exists, as TCGdex says.
+   *
+   * The whole point of relaying it is to stop a form asking a question with no answer: a card
+   * printed once was never a 1st Edition, and offering the choice there invites somebody to
+   * record something that does not exist. Null where the catalogue did not say, and then the
+   * form offers the runs rather than none, which is the rule the finishes already follow.
+   */
+  firstEdition: boolean | null;
   set: { id: string; name: string; logo: string | null; total: number | null } | null;
   /** Cardmarket's product id, which is how a card is addressed on their site. */
   cmId: number | null;
@@ -1423,6 +1457,8 @@ export async function getCardDetail(
       stage?: string;
       evolveFrom?: string;
       regulationMark?: string;
+      /** TCGdex says per card which runs and printings exist; only the stamped run is read here. */
+      variants?: { firstEdition?: boolean };
       set?: { id?: string; name?: string; logo?: string; cardCount?: { total?: number } };
       pricing?: {
         cardmarket?: {
@@ -1452,6 +1488,7 @@ export async function getCardDetail(
     stage: card.stage ?? null,
     evolveFrom: card.evolveFrom ?? null,
     regulationMark: card.regulationMark ?? null,
+    firstEdition: card.variants?.firstEdition ?? null,
     set: card.set?.id
       ? {
           id: card.set.id,

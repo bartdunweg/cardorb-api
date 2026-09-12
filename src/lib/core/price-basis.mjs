@@ -77,6 +77,31 @@ export const isReverseFinish = (f) =>
   f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
 
 /**
+ * Which of a card's price series one copy reads.
+ *
+ * The one sentence, in one place, and that is the point. It was written out four times over:
+ * variantPrice() in collection/cards.ts, copyPrice() in collection/items.ts, and twice in
+ * collection/snapshot.ts, each a copy of "a reverse reads the foil fields". Four copies of a
+ * money rule is one rule and three drifts waiting, which is what happened to isReverseFinish()
+ * above before it moved here. An edition would have made it five.
+ *
+ * The order is deliberate. A stamped first run is a different market from the card's ordinary
+ * price, dearer by multiples, so it wins where there is a figure for it; then the foil series
+ * for a reverse; then the plain price. A 1st Edition copy of a card nobody has a stamped-run
+ * figure for falls back to the ordinary price, which is the honest answer and is what the value
+ * history does for every card (see snapshotOf(): Cardmarket's guide has no stamped run in it).
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {{ price?: Price | null, priceHolo?: Price | null, priceFirstEd?: Price | null }} card
+ * @returns {Price | null}
+ */
+export const copyPriceOf = (copy, card) =>
+  (copy.edition === "1st-edition" && card.priceFirstEd) ||
+  (isReverseFinish(copy.finish) && card.priceHolo) ||
+  card.price ||
+  null;
+
+/**
  * How far trend may run ahead of the month's average before it is disbelieved.
  *
  * Cardmarket's trend is drawn from recent sales and a single absurd one drags it

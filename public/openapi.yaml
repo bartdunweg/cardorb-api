@@ -274,6 +274,13 @@ components:
         owned: { type: boolean }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        priceFirstEd:
+          oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
+          description: |
+            What the stamped first run trades at, where anything prices that run apart: TCGplayer
+            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros, and Cardmarket
+            does not for any card (one figure per product id, the ordinary run's). Null
+            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
         tcgId: { type: [string, "null"], description: "TCGdex's card id, for `GET /v1/cards/{tcgId}`." }
 
     CardSet:
@@ -326,6 +333,15 @@ components:
         stage: { type: [string, "null"] }
         evolveFrom: { type: [string, "null"] }
         regulationMark: { type: [string, "null"] }
+        firstEdition:
+          type: [boolean, "null"]
+          description: |
+            Whether a stamped first run of this card exists, as TCGdex says. Null where the
+            catalogue did not answer. It is here so a form can stop asking which run a copy is
+            from on a card that was only ever printed once.
+        # required: firstEdition is sent on every answer; kept out of `required` so a client
+        # generated from an older contract still validates one.
+
         set:
           type: [object, "null"]
           properties:
@@ -557,6 +573,13 @@ components:
         collectionId: { type: [string, "null"], format: uuid }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        priceFirstEd:
+          oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
+          description: |
+            What the stamped first run trades at, where anything prices that run apart: TCGplayer
+            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros, and Cardmarket
+            does not for any card (one figure per product id, the ordinary run's). Null
+            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
 
     PublicItem:
       type: object

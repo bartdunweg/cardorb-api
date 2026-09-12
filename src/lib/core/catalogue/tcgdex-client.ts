@@ -201,6 +201,12 @@ export type CardPrices = {
   holo: Price | null;
   /** TCGplayer's, in dollars, as TCGdex relays them: the second market for a card pokemontcg.io cannot reach. */
   usd?: UsdPrice | null;
+  /**
+   * The stamped first run's dollars, where TCGplayer prices that run apart: Jungle, Fossil,
+   * Team Rocket, Gym and Neo. Null everywhere else, Base Set included, where both markets file
+   * the runs as products of their own that nothing links to a card id.
+   */
+  usdFirstEd?: UsdPrice | null;
 };
 
 /**
@@ -224,6 +230,44 @@ const TCGPLAYER_PRINTINGS = [
   "1st-edition-holofoil",
 ];
 
+/**
+ * The printings that are the stamped first run, in the order one is taken.
+ *
+ * Told apart from the list above rather than mixed into it: these are a different market. A
+ * 1st Edition Neo Genesis Lugia trades at $1,085 where the unlimited one is $519, and a figure
+ * from one run standing in for the other is wrong by multiples either way.
+ */
+const TCGPLAYER_FIRST_ED = ["1st-edition-holofoil", "1st-edition"];
+
+/** TCGplayer's market and low for the first of `printings` that has a market, or null. */
+function firstWithMarket(
+  tp:
+    | Record<string, { marketPrice?: number | null; lowPrice?: number | null } | null | undefined>
+    | null
+    | undefined,
+  printings: string[],
+): UsdPrice | null {
+  if (!tp) return null;
+  const printing = printings.map((p) => tp[p]).find((p) => p && typeof p.marketPrice === "number");
+  if (!printing) return null;
+  return {
+    market: printing.marketPrice ?? null,
+    low: typeof printing.lowPrice === "number" ? printing.lowPrice : null,
+  };
+}
+
+/**
+ * Both runs' dollars for one card: the ordinary printing and the stamped one.
+ *
+ * A pair rather than two maps, because the two are read together everywhere and a card that has
+ * one and not the other is the normal case.
+ */
+export type UsdPair = { usd: UsdPrice | null; firstEd: UsdPrice | null };
+
+/** The stamped first run's dollars, where TCGplayer prices that run apart. Null otherwise. */
+export const usdFirstEdOf = (tp: Parameters<typeof firstWithMarket>[0]): UsdPrice | null =>
+  firstWithMarket(tp, TCGPLAYER_FIRST_ED);
+
 /** TCGplayer's market and low for the first printing that has a market, or null. */
 export function usdOf(
   tp:
@@ -231,15 +275,7 @@ export function usdOf(
     | null
     | undefined,
 ): UsdPrice | null {
-  if (!tp) return null;
-  const printing = TCGPLAYER_PRINTINGS.map((p) => tp[p]).find(
-    (p) => p && typeof p.marketPrice === "number",
-  );
-  if (!printing) return null;
-  return {
-    market: printing.marketPrice ?? null,
-    low: typeof printing.lowPrice === "number" ? printing.lowPrice : null,
-  };
+  return firstWithMarket(tp, TCGPLAYER_PRINTINGS);
 }
 
 export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>> {
@@ -264,8 +300,9 @@ export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>>
     const cm = card?.pricing?.cardmarket;
     const price = cm ? priceOf(cm) : null;
     const usd = usdOf(card?.pricing?.tcgplayer);
+    const usdFirstEd = usdFirstEdOf(card?.pricing?.tcgplayer);
     // Either market is worth keeping: a promo Cardmarket does not price is still a card TCGplayer does.
-    if (price || usd) out.set(id, { price, holo: cm ? holoPriceOf(cm) : null, usd });
+    if (price || usd) out.set(id, { price, holo: cm ? holoPriceOf(cm) : null, usd, usdFirstEd });
   });
   return out;
 }
@@ -285,8 +322,8 @@ export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>>
  * set. Throws only when nothing at all came back for a list that asked for
  * something, so an outage is not cached as "no second market" for a day.
  */
-export async function usdFor(ids: string[]): Promise<Map<string, UsdPrice>> {
-  const out = new Map<string, UsdPrice>();
+export async function usdFor(ids: string[]): Promise<Map<string, UsdPair>> {
+  const out = new Map<string, UsdPair>();
   let answered = 0;
   await mapLimit(ids, 8, async (id) => {
     let card: { pricing?: { tcgplayer?: Parameters<typeof usdOf>[0] } } | null;
@@ -297,7 +334,8 @@ export async function usdFor(ids: string[]): Promise<Map<string, UsdPrice>> {
     }
     answered += 1;
     const usd = usdOf(card?.pricing?.tcgplayer);
-    if (usd) out.set(id, usd);
+    const firstEd = usdFirstEdOf(card?.pricing?.tcgplayer);
+    if (usd || firstEd) out.set(id, { usd, firstEd });
   });
   if (ids.length && !answered) throw new Error("TCGdex answered for none of the cards");
   return out;

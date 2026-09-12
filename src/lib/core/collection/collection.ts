@@ -51,7 +51,7 @@ import { blendPrices, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
-import { pricesFor, usdFor, type CardPrices, type UsdPrice } from "../catalogue/tcgdex-client";
+import { pricesFor, usdFor, type CardPrices, type UsdPair } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
 import IDS from "../cardmarket-ids.generated.json";
 import IDS_JA from "../cardmarket-ids.ja.generated.json";
@@ -513,11 +513,13 @@ const cachedSetFacts = (
 const cachedTcgdexUsd = (setName: string, ids: string[]) =>
   timedCache(`cache tcgplayer ${setName}`, (ran) =>
     unstable_cache(
-      async (): Promise<Record<string, UsdPrice>> => {
+      async (): Promise<Record<string, UsdPair>> => {
         ran();
         return Object.fromEntries(await usdFor(ids));
       },
-      ["tcgdex-usd", "v1", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
+      // v2: the answer is both runs now, not one figure. An entry written by the version
+      // before this holds a bare UsdPrice and would read as a pair with neither run in it.
+      ["tcgdex-usd", "v2", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -526,7 +528,7 @@ const cachedTcgdexUsd = (setName: string, ids: string[]) =>
 export const usdForSet = async (
   setName: string,
   ids: string[],
-): Promise<Record<string, UsdPrice>> => {
+): Promise<Record<string, UsdPair>> => {
   if (!ids.length) return {};
   try {
     return await cachedTcgdexUsd(setName, ids);
@@ -556,8 +558,25 @@ async function factsWithUsd(
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
       if (f.catalogue) return [key, f];
-      const p = f.usd ?? (f.tcgId ? usd[f.tcgId] : null) ?? null;
-      return [key, { ...f, price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null) }];
+      const fetched = f.tcgId ? usd[f.tcgId] : null;
+      const p = f.usd ?? fetched?.usd ?? null;
+      /*
+       * The stamped run's figure is not blended with Cardmarket's.
+       *
+       * Every other price here is the average of the two markets, which works because both
+       * describe the same product. They do not here: Cardmarket publishes one figure per card
+       * id and it is the ordinary run's, so averaging it with the stamped run's dollars would
+       * give a number that is neither run's. TCGplayer alone, converted, or nothing.
+       */
+      const first = f.usdFirstEd ?? fetched?.firstEd ?? null;
+      return [
+        key,
+        {
+          ...f,
+          price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null),
+          priceFirstEd: first ? priceFromUsd(first, usdToEur) : null,
+        },
+      ];
     }),
   );
   return { ...facts, cards };
