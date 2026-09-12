@@ -16,16 +16,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestViewer = vi.fn();
 const updateProfile = vi.fn();
-const forgetOnTheWeb = vi.fn(async (_who: { userId: string; username: string }) => undefined);
+const forgetOnTheWeb = vi.fn(async (_who: { userId: string; token?: string }) => undefined);
 vi.mock("@/lib/api/web-cache", () => ({
-  forgetOnTheWeb: (who: { userId: string; username: string }) => forgetOnTheWeb(who),
+  forgetOnTheWeb: (who: { userId: string; token?: string }) => forgetOnTheWeb(who),
 }));
 const ownProfile = vi.fn();
 
 vi.mock("@/lib/api/viewer", () => ({
   requestViewer: (req: Request) => requestViewer(req),
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
-  forgetProfile: () => {},
 }));
 vi.mock("@/lib/storage/supabase", () => ({
   serverClient: async () => ({}),
@@ -95,7 +94,8 @@ describe("PATCH /api/v1/profile", () => {
 
   it("tells the web whose profile changed, once the change is saved", async () => {
     await patch({ isPublic: false });
-    expect(forgetOnTheWeb).toHaveBeenCalledWith({ userId: "me-uuid", username: "me" });
+    // The id and the token; the purge reads the name itself (lib/api/web-cache.ts).
+    expect(forgetOnTheWeb).toHaveBeenCalledWith({ userId: "me-uuid", token: undefined });
   });
 
   it("does not tell the web of a change that was refused", async () => {

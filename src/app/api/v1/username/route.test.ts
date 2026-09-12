@@ -18,6 +18,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestViewer = vi.fn();
 const claimUsername = vi.fn();
+// The name they have is read where it is needed, not carried on the viewer (lib/api/viewer.ts).
+const usernameOf = vi.fn();
 
 const COOKIE_DB = { via: "cookies" };
 const tokenDb = (token: string) => ({ via: "bearer", token });
@@ -25,7 +27,7 @@ const tokenDb = (token: string) => ({ via: "bearer", token });
 vi.mock("@/lib/api/viewer", () => ({
   requestViewer: (req: Request) => requestViewer(req),
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
-  forgetProfile: () => {},
+  usernameOf: (...a: unknown[]) => usernameOf(...a),
 }));
 vi.mock("@/lib/storage/supabase", () => ({
   serverClient: async () => COOKIE_DB,
@@ -37,7 +39,7 @@ vi.mock("@/lib/storage/postgres", () => ({
 
 const { POST } = await import("./route");
 
-const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
+const VIEWER = { userId: "me-uuid", email: "me@example.com" };
 
 /** No Origin header is the iOS app; a matching one is the site's own form. */
 const post = (body: unknown, headers: Record<string, string> = {}) =>
@@ -52,6 +54,7 @@ const post = (body: unknown, headers: Record<string, string> = {}) =>
 beforeEach(() => {
   vi.clearAllMocks();
   requestViewer.mockResolvedValue(VIEWER);
+  usernameOf.mockResolvedValue("me");
   claimUsername.mockResolvedValue({ ok: true });
 });
 
@@ -93,11 +96,20 @@ describe("POST /v1/username", () => {
     expect(claimUsername).not.toHaveBeenCalled();
   });
 
-  it("answers the current name without touching the database", async () => {
+  it("answers the name they already have without claiming anything", async () => {
     const res = await post({ username: "me" }, { authorization: "Bearer tok-123" });
 
     expect(res.status).toBe(200);
     expect(claimUsername).not.toHaveBeenCalled();
+    // Read through the caller's own connection, as the claim would be.
+    expect(usernameOf).toHaveBeenCalledWith("me-uuid", "tok-123");
+  });
+
+  it("asks for the name they have only after the shape check", async () => {
+    const res = await post({ username: "x" }, { authorization: "Bearer tok-123" });
+
+    expect(res.status).toBe(400);
+    expect(usernameOf).not.toHaveBeenCalled();
   });
 
   it("keeps the two refusals apart", async () => {

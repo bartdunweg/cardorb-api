@@ -73,7 +73,7 @@ export async function PATCH(req: Request) {
   if (cards.length === 0) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
 
   return NextResponse.json({ ok: true, cards }, { headers: readHeaders(req) });
 }

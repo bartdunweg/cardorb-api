@@ -70,7 +70,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!row) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
   return NextResponse.json({ ok: true, card: row }, { status: 201, headers: readHeaders(req) });
 }
 

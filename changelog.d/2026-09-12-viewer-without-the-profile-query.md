@@ -1,0 +1,1 @@
+- Every keyed request used to wait on a Postgres read of your profile before it did anything else, whether it needed it or not. Nothing but a rename does, so nothing but a rename asks: the collection, the lists and the statistics answer without it.
