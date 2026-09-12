@@ -79,6 +79,9 @@ run "format"    npx prettier --check .
 # the run red, which is the whole reason the collector exists rather than a note
 # asking people to remember.
 run "changelog" node scripts/collect-changelog.mjs --check
+# A card with no TCGplayer product has no price anywhere and nothing says so. The links run leaves a
+# count of those; this fails when the committed map holds more, which is a new set nobody linked.
+run "tcgplayer coverage" node scripts/check-tcgplayer-coverage.mjs
 run "typecheck" pnpm run typecheck
 run "test"      pnpm run test
 run "lint"      pnpm run lint

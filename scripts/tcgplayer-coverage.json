@@ -1,0 +1,246 @@
+{
+  "unlinked": 348,
+  "digitalSets": [
+    "A1",
+    "A1a",
+    "A2",
+    "A2a",
+    "A2b",
+    "A3",
+    "A3a",
+    "A3b",
+    "A4",
+    "A4a",
+    "B1",
+    "B1a",
+    "B2",
+    "B2a",
+    "P-A"
+  ],
+  "sets": {
+    "base1": {
+      "name": "Base Set",
+      "unlinked": 1
+    },
+    "base2": {
+      "name": "Jungle",
+      "unlinked": 1
+    },
+    "base4": {
+      "name": "Base Set 2",
+      "unlinked": 3
+    },
+    "bw6": {
+      "name": "Dragons Exalted",
+      "unlinked": 2
+    },
+    "bw9": {
+      "name": "Plasma Freeze",
+      "unlinked": 2
+    },
+    "bwp": {
+      "name": "BW Black Star Promos",
+      "unlinked": 3
+    },
+    "cel25cc": {
+      "name": "Celebrations Classic Collection",
+      "unlinked": 23
+    },
+    "dp1": {
+      "name": "Diamond & Pearl",
+      "unlinked": 5
+    },
+    "dp2": {
+      "name": "Mysterious Treasures",
+      "unlinked": 5
+    },
+    "dp3": {
+      "name": "Secret Wonders",
+      "unlinked": 7
+    },
+    "dp4": {
+      "name": "Great Encounters",
+      "unlinked": 4
+    },
+    "dp5": {
+      "name": "Majestic Dawn",
+      "unlinked": 2
+    },
+    "dp6": {
+      "name": "Legends Awakened",
+      "unlinked": 6
+    },
+    "dpp": {
+      "name": "DP Black Star Promos",
+      "unlinked": 21
+    },
+    "ex12": {
+      "name": "Legend Maker",
+      "unlinked": 2
+    },
+    "ex13": {
+      "name": "Holon Phantoms",
+      "unlinked": 2
+    },
+    "ex15": {
+      "name": "Dragon Frontiers",
+      "unlinked": 5
+    },
+    "ex5.5": {
+      "name": "Poké Card Creator Pack",
+      "unlinked": 5
+    },
+    "ex7": {
+      "name": "Team Rocket Returns",
+      "unlinked": 3
+    },
+    "ex8": {
+      "name": "Deoxys",
+      "unlinked": 2
+    },
+    "fut2020": {
+      "name": "Pokémon Futsal 2020",
+      "unlinked": 5
+    },
+    "g1": {
+      "name": "Generations",
+      "unlinked": 2
+    },
+    "mee": {
+      "name": "Mega Evolution Energy",
+      "unlinked": 8
+    },
+    "mep": {
+      "name": "MEP Black Star Promos",
+      "unlinked": 1
+    },
+    "mfb": {
+      "name": "My First Battle",
+      "unlinked": 34
+    },
+    "neo4": {
+      "name": "Neo Destiny",
+      "unlinked": 1
+    },
+    "pop5": {
+      "name": "POP Series 5",
+      "unlinked": 2
+    },
+    "sm1": {
+      "name": "Sun & Moon",
+      "unlinked": 9
+    },
+    "sm10": {
+      "name": "Unbroken Bonds",
+      "unlinked": 1
+    },
+    "sm4": {
+      "name": "Crimson Invasion",
+      "unlinked": 1
+    },
+    "sm5": {
+      "name": "Ultra Prism",
+      "unlinked": 10
+    },
+    "sm6": {
+      "name": "Forbidden Light",
+      "unlinked": 7
+    },
+    "sm7": {
+      "name": "Celestial Storm",
+      "unlinked": 3
+    },
+    "sm7.5": {
+      "name": "Dragon Majesty",
+      "unlinked": 2
+    },
+    "sm8": {
+      "name": "Lost Thunder",
+      "unlinked": 11
+    },
+    "sm9": {
+      "name": "Team Up",
+      "unlinked": 6
+    },
+    "sve": {
+      "name": "Scarlet & Violet Energy",
+      "unlinked": 24
+    },
+    "svp": {
+      "name": "SVP Black Star Promos",
+      "unlinked": 15
+    },
+    "swsh1": {
+      "name": "Sword & Shield",
+      "unlinked": 3
+    },
+    "swsh10.5tg": {
+      "name": null,
+      "unlinked": 21
+    },
+    "swsh11.5tg": {
+      "name": null,
+      "unlinked": 17
+    },
+    "swsh12.5tg": {
+      "name": null,
+      "unlinked": 18
+    },
+    "swsh3.5": {
+      "name": "Champion's Path",
+      "unlinked": 1
+    },
+    "swsh9.5tg": {
+      "name": null,
+      "unlinked": 18
+    },
+    "tk-xy-n": {
+      "name": "XY trainer Kit (Noivern)",
+      "unlinked": 1
+    },
+    "xy10": {
+      "name": "Fates Collide",
+      "unlinked": 4
+    },
+    "xy11": {
+      "name": "Steam Siege",
+      "unlinked": 1
+    },
+    "xy12": {
+      "name": "Evolutions",
+      "unlinked": 1
+    },
+    "xy2": {
+      "name": "Flashfire",
+      "unlinked": 1
+    },
+    "xy3": {
+      "name": "Furious Fists",
+      "unlinked": 1
+    },
+    "xy4": {
+      "name": "Phantom Forces",
+      "unlinked": 7
+    },
+    "xy6": {
+      "name": "Roaring Skies",
+      "unlinked": 2
+    },
+    "xy7": {
+      "name": "Ancient Origins",
+      "unlinked": 1
+    },
+    "xy8": {
+      "name": "BREAKthrough",
+      "unlinked": 1
+    },
+    "xy9": {
+      "name": "BREAKpoint",
+      "unlinked": 3
+    },
+    "xyp": {
+      "name": "XY Black Star Promos",
+      "unlinked": 1
+    }
+  }
+}

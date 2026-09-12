@@ -14,7 +14,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "check": "npx prettier --check . && npm run typecheck && npm run test && npm run lint",
+    "check": "npx prettier --check . && node scripts/check-tcgplayer-coverage.mjs && npm run typecheck && npm run test && npm run lint",
     "changelog": "node scripts/collect-changelog.mjs"
   },
   "dependencies": {
