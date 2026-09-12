@@ -234,7 +234,7 @@ const cachedGuidePrices = async (
           },
           // v11: the entries now carry the Shadowless run's figure, and a cached v10 entry does
           // not (the Data Cache outlives a deploy, so a bump is the only way to be sure).
-          ["guide-prices", language ?? "en", "v14", String(shard)],
+          ["guide-prices", language ?? "en", "v15", String(shard)],
           { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
         )(),
       ),
@@ -461,7 +461,8 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
-      // v5: a card's facts carry the printings and which market answered for a copy.
+      // v5: a card's facts carry the printings and which market answered for a copy, and the
+      // 52 Mega cards linked in #350 have a product to be priced from for the first time.
       ["collection-facts", "v5", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
@@ -478,6 +479,9 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v22: 52 Mega cards linked for the first time; an entry made while they had no product
+      // holds no price for them, so it has to go rather than expire.
+      //
       // v21: 236 cards relinked, the unlimited half of a set that was reading its own holo.
       //
       // v20: the two dear halves of v19 pointed into a Japanese expansion and are now on the
@@ -512,7 +516,8 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      // v22: the facts carry TCGplayer's printings, which a v21 entry does not.
+      // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
+      // made while the Mega cards had no Cardmarket product holds no price for them (#350).
       ["set-facts", "v22", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),

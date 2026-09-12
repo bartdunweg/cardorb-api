@@ -88,13 +88,21 @@ const expansion = (set) => {
 };
 
 // A card's name as TCGdex says it, for the compare: Cardmarket writes "Yveltal EX [Evil Ball]".
+//
+// The last two lines are one difference twice: a space one catalogue puts in and the other
+// leaves out. TCGdex writes "M Manectric EX" and Cardmarket "MManectric EX", so every Mega
+// in the game failed to match and went to the undecided list unpriced; TCGdex writes
+// "Nidoran♀" and Cardmarket "Nidoran ♀ [Scratch | Bite]". Closing the gap rather than
+// dropping the mark, because the mark is the whole difference between the two Nidoran.
 const norm = (s) =>
   s
     .toLowerCase()
     .replace(/\[.*?\]|\(.*?\)/g, "")
     .replace(/[’'.\-]/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .replace(/^m (?=[a-z])/, "m")
+    .replace(/\s+([♀♂])/g, "$1");
 
 /** The digital game's sets, which have no product to find. */
 const isPocket = (set) => /^(A\d|B\d|P-A)/.test(set);
@@ -216,6 +224,9 @@ if (audit) process.exit(auditExpansions());
 let set = 0;
 let pocket = 0;
 const undecided = [];
+/** Which card is on a product already, so a second one is never put on top of it. */
+const taken = new Map();
+for (const [id, product] of Object.entries(ids)) if (product) taken.set(product, id);
 for (const id of missing) {
   if (isPocket(setOf(id))) {
     pocket += 1;
@@ -259,8 +270,18 @@ for (const id of missing) {
     const first = [...candidates].sort((a, b) => a.idProduct - b.idProduct)[0];
     if (candidates.every((p) => bracket(p) === bracket(first))) candidates = [first];
   }
-  if (candidates.length === 1) {
+  if (candidates.length === 1 && taken.has(candidates[0].idProduct)) {
+    // One product, and another card is already on it. That is the shape of a Mega and its own
+    // secret rare, or a holo and its unlimited printing: one name, one bracket of attacks, and
+    // Cardmarket telling them apart by nothing this script can read. Setting it anyway would
+    // put two cards on one price, which is the fault #344 spent a day undoing and #345 now
+    // fails the build over. So it goes to the reader, with the card already there named.
+    undecided.push(
+      `${id} (${card.name}): ${candidates[0].idProduct} ${candidates[0].name} is already ${taken.get(candidates[0].idProduct)}'s; Cardmarket lists the printings under one name, pick by hand`,
+    );
+  } else if (candidates.length === 1) {
     ids[id] = candidates[0].idProduct;
+    taken.set(candidates[0].idProduct, id);
     set += 1;
     console.log(`${id} (${card.name}) -> ${candidates[0].idProduct} ${candidates[0].name}`);
   } else if (candidates.length === 0) {
