@@ -1,0 +1,1 @@
+- A card added to one set no longer sends every set in the collection back to TCGdex. The collection facts are kept per person and dollar rate, each set with the signature it was resolved for, and only a set whose printings changed is resolved again. Measured before: one add made `/stats` 8.3 s and `/folders` 8.5 s.

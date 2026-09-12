@@ -34,7 +34,7 @@
  */
 
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
 import {
@@ -309,74 +309,115 @@ const factsSignature = (identities: CardIdentity[]): string =>
  * anything was drawn: 5 to 9 seconds measured, where the same walk against a local cache is
  * 0.16. This entry is that hundred and two collapsed into one.
  *
- * On a miss it reads them, so a miss costs what every request used to. The key carries every
- * group and the printings asked of it, so a card added anywhere makes a new entry rather than a
- * stale one, and the dollar rate too, since the prices inside were blended at it.
+ * Kept per person and dollar rate, not per the printings asked: each group inside carries the
+ * signature it was resolved for, and a group whose printings changed is resolved again while the
+ * rest are taken as they stand. It was keyed on every group's signature, so a card added to one
+ * set made a new entry, and that entry was filled from inside its own callback, where Next runs
+ * the per-set caches uncached: all fifty-two sets went to TCGdex again, on /stats, /folders and
+ * /cards at once. Measured 2026-09-13, one add on Perfect Order: /stats 8.3 s, /folders 8.5 s,
+ * with Team Up, Unified Minds and Cosmic Eclipse among the misses.
+ *
+ * So the callback does nothing but answer "nothing kept" on a cold key. The work happens at the
+ * top level of the request, where the per-set entries are real caches, and the result is written
+ * back by dropping this person's facts tag and filling the key again. Route handlers only: a tag
+ * cannot be dropped while a page renders, and nothing in this API renders a page.
  *
  * Tagged `catalogue` like the entries it holds, so the nightly sync drops all of it together.
  */
-const bundleSignature = (groups: FactsGroup[], usdToEur: number | null): string =>
-  createHash("sha1")
-    .update(groups.map((g) => `${g.key}\u0002${factsSignature(g.identities)}`).join("\u0001"))
-    .update(`\u0003${usdToEur ?? "-"}`)
-    .digest("hex");
+type KeptFacts = { groups: Record<string, { signature: string; facts: SetFacts }> };
 
-const cachedFactsBundle = (
+const factsTag = (userId: string) => `collection-facts:${userId}`;
+
+const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<KeptFacts>) =>
+  unstable_cache(
+    fill,
+    // v12: kept per person and rate, each group with its own signature (see above). A v11
+    // entry is keyed on the whole collection's signature and has the old shape.
+    //
+    // v11: 169 more English cards linked by how TCGplayer spells them (Prism Star, LV.X, Basic
+    // Energy, energy letters) and by name where the number is written another way.
+    //
+    // v10: WotC Promo 1 Pikachu relinked from its unpriced misprint to "Pikachu (1)".
+    //
+    // v9: 60 more cards linked (Deck Exclusives, Alternate Art Promos, Nidoran F and M). The links
+    // are read at request time, but a v8 entry holds these cards unpriced for its day.
+    //
+    // v8: Base Set's Shadowless and stamped runs priced from TCGplayer's Shadowless group.
+    //
+    // v7: 968 promo and subset cards priced from tcgcsv, where TCGdex relays no TCGplayer
+    // figure (tcgplayer-links.mjs). A v6 entry holds them unpriced for a day after the deploy.
+    //
+    // v6: every price is TCGplayer's or none, the Near Mint band is gone, and an unclassified
+    // copy no longer reads a reverse's figure (2026-09-12). An entry written under v5 holds
+    // the blend of both markets, and would stand for a day after the deploy.
+    //
+    // v5: a card's facts carry the printings and which market answered for a copy, and the
+    // 52 Mega cards linked in #350 have a product to be priced from for the first time.
+    ["collection-facts", "v12", userId, usdToEur == null ? "-" : String(usdToEur)],
+    { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
+  )();
+
+const cachedFactsBundle = async (
   userId: string,
   groups: FactsGroup[],
   priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
   usdToEur: number | null,
-): Promise<Record<string, SetFacts>> =>
-  timedCache(`cache collection-facts`, (ran) =>
-    unstable_cache(
-      async () => {
-        ran();
-        const entries = await mapLimit(groups, 6, async (g) => {
-          const facts = await factsWithUsd(g.setName, g.identities, priceSource, usdToEur);
-          return [g.key, facts] as const;
-        });
-        // A plain object: a Map arrives from the Data Cache as `{}`, which here would be a
-        // collection with no artwork and no prices. The same line guide-prices draws.
-        const bundle = Object.fromEntries(entries);
-        /*
-         * Said out loud, because the ceiling is silent.
-         *
-         * A Data Cache entry holds two megabytes and one over it is not cached at all, with no
-         * error and no warning: the fourteen-megabyte price guide was downloaded on every set
-         * page for exactly that reason before it was sharded. This entry grows with the
-         * collection, so the size goes in the log on every miss: 631,162 bytes across 53 groups
-         * on 2026-09-12, under a third of the ceiling. If it approaches it,
-         * shard it by group the way guide-prices is sharded, and the reason will be on record
-         * rather than guessed at.
-         */
-        console.info(
-          `[size] collection-facts ${JSON.stringify(bundle).length} bytes across ${groups.length} groups`,
-        );
-        return bundle;
-      },
-      // v11: 169 more English cards linked by how TCGplayer spells them (Prism Star, LV.X, Basic
-      // Energy, energy letters) and by name where the number is written another way.
-      //
-      // v10: WotC Promo 1 Pikachu relinked from its unpriced misprint to "Pikachu (1)".
-      //
-      // v9: 60 more cards linked (Deck Exclusives, Alternate Art Promos, Nidoran F and M). The links
-      // are read at request time, but a v8 entry holds these cards unpriced for its day.
-      //
-      // v8: Base Set's Shadowless and stamped runs priced from TCGplayer's Shadowless group.
-      //
-      // v7: 968 promo and subset cards priced from tcgcsv, where TCGdex relays no TCGplayer
-      // figure (tcgplayer-links.mjs). A v6 entry holds them unpriced for a day after the deploy.
-      //
-      // v6: every price is TCGplayer's or none, the Near Mint band is gone, and an unclassified
-      // copy no longer reads a reverse's figure (2026-09-12). An entry written under v5 holds
-      // the blend of both markets, and would stand for a day after the deploy.
-      //
-      // v5: a card's facts carry the printings and which market answered for a copy, and the
-      // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-      ["collection-facts", "v11", userId, bundleSignature(groups, usdToEur)],
-      { revalidate: DAY, tags: ["catalogue"] },
-    )(),
+): Promise<Record<string, SetFacts>> => {
+  const kept = await timedCache(`cache collection-facts`, (ran) =>
+    keptFacts(userId, usdToEur, async () => {
+      ran();
+      return { groups: {} };
+    }),
   );
+  const next: KeptFacts = { groups: {} };
+  const stale: (FactsGroup & { signature: string })[] = [];
+  // Only the groups asked for now: a set the person no longer holds a card of leaves the entry.
+  for (const g of groups) {
+    const signature = factsSignature(g.identities);
+    const had = kept.groups[g.key];
+    if (had?.signature === signature) next.groups[g.key] = had;
+    else stale.push({ ...g, signature });
+  }
+
+  if (stale.length) {
+    // At the top level, so every set that did not change is a hit on its own entry.
+    await timed(
+      "collection-facts stale groups",
+      () =>
+        mapLimit(stale, 6, async (g) => {
+          const facts = await factsWithUsd(g.setName, g.identities, priceSource, usdToEur);
+          next.groups[g.key] = { signature: g.signature, facts };
+        }),
+      `${stale.length} of ${groups.length}`,
+    );
+  }
+  const answer = Object.fromEntries(Object.entries(next.groups).map(([key, g]) => [key, g.facts]));
+  if (!stale.length) return answer;
+
+  /*
+   * Said out loud, because the ceiling is silent.
+   *
+   * A Data Cache entry holds two megabytes and one over it is not cached at all, with no
+   * error and no warning: the fourteen-megabyte price guide was downloaded on every set
+   * page for exactly that reason before it was sharded. This entry grows with the
+   * collection, so the size goes in the log on every write: 631,162 bytes across 53 groups
+   * on 2026-09-12, under a third of the ceiling. If it approaches it,
+   * shard it by group the way guide-prices is sharded, and the reason will be on record
+   * rather than guessed at.
+   */
+  console.info(
+    `[size] collection-facts ${JSON.stringify(next).length} bytes across ${groups.length} groups`,
+  );
+  // Best effort: a write that fails still answers with what was resolved, and the next request
+  // resolves the same stale groups (hits by then) and tries again.
+  try {
+    revalidateTag(factsTag(userId), { expire: 0 });
+    await keptFacts(userId, usdToEur, async () => next);
+  } catch (err) {
+    console.error("Keeping the collection facts failed:", err);
+  }
+  return answer;
+};
 
 const cachedSetFacts = (
   setName: string,
