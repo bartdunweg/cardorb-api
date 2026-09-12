@@ -159,6 +159,34 @@ describe("filterItems", () => {
     expect(filterItems(all, {}).map((i) => i.id)).toEqual(["art", "plain", "unknown"]);
     expect(filterItems(all, { fullArtIds: new Set<string>() }).map((i) => i.id)).toEqual([]);
   });
+  /* A printing is the card, its finish and its run. Two rows of one printing add up; a reverse
+     holo beside a holo is two printings held once each; a wished copy is held by nobody. */
+  it("keeps the owned printings held more than once, quantities added up across rows", () => {
+    const row = (id: string, over: Partial<(typeof items)[number]>) => ({
+      ...items[0]!,
+      id,
+      owned: true,
+      quantity: 1,
+      finish: null,
+      edition: null,
+      ...over,
+    });
+    const all = [
+      row("two-rows-a", { tcgId: "base1-4" }),
+      row("two-rows-b", { tcgId: "base1-4", condition: "LP" }),
+      row("holo", { tcgId: "sv1-10", finish: "holo" }),
+      row("reverse", { tcgId: "sv1-10", finish: "reverse-holo" }),
+      row("three", { tcgId: "sv1-20", quantity: 3 }),
+      row("first-ed", { tcgId: "base1-4", edition: "1st-edition" }),
+      row("wished", { tcgId: "sv1-20", owned: false }),
+    ];
+    expect(filterItems(all, { duplicates: true }).map((i) => i.id)).toEqual([
+      "two-rows-a",
+      "two-rows-b",
+      "three",
+    ]);
+    expect(filterItems(all, {})).toHaveLength(7);
+  });
   it("owned=false is the wishlist", () => {
     expect(filterItems(items, { owned: false }).map((i) => i.id)).toEqual(["b"]);
   });
@@ -285,6 +313,13 @@ describe("readItemQuery", () => {
     expect(read("owned=yes").kind).toBe("invalid");
     expect(read("limit=0").kind).toBe("invalid");
     expect(read("collection=not-a-uuid").kind).toBe("invalid");
+  });
+  it("reads duplicates=1 and nothing else as asking for duplicates", () => {
+    expect(read("duplicates=1")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, duplicates: true },
+    });
+    expect(read("duplicates=0")).toEqual({ kind: "ok", query: { limit: 100, offset: 0 } });
   });
   it("reads a generation and a type as it reads a set", () => {
     expect(read("gen=Base&type=Lightning")).toEqual({
