@@ -117,6 +117,13 @@ export class CatalogueUnavailable extends Error {
 }
 
 /**
+ * The answers from a picture host that mean the file is not there, as opposed to not being
+ * handed over just now. 403 is in because object stores answer a missing key that way when
+ * listing is denied, which is how TCGdex' CDN is configured.
+ */
+const GONE = new Set([403, 404, 410]);
+
+/**
  * The black star every promo set wears, which TCGdex publishes once, under the
  * Sword & Shield promos. It is not that set's branding: it is the mark printed
  * on the cards themselves, and it is the same on all of them.
@@ -185,6 +192,25 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // The first is the set itself; the rest are its galleries, which have their
   // own logos and dates and should not be the ones on the heading.
   const detail = details[0] ?? null;
+
+  // Answered, and answered with nothing.
+  //
+  // The check above catches a set that could not be fetched at all. This is its quieter half:
+  // a 200 whose `cards` is missing or empty. Nothing in that answer looks like a failure, so
+  // it was cached for a day as "this set has no cards", which is an empty byNumber, which is
+  // every card of the set unmatched: no scan, no price, no catalogue id, no Pokedex slot.
+  //
+  // The index is what says it is wrong. It carries a card count per set, so a set the index
+  // counts in the hundreds and the record answers with none is TCGdex contradicting itself,
+  // and that is not a fact worth keeping for a day. A set the index counts at zero is a set
+  // that has been announced and not filled in yet, and an empty catalogue is then the truth.
+  const counted = sets.find((s) => s.id === ids[0])?.cardCount;
+  const expected = counted?.total ?? counted?.official ?? 0;
+  if (expected > 0 && !details.some((d) => d.cards?.length)) {
+    throw new CatalogueUnavailable(
+      `TCGdex counts ${expected} cards in ${setName} (${ids.join(", ")}) and answered with none; not caching an empty catalogue`,
+    );
+  }
 
   // Where this set keeps its artwork, taken off the logo it already handed over
   // rather than guessed: ".../en/swsh/swsh12.5/logo" minus the logo.
@@ -274,7 +300,12 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
         next: { revalidate: DAY },
         signal: catalogueTimeout(),
       });
-      setHasScans = res.ok;
+      // Only a "there is no such file" is proof of absence. It used to be every answer that
+      // was not a 200, so one 502 from the CDN turned a whole set's scans off for a day: on
+      // 2026-09-12 set 151 drew 207 empty tiles while every one of those files was being
+      // served. A server that is having a bad minute is not a set without artwork, and this
+      // decides it for the whole set, so it errs towards asking again.
+      setHasScans = res.ok || !GONE.has(res.status);
     } catch {
       // A probe that cannot be made is not proof of absence: assume the scans
       // are there and let the per-card fallback do what it always did.
@@ -322,10 +353,13 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
+// v5: the two rules above changed which answers are allowed to become an entry, and the entries
+// already on disk were written under the old ones. Any set poisoned by a bad answer today would
+// otherwise keep its emptiness for the rest of its day; under a new key nothing looks at them.
 // v4: #230 changed what an entry contains — five promo aliases, and resolveSetIds now takes the
 // longest overlap and requires a shared id prefix. The key stayed at v3, so for a whole day every
 // set already in the Data Cache kept a byNumber built by the old rule.
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v4"], {
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v5"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
