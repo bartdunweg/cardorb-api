@@ -4,6 +4,16 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-12
+
+- The links in the confirmation and password-reset emails point at cardorb.com again, and the emails say the link lasts an hour, which it does.
+
+- The three auth emails are rendered from cardorb-web on Untitled UI's email kit: the same wording, the app's pill button and type.
+
+- The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
+
+- The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
+
 ## 2026-09-11
 
 - `scripts/backfill-card-prices.mjs` goes on when TCGdex refuses one card. With twenty thousand cards to ask about, one refusal at card 1,482 threw the other answers away and stopped the run; a refused card is now left out of the map, so the next run asks again, and the TCGplayer ids of the whole English shelf are committed: 19,067 of 23,622 cards have a product.
