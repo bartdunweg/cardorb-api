@@ -1,0 +1,1 @@
+- Two cards can no longer quietly come to share one Cardmarket product. The 2,054 that still do are written down per set, and the check refuses any set that gains one, so the number can fall and never rise.
