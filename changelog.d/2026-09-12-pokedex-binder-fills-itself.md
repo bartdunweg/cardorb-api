@@ -1,0 +1,1 @@
+- A binder shown as a Pokédex fills itself from the Pokémon in its range, rather than waiting for cards to be filed in it by hand. The binders made when the Pokédex stopped being a fixture said "0 cards"; they hold the collection again.
