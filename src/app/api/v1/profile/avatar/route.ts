@@ -3,7 +3,7 @@ import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError, retryAfter } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
-import { bearer, requestViewer } from "@/lib/api/viewer";
+import { bearer, forgetProfile, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { updateProfile } from "@/lib/storage/postgres";
 
@@ -145,6 +145,7 @@ export async function POST(req: Request) {
 
   try {
     await updateProfile(db, viewer.userId, { avatarUrl });
+    forgetProfile(viewer.userId);
   } catch (err) {
     console.error("Saving the avatar URL failed:", err);
     return apiError(500, "That change could not be saved.");
@@ -182,6 +183,7 @@ export async function DELETE(req: Request) {
 
   try {
     await updateProfile(db, viewer.userId, { avatarUrl: null });
+    forgetProfile(viewer.userId);
   } catch (err) {
     console.error("Clearing the avatar failed:", err);
     return apiError(500, "That change could not be saved.");

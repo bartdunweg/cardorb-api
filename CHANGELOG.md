@@ -18,6 +18,8 @@ if the two have drifted apart.
 
 - The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
 
+- The four fields every page needs about the person asking are kept on the instance for a minute instead of read from Postgres on every request. The query is 0.1 ms in the database by its own statistics, but getting to it had a p90 of 8.4 seconds on production, so one page load in ten waited eight seconds on it.
+
 ## 2026-09-11
 
 - `scripts/backfill-card-prices.mjs` goes on when TCGdex refuses one card. With twenty thousand cards to ask about, one refusal at card 1,482 threw the other answers away and stopped the run; a refused card is now left out of the map, so the next run asks again, and the TCGplayer ids of the whole English shelf are committed: 19,067 of 23,622 cards have a product.

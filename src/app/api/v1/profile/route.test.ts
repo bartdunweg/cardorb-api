@@ -25,6 +25,7 @@ const ownProfile = vi.fn();
 vi.mock("@/lib/api/viewer", () => ({
   requestViewer: (req: Request) => requestViewer(req),
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
+  forgetProfile: () => {},
 }));
 vi.mock("@/lib/storage/supabase", () => ({
   serverClient: async () => ({}),
