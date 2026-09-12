@@ -35,6 +35,12 @@ import { localise, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
+import {
+  editionsOf,
+  printingsOf,
+  type Printing,
+  type TcgVariant,
+} from "../catalogue/card-printings";
 import { LOCALE } from "../config";
 import { limitlessScan, storedScan, tcgdexScan } from "../catalogue/artwork";
 import { sameCard } from "../catalogue/matching";
@@ -1438,6 +1444,18 @@ export type CardDetail = {
    * form offers the runs rather than none, which is the rule the finishes already follow.
    */
   firstEdition: boolean | null;
+  /**
+   * Every printing of this card that exists: what each one is, and what its foil looks like
+   * where that foil has a name. Empty where TCGdex lists no variants, which is no answer rather
+   * than none existing, and a form offers everything then (see printingsOf).
+   */
+  printings: Printing[];
+  /**
+   * The print runs a copy can be from, or null where nothing can say. `firstEdition` above is
+   * the fact this is built from, plus Cardmarket's Shadowless products; kept beside it because a
+   * client wants the answer, not the ingredients.
+   */
+  editions: Edition[] | null;
   set: { id: string; name: string; logo: string | null; total: number | null } | null;
   /** Cardmarket's product id, which is how a card is addressed on their site. */
   cmId: number | null;
@@ -1497,8 +1515,9 @@ export async function getCardDetail(
       stage?: string;
       evolveFrom?: string;
       regulationMark?: string;
-      /** TCGdex says per card which runs and printings exist; only the stamped run is read here. */
+      /** TCGdex says per card which runs and printings exist: the stamped run, and every printing. */
       variants?: { firstEdition?: boolean };
+      variants_detailed?: TcgVariant[];
       set?: { id?: string; name?: string; logo?: string; cardCount?: { total?: number } };
       pricing?: {
         cardmarket?: {
@@ -1529,6 +1548,8 @@ export async function getCardDetail(
     evolveFrom: card.evolveFrom ?? null,
     regulationMark: card.regulationMark ?? null,
     firstEdition: card.variants?.firstEdition ?? null,
+    printings: printingsOf(card.variants_detailed),
+    editions: editionsOf(card.id, card.variants?.firstEdition ?? null),
     set: card.set?.id
       ? {
           id: card.set.id,

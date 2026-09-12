@@ -10,7 +10,13 @@ import { CatalogueNotFound, json } from "./tcgdex-client";
  *
  * English is always in: the id is the English catalogue's.
  */
-export const WESTERN = ["en", "de", "fr", "it", "es", "pt", "nl"] as const;
+/**
+ * Dutch is not here. No Pokémon card has been printed in it, TCGdex keeps no Dutch catalogue, so
+ * the question was six words of URL that could only ever 404, and on the path where nothing
+ * could answer the apps offered Dutch as a printing. `nl` stays a value the store accepts, for
+ * an import that carries one; it is not a printing this can find.
+ */
+export const WESTERN = ["en", "de", "fr", "it", "es", "pt"] as const;
 export type Western = (typeof WESTERN)[number];
 
 /**
