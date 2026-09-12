@@ -44,6 +44,8 @@ if the two have drifted apart.
 
 - The Pokédex is a binder you make yourself now, not a fixture. The setting that lived on your profile became a binder called "Pokédex" carrying the same range, rarities and public flag, and it can be edited and deleted like any other binder.
 
+- A binder shown as a Pokédex fills itself from the Pokémon in its range, rather than waiting for cards to be filed in it by hand. The binders made when the Pokédex stopped being a fixture said "0 cards"; they hold the collection again.
+
 - A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
 
 - A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".
