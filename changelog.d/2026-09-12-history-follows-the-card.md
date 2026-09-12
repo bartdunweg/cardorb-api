@@ -1,0 +1,1 @@
+- A held card's price history is recorded in the market the card shows: TCGplayer's printings first (the ordinary run for the plain series, the foil for the holo one), Cardmarket's figure where TCGplayer prices nothing. Points before 2026-09-12 stay Cardmarket's, since no archive of TCGplayer's exists to redraw them from.

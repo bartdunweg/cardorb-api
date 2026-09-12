@@ -45,6 +45,8 @@ if the two have drifted apart.
 
 - The catalogue copy can be asked to work every set out from scratch, for the day a new source of scans is added: the cards that were copied without a picture were told "no" by the sources of that day, and nothing would ask the new one about them otherwise. The nightly run never does this by itself.
 
+- A held card's price history is recorded in the market the card shows: TCGplayer's printings first (the ordinary run for the plain series, the foil for the holo one), Cardmarket's figure where TCGplayer prices nothing. Points before 2026-09-12 stay Cardmarket's, since no archive of TCGplayer's exists to redraw them from.
+
 - A CSV row is recognised by the catalogue id where it has one: Dex writes it in its sixth column and this app read it as nothing, so a card whose set the collection filed under another name was matched by name and number instead of exactly.
 - The first import preview of the day no longer waits on a hundred set reads: only the names of rows with no catalogue id are resolved, which on a Dex export is usually none.
 
@@ -67,6 +69,8 @@ if the two have drifted apart.
 - A card answers which printings of it exist. `variants_detailed` says per card what was printed and what its foil is called, so the finish and foil questions in the apps finally have an answer to narrow to: Pikachu with Grey Felt Hat is a plain normal, and stops offering a holo, a reverse and the two ball prints. The Poké Ball and Master Ball reverses are named per card too, where they used to be offered on anything with a reverse.
 - A card answers which print runs it can be from. TCGdex says whether a stamped first run exists; Cardmarket prices Shadowless as a product of its own and the map of those 102 products (all of Base Set) is in this repo. So a Jungle card offers 1st Edition and unlimited, where it used to offer a Shadowless run that was never printed.
 - Dutch is no longer asked of TCGdex. No Pokémon card is printed in it and TCGdex keeps no Dutch catalogue, so the question could only ever 404, and where nothing could answer the apps offered Dutch as a printing.
+
+- Eighteen more sets say which languages they were printed in: the nine POP Series, the four EX and two DP and two HS trainer kits, and Pokémon Rumble, which was English only. The Black Star Promo sets and four odd ones out of the EX era are not there, because Bulbapedia does not say: a promo was handed out per region rather than released as a set, so those keep asking TCGdex per card.
 
 - A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
 
