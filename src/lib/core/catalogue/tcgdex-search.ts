@@ -150,9 +150,17 @@ const matchesWords = (card: CatalogueMatch, words: string[]) =>
 async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
   if (!cards.length) return cards;
   const query = `{ ${cards
-    .map((c, i) => `c${i}: card(id: ${JSON.stringify(c.id)}) { rarity types }`)
+    .map((c, i) => `c${i}: card(id: ${JSON.stringify(c.id)}) { rarity types category trainerType }`)
     .join(" ")} }`;
-  let facts: Record<string, { rarity?: string | null; types?: string[] | null } | null> = {};
+  let facts: Record<
+    string,
+    {
+      rarity?: string | null;
+      types?: string[] | null;
+      category?: string | null;
+      trainerType?: string | null;
+    } | null
+  > = {};
   try {
     facts = (await graphql(query, "card facts")) as typeof facts;
   } catch (err) {
@@ -163,7 +171,15 @@ async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
   }
   return cards.map((card, i) => {
     const fact = facts?.[`c${i}`];
-    return fact ? { ...card, rarity: fact.rarity ?? null, types: fact.types ?? [] } : card;
+    return fact
+      ? {
+          ...card,
+          rarity: fact.rarity ?? null,
+          types: fact.types ?? [],
+          category: fact.category ?? null,
+          trainerType: fact.trainerType ?? null,
+        }
+      : card;
   });
 }
 

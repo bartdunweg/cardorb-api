@@ -130,10 +130,22 @@ const INDEX = {
 };
 const FACTS = {
   cards: [
-    { id: "sv03.5-010", rarity: "Common", types: ["Grass"] },
-    { id: "sv03.5-002", rarity: "Uncommon", types: ["Grass"] },
+    {
+      id: "sv03.5-010",
+      rarity: "Common",
+      types: ["Grass"],
+      category: "Pokemon",
+      trainerType: null,
+    },
+    {
+      id: "sv03.5-002",
+      rarity: "Uncommon",
+      types: ["Grass"],
+      category: "Pokemon",
+      trainerType: null,
+    },
     // A card of another set the contains-filter also answers, and one TCGdex could not fill.
-    { id: "sv03-010", rarity: "Rare", types: ["Fire"] },
+    { id: "sv03-010", rarity: "Rare", types: ["Fire"], category: "Pokemon", trainerType: null },
     null,
   ],
 };
@@ -314,10 +326,17 @@ describe("tcgdex-browse", () => {
         imageHigh: "https://assets.tcgdex.net/en/sv/sv03.5/010/high.webp",
         rarity: "Common",
         types: ["Grass"],
+        category: "Pokemon",
+        trainerType: null,
         tcgId: "sv03.5-010",
       });
       // A card the facts did not cover keeps what the other shelves show.
-      expect(got?.cards[2]).toMatchObject({ rarity: null, types: [] });
+      expect(got?.cards[2]).toMatchObject({
+        rarity: null,
+        types: [],
+        category: null,
+        trainerType: null,
+      });
     });
 
     /* The window is the first 500 cards the contains-filter answers, so a short id spends it on
