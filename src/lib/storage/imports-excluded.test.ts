@@ -38,6 +38,7 @@ const card = (name: string): CollectionRow => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   collectionId: null,
 });
 
