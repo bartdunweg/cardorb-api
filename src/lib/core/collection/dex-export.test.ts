@@ -110,7 +110,7 @@ describe("a real Dex export", () => {
 
   it("recognises every one of its own rows on a second run", () => {
     const { rows } = dexRows(grid);
-    const held = new Set(rows.map(importKey));
+    const held = new Set(rows.map((row) => importKey(row)));
 
     // Importing the same file twice must add nothing. There is no database
     // constraint that would catch this; splitExisting is the whole defence.

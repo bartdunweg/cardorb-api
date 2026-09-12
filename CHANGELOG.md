@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
 
+- The CSV import counts a card as already held when the collection filed its set under another name (Notion wrote "Set 1 Unlimited" for Base Set): both sides are keyed through the set's official name.
+
 - The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
 
 ## 2026-09-11
