@@ -1,0 +1,80 @@
+# New cards get their TCGplayer link without anyone remembering to ask.
+#
+# A card missing from tcgplayer-ids.generated.json has no price on its set's page, and a promo or
+# subset card with no link has no price in a collection either. Every new set and promo line
+# starts that way, and until 2026-09-12 the links were added by hand, when somebody noticed a blank
+# (Jirachi XY67a). So once a week this reads what TCGdex and tcgcsv have published since, links
+# what it can by the rules in scripts/tcgplayer-links.mjs, and opens a pull request when anything
+# changed. Nothing changed is a quiet green run.
+#
+# The pull request is opened with this workflow's own token, and GitHub does not start other
+# workflows for pushes made with it, so the check is dispatched on the branch explicitly: the
+# merge gate reads that run like any other. Needs "Allow GitHub Actions to create and approve pull
+# requests" (Settings, Actions, General) switched on for the repository.
+#
+# Saturday 07:00 UTC: after tcgcsv's Friday evening publish and after that morning's weekly price
+# pass, so a pull request merged during the week is in place for the next one.
+name: tcgplayer links
+
+on:
+  schedule:
+    - cron: "0 7 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # New English cards from TCGdex, then which tcgcsv group every product is in, then the links
+      # for the cards TCGdex relays no product for. The order matters: each reads the one before.
+      - run: node scripts/tcgplayer-ids.mjs
+      - run: node scripts/tcgplayer-groups.mjs
+      - run: node scripts/tcgplayer-links.mjs
+
+      - name: Anything new?
+        id: diff
+        run: |
+          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json scripts/tcgplayer-coverage.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing new to link." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open a pull request
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          day="$(date -u +%Y-%m-%d)"
+          branch="bot/tcgplayer-links-$day"
+          before="$(git show HEAD:scripts/tcgplayer-coverage.json | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).unlinked')"
+          after="$(node -p 'require("./scripts/tcgplayer-coverage.json").unlinked')"
+          added="$(git diff --numstat -- src/lib/core/tcgplayer-ids.generated.json | cut -f1)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json scripts/tcgplayer-coverage.json
+          git commit -m "TCGplayer links for the cards published this week"
+          git push origin "$branch"
+          body="$(printf '%s\n\n%s\n\n%s\n' \
+            "The weekly links run (.github/workflows/tcgplayer-links.yml) found new cards or links." \
+            "- Cards without a TCGplayer product, outside Pokémon TCG Pocket: ${before} before, ${after} after" \
+            "- Lines added to tcgplayer-ids.generated.json: ${added}. The per-set rest is in scripts/tcgplayer-coverage.json; the check is dispatched on this branch.")"
+          gh pr create --base main --head "$branch" --title "TCGplayer links for the cards published this week ($day)" --body "$body"
+          gh workflow run check.yml --ref "$branch"
+          echo "Opened a pull request from $branch: ${before} to ${after} unlinked." >> "$GITHUB_STEP_SUMMARY"
