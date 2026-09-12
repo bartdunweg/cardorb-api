@@ -20,7 +20,7 @@ vi.mock("@/lib/core/collection/cards", () => ({
    unmocked — which this test did, and the CI runner's 2026-09-11 15:39 run timed out on it at
    5 s (main, #270's run), the only red thing in it. A unit test asks the network for nothing. */
 vi.mock("@/lib/core/catalogue/card-languages", () => ({
-  westernLanguagesOf: async () => ["en", "de"],
+  languagesOf: async () => ["en", "de"],
 }));
 const raritiesOfEra = vi.fn();
 vi.mock("@/lib/core/catalogue/catalogue", () => ({

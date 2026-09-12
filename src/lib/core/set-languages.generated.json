@@ -1,0 +1,294 @@
+{
+  "base1": [
+    "en",
+    "nl",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "base2": [
+    "en",
+    "nl",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "base3": [
+    "en",
+    "nl",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "base4": [
+    "en"
+  ],
+  "base5": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "col1": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "dp1": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "dp2": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "dp3": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "dp4": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es"
+  ],
+  "dp5": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "dp6": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es"
+  ],
+  "dp7": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es"
+  ],
+  "ecard1": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ecard2": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ecard3": [
+    "en",
+    "de",
+    "it"
+  ],
+  "ex1": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "ex10": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "ex11": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex12": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt"
+  ],
+  "ex13": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex14": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex15": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex16": [
+    "en",
+    "de",
+    "fr"
+  ],
+  "ex2": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex3": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex4": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex5": [
+    "en",
+    "fr",
+    "it"
+  ],
+  "ex6": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "ex7": [
+    "en",
+    "pt"
+  ],
+  "ex8": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt"
+  ],
+  "ex9": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt"
+  ],
+  "gym1": [
+    "en"
+  ],
+  "gym2": [
+    "en"
+  ],
+  "hgss1": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "hgss2": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "hgss3": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "hgss4": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "lc": [
+    "en"
+  ],
+  "neo1": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es"
+  ],
+  "neo2": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "neo3": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "neo4": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "pl1": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es"
+  ],
+  "pl2": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "pl3": [
+    "en",
+    "de",
+    "fr"
+  ],
+  "si1": [
+    "en"
+  ]
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
-import { westernLanguagesOf } from "@/lib/core/catalogue/card-languages";
+import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
 import { rarityOrNull } from "@/lib/core/collection/collection-row";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
@@ -45,16 +45,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     });
   const own = isBrowseLanguage(language) ? language : null;
   let card;
-  let languages;
   try {
-    // The printings beside the card: which Western catalogues carry this id.
-    // None can, for a card from a catalogue of its own — the Western ones share
-    // the English ids, so asking them would be six 404s to say so. Its own
-    // language is the only one a copy of it can be.
-    [card, languages] = await Promise.all([
-      getCardDetail(tcgId, own),
-      own ? Promise.resolve([]) : westernLanguagesOf(tcgId),
-    ]);
+    card = await getCardDetail(tcgId, own);
   } catch (err) {
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.
@@ -64,12 +56,25 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   if (!card) {
     return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });
   }
-  /* The rarities this card's era printed, asked for only where the catalogue has no rarity to
-     give. Those are the promos, and they are the cards somebody has to name by hand: a form that
-     offers the era's own words cannot be used to write a word the era never had. A card the
-     catalogue has named needs no list, and this costs it nothing. */
-  const eraRarities =
-    rarityOrNull(card.rarity) === null && card.set?.id ? await raritiesOfEra(card.set.id) : null;
+  /* Both of these need the card in hand, so they are asked after it rather than beside it.
+     `languages` is which Western printings exist, and the source that can answer depends on the
+     set (languagesOf); none can for a card from a catalogue of its own, where its own language is
+     the only one a copy can be. The era's rarities are asked for only where the catalogue has no
+     rarity to give: those are the promos, the cards somebody has to name by hand, and a form that
+     offers the era's own words cannot be used to write a word the era never had. */
+  let languages;
+  let eraRarities;
+  try {
+    [languages, eraRarities] = await Promise.all([
+      own ? Promise.resolve([]) : languagesOf(tcgId, card.set?.id ?? null),
+      rarityOrNull(card.rarity) === null && card.set?.id
+        ? raritiesOfEra(card.set.id)
+        : Promise.resolve(null),
+    ]);
+  } catch (err) {
+    console.error(`The printings of ${tcgId} could not be read:`, err);
+    return unavailable("That card could not be read. Try again in a moment.", readHeaders(req));
+  }
   // The hour of shared caching this used to carry is gone with the lock: a CDN
   // holding one person's answer and handing it to the next asker without a key
   // would undo the check above. getCardDetail memoises upstream, so what this
