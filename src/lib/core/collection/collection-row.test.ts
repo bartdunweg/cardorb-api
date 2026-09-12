@@ -165,6 +165,7 @@ describe("rowFromDraft", () => {
       purchaseDate: null,
       notes: null,
       isFavorite: false,
+      dexFace: false,
       collectionId: null,
     });
   });

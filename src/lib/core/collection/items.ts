@@ -499,6 +499,11 @@ export type PublicItem = {
   copies: number;
   /** One of the owned copies is starred. Always false on a wish. */
   favorite: boolean;
+  /**
+   * One of the owned copies leads this Pokémon's Pokédex slot: the picture a visitor's Pokédex
+   * opens on. Always false on a wish, which no Pokédex slot shows.
+   */
+  dexFace: boolean;
 };
 
 /**
@@ -535,6 +540,7 @@ export function publicItems(sets: CardSet[], { newestFirst = false } = {}): Publ
         tcgId: card.tcgId,
         copies,
         favorite: card.variants.some((v) => v.owned && v.isFavorite),
+        dexFace: card.variants.some((v) => v.owned && v.dexFace),
       };
       if (newestFirst) dated.push({ item, at });
       else out.push(item);
@@ -573,6 +579,8 @@ export function publicWishes(sets: CardSet[]): PublicItem[] {
         tcgId: card.tcgId,
         copies,
         favorite: false,
+        // A wish is not in anybody's Pokédex: the slots hold cards you own.
+        dexFace: false,
       });
     }
   }

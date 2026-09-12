@@ -385,6 +385,18 @@ describe("publicItems", () => {
     expect(Object.keys(items[0] ?? {})).not.toContain("purchasePrice");
   });
 
+  it("says which card leads its slot, so a visitor's Pokédex opens on it", () => {
+    const sets = [
+      set("Base", [card("Pikachu", [variant({ id: "a" }), variant({ id: "b", dexFace: true })])]),
+      set("Jungle", [card("Snorlax", [variant({ id: "c" })])]),
+    ];
+    const items = publicItems(sets);
+    expect(items.map((i) => [i.name, i.dexFace])).toEqual([
+      ["Pikachu", true],
+      ["Snorlax", false],
+    ]);
+  });
+
   it("searches by name or set, and reads only q, limit and offset", () => {
     expect(filterPublicItems(publicItems(SETS), { q: "jungle" }).map((i) => i.name)).toEqual([
       "Snorlax",
@@ -418,6 +430,7 @@ describe("public filters, sort and facets", () => {
     tcgId: null,
     copies: 1,
     favorite: false,
+    dexFace: false,
   });
   const items = [
     item("Snorlax", "jungle", "Rare"),

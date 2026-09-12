@@ -64,6 +64,9 @@ const PUBLIC_VARIANT_KEYS = [
   "acquiredAt",
   "collectionId",
   "condition",
+  // False here, and that is the decision: which card leads a Pokédex slot is worth seeing on a
+  // public profile, but it is the folded card that says so (publicItems), not the row.
+  "dexFace",
   "edition",
   "excluded",
   "finish",
