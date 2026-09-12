@@ -297,6 +297,9 @@ describe("filterCounts", () => {
       rarity: { Rare: 4, Common: 1 },
       gen: { Base: 5, SM: 1 },
       type: { Fire: 3, Water: 1, Grass: 1 },
+      condition: {},
+      finish: {},
+      language: { en: 6 },
       fullArt: 3,
       duplicates: 2,
     });
@@ -339,6 +342,90 @@ describe("filterCounts", () => {
     expect(counts.set).toEqual({ "Base Set": 1, Jungle: 2 });
     expect(counts.rarity).toEqual({ Rare: 3 });
     expect(counts.duplicates).toBe(2);
+  });
+});
+
+describe("copy-level filters", () => {
+  const base = flattenItems(SETS)[0]!;
+  const row = (id: string, over: Partial<typeof base>) => ({
+    ...base,
+    id,
+    owned: true,
+    quantity: 1,
+    tcgId: null,
+    edition: null,
+    condition: null,
+    finish: null,
+    language: null,
+    ...over,
+  });
+  const all = [
+    row("a", { condition: "Near Mint", finish: "holo", language: null, rarity: "Rare" }),
+    row("b", { condition: "Played", finish: "normal", language: "ja", rarity: "Rare" }),
+    row("c", { condition: "near mint", finish: "reverse-holo", language: "EN", rarity: "Common" }),
+    row("d", { condition: null, finish: null, language: "zh-tw", rarity: "Rare" }),
+    row("w", { condition: "Mint", finish: "holo", language: "de", owned: false }),
+  ];
+  const ids = (f: Parameters<typeof filterItems>[1]) => filterItems(all, f).map((i) => i.id);
+
+  it("matches any of a key's values, in any case, and every key at once", () => {
+    expect(ids({ condition: ["NEAR MINT"] })).toEqual(["a", "c"]);
+    expect(ids({ condition: ["Played", "Mint"] })).toEqual(["b", "w"]);
+    expect(ids({ finish: ["holo", "normal"] })).toEqual(["a", "b", "w"]);
+    expect(ids({ language: ["JA", "zh-tw"] })).toEqual(["b", "d"]);
+    expect(ids({ condition: ["Near Mint"], rarity: ["Rare"] })).toEqual(["a"]);
+    expect(ids({ finish: ["holo"], owned: true, language: ["en"] })).toEqual(["a"]);
+  });
+  it("reads a copy with no language as English, and a missing condition or finish as no match", () => {
+    expect(ids({ language: ["en"] })).toEqual(["a", "c"]);
+    expect(ids({ finish: ["normal", "holo", "reverse-holo"] })).not.toContain("d");
+    expect(ids({ condition: ["Near Mint", "Played", "Mint"] })).not.toContain("d");
+  });
+  it("offers conditions best first, finishes plain first, and English first, over the owned copies", () => {
+    const extra = [
+      ...all,
+      row("e", { condition: "Custom", finish: "master-ball", language: "fr" }),
+      row("f", { condition: "Excellent", finish: "poke-ball", language: "de" }),
+      row("g", { condition: "Poor", language: "ja" }),
+    ];
+    expect(facetsOf(extra)).toMatchObject({
+      conditions: ["Near Mint", "Excellent", "Played", "Poor", "Custom"],
+      finishes: ["normal", "holo", "reverse-holo", "poke-ball", "master-ball"],
+      languages: ["en", "de", "fr", "ja", "zh-tw"],
+    });
+    expect(facetsOf(extra, { owned: false })).toMatchObject({
+      conditions: ["Mint"],
+      finishes: ["holo"],
+      languages: ["de"],
+    });
+  });
+  it("leaves the copy-level menus out of a public page's facets", () => {
+    expect(Object.keys(publicFacets([]))).toEqual(["sets", "rarities", "gens", "types"]);
+  });
+  it("counts each copy-level option with that key's own values set aside", () => {
+    const none = filterCounts(all, { owned: true }, undefined);
+    expect(none).toMatchObject({
+      condition: { "Near Mint": 1, Played: 1, "near mint": 1 },
+      finish: { holo: 1, normal: 1, "reverse-holo": 1 },
+      language: { en: 2, ja: 1, "zh-tw": 1 },
+    });
+    const asked = filterCounts(
+      all,
+      { owned: true, condition: ["Near Mint"], finish: ["holo"], language: ["ja"] },
+      undefined,
+    );
+    // Condition over owned holo Japanese copies: none; finish over Near Mint Japanese: none.
+    expect(asked.condition).toEqual({});
+    expect(asked.finish).toEqual({});
+    // Language over owned Near Mint holos, whatever language was chosen.
+    expect(asked.language).toEqual({ en: 1 });
+    expect(
+      filterCounts(all, { owned: true, language: ["en"], finish: ["holo"] }, undefined),
+    ).toMatchObject({
+      condition: { "Near Mint": 1 },
+      finish: { holo: 1, "reverse-holo": 1 },
+      language: { en: 1 },
+    });
   });
 });
 
@@ -423,6 +510,28 @@ describe("readItemQuery", () => {
       query: { limit: 100, offset: 0, gen: ["Base"], type: ["Lightning"] },
     });
     expect(read("gen=").kind).toBe("invalid");
+  });
+  it("reads a repeated condition, finish or language as several, and refuses a finish it does not know", () => {
+    expect(
+      read("condition=Near%20Mint&condition=Played&finish=holo&finish=reverse-holo&language=ja"),
+    ).toEqual({
+      kind: "ok",
+      query: {
+        limit: 100,
+        offset: 0,
+        condition: ["Near Mint", "Played"],
+        finish: ["holo", "reverse-holo"],
+        language: ["ja"],
+      },
+    });
+    expect(read("finish=poke-ball").kind).toBe("ok");
+    expect(read("finish=holo&finish=foil")).toEqual({
+      kind: "invalid",
+      error: "finish must be normal, reverse-holo, holo, poke-ball or master-ball.",
+    });
+    expect(read("finish=Holo").kind).toBe("invalid");
+    expect(read("condition=").kind).toBe("invalid");
+    expect(read("language=en&language=").kind).toBe("invalid");
   });
   it("caps a page at two thousand", () => {
     const r = read("limit=9999&offset=200&owned=true&q=%20pika%20");
@@ -739,6 +848,9 @@ describe("facetsOf over the wishes", () => {
       rarities: ["Rare"],
       gens: [],
       types: [],
+      conditions: [],
+      finishes: [],
+      languages: ["en"],
     });
 
     // A generation and a type join the menus the same way, each named once.

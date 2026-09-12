@@ -135,6 +135,10 @@ describe("GET /api/v1/cards", () => {
       rarities: [],
       gens: [],
       types: [],
+      conditions: [],
+      finishes: [],
+      // A copy with no language is an English one.
+      languages: ["en"],
     });
   });
 
