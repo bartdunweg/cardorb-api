@@ -29,6 +29,8 @@ if the two have drifted apart.
 
 - A collection is read from one cache entry instead of one per set: a warm read on a fresh instance touched 112 entries and now touches 7, measured on the same collection.
 
+- Your collection keeps opening while the card catalogue is down: the cards come from the app's own copy, without pictures or prices, instead of a page that will not load.
+
 - The collection can be exported as a CSV in the shape Dex writes (semicolons, the same columns), collection and wishlist in one file, with the condition, language and acquired date after Dex's columns; GET /v1/collection/export.
 
 - A 1st Edition copy is priced as the stamped run where anything prices that run apart: TCGplayer does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Cardmarket publishes one figure per card and it is the ordinary run's, so the two are never averaged.
@@ -81,6 +83,8 @@ if the two have drifted apart.
 - A collection now takes its sets from the catalogue's nightly copy in the database rather than asking TCGdex on every read. The pages come up faster, and a catalogue that is slow or unreachable no longer reaches the cards at all. A set published today is still fetched live, until the copy has been through it.
 
 - More of the cards TCGdex has no scan of get a picture: the catalogue's copy now asks Limitless as well as pokemontcg.io, which between them answer for cards neither did alone (Oddish, SVP 102, is Limitless's; the Pikachu with the grey felt hat is pokemontcg.io's). And a nightly refresh keeps the pictures it worked out before instead of asking after every one of them again, so the whole catalogue is fresh again in a night rather than two.
+
+- Two cards can no longer quietly come to share one Cardmarket product. The 2,054 that still do are written down per set, and the check refuses any set that gains one, so the number can fall and never rise.
 
 - The four fields every page needs about the person asking are kept on the instance for a minute instead of read from Postgres on every request. The query is 0.1 ms in the database by its own statistics, but getting to it had a p90 of 8.4 seconds on production, so one page load in ten waited eight seconds on it.
 
