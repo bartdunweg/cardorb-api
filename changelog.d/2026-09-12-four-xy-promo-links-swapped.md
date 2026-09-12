@@ -1,0 +1,1 @@
+- The full art Venusaur EX (XY123) and Blastoise EX (XY122) are priced as themselves again. Both hung on the Cardmarket product of the plain promo of the same name, and the plain XY28 and XY30 hung on theirs, so each of the four read the other's price: Venusaur EX XY123 said €5.12 for a card that sells around €117.

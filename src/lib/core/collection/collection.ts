@@ -234,7 +234,7 @@ const cachedGuidePrices = async (
           },
           // v11: the entries now carry the Shadowless run's figure, and a cached v10 entry does
           // not (the Data Cache outlives a deploy, so a bump is the only way to be sure).
-          ["guide-prices", language ?? "en", "v11", String(shard)],
+          ["guide-prices", language ?? "en", "v12", String(shard)],
           { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
         )(),
       ),
@@ -461,7 +461,7 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
-      ["collection-facts", "v1", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v2", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -477,6 +477,12 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v19: four XY promo links swapped, the same way as v17 and v18. The signature above
+      // hashes which cards a set holds, never what they are worth, so a relink is invisible
+      // to it: the key is the only thing that reprices a card today rather than tomorrow.
+      // collection-facts holds the bundle of these and is keyed on the same signature, so it
+      // moves to v2 with this.
+      //
       // v18: base1-55 (Nidoran♂) linked by hand, the same way as v17.
       //
       // v17: #299 relinked two Cardmarket products (Nidoran♀ Jungle 57, Pikachu EX XY124), and
@@ -500,7 +506,7 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v18", setName, factsSignature(identities)],
+      ["set-facts", "v19", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
