@@ -1364,6 +1364,54 @@ export type CatalogueQuery = {
   fullArt?: boolean;
 };
 
+/**
+ * A set of the catalogue's copy, as the table holds it.
+ *
+ * The cards were copied since #326 and the sets were not, so every read of a collection still
+ * resolved its sets over HTTP against the catalogue the copy was made from. These are what let
+ * that read stay in the database: enough to find a set by name and to say what it is.
+ */
+export type CatalogueSetRecord = {
+  id: string;
+  name: string;
+  series: string | null;
+  release_date: string | null;
+  logo: string | null;
+  symbol: string | null;
+  abbreviation: string | null;
+  total: number | null;
+  printed_total: number | null;
+};
+
+const SET_COLUMNS =
+  "id, name, series, release_date, logo, symbol, abbreviation, total, printed_total";
+
+/** What a reader of the copy's cards is given. The search adds its own filters on top. */
+const CARD_COLUMNS =
+  "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image";
+
+/** Every set the copy holds. A few hundred rows, read whole and kept behind one cache entry. */
+export async function listCatalogueSets(db: SupabaseClient): Promise<CatalogueSetRecord[]> {
+  return readAllPages<CatalogueSetRecord>("the catalogue's sets", (page, counted) =>
+    db
+      .from("catalogue_sets")
+      .select(SET_COLUMNS, counted ? { count: "exact" } : {})
+      .order("id", { ascending: true })
+      .range(...pageRange(page)),
+  );
+}
+
+/** One set written down as the copy now has it. Called once per set by the nightly run. */
+export async function writeCatalogueSetRecord(
+  db: SupabaseClient,
+  set: CatalogueSetRecord,
+): Promise<void> {
+  const { error } = await db
+    .from("catalogue_sets")
+    .upsert({ ...set, synced_at: new Date().toISOString() }, { onConflict: "id" });
+  if (error) throw new Error(`Copying the set ${set.id} failed: ${error.message}`);
+}
+
 /** One set the cron has copied, and when. */
 export type CatalogueSyncRecord = { setId: string; cards: number; syncedAt: string };
 
@@ -1489,6 +1537,34 @@ export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueC
       .order("local_id", { ascending: true })
       .range(...pageRange(page)),
   );
+}
+
+/**
+ * Every card the copy holds of these sets, set by set, in the order asked.
+ *
+ * The order is the answer's shape, not a nicety: the caller indexes the set first and its
+ * galleries after it, and that order is what keeps a set's own card 01 ahead of its Trainer
+ * Gallery's TG01 when both fold to the same number.
+ */
+export async function catalogueCardsBySets(
+  db: SupabaseClient,
+  setIds: readonly string[],
+): Promise<CatalogueCardRecord[][]> {
+  if (!setIds.length) return [];
+  const rows = await readAllPages<CatalogueCardRecord>(
+    "the catalogue's copy by set",
+    (page, counted) =>
+      db
+        .from("catalogue_cards")
+        .select(CARD_COLUMNS, counted ? { count: "exact" } : {})
+        .in("set_id", setIds as string[])
+        .order("set_id", { ascending: true })
+        .order("local_id", { ascending: true })
+        .range(...pageRange(page)),
+  );
+  const bySet = new Map<string, CatalogueCardRecord[]>(setIds.map((id) => [id, []]));
+  for (const row of rows) bySet.get(row.set_id)?.push(row);
+  return setIds.map((id) => bySet.get(id) ?? []);
 }
 
 /** These cards of the copy, by id, in the order asked. An id the copy lacks is left out. */

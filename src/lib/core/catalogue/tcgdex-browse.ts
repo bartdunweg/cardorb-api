@@ -24,6 +24,14 @@ export type CatalogueSet = {
   printedTotal: number | null;
   logo: string | null;
   symbol: string | null;
+  /**
+   * The abbreviation printed on the cards ("MEW"), where the catalogue publishes one.
+   *
+   * Optional because only the English set read fills it: it is what the API hands out as a
+   * set's `abbreviation`, and what the Limitless scan guess is built from, and neither
+   * question is ever asked of a Japanese shelf.
+   */
+  abbreviation?: string | null;
   /** The set's name in its own language where `name` is a translation (a Japanese set); null for English. */
   localName: string | null;
   /**
@@ -550,6 +558,9 @@ export async function englishSet(
     releaseDate: shelfDate(detail.releaseDate) ?? known?.releaseDate ?? null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
+    // Only the parent set's own, never a gallery's "ASR:TG", which is not one: see the
+    // comment on `code` in catalogue.ts, which has always taken the half before the colon.
+    abbreviation: detail.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null,
     cardsRecorded: (detail.cards ?? []).length > 0,
     logo: detail.logo ? `${detail.logo}.webp` : (known?.logo ?? null),
     symbol: detail.symbol ? `${detail.symbol}.webp` : (known?.symbol ?? null),
