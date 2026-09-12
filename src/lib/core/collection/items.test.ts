@@ -363,7 +363,7 @@ describe("copy-level filters", () => {
     row("a", { condition: "Near Mint", finish: "holo", language: null, rarity: "Rare" }),
     row("b", { condition: "Played", finish: "normal", language: "ja", rarity: "Rare" }),
     row("c", { condition: "near mint", finish: "reverse-holo", language: "EN", rarity: "Common" }),
-    row("d", { condition: null, finish: null, language: "zh-tw", rarity: "Rare" }),
+    row("d", { condition: null, finish: null, language: "it", rarity: "Rare" }),
     row("w", { condition: "Mint", finish: "holo", language: "de", owned: false }),
   ];
   const ids = (f: Parameters<typeof filterItems>[1]) => filterItems(all, f).map((i) => i.id);
@@ -372,7 +372,7 @@ describe("copy-level filters", () => {
     expect(ids({ condition: ["NEAR MINT"] })).toEqual(["a", "c"]);
     expect(ids({ condition: ["Played", "Mint"] })).toEqual(["b", "w"]);
     expect(ids({ finish: ["holo", "normal"] })).toEqual(["a", "b", "w"]);
-    expect(ids({ language: ["JA", "zh-tw"] })).toEqual(["b", "d"]);
+    expect(ids({ language: ["JA", "it"] })).toEqual(["b", "d"]);
     expect(ids({ condition: ["Near Mint"], rarity: ["Rare"] })).toEqual(["a"]);
     expect(ids({ finish: ["holo"], owned: true, language: ["en"] })).toEqual(["a"]);
   });
@@ -391,7 +391,7 @@ describe("copy-level filters", () => {
     expect(facetsOf(extra)).toMatchObject({
       conditions: ["Near Mint", "Excellent", "Played", "Poor", "Custom"],
       finishes: ["normal", "holo", "reverse-holo", "poke-ball", "master-ball"],
-      languages: ["en", "de", "fr", "ja", "zh-tw"],
+      languages: ["en", "de", "fr", "it", "ja"],
     });
     expect(facetsOf(extra, { owned: false })).toMatchObject({
       conditions: ["Mint"],
@@ -407,7 +407,7 @@ describe("copy-level filters", () => {
     expect(none).toMatchObject({
       condition: { "Near Mint": 1, Played: 1, "near mint": 1 },
       finish: { holo: 1, normal: 1, "reverse-holo": 1 },
-      language: { en: 2, ja: 1, "zh-tw": 1 },
+      language: { en: 2, ja: 1, it: 1 },
     });
     const asked = filterCounts(
       all,

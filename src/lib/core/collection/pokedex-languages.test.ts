@@ -2,20 +2,14 @@ import { describe, expect, it } from "vitest";
 import { speciesOf } from "./pokedex";
 
 /**
- * A card off the Japanese, Korean or Chinese shelf is named in that language, and the species
- * list this file matches against is English — so every one of them landed in no Pokédex slot.
+ * A card off the Japanese shelf is named in Japanese, and the species list this file matches
+ * against is English, so every one of them landed in no Pokédex slot.
  * The slot is the whole point of the page, and an empty one reads as "you do not own this".
  */
 describe("speciesOf, off an English shelf", () => {
   it("places a Japanese card", () => {
     expect(speciesOf("ピカチュウex", "ja")).toBe(25);
     expect(speciesOf("リザードンV", "ja")).toBe(6);
-  });
-
-  it("places a Korean and a Chinese one", () => {
-    expect(speciesOf("피카츄", "ko")).toBe(25);
-    expect(speciesOf("噴火龍", "zh-tw")).toBe(6);
-    expect(speciesOf("喷火龙", "zh-cn")).toBe(6);
   });
 
   it("takes the longest name, the way the English rule does", () => {

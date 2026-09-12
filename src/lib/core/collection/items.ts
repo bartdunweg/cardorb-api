@@ -257,7 +257,7 @@ export type ItemFilter = {
   condition?: Several;
   /** One finish or several; any counts. A copy with none recorded matches none. */
   finish?: Several;
-  /** One language code or several (`en`, `ja`, `zh-tw`); any counts, in any case. */
+  /** One language code or several (`en`, `ja`, `de`); any counts, in any case. */
   language?: Several;
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;

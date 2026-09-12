@@ -96,28 +96,11 @@ export type Edition = (typeof EDITIONS)[number];
 export const isEdition = (v: unknown): v is Edition =>
   typeof v === "string" && (EDITIONS as readonly string[]).includes(v);
 
-/** The languages a card is printed in, as Cardmarket and TCGdex code them. */
 /**
- * `zh-tw` and `zh-cn` beside `zh`: Chinese is two catalogues, traditional and simplified, and
- * the shelves name them apart. `zh` stays for the rows that carry it and reads as "one of the
- * two" — both are asked, the first that has the card answers (cataloguesFor). A card added from
- * a Chinese shelf used to arrive as `zh-tw`, fail this list, and be stored with no language at
- * all, after which it was looked up as an English card by its set's name (2026-09-11).
+ * The languages a card is printed in, as Cardmarket and TCGdex code them: English and the
+ * Western languages that share its catalogue, and Japanese.
  */
-export const LANGUAGES = [
-  "en",
-  "de",
-  "fr",
-  "it",
-  "es",
-  "pt",
-  "nl",
-  "ja",
-  "ko",
-  "zh",
-  "zh-tw",
-  "zh-cn",
-] as const;
+export const LANGUAGES = ["en", "de", "fr", "it", "es", "pt", "nl", "ja"] as const;
 export type Language = (typeof LANGUAGES)[number];
 export const isLanguage = (v: unknown): v is Language =>
   typeof v === "string" && (LANGUAGES as readonly string[]).includes(v);
@@ -261,8 +244,8 @@ export type CardDraft = {
   types: string[];
   /**
    * The catalogue's id for the card being added, where the client picked it off
-   * a shelf rather than typing it. See CollectionRow.tcgId: for a Japanese,
-   * Korean or Chinese card it is the only thing that finds the card again.
+   * a shelf rather than typing it. See CollectionRow.tcgId: for a Japanese
+   * card it is the only thing that finds the card again.
    * Refused when it is present and not an id, rather than blanked — a wrong one
    * costs the card its picture and its price, silently.
    */

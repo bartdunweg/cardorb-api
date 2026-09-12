@@ -38,12 +38,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   }
 
   const { tcgId } = await params;
-  /* `?language=ja|zh-tw|zh-cn|ko`: that catalogue rather than the English one, because these
-     ids are only in their own. Left out, English, which is every card this route has ever
+  /* `?language=ja`: the Japanese catalogue rather than the English one, because its ids are
+     only in its own. Left out, English, which is every card this route has ever
      been asked about. */
   const language = new URL(req.url).searchParams.get("language");
   if (language && language !== "en" && !isBrowseLanguage(language))
-    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+    return apiError(400, "language must be en or ja.", undefined, {
       headers: readHeaders(req),
     });
   const own = isBrowseLanguage(language) ? language : null;

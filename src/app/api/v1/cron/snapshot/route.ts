@@ -188,8 +188,7 @@ export async function GET(req: Request) {
   // The weekly pass, added after the held cards so a held card's nightly point
   // is the one that stands. TCGplayer's figures for both shelves it sells, from
   // tcgcsv, in the one market every other line is in (since 2026-09-12; it read
-  // Cardmarket's guide before). Korean and Chinese cards TCGplayer does not sell,
-  // so they have no weekly point.
+  // Cardmarket's guide before).
   const url = new URL(req.url);
   const weekly = url.searchParams.get("all") === "1" || new Date().getUTCDay() === 6;
   let everyCard = 0;

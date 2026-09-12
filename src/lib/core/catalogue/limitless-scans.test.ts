@@ -85,10 +85,9 @@ describe("withLimitlessScans", () => {
     await expect(withLimitlessScans("ja", cards)).resolves.toEqual(cards);
   });
 
-  it("leaves the other shelves alone: Limitless has no Korean or Chinese cards", async () => {
+  it("leaves the English shelf alone", async () => {
     const cards = [card("001", { id: "SV5M-001" })];
-    await expect(withLimitlessScans("zh-tw", cards)).resolves.toBe(cards);
-    await expect(withLimitlessScans("ko", cards)).resolves.toBe(cards);
+    await expect(withLimitlessScans("en", cards)).resolves.toBe(cards);
     expect(fetch).not.toHaveBeenCalled();
   });
 });

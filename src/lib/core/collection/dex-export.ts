@@ -85,10 +85,6 @@ const PATTERN_WORDS: Record<string, string> = {
 
 const LOCALES: Record<string, string> = {
   ja: "Japanese",
-  ko: "Korean",
-  zh: "Chinese",
-  "zh-tw": "Traditional Chinese",
-  "zh-cn": "Simplified Chinese",
 };
 
 /** Dex's word for the printing: the finish, and the pattern in brackets where there is one. */

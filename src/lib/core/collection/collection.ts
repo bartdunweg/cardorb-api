@@ -169,9 +169,8 @@ const cachedRows = async (userId: string, db: SupabaseClient | null) => {
  * Cardmarket's guide until 2026-09-12, and a set page then showed one market while the collection
  * showed another.
  *
- * English and Japanese only: TCGplayer sells no Korean or Chinese cards, and those pages carry no
- * price rather than another market's. A card with no product, or a group that does not answer,
- * is left out; the caller draws a blank line.
+ * A card with no product, or a group that does not answer, is left out; the caller draws a blank
+ * line.
  */
 export const tcgplayerPricesFor = async (
   ids: string[],
@@ -179,7 +178,7 @@ export const tcgplayerPricesFor = async (
   language: BrowseLanguage | null = null,
 ): Promise<Map<string, CardPrices>> => {
   const out = new Map<string, CardPrices>();
-  if (!ids.length || (language && language !== "ja")) return out;
+  if (!ids.length) return out;
   const rate = await usdToEurForRequest();
   if (rate == null) return out;
   const category = language === "ja" ? TCGCSV_CATEGORY.ja : TCGCSV_CATEGORY.en;
@@ -667,7 +666,7 @@ async function factsWithUsd(
   ]);
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
-      // A Japanese, Korean or Chinese printing: TCGplayer's English shelf does not carry it,
+      // A Japanese printing: TCGplayer's English shelf does not carry it,
       // so it has no price here. Its own catalogue's figure is Cardmarket's and no longer
       // shown. tcgcsv carries TCGplayer's Japanese shelf and is where this comes back from.
       if (f.catalogue) return [key, { ...f, price: null }];

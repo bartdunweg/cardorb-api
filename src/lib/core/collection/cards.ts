@@ -267,7 +267,7 @@ export type CardSet = {
    * so "SV Black Star Promos" and "SVP Black Star Promos" are one set, named
    * the second. The card keys keep the filing name, so no card changes id.
    * A set from another language's catalogue keeps its filing name: its title
-   * is the Japanese (Korean, Chinese) one, and the app is English throughout.
+   * is the Japanese one, and the app is English throughout.
    */
   name: string;
   /**
@@ -687,9 +687,8 @@ export type CatalogueAddress = { language: Language; tcgId: string };
  * Both halves are needed and neither is enough on its own. The language cannot
  * find the card — the Japanese catalogue is not searchable by an English set
  * name, and the English name the shelf shows a Japanese set under is ours
- * rather than the catalogue's. The id does not say which catalogue, because the
- * Chinese and Korean ones print the Japanese sets under the same ids. A row
- * that carries only one of the two resolves the English way, which is what
+ * rather than the catalogue's. The id alone does not say which catalogue it
+ * belongs to. A row that carries only one of the two resolves the English way, which is what
  * every row in this collection does today.
  */
 export function catalogueAddress(
@@ -734,9 +733,9 @@ export type CardFacts = {
   /** TCGdex's name where the row matched a card; the Dex files under it. See speciesId. */
   matchedName: string | null;
   /**
-   * What the card prints, where that is not what the row says: a Japanese, Korean or Chinese
-   * card's own name, from its catalogue, for a sheet to show in brackets after the English one.
-   * Null on every English card — the row's name is the printed one there. Optional in the
+   * What the card prints, where that is not what the row says: a Japanese card's own name, from
+   * its catalogue, for a sheet to show in brackets after the English one. Null on every English
+   * card, as the row's name is the printed one there. Optional in the
    * type, not the answer: every fixture that builds a card by hand predates it.
    */
   localName?: string | null;
@@ -850,8 +849,8 @@ function factsOfLanguageCard(
     // Cardmarket's own figure for this exact printing, through the same
     // priceOf() the English path uses, so "no price" is a null on both — the
     // distinction the whole value chart is built on. Japanese cards mostly
-    // carry a Cardmarket product; Chinese ones almost never do, and those read
-    // as unpriced rather than as worth nothing.
+    // carry a Cardmarket product; one that does not reads as unpriced rather
+    // than as worth nothing.
     price: prices ? card.price : null,
     priceHolo: prices ? card.holo : null,
     // No second market: pokemontcg.io indexes the English game only, so there
@@ -861,7 +860,7 @@ function factsOfLanguageCard(
     usdFirstEd: null,
     usdPrintings: null,
     priceFirstEd: null,
-    // No Japanese, Korean or Chinese set had a run of its own, and Cardmarket files none apart.
+    // No Japanese set had a run of its own, and Cardmarket files none apart.
     priceShadowless: null,
     rarity: card.rarity,
     catalogue: card.catalogue,
@@ -884,8 +883,8 @@ function factsOfLanguageCard(
  * does not know. A set with no card of its own catalogue never enters the new
  * code and never pays a request for it.
  *
- * The second path is for a row that names a catalogue of its own — a Japanese,
- * Korean or Chinese card, with the id it has there. It does not match anything:
+ * The second path is for a row that names a catalogue of its own: a Japanese
+ * card, with the id it has there. It does not match anything:
  * the id *is* the match, so there is no set to resolve by name, no number to
  * fold, no name to check, and none of the three artwork fallbacks (all English).
  * One request per card answers the picture, the rarity and the price at once.
@@ -1390,8 +1389,8 @@ const byNumber = (a: OwnedCard, b: OwnedCard): number => compareCardNumbers(a.nu
  * every row's variants, as two rows of one printing do within a set; the first
  * set's facts (logo, date, total) stand, and the other's fill what it lacks.
  * A set from another language's catalogue is left as it is: its title is the
- * Japanese (Korean, Chinese) name, and the app names every set in English —
- * which, for those, is what the owner filed it under.
+ * Japanese name, and the app names every set in English, which, for those, is
+ * what the owner filed it under.
  */
 export function mergeSetsByTitle(sets: CardSet[]): CardSet[] {
   const byTitle = new Map<string, CardSet>();

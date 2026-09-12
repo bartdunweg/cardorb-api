@@ -9,8 +9,7 @@ import { catalogueTimeout, mapLimit } from "../util";
  * the weekly point for every card nobody holds comes from too, in place of Cardmarket's guide:
  * one market for every line, so a card's chart does not change markets halfway along.
  *
- * Two shelves: Pokémon (category 3) and Pokémon Japan (85). TCGplayer sells no Korean or
- * Chinese cards, so those have no weekly point.
+ * Two shelves: Pokémon (category 3) and Pokémon Japan (85).
  *
  * Measured 2026-09-12: 220 English groups and 459 Japanese, about 0.06 s a request, so both
  * shelves come in a few seconds at eight at a time, inside the cron's minute.

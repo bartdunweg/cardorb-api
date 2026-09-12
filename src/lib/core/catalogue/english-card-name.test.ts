@@ -80,15 +80,15 @@ describe("englishFromLocalName", () => {
   species[151] = "Mew";
   species[759] = "Stufful";
   const local: Record<string, string>[] = [];
-  local[0] = { ja: "フシギダネ", zhHant: "妙蛙種子", zhHans: "妙蛙种子", ko: "이상해씨" };
-  local[2] = { ja: "フシギバナ", zhHant: "妙蛙花", zhHans: "妙蛙花", ko: "이상해꽃" };
-  local[150] = { ja: "ミュウツー", zhHant: "超夢", zhHans: "超梦", ko: "뮤츠" };
-  local[151] = { ja: "ミュウ", zhHant: "夢幻", zhHans: "梦幻", ko: "뮤" };
-  local[759] = { ja: "ヌイコグマ", zhHant: "童偶熊", zhHans: "童偶熊", ko: "포곰곰" };
+  local[0] = { ja: "フシギダネ" };
+  local[2] = { ja: "フシギバナ" };
+  local[150] = { ja: "ミュウツー" };
+  local[151] = { ja: "ミュウ" };
+  local[759] = { ja: "ヌイコグマ" };
 
   it("names a Pokémon by the species written inside its printed name, suffix kept", () => {
-    expect(englishFromLocalName("zh-tw", "童偶熊", local, species)).toBe("Stufful");
-    expect(englishFromLocalName("zh-tw", "妙蛙花ex", local, species)).toBe("Venusaur ex");
+    expect(englishFromLocalName("ja", "ヌイコグマ", local, species)).toBe("Stufful");
+    expect(englishFromLocalName("ja", "フシギバナex", local, species)).toBe("Venusaur ex");
     expect(englishFromLocalName("ja", "フシギバナVMAX", local, species)).toBe("Venusaur VMAX");
   });
 
@@ -98,12 +98,14 @@ describe("englishFromLocalName", () => {
   });
 
   it("splits a tag team at the ampersand", () => {
-    expect(englishFromLocalName("zh-tw", "超夢&夢幻GX", local, species)).toBe("Mewtwo & Mew GX");
+    expect(englishFromLocalName("ja", "ミュウツー&ミュウGX", local, species)).toBe(
+      "Mewtwo & Mew GX",
+    );
   });
 
   it("is null where no species is written in the name", () => {
-    expect(englishFromLocalName("zh-tw", "博士的研究", local, species)).toBeNull();
-    expect(englishFromLocalName("zh-tw", "", local, species)).toBeNull();
+    expect(englishFromLocalName("ja", "博士の研究", local, species)).toBeNull();
+    expect(englishFromLocalName("ja", "", local, species)).toBeNull();
     expect(englishFromLocalName("de", "Bisasam", local, species)).toBeNull();
   });
 });
