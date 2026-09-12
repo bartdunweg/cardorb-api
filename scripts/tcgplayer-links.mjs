@@ -1,26 +1,39 @@
 /**
- * Links the cards TCGdex relays no TCGplayer price for to TCGplayer's own products, via tcgcsv.
+ * Links the cards TCGdex relays no TCGplayer price for to TCGplayer's own products, via tcgcsv,
+ * and reports what is still unlinked.
  *
- * TCGdex carries a product id under pricing.tcgplayer for most cards, and none at all for the
- * subsets and promo lines TCGplayer files as groups of their own: the Galarian Gallery, the
- * Trainer Galleries, the Shiny Vaults, every Black Star promo line. Measured on 2026-09-12, 217
- * of the owner's 1,609 held cards had no price for that reason alone, while TCGplayer prices
- * them (SVP 027 Pikachu, $21.45). tcgcsv publishes those groups, product by product, with the
- * printed number, so a card can be matched on the set it is in, its number and its name.
+ * TCGdex carries a TCGplayer product id for most cards, and none for the subsets and promo lines
+ * TCGplayer files as groups of their own. tcgcsv publishes every group, product by product, with
+ * the printed number, so a card can be matched on its name and its number.
  *
- * Only the set-to-group pairs below, each read by hand: a group name is not a rule a script
- * should guess at. A product is taken when its number and its name both agree, and the plain one
- * where TCGplayer lists stamped variants beside it ("Pikachu - 027 (Pokemon Center Exclusive)").
+ * Every group, not a list of them. The first version of this script searched the groups it was
+ * told to, one per set, read by hand; every group nobody thought of was a card with no price and
+ * no warning, and Bart found Jirachi XY67a ($257.56) by opening TCGplayer himself: it is filed
+ * in "Alternate Art Promos", not beside XY67. So a card is matched against all of TCGplayer's
+ * English products, and taken only when it is unambiguous:
  *
- * Writes into tcgplayer-ids.generated.json, the map every other TCGplayer read already uses (the
- * cron's weekly pass, backfill-card-prices.mjs), for cards that have no product there yet, and
- * adds `groupId`, which is how the live price asks tcgcsv for a card TCGdex does not price.
- * Never overwrites a product TCGdex gave.
+ *   - the printed number agrees ("GG01", "TG01/TG30", "027", "XY67a" read as prefix, number, suffix)
+ *   - the name agrees exactly, once TCGplayer's own suffixes are off ("Pikachu - 027 (Pokemon
+ *     Center Exclusive)" is Pikachu, "Latias (Delta Species)" is Latias)
+ *   - the group is the set's own. Where TCGdex already linked some of the set's cards, those
+ *     cards' groups are its home, and a group is the set's own when it is a home or a subgroup
+ *     of one, which TCGplayer names "Home: Subset" ("Generations: Radiant Collection"). Measured
+ *     on 2026-09-12, looser rules linked wrongly: word overlap put a Dragon Frontiers card in
+ *     EX Dragon, and a shared-words subgroup test put a Sun & Moon card in "SM - Guardians
+ *     Rising" (the home "SM Base Set" is only "sm" once "base" and "set" are set aside).
+ *     A set with no linked card at all (the promo lines) has no home, and there the group must
+ *     share a word with the set's name and share more than any other group does
  *
- * Runs too. TCGplayer files the Shadowless Base Set as a group of its own, where "Unlimited" is
- * the Shadowless run and "1st Edition" the stamped one, neither of which TCGdex relays. Those are
- * linked under `shadowless` beside the card's own product, and the collection reads that group's
- * printings as "shadowless", "shadowless-holofoil", "1st-edition" and "1st-edition-holofoil".
+ * Anything else is left unlinked and counted in the report, never guessed. Within a group the
+ * plain product wins over a stamped or exclusive one of the same number and name.
+ *
+ * Writes tcgplayer-ids.generated.json for cards with no product there yet (adding `groupId`, which
+ * is how the live price asks tcgcsv), never overwriting a product TCGdex gave; and
+ * tcgplayer-coverage.json, the count verify.sh holds the line on. Pokémon TCG Pocket's sets are
+ * digital and are not counted.
+ *
+ * Runs too: TCGplayer files the Shadowless Base Set as a group of its own, where "Unlimited" is
+ * the Shadowless run and "1st Edition" the stamped one. Those are linked under `shadowless`.
  *
  *   node scripts/tcgplayer-links.mjs [--dry]
  */
@@ -30,36 +43,29 @@ import { join } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
+const COVERAGE = join(ROOT, "scripts", "tcgplayer-coverage.json");
 const DRY = process.argv.includes("--dry");
-
-/**
- * TCGdex set id to the tcgcsv groups its cards are in, category 3, first match wins. Read by hand
- * on 2026-09-12. A list, because TCGplayer files a promo line's alternate printings in a group of
- * their own: Jirachi XY67a is in "Alternate Art Promos" at $257.56, not beside XY67 in "XY Promos"
- * (Bart found it on TCGplayer when the app showed no price).
- */
-const GROUPS = {
-  "swsh12.5gg": "SWSH: Crown Zenith: Galarian Gallery",
-  swsh9tg: "SWSH09: Brilliant Stars Trainer Gallery",
-  swsh10tg: "SWSH10: Astral Radiance Trainer Gallery",
-  swsh11tg: "SWSH11: Lost Origin Trainer Gallery",
-  swsh12tg: "SWSH12: Silver Tempest Trainer Gallery",
-  "swsh4.5sv": "Shining Fates: Shiny Vault",
-  sma: "Hidden Fates: Shiny Vault",
-  cel25cc: "Celebrations: Classic Collection",
-  svp: "SV: Scarlet & Violet Promo Cards",
-  swshp: "SWSH: Sword & Shield Promo Cards",
-  smp: ["SM Promos", "Alternate Art Promos"],
-  xyp: ["XY Promos", "Alternate Art Promos"],
-  hgssp: "HGSS Promos",
-  basep: "WoTC Promo",
-  mep: "ME: Mega Evolution Promo",
-};
 
 /** TCGdex set id to the tcgcsv group that holds its Shadowless run. Read by hand on 2026-09-12. */
 const RUN_GROUPS = {
   base1: "Base Set (Shadowless)",
 };
+
+/** TCGdex's series for Pokémon TCG Pocket: digital cards, which no market sells. */
+const DIGITAL_SERIES = new Set(["tcgp"]);
+
+/** Words a set name and a group name share without it meaning they are the same set. */
+const COMMON = new Set([
+  "the",
+  "and",
+  "set",
+  "pokemon",
+  "series",
+  "card",
+  "cards",
+  "collection",
+  "base",
+]);
 
 async function fetchJson(url) {
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -74,7 +80,22 @@ async function fetchJson(url) {
   throw new Error(`${url}: gave up`);
 }
 
-/** "GG01", "TG01/TG30", "027", "SWSH001" and "1" read as the same kind of thing: prefix, number, suffix. */
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      for (;;) {
+        const i = next++;
+        if (i >= items.length) return;
+        out[i] = await fn(items[i]);
+      }
+    }),
+  );
+  return out;
+}
+
+/** "GG01", "TG01/TG30", "027", "SWSH001", "XY67a" and "1" read as prefix, number and suffix. */
 const numberKey = (raw) => {
   const n = String(raw).split("/")[0].toUpperCase().replace(/\s+/g, "");
   const m = n.match(/^([A-Z]*)0*(\d+)([A-Z]*)$/);
@@ -89,114 +110,167 @@ const fold = (s) =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
 
+/** A product's card name, without TCGplayer's suffixes: " - 027", " (Pokemon Center Exclusive)", " [Staff]". */
+const baseName = (productName) => productName.replace(/\s*[([].*$/, "").split(" - ")[0];
+
+/** The words of a set or group name that could identify it. */
+const words = (name) =>
+  new Set(
+    name
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length >= 2 && !COMMON.has(w)),
+  );
+
 /** tcgcsv's subtype name as TCGdex spells the same printing: "Reverse Holofoil" is "reverse-holofoil". */
 const printingKey = (subType) => subType.toLowerCase().replace(/\s+/g, "-");
 
 const ids = JSON.parse(readFileSync(IDS, "utf8"));
 const { results: groups } = await fetchJson("https://tcgcsv.com/tcgplayer/3/groups");
-const groupId = Object.fromEntries(groups.map((g) => [g.name, g.groupId]));
 
-let linked = 0;
-for (const [set, names] of Object.entries(GROUPS)) {
-  for (const name of [names].flat()) {
-    const gid = groupId[name];
-    if (!gid) {
-      console.log(`${set}: no tcgcsv group named "${name}"`);
-      continue;
-    }
-    const catalogue = await fetchJson(
-      `https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(set)}`,
-    );
-    const { results: products } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/products`);
-    const { results: prices } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/prices`);
-    const printings = new Map();
-    for (const p of prices) {
-      if (!(p.marketPrice > 0)) continue;
-      printings.set(p.productId, [
-        ...(printings.get(p.productId) ?? []),
-        printingKey(p.subTypeName),
-      ]);
-    }
-    const byNumber = new Map();
-    for (const p of products) {
-      const number = p.extendedData?.find((e) => e.name === "Number")?.value;
-      if (!number) continue;
-      const key = numberKey(number);
-      byNumber.set(key, [...(byNumber.get(key) ?? []), p]);
-    }
-    let here = 0;
-    let unmatched = 0;
-    for (const card of catalogue?.cards ?? []) {
-      if (ids[card.id]) continue;
-      const named = (byNumber.get(numberKey(card.localId)) ?? []).filter((p) =>
-        fold(p.name).startsWith(fold(card.name)),
-      );
-      // The plain product before a stamped or exclusive one of the same number and name.
-      const product = named.find((p) => !p.name.includes("(")) ?? named[0];
-      if (!product) {
-        unmatched++;
-        continue;
-      }
-      ids[card.id] = {
-        productId: product.productId,
-        variants: printings.get(product.productId) ?? [],
-        groupId: gid,
-      };
-      here++;
-    }
-    linked += here;
-    console.log(`${set} -> ${name}: ${here} linked, ${unmatched} left without a product`);
-  }
-}
-
-/** One group's products by number, and which printings each is priced as. */
-async function groupIndex(gid) {
-  const { results: products } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/products`);
-  const { results: prices } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/prices`);
-  const printings = new Map();
-  for (const p of prices) {
+// Every English product, by number, with its group and the printings it is priced as.
+const byNumber = new Map();
+const printingsOf = new Map();
+const groupOfProduct = new Map();
+await mapLimit(groups, 8, async (g) => {
+  const [products, prices] = await Promise.all([
+    fetchJson(`https://tcgcsv.com/tcgplayer/3/${g.groupId}/products`),
+    fetchJson(`https://tcgcsv.com/tcgplayer/3/${g.groupId}/prices`),
+  ]);
+  for (const p of prices?.results ?? []) {
     if (!(p.marketPrice > 0)) continue;
-    printings.set(p.productId, [...(printings.get(p.productId) ?? []), printingKey(p.subTypeName)]);
+    printingsOf.set(p.productId, [
+      ...(printingsOf.get(p.productId) ?? []),
+      printingKey(p.subTypeName),
+    ]);
   }
-  const byNumber = new Map();
-  for (const p of products) {
+  for (const p of products?.results ?? []) {
+    groupOfProduct.set(p.productId, g);
     const number = p.extendedData?.find((e) => e.name === "Number")?.value;
     if (!number) continue;
     const key = numberKey(number);
-    byNumber.set(key, [...(byNumber.get(key) ?? []), p]);
+    byNumber.set(key, [...(byNumber.get(key) ?? []), { group: g, product: p }]);
   }
-  return { byNumber, printings };
+});
+console.log(`tcgcsv: ${groups.length} groups, ${printingsOf.size} priced products`);
+
+// The sets that hold a card with no product, read once each.
+const unlinkedSets = [
+  ...new Set(
+    Object.keys(ids)
+      .filter((id) => !ids[id])
+      .map((id) => id.slice(0, id.lastIndexOf("-"))),
+  ),
+];
+const catalogues = await mapLimit(unlinkedSets, 6, async (set) => [
+  set,
+  await fetchJson(`https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(set)}`),
+]);
+
+const coverage = {};
+const digitalSets = [];
+let linked = 0;
+for (const [set, catalogue] of catalogues) {
+  if (catalogue && DIGITAL_SERIES.has(catalogue.serie?.id)) digitalSets.push(set);
+  if (!catalogue || DIGITAL_SERIES.has(catalogue.serie?.id)) continue;
+  const setWords = words(catalogue.name);
+  // The groups TCGdex's own links for this set are in: its home, where it has one.
+  const homes = new Map();
+  for (const card of catalogue.cards ?? []) {
+    const link = ids[card.id];
+    const group = link && groupOfProduct.get(link.productId);
+    if (group) homes.set(group.groupId, group.name);
+  }
+  const ownGroup = (group) =>
+    homes.has(group.groupId) ||
+    [...homes.values()].some((home) => group.name.startsWith(`${home}: `));
+  const row = { name: catalogue.name, linked: 0, ambiguous: 0, notFound: 0 };
+  for (const card of catalogue.cards ?? []) {
+    if (ids[card.id] !== null) continue;
+    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter(
+      ({ product }) => fold(baseName(product.name)) === fold(card.name),
+    );
+    // Only groups whose name shares a word with the set's, the closest of those, and only one.
+    const scored = new Map();
+    for (const hit of named) {
+      const shared = homes.size
+        ? ownGroup(hit.group)
+          ? 1
+          : 0
+        : [...words(hit.group.name)].filter((w) => setWords.has(w)).length;
+      if (shared)
+        scored.set(hit.group.groupId, {
+          shared,
+          hits: [...(scored.get(hit.group.groupId)?.hits ?? []), hit],
+        });
+    }
+    const ranked = [...scored.values()].sort((a, b) => b.shared - a.shared);
+    if (!named.length || !ranked.length) {
+      row.notFound++;
+      continue;
+    }
+    if (ranked.length > 1 && ranked[0].shared === ranked[1].shared) {
+      row.ambiguous++;
+      continue;
+    }
+    const hits = ranked[0].hits;
+    const { product, group } = hits.find(({ product: p }) => !/[([]/.test(p.name)) ?? hits[0];
+    ids[card.id] = {
+      productId: product.productId,
+      variants: printingsOf.get(product.productId) ?? [],
+      groupId: group.groupId,
+    };
+    row.linked++;
+    linked++;
+  }
+  if (row.linked || row.ambiguous || row.notFound) coverage[set] = row;
 }
 
+// The Shadowless runs, beside each card's own product.
 let runs = 0;
 for (const [set, name] of Object.entries(RUN_GROUPS)) {
-  const gid = groupId[name];
-  if (!gid) {
+  const group = groups.find((g) => g.name === name);
+  if (!group) {
     console.log(`${set}: no tcgcsv group named "${name}"`);
     continue;
   }
   const catalogue = await fetchJson(`https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(set)}`);
-  const { byNumber } = await groupIndex(gid);
-  let here = 0;
-  let unmatched = 0;
   for (const card of catalogue?.cards ?? []) {
-    // A run is linked beside the card's own product; a card with none has nothing to sit beside.
     if (!ids[card.id]) continue;
-    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter((p) =>
-      fold(p.name).startsWith(fold(card.name)),
+    const hits = (byNumber.get(numberKey(card.localId)) ?? []).filter(
+      (h) =>
+        h.group.groupId === group.groupId && fold(baseName(h.product.name)) === fold(card.name),
     );
-    const product = named.find((p) => !p.name.includes("(")) ?? named[0];
-    if (!product) {
-      unmatched++;
-      continue;
-    }
-    ids[card.id] = { ...ids[card.id], shadowless: { productId: product.productId, groupId: gid } };
-    here++;
+    const hit = hits.find(({ product: p }) => !/[([]/.test(p.name)) ?? hits[0];
+    if (!hit) continue;
+    ids[card.id] = {
+      ...ids[card.id],
+      shadowless: { productId: hit.product.productId, groupId: group.groupId },
+    };
+    runs++;
   }
-  runs += here;
-  console.log(`${set} -> ${name}: ${here} Shadowless runs linked, ${unmatched} without one`);
 }
-console.log(`${DRY ? "Would link" : "Linked"} ${runs} Shadowless runs.`);
+
+const totals = Object.values(coverage).reduce(
+  (t, r) => ({
+    linked: t.linked + r.linked,
+    ambiguous: t.ambiguous + r.ambiguous,
+    notFound: t.notFound + r.notFound,
+  }),
+  { linked: 0, ambiguous: 0, notFound: 0 },
+);
+console.log(
+  `Linked ${linked} cards and ${runs} Shadowless runs. Left: ${totals.ambiguous} ambiguous, ${totals.notFound} not found.`,
+);
+for (const [set, r] of Object.entries(coverage)
+  .sort((a, b) => b[1].ambiguous + b[1].notFound - (a[1].ambiguous + a[1].notFound))
+  .slice(0, 12)) {
+  if (r.ambiguous + r.notFound)
+    console.log(`  ${set} (${r.name}): ${r.ambiguous} ambiguous, ${r.notFound} not found`);
+}
 
 if (!DRY) {
   const sorted = Object.fromEntries(
@@ -205,5 +279,25 @@ if (!DRY) {
       .map((k) => [k, ids[k]]),
   );
   writeFileSync(IDS, `${JSON.stringify(sorted, null, 2)}\n`);
+  // What is left: the line verify.sh holds (scripts/check-tcgplayer-coverage.mjs). `unlinked` counts
+  // every card in the map with no product, outside the digital sets, which is what the check
+  // recounts offline; the per-set rows say where they are.
+  const digital = new Set(digitalSets);
+  const unlinked = Object.keys(sorted).filter(
+    (id) => sorted[id] === null && !digital.has(id.slice(0, id.lastIndexOf("-"))),
+  ).length;
+  // Per set, from the map itself, so the rows add up to `unlinked`: a card TCGdex's set listing no
+  // longer carries is still a card with no price. Names where this run read the set.
+  const names = Object.fromEntries(catalogues.map(([set, c]) => [set, c?.name ?? null]));
+  const left = {};
+  for (const id of Object.keys(sorted)) {
+    const set = id.slice(0, id.lastIndexOf("-"));
+    if (sorted[id] !== null || digital.has(set)) continue;
+    left[set] ??= { name: names[set] ?? null, unlinked: 0 };
+    left[set].unlinked++;
+  }
+  writeFileSync(
+    COVERAGE,
+    `${JSON.stringify({ unlinked, digitalSets: digitalSets.sort(), sets: left }, null, 2)}\n`,
+  );
 }
-console.log(`${DRY ? "Would link" : "Linked"} ${linked} cards.`);
