@@ -66,7 +66,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!folder) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(foldersTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
   return NextResponse.json({ ok: true, folder }, { headers: readHeaders(req) });
 }
 
@@ -91,6 +91,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   // The cards that were filed in it changed, so the cached rows are stale; so is the list.
   revalidateTag(cardsTag(who.userId), { expire: 0 });
   revalidateTag(foldersTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
   return NextResponse.json({ ok: true }, { headers: readHeaders(req) });
 }

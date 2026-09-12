@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
-import { bearer, forgetProfile, requestViewer } from "@/lib/api/viewer";
+import { bearer, requestViewer, usernameOf } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { claimUsername } from "@/lib/storage/postgres";
 import { validateUsername } from "@/lib/core/account/account";
@@ -45,8 +45,6 @@ export async function POST(req: Request) {
   const body = read.body;
   if (typeof body.username === "string") wanted = body.username.trim().toLowerCase();
 
-  if (wanted === viewer.username) return NextResponse.json({ ok: true, username: wanted });
-
   const shape = validateUsername(wanted);
   if (!shape.ok) return apiError(400, shape.error);
 
@@ -56,10 +54,14 @@ export async function POST(req: Request) {
     return refuse("noDatabase");
   }
 
+  // The name they have, read through the same connection that will claim the new one. After the
+  // shape check rather than before it: a name this route would refuse anyway is not worth a query.
+  if (wanted === (await usernameOf(viewer.userId, token ?? undefined))) {
+    return NextResponse.json({ ok: true, username: wanted });
+  }
+
   const result = await claimUsername(db, wanted);
   if (result.ok) {
-    // The name is one of the four kept per viewer; the claim makes them wrong.
-    forgetProfile(viewer.userId);
     return NextResponse.json({ ok: true, username: wanted });
   }
 

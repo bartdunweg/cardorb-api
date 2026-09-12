@@ -105,7 +105,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!row) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
 
   return NextResponse.json({ ok: true, card: row }, { headers: readHeaders(req) });
 }
@@ -129,7 +129,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (!gone) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
 
   // The row as it was, in the same `card` the PATCH above answers with, so a
   // client parses one shape for both. It is what an undo needs and the only

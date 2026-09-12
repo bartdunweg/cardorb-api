@@ -31,25 +31,6 @@ import { timed } from "../core/timing";
 export type Viewer = {
   userId: string;
   email: string;
-  /** The name in /user/<name>. Always present: a trigger makes one. */
-  username: string;
-  /**
-   * The name this person gave for themselves, or null if they have not.
-   *
-   * Never read on its own: pass the viewer to ownerLabel() (lib/core/account/owner.ts),
-   * which falls back to the username. Nullable because it genuinely is — signup
-   * used to seed it with the generated username, which made "no name given"
-   * indistinguishable from a name, and stopped doing so.
-   */
-  displayName: string | null;
-  /** The avatars bucket's public URL for this account, or null until one is
-   *  uploaded. See app/api/v1/profile/avatar/route.ts. */
-  avatarUrl: string | null;
-  /** When this account finished (or skipped past) the welcome flow, null while
-   *  it has not. Read here rather than in a query of its own because the (app)
-   *  layout has to check it on every render, and it already pays for this
-   *  lookup. See app/welcome/page.tsx. */
-  onboardedAt: string | null;
 };
 
 /**
@@ -74,98 +55,37 @@ export function bearer(req: Request): string | null {
 }
 
 /**
- * A verified token into a viewer, or null.
+ * The name in /user/<name>, read for the one caller that is about to need it.
  *
- * The profile lookup is a second query and it is worth it: everything that
- * renders a person needs their username, and a Viewer that carried only an id
- * would push that query into every caller instead. It reads through the same
- * client, so a profile row that RLS will not show is a viewer we do not claim
- * to know.
+ * This used to be part of every viewer: `authorise()` verified the token and then asked
+ * Postgres for the person's username, display name, avatar and onboarding date, on every
+ * authorised request. Postgres was never the cost (0.1 ms mean by its own statistics); getting
+ * to it was, and on 2026-09-12 that read measured a median of 58 ms, a p90 of 8.4 seconds and a
+ * worst of 17.6. It was kept for a minute per instance to soften that, which is a cache with a
+ * staleness window in front of a query nobody had asked for: nothing here reads the display
+ * name, the avatar or the onboarding date (the web app reads its own profile for those), and the
+ * name is wanted in two places only, both after a write: `POST /v1/username`, which is about to
+ * replace it, and the purge that tells cardorb.com which public page to drop (web-cache.ts).
+ * Asked for there, every read of every route stops waiting for it.
+ *
+ * Through the caller's own client, so a row RLS will not show is a name we do not claim to know;
+ * the empty string for a row that is not there, which never resolves as a username, and is the
+ * right answer for an account whose trigger has not run.
  */
-/**
- * The person's own four fields, kept on this instance for a minute.
- *
- * Read from Postgres on every authorised request, and Postgres is not the cost: by its own
- * statistics the query is 0.1 ms mean over 15,532 calls, 10 ms at worst. Getting to it is. On
- * production on 2026-09-12 the read had a median of 58 ms, a p90 of 8.4 seconds and a worst of
- * 17.6, and since every rendered page waits on it, one page load in ten waited eight seconds
- * on a tenth of a millisecond of work.
- *
- * In this process rather than in the Data Cache, the same shape and the same reasoning as the
- * assembled collections in collection/collection.ts: a lint rule keeps `unstable_cache` to two
- * files so the move to `use cache` stays a two-file change, and a memo needs neither. What it
- * costs is that a name changed on one instance is the old name on another for up to a minute.
- * A minute of a stale display name against eight seconds of everybody's page load is a trade
- * worth making, and it is the same one the collection already makes with ten.
- *
- * Keyed on the id out of the verified token, never on the token itself: the token rotates every
- * hour and would only fragment the memo. Nothing is kept for a row that was not found, so a
- * brand new account is not sent through the welcome flow it has just finished.
- */
-const profiles = new Map<string, { row: ProfileRow; until: number }>();
-const PROFILE_TTL_MS = 60_000;
-const PROFILE_MAX = 32;
-
-type ProfileRow = {
-  username?: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  onboarded_at?: string | null;
-};
-
-async function profileOf(db: SupabaseClient, userId: string): Promise<ProfileRow | null> {
-  const kept = profiles.get(userId);
-  if (kept && kept.until > Date.now()) return kept.row;
-
-  const { data } = await timed("store profile", async () =>
-    db
-      .from("profiles")
-      .select("username,display_name,avatar_url,onboarded_at")
-      .eq("id", userId)
-      .maybeSingle(),
+export async function usernameOf(userId: string, token?: string): Promise<string> {
+  const db = token ? userClient(token) : await serverClient();
+  if (!db) return "";
+  const { data } = await timed("store username", async () =>
+    db.from("profiles").select("username").eq("id", userId).maybeSingle(),
   );
-  const row = data as ProfileRow | null;
-  if (!row) return null;
-
-  profiles.set(userId, { row, until: Date.now() + PROFILE_TTL_MS });
-  while (profiles.size > PROFILE_MAX) {
-    const oldest = profiles.keys().next().value;
-    if (oldest === undefined) break;
-    profiles.delete(oldest);
-  }
-  return row;
-}
-
-/** Forgotten here the moment the write that changes it lands, on the instance that wrote. */
-export function forgetProfile(userId: string): void {
-  profiles.delete(userId);
+  return (data as { username?: string } | null)?.username ?? "";
 }
 
 async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | null> {
   const { data, error } = await timed("auth getClaims", () => db.auth.getClaims(jwt));
   if (error || !data?.claims?.sub) return null;
-
   const { sub, email } = data.claims as { sub: string; email?: string };
-
-  const p = await profileOf(db, sub);
-  return {
-    userId: sub,
-    email: email ?? "",
-    // A signed-in account without a profile should not exist — the trigger in
-    // the accounts migration makes one in the same transaction as the user — so
-    // this fallback is not a supported state, it is a way of not crashing in
-    // one. The empty string never resolves as a username, which is the correct
-    // outcome for an account that has no name yet.
-    username: p?.username ?? "",
-    displayName: p?.display_name ?? null,
-    avatarUrl: p?.avatar_url ?? null,
-    // A profile row this lookup could not read is not a reason to send anybody
-    // through the welcome flow, but there is no row to write the answer to
-    // either — the fallback above already says this is a state that should not
-    // happen, and null here means the flow runs rather than being skipped by
-    // an error. Better a wizard nobody needed than a setup silently missed.
-    onboardedAt: p?.onboarded_at ?? null,
-  };
+  return { userId: sub, email: email ?? "" };
 }
 
 /**

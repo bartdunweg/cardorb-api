@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
 import { readHeaders, sameOrigin, storeErrorResponse } from "@/lib/api/guard";
-import { bearer, forgetProfile, requestViewer } from "@/lib/api/viewer";
+import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { ownProfile, updateProfile } from "@/lib/storage/postgres";
 import { MAX_DISPLAY_NAME } from "@/lib/core/account/account";
@@ -119,17 +119,13 @@ export async function PATCH(req: Request) {
     return apiError(500, "That change could not be saved.");
   }
 
-  // The four fields are kept on this instance for a minute (viewer.ts); this is the write that
-  // makes them wrong, so it is the write that forgets them.
-  forgetProfile(viewer.userId);
-
   // Nothing of this host's to purge: what it serves for a profile — the four
   // routes under /v1/public/<name>/ — are dynamic handlers cached only at the
   // CDN by their own header (PUBLIC_READ_CACHE), and a profile turned private
   // is gone from every edge within a minute. The web app keeps its own copy
   // for five minutes and is told, so a switch made in the iOS app is not
   // open on cardorb.com for the rest of them (cardorb-web, /api/revalidate).
-  await forgetOnTheWeb({ userId: viewer.userId, username: viewer.username });
+  await forgetOnTheWeb({ userId: viewer.userId, token: token ?? undefined });
 
   return NextResponse.json({ ok: true, ...patch });
 }

@@ -111,7 +111,7 @@ export async function POST(req: Request) {
   // cardsTag is the expensive one to rebuild (every row against the catalogues, twenty seconds
   // for a large binder). Deleting a folder does unfile rows and drops both.
   revalidateTag(foldersTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb(who);
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
   return NextResponse.json(
     { ok: true, folder: { ...folder, count: 0 } },
     { headers: readHeaders(req) },
