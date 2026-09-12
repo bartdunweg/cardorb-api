@@ -29,7 +29,10 @@ import {
   writeCatalogueSet,
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
-import { englishSet, englishSets } from "./tcgdex-browse";
+import { englishScanGaps, englishSet, englishSets } from "./tcgdex-browse";
+import { storedScan, tcgdexScan } from "./artwork";
+import { ptcgScan } from "./ptcg";
+import { mapLimit } from "../util";
 
 /** The energy types a card can carry, as TCGdex names them. A word that is one is a type filter, not a name. */
 export const ENERGY_TYPES = [
@@ -84,8 +87,7 @@ const matchOf = (r: CatalogueCardRecord): CatalogueMatch => ({
   name: r.name,
   localName: null,
   setName: r.set_name,
-  image: r.image ? `${r.image}/low.webp` : null,
-  imageHigh: r.image ? `${r.image}/high.webp` : null,
+  ...storedScan(r.image),
   rarity: r.rarity,
   types: r.types,
   series: r.series,
@@ -145,6 +147,50 @@ export type SyncReport = {
 const stemOf = (image: string | null) => image?.replace(/\/(low|high)\.webp$/, "") ?? null;
 
 /**
+ * The most cards of one set the second catalogue is asked about. A set TCGdex knows nothing of
+ * would otherwise fire one lookup per card and find nothing; the gaps this closes are a handful
+ * of promos in a set that is otherwise photographed.
+ */
+const FALLBACKS_PER_SET = 40;
+
+/**
+ * The picture each card of a set is copied under: TCGdex's built address where a file is behind
+ * it, and the second catalogue's file where there is not.
+ *
+ * englishSet() builds every address from the serie, the set and the number, because TCGdex's
+ * record names no scan for cards whose file is there all the same (see englishScanGaps). The
+ * cards it names none for are the ones that can be a 404, and a 404 in the copy is what every
+ * reader of the copy draws: a blank square in the search, on the set page and in the index
+ * document. Pikachu with Grey Felt Hat (svp-085) is the one that showed it, the card the
+ * collection has always found through pokemontcg.io and the search never did.
+ *
+ * The probe and the lookup are the copy's to pay, once a night, not a reader's per request:
+ * that is the whole reason the copy exists. A card whose address holds nothing and whose
+ * fallback finds nothing is copied with no picture, which is the honest answer and draws as
+ * the card's name.
+ */
+async function withResolvedScans(
+  setId: string,
+  setName: string,
+  cards: CatalogueMatch[],
+): Promise<CatalogueMatch[]> {
+  const gaps = await englishScanGaps(setId).catch(() => new Set<string>());
+  if (!gaps.size) return cards;
+  let fallbacks = FALLBACKS_PER_SET;
+  return mapLimit(cards, 8, async (card) => {
+    const stem = stemOf(card.image);
+    if (!stem || !gaps.has(card.number)) return card;
+    // tcgdexScan() answers the address itself where the probe could not be made, which reads
+    // as "keep it": an unanswered check is not proof a scan is missing.
+    if (await tcgdexScan(stem)) return card;
+    if (fallbacks <= 0) return { ...card, image: null, imageHigh: null };
+    fallbacks--;
+    const file = await ptcgScan(setName, card.number, card.name).catch(() => null);
+    return { ...card, image: file, imageHigh: null };
+  });
+}
+
+/**
  * Copies as many sets as the budget allows, most needed first: a set the copy has never seen,
  * then one whose card count has moved since (a set that grew, a set that was empty), then the
  * rest oldest copy first. Each set is one REST read for its cards and one GraphQL call for
@@ -190,10 +236,11 @@ export async function syncMirror(
           continue;
         }
         const { set, cards } = read;
+        const pictured = await withResolvedScans(id, set.name, cards);
         await writeCatalogueSet(
           db,
           id,
-          cards.map((c): CatalogueCardRecord => ({
+          pictured.map((c): CatalogueCardRecord => ({
             id: c.id,
             set_id: id,
             local_id: c.number,
@@ -278,6 +325,26 @@ export async function catalogueIndex(
   const body = JSON.stringify(buildIndex(version, await listCatalogueCards(db)));
   await writeCatalogueIndex(db, "en", version, body);
   return { version, body };
+}
+
+/**
+ * The pictures the copy holds for these cards, by id, for a reader that has the cards from
+ * TCGdex itself: the set page.
+ *
+ * The copy is where a picture has been checked (withResolvedScans): TCGdex's own address where
+ * a file is behind it, the second catalogue's file where there is none, and nothing where
+ * neither has one. The set page builds the address instead, so it drew a blank square for the
+ * cards TCGdex has no scan of while the search, off the copy, had the answer. An id the copy
+ * does not hold is left out, and the page keeps what it built: a set copied for the first time
+ * tonight is no worse off than it was.
+ */
+export async function mirrorScans(
+  db: SupabaseClient,
+  ids: string[],
+): Promise<Map<string, { image: string | null; imageHigh: string | null }>> {
+  if (!ids.length) return new Map();
+  const rows = await catalogueCardsById(db, ids);
+  return new Map(rows.map((r) => [r.id, storedScan(r.image)]));
 }
 
 /** These cards of the copy as the add-card form reads them, in the order asked; an id the copy lacks is left out. */

@@ -38,6 +38,15 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
   englishSets: async () => [SET],
   setIn: (...a: unknown[]) => setIn(...a),
 }));
+/* The copy is the store, and the store is server-only. `mirrorScans` has its own tests; the
+   default here is a copy that holds nothing, which leaves the addresses this route built. */
+const mirrorScans = vi.fn(
+  async () => new Map<string, { image: string | null; imageHigh: string | null }>(),
+);
+vi.mock("@/lib/core/catalogue/mirror", () => ({
+  mirrorScans: (...a: unknown[]) => mirrorScans(...(a as [])),
+}));
+vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
 /* The Limitless probe is a network call with its own tests; replaced with the
    identity it degrades to when the probe cannot be made. */
 vi.mock("@/lib/core/catalogue/browse-artwork", () => ({
@@ -117,6 +126,44 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.ownedCount).toBe(1);
     expect(body.cards.map((c: { owned: boolean }) => c.owned)).toEqual([false, false, true]);
     expect(body.cards[2]).toMatchObject({ quantity: 3, itemIds: ["row-1"] });
+  });
+
+  /* The copy is where a picture has been checked: this route builds one from the serie, the
+     set and the number, and TCGdex has no file behind it for a handful of cards a set. */
+  it("takes the page's pictures from the catalogue's copy where it holds them", async () => {
+    englishSet.mockResolvedValue({
+      set: SET,
+      cards: [
+        { ...card("85"), image: "https://assets.tcgdex.net/en/sv/svp/085/low.webp" },
+        { ...card("86"), image: "https://assets.tcgdex.net/en/sv/svp/086/low.webp" },
+      ],
+    });
+    mirrorScans.mockResolvedValue(
+      new Map([
+        ["base1-85", { image: "https://images.pokemontcg.io/svp/85.png", imageHigh: null }],
+      ]),
+    );
+    const body = await (await open()).json();
+    expect(body.cards.map((c: { image: string | null }) => c.image)).toEqual([
+      "https://images.pokemontcg.io/svp/85.png",
+      "https://assets.tcgdex.net/en/sv/svp/086/low.webp",
+    ]);
+  });
+
+  it("keeps what it built when the copy cannot be read", async () => {
+    englishSet.mockResolvedValue({
+      set: SET,
+      cards: [{ ...card("85"), image: "https://assets.tcgdex.net/en/sv/svp/085/low.webp" }],
+    });
+    mirrorScans.mockRejectedValue(new Error("the store said no"));
+    const body = await (await open()).json();
+    expect(body.cards[0].image).toBe("https://assets.tcgdex.net/en/sv/svp/085/low.webp");
+  });
+
+  it("does not ask the copy for another language's shelf, which it does not hold", async () => {
+    setIn.mockResolvedValue({ set: SET, cards: [card("1")] });
+    await open("language=ja", "sv2a");
+    expect(mirrorScans).not.toHaveBeenCalled();
   });
 
   it("prices the page's cards, and asks after those cards only", async () => {

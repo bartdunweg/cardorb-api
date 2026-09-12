@@ -7,6 +7,8 @@ import {
   setIn,
 } from "@/lib/core/catalogue/tcgdex-browse";
 import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
+import { mirrorScans } from "@/lib/core/catalogue/mirror";
+import { adminClient } from "@/lib/storage/supabase";
 import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -92,7 +94,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   );
   const marked = markOwnership(index, cards);
   const start = (page - 1) * pageSize;
-  const shown = marked.slice(start, start + pageSize);
+  const onPage = marked.slice(start, start + pageSize);
+  /* The pictures as the catalogue's copy has them, for the English shelf: this route builds a
+     card's address from the serie, the set and the number, and TCGdex has no file behind it for
+     a handful of cards a set (svp-085, Pikachu with Grey Felt Hat, among them). The copy has
+     checked each of those and holds the second catalogue's file where there is one. One query
+     for the page's ids, and no probe on this request; a card the copy does not hold keeps the
+     address this route built. The copy holds no person's data, so it is the service role's to
+     read, as the search reads it. */
+  const copy = isBrowseLanguage(language) ? null : adminClient();
+  const scans = copy
+    ? await mirrorScans(
+        copy,
+        onPage.map((c) => c.id),
+      ).catch(() => null)
+    : null;
+  const shown = scans?.size ? onPage.map((c) => ({ ...c, ...(scans.get(c.id) ?? {}) })) : onPage;
 
   /* A price under every card, so a set page can be read the way the collection's own lists are
      rather than as a checklist. Only the page's cards are priced, and only from the guide that
