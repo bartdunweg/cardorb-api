@@ -87,6 +87,8 @@ if the two have drifted apart.
 
 - Venusaur EX sits between Blastoise EX (122) and Pikachu EX (124) in XY Black Star Promos again, instead of at the bottom of the set. A promo number written with its set's letters (XY123, SWSH050) now sorts as the number it is, is saved without those letters like every other card of its set, and the database refuses one that still has them, so a script writing to it directly cannot bring the problem back. Trainer Gallery and other lettered subsets (TG01, RC5) keep their place after the main run.
 
+- 968 promo and subset cards have a price again, from TCGplayer: the Galarian Gallery, four Trainer Galleries, both Shiny Vaults and the SV, SWSH, SM, XY, HGSS, WotC and ME Black Star promo lines. TCGdex relays no TCGplayer figure for any of them, while TCGplayer prices them in groups of their own; `scripts/tcgplayer-links.mjs` matches each card to its product on tcgcsv by set, number and name, and the collection asks tcgcsv for those groups. Of the owner's 217 held cards without a price, 209 are priced. Celebrations Classic Collection is not linked yet: its numbers do not line up.
+
 - A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
 
 - A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".
