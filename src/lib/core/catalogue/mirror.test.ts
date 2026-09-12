@@ -436,6 +436,28 @@ describe("syncMirror", () => {
     expect(ptcgScan).toHaveBeenCalled();
   });
 
+  /* The day a source is added to the chain: a card copied without a picture was told "no" by
+     the sources of that day, and nothing would ever ask the new one about it. */
+  it("works every set out from scratch when asked for a full pass", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [hit("svp-102", "102")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["102"]), code: "SVP" });
+    tcgdexScan.mockResolvedValue(null);
+    limitlessScan.mockResolvedValue("/api/cover?url=limitless");
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [row({ id: "svp-102", image: null })],
+    });
+    await syncMirror(db, { full: true });
+    expect(limitlessScan).toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "/api/cover?url=limitless" }),
+    ]);
+  });
+
   it("copies no picture at all where neither catalogue has one", async () => {
     englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
     englishSet.mockResolvedValue({
