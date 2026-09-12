@@ -14,15 +14,6 @@ const answers: Record<string, unknown> = {
       tcgplayer: null,
     },
   },
-  // A Chinese card Cardmarket does not price at all, and only the simplified
-  // catalogue has it: both halves of what makes zh awkward, in one card.
-  "/zh-cn/cards/CS3aC-010": {
-    id: "CS3aC-010",
-    localId: "010",
-    name: "妙蛙种子",
-    image: "https://assets.tcgdex.net/zh-cn/CS/CS3aC/010",
-    set: { id: "CS3aC", name: "朱＆紫" },
-  },
   // TCGdex has photographed SV1a-007; the HEAD the Japanese path spends says so.
   "https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp": true,
   // A card from a set TCGdex has recorded and not photographed — SV5M was 12 of 12 on
@@ -59,23 +50,13 @@ const stub = (extra: Record<string, unknown> = {}) => {
 };
 
 describe("cataloguesFor", () => {
-  it("sends only the four languages that have a catalogue of their own", () => {
+  it("sends only Japanese, the one language with a catalogue of its own", () => {
     expect(cataloguesFor("ja")).toEqual(["ja"]);
-    expect(cataloguesFor("ko")).toEqual(["ko"]);
     // A German copy is an English card printed in German: same catalogue, same
     // ids, so it resolves the way it always did and never reaches this path.
     expect(cataloguesFor("de")).toEqual([]);
     expect(cataloguesFor("en")).toEqual([]);
     expect(cataloguesFor(null)).toEqual([]);
-  });
-
-  it("tries both Chinese catalogues, traditional first", () => {
-    expect(cataloguesFor("zh")).toEqual(["zh-tw", "zh-cn"]);
-  });
-
-  it("asks one Chinese catalogue where the row names it", () => {
-    expect(cataloguesFor("zh-tw")).toEqual(["zh-tw"]);
-    expect(cataloguesFor("zh-cn")).toEqual(["zh-cn"]);
   });
 });
 
@@ -166,23 +147,9 @@ describe("languageCard", () => {
     expect(asked).toEqual(["/ja/cards/SV5M-002"]);
   });
 
-  it("spends no probe on a Chinese card: Limitless has none of those", async () => {
-    const asked = stub();
-    const card = await languageCard(["zh-cn"], "CS3aC-010");
-    expect(card!.scan).toBeNull();
-    expect(asked).toEqual(["/zh-cn/cards/CS3aC-010"]);
-  });
-
-  it("falls through to simplified when traditional does not have the card", async () => {
-    const asked = stub();
-    const card = await languageCard(["zh-tw", "zh-cn"], "CS3aC-010");
-    expect(card?.catalogue).toBe("zh-cn");
-    expect(asked).toEqual(["/zh-tw/cards/CS3aC-010", "/zh-cn/cards/CS3aC-010"]);
-  });
-
   it("reads a card no market prices as unpriced, never as free", async () => {
     stub();
-    const card = await languageCard(["zh-cn"], "CS3aC-010");
+    const card = await languageCard(["ja"], "SV5M-002");
     expect(card).not.toBeNull();
     expect(card!.price).toBeNull();
     expect(card!.holo).toBeNull();

@@ -1,5 +1,5 @@
 /**
- * The English name of every card on the Japanese, Korean and Chinese shelves.
+ * The English name of every card on the Japanese shelf.
  *
  *   node scripts/language-card-names.mjs            # every catalogue, print what it found
  *   node scripts/language-card-names.mjs --write    # write the maps
@@ -7,17 +7,17 @@
  *
  * ── Why this exists ──
  *
- * TCGdex names a card from these catalogues in its own script and has no English for it (there is
+ * TCGdex names a card from this catalogue in its own script and has no English for it (there is
  * no English printing to borrow from). The app is English throughout, so a set page or a
  * collection row would otherwise read リザードンex under a card everyone here calls Charizard ex.
  *
  * The rules are in src/lib/core/catalogue/english-card-name.mjs. Their inputs come from two
  * downloads: Cardmarket's product list (13 MB, one request, every product it sells with its
  * English name) read through the committed product id maps, and, for a card Cardmarket has no
- * product for, the card's own TCGdex record — one request per such card, a few thousand across
- * the four catalogues, where the id maps needed twenty-one thousand.
+ * product for, the card's own TCGdex record: one request per such card, a few thousand across
+ * the catalogue, where the id maps needed twenty-one thousand.
  *
- * One file per catalogue, as the id maps are, because the ids collide between them. Runs after
+ * One file per catalogue, as the id maps are. Runs after
  * language-cardmarket-ids.mjs: a card the id map does not have is a card this cannot name.
  *
  * Re-runnable. A name already written is kept, so a second run only reads what was added since
@@ -38,7 +38,7 @@ const CORE = join(ROOT, "src", "lib", "core");
 const HOST = "https://api.tcgdex.net/v2";
 const PRODUCTS =
   "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json";
-const LANGUAGES = ["ja", "zh-tw", "zh-cn", "ko"];
+const LANGUAGES = ["ja"];
 
 const args = process.argv.slice(2);
 const write = args.includes("--write");

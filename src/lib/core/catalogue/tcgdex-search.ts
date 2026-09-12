@@ -40,8 +40,8 @@ import { setIdOf } from "./tcgdex-language";
 import { setIn } from "./tcgdex-browse";
 
 /* One catalogue per language. English is the one every search asked until 2026-09-11; the
-   Japanese, Korean and Chinese ones are the same host under their own code, and a name typed in
-   their script is found only there — "リザードン" is in none of the English records. */
+   Japanese one is the same host under its own code, and a name typed in its script is found only
+   there: "リザードン" is in none of the English records. */
 const catalogueOf = (language: BrowseLanguage | null) =>
   `https://api.tcgdex.net/v2/${language ?? "en"}`;
 
@@ -297,9 +297,9 @@ export async function searchCards(
 }
 
 /**
- * A card on the Japanese, Korean or Chinese shelf, by the English name the app shows it under.
+ * A card on the Japanese shelf, by the English name the app shows it under.
  *
- * TCGdex can filter these catalogues by name, but only by the name the card prints, so
+ * TCGdex can filter this catalogue by name, but only by the name the card prints, so
  * "charizard" found nothing on the Japanese shelf while the set page showed Charizard ex under
  * every Lizardon. The English names are ours (card-names.ts, one map per catalogue, committed),
  * so the scan is a walk down twelve thousand strings in memory — no request — and every word
@@ -325,8 +325,8 @@ async function searchEnglishNames(
   // The shelf's order: the set index is newest first, as listSetsIn writes it.
   const shelf = await languageSetIndex(language).catch(() => new Map<string, CatalogueSet>());
   const setOf = (id: string) => setIdOf(id) ?? id;
-  // The sets the chip's word names: by English title, by printed name, or by id — a title the
-  // list gives two sets (a Japanese set and its Korean printing share ids, not titles) keeps both.
+  // The sets the chip's word names: by English title, by printed name, or by id. A title the list
+  // gives two sets keeps both.
   const inSets = wantedSet
     ? new Set(
         [...shelf.values()]

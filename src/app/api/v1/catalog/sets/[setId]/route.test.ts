@@ -222,7 +222,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
 
   it("prices a Japanese set from the Japanese map, by the catalogue's own id", async () => {
     /* The shelf is a fact about the page, not the id: a Japanese set page prices from the
-       Japanese shelf, and SM1S-001 is a Japanese card and a different Korean one. */
+       Japanese shelf. */
     setIn.mockResolvedValue({
       set: { ...SET, id: "M1S", name: "Mega Symphonia" },
       cards: [{ ...card("001", "Tangela"), id: "M1S-001", setName: "Mega Symphonia" }],

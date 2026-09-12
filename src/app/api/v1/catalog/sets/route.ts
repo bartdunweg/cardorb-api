@@ -36,10 +36,10 @@ export async function GET(req: Request) {
     });
   }
 
-  // `?language=ja|zh-tw|zh-cn|ko`: that language's own catalogue (TCGdex); left out, English.
+  // `?language=ja`: the Japanese catalogue (TCGdex); left out, English.
   const language = new URL(req.url).searchParams.get("language");
   if (language && language !== "en" && !isBrowseLanguage(language))
-    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+    return apiError(400, "language must be en or ja.", undefined, {
       headers: readHeaders(req),
     });
   let sets;

@@ -4,11 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Where a browse surface's prices come from: TCGplayer, a tcgcsv group at a time, the shelf picked
  * by the catalogue's language.
  *
- * The id maps are one file per shelf because the ids collide between catalogues (SM1S-001 is a
- * Japanese card and a different Korean one), so "the Japanese shelf for a Japanese page" is the
- * whole mechanism, and the one thing that could quietly go wrong: read the English map for a
- * Japanese page and every price is null, with nothing failing. Korean and Chinese cards TCGplayer
- * does not sell, so those pages carry no price at all rather than Cardmarket's.
+ * The id maps are one file per shelf, so "the Japanese shelf for a Japanese page" is the whole
+ * mechanism, and the one thing that could quietly go wrong: read the English map for a Japanese
+ * page and every price is null, with nothing failing.
  */
 
 const groupPrintings = vi.fn();
@@ -72,8 +70,7 @@ describe("tcgplayerPricesFor", () => {
     expect(prices.get("M1S-001")?.price?.market).toBe(2);
   });
 
-  it("prices nothing on a shelf TCGplayer does not sell, and nothing for a card with no product", async () => {
-    expect((await tcgplayerPricesFor(["SM1S-001"], "ko")).size).toBe(0);
+  it("prices nothing for a card with no product", async () => {
     expect((await tcgplayerPricesFor(["A1-001"])).size).toBe(0);
     expect(groupPrintings).not.toHaveBeenCalled();
   });

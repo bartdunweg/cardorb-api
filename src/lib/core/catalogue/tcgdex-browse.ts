@@ -2,8 +2,6 @@ import { compareCardNumbers } from "../util";
 import RECORDED_SETS from "../recorded-sets.generated.json";
 import { CatalogueNotFound, graphql, json } from "./tcgdex-client";
 import JA_NAMES from "./set-names.ja.json";
-import ZH_NAMES from "./set-names.zh.json";
-import ZH_CN_NAMES from "./set-names.zh-cn.json";
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
 import { cardNamed } from "./card-names";
@@ -35,14 +33,14 @@ export type CatalogueSet = {
   localName: string | null;
   /**
    * Whether the catalogue has recorded the set's cards, or only the set and its count. Always
-   * true for English; TCGdex lists 68 of 184 Japanese sets and 92 of 95 Korean ones with a count
-   * and no card (2026-09-11), and a shelf that could not tell showed "0 of 60" for those.
+   * true for English; TCGdex lists 68 of 184 Japanese sets with a count and no card (2026-09-11),
+   * and a shelf that could not tell showed "0 of 60" for those.
    */
   cardsRecorded: boolean;
 };
 
 /**
- * The shelf and the set pages: every language TCGdex carries, English included.
+ * The shelf and the set pages: English and Japanese, the two languages Card Orb carries.
  *
  * ── English, since 2026-09-11 ────────────────────────────────────────────────
  *
@@ -56,7 +54,7 @@ export type CatalogueSet = {
  * and for these routes: 2 of 8 for the set list, 1 of 8 for a set's cards —
  * behind a day-long cache that hid it until an entry went cold.
  *
- * So the English shelf reads like the other four: TCGdex's own ids, names,
+ * So the English shelf reads like the Japanese one: TCGdex's own ids, names,
  * eras and scans. A set is two reads — its record and card list (a cached
  * GET), and its rarities and types (GraphQL, memoised nowhere, 240 ms) — and
  * the shelf is one, the set index below, held for a day per process.
@@ -67,12 +65,12 @@ export type CatalogueSet = {
  * a link from before this day still opens the set it opened. The contract
  * (`GET /v1/catalog/sets/{setId}`) says which id the shelf now hands out.
  *
- * ── The other languages ──────────────────────────────────────────────────────
+ * ── Japanese ─────────────────────────────────────────────────────────────────
  *
- * pokemontcg.io knows the English game only. TCGdex carries a catalogue per
- * language — Japanese, Chinese (traditional and simplified), Korean — with its
- * own sets and ids, named in that language (there is no English name for a
- * Japanese set, and inventing one would be a second identity to keep straight).
+ * pokemontcg.io knows the English game only. TCGdex carries a Japanese
+ * catalogue with its own sets and ids, named in Japanese (there is no English
+ * name for a Japanese set, and inventing one would be a second identity to
+ * keep straight).
  * The shapes below are the English shelf's, so a client draws them with the
  * same code; `series` is TCGdex's serie name, `releaseDate` the set's own.
  *
@@ -97,15 +95,8 @@ export type CatalogueSet = {
  * English throughout, and リザードンex under a card everyone here calls
  * Charizard ex was the one place it was not.
  */
-// The Chinese and Korean catalogues print the Japanese sets under the same ids (S12a, SV9), so
-// the Japanese list names those; the sets those languages have of their own get their own lists.
-const JA = JA_NAMES as Record<string, string>;
-const ZH = ZH_NAMES as Record<string, string>;
-const ENGLISH: Partial<Record<BrowseLanguage, Record<string, string>>> = {
-  ja: JA,
-  ko: JA,
-  "zh-tw": { ...JA, ...ZH },
-  "zh-cn": { ...JA, ...ZH, ...(ZH_CN_NAMES as Record<string, string>) },
+const ENGLISH: Record<BrowseLanguage, Record<string, string>> = {
+  ja: JA_NAMES as Record<string, string>,
 };
 
 const named = (
@@ -113,15 +104,15 @@ const named = (
   id: string,
   own: string,
 ): { name: string; localName: string | null } => {
-  const english = ENGLISH[lang]?.[id];
+  const english = ENGLISH[lang][id];
   return english ? { name: english, localName: own } : { name: own, localName: null };
 };
 
 /**
- * The eras, by TCGdex's serie id, which the four catalogues share (S is Sword & Shield in all
- * of them). TCGdex names each in the catalogue's own language — ポケモンカードゲーム
- * スカーレット&バイオレット, 劍＆盾, 썬&문 — and the shelf groups its sets under that heading. The
- * English is the era's, as the English shelf writes it; a serie this does not know keeps its own.
+ * The eras, by TCGdex's serie id (S is Sword & Shield). TCGdex names each in the catalogue's own
+ * language (ポケモンカードゲーム スカーレット&バイオレット), and the shelf groups its sets under that
+ * heading. The English is the era's, as the English shelf writes it; a serie this does not know
+ * keeps its own.
  */
 const SERIES_ENGLISH: Record<string, string> = {
   PMCG: "Original",
@@ -141,7 +132,7 @@ const SERIES_ENGLISH: Record<string, string> = {
 };
 const seriesNamed = (serieId: string | undefined, own: string | undefined): string =>
   (serieId && SERIES_ENGLISH[serieId]) || own || "";
-export const BROWSE_LANGUAGES = ["ja", "zh-tw", "zh-cn", "ko"] as const;
+export const BROWSE_LANGUAGES = ["ja"] as const;
 export type BrowseLanguage = (typeof BROWSE_LANGUAGES)[number];
 
 export const isBrowseLanguage = (v: unknown): v is BrowseLanguage =>
@@ -196,14 +187,12 @@ const recordedSets = (() => {
 })();
 
 /**
- * TCGdex's placeholders. The Japanese, Traditional Chinese and Korean catalogues each list
- * fifteen sets under the Chinese-looking ids CS1a … CS4Da — every one named Triplet Beat in
- * that script, counted 101, dated 2024-04-26, with no card behind it, on every shelf alike
- * (2026-09-11). No catalogue records a card for any of them: they are one record copied
- * fifteen times, not fifteen sets, and a shelf showed fifteen "No cards in the catalogue yet"
- * tiles under one name. A set that shares its name and its count with another on the same
- * shelf and has no cards recorded is one of these and is left out; a real set with no cards
- * yet (92 of the 95 Korean ones) shares its name with nothing and stays.
+ * TCGdex's placeholders. The Japanese catalogue lists fifteen sets under the ids CS1a to
+ * CS4Da, every one named トリプレットビート, counted 101, dated 2024-04-26, with no card behind it
+ * (2026-09-11). They are one record copied fifteen times, not fifteen sets, and the shelf showed
+ * fifteen "No cards in the catalogue yet" tiles under one name. A set that shares its name and
+ * its count with another on the same shelf and has no cards recorded is one of these and is left
+ * out; a real set with no cards yet shares its name with nothing and stays.
  */
 const withoutPlaceholders = (sets: CatalogueSet[]): CatalogueSet[] => {
   const alike = new Map<string, number>();
@@ -211,42 +200,6 @@ const withoutPlaceholders = (sets: CatalogueSet[]): CatalogueSet[] => {
   for (const s of sets) alike.set(key(s), (alike.get(key(s)) ?? 0) + 1);
   return sets.filter((s) => s.cardsRecorded || (alike.get(key(s)) ?? 0) < 2);
 };
-
-/**
- * One tile per id. TCGdex's Simplified Chinese listing carries CSV1C twice (2026-09-11): 宝石包
- * 第一卷 with 9 cards and 亘古开来 with 127, and `/sets/CSV1C` opens on the second. A shelf drew
- * both under one key, so React kept one tile and warned, and a link from either landed on the
- * same page. The entry kept is the one that page shows — the set's own record says which, by
- * count and then by name; one cached GET, and only for an id that repeats, which is one today.
- * Where the record cannot be read, the last entry stands, as the page it opens does not exist
- * to disagree.
- */
-async function onePerId(lang: BrowseLanguage, sets: CatalogueSet[]): Promise<CatalogueSet[]> {
-  const seen = new Map<string, number>();
-  for (const s of sets) seen.set(s.id, (seen.get(s.id) ?? 0) + 1);
-  const repeated = [...seen].filter(([, n]) => n > 1).map(([id]) => id);
-  if (!repeated.length) return sets;
-  const keep = new Map<string, CatalogueSet>();
-  for (const id of repeated) {
-    const entries = sets.filter((s) => s.id === id);
-    let detail: TcgSetDetail | null = null;
-    try {
-      detail = (await json(
-        `${HOST}/${lang}/sets/${encodeURIComponent(id)}`,
-        `${lang} set ${id}`,
-      )) as TcgSetDetail;
-    } catch {
-      detail = null;
-    }
-    const own = detail?.cardCount?.total;
-    const chosen =
-      entries.find((s) => own != null && s.total === own) ??
-      entries.find((s) => detail?.name && (s.localName ?? s.name) === detail.name) ??
-      entries.at(-1)!;
-    keep.set(id, chosen);
-  }
-  return sets.filter((s) => !keep.has(s.id) || keep.get(s.id) === s);
-}
 
 export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> {
   const series = (await json(`${HOST}/${lang}/series`, `${lang} series`)) as TcgSerieBrief[];
@@ -272,7 +225,7 @@ export async function listSetsIn(lang: BrowseLanguage): Promise<CatalogueSet[]> 
       });
     }
   }
-  return onePerId(lang, withoutPlaceholders(out));
+  return withoutPlaceholders(out);
 }
 
 /** One set with its cards, or null where the language has no set by that id. */
@@ -298,8 +251,8 @@ export async function setIn(
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
-    // The same read as the English set's, off the same record: null on every Japanese, Chinese
-    // and Korean set TCGdex answered on 2026-09-13, and the code where it ever carries one.
+    // The same read as the English set's, off the same record: null on every Japanese set
+    // TCGdex answered on 2026-09-13, and the code where it ever carries one.
     abbreviation: detail.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null,
     cardsRecorded: (detail.cards ?? []).length > 0,
     logo: detail.logo ? `${detail.logo}.png` : null,

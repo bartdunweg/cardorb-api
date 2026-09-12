@@ -24,18 +24,8 @@
  *
  * ── Which catalogue ────────────────────────────────────────────────────────
  *
- * The id alone does not say: the Chinese and Korean catalogues print the
- * Japanese sets under the same ids — all 95 Korean sets share theirs with the
- * Japanese ones, measured. The row's `language` does, and exactly one of the
- * four is coarser than the catalogues are: `zh` is one code for two of them,
- * traditional and simplified, so both are asked in order and the first that has
- * the card answers.
- *
- * `zh-tw` and `zh-cn` are languages of their own since 2026-09-11 and name
- * their catalogue exactly; `zh` stays for the rows that carry it, and for
- * those the fallback is exact: a card comes back from the catalogue that
- * actually holds its id, or from neither. (The iOS app decodes no language
- * field at all, checked — so widening the list cost it nothing.)
+ * The row's `language` says: a `ja` row carries a Japanese catalogue id, and
+ * every other row resolves through the English catalogue by set name.
  */
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
@@ -53,28 +43,11 @@ const HOST = "https://api.tcgdex.net/v2";
  *
  * Empty for English and for every Western language: those share the English
  * catalogue's ids and its set names, so a German copy of an English card is
- * that card and resolves the way it always did. Only these four have a
- * catalogue of their own, and only they need one.
+ * that card and resolves the way it always did. Only Japanese has a catalogue
+ * of its own, and only it needs one.
  */
 export function cataloguesFor(language: Language | null | undefined): readonly BrowseLanguage[] {
-  switch (language) {
-    case "ja":
-      return ["ja"];
-    case "ko":
-      return ["ko"];
-    // Traditional first, because it is the larger catalogue: 98 sets against
-    // 56, and only 7 in both. So most simplified-only cards cost one 404 before
-    // the answer, cached for the day like the answer itself, and no card can
-    // come back from the wrong catalogue — the id has to be *in* one.
-    case "zh":
-      return ["zh-tw", "zh-cn"];
-    case "zh-tw":
-      return ["zh-tw"];
-    case "zh-cn":
-      return ["zh-cn"];
-    default:
-      return [];
-  }
+  return language === "ja" ? ["ja"] : [];
 }
 
 /**
@@ -105,7 +78,7 @@ export function setIdOf(tcgId: string): string | null {
 
 /** One card as its own catalogue has it. Everything a collection row needs, in one answer. */
 export type LanguageCard = {
-  /** Which of the four catalogues answered. For `zh` this is the one that had it. */
+  /** Which catalogue answered. */
   catalogue: BrowseLanguage;
   id: string;
   /** The printed number, TCGdex's `localId`. */
@@ -175,9 +148,8 @@ export async function languageCard(
     // Limitless's plain print where TCGdex has no file — or has the reverse
     // variant's, which is worse than none (artwork.ts, SCANNED_AS_REVERSE).
     const scan =
-      lang === "ja" &&
-      (tcgdexScanIsReverse(card.set?.id ?? setIdOf(tcgId)) ||
-        !(card.image && (await tcgdexScan(card.image))))
+      tcgdexScanIsReverse(card.set?.id ?? setIdOf(tcgId)) ||
+      !(card.image && (await tcgdexScan(card.image)))
         ? limitlessJapaneseScan(id, number)
         : null;
     return {
@@ -195,9 +167,8 @@ export async function languageCard(
       setName: card.set?.name ?? null,
       // The same two functions the English path uses, so a Japanese card and an
       // English one cannot come to disagree about what "no price" looks like:
-      // null, never zero. Cardmarket publishes euros for most Japanese cards
-      // and for almost no Chinese ones, and a card it does not publish reads as
-      // unpriced rather than as free.
+      // null, never zero. Cardmarket publishes euros for most Japanese cards,
+      // and a card it does not publish reads as unpriced rather than as free.
       price: cm ? priceOf(cm) : null,
       holo: cm ? holoPriceOf(cm) : null,
     };

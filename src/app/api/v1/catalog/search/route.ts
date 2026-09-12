@@ -64,11 +64,11 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  /* `?language=ja|zh-tw|zh-cn|ko`: that catalogue rather than the English one, as the set route
+  /* `?language=ja`: the Japanese catalogue rather than the English one, as the set route
      reads it. Left out, English, which is every search this route had answered before. */
   const languageParam = url.searchParams.get("language");
   if (languageParam && languageParam !== "en" && !isBrowseLanguage(languageParam))
-    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+    return apiError(400, "language must be en or ja.", undefined, {
       headers: readHeaders(req),
     });
   const language = isBrowseLanguage(languageParam) ? languageParam : null;

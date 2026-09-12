@@ -256,7 +256,7 @@ components:
         quantity: { type: [integer, "null"] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
-        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null], description: "The printing's language; null reads as English." }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -279,7 +279,7 @@ components:
         imageHigh: { type: [string, "null"], description: "Large scan. Only where TCGdex has the card." }
         imageSize: { $ref: "#/components/schemas/ImageSize" }
         speciesId: { type: [integer, "null"], description: "The National Pokédex number." }
-        localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it (a Japanese, Korean or Chinese card); null on English cards." }
+        localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it (a Japanese card); null on English cards." }
         variants: { type: array, items: { $ref: "#/components/schemas/Variant" } }
         owned: { type: boolean }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
@@ -300,7 +300,7 @@ components:
         name: { type: string, description: "The set as the collection names it. Addresses everything." }
         language:
           type: [string, "null"]
-          enum: [ja, zh-tw, zh-cn, ko, null]
+          enum: [ja, null]
           description: >
             Which catalogue the cards in it came from; null for the English one. The one thing
             `name` cannot say: a collector holding Black Bolt in English and in Japanese has two
@@ -413,7 +413,7 @@ components:
         quantity: { type: integer, minimum: 1, default: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
-        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null], description: "The printing's language; null reads as English." }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -433,7 +433,7 @@ components:
         quantity: { type: integer, minimum: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
-        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null], description: "The printing's language; null reads as English." }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -450,7 +450,7 @@ components:
         edition: { oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
-        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null] }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, null] }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -486,7 +486,7 @@ components:
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
-        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null], description: "The printing's language; null reads as English." }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -506,7 +506,7 @@ components:
         logo: { type: [string, "null"] }
         symbol: { type: [string, "null"] }
         localName: { type: [string, "null"], description: "The set's name in its own language where `name` is a translation (a Japanese set); null for English." }
-        cardsRecorded: { type: boolean, description: "Whether the catalogue has recorded the set's cards, or only the set and its count. Always true for English; TCGdex lists many Japanese and most Korean sets with a count and no card yet." }
+        cardsRecorded: { type: boolean, description: "Whether the catalogue has recorded the set's cards, or only the set and its count. Always true for English; TCGdex lists many Japanese sets with a count and no card yet." }
 
     CatalogueSetWithCounts:
       allOf:
@@ -528,7 +528,7 @@ components:
       properties:
         id: { type: string }
         number: { type: string }
-        name: { type: string, description: "In English, on every shelf: a Japanese, Korean or Chinese card is named off Cardmarket's product list or its species. Falls back to the printed name where neither names the card." }
+        name: { type: string, description: "In English, on every shelf: a Japanese card is named off Cardmarket's product list or its species. Falls back to the printed name where neither names the card." }
         localName: { type: [string, "null"], description: "What the card itself prints, where `name` is a translation of it; null on English cards and where `name` is the printed one." }
         setName: { type: string }
         image: { type: [string, "null"] }
@@ -573,7 +573,7 @@ components:
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
-        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null], description: "The printing's language; null reads as English." }
+        language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, null], description: "The printing's language; null reads as English." }
         purchasePrice: { type: [number, "null"] }
         purchaseDate: { type: [string, "null"], format: date }
         notes: { type: [string, "null"] }
@@ -930,7 +930,7 @@ paths:
         - { name: type, in: query, schema: { type: string, maxLength: 100 }, description: "An energy type, whole, as the catalogue names it; case does not matter. Repeat it for several: any of them counts. At most 50." }
         - { name: condition, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's condition, whole, as written on it; case does not matter. Repeat it for several: any of them counts. A copy with no condition matches none. At most 50." }
         - { name: finish, in: query, schema: { $ref: "#/components/schemas/Finish" }, description: "A copy's finish. Repeat it for several: any of them counts. A copy with no finish matches none. A value outside the list is a 400. At most 50." }
-        - { name: language, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's language code (`en`, `ja`, `zh-tw`); case does not matter. Repeat it for several: any of them counts. A copy with no language is English and matches `en`. At most 50." }
+        - { name: language, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's language code (`en`, `ja`, `de`); case does not matter. Repeat it for several: any of them counts. A copy with no language is English and matches `en`. At most 50." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }
@@ -1027,7 +1027,7 @@ paths:
       summary: One card, its printings and its price
       parameters:
         - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
-        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja, zh-tw, zh-cn, ko] }, description: "Which catalogue holds this id; left out, English. A Japanese id is a 404 in the English catalogue and the other way round. `languages` comes back empty for one of the four: the Western catalogues share the English ids, so a copy of it can only be its own language." }
+        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja] }, description: "Which catalogue holds this id; left out, English. A Japanese id is a 404 in the English catalogue and the other way round. `languages` comes back empty for a Japanese one: the Western catalogues share the English ids, so a copy of it can only be its own language." }
       responses:
         "200":
           description: The card.
@@ -1308,7 +1308,7 @@ paths:
       operationId: listSets
       summary: Every set, with how much of each the caller holds
       parameters:
-        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja, zh-tw, zh-cn, ko] }, description: "That language's own catalogue (TCGdex); left out, English. Sets and cards there have their own ids and names." }
+        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja] }, description: "That language's own catalogue (TCGdex); left out, English. Sets and cards there have their own ids and names." }
       responses:
         "200":
           description: The sets.
@@ -1337,7 +1337,7 @@ paths:
       operationId: getSet
       summary: One whole set, a page at a time
       parameters:
-        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja, zh-tw, zh-cn, ko] }, description: "That language's own catalogue (TCGdex); left out, English." }
+        - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja] }, description: "That language's own catalogue (TCGdex); left out, English." }
         - { name: setId, in: path, required: true, schema: { type: string }, description: "pokemontcg.io's set id, e.g. `swsh3`." }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 250, default: 60 }, description: "Clamped to 250." }
@@ -1363,8 +1363,7 @@ paths:
                               The code printed in the corner of the set's cards: POR for Perfect Order,
                               BRS for Brilliant Stars. The same value a collection card's `setAbbr`
                               carries. Null where the catalogue publishes none, which today is every
-                              Japanese, Chinese and Korean set. Only on this route: the set list does
-                              not carry it.
+                              Japanese set. Only on this route: the set list does not carry it.
                   cards: { type: array, items: { $ref: "#/components/schemas/BrowseCard" } }
                   page: { type: integer }
                   pageSize: { type: integer }
@@ -1390,7 +1389,7 @@ paths:
         `query` (two characters or more) is a free search.
 
         An English search reads the catalogue's nightly copy, rarity and types included;
-        the other languages ask the catalogue itself. A set the catalogue added today is
+        a Japanese search asks the catalogue itself. A set the catalogue added today is
         in the copy tomorrow.
       parameters:
         - { name: query, in: query, schema: { type: string, minLength: 2 } }

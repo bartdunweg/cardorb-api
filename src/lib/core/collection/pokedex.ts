@@ -21,7 +21,7 @@ import LOCAL_NAMES from "../species-names.generated.json";
 import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 
 /** One row of the generated table: a species' name in each catalogue that is not English. */
-type LocalNames = { ja?: string; ko?: string; zhHant?: string; zhHans?: string };
+type LocalNames = { ja?: string };
 import SPECIES from "../pokedex.generated.json";
 
 /**
@@ -51,8 +51,8 @@ const BY_LENGTH = SPECIES.map((name, i) => ({ id: i + 1, name, key: normalise(na
  * The same question in a language that is not written in this alphabet.
  *
  * `normalise` keeps `[a-z0-9]` and nothing else, which is right for the Latin catalogues and
- * empties a Japanese name completely — so every card off the Japanese, Korean and Chinese
- * shelves landed in no Pokédex slot at all. This keeps any script's letters and digits and drops
+ * empties a Japanese name completely, so every card off the Japanese shelf landed in no Pokédex
+ * slot at all. This keeps any script's letters and digits and drops
  * only what separates them, so ピカチュウex reduces to ピカチュウex and still contains ピカチュウ.
  *
  * NFKC first: a card prints its suffix full-width often enough (ｅｘ), and without folding that
@@ -68,9 +68,6 @@ function normaliseLocal(name: string) {
 /** Which column of the generated table a catalogue reads. */
 const COLUMN: Record<BrowseLanguage, keyof LocalNames> = {
   ja: "ja",
-  ko: "ko",
-  "zh-tw": "zhHant",
-  "zh-cn": "zhHans",
 };
 
 /** Per catalogue, its species longest name first, for the same longest-match rule. */

@@ -18,12 +18,12 @@ import type { CatalogueMatch } from "./ptcg-search";
  * The Japanese shelf hands out TCGdex's picture address for every card without
  * asking whether a file is behind it, and on 2026-09-11 there was none behind
  * 41 of 72 sampled cards across eight sets — whole sets at a time (SV5M, SM12a,
- * SM1M: 12 of 12), the odd card elsewhere (SV5a: 1 of 12). Traditional Chinese
- * was 44 of 60; English 1 of 96. A set page of grey boxes with names in them.
+ * SM1M: 12 of 12), the odd card elsewhere (SV5a: 1 of 12); English 1 of 96. A
+ * set page of grey boxes with names in them.
  *
  * Limitless has the Japanese scans, at an address artwork.ts builds from the
- * set's abbreviation and the number. Japanese only: Limitless carries no
- * Korean or Chinese cards, and those shelves keep what they had.
+ * set's abbreviation and the number. Japanese only: the English shelf keeps
+ * what it had.
  *
  * ── Why one probe per set and not one per card ─────────────────────────────
  *

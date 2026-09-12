@@ -24,11 +24,10 @@ const SRC =
  * PokéAPI's own language ids, read from its languages.csv rather than assumed.
  *
  * `ja-hrkt` (1) and not `ja` (11): the kanji column is the literary spelling, and a Pokémon card
- * prints the katakana one. Traditional and simplified Chinese are separate rows there and
- * separate catalogues at TCGdex, so they stay apart here too.
+ * prints the katakana one.
  */
 const ENGLISH = "9";
-const LOCALISED = { ja: "1", ko: "3", zhHant: "4", zhHans: "12" };
+const LOCALISED = { ja: "1" };
 
 /**
  * `src` is not optional here, and was missing: this wrote to lib/core, which does not exist, so
@@ -43,7 +42,7 @@ if (!res.ok) throw new Error(`PokéAPI CSV: ${res.status}`);
 
 /** id -> name, English only, in National Dex order. */
 const names = new Map();
-/** id -> { ja, ko, zhHant, zhHans }, same order, for the catalogues that are not English. */
+/** id -> { ja }, same order, for the Japanese catalogue. */
 const localised = new Map();
 const langOf = Object.fromEntries(Object.entries(LOCALISED).map(([k, v]) => [v, k]));
 for (const line of (await res.text()).trim().split("\n").slice(1)) {
@@ -72,7 +71,7 @@ if (missing) throw new Error(`${missing} species have no English name`);
 writeFileSync(out, `${JSON.stringify(list, null, 1)}\n`);
 
 /**
- * The same thousand and twenty-five, in the languages whose catalogues Cardorb reads.
+ * The same thousand and twenty-five, in Japanese, the other language whose catalogue Cardorb reads.
  *
  * A card from the Japanese shelf is named in Japanese, so the English list cannot place it in a
  * Pokédex slot and it landed in none. These are the names to match it against instead.
@@ -85,4 +84,4 @@ const thin = localisedList.filter((r) => !r.ja).length;
 if (thin) throw new Error(`${thin} species have no Japanese name`);
 
 writeFileSync(outLocalised, `${JSON.stringify(localisedList, null, 1)}\n`);
-console.log(`${list.length} Pokémon written, with their ja, ko and zh names beside them`);
+console.log(`${list.length} Pokémon written, with their Japanese names beside them`);

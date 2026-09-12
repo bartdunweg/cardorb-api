@@ -128,15 +128,9 @@ describe("validateCardDraft", () => {
 });
 
 describe("rowFromDraft", () => {
-  it("keeps a Chinese shelf's own language, which used to fall to null", () => {
-    /* A card added from the traditional-Chinese shelf arrived as `zh-tw`, and a list that knew
-       only `zh` stored no language at all — after which the card was looked up as an English
-       one by its set's name. */
-    expect(rowFromDraft(ok({ name: "妙蛙種子", set: "S7R", language: "zh-tw" })).language).toBe(
-      "zh-tw",
-    );
-    expect(rowFromDraft(ok({ name: "妙蛙种子", set: "CS3aC", language: "zh-cn" })).language).toBe(
-      "zh-cn",
+  it("keeps a language it knows and drops one it does not", () => {
+    expect(rowFromDraft(ok({ name: "ピカチュウ", set: "SV1a", language: "ja" })).language).toBe(
+      "ja",
     );
     expect(rowFromDraft(ok({ name: "Pikachu", set: "Base", language: "zz" })).language).toBeNull();
   });

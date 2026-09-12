@@ -54,7 +54,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
 
   const language = url.searchParams.get("language");
   if (language && language !== "en" && !isBrowseLanguage(language))
-    return apiError(400, "language must be en, ja, zh-tw, zh-cn or ko.", undefined, {
+    return apiError(400, "language must be en or ja.", undefined, {
       headers: readHeaders(req),
     });
 
@@ -115,8 +115,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      rather than as a checklist. Only the page's cards, from TCGplayer's tcgcsv groups, each cached
      a day: the market every other price in the app is in since 2026-09-12. Keyed by the TCGdex
      id, which every shelf's cards carry; the fallback is for a card that came without one. The
-     shelf is a fact about the page, not the id: SM1S-001 is a Japanese card and a different
-     Korean one, and a Korean page carries no price because TCGplayer does not sell the card. */
+     shelf is a fact about the page, not the id: a Japanese page prices from the Japanese shelf. */
   const priceKey = (c: (typeof shown)[number]) => c.tcgId ?? c.id;
   const prices = await tcgplayerPricesFor(
     shown.map(priceKey),

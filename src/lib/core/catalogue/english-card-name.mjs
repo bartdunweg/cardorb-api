@@ -1,7 +1,7 @@
 /**
  * The English name of a card from a catalogue that has none.
  *
- * TCGdex names a Japanese, Korean or Chinese card in its own script and nowhere else: there is no
+ * TCGdex names a Japanese card in its own script and nowhere else: there is no
  * English catalogue holding リザードンex, because the English game never printed that card. The
  * app is English throughout (Bart's call, 2026-09-11), so the name is worked out from two places
  * that do write it in English, in this order:
@@ -10,15 +10,14 @@
  *      cards to a European market and names every product in English, with the attacks in
  *      square brackets to tell one Pikachu from another: "Oddish [Razor Leaf]", "Tatsugiri
  *      [Mise en Place | Curl Up]". The card's name is what stands before the bracket. Covers the
- *      cards Cardmarket has a product for — 10,350 of 12,781 Japanese cards on 2026-09-11, all
- *      239 Korean, about half the Chinese.
+ *      cards Cardmarket has a product for: 10,350 of 12,781 Japanese cards on 2026-09-11.
  *   2. The card's own TCGdex record, for a Pokémon: its national Dex number(s) name the species
  *      in English (pokedex.generated.json), and the Latin letters at the end of the printed name
  *      are the suffix as printed — ex, EX, GX, V, VMAX. A tag team joins its species with " & ".
- *   3. The printed name itself, where the record carries no Dex number (every Traditional Chinese
- *      card, 2026-09-11): the species whose name in that script sits inside the card's name,
- *      longest first, as the Pokédex files a card (pokedex.ts) — 童偶熊 is Stufful because
- *      species-names.generated.json says so. Each half of a tag team on its own.
+ *   3. The printed name itself, where the record carries no Dex number: the species whose name in
+ *      that script sits inside the card's name, longest first, as the Pokédex files a card
+ *      (pokedex.ts). ヌイコグマ is Stufful because species-names.generated.json says so. Each half
+ *      of a tag team on its own.
  *
  * A trainer or an energy Cardmarket does not sell keeps its own name: nothing here can translate
  * one, and a guess would be a second identity to keep straight.
@@ -63,8 +62,8 @@ export function englishFromProduct(productName) {
 
 /**
  * The species suffix as the card prints it: the Latin letters, digits, dots and spaces that end
- * a Japanese or Chinese name, which are the same on every printing of the game — "ex", "GX",
- * "VMAX", "VSTAR", "BREAK", "LV.X". Empty where the name is all script.
+ * a Japanese name, which are the same on every printing of the game: "ex", "GX", "VMAX", "VSTAR",
+ * "BREAK", "LV.X". Empty where the name is all script.
  */
 export function printedSuffix(localName) {
   const m = /[A-Za-z][A-Za-z0-9.\- ]*$/.exec(String(localName ?? "").trim());
@@ -84,7 +83,7 @@ export function englishFromRecord(record, species) {
 }
 
 /** Which column of species-names.generated.json a catalogue reads. */
-const COLUMN = { ja: "ja", ko: "ko", "zh-tw": "zhHant", "zh-cn": "zhHans" };
+const COLUMN = { ja: "ja" };
 
 const byLength = new Map();
 /** Every species with a name in that script, longest first, so the longest match is the first hit. */

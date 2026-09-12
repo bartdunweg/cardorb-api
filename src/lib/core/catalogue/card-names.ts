@@ -1,14 +1,11 @@
 import type { BrowseLanguage } from "./tcgdex-browse";
 import JA from "../card-names.ja.generated.json";
-import KO from "../card-names.ko.generated.json";
-import ZH_CN from "../card-names.zh-cn.generated.json";
-import ZH_TW from "../card-names.zh-tw.generated.json";
 
 /**
  * The English name of a card from a catalogue that has none, off the committed maps
  * scripts/language-card-names.mjs writes: Cardmarket's product name first, the species by Dex
- * number second (english-card-name.mjs says how). One map per catalogue, because the ids collide
- * between them — SM1S-001 is a Japanese card and a different Korean one.
+ * number second (english-card-name.mjs says how). One map per catalogue, keyed by that
+ * catalogue's own card ids.
  *
  * Null where neither source names the card: a trainer or an energy Cardmarket does not sell, or
  * a card added to TCGdex since the maps were last written. The caller shows the card's own name
@@ -16,9 +13,6 @@ import ZH_TW from "../card-names.zh-tw.generated.json";
  */
 const NAMES: Record<BrowseLanguage, Record<string, string | null>> = {
   ja: JA,
-  ko: KO,
-  "zh-cn": ZH_CN,
-  "zh-tw": ZH_TW,
 };
 
 export function englishCardName(lang: BrowseLanguage, id: string): string | null {

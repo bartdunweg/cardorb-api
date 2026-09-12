@@ -1,5 +1,5 @@
 /**
- * Which sets of the Japanese, Korean and Chinese shelves TCGdex has cards for.
+ * Which sets of the Japanese shelf TCGdex has cards for.
  *
  * The shelf lists every set TCGdex knows, and a set with a count and no card behind it reads as
  * "No cards in the catalogue yet" rather than as a set to open (tcgdex-browse.ts, recordedSets).
@@ -7,7 +7,7 @@
  * here and read on the page. It was read off the Cardmarket id maps until 2026-09-12, which listed
  * every card; those went with Cardmarket, and this reads the same fact from TCGdex directly.
  *
- * Run it when a set is added to one of those shelves.
+ * Run it when a set is added to that shelf.
  *
  *   node scripts/recorded-sets.mjs [--dry]
  */
@@ -22,7 +22,7 @@ const OUT = join(
   "core",
   "recorded-sets.generated.json",
 );
-const LANGUAGES = ["ja", "ko", "zh-cn", "zh-tw"];
+const LANGUAGES = ["ja"];
 const DRY = process.argv.includes("--dry");
 
 async function fetchJson(url) {

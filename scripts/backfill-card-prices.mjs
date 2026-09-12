@@ -23,8 +23,7 @@
  *                    ("m5", "103/081") are TCGdex's Japanese id (M5-103), so
  *                    the join needs no catalogue lookup at all: the map in
  *                    tcgplayer-ids.ja.generated.json is built from TCGplayer's
- *                    own group and product lists. Korean and Chinese cards
- *                    TCGplayer does not sell; their lines start with the cron.
+ *                    own group and product lists.
  *
  * A card is joined to TCGplayer through TCGdex, which lists the productId under
  * pricing.tcgplayer; the join is kept in tcgplayer-ids.generated.json so the
