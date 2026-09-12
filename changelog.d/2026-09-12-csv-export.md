@@ -1,0 +1,1 @@
+- The collection can be exported as a CSV in the shape Dex writes (semicolons, the same columns), collection and wishlist in one file, with the condition, language and acquired date after Dex's columns; GET /v1/collection/export.

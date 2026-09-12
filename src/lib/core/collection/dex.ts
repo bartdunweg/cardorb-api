@@ -1,4 +1,4 @@
-import type { CollectionRow } from "./collection-row";
+import { type CollectionRow, type Language, isLanguage } from "./collection-row";
 import {
   NOT_OWNED,
   cardNumber,
@@ -60,7 +60,37 @@ const columns = (header: string[]) => {
     rarity: at("rarity"),
     quantity: at("quantity"),
     notes: norm.map((h, i) => (h.startsWith("note") ? i : -1)).filter((i) => i !== -1),
+    // The four this app writes after Dex's own columns (dex-export.ts). Absent
+    // from a file Dex wrote, and then every one of them reads as unknown.
+    condition: at("condition"),
+    language: at("language"),
+    acquired: at("acquired"),
+    purchase: at("purchase price"),
   };
+};
+
+/** A day, as this app's export writes it (2023-09-15) or as a spreadsheet does; null for anything else. */
+const acquiredFrom = (raw: string): string | null => {
+  if (!raw.trim()) return null;
+  const parsed = new Date(raw.trim());
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
+/** A language code this app knows, or null: a word it does not know is not a guess. */
+const language = (raw: string): Language | null => {
+  const code = raw.trim().toLowerCase();
+  return isLanguage(code) ? code : null;
+};
+
+/** "4,50" as this app's export and a Dutch spreadsheet write it, or "4.50"; null for anything else. */
+const priceFrom = (raw: string): number | null => {
+  const n = Number.parseFloat(
+    raw
+      .trim()
+      .replace(/[^\d,.-]/g, "")
+      .replace(",", "."),
+  );
+  return Number.isFinite(n) && n >= 0 ? n : null;
 };
 
 /**
@@ -136,21 +166,23 @@ export function dexRows(grid: string[][]): CsvResult {
       types: [],
       owned: !wanted,
       excluded: false,
-      // Dex exports no acquisition date. Left null so the column default —
-      // now() — applies, and the import says so.
-      acquiredAt: null,
+      // Dex exports no acquisition date, and null lets the column default,
+      // now(), apply, which the import says out loud. This app's own export
+      // writes the day after Dex's columns, and that comes back as it was.
+      acquiredAt: acquiredFrom(at(r, c.acquired)),
       finish: finishFrom(at(r, c.variant)),
       // Dex names the foil pattern in the same column: "Cosmos Holo" is a holo
       // whose foil is cosmos, and both halves of that are worth keeping.
       foilPattern: patternFrom(at(r, c.variant)),
       // A wishlist row is a card you want one of, whatever Dex counted.
       quantity: wanted ? 1 : Math.max(1, quantity ?? 1),
-      condition: null,
+      condition: at(r, c.condition) || null,
       grade: null,
-      language: null,
+      language: language(at(r, c.language)),
       // Dex's Price is what the card is worth today, not what anybody paid for
-      // it. This app fetches the first and would be lying about the second.
-      purchasePrice: null,
+      // it. This app fetches the first and would be lying about the second;
+      // what was paid is its own column, written by this app's export alone.
+      purchasePrice: c.purchase < 0 ? null : priceFrom(at(r, c.purchase)),
       purchaseDate: null,
       notes: notes || null,
       isFavorite: false,
