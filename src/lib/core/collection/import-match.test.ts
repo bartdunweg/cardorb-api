@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { importKey, splitExisting } from "./import-match";
+import { importKey, importKeys, splitExisting } from "./import-match";
 import type { CollectionRow } from "./collection-row";
 
 const card = (over: Partial<CollectionRow>): CollectionRow => ({
@@ -99,5 +99,51 @@ describe("splitExisting", () => {
 
   it("calls everything new when the collection is empty", () => {
     expect(splitExisting([card({}), card({ name: "Umbreon" })], new Set()).existing).toEqual([]);
+  });
+});
+
+/**
+ * The catalogue id, which is the exact answer where both sides have one.
+ *
+ * Dex writes it in its sixth column and the rows here have carried one since the catalogue
+ * backfill, so on a real file this is how most of it is recognised: no set name, no spelling,
+ * no denominator.
+ */
+describe("importKeys", () => {
+  it("offers the id and the name, and only the name where there is no id", () => {
+    expect(
+      importKeys({ name: "Espeon", setName: "Dark Explorers", number: "48", tcgId: "bw5-48" }),
+    ).toEqual([
+      "id bw5-48",
+      importKey({ name: "Espeon", setName: "Dark Explorers", number: "48" }),
+    ]);
+    expect(importKeys({ name: "Espeon", setName: "Dark Explorers", number: "48" })).toEqual([
+      importKey({ name: "Espeon", setName: "Dark Explorers", number: "48" }),
+    ]);
+  });
+
+  it("recognises a card through a set name neither side agrees on", () => {
+    // The Notion rows call Base Set "Set 1 Unlimited"; the file calls it what the card says.
+    // Nothing folds these names here, and the id is enough on its own.
+    const held = new Set(
+      importKeys({ name: "Pikachu", setName: "Set 1 Unlimited", number: "58", tcgId: "base1-58" }),
+    );
+    const { existing, fresh } = splitExisting(
+      [
+        card({ name: "Pikachu", setName: "Base Set", number: "58/102", tcgId: "base1-58" }),
+        card({ name: "Pikachu", setName: "Base Set", number: "58", tcgId: "base2-58" }),
+      ],
+      held,
+    );
+
+    expect(existing.map((r) => r.tcgId)).toEqual(["base1-58"]);
+    expect(fresh.map((r) => r.tcgId)).toEqual(["base2-58"]);
+  });
+
+  it("still meets on the name where one side has no id", () => {
+    const held = new Set(importKeys({ name: "Espeon", setName: "Dark Explorers", number: "48" }));
+    const { existing } = splitExisting([card({ tcgId: "bw5-48" })], held);
+
+    expect(existing).toHaveLength(1);
   });
 });

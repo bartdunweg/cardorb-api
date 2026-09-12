@@ -144,7 +144,8 @@ export async function POST(req: Request) {
     ({ keys: held, titleOf } = await heldKeys(
       db,
       viewer.userId,
-      rows.map((r) => r.setName),
+      // Only the rows with no catalogue id: the rest are recognised by it. See heldKeys().
+      rows.filter((r) => !r.tcgId).map((r) => r.setName),
     ));
   } catch (err) {
     console.error("Reading the collection before an import failed:", err);

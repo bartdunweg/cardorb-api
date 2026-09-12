@@ -117,6 +117,16 @@ describe("dexCsv", () => {
       ["Umbreon", false, 1, "normal", null, null, null, null],
     ]);
   });
+
+  it("carries the catalogue id out and back in, which is what a row is recognised by", () => {
+    const grid = parseCsv(dexCsv([item({ tcgId: "bw5-48" })]));
+    expect(dexRows(grid).rows[0]?.tcgId).toBe("bw5-48");
+  });
+
+  it("reads no id where the column holds something that is not one", () => {
+    const grid = parseCsv(dexCsv([item({ tcgId: null })]));
+    expect(dexRows(grid).rows[0]?.tcgId).toBeNull();
+  });
 });
 
 describe("editionFrom", () => {

@@ -25,6 +25,9 @@ if the two have drifted apart.
 - Which price series a copy reads is one function, copyPriceOf(), instead of the four copies of that sentence in cards.ts, items.ts and twice in snapshot.ts.
 - The card facts say whether a stamped first run of the card exists (TCGdex knows), so a form can stop asking which run a copy is from on a card that was printed once.
 
+- A CSV row is recognised by the catalogue id where it has one: Dex writes it in its sixth column and this app read it as nothing, so a card whose set the collection filed under another name was matched by name and number instead of exactly.
+- The first import preview of the day no longer waits on a hundred set reads: only the names of rows with no catalogue id are resolved, which on a Dex export is usually none.
+
 - The CSV import counts a card as already held when the collection filed its set under another name (Notion wrote "Set 1 Unlimited" for Base Set): both sides are keyed through the set's official name.
 
 - The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
