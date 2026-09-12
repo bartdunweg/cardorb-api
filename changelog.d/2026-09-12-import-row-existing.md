@@ -1,0 +1,1 @@
+- A CSV preview now says, per row, whether it names a card you already hold, not only how many of them there are. An import screen can point at the rows it means instead of leaving you to find them.

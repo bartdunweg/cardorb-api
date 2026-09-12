@@ -9,6 +9,7 @@ import { clientFor } from "@/lib/storage/collection";
 import { cardsTag } from "@/lib/core/collection/collection-row";
 import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/collection/csv";
 import { looksLikeDex, dexRows } from "@/lib/core/collection/dex";
+import { importKeys } from "@/lib/core/collection/import-match";
 import { commit, heldKeys, preview } from "@/lib/storage/imports";
 import type { TitleOf } from "@/lib/core/collection/import-match";
 
@@ -184,7 +185,7 @@ export async function POST(req: Request) {
 
   if (!doCommit) {
     return NextResponse.json({
-      ...preview(rows, skipped, held, titleOf),
+      ...preview(rows, skipped, held, titleOf, excluded),
       header,
       guessed,
       source,
@@ -208,6 +209,17 @@ export async function POST(req: Request) {
         finish: row.finish,
         foilPattern: row.foilPattern,
         edition: row.edition,
+        /*
+         * Whether this row names a card the collection already holds, the same
+         * question `existing` answers in one number. Per row as well, because
+         * the number alone tells somebody that 93 of their rows are already
+         * here and leaves them no way to find which 93: a screen that lets rows
+         * be struck off needs to say which ones it is talking about.
+         *
+         * It over-matches on purpose, the way the count does: a card held in
+         * any printing answers for the one being imported. See import-match.ts.
+         */
+        existing: importKeys(row, titleOf).some((k) => held.has(k)),
       })),
     });
   }

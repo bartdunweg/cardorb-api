@@ -175,17 +175,21 @@ export function preview(
   skipped: SkippedRow[],
   held: ReadonlySet<string>,
   titleOf?: TitleOf,
+  /** Rows the caller struck off by hand. Already gone from `rows`; counted here so the answer can say so. */
+  excluded = 0,
 ): ImportOutcome {
   const { existing } = splitExisting(rows, held, titleOf);
   return {
-    seen: rows.length + skipped.length,
+    // The file, not what is left of it after the caller's ticking, exactly as
+    // the commit counts it. A dry run that counted differently from the write
+    // it is a dry run of would be the one thing this endpoint's shape exists to
+    // prevent.
+    seen: rows.length + skipped.length + excluded,
     added: 0,
     skipped: skipped.length,
     notOwned: skipped.filter((s) => s.why === NOT_OWNED).length,
     existing: existing.length,
-    // A dry run strikes nothing off: the caller has not been shown the rows
-    // yet, so there is nothing for them to have said no to.
-    excluded: 0,
+    excluded,
     /*
      * Twenty rows, not five. Five was a glimpse: it showed the first cards of a
      * 2,000-row file and left the reader trusting the count. Twenty is what
