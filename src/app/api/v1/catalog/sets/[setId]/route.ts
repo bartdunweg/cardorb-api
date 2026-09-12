@@ -125,7 +125,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
 
   return NextResponse.json(
     {
-      set,
+      /* `abbreviation` always, null where unknown, so a client can print the code without
+         telling a missing field from an empty one. Both reads fill it from the set's own TCGdex
+         record, the source the collection's `setAbbr` is copied from too, so a set page and a
+         collection tile print the same code. */
+      set: { ...set, abbreviation: set.abbreviation ?? null },
       cards: shown.map((c) => ({
         ...c,
         price: prices.get(priceKey(c))?.price ?? null,

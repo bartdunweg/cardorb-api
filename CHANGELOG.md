@@ -4,6 +4,12 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-13
+
+- `GET /v1/cards?counts=1` says how many cards each filter option would leave, for a filter sheet that writes the number beside the option. `counts` has one tally per set (by title), rarity, generation and type, each over the cards the other filters leave with that key's own choice set aside, plus how many would remain with `fullArt=1` or `duplicates=1` added. Without `counts=1` the answer is unchanged.
+
+- `GET /v1/catalog/sets/{setId}` always answers `set.abbreviation`: the code printed in the corner of the set's cards (POR for Perfect Order), the same value a collection card's `setAbbr` carries, or null where the catalogue has none. English sets already sent it; other languages now send null instead of leaving it out. The set list does not carry it.
+
 ## 2026-09-12
 
 - A set no longer loses its cards, its prices or its pictures for a day because the catalogue had one bad second. An answer that contradicts itself, or a picture host that is briefly unreachable, is asked again instead of being written down as the truth.
@@ -34,6 +40,8 @@ if the two have drifted apart.
 - The Cardmarket id maps, the product links, their scripts and the weekly Cardmarket audit are deleted: nothing has read a Cardmarket price since #362. The Japanese, Korean and Chinese shelves read which sets have cards from `recorded-sets.generated.json`, written by `scripts/recorded-sets.mjs` from TCGdex; it was read off those maps, and the sets are the same (116, 3, 8 and 83). `snapshot-collection-value.mjs`, which valued a collection from archived Cardmarket guides, goes with them. The `null` Cardmarket fields the API still sends (`priceHolo`, `priceShadowless`, `cmId`, `cmUrl`, `market`) are next.
 
 - `GET /v1/cards?duplicates=1` answers only the owned printings held more than once, the copies to trade or sell. A printing is the card, its finish and its run: a holo and a reverse holo of one card are two printings, and condition, grade and language do not split one. Quantities add up across rows.
+
+- `GET /v1/cards` and `GET /v1/public/{username}/cards` take several values for a filter: repeat `set`, `rarity`, `gen` or `type` (`?rarity=Rare&rarity=Rare%20Holo`) and a card matching any of them counts, while different keys still narrow together. One value works as it always has. At most 50 values per key; `number` stays one.
 
 - Search results, the catalogue the browser searches in and a set's cards from the copy now list cards the way a binder holds them: XY2 before XY10, 20 before 100, and a set's Trainer Gallery after its main run instead of in the middle of it. They used to be sorted as text. The collection has sorted this way since #356; the catalogue now follows the same rule, worked out in the database so paging through a search stays in one order.
 

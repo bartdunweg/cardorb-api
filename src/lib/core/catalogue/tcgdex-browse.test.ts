@@ -242,6 +242,8 @@ describe("tcgdex-browse", () => {
     stub();
     const got = await setIn("ja", "M4");
     expect(got?.set.releaseDate).toBe("2026/03/13");
+    // The record carries no code, as no Japanese record did on 2026-09-13: null, not missing.
+    expect(got?.set.abbreviation).toBeNull();
     // Named in English off the committed map, with the printed name beside it.
     expect(got?.cards[0]).toEqual({
       id: "M4-001",
@@ -310,6 +312,7 @@ describe("tcgdex-browse", () => {
         releaseDate: "2023/09/22",
         total: 3,
         printedTotal: 2,
+        abbreviation: "MEW",
       });
       expect(got?.cards.map((c) => c.number)).toEqual(["002", "010", "TG01"]);
       expect(got?.cards[1]).toEqual({

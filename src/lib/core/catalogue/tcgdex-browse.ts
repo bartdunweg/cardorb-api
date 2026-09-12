@@ -25,9 +25,10 @@ export type CatalogueSet = {
   /**
    * The abbreviation printed on the cards ("MEW"), where the catalogue publishes one.
    *
-   * Optional because only the English set read fills it: it is what the API hands out as a
-   * set's `abbreviation`, and what the Limitless scan guess is built from, and neither
-   * question is ever asked of a Japanese shelf.
+   * Optional because only a set's own record carries it: englishSet() and setIn() fill it,
+   * and a set page always answers it (null where the record has none, which today is every
+   * other language's). The shelves leave it out: TCGdex's GraphQL set index has no such field,
+   * and a record per set would be 218 requests for a tile that does not print it.
    */
   abbreviation?: string | null;
   /** The set's name in its own language where `name` is a translation (a Japanese set); null for English. */
@@ -297,6 +298,9 @@ export async function setIn(
     releaseDate: detail.releaseDate ? detail.releaseDate.replaceAll("-", "/") : null,
     total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
     printedTotal: detail.cardCount?.official ?? null,
+    // The same read as the English set's, off the same record: null on every Japanese, Chinese
+    // and Korean set TCGdex answered on 2026-09-13, and the code where it ever carries one.
+    abbreviation: detail.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null,
     cardsRecorded: (detail.cards ?? []).length > 0,
     logo: detail.logo ? `${detail.logo}.png` : null,
     symbol: detail.symbol ? `${detail.symbol}.png` : null,
