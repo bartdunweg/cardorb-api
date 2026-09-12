@@ -63,6 +63,8 @@ export type CardItem = {
   priceHolo: Price | null;
   /** The stamped first run's price, where anything prices that run apart. See OwnedCard.priceFirstEd. */
   priceFirstEd?: Price | null;
+  /** The Shadowless run's price, where Cardmarket prices that run apart. See OwnedCard.priceShadowless. */
+  priceShadowless?: Price | null;
 };
 
 /** One item per copy, in the assembly's order: set by set, number by number. */
@@ -158,6 +160,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   price: card.price,
   priceHolo: card.priceHolo,
   priceFirstEd: card.priceFirstEd ?? null,
+  priceShadowless: card.priceShadowless ?? null,
 });
 
 export type ItemFilter = {

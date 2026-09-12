@@ -228,6 +228,8 @@ export type OwnedCard = {
    * price-basis.mjs.
    */
   priceFirstEd?: Price | null;
+  /** The Shadowless run's price, where Cardmarket prices that run apart. See CardFacts.priceShadowless. */
+  priceShadowless?: Price | null;
   /**
    * TCGdex's id for the printing this row matched ("sv03-125"), or null when
    * nothing matched. It is the only stable, URL-safe handle a card has, because `key`
@@ -456,6 +458,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
       price: null,
       priceHolo: null,
       priceFirstEd: null,
+      priceShadowless: null,
       // Eleven keys written as null rather than omitted, and that is 472.3 kB
       // of the 1,050 kB RSC flight payload on a 1,635-card profile — 45% of it,
       // measured. Omitting them instead is the obvious win and was attempted;
@@ -745,6 +748,12 @@ export type CardFacts = {
    */
   priceFirstEd?: Price | null;
   /**
+   * What the Shadowless run trades at, in euros, where Cardmarket files that run as a product of
+   * its own. Base Set is the one set it does, every card of it; null everywhere else, and a
+   * Shadowless copy of a card nobody prices apart falls back to the ordinary price.
+   */
+  priceShadowless?: Price | null;
+  /**
    * TCGdex's word for how rare this printing is, from a catalogue that is not
    * the English one — and null on every English card, always.
    *
@@ -828,6 +837,8 @@ function factsOfLanguageCard(
     usd: null,
     usdFirstEd: null,
     priceFirstEd: null,
+    // No Japanese, Korean or Chinese set had a run of its own, and Cardmarket files none apart.
+    priceShadowless: null,
     rarity: card.rarity,
     catalogue: card.catalogue,
   };
@@ -1015,6 +1026,7 @@ export async function resolveSetFacts(
       usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
       usdFirstEd: (prices && r.tcgId && fetched.get(r.tcgId)?.usdFirstEd) || null,
       priceHolo: holoOfId(r.tcgId),
+      priceShadowless: (prices && r.tcgId && fetched.get(r.tcgId)?.shadowless) || null,
       // Always null on this path. See CardFacts.rarity: the row's own column is
       // the one source for an English card's rarity and is to stay so.
       rarity: null,
@@ -1188,6 +1200,7 @@ export async function buildCollection(
           price: card?.price ?? null,
           priceHolo: card?.priceHolo ?? null,
           priceFirstEd: card?.priceFirstEd ?? null,
+          priceShadowless: card?.priceShadowless ?? null,
           // The catalogue's word where it has one, the row's where it does not.
           // Only a card from its own catalogue ever carries the first — the
           // shelves those are added from publish no rarity, so a row written from
@@ -1279,6 +1292,7 @@ export async function buildCollection(
           price: p.price,
           priceHolo: p.priceHolo,
           priceFirstEd: p.priceFirstEd,
+          priceShadowless: p.priceShadowless,
           tcgId: p.tcgId,
           variants: [variant],
           owned: p.owned,

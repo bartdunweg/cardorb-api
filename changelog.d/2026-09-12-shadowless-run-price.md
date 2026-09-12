@@ -1,0 +1,2 @@
+- A Shadowless copy is priced as the Shadowless product Cardmarket files it as, on the card, in the collection's total and on the value chart, where it used to read the unlimited printing's figure (base1-4 Charizard: €3,567 against €583).
+- Added `scripts/cardmarket-ids-editions.mjs`, which reads which product each of a card's print runs is from TCGdex's `variants_detailed` and commits the map. Of 23,548 English cards, the 102 of Base Set are the ones Cardmarket prices apart.

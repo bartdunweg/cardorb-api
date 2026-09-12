@@ -89,7 +89,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { priceOf, holoPriceOf, shownPrice, isReverseFinish } from "../src/lib/core/price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice, copyPriceOf } from "../src/lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 /**
@@ -102,6 +102,8 @@ const ROOT = new URL("..", import.meta.url).pathname;
  * scripts/backfill-card-prices.mjs had it right, which is how the other three were missed.
  */
 const IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.generated.json");
+/** Which product a card's print runs are filed as: scripts/cardmarket-ids-editions.mjs writes it. */
+const RUN_IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.editions.generated.json");
 
 // .env.local, read by hand. The script is run with plain node, which does not
 // load it, and adding a dotenv dependency for a handful of lines would be the
@@ -281,7 +283,7 @@ async function fromPostgres(db) {
     const { data, error, count } = await db
       .from("cards")
       .select(
-        "set_name,number,name,owned,quantity,acquired_at,finish",
+        "set_name,number,name,owned,quantity,acquired_at,finish,edition",
         page === 0 ? { count: "exact" } : {},
       )
       .eq("user_id", userId)
@@ -307,6 +309,7 @@ async function fromPostgres(db) {
       // Which printing this copy is, so it can be priced as one. Null reads as
       // normal, exactly as variantPrice() treats it on the page.
       finish: row.finish ?? null,
+      edition: row.edition ?? null,
       // Defaulted the way lib/storage/postgres.ts defaults it, and floored at
       // zero so a bad row cannot subtract from the total.
       quantity: Math.max(0, row.quantity ?? 1),
@@ -369,6 +372,9 @@ const sortKeys = (o) =>
  */
 function valueAt(guide, cards, ids, acquisitions) {
   const byProduct = new Map(guide.priceGuides.map((r) => [r.idProduct, r]));
+  // Committed, not asked for: the runs are written by scripts/cardmarket-ids-editions.mjs, and a
+  // day this map does not know a card is a day that card reads its ordinary price, as before.
+  const runIds = existsSync(RUN_IDS) ? JSON.parse(readFileSync(RUN_IDS, "utf8")) : {};
   const on = guide.createdAt.slice(0, 10);
   let value = 0;
   let priced = 0;
@@ -385,6 +391,11 @@ function valueAt(guide, cards, ids, acquisitions) {
     held += copies;
 
     const row = byProduct.get(ids[tcgId]);
+    // The Shadowless run is a product of its own in this same guide, so history reads it where
+    // the page does: base1-4 Charizard is €3,567 as Shadowless against €583 as the ordinary
+    // printing, and a chart that valued it at the second was wrong by six times.
+    const runProduct = runIds[tcgId]?.shadowless;
+    const runRow = runProduct == null ? undefined : byProduct.get(runProduct);
     // Both printings, the same pair lib/core/collection/snapshot.ts resolves for the cron.
     // The two have to agree: this fills in history and that adds today's point,
     // onto one chart.
@@ -400,8 +411,15 @@ function valueAt(guide, cards, ids, acquisitions) {
       // Which price series this copy reads, from price-basis.mjs, which is the only
       // place that rule is written. This line used to test `=== "reverse-holo"` by hand
       // and so priced a Poké Ball or Master Ball copy off the plain series while every
-      // other valuation path used the foil one.
-      const each = shownPrice((isReverseFinish(r.finish) && foil) || normal);
+      // other valuation path used the foil one; it wrote the rule out a second time after
+      // that, and the run of a copy was the fact it did not know. copyPriceOf() is the rule.
+      const each = shownPrice(
+        copyPriceOf(r, {
+          price: normal || null,
+          priceHolo: foil || null,
+          priceShadowless: runRow ? priceOf(runRow) : null,
+        }),
+      );
       if (each == null) continue;
       value += each * r.quantity;
       any = true;
