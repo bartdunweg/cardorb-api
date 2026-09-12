@@ -172,6 +172,16 @@ components:
         rarities: { type: array, items: { type: string }, description: "A to Z." }
         gens: { type: array, items: { type: string }, description: "In the collection's own order, which is the catalogue's series order." }
         types: { type: array, items: { type: string }, description: "A to Z." }
+    CardFacets:
+      description: The owner's menus, which add what a copy carries and a public item does not.
+      allOf:
+        - { $ref: "#/components/schemas/Facets" }
+        - type: object
+          required: [conditions, finishes, languages]
+          properties:
+            conditions: { type: array, items: { type: string }, description: "Mint, Near Mint, Excellent, Good, Light Played, Played, Poor, then any other value A to Z. Each named once, in its first spelling." }
+            finishes: { type: array, items: { $ref: "#/components/schemas/Finish" }, description: "normal, holo, reverse-holo, poke-ball, master-ball, those present." }
+            languages: { type: array, items: { type: string }, description: "Lower-case codes, `en` first, then A to Z. A copy with no language counts as `en`." }
     Error:
       type: object
       description: The one shape every failure takes.
@@ -918,6 +928,9 @@ paths:
         - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole, as printed; with `set` it names one card's every row." }
         - { name: gen, in: query, schema: { type: string, maxLength: 100 }, description: "A generation, whole, as the catalogue names its series; case does not matter. Repeat it for several: any of them counts. At most 50." }
         - { name: type, in: query, schema: { type: string, maxLength: 100 }, description: "An energy type, whole, as the catalogue names it; case does not matter. Repeat it for several: any of them counts. At most 50." }
+        - { name: condition, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's condition, whole, as written on it; case does not matter. Repeat it for several: any of them counts. A copy with no condition matches none. At most 50." }
+        - { name: finish, in: query, schema: { $ref: "#/components/schemas/Finish" }, description: "A copy's finish. Repeat it for several: any of them counts. A copy with no finish matches none. A value outside the list is a 400. At most 50." }
+        - { name: language, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's language code (`en`, `ja`, `zh-tw`); case does not matter. Repeat it for several: any of them counts. A copy with no language is English and matches `en`. At most 50." }
         - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }
@@ -939,17 +952,20 @@ paths:
                   value: { type: number, description: "What the whole filtered list is worth, in euros to the cent: not the page. An owned copy counts as many times as held, a wish once." }
                   unpriced: { type: integer, description: "Copies in the filtered list no price was found for." }
                   facets:
-                    allOf: [{ $ref: "#/components/schemas/Facets" }]
+                    allOf: [{ $ref: "#/components/schemas/CardFacets" }]
                     description: "Present unless `facets=0` was asked for. Not required for that reason; every request that does not pass `facets=0` carries them."
                   counts:
                     type: object
-                    description: "Present only when `counts=1` was asked for. Cards, the unit of `total`. For `set`, `rarity`, `gen` and `type`, each option is counted over the cards every other filter in the request leaves, that key's own values set aside, so choosing one rarity does not change the rarity counts. A card without a value for the key is counted under none."
-                    required: [set, rarity, gen, type, duplicates]
+                    description: "Present only when `counts=1` was asked for. Cards, the unit of `total`. For `set`, `rarity`, `gen`, `type`, `condition`, `finish` and `language`, each option is counted over the cards every other filter in the request leaves, that key's own values set aside, so choosing one rarity does not change the rarity counts. A card without a value for the key is counted under none."
+                    required: [set, rarity, gen, type, condition, finish, language, duplicates]
                     properties:
                       set: { type: object, additionalProperties: { type: integer }, description: "Keyed by the set's title." }
                       rarity: { type: object, additionalProperties: { type: integer } }
                       gen: { type: object, additionalProperties: { type: integer } }
                       type: { type: object, additionalProperties: { type: integer } }
+                      condition: { type: object, additionalProperties: { type: integer } }
+                      finish: { type: object, additionalProperties: { type: integer } }
+                      language: { type: object, additionalProperties: { type: integer }, description: "Keyed by the lower-case code; a card with no language is counted under `en`." }
                       fullArt: { type: integer, description: "The cards every requested filter leaves with `fullArt=1` added. Absent when the full arts could not be read; the rest of the answer still comes." }
                       duplicates: { type: integer, description: "The cards every requested filter leaves with `duplicates=1` added." }
                   catalogueUnavailable:

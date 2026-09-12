@@ -4,7 +4,7 @@ import { shownPrice, variantPrice } from "./cards";
 import { copyPriceOf, printingKeysOf } from "../price-basis.mjs";
 import { heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
-import { UUID } from "./collection-row";
+import { FINISHES, UUID } from "./collection-row";
 
 /**
  * The collection as a flat list of copies, for a screen that pages through it.
@@ -253,6 +253,12 @@ export type ItemFilter = {
   gen?: Several;
   /** One energy type or several, each whole, as the catalogue names it; any counts, in any case. */
   type?: Several;
+  /** One condition or several, each whole, as the row spells it; any counts, in any case. A copy with none matches none. */
+  condition?: Several;
+  /** One finish or several; any counts. A copy with none recorded matches none. */
+  finish?: Several;
+  /** One language code or several (`en`, `ja`, `zh-tw`); any counts, in any case. */
+  language?: Several;
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
@@ -286,6 +292,12 @@ const matchesWord = (it: { name: string; set: string; setTitle: string }, q: str
   it.set.toLowerCase().includes(q) ||
   it.setTitle.toLowerCase().includes(q);
 
+/**
+ * A copy's language as a filter reads it, in lower case. A row with no language is an English
+ * copy: English is the language nobody writes down, so a filter for `en` has to find it.
+ */
+const languageOf = (it: { language: string | null }): string => (it.language ?? "en").toLowerCase();
+
 /** One printing, as `duplicates` counts it: the catalogue id (the set and number without one), the finish and the run. */
 const printingKey = (it: CardItem): string =>
   `${it.tcgId ?? `${it.set}#${it.number}`}|${it.finish ?? ""}|${it.edition ?? ""}`;
@@ -305,6 +317,9 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const number = f.number?.trim().toLowerCase();
   const gen = wantedOf(f.gen);
   const type = wantedOf(f.type);
+  const condition = wantedOf(f.condition);
+  const finish = wantedOf(f.finish);
+  const language = wantedOf(f.language);
   const inRule = f.rule ? ruleMatcher(f.rule) : null;
   return items.filter((it) => {
     if (inRule && !inRule(it)) return false;
@@ -317,6 +332,9 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (number && it.number.toLowerCase() !== number) return false;
     if (gen && !gen.has((it.gen ?? "").toLowerCase())) return false;
     if (type && !type.has((it.type ?? "").toLowerCase())) return false;
+    if (condition && !(it.condition && condition.has(it.condition.toLowerCase()))) return false;
+    if (finish && !(it.finish && finish.has(it.finish))) return false;
+    if (language && !language.has(languageOf(it))) return false;
     if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
     if (held && !(it.owned && (held.get(printingKey(it)) ?? 0) > 1)) return false;
     if (q && !matchesWord(it, q)) return false;
@@ -330,6 +348,10 @@ export type FilterCounts = {
   rarity: Record<string, number>;
   gen: Record<string, number>;
   type: Record<string, number>;
+  condition: Record<string, number>;
+  finish: Record<string, number>;
+  /** Keyed by the code in lower case; a copy with no language is counted under "en", as the filter reads it. */
+  language: Record<string, number>;
   /** Left out when the full-art ids could not be read: an unknown is not a zero. */
   fullArt?: number;
   duplicates: number;
@@ -347,11 +369,13 @@ export function filterCounts(
   f: ItemFilter,
   fullArtIds: ReadonlySet<string> | undefined,
 ): FilterCounts {
-  const tally = (key: "set" | "rarity" | "gen" | "type") => {
-    const field = key === "set" ? "setTitle" : key;
+  type Key = "set" | "rarity" | "gen" | "type" | "condition" | "finish" | "language";
+  const tally = (key: Key) => {
+    const valueOf = (it: CardItem): string | null =>
+      key === "set" ? it.setTitle : key === "language" ? languageOf(it) : it[key];
     const out: Record<string, number> = {};
     for (const it of filterItems(items, { ...f, [key]: undefined })) {
-      const v = it[field];
+      const v = valueOf(it);
       if (v) out[v] = (out[v] ?? 0) + 1;
     }
     return out;
@@ -361,6 +385,9 @@ export function filterCounts(
     rarity: tally("rarity"),
     gen: tally("gen"),
     type: tally("type"),
+    condition: tally("condition"),
+    finish: tally("finish"),
+    language: tally("language"),
     ...(fullArtIds ? { fullArt: filterItems(items, { ...f, fullArtIds }).length } : {}),
     duplicates: filterItems(items, { ...f, duplicates: true }).length,
   };
@@ -461,16 +488,22 @@ export const PUBLIC_PAGE_MAX = 500;
 
 export type Page = { limit: number; offset: number };
 
-/** How many values one of `set`, `rarity`, `gen` or `type` may be repeated with. */
+/** How many values one of the repeated keys (`set`, `rarity`, `finish` and the rest) may carry. */
 export const MAX_VALUES = 50;
 
-export type ItemQuery = Omit<ItemFilter, "set" | "rarity" | "gen" | "type"> &
+const REPEATED = ["set", "rarity", "gen", "type", "condition", "finish", "language"] as const;
+
+export type ItemQuery = Omit<ItemFilter, (typeof REPEATED)[number]> &
   Page & {
     /** As asked, trimmed and without repeats: one value is an array of one. */
     set?: string[];
     rarity?: string[];
     gen?: string[];
     type?: string[];
+    condition?: string[];
+    /** Each one of FINISHES, as written there. */
+    finish?: string[];
+    language?: string[];
     sort?: Sort;
     order?: Order;
     /**
@@ -521,13 +554,16 @@ export function readItemQuery(
   }
   // Repeated for several (`?rarity=Rare&rarity=Rare%20Holo`): a copy matching any of them counts.
   // One is still one, as the iOS app sends it; each is held to what one always was.
-  for (const key of ["set", "rarity", "gen", "type"] as const) {
+  for (const key of REPEATED) {
     const vs = params.getAll(key);
     if (vs.length === 0) continue;
     if (vs.length > MAX_VALUES) return { kind: "invalid", error: `${key} names too many.` };
     const names: string[] = [];
     for (const v of vs) {
       if (!v.trim() || v.length > 100) return { kind: "invalid", error: `${key} must name one.` };
+      // A finish is one of a closed list: a misspelt one would otherwise match nothing, quietly.
+      if (key === "finish" && !(FINISHES as readonly string[]).includes(v.trim()))
+        return { kind: "invalid", error: `finish must be ${orList(FINISHES)}.` };
       if (!names.includes(v.trim())) names.push(v.trim());
     }
     query[key] = names;
@@ -555,6 +591,10 @@ export function readItemQuery(
   }
   return { kind: "ok", query };
 }
+
+/** "a, b or c", for an error sentence. */
+const orList = (vs: readonly string[]): string =>
+  vs.length < 2 ? vs.join("") : `${vs.slice(0, -1).join(", ")} or ${vs[vs.length - 1]}`;
 
 export function pageOf<T>(items: T[], page: Page): { items: T[]; total: number } {
   return { items: items.slice(page.offset, page.offset + page.limit), total: items.length };
@@ -798,8 +838,43 @@ export type Facets = {
   rarities: string[];
   gens: string[];
   types: string[];
+  /** The copy-level menus: an owner's list only, since a public item carries no copy. */
+  conditions: string[];
+  finishes: string[];
+  languages: string[];
 };
-export type PublicFacets = Facets;
+export type PublicFacets = Pick<Facets, "sets" | "rarities" | "gens" | "types">;
+
+/** Best first, as a grading scale reads; a condition not on it follows, A to Z. */
+const CONDITION_ORDER = [
+  "mint",
+  "near mint",
+  "excellent",
+  "good",
+  "light played",
+  "played",
+  "poor",
+];
+
+/** The plain card, then its foils: the order a person picks a finish in, not FINISHES' own. */
+const FINISH_ORDER: readonly string[] = [
+  "normal",
+  "holo",
+  "reverse-holo",
+  "poke-ball",
+  "master-ball",
+];
+
+/** By a known order first, then A to Z for anything the order does not name. */
+const rankedBy =
+  (order: readonly string[]) =>
+  (a: string, b: string): number => {
+    const ra = order.indexOf(a.toLowerCase());
+    const rb = order.indexOf(b.toLowerCase());
+    if (ra !== -1 || rb !== -1)
+      return (ra === -1 ? order.length : ra) - (rb === -1 ? order.length : rb);
+    return a.localeCompare(b);
+  };
 
 /**
  * What a filter menu can offer over a whole collection: its sets in set order, its rarities
@@ -816,6 +891,9 @@ export function facetsOf(
     rarity: string | null;
     gen?: string | null;
     type?: string | null;
+    condition?: string | null;
+    finish?: string | null;
+    language?: string | null;
     owned?: boolean;
   }[],
   /** `owned: false` draws the menus from the wishes instead: a wishlist filters by its own sets. */
@@ -828,6 +906,9 @@ export function facetsOf(
   // so they go A to Z.
   const gens = new Map<string, string>();
   const types = new Map<string, string>();
+  const conditions = new Map<string, string>();
+  const finishes = new Set<string>();
+  const languages = new Set<string>();
   const wanted = over.owned === false ? false : true;
   for (const it of items) {
     if ((it.owned ?? true) !== wanted) continue;
@@ -836,16 +917,28 @@ export function facetsOf(
       rarities.set(it.rarity.toLowerCase(), it.rarity);
     if (it.gen && !gens.has(it.gen.toLowerCase())) gens.set(it.gen.toLowerCase(), it.gen);
     if (it.type && !types.has(it.type.toLowerCase())) types.set(it.type.toLowerCase(), it.type);
+    if (it.condition && !conditions.has(it.condition.toLowerCase()))
+      conditions.set(it.condition.toLowerCase(), it.condition);
+    if (it.finish) finishes.add(it.finish);
+    // No language is English, as the filter reads it; a public item has no copy, so no menu.
+    if ("language" in it) languages.add(languageOf({ language: it.language ?? null }));
   }
   return {
     sets: [...sets].map(([name, title]) => ({ name, title })),
     rarities: [...rarities.values()].sort((a, b) => a.localeCompare(b)),
     gens: [...gens.values()],
     types: [...types.values()].sort((a, b) => a.localeCompare(b)),
+    conditions: [...conditions.values()].sort(rankedBy(CONDITION_ORDER)),
+    finishes: [...finishes].sort(rankedBy(FINISH_ORDER)),
+    languages: [...languages].sort(rankedBy(["en"])),
   };
 }
 
-export const publicFacets = (items: PublicItem[]): PublicFacets => facetsOf(items);
+/** The card-level menus only: a visitor cannot filter by what a public item does not carry. */
+export const publicFacets = (items: PublicItem[]): PublicFacets => {
+  const { sets, rarities, gens, types } = facetsOf(items);
+  return { sets, rarities, gens, types };
+};
 
 /** The lists beside the collection an owner can show: each behind its own flag on the profile. */
 export const PUBLIC_LISTS = ["wishlist", "favorites"] as const;
