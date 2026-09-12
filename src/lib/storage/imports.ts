@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CollectionRow } from "../core/collection/collection-row";
 import { NOT_OWNED } from "../core/collection/csv";
-import { importKey, splitExisting, type TitleOf } from "../core/collection/import-match";
+import { importKeys, splitExisting, type TitleOf } from "../core/collection/import-match";
 import { setCatalogue } from "../core/catalogue/catalogue";
 import { mapLimit } from "../core/util";
 import { createRows, pageRange, readAllPages } from "./postgres";
@@ -71,7 +71,7 @@ export type ImportOutcome = {
  * they do — which is right here more than anywhere, since a short read is
  * exactly how a collection gets imported twice.
  */
-type Row = { name?: string; set_name?: string; number?: string };
+type Row = { name?: string; set_name?: string; number?: string; tcg_id?: string | null };
 
 /**
  * The official name of every set named, by the name it was named.
@@ -111,22 +111,36 @@ export async function heldKeys(
   const rows = await readAllPages<Row>("the collection", (page, counted) =>
     db
       .from("cards")
-      .select("name,set_name,number", counted ? { count: "exact" } : {})
+      .select("name,set_name,number,tcg_id", counted ? { count: "exact" } : {})
       // A total order, so the pages are disjoint: id alone is unique and enough.
       .order("id", { ascending: true })
       .eq("user_id", userId)
       .range(...pageRange(page)),
   );
 
-  const titleOf = await officialTitles([...rows.map((row) => row.set_name ?? ""), ...alsoFold]);
+  /*
+   * Only the names of rows with no catalogue id, and only those from the file.
+   *
+   * A row that carries an id is recognised by it (importKeys), and its name key is a bonus that
+   * costs nothing when it is unfolded. So the catalogue is asked about the names that are the
+   * only thing a row has, which on a Dex export against this collection is usually none: the
+   * fifteen seconds a first preview spent reading a hundred sets is gone, and nothing it
+   * decided has changed.
+   */
+  const needFold = [
+    ...rows.filter((row) => !row.tcg_id).map((row) => row.set_name ?? ""),
+    ...alsoFold,
+  ];
+  const titleOf = await officialTitles(needFold);
   return {
     keys: new Set(
-      rows.map((row) =>
-        importKey(
+      rows.flatMap((row) =>
+        importKeys(
           {
             name: row.name ?? "",
             setName: row.set_name ?? "",
             number: row.number ?? "",
+            tcgId: row.tcg_id ?? null,
           },
           titleOf,
         ),

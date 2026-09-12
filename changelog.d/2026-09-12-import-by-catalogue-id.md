@@ -1,0 +1,2 @@
+- A CSV row is recognised by the catalogue id where it has one: Dex writes it in its sixth column and this app read it as nothing, so a card whose set the collection filed under another name was matched by name and number instead of exactly.
+- The first import preview of the day no longer waits on a hundred set reads: only the names of rows with no catalogue id are resolved, which on a Dex export is usually none.

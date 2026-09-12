@@ -1,4 +1,5 @@
 import { type CollectionRow, type Language, isLanguage } from "./collection-row";
+import { isTcgId } from "../catalogue/tcgdex-language";
 import {
   NOT_OWNED,
   cardNumber,
@@ -53,6 +54,7 @@ const columns = (header: string[]) => {
   const at = (name: string) => norm.indexOf(name);
   return {
     category: at("category"),
+    id: at("id"),
     series: at("series"),
     set: at("set"),
     number: at("number"),
@@ -133,6 +135,7 @@ export function dexRows(grid: string[][]): CsvResult {
       return;
     }
 
+    const id = at(r, c.id);
     const wanted = WISHLIST.test(at(r, c.category));
     const quantity = quantityFrom(at(r, c.quantity));
 
@@ -157,8 +160,17 @@ export function dexRows(grid: string[][]): CsvResult {
       // "48/108" as the card prints it; the catalogue files it under "48".
       number: cardNumber(at(r, c.number)),
       setName: set,
-      // A Dex export carries no catalogue id; see the same line in csv.ts.
-      tcgId: null,
+      /*
+       * Dex's sixth column is the catalogue's own id ("bw5-48"), and this file read it as
+       * nothing until 2026-09-12: the comment here said a Dex export carries no id, which is
+       * simply not so. It is the exact handle on a card, so a row that has one is matched
+       * against the collection by it rather than by a set's name and a spelling, and the
+       * card it is written against is found without a guess.
+       *
+       * Validated, not trusted: anything that is not an id shape reads as none, which is what
+       * every row did before.
+       */
+      tcgId: isTcgId(id) ? id : null,
       rarity: at(r, c.rarity) || null,
       // Dex's "Series" is the era — "Black & White", "EX", "Scarlet & Violet" —
       // which is what gen holds for every row that came from Notion.

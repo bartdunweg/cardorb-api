@@ -74,6 +74,31 @@ export const importKey = (
   ].join(" ");
 
 /**
+ * Every key a row can be recognised by: its catalogue id, and the name key above.
+ *
+ * The id is the exact answer and the reason this exists. Dex writes the catalogue id in its
+ * sixth column and this app's export writes it too, and the rows in the collection have carried
+ * one since the catalogue backfill, so for most of a real file both sides know the same
+ * `bw5-48`. Compared on that, none of the guessing matters: not the set's name, not a
+ * misspelling, not "48/108" against "48".
+ *
+ * Both keys, not the best one. A file row with an id and a held row without it (or the other way
+ * round) must still meet, and they can only meet on the name. So every row offers both and a
+ * match on either is a match, which is the one shape that cannot go quiet in either direction.
+ *
+ * It is also what makes the name fold cheap: a name key is only ever *needed* by a row with no
+ * id, so storage/imports.ts asks the catalogue about those names alone. On a Dex export against
+ * this collection that is none of them, and the preview stops waiting on a hundred set reads.
+ */
+export const importKeys = (
+  row: { name: string; setName: string; number: string; tcgId?: string | null },
+  titleOf: TitleOf = asFiled,
+): string[] => {
+  const name = importKey(row, titleOf);
+  return row.tcgId ? [`id ${row.tcgId.toLowerCase()}`, name] : [name];
+};
+
+/**
  * The rows split into the ones that are new and the ones already held.
  *
  * Rows are never compared against each other, only against the collection: two
@@ -87,6 +112,9 @@ export function splitExisting(
 ): { fresh: CollectionRow[]; existing: CollectionRow[] } {
   const fresh: CollectionRow[] = [];
   const existing: CollectionRow[] = [];
-  for (const row of rows) (held.has(importKey(row, titleOf)) ? existing : fresh).push(row);
+  for (const row of rows) {
+    const known = importKeys(row, titleOf).some((k) => held.has(k));
+    (known ? existing : fresh).push(row);
+  }
   return { fresh, existing };
 }
