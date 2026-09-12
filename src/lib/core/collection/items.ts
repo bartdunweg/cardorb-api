@@ -3,7 +3,6 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice, variantPrice } from "./cards";
 import { copyPriceOf } from "../price-basis.mjs";
 import { heldValue } from "./cards-stats";
-import type { DexEntry } from "./pokedex";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { UUID } from "./collection-row";
 
@@ -477,22 +476,6 @@ export function countStats(sets: CardSet[]): Stats {
 }
 
 /**
- * A Pokédex slot for a 1,025-tile grid: a count, and the owned cards of that
- * Pokémon as name and picture only. The row-level facts stay on `GET /v1/cards`.
- */
-export type DexCard = { key: string; name: string; image: string | null };
-export type DexSummary = { id: number; name: string; owned: number; cards: DexCard[] };
-
-export function summariseDex(dex: DexEntry[]): DexSummary[] {
-  return dex.map((e) => ({
-    id: e.id,
-    name: e.name,
-    owned: e.owned,
-    cards: e.cards.map((c) => ({ key: c.key, name: c.name, image: c.image })),
-  }));
-}
-
-/**
  * One entry per card on a public profile: what a stranger may see, and how
  * many copies the owner holds — never the copies themselves. Read from the
  * public payload (forPublic), where every private field is already gone.
@@ -703,7 +686,7 @@ export function facetsOf(
 export const publicFacets = (items: PublicItem[]): PublicFacets => facetsOf(items);
 
 /** The lists beside the collection an owner can show: each behind its own flag on the profile. */
-export const PUBLIC_LISTS = ["wishlist", "favorites", "pokedex"] as const;
+export const PUBLIC_LISTS = ["wishlist", "favorites"] as const;
 export type PublicList = (typeof PUBLIC_LISTS)[number];
 
 export type PublicQuery = PublicFilter &

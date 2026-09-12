@@ -1,35 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { caught, getPokedex, normalise, speciesOf } from "./pokedex";
-import type { CardSet, OwnedCard } from "./cards";
-
-const card = (over: Partial<OwnedCard> & { name: string }): OwnedCard => ({
-  key: over.name,
-  number: "1",
-  type: null,
-  gen: null,
-  image: null,
-  imageHigh: null,
-  imageSize: null,
-  speciesId: speciesOf(over.name),
-  price: null,
-  priceHolo: null,
-  tcgId: null,
-  variants: [],
-  owned: true,
-  ...over,
-});
-
-const set = (name: string, cards: OwnedCard[]): CardSet => ({
-  language: null,
-  name,
-  title: name,
-  abbreviation: null,
-  logo: null,
-  logoSize: null,
-  releaseDate: null,
-  total: null,
-  cards,
-});
+import { normalise, speciesList, speciesOf } from "./pokedex";
 
 describe("normalise", () => {
   it("keeps the two Nidoran apart", () => {
@@ -92,34 +62,7 @@ describe("speciesOf", () => {
   });
 });
 
-describe("getPokedex", () => {
-  it("files every card under its Pokémon and leaves the rest empty", () => {
-    const dex = getPokedex([
-      set("A", [
-        card({ name: "Charizard ex", price: { low: 40, market: 40, avg30: 45, nm: null } }),
-        card({ name: "Charizard", price: { low: 5, market: 5, avg30: 6, nm: null } }),
-        card({ name: "Pikachu", owned: false }),
-        card({ name: "Ultra Ball" }),
-      ]),
-    ]);
-
-    expect(dex).toHaveLength(1025);
-    const charizard = dex[5]!; // #6
-    expect(charizard.name).toBe("Charizard");
-    expect(charizard.cards.map((c) => c.name)).toEqual(["Charizard ex", "Charizard"]);
-    expect(charizard.owned).toBe(2);
-
-    const pikachu = dex[24]!; // #25
-    expect(pikachu.cards).toHaveLength(1);
-    // On the wishlist is not in the binder.
-    expect(pikachu.owned).toBe(0);
-
-    expect(dex[0]!.cards).toEqual([]); // Bulbasaur, none of
-    expect(caught(dex)).toBe(1);
-  });
-});
-
 /** The Dex name for a number, for the assertions above. */
 function SPECIES_NAME(id: number) {
-  return getPokedex([])[id - 1]!.name;
+  return speciesList("https://api.cardorb.com")[id - 1]!.name;
 }

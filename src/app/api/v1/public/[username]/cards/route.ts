@@ -52,16 +52,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const shown = forPublic(sets);
   // A list beside the collection only for an owner who shows it; asked of one who does not, the
   // same 404 as a folder nobody shows. A folder and a list do not combine: a wish is in no
-  // folder, and the favorites and the Pokédex are the whole collection seen another way.
+  // folder, and the favorites are the whole collection seen another way. A Pokédex was a list
+  // here until 2026-09-12 and is a binder now, so it comes through as a folder.
   const { list } = read.query;
-  const listShown =
-    list === "wishlist"
-      ? owner.wishlistPublic
-      : list === "favorites"
-        ? owner.favoritesPublic
-        : list === "pokedex"
-          ? owner.pokedexPublic
-          : true;
+  const listShown = list === "wishlist" ? owner.wishlistPublic : list === "favorites" ? owner.favoritesPublic : true;
   if (!listShown) return apiError(404, "No such list.");
   // The star is a fact about the owner's copy, so forPublic() strips it with the rest; it is read
   // here off the private items, the way a folder's contents are below, and only when the owner

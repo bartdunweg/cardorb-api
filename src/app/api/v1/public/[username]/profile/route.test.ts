@@ -19,8 +19,6 @@ beforeEach(() => {
     avatarUrl: "/a.png",
     wishlistPublic: true,
     favoritesPublic: true,
-    pokedexPublic: false,
-    pokedex: null,
   });
 });
 
@@ -33,8 +31,6 @@ describe("GET /api/v1/public/{username}/profile", () => {
       avatarUrl: "/a.png",
       wishlistPublic: true,
       favoritesPublic: true,
-      pokedexPublic: false,
-      pokedex: null,
     });
     expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
   });

@@ -1,0 +1,1 @@
+- The two Pokédex fields on a profile are gone, and so is `GET /v1/pokedex` and the `list=pokedex` gate on a public profile. The Pokédex is a binder, and a binder carries its own setting; nothing is left on an account for a thing the app no longer has.

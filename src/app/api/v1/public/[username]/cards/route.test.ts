@@ -62,7 +62,7 @@ const get = (qs = "", name = "bart") =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: false, pokedexPublic: false, pokedex: null });
+  ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: false });
   getPublicCollection.mockResolvedValue({ sets: SETS, failed: false });
 });
 
@@ -138,16 +138,15 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect((await get("", "nobody")).status).toBe(404);
   });
 
-  it("shows the favorites and the Pokédex only for an owner who does, and refuses another list", async () => {
+  it("shows the favorites only for an owner who does, and refuses another list", async () => {
     expect((await get("?list=favorites")).status).toBe(404);
-    expect((await get("?list=pokedex")).status).toBe(404);
+    // A Pokédex was a list of its own here until 2026-09-12. It is a binder now, so the word is
+    // no list at all: the same 400 as any other thing that is not one.
+    expect((await get("?list=pokedex")).status).toBe(400);
     expect((await get("?list=binder")).status).toBe(400);
-    ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: true, pokedexPublic: true, pokedex: null });
+    ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: true });
     const favorites = await (await get("?list=favorites")).json();
     expect(favorites.cards.length).toBeGreaterThan(0);
     expect(favorites.cards.every((c: { favorite: boolean }) => c.favorite)).toBe(true);
-    const all = await (await get()).json();
-    const dex = await (await get("?list=pokedex")).json();
-    expect(dex.total).toBe(all.total);
   });
 });
