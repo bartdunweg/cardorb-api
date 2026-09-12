@@ -803,9 +803,14 @@ components:
 
     ImportOutcome:
       type: object
-      required: [seen, added, skipped, notOwned, existing, sample]
+      required: [seen, added, skipped, notOwned, existing, excluded, sample]
       properties:
-        seen: { type: integer }
+        seen:
+          type: integer
+          description: |
+            Every line the file held, the ones struck off with `exclude`
+            included. It is the file, not what is left of it after the caller's
+            ticking.
         added: { type: integer }
         skipped: { type: integer }
         notOwned:
@@ -824,7 +829,42 @@ components:
             acted on — every row is written. A client shows it before a commit,
             because a CSV row has no source_id and nothing in the database stops
             the same file being imported twice.
+        excluded:
+          type: integer
+          description: |
+            Rows the caller struck off by hand with `exclude`. Apart from
+            `skipped`, which is rows this endpoint could not use: told together,
+            somebody who unticked half their file would be shown an import that
+            half failed. Always 0 on a preview, which has nothing to strike off
+            yet.
+        total:
+          type: integer
+          description: |
+            How many cards the collection holds once the writing is done. On a
+            commit only, and left out where it could not be counted: a count
+            that fails after a successful write is a number missing from the
+            answer, not an error. "1,204 added" cannot be checked without it.
         sample: { type: array, items: { $ref: "#/components/schemas/CollectionRow" } }
+
+    ImportPreviewRow:
+      type: object
+      description: |
+        One row a preview would write, with the line of the file it came from.
+        Enough to draw and to tick, not the whole CollectionRow.
+      required: [line, name, number, setName, owned, quantity]
+      properties:
+        line:
+          type: integer
+          description: The line as a person counts it in their own file, the header being line 1.
+        name: { type: string }
+        number: { type: string }
+        setName: { type: string }
+        rarity: { type: [string, "null"] }
+        owned: { type: boolean }
+        quantity: { type: integer }
+        finish: { type: [string, "null"] }
+        foilPattern: { type: [string, "null"] }
+        edition: { type: [string, "null"] }
 
     ImportRecord:
       type: object
@@ -2085,8 +2125,8 @@ paths:
       summary: Preview or commit a CSV import
       description: |
         A bearer token or a session. Without `commit` it is a dry run that
-        answers with the header, the guessed column map, a sample and how many
-        rows you already hold. With `commit: true` it writes, ten times per
+        answers with the header, the guessed column map, a sample, every row it
+        would write, and how many rows you already hold. With `commit: true` it writes, ten times per
         person each fifteen minutes. 2 MB, 5,000 rows.
 
         `csv` is text, so its encoding is the caller's problem: read a UTF-16
@@ -2110,9 +2150,19 @@ paths:
                 csv: { type: string }
                 map: { $ref: "#/components/schemas/ColumnMap" }
                 commit: { type: boolean, default: false }
+                exclude:
+                  type: array
+                  items: { type: integer }
+                  description: |
+                    Lines of the file not to write, as `rows[].line` gave them.
+                    Line numbers rather than positions in the answer: the same
+                    file and the same `map` parse to the same lines every time,
+                    so a selection made against a preview still means what it
+                    said by the time the commit arrives, whatever the client
+                    sorted or filtered on screen. Unknown lines are ignored.
       responses:
         "200":
-          description: The outcome, plus `source`. A preview also carries `header`, `guessed` and `skippedRows`.
+          description: The outcome, plus `source`. A preview also carries `header`, `guessed`, `skippedRows` and `rows`.
           content:
             application/json:
               schema:
@@ -2130,6 +2180,15 @@ paths:
                           properties:
                             line: { type: integer }
                             why: { type: string }
+                      rows:
+                        type: array
+                        description: |
+                          Every row the preview would write, in file order, each
+                          with its line. `sample` is a glimpse to check the parse
+                          by; this is the list itself, for a client that lets
+                          somebody tick rows off and hands the rest back in
+                          `exclude`. Preview only.
+                        items: { $ref: "#/components/schemas/ImportPreviewRow" }
         "400":
           description: Refused. When the name and set columns could not be found, `header` and `guessed` come along so the client can ask.
           content:

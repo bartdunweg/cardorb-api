@@ -116,6 +116,7 @@ export function dexRows(grid: string[][]): CsvResult {
   const header = grid[0] ?? [];
   const c = columns(header);
   const rows: CollectionRow[] = [];
+  const lines: number[] = [];
   const skipped: { line: number; why: string }[] = [];
 
   const at = (r: string[], i: number) => (i < 0 ? "" : (r[i] ?? "").trim());
@@ -154,6 +155,7 @@ export function dexRows(grid: string[][]): CsvResult {
       .filter(Boolean)
       .join("\n");
 
+    lines.push(line);
     rows.push({
       id: null,
       name,
@@ -207,5 +209,5 @@ export function dexRows(grid: string[][]): CsvResult {
     });
   });
 
-  return { rows, skipped };
+  return { rows, lines, skipped };
 }

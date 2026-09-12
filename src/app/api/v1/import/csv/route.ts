@@ -72,16 +72,31 @@ export async function POST(req: Request) {
   let csv = "";
   let map: Partial<ColumnMap> | undefined;
   let doCommit = false;
-  const read = await readJsonBody<{ csv?: unknown; map?: unknown; commit?: unknown }>(
-    req,
-    BODY_LIMIT.csv,
-  );
+  /**
+   * Lines the caller struck off, by the number a person counts to in their own
+   * file. Line numbers rather than indices into the answer: the same file and
+   * the same column map parse to the same lines every time, so a selection
+   * made against a preview still means what it said when the commit arrives,
+   * and it survives a client that sorted or filtered what it drew.
+   */
+  let exclude: ReadonlySet<number> = new Set();
+  const read = await readJsonBody<{
+    csv?: unknown;
+    map?: unknown;
+    commit?: unknown;
+    exclude?: unknown;
+  }>(req, BODY_LIMIT.csv);
   if (read.kind === "too-large") return apiError(413, "That file is too large.");
   if (read.kind === "invalid") return apiError(400, "Invalid request");
   const body = read.body;
   if (typeof body.csv === "string") csv = body.csv;
   if (body.map && typeof body.map === "object") map = body.map as Partial<ColumnMap>;
   doCommit = body.commit === true;
+  if (Array.isArray(body.exclude)) {
+    exclude = new Set(
+      body.exclude.filter((n): n is number => typeof n === "number" && Number.isInteger(n)),
+    );
+  }
 
   // After the body is read, because the flag deciding whether this call is
   // expensive is in it. A preview is not counted; see the note on byAccount.
@@ -125,7 +140,20 @@ export async function POST(req: Request) {
     );
   }
 
-  const { rows, skipped } = dex ? dexRows(grid) : rowsFrom(grid, guessed as ColumnMap);
+  const parsed = dex ? dexRows(grid) : rowsFrom(grid, guessed as ColumnMap);
+  const { skipped } = parsed;
+
+  /*
+   * The caller's ticking, applied here and nowhere else: everything downstream
+   * sees the rows that are actually going to be written, so no count has to
+   * remember to subtract. A line that was never writable in the first place
+   * cannot be struck off, so `excluded` counts only rows this dropped.
+   */
+  const kept = parsed.rows
+    .map((row, i) => ({ row, line: parsed.lines[i]! }))
+    .filter((r) => !exclude.has(r.line));
+  const rows = kept.map((k) => k.row);
+  const excluded = parsed.rows.length - rows.length;
 
   /**
    * What the collection already holds, read before either half answers.
@@ -161,11 +189,31 @@ export async function POST(req: Request) {
       guessed,
       source,
       skippedRows: skipped.slice(0, 20),
+      /*
+       * Every row that would be written, not the twenty of `sample`.
+       *
+       * `sample` is a glimpse to check the parse by; this is the list itself,
+       * so a client can put a tick beside each row and hand the unticked lines
+       * back. It is the same rows in the same order, each with the line it came
+       * from, and it is capped by MAX_ROWS like everything else here.
+       */
+      rows: kept.map(({ row, line }) => ({
+        line,
+        name: row.name,
+        number: row.number,
+        setName: row.setName,
+        rarity: row.rarity,
+        owned: row.owned,
+        quantity: row.quantity,
+        finish: row.finish,
+        foilPattern: row.foilPattern,
+        edition: row.edition,
+      })),
     });
   }
 
   try {
-    const outcome = await commit(db, viewer.userId, "csv", rows, skipped, held, titleOf);
+    const outcome = await commit(db, viewer.userId, "csv", rows, skipped, held, titleOf, excluded);
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });

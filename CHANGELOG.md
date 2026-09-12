@@ -32,6 +32,8 @@ if the two have drifted apart.
 
 - The CSV import preview hands the screen twenty rows instead of five, enough to see set names and printings come through right.
 
+- A CSV preview now hands back every row it would write, each with the line it came from, so an import screen can put a tick beside each one. Commit takes the lines you unticked as `exclude`, counts them apart from the rows it could not read, and answers with how many cards your collection holds when the writing is done.
+
 - A correction to the catalogue reaches the search the same day. The document the browser searches in was kept for a day without asking, so a card whose picture was fixed this afternoon stayed a blank square until that day was up; it is now checked against its version on every page load, which answers with no content where nothing has changed.
 
 - The four fields every page needs about the person asking are kept on the instance for a minute instead of read from Postgres on every request. The query is 0.1 ms in the database by its own statistics, but getting to it had a p90 of 8.4 seconds on production, so one page load in ten waited eight seconds on it.
