@@ -242,6 +242,16 @@ describe("validateCardPatch", () => {
     expect(refused({ finish: "shiny" })).toMatch(/finish must be null/);
   });
 
+  it("takes a rarity by hand, and lets a blank clear it", () => {
+    // What a promo needs: the catalogue answers "Promo" for every card in the set, which is the
+    // set's name, so the owner is the only one who can say what the card is.
+    expect(patched({ rarity: "  Ultra Rare  " }).rarity).toBe("Ultra Rare");
+    expect(patched({ rarity: null }).rarity).toBeNull();
+    expect(patched({ rarity: "   " }).rarity).toBeNull();
+    expect(refused({ rarity: 7 })).toMatch(/rarity must be a word or null/);
+    expect(refused({ rarity: "r".repeat(MAX.option + 1) })).toMatch(/too long/);
+  });
+
   it("keeps quantity a whole number of at least one", () => {
     expect(patched({ quantity: "3" }).quantity).toBe(3);
     expect(refused({ quantity: 0 })).toMatch(/at least 1/);
