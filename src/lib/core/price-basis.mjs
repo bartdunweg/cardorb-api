@@ -121,11 +121,14 @@ export const printingKeysOf = (copy) => {
       : copy.finish === "normal"
         ? "normal"
         : null;
+  // "shadowless" is not TCGplayer's word: it files the run as a group of its own, and
+  // tcgplayer-links.mjs names that group's printings "shadowless" and "shadowless-holofoil" so a
+  // Shadowless copy can ask for them here like any other run.
   const run =
     copy.edition === "1st-edition"
       ? "1st-edition"
       : copy.edition === "shadowless"
-        ? null
+        ? "shadowless"
         : "unlimited";
   const keys = [];
   // The run and the foil together first, then the run, then the foil, then the plain card: every

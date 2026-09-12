@@ -1,6 +1,6 @@
 import { EDITIONS, FINISHES } from "../collection/collection-row";
 import type { Edition, Finish, FoilPattern } from "../collection/collection-row";
-import RUNS from "../cardmarket-ids.editions.generated.json";
+import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 
 /**
  * Which printings of a card exist, and which print runs, from what TCGdex says per card.
@@ -67,8 +67,17 @@ export function printingsOf(variants: TcgVariant[] | null | undefined): Printing
   );
 }
 
-/** The cards Cardmarket files a Shadowless product for: all 102 of them are Base Set (#329). */
-const SHADOWLESS = new Set(Object.keys(RUNS as Record<string, { shadowless?: number }>));
+/**
+ * The cards TCGplayer prices a Shadowless run for, as tcgplayer-links.mjs linked them: 101 of
+ * Base Set's 102. It was Cardmarket's list until 2026-09-12, which filed every Base Set card as
+ * having one, Machamp included, for which TCGplayer has no Shadowless product.
+ * A run is offered where the market the app prices from has a figure for it.
+ */
+const SHADOWLESS = new Set(
+  Object.entries(TCGPLAYER_IDS as Record<string, { shadowless?: unknown } | null>).flatMap(
+    ([id, v]) => (v?.shadowless ? [id] : []),
+  ),
+);
 
 /**
  * The print runs a copy of this card can be from, or null where nothing can say.

@@ -248,6 +248,27 @@ describe("printingKeysOf and printingPriceOf", () => {
     expect(printingPriceOf({ finish: null }, { "reverse-holofoil": eur(1.4) })).toBeNull();
   });
 
+  // Base Set Charizard on tcgcsv, 2026-09-12: TCGplayer files the Shadowless run as a group of
+  // its own, whose "Unlimited Holofoil" is the Shadowless holo at $2,257.87, beside the ordinary
+  // card's $869.02. tcgplayer-links.mjs files that printing as "shadowless-holofoil".
+  it("reads the Shadowless run for a Shadowless copy, and the ordinary card where there is none", () => {
+    const charizard = {
+      holofoil: eur(869.02),
+      "shadowless-holofoil": eur(2257.87),
+      "1st-edition-holofoil": eur(10000),
+    };
+    expect(printingPriceOf({ finish: "holo", edition: "shadowless" }, charizard)?.market).toBe(
+      2257.87,
+    );
+    expect(printingPriceOf({ finish: "holo", edition: "1st-edition" }, charizard)?.market).toBe(
+      10000,
+    );
+    expect(printingPriceOf({ finish: "holo" }, charizard)?.market).toBe(869.02);
+    expect(
+      printingPriceOf({ finish: "holo", edition: "shadowless" }, { holofoil: eur(869.02) })?.market,
+    ).toBe(869.02);
+  });
+
   it("falls back through less and less of what it knows, and then answers nothing", () => {
     expect(printingPriceOf({ finish: "reverse-holo" }, { holofoil: eur(9) })?.market).toBe(9);
     expect(printingPriceOf({ finish: "holo" }, {})).toBeNull();

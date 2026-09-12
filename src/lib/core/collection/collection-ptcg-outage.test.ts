@@ -50,6 +50,10 @@ const fresh = async () => {
   vi.resetModules();
   return (await import("./collection")).usdForSet;
 };
+const freshRuns = async () => {
+  vi.resetModules();
+  return (await import("./collection")).runPrintingsForSet;
+};
 
 beforeEach(() => {
   usdFor.mockReset();
@@ -109,5 +113,38 @@ describe("usdForSet", () => {
     expect(await usdForSet("Mixed", ["base1-4", "svp-027"])).toEqual({
       "base1-4": { market: 100, low: 80 },
     });
+  });
+});
+
+describe("runPrintingsForSet", () => {
+  // Base Set Charizard in TCGplayer's "Base Set (Shadowless)" group (1663), product 106999, as
+  // tcgplayer-links.mjs linked it: "Unlimited Holofoil" there is the Shadowless holo, "1st Edition
+  // Holofoil" the stamped one. Figures read off tcgcsv on 2026-09-12.
+  it("names the Shadowless group's printings as runs the copy rule can ask for", async () => {
+    groupPrintings.mockResolvedValue(
+      new Map([
+        [
+          106999,
+          {
+            "unlimited-holofoil": { marketPrice: 2257.87, lowPrice: 1900, productId: 106999 },
+            "1st-edition-holofoil": { marketPrice: 10000, lowPrice: 8500, productId: 106999 },
+          },
+        ],
+      ]),
+    );
+    const runPrintingsForSet = await freshRuns();
+    const runs = await runPrintingsForSet(["base1-4", "base2-1"]);
+    expect(groupPrintings).toHaveBeenCalledWith(1663);
+    expect(runs["base1-4"]?.printings["shadowless-holofoil"]?.market).toBe(2257.87);
+    expect(runs["base1-4"]?.printings["1st-edition-holofoil"]?.market).toBe(10000);
+    expect(runs["base1-4"]?.firstEd?.market).toBe(10000);
+    // Jungle has no Shadowless run, so nothing is asked about it.
+    expect(runs["base2-1"]).toBeUndefined();
+  });
+
+  it("is nothing when the group does not answer, rather than throwing", async () => {
+    groupPrintings.mockRejectedValue(new Error("tcgcsv 503"));
+    const runPrintingsForSet = await freshRuns();
+    expect(await runPrintingsForSet(["base1-4"])).toEqual({});
   });
 });

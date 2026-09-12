@@ -3129,608 +3129,1012 @@
     "productId": 42346,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 106996,
+      "groupId": 1663
+    }
   },
   "base1-10": {
     "productId": 42347,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107005,
+      "groupId": 1663
+    }
   },
   "base1-100": {
     "productId": 42348,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107097,
+      "groupId": 1663
+    }
   },
   "base1-101": {
     "productId": 42349,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107096,
+      "groupId": 1663
+    }
   },
   "base1-102": {
     "productId": 42350,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107098,
+      "groupId": 1663
+    }
   },
   "base1-11": {
     "productId": 42351,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107006,
+      "groupId": 1663
+    }
   },
   "base1-12": {
     "productId": 42352,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107008,
+      "groupId": 1663
+    }
   },
   "base1-13": {
     "productId": 42353,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107007,
+      "groupId": 1663
+    }
   },
   "base1-14": {
     "productId": 42354,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107009,
+      "groupId": 1663
+    }
   },
   "base1-15": {
     "productId": 42355,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107010,
+      "groupId": 1663
+    }
   },
   "base1-16": {
     "productId": 42356,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107011,
+      "groupId": 1663
+    }
   },
   "base1-17": {
     "productId": 42357,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107012,
+      "groupId": 1663
+    }
   },
   "base1-18": {
     "productId": 42358,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107013,
+      "groupId": 1663
+    }
   },
   "base1-19": {
     "productId": 42359,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107014,
+      "groupId": 1663
+    }
   },
   "base1-2": {
     "productId": 42360,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 106997,
+      "groupId": 1663
+    }
   },
   "base1-20": {
     "productId": 42361,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107015,
+      "groupId": 1663
+    }
   },
   "base1-21": {
     "productId": 42362,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107016,
+      "groupId": 1663
+    }
   },
   "base1-22": {
     "productId": 42363,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107017,
+      "groupId": 1663
+    }
   },
   "base1-23": {
     "productId": 42364,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107018,
+      "groupId": 1663
+    }
   },
   "base1-24": {
     "productId": 42365,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107021,
+      "groupId": 1663
+    }
   },
   "base1-25": {
     "productId": 42366,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107022,
+      "groupId": 1663
+    }
   },
   "base1-26": {
     "productId": 42367,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107023,
+      "groupId": 1663
+    }
   },
   "base1-27": {
     "productId": 42368,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107024,
+      "groupId": 1663
+    }
   },
   "base1-28": {
     "productId": 42369,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107025,
+      "groupId": 1663
+    }
   },
   "base1-29": {
     "productId": 42370,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107026,
+      "groupId": 1663
+    }
   },
   "base1-3": {
     "productId": 42371,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 106998,
+      "groupId": 1663
+    }
   },
   "base1-30": {
     "productId": 42372,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107027,
+      "groupId": 1663
+    }
   },
   "base1-31": {
     "productId": 42373,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107028,
+      "groupId": 1663
+    }
   },
   "base1-32": {
     "productId": 42374,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107029,
+      "groupId": 1663
+    }
   },
   "base1-33": {
     "productId": 42375,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107030,
+      "groupId": 1663
+    }
   },
   "base1-34": {
     "productId": 42376,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107031,
+      "groupId": 1663
+    }
   },
   "base1-35": {
     "productId": 42377,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107032,
+      "groupId": 1663
+    }
   },
   "base1-36": {
     "productId": 42378,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107033,
+      "groupId": 1663
+    }
   },
   "base1-37": {
     "productId": 42379,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107034,
+      "groupId": 1663
+    }
   },
   "base1-38": {
     "productId": 42380,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107035,
+      "groupId": 1663
+    }
   },
   "base1-39": {
     "productId": 42381,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107036,
+      "groupId": 1663
+    }
   },
   "base1-4": {
     "productId": 42382,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 106999,
+      "groupId": 1663
+    }
   },
   "base1-40": {
     "productId": 42383,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107037,
+      "groupId": 1663
+    }
   },
   "base1-41": {
     "productId": 42384,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107038,
+      "groupId": 1663
+    }
   },
   "base1-42": {
     "productId": 42385,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107039,
+      "groupId": 1663
+    }
   },
   "base1-43": {
     "productId": 42386,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107040,
+      "groupId": 1663
+    }
   },
   "base1-44": {
     "productId": 42387,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107041,
+      "groupId": 1663
+    }
   },
   "base1-45": {
     "productId": 42388,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107042,
+      "groupId": 1663
+    }
   },
   "base1-46": {
     "productId": 42389,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107043,
+      "groupId": 1663
+    }
   },
   "base1-47": {
     "productId": 42390,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107044,
+      "groupId": 1663
+    }
   },
   "base1-48": {
     "productId": 42391,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107045,
+      "groupId": 1663
+    }
   },
   "base1-49": {
     "productId": 42392,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107046,
+      "groupId": 1663
+    }
   },
   "base1-5": {
     "productId": 42393,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107001,
+      "groupId": 1663
+    }
   },
   "base1-50": {
     "productId": 42394,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107047,
+      "groupId": 1663
+    }
   },
   "base1-51": {
     "productId": 42395,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107048,
+      "groupId": 1663
+    }
   },
   "base1-52": {
     "productId": 42396,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107049,
+      "groupId": 1663
+    }
   },
   "base1-53": {
     "productId": 42397,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107050,
+      "groupId": 1663
+    }
   },
   "base1-54": {
     "productId": 42398,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107051,
+      "groupId": 1663
+    }
   },
   "base1-55": {
     "productId": 42399,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107052,
+      "groupId": 1663
+    }
   },
   "base1-56": {
     "productId": 42400,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107053,
+      "groupId": 1663
+    }
   },
   "base1-57": {
     "productId": 42401,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107054,
+      "groupId": 1663
+    }
   },
   "base1-58": {
     "productId": 42402,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107055,
+      "groupId": 1663
+    }
   },
   "base1-59": {
     "productId": 42403,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107056,
+      "groupId": 1663
+    }
   },
   "base1-6": {
     "productId": 42404,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107000,
+      "groupId": 1663
+    }
   },
   "base1-60": {
     "productId": 42405,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107057,
+      "groupId": 1663
+    }
   },
   "base1-61": {
     "productId": 42406,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107058,
+      "groupId": 1663
+    }
   },
   "base1-62": {
     "productId": 42407,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107059,
+      "groupId": 1663
+    }
   },
   "base1-63": {
     "productId": 42408,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107060,
+      "groupId": 1663
+    }
   },
   "base1-64": {
     "productId": 42409,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107061,
+      "groupId": 1663
+    }
   },
   "base1-65": {
     "productId": 42410,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107062,
+      "groupId": 1663
+    }
   },
   "base1-66": {
     "productId": 42411,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107063,
+      "groupId": 1663
+    }
   },
   "base1-67": {
     "productId": 42412,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107064,
+      "groupId": 1663
+    }
   },
   "base1-68": {
     "productId": 42413,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107065,
+      "groupId": 1663
+    }
   },
   "base1-69": {
     "productId": 42414,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107066,
+      "groupId": 1663
+    }
   },
   "base1-7": {
     "productId": 42415,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107002,
+      "groupId": 1663
+    }
   },
   "base1-70": {
     "productId": 42416,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107067,
+      "groupId": 1663
+    }
   },
   "base1-71": {
     "productId": 42417,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107068,
+      "groupId": 1663
+    }
   },
   "base1-72": {
     "productId": 42418,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107069,
+      "groupId": 1663
+    }
   },
   "base1-73": {
     "productId": 86271,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107070,
+      "groupId": 1663
+    }
   },
   "base1-74": {
     "productId": 42420,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107072,
+      "groupId": 1663
+    }
   },
   "base1-75": {
     "productId": 42421,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107071,
+      "groupId": 1663
+    }
   },
   "base1-76": {
     "productId": 42422,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107074,
+      "groupId": 1663
+    }
   },
   "base1-77": {
     "productId": 108648,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107073,
+      "groupId": 1663
+    }
   },
   "base1-78": {
     "productId": 42423,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107075,
+      "groupId": 1663
+    }
   },
   "base1-79": {
     "productId": 42424,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107076,
+      "groupId": 1663
+    }
   },
   "base1-8": null,
   "base1-80": {
     "productId": 42426,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107077,
+      "groupId": 1663
+    }
   },
   "base1-81": {
     "productId": 42427,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107078,
+      "groupId": 1663
+    }
   },
   "base1-82": {
     "productId": 42428,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107079,
+      "groupId": 1663
+    }
   },
   "base1-83": {
     "productId": 42429,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107080,
+      "groupId": 1663
+    }
   },
   "base1-84": {
     "productId": 42430,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107081,
+      "groupId": 1663
+    }
   },
   "base1-85": {
     "productId": 108646,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107082,
+      "groupId": 1663
+    }
   },
   "base1-86": {
     "productId": 108647,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107083,
+      "groupId": 1663
+    }
   },
   "base1-87": {
     "productId": 108645,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107084,
+      "groupId": 1663
+    }
   },
   "base1-88": {
     "productId": 42431,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107085,
+      "groupId": 1663
+    }
   },
   "base1-89": {
     "productId": 42432,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107086,
+      "groupId": 1663
+    }
   },
   "base1-9": {
     "productId": 42433,
     "variants": [
       "holofoil"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107003,
+      "groupId": 1663
+    }
   },
   "base1-90": {
     "productId": 42434,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107087,
+      "groupId": 1663
+    }
   },
   "base1-91": {
     "productId": 42435,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107088,
+      "groupId": 1663
+    }
   },
   "base1-92": {
     "productId": 42436,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107089,
+      "groupId": 1663
+    }
   },
   "base1-93": {
     "productId": 42437,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107090,
+      "groupId": 1663
+    }
   },
   "base1-94": {
     "productId": 42438,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107091,
+      "groupId": 1663
+    }
   },
   "base1-95": {
     "productId": 42439,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107092,
+      "groupId": 1663
+    }
   },
   "base1-96": {
     "productId": 42440,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107099,
+      "groupId": 1663
+    }
   },
   "base1-97": {
     "productId": 42441,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107093,
+      "groupId": 1663
+    }
   },
   "base1-98": {
     "productId": 42442,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107094,
+      "groupId": 1663
+    }
   },
   "base1-99": {
     "productId": 42443,
     "variants": [
       "normal"
-    ]
+    ],
+    "shadowless": {
+      "productId": 107095,
+      "groupId": 1663
+    }
   },
   "base2-1": {
     "productId": 45120,
