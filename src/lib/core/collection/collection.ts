@@ -435,7 +435,22 @@ const cachedFactsBundle = (
         });
         // A plain object: a Map arrives from the Data Cache as `{}`, which here would be a
         // collection with no artwork and no prices. The same line guide-prices draws.
-        return Object.fromEntries(entries);
+        const bundle = Object.fromEntries(entries);
+        /*
+         * Said out loud, because the ceiling is silent.
+         *
+         * A Data Cache entry holds two megabytes and one over it is not cached at all, with no
+         * error and no warning: the fourteen-megabyte price guide was downloaded on every set
+         * page for exactly that reason before it was sharded. This entry grows with the
+         * collection, so the size goes in the log on every miss: 631,162 bytes across 53 groups
+         * on 2026-09-12, under a third of the ceiling. If it approaches it,
+         * shard it by group the way guide-prices is sharded, and the reason will be on record
+         * rather than guessed at.
+         */
+        console.info(
+          `[size] collection-facts ${JSON.stringify(bundle).length} bytes across ${groups.length} groups`,
+        );
+        return bundle;
       },
       ["collection-facts", "v1", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
