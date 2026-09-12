@@ -31,7 +31,11 @@ export async function GET(req: Request) {
   if (!db) return refuse("noDatabase");
 
   try {
-    const report = await syncMirror(db);
+    /* `?full=1`: work every set out from scratch instead of keeping the pictures the copy
+       already has. For the day a source is added to the chain, whose cards were copied without
+       a picture before it existed; the nightly schedule never asks for it. */
+    const full = new URL(req.url).searchParams.get("full") === "1";
+    const report = await syncMirror(db, { full });
     // The document the browser searches in, rebuilt from what was just copied (mirror.ts).
     if (report.copied.length) await catalogueIndex(db);
     console.log(

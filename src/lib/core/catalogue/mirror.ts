@@ -248,6 +248,12 @@ async function withResolvedScans(
  * days, where the live path answers it the next request.
  *
  * Every set is committed as it finishes, so a run cut short keeps what it did.
+ *
+ * `full` works every set out from scratch rather than keeping the pictures the copy already
+ * has (withResolvedScans). For the day the chain itself changes: the cards that were copied
+ * without a picture were told "no" by the sources of that day, and a source added since is
+ * never asked about them otherwise. It costs a run its speed, so it is asked for by hand and
+ * the nightly one never sets it.
  */
 export async function syncMirror(
   db: SupabaseClient,
@@ -255,7 +261,8 @@ export async function syncMirror(
     budgetMs = 45_000,
     parallel = 4,
     now = Date.now,
-  }: { budgetMs?: number; parallel?: number; now?: () => number } = {},
+    full = false,
+  }: { budgetMs?: number; parallel?: number; now?: () => number; full?: boolean } = {},
 ): Promise<SyncReport> {
   const start = now();
   const [index, done] = await Promise.all([englishSets(), listCatalogueSync(db)]);
@@ -275,7 +282,9 @@ export async function syncMirror(
   /* The sets worth working out in full: never seen, or their card count has moved. The rest is
      a refresh of what the copy already has, and keeps the pictures it worked out before
      (withResolvedScans). */
-  const fresh = new Set(ranked.filter((s) => s.key[0] < 2).map((s) => s.id));
+  const fresh = new Set(
+    full ? ranked.map((s) => s.id) : ranked.filter((s) => s.key[0] < 2).map((s) => s.id),
+  );
 
   const report: SyncReport = { copied: [], failed: [], left: 0, ms: 0 };
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);

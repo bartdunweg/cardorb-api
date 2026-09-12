@@ -27,6 +27,8 @@ if the two have drifted apart.
 - Which price series a copy reads is one function, copyPriceOf(), instead of the four copies of that sentence in cards.ts, items.ts and twice in snapshot.ts.
 - The card facts say whether a stamped first run of the card exists (TCGdex knows), so a form can stop asking which run a copy is from on a card that was printed once.
 
+- The catalogue copy can be asked to work every set out from scratch, for the day a new source of scans is added: the cards that were copied without a picture were told "no" by the sources of that day, and nothing would ask the new one about them otherwise. The nightly run never does this by itself.
+
 - A CSV row is recognised by the catalogue id where it has one: Dex writes it in its sixth column and this app read it as nothing, so a card whose set the collection filed under another name was matched by name and number instead of exactly.
 - The first import preview of the day no longer waits on a hundred set reads: only the names of rows with no catalogue id are resolved, which on a Dex export is usually none.
 
