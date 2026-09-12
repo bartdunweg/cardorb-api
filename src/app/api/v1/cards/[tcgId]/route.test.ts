@@ -33,6 +33,11 @@ vi.mock("@/lib/core/catalogue/catalogue", () => ({
   raritiesOfEra: (...a: unknown[]) => raritiesOfEra(...a),
 }));
 
+const serieOfSet = vi.fn();
+vi.mock("@/lib/core/catalogue/era-rarities", () => ({
+  serieOfSet: (...a: unknown[]) => serieOfSet(...a),
+}));
+
 const { GET } = await import("./route");
 
 const get = (tcgId = "sv03-125") =>
@@ -44,6 +49,7 @@ beforeEach(() => {
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
   getCardDetail.mockResolvedValue({ id: "sv03-125", name: "Charizard" });
   usdToEurForRequest.mockResolvedValue(0.92);
+  serieOfSet.mockResolvedValue(null);
 });
 afterEach(() => {
   vi.clearAllMocks();
@@ -64,6 +70,7 @@ describe("GET /api/v1/cards/[tcgId]", () => {
       name: "Charizard",
       languages: ["en", "de"],
       eraRarities: null,
+      foilPatterns: null,
     });
   });
 
@@ -92,6 +99,23 @@ describe("GET /api/v1/cards/[tcgId]", () => {
     const res = await get();
     expect((await res.json()).eraRarities).toBeNull();
     expect(raritiesOfEra).not.toHaveBeenCalled();
+  });
+
+  /* A Wizards holo had its set's one foil, so a pattern is not something to ask; a later card's
+     answer is left to its printings. */
+  it("answers no foil patterns for a Wizards card and no answer for a later one", async () => {
+    getCardDetail.mockResolvedValue({
+      id: "base1-8",
+      name: "Machamp",
+      rarity: "Rare Holo",
+      set: { id: "base1" },
+    });
+    serieOfSet.mockResolvedValue("base");
+    expect((await (await get("base1-8")).json()).foilPatterns).toEqual([]);
+    serieOfSet.mockResolvedValue("sv");
+    expect((await (await get()).json()).foilPatterns).toBeNull();
+    serieOfSet.mockRejectedValue(new Error("down"));
+    expect((await (await get()).json()).foilPatterns).toBeNull();
   });
 
   it("404s a card the catalogue does not know", async () => {

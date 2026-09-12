@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editionsOf, printingsOf } from "./card-printings";
+import { editionsOf, foilPatternsOfSerie, printingsOf } from "./card-printings";
 
 describe("printingsOf", () => {
   it("is nothing where TCGdex lists no variants, which is no answer rather than none", () => {
@@ -62,13 +62,19 @@ describe("editionsOf", () => {
     expect(editionsOf("base1-4", true)).toEqual(["1st-edition", "shadowless", "unlimited"]);
   });
 
-  // Offered where TCGplayer has a Shadowless product, and nowhere else. Machamp was the example of
-  // "none" until its product turned up in Deck Exclusives ("Machamp - 8/102 (Base Set
-  // Shadowless)", 2026-09-12), so it now reads as every other Base Set card; a card with no link at
-  // all is offered no Shadowless run.
-  it("offers Shadowless where TCGplayer has a product for the run, Machamp included, and not otherwise", () => {
-    expect(editionsOf("base1-8", true)).toEqual(["1st-edition", "shadowless", "unlimited"]);
+  // Machamp came only in the two-player starter, stamped: TCGplayer sells a 1st Edition Holofoil and
+  // nothing unstamped, where TCGdex lists an unlimited variant too. TCGplayer decides.
+  it("offers Machamp its stamped runs and no unlimited one, because none was printed", () => {
+    expect(editionsOf("base1-8", true)).toEqual(["1st-edition", "shadowless"]);
+  });
+
+  it("offers Shadowless where TCGplayer has a product for the run, and not otherwise", () => {
+    expect(editionsOf("base1-4", true)).toContain("shadowless");
     expect(editionsOf("base1-999", true)).toEqual(["1st-edition", "unlimited"]);
+  });
+
+  it("reads a stamped run from TCGplayer where TCGdex said nothing", () => {
+    expect(editionsOf("base2-10", null)).toEqual(["1st-edition", "unlimited"]);
   });
 
   it("offers a Jungle card its two runs, because no Shadowless Jungle was printed", () => {
@@ -77,5 +83,18 @@ describe("editionsOf", () => {
 
   it("offers a card printed once the one run it had", () => {
     expect(editionsOf("sv01-001", false)).toEqual(["unlimited"]);
+  });
+});
+
+describe("foilPatternsOfSerie", () => {
+  it("offers no pattern on a Wizards card, whose holo had its set's one foil", () => {
+    for (const serie of ["base", "gym", "neo", "lc", "ecard"])
+      expect(foilPatternsOfSerie(serie)).toEqual([]);
+  });
+
+  it("has no answer for any later series, or a series nobody could find", () => {
+    expect(foilPatternsOfSerie("ex")).toBeNull();
+    expect(foilPatternsOfSerie("sv")).toBeNull();
+    expect(foilPatternsOfSerie(null)).toBeNull();
   });
 });

@@ -4,6 +4,8 @@ import { getCardDetail } from "@/lib/core/collection/cards";
 import { usdToEurForRequest } from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
+import { foilPatternsOfSerie } from "@/lib/core/catalogue/card-printings";
+import { serieOfSet } from "@/lib/core/catalogue/era-rarities";
 import { rarityOrNull } from "@/lib/core/collection/collection-row";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -67,12 +69,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
      offers the era's own words cannot be used to write a word the era never had. */
   let languages;
   let eraRarities;
+  let foilPatterns;
   try {
-    [languages, eraRarities] = await Promise.all([
+    [languages, eraRarities, foilPatterns] = await Promise.all([
       own ? Promise.resolve([]) : languagesOf(tcgId, card.set?.id ?? null),
       rarityOrNull(card.rarity) === null && card.set?.id
         ? raritiesOfEra(card.set.id)
         : Promise.resolve(null),
+      /* `foilPatterns` is [] for a Wizards card, whose holo had its set's one foil, and null
+         everywhere else (foilPatternsOfSerie). A set nobody can find is null: no answer. */
+      own || !card.set?.id
+        ? Promise.resolve(null)
+        : serieOfSet(card.set.id).then(foilPatternsOfSerie, () => null),
     ]);
   } catch (err) {
     console.error(`The printings of ${tcgId} could not be read:`, err);
@@ -82,5 +90,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // holding one person's answer and handing it to the next asker without a key
   // would undo the check above. getCardDetail memoises upstream, so what this
   // costs is the round trip, not the walk.
-  return NextResponse.json({ ...card, languages, eraRarities }, { headers: readHeaders(req) });
+  return NextResponse.json(
+    { ...card, languages, eraRarities, foilPatterns },
+    { headers: readHeaders(req) },
+  );
 }
