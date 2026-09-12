@@ -201,6 +201,16 @@ components:
         `finish`, which chooses between the two series Cardmarket publishes and
         holds the ball patterns because those two are priced apart. Null means
         not recorded, which is every card added by hand.
+    Edition:
+      type: string
+      enum: [1st-edition, shadowless, unlimited]
+      description: |
+        Which print run a copy is from. A third axis beside `finish` and
+        `foilPattern`: an edition is when the card was printed, not which price
+        series it reads, and a 1st Edition holo is still a holo. `shadowless` is
+        Base Set's second run and comes from the person holding the card, since
+        no catalogue records it. Null means nobody has said, which is not the
+        same as unlimited.
     Price:
       type: object
       description: "One card's price, in euros. Cardmarket's where it stands alone, with its Near Mint band; the average of Cardmarket and TCGplayer (at the ECB rate) where both exist, and then `nm` is null and `market` is the shown figure."
@@ -232,6 +242,7 @@ components:
         owned: { type: boolean, description: "`false` is a wishlist entry." }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
         foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+        edition: { oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }] }
         quantity: { type: [integer, "null"] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -370,6 +381,9 @@ components:
         foilPattern:
           oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }]
           description: "What the foil looks like, which is not what it is worth. One card is commonly held both as a patterned holo and as a plain one, so this is a choice per copy."
+        edition:
+          oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }]
+          description: "Which print run this copy is from. Anything that is not one of the three is a 400, as on `CardPatch`."
         quantity: { type: integer, minimum: 1, default: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -389,6 +403,7 @@ components:
         excluded: { type: boolean }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
         foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+        edition: { oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }] }
         quantity: { type: integer, minimum: 1 }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -406,6 +421,7 @@ components:
       properties:
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
         foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+        edition: { oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }] }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
         language: { type: [string, "null"], enum: [en, de, fr, it, es, pt, nl, ja, ko, zh, zh-tw, zh-cn, null] }
@@ -440,6 +456,7 @@ components:
         acquiredAt: { type: [string, "null"], format: date-time }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
         foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+        edition: { oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }] }
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -526,6 +543,7 @@ components:
         owned: { type: boolean, description: "`false` is a wishlist entry." }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
         foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+        edition: { oneOf: [{ $ref: "#/components/schemas/Edition" }, { type: "null" }] }
         quantity: { type: integer }
         condition: { type: [string, "null"] }
         grade: { type: [string, "null"] }
@@ -1394,7 +1412,8 @@ paths:
         Every copy held and every card wanted, one row per kind of copy with its count, in the
         columns and order Dex exports (semicolons between them), so the file goes into Dex, a
         spreadsheet or back into `POST /v1/import/csv` unchanged. Four columns this app knows and
-        Dex has none for follow Dex's: Condition, Language, Acquired (a day) and Purchase price.
+        Dex has none for follow Dex's: Condition, Language, Acquired (a day), Purchase price and
+        Edition.
         UTF-8 with a byte order mark, CRLF line ends, named by the day in Content-Disposition.
       responses:
         "200":

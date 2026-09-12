@@ -34,6 +34,9 @@ import { type CardItem, copyPrice } from "./items";
  *   Price      Dex's format, "€ 8,63", or Dex's dash where nothing prices it.
  *   Note 1     The notes, whole. Note 2 to 5 stay empty.
  *
+ * Edition is one of ours, after Note 5: Dex has no column for it and writes the run in Variant
+ * instead, which it can only do by giving up saying "1st Edition Holo". Ours says both.
+ *
  * Illustrator is empty: this app does not keep it, and an empty column is a
  * column a reader can skip, where a missing one shifts every column after it.
  */
@@ -61,6 +64,7 @@ const HEADER = [
   "Language",
   "Acquired",
   "Purchase price",
+  "Edition",
 ] as const;
 
 const FINISH_WORDS: Record<string, string> = {
@@ -137,6 +141,7 @@ export function dexCsv(items: readonly CardItem[]): string {
         language,
         it.acquiredAt ? it.acquiredAt.slice(0, 10) : "",
         it.purchasePrice === null ? "" : it.purchasePrice.toFixed(2).replace(".", ","),
+        it.edition ?? "",
       ]),
     );
   }

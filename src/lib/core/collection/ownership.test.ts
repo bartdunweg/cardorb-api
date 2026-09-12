@@ -18,6 +18,7 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
   acquiredAt: null,
   finish: null,
   foilPattern: null,
+  edition: null,
   quantity: 1,
   condition: null,
   grade: null,

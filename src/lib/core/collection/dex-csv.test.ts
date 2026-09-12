@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCsv } from "./csv";
+import { editionFrom } from "./csv";
 import { dexRows, looksLikeDex } from "./dex";
 import { dexCsv, priceWord, variantWord } from "./dex-export";
 import type { CardItem } from "./items";
@@ -22,6 +23,7 @@ const item = (over: Partial<CardItem>): CardItem => ({
   owned: true,
   finish: "normal",
   foilPattern: null,
+  edition: null,
   quantity: 1,
   condition: null,
   grade: null,
@@ -42,14 +44,14 @@ describe("dexCsv", () => {
   it("writes Dex's header first, and this app's four columns after it", () => {
     const [header] = dexCsv([]).split("\r\n");
     expect(header).toBe(
-      "Type;Category;Locale;Series;Set;Id;Number;Name;Variant;Rarity;Illustrator;Quantity;Price;Note 1;Note 2;Note 3;Note 4;Note 5;Condition;Language;Acquired;Purchase price",
+      "Type;Category;Locale;Series;Set;Id;Number;Name;Variant;Rarity;Illustrator;Quantity;Price;Note 1;Note 2;Note 3;Note 4;Note 5;Condition;Language;Acquired;Purchase price;Edition",
     );
   });
 
   it("writes a held copy the way Dex does, the official set name and the count included", () => {
     const [, line] = dexCsv([item({ set: "Dark Explorers (BW5)", quantity: 3 })]).split("\r\n");
     expect(line).toBe(
-      "collection;My Collection;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Normal;Rare;;3;€ 8,63;;;;;;;;;",
+      "collection;My Collection;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Normal;Rare;;3;€ 8,63;;;;;;;;;;",
     );
   });
 
@@ -65,11 +67,12 @@ describe("dexCsv", () => {
         notes: "Traded with Sam",
         finish: "reverse-holo",
         foilPattern: "cosmos",
+        edition: "1st-edition",
         price: null,
       }),
     ]).split("\r\n");
     expect(line).toBe(
-      "collection;Wishlist;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Reverse Holo (Cosmos Holo);Rare;;1;—;Traded with Sam;;;;;Near Mint;de;2023-09-15;4,50",
+      "collection;Wishlist;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Reverse Holo (Cosmos Holo);Rare;;1;—;Traded with Sam;;;;;Near Mint;de;2023-09-15;4,50;1st-edition",
     );
   });
 
@@ -90,6 +93,7 @@ describe("dexCsv", () => {
         condition: "Near Mint",
         language: "de",
         acquiredAt: "2023-09-15T00:00:00+00:00",
+        edition: "1st-edition",
       }),
       item({ id: "row-2", name: "Umbreon", number: "70", owned: false, tcgId: "bw5-70" }),
     ]);
@@ -106,11 +110,31 @@ describe("dexCsv", () => {
         r.condition,
         r.language,
         r.acquiredAt,
+        r.edition,
       ]),
     ).toEqual([
-      ["Espeon", true, 2, "normal", "Near Mint", "de", "2023-09-15T00:00:00.000Z"],
-      ["Umbreon", false, 1, "normal", null, null, null],
+      ["Espeon", true, 2, "normal", "Near Mint", "de", "2023-09-15T00:00:00.000Z", "1st-edition"],
+      ["Umbreon", false, 1, "normal", null, null, null, null],
     ]);
+  });
+});
+
+describe("editionFrom", () => {
+  it("reads the run out of Dex's variant word and out of a column of its own", () => {
+    expect(editionFrom("1st Edition")).toBe("1st-edition");
+    expect(editionFrom("1st Edition Holofoil")).toBe("1st-edition");
+    expect(editionFrom("First Edition")).toBe("1st-edition");
+    expect(editionFrom("Shadowless")).toBe("shadowless");
+    expect(editionFrom("Unlimited Holofoil")).toBe("unlimited");
+    expect(editionFrom("1st-edition")).toBe("1st-edition");
+  });
+
+  it("says nothing where nothing says it, and is not fooled by a nearby word", () => {
+    expect(editionFrom("")).toBeNull();
+    expect(editionFrom("Holo")).toBeNull();
+    expect(editionFrom("Reverse Holo")).toBeNull();
+    // A league promo, not a print run.
+    expect(editionFrom("League Challenge (1st Place)")).toBeNull();
   });
 });
 

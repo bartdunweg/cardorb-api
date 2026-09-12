@@ -279,6 +279,7 @@ const draft = (over: Partial<CardDraft> = {}): CardDraft => ({
   excluded: false,
   finish: null,
   foilPattern: null,
+  edition: null,
   quantity: 1,
   condition: null,
   grade: null,

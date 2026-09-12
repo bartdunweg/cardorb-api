@@ -74,6 +74,28 @@ export type FoilPattern = (typeof FOIL_PATTERNS)[number];
 export const isFoilPattern = (v: unknown): v is FoilPattern =>
   typeof v === "string" && (FOIL_PATTERNS as readonly string[]).includes(v);
 
+/**
+ * Which print run a copy is from.
+ *
+ * The third axis, and neither of the other two. `finish` answers which price series a copy
+ * reads and the value history is built on it; `foil_pattern` is what the foil looks like. An
+ * edition is when the card was printed: a 1st Edition holo is still a holo, and it is worth
+ * multiples of the unlimited one ($1,085 against $519 for Neo Genesis Lugia on 2026-09-12).
+ *
+ * Three runs the classics had. `shadowless` is Base Set's second run, the one without a drop
+ * shadow on the art box; no catalogue records it, so it can only come from the person holding
+ * the card. TCGdex does say whether a card exists as 1st Edition (`variants.firstEdition`),
+ * which is what makes offering the choice honest rather than a guess.
+ *
+ * Null is not unlimited. Most of what anybody holds is unlimited, and saying that for a row
+ * nobody has looked at would put a fact in the database that nobody established.
+ */
+export const EDITIONS = ["1st-edition", "shadowless", "unlimited"] as const;
+export type Edition = (typeof EDITIONS)[number];
+
+export const isEdition = (v: unknown): v is Edition =>
+  typeof v === "string" && (EDITIONS as readonly string[]).includes(v);
+
 /** The languages a card is printed in, as Cardmarket and TCGdex code them. */
 /**
  * `zh-tw` and `zh-cn` beside `zh`: Chinese is two catalogues, traditional and simplified, and
@@ -173,6 +195,8 @@ export type CollectionRow = {
   finish: Finish | null;
   /** What the foil looks like, where a source said. Null is "not recorded", never "plain". */
   foilPattern: FoilPattern | null;
+  /** Which print run, where somebody said. Null is "not recorded", never "unlimited". */
+  edition: Edition | null;
   /**
    * The nine — not eight — inventory facts added for per-printing detail
    * (2026-08-14 card-inventory-fields migration): quantity 1, isFavorite
@@ -231,6 +255,8 @@ export type CardDraft = {
   finish: Finish | null;
   /** What the foil looks like, where a source said. Null is "not recorded", never "plain". */
   foilPattern: FoilPattern | null;
+  /** Which print run, where somebody said. Null is "not recorded", never "unlimited". */
+  edition: Edition | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -351,6 +377,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     excluded = false,
     finish = null,
     foilPattern = null,
+    edition = null,
     quantity = 1,
     condition = null,
     grade = null,
@@ -393,6 +420,9 @@ export function validateCardDraft(body: unknown): CardValidation {
     // price and no placement — and the list is one somebody else's vocabulary
     // gets mapped onto, so it will be short of a name before it is wrong.
     foilPattern: isFoilPattern(foilPattern) ? foilPattern : null,
+    // The same reasoning as the pattern above: an edition nobody recognises reads as not
+    // recorded rather than refusing the whole card.
+    edition: isEdition(edition) ? edition : null,
     quantity: Number.isFinite(Number(quantity)) ? Math.trunc(Number(quantity)) : 1,
     condition: optionalText(condition),
     grade: optionalText(grade),
@@ -481,6 +511,7 @@ export function rowFromDraft(
     excluded: draft.excluded,
     finish: draft.finish,
     foilPattern: draft.foilPattern,
+    edition: draft.edition,
     quantity: draft.quantity,
     condition: draft.condition,
     grade: draft.grade,
@@ -513,6 +544,8 @@ export type CardPatch = Partial<{
   finish: Finish | null;
   /** The same, for the foil's pattern. Its own field: see FOIL_PATTERNS. */
   foilPattern: FoilPattern | null;
+  /** The same, for the print run. Its own field: see EDITIONS. */
+  edition: Edition | null;
   quantity: number;
   condition: string | null;
   grade: string | null;
@@ -603,6 +636,13 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
       return { kind: "invalid", error: `foilPattern must be null, ${FOIL_PATTERNS.join(", ")}.` };
     patch.foilPattern = b.foilPattern as FoilPattern | null;
   }
+  if ("edition" in b) {
+    // Refused rather than blanked, as the two above are: one card is held as a 1st Edition and
+    // as an unlimited at the same time, so this is a choice between two copies somebody owns.
+    if (b.edition !== null && !isEdition(b.edition))
+      return { kind: "invalid", error: `edition must be null, ${EDITIONS.join(", ")}.` };
+    patch.edition = b.edition as Edition | null;
+  }
   if ("quantity" in b) {
     const q = Number(b.quantity);
     if (!Number.isInteger(q) || q < 1) {
@@ -688,6 +728,7 @@ export type CopyChanges = Pick<
   CardPatch,
   | "finish"
   | "foilPattern"
+  | "edition"
   | "condition"
   | "grade"
   | "language"
@@ -701,6 +742,7 @@ export type CopyChanges = Pick<
 const COPY_KEYS = [
   "finish",
   "foilPattern",
+  "edition",
   "condition",
   "grade",
   "language",

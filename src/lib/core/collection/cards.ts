@@ -52,6 +52,7 @@ import {
   type CollectionRow,
   type Finish,
   type FoilPattern,
+  type Edition,
   type Language,
   isReverseFinish,
 } from "./collection-row";
@@ -101,6 +102,12 @@ export type Variant = {
    * prices a cosmos holo apart from a plain one. See FOIL_PATTERNS.
    */
   foilPattern: FoilPattern | null;
+  /**
+   * Which print run this copy is from, where somebody said. Null is "not recorded", which is
+   * every row until 2026-09-12. Beside `finish` for the same reason the pattern is: an edition
+   * is when the card was printed, not which price series it reads. See EDITIONS.
+   */
+  edition: Edition | null;
   /**
    * How many of this printing. Null on a public payload rather than absent —
    * see forPublic(), which nulls it because how many of a card somebody has is
@@ -462,6 +469,8 @@ export function forPublic(sets: CardSet[]): CardSet[] {
         // looks like is theirs, and the public page shows the cards rather
         // than the collection.
         foilPattern: null,
+        // The same argument again: which run somebody's own copy is from is theirs.
+        edition: null,
         quantity: null,
         condition: null,
         grade: null,
@@ -1165,6 +1174,7 @@ export async function buildCollection(
           id: row.id,
           finish: row.finish,
           foilPattern: row.foilPattern,
+          edition: row.edition,
           quantity: row.quantity,
           condition: row.condition,
           grade: row.grade,
@@ -1199,6 +1209,7 @@ export async function buildCollection(
           owned: p.owned,
           finish: p.finish,
           foilPattern: p.foilPattern,
+          edition: p.edition,
           quantity: p.quantity,
           condition: p.condition,
           grade: p.grade,
