@@ -3,6 +3,7 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import {
   countStats,
   facetsOf,
+  filterCounts,
   filterItems,
   filterPublicItems,
   sumValue,
@@ -267,6 +268,80 @@ describe("filterItems", () => {
   });
 });
 
+describe("filterCounts", () => {
+  const base = flattenItems(SETS)[0]!;
+  const row = (id: string, over: Partial<typeof base>) => ({
+    ...base,
+    id,
+    owned: true,
+    quantity: 1,
+    finish: null,
+    edition: null,
+    tcgId: null,
+    ...over,
+    set: over.setTitle ?? base.set,
+  });
+  const all = [
+    row("a", { setTitle: "Base Set", rarity: "Rare", gen: "Base", type: "Fire", tcgId: "b-1" }),
+    row("b", { setTitle: "Base Set", rarity: "Common", gen: "Base", type: "Water", tcgId: "b-2" }),
+    row("c", { setTitle: "Jungle", rarity: "Rare", gen: "Base", type: "Grass", tcgId: "j-1" }),
+    row("d", { setTitle: "Jungle", rarity: "Rare", gen: "Base", type: "Fire", tcgId: "j-1" }),
+    row("e", { setTitle: "Sun & Moon", rarity: null, gen: "SM", type: null, tcgId: "sm-1" }),
+    row("w", { setTitle: "Jungle", rarity: "Rare", gen: "Base", type: "Fire", owned: false }),
+  ];
+  const fullArts = new Set(["j-1", "sm-1"]);
+
+  it("counts every option over the whole list when nothing is asked, skipping empty values", () => {
+    expect(filterCounts(all, {}, fullArts)).toEqual({
+      set: { "Base Set": 2, Jungle: 3, "Sun & Moon": 1 },
+      rarity: { Rare: 4, Common: 1 },
+      gen: { Base: 5, SM: 1 },
+      type: { Fire: 3, Water: 1, Grass: 1 },
+      fullArt: 3,
+      duplicates: 2,
+    });
+  });
+  it("sets a key's own values aside and keeps every other filter", () => {
+    const counts = filterCounts(all, { owned: true, rarity: ["Rare"], type: ["Fire"] }, fullArts);
+    // Rarity is counted over owned Fire copies, whatever rarity was chosen.
+    expect(counts.rarity).toEqual({ Rare: 2 });
+    // Type is counted over owned Rare copies, whatever type was chosen.
+    expect(counts.type).toEqual({ Fire: 2, Grass: 1 });
+    // Set and generation keep both.
+    expect(counts.set).toEqual({ "Base Set": 1, Jungle: 1 });
+    expect(counts.gen).toEqual({ Base: 2 });
+  });
+  it("gives a key the same counts whichever of its own values are chosen", () => {
+    const none = filterCounts(all, { owned: true }, fullArts);
+    const one = filterCounts(all, { owned: true, set: ["Jungle"] }, fullArts);
+    const two = filterCounts(all, { owned: true, set: ["Jungle", "base set"] }, fullArts);
+    expect(one.set).toEqual(none.set);
+    expect(two.set).toEqual(none.set);
+    expect(two.rarity).toEqual({ Rare: 3, Common: 1 });
+  });
+  it("counts full arts and duplicates with the rest of the filter on", () => {
+    const counts = filterCounts(all, { owned: true, set: ["Jungle"] }, fullArts);
+    expect(counts.fullArt).toBe(2);
+    // The two Jungle rows are one printing held twice; the wished one holds nothing.
+    expect(counts.duplicates).toBe(2);
+    expect(filterCounts(all, { owned: true, type: ["Water"] }, fullArts)).toMatchObject({
+      fullArt: 0,
+      duplicates: 0,
+    });
+  });
+  it("leaves the full-art count out when the ids could not be read", () => {
+    expect(filterCounts(all, {}, undefined)).not.toHaveProperty("fullArt");
+  });
+  /* The route hands a rule folder over with `owned` cleared, as it does for the list: the rule
+     keeps the owned copies it matches, and clearing the rarity key does not clear the rule. */
+  it("keeps a rule folder's rule while it counts", () => {
+    const counts = filterCounts(all, { rule: { rarities: ["Rare"] } }, fullArts);
+    expect(counts.set).toEqual({ "Base Set": 1, Jungle: 2 });
+    expect(counts.rarity).toEqual({ Rare: 3 });
+    expect(counts.duplicates).toBe(2);
+  });
+});
+
 describe("sortItems", () => {
   const price = { market: 2, low: null, nm: null } as unknown as Price;
   const foil = { market: 5, low: null, nm: null } as unknown as Price;
@@ -334,6 +409,13 @@ describe("readItemQuery", () => {
       query: { limit: 100, offset: 0, duplicates: true },
     });
     expect(read("duplicates=0")).toEqual({ kind: "ok", query: { limit: 100, offset: 0 } });
+  });
+  it("reads counts=1 and nothing else as asking for counts", () => {
+    expect(read("counts=1")).toEqual({
+      kind: "ok",
+      query: { limit: 100, offset: 0, counts: true },
+    });
+    expect(read("counts=true")).toEqual({ kind: "ok", query: { limit: 100, offset: 0 } });
   });
   it("reads a generation and a type as it reads a set", () => {
     expect(read("gen=Base&type=Lightning")).toEqual({

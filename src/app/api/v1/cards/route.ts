@@ -14,6 +14,7 @@ import { findFolder, getCollection } from "@/lib/core/collection/collection";
 import type { FolderRule } from "@/lib/core/collection/folders";
 import {
   facetsOf,
+  filterCounts,
   filterItems,
   flattenItems,
   pageOf,
@@ -95,18 +96,22 @@ export async function GET(req: Request) {
      it: a row filed from the old catalogue stores `sv3pt5-1` and the item carries `sv03.5-001`.
      Checked on 2026-09-12: all 1,915 rows of one collection carried a resolved id, none missing,
      so no second key by set and number is needed (#336 added one and it matched nothing). */
+  /* `?counts=1` wants the full-art count beside the list whether or not the list is narrowed to
+     them, so the ids are read for it too. There a failure costs only that one number. */
   let fullArtIds: Set<string> | undefined;
-  if (read.query.fullArt) {
+  let knownFullArts: Set<string> | undefined;
+  if (read.query.fullArt || read.query.counts) {
     const ids = [...new Set(all.flatMap((it) => (it.tcgId ? [it.tcgId] : [])))];
     try {
       const store = adminClient();
       if (!store) throw new Error("no service role client");
-      fullArtIds = await fullArtIdsAmong(store, ids);
+      knownFullArts = await fullArtIdsAmong(store, ids);
+      if (read.query.fullArt) fullArtIds = knownFullArts;
     } catch (err) {
       // The copy is the only place that knows. Answering the whole collection instead would be
       // a page that says "full art" over cards that are not, which is worse than saying so.
       console.error("Full art unavailable:", err instanceof Error ? err.message : err);
-      return unavailable(undefined, readHeaders(req));
+      if (read.query.fullArt) return unavailable(undefined, readHeaders(req));
     }
   }
   // A rule folder holds owned copies only, whatever `owned` says: the rule is the filter,
@@ -136,6 +141,8 @@ export async function GET(req: Request) {
       ...(new URL(req.url).searchParams.get("facets") === "0"
         ? {}
         : { facets: facetsOf(all, { owned: read.query.owned }) }),
+      // What each option in a filter sheet would leave, over the same filter as the list.
+      ...(read.query.counts ? { counts: filterCounts(all, filter, knownFullArts) } : {}),
       ...(catalogueUnavailable ? { catalogueUnavailable } : {}),
     },
     { headers: readHeaders(req) },

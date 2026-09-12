@@ -324,6 +324,48 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   });
 }
 
+export type FilterCounts = {
+  /** Keyed by the set's title, the name a filter sheet shows. */
+  set: Record<string, number>;
+  rarity: Record<string, number>;
+  gen: Record<string, number>;
+  type: Record<string, number>;
+  /** Left out when the full-art ids could not be read: an unknown is not a zero. */
+  fullArt?: number;
+  duplicates: number;
+};
+
+/**
+ * How many copies each filter option would leave, given the rest of the filter: what a filter
+ * sheet writes beside an option. A key's own values are set aside while it is counted, so a
+ * sheet with Rare chosen still says how many Rare Holo there are; every other key narrows as it
+ * does for the list. Items, the unit of `total`. `fullArt` and `duplicates` count the list with
+ * that one switched on. `fullArtIds` is the full-art set whether or not the filter asked for it.
+ */
+export function filterCounts(
+  items: CardItem[],
+  f: ItemFilter,
+  fullArtIds: ReadonlySet<string> | undefined,
+): FilterCounts {
+  const tally = (key: "set" | "rarity" | "gen" | "type") => {
+    const field = key === "set" ? "setTitle" : key;
+    const out: Record<string, number> = {};
+    for (const it of filterItems(items, { ...f, [key]: undefined })) {
+      const v = it[field];
+      if (v) out[v] = (out[v] ?? 0) + 1;
+    }
+    return out;
+  };
+  return {
+    set: tally("set"),
+    rarity: tally("rarity"),
+    gen: tally("gen"),
+    type: tally("type"),
+    ...(fullArtIds ? { fullArt: filterItems(items, { ...f, fullArtIds }).length } : {}),
+    duplicates: filterItems(items, { ...f, duplicates: true }).length,
+  };
+}
+
 export const SORTS = ["set", "name", "price", "added", "dex"] as const;
 export type Sort = (typeof SORTS)[number];
 export type Order = "asc" | "desc";
@@ -436,6 +478,8 @@ export type ItemQuery = Omit<ItemFilter, "set" | "rarity" | "gen" | "type"> &
      * copy; the filter itself never reaches a store.
      */
     fullArt?: boolean;
+    /** `?counts=1`: the answer carries filterCounts() beside the page. */
+    counts?: boolean;
   };
 
 /**
@@ -455,6 +499,7 @@ export function readItemQuery(
   }
   if (params.get("fullArt") === "1") query.fullArt = true;
   if (params.get("duplicates") === "1") query.duplicates = true;
+  if (params.get("counts") === "1") query.counts = true;
   for (const key of ["owned", "favorite", "priced"] as const) {
     const v = params.get(key);
     if (v === null) continue;
