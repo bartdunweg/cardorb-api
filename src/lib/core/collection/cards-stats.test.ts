@@ -92,12 +92,14 @@ describe("heldValue with a foil printing", () => {
 
   it("prices a reverse holo as a reverse holo, and its normal twin as normal", () => {
     // The whole reason the finish column exists: one card, two copies, two
-    // prices. This used to come to 20 — the normal price, twice.
+    // prices. This used to come to 20, the normal price twice. The foil figure
+    // is TCGplayer's reverse-holofoil printing since 2026-09-12, not
+    // Cardmarket's -holo fields.
     expect(
       heldValue(
         card({
           price: NORMAL,
-          priceHolo: FOIL,
+          pricePrintings: { normal: NORMAL, "reverse-holofoil": FOIL },
           variants: [
             variant({ id: "a", finish: "normal" }),
             variant({ id: "b", finish: "reverse-holo" }),
@@ -141,7 +143,7 @@ describe("heldValue with a foil printing", () => {
       heldValue(
         card({
           price: NORMAL,
-          priceHolo: FOIL,
+          pricePrintings: { normal: NORMAL, "reverse-holofoil": FOIL },
           variants: [variant({ id: "a", finish: "reverse-holo", quantity: 3 })],
         }),
       ),

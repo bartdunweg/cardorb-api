@@ -60,6 +60,13 @@ if the two have drifted apart.
 
 - A correction to the catalogue reaches the search the same day. The document the browser searches in was kept for a day without asking, so a card whose picture was fixed this afternoon stayed a blank square until that day was up; it is now checked against its version on every page load, which answers with no content where nothing has changed.
 
+- Every price is TCGplayer's, converted at the day's rate, or there is none. The two markets were averaged, which put half of a holo's figure on the plain rare beside it without saying so: a Team Rocket Dark Golbat read €30.46 on Cardmarket's shared product where TCGplayer said €5.83. A card TCGplayer does not price, about one in eight and mostly promos, now reads no price rather than the other market's.
+- The estimated Near Mint band is gone with it. It was a ratio fitted to Cardmarket's trend, and nothing reads that trend any more.
+- A copy whose finish nobody has filled in reads the plain card's figure, not the reverse holo's. Through TCGplayer's printings it had been reading the reverse, which counted every unclassified modern common at several times its price. A holo copy no longer falls through to a reverse's figure either.
+- A reverse holo's price is TCGplayer's reverse-holofoil printing rather than Cardmarket's foil fields, and a held card's price history no longer falls back to Cardmarket where TCGplayer prices nothing: no price, no point.
+- A card's detail (`GET /v1/cards/{tcgId}`) carries TCGplayer's figure and `tcgplayerId`, the product the figure is from; `market`, `priceHolo` and `priceShadowless` are sent as null until no client decodes them.
+- Not yet: the nightly cron's weekly pass over unheld cards still writes Cardmarket's guide, and the Shadowless run has no figure of its own. Both move to TCGplayer through tcgcsv's archive in the next change, along with a rebuild of the price history from one source.
+
 - The Pokédex is a binder you make yourself now, not a fixture. The setting that lived on your profile became a binder called "Pokédex" carrying the same range, rarities and public flag, and it can be edited and deleted like any other binder.
 
 - A binder shown as a Pokédex fills itself from the Pokémon in its range, rather than waiting for cards to be filed in it by hand. The binders made when the Pokédex stopped being a fixture said "0 cards"; they hold the collection again.

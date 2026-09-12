@@ -22,6 +22,12 @@ vi.mock("@/lib/core/collection/cards", () => ({
 vi.mock("@/lib/core/catalogue/card-languages", () => ({
   languagesOf: async () => ["en", "de"],
 }));
+/* The day's dollar rate, which the route reads so the price can be TCGplayer's in euros. The
+   real one sits in collection.ts behind server-only and asks frankfurter; neither belongs here. */
+const usdToEurForRequest = vi.fn();
+vi.mock("@/lib/core/collection/collection", () => ({
+  usdToEurForRequest: () => usdToEurForRequest(),
+}));
 const raritiesOfEra = vi.fn();
 vi.mock("@/lib/core/catalogue/catalogue", () => ({
   raritiesOfEra: (...a: unknown[]) => raritiesOfEra(...a),
@@ -37,6 +43,7 @@ const get = (tcgId = "sv03-125") =>
 beforeEach(() => {
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
   getCardDetail.mockResolvedValue({ id: "sv03-125", name: "Charizard" });
+  usdToEurForRequest.mockResolvedValue(0.92);
 });
 afterEach(() => {
   vi.clearAllMocks();
@@ -102,5 +109,18 @@ describe("GET /api/v1/cards/[tcgId]", () => {
     expect(await res.json()).toEqual({
       error: "That card could not be read. Try again in a moment.",
     });
+  });
+});
+
+describe("the price's currency", () => {
+  // The price on a card is TCGplayer's dollars since 2026-09-12. Without the day's rate the
+  // detail has no price at all rather than one in the wrong currency, so the route must hand
+  // the rate on, and hand on null when it could not be read.
+  it("passes the day's dollar rate to the card, and null when there is none", async () => {
+    await get();
+    expect(getCardDetail).toHaveBeenLastCalledWith("sv03-125", null, 0.92);
+    usdToEurForRequest.mockResolvedValueOnce(null);
+    await get();
+    expect(getCardDetail).toHaveBeenLastCalledWith("sv03-125", null, null);
   });
 });

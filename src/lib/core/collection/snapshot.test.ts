@@ -142,10 +142,14 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
   const priced = (market: number, holo: number | null = null, over: Partial<OwnedCard> = {}) =>
     card({
       price: { market, low: null, nm: null } as unknown as OwnedCard["price"],
-      priceHolo:
+      // The foil figure is TCGplayer's reverse-holofoil printing, as it is on a live card.
+      pricePrintings:
         holo == null
           ? null
-          : ({ market: holo, low: null, nm: null } as unknown as OwnedCard["priceHolo"]),
+          : ({
+              normal: { market, low: null, nm: null },
+              "reverse-holofoil": { market: holo, low: null, nm: null },
+            } as unknown as OwnedCard["pricePrintings"]),
       ...over,
     });
 
@@ -206,16 +210,17 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
     ]);
   });
 
-  it("records the market the card shows: TCGplayer's printings first, Cardmarket where they are silent", () => {
+  it("records the market the card shows: TCGplayer's printings first, then the card's own figure", () => {
     const eur = (market: number) => ({ market, low: null, avg30: null, nm: null });
     const sets = [
       set([
-        // A Jungle Scyther: one product on Cardmarket at €20.72, two printings on TCGplayer.
+        // A Jungle Scyther: two printings on TCGplayer, and the printings win over the card's figure.
         priced(20.72, 19.69, {
           tcgId: "base2-10",
           pricePrintings: { "unlimited-holofoil": eur(53.23), unlimited: eur(15.19) },
         }),
-        // A promo TCGplayer does not price: the point stays what every point before today was.
+        // A card with no printings of its own: the plain series is the card's figure, TCGplayer's
+        // since 2026-09-12, and there is no foil series to invent.
         priced(7, null, { tcgId: "svp-1", key: "k-promo" }),
       ]),
     ];

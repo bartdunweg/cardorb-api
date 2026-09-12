@@ -47,7 +47,7 @@ import {
   resolveSetFacts,
 } from "./cards";
 import { DAY, mapLimit } from "../util";
-import { blendPrices, priceFromUsd } from "../price-basis.mjs";
+import { priceFromMarket, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
@@ -461,9 +461,13 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
+      // v6: every price is TCGplayer's or none, the Near Mint band is gone, and an unclassified
+      // copy no longer reads a reverse's figure (2026-09-12). An entry written under v5 holds
+      // the blend of both markets, and would stand for a day after the deploy.
+      //
       // v5: a card's facts carry the printings and which market answered for a copy, and the
       // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-      ["collection-facts", "v5", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v6", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -566,7 +570,24 @@ export const usdForSet = async (
   }
 };
 
-/** The set's facts with the second market blended into every price, where the rate allows. */
+/**
+ * Every card in a set's facts with no price on it at all.
+ *
+ * Not a price of zero and not the guide's euros: nothing. Used where the day's dollar rate
+ * could not be read, which is the one case where TCGplayer's figure exists and cannot be
+ * stated in this collection's currency.
+ */
+const unpriced = <T extends { price?: unknown; priceHolo?: unknown; priceShadowless?: unknown }>(
+  cards: Record<string, T>,
+): Record<string, T> =>
+  Object.fromEntries(
+    Object.entries(cards).map(([key, f]) => [
+      key,
+      { ...f, price: null, priceHolo: null, priceShadowless: null },
+    ]),
+  );
+
+/** The set's facts with TCGplayer's figure as every price, where the rate allows. */
 async function factsWithUsd(
   setName: string,
   identities: CardIdentity[],
@@ -574,28 +595,29 @@ async function factsWithUsd(
   usdToEur: number | null,
 ) {
   const facts = await cachedSetFacts(setName, identities, priceSource);
-  if (usdToEur == null) return facts;
-  /* Only the English cards, by their TCGdex id: a card from its own catalogue keeps
-     Cardmarket's figure alone, since there is no TCGplayer price for a Japanese printing.
-     A card whose facts already carry the dollar figure — priced by TCGdex because the guide
-     had nothing — is not asked for twice. */
+  /* No rate, no price. The figures underneath are the guide's euros, and handing those back
+     would quietly put a card on the European market's number without saying so, which is the
+     confusion this whole change exists to end. The rate is cached for a day, so this bites
+     only on a cold cache during a frankfurter outage, and then every card reads "no price"
+     rather than the wrong one. */
+  if (usdToEur == null) return { ...facts, cards: unpriced(facts.cards) };
+  /* Only the English cards, by their TCGdex id: a card from its own catalogue is not on
+     TCGplayer's English shelf, so nothing here can price it. A card whose facts already carry
+     the dollar figure, priced by TCGdex because the guide had nothing, is not asked twice. */
   const wanted = Object.values(facts.cards).flatMap((f) =>
     !f.catalogue && f.tcgId && !f.usd ? [f.tcgId] : [],
   );
   const usd = await usdForSet(setName, [...new Set(wanted)]);
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
-      if (f.catalogue) return [key, f];
+      // A Japanese, Korean or Chinese printing: TCGplayer's English shelf does not carry it,
+      // so it has no price here. Its own catalogue's figure is Cardmarket's and no longer
+      // shown. tcgcsv carries TCGplayer's Japanese shelf and is where this comes back from.
+      if (f.catalogue) return [key, { ...f, price: null }];
       const fetched = f.tcgId ? usd[f.tcgId] : null;
       const p = f.usd ?? fetched?.usd ?? null;
-      /*
-       * The stamped run's figure is not blended with Cardmarket's.
-       *
-       * Every other price here is the average of the two markets, which works because both
-       * describe the same product. They do not here: Cardmarket publishes one figure per card
-       * id and it is the ordinary run's, so averaging it with the stamped run's dollars would
-       * give a number that is neither run's. TCGplayer alone, converted, or nothing.
-       */
+      /* The stamped run's own dollars, converted. Nothing to reconcile any more: every price
+         on this card is TCGplayer's now, this one included. */
       const first = f.usdFirstEd ?? fetched?.firstEd ?? null;
       /*
        * Every printing TCGplayer prices, in euros, and the product id beside it.
@@ -603,8 +625,8 @@ async function factsWithUsd(
        * This is the market that tells a holo from the plain card and a stamped run from an
        * unlimited one; Cardmarket files those together often enough to be wrong by multiples
        * (a Jungle Scyther is one product there and two printings here). copyPriceOf() reads
-       * these first and falls back to Cardmarket, which is still the only figure for most
-       * promos. The ids travel so a person can open the page the figure came from.
+       * these first, and a card TCGplayer does not price has no price at all. The ids travel
+       * so a person can open the page the figure came from and check it.
        */
       const printings = f.usdPrintings ?? fetched?.printings ?? null;
       const pricePrintings = printings
@@ -623,7 +645,7 @@ async function factsWithUsd(
         key,
         {
           ...f,
-          price: blendPrices(f.price, p ? priceFromUsd(p, usdToEur) : null),
+          price: priceFromMarket(f.price, p ? priceFromUsd(p, usdToEur) : null),
           priceFirstEd: first ? priceFromUsd(first, usdToEur) : null,
           pricePrintings,
           printingIds,
@@ -651,7 +673,7 @@ const cachedUsdToEur = () =>
     )(),
   );
 
-const usdToEurForRequest = cache(async (): Promise<number | null> => {
+export const usdToEurForRequest = cache(async (): Promise<number | null> => {
   try {
     return await cachedUsdToEur();
   } catch (err) {

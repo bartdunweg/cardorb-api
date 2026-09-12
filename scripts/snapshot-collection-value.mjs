@@ -12,9 +12,9 @@
  * It used to upsert on (user_id, snapshot_date): the same row, under the same key, that
  * /api/v1/cron/snapshot writes every night. The two did not agree, and could not.
  *
- * The cron prices a card at the blended two-market figure — Cardmarket's shown price and
- * TCGplayer's market in euros, averaged; blendPrices() in lib/core/price-basis.mjs, over
- * the same assembly every request reads. This script prices from Cardmarket's guide
+ * The cron priced a card at the blended two-market figure (Cardmarket's shown price and
+ * TCGplayer's market in euros, averaged) until 2026-09-12, and at TCGplayer's alone since
+ * (priceFromMarket() in lib/core/price-basis.mjs), over the same assembly every request reads. This script prices from Cardmarket's guide
  * alone, which above €20 is the middle of the Near Mint band. On a €100 card that is
  * 100 × 1.275 = 127.50 against (127.50 + 100) / 2 = 113.75, a step of 12% into a chart
  * that is permanent and that says nothing about why it stepped. Below the band it steps
