@@ -441,6 +441,14 @@ export async function resolveEnglishSetId(setId: string): Promise<string | null>
  * `sv03.5`'s cards; the prefix check keeps the set's own. Fails soft: a card
  * without facts keeps rarity null and types empty, which is what the other
  * shelves have always shown, and a set is worth showing without them.
+ *
+ * The hyphen in the filter is load-bearing. Asked for `sm1` the contains-match
+ * answers sm1, sm10, sm11, sm115, sm12, sm2 and the rest at once, and the
+ * window is the first 500 of them, so the prefix check below threw away what
+ * came back and 64 of Sun & Moon's 172 cards were left with no rarity at all
+ * (measured 2026-09-12). Every card past number 149 was one of them, which is
+ * the whole back half of the set: its full arts and its secret rares. `sm1-`
+ * matches that set alone, because `sm10-1` has a zero where the hyphen goes.
  */
 async function englishFacts(
   setId: string,
@@ -448,7 +456,7 @@ async function englishFacts(
   const out = new Map<string, { rarity: string | null; types: string[] }>();
   try {
     const body = (await graphql(
-      `{ cards(filters: { id: ${JSON.stringify(setId)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types } }`,
+      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types } }`,
       `en set ${setId} facts`,
     )) as {
       cards?: ({ id: string; rarity?: string | null; types?: string[] | null } | null)[];
