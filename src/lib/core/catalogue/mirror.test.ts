@@ -3,10 +3,22 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const englishSets = vi.fn();
 const englishSet = vi.fn();
+/** Which numbers TCGdex names no scan for; none unless a test says so. */
+const scanGaps = vi.fn(async () => new Set<string>());
 vi.mock("./tcgdex-browse", () => ({
   englishSets: () => englishSets(),
   englishSet: (...a: unknown[]) => englishSet(...a),
+  englishScanGaps: (...a: unknown[]) => scanGaps(...(a as [])),
 }));
+
+/** Whether a built address holds a file, and what the second catalogue has instead. */
+const tcgdexScan = vi.fn(async (base: string) => base as string | null);
+const ptcgScan = vi.fn(async () => null as string | null);
+vi.mock("./artwork", async (original) => ({
+  ...(await original<Record<string, unknown>>()),
+  tcgdexScan: (...a: unknown[]) => tcgdexScan(...(a as [string])),
+}));
+vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as [])) }));
 
 const { buildIndex, forgetCopy, mirrorQuery, searchMirror, syncMirror } = await import("./mirror");
 
@@ -194,6 +206,10 @@ describe("syncMirror", () => {
   });
 
   beforeEach(() => {
+    vi.clearAllMocks();
+    scanGaps.mockResolvedValue(new Set<string>());
+    tcgdexScan.mockImplementation(async (base: string) => base);
+    ptcgScan.mockResolvedValue(null);
     englishSet.mockImplementation(async (id: string) => ({
       set: set(id, 1, "2024/01/01"),
       cards: [hit(`${id}-001`, "001")],
@@ -265,6 +281,68 @@ describe("syncMirror", () => {
       set_id: "sv03.5",
       cards: 1,
     });
+  });
+
+  /* The gap this closes: TCGdex names no scan for a handful of cards a set, its built address
+     is a 404 for some of those, and the copy used to keep the 404. */
+  it("keeps the built address for a card TCGdex names no scan for but does have a file for", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [hit("svp-102", "102")],
+    });
+    scanGaps.mockResolvedValue(new Set(["102"]));
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://assets.tcgdex.net/en/x/svp/102" }),
+    ]);
+    expect(ptcgScan).not.toHaveBeenCalled();
+  });
+
+  it("copies the second catalogue's file where the built address holds nothing", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: { ...set("svp", 1, "2023/06/30"), name: "SVP Black Star Promos" },
+      cards: [{ ...hit("svp-085", "085"), name: "Pikachu with Grey Felt Hat" }],
+    });
+    scanGaps.mockResolvedValue(new Set(["085"]));
+    tcgdexScan.mockResolvedValue(null);
+    ptcgScan.mockResolvedValue("https://images.pokemontcg.io/svp/85.png");
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(ptcgScan).toHaveBeenCalledWith(
+      "SVP Black Star Promos",
+      "085",
+      "Pikachu with Grey Felt Hat",
+    );
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.pokemontcg.io/svp/85.png" }),
+    ]);
+  });
+
+  it("copies no picture at all where neither catalogue has one", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [hit("svp-190", "190")],
+    });
+    scanGaps.mockResolvedValue(new Set(["190"]));
+    tcgdexScan.mockResolvedValue(null);
+    ptcgScan.mockResolvedValue(null);
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: null }),
+    ]);
+  });
+
+  it("leaves every address alone where the catalogue names a scan for all of them", async () => {
+    englishSets.mockResolvedValue([set("sv03.5", 1, "2023/09/22")]);
+    const { db } = fakeStore();
+    await syncMirror(db);
+    expect(tcgdexScan).not.toHaveBeenCalled();
+    expect(ptcgScan).not.toHaveBeenCalled();
   });
 
   it("skips a set whose facts could not be read, and carries on with the rest", async () => {

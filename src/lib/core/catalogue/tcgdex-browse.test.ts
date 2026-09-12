@@ -273,6 +273,20 @@ describe("tcgdex-browse", () => {
       });
     });
 
+    /* The address is built for every card, because the record names no scan for cards whose
+       file is there all the same. This is what says which of them are worth a probe. */
+    it("says which numbers the record names no scan for", async () => {
+      stub();
+      const { englishScanGaps } = await load();
+      expect([...(await englishScanGaps("sv03.5"))].sort()).toEqual(["002", "TG01"]);
+    });
+
+    it("answers no gaps for a set nobody carries", async () => {
+      stub();
+      const { englishScanGaps } = await load();
+      expect(await englishScanGaps("nope")).toEqual(new Set());
+    });
+
     it("reads a set with its cards in binder order, each with its facts and its scan", async () => {
       stub();
       const { englishSet } = await load();

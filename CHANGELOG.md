@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
 
+- A card TCGdex has no scan of now carries a picture in search and on its set page, from the second catalogue, instead of an address with nothing behind it. Pikachu with Grey Felt Hat (svp-085) was the card that showed it: the collection has always found its picture, the search never did, so it drew a blank square right up to the moment it was added. The catalogue's copy checks these addresses while it is being filled, so a reader pays nothing for it.
+
 - A collection is read from one cache entry instead of one per set: a warm read on a fresh instance touched 112 entries and now touches 7, measured on the same collection.
 
 - The collection can be exported as a CSV in the shape Dex writes (semicolons, the same columns), collection and wishlist in one file, with the condition, language and acquired date after Dex's columns; GET /v1/collection/export.

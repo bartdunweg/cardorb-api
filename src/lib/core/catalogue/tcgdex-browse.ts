@@ -152,7 +152,10 @@ type TcgSetDetail = {
   releaseDate?: string | null;
   serie?: { id: string; name: string };
   cardCount?: { total?: number; official?: number };
-  cards?: { id: string; localId: string; name: string }[];
+  /* `image` is the scan's stem where the record names one. It is read for one thing only:
+     knowing which cards it names none for, which is where a built address may be a 404
+     (englishScanGaps). */
+  cards?: { id: string; localId: string; name: string; image?: string | null }[];
 };
 
 const HOST = "https://api.tcgdex.net/v2";
@@ -542,4 +545,24 @@ export async function englishSet(
     tcgId: c.id,
   }));
   return { set, cards: inBinderOrder(cards) };
+}
+
+/**
+ * The numbers in an English set whose record names no scan.
+ *
+ * englishSet() builds every card's picture address from the serie, the set and the number,
+ * because TCGdex's record often says nothing about a scan that is there all the same: of the
+ * 34 cards SVP Black Star Promos names none for, 19 have a file at the built address and 15
+ * have none (measured 2026-09-12). So neither the record nor the address can be believed on
+ * its own, and this says which cards are worth a probe: the rest are certain.
+ *
+ * The set detail is the same day-cached GET englishSet() reads, so asking again costs nothing.
+ * An unreadable set answers no gaps, which leaves every address as it was.
+ */
+export async function englishScanGaps(setId: string): Promise<Set<string>> {
+  const id = await resolveEnglishSetId(setId);
+  if (!id) return new Set();
+  const detail = (await json(`${HOST}/en/sets/${encodeURIComponent(id)}`, `en set ${id}`)) as
+    TcgSetDetail | undefined;
+  return new Set((detail?.cards ?? []).filter((c) => !c.image).map((c) => c.localId));
 }

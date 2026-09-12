@@ -120,3 +120,26 @@ export function limitlessJapaneseScan(id: string, number: string): { low: string
     )}`;
   return { low: at("SM"), high: at("LG") };
 }
+
+/**
+ * Whether a stored picture address is a whole file rather than a scan's folder.
+ *
+ * TCGdex's addresses are folders: the size and the format are the reader's, `${stem}/low.webp`.
+ * The two fallbacks publish one file each, and a file is what the catalogue's copy keeps for a
+ * card TCGdex has no scan of. A path on this origin is the cover proxy, which is also a file.
+ */
+export const isScanFile = (value: string): boolean =>
+  value.startsWith("/") || /\.(webp|png|jpe?g)(\?|$)/i.test(value);
+
+/**
+ * The small and the large address for a stored picture: both sizes of a stem, or the one file
+ * there is. Null in, null out, which is a card that draws as its name.
+ */
+export const storedScan = (
+  value: string | null | undefined,
+): { image: string | null; imageHigh: string | null } =>
+  !value
+    ? { image: null, imageHigh: null }
+    : isScanFile(value)
+      ? { image: value, imageHigh: null }
+      : { image: `${value}/low.webp`, imageHigh: `${value}/high.webp` };
