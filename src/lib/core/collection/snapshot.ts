@@ -28,7 +28,7 @@
 
 import { copiesHeld } from "./cards-stats";
 import { priceOf, holoPriceOf, shownPrice, copyPriceOf } from "../price-basis.mjs";
-import { guidePrices } from "../catalogue/price-guide";
+import { type RunProducts, guidePrices } from "../catalogue/price-guide";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { CardPricePoint } from "./movers";
@@ -109,7 +109,13 @@ export function cardPricesOf(
   return [...seen.values()];
 }
 
-export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds): ValueSnapshot {
+export function snapshotOf(
+  sets: CardSet[],
+  guide: PriceGuide,
+  ids: ProductIds,
+  /** Which product a card's print runs are filed as, where Cardmarket files one apart. */
+  runs: RunProducts = {},
+): ValueSnapshot {
   const byProduct = new Map(guide.priceGuides.map((r) => [r.idProduct, r]));
 
   let value = 0;
@@ -127,6 +133,12 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
       const row = product == null ? undefined : byProduct.get(product);
       const normal = row ? priceOf(row) : null;
       const foil = row ? holoPriceOf(row) : null;
+      // The Shadowless run is a product of its own in this same guide, so the chart can read it
+      // where the tile does. Without this a Shadowless Base Set card counted as the ordinary
+      // printing, which on Charizard is €583 against €3,567.
+      const shadowless = card.tcgId ? runs[card.tcgId]?.shadowless : undefined;
+      const runRow = shadowless == null ? undefined : byProduct.get(shadowless);
+      const priceShadowless = runRow ? priceOf(runRow) : null;
       if (!normal && !foil) {
         unpriced++;
         continue;
@@ -146,12 +158,15 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
         /*
          * The same rule as the page, out of the one place it is written.
          *
-         * No stamped run here, and that is not an oversight: this reads Cardmarket's guide,
-         * which publishes one figure per product id and it is the ordinary run's. So a 1st
-         * Edition copy is valued at the ordinary price on the chart, as it is anywhere the
-         * stamped figure is missing. The line and the tile agree, which is what matters.
+         * The Shadowless run is here, because Cardmarket files it as a product of its own and
+         * this is Cardmarket's guide. The stamped first run is not: its only figure is
+         * TCGplayer's, which this does not read, so a 1st Edition copy is valued at the ordinary
+         * price on the chart, as it is anywhere that figure is missing. The line and the tile
+         * agree wherever both can see the same market, which is what matters.
          */
-        const each = shownPrice(copyPriceOf(v, { price: normal, priceHolo: foil }));
+        const each = shownPrice(
+          copyPriceOf(v, { price: normal, priceHolo: foil, priceShadowless }),
+        );
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
         any = true;

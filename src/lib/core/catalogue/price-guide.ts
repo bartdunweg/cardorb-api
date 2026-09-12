@@ -3,6 +3,9 @@ import { catalogueTimeout } from "../util";
 import type { CardPrices } from "./tcgdex-client";
 import type { GuideRow, PriceGuide, ProductIds } from "../collection/snapshot";
 
+/** Which product each of a card's print runs is, by the catalogue's card id. */
+export type RunProducts = Record<string, { shadowless?: number } | undefined>;
+
 /**
  * Cardmarket's own price guide: every product's prices, one file, rebuilt
  * nightly. Public, no login.
@@ -41,6 +44,12 @@ export function guidePrices(
   ids: string[],
   guide: PriceGuide,
   products: ProductIds,
+  /**
+   * The product a card's print runs are filed as, where Cardmarket files one apart. English
+   * only, and Shadowless is the one run it prices (see scripts/cardmarket-ids-editions.mjs).
+   * A card whose run has no row in the guide reads its ordinary price, as it did.
+   */
+  runs: RunProducts = {},
 ): Map<string, CardPrices> {
   const byProduct = new Map<number, GuideRow>(guide.priceGuides.map((r) => [r.idProduct, r]));
   const out = new Map<string, CardPrices>();
@@ -49,7 +58,12 @@ export function guidePrices(
     const row = product == null ? undefined : byProduct.get(product);
     if (!row) continue;
     const price = priceOf(row);
-    if (price) out.set(id, { price, holo: holoPriceOf(row) });
+    if (!price) continue;
+    // The run's own product, through the same priceOf(): a Shadowless Charizard is €3,567 where
+    // the unlimited one is €583, and until this it was shown and totalled as the €583 card.
+    const shadowless = runs[id]?.shadowless;
+    const runRow = shadowless == null ? undefined : byProduct.get(shadowless);
+    out.set(id, { price, holo: holoPriceOf(row), shadowless: runRow ? priceOf(runRow) : null });
   }
   return out;
 }

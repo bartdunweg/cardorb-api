@@ -54,6 +54,7 @@ import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
 import { pricesFor, usdFor, type CardPrices, type UsdPair } from "../catalogue/tcgdex-client";
 import type { ProductIds } from "./snapshot";
 import IDS from "../cardmarket-ids.generated.json";
+import RUN_IDS from "../cardmarket-ids.editions.generated.json";
 import IDS_JA from "../cardmarket-ids.ja.generated.json";
 import IDS_KO from "../cardmarket-ids.ko.generated.json";
 import IDS_ZH_CN from "../cardmarket-ids.zh-cn.generated.json";
@@ -223,9 +224,15 @@ const cachedGuidePrices = async (
           async (): Promise<Record<string, CardPrices>> => {
             ran();
             // The whole map, so the read stays what it was: which map is the fact under test.
-            return Object.fromEntries(guidePrices(ids, await guideForShards(), map));
+            // The run products only for English: Cardmarket prices no run of the other shelves,
+            // and the ids do not mean the same thing between catalogues.
+            return Object.fromEntries(
+              guidePrices(ids, await guideForShards(), map, language ? {} : RUN_IDS),
+            );
           },
-          ["guide-prices", language ?? "en", "v10", String(shard)],
+          // v11: the entries now carry the Shadowless run's figure, and a cached v10 entry does
+          // not (the Data Cache outlives a deploy, so a bump is the only way to be sure).
+          ["guide-prices", language ?? "en", "v11", String(shard)],
           { revalidate: 86_400, tags: [PRICE_GUIDE_TAG] },
         )(),
       ),

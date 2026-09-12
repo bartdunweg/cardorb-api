@@ -85,18 +85,24 @@ export const isReverseFinish = (f) =>
  * money rule is one rule and three drifts waiting, which is what happened to isReverseFinish()
  * above before it moved here. An edition would have made it five.
  *
- * The order is deliberate. A stamped first run is a different market from the card's ordinary
- * price, dearer by multiples, so it wins where there is a figure for it; then the foil series
+ * The order is deliberate. A run of its own is a different market from the card's ordinary price,
+ * dearer by multiples, so it wins where there is a figure for it: the stamped first run from
+ * TCGplayer, converted, and the Shadowless run from Cardmarket's own guide, which files it as a
+ * product of its own (base1-4 Charizard: €3,567 against €583, read 2026-09-12). Then the foil
+ * series
  * for a reverse; then the plain price. A 1st Edition copy of a card nobody has a stamped-run
  * figure for falls back to the ordinary price, which is the honest answer and is what the value
- * history does for every card (see snapshotOf(): Cardmarket's guide has no stamped run in it).
+ * history does for every card (see snapshotOf(): the stamped run's only figure is TCGplayer's,
+ * which the guide behind the chart does not carry. The Shadowless run it does carry, and both
+ * read it).
  *
  * @param {{ finish?: string | null, edition?: string | null }} copy
- * @param {{ price?: Price | null, priceHolo?: Price | null, priceFirstEd?: Price | null }} card
+ * @param {{ price?: Price | null, priceHolo?: Price | null, priceFirstEd?: Price | null, priceShadowless?: Price | null }} card
  * @returns {Price | null}
  */
 export const copyPriceOf = (copy, card) =>
   (copy.edition === "1st-edition" && card.priceFirstEd) ||
+  (copy.edition === "shadowless" && card.priceShadowless) ||
   (isReverseFinish(copy.finish) && card.priceHolo) ||
   card.price ||
   null;

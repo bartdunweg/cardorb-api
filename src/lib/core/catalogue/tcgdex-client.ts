@@ -207,6 +207,12 @@ export type CardPrices = {
    * the runs as products of their own that nothing links to a card id.
    */
   usdFirstEd?: UsdPrice | null;
+  /**
+   * The Shadowless run's euros, where Cardmarket files that run as a product of its own: Base
+   * Set, every card of it. From the same nightly guide as `price`, under the product id
+   * cardmarket-ids.editions.generated.json holds. Null everywhere else.
+   */
+  shadowless?: Price | null;
 };
 
 /**

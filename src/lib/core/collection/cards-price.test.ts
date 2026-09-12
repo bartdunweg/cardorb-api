@@ -183,6 +183,7 @@ describe("copyPriceOf", () => {
     price: { low: 1, market: 10, avg30: 10, nm: null },
     priceHolo: { low: 2, market: 20, avg30: 20, nm: null },
     priceFirstEd: { low: 3, market: 30, avg30: 30, nm: null },
+    priceShadowless: { low: 4, market: 40, avg30: 40, nm: null },
   };
 
   it("reads the stamped run's price for a 1st Edition copy, whatever its finish", () => {
@@ -190,6 +191,21 @@ describe("copyPriceOf", () => {
     expect(copyPriceOf({ edition: "1st-edition", finish: "reverse-holo" }, card)).toBe(
       card.priceFirstEd,
     );
+  });
+
+  it("reads the Shadowless run's price for a Shadowless copy, whatever its finish", () => {
+    // Cardmarket files the run as a product of its own and the guide carries it: base1-4
+    // Charizard is €3,567 there against €583 on the ordinary product, read 2026-09-12.
+    expect(copyPriceOf({ edition: "shadowless", finish: "holo" }, card)).toBe(card.priceShadowless);
+    expect(copyPriceOf({ edition: "shadowless", finish: "reverse-holo" }, card)).toBe(
+      card.priceShadowless,
+    );
+  });
+
+  it("falls back to the ordinary price for a run nothing prices apart", () => {
+    const plain = { price: card.price, priceHolo: card.priceHolo };
+    expect(copyPriceOf({ edition: "shadowless", finish: "holo" }, plain)).toBe(card.price);
+    expect(copyPriceOf({ edition: "1st-edition", finish: "holo" }, plain)).toBe(card.price);
   });
 
   it("reads the foil series for a reverse and the plain one otherwise", () => {

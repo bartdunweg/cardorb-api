@@ -39,10 +39,15 @@ describe("which price series a copy reads", () => {
   });
 
   it("is the rule the script uses, rather than one it restates", () => {
-    expect(SOURCE).toMatch(/isReverseFinish\b/);
-    // The line it had. It priced a Poké Ball copy off the plain series while every other
+    // copyPriceOf() is the whole sentence — which run, then which series — and it calls
+    // isReverseFinish() itself. The script used to call that half directly and write the run
+    // half nowhere, so a Shadowless copy counted as the ordinary printing on the chart while
+    // the tile above it read the run's own price.
+    expect(SOURCE).toMatch(/copyPriceOf\b/);
+    // The lines it had. The first priced a Poké Ball copy off the plain series while every other
     // valuation path priced it off the foil one, which runs at a median of twice as much.
     expect(SOURCE).not.toMatch(/finish\s*===\s*"reverse-holo"/);
+    expect(SOURCE).not.toMatch(/isReverseFinish\(r\.finish\)/);
   });
 });
 
