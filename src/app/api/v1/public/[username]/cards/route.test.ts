@@ -98,6 +98,7 @@ describe("GET /api/v1/public/{username}/cards", () => {
       copies: 2,
       localName: null,
       favorite: false,
+      dexFace: false,
     });
   });
 

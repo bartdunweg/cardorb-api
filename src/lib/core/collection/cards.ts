@@ -121,6 +121,8 @@ export type Variant = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** This copy is the one its Pokémon's Pokédex slot shows. See CollectionRow.dexFace. */
+  dexFace: boolean;
   /** ISO date, when this printing joined the collection. See CollectionRow.acquiredAt. */
   acquiredAt: string | null;
   /** Kept out of the "latest pull" on the portfolio site. See CollectionRow.excluded. */
@@ -487,6 +489,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
         purchaseDate: null,
         notes: null,
         isFavorite: false,
+        dexFace: false,
         acquiredAt: null,
         excluded: false,
         collectionId: null,
@@ -1207,6 +1210,7 @@ export async function buildCollection(
           purchaseDate: row.purchaseDate,
           notes: row.notes,
           isFavorite: row.isFavorite,
+          dexFace: row.dexFace,
           acquiredAt: row.acquiredAt,
           excluded: row.excluded,
           collectionId: row.collectionId,
@@ -1242,6 +1246,7 @@ export async function buildCollection(
           purchaseDate: p.purchaseDate,
           notes: p.notes,
           isFavorite: p.isFavorite,
+          dexFace: p.dexFace,
           acquiredAt: p.acquiredAt,
           excluded: p.excluded,
           collectionId: p.collectionId,

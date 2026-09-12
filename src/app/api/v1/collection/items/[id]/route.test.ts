@@ -136,6 +136,17 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenCalledWith(expect.objectContaining({ userId: "me-uuid" }));
   });
 
+  it("takes the flag that makes a card its Pokédex slot's face, and refuses one that is not a flag", async () => {
+    // The web writes this one on the swipe that settles, and clears it on the card it replaces,
+    // so both values have to reach the store as sent.
+    await patch({ dexFace: true });
+    expect(updateRow).toHaveBeenCalledWith("me-uuid", ID, { dexFace: true }, "t.o.k.e.n");
+    await patch({ dexFace: false });
+    expect(updateRow).toHaveBeenLastCalledWith("me-uuid", ID, { dexFace: false }, "t.o.k.e.n");
+    const res = await patch({ dexFace: 1 });
+    expect(res.status).toBe(400);
+  });
+
   it("refuses a body with nothing recognisable in it", async () => {
     const res = await patch({ nonsense: true });
     expect(res.status).toBe(400);

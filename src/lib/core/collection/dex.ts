@@ -205,6 +205,7 @@ export function dexRows(grid: string[][]): CsvResult {
       purchaseDate: null,
       notes: notes || null,
       isFavorite: false,
+      dexFace: false,
       collectionId: null,
     });
   });

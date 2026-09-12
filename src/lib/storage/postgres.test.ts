@@ -211,6 +211,7 @@ describe("updateRow", () => {
       quantity: 2,
       purchasePrice: 4.5,
       isFavorite: true,
+      dexFace: false,
       collectionId: null,
     });
   });
@@ -241,6 +242,7 @@ describe("deleteRow", () => {
       quantity: 2,
       purchasePrice: 4.5,
       isFavorite: true,
+      dexFace: false,
     });
     expect(await deleteRow(fakeWriteDb([]).db, ME, ROW)).toBeNull();
   });
@@ -288,6 +290,7 @@ const draft = (over: Partial<CardDraft> = {}): CardDraft => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   collectionId: null,
   ...over,
 });

@@ -213,6 +213,12 @@ export type CollectionRow = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /**
+   * This copy is the one its Pokémon's Pokédex slot shows: the picture the slot opens on.
+   * At most one per owner per species, and the app keeps that rule rather than the database,
+   * which cannot see a species: species_id is read from the catalogue, not stored here.
+   */
+  dexFace: boolean;
   /** The folder this copy is filed in (`/v1/folders`), or null for none. */
   collectionId: string | null;
 };
@@ -266,6 +272,8 @@ export type CardDraft = {
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** This copy leads its Pokémon's Pokédex slot. False for a card being added: nothing is chosen yet. */
+  dexFace: boolean;
   /** A folder of the caller's, filled by hand, to file the new card in at once. */
   collectionId: string | null;
   /**
@@ -386,6 +394,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     purchaseDate = null,
     notes = null,
     isFavorite = false,
+    dexFace = false,
     collectionId = null,
     acquiredAt,
   } = (body ?? {}) as Record<string, unknown>;
@@ -434,6 +443,7 @@ export function validateCardDraft(body: unknown): CardValidation {
     purchaseDate: optionalText(purchaseDate),
     notes: optionalText(notes),
     isFavorite: isFavorite === true,
+    dexFace: dexFace === true,
     collectionId: typeof collectionId === "string" && UUID.test(collectionId) ? collectionId : null,
   };
 
@@ -520,6 +530,7 @@ export function rowFromDraft(
     purchaseDate: draft.purchaseDate,
     notes: draft.notes,
     isFavorite: draft.isFavorite,
+    dexFace: draft.dexFace,
     collectionId: draft.collectionId,
     // The key is there or it is not — never there holding undefined. A store
     // that spreads this into an insert would write a null over the column
@@ -555,6 +566,8 @@ export type CardPatch = Partial<{
   purchaseDate: string | null;
   notes: string | null;
   isFavorite: boolean;
+  /** This copy leads its Pokémon's Pokédex slot. The caller clears the one it replaces: see CollectionRow. */
+  dexFace: boolean;
   /** null takes the copy out of its folder. */
   collectionId: string | null;
   /**
@@ -606,7 +619,7 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
   const b = (body ?? {}) as Record<string, unknown>;
   const patch: CardPatch = {};
 
-  // The three flags, checked the same way, in one place rather than three
+  // The four flags, checked the same way, in one place rather than four
   // copies of the same four lines. Not coerced: `"false"` and `0` are both
   // truthy-adjacent enough that a coercing check would silently invert them,
   // and a PATCH names the field it is changing, so a wrong type is worth
@@ -618,7 +631,7 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
   // after `finish` and `quantity`. A body with two invalid fields at once is
   // now told about the flag rather than the finish. Every single-field answer
   // is identical, which is every answer a working client can produce.
-  for (const key of ["owned", "excluded", "isFavorite"] as const) {
+  for (const key of ["owned", "excluded", "isFavorite", "dexFace"] as const) {
     if (key in b) {
       if (typeof b[key] !== "boolean")
         return { kind: "invalid", error: `${key} must be true or false.` };

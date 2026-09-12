@@ -32,6 +32,7 @@ const item = (over: Partial<CardItem>): CardItem => ({
   purchaseDate: null,
   notes: null,
   isFavorite: false,
+  dexFace: false,
   excluded: false,
   acquiredAt: null,
   collectionId: null,

@@ -1,0 +1,1 @@
+- A card can be the face of its Pokédex slot: the picture a slot shows when you own several cards of the same Pokémon. The app sets it when you stop swiping, and clears the one it replaces. Visible on the public profile as well, so a visitor's Pokédex opens on the card its owner chose.

@@ -47,6 +47,7 @@ const variant = (over: Partial<Variant> = {}): Variant => ({
   purchaseDate: "2026-01-01",
   notes: "bought at the shop on the corner",
   isFavorite: true,
+  dexFace: false,
   acquiredAt: "2026-01-01",
   excluded: true,
   collectionId: "88888888-8888-4888-8888-888888888888",
@@ -63,6 +64,9 @@ const PUBLIC_VARIANT_KEYS = [
   "acquiredAt",
   "collectionId",
   "condition",
+  // False here, and that is the decision: which card leads a Pokédex slot is worth seeing on a
+  // public profile, but it is the folded card that says so (publicItems), not the row.
+  "dexFace",
   "edition",
   "excluded",
   "finish",
@@ -141,6 +145,7 @@ describe("forPublic", () => {
       quantity: null,
       acquiredAt: null,
       isFavorite: false,
+      dexFace: false,
       excluded: false,
     });
   });

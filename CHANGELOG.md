@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
 
+- A card can be the face of its Pokédex slot: the picture a slot shows when you own several cards of the same Pokémon. The app sets it when you stop swiping, and clears the one it replaces. Visible on the public profile as well, so a visitor's Pokédex opens on the card its owner chose.
+
 - A copy says which print run it is from: 1st Edition, Shadowless or Unlimited, a third axis beside the finish and the foil pattern. The CSV import reads it from Dex's Variant word and from a column of its own, the export writes it, and a 1st Edition copy is its own line rather than one more of the unlimited row.
 - The dollar price of a Jungle, Fossil, Team Rocket, Gym or Neo card is the ordinary run's, not the stamped one's: TCGplayer splits the two and the 1st Edition figure was taken first, so an unlimited Neo Genesis Lugia read $1,085 where it is $519.
 
@@ -35,6 +37,10 @@ if the two have drifted apart.
 - A CSV preview now hands back every row it would write, each with the line it came from, so an import screen can put a tick beside each one. Commit takes the lines you unticked as `exclude`, counts them apart from the rows it could not read, and answers with how many cards your collection holds when the writing is done.
 
 - A correction to the catalogue reaches the search the same day. The document the browser searches in was kept for a day without asking, so a card whose picture was fixed this afternoon stayed a blank square until that day was up; it is now checked against its version on every page load, which answers with no content where nothing has changed.
+
+- A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".
+
+- A set page shows the rarity of every card again. Sets with a short id (Sun & Moon, XY) lost it on the back half of the set, the full arts and the secret rares included.
 
 - The four fields every page needs about the person asking are kept on the instance for a minute instead of read from Postgres on every request. The query is 0.1 ms in the database by its own statistics, but getting to it had a p90 of 8.4 seconds on production, so one page load in ten waited eight seconds on it.
 

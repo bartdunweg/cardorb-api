@@ -165,6 +165,7 @@ describe("rowFromDraft", () => {
       purchaseDate: null,
       notes: null,
       isFavorite: false,
+      dexFace: false,
       collectionId: null,
     });
   });
@@ -219,8 +220,8 @@ describe("validateCardPatch", () => {
     expect(refused({ unknownField: 1 })).toMatch(/nothing to change/i);
   });
 
-  it("wants a real boolean for each of the three flags", () => {
-    for (const key of ["owned", "excluded", "isFavorite"]) {
+  it("wants a real boolean for each of the four flags", () => {
+    for (const key of ["owned", "excluded", "isFavorite", "dexFace"]) {
       expect(patched({ [key]: true })).toEqual({ [key]: true });
       expect(patched({ [key]: false })).toEqual({ [key]: false });
       // Not coerced. "false" and 0 are the two that would silently invert.
