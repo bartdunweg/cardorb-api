@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readJsonBody, BODY_LIMIT } from "@/lib/api/body";
 import { refuse, apiError } from "@/lib/api/respond";
 import { sameOrigin } from "@/lib/api/guard";
-import { bearer, requestViewer } from "@/lib/api/viewer";
+import { bearer, forgetProfile, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { claimUsername } from "@/lib/storage/postgres";
 import { validateUsername } from "@/lib/core/account/account";
@@ -57,7 +57,11 @@ export async function POST(req: Request) {
   }
 
   const result = await claimUsername(db, wanted);
-  if (result.ok) return NextResponse.json({ ok: true, username: wanted });
+  if (result.ok) {
+    // The name is one of the four kept per viewer; the claim makes them wrong.
+    forgetProfile(viewer.userId);
+    return NextResponse.json({ ok: true, username: wanted });
+  }
 
   // Two refusals, two sentences. Collapsing them would make the reserved list
   // read as a very popular set of usernames.

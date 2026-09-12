@@ -82,26 +82,72 @@ export function bearer(req: Request): string | null {
  * client, so a profile row that RLS will not show is a viewer we do not claim
  * to know.
  */
+/**
+ * The person's own four fields, kept on this instance for a minute.
+ *
+ * Read from Postgres on every authorised request, and Postgres is not the cost: by its own
+ * statistics the query is 0.1 ms mean over 15,532 calls, 10 ms at worst. Getting to it is. On
+ * production on 2026-09-12 the read had a median of 58 ms, a p90 of 8.4 seconds and a worst of
+ * 17.6, and since every rendered page waits on it, one page load in ten waited eight seconds
+ * on a tenth of a millisecond of work.
+ *
+ * In this process rather than in the Data Cache, the same shape and the same reasoning as the
+ * assembled collections in collection/collection.ts: a lint rule keeps `unstable_cache` to two
+ * files so the move to `use cache` stays a two-file change, and a memo needs neither. What it
+ * costs is that a name changed on one instance is the old name on another for up to a minute.
+ * A minute of a stale display name against eight seconds of everybody's page load is a trade
+ * worth making, and it is the same one the collection already makes with ten.
+ *
+ * Keyed on the id out of the verified token, never on the token itself: the token rotates every
+ * hour and would only fragment the memo. Nothing is kept for a row that was not found, so a
+ * brand new account is not sent through the welcome flow it has just finished.
+ */
+const profiles = new Map<string, { row: ProfileRow; until: number }>();
+const PROFILE_TTL_MS = 60_000;
+const PROFILE_MAX = 32;
+
+type ProfileRow = {
+  username?: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
+  onboarded_at?: string | null;
+};
+
+async function profileOf(db: SupabaseClient, userId: string): Promise<ProfileRow | null> {
+  const kept = profiles.get(userId);
+  if (kept && kept.until > Date.now()) return kept.row;
+
+  const { data } = await timed("store profile", async () =>
+    db
+      .from("profiles")
+      .select("username,display_name,avatar_url,onboarded_at")
+      .eq("id", userId)
+      .maybeSingle(),
+  );
+  const row = data as ProfileRow | null;
+  if (!row) return null;
+
+  profiles.set(userId, { row, until: Date.now() + PROFILE_TTL_MS });
+  while (profiles.size > PROFILE_MAX) {
+    const oldest = profiles.keys().next().value;
+    if (oldest === undefined) break;
+    profiles.delete(oldest);
+  }
+  return row;
+}
+
+/** Forgotten here the moment the write that changes it lands, on the instance that wrote. */
+export function forgetProfile(userId: string): void {
+  profiles.delete(userId);
+}
+
 async function viewerFrom(db: SupabaseClient, jwt?: string): Promise<Viewer | null> {
   const { data, error } = await timed("auth getClaims", () => db.auth.getClaims(jwt));
   if (error || !data?.claims?.sub) return null;
 
   const { sub, email } = data.claims as { sub: string; email?: string };
 
-  const { data: profile } = await timed("store profile", async () =>
-    db
-      .from("profiles")
-      .select("username,display_name,avatar_url,onboarded_at")
-      .eq("id", sub)
-      .maybeSingle(),
-  );
-
-  const p = profile as {
-    username?: string;
-    display_name?: string | null;
-    avatar_url?: string | null;
-    onboarded_at?: string | null;
-  } | null;
+  const p = await profileOf(db, sub);
   return {
     userId: sub,
     email: email ?? "",
