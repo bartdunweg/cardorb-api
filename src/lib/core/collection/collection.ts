@@ -354,6 +354,9 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
+      // v9: 60 more cards linked (Deck Exclusives, Alternate Art Promos, Nidoran F and M). The links
+      // are read at request time, but a v8 entry holds these cards unpriced for its day.
+      //
       // v8: Base Set's Shadowless and stamped runs priced from TCGplayer's Shadowless group.
       //
       // v7: 968 promo and subset cards priced from tcgcsv, where TCGdex relays no TCGplayer
@@ -365,7 +368,7 @@ const cachedFactsBundle = (
       //
       // v5: a card's facts carry the printings and which market answered for a copy, and the
       // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-      ["collection-facts", "v8", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v9", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
