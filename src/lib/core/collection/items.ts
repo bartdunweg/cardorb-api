@@ -221,6 +221,17 @@ function sourceOf(
   return { priceSource: own ? "tcgplayer" : null, pricePrinting: null, tcgplayerId: null };
 }
 
+/** A filter key that takes several values: a copy matches when it matches any of them. */
+export type Several = readonly string[] | string;
+
+/** The asked values, trimmed and lowercased, or null when nothing was asked. */
+function wantedOf(v: Several | undefined): ReadonlySet<string> | null {
+  const all = (typeof v === "string" ? [v] : (v ?? []))
+    .map((x) => x.trim().toLowerCase())
+    .filter(Boolean);
+  return all.length ? new Set(all) : null;
+}
+
 export type ItemFilter = {
   /** Matches the card's name or its set, case-insensitively, anywhere in the text. */
   q?: string;
@@ -229,16 +240,19 @@ export type ItemFilter = {
   favorite?: boolean;
   /** A folder id. */
   collection?: string;
-  /** A set, whole, as the catalogue names it (`set`) or titles it (`setTitle`); case does not matter. */
-  set?: string;
-  /** A rarity, whole, in the catalogue's words; case does not matter. */
-  rarity?: string;
+  /**
+   * One set or several, each whole, as the catalogue names it (`set`) or titles it (`setTitle`);
+   * case does not matter. A copy in any of them counts. The query reads an array; a string is one.
+   */
+  set?: Several;
+  /** One rarity or several, each whole, in the catalogue's words; any of them counts, in any case. */
+  rarity?: Several;
   /** A card number, whole, as printed; with `set` it names one card's every row. */
   number?: string;
-  /** A generation, whole, as the catalogue names its series; case does not matter. */
-  gen?: string;
-  /** An energy type, whole, as the catalogue names it; case does not matter. */
-  type?: string;
+  /** One generation or several, each whole, as the catalogue names its series; any counts, in any case. */
+  gen?: Several;
+  /** One energy type or several, each whole, as the catalogue names it; any counts, in any case. */
+  type?: Several;
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
@@ -286,23 +300,23 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     }
   }
   const q = f.q?.trim().toLowerCase();
-  const set = f.set?.trim().toLowerCase();
-  const rarity = f.rarity?.trim().toLowerCase();
+  const set = wantedOf(f.set);
+  const rarity = wantedOf(f.rarity);
   const number = f.number?.trim().toLowerCase();
-  const gen = f.gen?.trim().toLowerCase();
-  const type = f.type?.trim().toLowerCase();
+  const gen = wantedOf(f.gen);
+  const type = wantedOf(f.type);
   const inRule = f.rule ? ruleMatcher(f.rule) : null;
   return items.filter((it) => {
     if (inRule && !inRule(it)) return false;
     if (f.owned !== undefined && it.owned !== f.owned) return false;
     if (f.favorite && !it.isFavorite) return false;
     if (f.collection && it.collectionId !== f.collection) return false;
-    if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
-    if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
+    if (set && !set.has(it.set.toLowerCase()) && !set.has(it.setTitle.toLowerCase())) return false;
+    if (rarity && !rarity.has((it.rarity ?? "").toLowerCase())) return false;
     if (f.fullArtIds && !(it.tcgId && f.fullArtIds.has(it.tcgId))) return false;
     if (number && it.number.toLowerCase() !== number) return false;
-    if (gen && (it.gen ?? "").toLowerCase() !== gen) return false;
-    if (type && (it.type ?? "").toLowerCase() !== type) return false;
+    if (gen && !gen.has((it.gen ?? "").toLowerCase())) return false;
+    if (type && !type.has((it.type ?? "").toLowerCase())) return false;
     if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
     if (held && !(it.owned && (held.get(printingKey(it)) ?? 0) > 1)) return false;
     if (q && !matchesWord(it, q)) return false;
@@ -405,8 +419,16 @@ export const PUBLIC_PAGE_MAX = 500;
 
 export type Page = { limit: number; offset: number };
 
-export type ItemQuery = ItemFilter &
+/** How many values one of `set`, `rarity`, `gen` or `type` may be repeated with. */
+export const MAX_VALUES = 50;
+
+export type ItemQuery = Omit<ItemFilter, "set" | "rarity" | "gen" | "type"> &
   Page & {
+    /** As asked, trimmed and without repeats: one value is an array of one. */
+    set?: string[];
+    rarity?: string[];
+    gen?: string[];
+    type?: string[];
     sort?: Sort;
     order?: Order;
     /**
@@ -446,11 +468,24 @@ export function readItemQuery(
       return { kind: "invalid", error: "collection must be a folder id." };
     query.collection = collection;
   }
-  for (const key of ["set", "rarity", "number", "gen", "type"] as const) {
-    const v = params.get(key);
-    if (v === null) continue;
-    if (!v.trim() || v.length > 100) return { kind: "invalid", error: `${key} must name one.` };
-    query[key] = v.trim();
+  const number = params.get("number");
+  if (number !== null) {
+    if (!number.trim() || number.length > 100)
+      return { kind: "invalid", error: "number must name one." };
+    query.number = number.trim();
+  }
+  // Repeated for several (`?rarity=Rare&rarity=Rare%20Holo`): a copy matching any of them counts.
+  // One is still one, as the iOS app sends it; each is held to what one always was.
+  for (const key of ["set", "rarity", "gen", "type"] as const) {
+    const vs = params.getAll(key);
+    if (vs.length === 0) continue;
+    if (vs.length > MAX_VALUES) return { kind: "invalid", error: `${key} names too many.` };
+    const names: string[] = [];
+    for (const v of vs) {
+      if (!v.trim() || v.length > 100) return { kind: "invalid", error: `${key} must name one.` };
+      if (!names.includes(v.trim())) names.push(v.trim());
+    }
+    query[key] = names;
   }
   const sort = params.get("sort");
   if (sort !== null) {
@@ -678,11 +713,11 @@ export type PublicFilter = Pick<ItemFilter, "q" | "set" | "rarity">;
 
 export function filterPublicItems(items: PublicItem[], f: PublicFilter): PublicItem[] {
   const q = f.q?.trim().toLowerCase();
-  const set = f.set?.trim().toLowerCase();
-  const rarity = f.rarity?.trim().toLowerCase();
+  const set = wantedOf(f.set);
+  const rarity = wantedOf(f.rarity);
   return items.filter((it) => {
-    if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
-    if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
+    if (set && !set.has(it.set.toLowerCase()) && !set.has(it.setTitle.toLowerCase())) return false;
+    if (rarity && !rarity.has((it.rarity ?? "").toLowerCase())) return false;
     if (q && !matchesWord(it, q)) return false;
     return true;
   });
@@ -775,8 +810,9 @@ export type PublicQuery = PublicFilter &
   Page & { sort?: PublicSort; order?: Order; collection?: string; list?: PublicList };
 
 /**
- * `q`, `set`, `rarity`, `sort`, `order`, `limit` and `offset`: a public page has no wishlist,
- * favourites or folders, and no price or date to sort by. Read as strictly as the owner's list.
+ * `q`, `set` and `rarity` (either repeated for several), `sort`, `order`, `limit` and `offset`:
+ * a public page has no wishlist, favourites or folders, and no price or date to sort by. Read as
+ * strictly as the owner's list.
  */
 export function readPublicQuery(
   params: URLSearchParams,
@@ -788,10 +824,9 @@ export function readPublicQuery(
   const sort = params.get("sort");
   if (sort !== null && !(PUBLIC_SORTS as readonly string[]).includes(sort))
     return { kind: "invalid", error: `sort must be one of ${PUBLIC_SORTS.join(", ")}.` };
+  // Pairs, not an object: an object keeps one `set` of several and drops the rest.
   const read = readItemQuery(
-    new URLSearchParams(
-      Object.fromEntries([...params.entries()].filter(([k]) => kept.includes(k))),
-    ),
+    new URLSearchParams([...params.entries()].filter(([k]) => kept.includes(k))),
   );
   if (read.kind === "invalid") return read;
   const { q, set, rarity, order, offset, collection } = read.query;
@@ -800,8 +835,8 @@ export function readPublicQuery(
     kind: "ok",
     query: {
       ...(q ? { q } : {}),
-      ...(set ? { set } : {}),
-      ...(rarity ? { rarity } : {}),
+      ...(set?.length ? { set } : {}),
+      ...(rarity?.length ? { rarity } : {}),
       ...(collection ? { collection } : {}),
       ...(list ? { list: list as PublicList } : {}),
       ...(sort ? { sort: sort as PublicSort } : {}),

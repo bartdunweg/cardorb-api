@@ -1,0 +1,1 @@
+- `GET /v1/cards` and `GET /v1/public/{username}/cards` take several values for a filter: repeat `set`, `rarity`, `gen` or `type` (`?rarity=Rare&rarity=Rare%20Holo`) and a card matching any of them counts, while different keys still narrow together. One value works as it always has. At most 50 values per key; `number` stays one.
