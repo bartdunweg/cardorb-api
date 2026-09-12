@@ -86,6 +86,8 @@ if the two have drifted apart.
 
 - A collection now takes its sets from the catalogue's nightly copy in the database rather than asking TCGdex on every read. The pages come up faster, and a catalogue that is slow or unreachable no longer reaches the cards at all. A set published today is still fetched live, until the copy has been through it.
 
+- A Cardmarket link that points into the wrong expansion is now found rather than believed. `node scripts/cardmarket-ids-fill.mjs --audit` reads the links that are there and asks whether each product sits in the expansion its own set does; 73 of 20,907 do not, and none of them is a card this collection holds. It runs weekly on its own.
+
 - More of the cards TCGdex has no scan of get a picture: the catalogue's copy now asks Limitless as well as pokemontcg.io, which between them answer for cards neither did alone (Oddish, SVP 102, is Limitless's; the Pikachu with the grey felt hat is pokemontcg.io's). And a nightly refresh keeps the pictures it worked out before instead of asking after every one of them again, so the whole catalogue is fresh again in a night rather than two.
 
 - Two cards can no longer quietly come to share one Cardmarket product. The 2,054 that still do are written down per set, and the check refuses any set that gains one, so the number can fall and never rise.

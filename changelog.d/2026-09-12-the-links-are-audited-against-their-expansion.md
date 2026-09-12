@@ -1,0 +1,1 @@
+- A Cardmarket link that points into the wrong expansion is now found rather than believed. `node scripts/cardmarket-ids-fill.mjs --audit` reads the links that are there and asks whether each product sits in the expansion its own set does; 73 of 20,907 do not, and none of them is a card this collection holds. It runs weekly on its own.
