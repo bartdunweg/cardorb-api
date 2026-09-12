@@ -42,6 +42,8 @@ if the two have drifted apart.
 
 - A set page shows the rarity of every card again. Sets with a short id (Sun & Moon, XY) lost it on the back half of the set, the full arts and the secret rares included.
 
+- More of the cards TCGdex has no scan of get a picture: the catalogue's copy now asks Limitless as well as pokemontcg.io, which between them answer for cards neither did alone (Oddish, SVP 102, is Limitless's; the Pikachu with the grey felt hat is pokemontcg.io's). And a nightly refresh keeps the pictures it worked out before instead of asking after every one of them again, so the whole catalogue is fresh again in a night rather than two.
+
 - The four fields every page needs about the person asking are kept on the instance for a minute instead of read from Postgres on every request. The query is 0.1 ms in the database by its own statistics, but getting to it had a p90 of 8.4 seconds on production, so one page load in ten waited eight seconds on it.
 
 - Every keyed request used to wait on a Postgres read of your profile before it did anything else, whether it needed it or not. Nothing but a rename does, so nothing but a rename asks: the collection, the lists and the statistics answer without it.

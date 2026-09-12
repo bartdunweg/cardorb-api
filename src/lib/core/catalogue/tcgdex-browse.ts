@@ -152,9 +152,11 @@ type TcgSetDetail = {
   releaseDate?: string | null;
   serie?: { id: string; name: string };
   cardCount?: { total?: number; official?: number };
+  /** As printed in the set symbol's corner ("SVP"): the folder Limitless files its scans under. */
+  abbreviation?: { official?: string | null } | null;
   /* `image` is the scan's stem where the record names one. It is read for one thing only:
      knowing which cards it names none for, which is where a built address may be a 404
-     (englishScanGaps). */
+     (englishSetScans). */
   cards?: { id: string; localId: string; name: string; image?: string | null }[];
 };
 
@@ -556,7 +558,7 @@ export async function englishSet(
 }
 
 /**
- * The numbers in an English set whose record names no scan.
+ * The numbers in an English set whose record names no scan, and the set's printed abbreviation.
  *
  * englishSet() builds every card's picture address from the serie, the set and the number,
  * because TCGdex's record often says nothing about a scan that is there all the same: of the
@@ -567,10 +569,19 @@ export async function englishSet(
  * The set detail is the same day-cached GET englishSet() reads, so asking again costs nothing.
  * An unreadable set answers no gaps, which leaves every address as it was.
  */
-export async function englishScanGaps(setId: string): Promise<Set<string>> {
+export async function englishSetScans(
+  setId: string,
+): Promise<{ gaps: Set<string>; code: string | null }> {
   const id = await resolveEnglishSetId(setId);
-  if (!id) return new Set();
+  if (!id) return { gaps: new Set(), code: null };
   const detail = (await json(`${HOST}/en/sets/${encodeURIComponent(id)}`, `en set ${id}`)) as
     TcgSetDetail | undefined;
-  return new Set((detail?.cards ?? []).filter((c) => !c.image).map((c) => c.localId));
+  return {
+    gaps: new Set((detail?.cards ?? []).filter((c) => !c.image).map((c) => c.localId)),
+    /* The abbreviation printed in the set symbol's corner ("SVP"), which is the folder
+       Limitless files the set's scans under. A gallery carries its parent's as "ASR:TG", which
+       is no folder and whose cards Limitless renumbers into the parent's run, so only the part
+       before the colon is kept and a lettered number is never guessed with (catalogue.ts). */
+    code: detail?.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null,
+  };
 }

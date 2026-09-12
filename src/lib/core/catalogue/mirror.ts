@@ -29,8 +29,8 @@ import {
   writeCatalogueSet,
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
-import { englishScanGaps, englishSet, englishSets } from "./tcgdex-browse";
-import { storedScan, tcgdexScan } from "./artwork";
+import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
+import { limitlessScan, storedScan, tcgdexScan } from "./artwork";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
 
@@ -155,38 +155,86 @@ const FALLBACKS_PER_SET = 40;
 
 /**
  * The picture each card of a set is copied under: TCGdex's built address where a file is behind
- * it, and the second catalogue's file where there is not.
+ * it, and one of the two other catalogues' file where there is not.
  *
  * englishSet() builds every address from the serie, the set and the number, because TCGdex's
- * record names no scan for cards whose file is there all the same (see englishScanGaps). The
+ * record names no scan for cards whose file is there all the same (see englishSetScans). The
  * cards it names none for are the ones that can be a 404, and a 404 in the copy is what every
  * reader of the copy draws: a blank square in the search, on the set page and in the index
  * document. Pikachu with Grey Felt Hat (svp-085) is the one that showed it, the card the
  * collection has always found through pokemontcg.io and the search never did.
  *
- * The probe and the lookup are the copy's to pay, once a night, not a reader's per request:
- * that is the whole reason the copy exists. A card whose address holds nothing and whose
- * fallback finds nothing is copied with no picture, which is the honest answer and draws as
- * the card's name.
+ * The chain is the collection's own (cards.ts): the built address, then Limitless under the
+ * set's printed abbreviation, then pokemontcg.io. Limitless has Oddish (svp-102) where
+ * pokemontcg.io has the Pikachu, so the two together answer more than either.
+ *
+ * ── What is asked again, and what is not ───────────────────────────────────
+ *
+ * The probe and the lookups are the copy's to pay, not a reader's per request: that is the
+ * whole reason the copy exists. But a nightly pass that asks them again for every gap of every
+ * set turns 11 seconds into 46 (measured 2026-09-12, 105 sets), so a full refresh takes two
+ * nights instead of one. A set that is new to the copy, or whose card count has moved, is
+ * worked out in full. A set that is merely the oldest keeps every answer it already has, and
+ * only its cards with no picture at all are probed again, in case TCGdex has published one
+ * since: one HEAD each, and no lookup behind it, because those two have already said no.
+ *
+ * A card whose address holds nothing and whose fallbacks find nothing is copied with no
+ * picture, which is the honest answer and draws as the card's name.
  */
 async function withResolvedScans(
+  db: SupabaseClient,
   setId: string,
   setName: string,
   cards: CatalogueMatch[],
+  /** The set is new to the copy or its card count has moved: every gap is worked out afresh. */
+  fresh: boolean,
 ): Promise<CatalogueMatch[]> {
-  const gaps = await englishScanGaps(setId).catch(() => new Set<string>());
+  const { gaps, code } = await englishSetScans(setId).catch(() => ({
+    gaps: new Set<string>(),
+    code: null,
+  }));
   if (!gaps.size) return cards;
+  const gapCards = cards.filter((c) => gaps.has(c.number));
+  /* What the copy already worked out for these cards. Empty for a set it has never seen, and
+     not asked for at all where the set is being worked out in full anyway. A store that will
+     not answer costs this set its shortcut, not its pictures. */
+  const known = fresh
+    ? new Map<string, string | null>()
+    : await catalogueCardsById(
+        db,
+        gapCards.map((c) => c.id),
+      )
+        .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
+        .catch(() => new Map<string, string | null>());
   let fallbacks = FALLBACKS_PER_SET;
+  const at = (card: CatalogueMatch, file: string | null) => ({
+    ...card,
+    image: file,
+    imageHigh: null,
+  });
   return mapLimit(cards, 8, async (card) => {
     const stem = stemOf(card.image);
     if (!stem || !gaps.has(card.number)) return card;
+    const answered = known.get(card.id);
+    // A picture the copy already holds for this card is kept as it is: it was checked, and
+    // checking it again is two requests for the same answer.
+    if (answered) return at(card, answered);
     // tcgdexScan() answers the address itself where the probe could not be made, which reads
     // as "keep it": an unanswered check is not proof a scan is missing.
     if (await tcgdexScan(stem)) return card;
-    if (fallbacks <= 0) return { ...card, image: null, imageHigh: null };
+    // The copy has already asked the other two about this card and neither had it. Only the
+    // built address is worth checking again, and that is what just happened.
+    if (known.has(card.id)) return at(card, null);
+    if (fallbacks <= 0) return at(card, null);
     fallbacks--;
-    const file = await ptcgScan(setName, card.number, card.name).catch(() => null);
-    return { ...card, image: file, imageHigh: null };
+    /* Limitless first, where the set has a code there, and never for a lettered number: it
+       renumbers a gallery's cards into the parent's run, and a guessed offset shows a
+       confidently wrong card (cards.ts). Then pokemontcg.io, which is asked by set name. */
+    const file =
+      (code && !/^[A-Za-z]/.test(card.number)
+        ? await limitlessScan(code, card.number).catch(() => null)
+        : null) ?? (await ptcgScan(setName, card.number, card.name).catch(() => null));
+    return at(card, file);
   });
 }
 
@@ -220,10 +268,14 @@ export async function syncMirror(
   };
   // The index is newest first; a tie within a rank keeps that, which is the order a
   // collector would pick too.
-  const queue = index
+  const ranked = index
     .map((s, i) => ({ id: s.id, key: rank(s.id, s.total), i }))
-    .sort((a, b) => a.key[0] - b.key[0] || a.key[1].localeCompare(b.key[1]) || a.i - b.i)
-    .map((s) => s.id);
+    .sort((a, b) => a.key[0] - b.key[0] || a.key[1].localeCompare(b.key[1]) || a.i - b.i);
+  const queue = ranked.map((s) => s.id);
+  /* The sets worth working out in full: never seen, or their card count has moved. The rest is
+     a refresh of what the copy already has, and keeps the pictures it worked out before
+     (withResolvedScans). */
+  const fresh = new Set(ranked.filter((s) => s.key[0] < 2).map((s) => s.id));
 
   const report: SyncReport = { copied: [], failed: [], left: 0, ms: 0 };
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);
@@ -236,7 +288,7 @@ export async function syncMirror(
           continue;
         }
         const { set, cards } = read;
-        const pictured = await withResolvedScans(id, set.name, cards);
+        const pictured = await withResolvedScans(db, id, set.name, cards, fresh.has(id));
         await writeCatalogueSet(
           db,
           id,

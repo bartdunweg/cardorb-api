@@ -38,6 +38,7 @@ const answers: Record<string, unknown> = {
   "/en/sets/sv03.5": {
     id: "sv03.5",
     name: "151",
+    abbreviation: { official: "MEW" },
     logo: "https://assets.tcgdex.net/en/sv/sv03.5/logo",
     symbol: "https://assets.tcgdex.net/univ/sv/sv03.5/symbol",
     releaseDate: "2023-09-22",
@@ -275,16 +276,18 @@ describe("tcgdex-browse", () => {
 
     /* The address is built for every card, because the record names no scan for cards whose
        file is there all the same. This is what says which of them are worth a probe. */
-    it("says which numbers the record names no scan for", async () => {
+    it("says which numbers the record names no scan for, and the set's printed code", async () => {
       stub();
-      const { englishScanGaps } = await load();
-      expect([...(await englishScanGaps("sv03.5"))].sort()).toEqual(["002", "TG01"]);
+      const { englishSetScans } = await load();
+      const { gaps, code } = await englishSetScans("sv03.5");
+      expect([...gaps].sort()).toEqual(["002", "TG01"]);
+      expect(code).toBe("MEW");
     });
 
-    it("answers no gaps for a set nobody carries", async () => {
+    it("answers no gaps and no code for a set nobody carries", async () => {
       stub();
-      const { englishScanGaps } = await load();
-      expect(await englishScanGaps("nope")).toEqual(new Set());
+      const { englishSetScans } = await load();
+      expect(await englishSetScans("nope")).toEqual({ gaps: new Set(), code: null });
     });
 
     it("reads a set with its cards in binder order, each with its facts and its scan", async () => {
