@@ -67,36 +67,64 @@ export function printingsOf(variants: TcgVariant[] | null | undefined): Printing
   );
 }
 
+type TcgplayerLink = { variants?: string[]; shadowless?: unknown } | null;
+const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
+
 /**
  * The cards TCGplayer prices a Shadowless run for, as tcgplayer-links.mjs linked them: all 102 of
  * Base Set, Machamp's from Deck Exclusives. It was Cardmarket's list until 2026-09-12. A run is
  * offered where the market the app prices from has a figure for it.
  */
-const SHADOWLESS = new Set(
-  Object.entries(TCGPLAYER_IDS as Record<string, { shadowless?: unknown } | null>).flatMap(
-    ([id, v]) => (v?.shadowless ? [id] : []),
-  ),
-);
+const SHADOWLESS = new Set(Object.entries(LINKS).flatMap(([id, v]) => (v?.shadowless ? [id] : [])));
+
+const stamped = (variant: string): boolean => variant.startsWith("1st-edition");
 
 /**
  * The print runs a copy of this card can be from, or null where nothing can say.
  *
- * `firstEdition` is TCGdex'; Shadowless is Base Set's middle run, which no catalogue records as
- * a variant but Cardmarket does price as a product of its own, and the map of those products is
- * in this repo. So the third run is a fact now rather than a choice offered everywhere: a Jungle
- * card has a 1st Edition and an unlimited run and no Shadowless one, and used to be offered all
- * three.
+ * TCGplayer first, because it names the run of every printing it sells: "1st Edition Holofoil",
+ * "Unlimited Holofoil", or a plain "Holofoil" on a card that had one run. TCGdex says whether a
+ * stamped run exists and not whether an unstamped one does, and on Base Set Machamp that is the
+ * wrong way round: every Machamp came in the two-player starter, stamped, and TCGdex lists an
+ * unlimited variant all the same. TCGplayer sells it as 1st Edition only, so a form offered
+ * "Unlimited" for a card that was never printed without the stamp (Bart, 2026-09-13).
  *
- * Null where TCGdex did not say whether a stamped run exists, which is the rule the printings
+ * So: a stamped run where either source names one; an unstamped run where TCGplayer lists any
+ * printing without the stamp, and assumed where TCGplayer has no link to read (every card was
+ * printed at least once, and nearly all of them unstamped). Shadowless is Base Set's middle run,
+ * where TCGplayer has a product for it.
+ *
+ * Null where neither source said anything about a stamped run, which is the rule the printings
  * follow: no answer is not "none exist", and a client offers every run then.
  */
 export function editionsOf(
   tcgId: string,
   firstEdition: boolean | null | undefined,
 ): Edition[] | null {
-  if (firstEdition == null) return null;
-  const runs: Edition[] = ["unlimited"];
-  if (firstEdition) runs.push("1st-edition");
+  const variants = LINKS[tcgId]?.variants ?? [];
+  const listed = variants.length > 0;
+  if (firstEdition == null && !variants.some(stamped)) return null;
+  const runs: Edition[] = [];
+  if (!listed || variants.some((v) => !stamped(v))) runs.push("unlimited");
+  if (firstEdition || variants.some(stamped)) runs.push("1st-edition");
   if (SHADOWLESS.has(tcgId)) runs.push("shadowless");
   return EDITIONS.filter((e) => runs.includes(e));
 }
+
+/**
+ * The TCGdex series whose holos had one foil each, set by set, and nothing to choose.
+ *
+ * Wizards of the Coast's sets used their era's pattern on every holo: Starlight in Base, Jungle
+ * and Fossil, Cosmos from Base Set 2 on (Bulbapedia, "Holofoil"). The patterns a copy records are
+ * the exceptions later products brought: cracked ice in theme decks from Platinum, cosmos on
+ * blister promos after Black & White, confetti at McDonald's. None of those were printed on a
+ * Wizards card, so asking which one a Base Set Machamp has offers five answers that are all wrong.
+ */
+const ONE_FOIL_SERIES = new Set(["base", "gym", "neo", "lc", "ecard"]);
+
+/**
+ * The foil patterns a card of this series can be recorded with: none for a Wizards series, and
+ * null (no answer, everything the printings allow) for every other.
+ */
+export const foilPatternsOfSerie = (serieId: string | null | undefined): FoilPattern[] | null =>
+  serieId && ONE_FOIL_SERIES.has(serieId) ? [] : null;
