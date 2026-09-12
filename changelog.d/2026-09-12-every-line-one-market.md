@@ -1,0 +1,5 @@
+- Every card's price history is TCGplayer's, end to end. The weekly point for a card nobody holds comes from TCGplayer's figures on tcgcsv, for the English and the Japanese shelf, instead of Cardmarket's guide, so a card's chart no longer changes markets halfway along.
+- A reading says which market it is from. The nightly points had been written without a source, and the column's default labelled them Cardmarket whatever they were.
+- The weekly pass runs on Saturdays, the day the 2.8 million archived weekly points are on. It ran on Mondays, so the two series never lined up.
+- `scripts/backfill-card-prices.mjs --only recent` rewrites the weeks since 2026-08-16 from TCGplayer's daily archive and deletes the Cardmarket readings nothing could replace. Before it: 65,490 Cardmarket rows beside 3.06 million TCGplayer ones.
+- Gone with the guide: `snapshotOf`, `cardPricesOf` and `cardPricesFromGuide`, the three ways the history was priced from Cardmarket. Browse and search still price shelves from the guide; that moves next.

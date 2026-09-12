@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  cardPricesFromGuide,
-  cardPricesFromSets,
-  snapshotFromSets,
-  snapshotOf,
-  type PriceGuide,
-  type ProductIds,
-} from "./snapshot";
+import { cardPricesFromSets, cardPricesFromTcgcsv, snapshotFromSets } from "./snapshot";
 import type { CardSet, OwnedCard, Variant } from "./cards";
 
 /**
@@ -72,70 +65,6 @@ const set = (cards: OwnedCard[]): CardSet => ({
   releaseDate: null,
   total: null,
   cards,
-});
-
-const guide = (rows: PriceGuide["priceGuides"] = []): PriceGuide => ({
-  createdAt: "2026-08-16T02:48:45+0200",
-  priceGuides: rows,
-});
-
-/** trend 10 with avg30 10 lands on a market of 10 and an nm mid above it. */
-const PRODUCT = { idProduct: 42, low: 1, trend: 10, avg30: 10 };
-const IDS: ProductIds = { "sv03-125": 42 };
-
-const valueOf = (sets: CardSet[], g = guide([PRODUCT]), ids = IDS) => snapshotOf(sets, g, ids);
-
-describe("snapshotOf", () => {
-  it("dates the point by the guide, not by the clock", () => {
-    // The reading is "what Cardmarket published that morning". Stamping it with
-    // now() would file an archived guide under today and put a 2024 valuation
-    // at the right-hand end of the chart.
-    expect(valueOf([set([card()])]).date).toBe("2026-08-16");
-  });
-
-  it("values every copy held", () => {
-    const one = valueOf([set([card()])]);
-    const three = valueOf([
-      set([card({ variants: [variant({ id: "a", quantity: 2 }), variant({ id: "b" })] })]),
-    ]);
-    expect(three.value).toBeCloseTo(one.value * 3);
-    expect(three.cards).toBe(3);
-    // Coverage counts distinct cards, however many copies there are.
-    expect(three.priced).toBe(1);
-  });
-
-  it("leaves the wishlist out", () => {
-    const wanted = valueOf([set([card({ variants: [variant({ owned: false })] })])]);
-    expect(wanted).toMatchObject({ value: 0, cards: 0, priced: 0, unpriced: 0 });
-  });
-
-  it("counts a held card the guide has no price for as unpriced, not as free", () => {
-    const s = valueOf([set([card()])], guide([]));
-    expect(s).toMatchObject({ value: 0, cards: 1, priced: 0, unpriced: 1 });
-  });
-
-  it("counts a card with no Cardmarket product as unpriced", () => {
-    // A card added since cardmarket-ids.generated.json was last written. It is
-    // held, so it counts as a copy; it just cannot be valued yet.
-    const s = valueOf([set([card({ tcgId: "sv09-001" })])]);
-    expect(s).toMatchObject({ cards: 1, priced: 0, unpriced: 1 });
-  });
-
-  it("ignores the card's own price entirely", () => {
-    // The guide is the source. A price left on the card — which should not
-    // happen with { prices: false }, but might if a caller forgets — must not
-    // quietly become the answer.
-    const s = valueOf(
-      [set([card({ price: { low: 999, market: 999, avg30: 999, nm: null } })])],
-      guide([]),
-    );
-    expect(s.value).toBe(0);
-    expect(s.unpriced).toBe(1);
-  });
-
-  it("survives an empty collection", () => {
-    expect(valueOf([])).toMatchObject({ value: 0, cards: 0, priced: 0, unpriced: 0 });
-  });
 });
 
 describe("snapshotFromSets and cardPricesFromSets", () => {
@@ -206,7 +135,7 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       ]),
     ];
     expect(cardPricesFromSets(sets, "2026-09-07")).toEqual([
-      { tcgId: "sv03-125", date: "2026-09-07", market: 10, holo: 30 },
+      { tcgId: "sv03-125", date: "2026-09-07", market: 10, holo: 30, source: "tcgplayer" },
     ]);
   });
 
@@ -225,31 +154,34 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       ]),
     ];
     expect(cardPricesFromSets(sets, "2026-09-12")).toEqual([
-      { tcgId: "base2-10", date: "2026-09-12", market: 15.19, holo: 53.23 },
-      { tcgId: "svp-1", date: "2026-09-12", market: 7, holo: null },
+      { tcgId: "base2-10", date: "2026-09-12", market: 15.19, holo: 53.23, source: "tcgplayer" },
+      { tcgId: "svp-1", date: "2026-09-12", market: 7, holo: null, source: "tcgplayer" },
     ]);
   });
 });
 
-describe("cardPricesFromGuide", () => {
-  const guide: PriceGuide = {
-    createdAt: "2026-09-14T04:00:00Z",
-    priceGuides: [
-      { idProduct: 1, trend: 2.5, avg30: 2.4, low: 1 },
-      { idProduct: 2, trend: 0, avg30: 0, low: 0 },
+describe("cardPricesFromTcgcsv", () => {
+  const shelf = new Map([
+    [
+      502552,
+      new Map([
+        ["Normal", 0.25],
+        ["Reverse Holofoil", 1.5],
+      ]),
     ],
-  };
-  const ids: ProductIds = { "sv03-125": 1, "sv03-126": 2, "sv03-127": null };
+    [42382, new Map([["Holofoil", 869.02]])],
+  ]);
 
-  it("prices every mapped card the guide has a number for, held or not", () => {
-    expect(cardPricesFromGuide(ids, guide, "2026-09-14")).toEqual([
-      { tcgId: "sv03-125", date: "2026-09-14", market: expect.any(Number), holo: null },
+  it("prices every mapped card TCGplayer has a figure for, in euros, and says the market", () => {
+    const points = cardPricesFromTcgcsv(
+      { "sv03.5-001": 502552, "base1-4": 42382, "no-product": null, "not-on-shelf": 1 },
+      shelf,
+      0.9,
+      "2026-09-14",
+    );
+    expect(points).toEqual([
+      { tcgId: "sv03.5-001", date: "2026-09-14", market: 0.23, holo: 1.35, source: "tcgplayer" },
+      { tcgId: "base1-4", date: "2026-09-14", market: 782.12, holo: 782.12, source: "tcgplayer" },
     ]);
-  });
-
-  it("writes no reading of zero, and none for a card without a product", () => {
-    const points = cardPricesFromGuide(ids, guide, "2026-09-14").map((p) => p.tcgId);
-    expect(points).not.toContain("sv03-126");
-    expect(points).not.toContain("sv03-127");
   });
 });

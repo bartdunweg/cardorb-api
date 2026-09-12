@@ -334,3 +334,33 @@ export function priceFromMarket(_cardmarket, tcgplayer) {
   if (!tcgplayer) return null;
   return tcgplayer.market === null && tcgplayer.low === null ? null : tcgplayer;
 }
+
+/**
+ * One price history point out of TCGplayer's printings, as tcgcsv names them, in the currency
+ * they were published in.
+ *
+ * Two series, because that is what the chart draws: `market` the plain printing, `holo` the
+ * foil. Each takes the first of TCGplayer's names that means it, in the order the nightly point
+ * reads the same printings off a card (cardPricesFromSets): the ordinary run before the stamped
+ * one, the holo before the reverse. A card that exists only as a holo is its holo on both lines.
+ *
+ * Here rather than beside the cron, for the reason at the top of this file: the script that
+ * rebuilds the history runs on plain node, and a rule kept in a .ts file gets copied by hand.
+ *
+ * @param {Map<string, number> | null | undefined} printings subtype name to market figure
+ * @returns {{ market: number, holo: number | null } | null}
+ */
+export function pointFromTcgplayer(printings) {
+  if (!printings) return null;
+  const first = (...names) => {
+    for (const name of names) {
+      const v = printings.get(name);
+      if (typeof v === "number" && v > 0) return v;
+    }
+    return null;
+  };
+  const plain = first("Normal", "Unlimited", "1st Edition");
+  const foil = first("Holofoil", "Unlimited Holofoil", "Reverse Holofoil", "1st Edition Holofoil");
+  const market = plain ?? foil;
+  return market == null ? null : { market, holo: foil };
+}
