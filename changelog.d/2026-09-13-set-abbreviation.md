@@ -1,0 +1,1 @@
+- `GET /v1/catalog/sets/{setId}` always answers `set.abbreviation`: the code printed in the corner of the set's cards (POR for Perfect Order), the same value a collection card's `setAbbr` carries, or null where the catalogue has none. English sets already sent it; other languages now send null instead of leaving it out. The set list does not carry it.

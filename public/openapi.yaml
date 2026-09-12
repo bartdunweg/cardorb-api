@@ -1335,7 +1335,20 @@ paths:
                 type: object
                 required: [set, cards, page, pageSize, totalCount, ownedCount, hasMore]
                 properties:
-                  set: { $ref: "#/components/schemas/CatalogueSet" }
+                  set:
+                    allOf:
+                      - $ref: "#/components/schemas/CatalogueSet"
+                      - type: object
+                        required: [abbreviation]
+                        properties:
+                          abbreviation:
+                            type: [string, "null"]
+                            description: >
+                              The code printed in the corner of the set's cards: POR for Perfect Order,
+                              BRS for Brilliant Stars. The same value a collection card's `setAbbr`
+                              carries. Null where the catalogue publishes none, which today is every
+                              Japanese, Chinese and Korean set. Only on this route: the set list does
+                              not carry it.
                   cards: { type: array, items: { $ref: "#/components/schemas/BrowseCard" } }
                   page: { type: integer }
                   pageSize: { type: integer }

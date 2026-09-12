@@ -160,6 +160,16 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.cards[0].image).toBe("https://assets.tcgdex.net/en/sv/svp/085/low.webp");
   });
 
+  it("prints the set's code, and says null rather than nothing where there is none", async () => {
+    englishSet.mockResolvedValue({ set: { ...SET, abbreviation: "BS" }, cards: [card("1")] });
+    expect((await (await open()).json()).set.abbreviation).toBe("BS");
+
+    // A set read that leaves the field out still answers it, as null.
+    setIn.mockResolvedValue({ set: SET, cards: [card("1")] });
+    const body = await (await open("language=ja", "sv2a")).json();
+    expect(body.set).toHaveProperty("abbreviation", null);
+  });
+
   it("does not ask the copy for another language's shelf, which it does not hold", async () => {
     setIn.mockResolvedValue({ set: SET, cards: [card("1")] });
     await open("language=ja", "sv2a");
