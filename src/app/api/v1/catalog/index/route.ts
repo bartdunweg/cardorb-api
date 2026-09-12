@@ -38,7 +38,13 @@ export async function GET(req: Request) {
     const etag = `"${index.version}"`;
     const headers = {
       ...readHeaders(req),
-      "Cache-Control": "private, max-age=86400",
+      /* Kept in the browser, and asked about every time rather than believed for a day. The
+         document changes the moment the nightly copy has run, or a correction to it has
+         shipped, and `max-age=86400` meant a browser that had it went on searching yesterday's
+         catalogue for a day: a card whose picture was fixed today (svp-085, Pikachu with Grey
+         Felt Hat) stayed a blank square until the cache let go. The ETag is the copy's own
+         version, so a document that has not changed answers 304 with no body at all. */
+      "Cache-Control": "private, no-cache",
       ETag: etag,
       Vary: "Origin, Authorization",
     };

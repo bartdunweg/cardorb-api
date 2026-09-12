@@ -30,11 +30,13 @@ describe("GET /api/v1/catalog/index", () => {
     expect(catalogueIndex).not.toHaveBeenCalled();
   });
 
-  it("serves the document under its version, cached a day and private", async () => {
+  it("serves the document under its version, kept but revalidated, and private", async () => {
     const res = await get();
     expect(res.status).toBe(200);
     expect(res.headers.get("etag")).toBe('"2026-09-11T19:10:00Z"');
-    expect(res.headers.get("cache-control")).toBe("private, max-age=86400");
+    // Asked about on every load rather than believed for a day: a correction to the copy
+    // reaches a browser that already has the document, at the cost of one 304.
+    expect(res.headers.get("cache-control")).toBe("private, no-cache");
     expect(res.headers.get("content-type")).toBe("application/json");
     expect(await res.json()).toEqual({ version: "x", sets: {}, cards: [] });
   });
