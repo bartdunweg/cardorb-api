@@ -67,3 +67,43 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
     throw new Error(`tcgcsv answered for none of category ${category}'s groups`);
   return out;
 }
+
+/**
+ * One group's printings, in the shape TCGdex relays TCGplayer's figures in, keyed by product.
+ *
+ * For the cards TCGdex has no TCGplayer figure for at all: the subsets and promo lines
+ * scripts/tcgplayer-links.mjs linked to a tcgcsv group. Shaped like TCGdex's `pricing.tcgplayer`
+ * (printing name, marketPrice, lowPrice, productId) so the pickers in tcgdex-client.ts read it
+ * with the same rules, and a promo priced here is chosen exactly as any other card is.
+ */
+export async function groupPrintings(
+  groupId: number,
+  category: number = TCGCSV_CATEGORY.en,
+): Promise<
+  Map<number, Record<string, { marketPrice: number; lowPrice: number | null; productId: number }>>
+> {
+  const { results } = await read<{
+    results: {
+      productId: number;
+      subTypeName: string;
+      marketPrice: number | null;
+      lowPrice: number | null;
+    }[];
+  }>(`${BASE}/${category}/${groupId}/prices`);
+  const out = new Map<
+    number,
+    Record<string, { marketPrice: number; lowPrice: number | null; productId: number }>
+  >();
+  for (const r of results) {
+    if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
+    const printings = out.get(r.productId) ?? {};
+    // tcgcsv's "Reverse Holofoil" is TCGdex's "reverse-holofoil".
+    printings[r.subTypeName.toLowerCase().replace(/\s+/g, "-")] = {
+      marketPrice: r.marketPrice,
+      lowPrice: typeof r.lowPrice === "number" ? r.lowPrice : null,
+      productId: r.productId,
+    };
+    out.set(r.productId, printings);
+  }
+  return out;
+}

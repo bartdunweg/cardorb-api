@@ -51,7 +51,17 @@ import { priceFromMarket, priceFromUsd } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import { fetchPriceGuide, guidePrices } from "../catalogue/price-guide";
-import { pricesFor, usdFor, type CardPrices, type UsdPair } from "../catalogue/tcgdex-client";
+import {
+  pricesFor,
+  usdFirstEdOf,
+  usdFor,
+  usdOf,
+  usdPrintingsOf,
+  type CardPrices,
+  type UsdPair,
+} from "../catalogue/tcgdex-client";
+import { groupPrintings } from "../catalogue/tcgcsv";
+import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import type { ProductIds } from "./snapshot";
 import IDS from "../cardmarket-ids.generated.json";
 import RUN_IDS from "../cardmarket-ids.editions.generated.json";
@@ -461,13 +471,16 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
+      // v7: 968 promo and subset cards priced from tcgcsv, where TCGdex relays no TCGplayer
+      // figure (tcgplayer-links.mjs). A v6 entry holds them unpriced for a day after the deploy.
+      //
       // v6: every price is TCGplayer's or none, the Near Mint band is gone, and an unclassified
       // copy no longer reads a reverse's figure (2026-09-12). An entry written under v5 holds
       // the blend of both markets, and would stand for a day after the deploy.
       //
       // v5: a card's facts carry the printings and which market answered for a copy, and the
       // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-      ["collection-facts", "v6", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v7", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -556,18 +569,69 @@ const cachedTcgdexUsd = (setName: string, ids: string[]) =>
     )(),
   );
 
+/**
+ * The cards tcgplayer-links.mjs linked to a tcgcsv group because TCGdex relays no TCGplayer
+ * figure for them: the Galarian Gallery, the Trainer Galleries, the Shiny Vaults, the Black Star
+ * promo lines. 968 cards on 2026-09-12, 209 of them held by the owner.
+ */
+const TCGCSV_LINKS = TCGPLAYER_IDS as Record<
+  string,
+  { productId: number; groupId?: number } | null | undefined
+>;
+
+/** One tcgcsv group's printings, a day at a time. A plain object: a Map comes back from the Data Cache as `{}`. */
+const cachedGroupPrintings = (groupId: number) =>
+  timedCache(`cache tcgcsv group ${groupId}`, (ran) =>
+    unstable_cache(
+      async () => {
+        ran();
+        return Object.fromEntries(await groupPrintings(groupId));
+      },
+      ["tcgcsv-group", "v1", String(groupId)],
+      { revalidate: DAY, tags: ["catalogue"] },
+    )(),
+  );
+
 /** Exported for its test rather than for any caller: the rule is about money. */
 export const usdForSet = async (
   setName: string,
   ids: string[],
 ): Promise<Record<string, UsdPair>> => {
   if (!ids.length) return {};
+  let answer: Record<string, UsdPair> = {};
   try {
-    return await cachedTcgdexUsd(setName, ids);
+    answer = await cachedTcgdexUsd(setName, ids);
   } catch (err) {
-    console.error(`TCGplayer prices unavailable for ${setName}, Cardmarket's alone for now:`, err);
-    return {};
+    console.error(`TCGplayer prices unavailable for ${setName} from TCGdex:`, err);
   }
+  /*
+   * Then tcgcsv, for the linked cards TCGdex said nothing about. Read through the same pickers as
+   * TCGdex's figures (usdOf, usdFirstEdOf, usdPrintingsOf), because groupPrintings() hands back
+   * the same shape: a promo is priced by exactly the rules a set card is. A group that does not
+   * answer costs its cards their price for this request, not TCGdex's answer for the others.
+   */
+  const linked = ids.filter((id) => !answer[id]?.usd && TCGCSV_LINKS[id]?.groupId != null);
+  if (!linked.length) return answer;
+  const out = { ...answer };
+  const groups = [...new Set(linked.map((id) => TCGCSV_LINKS[id]!.groupId!))];
+  await mapLimit(groups, 4, async (groupId) => {
+    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
+    try {
+      printings = await cachedGroupPrintings(groupId);
+    } catch (err) {
+      console.error(`tcgcsv group ${groupId} unavailable, its linked cards unpriced for now:`, err);
+      return;
+    }
+    for (const id of linked) {
+      const link = TCGCSV_LINKS[id]!;
+      if (link.groupId !== groupId) continue;
+      const tp = printings[String(link.productId)];
+      const usd = tp ? usdOf(tp) : null;
+      if (!tp || !usd) continue;
+      out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
+    }
+  });
+  return out;
 };
 
 /**
