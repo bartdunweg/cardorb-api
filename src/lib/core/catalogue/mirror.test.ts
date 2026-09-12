@@ -3,20 +3,22 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const englishSets = vi.fn();
 const englishSet = vi.fn();
-/** Which numbers TCGdex names no scan for; none unless a test says so. */
-const scanGaps = vi.fn(async () => new Set<string>());
+/** Which numbers TCGdex names no scan for, and the set's printed code; none unless a test says so. */
+const setScans = vi.fn(async () => ({ gaps: new Set<string>(), code: null as string | null }));
 vi.mock("./tcgdex-browse", () => ({
   englishSets: () => englishSets(),
   englishSet: (...a: unknown[]) => englishSet(...a),
-  englishScanGaps: (...a: unknown[]) => scanGaps(...(a as [])),
+  englishSetScans: (...a: unknown[]) => setScans(...(a as [])),
 }));
 
-/** Whether a built address holds a file, and what the second catalogue has instead. */
+/** Whether a built address holds a file, and what the two other catalogues have instead. */
 const tcgdexScan = vi.fn(async (base: string) => base as string | null);
+const limitlessScan = vi.fn(async () => null as string | null);
 const ptcgScan = vi.fn(async () => null as string | null);
 vi.mock("./artwork", async (original) => ({
   ...(await original<Record<string, unknown>>()),
   tcgdexScan: (...a: unknown[]) => tcgdexScan(...(a as [string])),
+  limitlessScan: (...a: unknown[]) => limitlessScan(...(a as [])),
 }));
 vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as [])) }));
 
@@ -41,6 +43,7 @@ function fakeStore(seed: Record<string, unknown[]> = {}) {
       "order",
       "range",
       "eq",
+      "in",
       "lt",
       "upsert",
       "delete",
@@ -207,8 +210,9 @@ describe("syncMirror", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    scanGaps.mockResolvedValue(new Set<string>());
+    setScans.mockResolvedValue({ gaps: new Set<string>(), code: null });
     tcgdexScan.mockImplementation(async (base: string) => base);
+    limitlessScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue(null);
     englishSet.mockImplementation(async (id: string) => ({
       set: set(id, 1, "2024/01/01"),
@@ -291,7 +295,7 @@ describe("syncMirror", () => {
       set: set("svp", 1, "2023/06/30"),
       cards: [hit("svp-102", "102")],
     });
-    scanGaps.mockResolvedValue(new Set(["102"]));
+    setScans.mockResolvedValue({ gaps: new Set(["102"]), code: "SVP" });
     const { db, calls } = fakeStore();
     await syncMirror(db);
     expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
@@ -306,7 +310,7 @@ describe("syncMirror", () => {
       set: { ...set("svp", 1, "2023/06/30"), name: "SVP Black Star Promos" },
       cards: [{ ...hit("svp-085", "085"), name: "Pikachu with Grey Felt Hat" }],
     });
-    scanGaps.mockResolvedValue(new Set(["085"]));
+    setScans.mockResolvedValue({ gaps: new Set(["085"]), code: "SVP" });
     tcgdexScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue("https://images.pokemontcg.io/svp/85.png");
     const { db, calls } = fakeStore();
@@ -321,13 +325,124 @@ describe("syncMirror", () => {
     ]);
   });
 
+  it("asks Limitless before pokemontcg.io, under the set's printed code", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [{ ...hit("svp-102", "102"), name: "Oddish" }],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["102"]), code: "SVP" });
+    tcgdexScan.mockResolvedValue(null);
+    limitlessScan.mockResolvedValue("/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png");
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(limitlessScan).toHaveBeenCalledWith("SVP", "102");
+    expect(ptcgScan).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png" }),
+    ]);
+  });
+
+  /* Limitless renumbers a gallery's cards into the parent's run, so a lettered number would
+     answer with a confidently wrong card; pokemontcg.io publishes those as sets of their own. */
+  it("never guesses at Limitless for a gallery number", async () => {
+    englishSets.mockResolvedValue([set("swsh12tg", 1, "2022/09/09")]);
+    englishSet.mockResolvedValue({
+      set: set("swsh12tg", 1, "2022/09/09"),
+      cards: [hit("swsh12tg-TG04", "TG04")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["TG04"]), code: "SIT" });
+    tcgdexScan.mockResolvedValue(null);
+    const { db } = fakeStore();
+    await syncMirror(db);
+    expect(limitlessScan).not.toHaveBeenCalled();
+    expect(ptcgScan).toHaveBeenCalled();
+  });
+
+  /* A nightly refresh of a set nothing has happened to: 46 seconds against 11 for a pass that
+     asks it all again (measured 2026-09-12). */
+  it("keeps the picture the copy already worked out, without asking anyone", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [hit("svp-085", "085")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["085"]), code: "SVP" });
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [row({ id: "svp-085", image: "https://images.pokemontcg.io/svp/85.png" })],
+    });
+    await syncMirror(db);
+    expect(tcgdexScan).not.toHaveBeenCalled();
+    expect(limitlessScan).not.toHaveBeenCalled();
+    expect(ptcgScan).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.pokemontcg.io/svp/85.png" }),
+    ]);
+  });
+
+  it("probes a card the copy has no picture for, but does not ask the other two again", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [hit("svp-190", "190")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["190"]), code: "SVP" });
+    tcgdexScan.mockResolvedValue(null);
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [row({ id: "svp-190", image: null })],
+    });
+    await syncMirror(db);
+    expect(tcgdexScan).toHaveBeenCalledTimes(1);
+    expect(limitlessScan).not.toHaveBeenCalled();
+    expect(ptcgScan).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: null }),
+    ]);
+  });
+
+  it("takes the scan TCGdex has published since, on a card the copy had none for", async () => {
+    englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 1, "2023/06/30"),
+      cards: [hit("svp-190", "190")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["190"]), code: "SVP" });
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [row({ id: "svp-190", image: null })],
+    });
+    await syncMirror(db);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://assets.tcgdex.net/en/x/svp/190" }),
+    ]);
+  });
+
+  it("works a set out in full where its card count has moved", async () => {
+    englishSets.mockResolvedValue([set("svp", 2, "2023/06/30")]);
+    englishSet.mockResolvedValue({
+      set: set("svp", 2, "2023/06/30"),
+      cards: [hit("svp-085", "085")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["085"]), code: "SVP" });
+    tcgdexScan.mockResolvedValue(null);
+    ptcgScan.mockResolvedValue("https://images.pokemontcg.io/svp/85.png");
+    const { db } = fakeStore({
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [row({ id: "svp-085", image: null })],
+    });
+    await syncMirror(db);
+    expect(ptcgScan).toHaveBeenCalled();
+  });
+
   it("copies no picture at all where neither catalogue has one", async () => {
     englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
     englishSet.mockResolvedValue({
       set: set("svp", 1, "2023/06/30"),
       cards: [hit("svp-190", "190")],
     });
-    scanGaps.mockResolvedValue(new Set(["190"]));
+    setScans.mockResolvedValue({ gaps: new Set(["190"]), code: "SVP" });
     tcgdexScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue(null);
     const { db, calls } = fakeStore();
