@@ -53,8 +53,12 @@ const WESTERN = {
  * The sets to ask about: everything before Black & White, by TCGdex id, with the Bulbapedia
  * title that carries the answer.
  *
- * pl4 (Arceus) is deliberately absent: its page has no "Languages this set is released in"
- * section at all, so there is nothing to read and the set keeps asking TCGdex per card.
+ * What is deliberately absent is what the wiki does not say. pl4 (Arceus) has no "Languages this
+ * set is released in" section at all, and neither has any of the Black Star Promo sets (basep,
+ * wp, np, dpp, hgssp) or the odd ones out of the EX era (ex5.5, exu, bog, sp). A promo was handed
+ * out per region rather than released as a set, so there may be no per-set answer to find; those
+ * keep asking TCGdex per card, which for these years means they read as English alone. Checked
+ * 2026-09-12, page by page.
  *
  * Written out rather than derived from the set name, because the two do not agree often enough
  * to guess: TCGdex calls it "Ruby & Sapphire" and Bulbapedia "EX Ruby & Sapphire (TCG)". A set
@@ -109,6 +113,26 @@ const TITLES = {
   hgss3: "Undaunted (TCG)",
   hgss4: "Triumphant (TCG)",
   col1: "Call of Legends (TCG)",
+  ru1: "Pokémon Rumble (TCG)",
+  pop1: "POP Series 1 (TCG)",
+  pop2: "POP Series 2 (TCG)",
+  pop3: "POP Series 3 (TCG)",
+  pop4: "POP Series 4 (TCG)",
+  pop5: "POP Series 5 (TCG)",
+  pop6: "POP Series 6 (TCG)",
+  pop7: "POP Series 7 (TCG)",
+  pop8: "POP Series 8 (TCG)",
+  pop9: "POP Series 9 (TCG)",
+  /* The kits are documented two at a time, one page for both halves of a kit, which is how they
+     were sold: a Latios kit and a Latias kit are one release in one set of languages. */
+  "tk-ex-latio": "EX Trainer Kit (TCG)",
+  "tk-ex-latia": "EX Trainer Kit (TCG)",
+  "tk-ex-p": "EX Trainer Kit 2 (TCG)",
+  "tk-ex-m": "EX Trainer Kit 2 (TCG)",
+  "tk-dp-m": "Diamond & Pearl Trainer Kit (TCG)",
+  "tk-dp-l": "Diamond & Pearl Trainer Kit (TCG)",
+  "tk-hs-g": "HS Trainer Kit (TCG)",
+  "tk-hs-r": "HS Trainer Kit (TCG)",
 };
 
 const wiki = async (title) => {

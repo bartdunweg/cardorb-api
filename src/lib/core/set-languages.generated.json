@@ -288,7 +288,107 @@
     "de",
     "fr"
   ],
+  "pop1": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "pop2": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt"
+  ],
+  "pop3": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "pt"
+  ],
+  "pop4": [
+    "en",
+    "de",
+    "fr",
+    "it",
+    "pt"
+  ],
+  "pop5": [
+    "en",
+    "de",
+    "it"
+  ],
+  "pop6": [
+    "en",
+    "de",
+    "it"
+  ],
+  "pop7": [
+    "en",
+    "de",
+    "es"
+  ],
+  "pop8": [
+    "en",
+    "de",
+    "it"
+  ],
+  "pop9": [
+    "en",
+    "de",
+    "it"
+  ],
+  "ru1": [
+    "en"
+  ],
   "si1": [
     "en"
+  ],
+  "tk-dp-l": [
+    "en",
+    "de",
+    "fr"
+  ],
+  "tk-dp-m": [
+    "en",
+    "de",
+    "fr"
+  ],
+  "tk-ex-latia": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "tk-ex-latio": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "tk-ex-m": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "tk-ex-p": [
+    "en",
+    "de",
+    "fr",
+    "it"
+  ],
+  "tk-hs-g": [
+    "en",
+    "fr",
+    "it"
+  ],
+  "tk-hs-r": [
+    "en",
+    "fr",
+    "it"
   ]
 }
