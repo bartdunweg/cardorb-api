@@ -461,7 +461,8 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
-      ["collection-facts", "v4", userId, bundleSignature(groups, usdToEur)],
+      // v5: a card's facts carry the printings and which market answered for a copy.
+      ["collection-facts", "v5", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -511,7 +512,8 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
-      ["set-facts", "v21", setName, factsSignature(identities)],
+      // v22: the facts carry TCGplayer's printings, which a v21 entry does not.
+      ["set-facts", "v22", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -537,9 +539,10 @@ const cachedTcgdexUsd = (setName: string, ids: string[]) =>
         ran();
         return Object.fromEntries(await usdFor(ids));
       },
-      // v2: the answer is both runs now, not one figure. An entry written by the version
-      // before this holds a bare UsdPrice and would read as a pair with neither run in it.
-      ["tcgdex-usd", "v2", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
+      // v3: the answer carries every printing TCGplayer prices now, and a v2 entry holds the two
+      // runs alone. The Data Cache outlives a deploy, so a stale entry would leave every copy on
+      // the old first-printing-wins figure until its day was up.
+      ["tcgdex-usd", "v3", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
