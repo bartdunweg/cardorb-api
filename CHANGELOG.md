@@ -33,6 +33,10 @@ if the two have drifted apart.
 - Which price series a copy reads is one function, copyPriceOf(), instead of the four copies of that sentence in cards.ts, items.ts and twice in snapshot.ts.
 - The card facts say whether a stamped first run of the card exists (TCGdex knows), so a form can stop asking which run a copy is from on a card that was printed once.
 
+- The full art Venusaur EX (XY123) and Blastoise EX (XY122) are priced as themselves again. Both hung on the Cardmarket product of the plain promo of the same name, and the plain XY28 and XY30 hung on theirs, so each of the four read the other's price: Venusaur EX XY123 said €5.12 for a card that sells around €117.
+
+- The full art filter finds the cards it was missing: a card whose id the two catalogues spell differently is now matched on its set and number instead.
+
 - Search and the collection can be narrowed to full art cards: the ones whose illustration covers the whole card, wherever they sit in the rarities.
 
 - The catalogue copy can be asked to work every set out from scratch, for the day a new source of scans is added: the cards that were copied without a picture were told "no" by the sources of that day, and nothing would ask the new one about them otherwise. The nightly run never does this by itself.
@@ -61,6 +65,9 @@ if the two have drifted apart.
 - A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".
 
 - A set's name is no longer stored as a card's rarity. Every card in a promo set answers "Promo", and "None" is the same answer spelled differently; both now leave the column empty, which is the true answer, and the catalogue can no longer put either back over a rarity its owner set by hand.
+
+- A card's languages are the ones it was really printed in. Portuguese standing alone beside English is TCGdex' Portuguese catalogue translating a card that was only ever English (Pikachu with Grey Felt Hat, svp-085), so it is no longer offered as a printing; and a catalogue that is asked and does not answer now means "not known", where it used to quietly read as "never printed in it".
+- A card the catalogue cannot name carries the rarities its era printed. Measured from the sets of the card's own TCGdex series, so a promo from 1999 is offered Common, Rare and Uncommon, and a Scarlet & Violet promo the words that era has.
 
 - A set page shows the rarity of every card again. Sets with a short id (Sun & Moon, XY) lost it on the back half of the set, the full arts and the secret rares included.
 
