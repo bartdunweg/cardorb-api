@@ -75,6 +75,16 @@ export type CardItem = {
   priceSource?: "tcgplayer" | "cardmarket" | null;
   pricePrinting?: string | null;
   tcgplayerId?: number | null;
+  /**
+   * What that printing trades at, in euros.
+   *
+   * The item sends the card's price fields and the reader works out which of them this copy
+   * reads (priceForCopy in cardorb-web's api-shapes.ts), so a figure that is not among those
+   * fields cannot be chosen however well this side chose it: #346 picked the printing and the
+   * app went on showing the blend of both markets. The chosen printing travels as a price of
+   * its own, and the rule on the other side prefers it the way this one does.
+   */
+  printingPrice?: Price | null;
 };
 
 /** One item per copy, in the assembly's order: set by set, number by number. */
@@ -186,6 +196,7 @@ function sourceOf(
   priceSource: "tcgplayer" | "cardmarket" | null;
   pricePrinting: string | null;
   tcgplayerId: number | null;
+  printingPrice?: Price | null;
 } {
   const printing = card.pricePrintings
     ? printingKeysOf(v).find((key) => card.pricePrintings?.[key])
@@ -195,6 +206,7 @@ function sourceOf(
       priceSource: "tcgplayer",
       pricePrinting: printing,
       tcgplayerId: card.printingIds?.[printing] ?? null,
+      printingPrice: card.pricePrintings?.[printing] ?? null,
     };
   }
   const cardmarket = copyPriceOf(v, card);

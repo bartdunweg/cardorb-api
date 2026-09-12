@@ -86,6 +86,8 @@ if the two have drifted apart.
 - TCGplayer's figure now answers before Cardmarket's, which files several printings of one card under a single product and was wrong by multiples on those. Cardmarket still answers for every card TCGplayer does not price.
 - An item says which market its figure came from, which printing it was, and TCGplayer's product id for that printing, so a figure can be opened and checked.
 
+- The printing a copy reads now travels as a price of its own, so the app can show it: the item sent the card's price fields and the reader worked out which one applied, and a figure that was not among those fields could not be chosen however well this side had chosen it.
+
 - A collection now takes its sets from the catalogue's nightly copy in the database rather than asking TCGdex on every read. The pages come up faster, and a catalogue that is slow or unreachable no longer reaches the cards at all. A set published today is still fetched live, until the copy has been through it.
 
 - A Cardmarket link that points into the wrong expansion is now found rather than believed. `node scripts/cardmarket-ids-fill.mjs --audit` reads the links that are there and asks whether each product sits in the expansion its own set does; 73 of 20,907 do not, and none of them is a card this collection holds. It runs weekly on its own.
