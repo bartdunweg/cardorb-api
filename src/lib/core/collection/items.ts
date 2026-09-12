@@ -242,6 +242,13 @@ export type ItemFilter = {
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
+   * Only the owned printings held more than once: the copies to trade or sell. A printing is
+   * the card, its finish and its run, so a holo and a reverse holo of one card are two printings
+   * and neither is a duplicate of the other; condition, grade and language are not part of it.
+   * Counted over the items handed in, quantities added up across rows.
+   */
+  duplicates?: boolean;
+  /**
    * The catalogue ids of the full arts, where the route asked for them: a copy counts when its
    * own catalogue id is one. Resolved by the route from the catalogue's copy, because whether a
    * card is full art is a fact about the printing and not about the row (full-art.ts). A row
@@ -265,7 +272,19 @@ const matchesWord = (it: { name: string; set: string; setTitle: string }, q: str
   it.set.toLowerCase().includes(q) ||
   it.setTitle.toLowerCase().includes(q);
 
+/** One printing, as `duplicates` counts it: the catalogue id (the set and number without one), the finish and the run. */
+const printingKey = (it: CardItem): string =>
+  `${it.tcgId ?? `${it.set}#${it.number}`}|${it.finish ?? ""}|${it.edition ?? ""}`;
+
 export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
+  let held: Map<string, number> | undefined;
+  if (f.duplicates) {
+    held = new Map();
+    for (const it of items) {
+      if (!it.owned) continue;
+      held.set(printingKey(it), (held.get(printingKey(it)) ?? 0) + it.quantity);
+    }
+  }
   const q = f.q?.trim().toLowerCase();
   const set = f.set?.trim().toLowerCase();
   const rarity = f.rarity?.trim().toLowerCase();
@@ -285,6 +304,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (gen && (it.gen ?? "").toLowerCase() !== gen) return false;
     if (type && (it.type ?? "").toLowerCase() !== type) return false;
     if (f.priced !== undefined && (copyPrice(it) !== null) !== f.priced) return false;
+    if (held && !(it.owned && (held.get(printingKey(it)) ?? 0) > 1)) return false;
     if (q && !matchesWord(it, q)) return false;
     return true;
   });
@@ -412,6 +432,7 @@ export function readItemQuery(
     if (q.trim()) query.q = q.trim();
   }
   if (params.get("fullArt") === "1") query.fullArt = true;
+  if (params.get("duplicates") === "1") query.duplicates = true;
   for (const key of ["owned", "favorite", "priced"] as const) {
     const v = params.get(key);
     if (v === null) continue;

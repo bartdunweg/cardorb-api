@@ -1,0 +1,1 @@
+- `GET /v1/cards?duplicates=1` answers only the owned printings held more than once, the copies to trade or sell. A printing is the card, its finish and its run: a holo and a reverse holo of one card are two printings, and condition, grade and language do not split one. Quantities add up across rows.
