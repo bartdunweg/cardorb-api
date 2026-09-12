@@ -18,6 +18,10 @@ if the two have drifted apart.
 
 - The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
 
+- Set pages, search and the catalogue's card list are priced from TCGplayer, a tcgcsv group at a time, like every other price in the app. They read Cardmarket's guide, so a set page showed one market and the collection another. Measured: 151 prices 207 of 207 cards, Crown Zenith's Galarian Gallery 70 of 70, the Japanese M1S 92 of 92, each from one cached request. Korean and Chinese pages carry no price, as TCGplayer does not sell those cards.
+- `scripts/tcgplayer-groups.mjs` writes which tcgcsv group each TCGplayer product is in, for both shelves: 20,035 English and 9,259 Japanese products the id maps know, all of them found.
+- Cardmarket's price guide is no longer downloaded anywhere: the collection asked it first and used nothing it said. `catalogue/price-guide.ts` and the guide's shards are deleted.
+
 - A catalogue card says what kind of card it is, so an app can tell a full art Supporter apart from a gold Item: the two share a rarity and look nothing alike.
 
 - A card can be the face of its Pokédex slot: the picture a slot shows when you own several cards of the same Pokémon. The app sets it when you stop swiping, and clears the one it replaces. Visible on the public profile as well, so a visitor's Pokédex opens on the card its owner chose.

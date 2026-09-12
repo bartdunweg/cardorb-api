@@ -9,7 +9,7 @@ import {
 import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
 import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
-import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
+import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -112,17 +112,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   const shown = scans?.size ? onPage.map((c) => ({ ...c, ...(scans.get(c.id) ?? {}) })) : onPage;
 
   /* A price under every card, so a set page can be read the way the collection's own lists are
-     rather than as a checklist. Only the page's cards are priced, and only from the guide that
-     is already cached for the day: the whole set would be up to 250 lookups, and the TCGdex
-     fallback behind them would be a request each for the many cards Cardmarket does not price. */
-  /* Keyed by the TCGdex id. Every shelf's cards are TCGdex's now, so `tcgId` and `id` agree;
-     the fallback is for a card that came without the one. */
-  /* From that catalogue's own map. A Japanese set page showed a blank line under all 92 cards
-     of M1S while the guide priced every one of them: the only map from a card to its Cardmarket
-     product held English cards somebody owns. Which map to read is a fact about the page, not
-     the id — SM1S-001 is a Japanese card and a different Korean one. */
+     rather than as a checklist. Only the page's cards, from TCGplayer's tcgcsv groups, each cached
+     a day: the market every other price in the app is in since 2026-09-12. Keyed by the TCGdex
+     id, which every shelf's cards carry; the fallback is for a card that came without one. The
+     shelf is a fact about the page, not the id: SM1S-001 is a Japanese card and a different
+     Korean one, and a Korean page carries no price because TCGplayer does not sell the card. */
   const priceKey = (c: (typeof shown)[number]) => c.tcgId ?? c.id;
-  const prices = await guidePricesFor(
+  const prices = await tcgplayerPricesFor(
     shown.map(priceKey),
     isBrowseLanguage(language) ? language : null,
   );

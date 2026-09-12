@@ -26,14 +26,12 @@ vi.mock("../catalogue/tcgdex-client", async (actual) => ({
 }));
 const groupPrintings = vi.fn();
 vi.mock("../catalogue/tcgcsv", () => ({
-  groupPrintings: (groupId: number) => groupPrintings(groupId),
+  TCGCSV_CATEGORY: { en: 3, ja: 85 },
+  groupPrintings: (groupId: number, category: number) => groupPrintings(groupId, category),
 }));
 vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
-}));
-vi.mock("../catalogue/price-guide", () => ({
-  guidePrices: async () => ({}),
 }));
 vi.mock("../../storage/supabase", () => ({
   createServiceClient: () => null,
@@ -94,7 +92,7 @@ describe("usdForSet", () => {
     );
     const usdForSet = await fresh();
     const answer = await usdForSet("SVP Black Star Promos", ["svp-027"]);
-    expect(groupPrintings).toHaveBeenCalledWith(22872);
+    expect(groupPrintings).toHaveBeenCalledWith(22872, 3);
     expect(answer["svp-027"]?.usd).toEqual({ market: 21.45, low: 17.99, productId: 500263 });
     expect(answer["svp-027"]?.printings?.holofoil?.productId).toBe(500263);
   });
@@ -134,7 +132,7 @@ describe("runPrintingsForSet", () => {
     );
     const runPrintingsForSet = await freshRuns();
     const runs = await runPrintingsForSet(["base1-4", "base2-1"]);
-    expect(groupPrintings).toHaveBeenCalledWith(1663);
+    expect(groupPrintings).toHaveBeenCalledWith(1663, 3);
     expect(runs["base1-4"]?.printings["shadowless-holofoil"]?.market).toBe(2257.87);
     expect(runs["base1-4"]?.printings["1st-edition-holofoil"]?.market).toBe(10000);
     expect(runs["base1-4"]?.firstEd?.market).toBe(10000);

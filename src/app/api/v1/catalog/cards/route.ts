@@ -3,7 +3,7 @@ import { apiError, refuse } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { englishSets } from "@/lib/core/catalogue/tcgdex-browse";
 import { mirrorCards } from "@/lib/core/catalogue/mirror";
-import { getRows, guidePricesFor } from "@/lib/core/collection/collection";
+import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { bearer } from "@/lib/api/viewer";
 import { adminClient } from "@/lib/storage/supabase";
@@ -41,10 +41,9 @@ export async function GET(req: Request) {
       mirrorCards(db, [...new Set(ids)]),
       getRows(who.userId, bearer(req) ?? undefined),
       englishSets().catch(() => []),
-      guidePricesFor([]),
     ]);
     const marked = markOwnership(ownershipIndex(rows, null, sets), cards);
-    const prices = await guidePricesFor(marked.map((c) => c.tcgId ?? c.id));
+    const prices = await tcgplayerPricesFor(marked.map((c) => c.tcgId ?? c.id));
     return NextResponse.json(
       {
         cards: marked.map((c) => ({

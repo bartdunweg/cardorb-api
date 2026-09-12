@@ -1,15 +1,17 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Which id map guidePricesFor() reads is decided by the language it is given.
+ * Where a browse surface's prices come from: TCGplayer, a tcgcsv group at a time, the shelf picked
+ * by the catalogue's language.
  *
- * The maps are one file per catalogue because the ids collide between them — SM1S-001 is a
- * Japanese card and a different Korean one — so "the Japanese map for a Japanese page" is the
+ * The id maps are one file per shelf because the ids collide between catalogues (SM1S-001 is a
+ * Japanese card and a different Korean one), so "the Japanese shelf for a Japanese page" is the
  * whole mechanism, and the one thing that could quietly go wrong: read the English map for a
- * Japanese page and every price is null again, with nothing failing.
+ * Japanese page and every price is null, with nothing failing. Korean and Chinese cards TCGplayer
+ * does not sell, so those pages carry no price at all rather than Cardmarket's.
  */
 
-const guidePrices = vi.fn((..._a: unknown[]) => new Map());
+const groupPrintings = vi.fn();
 
 vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn, revalidateTag: vi.fn() }));
 vi.mock("../catalogue/catalogue", () => ({
@@ -17,14 +19,14 @@ vi.mock("../catalogue/catalogue", () => ({
   pricesFor: async () => new Map(),
   json: async () => null,
 }));
-vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: async () => null }));
+vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: async () => 0.5 }));
+vi.mock("../catalogue/tcgcsv", () => ({
+  TCGCSV_CATEGORY: { en: 3, ja: 85 },
+  groupPrintings: (groupId: number, category: number) => groupPrintings(groupId, category),
+}));
 vi.mock("../catalogue/ptcg", () => ({
   ptcgScan: async () => null,
   ptcgLogo: async () => null,
-}));
-vi.mock("../catalogue/price-guide", () => ({
-  fetchPriceGuide: async () => ({ priceGuides: [], createdAt: "today" }),
-  guidePrices: (...a: unknown[]) => guidePrices(...(a as [])),
 }));
 vi.mock("../../storage/supabase", () => ({
   adminClient: () => ({}),
@@ -37,32 +39,42 @@ vi.mock("../../storage/collection", () => ({
   listSnapshots: vi.fn(),
   publicProfile: vi.fn(),
 }));
-// The committed maps, small enough to read whole: which one arrives is the assertion.
-vi.mock("../cardmarket-ids.generated.json", () => ({ default: { "base1-4": 273699 } }));
-vi.mock("../cardmarket-ids.ja.generated.json", () => ({ default: { "M1S-001": 840539 } }));
-vi.mock("../cardmarket-ids.ko.generated.json", () => ({ default: { "SM1S-001": 1 } }));
-vi.mock("../cardmarket-ids.zh-tw.generated.json", () => ({ default: {} }));
-vi.mock("../cardmarket-ids.zh-cn.generated.json", () => ({ default: {} }));
+// Small maps, so which shelf and which group were asked is the assertion.
+vi.mock("../tcgplayer-ids.generated.json", () => ({
+  default: { "base1-4": { productId: 42382, variants: ["holofoil"] }, "A1-001": null },
+}));
+vi.mock("../tcgplayer-ids.ja.generated.json", () => ({ default: { "M1S-001": 640001 } }));
+vi.mock("../tcgplayer-groups.generated.json", () => ({
+  default: { "3": { "42382": 604 }, "85": { "640001": 24001 } },
+}));
 
-const { guidePricesFor } = await import("./collection");
+const { tcgplayerPricesFor } = await import("./collection");
 
-/** The id map the guide was asked to price, on the last call. */
-const mapRead = () => guidePrices.mock.lastCall?.[2] as Record<string, number> | undefined;
+beforeEach(() => {
+  groupPrintings.mockReset();
+  groupPrintings.mockImplementation(async (groupId: number) =>
+    groupId === 604
+      ? new Map([[42382, { holofoil: { marketPrice: 800, lowPrice: 450, productId: 42382 } }]])
+      : new Map([[640001, { normal: { marketPrice: 4, lowPrice: 2, productId: 640001 } }]]),
+  );
+});
 
-describe("guidePricesFor", () => {
-  it("reads the English map when no catalogue is named", async () => {
-    await guidePricesFor(["base1-4"]);
-    expect(mapRead()).toEqual({ "base1-4": 273699 });
+describe("tcgplayerPricesFor", () => {
+  it("prices an English card from its product's group, in euros", async () => {
+    const prices = await tcgplayerPricesFor(["base1-4"]);
+    expect(groupPrintings).toHaveBeenCalledWith(604, 3);
+    expect(prices.get("base1-4")?.price).toEqual({ low: 225, market: 400, avg30: null, nm: null });
   });
 
-  it("reads the named catalogue's own map", async () => {
-    await guidePricesFor(["M1S-001"], "ja");
-    expect(mapRead()).toEqual({ "M1S-001": 840539 });
+  it("reads the Japanese shelf for a Japanese page", async () => {
+    const prices = await tcgplayerPricesFor(["M1S-001"], "ja");
+    expect(groupPrintings).toHaveBeenCalledWith(24001, 85);
+    expect(prices.get("M1S-001")?.price?.market).toBe(2);
   });
 
-  it("keeps the catalogues apart where their ids collide", async () => {
-    await guidePricesFor(["SM1S-001"], "ko");
-    expect(mapRead()).toEqual({ "SM1S-001": 1 });
-    expect(mapRead()).not.toHaveProperty("M1S-001");
+  it("prices nothing on a shelf TCGplayer does not sell, and nothing for a card with no product", async () => {
+    expect((await tcgplayerPricesFor(["SM1S-001"], "ko")).size).toBe(0);
+    expect((await tcgplayerPricesFor(["A1-001"])).size).toBe(0);
+    expect(groupPrintings).not.toHaveBeenCalled();
   });
 });
