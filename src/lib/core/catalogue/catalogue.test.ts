@@ -6,7 +6,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * because the empty answer would be cached for a day. See loadSetCatalogue().
  */
 
-const index = [{ id: "me05", name: "Pitch Black" }];
+const index = [{ id: "me05", name: "Pitch Black", cardCount: { official: 120, total: 150 } }];
+
+/** A set record as TCGdex hands one over, with one card that has a scan. */
+const record = (cards: { id: string; localId: string; name: string; image?: string }[]) => ({
+  id: "me05",
+  name: "Pitch Black",
+  logo: "https://assets.tcgdex.net/en/me/me05/logo",
+  cardCount: { official: 120, total: 150 },
+  cards,
+});
+
+const CARD = { id: "me05-001", localId: "001", name: "Bulbasaur", image: "img/001" };
+
+/** The index, the set record and the HEAD on the first scan, each answered as told. */
+const serve = (set: unknown, scan: { status: number }) =>
+  vi.fn(async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.endsWith("/v2/en/sets")) return new Response(JSON.stringify(index), { status: 200 });
+    if (url.includes("/v2/en/sets/")) return new Response(JSON.stringify(set), { status: 200 });
+    return new Response(null, { status: scan.status });
+  }) as typeof fetch;
 
 const { loadSetCatalogue } = await import("./catalogue");
 
@@ -53,6 +73,51 @@ describe("loadSetCatalogue", () => {
     await expect(loadSetCatalogue("Pitch Black")).rejects.toMatchObject({
       name: "CatalogueUnavailable",
     });
+  }, 15_000);
+
+  it("throws rather than caching a set the index counts in the hundreds and the record answers with none", async () => {
+    // The quieter half of the same failure: a 200 whose `cards` is empty looks like a fact, so
+    // it was kept for a day as "this set has no cards" - no scan, no price, no catalogue id.
+    globalThis.fetch = serve(record([]), { status: 200 });
+
+    await expect(loadSetCatalogue("Pitch Black")).rejects.toMatchObject({
+      name: "CatalogueUnavailable",
+      message: expect.stringMatching(/answered with none/),
+    });
+  }, 15_000);
+
+  it("keeps a set the index itself counts at zero: announced and not filled in is the truth", async () => {
+    globalThis.fetch = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/v2/en/sets")) {
+        return new Response(JSON.stringify([{ id: "me05", name: "Pitch Black" }]), { status: 200 });
+      }
+      if (url.includes("/v2/en/sets/")) {
+        return new Response(JSON.stringify({ id: "me05", name: "Pitch Black", cards: [] }), {
+          status: 200,
+        });
+      }
+      return new Response(null, { status: 404 });
+    }) as typeof fetch;
+
+    const cat = await loadSetCatalogue("Pitch Black");
+    expect(Object.keys(cat.byNumber)).toHaveLength(0);
+  }, 15_000);
+
+  it("keeps the set's scans on when the picture host is having a bad minute", async () => {
+    // One HEAD decides it for the whole set and the answer is cached for a day: on 2026-09-12
+    // a 502 on that one request drew 207 empty tiles for set 151 while every file was served.
+    globalThis.fetch = serve(record([CARD]), { status: 502 });
+
+    expect((await loadSetCatalogue("Pitch Black")).setHasScans).toBe(true);
+  }, 15_000);
+
+  it("still says a set has no scans when the file really is not there", async () => {
+    // What the probe is for: TCGdex publishes the record before the artwork, and every image
+    // URL of a just-announced set is a 404 that carries no cache-control.
+    globalThis.fetch = serve(record([CARD]), { status: 404 });
+
+    expect((await loadSetCatalogue("Pitch Black")).setHasScans).toBe(false);
   }, 15_000);
 
   it("resolves to no cards, and caches that, for a set the index does not know", async () => {

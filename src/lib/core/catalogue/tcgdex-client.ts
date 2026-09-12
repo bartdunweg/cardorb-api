@@ -15,7 +15,15 @@ import type { Price } from "../price-basis.mjs";
 /** TCGplayer's numbers for one printing, in dollars, as TCGdex relays them. */
 export type UsdPrice = { market: number | null; low: number | null };
 
-export type TcgSet = { id: string; name: string };
+/**
+ * A set as the index lists it. `cardCount` is the index's own count, and it is what tells a set
+ * that genuinely has no cards yet from a record that answered with none: see loadSetCatalogue().
+ */
+export type TcgSet = {
+  id: string;
+  name: string;
+  cardCount?: { official?: number; total?: number };
+};
 export type TcgCard = { id: string; localId?: string; name?: string; image?: string };
 export type TcgSetDetail = {
   id: string;

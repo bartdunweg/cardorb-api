@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-12
 
+- A set no longer loses its cards, its prices or its pictures for a day because the catalogue had one bad second. An answer that contradicts itself, or a picture host that is briefly unreachable, is asked again instead of being written down as the truth.
+
 - A card keeps the picture it has been seen with. The scan is still worked out from the catalogue on every read, so a better one is picked up the same day, but the card no longer goes blank when the catalogue is briefly silent about the set it is from.
 
 - The links in the confirmation and password-reset emails point at cardorb.com again, and the emails say the link lasts an hour, which it does.
@@ -13,6 +15,8 @@ if the two have drifted apart.
 - The three auth emails are rendered from cardorb-web on Untitled UI's email kit: the same wording, the app's pill button and type.
 
 - The three auth emails are rewritten: a heading, one sentence, one button, the link written out under it, and a footer that says who it was sent to and why. The password mail is now "Reset your Card Orb password".
+
+- A catalogue card says what kind of card it is, so an app can tell a full art Supporter apart from a gold Item: the two share a rarity and look nothing alike.
 
 - A card can be the face of its Pokédex slot: the picture a slot shows when you own several cards of the same Pokémon. The app sets it when you stop swiping, and clears the one it replaces. Visible on the public profile as well, so a visitor's Pokédex opens on the card its owner chose.
 
@@ -28,6 +32,8 @@ if the two have drifted apart.
 - A 1st Edition copy is priced as the stamped run where anything prices that run apart: TCGplayer does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Cardmarket publishes one figure per card and it is the ordinary run's, so the two are never averaged.
 - Which price series a copy reads is one function, copyPriceOf(), instead of the four copies of that sentence in cards.ts, items.ts and twice in snapshot.ts.
 - The card facts say whether a stamped first run of the card exists (TCGdex knows), so a form can stop asking which run a copy is from on a card that was printed once.
+
+- Search and the collection can be narrowed to full art cards: the ones whose illustration covers the whole card, wherever they sit in the rarities.
 
 - The catalogue copy can be asked to work every set out from scratch, for the day a new source of scans is added: the cards that were copied without a picture were told "no" by the sources of that day, and nothing would ask the new one about them otherwise. The nightly run never does this by itself.
 
@@ -51,6 +57,8 @@ if the two have drifted apart.
 - A public profile's folder list says when a binder is shown as a Pokédex, so a visitor's page can draw its slots instead of a list of cards. The rule behind a binder stays private, as it was.
 
 - A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".
+
+- A set's name is no longer stored as a card's rarity. Every card in a promo set answers "Promo", and "None" is the same answer spelled differently; both now leave the column empty, which is the true answer, and the catalogue can no longer put either back over a rarity its owner set by hand.
 
 - A set page shows the rarity of every card again. Sets with a short id (Sun & Moon, XY) lost it on the back half of the set, the full arts and the secret rares included.
 

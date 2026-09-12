@@ -1,0 +1,1 @@
+- A set no longer loses its cards, its prices or its pictures for a day because the catalogue had one bad second. An answer that contradicts itself, or a picture host that is briefly unreachable, is asked again instead of being written down as the truth.
