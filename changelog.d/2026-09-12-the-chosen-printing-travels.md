@@ -1,0 +1,1 @@
+- The printing a copy reads now travels as a price of its own, so the app can show it: the item sent the card's price fields and the reader worked out which one applied, and a figure that was not among those fields could not be chosen however well this side had chosen it.
