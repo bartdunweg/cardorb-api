@@ -317,6 +317,18 @@ describe("tcgdex-browse", () => {
       expect(got?.cards[2]).toMatchObject({ rarity: null, types: [] });
     });
 
+    /* The window is the first 500 cards the contains-filter answers, so a short id spends it on
+       other sets: `sm1` also answers sm10, sm11, sm115 and sm12, and Sun & Moon's own cards past
+       number 149 fell outside it. The hyphen asks for the one set. */
+    it("asks the facts of the set alone, hyphen and all, not of every id that contains it", async () => {
+      stub();
+      const { englishSet } = await load();
+      await englishSet("sv03.5");
+      const facts = queries.filter((q) => q.includes("rarity types"));
+      expect(facts).toHaveLength(1);
+      expect(facts[0]).toContain('"sv03.5-"');
+    });
+
     it("shows the set without facts when TCGdex's GraphQL is down, rather than not at all", async () => {
       stub();
       const { englishSet } = await load();
