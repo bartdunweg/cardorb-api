@@ -44,7 +44,7 @@
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese|recent]
  *
- * Service role, like snapshot-collection-value.mjs and for the same reason: an
+ * Service role, because there is nobody to be: an
  * offline script run by a person, writing a table about cards that belongs to
  * nobody.
  */
@@ -58,7 +58,6 @@ import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
 const IDS_JA = join(ROOT, "src", "lib", "core", "tcgplayer-ids.ja.generated.json");
-const CARDMARKET_IDS = join(ROOT, "src", "lib", "core", "cardmarket-ids.generated.json");
 const CACHE = join(ROOT, ".cache", "tcgcsv");
 
 for (const file of [".env.local", ".env"]) {
@@ -170,7 +169,7 @@ async function pricedIds() {
   if (e1) throw new Error(`Reading card prices failed: ${e1.message}`);
   const date = latest?.[0]?.snapshot_date;
   if (!date) throw new Error("No reading yet: nothing to fill in before.");
-  const ids = new Set(Object.keys(JSON.parse(readFileSync(CARDMARKET_IDS, "utf8"))));
+  const ids = new Set(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
   for (let from = 0; ; from += 1000) {
     const { data, error } = await db
       .from("card_prices")
@@ -484,7 +483,7 @@ async function cardmarketRowsOn(date) {
 
 async function recent() {
   const end = newestArchive();
-  const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(CARDMARKET_IDS, "utf8"))));
+  const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
   const japanese = await japaneseIds();
   const everyCard = [
     ...Object.keys(english).filter((id) => english[id]),

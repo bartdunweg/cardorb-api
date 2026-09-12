@@ -43,7 +43,7 @@ import { sameCard } from "../src/lib/core/catalogue/matching.ts";
 const ROOT = new URL("..", import.meta.url).pathname;
 const WORKLIST = `${ROOT}docs/rarity-type-backfill-corrections.md`;
 
-// .env.local, read by hand — see scripts/snapshot-collection-value.mjs for why.
+// .env.local, read by hand — the same loader as scripts/backfill-card-prices.mjs.
 for (const file of [".env.local", ".env"]) {
   const path = `${ROOT}${file}`;
   if (!existsSync(path)) continue;

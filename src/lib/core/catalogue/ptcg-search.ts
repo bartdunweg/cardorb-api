@@ -41,7 +41,7 @@ export type CatalogueMatch = {
    * The same card's TCGdex id, where the two catalogues could be matched.
    *
    * pokemontcg.io numbers a set `me5-85` and TCGdex numbers it `me05-085`, and everything priced
-   * in this repo is keyed by the second — `cardmarket-ids.generated.json` is 1,634 TCGdex ids.
+   * in this repo is keyed by the second: `tcgplayer-ids.generated.json` is TCGdex ids.
    * A price looked up by the pokemontcg.io id matches nothing at all, silently, which is exactly
    * what shipped in #241. Filled by the English set page and the search (tcgdex-browse.ts,
    * tcgdex-search.ts), whose hits are TCGdex ids to begin with; the language shelves carry
