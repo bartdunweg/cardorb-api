@@ -309,6 +309,35 @@ describe("createRow", () => {
     await createRow(db, draft({ acquiredAt: "2026-01-02T00:00:00.000Z" }));
     expect(written[0]).toMatchObject({ acquired_at: "2026-01-02T00:00:00.000Z" });
   });
+
+  it("stores a promo as the number it wraps, like its siblings, and keeps a gallery's letters", async () => {
+    const { db, written } = fakeInsertDb();
+    await createRow(db, draft({ number: "XY123", set: "XY Black Star Promos" }));
+    await createRow(db, draft({ number: " SWSH050 ", set: "SWSH Black Star Promos" }));
+    await createRow(db, draft({ number: "TG01", set: "Silver Tempest" }));
+    expect(written.map((w) => w.number)).toEqual(["123", "050", "TG01"]);
+  });
+});
+
+describe("createRows", () => {
+  it("stores an imported promo number without its prefix", async () => {
+    const batches: Record<string, unknown>[][] = [];
+    const chain: Record<string, unknown> = {
+      select: () => chain,
+      eq: async () => ({ count: 0, error: null }),
+      upsert: async (batch: Record<string, unknown>[]) => {
+        batches.push(batch);
+        return { error: null };
+      },
+    };
+    const db = {
+      from: () => chain,
+      rpc: async () => ({ data: 0, error: null }),
+    } as unknown as SupabaseClient;
+    const row = (number: string) => ({ ...draft(), number, setName: "XY Black Star Promos" });
+    await createRows(db, ME, [row("XY67a"), row("122")] as never, "csv");
+    expect(batches.flat().map((b) => b.number)).toEqual(["67A", "122"]);
+  });
 });
 
 /**
