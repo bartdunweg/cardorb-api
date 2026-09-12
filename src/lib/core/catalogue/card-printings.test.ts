@@ -62,6 +62,12 @@ describe("editionsOf", () => {
     expect(editionsOf("base1-4", true)).toEqual(["1st-edition", "shadowless", "unlimited"]);
   });
 
+  // TCGplayer's Shadowless group has no Machamp (tcgcsv, 2026-09-12): the run is offered where the
+  // market the app prices from has one, not for the whole set.
+  it("does not offer Shadowless to a Base Set card TCGplayer has no Shadowless product for", () => {
+    expect(editionsOf("base1-8", true)).toEqual(["1st-edition", "unlimited"]);
+  });
+
   it("offers a Jungle card its two runs, because no Shadowless Jungle was printed", () => {
     expect(editionsOf("base2-1", true)).toEqual(["1st-edition", "unlimited"]);
   });

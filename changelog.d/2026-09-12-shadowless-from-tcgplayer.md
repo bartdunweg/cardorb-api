@@ -1,0 +1,2 @@
+- Base Set's Shadowless and 1st Edition runs have prices of their own again, from TCGplayer's Shadowless group on tcgcsv, where "Unlimited" is the Shadowless run and "1st Edition" the stamped one. Charizard reads €742 ordinary, €1,928 Shadowless and €8,541 1st Edition; all three read the ordinary figure since the move to one market. 101 of 102 cards linked.
+- A card offers Shadowless as a print run where TCGplayer has a Shadowless product for it, not for all of Base Set: Machamp no longer offers it.

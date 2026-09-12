@@ -102,6 +102,9 @@ if the two have drifted apart.
 
 - A set page shows the rarity of every card again. Sets with a short id (Sun & Moon, XY) lost it on the back half of the set, the full arts and the secret rares included.
 
+- Base Set's Shadowless and 1st Edition runs have prices of their own again, from TCGplayer's Shadowless group on tcgcsv, where "Unlimited" is the Shadowless run and "1st Edition" the stamped one. Charizard reads €742 ordinary, €1,928 Shadowless and €8,541 1st Edition; all three read the ordinary figure since the move to one market. 101 of 102 cards linked.
+- A card offers Shadowless as a print run where TCGplayer has a Shadowless product for it, not for all of Base Set: Machamp no longer offers it.
+
 - A Shadowless copy is priced as the Shadowless product Cardmarket files it as, on the card, in the collection's total and on the value chart, where it used to read the unlimited printing's figure (base1-4 Charizard: €3,567 against €583).
 - Added `scripts/cardmarket-ids-editions.mjs`, which reads which product each of a card's print runs is from TCGdex's `variants_detailed` and commits the map. Of 23,548 English cards, the 102 of Base Set are the ones Cardmarket prices apart.
 

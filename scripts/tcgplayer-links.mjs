@@ -17,6 +17,11 @@
  * adds `groupId`, which is how the live price asks tcgcsv for a card TCGdex does not price.
  * Never overwrites a product TCGdex gave.
  *
+ * Runs too. TCGplayer files the Shadowless Base Set as a group of its own, where "Unlimited" is
+ * the Shadowless run and "1st Edition" the stamped one, neither of which TCGdex relays. Those are
+ * linked under `shadowless` beside the card's own product, and the collection reads that group's
+ * printings as "shadowless", "shadowless-holofoil", "1st-edition" and "1st-edition-holofoil".
+ *
  *   node scripts/tcgplayer-links.mjs [--dry]
  */
 
@@ -44,6 +49,11 @@ const GROUPS = {
   hgssp: "HGSS Promos",
   basep: "WoTC Promo",
   mep: "ME: Mega Evolution Promo",
+};
+
+/** TCGdex set id to the tcgcsv group that holds its Shadowless run. Read by hand on 2026-09-12. */
+const RUN_GROUPS = {
+  base1: "Base Set (Shadowless)",
 };
 
 async function fetchJson(url) {
@@ -126,6 +136,55 @@ for (const [set, name] of Object.entries(GROUPS)) {
   linked += here;
   console.log(`${set} -> ${name}: ${here} linked, ${unmatched} left without a product`);
 }
+
+/** One group's products by number, and which printings each is priced as. */
+async function groupIndex(gid) {
+  const { results: products } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/products`);
+  const { results: prices } = await fetchJson(`https://tcgcsv.com/tcgplayer/3/${gid}/prices`);
+  const printings = new Map();
+  for (const p of prices) {
+    if (!(p.marketPrice > 0)) continue;
+    printings.set(p.productId, [...(printings.get(p.productId) ?? []), printingKey(p.subTypeName)]);
+  }
+  const byNumber = new Map();
+  for (const p of products) {
+    const number = p.extendedData?.find((e) => e.name === "Number")?.value;
+    if (!number) continue;
+    const key = numberKey(number);
+    byNumber.set(key, [...(byNumber.get(key) ?? []), p]);
+  }
+  return { byNumber, printings };
+}
+
+let runs = 0;
+for (const [set, name] of Object.entries(RUN_GROUPS)) {
+  const gid = groupId[name];
+  if (!gid) {
+    console.log(`${set}: no tcgcsv group named "${name}"`);
+    continue;
+  }
+  const catalogue = await fetchJson(`https://api.tcgdex.net/v2/en/sets/${encodeURIComponent(set)}`);
+  const { byNumber } = await groupIndex(gid);
+  let here = 0;
+  let unmatched = 0;
+  for (const card of catalogue?.cards ?? []) {
+    // A run is linked beside the card's own product; a card with none has nothing to sit beside.
+    if (!ids[card.id]) continue;
+    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter((p) =>
+      fold(p.name).startsWith(fold(card.name)),
+    );
+    const product = named.find((p) => !p.name.includes("(")) ?? named[0];
+    if (!product) {
+      unmatched++;
+      continue;
+    }
+    ids[card.id] = { ...ids[card.id], shadowless: { productId: product.productId, groupId: gid } };
+    here++;
+  }
+  runs += here;
+  console.log(`${set} -> ${name}: ${here} Shadowless runs linked, ${unmatched} without one`);
+}
+console.log(`${DRY ? "Would link" : "Linked"} ${runs} Shadowless runs.`);
 
 if (!DRY) {
   const sorted = Object.fromEntries(

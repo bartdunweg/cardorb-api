@@ -471,6 +471,8 @@ const cachedFactsBundle = (
         );
         return bundle;
       },
+      // v8: Base Set's Shadowless and stamped runs priced from TCGplayer's Shadowless group.
+      //
       // v7: 968 promo and subset cards priced from tcgcsv, where TCGdex relays no TCGplayer
       // figure (tcgplayer-links.mjs). A v6 entry holds them unpriced for a day after the deploy.
       //
@@ -480,7 +482,7 @@ const cachedFactsBundle = (
       //
       // v5: a card's facts carry the printings and which market answered for a copy, and the
       // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-      ["collection-facts", "v7", userId, bundleSignature(groups, usdToEur)],
+      ["collection-facts", "v8", userId, bundleSignature(groups, usdToEur)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -576,7 +578,14 @@ const cachedTcgdexUsd = (setName: string, ids: string[]) =>
  */
 const TCGCSV_LINKS = TCGPLAYER_IDS as Record<
   string,
-  { productId: number; groupId?: number } | null | undefined
+  | {
+      productId: number;
+      groupId?: number;
+      /** The card's Shadowless run, in TCGplayer's group for it: Base Set only. */
+      shadowless?: { productId: number; groupId: number };
+    }
+  | null
+  | undefined
 >;
 
 /** One tcgcsv group's printings, a day at a time. A plain object: a Map comes back from the Data Cache as `{}`. */
@@ -635,6 +644,52 @@ export const usdForSet = async (
 };
 
 /**
+ * The Shadowless run's printings, and the stamped run's where it is filed there too, for the cards
+ * tcgplayer-links.mjs linked to TCGplayer's Shadowless group.
+ *
+ * TCGplayer files the Shadowless Base Set as a group of its own, whose "Unlimited" is the
+ * Shadowless run and "1st Edition" the stamped one; TCGdex relays neither. They are renamed to the
+ * runs copyPriceOf() asks for ("shadowless-holofoil", "1st-edition-holofoil"), so a Shadowless
+ * copy reads its own figure and a 1st Edition Base Set copy reads the stamped run's, instead of
+ * both reading the ordinary card (Charizard: $869.02 ordinary, $2,257.87 Shadowless, $10,000
+ * stamped, 2026-09-12). Exported for its test.
+ */
+export const runPrintingsForSet = async (
+  ids: string[],
+): Promise<
+  Record<string, Pick<UsdPair, "firstEd"> & { printings: NonNullable<UsdPair["printings"]> }>
+> => {
+  const linked = ids.filter((id) => TCGCSV_LINKS[id]?.shadowless);
+  if (!linked.length) return {};
+  const out: Awaited<ReturnType<typeof runPrintingsForSet>> = {};
+  const groups = [...new Set(linked.map((id) => TCGCSV_LINKS[id]!.shadowless!.groupId))];
+  await mapLimit(groups, 2, async (groupId) => {
+    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
+    try {
+      printings = await cachedGroupPrintings(groupId);
+    } catch (err) {
+      console.error(`tcgcsv group ${groupId} unavailable, Shadowless runs unpriced for now:`, err);
+      return;
+    }
+    for (const id of linked) {
+      const run = TCGCSV_LINKS[id]!.shadowless!;
+      if (run.groupId !== groupId) continue;
+      const tp = printings[String(run.productId)];
+      if (!tp) continue;
+      // "unlimited" in the Shadowless group is the Shadowless run; "1st-edition" keeps its name.
+      const renamed = Object.fromEntries(
+        Object.entries(tp).map(([name, v]) => [
+          name.replace(/^unlimited|^normal$/, "shadowless"),
+          v,
+        ]),
+      );
+      out[id] = { printings: usdPrintingsOf(renamed), firstEd: usdFirstEdOf(renamed) };
+    }
+  });
+  return out;
+};
+
+/**
  * Every card in a set's facts with no price on it at all.
  *
  * Not a price of zero and not the guide's euros: nothing. Used where the day's dollar rate
@@ -671,7 +726,12 @@ async function factsWithUsd(
   const wanted = Object.values(facts.cards).flatMap((f) =>
     !f.catalogue && f.tcgId && !f.usd ? [f.tcgId] : [],
   );
-  const usd = await usdForSet(setName, [...new Set(wanted)]);
+  const [usd, runs] = await Promise.all([
+    usdForSet(setName, [...new Set(wanted)]),
+    runPrintingsForSet(
+      Object.values(facts.cards).flatMap((f) => (!f.catalogue && f.tcgId ? [f.tcgId] : [])),
+    ),
+  ]);
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
       // A Japanese, Korean or Chinese printing: TCGplayer's English shelf does not carry it,
@@ -682,7 +742,8 @@ async function factsWithUsd(
       const p = f.usd ?? fetched?.usd ?? null;
       /* The stamped run's own dollars, converted. Nothing to reconcile any more: every price
          on this card is TCGplayer's now, this one included. */
-      const first = f.usdFirstEd ?? fetched?.firstEd ?? null;
+      const run = f.tcgId ? runs[f.tcgId] : undefined;
+      const first = f.usdFirstEd ?? fetched?.firstEd ?? run?.firstEd ?? null;
       /*
        * Every printing TCGplayer prices, in euros, and the product id beside it.
        *
@@ -692,7 +753,9 @@ async function factsWithUsd(
        * these first, and a card TCGplayer does not price has no price at all. The ids travel
        * so a person can open the page the figure came from and check it.
        */
-      const printings = f.usdPrintings ?? fetched?.printings ?? null;
+      // The Shadowless group's runs beside them, where the card has one; TCGdex's names win a clash.
+      const own = f.usdPrintings ?? fetched?.printings ?? null;
+      const printings = run ? { ...run.printings, ...own } : own;
       const pricePrintings = printings
         ? Object.fromEntries(
             Object.entries(printings).map(([name, v]) => [name, priceFromUsd(v, usdToEur)]),
