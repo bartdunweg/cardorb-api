@@ -1,0 +1,1 @@
+- A card's rarity can be set by hand through PATCH on a collection item, alone or on many at once. Every card in a promo set answers "Promo", which names the set and not the printing, and no catalogue publishes what such a card actually is; the owner can see it and now say it. Null puts it back to "nobody has said".

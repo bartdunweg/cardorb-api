@@ -545,6 +545,7 @@ function patchColumns(patch: CardPatch): Record<string, unknown> {
   if ("notes" in patch) row.notes = patch.notes;
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
+  if ("rarity" in patch) row.rarity = patch.rarity;
   if ("acquiredAt" in patch) row.acquired_at = patch.acquiredAt;
   return row;
 }

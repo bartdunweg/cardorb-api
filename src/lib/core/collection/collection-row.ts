@@ -557,6 +557,14 @@ export type CardPatch = Partial<{
   isFavorite: boolean;
   /** null takes the copy out of its folder. */
   collectionId: string | null;
+  /**
+   * What kind of printing this is, in the catalogue's own words. Set by hand, and only where the
+   * catalogue says nothing: every card in a promo set answers "Promo", which is the set's name and
+   * not a rarity, and no source publishes what such a card actually is. See the note on
+   * CardFacts.rarity: the row's column is the one source for an English card, so what is written
+   * here stands. null puts it back to "nobody has said".
+   */
+  rarity: string | null;
   /** When the copy was pulled: an ISO date or timestamp, not in the future. Decides Newest first. */
   acquiredAt: string;
 }>;
@@ -616,6 +624,17 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
         return { kind: "invalid", error: `${key} must be true or false.` };
       patch[key] = b[key];
     }
+  }
+  if ("rarity" in b) {
+    // A word, not a vocabulary: the catalogue's list grows with every set, and a rarity nobody
+    // here has heard of is still the right answer on the card. Blank reads as null, so a cleared
+    // field and an explicit null mean the same thing.
+    if (b.rarity !== null && typeof b.rarity !== "string")
+      return { kind: "invalid", error: "rarity must be a word or null." };
+    const value = typeof b.rarity === "string" ? b.rarity.trim() : null;
+    if (value !== null && value.length > MAX.option)
+      return { kind: "invalid", error: "That value is too long." };
+    patch.rarity = value === "" ? null : value;
   }
   if ("finish" in b) {
     // null is allowed and meaningful: it puts the row back to "nobody has
