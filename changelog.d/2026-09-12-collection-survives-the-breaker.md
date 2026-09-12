@@ -1,0 +1,1 @@
+- Your collection keeps opening while the card catalogue is down: the cards come from the app's own copy, without pictures or prices, instead of a page that will not load.
