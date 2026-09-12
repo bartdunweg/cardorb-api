@@ -1,0 +1,1 @@
+- A set's name is no longer stored as a card's rarity. Every card in a promo set answers "Promo", and "None" is the same answer spelled differently; both now leave the column empty, which is the true answer, and the catalogue can no longer put either back over a rarity its owner set by hand.

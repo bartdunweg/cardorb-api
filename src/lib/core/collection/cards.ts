@@ -54,6 +54,7 @@ import {
   type FoilPattern,
   type Edition,
   type Language,
+  rarityOrNull,
 } from "./collection-row";
 
 export { sameCard } from "../catalogue/matching";
@@ -1206,7 +1207,10 @@ export async function buildCollection(
           // shelves those are added from publish no rarity, so a row written from
           // one has nothing in this column, and the per-card request the price
           // already costs carries the answer. See CardFacts.rarity.
-          rarity: card?.rarity ?? row.rarity,
+          //
+          // "Promo" is not one it has: that names the set, and letting it through
+          // here would put it back over a rarity its owner said by hand.
+          rarity: rarityOrNull(card?.rarity) ?? row.rarity,
           owned: row.owned,
           // The row's own id and inventory facts, carried through untouched so
           // the merge below can build one Variant per row. See Variant's own

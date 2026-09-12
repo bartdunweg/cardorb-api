@@ -506,6 +506,21 @@ export function validateCardDraft(body: unknown): CardValidation {
  * empty strings become nulls because a rarity nobody filled in is absent rather
  * than blank.
  */
+/**
+ * The words a catalogue writes in the rarity field when it has no rarity to give.
+ *
+ * Every card in a promo set answers "Promo", which names the set and is already in `set_name`;
+ * "None" is the same answer spelled differently. A set is not a rarity, so neither is stored: the
+ * column stays empty, which is the true answer, and the owner can say what the card is
+ * (validateCardPatch takes a rarity by hand).
+ */
+const NOT_A_RARITY = ["promo", "none"];
+
+export const rarityOrNull = (rarity: string | null | undefined): string | null => {
+  const r = (rarity ?? "").trim();
+  return r === "" || NOT_A_RARITY.includes(r.toLowerCase()) ? null : r;
+};
+
 export function rowFromDraft(
   draft: CardDraft,
 ): Omit<CollectionRow, "id" | "acquiredAt"> & Partial<Pick<CollectionRow, "acquiredAt">> {
@@ -513,7 +528,7 @@ export function rowFromDraft(
     name: draft.name,
     number: draft.number,
     setName: draft.set,
-    rarity: draft.rarity || null,
+    rarity: rarityOrNull(draft.rarity),
     gen: draft.gen || null,
     types: draft.types,
     tcgId: draft.tcgId,

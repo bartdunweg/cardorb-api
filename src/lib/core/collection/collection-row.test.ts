@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   MAX,
+  rarityOrNull,
   rowFromDraft,
   validateCardDraft,
   validateCardPatch,
@@ -252,6 +253,17 @@ describe("validateCardPatch", () => {
     expect(patched({ rarity: "   " }).rarity).toBeNull();
     expect(refused({ rarity: 7 })).toMatch(/rarity must be a word or null/);
     expect(refused({ rarity: "r".repeat(MAX.option + 1) })).toMatch(/too long/);
+  });
+
+  it("never stores a set's name as a rarity", () => {
+    // Every card in a promo set answers "Promo", and "None" is the same answer spelled
+    // differently. The set already says it, so the column stays empty and its owner can speak.
+    expect(rarityOrNull("Promo")).toBeNull();
+    expect(rarityOrNull("promo")).toBeNull();
+    expect(rarityOrNull("None")).toBeNull();
+    expect(rarityOrNull("  ")).toBeNull();
+    expect(rarityOrNull(null)).toBeNull();
+    expect(rarityOrNull("Illustration rare")).toBe("Illustration rare");
   });
 
   it("keeps quantity a whole number of at least one", () => {
