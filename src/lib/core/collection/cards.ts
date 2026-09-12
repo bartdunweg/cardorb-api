@@ -36,7 +36,7 @@ import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/c
 import { CatalogueNotFound, type CardPrices } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
 import { LOCALE } from "../config";
-import { limitlessScan, tcgdexScan } from "../catalogue/artwork";
+import { limitlessScan, storedScan, tcgdexScan } from "../catalogue/artwork";
 import { sameCard } from "../catalogue/matching";
 import { ptcgScan } from "../catalogue/ptcg";
 import type { UsdPrice } from "../catalogue/tcgdex-client";
@@ -956,8 +956,13 @@ export async function resolveSetFacts(
     const tcgBase = !setHasScans
       ? null
       : (matched?.image ?? (guessed ? await tcgdexScan(guessed) : null));
-    let image = tcgBase ? localise(`${tcgBase}/low.webp`) : null;
-    let imageHigh = tcgBase ? localise(`${tcgBase}/high.webp`) : null;
+    // Through storedScan() rather than by appending, because the two sources hold a picture
+    // differently: TCGdex publishes a stem with the size as its last segment, and the copy in
+    // Postgres stores whatever it checked, which for a card TCGdex has no scan of is a whole
+    // file from one of the other two catalogues, with no larger version to name.
+    const scan = storedScan(tcgBase);
+    let image = scan.image ? localise(scan.image) : null;
+    let imageHigh = scan.imageHigh ? localise(scan.imageHigh) : null;
     if (!image && number && fallbacks > 0) {
       fallbacks--;
       // Limitless first, where the set has a code there. Not every set does,

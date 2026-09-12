@@ -40,26 +40,22 @@
  * allowed to import (see eslint.config.mjs).
  */
 
-import { DAY, localise, mapLimit, numberForms, catalogueTimeout } from "../util";
-import { ptcgLogo } from "./ptcg";
+import { DAY, mapLimit, catalogueTimeout } from "../util";
 import type { Price } from "../price-basis.mjs";
 import { unstable_cache } from "next/cache";
 import { json, fetchSet, pricesFor } from "./tcgdex-client";
 import { resolveSetIds } from "./set-resolve";
+import { type CatalogueCard, indexByNumber } from "./set-index";
+import { mirrorSetCatalogue } from "./set-catalogue-mirror";
+import { setArt } from "./set-art";
 
 export { resolveSetIds } from "./set-resolve";
-import type { TcgSet, TcgCard, TcgSetDetail } from "./tcgdex-client";
+import type { TcgSet, TcgSetDetail } from "./tcgdex-client";
 
 export { json, pricesFor } from "./tcgdex-client";
 export type { TcgSet, TcgCard, TcgSetDetail } from "./tcgdex-client";
 
-/** What a matched card contributes, which is less than TCGdex sends. */
-export type CatalogueCard = {
-  id: string;
-  localId: string;
-  name: string;
-  image: string | null;
-};
+export type { CatalogueCard } from "./set-index";
 
 export type SetCatalogue = {
   /**
@@ -123,25 +119,6 @@ export class CatalogueUnavailable extends Error {
  */
 const GONE = new Set([403, 404, 410]);
 
-/**
- * The black star every promo set wears, which TCGdex publishes once, under the
- * Sword & Shield promos. It is not that set's branding: it is the mark printed
- * on the cards themselves, and it is the same on all of them.
- */
-const PROMO_STAR = "https://assets.tcgdex.net/en/swsh/swshp/logo.webp";
-
-async function setArt(name: string, detail: TcgSetDetail | null | undefined) {
-  if (detail?.logo) return localise(`${detail.logo}.webp`);
-  if (/black star promos/i.test(name)) return localise(PROMO_STAR);
-  // Their logo before TCGdex's symbol: the symbol for a set with no logo is a
-  // 25px box with the set's three-letter code in it, which in a rail of
-  // wordmarks reads as a placeholder rather than as a set.
-  const theirs = await ptcgLogo(name);
-  if (theirs) return localise(theirs);
-  if (detail?.symbol) return localise(`${detail.symbol}.webp`);
-  return null;
-}
-
 /** How big a set may be before pre-pricing it stops being a saving. */
 function setPricingMax(): number {
   const raw = Number(process.env.CATALOGUE_SET_PRICING_MAX);
@@ -150,6 +127,17 @@ function setPricingMax(): number {
 
 /** The whole of the per-set work, on a cache miss. Exported for its test only. */
 export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
+  // The copy first. It answers for every set the nightly run has been through, which is every
+  // set anybody owns a card from, out of one query and with the pictures already checked. Null
+  // means the run has not reached this set, and the rest of this function is what that is for.
+  const copied = await mirrorSetCatalogue(setName).catch((err) => {
+    // A copy that cannot be read is not a set that does not exist: fall through to TCGdex
+    // rather than answer a collection with nothing.
+    console.error(`Reading ${setName} from the catalogue's copy failed:`, err);
+    return null;
+  });
+  if (copied) return copied;
+
   // Fetched inside rather than passed in, so a cached catalogue is a complete
   // answer to "tell me about this set" and not half of one. It costs nothing on
   // a miss: the index is one fetch and json() caches it for a day like the rest.
@@ -222,50 +210,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // than the subset (swsh12.5/GG69, not swsh12.5gg/GG69, which is a 404).
   const assetBase = detail?.logo?.replace(/\/logo$/, "") ?? null;
 
-  /**
-   * Keyed without case, because the two vocabularies disagree on it.
-   *
-   * TCGdex writes an alternate printing's number with a lowercase letter —
-   * "77a", "XY67a", "XY150a" — and the collection has them in capitals.
-   * Everything else about those rows lines up, so three real cards sat
-   * unmatched, with no scan, no price and no page, over the shape of one
-   * letter. Shaymin EX is the one that shows why it has to be the *same* card
-   * rather than a fallback to 77: "77a" is the alternate art, and quietly
-   * serving 77's picture instead would be a confidently wrong scan.
-   *
-   * Only the lookup is folded, not numberForms itself: that also builds the
-   * Limitless filenames, where the case is part of the path.
-   */
-  const numberKey = (n: string) => n.toLowerCase();
-  const byNumber: Record<string, CatalogueCard> = {};
-  const put = (form: string, card: TcgCard) => {
-    const k = numberKey(form);
-    if (k in byNumber) return;
-    byNumber[k] = {
-      id: card.id,
-      localId: card.localId ?? "",
-      name: card.name ?? "",
-      image: card.image ?? null,
-    };
-  };
-  for (const d of details) {
-    for (const card of d.cards ?? []) {
-      if (!card.localId) continue;
-      for (const form of numberForms(card.localId)) put(form, card);
-    }
-  }
-  // Second pass, on the numeric tail of a prefixed id. Promo sets number their
-  // cards "XY74" or "SWSH001" while a collector writes the bare "74", so
-  // without this every promo is unmatched. It runs after the exact forms and
-  // never overwrites them, which is what keeps a set's own card 01 ahead of its
-  // Trainer Gallery's TG01.
-  for (const d of details) {
-    for (const card of d.cards ?? []) {
-      const tail = card.localId?.match(/^[A-Za-z]+(\d+[A-Za-z]?)$/)?.[1];
-      if (!tail) continue;
-      for (const form of numberForms(tail)) put(form, card);
-    }
-  }
+  // One rule for both sources, in set-index.ts: the set first, its galleries after it.
+  const byNumber = indexByNumber(details.map((d) => d.cards ?? []));
 
   // Only the parent set has a printed abbreviation worth guessing with. The
   // galleries carry theirs as "ASR:TG", which is not a path segment, and
@@ -337,7 +283,11 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
     officialName: detail?.name ?? null,
     code,
     setHasScans,
-    logo: await setArt(setName, detail),
+    logo: await setArt(
+      setName,
+      detail?.logo ? `${detail.logo}.webp` : null,
+      detail?.symbol ? `${detail.symbol}.webp` : null,
+    ),
     releaseDate: detail?.releaseDate ?? null,
     total,
     prices,
@@ -353,13 +303,16 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
+// v6: a set the nightly copy holds is answered from Postgres now (set-catalogue-mirror.ts), and
+// the entries on disk were all built from TCGdex. They are not wrong, so this is not a repair;
+// it is so the change is true from the first request rather than from tomorrow.
 // v5: the two rules above changed which answers are allowed to become an entry, and the entries
 // already on disk were written under the old ones. Any set poisoned by a bad answer today would
 // otherwise keep its emptiness for the rest of its day; under a new key nothing looks at them.
 // v4: #230 changed what an entry contains — five promo aliases, and resolveSetIds now takes the
 // longest overlap and requires a shared id prefix. The key stayed at v3, so for a whole day every
 // set already in the Data Cache kept a byNumber built by the old rule.
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v5"], {
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v6"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });

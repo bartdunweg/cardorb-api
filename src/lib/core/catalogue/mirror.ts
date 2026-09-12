@@ -27,6 +27,7 @@ import {
   searchCatalogueCards,
   writeCatalogueIndex,
   writeCatalogueSet,
+  writeCatalogueSetRecord,
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
@@ -312,6 +313,21 @@ export async function syncMirror(
         /* Which of the set's cards are full art, worked out here because this is the one place
            that holds a whole set: the rule is about a card's place in it (full-art.ts). */
         const arts = fullArtOf(pictured);
+        // The set itself, beside its cards. Written first, and on its own line rather than
+        // folded into writeCatalogueSet(): a collection read resolves its sets by name out of
+        // this table (loadSetCatalogue), so a set whose cards are in the copy and whose own row
+        // is not would resolve to nothing at all.
+        await writeCatalogueSetRecord(db, {
+          id,
+          name: set.name,
+          series: set.series,
+          release_date: set.releaseDate,
+          logo: set.logo,
+          symbol: set.symbol,
+          abbreviation: set.abbreviation ?? null,
+          total: set.total,
+          printed_total: set.printedTotal,
+        });
         await writeCatalogueSet(
           db,
           id,
