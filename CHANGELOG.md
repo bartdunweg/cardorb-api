@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-12
 
+- A card keeps the picture it has been seen with. The scan is still worked out from the catalogue on every read, so a better one is picked up the same day, but the card no longer goes blank when the catalogue is briefly silent about the set it is from.
+
 - The links in the confirmation and password-reset emails point at cardorb.com again, and the emails say the link lasts an hour, which it does.
 
 - The three auth emails are rendered from cardorb-web on Untitled UI's email kit: the same wording, the app's pill button and type.

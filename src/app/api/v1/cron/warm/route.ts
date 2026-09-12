@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { getPublicCollection } from "@/lib/core/collection/collection";
+import { getPublicCollection, rememberCollectionScans } from "@/lib/core/collection/collection";
 import { listAccountIds } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
@@ -16,6 +16,11 @@ export const maxDuration = 60;
  * this every ten minutes: the miss is paid here, on nobody's screen, and the instance that
  * served it keeps the assembled collection in memory for the next ten (collection.ts).
  * Same bearer as the snapshot: `CRON_SECRET`.
+ *
+ * It also writes down the picture each card was just resolved to (remembered-scans.ts), which
+ * is the one thing here that is not only a cache: a row that has been seen with a scan keeps it,
+ * so a catalogue that goes quiet for a day can no longer empty a whole set of tiles. Only what
+ * changed is written, so after the first pass this is usually no write at all.
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET?.trim();
@@ -29,14 +34,29 @@ export async function GET(req: Request) {
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 
-  const warmed: { user: string; sets: number; ms: number }[] = [];
+  const warmed: { user: string; sets: number; remembered: number; ms: number }[] = [];
   const failed: string[] = [];
   for (const userId of await listAccountIds(db)) {
     const start = performance.now();
-    const { sets, failed: miss } = await getPublicCollection(userId);
-    if (miss) failed.push(userId);
-    else
-      warmed.push({ user: userId, sets: sets.length, ms: Math.round(performance.now() - start) });
+    const { sets, failed: miss, catalogueUnavailable } = await getPublicCollection(userId);
+    if (miss) {
+      failed.push(userId);
+      continue;
+    }
+    // Never off a collection served without the catalogue: those cards carry what the rows
+    // already remember, so writing it back would be the memory copying itself.
+    const remembered = catalogueUnavailable
+      ? 0
+      : await rememberCollectionScans(userId, sets, db).catch((err) => {
+          console.error("[cron] a collection could not remember its pictures:", err);
+          return 0;
+        });
+    warmed.push({
+      user: userId,
+      sets: sets.length,
+      remembered,
+      ms: Math.round(performance.now() - start),
+    });
   }
   return NextResponse.json({ warmed, failed }, { status: failed.length ? 207 : 200 });
 }

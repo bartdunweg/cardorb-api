@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getPublicCollection = vi.fn();
+const rememberCollectionScans = vi.fn();
 const listAccountIds = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   getPublicCollection: (...a: unknown[]) => getPublicCollection(...a),
+  rememberCollectionScans: (...a: unknown[]) => rememberCollectionScans(...a),
 }));
 vi.mock("@/lib/storage/postgres", () => ({
   listAccountIds: (...a: unknown[]) => listAccountIds(...a),
@@ -24,6 +26,7 @@ beforeEach(() => {
   process.env.CRON_SECRET = "s3cret";
   listAccountIds.mockResolvedValue(["u1", "u2"]);
   getPublicCollection.mockResolvedValue({ sets: [{}, {}], failed: false });
+  rememberCollectionScans.mockResolvedValue(0);
 });
 
 describe("GET /api/v1/cron/warm", () => {
@@ -41,6 +44,32 @@ describe("GET /api/v1/cron/warm", () => {
       ["u2", 2],
     ]);
     expect(body.failed).toEqual([]);
+  });
+
+  it("writes down the pictures it just resolved, and says how many", async () => {
+    rememberCollectionScans.mockResolvedValue(7);
+    const body = await (await get("Bearer s3cret")).json();
+    expect(rememberCollectionScans).toHaveBeenCalledTimes(2);
+    expect(body.warmed.map((w: { remembered: number }) => w.remembered)).toEqual([7, 7]);
+  });
+
+  it("remembers nothing off a collection served without the catalogue", async () => {
+    // Those cards carry what the rows already remember, so writing it back would be the
+    // memory copying itself, and a catalogue outage must never reach the store at all.
+    getPublicCollection.mockResolvedValue({
+      sets: [{}],
+      failed: false,
+      catalogueUnavailable: true,
+    });
+    await get("Bearer s3cret");
+    expect(rememberCollectionScans).not.toHaveBeenCalled();
+  });
+
+  it("warms the rest when one collection cannot remember its pictures", async () => {
+    rememberCollectionScans.mockRejectedValueOnce(new Error("store is down"));
+    const res = await get("Bearer s3cret");
+    expect(res.status).toBe(200);
+    expect((await res.json()).warmed).toHaveLength(2);
   });
 
   it("is a 207 naming the accounts that could not be assembled", async () => {
