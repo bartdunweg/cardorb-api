@@ -40,8 +40,13 @@ paths:
   a null in `cardmarket-ids.generated.json`: `scripts/cardmarket-ids-fill.mjs` fills those from
   Cardmarket's product list, by hand where a promo set holds one name several times. The algorithm that turns them into the one shown figure is
   `lib/core/price-basis.mjs`, and nothing else.
-- **Migrations are applied and recorded through `supabase db query --linked` and
-  `supabase migration repair`**, which need the CLI login and not the database password.
+- **A migration is applied by `.github/workflows/migrate.yml`, never by hand.** A merge to
+  main that adds a file under `supabase/migrations/` waits for the Vercel Production deploy
+  of that commit, then runs `supabase db push`, which applies the file and records it in one
+  step. Running one by hand (`db query --file`, then `migration repair`) is how ten files
+  ran without a record and three records got versions no file carries (fixed 2026-09-12).
+  Two files may not share a version: the history table keys on it, so the second of a pair
+  is never recorded. Give a new file a timestamp nothing else has.
 - **`cards.collection_id` is `on delete set null` on the live database**, so `deleteFolder()`
   emptying a folder first is belt and braces. The migration file declares the reference
   without it; harmless, already applied.

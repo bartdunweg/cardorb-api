@@ -66,6 +66,8 @@ if the two have drifted apart.
 
 - A correction to the catalogue reaches the search the same day. The document the browser searches in was kept for a day without asking, so a card whose picture was fixed this afternoon stayed a blank square until that day was up; it is now checked against its version on every page load, which answers with no content where nothing has changed.
 
+- A migration is applied by GitHub Actions after its pull request merges, instead of by hand. The workflow waits for Vercel's Production deploy of the commit to succeed, then runs `supabase db push`, so the history table records every file it runs. Two pairs of files shared a version (`20260911200000`, `20260912140000`), which the history table cannot hold; the second of each is now `…0001`.
+
 - Every price is TCGplayer's, converted at the day's rate, or there is none. The two markets were averaged, which put half of a holo's figure on the plain rare beside it without saying so: a Team Rocket Dark Golbat read €30.46 on Cardmarket's shared product where TCGplayer said €5.83. A card TCGplayer does not price, about one in eight and mostly promos, now reads no price rather than the other market's.
 - The estimated Near Mint band is gone with it. It was a ratio fitted to Cardmarket's trend, and nothing reads that trend any more.
 - A copy whose finish nobody has filled in reads the plain card's figure, not the reverse holo's. Through TCGplayer's printings it had been reading the reverse, which counted every unclassified modern common at several times its price. A holo copy no longer falls through to a reverse's figure either.
