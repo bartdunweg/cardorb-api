@@ -184,6 +184,13 @@ export type ItemFilter = {
   /** true: copies with a price; false: the ones nothing prices, to see what the total leaves out. */
   priced?: boolean;
   /**
+   * The catalogue ids of the full arts, where the route asked for them: a copy counts when its
+   * own catalogue id is one. Resolved by the route from the catalogue's copy, because whether a
+   * card is full art is a fact about the printing and not about the row (full-art.ts). A row
+   * with no catalogue id, or one the copy has never seen, is not a full art here.
+   */
+  fullArtIds?: ReadonlySet<string>;
+  /**
    * A rule folder's rule, resolved by the route from `collection`. Owned copies only,
    * whatever `owned` says: a wished copy is in no folder that fills itself.
    */
@@ -215,6 +222,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (f.collection && it.collectionId !== f.collection) return false;
     if (set && it.set.toLowerCase() !== set && it.setTitle.toLowerCase() !== set) return false;
     if (rarity && (it.rarity ?? "").toLowerCase() !== rarity) return false;
+    if (f.fullArtIds && !(it.tcgId && f.fullArtIds.has(it.tcgId))) return false;
     if (number && it.number.toLowerCase() !== number) return false;
     if (gen && (it.gen ?? "").toLowerCase() !== gen) return false;
     if (type && (it.type ?? "").toLowerCase() !== type) return false;
@@ -317,7 +325,16 @@ export const PUBLIC_PAGE_MAX = 500;
 
 export type Page = { limit: number; offset: number };
 
-export type ItemQuery = ItemFilter & Page & { sort?: Sort; order?: Order };
+export type ItemQuery = ItemFilter &
+  Page & {
+    sort?: Sort;
+    order?: Order;
+    /**
+     * `?fullArt=1`, as asked. The route turns it into `fullArtIds` by asking the catalogue's
+     * copy; the filter itself never reaches a store.
+     */
+    fullArt?: boolean;
+  };
 
 /**
  * The query string, read strictly: an unknown value is an error rather than
@@ -334,6 +351,7 @@ export function readItemQuery(
     if (q.length > 100) return { kind: "invalid", error: "q is too long." };
     if (q.trim()) query.q = q.trim();
   }
+  if (params.get("fullArt") === "1") query.fullArt = true;
   for (const key of ["owned", "favorite", "priced"] as const) {
     const v = params.get(key);
     if (v === null) continue;

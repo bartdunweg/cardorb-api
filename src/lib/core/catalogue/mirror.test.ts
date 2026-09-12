@@ -100,6 +100,21 @@ describe("mirrorQuery", () => {
     expect(mirrorQuery("   ")).toBeNull();
   });
 
+  // Full art cuts across the rarities rather than being one of them, so it narrows whatever was
+  // asked; on its own it is still a question, every full art in the catalogue.
+  it("carries full art beside a term, and stands as a query on its own", () => {
+    expect(mirrorQuery("charizard", { fullArt: true })).toEqual({
+      words: ["charizard"],
+      fullArt: true,
+    });
+    expect(mirrorQuery("   ", { fullArt: true })).toEqual({ words: [], fullArt: true });
+    expect(mirrorQuery({ set: "151" }, { fullArt: true })).toEqual({
+      words: [],
+      set: "151",
+      fullArt: true,
+    });
+  });
+
   it("takes the filter fields as typed, the type in the catalogue's spelling", () => {
     expect(mirrorQuery({ name: " char ", number: "6", set: "151", type: "fire" })).toEqual({
       words: [],
@@ -139,6 +154,8 @@ describe("searchMirror", () => {
           imageHigh: "https://assets.tcgdex.net/en/sv/sv03.5/006/high.webp",
           rarity: "Double Rare",
           types: ["Fire"],
+          category: null,
+          trainerType: null,
           tcgId: "sv03.5-006",
         },
       ],

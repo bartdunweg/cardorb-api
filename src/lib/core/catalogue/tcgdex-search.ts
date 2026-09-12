@@ -150,9 +150,17 @@ const matchesWords = (card: CatalogueMatch, words: string[]) =>
 async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
   if (!cards.length) return cards;
   const query = `{ ${cards
-    .map((c, i) => `c${i}: card(id: ${JSON.stringify(c.id)}) { rarity types }`)
+    .map((c, i) => `c${i}: card(id: ${JSON.stringify(c.id)}) { rarity types category trainerType }`)
     .join(" ")} }`;
-  let facts: Record<string, { rarity?: string | null; types?: string[] | null } | null> = {};
+  let facts: Record<
+    string,
+    {
+      rarity?: string | null;
+      types?: string[] | null;
+      category?: string | null;
+      trainerType?: string | null;
+    } | null
+  > = {};
   try {
     facts = (await graphql(query, "card facts")) as typeof facts;
   } catch (err) {
@@ -163,7 +171,15 @@ async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
   }
   return cards.map((card, i) => {
     const fact = facts?.[`c${i}`];
-    return fact ? { ...card, rarity: fact.rarity ?? null, types: fact.types ?? [] } : card;
+    return fact
+      ? {
+          ...card,
+          rarity: fact.rarity ?? null,
+          types: fact.types ?? [],
+          category: fact.category ?? null,
+          trainerType: fact.trainerType ?? null,
+        }
+      : card;
   });
 }
 
@@ -190,6 +206,13 @@ export async function searchCards(
    * that will not answer, is the way every search before was.
    */
   store: SupabaseClient | null = null,
+  /**
+   * Only the cards whose illustration covers the whole card. Answered by the catalogue's copy
+   * alone, which is where the flag is worked out and kept (mirror.ts, full-art.ts): TCGdex
+   * cannot be asked for it, and a shelf other than the English one has no copy. So the filter
+   * asked anywhere else answers nothing rather than answering the wrong cards.
+   */
+  { fullArt = false }: { fullArt?: boolean } = {},
 ): Promise<{ cards: CatalogueMatch[]; total: number }> {
   // A Latin-letter term on another shelf is an English name, and TCGdex has none to match it
   // against: リザードンex is what its record says. The committed English names are scanned here.
@@ -205,7 +228,7 @@ export async function searchCards(
   )
     return searchEnglishNames(language, input.name ?? "", page, { set: input.set });
   if (!language && store) {
-    const copied = await searchMirror(store, input, page).catch((err) => {
+    const copied = await searchMirror(store, input, page, { fullArt }).catch((err) => {
       // The copy is a shortcut, not the catalogue: a store that will not answer costs this
       // search its speed, not its answer.
       console.error(
@@ -216,6 +239,7 @@ export async function searchCards(
     });
     if (copied) return copied;
   }
+  if (fullArt) return { cards: [], total: 0 };
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
   if (!params) return { cards: [], total: 0 };

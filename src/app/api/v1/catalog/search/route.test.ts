@@ -114,7 +114,7 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("passes the trimmed query through and returns what it finds", async () => {
     const res = await search(new URLSearchParams({ query: "  char  " }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null, { fullArt: false });
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
     expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", rarity: "Rare Holo" });
@@ -127,6 +127,7 @@ describe("GET /api/v1/catalog/search", () => {
       1,
       null,
       null,
+      { fullArt: false },
     );
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
@@ -140,7 +141,18 @@ describe("GET /api/v1/catalog/search", () => {
       1,
       null,
       null,
+      { fullArt: false },
     );
+  });
+
+  /* Full art narrows whatever was asked, and on its own is a question: every full art in the
+     catalogue. So it lifts the two-character rule the free box has. */
+  it("passes ?fullArt=1 down, and takes it as a query on its own", async () => {
+    await search(new URLSearchParams({ query: "char", fullArt: "1" }));
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null, { fullArt: true });
+    const res = await search(new URLSearchParams({ fullArt: "1" }));
+    expect(res.status).toBe(200);
+    expect(searchCards).toHaveBeenLastCalledWith("", 1, null, null, { fullArt: true });
   });
 
   it("trims filter fields before checking whether any are present", async () => {
@@ -151,15 +163,15 @@ describe("GET /api/v1/catalog/search", () => {
 
   it("forwards an explicit page number", async () => {
     await search(new URLSearchParams({ query: "char", page: "3" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 3, null, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 3, null, null, { fullArt: false });
   });
 
   it("falls back to page 1 for an invalid page value", async () => {
     await search(new URLSearchParams({ query: "char", page: "not-a-number" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null, { fullArt: false });
 
     await search(new URLSearchParams({ query: "char", page: "-1" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null, { fullArt: false });
   });
 
   it("answers 502 with a sentence, not 400, when searchCards fails", async () => {
@@ -200,13 +212,13 @@ describe("GET /api/v1/catalog/search", () => {
   it("asks the catalogue named by ?language, and joins ownership by that language alone", async () => {
     const res = await search(new URLSearchParams({ query: "リザードン", language: "ja" }));
     expect(res.status).toBe(200);
-    expect(searchCards).toHaveBeenCalledWith("リザードン", 1, "ja", null);
+    expect(searchCards).toHaveBeenCalledWith("リザードン", 1, "ja", null, { fullArt: false });
     expect(englishSets).not.toHaveBeenCalled();
   });
 
   it("reads language=en as the English catalogue", async () => {
     await search(new URLSearchParams({ query: "char", language: "en" }));
-    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null);
+    expect(searchCards).toHaveBeenCalledWith("char", 1, null, null, { fullArt: false });
   });
 
   it("prices every result from the guide, by the id everything priced is keyed by", async () => {

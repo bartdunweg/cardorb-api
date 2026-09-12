@@ -78,11 +78,16 @@ export async function GET(req: Request) {
     set: url.searchParams.get("set")?.trim() ?? "",
     type: url.searchParams.get("type")?.trim() ?? "",
   };
+  /* `?fullArt=1`: only the cards whose illustration covers the whole card. Not a fifth filter
+     field but a narrowing of whatever was asked, because it cuts across the rarities rather
+     than being one of them, and because on its own it is a question worth asking: every full
+     art in the catalogue, newest set first. Answered by the copy alone; see searchCards. */
+  const fullArt = url.searchParams.get("fullArt") === "1";
   const usingFilters = Object.values(filters).some(Boolean);
   const pageParam = Number(url.searchParams.get("page"));
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
-  if (!usingFilters) {
+  if (!usingFilters && !fullArt) {
     const query = (url.searchParams.get("query") ?? "").trim();
     if (query.length < 2) {
       return apiError(400, "Type at least two characters to search.", undefined, {
@@ -106,8 +111,8 @@ export async function GET(req: Request) {
     const [{ cards, total }, { rows }, sets] = await Promise.all([
       timed("catalogue search", () =>
         usingFilters
-          ? searchCards(filters, page, language, store)
-          : searchCards(term, page, language, store),
+          ? searchCards(filters, page, language, store, { fullArt })
+          : searchCards(term, page, language, store, { fullArt }),
       ),
       timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)),
       language ? Promise.resolve([]) : timed("en set index", () => englishSets().catch(() => [])),

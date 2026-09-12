@@ -30,6 +30,7 @@ import {
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
+import { fullArtOf } from "./full-art";
 import { limitlessScan, storedScan, tcgdexScan } from "./artwork";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
@@ -60,11 +61,16 @@ const energyType = (word: string) => ENERGY_TYPES.find((t) => lower(t) === lower
  * tcgdex-search.ts gives a term: a word that is an energy type is the type filter, every other
  * word must be in the name, the number or the set name. Null where there is nothing to ask.
  */
-export function mirrorQuery(input: string | SearchFilters): CatalogueQuery | null {
+export function mirrorQuery(
+  input: string | SearchFilters,
+  { fullArt = false }: { fullArt?: boolean } = {},
+): CatalogueQuery | null {
   if (typeof input === "string") {
     const words = input.trim().split(/\s+/).filter(Boolean).slice(0, MAX_WORDS);
-    if (!words.length) return null;
-    const query: CatalogueQuery = { words: [] };
+    // Nothing typed and nothing asked is no query. Full art on its own is a question, though:
+    // every full art in the catalogue, newest set first, which is a shelf worth walking.
+    if (!words.length && !fullArt) return null;
+    const query: CatalogueQuery = { words: [], ...(fullArt ? { fullArt: true } : {}) };
     for (const word of words) {
       const type = energyType(word);
       if (type && !query.type) query.type = type;
@@ -72,11 +78,13 @@ export function mirrorQuery(input: string | SearchFilters): CatalogueQuery | nul
     }
     return query;
   }
-  const query: CatalogueQuery = { words: [] };
+  const query: CatalogueQuery = { words: [], ...(fullArt ? { fullArt: true } : {}) };
   if (input.name?.trim()) query.name = input.name.trim();
   if (input.number?.trim()) query.number = input.number.trim();
   if (input.set?.trim()) query.set = input.set.trim();
   if (input.type?.trim()) query.type = energyType(input.type) ?? input.type.trim();
+  // `words` is always there, so one more key means something was actually asked for. Full art on
+  // its own is a question: every full art in the catalogue, newest set first.
   return Object.keys(query).length > 1 ? query : null;
 }
 
@@ -91,6 +99,8 @@ const matchOf = (r: CatalogueCardRecord): CatalogueMatch => ({
   rarity: r.rarity,
   types: r.types,
   series: r.series,
+  category: r.category ?? null,
+  trainerType: r.trainer_type ?? null,
   tcgId: r.id,
 });
 
@@ -124,9 +134,10 @@ export async function searchMirror(
   db: SupabaseClient,
   input: string | SearchFilters,
   page = 1,
+  { fullArt = false }: { fullArt?: boolean } = {},
 ): Promise<{ cards: CatalogueMatch[]; total: number } | null> {
   if (!(await hasCopy(db))) return null;
-  const query = mirrorQuery(input);
+  const query = mirrorQuery(input, { fullArt });
   if (!query) return { cards: [], total: 0 };
   const { rows, total } = await searchCatalogueCards(db, query, page, MAX_RESULTS);
   return { cards: rows.map(matchOf), total };
@@ -298,6 +309,9 @@ export async function syncMirror(
         }
         const { set, cards } = read;
         const pictured = await withResolvedScans(db, id, set.name, cards, fresh.has(id));
+        /* Which of the set's cards are full art, worked out here because this is the one place
+           that holds a whole set: the rule is about a card's place in it (full-art.ts). */
+        const arts = fullArtOf(pictured);
         await writeCatalogueSet(
           db,
           id,
@@ -312,6 +326,9 @@ export async function syncMirror(
             rarity: c.rarity,
             types: c.types,
             image: stemOf(c.image),
+            category: c.category ?? null,
+            trainer_type: c.trainerType ?? null,
+            full_art: arts.has(c),
           })),
         );
         report.copied.push(id);

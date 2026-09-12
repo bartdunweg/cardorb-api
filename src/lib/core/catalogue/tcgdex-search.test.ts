@@ -88,7 +88,9 @@ describe("searchCards", () => {
   it("maps a hit into the shape the add-card form uses, with set and era from the index", async () => {
     installFetch({
       list: [brief("pl4-1", "1", "Charizard", "https://assets.tcgdex.net/en/pl/pl4/1")],
-      facts: { c0: { rarity: "Holo Rare", types: ["Fire"] } },
+      facts: {
+        c0: { rarity: "Holo Rare", types: ["Fire"], category: "Pokemon", trainerType: null },
+      },
     });
     const { searchCards } = await loadCards();
 
@@ -104,6 +106,8 @@ describe("searchCards", () => {
         imageHigh: "https://assets.tcgdex.net/en/pl/pl4/1/high.webp",
         rarity: "Holo Rare",
         types: ["Fire"],
+        category: "Pokemon",
+        trainerType: null,
         tcgId: "pl4-1",
       },
     ]);

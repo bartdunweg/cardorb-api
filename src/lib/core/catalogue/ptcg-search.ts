@@ -48,6 +48,15 @@ export type CatalogueMatch = {
    * the same id as `id`.
    */
   tcgId?: string | null;
+  /**
+   * "Pokemon", "Trainer" or "Energy", and for a trainer which kind it is ("Supporter", "Item",
+   * "Tool", "Stadium"), as TCGdex files them. Carried because they are what tells a full art
+   * apart from a gold card: at Ultra Rare and Secret Rare a Supporter is the full art reprint
+   * and an Item is the gold one, and the rarity says the same word for both. Null where the
+   * catalogue did not answer, or where the shelf does not publish them.
+   */
+  category?: string | null;
+  trainerType?: string | null;
 };
 
 /** One page of hits. Also read by the dialog, to know whether a full page means more might exist. */

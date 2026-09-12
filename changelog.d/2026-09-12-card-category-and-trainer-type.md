@@ -1,0 +1,1 @@
+- A catalogue card says what kind of card it is, so an app can tell a full art Supporter apart from a gold Item: the two share a rarity and look nothing alike.

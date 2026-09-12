@@ -452,20 +452,36 @@ export async function resolveEnglishSetId(setId: string): Promise<string | null>
  * the whole back half of the set: its full arts and its secret rares. `sm1-`
  * matches that set alone, because `sm10-1` has a zero where the hyphen goes.
  */
-async function englishFacts(
-  setId: string,
-): Promise<Map<string, { rarity: string | null; types: string[] }> | null> {
-  const out = new Map<string, { rarity: string | null; types: string[] }>();
+type SetFact = {
+  rarity: string | null;
+  types: string[];
+  category: string | null;
+  trainerType: string | null;
+};
+
+async function englishFacts(setId: string): Promise<Map<string, SetFact> | null> {
+  const out = new Map<string, SetFact>();
   try {
     const body = (await graphql(
-      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types } }`,
+      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types category trainerType } }`,
       `en set ${setId} facts`,
     )) as {
-      cards?: ({ id: string; rarity?: string | null; types?: string[] | null } | null)[];
+      cards?: ({
+        id: string;
+        rarity?: string | null;
+        types?: string[] | null;
+        category?: string | null;
+        trainerType?: string | null;
+      } | null)[];
     } | null;
     for (const c of body?.cards ?? [])
       if (c?.id.startsWith(`${setId}-`))
-        out.set(c.id, { rarity: c.rarity ?? null, types: c.types ?? [] });
+        out.set(c.id, {
+          rarity: c.rarity ?? null,
+          types: c.types ?? [],
+          category: c.category ?? null,
+          trainerType: c.trainerType ?? null,
+        });
   } catch (err) {
     console.error(`TCGdex facts for ${setId} unavailable, set shown without them:`, err);
     return null;
@@ -523,7 +539,7 @@ export async function englishSet(
     englishFacts(id),
   ]);
   if (!read && factsRequired) throw new Error(`TCGdex facts for ${id} unavailable`);
-  const facts = read ?? new Map<string, { rarity: string | null; types: string[] }>();
+  const facts = read ?? new Map<string, SetFact>();
   const known = index.get(id);
   const serieId = detail.serie?.id ?? "";
   const set: CatalogueSet = {
@@ -551,6 +567,8 @@ export async function englishSet(
     imageHigh: serieId ? scan("en", serieId, id, c.localId, "high") : null,
     rarity: facts.get(c.id)?.rarity ?? null,
     types: facts.get(c.id)?.types ?? [],
+    category: facts.get(c.id)?.category ?? null,
+    trainerType: facts.get(c.id)?.trainerType ?? null,
     // TCGdex's id, because this is TCGdex: what every price in this repo is keyed by.
     tcgId: c.id,
   }));
