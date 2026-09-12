@@ -47,9 +47,28 @@ const TYPE_SUFFIX = /\s+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\s?x
  * symmetric nor hashable, and a count is not worth an edit-distance pass over
  * two thousand rows squared.
  */
-export const importKey = (row: { name: string; setName: string; number: string }): string =>
+/**
+ * The name a set goes by, for the name a row filed it under.
+ *
+ * Since 2026-09-11 a set goes by its official name everywhere it is shown
+ * (cards.ts, mergeSetsByTitle), and a file names sets the official way too.
+ * The rows in the collection still carry what they were filed under: a Notion
+ * import wrote "Set 1 Unlimited" for Base Set, and keyed on that, a Dex export
+ * of the same cards counted as 0 already held (2026-09-12). So the key goes
+ * through this first, on both sides. storage/imports.ts builds it from the
+ * catalogue; the identity is the default, which is what a test and an offline
+ * catalogue get.
+ */
+export type TitleOf = (setName: string) => string;
+
+const asFiled: TitleOf = (setName) => setName;
+
+export const importKey = (
+  row: { name: string; setName: string; number: string },
+  titleOf: TitleOf = asFiled,
+): string =>
   [
-    norm(row.setName),
+    norm(titleOf(row.setName)),
     cardNumber(row.number).toLowerCase().replace(/^0+/, ""),
     norm(row.name.replace(TYPE_SUFFIX, "")),
   ].join(" ");
@@ -64,9 +83,10 @@ export const importKey = (row: { name: string; setName: string; number: string }
 export function splitExisting(
   rows: CollectionRow[],
   held: ReadonlySet<string>,
+  titleOf: TitleOf = asFiled,
 ): { fresh: CollectionRow[]; existing: CollectionRow[] } {
   const fresh: CollectionRow[] = [];
   const existing: CollectionRow[] = [];
-  for (const row of rows) (held.has(importKey(row)) ? existing : fresh).push(row);
+  for (const row of rows) (held.has(importKey(row, titleOf)) ? existing : fresh).push(row);
   return { fresh, existing };
 }

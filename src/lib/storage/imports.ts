@@ -2,7 +2,9 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CollectionRow } from "../core/collection/collection-row";
 import { NOT_OWNED } from "../core/collection/csv";
-import { importKey, splitExisting } from "../core/collection/import-match";
+import { importKey, splitExisting, type TitleOf } from "../core/collection/import-match";
+import { setCatalogue } from "../core/catalogue/catalogue";
+import { mapLimit } from "../core/util";
 import { createRows, pageRange, readAllPages } from "./postgres";
 
 /**
@@ -71,7 +73,41 @@ export type ImportOutcome = {
  */
 type Row = { name?: string; set_name?: string; number?: string };
 
-export async function heldKeys(db: SupabaseClient, userId: string): Promise<Set<string>> {
+/**
+ * The official name of every set named, by the name it was named.
+ *
+ * The same cached read the collection view makes for a set (setCatalogue, a
+ * day), eight at a time as cards.ts asks it. A set the catalogue does not know,
+ * or cannot be asked about right now, goes by the name given: the outage that
+ * serves the collection from the rows alone must not stop an import, and a
+ * count that is right for every set but one beats no count.
+ */
+export async function officialTitles(setNames: Iterable<string>): Promise<TitleOf> {
+  const names = [...new Set(setNames)].filter((n) => n.trim());
+  const titles = new Map<string, string>();
+  await mapLimit(names, 8, async (name) => {
+    try {
+      const title = (await setCatalogue(name)).officialName;
+      if (title) titles.set(name, title);
+    } catch {
+      // Unknown or unreachable: the filing name stands, see above.
+    }
+  });
+  return (name) => titles.get(name) ?? name;
+}
+
+/**
+ * The keys of what is held, and the fold both sides are keyed through.
+ *
+ * `alsoFold` is the file's set names: the fold has to know those too, or a
+ * file saying "Base Set" would be compared against rows folded to "Base Set"
+ * under its own unfolded name and miss.
+ */
+export async function heldKeys(
+  db: SupabaseClient,
+  userId: string,
+  alsoFold: Iterable<string> = [],
+): Promise<{ keys: Set<string>; titleOf: TitleOf }> {
   const rows = await readAllPages<Row>("the collection", (page, counted) =>
     db
       .from("cards")
@@ -82,15 +118,22 @@ export async function heldKeys(db: SupabaseClient, userId: string): Promise<Set<
       .range(...pageRange(page)),
   );
 
-  return new Set(
-    rows.map((row) =>
-      importKey({
-        name: row.name ?? "",
-        setName: row.set_name ?? "",
-        number: row.number ?? "",
-      }),
+  const titleOf = await officialTitles([...rows.map((row) => row.set_name ?? ""), ...alsoFold]);
+  return {
+    keys: new Set(
+      rows.map((row) =>
+        importKey(
+          {
+            name: row.name ?? "",
+            setName: row.set_name ?? "",
+            number: row.number ?? "",
+          },
+          titleOf,
+        ),
+      ),
     ),
-  );
+    titleOf,
+  };
 }
 
 /**
@@ -104,8 +147,9 @@ export function preview(
   rows: CollectionRow[],
   skipped: SkippedRow[],
   held: ReadonlySet<string>,
+  titleOf?: TitleOf,
 ): ImportOutcome {
-  const { existing } = splitExisting(rows, held);
+  const { existing } = splitExisting(rows, held, titleOf);
   return {
     seen: rows.length + skipped.length,
     added: 0,
@@ -154,8 +198,9 @@ export async function commit(
   rows: CollectionRow[],
   skippedRows: SkippedRow[],
   held: ReadonlySet<string>,
+  titleOf?: TitleOf,
 ): Promise<ImportOutcome> {
-  const { existing } = splitExisting(rows, held);
+  const { existing } = splitExisting(rows, held, titleOf);
   const skippedCount = skippedRows.length;
 
   // The error was being discarded here. If this insert is refused the import

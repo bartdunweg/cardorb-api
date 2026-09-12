@@ -35,6 +35,30 @@ describe("importKey", () => {
     );
   });
 
+  it("sees one set through the name it was filed under, given the official one", () => {
+    const titleOf = (s: string) => (s === "Set 1 Unlimited" ? "Base Set" : s);
+    expect(importKey({ name: "Pikachu", setName: "Set 1 Unlimited", number: "58" }, titleOf)).toBe(
+      importKey({ name: "Pikachu", setName: "Base Set", number: "58" }, titleOf),
+    );
+    expect(importKey({ name: "Pikachu", setName: "Set 1 Unlimited", number: "58" })).not.toBe(
+      importKey({ name: "Pikachu", setName: "Base Set", number: "58" }),
+    );
+  });
+
+  it("counts a card held under a filing name as existing when the file says the official one", () => {
+    const titleOf = (s: string) => (s === "Set 1 Unlimited" ? "Base Set" : s);
+    const held = new Set([
+      importKey({ name: "Pikachu", setName: "Set 1 Unlimited", number: "58" }, titleOf),
+    ]);
+    const { existing } = splitExisting(
+      [card({ name: "Pikachu", setName: "Base Set", number: "58" })],
+      held,
+      titleOf,
+    );
+
+    expect(existing).toHaveLength(1);
+  });
+
   it("sees one card through the printed number's denominator", () => {
     expect(importKey({ name: "Espeon", setName: "Dark Explorers", number: "48/108" })).toBe(
       importKey({ name: "Espeon", setName: "Dark Explorers", number: "48" }),

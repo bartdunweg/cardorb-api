@@ -10,6 +10,7 @@ import { cardsTag } from "@/lib/core/collection/collection-row";
 import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/collection/csv";
 import { looksLikeDex, dexRows } from "@/lib/core/collection/dex";
 import { commit, heldKeys, preview } from "@/lib/storage/imports";
+import type { TitleOf } from "@/lib/core/collection/import-match";
 
 import { forgetOnTheWeb } from "@/lib/api/web-cache";
 /**
@@ -135,9 +136,16 @@ export async function POST(req: Request) {
   const db = await clientFor(bearer(req) ?? undefined);
   if (!db) return apiError(503, "There is nowhere to write to.");
 
+  // Keyed through the sets' official names on both sides, so a card held under the name
+  // it was filed with in Notion counts as held when the file says the catalogue's name.
   let held: Set<string>;
+  let titleOf: TitleOf;
   try {
-    held = await heldKeys(db, viewer.userId);
+    ({ keys: held, titleOf } = await heldKeys(
+      db,
+      viewer.userId,
+      rows.map((r) => r.setName),
+    ));
   } catch (err) {
     console.error("Reading the collection before an import failed:", err);
     return apiError(502, "Your collection could not be read.");
@@ -147,7 +155,7 @@ export async function POST(req: Request) {
 
   if (!doCommit) {
     return NextResponse.json({
-      ...preview(rows, skipped, held),
+      ...preview(rows, skipped, held, titleOf),
       header,
       guessed,
       source,
@@ -156,7 +164,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const outcome = await commit(db, viewer.userId, "csv", rows, skipped, held);
+    const outcome = await commit(db, viewer.userId, "csv", rows, skipped, held, titleOf);
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });

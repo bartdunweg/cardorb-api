@@ -1,0 +1,1 @@
+- The CSV import counts a card as already held when the collection filed its set under another name (Notion wrote "Set 1 Unlimited" for Base Set): both sides are keyed through the set's official name.
