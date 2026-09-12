@@ -14,7 +14,6 @@ import {
   readPublicQuery,
   sortPublicItems,
   sortItems,
-  summariseDex,
 } from "./items";
 
 const variant = (over: Partial<Variant> = {}): Variant => ({
@@ -358,32 +357,6 @@ describe("countStats", () => {
     expect(stats.value).toBe(9);
     expect(stats.unpriced).toBe(3);
     expect(stats.copies).toBe(6);
-  });
-});
-
-describe("summariseDex", () => {
-  it("keeps the slot and its cards as name and picture, not the rows", () => {
-    const dex = [
-      {
-        id: 25,
-        name: "Pikachu",
-        owned: 2,
-        cards: [card("Pikachu", [], { image: null }), card("Pikachu V", [])],
-      },
-      { id: 1, name: "Bulbasaur", owned: 0, cards: [] },
-    ];
-    expect(summariseDex(dex)).toEqual([
-      {
-        id: 25,
-        name: "Pikachu",
-        owned: 2,
-        cards: [
-          { key: "Pikachu", name: "Pikachu", image: null },
-          { key: "Pikachu V", name: "Pikachu V", image: "/Pikachu V.png" },
-        ],
-      },
-      { id: 1, name: "Bulbasaur", owned: 0, cards: [] },
-    ]);
   });
 });
 

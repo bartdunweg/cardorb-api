@@ -17,24 +17,12 @@
  * nobody notices by looking at it.
  */
 
-import { shownPrice } from "./cards";
 import LOCAL_NAMES from "../species-names.generated.json";
 import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 
 /** One row of the generated table: a species' name in each catalogue that is not English. */
 type LocalNames = { ja?: string; ko?: string; zhHant?: string; zhHans?: string };
-import type { CardSet, OwnedCard } from "./cards";
 import SPECIES from "../pokedex.generated.json";
-
-export type DexEntry = {
-  /** National Dex number. */
-  id: number;
-  name: string;
-  /** The cards in the collection that show this Pokémon, held or wanted. */
-  cards: OwnedCard[];
-  /** How many of those are actually in the binder. */
-  owned: number;
-};
 
 /**
  * Down to letters and digits.
@@ -131,63 +119,6 @@ export function speciesOf(cardName: string, catalogue?: BrowseLanguage | null): 
 
 const SPECIES_OF = new Map<string, number | null>();
 
-/**
- * The whole Dex, in order, with the collection filed into it.
- *
- * Every Pokémon is present whether or not there is a card of it: the empty
- * slots are the point of a Pokédex, and a list of only what is held is a list
- * this page already has three of.
- */
-export function getPokedex(sets: CardSet[]): DexEntry[] {
-  const entries: DexEntry[] = SPECIES.map((name, i) => ({
-    id: i + 1,
-    name,
-    cards: [],
-    owned: 0,
-  }));
-
-  for (const set of sets) {
-    for (const card of set.cards) {
-      // The card's own answer, worked out on the server. See speciesId in
-      // lib/cards.ts for why this is not speciesOf(card.name) any more.
-      const id = card.speciesId;
-      if (!id) continue;
-      const entry = entries[id - 1];
-      // speciesOf only ever answers with an index this array has, but the
-      // compiler cannot know that and a silent miss is not worth the risk.
-      if (!entry) continue;
-      entry.cards.push(card);
-      if (card.owned) entry.owned++;
-    }
-  }
-
-  // The priciest card first inside each Pokémon, so the one the grid shows for
-  // it is the best copy in the binder rather than whichever set was read first.
-  for (const entry of entries) {
-    entry.cards.sort((a, b) => (shownPrice(b.price) ?? 0) - (shownPrice(a.price) ?? 0));
-  }
-  return entries;
-}
-
-/** How many species the collection can show at all. */
-export const caught = (dex: DexEntry[]) => dex.filter((e) => e.owned > 0).length;
-
-/**
- * Every species there is, by National Dex number — the names alone, with no
- * collection behind them.
- *
- * getPokedex() answers the same names, but only after a collection has been
- * assembled, which is why a caller who owns nothing and holds no key could not
- * get at them. They are catalogue-level facts: the same 1,025 strings for
- * everyone, so a stranger reading a public profile's Pokédex can label its
- * slots without being told anything about whose profile it is.
- */
-/**
- * Every species with its official artwork, for the slots a Pokédex holds no
- * card of. The picture is served by this API from public/artwork/pokedex, put
- * there by scripts/pokedex-art.mjs; `origin` is where this API answers from,
- * so a preview hands out its own copies and production its own.
- */
 export const speciesList = (origin: string): { id: number; name: string; artwork_url: string }[] =>
   SPECIES.map((name, i) => ({
     id: i + 1,
