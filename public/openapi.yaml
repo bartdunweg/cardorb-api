@@ -274,6 +274,13 @@ components:
         owned: { type: boolean }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        priceFirstEd:
+          oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
+          description: |
+            What the stamped first run trades at, where anything prices that run apart: TCGplayer
+            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros, and Cardmarket
+            does not for any card (one figure per product id, the ordinary run's). Null
+            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
         tcgId: { type: [string, "null"], description: "TCGdex's card id, for `GET /v1/cards/{tcgId}`." }
 
     CardSet:
@@ -557,6 +564,13 @@ components:
         collectionId: { type: [string, "null"], format: uuid }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        priceFirstEd:
+          oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
+          description: |
+            What the stamped first run trades at, where anything prices that run apart: TCGplayer
+            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros, and Cardmarket
+            does not for any card (one figure per product id, the ordinary run's). Null
+            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
 
     PublicItem:
       type: object

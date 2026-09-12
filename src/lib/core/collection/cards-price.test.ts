@@ -10,7 +10,8 @@
 
 import { describe, expect, it } from "vitest";
 import { holoPriceOf, priceOf, shownPrice } from "./cards";
-import { blendPrices, priceFromUsd } from "../price-basis.mjs";
+import { blendPrices, copyPriceOf, priceFromUsd } from "../price-basis.mjs";
+import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
 
 /** label, Cardmarket's own low/trend/avg30, and the English Near Mint "From" on the page. */
 const MEASURED = [
@@ -166,5 +167,58 @@ describe("blendPrices", () => {
     expect(shownPrice(blendPrices(cm, null))).toBe(shownPrice(cm));
     expect(shownPrice(blendPrices(null, tp))).toBe(11);
     expect(blendPrices(null, null)).toBeNull();
+  });
+});
+
+/**
+ * Which series a copy reads, in the one place that says so.
+ *
+ * The numbers are TCGdex's for Neo Genesis Lugia (neo1-9) on 2026-09-12: $1,085.03 as a 1st
+ * Edition holo and $518.99 as an unlimited one. They are here because the pair is the whole
+ * argument for the rule: a figure from one run standing in for the other is wrong by more
+ * than twice.
+ */
+describe("copyPriceOf", () => {
+  const card = {
+    price: { low: 1, market: 10, avg30: 10, nm: null },
+    priceHolo: { low: 2, market: 20, avg30: 20, nm: null },
+    priceFirstEd: { low: 3, market: 30, avg30: 30, nm: null },
+  };
+
+  it("reads the stamped run's price for a 1st Edition copy, whatever its finish", () => {
+    expect(copyPriceOf({ edition: "1st-edition", finish: "holo" }, card)).toBe(card.priceFirstEd);
+    expect(copyPriceOf({ edition: "1st-edition", finish: "reverse-holo" }, card)).toBe(
+      card.priceFirstEd,
+    );
+  });
+
+  it("reads the foil series for a reverse and the plain one otherwise", () => {
+    expect(copyPriceOf({ finish: "reverse-holo" }, card)).toBe(card.priceHolo);
+    expect(copyPriceOf({ finish: "poke-ball" }, card)).toBe(card.priceHolo);
+    expect(copyPriceOf({ finish: "holo" }, card)).toBe(card.price);
+    expect(copyPriceOf({ finish: null, edition: "unlimited" }, card)).toBe(card.price);
+  });
+
+  it("falls back to the ordinary price where no stamped figure exists", () => {
+    const plain = { price: card.price, priceHolo: null };
+    expect(copyPriceOf({ edition: "1st-edition" }, plain)).toBe(card.price);
+    expect(copyPriceOf({ edition: "1st-edition" }, { price: null })).toBeNull();
+  });
+});
+
+describe("TCGplayer's two runs", () => {
+  const lugia = {
+    "1st-edition-holofoil": { marketPrice: 1085.03, lowPrice: 2999.99 },
+    "unlimited-holofoil": { marketPrice: 518.99, lowPrice: 434.85 },
+  };
+
+  it("takes the ordinary run for the card's own price", () => {
+    expect(usdOf(lugia)?.market).toBe(518.99);
+  });
+
+  it("takes the stamped run only where it is asked for", () => {
+    expect(usdFirstEdOf(lugia)?.market).toBe(1085.03);
+    expect(usdFirstEdOf({ holofoil: { marketPrice: 12 } })).toBeNull();
+    expect(usdFirstEdOf(null)).toBeNull();
   });
 });

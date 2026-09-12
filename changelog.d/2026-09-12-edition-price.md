@@ -1,0 +1,2 @@
+- A 1st Edition copy is priced as the stamped run where anything prices that run apart: TCGplayer does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Cardmarket publishes one figure per card and it is the ordinary run's, so the two are never averaged.
+- Which price series a copy reads is one function, copyPriceOf(), instead of the four copies of that sentence in cards.ts, items.ts and twice in snapshot.ts.

@@ -26,9 +26,8 @@
  * being it — and that is a difference of source, not of method.
  */
 
-import { isReverseFinish } from "./collection-row";
 import { copiesHeld } from "./cards-stats";
-import { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
+import { priceOf, holoPriceOf, shownPrice, copyPriceOf } from "../price-basis.mjs";
 import { guidePrices } from "../catalogue/price-guide";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
@@ -144,10 +143,15 @@ export function snapshotOf(sets: CardSet[], guide: PriceGuide, ids: ProductIds):
       let any = false;
       for (const v of card.variants) {
         if (!v.owned) continue;
-        // reverse-holo only, never plain holo. See variantPrice() in cards.ts
-        // for the measurement behind that: on a holo-only card the -holo fields
-        // describe a different, thinner market at 0.47x the plain price.
-        const each = shownPrice((isReverseFinish(v.finish) && foil) || normal);
+        /*
+         * The same rule as the page, out of the one place it is written.
+         *
+         * No stamped run here, and that is not an oversight: this reads Cardmarket's guide,
+         * which publishes one figure per product id and it is the ordinary run's. So a 1st
+         * Edition copy is valued at the ordinary price on the chart, as it is anywhere the
+         * stamped figure is missing. The line and the tile agree, which is what matters.
+         */
+        const each = shownPrice(copyPriceOf(v, { price: normal, priceHolo: foil }));
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
         any = true;
@@ -189,7 +193,7 @@ export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
       let any = false;
       for (const v of card.variants) {
         if (!v.owned) continue;
-        const each = shownPrice((isReverseFinish(v.finish) && card.priceHolo) || card.price);
+        const each = shownPrice(copyPriceOf(v, card));
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
         any = true;
