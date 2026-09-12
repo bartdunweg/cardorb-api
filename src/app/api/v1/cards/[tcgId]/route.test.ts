@@ -22,6 +22,10 @@ vi.mock("@/lib/core/collection/cards", () => ({
 vi.mock("@/lib/core/catalogue/card-languages", () => ({
   westernLanguagesOf: async () => ["en", "de"],
 }));
+const raritiesOfEra = vi.fn();
+vi.mock("@/lib/core/catalogue/catalogue", () => ({
+  raritiesOfEra: (...a: unknown[]) => raritiesOfEra(...a),
+}));
 
 const { GET } = await import("./route");
 
@@ -52,7 +56,35 @@ describe("GET /api/v1/cards/[tcgId]", () => {
       id: "sv03-125",
       name: "Charizard",
       languages: ["en", "de"],
+      eraRarities: null,
     });
+  });
+
+  /* The era's rarities, for the cards that need them and no others: a promo answers "Promo",
+     which is the set's mark and not a rarity, and somebody has to say what the card is. A card
+     the catalogue has named needs no list and the walk is not made. */
+  it("answers the era's rarities for a card the catalogue could not name", async () => {
+    getCardDetail.mockResolvedValue({
+      id: "svp-085",
+      name: "Pikachu with Grey Felt Hat",
+      rarity: "Promo",
+      set: { id: "svp" },
+    });
+    raritiesOfEra.mockResolvedValue(["Common", "Illustration rare"]);
+    expect((await get("svp-085")).status).toBe(200);
+    expect(raritiesOfEra).toHaveBeenCalledWith("svp");
+  });
+
+  it("asks for no era rarities where the catalogue named the card", async () => {
+    getCardDetail.mockResolvedValue({
+      id: "sv03-125",
+      name: "Charizard",
+      rarity: "Double rare",
+      set: { id: "sv03" },
+    });
+    const res = await get();
+    expect((await res.json()).eraRarities).toBeNull();
+    expect(raritiesOfEra).not.toHaveBeenCalled();
   });
 
   it("404s a card the catalogue does not know", async () => {

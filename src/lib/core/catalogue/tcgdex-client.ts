@@ -32,6 +32,8 @@ export type TcgSetDetail = {
   /** The little round set icon. The only art some sets have. */
   symbol?: string;
   releaseDate?: string;
+  /** The era the set belongs to: "sv" for Scarlet & Violet, promos included. */
+  serie?: { id?: string; name?: string };
   cardCount?: { official?: number; total?: number };
   abbreviation?: { official?: string };
   cards?: TcgCard[];

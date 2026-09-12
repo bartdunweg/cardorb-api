@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import { westernLanguagesOf } from "@/lib/core/catalogue/card-languages";
+import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
+import { rarityOrNull } from "@/lib/core/collection/collection-row";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
@@ -62,9 +64,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   if (!card) {
     return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });
   }
+  /* The rarities this card's era printed, asked for only where the catalogue has no rarity to
+     give. Those are the promos, and they are the cards somebody has to name by hand: a form that
+     offers the era's own words cannot be used to write a word the era never had. A card the
+     catalogue has named needs no list, and this costs it nothing. */
+  const eraRarities =
+    rarityOrNull(card.rarity) === null && card.set?.id ? await raritiesOfEra(card.set.id) : null;
   // The hour of shared caching this used to carry is gone with the lock: a CDN
   // holding one person's answer and handing it to the next asker without a key
   // would undo the check above. getCardDetail memoises upstream, so what this
   // costs is the round trip, not the walk.
-  return NextResponse.json({ ...card, languages }, { headers: readHeaders(req) });
+  return NextResponse.json({ ...card, languages, eraRarities }, { headers: readHeaders(req) });
 }
