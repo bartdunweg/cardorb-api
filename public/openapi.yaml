@@ -923,6 +923,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 }, description: "Not a whole number, or below 0, is a 400." }
         - { name: facets, in: query, schema: { type: string, enum: ["0"] }, description: "`facets=0` leaves `facets` out of the answer, for a caller that will not read them (a count, a further batch on scroll): the pass over every item is skipped. Any other value, or none, and they come along. It was undocumented while the response schema marked `facets` required, so a generated client with a non-optional field could not decode the answer it had asked for." }
+        - { name: counts, in: query, schema: { type: string, enum: ["1"] }, description: "`counts=1` adds `counts`, how many cards each filter option would leave. Any other value, or none, and it is left out and the answer is as before." }
       responses:
         "200":
           description: The page, in the asked order (set order when none was), the total behind it, and the facets over the owned whole.
@@ -940,6 +941,17 @@ paths:
                   facets:
                     allOf: [{ $ref: "#/components/schemas/Facets" }]
                     description: "Present unless `facets=0` was asked for. Not required for that reason; every request that does not pass `facets=0` carries them."
+                  counts:
+                    type: object
+                    description: "Present only when `counts=1` was asked for. Cards, the unit of `total`. For `set`, `rarity`, `gen` and `type`, each option is counted over the cards every other filter in the request leaves, that key's own values set aside, so choosing one rarity does not change the rarity counts. A card without a value for the key is counted under none."
+                    required: [set, rarity, gen, type, duplicates]
+                    properties:
+                      set: { type: object, additionalProperties: { type: integer }, description: "Keyed by the set's title." }
+                      rarity: { type: object, additionalProperties: { type: integer } }
+                      gen: { type: object, additionalProperties: { type: integer } }
+                      type: { type: object, additionalProperties: { type: integer } }
+                      fullArt: { type: integer, description: "The cards every requested filter leaves with `fullArt=1` added. Absent when the full arts could not be read; the rest of the answer still comes." }
+                      duplicates: { type: integer, description: "The cards every requested filter leaves with `duplicates=1` added." }
                   catalogueUnavailable:
                     type: boolean
                     const: true
