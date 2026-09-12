@@ -1,0 +1,132 @@
+# Applies the migrations a merge to main brought, once the code that expects them is live.
+#
+# Until 2026-09-12 every migration was run by hand with `supabase db query --file` and then
+# recorded with `supabase migration repair`, and the two halves drifted: ten files ran and were
+# never recorded, and three were recorded under versions no file carries. This workflow is the
+# one road now, so the history table and supabase/migrations/ say the same thing.
+#
+# The deploy comes first, on purpose. A migration here often constrains writes (a check
+# constraint, a dropped column), and the code that writes the new shape has to be serving
+# before the database starts refusing the old one. Vercel deploys straight off the push and
+# does not wait for anything, so this waits for Vercel instead.
+#
+# The only workflow with secrets. check.yml runs on every pull request, including ones from a
+# fork, and keeps having none; this one runs on main alone.
+name: migrate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: read
+
+# One push at a time against one database, and never cancelled halfway: a second merge queues
+# behind the first rather than racing it through the same history table.
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PROJECT_REF: fprjroupecdhosfdrqhv
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Vercel GitHub integration records each deploy as a GitHub deployment in the
+      # environment "Production", with the commit's sha. Success is the go; failure or error
+      # stops here, because a migration for code that never went live is the wrong way round.
+      # "inactive" is a deploy that succeeded and was then replaced by a newer one, so it was live.
+      - name: Wait for the Vercel Production deployment of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          deadline=$((SECONDS + 900))
+          while true; do
+            id="$(gh api "repos/$REPO/deployments?sha=$SHA&environment=Production&per_page=1" --jq '.[0].id // empty')"
+            state=""
+            if [ -n "$id" ]; then
+              state="$(gh api "repos/$REPO/deployments/$id/statuses?per_page=1" --jq '.[0].state // empty')"
+            fi
+            echo "deployment ${id:-none yet}: ${state:-no status yet}"
+            case "$state" in
+              success | inactive)
+                echo "Production is serving $SHA."
+                exit 0
+                ;;
+              failure | error)
+                echo "::error::The Vercel Production deployment of $SHA ended in $state. No migration was applied."
+                exit 1
+                ;;
+            esac
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::No successful Vercel Production deployment of $SHA after 15 minutes. No migration was applied."
+              exit 1
+            fi
+            sleep 20
+          done
+
+      # Pinned to a commit, not a tag, because this step holds the database password. The CLI
+      # version matches the one the migrations were last checked against by hand.
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.114.0
+
+      - name: Link the production project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase link --project-ref "$PROJECT_REF"
+
+      # No --include-all. A file older than the newest recorded migration and not in the
+      # history is a history that has drifted again, and pushing it blind is how a migration
+      # runs twice. The push refuses it; the fix is a `supabase migration repair`, by a person.
+      - name: Apply pending migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          supabase db push --dry-run 2>&1 | tee dry-run.log
+          supabase db push --yes 2>&1 | tee push.log
+
+      - name: Record the history after the push
+        if: always()
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: supabase migration list --linked 2>&1 | tee list.log || true
+
+      - name: Write the summary
+        if: always()
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          {
+            echo "## Migrations for \`${SHA:0:7}\`"
+            for part in "dry-run.log:What was pending" "push.log:What the push said" "list.log:History afterwards"; do
+              file="${part%%:*}"
+              title="${part#*:}"
+              echo
+              echo "### $title"
+              echo
+              if [ -s "$file" ]; then
+                echo '```'
+                cat "$file"
+                echo '```'
+              else
+                echo "Not reached."
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

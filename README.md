@@ -174,6 +174,18 @@ The collection lives in Postgres (Supabase); it started in Notion and was
 migrated over. The schema is in
 `supabase/migrations/`.
 
+**Migrations apply themselves after a merge.** `.github/workflows/migrate.yml`
+runs on a push to main that touches `supabase/migrations/`, and by hand from the
+Actions tab. It waits (up to 15 minutes) for Vercel's Production deploy of that
+commit to succeed, so the code is serving before a migration that constrains
+writes, then runs `supabase db push` against project `fprjroupecdhosfdrqhv` and
+writes what it applied to the run's summary. A failed or missing deploy stops it
+before the database is touched. It needs two repository secrets,
+`SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`; `check.yml` still has none.
+A push that finds a file older than the newest recorded migration refuses to
+run it: that is a history that has drifted, and the fix is a
+`supabase migration repair` by a person, not a push.
+
 Four things have to be set up once, and each of them fails in a way that looks
 like something else if it is left until the day it is needed.
 
