@@ -260,8 +260,8 @@ type SnapshotRecord = {
   cards: number;
   priced: number;
   unpriced: number;
-  added_cards: number | null;
-  added_value_cents: number | null;
+  added_cards?: number | null;
+  added_value_cents?: number | null;
 };
 
 /**
@@ -297,6 +297,17 @@ type SnapshotRecord = {
  * Cents become whole euros here, at the storage boundary, so nothing above this
  * line has to know the table counts in cents.
  */
+/**
+ * Whether a failure is the database not having the `added` columns yet.
+ *
+ * The migration that adds them (20260913120000) runs after the deploy that reads them, by design
+ * (.github/workflows/migrate.yml), so for a minute or two the code asks for columns that are not
+ * there. Reading and writing without them for that minute keeps the Home line and the night's
+ * point standing; a history rebuild must not delete the old points and then fail to write.
+ */
+const missingAdded = (message: string | undefined) =>
+  /added_(cards|value_cents)/.test(message ?? "");
+
 export async function listValueSnapshots(
   db: SupabaseClient,
   userId: string,
@@ -305,17 +316,28 @@ export async function listValueSnapshots(
   // reason listRows throws: a series with holes in it draws as a collection
   // that lost value, and the caller above knows how to fail soft without
   // inventing a shape.
-  const data = await readAllPages<SnapshotRecord>("the value history", (page, counted) =>
-    db
-      .from("collection_value_snapshots")
-      .select(
-        "snapshot_date,value_cents,cards,priced,unpriced,added_cards,added_value_cents",
-        counted ? { count: "exact" } : {},
-      )
-      .eq("user_id", userId)
-      .order("snapshot_date", { ascending: true })
-      .range(...pageRange(page)),
-  );
+  const read = (withAdded: boolean) =>
+    readAllPages<SnapshotRecord>("the value history", (page, counted) => {
+      const table = db.from("collection_value_snapshots");
+      const options = counted ? { count: "exact" as const } : {};
+      const selected = withAdded
+        ? table.select(
+            "snapshot_date,value_cents,cards,priced,unpriced,added_cards,added_value_cents",
+            options,
+          )
+        : table.select("snapshot_date,value_cents,cards,priced,unpriced", options);
+      return selected
+        .eq("user_id", userId)
+        .order("snapshot_date", { ascending: true })
+        .range(...pageRange(page));
+    });
+  let data: SnapshotRecord[];
+  try {
+    data = await read(true);
+  } catch (err) {
+    if (!missingAdded(err instanceof Error ? err.message : String(err))) throw err;
+    data = await read(false);
+  }
 
   return data.map((r) => ({
     date: r.snapshot_date,
@@ -371,19 +393,22 @@ export async function writeValueSnapshot(
   userId: string,
   point: ValueSnapshot,
 ): Promise<void> {
-  const { error } = await db.from("collection_value_snapshots").upsert(
-    {
-      user_id: userId,
-      snapshot_date: point.date,
-      value_cents: Math.round(point.value * 100),
-      cards: point.cards,
-      priced: point.priced,
-      unpriced: point.unpriced,
-      added_cards: point.added ?? 0,
-      added_value_cents: Math.round((point.addedValue ?? 0) * 100),
-    },
-    { onConflict: "user_id,snapshot_date" },
-  );
+  const row = {
+    user_id: userId,
+    snapshot_date: point.date,
+    value_cents: Math.round(point.value * 100),
+    cards: point.cards,
+    priced: point.priced,
+    unpriced: point.unpriced,
+  };
+  const write = (r: object) =>
+    db.from("collection_value_snapshots").upsert(r, { onConflict: "user_id,snapshot_date" });
+  let { error } = await write({
+    ...row,
+    added_cards: point.added ?? 0,
+    added_value_cents: Math.round((point.addedValue ?? 0) * 100),
+  });
+  if (error && missingAdded(error.message)) ({ error } = await write(row));
   if (error) throw new Error(`Writing a snapshot failed: ${error.message}`);
 }
 
@@ -542,9 +567,14 @@ export async function replaceValueHistory(
       added_value_cents: Math.round((p.addedValue ?? 0) * 100),
     }));
   for (let i = 0; i < rows.length; i += 500) {
-    const { error } = await db
-      .from("collection_value_snapshots")
-      .upsert(rows.slice(i, i + 500), { onConflict: "user_id,snapshot_date" });
+    const chunk = rows.slice(i, i + 500);
+    const write = (r: object[]) =>
+      db.from("collection_value_snapshots").upsert(r, { onConflict: "user_id,snapshot_date" });
+    let { error } = await write(chunk);
+    if (error && missingAdded(error.message))
+      ({ error } = await write(
+        chunk.map(({ added_cards: _c, added_value_cents: _v, ...rest }) => rest),
+      ));
     if (error) throw new Error(`Writing the value history failed: ${error.message}`);
   }
 }

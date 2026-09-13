@@ -152,6 +152,33 @@ describe("listValueSnapshots", () => {
     ]);
   });
 
+  // The migration adding the columns runs after the deploy that reads them (migrate.yml).
+  it("reads without the added columns while the database does not have them yet", async () => {
+    const selects: string[] = [];
+    const chain: Record<string, unknown> = {
+      select: (columns: string) => {
+        selects.push(columns);
+        return chain;
+      },
+      order: () => chain,
+      range: () => chain,
+      eq: () => chain,
+      then: (resolve: (v: unknown) => unknown) =>
+        resolve(
+          selects.at(-1)!.includes("added_cards")
+            ? {
+                data: null,
+                error: { message: "column collection_value_snapshots.added_cards does not exist" },
+              }
+            : { data: [snapshot()], error: null, count: 1 },
+        ),
+    };
+    const db = { from: () => chain } as unknown as SupabaseClient;
+    const out = await listValueSnapshots(db, "u");
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ added: 0, addedValue: 0 });
+  });
+
   it("answers with nothing for an account that has never been snapshotted", async () => {
     const { db } = fakeDb();
     expect(await listValueSnapshots(db, "u")).toEqual([]);
