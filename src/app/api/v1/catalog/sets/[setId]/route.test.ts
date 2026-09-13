@@ -32,6 +32,10 @@ vi.mock("@/lib/core/collection/collection", () => ({
 }));
 /* Both shelves are network reads; the language check is the real, pure one, and so is
    the set index the ownership join resolves a row's set name against. */
+/* The day-cached read is Next's Data Cache around englishSet; here it is englishSet itself. */
+vi.mock("@/lib/core/catalogue/catalogue", () => ({
+  englishSetOfDay: (...a: unknown[]) => englishSet(...a),
+}));
 vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
   ...(await real<typeof import("@/lib/core/catalogue/tcgdex-browse")>()),
   englishSet: (...a: unknown[]) => englishSet(...a),
@@ -282,8 +286,8 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body).toMatchObject({ page: 1, pageSize: 60 });
   });
 
-  it("caps pageSize at the catalogue's own maximum", async () => {
-    expect((await (await open("pageSize=5000")).json()).pageSize).toBe(250);
+  it("caps pageSize at 500, past any set with its gallery", async () => {
+    expect((await (await open("pageSize=5000")).json()).pageSize).toBe(500);
   });
 
   it("answers 502 with a sentence a client can show when the catalogue refused", async () => {

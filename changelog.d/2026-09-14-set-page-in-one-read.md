@@ -1,0 +1,1 @@
+- `GET /v1/catalog/sets/{setId}` answers faster: an English set with its rarities and types is kept a day (it was asking TCGdex's GraphQL on every request), the viewer's rows are read alongside the catalogue, and the pictures and prices of the page at the same time. `pageSize` is clamped to 500 rather than 250, so a Scarlet & Violet set with its secrets comes in one request.

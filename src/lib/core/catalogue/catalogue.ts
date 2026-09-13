@@ -49,6 +49,7 @@ import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
 import { mirrorSetCatalogue } from "./set-catalogue-mirror";
 import { setArt } from "./set-art";
+import { englishSet } from "./tcgdex-browse";
 
 export { resolveSetIds } from "./set-resolve";
 import type { TcgSet, TcgSetDetail } from "./tcgdex-client";
@@ -333,3 +334,28 @@ export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v1"
 /** The rarities the era of one set printed, or null where the catalogue could not say. */
 export const raritiesOfEra = (setId: string): Promise<string[] | null> =>
   eraRaritiesOfSet(setId, eraRarities);
+
+/**
+ * One English set whole, its rarities and types included, a day old at most.
+ *
+ * englishSet() reads the set's record through a day-cached GET, but its rarities and types come
+ * from TCGdex's GraphQL, which Next does not cache. Every set page paid that call again: 300 to
+ * 450 ms measured on 2026-09-14, twice where a page came in two parts. The set is the same for
+ * everybody, so it is kept here the way setCatalogue is.
+ *
+ * Only a whole answer becomes an entry. factsRequired throws where GraphQL did not answer, and an
+ * unknown id throws too, so neither a set without its rarities nor a 404 is kept for a day; both
+ * fall back to the uncached read, which answers exactly as it did before this cache.
+ */
+const englishSetEntry = unstable_cache(
+  async (setId: string) => {
+    const found = await englishSet(setId, { factsRequired: true });
+    if (!found) throw new Error(`No English set ${setId}`);
+    return found;
+  },
+  ["english-set", "v1"],
+  { revalidate: DAY, tags: ["catalogue"] },
+);
+
+export const englishSetOfDay = (setId: string): ReturnType<typeof englishSet> =>
+  englishSetEntry(setId).catch(() => englishSet(setId));
