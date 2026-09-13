@@ -35,7 +35,10 @@ paths:
   card's own record, a set's cards at a time for a day, and tcgcsv for the weekly point of every
   card nobody holds; dollars at the ECB's daily rate. pokemontcg.io answered one set in eight by
   2026-09-11 and is asked for no price any more. Where TCGplayer says nothing the card has no
-  price, and no other market stands in. A card TCGplayer does not price is nearly always a card
+  price, and no other market stands in. A Japanese card the same (since 2026-09-13): TCGdex relays
+  no TCGplayer figure for one, so its price is TCGplayer's Japanese shelf on tcgcsv, through
+  `tcgplayer-ids.ja.generated.json` (`shelfUsdFor` in `collection/collection.ts`), and TCGdex's
+  Cardmarket figures on its record are not read. A card TCGplayer does not price is nearly always a card
   with no product in `tcgplayer-ids.generated.json`: `scripts/tcgplayer-links.mjs` links those
   from tcgcsv, weekly, in `.github/workflows/tcgplayer-links.yml`. The algorithm that turns the
   figures into the one shown is `lib/core/price-basis.mjs`, and nothing else.

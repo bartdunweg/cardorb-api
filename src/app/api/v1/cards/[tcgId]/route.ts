@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
-import { usdToEurForRequest } from "@/lib/core/collection/collection";
+import { japaneseDetailPrice, usdToEurForRequest } from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
 import { foilPatternsOfSerie } from "@/lib/core/catalogue/card-printings";
@@ -20,7 +20,7 @@ import { authorise, readHeaders, refused } from "@/lib/api/guard";
  * than an empty object: nothing is a different answer from nothing found.
  *
  * Behind the key, like every read here now. This one carries a price and the
- * raw Cardmarket figures it came from, which is exactly what the public page
+ * product it came from, which is exactly what the public page
  * goes out of its way not to show; leaving it open would be an easier way to
  * ask than reading the page it was hidden from.
  */
@@ -51,7 +51,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   try {
     // The day's rate beside it: the price is TCGplayer's dollars, and a figure is only shown in
     // the currency the collection is valued in.
-    card = await getCardDetail(tcgId, own, await usdToEurForRequest());
+    const rate = await usdToEurForRequest();
+    card = await getCardDetail(tcgId, own, rate);
+    // TCGdex relays no TCGplayer figure for a Japanese card: its price is the Japanese shelf's.
+    if (card && own === "ja") card = await japaneseDetailPrice(card, rate);
   } catch (err) {
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.

@@ -15,7 +15,7 @@ info:
   summary: A Pokémon card collection, priced, served to a web tool and an iOS app.
   description: |
     Card Orb keeps one person's Pokémon card collection in Postgres, matches it
-    against three card catalogues, prices it from Cardmarket and TCGplayer, and serves it here.
+    against three card catalogues, prices it from TCGplayer, and serves it here.
 
     **Two clients read this API and both are ours**: the web tool at cardorb.com
     and the iOS app. Nothing here is designed for a third party yet.
@@ -223,7 +223,7 @@ components:
         same as unlimited.
     Price:
       type: object
-      description: "One card's price, in euros. Cardmarket's where it stands alone, with its Near Mint band; the average of Cardmarket and TCGplayer (at the ECB rate) where both exist, and then `nm` is null and `market` is the shown figure."
+      description: "One card's price, in euros: TCGplayer's figures, English and Japanese cards alike, converted from dollars at the ECB's daily rate. `market` is the shown figure, `low` where there is no market figure. Where TCGplayer prices nothing the price is null; no other market stands in."
       properties:
         low: { type: [number, "null"], description: "The lowest listing at any condition. A floor, not a price." }
         market: { type: [number, "null"], description: "What one copy trades at." }
@@ -542,7 +542,7 @@ components:
         itemIds: { type: array, items: { type: string }, description: "Every collection row this card matched." }
         price:
           $ref: "#/components/schemas/Price"
-          description: "Cardmarket's price, from the day's guide. Null where the guide does not price the card; only sent by GET /catalog/sets/{setId}."
+          description: "TCGplayer's price, in euros, from the day's figures for the card's set. Null where TCGplayer does not price the card; only sent by GET /catalog/sets/{setId}."
         priceHolo:
           $ref: "#/components/schemas/Price"
           description: "The foil's price, on the same terms as price."
@@ -738,7 +738,7 @@ components:
       required: [date, market, holo]
       properties:
         date: { type: string, format: date }
-        market: { type: [number, "null"], description: "The normal printing, in euros; null where Cardmarket published nothing." }
+        market: { type: [number, "null"], description: "The normal printing, in euros; null where TCGplayer published nothing." }
         holo: { type: [number, "null"], description: "The foil, or null where there is no separate foil price." }
 
     LatestPull:
