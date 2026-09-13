@@ -1,46 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  englishFromLocalName,
-  englishFromProduct,
-  englishFromRecord,
-  printedSuffix,
-} from "./english-card-name.mjs";
-
-// Every shape Cardmarket's product list had for the four catalogues on 2026-09-11, one each.
-describe("englishFromProduct", () => {
-  it("takes the name before the attacks", () => {
-    expect(englishFromProduct("Oddish [Razor Leaf]")).toBe("Oddish");
-    expect(englishFromProduct("Tatsugiri [Mise en Place | Curl Up]")).toBe("Tatsugiri");
-    expect(englishFromProduct("Celebi ◇ [Time Distortion | Leech Seed | Prism]")).toBe("Celebi ◇");
-    expect(englishFromProduct("Wo-Chien ex [Covetous Ivy | Forest Blast]")).toBe("Wo-Chien ex");
-    // A set code in the bracket is a disambiguator too.
-    expect(englishFromProduct("Misdreavus [Confuse Ray | s10a]")).toBe("Misdreavus");
-  });
-
-  it("leaves a trainer or an energy as it is", () => {
-    expect(englishFromProduct("Escape Board")).toBe("Escape Board");
-    expect(englishFromProduct("Professor Turo's Scenario")).toBe("Professor Turo's Scenario");
-  });
-
-  it("writes an energy type out where Cardmarket writes a letter", () => {
-    expect(englishFromProduct("Heat [R] Energy")).toBe("Heat Fire Energy");
-    expect(englishFromProduct("Aromatic [G] Energy")).toBe("Aromatic Grass Energy");
-    expect(englishFromProduct("Speed [L] Energy")).toBe("Speed Lightning Energy");
-  });
-
-  it("reads Nidoran's letter as the gender sign, and drops the attacks after it", () => {
-    expect(englishFromProduct("Nidoran [F] [Find a Friend | Gnaw]")).toBe("Nidoran♀");
-    expect(englishFromProduct("Nidoran [M] [Horn Attack]")).toBe("Nidoran♂");
-    expect(englishFromProduct("Team Rocket's Nidoran [F] [Surprise Attack]")).toBe(
-      "Team Rocket's Nidoran♀",
-    );
-  });
-
-  it("is null for nothing", () => {
-    expect(englishFromProduct("")).toBeNull();
-    expect(englishFromProduct(null)).toBeNull();
-  });
-});
+import { englishFromLocalName, englishFromRecord, printedSuffix } from "./english-card-name.mjs";
 
 describe("printedSuffix", () => {
   it("is the Latin tail of a name in another script", () => {

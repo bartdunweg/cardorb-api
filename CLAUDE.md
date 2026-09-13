@@ -35,7 +35,7 @@ src/app/api/v1/<route>/route.ts   one route handler per operation in public/open
 src/app/api/cover/route.ts        the image proxy, outside /v1 on purpose
 src/app/layout.tsx                the root layout Next requires; there is no page
 src/lib/api/                      request guards, body limits, rate limits, the error shape
-src/lib/core/catalogue/           the three catalogues, matching, artwork, Cardmarket pricing
+src/lib/core/catalogue/           the three catalogues, matching, artwork, TCGplayer pricing
 src/lib/core/collection/          rows, assembly, statistics, value over time
 src/lib/core/account/             accounts and profiles
 src/lib/core/{config,env,util}.ts what both domains need, and nothing else at the root

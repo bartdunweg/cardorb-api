@@ -11,43 +11,33 @@
  * no English printing to borrow from). The app is English throughout, so a set page or a
  * collection row would otherwise read リザードンex under a card everyone here calls Charizard ex.
  *
- * The rules are in src/lib/core/catalogue/english-card-name.mjs. Their inputs come from two
- * downloads: Cardmarket's product list (13 MB, one request, every product it sells with its
- * English name) read through the committed product id maps, and, for a card Cardmarket has no
- * product for, the card's own TCGdex record: one request per such card, a few thousand across
- * the catalogue, where the id maps needed twenty-one thousand.
+ * The rules are in src/lib/core/catalogue/english-card-name.mjs. The cards come from TCGdex's
+ * list of the catalogue (one request, every card id), and a card not named yet is named off its
+ * own TCGdex record: one request per such card.
  *
- * One file per catalogue, as the id maps are. Runs after
- * language-cardmarket-ids.mjs: a card the id map does not have is a card this cannot name.
- *
- * Re-runnable. A name already written is kept, so a second run only reads what was added since
- * and asks again about what it could not name last time; pass --refresh to re-read Cardmarket for
- * every card (a product renamed there).
+ * Most names already in the map were read off Cardmarket's product list, through the Cardmarket
+ * id maps that went with Cardmarket on 2026-09-12. Those names are kept as they are: a name
+ * already written is never asked again, so a run only reads what was added since and asks again
+ * about what it could not name last time.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   englishFromLocalName,
-  englishFromProduct,
   englishFromRecord,
 } from "../src/lib/core/catalogue/english-card-name.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const CORE = join(ROOT, "src", "lib", "core");
 const HOST = "https://api.tcgdex.net/v2";
-const PRODUCTS =
-  "https://downloads.s3.cardmarket.com/productCatalog/productList/products_singles_6.json";
 const LANGUAGES = ["ja"];
 
 const args = process.argv.slice(2);
 const write = args.includes("--write");
-const refresh = args.includes("--refresh");
 const only = args.filter((a) => !a.startsWith("--"));
 const languages = only.length ? LANGUAGES.filter((l) => only.includes(l)) : LANGUAGES;
 
-const idsFile = (lang) => join(CORE, `cardmarket-ids.${lang}.generated.json`);
-const namesFile = (lang) => join(CORE, `card-names.${lang}.generated.json`);
+const namesFile = (lang) => join(ROOT, "src", "lib", "core", `card-names.${lang}.generated.json`);
 const SPECIES = JSON.parse(
   readFileSync(join(ROOT, "src", "lib", "core", "pokedex.generated.json"), "utf8"),
 );
@@ -70,7 +60,7 @@ async function json(url) {
   }
 }
 
-/** Eight at a time, as the id script runs and TCGdex tolerates. */
+/** Eight at a time, which TCGdex tolerates. */
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length);
   let next = 0;
@@ -82,42 +72,23 @@ async function mapLimit(items, limit, fn) {
   return out;
 }
 
-process.stdout.write("Cardmarket product list… ");
-const products = new Map(
-  ((await json(PRODUCTS))?.products ?? []).map((p) => [p.idProduct, p.name]),
-);
-console.log(`${products.size} products.`);
-
 for (const lang of languages) {
-  const ids = JSON.parse(readFileSync(idsFile(lang), "utf8"));
+  const list = await json(`${HOST}/${lang}/cards`);
+  if (!Array.isArray(list) || !list.length) throw new Error(`${lang}: TCGdex listed no cards`);
   const known = existsSync(namesFile(lang))
     ? JSON.parse(readFileSync(namesFile(lang), "utf8"))
     : {};
-  const all = Object.keys(ids);
-  const wanted = all.filter((id) => refresh || !known[id]);
+  const wanted = list.map((card) => card.id).filter((id) => id && !known[id]);
 
-  let fromCardmarket = 0;
-  const askTcgdex = [];
-  for (const id of wanted) {
-    const product = ids[id];
-    const name = product != null ? englishFromProduct(products.get(product)) : null;
-    if (name) {
-      known[id] = name;
-      fromCardmarket++;
-    } else askTcgdex.push(id);
-  }
-
-  process.stdout.write(
-    `${lang}: ${all.length} cards, ${wanted.length} to name, ${fromCardmarket} from Cardmarket, ${askTcgdex.length} to ask TCGdex… `,
-  );
+  process.stdout.write(`${lang}: ${list.length} cards, ${wanted.length} to ask TCGdex… `);
   let fromRecord = 0;
   let asked = 0;
-  await mapLimit(askTcgdex, 8, async (id) => {
+  await mapLimit(wanted, 8, async (id) => {
     const record = await json(`${HOST}/${lang}/cards/${encodeURIComponent(id)}`);
     const name =
       englishFromRecord(record, SPECIES) ??
       englishFromLocalName(lang, record?.name, LOCAL_NAMES, SPECIES);
-    // Null is kept: this card has no English name anywhere, and the next run need not ask again.
+    // Null is written too, so the map lists every card; the next run asks about it again.
     known[id] = name;
     if (name) fromRecord++;
     if (++asked % 500 === 0) process.stdout.write(`${asked}… `);

@@ -140,14 +140,14 @@ curl localhost:3000/api/v1/collection | jq '.sets | length'
 `pnpm run check` is prettier, typecheck, tests and lint together; `./scripts/verify.sh` adds
 the secrets scan, the changelog check and `next build`.
 
-When a card has no price (`/dashboard/cards?unpriced=1` on the web app), run
-`node scripts/cardmarket-ids-fill.mjs`: it links the Cardmarket products TCGdex does not, sets
-the sure ones with `--write`, and prints the rest with their prices to pick by hand.
+A card with no price is a card with no TCGplayer product. `.github/workflows/tcgplayer-links.yml`
+links what it can every week (`scripts/tcgplayer-ids.mjs`, `tcgplayer-groups.mjs`,
+`tcgplayer-links.mjs`) and opens a pull request when anything changed; `verify.sh` fails when the
+committed map holds more unlinked cards than `scripts/tcgplayer-coverage.json` allows.
 
-When a set appears on the Japanese shelf, run
-`node scripts/language-cardmarket-ids.mjs --write`: it asks TCGdex about every card that
-catalogue holds that it has not asked about before, and keeps the Cardmarket product of each in
-`cardmarket-ids.<language>.generated.json`, which is what prices that shelf's set pages.
+When a set appears on the Japanese shelf, run `node scripts/recorded-sets.mjs`, which records
+which of that shelf's sets TCGdex has cards for, and `node scripts/language-card-names.mjs --write`,
+which names every card added since in English, in `card-names.ja.generated.json`.
 
 ## Production
 
