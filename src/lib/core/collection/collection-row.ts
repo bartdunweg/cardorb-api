@@ -415,11 +415,10 @@ export function validateCardDraft(body: unknown): CardValidation {
     tcgId: isTcgId(tcgId) ? tcgId : null,
     collection: collection !== false,
     excluded: excluded === true,
-    // null and undefined are both "nobody has said". Anything else that is not
-    // one of the three is refused below, the same rule and sentence as
-    // validateCardPatch(): this used to become null so an import would not
-    // lose the card, but no import sends a finish (csv.ts writes null itself)
-    // and a form or an app that misspells one should be told, not blanked.
+    // null and undefined are both "nobody has said", and an owned copy is then given one before
+    // it is written (defaultFinishFor() in the POST route): a copy you own has a finish since
+    // 2026-09-13. Anything else that is not a finish is refused below, the same rule and sentence
+    // as validateCardPatch(): a form or an app that misspells one should be told, not blanked.
     finish: isFinish(finish) ? finish : null,
     // Unrecognised reads as "not recorded" rather than being refused, unlike
     // finish: a pattern costs nothing when it is wrong or absent — it buys no
@@ -662,11 +661,10 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
     patch.rarity = value === "" ? null : value;
   }
   if ("finish" in b) {
-    // null is allowed and meaningful: it puts the row back to "nobody has
-    // said", which is not the same as calling it normal. Anything else that is
-    // not one of the three is refused here, unlike on a draft — a PATCH is
-    // somebody editing one field on purpose, so a typo should be told rather
-    // than quietly turned into a blank.
+    // null is accepted and kept on a wish, which has no finish. On a copy you own the store turns
+    // it into normal (the cards_owned_copy_finish trigger): a copy you own has a finish since
+    // 2026-09-13. Anything else that is not a finish is refused here, unlike on a draft: a PATCH
+    // is somebody editing one field on purpose, so a typo should be told rather than blanked.
     if (b.finish !== null && !isFinish(b.finish))
       return { kind: "invalid", error: `finish must be null, ${FINISHES.join(", ")}.` };
     patch.finish = b.finish as Finish | null;

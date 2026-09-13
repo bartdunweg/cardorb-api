@@ -5,6 +5,7 @@ import { NOT_OWNED } from "../core/collection/csv";
 import { importKeys, splitExisting, type TitleOf } from "../core/collection/import-match";
 import { setCatalogue } from "../core/catalogue/catalogue";
 import { mapLimit } from "../core/util";
+import { withDefaultFinishes } from "../core/catalogue/default-finish";
 import { createRows, pageRange, readAllPages } from "./postgres";
 
 /**
@@ -276,7 +277,8 @@ export async function commit(
   const id = (started as { id: string } | null)?.id;
 
   try {
-    const { added } = await createRows(db, userId, rows, kind);
+    // A file that names no finish still writes copies that have one. See defaultFinish().
+    const { added } = await createRows(db, userId, await withDefaultFinishes(rows), kind);
     const skipped = rows.length - added + skippedCount;
     const total = await countCards(db, userId);
 
