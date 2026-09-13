@@ -47,7 +47,7 @@ import { json, fetchSet, pricesFor } from "./tcgdex-client";
 import { eraRaritiesOfSet, loadEraRarities } from "./era-rarities";
 import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
-import { mirrorSetCatalogue } from "./set-catalogue-mirror";
+import { englishSetFromCopy, mirrorSetCatalogue } from "./set-catalogue-mirror";
 import { setArt } from "./set-art";
 import { englishSet } from "./tcgdex-browse";
 
@@ -357,5 +357,11 @@ const englishSetEntry = unstable_cache(
   { revalidate: DAY, tags: ["catalogue"] },
 );
 
-export const englishSetOfDay = (setId: string): ReturnType<typeof englishSet> =>
+/**
+ * The copy first (set-catalogue-mirror.ts): one query where TCGdex took two requests, and no
+ * TCGdex at all between a person and a set page. A set the copy holds no cards of yet, or a copy
+ * that cannot be read, goes to the day-cached read above, which is where every set went before.
+ */
+export const englishSetOfDay = async (setId: string): ReturnType<typeof englishSet> =>
+  (await englishSetFromCopy(setId).catch(() => null)) ??
   englishSetEntry(setId).catch(() => englishSet(setId));

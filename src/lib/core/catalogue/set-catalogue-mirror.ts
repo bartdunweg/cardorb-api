@@ -26,8 +26,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueSetRecord,
   catalogueCardsBySets,
+  catalogueSetCards,
   listCatalogueSets,
 } from "@/lib/storage/postgres";
+import { storedScan } from "./artwork";
+import { type CatalogueSet, inBinderOrder, resolveEnglishSetId } from "./tcgdex-browse";
+import type { CatalogueMatch } from "./ptcg-search";
 import type { Price } from "../price-basis.mjs";
 import { indexByNumber } from "./set-index";
 import { resolveSetIds } from "./set-resolve";
@@ -134,4 +138,56 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
     total,
     prices,
   };
+}
+
+/**
+ * One English set, whole, out of the copy: the answer englishSet() gives, without asking TCGdex.
+ *
+ * A set page read TCGdex twice per set (the record, then GraphQL for the rarities and types)
+ * while the nightly run had written both down already. Null where the copy cannot answer, which
+ * is a set it has no cards of yet: the caller asks TCGdex then, as before.
+ *
+ * The pictures are the copy's own, the ones the set page laid over TCGdex's built addresses
+ * anyway (mirrorScans); a card the copy holds with no picture has none either way.
+ */
+export async function englishSetFromCopy(
+  setId: string,
+): Promise<{ set: CatalogueSet; cards: CatalogueMatch[] } | null> {
+  const { adminClient } = await import("@/lib/storage/supabase");
+  const db = adminClient();
+  if (!db) return null;
+  const id = (await resolveEnglishSetId(setId)) ?? setId;
+  const [row, rows] = await Promise.all([
+    copiedSets(db).then((all) => all.find((r) => r.id === id) ?? null),
+    catalogueSetCards(db, id),
+  ]);
+  if (!row || !rows.length) return null;
+  const set: CatalogueSet = {
+    id: row.id,
+    name: row.name,
+    localName: null,
+    series: row.series ?? "Other",
+    releaseDate: row.release_date,
+    total: row.total ?? rows.length,
+    printedTotal: row.printed_total,
+    abbreviation: row.abbreviation,
+    cardsRecorded: true,
+    logo: row.logo,
+    symbol: row.symbol,
+  };
+  const cards = rows.map((c): CatalogueMatch => ({
+    id: c.id,
+    number: c.local_id,
+    name: c.name,
+    localName: null,
+    setName: set.name,
+    series: set.series,
+    ...storedScan(c.image),
+    rarity: c.rarity,
+    types: c.types ?? [],
+    category: c.category ?? null,
+    trainerType: c.trainer_type ?? null,
+    tcgId: c.id,
+  }));
+  return { set, cards: inBinderOrder(cards) };
 }

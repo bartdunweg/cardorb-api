@@ -1680,6 +1680,29 @@ export async function catalogueCardsBySets(
   return setIds.map((id) => bySet.get(id) ?? []);
 }
 
+/**
+ * One set's cards as the copy holds them, facts included, in the order the set is numbered.
+ *
+ * catalogueCardsBySets leaves the category and the trainer kind out, because the collection
+ * matches on the number alone; a set page filters on both, so this read carries them.
+ */
+export async function catalogueSetCards(
+  db: SupabaseClient,
+  setId: string,
+): Promise<CatalogueCardRecord[]> {
+  return readAllPages<CatalogueCardRecord>("one set of the catalogue's copy", (page, counted) =>
+    db
+      .from("catalogue_cards")
+      .select(
+        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type",
+        counted ? { count: "exact" } : {},
+      )
+      .eq("set_id", setId)
+      .order("number_order", { ascending: true })
+      .range(...pageRange(page)),
+  );
+}
+
 /** These cards of the copy, by id, in the order asked. An id the copy lacks is left out. */
 export async function catalogueCardsById(
   db: SupabaseClient,
