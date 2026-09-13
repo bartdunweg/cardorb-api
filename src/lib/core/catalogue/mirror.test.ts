@@ -432,6 +432,72 @@ describe("syncMirror", () => {
     ]);
   });
 
+  it("asks every gap of a set the second catalogue answers, past the fortieth (Crown Zenith GG69)", async () => {
+    const numbers = Array.from({ length: 70 }, (_, i) => `GG${String(i + 1).padStart(2, "0")}`);
+    englishSets.mockResolvedValue([set("swsh12.5gg", 70, "2023/01/20")]);
+    englishSet.mockResolvedValue({
+      set: set("swsh12.5gg", 70, "2023/01/20"),
+      cards: numbers.map((n) => hit(`swsh12.5gg-${n}`, n)),
+    });
+    setScans.mockResolvedValue({ gaps: new Set(numbers), code: "CRZ" });
+    tcgdexScan.mockResolvedValue(null);
+    ptcgScan.mockImplementation(
+      (async (_set: string, n: string) =>
+        `https://images.pokemontcg.io/swsh12pt5gg/${n}.png`) as never,
+    );
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    const written = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")
+      ?.args[0] as { id: string; image: string | null }[];
+    expect(written.filter((c) => c.image === null)).toEqual([]);
+    expect(written.find((c) => c.id === "swsh12.5gg-GG69")?.image).toBe(
+      "https://images.pokemontcg.io/swsh12pt5gg/GG69.png",
+    );
+  });
+
+  it("gives up on a set neither catalogue has after ten lookups", async () => {
+    const numbers = Array.from({ length: 30 }, (_, i) => String(i + 1).padStart(3, "0"));
+    englishSets.mockResolvedValue([set("tk-xy-b", 30, "2014/01/01")]);
+    englishSet.mockResolvedValue({
+      set: set("tk-xy-b", 30, "2014/01/01"),
+      cards: numbers.map((n) => hit(`tk-xy-b-${n}`, n)),
+    });
+    setScans.mockResolvedValue({ gaps: new Set(numbers), code: null });
+    tcgdexScan.mockResolvedValue(null);
+    const { db } = fakeStore();
+    await syncMirror(db);
+    // Eight at a time: the tenth miss can have up to seven more lookups already under way.
+    expect(ptcgScan.mock.calls.length).toBeGreaterThanOrEqual(10);
+    expect(ptcgScan.mock.calls.length).toBeLessThan(18);
+  });
+
+  it("asks again about a blank card of a set the second catalogue has other files for", async () => {
+    englishSets.mockResolvedValue([set("swsh12.5gg", 2, "2023/01/20")]);
+    englishSet.mockResolvedValue({
+      set: set("swsh12.5gg", 2, "2023/01/20"),
+      cards: [hit("swsh12.5gg-GG40", "GG40"), hit("swsh12.5gg-GG69", "GG69")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["GG40", "GG69"]), code: "CRZ" });
+    tcgdexScan.mockResolvedValue(null);
+    ptcgScan.mockResolvedValue("https://images.pokemontcg.io/swsh12pt5gg/GG69.png");
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "swsh12.5gg", cards: 2, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [
+        row({ id: "swsh12.5gg-GG40", image: "https://images.pokemontcg.io/swsh12pt5gg/GG40.png" }),
+        row({ id: "swsh12.5gg-GG69", image: null }),
+      ],
+    });
+    await syncMirror(db);
+    expect(ptcgScan).toHaveBeenCalledTimes(1);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ id: "swsh12.5gg-GG40" }),
+      expect.objectContaining({
+        id: "swsh12.5gg-GG69",
+        image: "https://images.pokemontcg.io/swsh12pt5gg/GG69.png",
+      }),
+    ]);
+  });
+
   it("takes the scan TCGdex has published since, on a card the copy had none for", async () => {
     englishSets.mockResolvedValue([set("svp", 1, "2023/06/30")]);
     englishSet.mockResolvedValue({
