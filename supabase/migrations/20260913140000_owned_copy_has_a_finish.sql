@@ -45,9 +45,12 @@ create trigger cards_owned_copy_finish
   for each row
   execute function public.owned_copy_finish();
 
--- Every owned row still without a finish is given the same floor before the check is added.
+-- Every owned row still without a finish is given one before the check is added: holo for an
+-- Illustration Rare or a Special Illustration Rare, which are printed as a holo and nothing else
+-- (on 2026-09-13 that is one row, a Team Rocket's Nidoking ex in another collection), and the
+-- same floor as the trigger for the rest.
 update public.cards
-  set finish = 'normal',
+  set finish = case when rarity ilike '%illustration rare%' then 'holo' else 'normal' end,
       updated_at = now()
   where owned and finish is null;
 
