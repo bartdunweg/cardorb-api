@@ -39,7 +39,8 @@
  * Re-running merges the same days again: a day written twice keeps the later figure.
  *
  *   daily            Every day for every English card, from 2024-02-08 to tcgcsv's newest
- *                    archive, a month to a row (daily). `--from` and `--to` resume a stopped run.
+ *                    archive, a month to a row (daily). `--from` and `--to` resume a stopped run;
+ *                    `--ids a,b` fills only those cards, for ones linked since.
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
  *
@@ -565,8 +566,10 @@ async function recent() {
  */
 async function daily() {
   const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
+  // `--ids a,b`: only these cards, for cards linked after the run (tcgplayer-links.mjs).
+  const only = flag("--ids")?.split(",").filter(Boolean);
   const ids = Object.keys(english)
-    .filter((id) => english[id])
+    .filter((id) => english[id] && (!only || only.includes(id)))
     .slice(0, LIMIT);
   const from = flag("--from") ?? TCGCSV_FROM;
   const to = flag("--to") ?? newestArchive();

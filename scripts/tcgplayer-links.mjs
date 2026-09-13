@@ -203,6 +203,8 @@ const cardNames = (name) => {
     n,
     n.replace(/\s+Team Flare (Hyper )?Gear$/i, ""),
     n.replace(/\s*\(.*\)\s*$/, ""),
+    // "δ Rainbow Energy" is "Delta Rainbow Energy" at TCGplayer, where "Mew ☆ δ" is "(Delta Species)".
+    name.replace(/δ/g, " Delta ").replace(/\s+/g, " ").trim(),
   ]);
   const typed = n.match(
     new RegExp(`^(.*\\b(?:Energy|Charm))\\s+((?:${TYPES})(?:\\s*(?:${TYPES}))*)$`, "i"),
@@ -233,6 +235,32 @@ const sameName = (productName, cardName) => {
   return cardNames(cardName).some((n) => product.has(fold(n)));
 };
 
+/** How many letters one name has to change to be the other (Levenshtein). */
+const distance = (a, b) => {
+  let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++)
+      next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    row = next;
+  }
+  return row[b.length];
+};
+
+/**
+ * Whether a product is this card by a name one or two letters off, for TCGplayer's typos: "Dark
+ * Exeggcutor" is Neo Destiny's Dark Exeggutor, 033/105 (Bart, 2026-09-13). Only ever asked of
+ * products with the card's own number, and only where no product matched its name exactly; the set
+ * and group rules below still decide. Names under six letters are not fuzzed: "Mew" and "Mewtwo" are
+ * three letters apart, but "Eevee" and "Evee" are not a typo worth the risk.
+ */
+const nearName = (productName, cardName) => {
+  const product = productNames(productName).map(fold);
+  return cardNames(cardName)
+    .map(fold)
+    .some((n) => n.length >= 6 && product.some((p) => distance(p, n) <= 2));
+};
+
 /** The words of a set or group name that could identify it. */
 const words = (name) =>
   new Set(
@@ -258,6 +286,11 @@ const groupOfProduct = new Map();
 const nameOfProduct = new Map();
 /** Every product by each spelling of its name, for a card whose number TCGplayer writes differently. */
 const byName = new Map();
+/**
+ * Every product with a prefixed number ("SVP 175", "SVP193") by the number without it, for a promo
+ * TCGdex numbers plainly ("175"): Espeon ex, Umbreon ex and Hop's Zacian ex were unlinked for it.
+ */
+const byPlainNumber = new Map();
 await mapLimit(groups, 8, async (g) => {
   const [products, prices] = await Promise.all([
     fetchJson(`https://tcgcsv.com/tcgplayer/3/${g.groupId}/products`),
@@ -282,10 +315,10 @@ await mapLimit(groups, 8, async (g) => {
     }
     if (!number) continue;
     const key = numberKey(number);
-    byNumber.set(key, [
-      ...(byNumber.get(key) ?? []),
-      { group: g, product: p, total: numberTotal(number) },
-    ]);
+    const hit = { group: g, product: p, total: numberTotal(number) };
+    byNumber.set(key, [...(byNumber.get(key) ?? []), hit]);
+    const plain = key.replace(/^[A-Z]+\|/, "|");
+    if (plain !== key) byPlainNumber.set(plain, [...(byPlainNumber.get(plain) ?? []), hit]);
   }
 });
 console.log(`tcgcsv: ${groups.length} groups, ${printingsOf.size} priced products`);
@@ -330,6 +363,26 @@ for (const [set, catalogue] of catalogues) {
     const group = link && link.groupId == null && groupOfProduct.get(link.productId);
     if (group) homes.set(group.groupId, group.name);
   }
+  /*
+   * Where TCGdex links none of the set's cards, the group this script already filed nearly all of
+   * them in. SVP Black Star Promos shares no word with "SV: Scarlet & Violet Promo Cards", TCGdex
+   * links none of its cards itself, and 211 of 226 were linked there by number and name; so Espeon
+   * ex, written "SVP 175" there, had nowhere to go (2026-09-13). One group, at least twenty cards and
+   * nine in ten of the set's links: a pattern that size is where the set lives, not a stray link.
+   */
+  if (!homes.size) {
+    const counts = new Map();
+    let made = 0;
+    for (const card of catalogue.cards ?? []) {
+      const link = ids[card.id];
+      if (!link?.groupId) continue;
+      made++;
+      counts.set(link.groupId, (counts.get(link.groupId) ?? 0) + 1);
+    }
+    const [top] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const group = top && groups.find((g) => g.groupId === top[0]);
+    if (group && top[1] >= 20 && top[1] >= made * 0.9) homes.set(group.groupId, group.name);
+  }
   const ownGroup = (group) =>
     homes.has(group.groupId) ||
     [...homes.values()].some((home) => group.name.startsWith(`${home}: `));
@@ -348,9 +401,16 @@ for (const [set, catalogue] of catalogues) {
         !VARIANT.test(nameOfProduct.get(previous.productId) ?? ""))
     )
       continue;
-    const named = (byNumber.get(numberKey(card.localId)) ?? []).filter(({ product }) =>
-      sameName(product.name, card.name),
-    );
+    const key = numberKey(card.localId);
+    const numbered = [
+      ...(byNumber.get(key) ?? []),
+      // A card numbered plainly also meets the products that write the same number with a prefix.
+      ...(key.startsWith("|") ? (byPlainNumber.get(key) ?? []) : []),
+    ];
+    const exact = numbered.filter(({ product }) => sameName(product.name, card.name));
+    const named = exact.length
+      ? exact
+      : numbered.filter(({ product }) => nearName(product.name, card.name));
     // A link this script made keeps its group: only the product inside it is chosen again. Asked
     // to find the group afresh, WotC Promo 1 went looking by words and landed on another Pikachu.
     if (previous?.groupId != null) {
