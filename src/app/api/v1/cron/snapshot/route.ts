@@ -8,7 +8,6 @@ import {
   snapshotFromSets,
 } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
-import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
 import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
@@ -64,7 +63,11 @@ import { adminClient } from "@/lib/storage/supabase";
  * figure in it is TCGplayer's since 2026-09-12 (price-basis.mjs), and every
  * point says so in card_prices.source, whose default is 'cardmarket'.
  *
- * ── Every other card, once a week ──────────────────────────────────────────
+ * ── Every other card, every night while there is room ──────────────────────
+ *
+ * Since 2026-09-13 the pass below runs nightly for the English shelf while the database is under
+ * DAILY_CEILING, and on Saturdays only above it. What follows is its weekly history.
+ *
  *
  * A card nobody held had no line at all: its sheet opened on an empty chart.
  * Since 2026-09-11 the night of a Monday also writes a point for every card the
@@ -78,6 +81,9 @@ import { adminClient } from "@/lib/storage/supabase";
  */
 
 export const dynamic = "force-dynamic";
+
+/** Below this the every-card pass runs nightly; at or above it, Saturdays only. The free plan's limit is 500 MB. */
+const DAILY_CEILING = 480 * 1024 * 1024;
 /**
  * One assembly per account, memoised for ten minutes and mostly warm. Sixty
  * seconds is the ceiling this plan allows, and the work is ordered so that a
@@ -182,7 +188,19 @@ export async function GET(req: Request) {
   // tcgcsv, in the one market every other line is in (since 2026-09-12; it read
   // Cardmarket's guide before).
   const url = new URL(req.url);
-  const weekly = url.searchParams.get("all") === "1" || new Date().getUTCDay() === 6;
+  /*
+   * Every night since 2026-09-13, for the English shelf: Bart wanted a price for every card every
+   * day. About 4.3 MB a night in this table, which the free plan's 500 MB holds for a couple of
+   * weeks until card prices are stored a month to a row. So the size is read first, and at
+   * DAILY_CEILING or over the pass goes back to Saturdays; a size nobody could read counts as over.
+   * The Japanese shelf is paused: nobody holds a Japanese card, and its readings were the room.
+   */
+  const databaseBytes = await db
+    .rpc("database_size_bytes")
+    .then(({ data, error }) => (error || typeof data !== "number" ? null : data));
+  const roomForDaily = databaseBytes != null && databaseBytes < DAILY_CEILING;
+  const weekly =
+    url.searchParams.get("all") === "1" || roomForDaily || new Date().getUTCDay() === 6;
   let everyCard = 0;
   if (weekly) {
     try {
@@ -194,10 +212,7 @@ export async function GET(req: Request) {
           ([id, v]) => [id, v?.productId ?? null],
         ),
       );
-      const shelves: [Record<string, number | null>, number][] = [
-        [english, TCGCSV_CATEGORY.en],
-        [TCGPLAYER_IDS_JA as Record<string, number | null>, TCGCSV_CATEGORY.ja],
-      ];
+      const shelves: [Record<string, number | null>, number][] = [[english, TCGCSV_CATEGORY.en]];
       for (const [products, category] of shelves) {
         const shelf = await shelfPrices(category);
         for (const p of cardPricesFromTcgcsv(products, shelf, rate, date)) {
@@ -235,6 +250,8 @@ export async function GET(req: Request) {
       rebuilt,
       prices: prices.size,
       everyCard,
+      databaseBytes,
+      everyCardDaily: roomForDaily,
       failed,
     },
     { status: failed.length ? 207 : 200, headers: { "Cache-Control": "no-store" } },
