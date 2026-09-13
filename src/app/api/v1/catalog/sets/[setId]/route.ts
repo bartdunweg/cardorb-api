@@ -11,6 +11,8 @@ import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
+import { galleriesByParent } from "@/lib/core/catalogue/set-galleries";
+import { withSetLogos } from "@/lib/core/catalogue/set-logos";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -75,8 +77,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
          an empty set. */
       const found = await englishSet(setId);
       if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
-      set = found.set;
+      set = (await withSetLogos([found.set]))[0] ?? found.set;
       cards = found.cards;
+      /* The set's gallery after its own cards: TG01 to TG30 are part of Brilliant Stars on the
+         shelf, as they are in the collection (set-galleries.ts). A gallery that cannot be read
+         leaves the set as it is rather than failing the page. */
+      const gallery = galleriesByParent(await englishSets()).get(set.id);
+      const inside = gallery ? await englishSet(gallery.id).catch(() => null) : null;
+      if (inside) {
+        set = {
+          ...set,
+          total: set.total + inside.set.total,
+          gallery: { name: inside.set.name.slice(set.name.length).trim(), total: inside.set.total },
+        };
+        cards = [...cards, ...inside.cards];
+      }
     }
   } catch {
     return refuse("catalogue", { headers: readHeaders(req) });

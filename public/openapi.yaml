@@ -501,9 +501,16 @@ components:
         name: { type: string }
         series: { type: string, description: "The era, as pokemontcg.io names it." }
         releaseDate: { type: [string, "null"], description: "`YYYY/MM/DD`, sortable as a string." }
-        total: { type: integer, description: "Every card, secret rares included." }
+        total: { type: integer, description: "Every card, secret rares included, and on the English shelf the set's gallery (Trainer Gallery, Galarian Gallery)." }
         printedTotal: { type: [integer, "null"], description: "The number printed on the cards." }
-        logo: { type: [string, "null"] }
+        gallery:
+          type: object
+          required: [name, total]
+          description: "English shelf only, since 2026-09-13: the set's gallery, shown inside the set rather than as a set of its own. `name` without the set's (`Trainer Gallery`), `total` how many of the set's `total` are its cards. Absent where the set has none. A gallery's own id still answers its page."
+          properties:
+            name: { type: string }
+            total: { type: integer }
+        logo: { type: [string, "null"], description: "TCGdex's wordmark, the black star on every Black Star Promos set, or pokemontcg.io's where TCGdex has none (English shelf)." }
         symbol: { type: [string, "null"] }
         localName: { type: [string, "null"], description: "The set's name in its own language where `name` is a translation (a Japanese set); null for English." }
         cardsRecorded: { type: boolean, description: "Whether the catalogue has recorded the set's cards, or only the set and its count. Always true for English; TCGdex lists many Japanese sets with a count and no card yet." }

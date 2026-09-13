@@ -20,8 +20,10 @@ const PROMO_STAR = "https://assets.tcgdex.net/en/swsh/swshp/logo.webp";
  * differently: TCGdex publishes an extensionless address and the copy stores the finished one.
  */
 export async function setArt(name: string, logo: string | null, symbol: string | null) {
-  if (logo) return localise(logo);
+  // The star first, whatever wordmark a promo set has: Wizards' promos have one at TCGdex, and a
+  // promo set is known by the star on its cards (Bart, 2026-09-13).
   if (/black star promos/i.test(name)) return localise(PROMO_STAR);
+  if (logo) return localise(logo);
   // Their logo before TCGdex's symbol: the symbol for a set with no logo is a
   // 25px box with the set's three-letter code in it, which in a rail of
   // wordmarks reads as a placeholder rather than as a set.

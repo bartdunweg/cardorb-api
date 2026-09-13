@@ -3,6 +3,8 @@ import { apiError, refuse } from "@/lib/api/respond";
 import { englishSets, isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
+import { galleriesByParent, withoutFoldedGalleries } from "@/lib/core/catalogue/set-galleries";
+import { withSetLogos } from "@/lib/core/catalogue/set-logos";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -44,7 +46,11 @@ export async function GET(req: Request) {
     });
   let sets;
   try {
-    sets = isBrowseLanguage(language) ? await listSetsIn(language) : await englishSets();
+    // The English shelf with the promo star and pokemontcg.io's wordmark where TCGdex has none
+    // (set-logos.ts): asked here and on a set's page, not in the index search and the collection read.
+    sets = isBrowseLanguage(language)
+      ? await listSetsIn(language)
+      : await withSetLogos(await englishSets());
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
        refused, the request is worth retrying, and the client can say so. The
@@ -63,9 +69,29 @@ export async function GET(req: Request) {
      otherwise be counted by the English cards, and was. */
   const index = ownershipIndex(rows, isBrowseLanguage(language) ? language : null, sets);
 
+  /* On the English shelf a Trainer Gallery or Galarian Gallery is part of its set, not a tile of
+     its own (set-galleries.ts): its cards and counts are added to the parent's. The index above
+     still knows the gallery, which is how a TG row is counted for it. */
+  const galleries = isBrowseLanguage(language) ? new Map() : galleriesByParent(sets);
+  const shown = withoutFoldedGalleries(sets, galleries);
+
   return NextResponse.json(
     {
-      sets: sets.map((set) => ({ ...set, ...setCounts(index, set) })),
+      sets: shown.map((set) => {
+        const own = setCounts(index, set);
+        const gallery = galleries.get(set.id);
+        if (!gallery) return { ...set, ...own };
+        const theirs = setCounts(index, gallery);
+        return {
+          ...set,
+          total: set.total + gallery.total,
+          // What of `total` is the gallery, so a client can say "30 Trainer Gallery" and not count
+          // the gallery as secret rares past the printed number.
+          gallery: { name: gallery.name.slice(set.name.length).trim(), total: gallery.total },
+          ownedCount: own.ownedCount + theirs.ownedCount,
+          wishlistCount: own.wishlistCount + theirs.wishlistCount,
+        };
+      }),
       ...(failed ? { collectionUnavailable: true } : {}),
     },
     { headers: readHeaders(req) },
