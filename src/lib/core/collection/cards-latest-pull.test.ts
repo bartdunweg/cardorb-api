@@ -149,4 +149,33 @@ describe("latestPull", () => {
       acquiredAt: "2026-08-10T12:00:00.000Z",
     });
   });
+
+  it("carries what the foil needs: finish, pattern, era and types", () => {
+    const pull = card({
+      name: "Charizard",
+      type: "Fire, Dragon",
+      gen: "Base",
+      speciesId: 6,
+      variants: [
+        variant({
+          acquiredAt: "2026-09-01T00:00:00.000Z",
+          rarity: "Rare Holo",
+          finish: "holo",
+          foilPattern: "cosmos",
+        }),
+      ],
+    });
+
+    expect(latestPull([set("Base", [pull])])).toMatchObject({
+      finish: "holo",
+      foilPattern: "cosmos",
+      gen: "Base",
+      types: ["Fire", "Dragon"],
+    });
+  });
+
+  it("sends no types, not an empty string, for a card that has none", () => {
+    const trainer = card({ variants: [variant({ acquiredAt: "2026-09-01T00:00:00.000Z" })] });
+    expect(latestPull([set("A", [trainer])])?.types).toEqual([]);
+  });
 });
