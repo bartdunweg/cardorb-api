@@ -32,7 +32,8 @@ import {
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
 import { fullArtOf } from "./full-art";
-import { limitlessScan, storedScan, tcgdexScan } from "./artwork";
+import { isScanFile, limitlessScan, storedScan, tcgdexScan, tcgplayerScan } from "./artwork";
+import { canStoreImages, keepImage, storedAddress } from "./image-store";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
 
@@ -232,7 +233,7 @@ async function withResolvedScans(
      with none was very likely never asked about: the ceiling this used to have cut the set off
      (FALLBACK_MISSES_BEFORE_GIVING_UP). Those cards are asked again rather than kept blank. */
   const answeredElsewhere = [...known.values()].some(
-    (image) => image !== null && !image.startsWith("https://assets.tcgdex.net/"),
+    (image) => image !== null && isScanFile(image),
   );
   const at = (card: CatalogueMatch, file: string | null) => ({
     ...card,
@@ -257,13 +258,48 @@ async function withResolvedScans(
     asked++;
     /* Limitless first, where the set has a code there, and never for a lettered number: it
        renumbers a gallery's cards into the parent's run, and a guessed offset shows a
-       confidently wrong card (cards.ts). Then pokemontcg.io, which is asked by set name. */
+       confidently wrong card (cards.ts). Then TCGplayer, by the product the price links name
+       for this card id, so nothing is guessed. Then pokemontcg.io, which is asked by set name. */
     const file =
       (code && !/^[A-Za-z]/.test(card.number)
         ? await limitlessScan(code, card.number).catch(() => null)
-        : null) ?? (await ptcgScan(setName, card.number, card.name).catch(() => null));
+        : null) ??
+      (await tcgplayerScan(card.id).catch(() => null)) ??
+      (await ptcgScan(setName, card.number, card.name).catch(() => null));
     if (file) found++;
     return at(card, file);
+  });
+}
+
+/**
+ * Every picture of a set in our own bucket (image-store.ts), the address the copy keeps being ours
+ * wherever the file is there.
+ *
+ * A card whose copy already holds our address for this very source is kept without a request:
+ * that is every card of a set after its first pass, so a nightly refresh asks nothing here. The
+ * rest are copied, eight at a time; one that cannot be keeps the source's address and is tried
+ * again the next time its set comes up. Without the write secret this returns the cards as they
+ * are, which is how a local run and the tests behave.
+ */
+async function withStoredImages(
+  db: SupabaseClient,
+  cards: CatalogueMatch[],
+  /** canStoreImages(), asked once per run rather than once per set. */
+  storing: boolean,
+): Promise<CatalogueMatch[]> {
+  if (!storing || !cards.length) return cards;
+  const held = await catalogueCardsById(
+    db,
+    cards.map((c) => c.id),
+  )
+    .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
+    .catch(() => new Map<string, string | null>());
+  return mapLimit(cards, 8, async (card) => {
+    const stem = stemOf(card.image);
+    const ours = stem ? storedAddress(stem) : null;
+    if (!stem || !ours) return card;
+    const image = held.get(card.id) === ours ? ours : await keepImage(stem);
+    return image === stem ? card : { ...card, image, imageHigh: null };
   });
 }
 
@@ -315,6 +351,7 @@ export async function syncMirror(
     full ? ranked.map((s) => s.id) : ranked.filter((s) => s.key[0] < 2).map((s) => s.id),
   );
 
+  const storing = await canStoreImages();
   const report: SyncReport = { copied: [], failed: [], left: 0, ms: 0 };
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);
   const worker = async () => {
@@ -326,7 +363,11 @@ export async function syncMirror(
           continue;
         }
         const { set, cards } = read;
-        const pictured = await withResolvedScans(db, id, set.name, cards, fresh.has(id));
+        const pictured = await withStoredImages(
+          db,
+          await withResolvedScans(db, id, set.name, cards, fresh.has(id)),
+          storing,
+        );
         /* Which of the set's cards are full art, worked out here because this is the one place
            that holds a whole set: the rule is about a card's place in it (full-art.ts). */
         const arts = fullArtOf(pictured);

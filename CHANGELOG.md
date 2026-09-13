@@ -6,6 +6,9 @@ if the two have drifted apart.
 
 ## 2026-09-14
 
+- Card pictures are copied into our own Cloudflare R2 bucket (`cardorb-images`, read at images.cardorb.com) and the catalogue copy hands out that address: the set page and the search stop depending on TCGdex, pokemontcg.io and Limitless answering. Writes go through the `cardorb-images-writer` Worker (`cloudflare/images-writer`) with `IMAGES_WRITE_SECRET`; without the secret, or while images.cardorb.com does not answer, every address stays the source's. `scripts/copy-images-to-bucket.mjs` does the first fill.
+- TCGplayer is a picture source for a card TCGdex has no scan of, by the product the price links name for it: 474 of the 649 catalogue cards with no picture (McDonald's Collections, Classic Collection, Unown Collection, Aquapolis and Skyridge holos, eight trainer kits).
+
 - The nightly catalogue copy asks pokemontcg.io and Limitless about every card of a set TCGdex has no scan for, not only the first 40: 213 cards were left with no picture on the set page and in the search (Crown Zenith Galarian Gallery GG41 to GG70, 82 of Shining Fates' Shiny Vault, 38 of Dragon Majesty, 36 of Shining Legends, 27 SM Black Star Promos). A set neither catalogue has is given up on after ten misses. A blank card in a set the other two do have files for is asked again, so the copy fills those in as each set comes up for refresh.
 
 - `GET /v1/catalog/sets/{setId}` answers faster: an English set with its rarities and types is kept a day (it was asking TCGdex's GraphQL on every request), the viewer's rows are read alongside the catalogue, and the pictures and prices of the page at the same time. `pageSize` is clamped to 500 rather than 250, so a Scarlet & Violet set with its secrets comes in one request.
