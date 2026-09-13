@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-13
 
+- Card prices are stored per printing, a month to a row (`card_price_months`, migration 20260913220000), so every English card can have a price for every day on the free plan: about 115 MB a year where one row a day was about 1.2 GB. `GET /v1/cards/{tcgId}/prices` adds `printings` to each point (every printing's figure that day, by TCGplayer's name); `market` and `holo` are unchanged. The Home line, a folder's line and the movers value a copy at its own printing (a 1st Edition copy at the stamped run's history). The cron writes every printing it prices. `backfill-card-prices.mjs --only daily` fills every day for every English card from 2024-02-08, per printing. The migration copies the sales averages before 2024-02-08 and everything since 2026-08-16; `card_prices` is dropped by hand afterwards.
+
 - `GET /v1/cards` filters by a copy's `condition`, `finish` and `language`, each repeatable like `rarity`: any value of a key counts, every key must hold. A copy with no language is English and matches `language=en`; a copy with no condition or finish matches no value of that key. A finish outside the list is a 400. `facets` gains `conditions`, `finishes` and `languages`, and `counts=1` gains `condition`, `finish` and `language`. The public cards route is unchanged.
 
 - `GET /v1/cards?counts=1` says how many cards each filter option would leave, for a filter sheet that writes the number beside the option. `counts` has one tally per set (by title), rarity, generation and type, each over the cards the other filters leave with that key's own choice set aside, plus how many would remain with `fullArt=1` or `duplicates=1` added. Without `counts=1` the answer is unchanged.

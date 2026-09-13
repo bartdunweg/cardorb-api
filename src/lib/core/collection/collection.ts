@@ -1217,7 +1217,8 @@ export const getCardPrices = cache(
         // list (a folder's, or one card's) was the answer for every later ask
         // under the same person and day: a card's own line came back as nine
         // thousand points of the whole collection.
-        ["card-prices", "v3", userId, since, idsKey(tcgIds)],
+        // v4: read from card_price_months, with printings (2026-09-13).
+        ["card-prices", "v4", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
       return { points, failed: false };
