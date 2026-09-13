@@ -22,12 +22,7 @@ import {
 } from "@/lib/storage/postgres";
 import { holdingsSeries } from "@/lib/core/collection/folder-history";
 import { flattenItems } from "@/lib/core/collection/items";
-import {
-  HISTORY_DAILY_FROM,
-  HISTORY_FROM,
-  needsHistoryRebuild,
-  saturdaysBetween,
-} from "@/lib/core/collection/value-history";
+import { HISTORY_FROM, needsHistoryRebuild } from "@/lib/core/collection/value-history";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -154,12 +149,7 @@ export async function GET(req: Request) {
           )
         ) {
           const ids = [...new Set(items.flatMap((it) => (it.owned && it.tcgId ? [it.tcgId] : [])))];
-          const readings = await listHistoryPrices(
-            db,
-            ids,
-            saturdaysBetween(HISTORY_FROM, HISTORY_DAILY_FROM),
-            HISTORY_DAILY_FROM,
-          );
+          const readings = await listHistoryPrices(db, ids, HISTORY_FROM);
           const series = holdingsSeries(items, readings).filter((p) => p.date < date);
           await replaceValueHistory(db, userId, series, date);
           revalidateTag(valueHistoryTag(userId), { expire: 0 });

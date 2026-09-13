@@ -471,56 +471,48 @@ export async function listCardPrices(
 }
 
 /**
- * The readings a Home line is built from: every card's Saturday readings before `dailyFrom`, and
- * every reading from then on.
+ * The readings a Home line is built from: every reading of these cards since `from`.
  *
- * Saturdays because that is the day the weekly series has a reading for every card (since
- * 2024-02-10), and every day after `dailyFrom` because the held cards have a nightly reading from
- * then. Read in parallel, a page of a thousand rows at a time: a collection of sixteen hundred cards
- * over two and a half years is a quarter of a million readings, and one after another that is most
- * of the cron's minute.
+ * Daily since 2026-09-13: the held cards have a reading for every day since 2024-02-08, where they
+ * had Saturdays until the cron began, and this read Saturdays before it and every day after. Read
+ * in parallel, a page of a thousand rows at a time: a collection of sixteen hundred cards over two
+ * and a half years is a million and a half readings, which is minutes, not the cron's minute.
  */
 export async function listHistoryPrices(
   db: SupabaseClient,
   tcgIds: string[],
-  saturdays: string[],
-  dailyFrom: string,
+  from: string,
 ): Promise<CardPricePoint[]> {
   const out: CardPricePoint[] = [];
   const PAGE = 1000;
   const tasks: (() => Promise<void>)[] = [];
   for (let i = 0; i < tcgIds.length; i += 50) {
     const chunk = tcgIds.slice(i, i + 50);
-    for (const saturdaysOnly of [true, false]) {
-      tasks.push(async () => {
-        for (let page = 0; ; page++) {
-          const base = db
-            .from("card_prices")
-            .select("tcg_id,snapshot_date,market_cents,holo_cents")
-            .in("tcg_id", chunk);
-          const query = saturdaysOnly
-            ? base.in("snapshot_date", saturdays)
-            : base.gte("snapshot_date", dailyFrom);
-          const { data, error } = await query
-            // The primary key's order, (tcg_id, snapshot_date), so the database walks the index
-            // instead of sorting: ordered by date first, the read hit the statement timeout.
-            .order("tcg_id", { ascending: true })
-            .order("snapshot_date", { ascending: true })
-            .range(page * PAGE, page * PAGE + PAGE - 1);
-          if (error) throw new Error(`Reading card prices failed: ${error.message}`);
-          const rows = (data ?? []) as PriceRecord[];
-          for (const r of rows) {
-            out.push({
-              tcgId: r.tcg_id,
-              date: r.snapshot_date,
-              market: r.market_cents == null ? null : r.market_cents / 100,
-              holo: r.holo_cents == null ? null : r.holo_cents / 100,
-            });
-          }
-          if (rows.length < PAGE) break;
+    tasks.push(async () => {
+      for (let page = 0; ; page++) {
+        const { data, error } = await db
+          .from("card_prices")
+          .select("tcg_id,snapshot_date,market_cents,holo_cents")
+          .in("tcg_id", chunk)
+          .gte("snapshot_date", from)
+          // The primary key's order, (tcg_id, snapshot_date), so the database walks the index
+          // instead of sorting: ordered by date first, the read hit the statement timeout.
+          .order("tcg_id", { ascending: true })
+          .order("snapshot_date", { ascending: true })
+          .range(page * PAGE, page * PAGE + PAGE - 1);
+        if (error) throw new Error(`Reading card prices failed: ${error.message}`);
+        const rows = (data ?? []) as PriceRecord[];
+        for (const r of rows) {
+          out.push({
+            tcgId: r.tcg_id,
+            date: r.snapshot_date,
+            market: r.market_cents == null ? null : r.market_cents / 100,
+            holo: r.holo_cents == null ? null : r.holo_cents / 100,
+          });
         }
-      });
-    }
+        if (rows.length < PAGE) break;
+      }
+    });
   }
   let next = 0;
   await Promise.all(
