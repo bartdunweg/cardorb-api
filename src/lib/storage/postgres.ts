@@ -260,6 +260,8 @@ type SnapshotRecord = {
   cards: number;
   priced: number;
   unpriced: number;
+  added_cards?: number | null;
+  added_value_cents?: number | null;
 };
 
 /**
@@ -295,6 +297,17 @@ type SnapshotRecord = {
  * Cents become whole euros here, at the storage boundary, so nothing above this
  * line has to know the table counts in cents.
  */
+/**
+ * Whether a failure is the database not having the `added` columns yet.
+ *
+ * The migration that adds them (20260913180000) runs after the deploy that reads them, by design
+ * (.github/workflows/migrate.yml), so for a minute or two the code asks for columns that are not
+ * there. Reading and writing without them for that minute keeps the Home line and the night's
+ * point standing; a history rebuild must not delete the old points and then fail to write.
+ */
+const missingAdded = (message: string | undefined) =>
+  /added_(cards|value_cents)/.test(message ?? "");
+
 export async function listValueSnapshots(
   db: SupabaseClient,
   userId: string,
@@ -303,14 +316,28 @@ export async function listValueSnapshots(
   // reason listRows throws: a series with holes in it draws as a collection
   // that lost value, and the caller above knows how to fail soft without
   // inventing a shape.
-  const data = await readAllPages<SnapshotRecord>("the value history", (page, counted) =>
-    db
-      .from("collection_value_snapshots")
-      .select("snapshot_date,value_cents,cards,priced,unpriced", counted ? { count: "exact" } : {})
-      .eq("user_id", userId)
-      .order("snapshot_date", { ascending: true })
-      .range(...pageRange(page)),
-  );
+  const read = (withAdded: boolean) =>
+    readAllPages<SnapshotRecord>("the value history", (page, counted) => {
+      const table = db.from("collection_value_snapshots");
+      const options = counted ? { count: "exact" as const } : {};
+      const selected = withAdded
+        ? table.select(
+            "snapshot_date,value_cents,cards,priced,unpriced,added_cards,added_value_cents",
+            options,
+          )
+        : table.select("snapshot_date,value_cents,cards,priced,unpriced", options);
+      return selected
+        .eq("user_id", userId)
+        .order("snapshot_date", { ascending: true })
+        .range(...pageRange(page));
+    });
+  let data: SnapshotRecord[];
+  try {
+    data = await read(true);
+  } catch (err) {
+    if (!missingAdded(err instanceof Error ? err.message : String(err))) throw err;
+    data = await read(false);
+  }
 
   return data.map((r) => ({
     date: r.snapshot_date,
@@ -318,6 +345,8 @@ export async function listValueSnapshots(
     cards: r.cards,
     priced: r.priced,
     unpriced: r.unpriced,
+    added: r.added_cards ?? 0,
+    addedValue: Math.round((r.added_value_cents ?? 0) / 100),
   }));
 }
 
@@ -364,17 +393,22 @@ export async function writeValueSnapshot(
   userId: string,
   point: ValueSnapshot,
 ): Promise<void> {
-  const { error } = await db.from("collection_value_snapshots").upsert(
-    {
-      user_id: userId,
-      snapshot_date: point.date,
-      value_cents: Math.round(point.value * 100),
-      cards: point.cards,
-      priced: point.priced,
-      unpriced: point.unpriced,
-    },
-    { onConflict: "user_id,snapshot_date" },
-  );
+  const row = {
+    user_id: userId,
+    snapshot_date: point.date,
+    value_cents: Math.round(point.value * 100),
+    cards: point.cards,
+    priced: point.priced,
+    unpriced: point.unpriced,
+  };
+  const write = (r: object) =>
+    db.from("collection_value_snapshots").upsert(r, { onConflict: "user_id,snapshot_date" });
+  let { error } = await write({
+    ...row,
+    added_cards: point.added ?? 0,
+    added_value_cents: Math.round((point.addedValue ?? 0) * 100),
+  });
+  if (error && missingAdded(error.message)) ({ error } = await write(row));
   if (error) throw new Error(`Writing a snapshot failed: ${error.message}`);
 }
 
@@ -437,56 +471,48 @@ export async function listCardPrices(
 }
 
 /**
- * The readings a Home line is built from: every card's Saturday readings before `dailyFrom`, and
- * every reading from then on.
+ * The readings a Home line is built from: every reading of these cards since `from`.
  *
- * Saturdays because that is the day the weekly series has a reading for every card (since
- * 2024-02-10), and every day after `dailyFrom` because the held cards have a nightly reading from
- * then. Read in parallel, a page of a thousand rows at a time: a collection of sixteen hundred cards
- * over two and a half years is a quarter of a million readings, and one after another that is most
- * of the cron's minute.
+ * Daily since 2026-09-13: the held cards have a reading for every day since 2024-02-08, where they
+ * had Saturdays until the cron began, and this read Saturdays before it and every day after. Read
+ * in parallel, a page of a thousand rows at a time: a collection of sixteen hundred cards over two
+ * and a half years is a million and a half readings, which is minutes, not the cron's minute.
  */
 export async function listHistoryPrices(
   db: SupabaseClient,
   tcgIds: string[],
-  saturdays: string[],
-  dailyFrom: string,
+  from: string,
 ): Promise<CardPricePoint[]> {
   const out: CardPricePoint[] = [];
   const PAGE = 1000;
   const tasks: (() => Promise<void>)[] = [];
   for (let i = 0; i < tcgIds.length; i += 50) {
     const chunk = tcgIds.slice(i, i + 50);
-    for (const saturdaysOnly of [true, false]) {
-      tasks.push(async () => {
-        for (let page = 0; ; page++) {
-          const base = db
-            .from("card_prices")
-            .select("tcg_id,snapshot_date,market_cents,holo_cents")
-            .in("tcg_id", chunk);
-          const query = saturdaysOnly
-            ? base.in("snapshot_date", saturdays)
-            : base.gte("snapshot_date", dailyFrom);
-          const { data, error } = await query
-            // The primary key's order, (tcg_id, snapshot_date), so the database walks the index
-            // instead of sorting: ordered by date first, the read hit the statement timeout.
-            .order("tcg_id", { ascending: true })
-            .order("snapshot_date", { ascending: true })
-            .range(page * PAGE, page * PAGE + PAGE - 1);
-          if (error) throw new Error(`Reading card prices failed: ${error.message}`);
-          const rows = (data ?? []) as PriceRecord[];
-          for (const r of rows) {
-            out.push({
-              tcgId: r.tcg_id,
-              date: r.snapshot_date,
-              market: r.market_cents == null ? null : r.market_cents / 100,
-              holo: r.holo_cents == null ? null : r.holo_cents / 100,
-            });
-          }
-          if (rows.length < PAGE) break;
+    tasks.push(async () => {
+      for (let page = 0; ; page++) {
+        const { data, error } = await db
+          .from("card_prices")
+          .select("tcg_id,snapshot_date,market_cents,holo_cents")
+          .in("tcg_id", chunk)
+          .gte("snapshot_date", from)
+          // The primary key's order, (tcg_id, snapshot_date), so the database walks the index
+          // instead of sorting: ordered by date first, the read hit the statement timeout.
+          .order("tcg_id", { ascending: true })
+          .order("snapshot_date", { ascending: true })
+          .range(page * PAGE, page * PAGE + PAGE - 1);
+        if (error) throw new Error(`Reading card prices failed: ${error.message}`);
+        const rows = (data ?? []) as PriceRecord[];
+        for (const r of rows) {
+          out.push({
+            tcgId: r.tcg_id,
+            date: r.snapshot_date,
+            market: r.market_cents == null ? null : r.market_cents / 100,
+            holo: r.holo_cents == null ? null : r.holo_cents / 100,
+          });
         }
-      });
-    }
+        if (rows.length < PAGE) break;
+      }
+    });
   }
   let next = 0;
   await Promise.all(
@@ -529,11 +555,18 @@ export async function replaceValueHistory(
       cards: p.cards,
       priced: p.priced,
       unpriced: p.unpriced,
+      added_cards: p.added ?? 0,
+      added_value_cents: Math.round((p.addedValue ?? 0) * 100),
     }));
   for (let i = 0; i < rows.length; i += 500) {
-    const { error } = await db
-      .from("collection_value_snapshots")
-      .upsert(rows.slice(i, i + 500), { onConflict: "user_id,snapshot_date" });
+    const chunk = rows.slice(i, i + 500);
+    const write = (r: object[]) =>
+      db.from("collection_value_snapshots").upsert(r, { onConflict: "user_id,snapshot_date" });
+    let { error } = await write(chunk);
+    if (error && missingAdded(error.message))
+      ({ error } = await write(
+        chunk.map(({ added_cards: _c, added_value_cents: _v, ...rest }) => rest),
+      ));
     if (error) throw new Error(`Writing the value history failed: ${error.message}`);
   }
 }

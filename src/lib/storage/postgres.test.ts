@@ -130,9 +130,53 @@ describe("listValueSnapshots", () => {
     ]);
     const out = await listValueSnapshots(db, "u");
     expect(out).toEqual([
-      { date: "2024-12-30", value: 15_634, cards: 1524, priced: 1211, unpriced: 313 },
-      { date: "2026-08-06", value: 39_887, cards: 1524, priced: 1211, unpriced: 313 },
+      // A row written before the added columns existed reads as nothing added.
+      {
+        date: "2024-12-30",
+        value: 15_634,
+        cards: 1524,
+        priced: 1211,
+        unpriced: 313,
+        added: 0,
+        addedValue: 0,
+      },
+      {
+        date: "2026-08-06",
+        value: 39_887,
+        cards: 1524,
+        priced: 1211,
+        unpriced: 313,
+        added: 0,
+        addedValue: 0,
+      },
     ]);
+  });
+
+  // The migration adding the columns runs after the deploy that reads them (migrate.yml).
+  it("reads without the added columns while the database does not have them yet", async () => {
+    const selects: string[] = [];
+    const chain: Record<string, unknown> = {
+      select: (columns: string) => {
+        selects.push(columns);
+        return chain;
+      },
+      order: () => chain,
+      range: () => chain,
+      eq: () => chain,
+      then: (resolve: (v: unknown) => unknown) =>
+        resolve(
+          selects.at(-1)!.includes("added_cards")
+            ? {
+                data: null,
+                error: { message: "column collection_value_snapshots.added_cards does not exist" },
+              }
+            : { data: [snapshot()], error: null, count: 1 },
+        ),
+    };
+    const db = { from: () => chain } as unknown as SupabaseClient;
+    const out = await listValueSnapshots(db, "u");
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ added: 0, addedValue: 0 });
   });
 
   it("answers with nothing for an account that has never been snapshotted", async () => {

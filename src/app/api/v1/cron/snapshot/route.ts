@@ -22,12 +22,7 @@ import {
 } from "@/lib/storage/postgres";
 import { holdingsSeries } from "@/lib/core/collection/folder-history";
 import { flattenItems } from "@/lib/core/collection/items";
-import {
-  HISTORY_DAILY_FROM,
-  HISTORY_FROM,
-  needsHistoryRebuild,
-  saturdaysBetween,
-} from "@/lib/core/collection/value-history";
+import { HISTORY_FROM, needsHistoryRebuild } from "@/lib/core/collection/value-history";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -127,7 +122,10 @@ export async function GET(req: Request) {
       // The same assembly every request reads, blended prices and memo included: what the
       // night writes is what the day shows, and the warm cron has usually just built it.
       const sets = await assembleFor(userId, db);
-      const point = snapshotFromSets(sets, date);
+      // Read before tonight's point is written: `added` counts the copies since the point before.
+      const stored = await listValueSnapshots(db, userId);
+      const since = stored.filter((p) => p.date < date).at(-1)?.date ?? null;
+      const point = snapshotFromSets(sets, date, since);
       await writeValueSnapshot(db, userId, point);
       // The read path caches for an hour under this tag and nothing else can
       // drop it — the manual script writes from plain node, where this does not
@@ -143,7 +141,6 @@ export async function GET(req: Request) {
        */
       try {
         const items = flattenItems(sets);
-        const stored = await listValueSnapshots(db, userId);
         if (
           forceHistory ||
           needsHistoryRebuild(
@@ -152,12 +149,7 @@ export async function GET(req: Request) {
           )
         ) {
           const ids = [...new Set(items.flatMap((it) => (it.owned && it.tcgId ? [it.tcgId] : [])))];
-          const readings = await listHistoryPrices(
-            db,
-            ids,
-            saturdaysBetween(HISTORY_FROM, HISTORY_DAILY_FROM),
-            HISTORY_DAILY_FROM,
-          );
+          const readings = await listHistoryPrices(db, ids, HISTORY_FROM);
           const series = holdingsSeries(items, readings).filter((p) => p.date < date);
           await replaceValueHistory(db, userId, series, date);
           revalidateTag(valueHistoryTag(userId), { expire: 0 });

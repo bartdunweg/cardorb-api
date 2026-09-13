@@ -25,6 +25,15 @@ export type ValueSnapshot = {
   cards: number;
   priced: number;
   unpriced: number;
+  /**
+   * Copies added since the point before, and what they were worth on this day. What the line gained
+   * by holding more rather than by prices moving, so a chart can mark the day and a total can say
+   * which part of a change was which (Bart, 2026-09-13: "ik zie het toevoegen van kaarten niet
+   * terug in de grafiek"). Zero on an account's first point, whose copies were not added since
+   * anything. Left out by a point written before 2026-09-13, which reads as zero.
+   */
+  added?: number;
+  addedValue?: number;
 };
 
 /**

@@ -97,7 +97,24 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       cards: 4,
       priced: 2,
       unpriced: 0,
+      added: 0,
+      addedValue: 0,
     });
+  });
+
+  it("counts the copies added since the point before, at tonight's price", () => {
+    const sets = [
+      set([
+        priced(10, null, {
+          variants: [
+            variant({ quantity: 2, acquiredAt: "2026-09-06T12:00:00Z" }),
+            variant({ id: "row-2", acquiredAt: "2026-08-01T00:00:00Z" }),
+          ],
+        }),
+      ]),
+    ];
+    const point = snapshotFromSets(sets, "2026-09-07", "2026-09-05");
+    expect([point.cards, point.added, point.addedValue]).toEqual([3, 2, 20]);
   });
 
   it("counts a held card with no price as unpriced and leaves wishes out", () => {
@@ -118,6 +135,8 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       cards: 1,
       priced: 0,
       unpriced: 1,
+      added: 0,
+      addedValue: 0,
     });
   });
 

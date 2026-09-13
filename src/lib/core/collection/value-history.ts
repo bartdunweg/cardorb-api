@@ -13,40 +13,33 @@
  * account, by the cron (api/v1/cron/snapshot).
  */
 
-/** The first Saturday every card has a TCGplayer reading for: tcgcsv's archive starts 2024-02-08. */
-export const HISTORY_FROM = "2024-02-10";
+/**
+ * The first day of the line. tcgcsv's archive starts on 2024-02-08, and since 2026-09-13 the held
+ * cards have a reading for every day from it (backfill-card-prices.mjs `--only held-daily`), where
+ * before they had Saturdays until the cron began (Bart: "ik wil alles per dag, en het liefst zo ver
+ * mogelijk terug"). Earlier than this only older sets have a price, about half of a 2023 collection.
+ */
+export const HISTORY_FROM = "2024-02-08";
 
-/** The first night the held cards have a reading of their own every day. */
+/** The first night the cron priced the held cards itself. */
 export const HISTORY_DAILY_FROM = "2026-08-16";
 
-const addDays = (iso: string, n: number) =>
-  new Date(Date.parse(`${iso}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
-const isSaturday = (iso: string) => new Date(`${iso}T00:00:00Z`).getUTCDay() === 6;
-
-/** Every Saturday on or after `from` and before `before`. */
-export function saturdaysBetween(from: string, before: string): string[] {
-  let day = from;
-  while (!isSaturday(day)) day = addDays(day, 1);
-  const out: string[] = [];
-  for (; day < before; day = addDays(day, 7)) out.push(day);
-  return out;
-}
-
 /**
- * Whether an account's history still holds the old series.
+ * Whether an account's history has never been built.
  *
- * A rebuilt history has only Saturdays before the nightly series began, so a weekday there is an
- * old point. An account with no point before then, whose collection held a copy before then, has
- * never been built. Once built, neither is true, and the cron leaves the history to its nightly
- * point. A copy with no recorded date counts as held all along, as it does in the line.
+ * An account with no point before the cron began, whose collection held a copy before then, has
+ * never been built. Once built, the cron leaves the history to its nightly point: every day since
+ * 2024 is a million and a half readings for a collection of sixteen hundred cards, which does not
+ * fit in the cron's minute, so `?history=1` is for a local run of the route. It used to also
+ * rebuild a history with a weekday before the nightly series, which was how the Cardmarket-era
+ * points were told apart; a history built from daily readings has weekdays everywhere. A copy with
+ * no recorded date counts as held all along, as it does in the line.
  */
 export function needsHistoryRebuild(
   snapshotDates: string[],
   items: { owned: boolean; acquiredAt: string | null }[],
 ): boolean {
-  const before = snapshotDates.filter((d) => d < HISTORY_DAILY_FROM);
-  if (before.some((d) => !isSaturday(d))) return true;
-  if (before.length) return false;
+  if (snapshotDates.some((d) => d < HISTORY_DAILY_FROM)) return false;
   return items.some(
     (it) => it.owned && (!it.acquiredAt || it.acquiredAt.slice(0, 10) < HISTORY_DAILY_FROM),
   );

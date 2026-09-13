@@ -41,7 +41,10 @@
  *
  * Re-running upserts the same rows, and `recent` a second time finds nothing to delete.
  *
- *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese|recent]
+ *   held-daily       Every day from 2024-02-08 to the day before the cron began, for the cards
+ *                    held now (heldDaily). `--from` and `--to` resume a stopped run.
+ *
+ *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese|recent|held-daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
  *
  * Service role, because there is nobody to be: an
  * offline script run by a person, writing a table about cards that belongs to
@@ -230,11 +233,16 @@ async function tcgplayerIds(ids) {
 
 /** date → EUR per USD, the ECB's reference rate; a weekend or holiday takes the last rate before it. */
 async function rates(from, to) {
-  const body = await fetchJson(`https://api.frankfurter.dev/v1/${from}..${to}?from=USD&to=EUR`);
+  // Asked from a week earlier, so a first day on a weekend has Friday's rate to stand on. From
+  // Sunday 2026-08-16 itself the first rate was Monday's, and every `--only recent` reading of
+  // 08-16 was written without a figure.
+  const body = await fetchJson(
+    `https://api.frankfurter.dev/v1/${addDays(from, -7)}..${to}?from=USD&to=EUR`,
+  );
   const known = body.rates;
   const out = new Map();
   let last = null;
-  for (let d = from; d <= to; d = addDays(d, 1)) {
+  for (let d = addDays(from, -7); d <= to; d = addDays(d, 1)) {
     if (known[d]?.EUR) last = known[d].EUR;
     if (last) out.set(d, last);
   }
@@ -480,6 +488,25 @@ async function cardmarketRowsOn(date) {
   return count ?? 0;
 }
 
+/**
+ * The cards held now, as the cron last priced them on a night that was not the weekly pass: every
+ * copy in every collection, by the id the cron resolved it to. The nightly series only ever priced
+ * the cards held on the night, so a card linked to TCGplayer later (the promos and subsets of
+ * cardorb-api#358 and #371) had a Saturday reading and nothing between, and the Home line counted
+ * it as unpriced six days a week. Cards bought after a day are priced on it too, which costs a few
+ * rows and nothing else: the line counts a copy from the day it was added.
+ */
+async function heldNow() {
+  const today = day(new Date());
+  for (let back = 0; back < 8; back++) {
+    const date = addDays(today, -back);
+    if (dow(date) === 6) continue;
+    const ids = await idsOn(date);
+    if (ids.size) return { date, ids };
+  }
+  return { date: null, ids: new Set() };
+}
+
 async function recent() {
   const end = newestArchive();
   const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
@@ -495,14 +522,17 @@ async function recent() {
     `recent: ${dates.length} days, ${CRON_FROM} to ${end}${DRY ? " (dry run: nothing is written)" : ""}`,
   );
 
+  const now = await heldNow();
+  console.log(`  held now: ${now.ids.size} cards, as priced on ${now.date ?? "no recent night"}`);
+
   let written = 0;
   let before = 0;
   for (const date of dates) {
     const r = rate.get(date);
-    const held = await idsOn(date);
+    const held = new Set([...(await idsOn(date)), ...now.ids]);
     before += await cardmarketRowsOn(date);
     // Saturday is the weekly series' day: every card gets a point. Any other day, the cards
-    // that already had one, which is what the cron wrote.
+    // that already had one, which is what the cron wrote, and the cards held now (heldNow).
     const wanted = dow(date) === 6 ? new Set([...everyCard, ...held]) : held;
     const en = tcgcsvDay(date, CATEGORY_EN);
     const ja = tcgcsvDay(date, CATEGORY_JA);
@@ -557,7 +587,78 @@ async function recent() {
   );
 }
 
+/**
+ * Every day for the cards held now, from tcgcsv's first archive to the day before the cron began.
+ *
+ * The weekly series gives every card a Saturday; the Home line and a card's own chart wanted every
+ * day (Bart, 2026-09-13: "ik wil alles per dag, en het liefst zo ver mogelijk terug"). Only the
+ * cards somebody holds, the same set the cron prices nightly: some sixteen hundred cards over two
+ * and a half years is 1.5 million readings, where every card would be twenty-eight million.
+ * tcgcsv starts on 2024-02-08, and that is as far back as a whole collection has a price: the
+ * sales history before it covers older sets only, about half of the cards held in 2023.
+ *
+ * `--from` and `--to` narrow the days, to resume a run that stopped. An archive tcgcsv does not
+ * have is skipped and said, not fatal. Each archive is deleted once read: two and a half years of
+ * them is almost four gigabytes.
+ */
+async function heldDaily() {
+  const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
+  const japanese = await japaneseIds();
+  const now = await heldNow();
+  const from = flag("--from") ?? TCGCSV_FROM;
+  const to = flag("--to") ?? addDays(CRON_FROM, -1);
+  const ids = [...now.ids].slice(0, LIMIT);
+  const rate = await rates(from, to);
+  const dates = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+  console.log(
+    `held-daily: ${ids.length} cards held (as priced on ${now.date}), ${dates.length} days, ${from} to ${to}${DRY ? " (dry run: nothing is written)" : ""}`,
+  );
+  let written = 0;
+  for (const date of dates) {
+    const r = rate.get(date);
+    let en;
+    let ja;
+    try {
+      en = tcgcsvDay(date, CATEGORY_EN);
+      ja = date >= JAPAN_FROM ? tcgcsvDay(date, CATEGORY_JA) : new Map();
+    } catch (err) {
+      console.log(
+        `  ${date}: no archive (${err instanceof Error ? err.message.split("\n")[0] : err})`,
+      );
+      continue;
+    }
+    const rows = [];
+    for (const id of ids) {
+      const pick = english[id]
+        ? pickTcgcsv(en.get(english[id].productId))
+        : japanese[id]
+          ? pickTcgcsv(ja.get(japanese[id]))
+          : null;
+      if (!pick) continue;
+      rows.push({
+        tcg_id: id,
+        snapshot_date: date,
+        market_cents: cents(pick.market, r),
+        holo_cents: cents(pick.holo, r),
+        source: "tcgplayer",
+      });
+    }
+    await write(rows);
+    written += rows.length;
+    rmSync(join(CACHE, `prices-${date}.ppmd.7z`), { force: true });
+    console.log(`  ${date}: ${rows.length} of ${ids.length} cards priced`);
+    show(rows);
+  }
+  console.log(`${DRY ? "Would write" : "Wrote"} ${written} readings.`);
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
+
+if (ONLY === "held-daily") {
+  await heldDaily();
+  process.exit(0);
+}
 
 if (ONLY === "recent") {
   await recent();

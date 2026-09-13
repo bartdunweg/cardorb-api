@@ -24,11 +24,18 @@ import type { SourcedPricePoint } from "./movers";
  * by printing, through copyPriceOf(); a card with no price on it is unpriced.
  * The guide's date is not to hand here, so the caller dates it.
  */
-export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
+export function snapshotFromSets(
+  sets: CardSet[],
+  date: string,
+  /** The date of the point before, for `added`; null where there is none. */
+  since: string | null = null,
+): ValueSnapshot {
   let value = 0;
   let copies = 0;
   let priced = 0;
   let unpriced = 0;
+  let added = 0;
+  let addedValue = 0;
   for (const set of sets) {
     for (const card of set.cards) {
       const held = copiesHeld(card);
@@ -38,15 +45,19 @@ export function snapshotFromSets(sets: CardSet[], date: string): ValueSnapshot {
       for (const v of card.variants) {
         if (!v.owned) continue;
         const each = shownPrice(copyPriceOf(v, card));
+        const day = v.acquiredAt?.slice(0, 10);
+        const isNew = since != null && day != null && day > since && day <= date;
+        if (isNew) added += Math.max(0, v.quantity ?? 0);
         if (each == null) continue;
         value += each * Math.max(0, v.quantity ?? 0);
+        if (isNew) addedValue += each * Math.max(0, v.quantity ?? 0);
         any = true;
       }
       if (any) priced++;
       else unpriced++;
     }
   }
-  return { date, value, cards: copies, priced, unpriced };
+  return { date, value, cards: copies, priced, unpriced, added, addedValue };
 }
 
 /**
