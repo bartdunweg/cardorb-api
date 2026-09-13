@@ -32346,7 +32346,14 @@
       "reverse-holofoil"
     ]
   },
-  "ex13-98": null,
+  "ex13-98": {
+    "productId": 84754,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ],
+    "groupId": 1379
+  },
   "ex13-99": {
     "productId": 84465,
     "variants": [
@@ -33735,7 +33742,14 @@
       "reverse-holofoil"
     ]
   },
-  "ex15-88": null,
+  "ex15-88": {
+    "productId": 84755,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ],
+    "groupId": 1411
+  },
   "ex15-89": {
     "productId": 88989,
     "variants": [
@@ -56300,7 +56314,14 @@
       "unlimited"
     ]
   },
-  "neo4-33": null,
+  "neo4-33": {
+    "productId": 84593,
+    "variants": [
+      "1st-edition",
+      "unlimited"
+    ],
+    "groupId": 1444
+  },
   "neo4-34": {
     "productId": 84595,
     "variants": [
@@ -76777,7 +76798,14 @@
     ],
     "groupId": 2328
   },
-  "sm8-177": null,
+  "sm8-177": {
+    "productId": 179006,
+    "variants": [
+      "reverse-holofoil",
+      "normal"
+    ],
+    "groupId": 2328
+  },
   "sm8-178": {
     "productId": 179007,
     "variants": [
@@ -105231,8 +105259,20 @@
     ],
     "groupId": 22872
   },
-  "svp-175": null,
-  "svp-176": null,
+  "svp-175": {
+    "productId": 655095,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 22872
+  },
+  "svp-176": {
+    "productId": 655094,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 22872
+  },
   "svp-177": {
     "productId": 595473,
     "variants": [
@@ -105345,7 +105385,13 @@
     ],
     "groupId": 22872
   },
-  "svp-193": null,
+  "svp-193": {
+    "productId": 625631,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 22872
+  },
   "svp-194": {
     "productId": 628320,
     "variants": [
@@ -105388,7 +105434,13 @@
     ],
     "groupId": 22872
   },
-  "svp-200": null,
+  "svp-200": {
+    "productId": 637077,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 22872
+  },
   "svp-201": {
     "productId": 637669,
     "variants": [

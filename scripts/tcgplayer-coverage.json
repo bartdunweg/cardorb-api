@@ -1,5 +1,5 @@
 {
-  "unlinked": 45,
+  "unlinked": 37,
   "digitalSets": [
     "A1",
     "A1a",
@@ -30,14 +30,6 @@
       "name": "DP Black Star Promos",
       "unlinked": 2
     },
-    "ex13": {
-      "name": "Holon Phantoms",
-      "unlinked": 1
-    },
-    "ex15": {
-      "name": "Dragon Frontiers",
-      "unlinked": 1
-    },
     "ex5.5": {
       "name": "Poké Card Creator Pack",
       "unlinked": 5
@@ -50,21 +42,13 @@
       "name": "My First Battle",
       "unlinked": 10
     },
-    "neo4": {
-      "name": "Neo Destiny",
-      "unlinked": 1
-    },
     "pop5": {
       "name": "POP Series 5",
       "unlinked": 2
     },
-    "sm8": {
-      "name": "Lost Thunder",
-      "unlinked": 1
-    },
     "svp": {
       "name": "SVP Black Star Promos",
-      "unlinked": 15
+      "unlinked": 11
     },
     "swsh1": {
       "name": "Sword & Shield",
