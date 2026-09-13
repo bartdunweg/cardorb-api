@@ -32,7 +32,7 @@ if the two have drifted apart.
 
 - Seven cards read as one copy of two with no finish (Charmander and Charmeleon from 151, Snivy and Victini from Black Bolt, Tepig, Emboar and Oshawott from White Flare) where the shelf holds two different finishes. The Notion import left their finish empty, and the fold of identical rows on 2026-09-11 took a normal and a reverse holo for the same thing. A migration splits each back into its two finishes, as their Notion pages name them. Pansear from White Flare goes back from two of each finish to one (a second Notion entry at 013, which is Emboar, had been moved onto it), and three Special Illustration Rares with no finish are recorded as holo.
 
-- `GET /v1/value-history` says on each point of the collection's line how many copies were added since the point before (`added`) and what they were worth that day (`addedValue`, whole euros), so a chart can mark the day and split a change into cards added and prices moving. Stored in `collection_value_snapshots.added_cards` and `added_value_cents` (migration 20260913120000); the nightly point counts since the point before, a rebuilt history (`?history=1`) fills the past. A folder's line does not carry them.
+- `GET /v1/value-history` says on each point of the collection's line how many copies were added since the point before (`added`) and what they were worth that day (`addedValue`, whole euros), so a chart can mark the day and split a change into cards added and prices moving. Stored in `collection_value_snapshots.added_cards` and `added_value_cents` (migration 20260913180000); the nightly point counts since the point before, a rebuilt history (`?history=1`) fills the past. A folder's line does not carry them.
 
 ## 2026-09-12
 

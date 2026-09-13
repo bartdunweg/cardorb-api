@@ -300,7 +300,7 @@ type SnapshotRecord = {
 /**
  * Whether a failure is the database not having the `added` columns yet.
  *
- * The migration that adds them (20260913120000) runs after the deploy that reads them, by design
+ * The migration that adds them (20260913180000) runs after the deploy that reads them, by design
  * (.github/workflows/migrate.yml), so for a minute or two the code asks for columns that are not
  * there. Reading and writing without them for that minute keeps the Home line and the night's
  * point standing; a history rebuild must not delete the old points and then fail to write.
