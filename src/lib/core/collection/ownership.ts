@@ -33,7 +33,7 @@
 
 import { sameCard } from "../catalogue/matching";
 import { norm } from "../util";
-import { galleryParent, isGalleryNumber } from "../catalogue/set-aliases";
+import { isSubsetNumber, subsetParent } from "../catalogue/set-galleries";
 import { resolveSetIds } from "../catalogue/set-resolve";
 import { cataloguesFor, setIdOf } from "../catalogue/tcgdex-language";
 import type { CollectionRow } from "./collection-row";
@@ -135,7 +135,8 @@ export function ownershipIndex(
   /* A gallery set is a set of its own in TCGdex ("Silver Tempest Trainer Gallery"), and the
      resolver hands a parent's name back with its galleries. Which of them a row belongs to is
      its number: TG12 is in the gallery, 12 is not. */
-  const galleries = new Set(sets.filter((s) => galleryParent(s.name) !== null).map((s) => s.id));
+  // Shiny Vault and Classic Collection too, since the shelf shows them inside their set (set-galleries.ts).
+  const galleries = new Set(sets.filter((s) => subsetParent(s.name) !== null).map((s) => s.id));
   for (const row of rows) {
     if (!row.setName || !row.name) continue;
     const own = row.tcgId && cataloguesFor(row.language).includes(language as BrowseLanguage);
@@ -151,7 +152,7 @@ export function ownershipIndex(
     // is a translation of ours.
     if (cataloguesFor(row.language).length && row.tcgId) continue;
     const ids = resolveSetIds(row.setName, sets);
-    const gallery = isGalleryNumber(row.number);
+    const gallery = isSubsetNumber(row.number);
     const mine = ids.filter((id) => galleries.has(id) === gallery);
     // A row no set claims is a row this shelf cannot mark, and says nothing about.
     for (const id of mine.length ? mine : ids) {

@@ -10,15 +10,35 @@
  * its own, its counts include them, and the gallery is not a tile of its own. A gallery's own id
  * still answers its page, so an address kept from before goes on working.
  */
-import { galleryParent } from "./set-aliases";
+import { galleryParent, isGalleryNumber } from "./set-aliases";
 import type { CatalogueSet } from "./tcgdex-browse";
+
+/**
+ * The subsets the shelf shows inside their set: a gallery by the rule the collection has always
+ * used, and, since 2026-09-13, Hidden Fates' and Shining Fates' Shiny Vault and Celebrations'
+ * Classic Collection, which come in the same boosters and are numbered apart the same way (SV1,
+ * SV001, CC001), so their numbers cannot be mistaken for the set's own.
+ */
+const SUBSET_SUFFIX = /\s+(?:Shiny Vault|Classic Collection)$/i;
+
+/** The parent set's name for a subset shown inside it, or null. */
+export const subsetParent = (name: string): string | null => {
+  const gallery = galleryParent(name);
+  if (gallery) return gallery;
+  const parent = name.replace(SUBSET_SUFFIX, "");
+  return parent && parent !== name ? parent : null;
+};
+
+/** A number only a subset carries: TG01, GG01, SV1, SV001, CC001. */
+export const isSubsetNumber = (number: string) =>
+  isGalleryNumber(number) || /^(SV|CC)\d/i.test(number.trim());
 
 /** Each parent's gallery by the parent's id, for the galleries whose parent is on the shelf. */
 export function galleriesByParent(sets: CatalogueSet[]): Map<string, CatalogueSet> {
   const byName = new Map(sets.map((s) => [s.name.toLowerCase(), s]));
   const out = new Map<string, CatalogueSet>();
   for (const set of sets) {
-    const parentName = galleryParent(set.name);
+    const parentName = subsetParent(set.name);
     const parent = parentName ? byName.get(parentName.toLowerCase()) : undefined;
     if (parent) out.set(parent.id, set);
   }

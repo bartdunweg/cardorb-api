@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { galleriesByParent, withoutFoldedGalleries } from "./set-galleries";
+import { galleriesByParent, isSubsetNumber, withoutFoldedGalleries } from "./set-galleries";
 import type { CatalogueSet } from "./tcgdex-browse";
 
 const set = (id: string, name: string): CatalogueSet =>
@@ -38,5 +38,26 @@ describe("galleriesByParent", () => {
   it("keeps a gallery whose parent is not on the shelf", () => {
     const sets = [set("x-tg", "Nowhere Trainer Gallery")];
     expect(withoutFoldedGalleries(sets, galleriesByParent(sets))).toHaveLength(1);
+  });
+});
+
+describe("Shiny Vault and Classic Collection", () => {
+  it("are shown inside their set, and their numbers are the subset's", () => {
+    const sets = [
+      set("sm11.5", "Hidden Fates"),
+      set("sma", "Hidden Fates Shiny Vault"),
+      set("swsh4.5", "Shining Fates"),
+      set("swsh4.5sv", "Shining Fates Shiny Vault"),
+      set("cel25", "Celebrations"),
+      set("cel25cc", "Celebrations Classic Collection"),
+    ];
+    const galleries = galleriesByParent(sets);
+    expect([...galleries].map(([p, g]) => `${p}:${g.id}`)).toEqual([
+      "sm11.5:sma",
+      "swsh4.5:swsh4.5sv",
+      "cel25:cel25cc",
+    ]);
+    expect(["SV49", "SV001", "CC004", "TG05", "GG70"].every(isSubsetNumber)).toBe(true);
+    expect(["49", "4", "SVP1"].some(isSubsetNumber)).toBe(false);
   });
 });

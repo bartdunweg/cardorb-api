@@ -1,5 +1,5 @@
 {
-  "unlinked": 37,
+  "unlinked": 35,
   "digitalSets": [
     "A1",
     "A1a",
@@ -48,11 +48,7 @@
     },
     "svp": {
       "name": "SVP Black Star Promos",
-      "unlinked": 11
-    },
-    "swsh1": {
-      "name": "Sword & Shield",
-      "unlinked": 1
+      "unlinked": 10
     },
     "tk-xy-n": {
       "name": "XY trainer Kit (Noivern)",
