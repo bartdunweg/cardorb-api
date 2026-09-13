@@ -11,6 +11,8 @@ if the two have drifted apart.
 
 - The nightly catalogue copy asks pokemontcg.io and Limitless about every card of a set TCGdex has no scan for, not only the first 40: 213 cards were left with no picture on the set page and in the search (Crown Zenith Galarian Gallery GG41 to GG70, 82 of Shining Fates' Shiny Vault, 38 of Dragon Majesty, 36 of Shining Legends, 27 SM Black Star Promos). A set neither catalogue has is given up on after ten misses. A blank card in a set the other two do have files for is asked again, so the copy fills those in as each set comes up for refresh.
 
+- `GET /v1/catalog/sets/{setId}` reads an English set out of the catalogue's copy in Postgres, one query, where it asked TCGdex for the set's record and then its rarities and types. A set the copy holds no cards of yet (jumbo, rc, sp and wp today, or one published since last night) is read from TCGdex as before. All 199 copied sets were compared card by card with the TCGdex answer on 2026-09-14: the same fields, values and order.
+
 - `GET /v1/catalog/sets/{setId}` answers faster: an English set with its rarities and types is kept a day (it was asking TCGdex's GraphQL on every request), the viewer's rows are read alongside the catalogue, and the pictures and prices of the page at the same time. `pageSize` is clamped to 500 rather than 250, so a Scarlet & Violet set with its secrets comes in one request.
 
 ## 2026-09-13

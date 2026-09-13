@@ -12,15 +12,23 @@ import type { CatalogueCardRecord, CatalogueSetRecord } from "@/lib/storage/post
 
 const listCatalogueSets = vi.fn();
 const catalogueCardsBySets = vi.fn();
+const catalogueSetCards = vi.fn();
 
 vi.mock("@/lib/storage/postgres", () => ({
   listCatalogueSets: (...a: unknown[]) => listCatalogueSets(...a),
   catalogueCardsBySets: (...a: unknown[]) => catalogueCardsBySets(...a),
+  catalogueSetCards: (...a: unknown[]) => catalogueSetCards(...a),
+}));
+/* The id resolver asks TCGdex's set index; here every id is already TCGdex's own. */
+vi.mock("./tcgdex-browse", async (real) => ({
+  ...(await real<typeof import("./tcgdex-browse")>()),
+  resolveEnglishSetId: async (id: string) => id,
 }));
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
 vi.mock("./ptcg", () => ({ ptcgLogo: async () => null }));
 
-const { forgetCopiedSets, mirrorSetCatalogue } = await import("./set-catalogue-mirror");
+const { englishSetFromCopy, forgetCopiedSets, mirrorSetCatalogue } =
+  await import("./set-catalogue-mirror");
 
 const set = (over: Partial<CatalogueSetRecord> = {}): CatalogueSetRecord => ({
   id: "sv03.5",
@@ -123,5 +131,66 @@ describe("mirrorSetCatalogue", () => {
     await mirrorSetCatalogue("151");
     await mirrorSetCatalogue("151");
     expect(listCatalogueSets).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("englishSetFromCopy", () => {
+  it("answers a set page's set and cards out of the copy, facts and pictures included", async () => {
+    catalogueSetCards.mockResolvedValue([
+      card({ id: "sv03.5-010", local_id: "010", name: "Charmander", category: "Pokemon" }),
+      card({ category: "Pokemon" }),
+      card({
+        id: "sv03.5-166",
+        local_id: "166",
+        name: "Antique Dome Fossil",
+        rarity: "Uncommon",
+        types: [],
+        image: null,
+        category: "Trainer",
+        trainer_type: "Item",
+      }),
+    ]);
+
+    const found = await englishSetFromCopy("sv03.5");
+
+    expect(found?.set).toMatchObject({
+      id: "sv03.5",
+      name: "151",
+      series: "Scarlet & Violet",
+      total: 207,
+      printedTotal: 165,
+      abbreviation: "MEW",
+      cardsRecorded: true,
+    });
+    // In the set's own order, whatever order the rows came in.
+    expect(found?.cards.map((c) => c.number)).toEqual(["001", "010", "166"]);
+    expect(found?.cards[0]).toEqual({
+      id: "sv03.5-001",
+      number: "001",
+      name: "Bulbasaur",
+      localName: null,
+      setName: "151",
+      series: "Scarlet & Violet",
+      image: "https://assets.tcgdex.net/en/sv/sv03.5/001/low.webp",
+      imageHigh: "https://assets.tcgdex.net/en/sv/sv03.5/001/high.webp",
+      rarity: "Common",
+      types: ["Grass"],
+      category: "Pokemon",
+      trainerType: null,
+      tcgId: "sv03.5-001",
+    });
+    // A card the copy holds no picture of has none, as the page showed it before.
+    expect(found?.cards[2]).toMatchObject({ image: null, imageHigh: null, trainerType: "Item" });
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it("answers null for a set the copy has no cards of, so the page asks TCGdex", async () => {
+    catalogueSetCards.mockResolvedValue([]);
+    expect(await englishSetFromCopy("sv03.5")).toBeNull();
+  });
+
+  it("answers null for a set the copy has no record of", async () => {
+    catalogueSetCards.mockResolvedValue([card()]);
+    expect(await englishSetFromCopy("sv99")).toBeNull();
   });
 });
