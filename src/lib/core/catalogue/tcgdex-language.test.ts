@@ -82,7 +82,7 @@ describe("isTcgId", () => {
 });
 
 describe("languageCard", () => {
-  it("answers a Japanese card whole: picture, rarity and Cardmarket's euros", async () => {
+  it("answers a Japanese card whole: picture, rarity, name and set", async () => {
     stub();
     const card = await languageCard(["ja"], "SV1a-007");
     expect(card).toMatchObject({
@@ -95,10 +95,17 @@ describe("languageCard", () => {
       setId: "SV1a",
       setName: "トリプレットビート",
     });
-    expect(card!.price?.market).toBeCloseTo(0.17);
-    // trend-holo: 0 is Cardmarket saying it has no foil listing, not that the
-    // foil is free. The same rule the English path reads it by.
-    expect(card!.holo).toBeNull();
+  });
+
+  // Every price in Card Orb is TCGplayer's (2026-09-13). TCGdex relays Cardmarket's figures for a
+  // Japanese card and no TCGplayer ones, so the record's pricing is not read at all: the price
+  // comes from TCGplayer's Japanese shelf, in collection.ts.
+  it("reads nothing of Cardmarket's off the record", async () => {
+    stub();
+    const card = await languageCard(["ja"], "SV1a-007");
+    expect(card).not.toHaveProperty("price");
+    expect(card).not.toHaveProperty("holo");
+    expect(JSON.stringify(card)).not.toContain("0.17");
   });
 
   it("keeps TCGdex's own scan where the file is there, after one probe", async () => {
@@ -145,14 +152,6 @@ describe("languageCard", () => {
     const card = await languageCard(["ja"], "SV5M-002");
     expect(card!.scan?.low).toContain("SV5M_2_R_JP_SM.png");
     expect(asked).toEqual(["/ja/cards/SV5M-002"]);
-  });
-
-  it("reads a card no market prices as unpriced, never as free", async () => {
-    stub();
-    const card = await languageCard(["ja"], "SV5M-002");
-    expect(card).not.toBeNull();
-    expect(card!.price).toBeNull();
-    expect(card!.holo).toBeNull();
   });
 
   it("is null for a card no catalogue in the list has", async () => {

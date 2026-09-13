@@ -25,8 +25,10 @@ vi.mock("@/lib/core/catalogue/card-languages", () => ({
 /* The day's dollar rate, which the route reads so the price can be TCGplayer's in euros. The
    real one sits in collection.ts behind server-only and asks frankfurter; neither belongs here. */
 const usdToEurForRequest = vi.fn();
+const japaneseDetailPrice = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   usdToEurForRequest: () => usdToEurForRequest(),
+  japaneseDetailPrice: (...a: unknown[]) => japaneseDetailPrice(...a),
 }));
 const raritiesOfEra = vi.fn();
 vi.mock("@/lib/core/catalogue/catalogue", () => ({
@@ -146,5 +148,27 @@ describe("the price's currency", () => {
     usdToEurForRequest.mockResolvedValueOnce(null);
     await get();
     expect(getCardDetail).toHaveBeenLastCalledWith("sv03-125", null, null);
+  });
+
+  // TCGdex relays no TCGplayer figure for a Japanese card, so its price is the Japanese shelf's.
+  it("prices a Japanese card from TCGplayer's Japanese shelf, and an English one as it was", async () => {
+    getCardDetail.mockResolvedValue({ id: "SV1a-007", price: null, tcgplayerId: null });
+    japaneseDetailPrice.mockImplementation(async (card: object) => ({
+      ...card,
+      price: { low: 1, market: 2, avg30: null, nm: null },
+      tcgplayerId: 640001,
+    }));
+    const res = await GET(new Request("https://api.cardorb.com/v1/cards/SV1a-007?language=ja"), {
+      params: Promise.resolve({ tcgId: "SV1a-007" }),
+    });
+    expect(japaneseDetailPrice).toHaveBeenCalledWith(
+      { id: "SV1a-007", price: null, tcgplayerId: null },
+      0.92,
+    );
+    expect(await res.json()).toMatchObject({ price: { market: 2 }, tcgplayerId: 640001 });
+
+    japaneseDetailPrice.mockClear();
+    await get();
+    expect(japaneseDetailPrice).not.toHaveBeenCalled();
   });
 });

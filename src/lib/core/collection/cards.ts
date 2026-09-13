@@ -829,11 +829,7 @@ export type ResolveOptions = Pick<BuildOptions, "prices" | "priceSource" | "offl
  * English id, or an id that was mistyped, and the honest answer is to let it
  * fall back to the English path below rather than to show nothing.
  */
-function factsOfLanguageCard(
-  identity: CardIdentity,
-  card: LanguageCard,
-  prices: boolean,
-): CardFacts {
+function factsOfLanguageCard(identity: CardIdentity, card: LanguageCard): CardFacts {
   return {
     // The same two addresses the English path builds, off the base the
     // catalogue hands over: low for the grid, high for the slider past 180px.
@@ -845,21 +841,18 @@ function factsOfLanguageCard(
     matchedName: card.name || null,
     localName: card.name || null,
     number: card.number || identity.number,
-    // Cardmarket's own figure for this exact printing, through the same
-    // priceOf() the English path uses, so "no price" is a null on both — the
-    // distinction the whole value chart is built on. Japanese cards mostly
-    // carry a Cardmarket product; one that does not reads as unpriced rather
-    // than as worth nothing.
-    price: prices ? card.price : null,
-    priceHolo: prices ? card.holo : null,
-    // No second market: pokemontcg.io indexes the English game only, so there
-    // is nothing to blend and nothing to look one up by. The stamped run comes from that
-    // market alone, so it is null here too: no Japanese set had a 1st Edition run anyway.
+    // Unpriced here, and priced by the caller: TCGdex relays no TCGplayer figure for a
+    // Japanese card, only Cardmarket's, which Card Orb does not show (2026-09-13). factsWithUsd()
+    // in collection.ts reads TCGplayer's Japanese shelf from tcgcsv, through the Japanese id
+    // map, and fills the price and the printings in. A card that shelf does not price stays
+    // null: unpriced, never free, and no other market stands in.
+    price: null,
+    priceHolo: null,
     usd: null,
     usdFirstEd: null,
     usdPrintings: null,
+    // No Japanese set had a stamped or a Shadowless run.
     priceFirstEd: null,
-    // No Japanese set had a run of its own, and Cardmarket files none apart.
     priceShadowless: null,
     rarity: card.rarity,
     catalogue: card.catalogue,
@@ -886,7 +879,8 @@ function factsOfLanguageCard(
  * card, with the id it has there. It does not match anything:
  * the id *is* the match, so there is no set to resolve by name, no number to
  * fold, no name to check, and none of the three artwork fallbacks (all English).
- * One request per card answers the picture, the rarity and the price at once.
+ * One request per card answers the picture and the rarity; the price is TCGplayer's
+ * Japanese shelf, read by the caller (factsWithUsd in collection.ts).
  *
  * A row whose id that catalogue does not have joins the English identities
  * afterwards and is resolved the old way. That is the whole of what happens
@@ -914,7 +908,7 @@ export async function resolveSetFacts(
     for (const { identity, card } of found) {
       if (!card) unfound.push(identity);
       else {
-        foreign[identityKey(identity)] = factsOfLanguageCard(identity, card, prices);
+        foreign[identityKey(identity)] = factsOfLanguageCard(identity, card);
         answered ??= card;
       }
     }

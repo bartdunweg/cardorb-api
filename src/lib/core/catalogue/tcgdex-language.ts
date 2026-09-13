@@ -18,9 +18,16 @@
  *
  * So the other catalogues are not asked by set name at all. A TCGdex card id
  * names its set (`SV1a-007` is card 007 of SV1a), the row carries that id in
- * `cards.tcg_id`, and one request answers everything: the picture, the rarity,
- * the name, the set, and Cardmarket's prices. There is no matching step, so
- * there is nothing to match wrongly.
+ * `cards.tcg_id`, and one request answers what the card is: the picture, the
+ * rarity, the name and the set. There is no matching step, so there is nothing
+ * to match wrongly.
+ *
+ * Not its price. TCGdex relays Cardmarket's figures for a Japanese card and no
+ * TCGplayer ones (`pricing.tcgplayer` was null on every Japanese card sampled on
+ * 2026-09-13), and every price in Card Orb is TCGplayer's. A Japanese card is
+ * priced from TCGplayer's Japanese shelf on tcgcsv instead, through the id map
+ * `tcgplayer-ids.ja.generated.json`, the way a Japanese set page already was
+ * (shelfUsdFor in collection/collection.ts).
  *
  * ── Which catalogue ────────────────────────────────────────────────────────
  *
@@ -30,8 +37,6 @@
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
 import { limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
-import { priceOf, holoPriceOf } from "../price-basis.mjs";
-import type { Price } from "../price-basis.mjs";
 import type { BrowseLanguage } from "./tcgdex-browse";
 import type { Language } from "../collection/collection-row";
 
@@ -99,9 +104,6 @@ export type LanguageCard = {
   scan: { low: string; high: string } | null;
   setId: string | null;
   setName: string | null;
-  /** Cardmarket's, in euros. Null where nothing prices it — never zero; see priceOf(). */
-  price: Price | null;
-  holo: Price | null;
 };
 
 type TcgLanguageCard = {
@@ -111,9 +113,6 @@ type TcgLanguageCard = {
   rarity?: string | null;
   image?: string | null;
   set?: { id?: string; name?: string };
-  pricing?: {
-    cardmarket?: Record<string, number | null | undefined>;
-  };
 };
 
 /**
@@ -142,7 +141,6 @@ export async function languageCard(
       throw err;
     }
     if (!card) continue;
-    const cm = card.pricing?.cardmarket;
     const id = card.id ?? tcgId;
     const number = card.localId ?? "";
     // Limitless's plain print where TCGdex has no file — or has the reverse
@@ -165,12 +163,6 @@ export async function languageCard(
       scan,
       setId: card.set?.id ?? setIdOf(tcgId),
       setName: card.set?.name ?? null,
-      // The same two functions the English path uses, so a Japanese card and an
-      // English one cannot come to disagree about what "no price" looks like:
-      // null, never zero. Cardmarket publishes euros for most Japanese cards,
-      // and a card it does not publish reads as unpriced rather than as free.
-      price: cm ? priceOf(cm) : null,
-      holo: cm ? holoPriceOf(cm) : null,
     };
   }
   return null;
