@@ -115,7 +115,7 @@ export async function GET(req: Request) {
   const forceHistory = new URL(req.url).searchParams.get("history") === "1";
   const failed: string[] = [];
   /** Card prices, gathered across every account and written once at the end. */
-  const prices = new Map<string, ReturnType<typeof cardPricesFromSets>[number]>();
+  const prices = new Map<string, ReturnType<typeof cardPricesFromSets>>();
 
   for (const userId of await listAccountIds(db)) {
     try {
@@ -171,7 +171,11 @@ export async function GET(req: Request) {
       // Every held card's own price, for the movers list. Deduped across
       // accounts as it goes: two people holding the same card is one price, and
       // writing it twice would only make the two able to disagree.
-      for (const p of cardPricesFromSets(sets, date)) prices.set(p.tcgId, p);
+      for (const p of cardPricesFromSets(sets, date)) {
+        const days = prices.get(p.tcgId);
+        if (days) days.push(p);
+        else prices.set(p.tcgId, [p]);
+      }
 
       written.push({ user: userId, value: Math.round(point.value), cards: point.cards });
     } catch (err) {
@@ -215,13 +219,16 @@ export async function GET(req: Request) {
       const shelves: [Record<string, number | null>, number][] = [[english, TCGCSV_CATEGORY.en]];
       for (const [products, category] of shelves) {
         const shelf = await shelfPrices(category);
+        const fresh = new Map<string, ReturnType<typeof cardPricesFromTcgcsv>>();
         for (const p of cardPricesFromTcgcsv(products, shelf, rate, date)) {
-          // English first, so an id two shelves share keeps the English reading.
-          if (!prices.has(p.tcgId)) {
-            prices.set(p.tcgId, p);
-            everyCard++;
-          }
+          // A held card's own printings, written above, stand: the every-card pass adds the rest.
+          if (prices.has(p.tcgId)) continue;
+          const days = fresh.get(p.tcgId);
+          if (days) days.push(p);
+          else fresh.set(p.tcgId, [p]);
         }
+        for (const [tcgId, days] of fresh) prices.set(tcgId, days);
+        everyCard += fresh.size;
       }
     } catch (err) {
       console.error("[cron] weekly TCGplayer pass failed:", err);
@@ -233,7 +240,7 @@ export async function GET(req: Request) {
   // row, and one upsert of the union beats one per account.
   if (prices.size) {
     try {
-      await writeCardPrices(db, [...prices.values()]);
+      await writeCardPrices(db, [...prices.values()].flat());
     } catch (err) {
       // A failure here costs the movers list, not the value history, and the
       // per-account snapshots above are already committed.

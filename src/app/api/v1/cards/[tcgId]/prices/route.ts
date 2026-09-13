@@ -47,7 +47,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     {
       points: points
         .filter((p) => p.tcgId === tcgId)
-        .map((p) => ({ date: p.date, market: p.market, holo: p.holo })),
+        // `printings` since 2026-09-13: every printing's figure that day, where it was stored per
+        // printing. Absent on a reading from before.
+        .map((p) => ({
+          date: p.date,
+          market: p.market,
+          holo: p.holo,
+          ...(p.printings ? { printings: p.printings } : {}),
+        })),
     },
     { headers: readHeaders(req) },
   );

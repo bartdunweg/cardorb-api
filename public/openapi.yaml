@@ -742,6 +742,10 @@ components:
         date: { type: string, format: date }
         market: { type: [number, "null"], description: "The normal printing, in euros; null where TCGplayer published nothing." }
         holo: { type: [number, "null"], description: "The foil, or null where there is no separate foil price." }
+        printings:
+          type: object
+          additionalProperties: { type: number }
+          description: "Every printing's figure that day in euros, by TCGplayer's name (`normal`, `holofoil`, `reverse-holofoil`, `1st-edition-holofoil`, `unlimited-holofoil`, `shadowless-holofoil`, ...). Absent on a reading stored before printings were (2026-09-13)."
 
     LatestPull:
       type: object

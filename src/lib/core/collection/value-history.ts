@@ -15,7 +15,7 @@
 
 /**
  * The first day of the line. tcgcsv's archive starts on 2024-02-08, and since 2026-09-13 the held
- * cards have a reading for every day from it (backfill-card-prices.mjs `--only held-daily`), where
+ * cards have a reading for every day from it (backfill-card-prices.mjs `--only daily`, every English card, a month to a row), where
  * before they had Saturdays until the cron began (Bart: "ik wil alles per dag, en het liefst zo ver
  * mogelijk terug"). Earlier than this only older sets have a price, about half of a 2023 collection.
  */

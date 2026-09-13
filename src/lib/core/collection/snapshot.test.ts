@@ -140,7 +140,7 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
     });
   });
 
-  it("lists one point per held card with a price", () => {
+  it("lists every printing of every held card with a price", () => {
     const sets = [
       set([
         priced(10, 30),
@@ -154,11 +154,20 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       ]),
     ];
     expect(cardPricesFromSets(sets, "2026-09-07")).toEqual([
-      { tcgId: "sv03-125", date: "2026-09-07", market: 10, holo: 30, source: "tcgplayer" },
+      { tcgId: "sv03-125", printing: "normal", date: "2026-09-07", price: 10, source: "tcgplayer" },
+      {
+        tcgId: "sv03-125",
+        printing: "reverse-holofoil",
+        date: "2026-09-07",
+        price: 30,
+        source: "tcgplayer",
+      },
     ]);
   });
 
-  it("records the market the card shows: TCGplayer's printings first, then the card's own figure", () => {
+  // Since 2026-09-13 each printing is its own series: a 1st Edition copy's history is the stamped
+  // run's, not the unlimited one's.
+  it("records the market the card shows: every printing TCGplayer prices, else the card's own figure", () => {
     const eur = (market: number) => ({ market, low: null, avg30: null, nm: null });
     const sets = [
       set([
@@ -173,8 +182,21 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       ]),
     ];
     expect(cardPricesFromSets(sets, "2026-09-12")).toEqual([
-      { tcgId: "base2-10", date: "2026-09-12", market: 15.19, holo: 53.23, source: "tcgplayer" },
-      { tcgId: "svp-1", date: "2026-09-12", market: 7, holo: null, source: "tcgplayer" },
+      {
+        tcgId: "base2-10",
+        printing: "unlimited-holofoil",
+        date: "2026-09-12",
+        price: 53.23,
+        source: "tcgplayer",
+      },
+      {
+        tcgId: "base2-10",
+        printing: "unlimited",
+        date: "2026-09-12",
+        price: 15.19,
+        source: "tcgplayer",
+      },
+      { tcgId: "svp-1", printing: "market", date: "2026-09-12", price: 7, source: "tcgplayer" },
     ]);
   });
 });
@@ -191,7 +213,7 @@ describe("cardPricesFromTcgcsv", () => {
     [42382, new Map([["Holofoil", 869.02]])],
   ]);
 
-  it("prices every mapped card TCGplayer has a figure for, in euros, and says the market", () => {
+  it("prices every printing of every mapped card TCGplayer has a figure for, in euros", () => {
     const points = cardPricesFromTcgcsv(
       { "sv03.5-001": 502552, "base1-4": 42382, "no-product": null, "not-on-shelf": 1 },
       shelf,
@@ -199,8 +221,27 @@ describe("cardPricesFromTcgcsv", () => {
       "2026-09-14",
     );
     expect(points).toEqual([
-      { tcgId: "sv03.5-001", date: "2026-09-14", market: 0.23, holo: 1.35, source: "tcgplayer" },
-      { tcgId: "base1-4", date: "2026-09-14", market: 782.12, holo: 782.12, source: "tcgplayer" },
+      {
+        tcgId: "sv03.5-001",
+        printing: "normal",
+        date: "2026-09-14",
+        price: 0.23,
+        source: "tcgplayer",
+      },
+      {
+        tcgId: "sv03.5-001",
+        printing: "reverse-holofoil",
+        date: "2026-09-14",
+        price: 1.35,
+        source: "tcgplayer",
+      },
+      {
+        tcgId: "base1-4",
+        printing: "holofoil",
+        date: "2026-09-14",
+        price: 782.12,
+        source: "tcgplayer",
+      },
     ]);
   });
 });

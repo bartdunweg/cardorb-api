@@ -12,11 +12,12 @@
  */
 
 import { copiesHeld } from "./cards-stats";
-import { copyPriceOf, pointFromTcgplayer, shownPrice } from "../price-basis.mjs";
+import { copyPriceOf, shownPrice } from "../price-basis.mjs";
 import type { ShelfPrices } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
-import type { SourcedPricePoint } from "./movers";
+import type { PrintingDay } from "./movers";
+import { LEGACY, printingKey } from "../price-months.mjs";
 
 /**
  * The reading off an assembled collection: the card's own blended price, the one
@@ -80,21 +81,22 @@ export function cardPricesFromTcgcsv(
   shelf: ShelfPrices,
   usdToEur: number,
   date: string,
-): SourcedPricePoint[] {
-  const euros = (usd: number | null) =>
-    usd == null ? null : Math.round(usd * usdToEur * 100) / 100;
-  const out: SourcedPricePoint[] = [];
+): PrintingDay[] {
+  const out: PrintingDay[] = [];
   for (const [tcgId, productId] of Object.entries(products)) {
     if (productId == null) continue;
-    const point = pointFromTcgplayer(shelf.get(productId));
-    if (!point) continue;
-    out.push({
-      tcgId,
-      date,
-      market: euros(point.market),
-      holo: euros(point.holo),
-      source: "tcgplayer",
-    });
+    // Every printing TCGplayer prices, under its own name, since 2026-09-13: a card's history is
+    // its printings', so a 1st Edition copy has the stamped run's line and not the unlimited one's.
+    for (const [subType, usd] of shelf.get(productId) ?? []) {
+      if (!(usd > 0)) continue;
+      out.push({
+        tcgId,
+        printing: printingKey(subType),
+        date,
+        price: Math.round(usd * usdToEur * 100) / 100,
+        source: "tcgplayer",
+      });
+    }
   }
   return out;
 }
@@ -105,42 +107,36 @@ export function cardPricesFromTcgcsv(
  * Both series are TCGplayer's since 2026-09-12; see the note inside for which printing each
  * reads. The holo series used to be Cardmarket's `-holo` fields.
  */
-export function cardPricesFromSets(sets: CardSet[], date: string): SourcedPricePoint[] {
-  const seen = new Map<string, SourcedPricePoint>();
+export function cardPricesFromSets(sets: CardSet[], date: string): PrintingDay[] {
+  const seen = new Map<string, PrintingDay[]>();
   for (const set of sets) {
     for (const card of set.cards) {
       if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
       /*
-       * The same market the card itself shows, or the line disagrees with the figure above it.
-       *
-       * A point is two series, the ordinary printing and the foil, because that is what the
-       * chart draws. TCGplayer names more printings than two, so each series takes the first of
-       * theirs that means it: the ordinary run before the plain card, the foil before the
-       * reverse. Then the card's own figure for the plain series, which is TCGplayer's too since
-       * 2026-09-12. No Cardmarket fallback for either: a card TCGplayer does not price has no
-       * point, the same "no price" the card shows.
-       *
-       * The catalogue-wide weekly pass (cardPricesFromGuide) is still Cardmarket's until it reads
-       * tcgcsv's archive. A card somebody holds is written nightly by this function and takes
-       * precedence.
+       * The same market the card itself shows, printing by printing, or a line disagrees with the
+       * figure above it. Every printing the card carries (TCGplayer's, the Shadowless run's where
+       * it is linked) is its own series since 2026-09-13. A card priced on no printing but with a
+       * figure of its own keeps that figure as the old plain series, so it still has a point.
        */
-      const printing = (...names: string[]) => {
-        for (const name of names) {
-          const found = card.pricePrintings?.[name];
-          if (found) return shownPrice(found);
-        }
-        return null;
-      };
-      const market = printing("normal", "unlimited", "1st-edition") ?? shownPrice(card.price);
-      const holo = printing(
-        "holofoil",
-        "unlimited-holofoil",
-        "reverse-holofoil",
-        "1st-edition-holofoil",
-      );
-      if (market == null && holo == null) continue;
-      seen.set(card.tcgId, { tcgId: card.tcgId, date, market, holo, source: "tcgplayer" });
+      const days: PrintingDay[] = [];
+      for (const [printing, price] of Object.entries(card.pricePrintings ?? {})) {
+        const each = price ? shownPrice(price) : null;
+        if (each != null)
+          days.push({ tcgId: card.tcgId, printing, date, price: each, source: "tcgplayer" });
+      }
+      if (!days.length) {
+        const own = shownPrice(card.price);
+        if (own != null)
+          days.push({
+            tcgId: card.tcgId,
+            printing: LEGACY.market,
+            date,
+            price: own,
+            source: "tcgplayer",
+          });
+      }
+      if (days.length) seen.set(card.tcgId, days);
     }
   }
-  return [...seen.values()];
+  return [...seen.values()].flat();
 }

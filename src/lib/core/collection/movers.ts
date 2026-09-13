@@ -13,6 +13,7 @@
  */
 
 import { isReverseFinish } from "./collection-row";
+import { printingKeysOf } from "../price-basis.mjs";
 import { copiesHeld } from "./cards-stats";
 import type { CardSet, OwnedCard } from "./cards";
 
@@ -26,6 +27,12 @@ export type CardPricePoint = {
   /** The foil, or null where there is no separate foil price. */
   holo: number | null;
   /**
+   * Every printing's figure that day, TCGplayer's names ("1st-edition-holofoil"), where the
+   * reading was stored per printing (card_price_months, since 2026-09-13). Absent on a reading
+   * from before, which knew only `market` and `holo`.
+   */
+  printings?: Record<string, number>;
+  /**
    * Which market the reading is from, as card_prices.source stores it. Required on the way in:
    * the column defaults to 'cardmarket', so a point written without one was labelled with the
    * market it was not from (every nightly TCGplayer point, for the hours after 2026-09-12's
@@ -34,8 +41,35 @@ export type CardPricePoint = {
   source?: "tcgplayer" | "tcgplayer-sales" | "cardmarket";
 };
 
-/** A reading on its way into card_prices, which always says which market it is from. */
-export type SourcedPricePoint = CardPricePoint & { source: NonNullable<CardPricePoint["source"]> };
+/** One printing's figure on one day, on its way into card_price_months. Euros. */
+export type PrintingDay = {
+  tcgId: string;
+  printing: string;
+  date: string;
+  price: number | null;
+  source: NonNullable<CardPricePoint["source"]>;
+};
+
+/**
+ * What one copy was worth on a reading: its own printing's figure where the reading has printings,
+ * taken in the order today's price takes them (printingKeysOf: the run and the foil, then the run,
+ * then the foil, then the plain card), so a 1st Edition copy reads the stamped run's history and
+ * not the unlimited one's. A reading without printings has the two old series: the foil for a
+ * reverse holo, the plain figure otherwise.
+ */
+export function priceOfCopy(
+  copy: { finish?: string | null; edition?: string | null },
+  point: CardPricePoint,
+): number | null {
+  if (point.printings) {
+    for (const key of printingKeysOf(copy)) {
+      const v = point.printings[key];
+      if (v != null) return v;
+    }
+    return point.market;
+  }
+  return (isReverseFinish(copy.finish) ? point.holo : null) ?? point.market;
+}
 
 export type Mover = {
   card: OwnedCard;
@@ -67,7 +101,7 @@ function held(card: OwnedCard, point: CardPricePoint): number | null {
   let best: number | null = null;
   for (const v of card.variants) {
     if (!v.owned) continue;
-    const each = (isReverseFinish(v.finish) && point.holo) || point.market;
+    const each = priceOfCopy(v, point);
     if (each != null && (best == null || each > best)) best = each;
   }
   return best;

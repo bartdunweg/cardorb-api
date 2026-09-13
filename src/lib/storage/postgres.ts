@@ -21,6 +21,7 @@
  */
 
 import { type CopyChanges, isLanguage } from "@/lib/core/collection/collection-row";
+import { daysFromMonths, monthOf, monthsFromDays } from "../core/price-months.mjs";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { storedCardNumber } from "@/lib/core/util";
@@ -35,7 +36,7 @@ import {
 } from "../core/collection/collection-row";
 import type { ScanMemory } from "../core/collection/remembered-scans";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
-import type { CardPricePoint, SourcedPricePoint } from "../core/collection/movers";
+import type { CardPricePoint, PrintingDay } from "../core/collection/movers";
 
 /** The row as the table has it, before it is turned into the shape above. */
 type CardRecord = {
@@ -412,24 +413,24 @@ export async function writeValueSnapshot(
   if (error) throw new Error(`Writing a snapshot failed: ${error.message}`);
 }
 
-/** One dated price for one card, as the table has it. */
-type PriceRecord = {
+/** One printing's month of prices, as card_price_months has it. */
+type PriceMonthRecord = {
   tcg_id: string;
-  snapshot_date: string;
-  market_cents: number | null;
-  holo_cents: number | null;
+  printing: string;
+  month: string;
+  cents: (number | null)[] | null;
 };
 
 /**
  * Every reading for these cards since a date, oldest first.
  *
- * Chunked over the ids because a URL has a length and a collection has sixteen
- * hundred cards: PostgREST takes `in.(…)` as a query parameter, and one list of
- * that size is a request nothing will accept. Two hundred at a time keeps each
- * URL well inside any limit and costs eight requests for a whole binder.
+ * Read a printing-month to a row since 2026-09-13 (card_price_months, price-months.mjs) and laid
+ * out as the days the callers have always had, each with its printings. Chunked over the ids
+ * because a URL has a length and a collection has sixteen hundred cards: PostgREST takes `in.(…)`
+ * as a query parameter. Paged, because PostgREST answers a thousand rows at most; a chunk's rows
+ * are all read before they are laid out, so a day's printings are never split across two pages.
  *
- * No user_id, and here that is not an omission to be justified — see the
- * 20260816220000 migration. A price is a fact about a card.
+ * No user_id: a price is a fact about a card (the 20260816220000 migration).
  */
 export async function listCardPrices(
   db: SupabaseClient,
@@ -437,94 +438,56 @@ export async function listCardPrices(
   since: string,
 ): Promise<CardPricePoint[]> {
   const out: CardPricePoint[] = [];
-  // PostgREST answers a thousand rows at most, whatever the query asks, and two
-  // hundred cards over a few weeks of readings is more than that. So each chunk
-  // is read in pages until one comes back short; before this, the later dates of
-  // every chunk were silently missing and a folder's line stopped weeks early.
   const PAGE = 1000;
   for (let i = 0; i < tcgIds.length; i += 200) {
     const chunk = tcgIds.slice(i, i + 200);
+    const rows: PriceMonthRecord[] = [];
     for (let page = 0; ; page++) {
       const { data, error } = await db
-        .from("card_prices")
-        .select("tcg_id,snapshot_date,market_cents,holo_cents")
+        .from("card_price_months")
+        .select("tcg_id,printing,month,cents")
         .in("tcg_id", chunk)
-        .gte("snapshot_date", since)
-        .order("snapshot_date", { ascending: true })
-        // The tiebreak that makes the pages disjoint: many rows share a date.
+        .gte("month", monthOf(since))
         .order("tcg_id", { ascending: true })
+        .order("printing", { ascending: true })
+        .order("month", { ascending: true })
         .range(page * PAGE, page * PAGE + PAGE - 1);
       if (error) throw new Error(`Reading card prices failed: ${error.message}`);
-      const rows = (data ?? []) as PriceRecord[];
-      for (const r of rows) {
-        out.push({
-          tcgId: r.tcg_id,
-          date: r.snapshot_date,
-          market: r.market_cents == null ? null : r.market_cents / 100,
-          holo: r.holo_cents == null ? null : r.holo_cents / 100,
-        });
-      }
-      if (rows.length < PAGE) break;
+      const got = (data ?? []) as PriceMonthRecord[];
+      rows.push(...got);
+      if (got.length < PAGE) break;
     }
+    out.push(...daysFromMonths(rows, since));
   }
-  return out;
+  return out.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
 }
 
 /**
  * The readings a Home line is built from: every reading of these cards since `from`.
  *
- * Daily since 2026-09-13: the held cards have a reading for every day since 2024-02-08, where they
- * had Saturdays until the cron began, and this read Saturdays before it and every day after. Read
- * in parallel, a page of a thousand rows at a time: a collection of sixteen hundred cards over two
- * and a half years is a million and a half readings, which is minutes, not the cron's minute.
+ * The same read as listCardPrices, in parallel: a collection of sixteen hundred cards over two and
+ * a half years is some fifty thousand month rows, where it was a million and a half day rows.
  */
 export async function listHistoryPrices(
   db: SupabaseClient,
   tcgIds: string[],
   from: string,
 ): Promise<CardPricePoint[]> {
-  const out: CardPricePoint[] = [];
-  const PAGE = 1000;
-  const tasks: (() => Promise<void>)[] = [];
-  for (let i = 0; i < tcgIds.length; i += 50) {
-    const chunk = tcgIds.slice(i, i + 50);
-    tasks.push(async () => {
-      for (let page = 0; ; page++) {
-        const { data, error } = await db
-          .from("card_prices")
-          .select("tcg_id,snapshot_date,market_cents,holo_cents")
-          .in("tcg_id", chunk)
-          .gte("snapshot_date", from)
-          // The primary key's order, (tcg_id, snapshot_date), so the database walks the index
-          // instead of sorting: ordered by date first, the read hit the statement timeout.
-          .order("tcg_id", { ascending: true })
-          .order("snapshot_date", { ascending: true })
-          .range(page * PAGE, page * PAGE + PAGE - 1);
-        if (error) throw new Error(`Reading card prices failed: ${error.message}`);
-        const rows = (data ?? []) as PriceRecord[];
-        for (const r of rows) {
-          out.push({
-            tcgId: r.tcg_id,
-            date: r.snapshot_date,
-            market: r.market_cents == null ? null : r.market_cents / 100,
-            holo: r.holo_cents == null ? null : r.holo_cents / 100,
-          });
-        }
-        if (rows.length < PAGE) break;
-      }
-    });
-  }
+  const chunks: string[][] = [];
+  for (let i = 0; i < tcgIds.length; i += 200) chunks.push(tcgIds.slice(i, i + 200));
+  const parts: CardPricePoint[][] = [];
   let next = 0;
   await Promise.all(
     Array.from({ length: 8 }, async () => {
       for (;;) {
-        const task = tasks[next++];
-        if (!task) return;
-        await task();
+        const n = next++;
+        const chunk = chunks[n];
+        if (!chunk) return;
+        parts[n] = await listCardPrices(db, chunk, from);
       }
     }),
   );
-  return out;
+  return parts.flat();
 }
 
 /**
@@ -572,36 +535,26 @@ export async function replaceValueHistory(
 }
 
 /**
- * A night's prices, written in one go.
+ * A night's prices, written a month to a row.
  *
- * Chunked for body size rather than URL length, the same reason createRows()
- * chunks. Upserted on the primary key so a re-run corrects the day instead of
- * being refused. Four chunks in flight at a time: the weekly pass is forty
- * thousand rows, eighty chunks, and one after another that is most of the
- * sixty seconds the cron has; four abreast it is a quarter of them.
+ * Each point is laid into its card's month and merged into what is stored by
+ * upsert_card_price_months (migration 20260913220000): a day sent replaces that day, a day not
+ * sent stays. Chunked for body size, four chunks in flight: the every-card pass is some
+ * twenty-eight thousand cards a night, and the cron has a minute.
  */
 export async function writeCardPrices(
   db: SupabaseClient,
-  points: SourcedPricePoint[],
-  chunk = 500,
+  points: PrintingDay[],
+  chunk = 1000,
   parallel = 4,
 ): Promise<void> {
-  const chunks: (typeof points)[] = [];
-  for (let i = 0; i < points.length; i += chunk) chunks.push(points.slice(i, i + chunk));
+  const months = monthsFromDays(points);
+  const chunks: (typeof months)[] = [];
+  for (let i = 0; i < months.length; i += chunk) chunks.push(months.slice(i, i + chunk));
   for (let i = 0; i < chunks.length; i += parallel) {
     await Promise.all(
       chunks.slice(i, i + parallel).map(async (rows) => {
-        const { error } = await db.from("card_prices").upsert(
-          rows.map((p) => ({
-            tcg_id: p.tcgId,
-            snapshot_date: p.date,
-            market_cents: p.market == null ? null : Math.round(p.market * 100),
-            holo_cents: p.holo == null ? null : Math.round(p.holo * 100),
-            // Always said: the column's default is 'cardmarket', which is not this.
-            source: p.source,
-          })),
-          { onConflict: "tcg_id,snapshot_date" },
-        );
+        const { error } = await db.rpc("upsert_card_price_months", { p_rows: rows });
         if (error) throw new Error(`Writing card prices failed: ${error.message}`);
       }),
     );
