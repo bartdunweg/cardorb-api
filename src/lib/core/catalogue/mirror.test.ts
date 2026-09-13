@@ -15,10 +15,20 @@ vi.mock("./tcgdex-browse", () => ({
 const tcgdexScan = vi.fn(async (base: string) => base as string | null);
 const limitlessScan = vi.fn(async () => null as string | null);
 const ptcgScan = vi.fn(async () => null as string | null);
+const tcgplayerScan = vi.fn(async () => null as string | null);
 vi.mock("./artwork", async (original) => ({
   ...(await original<Record<string, unknown>>()),
   tcgdexScan: (...a: unknown[]) => tcgdexScan(...(a as [string])),
   limitlessScan: (...a: unknown[]) => limitlessScan(...(a as [])),
+  tcgplayerScan: (...a: unknown[]) => tcgplayerScan(...(a as [])),
+}));
+/** Our own bucket: off unless a test turns it on. */
+const canStoreImages = vi.fn(async () => false);
+const keepImage = vi.fn(async (address: string | null) => address);
+vi.mock("./image-store", async (original) => ({
+  ...(await original<Record<string, unknown>>()),
+  canStoreImages: () => canStoreImages(),
+  keepImage: (...a: unknown[]) => keepImage(...(a as [string | null])),
 }));
 vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as [])) }));
 
@@ -243,7 +253,10 @@ describe("syncMirror", () => {
     setScans.mockResolvedValue({ gaps: new Set<string>(), code: null });
     tcgdexScan.mockImplementation(async (base: string) => base);
     limitlessScan.mockResolvedValue(null);
+    tcgplayerScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue(null);
+    canStoreImages.mockResolvedValue(false);
+    keepImage.mockImplementation(async (address: string | null) => address);
     englishSet.mockImplementation(async (id: string) => ({
       set: set(id, 1, "2024/01/01"),
       cards: [hit(`${id}-001`, "001")],
@@ -375,6 +388,64 @@ describe("syncMirror", () => {
 
   /* Limitless renumbers a gallery's cards into the parent's run, so a lettered number would
      answer with a confidently wrong card; pokemontcg.io publishes those as sets of their own. */
+  it("asks TCGplayer by the card's product before pokemontcg.io by set name", async () => {
+    englishSets.mockResolvedValue([set("2014xy", 1, "2014/11/01")]);
+    englishSet.mockResolvedValue({
+      set: set("2014xy", 1, "2014/11/01"),
+      cards: [hit("2014xy-1", "1")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["1"]), code: null });
+    tcgdexScan.mockResolvedValue(null);
+    tcgplayerScan.mockResolvedValue(
+      "https://tcgplayer-cdn.tcgplayer.com/product/110406_in_1000x1000.jpg",
+    );
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(tcgplayerScan).toHaveBeenCalledWith("2014xy-1");
+    expect(ptcgScan).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({
+        image: "https://tcgplayer-cdn.tcgplayer.com/product/110406_in_1000x1000.jpg",
+      }),
+    ]);
+  });
+
+  it("copies a set's pictures into our bucket and keeps our address", async () => {
+    englishSets.mockResolvedValue([set("swsh11", 1, "2022/09/09")]);
+    englishSet.mockResolvedValue({
+      set: set("swsh11", 1, "2022/09/09"),
+      cards: [hit("swsh11-186", "186")],
+    });
+    canStoreImages.mockResolvedValue(true);
+    keepImage.mockResolvedValue("https://images.cardorb.com/en/x/swsh11/186");
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(keepImage).toHaveBeenCalledWith("https://assets.tcgdex.net/en/x/swsh11/186");
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.cardorb.com/en/x/swsh11/186" }),
+    ]);
+  });
+
+  it("asks nothing for a picture the copy already holds in our bucket", async () => {
+    englishSets.mockResolvedValue([set("swsh11", 1, "2022/09/09")]);
+    englishSet.mockResolvedValue({
+      set: set("swsh11", 1, "2022/09/09"),
+      cards: [hit("swsh11-186", "186")],
+    });
+    canStoreImages.mockResolvedValue(true);
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [
+        row({ id: "swsh11-186", image: "https://images.cardorb.com/en/x/swsh11/186" }),
+      ],
+    });
+    await syncMirror(db);
+    expect(keepImage).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.cardorb.com/en/x/swsh11/186" }),
+    ]);
+  });
+
   it("never guesses at Limitless for a gallery number", async () => {
     englishSets.mockResolvedValue([set("swsh12tg", 1, "2022/09/09")]);
     englishSet.mockResolvedValue({

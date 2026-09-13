@@ -1,0 +1,9 @@
+{
+  // The one door into the cardorb-images bucket for writing. Reading goes straight to the bucket
+  // at images.cardorb.com; see index.js for why writes go through here.
+  "name": "cardorb-images-writer",
+  "main": "index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "r2_buckets": [{ "binding": "IMAGES", "bucket_name": "cardorb-images" }],
+}

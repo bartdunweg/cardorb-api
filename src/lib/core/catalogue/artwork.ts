@@ -3,6 +3,37 @@
  * sat beside matching and collection assembly with no seam between them.
  */
 import { DAY, numberForms, catalogueTimeout } from "../util";
+import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
+
+const PRODUCTS = TCGPLAYER_IDS as Record<string, { productId?: number } | null>;
+
+/**
+ * TCGplayer's scan of a card, found by the product the price links already name for it
+ * (tcgplayer-ids.generated.json), so nothing is matched by set name or number.
+ *
+ * Measured on 2026-09-13 against the 649 cards the catalogue copy had no picture for: 474 have
+ * a file here, every McDonald's Collection, Celebrations Classic Collection, Unseen Forces Unown
+ * Collection, the Aquapolis and Skyridge holos and eight of the trainer kits. Unown A and the BW
+ * kit's Lillipup were looked at: the card itself, scanned, not a product photo.
+ *
+ * The 1000 px file where there is one. A product with no picture answers 403, which reads as
+ * none; so does a card the links do not name.
+ */
+export async function tcgplayerScan(cardId: string): Promise<string | null> {
+  const product = PRODUCTS[cardId]?.productId;
+  if (!product) return null;
+  const url = `https://tcgplayer-cdn.tcgplayer.com/product/${product}_in_1000x1000.jpg`;
+  try {
+    const head = await fetch(url, {
+      method: "HEAD",
+      next: { revalidate: DAY },
+      signal: catalogueTimeout(),
+    });
+    return head.ok ? url : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Limitless publishes scans as soon as a set is out, at a path built from the
@@ -80,7 +111,9 @@ export async function tcgdexScan(base: string): Promise<string | null> {
  */
 export function highScan(image: string | null): string | null {
   if (!image) return null;
-  return image.startsWith("https://assets.tcgdex.net/") && image.endsWith("/low.webp")
+  return (image.startsWith("https://assets.tcgdex.net/") ||
+    image.startsWith("https://images.cardorb.com/")) &&
+    image.endsWith("/low.webp")
     ? image.replace(/\/low\.webp$/, "/high.webp")
     : null;
 }
