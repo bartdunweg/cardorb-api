@@ -80,6 +80,31 @@ describe("folderSeries", () => {
   });
 });
 
+describe("folderSeries, per printing", () => {
+  // Bart, 2026-09-13: "ik wil liefst prijs per editie". A reading stored per printing values each
+  // copy at its own run, as today's price does.
+  it("values a 1st Edition copy at the stamped run's figure and an unlimited one at its own", () => {
+    const items = [
+      copy({ tcgId: "base2-10", finish: "holo", edition: "1st-edition" }),
+      copy({ tcgId: "base2-10", finish: "holo", edition: "unlimited", id: "row-2" }),
+    ];
+    const prices = [
+      {
+        tcgId: "base2-10",
+        date: "2026-09-12",
+        market: 15.19,
+        holo: 53.23,
+        printings: {
+          "1st-edition-holofoil": 145.91,
+          "unlimited-holofoil": 53.23,
+          unlimited: 15.19,
+        },
+      },
+    ];
+    expect(folderSeries(items, prices)[0]?.value).toBe(Math.round(145.91 + 53.23));
+  });
+});
+
 describe("holdingsSeries", () => {
   // The Home line (Bart, 2026-09-12): what the collection held on the day, at that day's price. A
   // copy counts from the day it was added, so adding cards steps the line up, as holding more does.
