@@ -230,11 +230,16 @@ async function tcgplayerIds(ids) {
 
 /** date → EUR per USD, the ECB's reference rate; a weekend or holiday takes the last rate before it. */
 async function rates(from, to) {
-  const body = await fetchJson(`https://api.frankfurter.dev/v1/${from}..${to}?from=USD&to=EUR`);
+  // Asked from a week earlier, so a first day on a weekend has Friday's rate to stand on. From
+  // Sunday 2026-08-16 itself the first rate was Monday's, and every `--only recent` reading of
+  // 08-16 was written without a figure.
+  const body = await fetchJson(
+    `https://api.frankfurter.dev/v1/${addDays(from, -7)}..${to}?from=USD&to=EUR`,
+  );
   const known = body.rates;
   const out = new Map();
   let last = null;
-  for (let d = from; d <= to; d = addDays(d, 1)) {
+  for (let d = addDays(from, -7); d <= to; d = addDays(d, 1)) {
     if (known[d]?.EUR) last = known[d].EUR;
     if (last) out.set(d, last);
   }
