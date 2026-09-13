@@ -825,18 +825,38 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
     logTiming("cache assemble hit", 0, `${rows.length} rows`);
     return kept.sets;
   }
-  // TCGdex's record per card, which carries TCGplayer's printings; the Cardmarket guide that used
-  // to answer first is gone (2026-09-12), and TCGdex was already asked for every card after #354.
-  const priceSource = (ids: string[]) =>
-    timed("tcgdex pricesFor", () => pricesFor(ids), `${ids.length} cards`);
-  const start = performance.now();
-  const sets = await buildCollection(rows, {
-    factsSource: (setName, identities) => factsWithUsd(setName, identities, priceSource, usdToEur),
-    factsBundle: (groups) => cachedFactsBundle(userId, groups, priceSource, usdToEur),
-  });
-  logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
-  remember(key, sets);
-  return sets;
+  // The same join already under way on this instance: wait for it rather than run it twice. The
+  // app's first screen asks /cards, /stats and /folders at once, and on a cold instance each one
+  // missed the memo above and built the whole collection side by side: /cards took 7.3 s twice
+  // over, 3,265 price reads to TCGdex where half would do (measured locally, 2026-09-14).
+  const underway = building.get(key);
+  if (underway) {
+    logTiming("cache assemble joined", 0, `${rows.length} rows`);
+    return underway;
+  }
+  const build = (async () => {
+    // TCGdex's record per card, which carries TCGplayer's printings; the Cardmarket guide that used
+    // to answer first is gone (2026-09-12), and TCGdex was already asked for every card after #354.
+    const priceSource = (ids: string[]) =>
+      timed("tcgdex pricesFor", () => pricesFor(ids), `${ids.length} cards`);
+    const start = performance.now();
+    const sets = await buildCollection(rows, {
+      factsSource: (setName, identities) =>
+        factsWithUsd(setName, identities, priceSource, usdToEur),
+      factsBundle: (groups) => cachedFactsBundle(userId, groups, priceSource, usdToEur),
+    });
+    logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
+    remember(key, sets);
+    return sets;
+  })();
+  building.set(key, build);
+  // Gone once it settles either way: a join that failed is tried again by the next request, not
+  // handed to it.
+  build.then(
+    () => building.delete(key),
+    () => building.delete(key),
+  );
+  return build;
 }
 
 /**
@@ -854,6 +874,8 @@ export const assembleFor = (userId: string, db: SupabaseClient): Promise<CardSet
   assemble(userId, db);
 
 const assembled = new Map<string, { sets: CardSet[]; until: number }>();
+/** The joins in flight on this instance, by the same key, so two requests share one. */
+const building = new Map<string, Promise<CardSet[]>>();
 const ASSEMBLED_TTL_MS = 10 * 60_000;
 const ASSEMBLED_MAX = 8;
 

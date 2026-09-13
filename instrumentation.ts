@@ -11,8 +11,10 @@ import { checkEnv } from "./src/lib/core/env";
  * not have most of these variables at all, so the check would have reported
  * them missing on a deployment where they were set.
  */
-export function register() {
+export async function register() {
   checkEnv();
+  if (process.env.NEXT_RUNTIME === "nodejs")
+    (await import("./src/lib/core/event-loop-lag")).watchEventLoop();
 }
 
 /**

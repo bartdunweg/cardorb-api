@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-14
 
+- A collection is joined once per instance when several requests ask for it at the same moment: /cards, /stats and /folders on the app's first screen used to each build it on a cold instance, every price read to TCGdex made twice (3,265 reads where 1,633 do, measured locally). A join that fails is not handed to the next request. The API also logs `[timing] event loop blocked Nms` for any second the server was held for a quarter of a second or more, to read beside the other timing lines.
+
 - Card pictures are copied into our own Cloudflare R2 bucket (`cardorb-images`, read at images.cardorb.com) and the catalogue copy hands out that address: the set page and the search stop depending on TCGdex, pokemontcg.io and Limitless answering. Writes go through the `cardorb-images-writer` Worker (`cloudflare/images-writer`) with `IMAGES_WRITE_SECRET`; without the secret, or while images.cardorb.com does not answer, every address stays the source's. `scripts/copy-images-to-bucket.mjs` does the first fill.
 - TCGplayer is a picture source for a card TCGdex has no scan of, by the product the price links name for it: 474 of the 649 catalogue cards with no picture (McDonald's Collections, Classic Collection, Unown Collection, Aquapolis and Skyridge holos, eight trainer kits).
 
