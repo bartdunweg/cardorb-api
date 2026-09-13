@@ -125,6 +125,25 @@ describe("holdingsSeries", () => {
     expect(holdingsSeries(items, prices)[0]?.value).toBe(4);
   });
 
+  // 2026-09-13: weekdays had readings for only the cards held when the nightly series began, and
+  // 08-16's were all empty, so the line fell from EUR 40,000 to 28,000 and to zero between Saturdays.
+  it("values a card at its last reading on a day without one, and not past two weeks", () => {
+    const items = [copy({ tcgId: "base1-4" }), copy({ tcgId: "svp-1" })];
+    const prices = [
+      { tcgId: "base1-4", date: "2026-08-15", market: 100, holo: null },
+      { tcgId: "svp-1", date: "2026-08-15", market: 10, holo: null },
+      { tcgId: "base1-4", date: "2026-08-16", market: null, holo: null },
+      { tcgId: "base1-4", date: "2026-08-17", market: 102, holo: null },
+      { tcgId: "base1-4", date: "2026-08-30", market: 104, holo: null },
+    ];
+    expect(holdingsSeries(items, prices)).toEqual([
+      { date: "2026-08-15", value: 110, cards: 2, priced: 2, unpriced: 0 },
+      { date: "2026-08-16", value: 110, cards: 2, priced: 2, unpriced: 0 },
+      { date: "2026-08-17", value: 112, cards: 2, priced: 2, unpriced: 0 },
+      { date: "2026-08-30", value: 104, cards: 2, priced: 1, unpriced: 1 },
+    ]);
+  });
+
   it("draws no point before the first copy was added", () => {
     const items = [copy({ tcgId: "base1-4", acquiredAt: "2025-01-01T00:00:00Z" })];
     const prices = [
