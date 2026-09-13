@@ -485,6 +485,25 @@ async function cardmarketRowsOn(date) {
   return count ?? 0;
 }
 
+/**
+ * The cards held now, as the cron last priced them on a night that was not the weekly pass: every
+ * copy in every collection, by the id the cron resolved it to. The nightly series only ever priced
+ * the cards held on the night, so a card linked to TCGplayer later (the promos and subsets of
+ * cardorb-api#358 and #371) had a Saturday reading and nothing between, and the Home line counted
+ * it as unpriced six days a week. Cards bought after a day are priced on it too, which costs a few
+ * rows and nothing else: the line counts a copy from the day it was added.
+ */
+async function heldNow() {
+  const today = day(new Date());
+  for (let back = 0; back < 8; back++) {
+    const date = addDays(today, -back);
+    if (dow(date) === 6) continue;
+    const ids = await idsOn(date);
+    if (ids.size) return { date, ids };
+  }
+  return { date: null, ids: new Set() };
+}
+
 async function recent() {
   const end = newestArchive();
   const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
@@ -500,14 +519,17 @@ async function recent() {
     `recent: ${dates.length} days, ${CRON_FROM} to ${end}${DRY ? " (dry run: nothing is written)" : ""}`,
   );
 
+  const now = await heldNow();
+  console.log(`  held now: ${now.ids.size} cards, as priced on ${now.date ?? "no recent night"}`);
+
   let written = 0;
   let before = 0;
   for (const date of dates) {
     const r = rate.get(date);
-    const held = await idsOn(date);
+    const held = new Set([...(await idsOn(date)), ...now.ids]);
     before += await cardmarketRowsOn(date);
     // Saturday is the weekly series' day: every card gets a point. Any other day, the cards
-    // that already had one, which is what the cron wrote.
+    // that already had one, which is what the cron wrote, and the cards held now (heldNow).
     const wanted = dow(date) === 6 ? new Set([...everyCard, ...held]) : held;
     const en = tcgcsvDay(date, CATEGORY_EN);
     const ja = tcgcsvDay(date, CATEGORY_JA);
