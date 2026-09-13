@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import {
-  englishSet,
-  englishSets,
-  isBrowseLanguage,
-  setIn,
-} from "@/lib/core/catalogue/tcgdex-browse";
+import { englishSets, isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
 import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
@@ -13,6 +8,7 @@ import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { galleriesByParent } from "@/lib/core/catalogue/set-galleries";
 import { withSetLogos } from "@/lib/core/catalogue/set-logos";
+import { englishSetOfDay } from "@/lib/core/catalogue/catalogue";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -25,14 +21,16 @@ import { bearer } from "@/lib/api/viewer";
  * page could not give — an exact `totalCount`, and an ownership mark that is
  * right for every card rather than for the twenty that happened to come back.
  *
- * The default page is 60 because that is roughly three screens of a grid; the
- * ceiling is the catalogue's own 250. A client that wants the whole set in one
- * request asks for pageSize=250 and gets it.
+ * The default page is 60 because that is roughly three screens of a grid. The
+ * ceiling is 500, past any set with its gallery, so a client that wants the
+ * whole set asks for pageSize=500 and gets it in one request. It was 250 until
+ * 2026-09-14, and a Scarlet & Violet set then took two requests, each reading
+ * the whole set again.
  */
 export const dynamic = "force-dynamic";
 
 const DEFAULT_PAGE_SIZE = 60;
-const MAX_PAGE_SIZE = 250;
+const MAX_PAGE_SIZE = 500;
 
 /** A positive integer from the query string, or the fallback. */
 const intParam = (raw: string | null, fallback: number, max: number) => {
@@ -60,6 +58,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       headers: readHeaders(req),
     });
 
+  /* The viewer's rows do not wait on the catalogue: both are read at once. getRows never throws,
+     it says `failed`, so a set that turns out not to exist leaves nothing unhandled. */
+  const rowsRead = getRows(who.userId, bearer(req) ?? undefined);
+
   let set;
   let cards;
   try {
@@ -75,7 +77,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       /* TCGdex's own id, or pokemontcg.io's from before 2026-09-11, which the
          shelf still reads (tcgdex-browse.ts). An id nobody carries is a 404, not
          an empty set. */
-      const found = await englishSet(setId);
+      const found = await englishSetOfDay(setId);
       if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
       set = (await withSetLogos([found.set]))[0] ?? found.set;
       cards = found.cards;
@@ -83,7 +85,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
          shelf, as they are in the collection (set-galleries.ts). A gallery that cannot be read
          leaves the set as it is rather than failing the page. */
       const gallery = galleriesByParent(await englishSets()).get(set.id);
-      const inside = gallery ? await englishSet(gallery.id).catch(() => null) : null;
+      const inside = gallery ? await englishSetOfDay(gallery.id).catch(() => null) : null;
       if (inside) {
         set = {
           ...set,
@@ -97,7 +99,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
     return refuse("catalogue", { headers: readHeaders(req) });
   }
 
-  const { rows, failed } = await getRows(who.userId, bearer(req) ?? undefined);
+  const { rows, failed } = await rowsRead;
   /* Keyed by the catalogue being shown. A row of that language carrying that catalogue's card
      id marks its own shelf exactly, by id; every other row marks the English one. Both
      directions matter, because a Japanese set named like an English one (Black Bolt) would
@@ -118,24 +120,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      address this route built. The copy holds no person's data, so it is the service role's to
      read, as the search reads it. */
   const copy = isBrowseLanguage(language) ? null : adminClient();
-  const scans = copy
-    ? await mirrorScans(
+  const scansRead = copy
+    ? mirrorScans(
         copy,
         onPage.map((c) => c.id),
       ).catch(() => null)
     : null;
-  const shown = scans?.size ? onPage.map((c) => ({ ...c, ...(scans.get(c.id) ?? {}) })) : onPage;
 
   /* A price under every card, so a set page can be read the way the collection's own lists are
      rather than as a checklist. Only the page's cards, from TCGplayer's tcgcsv groups, each cached
      a day: the market every other price in the app is in since 2026-09-12. Keyed by the TCGdex
      id, which every shelf's cards carry; the fallback is for a card that came without one. The
-     shelf is a fact about the page, not the id: a Japanese page prices from the Japanese shelf. */
-  const priceKey = (c: (typeof shown)[number]) => c.tcgId ?? c.id;
-  const prices = await tcgplayerPricesFor(
-    shown.map(priceKey),
-    isBrowseLanguage(language) ? language : null,
-  );
+     shelf is a fact about the page, not the id: a Japanese page prices from the Japanese shelf.
+     The copy only swaps a card's pictures, never its ids, so the prices are asked for at the same
+     time as the pictures rather than after them. */
+  const priceKey = (c: (typeof onPage)[number]) => c.tcgId ?? c.id;
+  const [scans, prices] = await Promise.all([
+    scansRead,
+    tcgplayerPricesFor(onPage.map(priceKey), isBrowseLanguage(language) ? language : null),
+  ]);
+  const shown = scans?.size ? onPage.map((c) => ({ ...c, ...(scans.get(c.id) ?? {}) })) : onPage;
 
   return NextResponse.json(
     {
