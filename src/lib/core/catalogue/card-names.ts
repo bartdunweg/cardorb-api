@@ -3,11 +3,12 @@ import JA from "../card-names.ja.generated.json";
 
 /**
  * The English name of a card from a catalogue that has none, off the committed maps
- * scripts/language-card-names.mjs writes: Cardmarket's product name first, the species by Dex
- * number second (english-card-name.mjs says how). One map per catalogue, keyed by that
- * catalogue's own card ids.
+ * scripts/language-card-names.mjs writes: the species by Dex number or by the name printed on
+ * the card (english-card-name.mjs says how), and for most cards written before 2026-09-12
+ * Cardmarket's product name, kept as it was. One map per catalogue, keyed by that catalogue's
+ * own card ids.
  *
- * Null where neither source names the card: a trainer or an energy Cardmarket does not sell, or
+ * Null where nothing names the card: a trainer or an energy with no English name on record, or
  * a card added to TCGdex since the maps were last written. The caller shows the card's own name
  * then, which is at least what the card says.
  */

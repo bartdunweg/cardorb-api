@@ -25,10 +25,9 @@
  * be more than one collection, kept somewhere else, and none of the matching
  * below has an opinion about either.
  *
- * Name matching (matching.ts), scan resolution (artwork.ts) and the Cardmarket
- * link (cardmarket.ts) live beside this rather than in it: each is a concern
- * buildCollection() and getCardDetail() below use, not one the other two need
- * to know about. This file is what assembles their answers into a collection.
+ * Name matching (matching.ts) and scan resolution (artwork.ts) live beside
+ * this rather than in it: each is a concern buildCollection() and
+ * getCardDetail() below use, not one the other needs to know about. This file is what assembles their answers into a collection.
  */
 
 import { compareCardNumbers, localise, mapLimit, measure, numberForms } from "../util";
@@ -1477,8 +1476,8 @@ export type CardDetail = {
    * the set's, and the button it fed ("Buy on Cardmarket", in the iOS app) landed on the wrong
    * page or on nothing. Cardmarket publishes its product ids but not the expansion half of a
    * product's address, and its site answers every probe with a bot check, so the right page
-   * cannot be guaranteed from here. Null hides the button in every client without a release;
-   * cardmarketUrl() and the links map stay for when the address can be made to hold.
+   * cannot be guaranteed from here. Null hides the button in every client without a release.
+   * The code that built the address went with Cardmarket on 2026-09-12.
    */
   cmUrl: string | null;
   /**

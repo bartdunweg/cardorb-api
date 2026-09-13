@@ -31,15 +31,14 @@ paths:
 - **`lib/core/` is `catalogue/`, `collection/` and `account/`.** Only what both domains need
   (config, env, util) stays at its root. Thirty files on one heap gave no hint which of them a
   change could reach.
-- **A card's price is the average of two markets, in euros**: Cardmarket (the daily guide at
-  build time, cached as a small map; TCGdex for a card the guide does not know) and TCGplayer
-  (TCGdex's relay of it, off the card's own record, a set's cards at a time for a day —
-  pokemontcg.io answered one set in eight by 2026-09-11 and is asked for no price any more;
-  dollars at the ECB's daily rate). Where one market has nothing the other stands alone, in its
-  own shape. The foil price is Cardmarket's alone. A card the guide cannot price is nearly always
-  a null in `cardmarket-ids.generated.json`: `scripts/cardmarket-ids-fill.mjs` fills those from
-  Cardmarket's product list, by hand where a promo set holds one name several times. The algorithm that turns them into the one shown figure is
-  `lib/core/price-basis.mjs`, and nothing else.
+- **A card's price is TCGplayer's, in euros** (since 2026-09-12): TCGdex's relay of it, off the
+  card's own record, a set's cards at a time for a day, and tcgcsv for the weekly point of every
+  card nobody holds; dollars at the ECB's daily rate. pokemontcg.io answered one set in eight by
+  2026-09-11 and is asked for no price any more. Where TCGplayer says nothing the card has no
+  price, and no other market stands in. A card TCGplayer does not price is nearly always a card
+  with no product in `tcgplayer-ids.generated.json`: `scripts/tcgplayer-links.mjs` links those
+  from tcgcsv, weekly, in `.github/workflows/tcgplayer-links.yml`. The algorithm that turns the
+  figures into the one shown is `lib/core/price-basis.mjs`, and nothing else.
 - **A migration is applied by `.github/workflows/migrate.yml`, never by hand.** A merge to
   main that adds a file under `supabase/migrations/` waits for the Vercel Production deploy
   of that commit, then runs `supabase db push`, which applies the file and records it in one

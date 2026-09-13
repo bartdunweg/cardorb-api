@@ -17,9 +17,9 @@ export type CatalogueMatch = {
   name: string;
   /**
    * What the card itself says, where `name` is a translation of it: a Japanese card is named in
-   * English off Cardmarket's product list or its species (card-names.ts), and
+   * English off its species, or Cardmarket's product list before 2026-09-12 (card-names.ts), and
    * the printed name rides beside it for the sheet to show in brackets. Null on every English
-   * card, and on a card the maps could not name — then `name` is the printed one.
+   * card, and on a card the maps could not name, where `name` is the printed one.
    */
   localName: string | null;
   setName: string;
