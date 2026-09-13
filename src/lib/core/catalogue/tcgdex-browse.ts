@@ -29,6 +29,11 @@ export type CatalogueSet = {
    * and a record per set would be 218 requests for a tile that does not print it.
    */
   abbreviation?: string | null;
+  /**
+   * The set's gallery, where the English shelf shows it inside the set (set-galleries.ts): its
+   * name without the set's ("Trainer Gallery") and how many of `total` are its cards.
+   */
+  gallery?: { name: string; total: number };
   /** The set's name in its own language where `name` is a translation (a Japanese set); null for English. */
   localName: string | null;
   /**
