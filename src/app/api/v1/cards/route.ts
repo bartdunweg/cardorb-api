@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
+import { defaultFinishFor } from "@/lib/core/catalogue/default-finish";
 import { createRow } from "@/lib/storage/collection";
 import {
   authorise,
@@ -185,6 +186,11 @@ export async function POST(req: Request) {
         undefined,
         { headers: readHeaders(req) },
       );
+  }
+
+  // A copy you own always has a finish: the catalogue's only printing, or normal. See defaultFinish().
+  if (result.draft.collection && !result.draft.finish) {
+    result.draft.finish = await defaultFinishFor(result.draft.tcgId, result.draft.language);
   }
 
   let id: string;
