@@ -159,11 +159,18 @@ export type SyncReport = {
 const stemOf = (image: string | null) => image?.replace(/\/(low|high)\.webp$/, "") ?? null;
 
 /**
- * The most cards of one set the second catalogue is asked about. A set TCGdex knows nothing of
- * would otherwise fire one lookup per card and find nothing; the gaps this closes are a handful
- * of promos in a set that is otherwise photographed.
+ * How many cards of one set the other two catalogues are asked about before a set they answer
+ * nothing for is given up on. A set neither has (a trainer kit, a McDonald's run) would otherwise
+ * fire one lookup per card and find nothing.
+ *
+ * It used to be a ceiling on every set, 40 lookups whatever they found, and that is what left
+ * 213 cards with no picture on 2026-09-13: a set whose gaps run past 40 got its first 40 and a
+ * blank for the rest, though pokemontcg.io had every one of them. Crown Zenith's Galarian
+ * Gallery stopped at GG40 (Giratina VSTAR is GG69), Shining Fates' Shiny Vault at 40 of 122,
+ * Dragon Majesty, Shining Legends and SM Black Star Promos the same. So a set that answers keeps
+ * being asked, and only one that has said nothing this many times is left alone.
  */
-const FALLBACKS_PER_SET = 40;
+const FALLBACK_MISSES_BEFORE_GIVING_UP = 10;
 
 /**
  * The picture each card of a set is copied under: TCGdex's built address where a file is behind
@@ -188,7 +195,8 @@ const FALLBACKS_PER_SET = 40;
  * nights instead of one. A set that is new to the copy, or whose card count has moved, is
  * worked out in full. A set that is merely the oldest keeps every answer it already has, and
  * only its cards with no picture at all are probed again, in case TCGdex has published one
- * since: one HEAD each, and no lookup behind it, because those two have already said no.
+ * since: one HEAD each, and no lookup behind it, because those two have already said no. The
+ * exception is a set the other two do have files for: there a blank card is asked again.
  *
  * A card whose address holds nothing and whose fallbacks find nothing is copied with no
  * picture, which is the honest answer and draws as the card's name.
@@ -218,7 +226,14 @@ async function withResolvedScans(
       )
         .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
         .catch(() => new Map<string, string | null>());
-  let fallbacks = FALLBACKS_PER_SET;
+  let asked = 0;
+  let found = 0;
+  /* The other two have a file for another card of this set already in the copy, so a card of it
+     with none was very likely never asked about: the ceiling this used to have cut the set off
+     (FALLBACK_MISSES_BEFORE_GIVING_UP). Those cards are asked again rather than kept blank. */
+  const answeredElsewhere = [...known.values()].some(
+    (image) => image !== null && !image.startsWith("https://assets.tcgdex.net/"),
+  );
   const at = (card: CatalogueMatch, file: string | null) => ({
     ...card,
     image: file,
@@ -235,10 +250,11 @@ async function withResolvedScans(
     // as "keep it": an unanswered check is not proof a scan is missing.
     if (await tcgdexScan(stem)) return card;
     // The copy has already asked the other two about this card and neither had it. Only the
-    // built address is worth checking again, and that is what just happened.
-    if (known.has(card.id)) return at(card, null);
-    if (fallbacks <= 0) return at(card, null);
-    fallbacks--;
+    // built address is worth checking again, and that is what just happened; unless they do
+    // have this set, where the blank is more likely a question never asked.
+    if (known.has(card.id) && !answeredElsewhere) return at(card, null);
+    if (found === 0 && asked >= FALLBACK_MISSES_BEFORE_GIVING_UP) return at(card, null);
+    asked++;
     /* Limitless first, where the set has a code there, and never for a lettered number: it
        renumbers a gallery's cards into the parent's run, and a guessed offset shows a
        confidently wrong card (cards.ts). Then pokemontcg.io, which is asked by set name. */
@@ -246,6 +262,7 @@ async function withResolvedScans(
       (code && !/^[A-Za-z]/.test(card.number)
         ? await limitlessScan(code, card.number).catch(() => null)
         : null) ?? (await ptcgScan(setName, card.number, card.name).catch(() => null));
+    if (file) found++;
     return at(card, file);
   });
 }

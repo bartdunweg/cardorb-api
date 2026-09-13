@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-14
+
+- The nightly catalogue copy asks pokemontcg.io and Limitless about every card of a set TCGdex has no scan for, not only the first 40: 213 cards were left with no picture on the set page and in the search (Crown Zenith Galarian Gallery GG41 to GG70, 82 of Shining Fates' Shiny Vault, 38 of Dragon Majesty, 36 of Shining Legends, 27 SM Black Star Promos). A set neither catalogue has is given up on after ten misses. A blank card in a set the other two do have files for is asked again, so the copy fills those in as each set comes up for refresh.
+
 ## 2026-09-13
 
 - The English shelf shows a Trainer Gallery or Galarian Gallery inside its set, not as a set of its own: `GET /v1/catalog/sets` leaves the gallery out and adds its cards and counts to the parent's, with `gallery: { name, total }`; `GET /v1/catalog/sets/{setId}` lists the gallery's cards after the set's own. A gallery's own id still answers. Every Black Star Promos set wears the black star, and a set TCGdex has no logo for (Temporal Forces, the McDonald's Collections, 57 of 203) takes pokemontcg.io's where one is at `images.pokemontcg.io/<id>/logo.png`, checked once a day.
@@ -29,6 +33,8 @@ if the two have drifted apart.
 - The Home line counts a copy from the day it was added or from its card's first TCGplayer reading, whichever is later, so a card added before it had a price (a pre-order, a set bought on release day) joins the line and its ring on the day it is worth something rather than standing as unpriced. A card with no reading at all still counts from the day it was added, unpriced. Rebuild an account's line with `?history=1`.
 
 - A Japanese card you hold or open is priced from TCGplayer, like every other card: its figures come from TCGplayer's Japanese shelf on tcgcsv, printing by printing, in euros at the day's rate. A held Japanese card had no price and carried Cardmarket's foil figure as `priceHolo`; `GET /v1/cards/{tcgId}?language=ja` had no price at all. TCGdex relays no TCGplayer figure for a Japanese card, so nothing of TCGdex's pricing is read for one any more. Where TCGplayer prices nothing the card has no price. Measured on eleven Japanese sets (1,737 cards): Cardmarket priced 1,594, TCGplayer prices 1,440; the gap is mostly the Scarlet & Violet promos (SV-P, 108 of 288 on TCGplayer against 248 on Cardmarket).
+
+- `GET /api/v1/public/[username]/latest-pull` also returns the copy's `finish` and `foilPattern` and the card's `gen` and `types`, so the portfolio can draw it with the same holographic foil as the web app. Still no price.
 
 - Eight more English cards link to TCGplayer (45 unlinked to 37): a product with the card's own number whose name is one or two letters off (Neo Destiny "Dark Exeggcutor", Lost Thunder "Fairy Charm O"), a number TCGplayer writes with a prefix ("SVP 175", "SVP193") against TCGdex's plain one, "Delta" for δ (Holon Phantoms and Dragon Frontiers' Rainbow Energy), and, for a set TCGdex links no card of itself, the group this script already filed nine in ten of its cards in (SVP Black Star Promos). `backfill-card-prices.mjs --only daily --ids a,b` fills the history of cards linked since the daily run.
 
