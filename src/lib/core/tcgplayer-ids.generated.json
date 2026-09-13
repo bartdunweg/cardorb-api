@@ -105616,7 +105616,13 @@
     ],
     "groupId": 22872
   },
-  "svp-500": null,
+  "svp-500": {
+    "productId": 595035,
+    "variants": [
+      "holofoil"
+    ],
+    "groupId": 1528
+  },
   "swsh1-1": {
     "productId": 206047,
     "variants": [
@@ -106220,7 +106226,14 @@
       "reverse-holofoil"
     ]
   },
-  "swsh1-178": null,
+  "swsh1-178": {
+    "productId": 208508,
+    "variants": [
+      "reverse-holofoil",
+      "holofoil"
+    ],
+    "groupId": 2585
+  },
   "swsh1-179": {
     "productId": 208511,
     "variants": [
