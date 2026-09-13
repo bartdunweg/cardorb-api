@@ -457,7 +457,9 @@ export async function listCardPrices(
       rows.push(...got);
       if (got.length < PAGE) break;
     }
-    out.push(...daysFromMonths(rows, since));
+    // One at a time: a chunk over two and a half years is some 190,000 days, and spread into one
+    // push call that many arguments overflow the stack (the Home rebuild, 2026-09-13).
+    for (const day of daysFromMonths(rows, since)) out.push(day);
   }
   return out.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
 }
@@ -545,19 +547,31 @@ export async function replaceValueHistory(
 export async function writeCardPrices(
   db: SupabaseClient,
   points: PrintingDay[],
-  chunk = 1000,
-  parallel = 4,
+  chunk = 500,
+  parallel = 2,
 ): Promise<void> {
   const months = monthsFromDays(points);
   const chunks: (typeof months)[] = [];
   for (let i = 0; i < months.length; i += chunk) chunks.push(months.slice(i, i + chunk));
-  for (let i = 0; i < chunks.length; i += parallel) {
-    await Promise.all(
-      chunks.slice(i, i + parallel).map(async (rows) => {
+  // Retried like the backfill's writes: a dropped connection is a retry, not a lost night. The
+  // first night of every printing (35,000 rows, 2026-09-13) lost one of eight requests to "fetch
+  // failed" at four in flight; the backfill wrote thirty million readings two at a time without.
+  const send = async (rows: (typeof months)[number][]) => {
+    let last: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
         const { error } = await db.rpc("upsert_card_price_months", { p_rows: rows });
-        if (error) throw new Error(`Writing card prices failed: ${error.message}`);
-      }),
-    );
+        if (!error) return;
+        last = error.message;
+      } catch (err) {
+        last = err instanceof Error ? err.message : String(err);
+      }
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+    throw new Error(`Writing card prices failed: ${last}`);
+  };
+  for (let i = 0; i < chunks.length; i += parallel) {
+    await Promise.all(chunks.slice(i, i + parallel).map(send));
   }
 }
 

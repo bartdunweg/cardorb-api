@@ -1076,7 +1076,8 @@ export const getPublicCollection = cache(async (userId: string): Promise<Collect
  * cachedRows() above.
  */
 const cachedSnapshots = (userId: string, db: SupabaseClient | null) =>
-  unstable_cache(() => listSnapshots(userId, db), ["value-snapshots", userId], {
+  // v2: the daily Home line rebuilt 2026-09-13 from a local run, which cannot drop this tag.
+  unstable_cache(() => listSnapshots(userId, db), ["value-snapshots", "v2", userId], {
     revalidate: 3600,
     tags: [valueHistoryTag(userId)],
   })();
@@ -1217,8 +1218,9 @@ export const getCardPrices = cache(
         // list (a folder's, or one card's) was the answer for every later ask
         // under the same person and day: a card's own line came back as nine
         // thousand points of the whole collection.
-        // v4: read from card_price_months, with printings (2026-09-13).
-        ["card-prices", "v4", userId, since, idsKey(tcgIds)],
+        // v4: read from card_price_months, with printings (2026-09-13). v5: the same day, after the
+        // backfill: v4 entries were cached while it ran and held a gap from June to 16 August.
+        ["card-prices", "v5", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
       return { points, failed: false };
