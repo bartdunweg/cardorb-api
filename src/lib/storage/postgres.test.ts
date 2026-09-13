@@ -130,8 +130,25 @@ describe("listValueSnapshots", () => {
     ]);
     const out = await listValueSnapshots(db, "u");
     expect(out).toEqual([
-      { date: "2024-12-30", value: 15_634, cards: 1524, priced: 1211, unpriced: 313 },
-      { date: "2026-08-06", value: 39_887, cards: 1524, priced: 1211, unpriced: 313 },
+      // A row written before the added columns existed reads as nothing added.
+      {
+        date: "2024-12-30",
+        value: 15_634,
+        cards: 1524,
+        priced: 1211,
+        unpriced: 313,
+        added: 0,
+        addedValue: 0,
+      },
+      {
+        date: "2026-08-06",
+        value: 39_887,
+        cards: 1524,
+        priced: 1211,
+        unpriced: 313,
+        added: 0,
+        addedValue: 0,
+      },
     ]);
   });
 

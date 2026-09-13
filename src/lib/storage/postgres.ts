@@ -260,6 +260,8 @@ type SnapshotRecord = {
   cards: number;
   priced: number;
   unpriced: number;
+  added_cards: number | null;
+  added_value_cents: number | null;
 };
 
 /**
@@ -306,7 +308,10 @@ export async function listValueSnapshots(
   const data = await readAllPages<SnapshotRecord>("the value history", (page, counted) =>
     db
       .from("collection_value_snapshots")
-      .select("snapshot_date,value_cents,cards,priced,unpriced", counted ? { count: "exact" } : {})
+      .select(
+        "snapshot_date,value_cents,cards,priced,unpriced,added_cards,added_value_cents",
+        counted ? { count: "exact" } : {},
+      )
       .eq("user_id", userId)
       .order("snapshot_date", { ascending: true })
       .range(...pageRange(page)),
@@ -318,6 +323,8 @@ export async function listValueSnapshots(
     cards: r.cards,
     priced: r.priced,
     unpriced: r.unpriced,
+    added: r.added_cards ?? 0,
+    addedValue: Math.round((r.added_value_cents ?? 0) / 100),
   }));
 }
 
@@ -372,6 +379,8 @@ export async function writeValueSnapshot(
       cards: point.cards,
       priced: point.priced,
       unpriced: point.unpriced,
+      added_cards: point.added ?? 0,
+      added_value_cents: Math.round((point.addedValue ?? 0) * 100),
     },
     { onConflict: "user_id,snapshot_date" },
   );
@@ -529,6 +538,8 @@ export async function replaceValueHistory(
       cards: p.cards,
       priced: p.priced,
       unpriced: p.unpriced,
+      added_cards: p.added ?? 0,
+      added_value_cents: Math.round((p.addedValue ?? 0) * 100),
     }));
   for (let i = 0; i < rows.length; i += 500) {
     const { error } = await db

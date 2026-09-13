@@ -732,6 +732,8 @@ components:
         cards: { type: integer, description: "Copies held on that date." }
         priced: { type: integer }
         unpriced: { type: integer }
+        added: { type: integer, description: "Copies added since the point before. The collection's line only; absent on a folder's, and 0 on an account's first point." }
+        addedValue: { type: integer, description: "What those copies were worth on this date, whole euros. The part of the change since the point before that was adding cards rather than prices moving." }
 
     CardPricePoint:
       type: object

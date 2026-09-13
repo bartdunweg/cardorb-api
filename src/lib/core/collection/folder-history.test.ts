@@ -95,8 +95,17 @@ describe("holdingsSeries", () => {
       { tcgId: "base1-25", date: "2024-02-24", market: 6, holo: null },
     ];
     expect(holdingsSeries(items, prices)).toEqual([
-      { date: "2024-02-17", value: 100, cards: 1, priced: 1, unpriced: 0 },
-      { date: "2024-02-24", value: 122, cards: 3, priced: 3, unpriced: 0 },
+      { date: "2024-02-17", value: 100, cards: 1, priced: 1, unpriced: 0, added: 0, addedValue: 0 },
+      // The two copies of base1-25 came in between the points, at 6 each that day.
+      {
+        date: "2024-02-24",
+        value: 122,
+        cards: 3,
+        priced: 3,
+        unpriced: 0,
+        added: 2,
+        addedValue: 12,
+      },
     ]);
   });
 
@@ -112,8 +121,8 @@ describe("holdingsSeries", () => {
     // 2024-02-17: only base1-25 is priced and it was not held yet, but base1-4 was held (no date) and
     // unpriced that day: a point with nothing priced says so rather than drawing a zero.
     expect(holdingsSeries(items, prices)).toEqual([
-      { date: "2024-02-17", value: 0, cards: 1, priced: 0, unpriced: 1 },
-      { date: "2024-02-24", value: 100, cards: 1, priced: 1, unpriced: 0 },
+      { date: "2024-02-17", value: 0, cards: 1, priced: 0, unpriced: 1, added: 0, addedValue: 0 },
+      { date: "2024-02-24", value: 100, cards: 1, priced: 1, unpriced: 0, added: 0, addedValue: 0 },
     ]);
   });
 
@@ -137,10 +146,10 @@ describe("holdingsSeries", () => {
       { tcgId: "base1-4", date: "2026-08-30", market: 104, holo: null },
     ];
     expect(holdingsSeries(items, prices)).toEqual([
-      { date: "2026-08-15", value: 110, cards: 2, priced: 2, unpriced: 0 },
-      { date: "2026-08-16", value: 110, cards: 2, priced: 2, unpriced: 0 },
-      { date: "2026-08-17", value: 112, cards: 2, priced: 2, unpriced: 0 },
-      { date: "2026-08-30", value: 104, cards: 2, priced: 1, unpriced: 1 },
+      { date: "2026-08-15", value: 110, cards: 2, priced: 2, unpriced: 0, added: 0, addedValue: 0 },
+      { date: "2026-08-16", value: 110, cards: 2, priced: 2, unpriced: 0, added: 0, addedValue: 0 },
+      { date: "2026-08-17", value: 112, cards: 2, priced: 2, unpriced: 0, added: 0, addedValue: 0 },
+      { date: "2026-08-30", value: 104, cards: 2, priced: 1, unpriced: 1, added: 0, addedValue: 0 },
     ]);
   });
 

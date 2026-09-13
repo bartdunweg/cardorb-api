@@ -127,7 +127,10 @@ export async function GET(req: Request) {
       // The same assembly every request reads, blended prices and memo included: what the
       // night writes is what the day shows, and the warm cron has usually just built it.
       const sets = await assembleFor(userId, db);
-      const point = snapshotFromSets(sets, date);
+      // Read before tonight's point is written: `added` counts the copies since the point before.
+      const stored = await listValueSnapshots(db, userId);
+      const since = stored.filter((p) => p.date < date).at(-1)?.date ?? null;
+      const point = snapshotFromSets(sets, date, since);
       await writeValueSnapshot(db, userId, point);
       // The read path caches for an hour under this tag and nothing else can
       // drop it — the manual script writes from plain node, where this does not
@@ -143,7 +146,6 @@ export async function GET(req: Request) {
        */
       try {
         const items = flattenItems(sets);
-        const stored = await listValueSnapshots(db, userId);
         if (
           forceHistory ||
           needsHistoryRebuild(
