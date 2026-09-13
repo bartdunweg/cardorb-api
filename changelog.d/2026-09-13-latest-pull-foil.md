@@ -1,0 +1,1 @@
+- `GET /api/v1/public/[username]/latest-pull` also returns the copy's `finish` and `foilPattern` and the card's `gen` and `types`, so the portfolio can draw it with the same holographic foil as the web app. Still no price.

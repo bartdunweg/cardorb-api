@@ -523,6 +523,19 @@ export type LatestPull = {
   setName: string;
   setTitle: string;
   acquiredAt: string;
+  /**
+   * How this copy is printed, what its foil looks like, which era it is from and its types: what
+   * a portfolio needs to draw the card with the same holographic foil the web app gives it.
+   *
+   * forPublic() keeps finish and foilPattern back, on the argument that a stranger has no use for
+   * what somebody's own copies look like. This is one card the owner chose to put on a page, and
+   * the foil is the point of showing it. Neither field is a price: the price a finish selects is
+   * still not published anywhere public.
+   */
+  finish: Finish | null;
+  foilPattern: FoilPattern | null;
+  gen: string | null;
+  types: string[];
 };
 
 /**
@@ -568,6 +581,11 @@ export function latestPull(sets: CardSet[]): LatestPull | null {
     setName: set.name,
     setTitle: set.title,
     acquiredAt: variant.acquiredAt,
+    finish: variant.finish,
+    foilPattern: variant.foilPattern,
+    gen: card.gen,
+    // The row's multi-select, joined for the grid when the card was built; split back here.
+    types: card.type ? card.type.split(", ") : [],
   };
 }
 
