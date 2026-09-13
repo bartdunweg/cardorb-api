@@ -92,11 +92,34 @@ export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): Val
     if (day) day.push(p);
     else byDate.set(p.date, [p]);
   }
+  /*
+   * A copy counts from the day it was added, or from its card's first reading where that is later
+   * (Bart, 2026-09-13). A card added before it had a price, a pre-order or a set bought on release
+   * day, drew as a copy "without a price" for days or weeks: Journey Together from 6 February to its
+   * release on 28 March. It was worth nothing to the line either way; now it joins the line, and
+   * its ring, on the day it is worth something. A card with no reading at all counts from the day
+   * it was added and stays unpriced, so a card TCGplayer never prices does not vanish unsaid.
+   */
+  const firstPriced = new Map<string, string>();
+  for (const p of prices) {
+    if (p.market == null && p.holo == null) continue;
+    const known = firstPriced.get(p.tcgId);
+    if (!known || p.date < known) firstPriced.set(p.tcgId, p.date);
+  }
+  const countsFrom = (it: CardItem): string | null => {
+    const added = it.acquiredAt ? it.acquiredAt.slice(0, 10) : null;
+    const priced = it.tcgId ? firstPriced.get(it.tcgId) : undefined;
+    if (!priced) return added;
+    return added && added > priced ? added : priced;
+  };
   const last = new Map<string, CardPricePoint>();
   let previous: string | null = null;
   return [...byDate.keys()].sort().flatMap((date) => {
     for (const p of byDate.get(date)!) if (p.market != null || p.holo != null) last.set(p.tcgId, p);
-    const held = owned.filter((it) => !it.acquiredAt || it.acquiredAt.slice(0, 10) <= date);
+    const held = owned.filter((it) => {
+      const from = countsFrom(it);
+      return from == null || from <= date;
+    });
     if (!held.length) return [];
     const standing: CardPricePoint[] = [];
     for (const p of last.values()) {
@@ -108,7 +131,10 @@ export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): Val
     const since = previous;
     previous = date;
     const fresh = since
-      ? held.filter((it) => it.acquiredAt && it.acquiredAt.slice(0, 10) > since)
+      ? held.filter((it) => {
+          const from = countsFrom(it);
+          return from != null && from > since;
+        })
       : [];
     const gained = fresh.length ? pointOn(date, fresh, standing) : null;
     return [{ ...point, added: gained?.cards ?? 0, addedValue: gained?.value ?? 0 }];

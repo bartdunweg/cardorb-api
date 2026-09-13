@@ -134,7 +134,7 @@ describe("holdingsSeries", () => {
     ]);
   });
 
-  it("counts a copy with no date as held all along", () => {
+  it("counts a copy with no date as held from its card's first price", () => {
     const items = [
       copy({ tcgId: "base1-4", acquiredAt: null }),
       copy({ tcgId: "base1-25", acquiredAt: "2024-03-01T00:00:00Z" }),
@@ -143,10 +143,9 @@ describe("holdingsSeries", () => {
       { tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
       { tcgId: "base1-4", date: "2024-02-24", market: 100, holo: null },
     ];
-    // 2024-02-17: only base1-25 is priced and it was not held yet, but base1-4 was held (no date) and
-    // unpriced that day: a point with nothing priced says so rather than drawing a zero.
+    // 2024-02-17: base1-25 was not held yet and base1-4 had no price yet, so there is no point.
+    // Until 2026-09-13 base1-4 counted from the start, unpriced; now from its first price.
     expect(holdingsSeries(items, prices)).toEqual([
-      { date: "2024-02-17", value: 0, cards: 1, priced: 0, unpriced: 1, added: 0, addedValue: 0 },
       { date: "2024-02-24", value: 100, cards: 1, priced: 1, unpriced: 0, added: 0, addedValue: 0 },
     ]);
   });
@@ -175,6 +174,24 @@ describe("holdingsSeries", () => {
       { date: "2026-08-16", value: 110, cards: 2, priced: 2, unpriced: 0, added: 0, addedValue: 0 },
       { date: "2026-08-17", value: 112, cards: 2, priced: 2, unpriced: 0, added: 0, addedValue: 0 },
       { date: "2026-08-30", value: 104, cards: 2, priced: 1, unpriced: 1, added: 0, addedValue: 0 },
+    ]);
+  });
+
+  // Bart, 2026-09-13: a copy added before its card had a price joins the line on its first price.
+  it("counts a copy added before its card had a price from the first price, and one never priced from its date", () => {
+    const items = [
+      copy({ tcgId: "old", acquiredAt: "2025-02-01T00:00:00Z" }),
+      copy({ tcgId: "preorder", acquiredAt: "2025-02-06T00:00:00Z", id: "row-2" }),
+      copy({ tcgId: "never", acquiredAt: "2025-02-06T00:00:00Z", id: "row-3" }),
+    ];
+    const prices = [
+      { tcgId: "old", date: "2025-02-08", market: 10, holo: null },
+      { tcgId: "old", date: "2025-03-28", market: 10, holo: null },
+      { tcgId: "preorder", date: "2025-03-28", market: 5, holo: null },
+    ];
+    expect(holdingsSeries(items, prices)).toEqual([
+      { date: "2025-02-08", value: 10, cards: 2, priced: 1, unpriced: 1, added: 0, addedValue: 0 },
+      { date: "2025-03-28", value: 15, cards: 3, priced: 2, unpriced: 1, added: 1, addedValue: 5 },
     ]);
   });
 
