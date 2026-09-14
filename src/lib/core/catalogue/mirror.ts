@@ -418,7 +418,15 @@ export async function syncMirror(
     parallel = 4,
     now = Date.now,
     full = false,
-  }: { budgetMs?: number; parallel?: number; now?: () => number; full?: boolean } = {},
+    only,
+  }: {
+    budgetMs?: number;
+    parallel?: number;
+    now?: () => number;
+    full?: boolean;
+    /** Just these sets, each worked out from scratch: for a source added for a handful of cards. */
+    only?: string[];
+  } = {},
 ): Promise<SyncReport> {
   const start = now();
   const [index, done] = await Promise.all([englishSets(), listCatalogueSync(db)]);
@@ -434,13 +442,15 @@ export async function syncMirror(
   const ranked = index
     .map((s, i) => ({ id: s.id, key: rank(s.id, s.total), i }))
     .sort((a, b) => a.key[0] - b.key[0] || a.key[1].localeCompare(b.key[1]) || a.i - b.i);
-  const queue = ranked.map((s) => s.id);
+  const queue = only
+    ? ranked.filter((s) => only.includes(s.id)).map((s) => s.id)
+    : ranked.map((s) => s.id);
   /* The sets worth working out in full: never seen, or their card count has moved. The rest is
      a refresh of what the copy already has, and keeps the pictures it worked out before
      (withResolvedScans). */
   const totals = new Map(index.map((s) => [s.id, s.total]));
   const fresh = new Set(
-    full
+    full || only
       ? ranked.map((s) => s.id)
       : ranked.filter((s) => record.get(s.id)?.cards !== totals.get(s.id)).map((s) => s.id),
   );

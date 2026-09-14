@@ -172,6 +172,14 @@ const SCRYDEX_SETS: Record<string, string> = {
   "tk-sm-l": "tk10a",
   "tk-sm-r": "tk10b",
   "tk-hs-g": "tk4b",
+  // Poké Card Creator Pack: TCGdex's ex5.5 is Scrydex's wb1, the same five cards by number (2026-09-14).
+  "ex5.5": "wb1",
+};
+
+/** A card Scrydex files under a number the copy's does not say, read by hand. */
+const SCRYDEX_CARDS: Record<string, string> = {
+  // Pikachu at the Museum, a jumbo card, which Scrydex numbers 1000 in the promos.
+  "mep-Museum": "mep-1000",
 };
 
 /**
@@ -190,8 +198,10 @@ const SCRYDEX_STAND_IN_ETAG = "cfl2loWl84E8tUjrC-Q-I0D0JhCRBILXPqV9Rt6Cz3DQ";
 export async function scrydexScan(setId: string, number: string): Promise<string | null> {
   const set = SCRYDEX_SETS[setId];
   const n = number.replace(/^0+(?=\d)/, "");
-  if (!set || !/^\d+$/.test(n)) return null;
-  const url = `https://images.scrydex.com/pokemon/${set}-${n}/large`;
+  const card =
+    SCRYDEX_CARDS[`${setId}-${number}`] ?? (set && /^\d+$/.test(n) ? `${set}-${n}` : null);
+  if (!card) return null;
+  const url = `https://images.scrydex.com/pokemon/${card}/large`;
   try {
     const head = await fetch(url, {
       method: "HEAD",

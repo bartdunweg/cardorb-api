@@ -1,0 +1,1 @@
+- Six more English cards have a picture, from Scrydex: the five cards of the Poké Card Creator Pack (Scrydex's wb1) and Pikachu at the Museum (a jumbo card Scrydex files as MEP 1000). My First Battle's Potion and Switch are the two English cards no source pictures. The catalogue cron takes `?sets=` to work a few sets out from scratch when a source is added for them.

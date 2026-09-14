@@ -53,6 +53,21 @@ describe("storedScan", () => {
   });
 });
 
+describe("scrydexScan for cards read by hand", () => {
+  it("asks for Pikachu at the Museum under the number Scrydex files it at", async () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(url);
+      return new Response(null, { status: 200, headers: { etag: '"real"' } });
+    });
+    expect(await scrydexScan("mep", "Museum")).toBe(
+      "https://images.scrydex.com/pokemon/mep-1000/large",
+    );
+    expect(await scrydexScan("ex5.5", "3")).toBe("https://images.scrydex.com/pokemon/wb1-3/large");
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("scrydexScan", () => {
   const fetchMock = vi.fn();
   beforeEach(() => vi.stubGlobal("fetch", fetchMock));
