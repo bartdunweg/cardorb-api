@@ -1,5 +1,5 @@
 {
-  "unlinked": 35,
+  "unlinked": 26,
   "digitalSets": [
     "A1",
     "A1a",
@@ -40,7 +40,7 @@
     },
     "mfb": {
       "name": "My First Battle",
-      "unlinked": 10
+      "unlinked": 2
     },
     "pop5": {
       "name": "POP Series 5",
@@ -49,10 +49,6 @@
     "svp": {
       "name": "SVP Black Star Promos",
       "unlinked": 10
-    },
-    "tk-xy-n": {
-      "name": "XY trainer Kit (Noivern)",
-      "unlinked": 1
     },
     "xyp": {
       "name": "XY Black Star Promos",
