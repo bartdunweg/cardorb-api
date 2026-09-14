@@ -1,0 +1,103 @@
+# Opens an issue when the database is close to the free plan's 500 MB, so the upgrade is a
+# decision taken weeks ahead and not something the app finds out for itself.
+#
+# The price archive (card_price_months) is most of the database and grows about 20 MB a month
+# with a daily figure for every English card (measured 2026-09-14: 370 MB in all, 321 MB of it
+# the archive). Bart's call that day: stay on the free plan and upgrade when it is needed, with a
+# warning well before. Past 480 MB the snapshot cron keeps the archive weekly instead of daily
+# (DAILY_CEILING in cron/snapshot/route.ts), because at 500 MB Supabase puts the project in
+# read-only mode and nobody could add a card. This workflow is what makes that never a surprise.
+#
+# Reads the size through the Management API with the access token migrate.yml already holds; no
+# database password. Runs on main only (a schedule always does), so a fork never sees the token.
+name: storage-watch
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      warn_mb:
+        description: "Warn at or above this many MB (to try the warning path, set it low)"
+        default: "400"
+      dry_run:
+        description: "Print what would be filed instead of filing it"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PROJECT_REF: fprjroupecdhosfdrqhv
+      # The plan's limit. Raise it in the same commit as an upgrade, or the warning keeps firing.
+      LIMIT_MB: "500"
+      WARN_MB: ${{ inputs.warn_mb || '400' }}
+      URGENT_MB: "450"
+      CEILING_MB: "480"
+      TITLE_PREFIX: "Database storage"
+    steps:
+      - name: Read the database size
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          query() {
+            curl -sS --fail-with-body -X POST \
+              "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+              -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$(jq -n --arg q "$1" '{query: $q}')"
+          }
+          query "select pg_database_size(current_database()) as bytes" > size.json
+          query "select relname as name, pg_total_relation_size(c.oid) as bytes from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r' order by 2 desc limit 5" > tables.json
+          bytes="$(jq -r '.[0].bytes' size.json)"
+          mb=$((bytes / 1024 / 1024))
+          echo "MB=$mb" >> "$GITHUB_ENV"
+          {
+            echo "## Database: $mb MB of $LIMIT_MB MB"
+            echo
+            echo "| Table | MB |"
+            echo "|---|---|"
+            jq -r '.[] | "| \(.name) | \((.bytes / 1048576) | floor) |"' tables.json
+          } | tee tables.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: File or update the warning
+        if: ${{ fromJSON(env.MB) >= fromJSON(env.WARN_MB) }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
+        run: |
+          set -euo pipefail
+          pct=$((MB * 100 / LIMIT_MB))
+          if [ "$MB" -ge "$URGENT_MB" ]; then
+            title="$TITLE_PREFIX urgent: $MB of $LIMIT_MB MB ($pct%)"
+          else
+            title="$TITLE_PREFIX almost full: $MB of $LIMIT_MB MB ($pct%)"
+          fi
+          {
+            echo "The database is at **$MB MB of $LIMIT_MB MB** ($pct%), measured $(date -u +%Y-%m-%d)."
+            echo
+            echo "- At $CEILING_MB MB the nightly price pass writes the archive weekly instead of daily (DAILY_CEILING in \`src/app/api/v1/cron/snapshot/route.ts\`)."
+            echo "- At $LIMIT_MB MB Supabase puts the project in read-only mode: nobody can add a card."
+            echo "- The plan (Bart, 2026-09-14): upgrade Supabase to Pro when this fires, then raise \`LIMIT_MB\` in \`.github/workflows/storage-watch.yml\` and \`DAILY_CEILING\`, and close this issue."
+            echo
+            cat tables.md
+          } > body.md
+          existing="$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE_PREFIX\"" --json number --jq '.[0].number // empty')"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run. Would ${existing:+update #$existing}${existing:-open a new issue} titled: $title"
+            cat body.md
+            exit 0
+          fi
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" -R "$GITHUB_REPOSITORY" --title "$title"
+            gh issue comment "$existing" -R "$GITHUB_REPOSITORY" --body-file body.md
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body-file body.md
+          fi

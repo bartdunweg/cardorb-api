@@ -10,8 +10,9 @@
 # before the database starts refusing the old one. Vercel deploys straight off the push and
 # does not wait for anything, so this waits for Vercel instead.
 #
-# The only workflow with secrets. check.yml runs on every pull request, including ones from a
-# fork, and keeps having none; this one runs on main alone.
+# One of two workflows with secrets, beside storage-watch.yml, which reads the database size with
+# the same access token. check.yml runs on every pull request, including ones from a fork, and
+# keeps having none; both of these run on main alone.
 name: migrate
 
 on:
