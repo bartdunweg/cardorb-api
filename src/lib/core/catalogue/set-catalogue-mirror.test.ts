@@ -27,8 +27,14 @@ vi.mock("./tcgdex-browse", async (real) => ({
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
 vi.mock("./ptcg", () => ({ ptcgLogo: async () => null }));
 
-const { copiedEnglishSets, englishSetFromCopy, forgetCopiedSets, mirrorSetCatalogue } =
-  await import("./set-catalogue-mirror");
+const {
+  copiedEnglishSets,
+  copiedLanguageSets,
+  englishSetFromCopy,
+  forgetCopiedSets,
+  languageSetFromCopy,
+  mirrorSetCatalogue,
+} = await import("./set-catalogue-mirror");
 
 const set = (over: Partial<CatalogueSetRecord> = {}): CatalogueSetRecord => ({
   id: "sv03.5",
@@ -243,5 +249,88 @@ describe("englishSetFromCopy, by another id", () => {
     expect(found?.set.id).toBe("sv03.5");
     expect(catalogueSetCards).toHaveBeenCalledWith(expect.anything(), "sv03.5");
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("the Japanese shelf out of the copy", () => {
+  const jaSet = (over: Partial<CatalogueSetRecord> = {}): CatalogueSetRecord =>
+    set({
+      id: "SV2a",
+      name: "Pokémon Card 151",
+      local_name: "ポケモンカード151",
+      series: "Scarlet & Violet",
+      release_date: "2023/06/16",
+      logo: null,
+      abbreviation: null,
+      total: 210,
+      printed_total: 165,
+      cards_recorded: true,
+      sort_order: 1,
+      ...over,
+    });
+
+  beforeEach(() => {
+    forgetCopiedSets();
+    vi.clearAllMocks();
+  });
+
+  it("lists the sets in the shelf's own order, printed names beside, without dates or art", async () => {
+    listCatalogueSets.mockResolvedValue([
+      jaSet(),
+      jaSet({
+        id: "SV3",
+        name: "Ruler of the Black Flame",
+        local_name: "黒炎の支配者",
+        sort_order: 0,
+      }),
+    ]);
+    const sets = await copiedLanguageSets("ja");
+    expect(listCatalogueSets).toHaveBeenCalledWith(expect.anything(), "ja");
+    expect(sets?.map((s) => [s.id, s.localName, s.releaseDate, s.logo])).toEqual([
+      ["SV3", "黒炎の支配者", null, null],
+      ["SV2a", "ポケモンカード151", null, null],
+    ]);
+  });
+
+  it("is null while the copy holds none of the shelf, so the caller asks TCGdex", async () => {
+    listCatalogueSets.mockResolvedValue([]);
+    expect(await copiedLanguageSets("ja")).toBeNull();
+  });
+
+  it("reads a set's cards with their printed names and kept pictures", async () => {
+    listCatalogueSets.mockResolvedValue([jaSet()]);
+    catalogueSetCards.mockResolvedValue([
+      card({
+        id: "SV2a-006",
+        set_id: "SV2a",
+        local_id: "006",
+        name: "Charizard ex",
+        local_name: "リザードンex",
+        rarity: "Double Rare",
+        image: "https://images.cardorb.com/limitless/tpc/SV2a/SV2a_6_R_JP_LG.png",
+      }),
+    ]);
+    const found = await languageSetFromCopy("ja", "SV2a");
+    expect(catalogueSetCards).toHaveBeenCalledWith(expect.anything(), "SV2a", "ja");
+    expect(found?.set).toMatchObject({ id: "SV2a", localName: "ポケモンカード151" });
+    expect(found?.cards[0]).toMatchObject({
+      id: "SV2a-006",
+      name: "Charizard ex",
+      localName: "リザードンex",
+      setName: "Pokémon Card 151",
+      image: "https://images.cardorb.com/limitless/tpc/SV2a/SV2a_6_R_JP_LG.png",
+      imageHigh: null,
+      tcgId: "SV2a-006",
+    });
+  });
+
+  it("answers a set the catalogue lists without cards as that, and one it lacks as null", async () => {
+    listCatalogueSets.mockResolvedValue([jaSet({ id: "CS1a", cards_recorded: false })]);
+    expect(await languageSetFromCopy("ja", "CS1a")).toMatchObject({
+      set: { id: "CS1a", cardsRecorded: false },
+      cards: [],
+    });
+    expect(catalogueSetCards).not.toHaveBeenCalled();
+    expect(await languageSetFromCopy("ja", "SV9")).toBeNull();
   });
 });

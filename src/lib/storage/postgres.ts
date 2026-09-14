@@ -1796,7 +1796,7 @@ export async function searchCatalogueCards(
   let q = db
     .from("catalogue_cards")
     .select(
-      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art",
+      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, local_name",
       {
         count: "exact",
       },
@@ -1898,7 +1898,7 @@ export async function catalogueSetCards(
     db
       .from("catalogue_cards")
       .select(
-        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type",
+        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, local_name",
         counted ? { count: "exact" } : {},
       )
       .eq("language", language)
