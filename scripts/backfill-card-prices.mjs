@@ -588,6 +588,113 @@ async function daily() {
   console.log(`${DRY ? "Would write" : "Wrote"} ${written} printing readings.`);
 }
 
+// ── Japanese: the shelf's history, per printing ──────────────────────────────
+
+/** The first of the month six months back: before it the archive keeps one reading a week. */
+const weeklyBefore = () => {
+  const now = new Date();
+  return day(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 6, 1)));
+};
+
+/**
+ * The days a Japanese history reads: every day from `weeklyBefore()`, and before it one day a
+ * week, the Saturday, as the archive keeps those months (thin_oldest_price_month,
+ * weekly_price_days). A week whose Saturday falls in the next month belongs to that month's row,
+ * as the SQL has it, so a month's last days after its last Saturday are read on the next month's
+ * first Saturday. `fallbacks` are the earlier days of the same week and month, tried when tcgcsv
+ * has no archive for the Saturday.
+ */
+function japaneseDays(from, to, cutoff) {
+  const out = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    if (d >= cutoff) {
+      out.push({ date: d, fallbacks: [] });
+      continue;
+    }
+    if (dow(d) !== 6) continue;
+    const fallbacks = [];
+    for (let back = 1; back <= 6; back++) {
+      const earlier = addDays(d, -back);
+      if (earlier < from || earlier.slice(0, 7) !== d.slice(0, 7)) break;
+      fallbacks.push(earlier);
+    }
+    out.push({ date: d, fallbacks });
+  }
+  return out;
+}
+
+/**
+ * Every printing TCGplayer prices on the Japanese shelf, from tcgcsv's archive (category 85: files
+ * from 2024-08-24, but empty until mid-December 2024, the first full day 2024-12-14), under
+ * TCGdex's Japanese id, the way the price job writes it each night since
+ * 2026-09-14. It wrote the two old series once a week up to 2026-08-15 until then; those rows
+ * were gone by 2026-09-14. `--to` defaults to the day before today, the price job's first night.
+ */
+async function japanese() {
+  const products = await japaneseIds();
+  const ids = Object.keys(products)
+    .filter((id) => products[id] != null)
+    .slice(0, LIMIT);
+  const from = flag("--from") ?? JAPAN_FROM;
+  const to = flag("--to") ?? addDays(day(new Date()), -1);
+  const cutoff = weeklyBefore();
+  const plan = japaneseDays(from, to, cutoff);
+  const rate = await rates(from, to);
+  console.log(
+    `japanese: ${ids.length} cards, ${plan.length} days (weekly before ${cutoff}), ${from} to ${to}${DRY ? " (dry run: nothing is written)" : ""}`,
+  );
+  let written = 0;
+  let month = [];
+  const flush = async () => {
+    await writeDays(month);
+    written += month.length;
+    month = [];
+  };
+  for (const { date, fallbacks } of plan) {
+    if (month.length && month[0].date.slice(0, 7) !== date.slice(0, 7)) await flush();
+    let read = null;
+    let used = null;
+    for (const d of [date, ...fallbacks]) {
+      try {
+        const day = tcgcsvDay(d, CATEGORY_JA);
+        // An archive whose Japanese files are empty is no reading either: tcgcsv wrote empty ones
+        // for most days until mid-December 2024 and for some after (2024-12-21, 2025-01-04).
+        if (!day.size) continue;
+        read = day;
+        used = d;
+        break;
+      } catch {
+        // No archive that day: the week's day before it.
+      }
+    }
+    if (!read) {
+      console.log(`  ${date}: no archive for the week`);
+      continue;
+    }
+    const r = rate.get(used);
+    let priced = 0;
+    for (const id of ids) {
+      let any = false;
+      for (const [subType, usd] of read.get(products[id]) ?? []) {
+        const euros = cents(usd, r);
+        if (euros == null) continue;
+        month.push({
+          tcgId: id,
+          printing: printingKey(subType),
+          date: used,
+          price: euros / 100,
+          source: "tcgplayer",
+        });
+        any = true;
+      }
+      if (any) priced++;
+    }
+    console.log(`  ${used}: ${priced} of ${ids.length} cards priced`);
+  }
+  if (month.length) await flush();
+  console.log(`${DRY ? "Would write" : "Wrote"} ${written} printing readings.`);
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 if (ONLY === "daily") {
@@ -601,36 +708,7 @@ if (ONLY === "recent") {
 }
 
 if (ONLY === "japanese") {
-  const products = await japaneseIds();
-  const ids = Object.keys(products).slice(0, LIMIT);
-  const rate = await rates(JAPAN_FROM, addDays(CRON_FROM, -1));
-  const step = DAILY ? 1 : 7;
-  const dates = [];
-  for (let d = addDays(CRON_FROM, -1); d >= JAPAN_FROM; d = addDays(d, -step)) dates.push(d);
-  dates.reverse();
-  console.log(`tcgcsv japan: ${dates.length} days, ${dates[0]} to ${dates[dates.length - 1]}`);
-  let written = 0;
-  for (const date of dates) {
-    const r = rate.get(date);
-    const prices = tcgcsvDay(date, CATEGORY_JA);
-    const rows = [];
-    for (const id of ids) {
-      const pick = pickTcgcsv(prices.get(products[id]));
-      if (!pick) continue;
-      rows.push({
-        tcg_id: id,
-        snapshot_date: date,
-        market_cents: cents(pick.market, r),
-        holo_cents: cents(pick.holo, r),
-        source: "tcgplayer",
-      });
-    }
-    await write(rows);
-    written += rows.length;
-    console.log(`  ${date}: ${rows.length} cards`);
-    show(rows);
-  }
-  console.log(`${DRY ? "Would write" : "Wrote"} ${written} readings.`);
+  await japanese();
   process.exit(0);
 }
 
