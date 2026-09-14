@@ -41,17 +41,17 @@ const item = (over: Partial<CardItem>): CardItem => ({
 });
 
 describe("dexCsv", () => {
-  it("writes Dex's header first, and this app's four columns after it", () => {
+  it("writes Dex's header first, and this app's own columns after it", () => {
     const [header] = dexCsv([]).split("\r\n");
     expect(header).toBe(
-      "Type;Category;Locale;Series;Set;Id;Number;Name;Variant;Rarity;Illustrator;Quantity;Price;Note 1;Note 2;Note 3;Note 4;Note 5;Condition;Language;Acquired;Purchase price;Edition",
+      "Type;Category;Locale;Series;Set;Id;Number;Name;Variant;Rarity;Illustrator;Quantity;Price;Note 1;Note 2;Note 3;Note 4;Note 5;Condition;Language;Acquired;Purchase price;Edition;Finish",
     );
   });
 
   it("writes a held copy the way Dex does, the official set name and the count included", () => {
     const [, line] = dexCsv([item({ set: "Dark Explorers (BW5)", quantity: 3 })]).split("\r\n");
     expect(line).toBe(
-      "collection;My Collection;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Normal;Rare;;3;€ 8,63;;;;;;;;;;",
+      "collection;My Collection;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Normal;Rare;;3;€ 8,63;;;;;;;;;;;normal",
     );
   });
 
@@ -72,7 +72,7 @@ describe("dexCsv", () => {
       }),
     ]).split("\r\n");
     expect(line).toBe(
-      "collection;Wishlist;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Reverse Holo (Cosmos Holo);Rare;;1;—;Traded with Sam;;;;;Near Mint;de;2023-09-15;4,50;1st-edition",
+      "collection;Wishlist;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Reverse Holo (Cosmos Holo);Rare;;1;—;Traded with Sam;;;;;Near Mint;de;2023-09-15;4,50;1st-edition;reverse-holo",
     );
   });
 
@@ -118,6 +118,14 @@ describe("dexCsv", () => {
     ]);
   });
 
+  it("writes an Energy Symbol reverse as a reverse holo in Dex's column and names it in its own", () => {
+    const csv = dexCsv([item({ finish: "energy-symbol", tcgId: "me02.5-55" })]);
+    const [, line] = csv.split("\r\n");
+    expect(line!.split(";")[8]).toBe("Reverse Holo");
+    expect(line!.split(";").at(-1)).toBe("energy-symbol");
+    expect(dexRows(parseCsv(csv)).rows[0]?.finish).toBe("energy-symbol");
+  });
+
   it("carries the catalogue id out and back in, which is what a row is recognised by", () => {
     const grid = parseCsv(dexCsv([item({ tcgId: "bw5-48" })]));
     expect(dexRows(grid).rows[0]?.tcgId).toBe("bw5-48");
@@ -153,6 +161,7 @@ describe("Dex's words", () => {
     expect(variantWord("holo", null)).toBe("Holo");
     expect(variantWord("reverse-holo", "cracked-ice")).toBe("Reverse Holo (Cracked Ice Holo)");
     expect(variantWord("poke-ball", null)).toBe("Poké Ball Reverse");
+    expect(variantWord("energy-symbol", null)).toBe("Reverse Holo");
     expect(variantWord(null, null)).toBe("");
   });
 

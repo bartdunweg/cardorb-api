@@ -221,6 +221,114 @@ if (day) {
   }
 }
 
+/**
+ * The Poké Ball, Master Ball and Energy Symbol reverses are TCGplayer products of their own
+ * (tcgplayer-patterns.generated.json finishPrints), priced under the card as
+ * "poke-ball-reverse-holofoil" and so on. Every one TCGplayer priced today has a line for that
+ * printing, and at the figure of its own product: a line missing or off is a Poké Ball copy whose
+ * chart shows nothing, or another product's price.
+ *
+ * And no form offers a ball or Energy Symbol finish that is not one of those products: offers come
+ * from that file wherever a card has a TCGplayer link (card-printings.ts printingsOf), so the one way
+ * back is a card TCGdex names a ball foil on and no link, where TCGdex's word still stands.
+ */
+const patterns = JSON.parse(
+  readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-patterns.generated.json"), "utf8"),
+);
+if (day) {
+  const month = `${day.slice(0, 7)}-01`;
+  const dayIndex = Number(day.slice(8, 10));
+  const prints = Object.entries(patterns).flatMap(([id, c]) =>
+    (c.finishPrints ?? []).map((p) => ({ id, ...p, key: `${p.finish}-reverse-holofoil` })),
+  );
+  const [lines, prices, rateRow] = await Promise.all([
+    query(
+      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where month = '${month}' and printing in ('poke-ball-reverse-holofoil', 'master-ball-reverse-holofoil', 'energy-symbol-reverse-holofoil')`,
+    ),
+    query(
+      `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and product_id in (${prints.map((p) => p.productId).join(",") || "0"})`,
+    ),
+    query(
+      `select rate::float as rate from usd_eur_rates where day <= '${day}' order by day desc limit 1`,
+    ),
+  ]);
+  const line = new Map(lines.map((l) => [`${l.tcg_id}|${l.printing}`, l.cents]));
+  const usdOf = new Map();
+  for (const p of prices) usdOf.set(p.product_id, [...(usdOf.get(p.product_id) ?? []), p]);
+  const euro = rateRow[0]?.rate ?? null;
+  const priced = prints.filter((p) => usdOf.has(p.productId));
+  const missing = priced.filter((p) => line.get(`${p.id}|${p.key}`) == null);
+  const off = priced.filter((p) => {
+    const cents = line.get(`${p.id}|${p.key}`);
+    const rows = usdOf.get(p.productId) ?? [];
+    const usd = (rows.find((r) => r.printing === p.printing) ?? rows[0])?.market;
+    return (
+      cents != null &&
+      euro &&
+      usd > 0 &&
+      Math.abs(cents - usd * euro * 100) > Math.max(5, usd * euro * 100 * MISMATCH)
+    );
+  });
+  check(
+    "Poké Ball, Master Ball and Energy Symbol reverses have their own price line",
+    prints.length > 0 && missing.length === 0 && off.length === 0,
+    `${prints.length} products, ${priced.length} priced on ${day}; ${missing.length} without a line that day, ${off.length} off their product's figure${
+      missing.length + off.length
+        ? `: ${[...missing, ...off]
+            .slice(0, 10)
+            .map((p) => `${p.id} ${p.key} (${p.productId})`)
+            .join("; ")}`
+        : ""
+    }`,
+  );
+}
+{
+  const named = await query(
+    "select id, v->>'foil' as foil from catalogue_cards, jsonb_array_elements(variants) v where language = 'en' and v->>'type' = 'reverse' and v->>'foil' in ('pokeball', 'masterball')",
+  );
+  const unlinked = named.filter((r) => !links[r.id]?.productId);
+  const sold = new Set(
+    Object.entries(patterns).flatMap(([id, c]) =>
+      (c.finishPrints ?? []).map((p) => `${id}|${p.finish}`),
+    ),
+  );
+  const dropped = named.filter(
+    (r) =>
+      links[r.id]?.productId &&
+      !sold.has(`${r.id}|${r.foil === "pokeball" ? "poke-ball" : "master-ball"}`),
+  );
+  const stored = await query(
+    "select tcg_id, finish, count(*)::int as n from cards where finish in ('poke-ball', 'master-ball', 'energy-symbol') and tcg_id is not null group by 1, 2",
+  );
+  const storedWithout = stored.filter((r) => !sold.has(`${r.tcg_id}|${r.finish}`));
+  check(
+    "Ball and Energy Symbol finishes offered only where TCGplayer sells them",
+    unlinked.length === 0,
+    `${unlinked.length} cards offer a TCGdex ball with no TCGplayer link to check it${
+      unlinked.length
+        ? ` (${unlinked
+            .slice(0, 8)
+            .map((r) => `${r.id} ${r.foil}`)
+            .join(", ")})`
+        : ""
+    }; ${dropped.length} TCGdex balls not offered because TCGplayer sells none${
+      dropped.length
+        ? ` (${dropped
+            .slice(0, 8)
+            .map((r) => `${r.id} ${r.foil}`)
+            .join(", ")})`
+        : ""
+    }; ${storedWithout.length} kinds of stored copy with such a finish on a card TCGplayer sells none of, priced as a plain reverse${
+      storedWithout.length
+        ? ` (${storedWithout
+            .slice(0, 8)
+            .map((r) => `${r.tcg_id} ${r.finish}`)
+            .join(", ")})`
+        : ""
+    }`,
+  );
+}
+
 /** A number a person reads with a percent code in it ("#%3F"), which the copy writes decoded. */
 const encoded = await query(
   "select count(*)::int as n, string_agg(id, ', ') filter (where true) as ids from (select id from catalogue_cards where local_id ~ '%[0-9A-Fa-f]{2}' limit 10) x",

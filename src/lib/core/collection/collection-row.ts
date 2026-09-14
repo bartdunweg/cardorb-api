@@ -34,10 +34,19 @@ import { isTcgId } from "../catalogue/tcgdex-language";
 /** A folder id, as Postgres writes one. Checked before it reaches the store. */
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const FINISHES = ["normal", "reverse-holo", "holo", "poke-ball", "master-ball"] as const;
+export const FINISHES = [
+  "normal",
+  "reverse-holo",
+  "holo",
+  "poke-ball",
+  "master-ball",
+  "energy-symbol",
+] as const;
 /**
- * The finishes that are a reverse holo with a pattern on it — the Poké Ball and Master Ball
- * printings of 151 and Prismatic Evolutions. They read the foil price fields as a reverse does.
+ * The finishes that are a reverse holo with a pattern on it: the Poké Ball and Master Ball
+ * reverses of Prismatic Evolutions, Black Bolt and White Flare, and the Poké Ball and Energy Symbol
+ * reverses of Ascended Heroes. TCGplayer sells each as a product with its own price, filed under
+ * the card as `${finish}-reverse-holofoil` (price-basis.mjs printingKeysOf).
  *
  * Defined in ../price-basis.mjs and re-exported here, where callers look for it. It is a rule
  * about which price series a copy reads, and the one other thing that has to obey it —

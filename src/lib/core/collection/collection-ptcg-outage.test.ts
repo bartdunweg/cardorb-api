@@ -152,3 +152,34 @@ describe("runPrintingsForSet", () => {
     expect(await runPrintingsForSet(["base1-4"])).toEqual({});
   });
 });
+
+describe("finishPrintingsForSet", () => {
+  // Prismatic Evolutions Eevee 074/131 (sv08.5-074): its own product 610429 is the plain card and
+  // reverse, and TCGplayer sells "Eevee (Poke Ball Pattern)" 610590 and "(Master Ball Pattern)" 610691
+  // apart, both in the set's group 23821 and priced as Holofoil. Figures read off tcgcsv on 2026-09-14.
+  it("names each patterned reverse after its finish, with its own product beside the figure", async () => {
+    groupPrintings.mockResolvedValue(
+      new Map([
+        [610590, { holofoil: { marketPrice: 1.5, productId: 610590 } }],
+        [610691, { holofoil: { marketPrice: 18.63, productId: 610691 } }],
+      ]),
+    );
+    vi.resetModules();
+    const { finishPrintingsForSet } = await import("./collection");
+    const answer = await finishPrintingsForSet(["sv08.5-074", "base1-4"]);
+    expect(groupPrintings).toHaveBeenCalledWith(23821, 3);
+    expect(answer).toEqual({
+      "sv08.5-074": {
+        "poke-ball-reverse-holofoil": { market: 1.5, productId: 610590 },
+        "master-ball-reverse-holofoil": { market: 18.63, productId: 610691 },
+      },
+    });
+  });
+
+  it("asks for nothing for a card TCGplayer sells no patterned reverse of", async () => {
+    vi.resetModules();
+    const { finishPrintingsForSet } = await import("./collection");
+    expect(await finishPrintingsForSet(["base1-4"])).toEqual({});
+    expect(groupPrintings).not.toHaveBeenCalled();
+  });
+});

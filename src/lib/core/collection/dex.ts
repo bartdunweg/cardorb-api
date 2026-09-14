@@ -67,6 +67,7 @@ const columns = (header: string[]) => {
     // from a file Dex wrote, and then every one of them reads as unknown.
     condition: at("condition"),
     edition: at("edition"),
+    finish: at("finish"),
     language: at("language"),
     acquired: at("acquired"),
     purchase: at("purchase price"),
@@ -186,7 +187,8 @@ export function dexRows(grid: string[][]): CsvResult {
       // now(), apply, which the import says out loud. This app's own export
       // writes the day after Dex's columns, and that comes back as it was.
       acquiredAt: acquiredFrom(at(r, c.acquired)),
-      finish: finishFrom(at(r, c.variant)),
+      // This app's export names the finish in a column of its own, read first where it is there.
+      finish: finishFrom(at(r, c.finish)) ?? finishFrom(at(r, c.variant)),
       // Dex names the foil pattern in the same column: "Cosmos Holo" is a holo
       // whose foil is cosmos, and both halves of that are worth keeping.
       foilPattern: patternFrom(at(r, c.variant)),

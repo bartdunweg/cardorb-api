@@ -10,7 +10,13 @@
 
 import { describe, expect, it } from "vitest";
 import { shownPrice } from "./cards";
-import { copyPriceOf, pointFromTcgplayer, priceFromUsd, printingPriceOf } from "../price-basis.mjs";
+import {
+  copyPriceOf,
+  pointFromTcgplayer,
+  priceFromUsd,
+  printingKeysOf,
+  printingPriceOf,
+} from "../price-basis.mjs";
 import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
 
 describe("shownPrice", () => {
@@ -117,6 +123,22 @@ describe("TCGplayer's two runs", () => {
  */
 describe("printingKeysOf and printingPriceOf", () => {
   const eur = (n: number) => ({ market: n });
+
+  // Prismatic Evolutions Eevee, 2026-09-14, in dollars: plain reverse 0.29, Poké Ball 1.50, Master Ball 18.63.
+  it("reads a Poké Ball, Master Ball or Energy Symbol reverse's own product before the plain reverse", () => {
+    const eevee = {
+      normal: eur(0.24),
+      "reverse-holofoil": eur(0.29),
+      "poke-ball-reverse-holofoil": eur(1.5),
+      "master-ball-reverse-holofoil": eur(18.63),
+    };
+    expect(printingKeysOf({ finish: "energy-symbol" })[0]).toBe("energy-symbol-reverse-holofoil");
+    expect(printingPriceOf({ finish: "poke-ball" }, eevee)?.market).toBe(1.5);
+    expect(printingPriceOf({ finish: "master-ball" }, eevee)?.market).toBe(18.63);
+    expect(printingPriceOf({ finish: "reverse-holo" }, eevee)?.market).toBe(0.29);
+    // A print with no figure of its own reads the plain reverse, as every ball copy did before.
+    expect(printingPriceOf({ finish: "energy-symbol" }, eevee)?.market).toBe(0.29);
+  });
   const jungleScyther = { holofoil: eur(53.23), normal: eur(15.19) };
 
   it("reads the foil the copy is, not whichever printing came first", () => {

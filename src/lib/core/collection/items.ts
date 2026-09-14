@@ -849,6 +849,7 @@ const FINISH_ORDER: readonly string[] = [
   "reverse-holo",
   "poke-ball",
   "master-ball",
+  "energy-symbol",
 ];
 
 /** By a known order first, then A to Z for anything the order does not name. */

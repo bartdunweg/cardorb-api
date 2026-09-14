@@ -67,7 +67,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     // The day's rate beside it: the price is TCGplayer's dollars, and a figure is only shown in
     // the currency the collection is valued in.
     rate = await usdToEurForRequest();
-    card = sheet ? detailFromSheet(sheet) : await getCardDetail(tcgId, own, rate);
+    card = sheet ? detailFromSheet(sheet, own ?? "en") : await getCardDetail(tcgId, own, rate);
     // The price every other surface shows for this printing (detailPrice), not the figure TCGdex
     // relays on the record, which runs behind and is missing for a Japanese card.
     if (card) card = await detailPrice(card, own, rate);
