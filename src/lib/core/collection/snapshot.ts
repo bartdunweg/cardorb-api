@@ -11,7 +11,7 @@
  * too the guide is not read anywhere.
  */
 
-import { copiesHeld } from "./cards-stats";
+import { copiesHeld, copyUnpriced } from "./cards-stats";
 import { copyPriceOf, shownPrice } from "../price-basis.mjs";
 import type { ShelfPrices, ShelfPrinting } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
@@ -22,7 +22,9 @@ import { LEGACY, finishPrintingKey, printingKey, shadowlessKey } from "../price-
 /**
  * The reading off an assembled collection: the card's own blended price, the one
  * the tile and the sheet show, so the line ends where the number stands. Printing
- * by printing, through copyPriceOf(); a card with no price on it is unpriced.
+ * by printing, through copyPriceOf(). Every count is of copies, as countStats() counts them:
+ * `cards` is the copies held, and each is `priced` or `unpriced` by copyUnpriced(), so the two
+ * add up to `cards` and `unpriced` is the number /v1/stats says.
  * The guide's date is not to hand here, so the caller dates it.
  */
 export function snapshotFromSets(
@@ -42,20 +44,21 @@ export function snapshotFromSets(
       const held = copiesHeld(card);
       if (!held) continue;
       copies += held;
-      let any = false;
       for (const v of card.variants) {
         if (!v.owned) continue;
-        const each = shownPrice(copyPriceOf(v, card));
+        const n = Math.max(0, v.quantity ?? 0);
         const day = v.acquiredAt?.slice(0, 10);
         const isNew = since != null && day != null && day > since && day <= date;
-        if (isNew) added += Math.max(0, v.quantity ?? 0);
-        if (each == null) continue;
-        value += each * Math.max(0, v.quantity ?? 0);
-        if (isNew) addedValue += each * Math.max(0, v.quantity ?? 0);
-        any = true;
+        if (isNew) added += n;
+        if (copyUnpriced(card, v)) {
+          unpriced += n;
+          continue;
+        }
+        const each = shownPrice(copyPriceOf(v, card))!;
+        value += each * n;
+        priced += n;
+        if (isNew) addedValue += each * n;
       }
-      if (any) priced++;
-      else unpriced++;
     }
   }
   return { date, value, cards: copies, priced, unpriced, added, addedValue };

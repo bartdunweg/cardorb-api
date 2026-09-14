@@ -1,8 +1,8 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
-import { shownPrice, variantPrice } from "./cards";
+import { shownPrice } from "./cards";
 import { copyPriceOf, printingKeysOf } from "../price-basis.mjs";
-import { heldValue } from "./cards-stats";
+import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
 
@@ -652,8 +652,7 @@ export function countStats(sets: CardSet[]): Stats {
         stats.cards += 1;
         stats.copies += v.quantity ?? 1;
         if (v.isFavorite) stats.favorites += 1;
-        if (shownPrice(variantPrice(card, v)) == null)
-          stats.unpriced += Math.max(0, v.quantity ?? 1);
+        if (copyUnpriced(card, v)) stats.unpriced += Math.max(0, v.quantity ?? 1);
       }
       stats.value += heldValue(card);
     }
