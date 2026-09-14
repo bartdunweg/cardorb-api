@@ -1,5 +1,5 @@
 {
-  "unlinked": 26,
+  "unlinked": 25,
   "digitalSets": [
     "A1",
     "A1a",
@@ -18,10 +18,6 @@
     "P-A"
   ],
   "sets": {
-    "bw6": {
-      "name": "Dragons Exalted",
-      "unlinked": 1
-    },
     "bwp": {
       "name": "BW Black Star Promos",
       "unlinked": 2

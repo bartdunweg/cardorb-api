@@ -12796,7 +12796,14 @@
       "reverse-holofoil"
     ]
   },
-  "bw6-117": null,
+  "bw6-117": {
+    "productId": 83916,
+    "variants": [
+      "normal",
+      "reverse-holofoil"
+    ],
+    "groupId": 1394
+  },
   "bw6-118": {
     "productId": 83917,
     "variants": [
