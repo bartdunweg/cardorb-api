@@ -31,4 +31,26 @@ describe("getCardDetail", () => {
     json.mockResolvedValue({});
     expect(await getCardDetail("sv03-125")).toBeNull();
   });
+
+  /* The live read answered TCGdex's own words until 2026-09-14, where every other English read went
+     through card-fact-corrections.ts. */
+  it("answers an English card through the same corrections as the copy", async () => {
+    json.mockResolvedValue({
+      id: "dp5-121",
+      name: "Infernape LV.X",
+      rarity: "Rare Holo LV.X",
+      types: ["Fire"],
+      stage: "LEVEL-UP",
+      evolveFrom: null,
+    });
+    const card = await getCardDetail("dp5-121");
+    expect(card?.evolveFrom).toBe("Infernape");
+    expect(card?.rarity).toBe("Holo Rare LV.X");
+
+    json.mockResolvedValue({ id: "ex13-103", name: "Mewtwo Star", rarity: "Rare", types: [] });
+    expect((await getCardDetail("ex13-103"))?.name).toBe("Mewtwo ☆");
+
+    json.mockResolvedValue({ id: "swsh12.5gg-GG01", name: "Hisuian Voltorb", rarity: "Rare" });
+    expect((await getCardDetail("swsh12.5gg-GG01"))?.rarity).toBe("Galarian Gallery");
+  });
 });

@@ -25,7 +25,7 @@ import { norm } from "../util";
  * step with the one in catalogue/matching.ts, for the same reason: somebody
  * files "Venusaur" where the card says "Venusaur ex".
  */
-const TYPE_SUFFIX = /\s+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\s?x|star)$/i;
+const TYPE_SUFFIX = /[\s-]+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\s?x|star)$/i;
 
 /**
  * What makes two rows the same card: the set, the printed number and the name

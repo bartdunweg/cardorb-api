@@ -291,7 +291,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // longest overlap and requires a shared id prefix. The key stayed at v3, so for a whole day every
 // set already in the Data Cache kept a byNumber built by the old rule.
 // v9: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v9"], {
+// v10: the third pass over the English facts (card-fact-corrections.ts): Galarian Gallery, "None" as no rarity, Unown and ☆ names.
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v10"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
@@ -304,7 +305,8 @@ export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "
  * needs it most is the one whose own cards say nothing.
  */
 // v2: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
-export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v2"], {
+// v3: Galarian Gallery is a rarity of its own, and the Trainer Galleries' sub-tier words are Ultra Rare.
+export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v3"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
@@ -325,6 +327,7 @@ export const raritiesOfEra = (setId: string): Promise<string[] | null> =>
  * unknown id throws too, so neither a set without its rarities nor a 404 is kept for a day; both
  * fall back to the uncached read, which answers exactly as it did before this cache.
  */
+// v4: the third pass over the English facts: trainer types, evolutions, gallery rarities, Unown and ☆ names.
 // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
 // v2: rarity and types corrected for 481 English cards (card-fact-corrections.ts), 2026-09-14.
 const englishSetEntry = unstable_cache(
@@ -333,7 +336,7 @@ const englishSetEntry = unstable_cache(
     if (!found) throw new Error(`No English set ${setId}`);
     return found;
   },
-  ["english-set", "v3"],
+  ["english-set", "v4"],
   { revalidate: DAY, tags: ["catalogue"] },
 );
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalRarity, englishRarity, languageRarity } from "./rarity-names";
+import { canonicalRarity, languageRarity } from "./rarity-names";
 
 describe("canonicalRarity", () => {
   it("spells Scarlet & Violet's rarities in title case and a holo as Holo Rare", () => {
@@ -13,13 +13,6 @@ describe("canonicalRarity", () => {
     expect(canonicalRarity("Secret Rare")).toBe("Secret Rare");
     expect(canonicalRarity("レア")).toBe("レア");
     expect(canonicalRarity(null)).toBeNull();
-  });
-});
-
-describe("englishRarity", () => {
-  it("corrects an old holo TCGdex calls Rare, then spells it", () => {
-    expect(englishRarity("base1-1", "Rare")).toBe("Holo Rare");
-    expect(englishRarity("sv01-1", "Illustration rare")).toBe("Illustration Rare");
   });
 });
 

@@ -38,7 +38,8 @@ import { englishCardNames } from "./card-names";
 import { compareCardNumbers } from "../util";
 import { setIdOf } from "./tcgdex-language";
 import { setIn } from "./tcgdex-browse";
-import { englishRarity } from "./rarity-names";
+import { canonicalRarity } from "./rarity-names";
+import { correctedFacts, correctedName } from "./card-fact-corrections";
 
 /* One catalogue per language. English is the one every search asked until 2026-09-11; the
    Japanese one is the same host under its own code, and a name typed in its script is found only
@@ -149,6 +150,19 @@ const matchesWords = (card: CatalogueMatch, words: string[]) =>
  * answer for comes back null and keeps rarity null and types empty, which is
  * what a search result without them has always looked like.
  */
+/** A hit's rarity, types and trainer type through the English corrections, the rarity spelled once. */
+const withCorrections = (
+  id: string,
+  fact: { rarity?: string | null; types?: string[] | null; trainerType?: string | null },
+) => {
+  const fixed = correctedFacts(id, {
+    rarity: fact.rarity ?? null,
+    types: fact.types ?? [],
+    trainerType: fact.trainerType ?? null,
+  });
+  return { ...fixed, rarity: canonicalRarity(fixed.rarity) };
+};
+
 async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
   if (!cards.length) return cards;
   const query = `{ ${cards
@@ -176,10 +190,8 @@ async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
     return fact
       ? {
           ...card,
-          rarity: englishRarity(card.id, fact.rarity),
-          types: fact.types ?? [],
+          ...withCorrections(card.id, fact),
           category: fact.category ?? null,
-          trainerType: fact.trainerType ?? null,
         }
       : card;
   });
@@ -279,7 +291,8 @@ export async function searchCards(
       return {
         id: c.id,
         number: c.localId,
-        name: c.name,
+        // The English shelf's names as the copy writes them (card-fact-corrections.ts).
+        name: language ? c.name : correctedName(c.id, c.name),
         localName: null,
         setName: set?.name ?? setId,
         image: scan(c.image, "low"),

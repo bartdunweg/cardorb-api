@@ -228,9 +228,12 @@ export async function storeSetArt(db: SupabaseClient): Promise<number> {
  * evolution, trainer type, name and illustrator corrections (card-fact-corrections.ts), a stage from
  * TCGplayer's product where TCGdex has none, and full art where TCGplayer's product says so
  * (tcgplayer-products.ts). mirror-language.ts builds its own format on this one, so the Japanese
- * sets are copied again once too.
+ * sets are copied again once too. 3: the third pass (2026-09-14, round two): a trainer type and an
+ * evolution where TCGdex has none, "None" as no rarity, Galarian Gallery and the Trainer Galleries'
+ * one grade, an LV.X's evolution, and one spelling for Unown and the gold star cards
+ * (card-fact-corrections.ts).
  */
-export const CATALOGUE_FORMAT = 2;
+export const CATALOGUE_FORMAT = 3;
 
 export type SyncReport = {
   /** Sets written this run, in the order they finished. */

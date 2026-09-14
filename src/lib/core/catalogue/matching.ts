@@ -18,7 +18,7 @@ import { norm } from "../util";
  * falling back to "does one contain the other", which would happily accept
  * Mewtwo's scan for a card filed as Mew.
  */
-const TYPE_SUFFIX = /\s+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\s?x|star|δ)$/i;
+const TYPE_SUFFIX = /[\s-]+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\s?x|star|δ)$/i;
 
 /**
  * How many single-character edits apart two strings are, giving up at `cap`.
@@ -54,7 +54,8 @@ function editDistance(a: string, b: string, cap: number): number {
 /* Exported for lib/cards-name.test.ts, which is a list of the real rows this
    had to be widened for and the pairs it still has to refuse. */
 export const sameCard = (a: string, b: string) => {
-  const bare = (s: string) => norm(s.replace(TYPE_SUFFIX, ""));
+  // A gold star reads as the word: "Mewtwo ☆" is the catalogue's, "Mewtwo Star" a row's (2026-09-14).
+  const bare = (s: string) => norm(s.replace(/\s*[☆★]/g, " Star").replace(TYPE_SUFFIX, ""));
   if (norm(a) === norm(b) || bare(a) === bare(b)) return true;
   /**
    * A misspelling, which is a thing a hand-kept database of two thousand rows
