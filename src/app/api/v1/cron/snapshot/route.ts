@@ -82,7 +82,11 @@ import { adminClient } from "@/lib/storage/supabase";
 
 export const dynamic = "force-dynamic";
 
-/** Below this the every-card pass runs nightly; at or above it, Saturdays only. The free plan's limit is 500 MB. */
+/**
+ * Below this the every-card pass runs nightly; at or above it, Saturdays only. The free plan's limit
+ * is 500 MB, where Supabase turns the project read-only. Never reached unannounced: from 400 MB
+ * .github/workflows/storage-watch.yml opens an issue every Monday. Raise this with an upgrade.
+ */
 const DAILY_CEILING = 480 * 1024 * 1024;
 /**
  * One assembly per account, memoised for ten minutes and mostly warm. Sixty
