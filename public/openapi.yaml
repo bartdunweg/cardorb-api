@@ -2542,7 +2542,7 @@ paths:
     get:
       tags: [Platform]
       operationId: copyTcgplayerPrices
-      summary: Copy TCGplayer's English shelf in, the latest figures and the day's price history
+      summary: Copy TCGplayer's English and Japanese shelves in, the latest figures and the day's price history
       description: |
         Vercel's cron, daily at 21:15 UTC, with `CRON_SECRET` as the bearer. Five minutes at most.
         Reads tcgcsv's files for every English group once and writes `tcgplayer_prices`, which the
@@ -2569,6 +2569,15 @@ paths:
                   groups: { type: integer }
                   answered: { type: integer }
                   written: { type: integer, description: Printings written to `tcgplayer_prices`. }
+                  japanese:
+                    type: object
+                    description: The Japanese shelf, written on its own; a failure here leaves the English rows standing.
+                    required: [groups, answered, written]
+                    properties:
+                      groups: { type: integer }
+                      answered: { type: integer }
+                      written: { type: integer, description: Japanese printings written to `tcgplayer_prices`. }
+                      skipped: { type: string, description: Why nothing Japanese was written tonight. }
                   history:
                     type: object
                     required: [written]

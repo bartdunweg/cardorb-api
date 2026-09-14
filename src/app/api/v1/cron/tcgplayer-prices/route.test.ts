@@ -227,4 +227,69 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     thin = new Error("fetch failed");
     expect(await (await get("Bearer s3cret")).json()).toMatchObject({ ok: true, thinned: null });
   });
+
+  describe("the Japanese shelf", () => {
+    /** CP1-001, the first card of Double Crisis, linked to TCGplayer's Japanese product 605292. */
+    const JAPANESE = [{ productId: 605292, printing: "holofoil", market: 3 }];
+    const byCategory = (en: unknown, ja: unknown) =>
+      shelfPrintings.mockImplementation(async (category: number) => (category === 85 ? ja : en));
+
+    it("writes its latest figures and a day of history under the Japanese id", async () => {
+      monday();
+      byCategory(
+        { rows: CHARIZARD, groups: 10, answered: 10 },
+        { rows: JAPANESE, groups: 20, answered: 20 },
+      );
+
+      const body = await (await get("Bearer s3cret")).json();
+
+      expect(shelfPrintings).toHaveBeenCalledWith(85);
+      expect(writeTcgplayerPrices).toHaveBeenCalledWith(expect.anything(), [
+        { product_id: 605292, printing: "holofoil", market: 3, updated_on: "2026-09-14" },
+      ]);
+      expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
+        expect.objectContaining({
+          tcgId: "CP1-001",
+          printing: "holofoil",
+          date: "2026-09-14",
+          price: 2.7,
+        }),
+      );
+      expect(body.japanese).toEqual({ groups: 20, answered: 20, written: 1 });
+    });
+
+    it("leaves the English night standing when the Japanese shelf fails", async () => {
+      monday();
+      shelfPrintings.mockImplementation(async (category: number) => {
+        if (category === 85) throw new Error("tcgcsv 503");
+        return { rows: CHARIZARD, groups: 10, answered: 10 };
+      });
+
+      const res = await get("Bearer s3cret");
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(writeTcgplayerPrices).toHaveBeenCalledTimes(1);
+      expect(
+        writeCardPrices.mock.calls[0]![1].some((p: { tcgId: string }) => p.tcgId === "base1-4"),
+      ).toBe(true);
+      expect(body.japanese).toMatchObject({ written: 0, skipped: "read or write failed" });
+    });
+
+    it("writes nothing Japanese when most of its groups did not answer", async () => {
+      monday();
+      byCategory(
+        { rows: CHARIZARD, groups: 10, answered: 10 },
+        { rows: JAPANESE, groups: 20, answered: 10 },
+      );
+
+      const body = await (await get("Bearer s3cret")).json();
+
+      expect(writeTcgplayerPrices).toHaveBeenCalledTimes(1);
+      expect(
+        writeCardPrices.mock.calls[0]![1].some((p: { tcgId: string }) => p.tcgId === "CP1-001"),
+      ).toBe(false);
+      expect(body.japanese).toMatchObject({ written: 0, skipped: "too few groups answered" });
+    });
+  });
 });
