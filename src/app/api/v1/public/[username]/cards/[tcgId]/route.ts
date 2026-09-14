@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, refuse, retryAfter, unavailable } from "@/lib/api/respond";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { getCardDetail } from "@/lib/core/collection/cards";
+import { detailFromSheet, readCardSheet } from "@/lib/core/catalogue/card-sheet";
 import { ownerOf } from "@/lib/core/collection/collection";
 
 /**
@@ -61,7 +62,9 @@ export async function GET(
 
   let card;
   try {
-    card = await getCardDetail(tcgId);
+    // The copy's sheet where it holds one (card-sheet.ts); TCGdex for a card it does not yet.
+    const sheet = await readCardSheet(tcgId);
+    card = sheet ? detailFromSheet(sheet) : await getCardDetail(tcgId);
   } catch (err) {
     // The catalogue did not answer. Not a 404: the CDN below would keep that
     // for an hour and the card would look gone for everyone.

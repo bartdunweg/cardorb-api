@@ -46,6 +46,7 @@ import {
 import { canStoreImages, keepImage, storedAddress, tcgdexFolderMissing } from "./image-store";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
+import { languagesOfSet } from "./card-languages";
 
 /** The energy types a card can carry, as TCGdex names them. A word that is one is a type filter, not a name. */
 export const ENERGY_TYPES = [
@@ -182,6 +183,14 @@ export async function storeSetArt(db: SupabaseClient): Promise<number> {
   });
   return rewritten;
 }
+
+/**
+ * The shape of copy a set is written in. A set the copy holds in an older shape is copied again
+ * ahead of the up-to-date ones, the way a set whose card count moved is, without working its
+ * pictures out afresh. 1: the sheet's facts, printed languages and the set's serie
+ * (migration 20260914220000).
+ */
+export const CATALOGUE_FORMAT = 1;
 
 export type SyncReport = {
   /** Sets written this run, in the order they finished. */
@@ -383,7 +392,7 @@ export async function syncMirror(
   const rank = (setId: string, total: number): [number, string] => {
     const seen = record.get(setId);
     if (!seen) return [0, ""];
-    if (seen.cards !== total) return [1, seen.syncedAt];
+    if (seen.cards !== total || seen.format < CATALOGUE_FORMAT) return [1, seen.syncedAt];
     return [2, seen.syncedAt];
   };
   // The index is newest first; a tie within a rank keeps that, which is the order a
@@ -395,8 +404,11 @@ export async function syncMirror(
   /* The sets worth working out in full: never seen, or their card count has moved. The rest is
      a refresh of what the copy already has, and keeps the pictures it worked out before
      (withResolvedScans). */
+  const totals = new Map(index.map((s) => [s.id, s.total]));
   const fresh = new Set(
-    full ? ranked.map((s) => s.id) : ranked.filter((s) => s.key[0] < 2).map((s) => s.id),
+    full
+      ? ranked.map((s) => s.id)
+      : ranked.filter((s) => record.get(s.id)?.cards !== totals.get(s.id)).map((s) => s.id),
   );
 
   const storing = await canStoreImages();
@@ -418,6 +430,9 @@ export async function syncMirror(
           continue;
         }
         const { set, cards } = read;
+        /* Which Western languages each card was printed in: one read of the set per catalogue.
+           A failure leaves the set's languages unknown, which the sheet answers as TCGdex would. */
+        const languagesOf = await languagesOfSet(id).catch(() => () => null);
         /* What the copy holds for this set before the run writes it. A store that will not
            answer counts every card as changed, which costs the collection a day's cache early
            and never a stale picture. */
@@ -455,6 +470,7 @@ export async function syncMirror(
           abbreviation: set.abbreviation ?? null,
           total: set.total,
           printed_total: set.printedTotal,
+          serie_id: set.serieId ?? null,
         });
         await writeCatalogueSet(
           db,
@@ -473,7 +489,18 @@ export async function syncMirror(
             category: c.category ?? null,
             trainer_type: c.trainerType ?? null,
             full_art: arts.has(c),
+            // The sheet's facts, so opening a card asks nobody (getCardDetail).
+            illustrator: c.sheet?.illustrator ?? null,
+            hp: c.sheet?.hp ?? null,
+            stage: c.sheet?.stage ?? null,
+            evolve_from: c.sheet?.evolveFrom ?? null,
+            regulation_mark: c.sheet?.regulationMark ?? null,
+            first_edition: c.sheet?.firstEdition ?? null,
+            variants: c.sheet?.variants ?? null,
+            languages: languagesOf(c.id),
           })),
+          500,
+          CATALOGUE_FORMAT,
         );
         report.copied.push(id);
       } catch (err) {

@@ -39,6 +39,16 @@ const detail = {
 
 const getCardDetail = vi.fn();
 vi.mock("@/lib/core/collection/cards", () => ({ getCardDetail: () => getCardDetail() }));
+/* The copy's sheet (card-sheet.ts): none by default, so these tests read the card as TCGdex answers
+   it; the ones about the copy hand a sheet in. */
+const readCardSheet = vi.fn();
+vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => null }));
+vi.mock("@/lib/core/catalogue/card-sheet", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/core/catalogue/card-sheet")>(
+    "@/lib/core/catalogue/card-sheet",
+  );
+  return { ...actual, readCardSheet: (...a: unknown[]) => readCardSheet(...a), eraRaritiesFromCopy: async () => ["Promo"] };
+});
 
 const ownerOf = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({

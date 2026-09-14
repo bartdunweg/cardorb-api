@@ -95,3 +95,48 @@ export async function languagesOf(tcgId: string, setId: string | null): Promise<
   if (known) return WESTERN.filter((l) => known.includes(l));
   return westernLanguagesOf(tcgId);
 }
+
+/**
+ * The Western languages of every card of one set, for the nightly copy: one read of the set per
+ * language instead of one read of each card per language on every sheet.
+ *
+ * The same answer languagesOf() gives card by card: the Bulbapedia list where the set is on it,
+ * otherwise the catalogues that list the card, with Portuguese dropped where no other European
+ * catalogue has it. A catalogue that does not answer leaves the whole set unknown (null for every
+ * card), rather than a list short of a language.
+ */
+export async function languagesOfSet(setId: string): Promise<(cardId: string) => Western[] | null> {
+  const known = (SET_LANGUAGES as Record<string, string[] | undefined>)[setId];
+  if (known) {
+    const all = WESTERN.filter((l) => known.includes(l));
+    return () => all;
+  }
+  const listed = await Promise.all(
+    ASKED.filter((lang) => lang !== "en").map(
+      async (lang): Promise<[Western, Set<string>] | null> => {
+        try {
+          const set = (await json(
+            `https://api.tcgdex.net/v2/${lang}/sets/${encodeURIComponent(setId)}`,
+            `${lang} set ${setId}`,
+          )) as { cards?: { id?: string }[] } | null;
+          return [lang, new Set((set?.cards ?? []).flatMap((c) => (c.id ? [c.id] : [])))];
+        } catch (err) {
+          if (err instanceof CatalogueNotFound) return [lang, new Set()];
+          console.error(`TCGdex ${lang} could not list ${setId}:`, err);
+          return null;
+        }
+      },
+    ),
+  );
+  if (listed.includes(null)) return () => null;
+  const catalogues = listed as [Western, Set<string>][];
+  return (cardId) => {
+    const printed: Western[] = [
+      "en",
+      ...catalogues.flatMap(([lang, ids]) => (ids.has(cardId) ? [lang] : [])),
+    ];
+    return printed.includes("pt") && !printed.some((l) => EUROPEAN.includes(l))
+      ? printed.filter((l) => l !== "pt")
+      : printed;
+  };
+}

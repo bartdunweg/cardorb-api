@@ -57,6 +57,23 @@ export type CatalogueMatch = {
    */
   category?: string | null;
   trainerType?: string | null;
+  /**
+   * What a card's sheet shows beyond the list's facts, where the read carried it: the nightly copy
+   * keeps it (catalogue_cards) so the sheet asks nobody. Only englishSet() fills it.
+   */
+  sheet?: CardSheetFacts;
+};
+
+/** A card's sheet facts as TCGdex's GraphQL answers them, trimmed to what the API serves. */
+export type CardSheetFacts = {
+  illustrator: string | null;
+  hp: number | null;
+  stage: string | null;
+  evolveFrom: string | null;
+  regulationMark: string | null;
+  firstEdition: boolean | null;
+  /** variants_detailed, trimmed to what printingsOf() reads. */
+  variants: { type?: string; foil?: string; stamp?: string[] }[];
 };
 
 /** One page of hits. Also read by the dialog, to know whether a full page means more might exist. */
