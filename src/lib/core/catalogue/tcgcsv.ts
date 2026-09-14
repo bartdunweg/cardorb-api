@@ -67,6 +67,59 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
   return out;
 }
 
+/** One printing of one product on a shelf, as tcgplayer_prices stores it. Dollars. */
+export type ShelfPrinting = {
+  productId: number;
+  printing: string;
+  market: number;
+  low: number | null;
+};
+
+/** tcgcsv's "Reverse Holofoil" is TCGdex's "reverse-holofoil": the names the pickers read. */
+export const printingName = (subTypeName: string) => subTypeName.toLowerCase().replace(/\s+/g, "-");
+
+/**
+ * Every priced printing on one shelf, market and low, for the table the collection reads.
+ *
+ * The same files shelfPrices() reads, kept whole. Tolerant per group like it, and it says how
+ * many groups answered, so a cron can refuse to call a shelf with most of its sets missing a day.
+ */
+export async function shelfPrintings(
+  category: number,
+): Promise<{ rows: ShelfPrinting[]; groups: number; answered: number }> {
+  const { results: groups } = await read<{ results: { groupId: number }[] }>(
+    `${BASE}/${category}/groups`,
+  );
+  const rows: ShelfPrinting[] = [];
+  let answered = 0;
+  await mapLimit(groups, 8, async (g) => {
+    let results: {
+      productId: number;
+      subTypeName: string;
+      marketPrice: number | null;
+      lowPrice: number | null;
+    }[];
+    try {
+      ({ results } = await read<{ results: typeof results }>(
+        `${BASE}/${category}/${g.groupId}/prices`,
+      ));
+    } catch {
+      return;
+    }
+    answered++;
+    for (const r of results) {
+      if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
+      rows.push({
+        productId: r.productId,
+        printing: printingName(r.subTypeName),
+        market: r.marketPrice,
+        low: typeof r.lowPrice === "number" ? r.lowPrice : null,
+      });
+    }
+  });
+  return { rows, groups: groups.length, answered };
+}
+
 /**
  * One group's printings, in the shape TCGdex relays TCGplayer's figures in, keyed by product.
  *
@@ -96,8 +149,7 @@ export async function groupPrintings(
   for (const r of results) {
     if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
     const printings = out.get(r.productId) ?? {};
-    // tcgcsv's "Reverse Holofoil" is TCGdex's "reverse-holofoil".
-    printings[r.subTypeName.toLowerCase().replace(/\s+/g, "-")] = {
+    printings[printingName(r.subTypeName)] = {
       marketPrice: r.marketPrice,
       lowPrice: typeof r.lowPrice === "number" ? r.lowPrice : null,
       productId: r.productId,

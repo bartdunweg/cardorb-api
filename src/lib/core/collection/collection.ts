@@ -74,6 +74,7 @@ import {
   listPublicFolders,
   rememberScans,
   type Folder,
+  readTcgplayerPrices,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
 import type { CardPricePoint } from "./movers";
@@ -802,6 +803,113 @@ export const usdToEurForRequest = cache(async (): Promise<number | null> => {
 });
 
 /**
+ * How old a stored TCGplayer figure may be and still price a card. The cron writes daily; a week
+ * covers a run of failed nights without showing a price from another month.
+ */
+const STORED_PRICES_DAYS = 7;
+
+/**
+ * Every card's TCGplayer printings out of tcgplayer_prices, in the shape pricesFor() answers.
+ *
+ * pricesFor() asked TCGdex for each card's record, which relays the same TCGplayer figures: 1,633
+ * requests for the owner's collection, and on a cold instance /cards waited 7 to 12 s for them
+ * (2026-09-14). The cron (cron/tcgplayer-prices) writes the whole shelf daily; this is one query.
+ * Compared that day over 1,564 held cards: the same printings and product ids on every card both
+ * price, and 187 cards priced here that TCGdex has no figure for. Cardmarket's `price` and `holo`
+ * are left null, as no price on screen has read them since 2026-09-12 (priceFromMarket).
+ *
+ * TCGdex still answers for a card with no TCGplayer product linked, and for every card while the
+ * table holds nothing current (before the cron's first run, or a store that cannot be read).
+ */
+export async function storedPricesFor(ids: string[]): Promise<Map<string, CardPrices>> {
+  const out = new Map<string, CardPrices>();
+  if (!ids.length) return out;
+  const db = adminClient();
+  const links = ids.map((id) => [id, TCGCSV_LINKS[id]?.productId ?? null] as const);
+  const unlinked = links.flatMap(([id, pid]) => (pid == null ? [id] : []));
+  const since = new Date(Date.now() - STORED_PRICES_DAYS * 86_400_000).toISOString().slice(0, 10);
+  let rows: Awaited<ReturnType<typeof readTcgplayerPrices>> | null = null;
+  if (db && (await storedPricesCurrent(db, since))) {
+    const productIds = [...new Set(links.flatMap(([, pid]) => (pid == null ? [] : [pid])))];
+    rows = await readTcgplayerPrices(db, productIds, since).catch((err) => {
+      console.error("Stored TCGplayer prices unreadable, asking TCGdex:", err);
+      return null;
+    });
+  }
+  if (!rows) return timed("tcgdex pricesFor", () => pricesFor(ids), `${ids.length} cards`);
+
+  for (const [id, prices] of pricesFromStoredRows(links, rows)) out.set(id, prices);
+  if (unlinked.length)
+    for (const [id, prices] of await timed(
+      "tcgdex pricesFor",
+      () => pricesFor(unlinked),
+      `${unlinked.length} cards without a TCGplayer link`,
+    ))
+      out.set(id, prices);
+  logTiming("store tcgplayer prices", 0, `${out.size} of ${ids.length} cards priced`);
+  return out;
+}
+
+/**
+ * The cards' prices out of stored rows, by the pickers TCGdex's figures are read with (usdOf,
+ * usdFirstEdOf, usdPrintingsOf): a stored figure is chosen exactly as a relayed one was. Exported
+ * for its test and for the comparison with TCGdex.
+ */
+export function pricesFromStoredRows(
+  links: readonly (readonly [string, number | null])[],
+  rows: readonly {
+    product_id: number;
+    printing: string;
+    market: number | string;
+    low: number | string | null;
+  }[],
+): Map<string, CardPrices> {
+  const out = new Map<string, CardPrices>();
+  const byProduct = new Map<
+    number,
+    Record<string, { marketPrice: number; lowPrice: number | null; productId: number }>
+  >();
+  for (const r of rows) {
+    const printings = byProduct.get(r.product_id) ?? {};
+    printings[r.printing] = {
+      marketPrice: Number(r.market),
+      lowPrice: r.low == null ? null : Number(r.low),
+      productId: r.product_id,
+    };
+    byProduct.set(r.product_id, printings);
+  }
+  for (const [id, pid] of links) {
+    const tp = pid == null ? undefined : byProduct.get(pid);
+    const usd = tp ? usdOf(tp) : null;
+    if (!tp || !usd) continue;
+    out.set(id, {
+      price: null,
+      holo: null,
+      usd,
+      usdFirstEd: usdFirstEdOf(tp),
+      usdPrintings: usdPrintingsOf(tp),
+    });
+  }
+  return out;
+}
+
+/** Whether the table holds a figure written since `since`: one row asked, remembered ten minutes. */
+let pricesCurrent: { at: number; since: string; yes: boolean } | null = null;
+async function storedPricesCurrent(db: SupabaseClient, since: string): Promise<boolean> {
+  if (pricesCurrent && pricesCurrent.since === since && Date.now() - pricesCurrent.at < 600_000)
+    return pricesCurrent.yes;
+  const { data, error } = await db
+    .from("tcgplayer_prices")
+    .select("product_id")
+    .gte("updated_on", since)
+    .limit(1);
+  const yes = !error && (data?.length ?? 0) > 0;
+  // A failed look is not remembered: the next request asks again.
+  if (!error) pricesCurrent = { at: Date.now(), since, yes };
+  return yes;
+}
+
+/**
  * The collection, put together for this request: the rows from their cache,
  * the guide from its, one entry of facts per set from theirs, and the join.
  *
@@ -835,10 +943,9 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
     return underway;
   }
   const build = (async () => {
-    // TCGdex's record per card, which carries TCGplayer's printings; the Cardmarket guide that used
-    // to answer first is gone (2026-09-12), and TCGdex was already asked for every card after #354.
+    // TCGplayer's figures as the cron stored them; TCGdex only where the store has nothing current.
     const priceSource = (ids: string[]) =>
-      timed("tcgdex pricesFor", () => pricesFor(ids), `${ids.length} cards`);
+      timed("store pricesFor", () => storedPricesFor(ids), `${ids.length} cards`);
     const start = performance.now();
     const sets = await buildCollection(rows, {
       factsSource: (setName, identities) =>
