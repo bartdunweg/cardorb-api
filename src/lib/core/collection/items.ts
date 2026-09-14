@@ -404,7 +404,7 @@ export function filterCounts(
   };
 }
 
-export const SORTS = ["set", "name", "price", "added", "dex"] as const;
+export const SORTS = ["set", "name", "price", "added", "dex", "change"] as const;
 export type Sort = (typeof SORTS)[number];
 export type Order = "asc" | "desc";
 
@@ -463,7 +463,8 @@ export function sumValue(items: CardItem[]): ListValue {
 export function sortItems(items: CardItem[], sort: Sort = "set", order?: Order): CardItem[] {
   const dir = (order ?? (sort === "added" ? "desc" : "asc")) === "asc" ? 1 : -1;
   const indexed = items.map((it, i) => ({ it, i }));
-  if (sort === "set") {
+  // `change` needs the readings, which the route has and this pure sort does not: see sortByChange.
+  if (sort === "set" || sort === "change") {
     return (dir === 1 ? indexed : indexed.reverse()).map((x) => x.it);
   }
   // `dex`: the national number; a trainer or energy has none and goes last like any missing key.
@@ -524,6 +525,9 @@ export type ItemQuery = Omit<ItemFilter, (typeof REPEATED)[number]> &
     fullArt?: boolean;
     /** `?counts=1`: the answer carries filterCounts() beside the page. */
     counts?: boolean;
+    /** `sort=change`'s window, yyyy-mm-dd: required `from`, `to` today when left out. */
+    from?: string;
+    to?: string;
   };
 
 /**
@@ -591,6 +595,18 @@ export function readItemQuery(
       return { kind: "invalid", error: "order must be asc or desc." };
     query.order = order;
   }
+  const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+  for (const key of ["from", "to"] as const) {
+    const v = params.get(key);
+    if (v === null) continue;
+    if (!ISO_DAY.test(v) || Number.isNaN(Date.parse(`${v}T00:00:00Z`)))
+      return { kind: "invalid", error: `${key} must be a date, yyyy-mm-dd.` };
+    query[key] = v;
+  }
+  if (query.sort === "change" && !query.from)
+    return { kind: "invalid", error: "sort=change needs from, the first day of the window." };
+  if (query.from && query.to && query.from > query.to)
+    return { kind: "invalid", error: "from must not be after to." };
   for (const key of ["limit", "offset"] as const) {
     const v = params.get(key);
     if (v === null) continue;

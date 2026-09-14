@@ -19,7 +19,9 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
+const getCardPrices = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
+  getCardPrices: (...a: unknown[]) => getCardPrices(...a),
   getCollection: (...a: unknown[]) => getCollection(...a),
   findFolder: (...a: unknown[]) => findFolder(...a),
 }));
@@ -167,5 +169,29 @@ describe("GET /api/v1/cards", () => {
     const res = await get();
     expect(res.status).toBe(401);
     expect(getCollection).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/v1/cards?sort=change", () => {
+  it("refuses a change sort without its first day, and a window that ends before it starts", async () => {
+    expect((await get("?sort=change")).status).toBe(400);
+    expect((await get("?sort=change&from=2026-09-10&to=2026-09-01")).status).toBe(400);
+    expect((await get("?sort=change&from=10-09-2026")).status).toBe(400);
+    expect(getCollection).not.toHaveBeenCalled();
+  });
+
+  it("reads the readings from the first day, and answers each item with its priceChange", async () => {
+    getCardPrices.mockResolvedValue({ points: [], failed: false });
+    const res = await get("?sort=change&from=2026-09-01&to=2026-09-14");
+    expect(res.status).toBe(200);
+    expect(getCardPrices.mock.calls[0]![3]).toBe("2026-09-01");
+    const body = await res.json();
+    expect(body.cards.length).toBeGreaterThan(0);
+    for (const card of body.cards) expect(card.priceChange).toBeNull();
+  });
+
+  it("answers 503 when the readings could not be read", async () => {
+    getCardPrices.mockResolvedValue({ points: [], failed: true });
+    expect((await get("?sort=change&from=2026-09-01")).status).toBe(503);
   });
 });

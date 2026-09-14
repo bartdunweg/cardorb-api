@@ -11,7 +11,8 @@ import {
   refused,
   storeErrorResponse,
 } from "@/lib/api/guard";
-import { findFolder, getCollection } from "@/lib/core/collection/collection";
+import { findFolder, getCardPrices, getCollection } from "@/lib/core/collection/collection";
+import { type PriceChange, priceChanges, sortByChange } from "@/lib/core/collection/price-change";
 import type { FolderRule } from "@/lib/core/collection/folders";
 import {
   facetsOf,
@@ -21,6 +22,7 @@ import {
   pageOf,
   readItemQuery,
   sortItems,
+  pricedCardsOf,
   sumValue,
 } from "@/lib/core/collection/items";
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
@@ -124,8 +126,27 @@ export async function GET(req: Request) {
     rule,
     fullArtIds,
   };
-  const shown = sortItems(filterItems(all, filter), sort, order);
-  const { items, total } = pageOf(shown, read.query);
+  const filtered = filterItems(all, filter);
+  /* `sort=change`: by what each copy's price did between `from` and `to` (today when left out),
+     over the readings of just the cards in this list, biggest gain first unless `order=asc`. Each
+     item on the page carries its `priceChange`; an item with no change goes last and carries null.
+     The readings are the movers' (GET /v1/movers), so the two agree about a card. */
+  let changes: Map<string, PriceChange> | undefined;
+  if (sort === "change") {
+    const from = read.query.from!;
+    const to = read.query.to ?? new Date().toISOString().slice(0, 10);
+    const prices = await getCardPrices(who.userId, pricedCardsOf(filtered), token, from);
+    if (prices.failed) return unavailable(undefined, readHeaders(req));
+    changes = priceChanges(filtered, prices.points, from, to);
+  }
+  const shown = changes
+    ? sortByChange(filtered, changes, order ?? "desc")
+    : sortItems(filtered, sort, order);
+  const paged = pageOf(shown, read.query);
+  const total = paged.total;
+  const items = changes
+    ? paged.items.map((it) => ({ ...it, priceChange: changes.get(it.id) ?? null }))
+    : paged.items;
   // The facets ride along with every page, over the owned collection (the wishes when
   // `owned=false`) whatever the other filters: the web app used to fetch GET /v1/collection —
   // a megabyte — to draw the two menus.
