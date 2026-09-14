@@ -582,7 +582,7 @@ for (const [set, r] of Object.entries(coverage)
 }
 
 /* The printings of every linked card brought up to what TCGplayer lists now. They were written once,
-   when a card was linked, and never again: Skyridge Oddish (ecard3-96) and two HeartGold SoulSilver
+   when a card was linked, and never again: Skyridge Shuckle (ecard3-96) and two HeartGold SoulSilver
    cards had a reverse TCGplayer priced and a map that said Normal only (2026-09-14). */
 let widened = 0;
 for (const [id, link] of Object.entries(ids)) {
