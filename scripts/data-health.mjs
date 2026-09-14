@@ -56,7 +56,7 @@ const check = (name, ok, detail) => checks.push({ name, ok, detail });
  */
 const SET_STALE_DAYS = 7;
 /** The copy's shape each catalogue is written in now (mirror.ts, mirror-language.ts). */
-const FORMATS = { en: 1, ja: 2 };
+const FORMATS = { en: 1, ja: 3 };
 
 const sync = await query(
   "select language, count(*)::int as sets, min(format)::int as oldest_format, min(synced_at)::text as oldest from catalogue_sync group by language order by language",
@@ -80,12 +80,12 @@ for (const language of Object.keys(FORMATS)) {
 
 /**
  * Cards whose picture is not in our bucket, per catalogue: none at all, or still another host's.
- * On 2026-09-14 the English copy had 8 cards no source has a picture of, and the Japanese first pass
- * 2,430 once TCGplayer's product pictures were in (PMCG, neo, e-Card, VS and PCG sets no source
- * we read has a picture of); a jump past these is a night that failed
+ * On 2026-09-14 the English copy had 8 cards no source has a picture of, and the Japanese copy
+ * 1,194 of 16,832 once TCGplayer's Japanese shelf was read beside TCGdex (tcgplayer-japan.ts); a jump
+ * past these is a night that failed
  * to copy, not a catalogue that has none.
  */
-const PICTURELESS_CEILING = { en: 50, ja: 2500 };
+const PICTURELESS_CEILING = { en: 50, ja: 1300 };
 const pictures = await query(
   "select language, count(*) filter (where image is null)::int as none, count(*) filter (where image is not null and image not like 'https://images.cardorb.com/%')::int as elsewhere, count(*)::int as cards from catalogue_cards group by language",
 );
