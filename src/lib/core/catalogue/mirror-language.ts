@@ -35,6 +35,7 @@ import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { canonicalRarity } from "./rarity-names";
 import { CatalogueNotFound, json } from "./tcgdex-client";
 import { type BrowseLanguage, listSetsIn, setIn } from "./tcgdex-browse";
+import { scrydexJapanExpansions, scrydexLogoFor } from "./scrydex-japan-logos";
 import {
   type TcgplayerJapanCard,
   factsOfCardType,
@@ -52,8 +53,9 @@ const HOST = "https://api.tcgdex.net/v2";
  * numbers are no file name at Limitless, and the first pass left 10 of 150 sampled cards blank.
  * 3: TCGplayer's Japanese shelf as a catalogue (tcgplayer-japan.ts): the cards of a set TCGdex lists
  * without any, a picture matched by number or English name, and each card's TCGplayer product.
+ * 4: each set's wordmark from Scrydex (scrydex-japan-logos.ts).
  */
-const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 2;
+const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 3;
 
 /** TCGplayer's 1000 px product picture for a Japanese card, where its Japanese shelf sells one. */
 async function tcgplayerJapaneseScan(id: string): Promise<string | null> {
@@ -182,6 +184,9 @@ export async function syncLanguageMirror(
   // TCGplayer's Japanese groups, once for the run; a shelf that does not answer costs the run its
   // second source, not its copy.
   const groups = lang === "ja" ? await japanGroups().catch(() => []) : [];
+  // Scrydex's Japanese expansions, for each set's wordmark; a page that does not answer costs the run
+  // its logos, which are kept as they were.
+  const expansions = lang === "ja" ? await scrydexJapanExpansions().catch(() => null) : null;
   const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, art: 0, ms: 0 };
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);
   const worker = async () => {
@@ -276,7 +281,10 @@ export async function syncLanguageMirror(
           local_name: set.localName,
           series: set.series,
           release_date: set.releaseDate,
-          logo: await ownArt(set.logo, storing),
+          logo: await ownArt(
+            set.logo ?? (expansions ? scrydexLogoFor(expansions, { id, name: set.name }) : null),
+            storing,
+          ),
           symbol: await ownArt(set.symbol, storing),
           abbreviation: set.abbreviation ?? null,
           total: set.total,

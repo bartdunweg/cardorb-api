@@ -259,12 +259,13 @@ export async function copiedLanguageSets(language: BrowseLanguage): Promise<Cata
       name: r.name,
       localName: r.local_name ?? null,
       series: r.series ?? "",
-      // As the shelf has always shown these: no date and no art on the tile.
+      // No date on the tile, as the shelf has always shown these. The wordmark is Scrydex's, kept in
+      // our bucket (scrydex-japan-logos.ts), where the copy has one.
       releaseDate: null,
       total: r.total ?? 0,
       printedTotal: r.printed_total,
       cardsRecorded: r.cards_recorded ?? true,
-      logo: null,
+      logo: r.logo,
       symbol: null,
     }));
 }
