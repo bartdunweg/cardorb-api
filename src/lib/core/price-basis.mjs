@@ -143,24 +143,27 @@ export const printingKeysOf = (copy) => {
       : copy.edition === "shadowless"
         ? "shadowless"
         : "unlimited";
+  /*
+   * A reverse reads a reverse figure and nothing else (Bart, 2026-09-14: a missing price shows as
+   * unknown, never as another printing's). A patterned reverse (Poké Ball, Master Ball, Friend
+   * Ball, Team Rocket, Energy Symbol, ...) reads its own product: TCGplayer sells each apart from
+   * the plain reverse, at several times its price (Prismatic Evolutions Eevee: $0.29 plain
+   * reverse, $1.50 Poké Ball, $18.63 Master Ball). A plain reverse reads TCGplayer's reverse
+   * holofoil. Until then a reverse with no figure of its own fell to the plain reverse, the holo,
+   * the run's plain printing or the normal card, and was counted at a printing it is not: every
+   * e-Card reverse TCGplayer lists no figure for read the normal card's price.
+   */
+  if (isPatternedReverse(copy.finish)) return [`${copy.finish}-reverse-holofoil`];
+  if (foil === "reverse-holofoil") return [`${run}-${foil}`, foil];
   const keys = [];
-  /* A patterned reverse (Poké Ball, Master Ball, Friend Ball, Team Rocket, Energy Symbol, ...) reads its own product first (since
-     2026-09-14): TCGplayer sells each apart from the plain reverse, at several times its price
-     (Prismatic Evolutions Eevee: $0.29 plain reverse, $1.50 Poké Ball, $18.63 Master Ball). Where
-     that printing has no figure it falls to the plain reverse's chain below, as it always read. */
-  if (isPatternedReverse(copy.finish)) keys.push(`${copy.finish}-reverse-holofoil`);
   // The run and the foil together first, then the run, then the foil, then the plain card: every
   // step drops the fact TCGplayer is least likely to price apart.
-  if (run && foil) keys.push(`${run}-${foil}`);
-  /* A reverse reads TCGplayer's reverse holofoil before the run's plain printing: "unlimited" on its
-     own is the plain card, and a reverse copy is never the plain card while a reverse figure exists. */
-  if (foil === "reverse-holofoil") keys.push(foil);
-  if (run) keys.push(run);
+  if (foil) keys.push(`${run}-${foil}`);
+  keys.push(run);
   if (foil) keys.push(foil);
   /*
    * Then the nearest other figure, and only in one direction.
    *
-   * A reverse on a card TCGplayer prices only as "holofoil" is still a foil, so it reads that.
    * A holo never reads a reverse: on an older card the holo rare and the reverse are different
    * markets, and treating a holo like a reverse was measured once already, dropping this
    * collection by €2,488 (cards-stats.test.ts). And a copy whose finish nobody has said never
@@ -169,7 +172,6 @@ export const printingKeysOf = (copy) => {
    * card first for those, then "holofoil" for a card that exists only as a holo, where the
    * plain card is the holo.
    */
-  if (foil === "reverse-holofoil") keys.push("holofoil");
   keys.push("normal");
   if (foil === null) keys.push("holofoil");
   return [...new Set(keys)];
@@ -189,23 +191,27 @@ export const printingPriceOf = (copy, printings) => {
 };
 
 export const copyPriceOf = (copy, card) =>
-  /*
-   * TCGplayer's own printing first, then the stamped run, then the card's own figure, which
-   * is TCGplayer's too. One market, all the way down (Bart's call, 2026-09-12).
-   *
-   * Cardmarket used to answer where TCGplayer says nothing. It no longer does, and that is
-   * the point rather than an oversight: it names a product after the card and never after
-   * its number, so several printings share one figure and a plain rare reads the holo's
-   * price. A copy TCGplayer does not price now has no price, and every screen says so.
-   *
-   * What that costs is on the record in cardorb-web's docs/prices.md: about one card in
-   * eight, mostly promos, and the Shadowless run, which Cardmarket filed as a product of
-   * its own and TCGplayer does not separate.
-   */
-  printingPriceOf(copy, card.pricePrintings) ||
-  (copy.edition === "1st-edition" && card.priceFirstEd) ||
-  card.price ||
-  null;
+  isReverseFinish(copy.finish)
+    ? /* A reverse has its own figure or none: the stamped run and the card's headline figure are
+         other printings (printingKeysOf). */
+      printingPriceOf(copy, card.pricePrintings)
+    : /*
+       * TCGplayer's own printing first, then the stamped run, then the card's own figure, which
+       * is TCGplayer's too. One market, all the way down (Bart's call, 2026-09-12).
+       *
+       * Cardmarket used to answer where TCGplayer says nothing. It no longer does, and that is
+       * the point rather than an oversight: it names a product after the card and never after
+       * its number, so several printings share one figure and a plain rare reads the holo's
+       * price. A copy TCGplayer does not price now has no price, and every screen says so.
+       *
+       * What that costs is on the record in cardorb-web's docs/prices.md: about one card in
+       * eight, mostly promos, and the Shadowless run, which Cardmarket filed as a product of
+       * its own and TCGplayer does not separate.
+       */
+      printingPriceOf(copy, card.pricePrintings) ||
+      (copy.edition === "1st-edition" && card.priceFirstEd) ||
+      card.price ||
+      null;
 
 /*
  * The estimated Near Mint band used to live here: a ratio of about 1.15 to 1.40 above €20

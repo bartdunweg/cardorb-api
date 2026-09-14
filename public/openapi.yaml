@@ -201,7 +201,7 @@ components:
     Finish:
       type: string
       enum: [normal, reverse-holo, holo, poke-ball, master-ball, energy-symbol, friend-ball, love-ball, quick-ball, dusk-ball, team-rocket]
-      description: Which printing a copy is; `poke-ball`, `master-ball`, `energy-symbol`, `friend-ball`, `love-ball`, `quick-ball`, `dusk-ball` and `team-rocket` are patterned reverse holos TCGplayer sells as products of their own (Prismatic Evolutions, Black Bolt, White Flare, Ascended Heroes, three Black & White blister reverses), each priced from its own TCGplayer product as the printing `poke-ball-reverse-holofoil` and so on, and as a plain reverse holo where that has no figure. `null` on a copy means "nobody has said", not `normal`.
+      description: Which printing a copy is; `poke-ball`, `master-ball`, `energy-symbol`, `friend-ball`, `love-ball`, `quick-ball`, `dusk-ball` and `team-rocket` are patterned reverse holos TCGplayer sells as products of their own (Prismatic Evolutions, Black Bolt, White Flare, Ascended Heroes, three Black & White blister reverses), each priced from its own TCGplayer product as the printing `poke-ball-reverse-holofoil` and so on. A reverse (plain or patterned) with no figure of its own has no price (`null`), never the normal card's. `null` on a copy means "nobody has said", not `normal`.
 
     FoilPattern:
       type: string
