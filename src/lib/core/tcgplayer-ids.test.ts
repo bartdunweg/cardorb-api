@@ -7,7 +7,9 @@ import TCGPLAYER_IDS from "./tcgplayer-ids.generated.json";
  * TCGdex's list beside TCGplayer's (Pokémon Rumble Starmie and Gyarados both on Ninetales, seven
  * Brilliant Stars Trainer Gallery cards on their main-set namesakes, Aquapolis a/b). What is left
  * here is the same printing listed twice: a trainer kit card in both halves' TCGdex sets, and the
- * Generations and XY alternate arts TCGdex files under Yellow A Alternate too.
+ * Generations and XY alternate arts TCGdex files under Yellow A Alternate too. Trainer kit halves are
+ * not: TCGplayer sells each half-deck's copy as a product of its own ("Hau (#19) (Lycanroc
+ * Half-Deck)"), and six kit cards read the other half's until 2026-09-14.
  */
 const SAME_PRINTING = new Set([
   "g1-28a xya-28a",
@@ -16,12 +18,6 @@ const SAME_PRINTING = new Set([
   "xy4-24a xya-24a",
   "xy6-92a xya-92a",
   "xy9-107a xya-107a",
-  "tk-sm-l-19 tk-sm-r-19",
-  "tk-sm-l-21 tk-sm-r-21",
-  "tk-sm-l-23 tk-sm-r-23",
-  "tk-sm-l-25 tk-sm-r-25",
-  "tk-xy-latia-20 tk-xy-latio-20",
-  "tk-xy-p-20 tk-xy-su-20",
 ]);
 
 describe("tcgplayer-ids.generated.json", () => {
