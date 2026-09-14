@@ -50,7 +50,7 @@ vi.mock("../tcgplayer-groups.generated.json", () => ({
   default: { "3": { "42382": 604 }, "85": { "640001": 24001 } },
 }));
 
-const { assembleFor, japaneseDetailPrice, tcgplayerPricesFor } = await import("./collection");
+const { assembleFor, detailPrice, tcgplayerPricesFor } = await import("./collection");
 
 beforeEach(() => {
   groupPrintings.mockReset();
@@ -165,23 +165,34 @@ describe("a Japanese card in a collection", () => {
   });
 });
 
-describe("japaneseDetailPrice", () => {
+describe("detailPrice", () => {
   it("puts the Japanese shelf's price and product on a card's detail", async () => {
-    const card = await japaneseDetailPrice({ id: "M1S-001", price: null, tcgplayerId: null }, 0.5);
+    const card = await detailPrice({ id: "M1S-001", price: null, tcgplayerId: null }, "ja", 0.5);
     expect(groupPrintings).toHaveBeenCalledWith(24001, 85);
-    expect(card).toEqual({
-      id: "M1S-001",
-      price: { market: 2 },
-      tcgplayerId: 640001,
-    });
+    expect(card).toEqual({ id: "M1S-001", price: { market: 2 }, tcgplayerId: 640001 });
   });
 
-  it("prices nothing without a product or without the day's rate", async () => {
+  it("replaces the figure TCGdex relays on an English card with the one every list shows", async () => {
+    const card = await detailPrice(
+      { id: "base1-4", price: { market: 999 }, tcgplayerId: null },
+      null,
+      0.5,
+    );
+    expect(groupPrintings).toHaveBeenCalledWith(604, 3);
+    expect(card).toEqual({ id: "base1-4", price: { market: 400 }, tcgplayerId: 42382 });
+  });
+
+  it("keeps TCGdex's figure for an English card with no TCGplayer product", async () => {
+    const card = { id: "nowhere-1", price: { market: 3 }, tcgplayerId: null };
+    expect(await detailPrice(card, null, 0.5)).toEqual(card);
+  });
+
+  it("prices nothing without a product on the Japanese shelf or without the day's rate", async () => {
     expect(
-      await japaneseDetailPrice({ id: "M1S-002", price: null, tcgplayerId: null }, 0.5),
+      await detailPrice({ id: "M1S-002", price: null, tcgplayerId: null }, "ja", 0.5),
     ).toMatchObject({ price: null, tcgplayerId: null });
     expect(
-      await japaneseDetailPrice({ id: "M1S-001", price: null, tcgplayerId: null }, null),
+      await detailPrice({ id: "M1S-001", price: null, tcgplayerId: null }, "ja", null),
     ).toMatchObject({ price: null, tcgplayerId: null });
   });
 });

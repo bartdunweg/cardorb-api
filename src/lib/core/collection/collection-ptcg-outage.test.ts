@@ -36,6 +36,7 @@ vi.mock("../catalogue/ptcg", () => ({
 vi.mock("../../storage/supabase", () => ({
   createServiceClient: () => null,
   createClient: async () => null,
+  adminClient: () => null,
 }));
 vi.mock("../../storage/postgres", () => ({ listCardPrices: vi.fn() }));
 vi.mock("../../storage/collection", () => ({

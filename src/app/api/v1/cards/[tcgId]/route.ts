@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
-import { japaneseDetailPrice, usdToEurForRequest } from "@/lib/core/collection/collection";
+import { detailPrice, usdToEurForRequest } from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
 import { foilPatternsOfSerie } from "@/lib/core/catalogue/card-printings";
@@ -53,8 +53,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     // the currency the collection is valued in.
     const rate = await usdToEurForRequest();
     card = await getCardDetail(tcgId, own, rate);
-    // TCGdex relays no TCGplayer figure for a Japanese card: its price is the Japanese shelf's.
-    if (card && own === "ja") card = await japaneseDetailPrice(card, rate);
+    // The price every other surface shows for this printing (detailPrice), not the figure TCGdex
+    // relays on the record, which runs behind and is missing for a Japanese card.
+    if (card) card = await detailPrice(card, own, rate);
   } catch (err) {
     // The catalogue did not answer. Not a 404: that would say the card is
     // gone, and a client may keep it.

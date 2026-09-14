@@ -25,10 +25,10 @@ vi.mock("@/lib/core/catalogue/card-languages", () => ({
 /* The day's dollar rate, which the route reads so the price can be TCGplayer's in euros. The
    real one sits in collection.ts behind server-only and asks frankfurter; neither belongs here. */
 const usdToEurForRequest = vi.fn();
-const japaneseDetailPrice = vi.fn();
+const detailPrice = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   usdToEurForRequest: () => usdToEurForRequest(),
-  japaneseDetailPrice: (...a: unknown[]) => japaneseDetailPrice(...a),
+  detailPrice: (...a: unknown[]) => detailPrice(...a),
 }));
 const raritiesOfEra = vi.fn();
 vi.mock("@/lib/core/catalogue/catalogue", () => ({
@@ -52,6 +52,7 @@ beforeEach(() => {
   getCardDetail.mockResolvedValue({ id: "sv03-125", name: "Charizard" });
   usdToEurForRequest.mockResolvedValue(0.92);
   serieOfSet.mockResolvedValue(null);
+  detailPrice.mockImplementation(async (card: object) => card);
 });
 afterEach(() => {
   vi.clearAllMocks();
@@ -151,9 +152,9 @@ describe("the price's currency", () => {
   });
 
   // TCGdex relays no TCGplayer figure for a Japanese card, so its price is the Japanese shelf's.
-  it("prices a Japanese card from TCGplayer's Japanese shelf, and an English one as it was", async () => {
+  it("prices a card from the one TCGplayer read, on the shelf of its language", async () => {
     getCardDetail.mockResolvedValue({ id: "SV1a-007", price: null, tcgplayerId: null });
-    japaneseDetailPrice.mockImplementation(async (card: object) => ({
+    detailPrice.mockImplementation(async (card: object) => ({
       ...card,
       price: { market: 2 },
       tcgplayerId: 640001,
@@ -161,14 +162,15 @@ describe("the price's currency", () => {
     const res = await GET(new Request("https://api.cardorb.com/v1/cards/SV1a-007?language=ja"), {
       params: Promise.resolve({ tcgId: "SV1a-007" }),
     });
-    expect(japaneseDetailPrice).toHaveBeenCalledWith(
+    expect(detailPrice).toHaveBeenCalledWith(
       { id: "SV1a-007", price: null, tcgplayerId: null },
+      "ja",
       0.92,
     );
     expect(await res.json()).toMatchObject({ price: { market: 2 }, tcgplayerId: 640001 });
 
-    japaneseDetailPrice.mockClear();
+    detailPrice.mockClear();
     await get();
-    expect(japaneseDetailPrice).not.toHaveBeenCalled();
+    expect(detailPrice).toHaveBeenCalledWith(expect.anything(), null, 0.92);
   });
 });
