@@ -1,3 +1,4 @@
+import { catalogueCardId } from "@/lib/api/card-id";
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
@@ -29,7 +30,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     return apiError(who.status, who.error, undefined, {
       headers: { ...readHeaders(req), ...who.headers },
     });
-  const { tcgId } = await params;
+  const tcgId = catalogueCardId((await params).tcgId);
   const { points, failed } = await getCardPrices(
     who.userId,
     [tcgId],

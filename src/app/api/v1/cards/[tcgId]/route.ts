@@ -1,3 +1,4 @@
+import { catalogueCardId } from "@/lib/api/card-id";
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
@@ -43,7 +44,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     });
   }
 
-  const { tcgId } = await params;
+  const tcgId = catalogueCardId((await params).tcgId);
   /* `?language=ja`: the Japanese catalogue rather than the English one, because its ids are
      only in its own. Left out, English, which is every card this route has ever
      been asked about. */
