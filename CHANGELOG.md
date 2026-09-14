@@ -24,6 +24,8 @@ if the two have drifted apart.
 
 - The Japanese catalogue is copied into Card Orb's own store every night, beside the English one and in the same tables: every set with its English and printed name, every card with its facts (rarity, types, illustrator, HP, printings) and its picture in our own bucket, TCGdex's scan where it has the plain print and Limitless's where it does not. A row is now a card of one catalogue, keyed by language and id, because the two catalogues share ids (Neo Destiny 100 to 113). The search column also matches a card's printed name. Nothing reads the Japanese copy yet; the pages move onto it next, once it is compared with TCGdex.
 
+- The nightly catalogue copy may run for five minutes, as the price job does. The Japanese copy reads one record per card, and its first run was cut off after four sets at the one-minute limit.
+
 - Japanese cards have a price history from mid-December 2024, per printing: every day from March 2026 and one reading a week before, the same shape as the English archive. `scripts/backfill-card-prices.mjs --only japanese` writes it that way now (it wrote the two old series once a week up to August 2026), and passes over an archive whose Japanese files are empty, as tcgcsv's were for most days until 2024-12-14.
 
 - The price job (`GET /v1/cron/tcgplayer-prices`) reads TCGplayer's Japanese shelf too, into `tcgplayer_prices` and a day of history per printing under the card's Japanese id, from tonight: 22,445 printings, 9,259 cards linked. Its answer adds `japanese`. A Japanese card's chart has a line from 2026-09-14; the months before are filled in later from tcgcsv's archive (from 2024-08-24).

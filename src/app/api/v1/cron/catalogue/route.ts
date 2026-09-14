@@ -18,7 +18,10 @@ import { adminClient } from "@/lib/storage/supabase";
  * service role, for the same reason those two use it: there is nobody to be at half past three.
  */
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+/* 300 s, as the price job has: the Japanese copy asks one record per card, and on its first pass
+   four sets took the whole minute and the function was cut off mid-set (2026-09-14). The English
+   run keeps its 45 s budget inside it. */
+export const maxDuration = 300;
 
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET?.trim();
@@ -40,7 +43,7 @@ export async function GET(req: Request) {
     /* `?language=ja`: the Japanese catalogue into the same copy (mirror-language.ts), on a schedule
        of its own so each has the whole minute. */
     if (params.get("language") === "ja") {
-      const report = await syncLanguageMirror(db, "ja");
+      const report = await syncLanguageMirror(db, "ja", { budgetMs: 200_000 });
       console.log(
         `[cron] catalogue ja: ${report.copied.length} sets copied, ${report.failed.length} failed, ${report.left} left, ${report.pictures} pictures changed, ${report.ms} ms`,
       );
