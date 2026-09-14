@@ -149,6 +149,7 @@ import { copyPriceOf, priceFromUsd } from "../price-basis.mjs";
 export { shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
+import { englishRarity } from "../catalogue/rarity-names";
 
 const num = (v: unknown) => (typeof v === "number" ? v : null);
 
@@ -1503,7 +1504,9 @@ export async function getCardDetail(
     id: card.id,
     name: card.name,
     image: card.image ?? null,
-    rarity: card.rarity ?? null,
+    // TCGdex's word, corrected where it is wrong and in the one spelling (rarity-names.ts), so
+    // the sheet says what the lists and filters say.
+    rarity: englishRarity(card.id, card.rarity),
     illustrator: card.illustrator ?? null,
     hp: num(card.hp),
     types: card.types ?? [],

@@ -1,5 +1,6 @@
 import { CatalogueNotFound, fetchSet, graphql } from "./tcgdex-client";
 import { rarityOrNull } from "../collection/collection-row";
+import { canonicalRarity } from "./rarity-names";
 
 /**
  * The rarities an era actually printed.
@@ -56,7 +57,7 @@ export async function loadEraRarities(serieId: string): Promise<string[]> {
   const found = new Set<string>();
   for (let i = 0; i < sets.length; i++) {
     for (const card of body?.[`s${i}`] ?? []) {
-      const rarity = rarityOrNull(card?.rarity);
+      const rarity = canonicalRarity(rarityOrNull(card?.rarity));
       if (rarity) found.add(rarity);
     }
   }

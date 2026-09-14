@@ -29,7 +29,16 @@ describe("correctedFacts", () => {
 
   it("never corrects to nothing, and keeps to the words TCGdex uses", () => {
     for (const fix of Object.values(CARD_FACT_CORRECTIONS)) {
-      if (fix.rarity) expect(["Common", "Uncommon", "Rare", "Promo"]).toContain(fix.rarity[1]);
+      if (fix.rarity)
+        expect([
+          "Common",
+          "Uncommon",
+          "Rare",
+          "Promo",
+          "Holo Rare",
+          "Ultra Rare",
+          "Secret Rare",
+        ]).toContain(fix.rarity[1]);
       if (fix.types) expect(fix.types[1].length).toBeGreaterThan(0);
     }
   });

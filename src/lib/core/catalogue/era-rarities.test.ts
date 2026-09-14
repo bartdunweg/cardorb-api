@@ -11,7 +11,7 @@ afterEach(() => {
 const catalogue = ({
   serie = "sv",
   sets = ["svp", "sv01"],
-  rarities = { svp: ["Promo", "None"], sv01: ["Common", "Illustration rare", "Common"] },
+  rarities = { svp: ["Promo", "None"], sv01: ["Common", "Illustration Rare", "Common"] },
 }: {
   serie?: string | null;
   sets?: string[];
@@ -33,8 +33,8 @@ const catalogue = ({
 
 describe("loadEraRarities", () => {
   it("is every rarity the era's sets carry, once each, A to Z", async () => {
-    catalogue({ rarities: { svp: ["Rare"], sv01: ["Illustration rare", "Common", "Common"] } });
-    expect(await loadEraRarities("sv")).toEqual(["Common", "Illustration rare", "Rare"]);
+    catalogue({ rarities: { svp: ["Rare"], sv01: ["Illustration Rare", "Common", "Common"] } });
+    expect(await loadEraRarities("sv")).toEqual(["Common", "Illustration Rare", "Rare"]);
   });
 
   it("leaves out what a catalogue writes where it has no rarity", async () => {
@@ -59,7 +59,7 @@ describe("loadEraRarities", () => {
 describe("eraRaritiesOfSet", () => {
   it("reads the set's era and answers that era's rarities", async () => {
     catalogue();
-    expect(await eraRaritiesOfSet("svp", loadEraRarities)).toEqual(["Common", "Illustration rare"]);
+    expect(await eraRaritiesOfSet("svp", loadEraRarities)).toEqual(["Common", "Illustration Rare"]);
   });
 
   it("says nothing where the set names no era", async () => {

@@ -6,6 +6,7 @@ import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
 import { cardNamed } from "./card-names";
 import { correctedFacts } from "./card-fact-corrections";
+import { canonicalRarity } from "./rarity-names";
 
 /** One set, with enough to render a tile and sort a shelf. */
 export type CatalogueSet = {
@@ -422,6 +423,12 @@ type SetFact = {
   trainerType: string | null;
 };
 
+/** The fact with its rarity in the one spelling (rarity-names.ts). */
+const withSpelling = (fact: SetFact): SetFact => ({
+  ...fact,
+  rarity: canonicalRarity(fact.rarity),
+});
+
 async function englishFacts(setId: string): Promise<Map<string, SetFact> | null> {
   const out = new Map<string, SetFact>();
   try {
@@ -441,12 +448,14 @@ async function englishFacts(setId: string): Promise<Map<string, SetFact> | null>
       if (c?.id.startsWith(`${setId}-`))
         out.set(
           c.id,
-          correctedFacts(c.id, {
-            rarity: c.rarity ?? null,
-            types: c.types ?? [],
-            category: c.category ?? null,
-            trainerType: c.trainerType ?? null,
-          }),
+          withSpelling(
+            correctedFacts(c.id, {
+              rarity: c.rarity ?? null,
+              types: c.types ?? [],
+              category: c.category ?? null,
+              trainerType: c.trainerType ?? null,
+            }),
+          ),
         );
   } catch (err) {
     console.error(`TCGdex facts for ${setId} unavailable, set shown without them:`, err);

@@ -6,7 +6,7 @@ const answers: Record<string, unknown> = {
     id: "SV1a-007",
     localId: "007",
     name: "マスカーニャex",
-    rarity: "Double rare",
+    rarity: "Double Rare",
     image: "https://assets.tcgdex.net/ja/SV/SV1a/007",
     set: { id: "SV1a", name: "トリプレットビート", cardCount: { official: 73, total: 103 } },
     pricing: {
@@ -90,7 +90,7 @@ describe("languageCard", () => {
       id: "SV1a-007",
       number: "007",
       name: "マスカーニャex",
-      rarity: "Double rare",
+      rarity: "Double Rare",
       image: "https://assets.tcgdex.net/ja/SV/SV1a/007",
       setId: "SV1a",
       setName: "トリプレットビート",
