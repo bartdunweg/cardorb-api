@@ -33,7 +33,17 @@ import { fullArtOf } from "./full-art";
 import { canStoreImages, keepImage } from "./image-store";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { printedLocalName } from "./card-names";
-import { languageRarity } from "./rarity-names";
+import { correctedSet } from "./set-corrections";
+import {
+  englishEvolveFrom,
+  japaneseCardName,
+  japaneseLocalName,
+  japaneseRarity,
+  japaneseStage,
+  scrydexCard,
+  scrydexCodeOf,
+  scrydexOnlyCards,
+} from "./japanese-card-facts";
 import { CatalogueNotFound, json } from "./tcgdex-client";
 import { type BrowseLanguage, listSetsIn, setIn } from "./tcgdex-browse";
 import {
@@ -70,8 +80,12 @@ const HOST = "https://api.tcgdex.net/v2";
  * 7: the names and links put right on 2026-09-14: English names by the new rules
  * (english-card-name.mjs), no machine-translated printed name, a product only where its name
  * agrees and for one card, the groups found by hand, and a picture that follows its product.
+ * 8: the facts put right on 2026-09-14, round two (japanese-card-facts.ts): the printed rarity mark
+ * and no rarity where none is printed, Scrydex's artist, printed name and English evolution where
+ * TCGdex has none, names in the English game's printed style, the cards TCGdex lacks (Shiny Treasure
+ * ex 127 to 166), and a set's total at least the cards it holds.
  */
-const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 6;
+const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 7;
 
 /**
  * Cards whose TCGdex record is another number's, read from that number instead. Checked on
@@ -155,6 +169,20 @@ const sheetOf = (r: LanguageCardRecord | null): CardSheetFacts => ({
     ...(v.foil ? { foil: v.foil } : {}),
     ...(v.stamp?.length ? { stamp: v.stamp } : {}),
   })),
+});
+
+/**
+ * A card's sheet with what Scrydex knows where TCGdex has nothing: the artist, and an evolution in
+ * English (TCGdex writes 2,480 Japanese cards' evolution in Japanese, and none for 2,985 more).
+ */
+const withScrydexSheet = (
+  sheet: CardSheetFacts,
+  sx: ReturnType<typeof scrydexCard>,
+): CardSheetFacts => ({
+  ...sheet,
+  illustrator: sheet.illustrator ?? sx?.a ?? null,
+  stage: japaneseStage(sheet.stage),
+  evolveFrom: sx?.e ?? englishEvolveFrom(sheet.evolveFrom),
 });
 
 /** The scan's stem off the address setIn() builds: the size and format are the reader's. */
@@ -287,7 +315,7 @@ export async function syncLanguageMirror(
           else if (perNumber[at]!.label && !p.label) perNumber[at] = { ...p, number: p.number };
         }
         const own = new Map(read.cards.map((c) => [c.id, c]));
-        const cards: CatalogueMatch[] = fromTcgplayer
+        const listed: CatalogueMatch[] = fromTcgplayer
           ? perNumber.map((p) => ({
               id: `${id}-${p.number}`,
               number: p.number,
@@ -314,6 +342,29 @@ export async function syncLanguageMirror(
                   }
                 : c;
             });
+        /* The cards Scrydex lists with a printed number of this set and neither TCGdex nor TCGplayer's
+           list has: Shiny Treasure ex's 127 to 166 (2026-09-14). */
+        const numbers = new Set(listed.map((c) => c.number.replace(/^0+(?=\d)/, "")));
+        const cards: CatalogueMatch[] = [
+          ...listed,
+          ...scrydexOnlyCards(id)
+            .filter(
+              ([cardId]) => !numbers.has(cardId.slice(id.length + 1).replace(/^0+(?=\d)/, "")),
+            )
+            .map(([cardId, sx]) => ({
+              id: cardId,
+              number: cardId.slice(id.length + 1),
+              name: sx.n ?? sx.j ?? cardId,
+              localName: sx.j ?? null,
+              setName: set.name,
+              image: null,
+              imageHigh: null,
+              rarity: null,
+              types: sx.t ?? [],
+              series: set.series || null,
+              tcgId: cardId,
+            })),
+        ];
         const matched = fromTcgplayer
           ? new Map(cards.map((c) => [c.id, perNumber.find((p) => p.number === c.number) ?? null]))
           : matchCards(
@@ -348,21 +399,43 @@ export async function syncLanguageMirror(
           const productId = productIdOf(card);
           const image = await pictureOf(card, held.get(card.id), storing, product, productId);
           if (held.get(card.id) !== image) report.pictures++;
+          const sx = scrydexCard(card.id);
+          if (sx?.x && !own.has(card.id)) {
+            return {
+              ...card,
+              image,
+              imageHigh: null,
+              rarity: japaneseRarity({ mark: sx.m, tcgplayer: product?.rarity }),
+              types: sx.t ?? [],
+              category: sx.c ?? null,
+              trainerType: sx.tt ?? null,
+              productId,
+              sheet: {
+                ...sheetOf(null),
+                illustrator: sx.a ?? null,
+                hp: sx.h ?? product?.hp ?? null,
+                stage: sx.s ?? null,
+                evolveFrom: sx.e ?? null,
+              },
+            };
+          }
           if (fromTcgplayer && product) {
             const kind = factsOfCardType(product.cardType, product.hp);
             return {
               ...card,
               image,
               imageHigh: null,
-              rarity: languageRarity(product.rarity),
+              rarity: japaneseRarity({ mark: sx?.m, tcgplayer: product.rarity }),
               types: kind.types,
               category: kind.category,
               trainerType: kind.trainerType,
               productId: product.productId,
               sheet: {
                 ...sheetOf(null),
+                illustrator: sx?.a ?? null,
                 hp: product.hp,
-                stage: product.stage,
+                stage: japaneseStage(product.stage),
+                evolveFrom: sx?.e ?? null,
               },
             };
           }
@@ -378,13 +451,17 @@ export async function syncLanguageMirror(
             ...named,
             image,
             imageHigh: null,
-            // TCGdex has no rarity for SV4a's shiny cards; TCGplayer does (Klefki SV4a-264).
-            rarity: languageRarity(facts?.rarity, product?.rarity),
+            // The printed mark (japanese-card-facts.ts): Scrydex's, TCGplayer's, TCGdex's.
+            rarity: japaneseRarity({
+              mark: sx?.m,
+              tcgplayer: product?.rarity,
+              tcgdex: facts?.rarity,
+            }),
             types: facts?.types ?? [],
             category: facts?.category ?? null,
             trainerType: facts?.trainerType ?? null,
             productId,
-            sheet: sheetOf(facts),
+            sheet: withScrydexSheet(sheetOf(facts), sx),
           };
         });
         /* The last source, with Scrydex's permission (2026-09-14): its scan for the cards still
@@ -393,13 +470,16 @@ export async function syncLanguageMirror(
         const blank = storing ? resolved.filter((c) => !c.image) : [];
         const expansion =
           blank.length && expansions
-            ? scrydexExpansionFor(expansions, { id, name: set.name })
+            ? (scrydexExpansionFor(expansions, { id, name: set.name }) ??
+              (scrydexCodeOf(id) ? { name: set.name, code: scrydexCodeOf(id)! } : null))
             : null;
         if (expansion) {
-          const listed = await scrydexExpansionCards(expansion).catch(() => []);
-          const numbers = scrydexNumbers(listed, resolved);
+          const onScrydex = await scrydexExpansionCards(expansion).catch(() => []);
+          const scrydexByName = scrydexNumbers(onScrydex, resolved);
           await mapLimit(blank, cardParallel, async (card) => {
-            const number = numbers.get(card.id);
+            const number = scrydexCard(card.id)?.x
+              ? card.number.replace(/^0+(?=\d)/, "")
+              : scrydexByName.get(card.id);
             const scan = number ? await scrydexJapanScan(expansion.code, number) : null;
             const kept = scan ? await keepImage(scan) : null;
             if (kept && kept !== scan) {
@@ -425,7 +505,9 @@ export async function syncLanguageMirror(
           ),
           symbol: await ownArt(set.symbol, storing),
           abbreviation: set.abbreviation ?? null,
-          total: set.total,
+          // At least the cards the copy holds: TCGdex counts Blue Shock and Red Flash as 59 cards, and
+          // each prints 65 (060 to 065 are its secret rares).
+          total: Math.max(set.total, resolved.length),
           printed_total: set.printedTotal,
           serie_id: set.serieId ?? null,
           cards_recorded: set.cardsRecorded || fromTcgplayer,
@@ -438,9 +520,15 @@ export async function syncLanguageMirror(
             id: c.id,
             set_id: id,
             local_id: c.number,
-            name: c.name,
-            local_name: printedLocalName(id, c.localName, c.name, c.category),
-            set_name: set.name,
+            name: japaneseCardName(id, c.name, scrydexCard(c.id)?.n),
+            local_name: japaneseLocalName(
+              id,
+              printedLocalName(id, c.localName, c.name, c.category),
+              scrydexCard(c.id)?.j,
+            ),
+            // The set's name as its own row has it, corrections included (set-corrections.ts): a card
+            // of ADV1 read "Expansion Pack" beside its set's "ADV Expansion Pack".
+            set_name: correctedSet({ id, name: set.name, language: lang }).name,
             series: set.series,
             release_date: set.releaseDate,
             rarity: c.rarity,
@@ -451,7 +539,7 @@ export async function syncLanguageMirror(
             full_art: arts.has(c),
             illustrator: c.sheet.illustrator,
             hp: c.sheet.hp,
-            stage: c.sheet.stage,
+            stage: japaneseStage(c.sheet.stage),
             evolve_from: c.sheet.evolveFrom,
             regulation_mark: c.sheet.regulationMark,
             first_edition: c.sheet.firstEdition,

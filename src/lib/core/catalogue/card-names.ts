@@ -2,7 +2,7 @@ import type { BrowseLanguage } from "./tcgdex-browse";
 import JA from "../card-names.ja.generated.json";
 import SPECIES from "../pokedex.generated.json";
 import LOCAL_SPECIES from "../species-names.generated.json";
-import { printedNameOf } from "./english-card-name.mjs";
+import { printedNameOf, printedStyleName } from "./english-card-name.mjs";
 
 /**
  * The English name of a card from a catalogue that has none, off the committed maps
@@ -20,12 +20,30 @@ const NAMES: Record<BrowseLanguage, Record<string, string | null>> = {
 };
 
 export function englishCardName(lang: BrowseLanguage, id: string): string | null {
-  return NAMES[lang][id] ?? null;
+  const name = NAMES[lang][id];
+  return name ? printedStyleName(setOf(id), name) : null;
 }
 
-/** The whole map of one catalogue, id → English name (null where none), for a search to scan. */
+/** The set a card id is filed under: everything before its last hyphen ("SV-P-012" is SV-P). */
+const setOf = (id: string) => id.slice(0, Math.max(0, id.lastIndexOf("-")));
+
+const STYLED = new Map<BrowseLanguage, Readonly<Record<string, string | null>>>();
+
+/**
+ * The whole map of one catalogue, id → English name (null where none), for a search to scan: in the
+ * English game's printed style (printedStyleName), worked out once per catalogue.
+ */
 export function englishCardNames(lang: BrowseLanguage): Readonly<Record<string, string | null>> {
-  return NAMES[lang];
+  const had = STYLED.get(lang);
+  if (had) return had;
+  const styled = Object.fromEntries(
+    Object.entries(NAMES[lang]).map(([id, name]) => [
+      id,
+      name ? printedStyleName(setOf(id), name) : null,
+    ]),
+  );
+  STYLED.set(lang, styled);
+  return styled;
 }
 
 /**

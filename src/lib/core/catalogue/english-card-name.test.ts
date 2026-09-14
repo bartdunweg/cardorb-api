@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  printedStyleName,
   englishFromLocalName,
   englishFromRecord,
   keepsStoredName,
@@ -214,5 +215,37 @@ describe("printedNameOf", () => {
       "ポケモンファンクラブ",
     );
     expect(of("E1", null, "Clefable")).toBeNull();
+  });
+});
+
+describe("printedStyleName", () => {
+  it("writes XY's EX and its Megas as the English cards print them", () => {
+    expect(printedStyleName("XY8b", "M Houndoom Ex")).toBe("M Houndoom-EX");
+    expect(printedStyleName("CP4", "Mega Gengar EX")).toBe("M Gengar-EX");
+    expect(printedStyleName("XY4", "M Manectric ex- 024/088")).toBe("M Manectric-EX");
+    expect(printedStyleName("XY8a", "Mewtwo EX")).toBe("Mewtwo-EX");
+  });
+
+  it("writes Sun & Moon's GX with a hyphen, tag teams and Mega tag teams included", () => {
+    expect(printedStyleName("SM10", "Reshiram & Charizard GX")).toBe("Reshiram & Charizard-GX");
+    expect(printedStyleName("SM12", "Mega Lopunny & Jigglypuff GX")).toBe(
+      "Mega Lopunny & Jigglypuff-GX",
+    );
+  });
+
+  it("writes the ADV and PCG ex, δ and gold star as those cards do", () => {
+    expect(printedStyleName("PCG9", "Rayquaza Ex（デルタ種）")).toBe("Rayquaza ex δ");
+    expect(printedStyleName("PCG9", "Charizard Star δ")).toBe("Charizard ☆ δ");
+    expect(printedStyleName("PCG2", "Latias Star")).toBe("Latias ☆");
+    expect(printedStyleName("L2", "Ho-Oh Legend")).toBe("Ho-Oh LEGEND");
+  });
+
+  it("leaves the eras that print ex, V and Mega as written", () => {
+    expect(printedStyleName("SV4a", "Charizard ex")).toBe("Charizard ex");
+    expect(printedStyleName("S8", "Mew V")).toBe("Mew V");
+    expect(printedStyleName("M1L", "Mega Lucario ex")).toBe("Mega Lucario ex");
+    expect(printedStyleName("SM12a", "Victini ◇")).toBe("Victini ◇");
+    expect(printedStyleName("neo2", "Unown [F]")).toBe("Unown F");
+    expect(printedStyleName("neo1", "Farfetch’d")).toBe("Farfetch'd");
   });
 });
