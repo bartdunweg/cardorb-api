@@ -1,0 +1,1 @@
+- Dragons Exalted 117 Blend Energy GFPD links to its TCGplayer product (normal and reverse holo priced), by hand: TCGplayer names it "Blend Energy GFPD" where TCGdex spells the four types out. 25 English cards stay unlinked.
