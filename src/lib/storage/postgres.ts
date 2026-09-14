@@ -21,7 +21,13 @@
  */
 
 import { type CopyChanges, isLanguage } from "@/lib/core/collection/collection-row";
-import { daysFromMonths, monthOf, monthsFromDays } from "../core/price-months.mjs";
+import {
+  type PriceLanguage,
+  PRICE_LANGUAGES,
+  daysFromMonths,
+  monthOf,
+  monthsFromDays,
+} from "../core/price-months.mjs";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { storedCardNumber } from "@/lib/core/util";
@@ -416,14 +422,22 @@ export async function writeValueSnapshot(
 
 /** One printing's month of prices, as card_price_months has it. */
 type PriceMonthRecord = {
+  language: PriceLanguage;
   tcg_id: string;
   printing: string;
   month: string;
   cents: (number | null)[] | null;
 };
 
+/** A card whose price history is asked for: its id, and the catalogue the id is from. */
+export type PricedCard = { tcgId: string; language: PriceLanguage };
+
 /**
  * Every reading for these cards since a date, oldest first.
+ *
+ * A card is its catalogue and its id (migration 20260915161000): neo4-106 is Shining Celebi in
+ * English and Lucky Stadium in Japanese, and each is asked for, and answered, under its own
+ * language. Each point says which it is.
  *
  * Read a printing-month to a row since 2026-09-13 (card_price_months, price-months.mjs) and laid
  * out as the days the callers have always had, each with its printings. Chunked over the ids
@@ -435,18 +449,23 @@ type PriceMonthRecord = {
  */
 export async function listCardPrices(
   db: SupabaseClient,
-  tcgIds: string[],
+  cards: PricedCard[],
   since: string,
 ): Promise<CardPricePoint[]> {
   const out: CardPricePoint[] = [];
   const PAGE = 1000;
-  for (let i = 0; i < tcgIds.length; i += 200) {
-    const chunk = tcgIds.slice(i, i + 200);
+  const chunks: { language: PriceLanguage; ids: string[] }[] = [];
+  for (const language of PRICE_LANGUAGES) {
+    const ids = [...new Set(cards.filter((c) => c.language === language).map((c) => c.tcgId))];
+    for (let i = 0; i < ids.length; i += 200) chunks.push({ language, ids: ids.slice(i, i + 200) });
+  }
+  for (const { language, ids: chunk } of chunks) {
     const rows: PriceMonthRecord[] = [];
     for (let page = 0; ; page++) {
       const { data, error } = await db
         .from("card_price_months")
-        .select("tcg_id,printing,month,cents")
+        .select("language,tcg_id,printing,month,cents")
+        .eq("language", language)
         .in("tcg_id", chunk)
         .gte("month", monthOf(since))
         .order("tcg_id", { ascending: true })
@@ -465,6 +484,20 @@ export async function listCardPrices(
   return out.sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
 }
 
+/** The catalogues that have a card under this id: English, Japanese, both (neo4-100 to 113) or none. */
+export async function catalogueLanguagesOfCard(
+  db: SupabaseClient,
+  tcgId: string,
+): Promise<PriceLanguage[]> {
+  const { data, error } = await db
+    .from("catalogue_cards")
+    .select("language")
+    .in("language", [...PRICE_LANGUAGES])
+    .eq("id", tcgId);
+  if (error) throw new Error(`Reading the card's catalogue failed: ${error.message}`);
+  return ((data ?? []) as { language: PriceLanguage }[]).map((r) => r.language);
+}
+
 /**
  * The readings a Home line is built from: every reading of these cards since `from`.
  *
@@ -473,11 +506,11 @@ export async function listCardPrices(
  */
 export async function listHistoryPrices(
   db: SupabaseClient,
-  tcgIds: string[],
+  cards: PricedCard[],
   from: string,
 ): Promise<CardPricePoint[]> {
-  const chunks: string[][] = [];
-  for (let i = 0; i < tcgIds.length; i += 200) chunks.push(tcgIds.slice(i, i + 200));
+  const chunks: PricedCard[][] = [];
+  for (let i = 0; i < cards.length; i += 200) chunks.push(cards.slice(i, i + 200));
   const parts: CardPricePoint[][] = [];
   let next = 0;
   await Promise.all(
@@ -645,8 +678,8 @@ export async function readTcgplayerPrices(
  * A night's prices, written a month to a row.
  *
  * Each point is laid into its card's month and merged into what is stored by
- * upsert_card_price_months (migration 20260913220000): a day sent replaces that day, a day not
- * sent stays. Chunked for body size, four chunks in flight: the every-card pass is some
+ * upsert_card_price_months (migration 20260915161500): a day sent replaces that day, a day not
+ * sent stays. Every point names its card's catalogue; one that does not is refused (monthsFromDays). Chunked for body size, four chunks in flight: the every-card pass is some
  * twenty-eight thousand cards a night, and the cron has a minute.
  */
 export async function writeCardPrices(

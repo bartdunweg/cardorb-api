@@ -14,11 +14,17 @@
 
 import { isReverseFinish } from "./collection-row";
 import { printingKeysOf } from "../price-basis.mjs";
+import { type PriceLanguage, historyKey, priceLanguageOf } from "../price-months.mjs";
 import { copiesHeld } from "./cards-stats";
 import type { CardSet, OwnedCard } from "./cards";
 
 /** One dated reading for one card. Euros, both printings. */
 export type CardPricePoint = {
+  /**
+   * The catalogue tcgId is from. An English and a Japanese card can share an id (neo4-106 is Shining
+   * Celebi and Lucky Stadium), so a reading is matched to a card on both.
+   */
+  language: PriceLanguage;
   tcgId: string;
   /** ISO yyyy-mm-dd. */
   date: string;
@@ -43,6 +49,8 @@ export type CardPricePoint = {
 
 /** One printing's figure on one day, on its way into card_price_months. Euros. */
 export type PrintingDay = {
+  /** The catalogue tcgId is from; required, because a row filed under a guess mixed two cards' lines. */
+  language: PriceLanguage;
   tcgId: string;
   printing: string;
   date: string;
@@ -141,10 +149,11 @@ export function moversOf(
   points: CardPricePoint[],
   { top = 5, minChange = 0.1 }: MoversOptions = {},
 ): { up: Mover[]; down: Mover[] } {
-  const byId = new Map<string, CardPricePoint[]>();
+  const byCard = new Map<string, CardPricePoint[]>();
   for (const p of points) {
-    if (!byId.has(p.tcgId)) byId.set(p.tcgId, []);
-    byId.get(p.tcgId)!.push(p);
+    const key = historyKey(p.language, p.tcgId);
+    if (!byCard.has(key)) byCard.set(key, []);
+    byCard.get(key)!.push(p);
   }
 
   const movers: Mover[] = [];
@@ -157,7 +166,7 @@ export function moversOf(
       // Sorted here rather than trusted from the query: this is a pure
       // function and a caller that hands them over shuffled should still get
       // the right answer.
-      const series = (byId.get(card.tcgId) ?? [])
+      const series = (byCard.get(historyKey(priceLanguageOf(set.language), card.tcgId)) ?? [])
         .slice()
         .sort((a, b) => a.date.localeCompare(b.date));
       if (series.length < 2) continue;

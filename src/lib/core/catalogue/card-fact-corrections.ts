@@ -2293,7 +2293,7 @@ export function correctedFacts<
  *
  * A gold star card is "Mewtwo ☆", as it prints and as 36 of them already were: five EX cards were
  * "Mewtwo Star" and POP Series 5's two "Espeon ★" (2026-09-14). The search reads ☆ as "star" too
- * (migration 20260915100000).
+ * (migration 20260915200000).
  *
  * And as the card and Bulbapedia write them, where TCGdex has its own spelling: "Shaymin-EX" and
  * "Pikachu & Zekrom-GX" (TCGdex wrote 304 XY-era EX and 548 Sun & Moon GX names with a space, and

@@ -123,6 +123,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     expect(writeCardPrices).toHaveBeenCalledTimes(1);
     expect(writeCardPrices.mock.calls[0]?.[1]).toEqual([
       {
+        language: "en",
         tcgId: "base1-4",
         printing: "holofoil",
         date: "2026-09-14",
@@ -130,6 +131,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
         source: "tcgplayer",
       },
       {
+        language: "en",
         tcgId: "base1-4",
         printing: "shadowless-holofoil",
         date: "2026-09-14",
@@ -137,6 +139,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
         source: "tcgplayer",
       },
       {
+        language: "en",
         tcgId: "base1-4",
         printing: "1st-edition-holofoil",
         date: "2026-09-14",
@@ -305,6 +308,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       ]);
       expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
         expect.objectContaining({
+          language: "ja",
           tcgId: "CP1-001",
           printing: "holofoil",
           date: "2026-09-14",
@@ -330,8 +334,9 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       );
     });
 
-    // neo4-106 is Shining Celebi in English; a Japanese product under that id wrote Chansey into it.
-    it("never writes a Japanese product under an id that is an English card", async () => {
+    // neo4-106 is Shining Celebi in English and Lucky Stadium in Japanese; a Japanese product under
+    // that id once wrote Chansey into Shining Celebi's line. Each shelf's points carry their catalogue.
+    it("writes a Japanese product under an id English also has as the Japanese card's", async () => {
       monday();
       byCategory(
         { rows: CHARIZARD, groups: 10, answered: 10 },
@@ -339,8 +344,16 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       );
       listCatalogueProducts.mockResolvedValueOnce(new Map([["base1-4", 605292]]));
       await get("Bearer s3cret");
-      const written = writeCardPrices.mock.calls[0]![1] as { tcgId: string; price: number }[];
-      expect(written.filter((p) => p.tcgId === "base1-4").some((p) => p.price === 2.7)).toBe(false);
+      const written = writeCardPrices.mock.calls[0]![1] as {
+        language: string;
+        tcgId: string;
+        price: number;
+      }[];
+      const onId = written.filter((p) => p.tcgId === "base1-4");
+      expect(onId.filter((p) => p.language === "ja").map((p) => p.price)).toEqual([2.7]);
+      expect(onId.filter((p) => p.language === "en").map((p) => p.price)).toEqual([
+        900, 1800, 9000,
+      ]);
     });
 
     it("dates the night by the day tcgcsv published, not the clock", async () => {

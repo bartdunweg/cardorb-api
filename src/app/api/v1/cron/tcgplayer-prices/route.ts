@@ -213,21 +213,20 @@ export async function GET(req: Request) {
         });
         const japaneseLinks: Record<string, TcgplayerLink> = { ...JAPANESE_LINKS };
         for (const [id, productId] of copied) japaneseLinks[id] ??= { productId };
-        /* card_price_months keys a card by id alone, and 14 ids are cards in both catalogues
-           (neo4-100 to neo4-113): a Japanese product under one of them wrote Chansey's figure into
-           Shining Celebi's history. An English card's id is the English card's. */
-        for (const id of Object.keys(japaneseLinks))
-          if ((TCGPLAYER_IDS as Record<string, unknown>)[id] !== undefined)
-            delete japaneseLinks[id];
+        /* Each shelf's points under its own catalogue: 14 ids are cards in both (neo4-100 to
+           neo4-113), and a Japanese product under one of them once wrote Chansey's figure into
+           Shining Celebi's history. The language is part of the history's key since migration
+           20260915161000, so a Japanese card under a shared id has its own line. */
         const points = [
           ...cardPricesFromShelf(
+            "en",
             TCGPLAYER_IDS as Record<string, TcgplayerLink>,
             rows,
             rate,
             today,
             allFinishPrints(),
           ),
-          ...cardPricesFromShelf(japaneseLinks, japaneseRows, rate, today),
+          ...cardPricesFromShelf("ja", japaneseLinks, japaneseRows, rate, today),
         ];
         await writeCardPrices(db, points);
         history.written = points.length;

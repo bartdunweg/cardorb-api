@@ -44,8 +44,8 @@ beforeEach(() => {
   getCardPrices.mockResolvedValue({
     failed: false,
     points: [
-      { tcgId: "base1-4", date: "2026-09-07", market: 300, holo: null },
-      { tcgId: "base1-4", date: "2026-09-14", market: 320, holo: null },
+      { language: "en", tcgId: "base1-4", date: "2026-09-07", market: 300, holo: null },
+      { language: "en", tcgId: "base1-4", date: "2026-09-14", market: 320, holo: null },
     ],
   });
 });
@@ -66,6 +66,22 @@ describe("GET /v1/movers", () => {
         change: 20,
         total: 40,
       }),
+    ]);
+  });
+
+  // neo4-106 is Shining Celebi in English and Lucky Stadium in Japanese.
+  it("asks for each card under its set's catalogue", async () => {
+    getCollection.mockResolvedValue({
+      sets: [
+        { name: "Neo Destiny", language: null, cards: [{ ...card, tcgId: "neo4-106" }] },
+        { name: "Neo Destiny", language: "ja", cards: [{ ...card, tcgId: "neo4-106" }] },
+      ],
+      failed: false,
+    });
+    await ask("?days=7");
+    expect(getCardPrices.mock.calls[0]![1]).toEqual([
+      { tcgId: "neo4-106", language: "en" },
+      { tcgId: "neo4-106", language: "ja" },
     ]);
   });
 

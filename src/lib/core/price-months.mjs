@@ -20,6 +20,43 @@
  * rows the API does and a script cannot import TypeScript.
  */
 
+/**
+ * The catalogues a card id can be from, and so the first half of a price row's key.
+ *
+ * English and Japanese TCGdex ids collide: neo1 to neo4 are set ids in both, and neo4-100 to neo4-113
+ * are cards in both (neo4-106 is Shining Celebi in English and Lucky Stadium in Japanese). Keyed on
+ * the id alone, a Japanese product's figure was written into Shining Celebi's line (2026-09-14), so
+ * since migration 20260915161000 every row says which catalogue its id is from, and a row that does
+ * not say is refused rather than filed as English.
+ */
+export const PRICE_LANGUAGES = /** @type {const} */ (["en", "ja"]);
+
+/** @typedef {(typeof PRICE_LANGUAGES)[number]} PriceLanguage */
+
+/**
+ * The catalogue a copy's card id is from, by the copy's language: a Japanese copy carries a Japanese
+ * catalogue id and every other language shares the English catalogue (tcgdex-language.ts
+ * cataloguesFor).
+ *
+ * @param {string | null | undefined} language
+ * @returns {PriceLanguage}
+ */
+export const priceLanguageOf = (language) => (language === "ja" ? "ja" : "en");
+
+/**
+ * One card of one catalogue as a map key: the id alone is not a card.
+ *
+ * @param {PriceLanguage} language
+ * @param {string} tcgId
+ */
+export const historyKey = (language, tcgId) => `${language}|${tcgId}`;
+
+/** @param {unknown} language @returns {PriceLanguage} */
+const languageOrThrow = (language) => {
+  if (language === "en" || language === "ja") return language;
+  throw new Error(`A price reading without its catalogue's language (${String(language)})`);
+};
+
 /** The two series card_prices kept before printings were stored, as printings of their own. */
 export const LEGACY = { market: "market", holo: "holo" };
 
@@ -55,6 +92,7 @@ export const shadowlessKey = (/** @type {string} */ key) =>
 
 /**
  * @typedef {object} PrintingDay
+ * @property {PriceLanguage} language the catalogue tcgId is from
  * @property {string} tcgId
  * @property {string} printing
  * @property {string} date yyyy-mm-dd
@@ -64,6 +102,7 @@ export const shadowlessKey = (/** @type {string} */ key) =>
 
 /**
  * @typedef {object} PriceMonth
+ * @property {PriceLanguage} language
  * @property {string} tcg_id
  * @property {string} printing
  * @property {string} month yyyy-mm-01
@@ -72,8 +111,9 @@ export const shadowlessKey = (/** @type {string} */ key) =>
  */
 
 /**
- * Days grouped into the rows they belong to: one per card, printing and month. A day given twice
- * keeps the later figure; a day with no figure is left empty.
+ * Days grouped into the rows they belong to: one per catalogue, card, printing and month. A day
+ * given twice keeps the later figure; a day with no figure is left empty. A day that does not say
+ * which catalogue its card is from throws: filed under a guess, it is how two cards' lines mixed.
  *
  * @param {PrintingDay[]} days
  * @returns {PriceMonth[]}
@@ -83,11 +123,13 @@ export function monthsFromDays(days) {
   const months = new Map();
   for (const d of days) {
     if (d.price == null) continue;
+    const language = languageOrThrow(d.language);
     const month = `${d.date.slice(0, 7)}-01`;
-    const key = `${d.tcgId}|${d.printing}|${month}`;
+    const key = `${language}|${d.tcgId}|${d.printing}|${month}`;
     let row = months.get(key);
     if (!row) {
       row = {
+        language,
         tcg_id: d.tcgId,
         printing: d.printing,
         month,
@@ -107,18 +149,35 @@ export function monthsFromDays(days) {
  * is left out where it is the plain one: a reader falls back to the plain figure for a foil with
  * none, and storing it twice doubled most months.
  *
- * @param {{ tcgId: string, date: string, market: number | null, holo: number | null, source?: string }} p
+ * @param {{ language: PriceLanguage, tcgId: string, date: string, market: number | null, holo: number | null, source?: string }} p
  * @returns {PrintingDay[]}
  */
 export const legacyDays = (p) => [
-  { tcgId: p.tcgId, date: p.date, printing: LEGACY.market, price: p.market, source: p.source },
+  {
+    language: p.language,
+    tcgId: p.tcgId,
+    date: p.date,
+    printing: LEGACY.market,
+    price: p.market,
+    source: p.source,
+  },
   ...(p.holo != null && p.holo !== p.market
-    ? [{ tcgId: p.tcgId, date: p.date, printing: LEGACY.holo, price: p.holo, source: p.source }]
+    ? [
+        {
+          language: p.language,
+          tcgId: p.tcgId,
+          date: p.date,
+          printing: LEGACY.holo,
+          price: p.holo,
+          source: p.source,
+        },
+      ]
     : []),
 ];
 
 /**
  * @typedef {object} DayPrices
+ * @property {PriceLanguage} language the catalogue tcgId is from
  * @property {string} tcgId
  * @property {string} date
  * @property {number | null} market the plain printing, or the foil where there is no plain one
@@ -127,20 +186,23 @@ export const legacyDays = (p) => [
  */
 
 /**
- * Rows laid out as days, one per card per date with a figure, from `since` on, oldest first.
+ * Rows laid out as days, one per card per date with a figure, from `since` on, oldest first. A card
+ * is its catalogue and its id: an English and a Japanese card under one id are two lines.
  *
  * Each day carries its printings and the two series every chart and line has read (`market`, the
  * plain run before the foil, and `holo`, the foil), in the order pointFromTcgplayer takes them. A
  * day with only the old series has those and no printings.
  *
- * @param {{ tcg_id: string, printing: string, month: string, cents: (number | null)[] | null }[]} rows
+ * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null }[]} rows
  * @param {string} [since] yyyy-mm-dd
  * @returns {DayPrices[]}
  */
 export function daysFromMonths(rows, since = "0000-00-00") {
-  /** @type {Map<string, { tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number> }>} */
+  /** @type {Map<string, { language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number> }>} */
   const days = new Map();
   for (const row of rows) {
+    const language = languageOrThrow(row.language);
+    const card = historyKey(language, row.tcg_id);
     const prefix = row.month.slice(0, 8);
     const year = Number(row.month.slice(0, 4));
     const length = new Date(Date.UTC(year, Number(row.month.slice(5, 7)), 0)).getUTCDate();
@@ -150,9 +212,10 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       if (c == null) continue;
       const date = `${prefix}${String(i + 1).padStart(2, "0")}`;
       if (date < since) continue;
-      const key = `${row.tcg_id}|${date}`;
+      const key = `${card}|${date}`;
       let day = days.get(key);
-      if (!day) days.set(key, (day = { tcgId: row.tcg_id, date, real: {}, legacy: {} }));
+      if (!day)
+        days.set(key, (day = { language, card, tcgId: row.tcg_id, date, real: {}, legacy: {} }));
       (isLegacy ? day.legacy : day.real)[row.printing] = c / 100;
     }
   }
@@ -165,9 +228,9 @@ export function daysFromMonths(rows, since = "0000-00-00") {
   /** @type {Map<string, Record<string, number>>} */
   const counts = new Map();
   for (const d of days.values()) {
-    const c = counts.get(d.tcgId) ?? {};
+    const c = counts.get(d.card) ?? {};
     for (const name of Object.keys(d.real)) c[name] = (c[name] ?? 0) + 1;
-    counts.set(d.tcgId, c);
+    counts.set(d.card, c);
   }
   /** @param {Record<string, number>} c @param {string[]} names */
   const lineOf = (c, names) => {
@@ -176,14 +239,14 @@ export function daysFromMonths(rows, since = "0000-00-00") {
   };
   /** @type {Map<string, { plain: string | null, foil: string | null }>} */
   const lines = new Map(
-    [...counts].map(([tcgId, c]) => {
+    [...counts].map(([card, c]) => {
       /* The plain line only where it is the card's own: a printing read on at least half as many
          days as the card's most-read printing of any kind. ex8-15's 95 days of "normal" beside
          306 of holofoil made its line the scattered plain one (pricing audit, 2026-09-14). */
       const most = Math.max(0, ...Object.values(c));
       const plain = lineOf(c, PLAIN);
       return [
-        tcgId,
+        card,
         { plain: plain && (c[plain] ?? 0) * 2 >= most ? plain : null, foil: lineOf(c, FOIL) },
       ];
     }),
@@ -191,10 +254,11 @@ export function daysFromMonths(rows, since = "0000-00-00") {
   const out = [];
   for (const d of days.values()) {
     if (Object.keys(d.real).length) {
-      const line = lines.get(d.tcgId) ?? { plain: null, foil: null };
+      const line = lines.get(d.card) ?? { plain: null, foil: null };
       const foil = line.foil ? (d.real[line.foil] ?? null) : null;
       const plain = line.plain ? (d.real[line.plain] ?? null) : null;
       out.push({
+        language: d.language,
         tcgId: d.tcgId,
         date: d.date,
         market: line.plain ? plain : foil,
@@ -203,11 +267,27 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       });
     } else {
       const market = d.legacy[LEGACY.market] ?? null;
-      out.push({ tcgId: d.tcgId, date: d.date, market, holo: d.legacy[LEGACY.holo] ?? null });
+      out.push({
+        language: d.language,
+        tcgId: d.tcgId,
+        date: d.date,
+        market,
+        holo: d.legacy[LEGACY.holo] ?? null,
+      });
     }
   }
   return out.sort((a, b) =>
-    a.date < b.date ? -1 : a.date > b.date ? 1 : a.tcgId < b.tcgId ? -1 : 1,
+    a.date < b.date
+      ? -1
+      : a.date > b.date
+        ? 1
+        : a.tcgId < b.tcgId
+          ? -1
+          : a.tcgId > b.tcgId
+            ? 1
+            : a.language < b.language
+              ? -1
+              : 1,
   );
 }
 

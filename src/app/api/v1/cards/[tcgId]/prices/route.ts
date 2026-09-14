@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
-import { ALL_READINGS, getCardPrices } from "@/lib/core/collection/collection";
+import {
+  ALL_READINGS,
+  defaultPriceLanguage,
+  getCardPrices,
+} from "@/lib/core/collection/collection";
+import { type PriceLanguage, PRICE_LANGUAGES } from "@/lib/core/price-months.mjs";
 
 /**
  * One card's price, day by day, as far back as there is a reading: the nightly
@@ -21,6 +26,11 @@ import { ALL_READINGS, getCardPrices } from "@/lib/core/collection/collection";
  *
  * Authorised like the card itself. Read through getCardPrices so the caller's
  * own hour of caching and the paged store read are the same as the movers'.
+ *
+ * `?language=en|ja` says which catalogue the id is from, since the two share ids: neo4-106 is
+ * Shining Celebi in English and Lucky Stadium in Japanese, and each has its own line (migration
+ * 20260915161000). Left out, the id's own catalogue answers where only one has it, and English
+ * where both do (defaultPriceLanguage).
  */
 export const dynamic = "force-dynamic";
 
@@ -31,9 +41,22 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
       headers: { ...readHeaders(req), ...who.headers },
     });
   const tcgId = catalogueCardId((await params).tcgId);
+  const asked = new URL(req.url).searchParams.get("language");
+  if (asked !== null && !(PRICE_LANGUAGES as readonly string[]).includes(asked))
+    return apiError(400, "language must be en or ja.", undefined, { headers: readHeaders(req) });
+  let language: PriceLanguage;
+  try {
+    language = (asked as PriceLanguage | null) ?? (await defaultPriceLanguage(tcgId));
+  } catch (err) {
+    console.error("The card's catalogue unreadable, no price history answered:", err);
+    return unavailable(
+      "That card's price history could not be read. Try again in a moment.",
+      readHeaders(req),
+    );
+  }
   const { points, failed } = await getCardPrices(
     who.userId,
-    [tcgId],
+    [{ tcgId, language }],
     bearer(req) ?? undefined,
     ALL_READINGS,
   );
@@ -47,7 +70,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     // wider cached answer can never be handed out as one card's line.
     {
       points: points
-        .filter((p) => p.tcgId === tcgId)
+        .filter((p) => p.tcgId === tcgId && p.language === language)
         // `printings` since 2026-09-13: every printing's figure that day, where it was stored per
         // printing. Absent on a reading from before.
         .map((p) => ({

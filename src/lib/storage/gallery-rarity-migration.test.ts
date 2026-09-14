@@ -4,12 +4,12 @@ import { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Migration 20260915100000 respells the Galarian Gallery and Trainer Gallery copies' rarities, and
+ * Migration 20260915200000 respells the Galarian Gallery and Trainer Gallery copies' rarities, and
  * before it does, adds the new words to every binder rule and Pokédex setting that kept those
  * copies under the old ones. This runs that part in an in-process Postgres, twice.
  */
 const MIGRATION = readFileSync(
-  join(__dirname, "../../../supabase/migrations/20260915100000_english_card_facts_round_two.sql"),
+  join(__dirname, "../../../supabase/migrations/20260915200000_english_card_facts_round_two.sql"),
   "utf8",
 );
 const GALLERIES = MIGRATION.slice(MIGRATION.indexOf("create temporary table gallery_words"));
