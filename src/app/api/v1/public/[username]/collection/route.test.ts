@@ -61,8 +61,7 @@ const card = (name: string, owned: boolean) => ({
   speciesId: null,
   variants: [variant(owned)],
   owned,
-  price: { low: 1, market: 90, avg30: 95, nm: { low: 95, mid: 100, high: 110 } },
-  priceHolo: { low: 2, market: 180, avg30: 190, nm: null },
+  price: { market: 90 },
   tcgId: null,
 });
 const set = (name: string, cards: ReturnType<typeof card>[]) => ({
@@ -143,7 +142,6 @@ describe("GET /api/v1/public/{username}/collection", () => {
     expect(copy.isFavorite).toBe(false);
     expect(copy.excluded).toBe(false);
     expect(body.sets[0].cards[0].price).toBeNull();
-    expect(body.sets[0].cards[0].priceHolo).toBeNull();
   });
 
   it("carries none of it anywhere in the serialised payload either", async () => {

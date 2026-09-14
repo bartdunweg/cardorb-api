@@ -9,13 +9,10 @@
  * This file only ever runs inside a call that one of those two already cached.
  */
 import { DAY, mapLimit, catalogueTimeout } from "../util";
-import { priceOf, holoPriceOf } from "../price-basis.mjs";
-import type { Price } from "../price-basis.mjs";
 
-/** TCGplayer's numbers for one printing, in dollars, as TCGdex relays them. */
+/** TCGplayer's market figure for one printing, in dollars, as TCGdex relays it. */
 export type UsdPrice = {
   market: number | null;
-  low: number | null;
   /** TCGplayer's product id for the printing the figure is from: an address a person can open. */
   productId?: number | null;
 };
@@ -189,32 +186,13 @@ export async function fetchSet(id: string): Promise<TcgSetDetail | null> {
 }
 
 /**
- * Cardmarket's prices for a list of TCGdex card ids.
+ * TCGplayer's figures for one card, in dollars, as TCGdex relays them.
  *
- * One request per card, because the set endpoint carries only id, image,
- * localId and name: the prices live on the individual card. Measured at eight
- * at a time; json() caches each for a day, so a revalidation an hour later
- * refetches nothing. Prices move slower than a binder does.
- *
- * Note what that day-long fetch cache buys even when nothing is pre-priced:
- * two people who own the same card still only cost one request between them,
- * because the second one hits the HTTP cache rather than TCGdex. Pre-pricing a
- * whole set is an optimisation on top of that, not a replacement for it.
- */
-/**
- * Both printings, because Cardmarket prices both and TCGdex passes both on.
- *
- * `holo` is the foil — the reverse holo, and the holo rare on older sets —
- * which arrives in the same object under `-holo` keys and is null far more
- * often than not. holoPriceOf() is what turns the zeros those fields carry into
- * null; see its comment for why reading them raw would value a reverse holo at
- * nothing.
+ * Cardmarket's price and foil price sat beside these until 2026-09-14. Nothing had shown either
+ * since 2026-09-12, and a price in this API is TCGplayer's market figure and nothing else.
  */
 export type CardPrices = {
-  /** Cardmarket's, in euros; null on a card Cardmarket does not price (an old promo) but TCGplayer does. */
-  price: Price | null;
-  holo: Price | null;
-  /** TCGplayer's, in dollars, as TCGdex relays them: the second market for a card pokemontcg.io cannot reach. */
+  /** The first printing with a market figure: the card's own price. */
   usd?: UsdPrice | null;
   /**
    * The stamped first run's dollars, where TCGplayer prices that run apart: Jungle, Fossil,
@@ -224,12 +202,6 @@ export type CardPrices = {
   usdFirstEd?: UsdPrice | null;
   /** Every printing TCGplayer prices, by its own name: which one a copy is worth is a question about the copy. */
   usdPrintings?: Record<string, UsdPrice & { productId: number | null }>;
-  /**
-   * The Shadowless run's euros, where Cardmarket files that run as a product of its own: Base
-   * Set, every card of it. From the same nightly guide as `price`, under the product id
-   * map held, which was deleted with Cardmarket on 2026-09-12. Null everywhere.
-   */
-  shadowless?: Price | null;
 };
 
 /**
@@ -262,15 +234,10 @@ const TCGPLAYER_PRINTINGS = [
  */
 const TCGPLAYER_FIRST_ED = ["1st-edition-holofoil", "1st-edition"];
 
-/** TCGplayer's market and low for the first of `printings` that has a market, or null. */
+/** TCGplayer's market figure for the first of `printings` that has one, or null. */
 function firstWithMarket(
   tp:
-    | Record<
-        string,
-        | { marketPrice?: number | null; lowPrice?: number | null; productId?: number | null }
-        | null
-        | undefined
-      >
+    | Record<string, { marketPrice?: number | null; productId?: number | null } | null | undefined>
     | null
     | undefined,
   printings: string[],
@@ -280,7 +247,6 @@ function firstWithMarket(
   if (!printing) return null;
   return {
     market: printing.marketPrice ?? null,
-    low: typeof printing.lowPrice === "number" ? printing.lowPrice : null,
     productId: typeof printing.productId === "number" ? printing.productId : null,
   };
 }
@@ -309,19 +275,14 @@ export const usdFirstEdOf = (tp: Parameters<typeof firstWithMarket>[0]): UsdPric
  * while a card was one price. It is not the question a copy asks: a Jungle Scyther is a holo at
  * $61 and a plain rare at $17, TCGplayer knows both apart, and the first-with-a-market rule
  * handed every copy the plain one. The chooser lives in price-basis.mjs, beside the rule that
- * says which of Cardmarket's two series a copy reads, because it is the same sentence.
+ * says which of a card's price series a copy reads, because it is the same sentence.
  *
  * The product id travels because it is the only way to a page about this printing, which is
  * what a person checking a figure needs (Bart, 2026-09-12).
  */
 export const usdPrintingsOf = (
   tp:
-    | Record<
-        string,
-        | { marketPrice?: number | null; lowPrice?: number | null; productId?: number | null }
-        | null
-        | undefined
-      >
+    | Record<string, { marketPrice?: number | null; productId?: number | null } | null | undefined>
     | null
     | undefined,
 ): Record<string, UsdPrice & { productId: number | null }> => {
@@ -330,57 +291,48 @@ export const usdPrintingsOf = (
     if (!v || typeof v.marketPrice !== "number") continue;
     out[printing] = {
       market: v.marketPrice,
-      low: typeof v.lowPrice === "number" ? v.lowPrice : null,
       productId: typeof v.productId === "number" ? v.productId : null,
     };
   }
   return out;
 };
 
-/** TCGplayer's market and low for the first printing that has a market, or null. */
+/** TCGplayer's market figure for the first printing that has one, or null. */
 export function usdOf(
   tp:
-    | Record<
-        string,
-        | { marketPrice?: number | null; lowPrice?: number | null; productId?: number | null }
-        | null
-        | undefined
-      >
+    | Record<string, { marketPrice?: number | null; productId?: number | null } | null | undefined>
     | null
     | undefined,
 ): UsdPrice | null {
   return firstWithMarket(tp, TCGPLAYER_PRINTINGS);
 }
 
+/**
+ * TCGplayer's figures for a list of TCGdex card ids, off each card's own record.
+ *
+ * One request per card, because the set endpoint carries only id, image, localId and name: the
+ * prices live on the individual card. Eight at a time; json() caches each for a day, so two
+ * people who own the same card still only cost one request between them. A card TCGdex relays
+ * no TCGplayer market figure for is left out.
+ */
 export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>> {
   const out = new Map<string, CardPrices>();
   await mapLimit(ids, 8, async (id) => {
     const card = (await json(`https://api.tcgdex.net/v2/en/cards/${id}`, `card ${id}`)) as {
       pricing?: {
-        cardmarket?: {
-          low?: number | null;
-          trend?: number | null;
-          avg30?: number | null;
-          "low-holo"?: number | null;
-          "trend-holo"?: number | null;
-          "avg30-holo"?: number | null;
-        };
         tcgplayer?: Record<
           string,
-          | { marketPrice?: number | null; lowPrice?: number | null; productId?: number | null }
-          | null
-          | undefined
+          { marketPrice?: number | null; productId?: number | null } | null | undefined
         > | null;
       };
     } | null;
-    const cm = card?.pricing?.cardmarket;
-    const price = cm ? priceOf(cm) : null;
     const usd = usdOf(card?.pricing?.tcgplayer);
-    const usdFirstEd = usdFirstEdOf(card?.pricing?.tcgplayer);
-    const usdPrintings = usdPrintingsOf(card?.pricing?.tcgplayer);
-    // Either market is worth keeping: a promo Cardmarket does not price is still a card TCGplayer does.
-    if (price || usd)
-      out.set(id, { price, holo: cm ? holoPriceOf(cm) : null, usd, usdFirstEd, usdPrintings });
+    if (!usd) return;
+    out.set(id, {
+      usd,
+      usdFirstEd: usdFirstEdOf(card?.pricing?.tcgplayer),
+      usdPrintings: usdPrintingsOf(card?.pricing?.tcgplayer),
+    });
   });
   return out;
 }

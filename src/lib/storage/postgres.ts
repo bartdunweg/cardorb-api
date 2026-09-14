@@ -541,7 +541,6 @@ export type TcgplayerPriceRecord = {
   product_id: number;
   printing: string;
   market: number;
-  low: number | null;
   updated_on: string;
 };
 
@@ -595,10 +594,7 @@ export async function readTcgplayerPrices(
       ...(await readAllPages<TcgplayerPriceRecord>("TCGplayer's prices", (page, counted) =>
         db
           .from("tcgplayer_prices")
-          .select(
-            "product_id, printing, market, low, updated_on",
-            counted ? { count: "exact" } : {},
-          )
+          .select("product_id, printing, market, updated_on", counted ? { count: "exact" } : {})
           .in("product_id", ids)
           .gte("updated_on", since)
           .order("product_id", { ascending: true })

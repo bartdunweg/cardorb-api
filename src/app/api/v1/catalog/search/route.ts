@@ -130,7 +130,6 @@ export async function GET(req: Request) {
         cards: marked.map((c) => ({
           ...c,
           price: prices.get(priceKey(c))?.price ?? null,
-          priceHolo: prices.get(priceKey(c))?.holo ?? null,
         })),
         total,
       },

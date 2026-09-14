@@ -149,7 +149,6 @@ describe("getCollection during a TCGdex outage", () => {
       logo: null,
       releaseDate: null,
       total: 102,
-      prices: {},
     });
     const out = await getCollection("me", "t.o.k.e.n");
     expect(out.failed).toBe(false);

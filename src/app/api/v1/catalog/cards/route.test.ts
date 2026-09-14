@@ -71,7 +71,7 @@ describe("GET /api/v1/catalog/cards", () => {
   it("answers the cards with the viewer's marks and TCGplayer's price, asking the copy once per id", async () => {
     tcgplayerPricesFor.mockImplementation(
       async (...a: unknown[]) =>
-        new Map((a[0] as string[]).map((id) => [id, { price: { market: 12.5 }, holo: null }])),
+        new Map((a[0] as string[]).map((id) => [id, { price: { market: 12.5 } }])),
     );
     const res = await get("base1-4,base1-4,%20base1-5");
     expect(res.status).toBe(200);
@@ -84,7 +84,6 @@ describe("GET /api/v1/catalog/cards", () => {
       wishlist: false,
       quantity: 0,
       price: { market: 12.5 },
-      priceHolo: null,
     });
   });
 

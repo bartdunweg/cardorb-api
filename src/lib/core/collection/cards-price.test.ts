@@ -9,134 +9,34 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { holoPriceOf, priceOf, shownPrice } from "./cards";
-import {
-  copyPriceOf,
-  pointFromTcgplayer,
-  priceFromMarket,
-  priceFromUsd,
-  printingPriceOf,
-} from "../price-basis.mjs";
+import { shownPrice } from "./cards";
+import { copyPriceOf, pointFromTcgplayer, priceFromUsd, printingPriceOf } from "../price-basis.mjs";
 import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
 
-describe("priceOf", () => {
-  // The band that used to sit on top of this is gone, so the guide's own market figure is the
-  // whole of what it answers. Kept as a test because the guide still feeds the price history
-  // until the cron reads TCGplayer too, and a band creeping back in would be silent money.
-  it("never invents a Near Mint range on top of the market figure", () => {
-    expect(priceOf({ low: 145.0, trend: 191.47, avg30: 233.33 })?.nm).toBeNull();
-    expect(priceOf({ low: 5.0, trend: 8.64, avg30: 8.5 })?.nm).toBeNull();
-    expect(shownPrice(priceOf({ low: 0.02, trend: 0.45, avg30: 0.41 }))).toBe(0.45);
+describe("shownPrice", () => {
+  it("is the market figure", () => {
+    expect(shownPrice({ market: 0.45 })).toBe(0.45);
   });
 
-  it("has nothing to show for a card nobody has listed", () => {
+  it("has nothing to show for a card nobody prices", () => {
     expect(shownPrice(null)).toBeNull();
-  });
-
-  it("shows the floor only when it is the only number there is", () => {
-    expect(shownPrice(priceOf({ low: 1.2, trend: null, avg30: null }))).toBe(1.2);
-    expect(shownPrice(priceOf({ low: 1.2, trend: 3.4, avg30: 3.1 }))).not.toBe(1.2);
-  });
-  it("keeps the low as a floor rather than as the price", () => {
-    const price = priceOf({ low: 45.0, trend: 72.65, avg30: 66.74 });
-    expect(price?.low).toBe(45.0);
-    expect(price?.market).toBe(72.65);
-  });
-
-  // SVP 159 Magneton: one €10,000 sale in the chart put the trend at €801 for a
-  // card listed at €70. Believing that would have made it the dearest card on
-  // the page by a factor of four.
-  it("disbelieves a trend wrecked by a single sale", () => {
-    const price = priceOf({ low: 8.0, trend: 801.13, avg30: 391.26 });
-    expect(price?.market).toBe(391.26);
-  });
-
-  // e-Card Machamp: Cardmarket files the reverse holo under the same product, so
-  // the trend is drawn from two different cards.
-  it("disbelieves a trend drawn from two printings", () => {
-    const price = priceOf({ low: 2.5, trend: 145.5, avg30: 79.23 });
-    expect(price?.market).toBe(79.23);
-  });
-
-  it("leaves a trend alone when the month agrees with it", () => {
-    const price = priceOf({ low: 1.0, trend: 12.58, avg30: 11.81 });
-    expect(price?.market).toBe(12.58);
-  });
-
-  it("falls back to the month where there is no trend at all", () => {
-    expect(priceOf({ low: 1.0, trend: null, avg30: 9.0 })?.market).toBe(9.0);
-  });
-
-  // A card TCGdex knows but has never seen listed is unknown, not free.
-  it("is null where nothing has been published", () => {
-    expect(priceOf({ low: null, trend: null, avg30: null })).toBeNull();
-  });
-});
-
-describe("holoPriceOf", () => {
-  it("reads the foil fields, not the plain ones", () => {
-    const p = holoPriceOf({
-      low: 1,
-      trend: 2,
-      avg30: 2,
-      "low-holo": 10,
-      "trend-holo": 20,
-      "avg30-holo": 20,
-    });
-    expect(p?.market).toBe(20);
-    expect(p?.low).toBe(10);
-  });
-
-  it("treats zero as no price rather than as free", () => {
-    // The trap this function exists for. 865 of this collection's 1,526
-    // products answer `trend-holo: 0`, which is Cardmarket saying it has no
-    // foil listing. Read literally it values a reverse holo at nothing, which
-    // is worse than the approximation it was meant to replace.
-    expect(holoPriceOf({ "low-holo": 0, "trend-holo": 0, "avg30-holo": 0 })).toBeNull();
-  });
-
-  it("is null where the foil fields are absent altogether", () => {
-    expect(holoPriceOf({ low: 5, trend: 5, avg30: 5 })).toBeNull();
-  });
-
-  it("ignores a zero on one field without discarding a real price on another", () => {
-    const p = holoPriceOf({ "low-holo": 0, "trend-holo": 12, "avg30-holo": 12 });
-    expect(p?.market).toBe(12);
-    expect(p?.low).toBeNull();
+    expect(shownPrice(undefined)).toBeNull();
+    expect(shownPrice({ market: null })).toBeNull();
   });
 });
 
 describe("priceFromUsd", () => {
-  it("turns TCGplayer's dollars into euros to the cent, market as the price, low as the floor", () => {
-    const p = priceFromUsd({ market: 12.34, low: 9.99 }, 0.92)!;
-    expect(p.market).toBe(11.35);
-    expect(p.low).toBe(9.19);
-    expect(p.nm).toBeNull();
+  it("turns TCGplayer's market figure into euros to the cent", () => {
+    const p = priceFromUsd({ market: 12.34 }, 0.92)!;
+    expect(p).toEqual({ market: 11.35 });
     expect(shownPrice(p)).toBe(11.35);
   });
-  it("is nothing when TCGplayer has nothing", () => {
-    expect(priceFromUsd({ market: null, low: null }, 0.92)).toBeNull();
-  });
-});
 
-describe("priceFromMarket", () => {
-  const cm = priceOf({ low: 8, trend: 10, avg30: 10 });
-  const tp = priceFromUsd({ market: 11, low: 9 }, 1);
-
-  it("is TCGplayer's figure, untouched by the other market", () => {
-    const p = priceFromMarket(cm, tp)!;
-    expect(p.market).toBe(11);
-    expect(p.low).toBe(9);
-    expect(shownPrice(p)).toBe(11);
-  });
-
-  // The whole point of the change. A card Cardmarket prices at €30.46 off a product it shares
-  // with the holo, and TCGplayer does not price at all, used to read €30.46. It now reads
-  // nothing, and the screen says so.
-  it("is nothing where TCGplayer says nothing, however much the other market says", () => {
-    expect(priceFromMarket(cm, null)).toBeNull();
-    expect(priceFromMarket(priceOf({ low: 30.46, trend: 30.46, avg30: 30.46 }), null)).toBeNull();
-    expect(priceFromMarket(null, null)).toBeNull();
+  // A lowest listing was never a price and is not read at all now: a printing with no market
+  // figure has no price, whatever else TCGplayer publishes for it.
+  it("is nothing when TCGplayer has no market figure", () => {
+    expect(priceFromUsd({ market: null }, 0.92)).toBeNull();
+    expect(priceFromUsd({ market: null, low: 9.99 } as { market: null }, 0.92)).toBeNull();
   });
 });
 
@@ -150,8 +50,8 @@ describe("priceFromMarket", () => {
  */
 describe("copyPriceOf", () => {
   const card = {
-    price: { low: 1, market: 10, avg30: 10, nm: null },
-    priceFirstEd: { low: 3, market: 30, avg30: 30, nm: null },
+    price: { market: 10 },
+    priceFirstEd: { market: 30 },
   };
 
   it("reads the stamped run's price for a 1st Edition copy, whatever its finish", () => {
@@ -194,8 +94,8 @@ describe("copyPriceOf", () => {
 
 describe("TCGplayer's two runs", () => {
   const lugia = {
-    "1st-edition-holofoil": { marketPrice: 1085.03, lowPrice: 2999.99 },
-    "unlimited-holofoil": { marketPrice: 518.99, lowPrice: 434.85 },
+    "1st-edition-holofoil": { marketPrice: 1085.03 },
+    "unlimited-holofoil": { marketPrice: 518.99 },
   };
 
   it("takes the ordinary run for the card's own price", () => {
@@ -216,7 +116,7 @@ describe("TCGplayer's two runs", () => {
  * one product on Cardmarket, which is how a holo copy read the plain rare's figure.
  */
 describe("printingKeysOf and printingPriceOf", () => {
-  const eur = (n: number) => ({ low: null, market: n, avg30: null, nm: null });
+  const eur = (n: number) => ({ market: n });
   const jungleScyther = { holofoil: eur(53.23), normal: eur(15.19) };
 
   it("reads the foil the copy is, not whichever printing came first", () => {

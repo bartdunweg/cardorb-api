@@ -151,7 +151,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       cards: shown.map((c) => ({
         ...c,
         price: prices.get(priceKey(c))?.price ?? null,
-        priceHolo: prices.get(priceKey(c))?.holo ?? null,
       })),
       page,
       pageSize,

@@ -36,7 +36,6 @@ const catalogue = (over: Partial<SetCatalogue> = {}): SetCatalogue => ({
   logo: "https://assets.tcgdex.net/en/base/base1/logo.webp",
   releaseDate: "1999-01-09",
   total: 102,
-  prices: {},
   ...over,
 });
 
@@ -65,25 +64,13 @@ const empty = (): SetCatalogue => ({
   logo: null,
   releaseDate: null,
   total: null,
-  prices: {},
 });
 
 const setCatalogue = vi.fn(async (name: string) => KNOWN[name] ?? empty());
-/**
- * Both printings, matching what the real pricesFor() answers with since
- * Cardmarket's `-holo` fields were wired up: the normal price and the foil's,
- * where there is one. `holo` is null here because most cards have no separate
- * foil listing — 865 of this collection's 1,526 products — and the fallback to
- * the normal price is the path worth exercising by default.
- */
+/** TCGplayer's dollars, as the real pricesFor() answers: the caller converts them to a price. */
 const pricesFor = vi.fn(
   async (ids: string[]) =>
-    new Map(
-      ids.map((id) => [
-        id,
-        { price: { low: 1, market: 4.5, avg30: 4.2, nm: { low: 4, mid: 5, high: 6 } }, holo: null },
-      ]),
-    ),
+    new Map(ids.map((id) => [id, { usd: { market: 4.5, productId: null } }])),
 );
 
 vi.mock("../catalogue/catalogue", () => ({
@@ -251,10 +238,13 @@ describe("buildCollection", () => {
     ]);
   });
 
-  it("matches a row to the catalogue and takes its id and price", async () => {
+  it("matches a row to the catalogue, takes its id and asks for its price", async () => {
     const [set] = await buildCollection([row()]);
     expect(set!.cards[0]!.tcgId).toBe("base1-088");
-    expect(set!.cards[0]!.price).not.toBeNull();
+    expect(pricesFor).toHaveBeenCalledWith(["base1-088"]);
+    // The dollars are converted by the caller at the day's rate (factsWithUsd in collection.ts),
+    // so a card built without it has no price rather than one in the wrong currency.
+    expect(set!.cards[0]!.price).toBeNull();
     expect(set!.cards[0]!.image).toContain("img/088");
   });
 
@@ -286,22 +276,6 @@ describe("buildCollection", () => {
     expect(set!.cards[0]!.image).toBeNull();
     // Still matched, though: the id and the price do not depend on the picture.
     expect(set!.cards[0]!.tcgId).toBe("base1-088");
-    KNOWN.Base = catalogue();
-  });
-
-  it("takes a price the catalogue already had without asking again", async () => {
-    // What CATALOGUE_SET_PRICING_MAX buys once a set has more than one owner.
-    KNOWN.Base = catalogue({ prices: { "base1-088": { low: 2, market: 9, avg30: 9, nm: null } } });
-    const [set] = await buildCollection([row()]);
-    expect(set!.cards[0]!.price?.market).toBe(9);
-    expect(pricesFor).not.toHaveBeenCalled();
-    KNOWN.Base = catalogue();
-  });
-
-  it("asks only for the prices the catalogue is missing", async () => {
-    KNOWN.Base = catalogue({ prices: { "base1-088": { low: 2, market: 9, avg30: 9, nm: null } } });
-    await buildCollection([row(), row({ name: "Charizard", number: "004" })]);
-    expect(pricesFor).toHaveBeenCalledWith(["base1-004"]);
     KNOWN.Base = catalogue();
   });
 
@@ -411,7 +385,6 @@ describe("facts source", () => {
               number: i.number,
               price: null,
               usd: null,
-              priceHolo: null,
               rarity: null,
               catalogue: null,
             },

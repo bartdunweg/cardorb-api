@@ -9,8 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  */
 
 const pricesFor = vi.fn(
-  async (ids: string[]) =>
-    new Map(ids.map((id) => [id, { price: null, holo: null, usd: { market: 1, low: null } }])),
+  async (ids: string[]) => new Map(ids.map((id) => [id, { usd: { market: 1 } }])),
 );
 const readTcgplayerPrices = vi.fn();
 let current: { data: unknown[] | null; error: unknown } = {
@@ -60,18 +59,16 @@ describe("pricesFromStoredRows", () => {
         [TWO_RUNS, 45153],
       ],
       [
-        { product_id: 42382, printing: "holofoil", market: "112.50", low: "95.00" },
-        { product_id: 45153, printing: "unlimited", market: 2.24, low: null },
-        { product_id: 45153, printing: "1st-edition", market: 10.89, low: 8.5 },
+        { product_id: 42382, printing: "holofoil", market: "112.50" },
+        { product_id: 45153, printing: "unlimited", market: 2.24 },
+        { product_id: 45153, printing: "1st-edition", market: 10.89 },
       ],
     );
 
     expect(out.get(BLASTOISE)).toEqual({
-      price: null,
-      holo: null,
-      usd: { market: 112.5, low: 95, productId: 42382 },
+      usd: { market: 112.5, productId: 42382 },
       usdFirstEd: null,
-      usdPrintings: { holofoil: { market: 112.5, low: 95, productId: 42382 } },
+      usdPrintings: { holofoil: { market: 112.5, productId: 42382 } },
     });
     // The unlimited run is the card's price and the stamped run its own, as usdOf and
     // usdFirstEdOf pick them off TCGdex's record.
@@ -98,7 +95,7 @@ describe("pricesFromStoredRows", () => {
 describe("storedPricesFor", () => {
   it("prices linked cards from the store and asks TCGdex only for a card with no link", async () => {
     readTcgplayerPrices.mockResolvedValue([
-      { product_id: 42382, printing: "holofoil", market: 112.5, low: 95, updated_on: "2026-09-14" },
+      { product_id: 42382, printing: "holofoil", market: 112.5, updated_on: "2026-09-14" },
     ]);
 
     const out = await storedPricesFor([BLASTOISE, "nowhere-001"]);

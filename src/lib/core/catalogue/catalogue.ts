@@ -41,9 +41,8 @@
  */
 
 import { DAY, mapLimit, catalogueTimeout } from "../util";
-import type { Price } from "../price-basis.mjs";
 import { unstable_cache } from "next/cache";
-import { json, fetchSet, pricesFor } from "./tcgdex-client";
+import { json, fetchSet } from "./tcgdex-client";
 import { eraRaritiesOfSet, loadEraRarities } from "./era-rarities";
 import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
@@ -84,17 +83,6 @@ export type SetCatalogue = {
   logo: string | null;
   releaseDate: string | null;
   total: number | null;
-  /**
-   * tcgId to price, for as much of the set as was worth pricing up front.
-   *
-   * Empty unless CATALOGUE_SET_PRICING_MAX says otherwise, and that default is
-   * deliberate: pricing a whole 300-card set to serve somebody who owns twelve
-   * of it costs 300 requests where 12 would have done. It is the right trade
-   * once a set has more than one owner and the wrong one before that, so it
-   * ships off and gets turned on when the second account exists. Whatever is
-   * missing here is fetched per collection instead — see pricesFor().
-   */
-  prices: Record<string, Price>;
 };
 
 /**
@@ -120,12 +108,6 @@ export class CatalogueUnavailable extends Error {
  * listing is denied, which is how TCGdex' CDN is configured.
  */
 const GONE = new Set([403, 404, 410]);
-
-/** How big a set may be before pre-pricing it stops being a saving. */
-function setPricingMax(): number {
-  const raw = Number(process.env.CATALOGUE_SET_PRICING_MAX);
-  return Number.isFinite(raw) && raw > 0 ? raw : 0;
-}
 
 /** The whole of the per-set work, on a cache miss. Exported for its test only. */
 export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
@@ -263,22 +245,6 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 
   const total = detail?.cardCount?.official ?? detail?.cardCount?.total ?? null;
 
-  // Pre-pricing, when it has been turned on and the set is small enough to be
-  // worth it. Off by default; see SetCatalogue.prices.
-  const max = setPricingMax();
-  let prices: Record<string, Price> = {};
-  if (max > 0 && total !== null && total <= max) {
-    const ids = [...new Set(Object.values(byNumber).map((c) => c.id))];
-    // The normal printing only. This Record has one slot per card and the foil
-    // price needs a second, which is a wider change than this one — see
-    // holoOfId() in cards.ts, where a pre-priced card therefore falls back to
-    // the normal price for its foil. Invisible while pre-pricing is off, which
-    // it is by default.
-    prices = Object.fromEntries(
-      [...(await pricesFor(ids))].flatMap(([id, p]) => (p.price ? [[id, p.price] as const] : [])),
-    );
-  }
-
   return {
     byNumber,
     assetBase,
@@ -292,7 +258,6 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
     ),
     releaseDate: detail?.releaseDate ?? null,
     total,
-    prices,
   };
 }
 
@@ -305,6 +270,7 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
+// v8: a SetCatalogue no longer carries `prices`, Cardmarket's pre-pricing, which went on 2026-09-14.
 // v7: the copy's pictures moved to our own bucket at images.cardorb.com on 2026-09-14 (#394).
 // The entries on disk still name TCGdex and pokemontcg.io, which load; this is so the collection
 // reads from the bucket from the first request rather than from tomorrow.
@@ -317,7 +283,7 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v4: #230 changed what an entry contains — five promo aliases, and resolveSetIds now takes the
 // longest overlap and requires a shared id prefix. The key stayed at v3, so for a whole day every
 // set already in the Data Cache kept a byNumber built by the old rule.
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v7"], {
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v8"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });

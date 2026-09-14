@@ -50,7 +50,6 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   // the source. If a test passes because a price leaked in here, it is testing
   // the wrong path.
   price: null,
-  priceHolo: null,
   tcgId: "sv03-125",
   ...over,
 });
@@ -70,14 +69,14 @@ const set = (cards: OwnedCard[]): CardSet => ({
 describe("snapshotFromSets and cardPricesFromSets", () => {
   const priced = (market: number, holo: number | null = null, over: Partial<OwnedCard> = {}) =>
     card({
-      price: { market, low: null, nm: null } as unknown as OwnedCard["price"],
+      price: { market } as unknown as OwnedCard["price"],
       // The foil figure is TCGplayer's reverse-holofoil printing, as it is on a live card.
       pricePrintings:
         holo == null
           ? null
           : ({
-              normal: { market, low: null, nm: null },
-              "reverse-holofoil": { market: holo, low: null, nm: null },
+              normal: { market },
+              "reverse-holofoil": { market: holo },
             } as unknown as OwnedCard["pricePrintings"]),
       ...over,
     });
@@ -168,7 +167,7 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
   // Since 2026-09-13 each printing is its own series: a 1st Edition copy's history is the stamped
   // run's, not the unlimited one's.
   it("records the market the card shows: every printing TCGplayer prices, else the card's own figure", () => {
-    const eur = (market: number) => ({ market, low: null, avg30: null, nm: null });
+    const eur = (market: number) => ({ market });
     const sets = [
       set([
         // A Jungle Scyther: two printings on TCGplayer, and the printings win over the card's figure.

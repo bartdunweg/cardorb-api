@@ -147,7 +147,6 @@ describe("GET /api/v1/value-history", () => {
       speciesId: 25,
       tcgId,
       price: null,
-      priceHolo: null,
       variants,
     });
 

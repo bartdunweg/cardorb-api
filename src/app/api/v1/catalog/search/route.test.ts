@@ -222,20 +222,18 @@ describe("GET /api/v1/catalog/search", () => {
   });
 
   it("prices every result from TCGplayer, by the id everything priced is keyed by", async () => {
-    tcgplayerPricesFor.mockResolvedValue(
-      new Map([["base1-4", { price: { market: 12.5 }, holo: { market: 40 } }]]),
-    );
+    tcgplayerPricesFor.mockResolvedValue(new Map([["base1-4", { price: { market: 12.5 } }]]));
     const res = await search(new URLSearchParams({ query: "char", language: "ja" }));
     const { cards } = await res.json();
     expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], "ja");
-    expect(cards[0]).toMatchObject({ price: { market: 12.5 }, priceHolo: { market: 40 } });
+    expect(cards[0]).toMatchObject({ price: { market: 12.5 } });
   });
 
   it("leaves a null price under a result TCGplayer does not price", async () => {
     const res = await search(new URLSearchParams({ query: "char" }));
     const { cards } = await res.json();
     expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], null);
-    expect(cards[0]).toMatchObject({ price: null, priceHolo: null });
+    expect(cards[0]).toMatchObject({ price: null });
   });
 
   it("refuses a language it has no catalogue for", async () => {

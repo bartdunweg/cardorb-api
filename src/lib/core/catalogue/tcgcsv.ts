@@ -72,14 +72,13 @@ export type ShelfPrinting = {
   productId: number;
   printing: string;
   market: number;
-  low: number | null;
 };
 
 /** tcgcsv's "Reverse Holofoil" is TCGdex's "reverse-holofoil": the names the pickers read. */
 export const printingName = (subTypeName: string) => subTypeName.toLowerCase().replace(/\s+/g, "-");
 
 /**
- * Every priced printing on one shelf, market and low, for the table the collection reads.
+ * Every priced printing on one shelf, its market figure, for the table the collection reads.
  *
  * The same files shelfPrices() reads, kept whole. Tolerant per group like it, and it says how
  * many groups answered, so a cron can refuse to call a shelf with most of its sets missing a day.
@@ -97,7 +96,6 @@ export async function shelfPrintings(
       productId: number;
       subTypeName: string;
       marketPrice: number | null;
-      lowPrice: number | null;
     }[];
     try {
       ({ results } = await read<{ results: typeof results }>(
@@ -113,7 +111,6 @@ export async function shelfPrintings(
         productId: r.productId,
         printing: printingName(r.subTypeName),
         market: r.marketPrice,
-        low: typeof r.lowPrice === "number" ? r.lowPrice : null,
       });
     }
   });
@@ -125,33 +122,26 @@ export async function shelfPrintings(
  *
  * For the cards TCGdex has no TCGplayer figure for at all: the subsets and promo lines
  * scripts/tcgplayer-links.mjs linked to a tcgcsv group. Shaped like TCGdex's `pricing.tcgplayer`
- * (printing name, marketPrice, lowPrice, productId) so the pickers in tcgdex-client.ts read it
+ * (printing name, marketPrice, productId) so the pickers in tcgdex-client.ts read it
  * with the same rules, and a promo priced here is chosen exactly as any other card is.
  */
 export async function groupPrintings(
   groupId: number,
   category: number = TCGCSV_CATEGORY.en,
-): Promise<
-  Map<number, Record<string, { marketPrice: number; lowPrice: number | null; productId: number }>>
-> {
+): Promise<Map<number, Record<string, { marketPrice: number; productId: number }>>> {
   const { results } = await read<{
     results: {
       productId: number;
       subTypeName: string;
       marketPrice: number | null;
-      lowPrice: number | null;
     }[];
   }>(`${BASE}/${category}/${groupId}/prices`);
-  const out = new Map<
-    number,
-    Record<string, { marketPrice: number; lowPrice: number | null; productId: number }>
-  >();
+  const out = new Map<number, Record<string, { marketPrice: number; productId: number }>>();
   for (const r of results) {
     if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
     const printings = out.get(r.productId) ?? {};
     printings[printingName(r.subTypeName)] = {
       marketPrice: r.marketPrice,
-      lowPrice: typeof r.lowPrice === "number" ? r.lowPrice : null,
       productId: r.productId,
     };
     out.set(r.productId, printings);

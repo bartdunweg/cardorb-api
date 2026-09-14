@@ -14,23 +14,12 @@
 
 /**
  * @typedef {object} Price
- * @property {number | null} low
- *   The lowest listing for the printing. A floor, not a price.
  * @property {number | null} market
  *   What one copy trades at: TCGplayer's market figure for the printing, in euros.
- * @property {number | null} avg30
- *   The month's average, where a source publishes one. TCGplayer does not, so this is
- *   null on every card the app prices today. Kept because the guide readers still fill
- *   it and the price history written before 2026-09-12 carries it.
- * @property {{ low: number, mid: number, high: number } | null} nm
- *   Always null since 2026-09-12. See the note where the Near Mint band used to be.
  */
 
 /**
- * The one number a card is shown at, ranked by and totalled on.
- *
- * The market figure, and the lowest listing where there is no market figure: a card
- * shown at its cheapest listing is nearer the truth than a card shown as worth nothing.
+ * The one number a card is shown at, ranked by and totalled on: TCGplayer's market figure.
  *
  * Null is a real answer and every screen says so out loud, rather than reaching for a
  * second market that prices a different card. Everything that puts a figure on a card
@@ -40,10 +29,9 @@
  * @param {Price | null | undefined} p
  * @returns {number | null}
  */
-// `?? null` at the end rather than for tidiness: a Price built without a `low` at all used to
-// be caught by the band above it, and undefined reaching the money formatters is a crash, not
-// a missing price.
-export const shownPrice = (p) => (p ? (p.market ?? p.low ?? null) : null);
+// `?? null` at the end rather than for tidiness: undefined reaching the money formatters is a
+// crash, not a missing price.
+export const shownPrice = (p) => (p ? (p.market ?? null) : null);
 
 /**
  * @param {unknown} v
@@ -56,8 +44,9 @@ export const num = (v) => (typeof v === "number" ? v : null);
  *
  * The reverse holo, and the Poké Ball and Master Ball printings of 151 and Prismatic
  * Evolutions, which are a reverse holo with a pattern on it. Never the plain holo: on a
- * holo-only card the `-holo` fields describe a different, thinner market at 0.47x the plain
- * price. holoPriceOf() below is what those fields are.
+ * holo-only card Cardmarket's `-holo` fields described a different, thinner market at 0.47x
+ * the plain price, and printingKeysOf() below keeps a holo off the reverse's figure for the
+ * same reason.
  *
  * It lives here rather than beside FINISHES in collection/collection-row.ts, which now
  * re-exports it, for the reason at the top of this file: the script that values a binder
@@ -186,33 +175,6 @@ export const copyPriceOf = (copy, card) =>
   card.price ||
   null;
 
-/**
- * How far trend may run ahead of the month's average before it is disbelieved.
- *
- * Cardmarket's trend is drawn from recent sales and a single absurd one drags it
- * off the map. SVP 159 Magneton reads a trend of €801 against a 30-day average
- * of €391, off the back of one €10,000 sale visible as a spike in its own chart,
- * while the card is actually listed at €70. The same shape catches a product
- * page that mixes printings: e-Card Machamp reads €146 against €79 because
- * Cardmarket files the reverse holo under the same product.
- *
- * Of thirteen cards read off Cardmarket by hand, the two broken ones scored 2.05
- * and 1.84 on this ratio and no sound card went past 1.40, so the line sits
- * between them. It fires on 40 of this collection's 1,211 priced cards.
- */
-const TREND_CEILING = 1.5;
-
-/**
- * @param {number | null} trend
- * @param {number | null} avg30
- * @returns {number | null}
- */
-function marketPrice(trend, avg30) {
-  if (trend == null) return avg30;
-  if (avg30 != null && avg30 > 0 && trend / avg30 > TREND_CEILING) return avg30;
-  return trend;
-}
-
 /*
  * The estimated Near Mint band used to live here: a ratio of about 1.15 to 1.40 above €20
  * and 0.78 to 0.95 between €5 and €20, calibrated against thirteen of the owner's cards read
@@ -226,116 +188,24 @@ function marketPrice(trend, avg30) {
  *
  * Do not bring it back on a hunch. A Near Mint premium over TCGplayer wants its own readings,
  * against TCGplayer, before a single card is shown at one.
+ *
+ * Cardmarket's own readers went with it on 2026-09-14, and so did TCGplayer's lowest listing:
+ * a price here is TCGplayer's market figure and nothing else (Bart's call).
  */
 
 /**
- * One Price out of whatever Cardmarket published for a card, or null for nothing at all.
+ * A price out of TCGplayer's dollars: the market figure converted at the day's rate, to the
+ * cent, since a converted figure otherwise carries a tail no shop would print. Null where
+ * TCGplayer publishes no market figure.
  *
- * Exported for its test rather than for any caller: the constants above are a
- * measurement, and a measurement nobody checks is a number that drifts.
- *
- * @param {{ low?: number | null, trend?: number | null, avg30?: number | null }} cm
- * @returns {Price | null}
- */
-export function priceOf(cm) {
-  const low = num(cm.low);
-  const avg30 = num(cm.avg30);
-  const market = marketPrice(num(cm.trend), avg30);
-  // A card TCGdex knows but has never seen listed has every one of them null,
-  // which is not the same as "free" and should not be shown as a price.
-  if (low === null && market === null && avg30 === null) return null;
-  return { low, market, avg30, nm: null };
-}
-
-/**
- * The same, for the holo printing, which Cardmarket prices separately.
- *
- * Both feeds publish a second set of fields beside the first — `low-holo`,
- * `trend-holo`, `avg30-holo` — and they mean the foil printing of the same
- * product: the reverse holo, and for older sets the holo rare. Cardmarket files
- * both under one idProduct, which is why this is a second price on one card
- * rather than a second card.
- *
- * **Zero is not a price, and this is the whole reason this function exists
- * rather than a caller reading the fields itself.** Of 1,526 products in this
- * collection, 865 answer `trend-holo: 0` — Cardmarket saying it has no foil
- * listing for them, not saying the foil is free. Read naively that turns a
- * reverse holo into a card worth nothing, which is worse than the problem this
- * was built to fix. 660 carry a real figure, and where they do the foil runs at
- * a median of twice the normal printing.
- *
- * Null where there is no separate foil price, so the caller falls back to the
- * normal one — which is the honest answer for a card Cardmarket does not
- * distinguish.
- *
- * Takes the whole record rather than the foil fields alone, because that is how
- * it is called: one guide row, or one TCGdex pricing object, goes to both this
- * and priceOf(). Splitting it at the call site would mean every caller knowing
- * which keys belong to which printing, which is the knowledge this file exists
- * to hold.
- *
- * @param {{ low?: number | null, trend?: number | null, avg30?: number | null,
- *   "low-holo"?: number | null, "trend-holo"?: number | null, "avg30-holo"?: number | null }} cm
- * @returns {Price | null}
- */
-export function holoPriceOf(cm) {
-  const zeroless = (v) => {
-    const n = num(v);
-    return n === null || n === 0 ? null : n;
-  };
-  const low = zeroless(cm["low-holo"]);
-  const avg30 = zeroless(cm["avg30-holo"]);
-  const market = marketPrice(zeroless(cm["trend-holo"]), avg30);
-  if (low === null && market === null && avg30 === null) return null;
-  return { low, market, avg30, nm: null };
-}
-
-/**
- * A price out of TCGplayer's dollars, for a card Cardmarket publishes nothing for.
- *
- * The market figure converted at the day's rate is the price; the low is kept as the
- * floor it is. No month's average and no Near Mint band: those are Cardmarket's numbers
- * and the band was calibrated on them, so shownPrice() takes the market directly. To the
- * cent, since a converted figure otherwise carries a tail no shop would print.
- *
- * @param {{ market: number | null, low: number | null }} usd
+ * @param {{ market: number | null }} usd
  * @param {number} rate euros per dollar
  * @returns {Price | null}
  */
 export function priceFromUsd(usd, rate) {
-  const cents = (v) => (v == null ? null : Math.round(v * rate * 100) / 100);
-  const market = cents(num(usd.market));
-  const low = cents(num(usd.low));
-  if (market === null && low === null) return null;
-  return { low, market, avg30: null, nm: null };
-}
-
-/**
- * The card's price, out of the one market that prices it: TCGplayer's figure in euros, or
- * null.
- *
- * This used to average the two markets, and before that it preferred Cardmarket. Both are
- * gone (Bart's call, 2026-09-12). Averaging a figure that names the printing with one that
- * names only the card does not make either of them truer: it puts half of a holo's price on
- * the plain rare beside it, and the reader cannot see which half. Cardmarket priced a Team
- * Rocket Dark Golbat at €30.46 where TCGplayer said €5.83, off one shared product.
- *
- * So one source answers, and where it says nothing the card has no price. What that costs is
- * on the record in cardorb-web's docs/prices.md: about one card in eight, mostly promos, and
- * the European market the owner would actually sell in.
- *
- * Takes the Cardmarket figure it no longer uses, on purpose. Every caller still has one in
- * hand, and a function that quietly ignores an argument is easier to read than fifteen call
- * sites that stop passing it while the guide behind them is still being unwound (that is the
- * cron's and the guide's own change, not this one).
- *
- * @param {Price | null} _cardmarket no longer read; see above
- * @param {Price | null} tcgplayer already in euros, from priceFromUsd()
- * @returns {Price | null}
- */
-export function priceFromMarket(_cardmarket, tcgplayer) {
-  if (!tcgplayer) return null;
-  return tcgplayer.market === null && tcgplayer.low === null ? null : tcgplayer;
+  const market = num(usd.market);
+  if (market === null) return null;
+  return { market: Math.round(market * rate * 100) / 100 };
 }
 
 /**

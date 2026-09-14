@@ -37,7 +37,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
 
   it("writes the English shelf, dated today, and says how much", async () => {
     shelfPrintings.mockResolvedValue({
-      rows: [{ productId: 42382, printing: "holofoil", market: 112.5, low: 95 }],
+      rows: [{ productId: 42382, printing: "holofoil", market: 112.5 }],
       groups: 10,
       answered: 10,
     });
@@ -51,7 +51,6 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
         product_id: 42382,
         printing: "holofoil",
         market: 112.5,
-        low: 95,
         updated_on: new Date().toISOString().slice(0, 10),
       },
     ]);

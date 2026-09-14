@@ -74,7 +74,6 @@ const SETS = [
         variants: [variant("a"), variant("b", false)],
         owned: true,
         price: null,
-        priceHolo: null,
         tcgId: null,
       },
     ],

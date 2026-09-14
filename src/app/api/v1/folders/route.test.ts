@@ -78,7 +78,6 @@ const card = (name: string, speciesId: number | null, variants: unknown[]) => ({
   variants,
   owned: true,
   price: null,
-  priceHolo: null,
   tcgId: null,
 });
 const SETS = [

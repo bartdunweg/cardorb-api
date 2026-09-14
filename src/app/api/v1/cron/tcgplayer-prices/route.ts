@@ -46,7 +46,6 @@ export async function GET(req: Request) {
         product_id: r.productId,
         printing: r.printing,
         market: r.market,
-        low: r.low,
         updated_on: today,
       })),
     );

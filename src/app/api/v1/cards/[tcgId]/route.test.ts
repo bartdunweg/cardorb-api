@@ -155,7 +155,7 @@ describe("the price's currency", () => {
     getCardDetail.mockResolvedValue({ id: "SV1a-007", price: null, tcgplayerId: null });
     japaneseDetailPrice.mockImplementation(async (card: object) => ({
       ...card,
-      price: { low: 1, market: 2, avg30: null, nm: null },
+      price: { market: 2 },
       tcgplayerId: 640001,
     }));
     const res = await GET(new Request("https://api.cardorb.com/v1/cards/SV1a-007?language=ja"), {

@@ -27,7 +27,6 @@ const catalogue = (over: Partial<SetCatalogue> = {}): SetCatalogue => ({
   logo: "https://assets.tcgdex.net/en/base/base1/logo.webp",
   releaseDate: "1999-01-09",
   total: 102,
-  prices: {},
   ...over,
 });
 

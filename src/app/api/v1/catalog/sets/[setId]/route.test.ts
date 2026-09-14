@@ -182,14 +182,11 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
 
   it("prices the page's cards, and asks after those cards only", async () => {
     getRows.mockResolvedValue({ rows: [], failed: false });
-    tcgplayerPricesFor.mockResolvedValue(
-      new Map([["base1-4", { price: { market: 340 }, holo: null }]]),
-    );
+    tcgplayerPricesFor.mockResolvedValue(new Map([["base1-4", { price: { market: 340 } }]]));
     const body = await (await open()).json();
 
     const charizard = body.cards.find((c: { id: string }) => c.id === "base1-4");
     expect(charizard.price).toEqual({ market: 340 });
-    expect(charizard.priceHolo).toBeNull();
     // A card TCGplayer does not price is a blank line, not a missing field.
     expect(body.cards.find((c: { id: string }) => c.id !== "base1-4").price).toBeNull();
   });
@@ -203,9 +200,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
       cards: [{ ...card("85", "Fomantis"), id: "me5-85", tcgId: "me05-085" }],
     });
     getRows.mockResolvedValue({ rows: [], failed: false });
-    tcgplayerPricesFor.mockResolvedValue(
-      new Map([["me05-085", { price: { market: 2.81 }, holo: null }]]),
-    );
+    tcgplayerPricesFor.mockResolvedValue(new Map([["me05-085", { price: { market: 2.81 } }]]));
     const body = await (await open()).json();
 
     expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["me05-085"], null);
@@ -216,9 +211,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     // The other-language path: those cards are TCGdex's already, so `id` is the right key.
     englishSet.mockResolvedValue({ set: SET, cards: [{ ...card("85"), id: "me05-085" }] });
     getRows.mockResolvedValue({ rows: [], failed: false });
-    tcgplayerPricesFor.mockResolvedValue(
-      new Map([["me05-085", { price: { market: 1 }, holo: null }]]),
-    );
+    tcgplayerPricesFor.mockResolvedValue(new Map([["me05-085", { price: { market: 1 } }]]));
     const body = await (await open()).json();
 
     expect(body.cards[0].price).toEqual({ market: 1 });
@@ -232,9 +225,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
       cards: [{ ...card("001", "Tangela"), id: "M1S-001", setName: "Mega Symphonia" }],
     });
     getRows.mockResolvedValue({ rows: [], failed: false });
-    tcgplayerPricesFor.mockResolvedValue(
-      new Map([["M1S-001", { price: { market: 0.04 }, holo: null }]]),
-    );
+    tcgplayerPricesFor.mockResolvedValue(new Map([["M1S-001", { price: { market: 0.04 } }]]));
     const body = await (await open("language=ja", "M1S")).json();
 
     expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["M1S-001"], "ja");
