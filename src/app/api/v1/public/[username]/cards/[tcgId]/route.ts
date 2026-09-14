@@ -1,3 +1,4 @@
+import { catalogueCardId } from "@/lib/api/card-id";
 import { NextResponse } from "next/server";
 import { apiError, refuse, retryAfter, unavailable } from "@/lib/api/respond";
 import { createRateLimiter } from "@/lib/api/rate-limit";
@@ -55,7 +56,8 @@ export async function GET(
   const wait = byAddress(addressOf(req));
   if (wait) return refuse("tooMany", { headers: retryAfter(wait) });
 
-  const { username, tcgId } = await params;
+  const { username, tcgId: raw } = await params;
+  const tcgId = catalogueCardId(raw);
   if (!(await ownerOf(username))) {
     return apiError(404, "No such collection.");
   }
