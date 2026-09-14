@@ -1,6 +1,7 @@
-import { EDITIONS, FINISHES } from "../collection/collection-row";
+import { EDITIONS, FINISHES, isFoilPattern } from "../collection/collection-row";
 import type { Edition, Finish, FoilPattern } from "../collection/collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
+import TCGPLAYER_PATTERNS from "../tcgplayer-patterns.generated.json";
 
 /**
  * Which printings of a card exist, and which print runs, from what TCGdex says per card.
@@ -67,7 +68,7 @@ export function printingsOf(variants: TcgVariant[] | null | undefined): Printing
   );
 }
 
-type TcgplayerLink = { variants?: string[]; shadowless?: unknown } | null;
+type TcgplayerLink = { productId?: number; variants?: string[]; shadowless?: unknown } | null;
 const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
 
 /**
@@ -128,3 +129,48 @@ const ONE_FOIL_SERIES = new Set(["base", "gym", "neo", "lc", "ecard"]);
  */
 export const foilPatternsOfSerie = (serieId: string | null | undefined): FoilPattern[] | null =>
   serieId && ONE_FOIL_SERIES.has(serieId) ? [] : null;
+
+/** One pattern print of a card TCGplayer sells as a product of its own: "Machamp 068/165 (Cosmos Holo)". */
+export type PatternPrint = {
+  foilPattern: FoilPattern;
+  finish: Finish;
+  /** TCGplayer's product for the print. */
+  productId: number;
+  /** The printing its price is filed under in tcgplayer_prices ("holofoil"). */
+  printing: string;
+};
+
+/**
+ * The pattern prints of a card and whether a print without a pattern exists beside them.
+ *
+ * `standard` is false only for a card whose own TCGplayer product is a pattern print with no plain
+ * product beside it (the Tinkatink promo, svp-025, was only ever the cosmos holo).
+ */
+export type PatternPrints = { standard: boolean; prints: PatternPrint[] };
+
+type StoredPatterns = {
+  standard?: boolean;
+  prints: { foilPattern: string; finish: string; productId: number; printing: string }[];
+};
+const PATTERNS = TCGPLAYER_PATTERNS as Record<string, StoredPatterns>;
+
+/**
+ * Which foil patterns a copy of this card can really have, from TCGplayer's products
+ * (scripts/tcgplayer-patterns.mjs, the rules in foil-pattern-products.mjs).
+ *
+ * Bart, 2026-09-14: a pattern is picked for you, not asked. Every holo offered all five patterns,
+ * because TCGdex names the foil on a fraction of its cards. TCGplayer sells each pattern print as a
+ * product of its own, so a card with none listed has none: `prints` is empty and a form asks nothing.
+ *
+ * Null where the card has no TCGplayer product at all, which is no answer, not "none".
+ */
+export function patternPrintsFor(tcgId: string): PatternPrints | null {
+  if (LINKS[tcgId]?.productId == null) return null;
+  const stored = PATTERNS[tcgId];
+  const prints = (stored?.prints ?? []).flatMap((p) =>
+    isFoilPattern(p.foilPattern) && (FINISHES as readonly string[]).includes(p.finish)
+      ? [{ ...p, foilPattern: p.foilPattern, finish: p.finish as Finish }]
+      : [],
+  );
+  return { standard: stored?.standard !== false, prints };
+}

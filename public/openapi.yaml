@@ -341,6 +341,28 @@ components:
             from on a card that was only ever printed once.
         # required: firstEdition is sent on every answer; kept out of `required` so a client
         # generated from an older contract still validates one.
+        patternPrints:
+          type: [object, "null"]
+          description: |
+            The foil patterns a copy of this card can have, from TCGplayer's own products: it sells
+            a pattern print ("Machamp 068/165 (Cosmos Holo)") as a product beside the plain card.
+            A form offers these and nothing else, and asks nothing where `prints` is empty.
+            `standard` is false where no print without a pattern exists (a promo that only ever was
+            a cosmos holo). Null where the card has no TCGplayer product, or is not English: no
+            answer. Sent by GET /v1/cards/{tcgId} only.
+          required: [standard, prints]
+          properties:
+            standard: { type: boolean }
+            prints:
+              type: array
+              items:
+                type: object
+                required: [foilPattern, finish, tcgplayerId, price]
+                properties:
+                  foilPattern: { $ref: "#/components/schemas/FoilPattern" }
+                  finish: { $ref: "#/components/schemas/Finish" }
+                  tcgplayerId: { type: integer, description: "TCGplayer's product for the print." }
+                  price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }], description: "TCGplayer's market figure for the print at the day's rate; null where it has none." }
 
         set:
           type: [object, "null"]

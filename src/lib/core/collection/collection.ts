@@ -60,6 +60,8 @@ import {
   type UsdPair,
 } from "../catalogue/tcgdex-client";
 import { TCGCSV_CATEGORY, groupPrintings } from "../catalogue/tcgcsv";
+import type { PatternPrints } from "../catalogue/card-printings";
+import type { Finish, FoilPattern } from "./collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "../tcgplayer-ids.ja.generated.json";
 import TCGPLAYER_GROUPS from "../tcgplayer-groups.generated.json";
@@ -355,6 +357,50 @@ export const detailPrice = async <
     printingIds,
   };
 };
+
+/** One foil pattern a copy of a card can have, as the card's sheet answers it. */
+export type PricedPatternPrint = {
+  foilPattern: FoilPattern;
+  finish: Finish;
+  /** TCGplayer's product for the print. */
+  tcgplayerId: number;
+  /** TCGplayer's market figure for it, converted at the day's rate; null where unpriced. */
+  price: Price | null;
+};
+
+/**
+ * A card's pattern prints (patternPrintsFor) with each one's price, one per finish and pattern.
+ *
+ * TCGplayer sometimes lists one print twice, a Prize Pack product and a Miscellaneous one (Iono,
+ * sv02-185): the first that has a price stands for both, lowest product id first. The prices come
+ * from the same store every other price reads (printingsOfProducts): the nightly job copies every
+ * product on the shelf, pattern prints included.
+ */
+export async function pricePatternPrints(
+  patterns: PatternPrints | null,
+  usdToEur: number | null,
+): Promise<{ standard: boolean; prints: PricedPatternPrint[] } | null> {
+  if (!patterns) return null;
+  if (!patterns.prints.length) return { standard: patterns.standard, prints: [] };
+  const printings =
+    usdToEur == null
+      ? new Map<number, Printings>()
+      : await printingsOfProducts(patterns.prints.map((p) => p.productId)).catch((err) => {
+          console.error("Pattern print prices unreadable:", err);
+          return new Map<number, Printings>();
+        });
+  const out = new Map<string, PricedPatternPrint>();
+  for (const p of patterns.prints) {
+    const usd = printings.get(p.productId)?.[p.printing]?.marketPrice;
+    const price =
+      usdToEur != null && typeof usd === "number" ? priceFromUsd({ market: usd }, usdToEur) : null;
+    const key = `${p.finish}|${p.foilPattern}`;
+    const had = out.get(key);
+    if (had && (had.price || !price)) continue;
+    out.set(key, { foilPattern: p.foilPattern, finish: p.finish, tcgplayerId: p.productId, price });
+  }
+  return { standard: patterns.standard, prints: [...out.values()] };
+}
 
 /**
  * The person's folders, cached an hour under their own tag. `/v1/cards?collection=` reads

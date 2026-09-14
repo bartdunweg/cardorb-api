@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editionsOf, foilPatternsOfSerie, printingsOf } from "./card-printings";
+import { editionsOf, foilPatternsOfSerie, patternPrintsFor, printingsOf } from "./card-printings";
 
 describe("printingsOf", () => {
   it("is nothing where TCGdex lists no variants, which is no answer rather than none", () => {
@@ -96,5 +96,33 @@ describe("foilPatternsOfSerie", () => {
     expect(foilPatternsOfSerie("ex")).toBeNull();
     expect(foilPatternsOfSerie("sv")).toBeNull();
     expect(foilPatternsOfSerie(null)).toBeNull();
+  });
+});
+
+/* Against the committed file, on cards checked by hand at TCGplayer on 2026-09-14. */
+describe("patternPrintsFor", () => {
+  it("offers 151's Machamp its collection box cosmos holo beside the plain card", () => {
+    expect(patternPrintsFor("sv03.5-068")).toEqual({
+      standard: true,
+      prints: [{ foilPattern: "cosmos", finish: "holo", productId: 662070, printing: "holofoil" }],
+    });
+  });
+
+  it("has no pattern for a card TCGplayer sells no pattern print of, which is an answer", () => {
+    expect(patternPrintsFor("sv03-125")).toEqual({ standard: true, prints: [] });
+  });
+
+  it("says a promo that only ever was a cosmos holo has no Standard print", () => {
+    expect(patternPrintsFor("svp-025")).toMatchObject({ standard: false });
+  });
+
+  it("tells a cosmos holo from a cosmos reverse holo of the same card", () => {
+    expect(patternPrintsFor("swsh1-65")?.prints.map((p) => `${p.finish} ${p.foilPattern}`)).toEqual(
+      ["holo cosmos", "reverse-holo cosmos"],
+    );
+  });
+
+  it("is no answer for a card with no TCGplayer product", () => {
+    expect(patternPrintsFor("no-such-card")).toBeNull();
   });
 });
