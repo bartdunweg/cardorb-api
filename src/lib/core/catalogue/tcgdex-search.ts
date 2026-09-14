@@ -216,6 +216,19 @@ export async function searchCards(
    */
   { fullArt = false }: { fullArt?: boolean } = {},
 ): Promise<{ cards: CatalogueMatch[]; total: number }> {
+  /* Another shelf out of its copy (mirror-language.ts): one query, matched against the English
+     name the app shows and the name the card prints, so リザードン and Charizard both find it.
+     The walks below are for a shelf the copy does not hold yet. */
+  if (language && store) {
+    const copied = await searchMirror(store, input, page, { fullArt, language }).catch((err) => {
+      console.error(
+        `Catalogue copy unavailable for ${language}, asking TCGdex:`,
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    });
+    if (copied) return copied;
+  }
   // A Latin-letter term on another shelf is an English name, and TCGdex has none to match it
   // against: リザードンex is what its record says. The committed English names are scanned here.
   if (language && typeof input === "string" && /[A-Za-z]/.test(input))

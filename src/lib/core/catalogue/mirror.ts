@@ -18,6 +18,7 @@ import { withSetLogos } from "./set-logos";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueCardRecord,
+  type CatalogueLanguage,
   type CatalogueQuery,
   catalogueCardsById,
   catalogueCopied,
@@ -106,7 +107,7 @@ const matchOf = (r: CatalogueCardRecord): CatalogueMatch => ({
   id: r.id,
   number: r.local_id,
   name: r.name,
-  localName: null,
+  localName: r.local_name ?? null,
   setName: r.set_name,
   ...storedScan(r.image),
   rarity: r.rarity,
@@ -122,20 +123,21 @@ const matchOf = (r: CatalogueCardRecord): CatalogueMatch => ({
  * minutes when it has, for one when it has not, so the first night's run is noticed within
  * the minute and an empty copy does not cost every search a count before its fallback.
  */
-let copied: { at: number; value: boolean } | null = null;
+const copied = new Map<CatalogueLanguage, { at: number; value: boolean }>();
 const KNOWN_FOR_MS = { yes: 600_000, no: 60_000 };
 
-async function hasCopy(db: SupabaseClient): Promise<boolean> {
-  const ttl = copied?.value ? KNOWN_FOR_MS.yes : KNOWN_FOR_MS.no;
-  if (copied && Date.now() - copied.at < ttl) return copied.value;
-  const value = await catalogueCopied(db);
-  copied = { at: Date.now(), value };
+async function hasCopy(db: SupabaseClient, language: CatalogueLanguage): Promise<boolean> {
+  const known = copied.get(language);
+  const ttl = known?.value ? KNOWN_FOR_MS.yes : KNOWN_FOR_MS.no;
+  if (known && Date.now() - known.at < ttl) return known.value;
+  const value = await catalogueCopied(db, language);
+  copied.set(language, { at: Date.now(), value });
   return value;
 }
 
 /** Thrown away between tests. */
 export const forgetCopy = () => {
-  copied = null;
+  copied.clear();
 };
 
 /**
@@ -147,12 +149,12 @@ export async function searchMirror(
   db: SupabaseClient,
   input: string | SearchFilters,
   page = 1,
-  { fullArt = false }: { fullArt?: boolean } = {},
+  { fullArt = false, language = "en" }: { fullArt?: boolean; language?: CatalogueLanguage } = {},
 ): Promise<{ cards: CatalogueMatch[]; total: number } | null> {
-  if (!(await hasCopy(db))) return null;
+  if (!(await hasCopy(db, language))) return null;
   const query = mirrorQuery(input, { fullArt });
   if (!query) return { cards: [], total: 0 };
-  const { rows, total } = await searchCatalogueCards(db, query, page, MAX_RESULTS);
+  const { rows, total } = await searchCatalogueCards(db, query, page, MAX_RESULTS, language);
   return { cards: rows.map(matchOf), total };
 }
 

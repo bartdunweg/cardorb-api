@@ -83,6 +83,7 @@ const card = (id: string, number: string) => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  keepImage.mockImplementation(async (a: string | null) => a);
   tcgdexScan.mockImplementation(async (stem: string) => stem);
   canStoreImages.mockResolvedValue(false);
   json.mockResolvedValue({
@@ -140,7 +141,7 @@ describe("syncLanguageMirror", () => {
       }),
     ]);
     const stamped = calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert");
-    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 1 });
+    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 2 });
   });
 
   it("takes Limitless's plain print where TCGdex has no file, and TCGdex's where it has", async () => {
@@ -177,6 +178,29 @@ describe("syncLanguageMirror", () => {
     expect(rows[0]!.image).toBeNull();
   });
 
+  // SV-P 022: a promo, whose number is no file name at Limitless; TCGplayer's Japanese shelf sells
+  // it as product 587779 (tcgplayer-ids.ja.generated.json).
+  it("keeps TCGplayer's product picture where neither TCGdex nor Limitless has the card", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("SV-P")]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("SV-P"), serieId: "SV" },
+      cards: [card("SV-P-022", "022")],
+    });
+    tcgdexScan.mockResolvedValue(null);
+    canStoreImages.mockResolvedValue(true);
+    keepImage.mockImplementation(async (a: string | null) =>
+      a?.includes("tcgplayer-cdn") ? "https://images.cardorb.com/tcgplayer/587779.jpg" : a,
+    );
+    vi.stubGlobal("fetch", async () => new Response(null, { status: 200 }));
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    vi.unstubAllGlobals();
+    const rows = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0] as {
+      image: string | null;
+    }[];
+    expect(rows[0]!.image).toBe("https://images.cardorb.com/tcgplayer/587779.jpg");
+  });
+
   it("leaves a set for the next run where a card's record could not be read", async () => {
     listSetsIn.mockResolvedValue([shelfSet("SV1a")]);
     json.mockRejectedValue(new Error("TCGdex answered 503"));
@@ -191,8 +215,8 @@ describe("syncLanguageMirror", () => {
     listSetsIn.mockResolvedValue([shelfSet("held"), shelfSet("behind"), shelfSet("new")]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 1 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 0 },
+        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 2 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 1 },
       ],
     });
     const report = await syncLanguageMirror(db, "ja", { parallel: 1 });

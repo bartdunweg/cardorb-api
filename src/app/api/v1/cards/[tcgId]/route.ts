@@ -54,9 +54,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     });
   const own = isBrowseLanguage(language) ? language : null;
   let card;
-  /* The copy's sheet for an English card: everything below out of our own store, and TCGdex asked
-     only for a card the copy does not hold yet (card-sheet.ts). */
-  const sheet = own ? null : await readCardSheet(tcgId);
+  /* The copy's sheet for the card, in the catalogue asked for: everything below out of our own
+     store, and TCGdex asked only for a card the copy does not hold yet (card-sheet.ts). */
+  const sheet = await readCardSheet(tcgId, own ?? "en");
   try {
     // The day's rate beside it: the price is TCGplayer's dollars, and a figure is only shown in
     // the currency the collection is valued in.
@@ -92,7 +92,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
           : languagesOf(tcgId, card.set?.id ?? null),
       rarityOrNull(card.rarity) === null && card.set?.id
         ? sheet
-          ? eraRaritiesFromCopy(card.set.id)
+          ? eraRaritiesFromCopy(card.set.id, own ?? "en")
           : raritiesOfEra(card.set.id)
         : Promise.resolve(null),
       /* `foilPatterns` is [] for a Wizards card, whose holo had its set's one foil, and null

@@ -36,7 +36,7 @@
  */
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
-import { limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
+import { isScanFile, limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
 import type { BrowseLanguage } from "./tcgdex-browse";
 import type { Language } from "../collection/collection-row";
 import { canonicalRarity } from "./rarity-names";
@@ -125,11 +125,48 @@ type TcgLanguageCard = {
  * of unreachability is the failure this repository has been bitten by twice
  * (see loadSetCatalogue, which throws for the same reason).
  */
+/**
+ * The copy's sheet for a card of a catalogue of its own, or null where the copy has none or cannot
+ * be read. Imported when asked rather than at the top: the store's client is server-only, and the
+ * tests that reach this file never ask the store.
+ */
+async function copiedSheet(lang: BrowseLanguage, tcgId: string) {
+  try {
+    const { adminClient } = await import("@/lib/storage/supabase");
+    const { catalogueCardSheet } = await import("@/lib/storage/postgres");
+    const db = adminClient();
+    return db ? await catalogueCardSheet(db, tcgId, lang) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function languageCard(
   langs: readonly BrowseLanguage[],
   tcgId: string,
 ): Promise<LanguageCard | null> {
   if (!isTcgId(tcgId)) return null;
+  /* Out of the copy first (mirror-language.ts): the record, the picture already checked and kept
+     in our bucket, and the set's printed name, with no request. TCGdex below for a card the copy
+     does not hold yet. */
+  for (const lang of langs) {
+    const copied = await copiedSheet(lang, tcgId);
+    if (!copied) continue;
+    const { card, set } = copied;
+    const file = card.image && isScanFile(card.image) ? card.image : null;
+    return {
+      catalogue: lang,
+      id: card.id,
+      number: card.local_id,
+      // What the card prints, as TCGdex's record says it: the English name rides elsewhere.
+      name: card.local_name ?? card.name,
+      rarity: card.rarity,
+      image: file ? null : card.image,
+      scan: file ? { low: file, high: file } : null,
+      setId: card.set_id,
+      setName: set?.local_name ?? set?.name ?? null,
+    };
+  }
   for (const lang of langs) {
     let card: TcgLanguageCard | null;
     try {
@@ -190,6 +227,14 @@ export async function languageSet(
   lang: BrowseLanguage,
   setId: string,
 ): Promise<LanguageSet | null> {
+  const copied = await copiedSetRecord(lang, setId);
+  if (copied)
+    return {
+      name: copied.local_name ?? copied.name,
+      // TCGdex's own "YYYY-MM-DD", as below; the copy keeps the shelf's slashes.
+      releaseDate: copied.release_date?.replaceAll("/", "-") ?? null,
+      total: copied.printed_total ?? copied.total ?? null,
+    };
   try {
     const set = (await json(
       `${HOST}/${lang}/sets/${encodeURIComponent(setId)}`,
@@ -208,5 +253,15 @@ export async function languageSet(
   } catch (err) {
     if (err instanceof CatalogueNotFound) return null;
     throw err;
+  }
+}
+
+/** The copy's row for one set of a catalogue of its own, or null where it has none or cannot be read. */
+async function copiedSetRecord(lang: BrowseLanguage, setId: string) {
+  try {
+    const { copiedSetRow } = await import("./set-catalogue-mirror");
+    return await copiedSetRow(lang, setId);
+  } catch {
+    return null;
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
+import { copiedLanguageSets } from "@/lib/core/catalogue/set-catalogue-mirror";
 import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
@@ -51,7 +52,8 @@ export async function GET(req: Request) {
     // The English shelf with the promo star and pokemontcg.io's wordmark where TCGdex has none
     // (set-logos.ts): asked here and on a set's page, not in the index search and the collection read.
     sets = isBrowseLanguage(language)
-      ? await listSetsIn(language)
+      ? // Out of the copy (mirror-language.ts); TCGdex only while the copy holds none of it.
+        ((await copiedLanguageSets(language).catch(() => null)) ?? (await listSetsIn(language)))
       : await timed("shelf sets", () => englishShelfSets());
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue

@@ -376,10 +376,21 @@ describe("searchCards with the catalogue's copy", () => {
     expect(cards.map((c) => c.id)).toEqual(["pl4-1"]);
   });
 
-  it("leaves the copy alone for another language's shelf", async () => {
+  it("reads another language's shelf out of its own copy, by the printed name too", async () => {
     installFetch({ list: [brief("sv1s-001", "001", "リザードン")], index: { sets: [] } });
     const { searchCards } = await load();
-    await searchCards("リザードン", 1, "ja", store([copy]));
+    const japanese = { ...copy, id: "SV1a-006", name: "Charizard ex", local_name: "リザードンex" };
+    const { cards } = await searchCards("リザードン", 1, "ja", store([japanese]));
+    expect(cards.map((c) => [c.id, c.name, c.localName])).toEqual([
+      ["SV1a-006", "Charizard ex", "リザードンex"],
+    ]);
+    expect(calls.some((c) => c.url.includes("/ja/"))).toBe(false);
+  });
+
+  it("asks TCGdex for another language's shelf while its copy is empty", async () => {
+    installFetch({ list: [brief("sv1s-001", "001", "リザードン")], index: { sets: [] } });
+    const { searchCards } = await load();
+    await searchCards("リザードン", 1, "ja", store([], false));
     expect(calls.some((c) => c.url.includes("/ja/"))).toBe(true);
   });
 });

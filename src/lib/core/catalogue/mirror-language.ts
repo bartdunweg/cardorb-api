@@ -25,9 +25,10 @@ import {
   writeCatalogueSet,
   writeCatalogueSetRecord,
 } from "@/lib/storage/postgres";
-import { mapLimit } from "../util";
+import { DAY, catalogueTimeout, mapLimit } from "../util";
 import { limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
 import { CATALOGUE_FORMAT, ownArt, type SyncReport } from "./mirror";
+import TCGPLAYER_JA from "../tcgplayer-ids.ja.generated.json";
 import { fullArtOf } from "./full-art";
 import { canStoreImages, keepImage } from "./image-store";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
@@ -36,6 +37,30 @@ import { CatalogueNotFound, json } from "./tcgdex-client";
 import { type BrowseLanguage, listSetsIn, setIn } from "./tcgdex-browse";
 
 const HOST = "https://api.tcgdex.net/v2";
+
+/**
+ * The shape of Japanese copy a set is written in, on top of the shared one. 2: TCGplayer's product
+ * picture where neither TCGdex nor Limitless has the card, which is every promo (SV-P, M-P): their
+ * numbers are no file name at Limitless, and the first pass left 10 of 150 sampled cards blank.
+ */
+const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 1;
+
+/** TCGplayer's 1000 px product picture for a Japanese card, where its Japanese shelf sells one. */
+async function tcgplayerJapaneseScan(id: string): Promise<string | null> {
+  const product = (TCGPLAYER_JA as Record<string, number | null | undefined>)[id];
+  if (!product) return null;
+  const url = `https://tcgplayer-cdn.tcgplayer.com/product/${product}_in_1000x1000.jpg`;
+  try {
+    const head = await fetch(url, {
+      method: "HEAD",
+      next: { revalidate: DAY },
+      signal: catalogueTimeout(),
+    });
+    return head.ok ? url : null;
+  } catch {
+    return null;
+  }
+}
 
 /** A card's own record in a catalogue of its own: everything the list and the sheet show. */
 type LanguageCardRecord = {
@@ -101,7 +126,10 @@ async function pictureOf(
   const source = tcgdex ?? limitlessJapaneseScan(card.id, card.number).high;
   if (!storing) return source;
   const kept = await keepImage(source);
-  return kept && kept !== source ? kept : null;
+  if (kept && kept !== source) return kept;
+  const product = await tcgplayerJapaneseScan(card.id);
+  const keptProduct = product ? await keepImage(product) : null;
+  return keptProduct && keptProduct !== product ? keptProduct : null;
 }
 
 /**
@@ -127,7 +155,7 @@ export async function syncLanguageMirror(
   const rank = (setId: string, total: number): [number, string] => {
     const seen = record.get(setId);
     if (!seen) return [0, ""];
-    if (seen.format < CATALOGUE_FORMAT || (seen.cards > 0 && seen.cards !== total))
+    if (seen.format < LANGUAGE_FORMAT || (seen.cards > 0 && seen.cards !== total))
       return [1, seen.syncedAt];
     return [2, seen.syncedAt];
   };
@@ -216,7 +244,7 @@ export async function syncLanguageMirror(
             languages: null,
           })),
           500,
-          CATALOGUE_FORMAT,
+          LANGUAGE_FORMAT,
           lang,
         );
         report.copied.push(id);

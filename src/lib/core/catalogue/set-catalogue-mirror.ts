@@ -27,12 +27,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueSetRecord,
   catalogueCardsBySets,
+  type CatalogueLanguage,
   catalogueSetCards,
   listCatalogueSets,
 } from "@/lib/storage/postgres";
 import { storedScan } from "./artwork";
 import { localise } from "../util";
-import { type CatalogueSet, byShelfOrder, inBinderOrder } from "./tcgdex-browse";
+import {
+  type BrowseLanguage,
+  type CatalogueSet,
+  byShelfOrder,
+  inBinderOrder,
+} from "./tcgdex-browse";
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
 import { indexByNumber } from "./set-index";
@@ -47,19 +53,23 @@ import type { SetCatalogue } from "./catalogue";
  * written once a night: the cost of being ten minutes behind it is nothing, and the run that
  * copies a brand new set is noticed within the same ten.
  */
-let sets: { at: number; rows: CatalogueSetRecord[] } | null = null;
+const sets = new Map<CatalogueLanguage, { at: number; rows: CatalogueSetRecord[] }>();
 const SETS_FOR_MS = 600_000;
 
-async function copiedSets(db: SupabaseClient): Promise<CatalogueSetRecord[]> {
-  if (sets && Date.now() - sets.at < SETS_FOR_MS) return sets.rows;
-  const rows = await listCatalogueSets(db);
-  sets = { at: Date.now(), rows };
+async function copiedSets(
+  db: SupabaseClient,
+  language: CatalogueLanguage = "en",
+): Promise<CatalogueSetRecord[]> {
+  const kept = sets.get(language);
+  if (kept && Date.now() - kept.at < SETS_FOR_MS) return kept.rows;
+  const rows = await listCatalogueSets(db, language);
+  sets.set(language, { at: Date.now(), rows });
   return rows;
 }
 
 /** For the tests, and for the one place that needs the next read to go to the database. */
 export function forgetCopiedSets(): void {
-  sets = null;
+  sets.clear();
 }
 
 /**
@@ -224,4 +234,98 @@ export async function englishSetFromCopy(
     tcgId: c.id,
   }));
   return { set, cards: inBinderOrder(cards) };
+}
+
+/**
+ * Every set of a catalogue of its own (Japanese) out of the copy, in its shelf's order, the shape
+ * listSetsIn() answers. Null where the copy holds none of that catalogue or cannot be read, and the
+ * caller asks TCGdex as before.
+ *
+ * The shelf asked TCGdex for the series list and then each serie, fifteen requests, on every cold
+ * instance (Bart, 2026-09-14: out of our own copy). The nightly run writes the shelf's order down
+ * (sort_order) because these sets carry no date on the shelf, and leaves TCGdex's placeholder sets
+ * out, as listSetsIn() does.
+ */
+export async function copiedLanguageSets(language: BrowseLanguage): Promise<CatalogueSet[] | null> {
+  const { adminClient } = await import("@/lib/storage/supabase");
+  const db = adminClient();
+  if (!db) return null;
+  const rows = await copiedSets(db, language).catch(() => [] as CatalogueSetRecord[]);
+  if (!rows.length) return null;
+  return [...rows]
+    .sort((a, b) => (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) || a.id.localeCompare(b.id))
+    .map((r): CatalogueSet => ({
+      id: r.id,
+      name: r.name,
+      localName: r.local_name ?? null,
+      series: r.series ?? "",
+      // As the shelf has always shown these: no date and no art on the tile.
+      releaseDate: null,
+      total: r.total ?? 0,
+      printedTotal: r.printed_total,
+      cardsRecorded: r.cards_recorded ?? true,
+      logo: null,
+      symbol: null,
+    }));
+}
+
+/**
+ * One set of a catalogue of its own out of the copy, with its cards: the answer setIn() gives,
+ * pictures already resolved and kept in our bucket at night (mirror-language.ts), so the page asks
+ * neither TCGdex nor Limitless. A set the catalogue lists without cards is that answer too. Null
+ * where the copy does not hold the set, or holds it without the cards the catalogue lists.
+ */
+export async function languageSetFromCopy(
+  language: BrowseLanguage,
+  setId: string,
+): Promise<{ set: CatalogueSet; cards: CatalogueMatch[] } | null> {
+  const { adminClient } = await import("@/lib/storage/supabase");
+  const db = adminClient();
+  if (!db) return null;
+  const all = await timed("copy sets", () => copiedSets(db, language));
+  const row = all.find((r) => r.id === setId);
+  if (!row) return null;
+  const rows = row.cards_recorded
+    ? await timed("copy set cards", () => catalogueSetCards(db, row.id, language), row.id)
+    : [];
+  if (row.cards_recorded && !rows.length) return null;
+  const set: CatalogueSet = {
+    id: row.id,
+    name: row.name,
+    localName: row.local_name ?? null,
+    series: row.series ?? "",
+    releaseDate: row.release_date,
+    total: row.total ?? rows.length,
+    printedTotal: row.printed_total,
+    abbreviation: row.abbreviation,
+    cardsRecorded: row.cards_recorded ?? true,
+    logo: row.logo,
+    symbol: row.symbol,
+  };
+  const cards = rows.map((c): CatalogueMatch => ({
+    id: c.id,
+    number: c.local_id,
+    name: c.name,
+    localName: c.local_name ?? null,
+    setName: set.name,
+    series: set.series || null,
+    ...storedScan(c.image),
+    rarity: c.rarity,
+    types: c.types ?? [],
+    category: c.category ?? null,
+    trainerType: c.trainer_type ?? null,
+    tcgId: c.id,
+  }));
+  return { set, cards };
+}
+
+/** One set's row of a catalogue's copy, read through the ten-minute list; null where it holds none. */
+export async function copiedSetRow(
+  language: CatalogueLanguage,
+  setId: string,
+): Promise<CatalogueSetRecord | null> {
+  const { adminClient } = await import("@/lib/storage/supabase");
+  const db = adminClient();
+  if (!db) return null;
+  return (await copiedSets(db, language)).find((r) => r.id === setId) ?? null;
 }

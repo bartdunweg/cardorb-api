@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
+import { languageSetFromCopy } from "@/lib/core/catalogue/set-catalogue-mirror";
 import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
@@ -68,13 +69,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   let cards;
   try {
     if (isBrowseLanguage(language)) {
-      // That language's catalogue, pictures and all: TCGdex has the set whole.
-      const found = await setIn(language, setId);
-      if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
-      set = found.set;
-      /* TCGdex has the set whole and, on the Japanese shelf, often none of its pictures —
-         whole sets at a time. Limitless has those; see browse-artwork.ts for the count. */
-      cards = await withLimitlessScans(language, found.cards);
+      /* Out of the copy, pictures resolved and kept in our bucket at night (mirror-language.ts).
+         TCGdex and Limitless only for a set the copy does not hold yet. */
+      const copied = await languageSetFromCopy(language, setId).catch(() => null);
+      if (copied) {
+        set = copied.set;
+        cards = copied.cards;
+      } else {
+        // That language's catalogue, pictures and all: TCGdex has the set whole.
+        const found = await setIn(language, setId);
+        if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
+        set = found.set;
+        /* TCGdex has the set whole and, on the Japanese shelf, often none of its pictures —
+           whole sets at a time. Limitless has those; see browse-artwork.ts for the count. */
+        cards = await withLimitlessScans(language, found.cards);
+      }
     } else {
       /* TCGdex's own id, or pokemontcg.io's from before 2026-09-11, which the
          shelf still reads (tcgdex-browse.ts). An id nobody carries is a 404, not
