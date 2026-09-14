@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-15
 
+- Japanese sets show their logo. No source Card Orb read had a Japanese wordmark (TCGdex names none, TCGplayer and Limitless publish none); Scrydex lists one for every Japanese expansion and gave permission to keep them. The nightly Japanese copy finds each set on Scrydex by id, by English title, or by a short hand-read list where Scrydex titles a set differently, and keeps the logo in our own bucket: 165 of 169 sets, all but three starter sets and Detective Pikachu.
+
 - The Japanese copy also reads TCGplayer's Japanese shelf, where TCGdex falls short. The 53 Japanese sets TCGdex lists without cards (Shiny Star V, Eevee Heroes, the 25th Anniversary Collection, every SM+ set) get TCGplayer's card list, one card per printed number with its English name, rarity, type, HP and stage; a card TCGdex and Limitless have no picture of gets TCGplayer's product picture, matched by number or, on the unnumbered vintage shelves, by English name; and each card keeps its TCGplayer product, so the new cards are priced like every other.
 
 ## 2026-09-14
