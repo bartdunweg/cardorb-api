@@ -8,10 +8,14 @@ import {
   languagesFromSheet,
   readCardSheet,
 } from "@/lib/core/catalogue/card-sheet";
-import { detailPrice, usdToEurForRequest } from "@/lib/core/collection/collection";
+import {
+  detailPrice,
+  pricePatternPrints,
+  usdToEurForRequest,
+} from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
-import { foilPatternsOfSerie } from "@/lib/core/catalogue/card-printings";
+import { foilPatternsOfSerie, patternPrintsFor } from "@/lib/core/catalogue/card-printings";
 import { serieOfSet } from "@/lib/core/catalogue/era-rarities";
 import { rarityOrNull } from "@/lib/core/collection/collection-row";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
@@ -55,13 +59,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     });
   const own = isBrowseLanguage(language) ? language : null;
   let card;
+  let rate: number | null = null;
   /* The copy's sheet for the card, in the catalogue asked for: everything below out of our own
      store, and TCGdex asked only for a card the copy does not hold yet (card-sheet.ts). */
   const sheet = await readCardSheet(tcgId, own ?? "en");
   try {
     // The day's rate beside it: the price is TCGplayer's dollars, and a figure is only shown in
     // the currency the collection is valued in.
-    const rate = await usdToEurForRequest();
+    rate = await usdToEurForRequest();
     card = sheet ? detailFromSheet(sheet) : await getCardDetail(tcgId, own, rate);
     // The price every other surface shows for this printing (detailPrice), not the figure TCGdex
     // relays on the record, which runs behind and is missing for a Japanese card.
@@ -84,8 +89,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   let languages;
   let eraRarities;
   let foilPatterns;
+  let patternPrints;
   try {
-    [languages, eraRarities, foilPatterns] = await Promise.all([
+    [languages, eraRarities, foilPatterns, patternPrints] = await Promise.all([
       own
         ? Promise.resolve([])
         : sheet && languagesFromSheet(sheet)
@@ -103,6 +109,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
         : sheet?.set?.serie_id
           ? Promise.resolve(foilPatternsOfSerie(sheet.set.serie_id))
           : serieOfSet(card.set.id).then(foilPatternsOfSerie, () => null),
+      /* `patternPrints`: the foil patterns TCGplayer sells this card in, each with its price, and
+         whether a print without one exists. A form offers those and nothing else, so a card with
+         none is not asked. English only: the pattern products are on the English shelf. */
+      own ? Promise.resolve(null) : pricePatternPrints(patternPrintsFor(tcgId), rate),
     ]);
   } catch (err) {
     console.error(`The printings of ${tcgId} could not be read:`, err);
@@ -113,7 +123,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // would undo the check above. getCardDetail memoises upstream, so what this
   // costs is the round trip, not the walk.
   return NextResponse.json(
-    { ...card, languages, eraRarities, foilPatterns },
+    { ...card, languages, eraRarities, foilPatterns, patternPrints },
     { headers: readHeaders(req) },
   );
 }

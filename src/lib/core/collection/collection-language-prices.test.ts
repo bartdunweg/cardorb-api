@@ -53,7 +53,8 @@ vi.mock("../tcgplayer-groups.generated.json", () => ({
   default: { "3": { "42382": 604 }, "85": { "640001": 24001 } },
 }));
 
-const { assembleFor, detailPrice, tcgplayerPricesFor } = await import("./collection");
+const { assembleFor, detailPrice, pricePatternPrints, tcgplayerPricesFor } =
+  await import("./collection");
 
 beforeEach(() => {
   groupPrintings.mockReset();
@@ -200,5 +201,58 @@ describe("detailPrice", () => {
     expect(
       await detailPrice({ id: "M1S-001", price: null, tcgplayerId: null }, "ja", null),
     ).toMatchObject({ price: null, tcgplayerId: null });
+  });
+});
+
+describe("pricePatternPrints", () => {
+  it("is no answer for a card with no product, and keeps Standard on a card with no pattern", async () => {
+    expect(await pricePatternPrints(null, 0.5)).toBeNull();
+    expect(await pricePatternPrints({ standard: true, prints: [] }, 0.5)).toEqual({
+      standard: true,
+      prints: [],
+    });
+    expect(groupPrintings).not.toHaveBeenCalled();
+  });
+
+  /* Iono (sv02-185) is sold as a cosmos holo twice, a Prize Pack product and a Miscellaneous one:
+     one pattern, one line, and the one with a price stands for it. */
+  it("prices each pattern print once per finish, from the product that has a price", async () => {
+    const answer = await pricePatternPrints(
+      {
+        standard: true,
+        prints: [
+          { foilPattern: "cosmos", finish: "holo", productId: 42381, printing: "holofoil" },
+          { foilPattern: "cosmos", finish: "holo", productId: 42382, printing: "holofoil" },
+          {
+            foilPattern: "cosmos",
+            finish: "reverse-holo",
+            productId: 42383,
+            printing: "reverse-holofoil",
+          },
+        ],
+      },
+      0.5,
+    );
+    expect(answer).toEqual({
+      standard: true,
+      prints: [
+        { foilPattern: "cosmos", finish: "holo", tcgplayerId: 42382, price: { market: 400 } },
+        { foilPattern: "cosmos", finish: "reverse-holo", tcgplayerId: 42383, price: null },
+      ],
+    });
+  });
+
+  it("names the prints without a price when the day's rate is missing", async () => {
+    const answer = await pricePatternPrints(
+      {
+        standard: false,
+        prints: [{ foilPattern: "cosmos", finish: "holo", productId: 42382, printing: "holofoil" }],
+      },
+      null,
+    );
+    expect(answer).toEqual({
+      standard: false,
+      prints: [{ foilPattern: "cosmos", finish: "holo", tcgplayerId: 42382, price: null }],
+    });
   });
 });
