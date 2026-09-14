@@ -5,6 +5,7 @@ import { copyPriceOf, printingKeysOf } from "../price-basis.mjs";
 import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
+import { type PriceLanguage, historyKey, priceLanguageOf } from "../price-months.mjs";
 
 /**
  * The collection as a flat list of copies, for a screen that pages through it.
@@ -38,6 +39,12 @@ export type CardItem = {
   /** What the card prints where `name` is the English for it (a Japanese card); null otherwise. */
   localName: string | null;
   tcgId: string | null;
+  /**
+   * The catalogue `tcgId` is an id of: `ja` for a card off the Japanese catalogue, `en` for every
+   * other. Not `language`, which is the copy's: a Japanese copy without a Japanese catalogue id
+   * resolves through the English catalogue, and the two catalogues share ids (neo4-106).
+   */
+  catalogue: PriceLanguage;
   owned: boolean;
   finish: Finish | null;
   /** What the foil looks like, where anything told us. Null is "not recorded". */
@@ -123,6 +130,20 @@ const sameness = (v: Variant) =>
  *
  * The first row's id leads, so a tap opens the sheet on a real row; the sheet reads the rest.
  */
+/**
+ * The cards these copies are, each once, by id and catalogue, for a price history read
+ * (listCardPrices): a card is its catalogue and its id, since the two catalogues share ids.
+ */
+export function pricedCardsOf(
+  items: Pick<CardItem, "tcgId" | "catalogue">[],
+): { tcgId: string; language: PriceLanguage }[] {
+  const out = new Map<string, { tcgId: string; language: PriceLanguage }>();
+  for (const it of items)
+    if (it.tcgId)
+      out.set(historyKey(it.catalogue, it.tcgId), { tcgId: it.tcgId, language: it.catalogue });
+  return [...out.values()];
+}
+
 export function flattenItems(sets: CardSet[]): CardItem[] {
   const out: CardItem[] = [];
   for (const set of sets) {
@@ -158,6 +179,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   speciesId: card.speciesId,
   localName: card.localName ?? null,
   tcgId: card.tcgId,
+  catalogue: priceLanguageOf(set.language),
   owned: v.owned,
   finish: v.finish,
   foilPattern: v.foilPattern,

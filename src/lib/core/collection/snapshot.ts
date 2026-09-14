@@ -17,7 +17,15 @@ import type { ShelfPrices, ShelfPrinting } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { PrintingDay } from "./movers";
-import { LEGACY, finishPrintingKey, printingKey, shadowlessKey } from "../price-months.mjs";
+import {
+  LEGACY,
+  type PriceLanguage,
+  finishPrintingKey,
+  historyKey,
+  priceLanguageOf,
+  printingKey,
+  shadowlessKey,
+} from "../price-months.mjs";
 
 /**
  * The reading off an assembled collection: the card's own blended price, the one
@@ -74,10 +82,13 @@ export function snapshotFromSets(
  * Until 2026-09-12 this read Cardmarket's guide, so a card nobody held had a line in one market
  * and the card itself showed another.
  *
+ * @param language the catalogue the ids are from: the English shelf's cards are English ids, the
+ *   Japanese shelf's Japanese ones
  * @param products tcgId to TCGplayer productId, as tcgplayer-ids.generated.json has it
  * @param usdToEur euros per dollar on this day
  */
 export function cardPricesFromTcgcsv(
+  language: PriceLanguage,
   products: Record<string, number | null | undefined>,
   shelf: ShelfPrices,
   usdToEur: number,
@@ -91,6 +102,7 @@ export function cardPricesFromTcgcsv(
     for (const [subType, usd] of shelf.get(productId) ?? []) {
       if (!(usd > 0)) continue;
       out.push({
+        language,
         tcgId,
         printing: printingKey(subType),
         date,
@@ -123,8 +135,12 @@ export type TcgplayerLink = { productId: number; shadowless?: { productId: numbe
  * (card-printings.ts finishPrintsFor): each a product of its own, written under the card as
  * `${finish}-reverse-holofoil` (finishPrintingKey), whatever subtype TCGplayer files its figure under.
  * The same key scripts/backfill-card-prices.mjs writes their past under.
+ *
+ * `language` is the catalogue the links' ids are from, and every point carries it: an English and a
+ * Japanese card can share an id (neo4-106), and each is its own line.
  */
 export function cardPricesFromShelf(
+  language: PriceLanguage,
   links: Record<string, TcgplayerLink | undefined>,
   rows: ShelfPrinting[],
   usdToEur: number,
@@ -146,9 +162,9 @@ export function cardPricesFromShelf(
     products[id] = link?.productId ?? null;
     if (link?.shadowless) runs[id] = link.shadowless.productId;
   }
-  const points = cardPricesFromTcgcsv(products, shelf, usdToEur, date);
+  const points = cardPricesFromTcgcsv(language, products, shelf, usdToEur, date);
   const own = new Set(points.map((p) => `${p.tcgId}\u0001${p.printing}`));
-  for (const p of cardPricesFromTcgcsv(runs, shelf, usdToEur, date)) {
+  for (const p of cardPricesFromTcgcsv(language, runs, shelf, usdToEur, date)) {
     const printing = shadowlessKey(p.printing);
     if (!own.has(`${p.tcgId}\u0001${printing}`)) points.push({ ...p, printing });
   }
@@ -159,6 +175,7 @@ export function cardPricesFromShelf(
       const usd = printings?.get(print.printing) ?? [...(printings?.values() ?? [])][0];
       if (usd == null || !(usd > 0)) continue;
       points.push({
+        language,
         tcgId,
         printing: finishPrintingKey(print.finish),
         date,
@@ -176,14 +193,17 @@ export function cardPricesFromShelf(
  * A linked card is written by the tcgplayer-prices cron straight from tcgcsv. Writing it again from
  * the assembled collection is the loop that could store an old price as a new day's (a figure the
  * collection still carried from a stored row), so the collection writes only what the source cannot.
+ * A card is linked in its own catalogue's links: an English link says nothing about a Japanese card
+ * under the same id.
  */
 export const unlinkedCardPrices = (
   points: PrintingDay[],
-  links: Record<string, TcgplayerLink | undefined>,
-): PrintingDay[] => points.filter((p) => links[p.tcgId]?.productId == null);
+  links: Record<PriceLanguage, Record<string, TcgplayerLink | undefined>>,
+): PrintingDay[] => points.filter((p) => links[p.language][p.tcgId]?.productId == null);
 
 /**
- * Every held card's own price on this day, for the movers and the lines. Deduped on tcgId.
+ * Every held card's own price on this day, for the movers and the lines. Deduped on the card, its
+ * catalogue and its id, each point under the catalogue its set is from.
  *
  * Both series are TCGplayer's since 2026-09-12; see the note inside for which printing each
  * reads. The holo series used to be Cardmarket's `-holo` fields.
@@ -192,7 +212,9 @@ export function cardPricesFromSets(sets: CardSet[], date: string): PrintingDay[]
   const seen = new Map<string, PrintingDay[]>();
   for (const set of sets) {
     for (const card of set.cards) {
-      if (!card.tcgId || seen.has(card.tcgId) || !copiesHeld(card)) continue;
+      const language = priceLanguageOf(set.language);
+      const key = card.tcgId ? historyKey(language, card.tcgId) : null;
+      if (!card.tcgId || !key || seen.has(key) || !copiesHeld(card)) continue;
       /*
        * The same market the card itself shows, printing by printing, or a line disagrees with the
        * figure above it. Every printing the card carries (TCGplayer's, the Shadowless run's where
@@ -203,12 +225,20 @@ export function cardPricesFromSets(sets: CardSet[], date: string): PrintingDay[]
       for (const [printing, price] of Object.entries(card.pricePrintings ?? {})) {
         const each = price ? shownPrice(price) : null;
         if (each != null)
-          days.push({ tcgId: card.tcgId, printing, date, price: each, source: "tcgplayer" });
+          days.push({
+            language,
+            tcgId: card.tcgId,
+            printing,
+            date,
+            price: each,
+            source: "tcgplayer",
+          });
       }
       if (!days.length) {
         const own = shownPrice(card.price);
         if (own != null)
           days.push({
+            language,
             tcgId: card.tcgId,
             printing: LEGACY.market,
             date,
@@ -216,7 +246,7 @@ export function cardPricesFromSets(sets: CardSet[], date: string): PrintingDay[]
             source: "tcgplayer",
           });
       }
-      if (days.length) seen.set(card.tcgId, days);
+      if (days.length) seen.set(key, days);
     }
   }
   return [...seen.values()].flat();

@@ -61,7 +61,7 @@ import {
 } from "../catalogue/tcgdex-client";
 import { TCGCSV_CATEGORY, groupPrintings } from "../catalogue/tcgcsv";
 import { finishPrintsFor, type PatternPrints } from "../catalogue/card-printings";
-import { finishPrintingKey } from "../price-months.mjs";
+import { type PriceLanguage, finishPrintingKey, historyKey } from "../price-months.mjs";
 import type { Finish, FoilPattern } from "./collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "../tcgplayer-ids.ja.generated.json";
@@ -72,7 +72,9 @@ import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
 import { cardsVersion, listRows, listSnapshots, publicProfile } from "../../storage/collection";
 import {
   getFolder,
+  catalogueLanguagesOfCard,
   listCardPrices,
+  type PricedCard,
   listFolders,
   listPublicFolders,
   rememberScans,
@@ -1561,10 +1563,15 @@ const WINDOW_DAYS = 90;
 /** A `since` before any reading: one card's own line is everything it has, back to the backfill. */
 export const ALL_READINGS = "2000-01-01";
 
-/** The asked ids as one short key: order does not matter, the set does. */
-const idsKey = (tcgIds: string[]) =>
+/** The asked cards as one short key: order does not matter, the set does. */
+const idsKey = (cards: PricedCard[]) =>
   createHash("sha1")
-    .update([...tcgIds].sort().join("\n"))
+    .update(
+      cards
+        .map((c) => historyKey(c.language, c.tcgId))
+        .sort()
+        .join("\n"),
+    )
     .digest("hex");
 
 /**
@@ -1579,15 +1586,37 @@ const idsKey = (tcgIds: string[]) =>
  */
 export type CardPriceHistory = { points: CardPricePoint[]; failed: boolean };
 
+/**
+ * The catalogue a bare card id is from, for a caller that does not say which: Japanese where the id
+ * is a card of the Japanese catalogue and of no English one, English otherwise (an English card, a
+ * card of both, or an id neither has). `GET /v1/cards/{tcgId}/prices` asked by id alone until
+ * 2026-09-15, and a Japanese card's sheet still does; an id of both catalogues reads as English
+ * there, so a Japanese neo4-100 to neo4-113 needs `?language=ja`.
+ *
+ * Kept a day: which catalogues hold an id changes when a set is added, not by the hour. Throws where
+ * the copy cannot be read, so the route answers 503 rather than a guess.
+ */
+export const defaultPriceLanguage = async (tcgId: string): Promise<PriceLanguage> => {
+  const db = adminClient();
+  if (!db) return "en";
+  const languages = await unstable_cache(
+    () => catalogueLanguagesOfCard(db, tcgId),
+    ["card-catalogue-languages", "v1", tcgId],
+    { revalidate: 86_400 },
+  )();
+  return languages.includes("ja") && !languages.includes("en") ? "ja" : "en";
+};
+
 export const getCardPrices = cache(
   async (
     userId: string,
-    tcgIds: string[],
+    /** Each card by its id and the catalogue the id is from (PricedCard). */
+    cards: PricedCard[],
     token?: string,
     /** The earliest date wanted, yyyy-mm-dd; the ninety-day window when left out. */
     from?: string,
   ): Promise<CardPriceHistory> => {
-    if (!tcgIds.length) return { points: [], failed: false };
+    if (!cards.length) return { points: [], failed: false };
     try {
       const db = token ? userClient(token) : await serverClient();
       // No database at all is not an outage: it is a deployment without one,
@@ -1600,7 +1629,7 @@ export const getCardPrices = cache(
       const since =
         from ?? new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
       const points = await unstable_cache(
-        () => listCardPrices(db, tcgIds, since),
+        () => listCardPrices(db, cards, since),
         // v3: the ids are part of the key. They were not, so the first asker's
         // list (a folder's, or one card's) was the answer for every later ask
         // under the same person and day: a card's own line came back as nine
@@ -1614,7 +1643,9 @@ export const getCardPrices = cache(
         // v7: one printing per card on every day of its line (price-months.mjs daysFromMonths).
         // v6: 971,250 Japanese readings backfilled for the cards the copy linked (2026-09-14); a v5
         // entry held those cards' empty line for its hour.
-        ["card-prices", "v10", userId, since, idsKey(tcgIds)],
+        // v11: a card is its catalogue and its id (migration 20260915161000), every point carries its
+        // language, and the key hashes both; a v10 entry answers a Japanese card under an English id.
+        ["card-prices", "v11", userId, since, idsKey(cards)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
       return { points, failed: false };
