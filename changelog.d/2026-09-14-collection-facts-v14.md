@@ -1,0 +1,1 @@
+- The assembled collection's cache key moves to v14, so a collection built before the pictures moved to images.cardorb.com is not read: v7 of the set catalogue alone left 1,461 cards on TCGdex addresses.
