@@ -534,6 +534,95 @@ if (day) {
   );
 }
 
+// ── The collection rows ─────────────────────────────────────────────────────
+
+/**
+ * The owner's rows, held against the copy (migration 20260915090000, 2026-09-14). The other
+ * accounts in cards are not real collections: they are counted in the detail and never fail a
+ * check, and nothing of theirs but a count is written into the report.
+ */
+const OWNER = "bartdunweg";
+const ownerIs = `(c.user_id = (select id from profiles where username = '${OWNER}'))`;
+/** The catalogue a row's card lives in: Japanese for a Japanese row, English for every other (cataloguesFor). */
+const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
+
+/**
+ * Every row names its card by id. 1,368 of the owner's rows carried a pokemontcg.io id from before
+ * TCGdex (sv3pt5-162 for sv03.5-162): the page still found the card by set and number, but the CSV
+ * import recognises a held row by id, and a row with a stale one looks new. An id the copy does not
+ * have in the row's own catalogue is the same slip, and so is a deleted set's (sm2+, SM1+ and the
+ * other SM+ ids the Japanese copy dropped), and a Japanese row on an English id or the reverse.
+ */
+{
+  const unknown = `coalesce(c.tcg_id, '') <> '' and not exists (select 1 from catalogue_cards k where k.id = c.tcg_id and k.language = ${rowCatalogue})`;
+  const rows = await query(
+    `select ${ownerIs} as owner,
+       count(*) filter (where coalesce(c.tcg_id, '') = '')::int as no_id,
+       count(*) filter (where ${unknown})::int as missing,
+       count(*) filter (where ${unknown} and exists (select 1 from catalogue_cards k where k.id = c.tcg_id))::int as other_language,
+       (array_agg(distinct c.tcg_id) filter (where ${unknown}))[1:8] as examples,
+       count(*)::int as rows
+     from cards c group by 1`,
+  );
+  const owner = rows.find((r) => r.owner) ?? { no_id: 0, missing: 0, other_language: 0, rows: 0 };
+  const others = rows.filter((r) => !r.owner);
+  const sum = (key) => others.reduce((n, r) => n + r[key], 0);
+  check(
+    "The owner's rows carry a catalogue id",
+    owner.rows > 0 && owner.no_id === 0,
+    `${owner.no_id} of ${owner.rows} rows without one; other accounts ${sum("no_id")} of ${sum("rows")}`,
+  );
+  check(
+    "Collection rows on a card the copy has",
+    owner.missing === 0,
+    `${owner.missing} of the owner's rows on an id their catalogue does not have (${owner.other_language} of them a card in the other language's)${
+      owner.missing ? `: ${(owner.examples ?? []).join(", ")}` : ""
+    }; other accounts ${sum("missing")} (${sum("other_language")} in the other language's)`,
+  );
+}
+
+/**
+ * A copy recorded in a printing its card was never printed in: neither TCGdex's variants nor
+ * TCGplayer's product (tcgplayer-ids.generated.json) names that finish, and at least one of them
+ * answers. Fourteen of the owner's tag team and V promos were "normal" where both say holo only.
+ * Only the plain finishes, and read leniently (any reverse variant counts, whatever its foil), so
+ * this cannot disagree with what card-printings.ts offers on top: the ball and Energy Symbol
+ * finishes have their own check above.
+ */
+{
+  const rows = await query(
+    `select ${ownerIs} as owner, c.tcg_id, c.finish, k.variants
+       from cards c join catalogue_cards k on k.language = 'en' and k.id = c.tcg_id
+      where c.language is distinct from 'ja' and c.finish in ('normal', 'holo', 'reverse-holo')`,
+  );
+  const TCGDEX_TYPE = { normal: "normal", holo: "holo", "reverse-holo": "reverse" };
+  const TCGPLAYER_NAMES = {
+    normal: (v) => v === "normal" || v === "1st-edition" || v === "unlimited",
+    holo: (v) => v.endsWith("holofoil") && !v.startsWith("reverse"),
+    "reverse-holo": (v) => v === "reverse-holofoil",
+  };
+  const wrong = rows.filter((r) => {
+    const variants = Array.isArray(r.variants) ? r.variants : [];
+    const sold = links[r.tcg_id]?.variants ?? [];
+    const tcgdex = variants.length ? variants.some((v) => v.type === TCGDEX_TYPE[r.finish]) : null;
+    const tcgplayer = sold.length ? sold.some(TCGPLAYER_NAMES[r.finish]) : null;
+    return (tcgdex !== null || tcgplayer !== null) && !tcgdex && !tcgplayer;
+  });
+  const owner = wrong.filter((r) => r.owner);
+  check(
+    "Copies in a printing their card has",
+    owner.length === 0,
+    `${owner.length} of the owner's copies in a finish neither TCGdex nor TCGplayer names for the card${
+      owner.length
+        ? `: ${owner
+            .slice(0, 10)
+            .map((r) => `${r.tcg_id} ${r.finish}`)
+            .join(", ")}`
+        : ""
+    }; other accounts ${wrong.length - owner.length}`,
+  );
+}
+
 // ── Report ──────────────────────────────────────────────────────────────────
 
 const failed = checks.filter((c) => !c.ok);
