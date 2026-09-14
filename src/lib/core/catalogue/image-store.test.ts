@@ -97,3 +97,25 @@ describe("keepImage", () => {
     expect(fetchMock.mock.calls[0]![0]).toBe("https://images.cardorb.com/pokemontcg/sm75/1.png");
   });
 });
+
+describe("tcgdexFolderMissing", () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => {
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockReset();
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("is true only when TCGdex answers 404 for a size", async () => {
+    const { tcgdexFolderMissing } = await import("./image-store");
+    fetchMock.mockImplementation(
+      async (url: string) => new Response(null, { status: url.endsWith("high.webp") ? 404 : 200 }),
+    );
+    expect(await tcgdexFolderMissing("https://assets.tcgdex.net/en/sv/sv03.5/163")).toBe(true);
+    fetchMock.mockResolvedValue(new Response(null, { status: 503 }));
+    expect(await tcgdexFolderMissing("https://assets.tcgdex.net/en/sv/sv03.5/163")).toBe(false);
+    fetchMock.mockRejectedValue(new Error("down"));
+    expect(await tcgdexFolderMissing("https://assets.tcgdex.net/en/sv/sv03.5/163")).toBe(false);
+    expect(await tcgdexFolderMissing("https://images.pokemontcg.io/sm75/1.png")).toBe(false);
+  });
+});

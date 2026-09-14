@@ -63,9 +63,10 @@ database, and each answer carries the caller's own `owned` / `wishlist` /
 | `GET /api/v1/catalog/search` | find a card by name, number, set or type |
 
 Each card carries `image` and `imageHigh`. Use `image` in a grid and fetch
-`imageHigh` only where a card is drawn large — they are 26 kB and 87 kB where
-TCGdex has the card, and 198 kB and 674 kB on the pokemontcg.io fallback. A set
-page is a few hundred of them, so the difference is megabytes, not kilobytes.
+`imageHigh` only where a card is drawn large: they are 26 kB and 87 kB where
+TCGdex has the card, and up to 220 kB and 674 kB on the fallbacks. A set page is a
+few hundred of them, so the difference is megabytes, not kilobytes. For an English
+card both come from our own bucket at `images.cardorb.com` (see Card pictures below).
 
 Native clients authenticate with a Supabase access token in `Authorization: Bearer <jwt>`.
 Alongside the collection routes they use `GET/PATCH /api/v1/profile`,
@@ -112,8 +113,8 @@ Three things to know before you render it:
 - **`image` can be relative.** A scan that comes from Limitless is served through this
   app's CORS proxy as `/api/cover?url=…`, so prefix anything starting with `/` with
   `https://api.cardorb.com`. It can also be `null`.
-- **`imageHigh` is only set for TCGdex scans**, `null` for everything else. Never rely
-  on it alone. `rarity`, `speciesId` and `tcgId` are nullable too.
+- **`imageHigh` is only set for a TCGdex scan** (at TCGdex or copied to
+  `images.cardorb.com`), `null` for a picture from another catalogue. Never rely on it alone. `rarity`, `speciesId` and `tcgId` are nullable too.
 - **404 means nothing to show** — `{"error":"No card found."}` for an empty or entirely
   excluded collection, `{"error":"No such collection."}` for an unknown username. There
   is no `latestPull` key on either, so branch on `res.ok`.
@@ -162,10 +163,38 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
 | `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — the web app, where the links in auth emails land |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
+| `IMAGES_WRITE_SECRET` | no | lets the catalogue cron copy card pictures into our bucket; without it every address stays the source's |
 
 `NEXT_PUBLIC_SITE_URL` matters more than its "recommended" tag suggests: without it,
 `SITE_URL` falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, which is this API's own
 address — and a confirmation link that lands on the API instead of the web app is a dead end.
+
+## Card pictures
+
+Every English card picture lives in our own Cloudflare R2 bucket, `cardorb-images` (Western
+Europe), read at `https://images.cardorb.com` (custom domain, edge cached). Since 2026-09-14
+(#394): TCGdex is one server with no CDN, pokemontcg.io refuses most calls, and a host that
+stopped answering blanked every card it served.
+
+- **The key is the source's path.** A TCGdex folder stays a folder (`en/swsh/swsh11/186`, with
+  `low.webp` and `high.webp`); another catalogue's file sits under its name
+  (`pokemontcg/sm75/1.png`, `limitless/tpci/…`, `tcgplayer/{productId}.jpg`).
+- **Where a picture comes from**, in order: TCGdex; for a card TCGdex has no scan of, or names
+  a scan with no file behind it (`tcgdexFolderMissing`), Limitless, then TCGplayer by the
+  product the price links name, then pokemontcg.io.
+- **Writes go through the Worker** `cardorb-images-writer` (`cloudflare/images-writer`, deploy
+  with `wrangler deploy` there), which checks `IMAGES_WRITE_SECRET`. Existence is asked at the
+  public address, not the Worker: the free plan caps a Worker at 100,000 requests a day.
+- **The nightly catalogue cron** (`/api/v1/cron/catalogue`) copies what is new and stores our
+  address in `catalogue_cards.image`, only while the secret is set and `images.cardorb.com`
+  serves a known file. When a run changes a picture it drops the `catalogue` cache tag, so the
+  collection picks the address up (#400). `?full=1` works every set out again.
+- **A first fill** of a new bucket is `scripts/copy-images-to-bucket.mjs`, from a machine with
+  time (about 40,000 files, 45 minutes).
+- **Not copied:** the Japanese and other language shelves, read live from TCGdex and Limitless.
+- **Not resized here.** The web app puts Vercel's image optimizer in front, which serves AVIF at
+  the tile's width and is 2 to 4 times smaller than a file straight from the bucket (measured
+  2026-09-14); a native client should use `image` in a grid for the same reason.
 
 ## The database
 
@@ -251,5 +280,5 @@ It is in git up to `6e9a834`.
 Two things in `lib/core` are deliberately hollow. `localise()` and `measure()` in
 `util.ts` used to swap a remote image for a copy the portfolio served itself, and
 those paths resolve on one domain only, so an iOS client would have been handed a
-thousand broken pictures. Here the scans come from the catalogues directly. When
-Card Orb wants its own artwork in-house, `util.ts` is the one file that changes.
+thousand broken pictures. Card Orb's own copies came another way, a bucket every client can
+reach (see Card pictures), so these two stay hollow.

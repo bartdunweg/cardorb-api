@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-14
 
+- A card whose TCGdex record names a scan with no file behind it (404 for the small or large one) gets TCGplayer's picture instead, copied into our bucket: nine English cards on 2026-09-14, among them Team Magma's Numel (dc1-1) and Leftovers (sv03.5-163). The README has a Card pictures section for the bucket, the Worker, the secret and the fill script.
+
 - The catalogue cron drops the collection's day-long set caches (tag `catalogue`, stale while they refresh) whenever a run changes a card's picture, and reports how many it changed (`pictures`). Until now nothing dropped them: after the move to images.cardorb.com the collection kept naming TCGdex for all of its cards. `set-facts` moves to v24 for the entries already on disk.
 
 - The assembled collection's cache key moves to v14, so a collection built before the pictures moved to images.cardorb.com is not read: v7 of the set catalogue alone left 1,461 cards on TCGdex addresses.

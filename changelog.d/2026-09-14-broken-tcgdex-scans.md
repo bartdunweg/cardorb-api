@@ -1,0 +1,1 @@
+- A card whose TCGdex record names a scan with no file behind it (404 for the small or large one) gets TCGplayer's picture instead, copied into our bucket: nine English cards on 2026-09-14, among them Team Magma's Numel (dc1-1) and Leftovers (sv03.5-163). The README has a Card pictures section for the bucket, the Worker, the secret and the fill script.
