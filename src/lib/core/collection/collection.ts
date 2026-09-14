@@ -527,9 +527,12 @@ const cachedSetFacts = (
       // change what this resolves to for a card TCGdex has no picture of, and yesterday's
       // answer would have stood for a day — fourteen cards here kept their empty square
       // through a deploy that had already fixed them.
+      // v24: pictures moved to our bucket at images.cardorb.com (#394) and nothing dropped these
+      // entries; the catalogue cron does now, whenever a run changes a picture. This key is for
+      // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v23", setName, factsSignature(identities)],
+      ["set-facts", "v24", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

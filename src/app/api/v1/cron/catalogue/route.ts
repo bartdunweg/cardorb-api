@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { catalogueIndex, syncMirror } from "@/lib/core/catalogue/mirror";
@@ -38,8 +39,13 @@ export async function GET(req: Request) {
     const report = await syncMirror(db, { full });
     // The document the browser searches in, rebuilt from what was just copied (mirror.ts).
     if (report.copied.length) await catalogueIndex(db);
+    /* The collection keeps each set's facts, pictures included, for a day under the catalogue
+       tag (set-facts in collection.ts), and nothing else dropped it: on 2026-09-14 the copy had
+       moved 20,872 pictures into our bucket and the collection still named TCGdex for all of
+       its cards. Stale while it refreshes, so the first read after this is not a cold build. */
+    if (report.pictures) revalidateTag("catalogue", "max");
     console.log(
-      `[cron] catalogue: ${report.copied.length} sets copied, ${report.failed.length} failed, ${report.left} left, ${report.ms} ms`,
+      `[cron] catalogue: ${report.copied.length} sets copied, ${report.failed.length} failed, ${report.left} left, ${report.pictures} pictures changed, ${report.ms} ms`,
     );
     return NextResponse.json(report);
   } catch (err) {

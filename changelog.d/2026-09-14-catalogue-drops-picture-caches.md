@@ -1,0 +1,1 @@
+- The catalogue cron drops the collection's day-long set caches (tag `catalogue`, stale while they refresh) whenever a run changes a card's picture, and reports how many it changed (`pictures`). Until now nothing dropped them: after the move to images.cardorb.com the collection kept naming TCGdex for all of its cards. `set-facts` moves to v24 for the entries already on disk.
