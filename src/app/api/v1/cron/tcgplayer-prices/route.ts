@@ -4,6 +4,7 @@ import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
 import { usdToEurForRequest } from "@/lib/core/collection/collection";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
+import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
 import { writeCardPrices, writeTcgplayerPrices } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
@@ -23,8 +24,17 @@ const THIN_MONTHS = 3;
 
 type Thinned = { month: string; rows: number };
 
+/** The Japanese links name a card's product alone: tcgId to productId, no Shadowless run. */
+const JAPANESE_LINKS: Record<string, TcgplayerLink> = Object.fromEntries(
+  Object.entries(TCGPLAYER_IDS_JA as Record<string, number | null>).map(([id, productId]) => [
+    id,
+    productId == null ? null : { productId },
+  ]),
+);
+
 /**
- * TCGplayer's English shelf, once a day: the latest figures and the day's line in the history.
+ * TCGplayer's English and Japanese shelves, once a day: the latest figures and the day's line in
+ * the history.
  *
  * The one price job since 2026-09-14. tcgcsv publishes the day's figures at 20:00 UTC, so this runs
  * at 21:15 and reads them once, for two tables:
@@ -45,6 +55,13 @@ type Thinned = { month: string; rows: number };
  * Then the archive is thinned: months entirely older than six months keep one figure a week
  * (migration 20260914150000, thin_oldest_price_month), up to THIN_MONTHS a run. A failure there is
  * logged and answered as `thinned: null`; the night's prices stand.
+ *
+ * The Japanese shelf (tcgcsv category 85) since 2026-09-14, read after the English one into the same
+ * two tables: its product ids are TCGplayer's too and none is shared with the English shelf
+ * (checked that day: 44,480 English and 22,445 Japanese printings, no product in both), and its
+ * cards are keyed by TCGdex's Japanese ids (tcgplayer-ids.ja.generated.json, 9,259 linked). Its
+ * current price was already read live from the same files (shelfUsdFor); what it gains is a history.
+ * A Japanese shelf that does not answer costs only its own rows tonight; the English ones stand.
  *
  * Same bearer as the other crons: `CRON_SECRET`.
  */
@@ -88,6 +105,38 @@ export async function GET(req: Request) {
   }
   const { rows, groups, answered } = shelf;
 
+  // The Japanese shelf, on its own: a failure or a thin answer here leaves its rows for tonight and
+  // nothing else.
+  const japanese: { groups: number; answered: number; written: number; skipped?: string } = {
+    groups: 0,
+    answered: 0,
+    written: 0,
+  };
+  let japaneseRows: typeof rows = [];
+  try {
+    const ja = await shelfPrintings(TCGCSV_CATEGORY.ja);
+    japanese.groups = ja.groups;
+    japanese.answered = ja.answered;
+    if (!ja.groups || ja.answered < ja.groups * 0.9) {
+      japanese.skipped = "too few groups answered";
+    } else {
+      await writeTcgplayerPrices(
+        db,
+        ja.rows.map((r) => ({
+          product_id: r.productId,
+          printing: r.printing,
+          market: r.market,
+          updated_on: today,
+        })),
+      );
+      japaneseRows = ja.rows;
+      japanese.written = ja.rows.length;
+    }
+  } catch (err) {
+    console.error("[cron] copying TCGplayer's Japanese prices failed:", err);
+    japanese.skipped = "read or write failed";
+  }
+
   let ok = true;
   const databaseBytes = await (async (): Promise<number | null> => {
     try {
@@ -111,12 +160,10 @@ export async function GET(req: Request) {
       history.skipped = "no dollar rate";
     } else {
       try {
-        const points = cardPricesFromShelf(
-          TCGPLAYER_IDS as Record<string, TcgplayerLink>,
-          rows,
-          rate,
-          today,
-        );
+        const points = [
+          ...cardPricesFromShelf(TCGPLAYER_IDS as Record<string, TcgplayerLink>, rows, rate, today),
+          ...cardPricesFromShelf(JAPANESE_LINKS, japaneseRows, rate, today),
+        ];
         await writeCardPrices(db, points);
         history.written = points.length;
       } catch (err) {
@@ -154,6 +201,7 @@ export async function GET(req: Request) {
     groups,
     answered,
     written: rows.length,
+    japanese,
     history,
     thinned,
     databaseBytes,
