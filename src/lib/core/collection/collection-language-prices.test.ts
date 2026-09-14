@@ -33,7 +33,10 @@ vi.mock("../../storage/supabase", () => ({
   serverClient: async () => ({}),
   userClient: () => ({}),
 }));
-vi.mock("../../storage/postgres", () => ({ listCardPrices: vi.fn() }));
+vi.mock("../../storage/postgres", () => ({
+  listCardPrices: vi.fn(),
+  catalogueProductIds: async () => new Map(),
+}));
 const listRows = vi.fn();
 vi.mock("../../storage/collection", () => ({
   cardsVersion: async () => null,
