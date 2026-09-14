@@ -230,6 +230,137 @@ check(
   `${encoded[0].n} card numbers still percent-encoded${encoded[0].n ? `: ${encoded[0].ids}` : ""}`,
 );
 
+// ── The slips the audits of 2026-09-14 found, each kept from coming back ────────
+
+/**
+ * One product priced for two cards is one of them wearing the other's price: six trainer kit halves
+ * and a Worlds staff card in English, Chansey on Lucky Stadium and Houndour (U) on Houndour (HR) in
+ * Japanese. Counted per catalogue, the copy's product ids and the committed maps together, leaving
+ * out the printings TCGdex lists twice (Yellow A Alternate beside its own set) and the Shadowless
+ * runs.
+ */
+{
+  const byProduct = new Map();
+  const add = (language, id, pid) => {
+    if (!pid) return;
+    const key = `${language}:${pid}`;
+    byProduct.set(key, [...(byProduct.get(key) ?? []), id]);
+  };
+  for (const [id, v] of Object.entries(links)) add("en", id, v?.productId);
+  const jaCopy = await query(
+    "select id, tcgplayer_product_id as pid from catalogue_cards where language = 'ja' and tcgplayer_product_id is not null",
+  );
+  const jaSeen = new Set();
+  for (const r of jaCopy) {
+    add("ja", r.id, r.pid);
+    jaSeen.add(r.id);
+  }
+  for (const [id, pid] of Object.entries(jaLinks)) if (!jaSeen.has(id)) add("ja", id, pid);
+  const SAME_PRINTING = /^xya-|-\d+a$/;
+  const shared = [...byProduct].filter(
+    ([, ids]) =>
+      ids.length > 1 &&
+      !ids.every(
+        (id) =>
+          SAME_PRINTING.test(id) ||
+          ids.some((o) => o !== id && o.endsWith(id.slice(id.indexOf("-")))),
+      ),
+  );
+  check(
+    "One product, one card",
+    shared.length === 0,
+    `${shared.length} products priced for more than one card${
+      shared.length
+        ? `: ${shared
+            .slice(0, 8)
+            .map(([k, ids]) => `${k} ${ids.join("+")}`)
+            .join("; ")}`
+        : ""
+    }`,
+  );
+}
+
+/**
+ * An id that is an English card never holds a Japanese price: card_price_months has no language,
+ * and neo4-106 Shining Celebi carried Japanese Chansey's figure as a `normal` printing.
+ */
+{
+  const both = await query(
+    "select c.id, c.tcgplayer_product_id as pid from catalogue_cards c where c.language = 'ja' and c.tcgplayer_product_id is not null and exists (select 1 from catalogue_cards e where e.language = 'en' and e.id = c.id)",
+  );
+  const risky = both.filter((r) => links[r.id]?.productId);
+  check(
+    "No Japanese price under an English id",
+    true,
+    `${risky.length} ids are cards in both catalogues with a Japanese product; the price job leaves those off (${
+      risky
+        .slice(0, 6)
+        .map((r) => r.id)
+        .join(", ") || "none"
+    })`,
+  );
+}
+
+/** A `market` series beside real printings is the old collection snapshot writing for a linked card. */
+{
+  const month = `${today.slice(0, 7)}-01`;
+  const market = await query(
+    `select distinct tcg_id from card_price_months where printing = 'market' and month = '${month}'`,
+  );
+  const linked = market.filter((r) => links[r.tcg_id]?.productId);
+  check(
+    "No stray market series on linked cards",
+    linked.length === 0,
+    `${linked.length} linked cards with a market series this month${
+      linked.length
+        ? `: ${linked
+            .slice(0, 8)
+            .map((r) => r.tcg_id)
+            .join(", ")}`
+        : ""
+    }`,
+  );
+}
+
+/** A set twice under one name in one catalogue is two tiles for one set (SM3p and SM3+). */
+{
+  const twice = await query(
+    "select s.language, s.name, string_agg(s.id, ', ') as ids from catalogue_sets s where exists (select 1 from catalogue_cards c where c.language = s.language and c.set_id = s.id) group by s.language, s.name having count(*) > 1",
+  );
+  check(
+    "Each set once",
+    twice.length === 0,
+    `${twice.length} names shared by sets with cards${twice.length ? `: ${twice.map((r) => `${r.language} ${r.name} (${r.ids})`).join("; ")}` : ""}`,
+  );
+}
+
+/**
+ * A reading more than three times off both neighbours, and back, on a card worth at least €10: most
+ * are TCGplayer's own thin markets (Charizard 1st Edition, e-Card Umbreon), some a wrong product for
+ * a day (ecard2-95a after its relink). Reported, not failed: the market is what it is.
+ */
+if (day) {
+  const month = `${day.slice(0, 7)}-01`;
+  const rows = await query(
+    `select tcg_id, printing, cents from card_price_months where month = '${month}'`,
+  );
+  const spikes = [];
+  for (const r of rows) {
+    const c = r.cents ?? [];
+    for (let i = 1; i < c.length - 1; i++) {
+      const [a, b, n] = [c[i - 1], c[i], c[i + 1]];
+      if (a == null || b == null || n == null || Math.min(a, n) < 1000) continue;
+      if (b > 3 * Math.max(a, n) || b * 3 < Math.min(a, n))
+        spikes.push(`${r.tcg_id} ${r.printing} day ${i + 1}`);
+    }
+  }
+  check(
+    "Price spikes this month (reported)",
+    true,
+    `${spikes.length} one-day spikes over €10${spikes.length ? `: ${spikes.slice(0, 10).join("; ")}` : ""}`,
+  );
+}
+
 // ── Report ──────────────────────────────────────────────────────────────────
 
 const failed = checks.filter((c) => !c.ok);
