@@ -1,4 +1,4 @@
-import { catalogueTimeout, DAY } from "../util";
+import { catalogueTimeout } from "../util";
 
 /**
  * How many euros a dollar is, from the European Central Bank's daily reference rate as
@@ -14,7 +14,9 @@ import { catalogueTimeout, DAY } from "../util";
 export async function fetchUsdToEur(): Promise<number> {
   // frankfurter moved to a .dev host; the old one redirects, which is a round trip a day for nothing.
   const res = await fetch("https://api.frankfurter.dev/v1/latest?from=USD&to=EUR", {
-    next: { revalidate: DAY },
+    // Never the cached answer: the price job reads it once a night and a day-old rate would be
+    // stored as tonight's (a request reads the stored rate, usd_eur_rates).
+    cache: "no-store",
     signal: catalogueTimeout(),
   });
   if (!res.ok) throw new Error(`Dollar rate: ${res.status}`);

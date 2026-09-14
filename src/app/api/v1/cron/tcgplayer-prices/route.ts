@@ -38,6 +38,18 @@ const JAPANESE_LINKS: Record<string, TcgplayerLink> = Object.fromEntries(
   ]),
 );
 
+/** The UTC day tcgcsv last published its files, from its last-updated.txt. */
+async function publishedDay(): Promise<string> {
+  const res = await fetch("https://tcgcsv.com/last-updated.txt", {
+    headers: { "User-Agent": "cardorb.com" },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`tcgcsv last-updated: ${res.status}`);
+  const at = new Date((await res.text()).trim().replace(/([+-]\d{2})(\d{2})$/, "$1:$2"));
+  if (Number.isNaN(at.getTime())) throw new Error("tcgcsv last-updated: not a date");
+  return at.toISOString().slice(0, 10);
+}
+
 /**
  * TCGplayer's English and Japanese shelves, once a day: the latest figures and the day's line in
  * the history.
@@ -91,7 +103,11 @@ export async function GET(req: Request) {
 
   const start = performance.now();
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  /* The day the prices are, which is the day tcgcsv published them (its last-updated.txt, a UTC
+     timestamp): not the clock. A run at 15:31 UTC on 2026-09-14, before that day's 20:05 publish,
+     wrote Sunday's figures again under Monday, moved only by the new dollar rate. A file that cannot
+     be read falls back to the clock, as the job always did. */
+  const today = await publishedDay().catch(() => now.toISOString().slice(0, 10));
   let shelf: Awaited<ReturnType<typeof shelfPrintings>>;
   try {
     shelf = await shelfPrintings(TCGCSV_CATEGORY.en);
@@ -195,6 +211,12 @@ export async function GET(req: Request) {
         });
         const japaneseLinks: Record<string, TcgplayerLink> = { ...JAPANESE_LINKS };
         for (const [id, productId] of copied) japaneseLinks[id] ??= { productId };
+        /* card_price_months keys a card by id alone, and 14 ids are cards in both catalogues
+           (neo4-100 to neo4-113): a Japanese product under one of them wrote Chansey's figure into
+           Shining Celebi's history. An English card's id is the English card's. */
+        for (const id of Object.keys(japaneseLinks))
+          if ((TCGPLAYER_IDS as Record<string, unknown>)[id] !== undefined)
+            delete japaneseLinks[id];
         const points = [
           ...cardPricesFromShelf(TCGPLAYER_IDS as Record<string, TcgplayerLink>, rows, rate, today),
           ...cardPricesFromShelf(japaneseLinks, japaneseRows, rate, today),
