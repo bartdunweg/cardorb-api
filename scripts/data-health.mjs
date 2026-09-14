@@ -174,6 +174,62 @@ if (day) {
   );
 }
 
+// ── What a page would show wrong ────────────────────────────────────────────
+
+/**
+ * A card with today's price and no line in the history draws "No readings" on its sheet while its
+ * price is shown above it: 4,300 Japanese cards on 2026-09-14 before their history was backfilled.
+ * Per catalogue, through the product the copy or the committed map links.
+ */
+const jaLinks = JSON.parse(
+  readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-ids.ja.generated.json"), "utf8"),
+);
+if (day) {
+  const [copyProducts, historyIds, pricedProducts] = await Promise.all([
+    query(
+      "select language, id, tcgplayer_product_id as pid from catalogue_cards where tcgplayer_product_id is not null",
+    ),
+    query(
+      `select distinct tcg_id from card_price_months where month >= '${day.slice(0, 7)}-01'::date - interval '1 month'`,
+    ),
+    query(`select distinct product_id from tcgplayer_prices where updated_on = '${day}'`),
+  ]);
+  const withHistory = new Set(historyIds.map((r) => r.tcg_id));
+  const priced = new Set(pricedProducts.map((r) => r.product_id));
+  const products = { en: new Map(), ja: new Map() };
+  for (const [id, v] of Object.entries(links)) if (v?.productId) products.en.set(id, v.productId);
+  for (const [id, pid] of Object.entries(jaLinks)) if (pid) products.ja.set(id, pid);
+  for (const r of copyProducts)
+    if (!products[r.language]?.has(r.id)) products[r.language]?.set(r.id, r.pid);
+  for (const language of ["en", "ja"]) {
+    const missing = [...products[language]].filter(
+      ([id, pid]) => priced.has(pid) && !withHistory.has(id),
+    );
+    check(
+      `Priced cards have a price line (${language})`,
+      missing.length === 0,
+      `${missing.length} priced cards without history${
+        missing.length
+          ? `: ${missing
+              .slice(0, 10)
+              .map(([id]) => id)
+              .join(", ")}`
+          : ""
+      }`,
+    );
+  }
+}
+
+/** A number a person reads with a percent code in it ("#%3F"), which the copy writes decoded. */
+const encoded = await query(
+  "select count(*)::int as n, string_agg(id, ', ') filter (where true) as ids from (select id from catalogue_cards where local_id ~ '%[0-9A-Fa-f]{2}' limit 10) x",
+);
+check(
+  "Card numbers read as printed",
+  encoded[0].n === 0,
+  `${encoded[0].n} card numbers still percent-encoded${encoded[0].n ? `: ${encoded[0].ids}` : ""}`,
+);
+
 // ── Report ──────────────────────────────────────────────────────────────────
 
 const failed = checks.filter((c) => !c.ok);
