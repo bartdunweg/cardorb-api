@@ -15,6 +15,9 @@
  * where a difference is not accepted, 2 where the check itself failed.
  *
  *   node scripts/bulbapedia-compare.mjs [--set en/base1] [--issue issue.md] [--run-url <url>]
+ *
+ * Run by hand, from a machine Bulbapedia answers: it refuses GitHub's runners with a 403 (first
+ * scheduled run, 2026-09-14), so there is no workflow. Bart chose to run it on request.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
