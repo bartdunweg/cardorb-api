@@ -20,6 +20,8 @@ const BY_HAND: Record<string, string> = {
   "SM1+": "sm1p_ja", // Sun & Moon strengthening pack
   "sm2+": "sm2p_ja", // Beyond a New Challenge, Scrydex's Facing a New Trial
   XY11a: "xy11f_ja", // Explosive Fighter, Scrydex's Fever-Burst Fighter
+  // Red Flash: Scrydex's xy8b_ja is Blue Shock, and Red Flash wore Blue Shock's logo (2026-09-14).
+  XY8b: "xy8r_ja",
 };
 
 const fold = (s: string) =>

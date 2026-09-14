@@ -153,6 +153,12 @@ function copiedSetFor(rows: CatalogueSetRecord[], setId: string): CatalogueSetRe
 }
 
 /**
+ * English sets whose every card is a card of another set: TCGdex's Yellow A Alternate is six "a"
+ * printings from xy3, xy4, xy6, xy9, xy10 and g1, already on those sets' pages (2026-09-14).
+ */
+const DUPLICATE_SETS: ReadonlySet<string> = new Set(["xya"]);
+
+/**
  * Every English set out of the copy, newest first, the shape englishSets() answers and with the
  * logo a tile shows (the nightly run stores it resolved: the promo star, pokemontcg.io's wordmark
  * where TCGdex has none). Null where the copy holds no set or cannot be read, and the caller asks
@@ -174,11 +180,11 @@ export async function copiedEnglishSets(): Promise<CatalogueSet[] | null> {
   ]);
   if (!rows.length) return null;
   /* A set the copy holds no card of is no tile: TCGdex lists Sample, W Promotional, Jumbo cards and
-     Radiant Collection (whose 32 cards are Generations' RC run) with none (Bart, 2026-09-14). A set
-     with no sync record yet is kept, as before. */
+     Radiant Collection (Legendary Treasures' RC run, whose cards are in bw11) with none (Bart,
+     2026-09-14). A set with no sync record yet is kept, as before. */
   const cards = new Map(sync.map((s) => [s.setId, s.cards]));
   return rows
-    .filter((r) => cards.get(r.id) !== 0)
+    .filter((r) => cards.get(r.id) !== 0 && !DUPLICATE_SETS.has(r.id))
     .map((r): CatalogueSet => ({
       id: r.id,
       name: r.name,
@@ -259,26 +265,41 @@ export async function copiedLanguageSets(language: BrowseLanguage): Promise<Cata
   const { adminClient } = await import("@/lib/storage/supabase");
   const db = adminClient();
   if (!db) return null;
-  const rows = await copiedSets(db, language).catch(() => [] as CatalogueSetRecord[]);
+  const [rows, sync] = await Promise.all([
+    copiedSets(db, language).catch(() => [] as CatalogueSetRecord[]),
+    listCatalogueSync(db, language).catch(() => []),
+  ]);
   if (!rows.length) return null;
+  const held = new Map(sync.map((s) => [s.setId, s.cards]));
   // A set the catalogue lists with no cards, and TCGplayer has none of either, is no tile.
-  return rows
-    .filter((r) => r.cards_recorded !== false)
-    .sort((a, b) => (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) || a.id.localeCompare(b.id))
-    .map((r): CatalogueSet => ({
-      id: r.id,
-      name: r.name,
-      localName: r.local_name ?? null,
-      series: r.series ?? "",
-      // No date on the tile, as the shelf has always shown these. The wordmark is Scrydex's, kept in
-      // our bucket (scrydex-japan-logos.ts), where the copy has one.
-      releaseDate: null,
-      total: r.total ?? 0,
-      printedTotal: r.printed_total,
-      cardsRecorded: r.cards_recorded ?? true,
-      logo: r.logo,
-      symbol: null,
-    }));
+  return (
+    rows
+      .filter((r) => r.cards_recorded !== false)
+      /* Newest first, as the English shelf reads. TCGdex's own listing order put Scarlet & Violet ahead
+       of MEGA and scrambled each series (SV1V, SV9, SV11B), 2026-09-14; its order only breaks a tie. */
+      .sort(
+        (a, b) =>
+          (b.release_date ?? "").localeCompare(a.release_date ?? "") ||
+          (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) ||
+          a.id.localeCompare(b.id),
+      )
+      .map((r): CatalogueSet => ({
+        id: r.id,
+        name: r.name,
+        localName: r.local_name ?? null,
+        series: r.series ?? "",
+        // No date on the tile, as the shelf has always shown these. The wordmark is Scrydex's, kept in
+        // our bucket (scrydex-japan-logos.ts), where the copy has one.
+        releaseDate: null,
+        /* Never fewer than the cards the copy holds: TCGdex gives some XY and Sword & Shield sets their
+         printed count as the total (Shiny Star V 190, 330 cards held), and a tile read over 100%. */
+        total: Math.max(r.total ?? 0, held.get(r.id) ?? 0),
+        printedTotal: r.printed_total,
+        cardsRecorded: r.cards_recorded ?? true,
+        logo: r.logo,
+        symbol: null,
+      }))
+  );
 }
 
 /**

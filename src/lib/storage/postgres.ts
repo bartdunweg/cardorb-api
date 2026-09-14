@@ -25,6 +25,7 @@ import { daysFromMonths, monthOf, monthsFromDays } from "../core/price-months.mj
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { storedCardNumber } from "@/lib/core/util";
+import { correctedSet } from "@/lib/core/catalogue/set-corrections";
 import {
   isFinish,
   type CardDraft,
@@ -1655,12 +1656,15 @@ export async function writeCatalogueSetRecord(
   db: SupabaseClient,
   set: CatalogueSetRecord,
 ): Promise<void> {
-  const { error } = await db
-    .from("catalogue_sets")
-    .upsert(
-      { ...set, language: set.language ?? "en", synced_at: new Date().toISOString() },
-      { onConflict: "language,id" },
-    );
+  const { error } = await db.from("catalogue_sets").upsert(
+    {
+      // Facts the catalogues have wrong, read by hand (set-corrections.ts), on every write.
+      ...correctedSet(set),
+      language: set.language ?? "en",
+      synced_at: new Date().toISOString(),
+    },
+    { onConflict: "language,id" },
+  );
   if (error) throw new Error(`Copying the set ${set.id} failed: ${error.message}`);
 }
 
