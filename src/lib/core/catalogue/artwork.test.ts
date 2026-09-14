@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { storedScan, tcgdexScan } from "./artwork";
+import { scrydexScan, storedScan, tcgdexScan } from "./artwork";
 
 const BASE = "https://assets.tcgdex.net/en/sm/smp/SM191";
 
@@ -50,5 +50,29 @@ describe("storedScan", () => {
 
   it("answers nothing for a card with no picture, which draws as its name", () => {
     expect(storedScan(null)).toEqual({ image: null, imageHigh: null });
+  });
+});
+
+describe("scrydexScan", () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => vi.stubGlobal("fetch", fetchMock));
+  afterEach(() => vi.unstubAllGlobals());
+  const answer = (length: string) =>
+    new Response(null, { status: 200, headers: { "content-length": length } });
+
+  it("takes a set read by hand, at the number without its padding", async () => {
+    fetchMock.mockResolvedValue(answer("1502225"));
+    expect(await scrydexScan("tk-xy-b", "016")).toBe(
+      "https://images.scrydex.com/pokemon/tk7b-16/large",
+    );
+  });
+
+  it("refuses Scrydex's stand-in picture, a set nobody read, and a lettered number", async () => {
+    fetchMock.mockResolvedValue(answer("186316"));
+    expect(await scrydexScan("tk-xy-b", "16")).toBeNull();
+    fetchMock.mockReset();
+    expect(await scrydexScan("base1", "4")).toBeNull();
+    expect(await scrydexScan("tk-xy-b", "SWSH1")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

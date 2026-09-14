@@ -32,7 +32,14 @@ import {
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
 import { fullArtOf } from "./full-art";
-import { isScanFile, limitlessScan, storedScan, tcgdexScan, tcgplayerScan } from "./artwork";
+import {
+  isScanFile,
+  limitlessScan,
+  scrydexScan,
+  storedScan,
+  tcgdexScan,
+  tcgplayerScan,
+} from "./artwork";
 import { canStoreImages, keepImage, storedAddress, tcgdexFolderMissing } from "./image-store";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
@@ -265,13 +272,15 @@ async function withResolvedScans(
     /* Limitless first, where the set has a code there, and never for a lettered number: it
        renumbers a gallery's cards into the parent's run, and a guessed offset shows a
        confidently wrong card (cards.ts). Then TCGplayer, by the product the price links name
-       for this card id, so nothing is guessed. Then pokemontcg.io, which is asked by set name. */
+       for this card id, so nothing is guessed. Then pokemontcg.io, which is asked by set name, and
+       last Scrydex, for the sets read by hand in artwork.ts. */
     const file =
       (code && !/^[A-Za-z]/.test(card.number)
         ? await limitlessScan(code, card.number).catch(() => null)
         : null) ??
       (await tcgplayerScan(card.id).catch(() => null)) ??
-      (await ptcgScan(setName, card.number, card.name).catch(() => null));
+      (await ptcgScan(setName, card.number, card.name).catch(() => null)) ??
+      (await scrydexScan(setId, card.number).catch(() => null));
     if (file) found++;
     return at(card, file);
   });

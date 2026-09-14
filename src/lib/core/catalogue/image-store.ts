@@ -81,6 +81,11 @@ export function imageKey(address: string): string | null {
       return `pokemontcg/${path}`;
     case "limitlesstcg.nyc3.cdn.digitaloceanspaces.com":
       return `limitless/${path}`;
+    case "images.scrydex.com": {
+      // pokemon/tk7b-16/large: the file has no extension, and a key needs one to be a file.
+      const card = /^pokemon\/([A-Za-z0-9.-]+)\/large$/.exec(path)?.[1];
+      return card ? `scrydex/${card}.png` : null;
+    }
     case "tcgplayer-cdn.tcgplayer.com": {
       const product = /^product\/(\d+)_/.exec(path)?.[1];
       return product ? `tcgplayer/${product}.jpg` : null;

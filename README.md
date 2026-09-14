@@ -180,8 +180,9 @@ stopped answering blanked every card it served.
   `low.webp` and `high.webp`); another catalogue's file sits under its name
   (`pokemontcg/sm75/1.png`, `limitless/tpci/…`, `tcgplayer/{productId}.jpg`).
 - **Where a picture comes from**, in order: TCGdex; for a card TCGdex has no scan of, or names
-  a scan with no file behind it (`tcgdexFolderMissing`), Limitless, then TCGplayer by the
-  product the price links name, then pokemontcg.io.
+  a scan with no file behind it, Limitless, TCGplayer by product, pokemontcg.io, and last
+  Scrydex for the trainer kits read by hand. Every source, what for and when:
+  [`docs/sources.md`](./docs/sources.md).
 - **Writes go through the Worker** `cardorb-images-writer` (`cloudflare/images-writer`, deploy
   with `wrangler deploy` there), which checks `IMAGES_WRITE_SECRET`. Existence is asked at the
   public address, not the Worker: the free plan caps a Worker at 100,000 requests a day.
