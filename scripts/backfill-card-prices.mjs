@@ -673,6 +673,9 @@ async function japanese() {
   const products = args.includes("--copied-only")
     ? Object.fromEntries(Object.entries(copied).filter(([id]) => mapped[id] == null))
     : { ...copied, ...Object.fromEntries(Object.entries(mapped).filter(([, p]) => p != null)) };
+  // An id that is an English card is the English card's history (neo4-100 to 113 are both).
+  const english = JSON.parse(readFileSync(IDS, "utf8"));
+  for (const id of Object.keys(products)) if (english[id] !== undefined) delete products[id];
   const ids = Object.keys(products)
     .filter((id) => products[id] != null)
     .slice(0, LIMIT);

@@ -197,6 +197,16 @@ export async function syncLanguageMirror(
   // Scrydex's Japanese expansions, for each set's wordmark; a page that does not answer costs the run
   // its logos, which are kept as they were.
   const expansions = lang === "ja" ? await scrydexJapanExpansions().catch(() => null) : null;
+  /* The TCGplayer groups a set TCGdex lists cards for already reads. TCGdex lists SM3p with cards
+     and SM3+ with none under one name, and both found TCGplayer's "SM3+" group: the copy held every
+     card of it twice, and SM1+ was one energy from a booster box group (2026-09-14). A set is built
+     from TCGplayer only out of a group no set with TCGdex cards claims. */
+  const claimed = new Map<number, string>();
+  for (const s of shelf) {
+    if (!s.cardsRecorded) continue;
+    const g = groupForSet(groups, { id: s.id, name: s.name })?.groupId;
+    if (g != null && !claimed.has(g)) claimed.set(g, s.id);
+  }
   const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, art: 0, ms: 0 };
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);
   const worker = async () => {
@@ -212,7 +222,11 @@ export async function syncLanguageMirror(
         const products = group ? await groupCards(group.groupId).catch(() => []) : [];
         /* A set TCGdex lists without its cards is TCGplayer's list where TCGplayer has the set:
            one card per printed number, filed under TCGdex's id rule (set id, number). */
-        const fromTcgplayer = !read.cards.length && products.some((p) => p.number);
+        const fromTcgplayer =
+          !read.cards.length &&
+          !!group &&
+          (claimed.get(group.groupId) ?? id) === id &&
+          products.some((p) => p.number);
         const cards: CatalogueMatch[] = fromTcgplayer
           ? products
               .filter((p): p is TcgplayerJapanCard & { number: string } => !!p.number)
