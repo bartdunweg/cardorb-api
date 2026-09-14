@@ -35,6 +35,8 @@ if the two have drifted apart.
 
 - A `Price` is `{ market }`: TCGplayer's market figure in euros, and nothing else. `low` (TCGplayer's lowest listing), `avg30` and `nm` are gone from every price, and `priceHolo` from `GET /v1/cards`, the collection's cards and the catalogue's set page, search and card list; all of them had been null or unused since Cardmarket left on 2026-09-12. `tcgplayer_prices` drops its `low` column, and `CATALOGUE_SET_PRICING_MAX` (Cardmarket's set pre-pricing) is no longer read.
 
+- The price history of the seventeen cards relinked in #410 is deleted (it was another card's, back to 2024-02) and written again from TCGplayer's archive by `backfill-card-prices.mjs --only daily --ids`. That mode now sends one reading a week before the last six months, as the price job keeps them, instead of every day, which would have left those months daily for good; weekly archives stay in the cache.
+
 - The nightly catalogue copy asks pokemontcg.io and Limitless about every card of a set TCGdex has no scan for, not only the first 40: 213 cards were left with no picture on the set page and in the search (Crown Zenith Galarian Gallery GG41 to GG70, 82 of Shining Fates' Shiny Vault, 38 of Dragon Majesty, 36 of Shining Legends, 27 SM Black Star Promos). A set neither catalogue has is given up on after ten misses. A blank card in a set the other two do have files for is asked again, so the copy fills those in as each set comes up for refresh.
 
 - Scrydex's stand-in picture is told apart by its ETag, not its length: Scrydex sends a server no Content-Length, so #407 refused every real scan and the seven trainer kits stayed blank.

@@ -37,8 +37,9 @@
  *
  * Re-running merges the same days again: a day written twice keeps the later figure.
  *
- *   daily            Every day for every English card, from 2024-02-08 to tcgcsv's newest
- *                    archive, a month to a row (daily). `--from` and `--to` resume a stopped run;
+ *   daily            Every English card from 2024-02-08 to tcgcsv's newest archive, a month to
+ *                    a row: every day of the last six months, one a week (the Saturday) before,
+ *                    as the price job keeps them. `--from` and `--to` resume a stopped run;
  *                    `--ids a,b` fills only those cards, for ones linked since.
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
@@ -532,10 +533,13 @@ async function daily() {
   const from = flag("--from") ?? TCGCSV_FROM;
   const to = flag("--to") ?? newestArchive();
   const rate = await rates(from, to);
-  const dates = [];
-  for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+  /* One reading a week before the six months the archive keeps daily, as the price job thins
+     them (weekly_price_days): a month sent day by day is merged in and never thinned again, so
+     `--ids` for a card linked late would otherwise leave its old months daily for good. */
+  const cutoff = weeklyBefore();
+  const plan = japaneseDays(from, to, cutoff);
   console.log(
-    `daily: ${ids.length} English cards, ${dates.length} days, ${from} to ${to}${DRY ? " (dry run: nothing is written)" : ""}`,
+    `daily: ${ids.length} English cards, ${plan.length} days (weekly before ${cutoff}), ${from} to ${to}${DRY ? " (dry run: nothing is written)" : ""}`,
   );
   let written = 0;
   let month = [];
@@ -544,18 +548,23 @@ async function daily() {
     written += month.length;
     month = [];
   };
-  for (const date of dates) {
-    if (month.length && month[0].date.slice(0, 7) !== date.slice(0, 7)) await flush();
-    const r = rate.get(date);
-    let en;
-    try {
-      en = tcgcsvDay(date, CATEGORY_EN);
-    } catch (err) {
-      console.log(
-        `  ${date}: no archive (${err instanceof Error ? err.message.split("\n")[0] : err})`,
-      );
-      continue;
+  for (const { date: planned, fallbacks } of plan) {
+    if (month.length && month[0].date.slice(0, 7) !== planned.slice(0, 7)) await flush();
+    let en = null;
+    let date = planned;
+    for (const d of [planned, ...fallbacks]) {
+      try {
+        en = tcgcsvDay(d, CATEGORY_EN);
+        date = d;
+        break;
+      } catch (err) {
+        console.log(
+          `  ${d}: no archive (${err instanceof Error ? err.message.split("\n")[0] : err})`,
+        );
+      }
     }
+    if (!en) continue;
+    const r = rate.get(date);
     let priced = 0;
     for (const id of ids) {
       // Every printing TCGplayer prices, and the Shadowless run's where tcgplayer-links.mjs linked
@@ -581,7 +590,8 @@ async function daily() {
       }
       if (any) priced++;
     }
-    rmSync(join(CACHE, `prices-${date}.ppmd.7z`), { force: true });
+    // A daily archive is read once; a weekly one is kept, the other modes read the same Saturdays.
+    if (date >= cutoff) rmSync(join(CACHE, `prices-${date}.ppmd.7z`), { force: true });
     console.log(`  ${date}: ${priced} of ${ids.length} cards priced`);
   }
   if (month.length) await flush();
