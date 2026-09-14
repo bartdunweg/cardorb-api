@@ -97,6 +97,10 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   owned: true,
   price: PRICE,
   priceFirstEd: PRICE,
+  // Every printing's figure and the TCGplayer product behind it: the price a copy reads by its
+  // printing, so as private as `price`. They reached the public collection until 2026-09-14.
+  pricePrintings: { holofoil: { market: 77.77 }, "reverse-holofoil": { market: 12.34 } },
+  printingIds: { holofoil: 515151 },
   tcgId: "sv03-125",
   ...over,
 });
@@ -118,6 +122,13 @@ const only = (sets: CardSet[]) => sets[0]!.cards[0]!;
 describe("forPublic", () => {
   it("takes the price off the card", () => {
     expect(only(forPublic([set([card()])])).price).toBeNull();
+  });
+
+  it("takes every printing's price off the card, and the products they came from", () => {
+    const shown = only(forPublic([set([card()])]));
+    expect(shown.priceFirstEd).toBeNull();
+    expect(shown.pricePrintings).toBeNull();
+    expect(shown.printingIds).toBeNull();
   });
 
   it("carries exactly the two variant fields the public page reads", () => {
@@ -183,7 +194,18 @@ describe("forPublic", () => {
     // The belt to the braces above: whatever shape a future Variant takes, none
     // of these strings may appear in what crosses the wire.
     const json = JSON.stringify(forGrid(forPublic([set([card()])])));
-    for (const secret of ["42.5", "PSA 10", "Near Mint", "corner", "row-1", "90", "88888888"]) {
+    for (const secret of [
+      "42.5",
+      "PSA 10",
+      "Near Mint",
+      "corner",
+      "row-1",
+      "90",
+      "88888888",
+      "77.77",
+      "12.34",
+      "515151",
+    ]) {
       expect(json).not.toContain(secret);
     }
   });
