@@ -32,6 +32,8 @@ if the two have drifted apart.
 
 - Japanese sets show their logo. No source Card Orb read had a Japanese wordmark (TCGdex names none, TCGplayer and Limitless publish none); Scrydex lists one for every Japanese expansion and gave permission to keep them. The nightly Japanese copy finds each set on Scrydex by id, by English title, or by a short hand-read list where Scrydex titles a set differently, and keeps the logo in our own bucket: 165 of 169 sets, all but three starter sets and Detective Pikachu.
 
+- `GET /v1/movers?days=7|30|90|180|all&top=` answers the caller's cards whose price moved most over the period, up and down, ranked by what the move did to the collection. For Home's movers, over the period its value chart shows.
+
 - The Bulbapedia naming comparison runs on request instead of every Monday: Bulbapedia refuses GitHub's runners (403 on the first run), so the scheduled workflow would only ever fail. `node scripts/bulbapedia-compare.mjs` from a Mac still reports every difference.
 
 - A card's price chart follows one printing on every day. The line took each day's plain printing, or else its foil, and a day its own printing had no figure fell to the next one: Base Set Charizard read its 1st Edition (about €4,800) on the 14 days its unlimited holo (about €750) was missing, and the chart spiked sixfold and back. A card's line is now the first printing in line it has on at least half as many days as its most-read one, and a day without it is left out. `card-prices` cache v7.

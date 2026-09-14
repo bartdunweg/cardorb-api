@@ -1,0 +1,1 @@
+- `GET /v1/movers?days=7|30|90|180|all&top=` answers the caller's cards whose price moved most over the period, up and down, ranked by what the move did to the collection. For Home's movers, over the period its value chart shows.
