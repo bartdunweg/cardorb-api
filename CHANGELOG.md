@@ -43,6 +43,8 @@ if the two have drifted apart.
 
 - `GET /v1/catalog/sets/{setId}` answers faster: an English set with its rarities and types is kept a day (it was asking TCGdex's GraphQL on every request), the viewer's rows are read alongside the catalogue, and the pictures and prices of the page at the same time. `pageSize` is clamped to 500 rather than 250, so a Scarlet & Violet set with its secrets comes in one request.
 
+- Seventeen English cards link to their own TCGplayer product instead of another card's, found by laying TCGdex's list beside TCGplayer's: Pokémon Rumble 5 Starmie and 6 Gyarados (were Ninetales), Nintendo Black Star Promos 16 Treecko (was Torchic), seven Brilliant Stars Trainer Gallery cards (were their main-set namesakes), SM Trainer Kit (Alolan Raichu) 2 Lightning Energy, Celebrations Classic Collection CC020 Reshiram and CC021 Zekrom (were the Celebrations main set), and Aquapolis 50b, 74b, 103b and 95a (were their a/b twin). Each was priced, and a gallery card pictured, as the other card. A test now fails when one product is linked to two cards that are not one printing listed twice. `collection-facts` v16, `set-facts` v25.
+
 ## 2026-09-13
 
 - The English shelf shows a Trainer Gallery or Galarian Gallery inside its set, not as a set of its own: `GET /v1/catalog/sets` leaves the gallery out and adds its cards and counts to the parent's, with `gallery: { name, total }`; `GET /v1/catalog/sets/{setId}` lists the gallery's cards after the set's own. A gallery's own id still answers. Every Black Star Promos set wears the black star, and a set TCGdex has no logo for (Temporal Forces, the McDonald's Collections, 57 of 203) takes pokemontcg.io's where one is at `images.pokemontcg.io/<id>/logo.png`, checked once a day.
