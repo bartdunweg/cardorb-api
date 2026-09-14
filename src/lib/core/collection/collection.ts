@@ -381,6 +381,9 @@ const factsTag = (userId: string) => `collection-facts:${userId}`;
 const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<KeptFacts>) =>
   unstable_cache(
     fill,
+    // v14: card pictures come from our own bucket at images.cardorb.com (#394, #398). A v13 entry
+    // names TCGdex and pokemontcg.io for its whole day, which still load but skip the bucket.
+    //
     // v13: a Japanese card is priced from TCGplayer's Japanese shelf (2026-09-13). A v12 entry
     // holds it with no price and Cardmarket's foil figure as its priceHolo, for its whole day.
     //
@@ -406,7 +409,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v13", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v14", userId, usdToEur == null ? "-" : String(usdToEur)],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 

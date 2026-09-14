@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-14
 
+- The assembled collection's cache key moves to v14, so a collection built before the pictures moved to images.cardorb.com is not read: v7 of the set catalogue alone left 1,461 cards on TCGdex addresses.
+
 - A collection is priced from `tcgplayer_prices`, a table a new daily cron (`GET /v1/cron/tcgplayer-prices`, 21:15 UTC) fills from tcgcsv, instead of one TCGdex request per card: 1,633 requests for the owner's collection, which a cold instance waited 7 to 12 s for. Compared on 2026-09-14 over 1,559 held cards with the same pickers: the printings, product ids and first-edition figures are the same on every card both price, the market figure within 5% on 93%, and 187 cards TCGdex has no TCGplayer figure for are now priced. TCGdex still answers for a card with no TCGplayer link, and for every card until the table holds a figure from the past week. Needs the `tcgplayer_prices` migration.
 
 - A collection is joined once per instance when several requests ask for it at the same moment: /cards, /stats and /folders on the app's first screen used to each build it on a cold instance, every price read to TCGdex made twice (3,265 reads where 1,633 do, measured locally). A join that fails is not handed to the next request. The API also logs `[timing] event loop blocked Nms` for any second the server was held for a quarter of a second or more, to read beside the other timing lines.
