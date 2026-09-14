@@ -80,12 +80,11 @@ for (const language of Object.keys(FORMATS)) {
 
 /**
  * Cards whose picture is not in our bucket, per catalogue: none at all, or still another host's.
- * On 2026-09-14 the English copy had 8 cards no source has a picture of, and the Japanese copy
- * 1,194 of 16,832 once TCGplayer's Japanese shelf was read beside TCGdex (tcgplayer-japan.ts); a jump
- * past these is a night that failed
+ * On 2026-09-14, with Scrydex as the last source, 2 English cards and 66 of 16,832 Japanese cards
+ * had no picture anywhere; a jump past these is a night that failed
  * to copy, not a catalogue that has none.
  */
-const PICTURELESS_CEILING = { en: 50, ja: 1300 };
+const PICTURELESS_CEILING = { en: 20, ja: 150 };
 const pictures = await query(
   "select language, count(*) filter (where image is null)::int as none, count(*) filter (where image is not null and image not like 'https://images.cardorb.com/%')::int as elsewhere, count(*)::int as cards from catalogue_cards group by language",
 );

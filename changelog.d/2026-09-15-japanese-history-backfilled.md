@@ -1,0 +1,1 @@
+- Every priced Japanese card has its price history: 971,250 readings from TCGplayer's Japanese archive for the 6,585 cards the copy linked beyond the committed map, weekly before March 2026 and daily after. Before, 4,300 priced Japanese cards had a price and no line. `card-prices` cache v6, so no sheet keeps an empty line for its hour.
