@@ -521,6 +521,8 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v26: rarity and types corrected for 481 English cards (card-fact-corrections.ts).
+      //
       // v25: seventeen cards relinked to their own TCGplayer product (see collection-facts v16).
       //
       // v16: a card from a catalogue that is not the English one resolves here now, and
@@ -544,7 +546,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v25", setName, factsSignature(identities)],
+      ["set-facts", "v26", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

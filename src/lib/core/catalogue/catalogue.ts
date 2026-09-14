@@ -316,13 +316,14 @@ export const raritiesOfEra = (setId: string): Promise<string[] | null> =>
  * unknown id throws too, so neither a set without its rarities nor a 404 is kept for a day; both
  * fall back to the uncached read, which answers exactly as it did before this cache.
  */
+// v2: rarity and types corrected for 481 English cards (card-fact-corrections.ts), 2026-09-14.
 const englishSetEntry = unstable_cache(
   async (setId: string) => {
     const found = await englishSet(setId, { factsRequired: true });
     if (!found) throw new Error(`No English set ${setId}`);
     return found;
   },
-  ["english-set", "v1"],
+  ["english-set", "v2"],
   { revalidate: DAY, tags: ["catalogue"] },
 );
 
