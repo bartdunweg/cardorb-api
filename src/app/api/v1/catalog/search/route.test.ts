@@ -17,8 +17,10 @@ vi.mock("@/lib/core/catalogue/tcgdex-search", () => ({
   searchCards: (...a: unknown[]) => searchCards(...a),
 }));
 /* The English set index is a network read; the join resolves the fixture rows against this one. */
+vi.mock("@/lib/core/catalogue/catalogue", () => ({
+  englishShelfSets: () => englishSets(),
+}));
 vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
-  englishSets: () => englishSets(),
   isBrowseLanguage: (v: unknown) => v === "ja",
 }));
 /* Both of these are `import "server-only"` underneath — viewer.ts directly,

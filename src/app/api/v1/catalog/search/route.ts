@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { englishSets, isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
+import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
+import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -114,7 +115,10 @@ export async function GET(req: Request) {
           : searchCards(term, page, language, store, { fullArt }),
       ),
       timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)),
-      language ? Promise.resolve([]) : timed("en set index", () => englishSets().catch(() => [])),
+      // Out of the catalogue's copy, as the shelf reads it; TCGdex only when the copy is empty.
+      language
+        ? Promise.resolve([])
+        : timed("en set index", () => englishShelfSets().catch(() => [])),
     ]);
     const marked = markOwnership(ownershipIndex(rows, language, sets), cards);
     /* Keyed by the TCGdex id, which every hit carries and which everything priced is keyed by;
