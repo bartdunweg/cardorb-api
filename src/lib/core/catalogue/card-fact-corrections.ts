@@ -19,12 +19,51 @@
  *   others were TCGplayer's error or a wrong product link (fixed in #410) and stay as TCGdex has
  *   them.
  *
+ * A second pass the same day (2026-09-14) laid the copy beside pokemontcg.io as well, and kept a
+ * correction only where TCGplayer and pokemontcg.io agree against TCGdex:
+ *
+ * - **types**: Dark Houndoom (ex7-5) never took its correction, because TCGdex sends its type twice
+ *   (["Darkness", "Darkness"]) and the entry was written for one; Dark Dragonair (ex7-32) the same.
+ *   Three trainers carried an energy type (Poké Ball SWSH146 as Lightning, Master Ball, Mary's
+ *   Impulse) and lose it.
+ * - **rarity**: the plain Cinderace of Sword & Shield as "Holo Rare VMAX", Generations' Articuno and
+ *   Zapdos as "Ultra Rare", two Guardians Rising items and Burning Shadows' Kiawe as "Rare", and
+ *   the Trainer Galleries of Lost Origin (TG06 to TG08) and Silver Tempest (TG01 to TG11) kept
+ *   apart from the other galleries' "Ultra Rare". The shiny sets, the trainer kits and the shiny Primal Kyogre,
+ *   Groudon and Rayquaza (xy7-96 to 98) are graded differently by every source and stay as TCGdex
+ *   has them.
+ * - **stage**: the Dragon ex cards evolve (Dragonite ex, ex3-90, is a Stage 2, not a Basic), the
+ *   eighteen HeartGold SoulSilver LEGEND halves are a LEGEND, Neo Genesis Elekid is a Baby, Zacian
+ *   LV.X (SWSH135) is a LEVEL-UP where TCGdex says BREAK. Yveltal GX and Incineroar GX have no stage
+ *   at TCGdex and a wrong one at TCGplayer, so they are written here rather than filled from it
+ *   (tcgplayer-products.ts).
+ * - **hp, evolveFrom**: five HP values (Metagross Star is 90, not 70) and three evolutions (Paldea
+ *   Evolved's Raichu evolves from Pikachu, not "Pikachu ex"; Holon Phantoms' Nidorina from
+ *   "Nidoran?", which is TCGdex losing the ♀).
+ * - **trainerType**: nine Expedition Pokémon (Magikarp ecard1-118 as a Stadium) carried a trainer
+ *   type, and lose it.
+ * - **name**: 48 LV.X cards named without it (Diamond & Pearl's Torterra LV.X, dp1-122, was
+ *   "Torterra"), where TCGplayer, pokemontcg.io and TCGdex's own Platinum sets all write it; and
+ *   the Japanese name TCGdex left on the English Exeggutor of Evolutions (xy12-109). Matching
+ *   a collection row by name (sameCard in matching.ts) takes the LV.X off both sides first.
+ * - **illustrator**: two names run together (Mareep, ecard1-119, was Sumiyoshi Kizuki and "Big
+ *   Mama" Tagawa in one string), stray quotes, typos, and the "Illus. & Direc." prefix on sixteen
+ *   promos.
+ *
  * Each entry is [what TCGdex says, what the card is]. It applies only while TCGdex still says the
  * first, so a fix upstream wins and a stale entry does nothing.
  */
 export type FactCorrection = {
+  name?: [string, string];
   rarity?: [string, string];
   types?: [string[], string[]];
+  /** Null on the left where TCGdex answers none; null on the right where the card has none. */
+  trainerType?: [string | null, string | null];
+  /** TCGdex's own words: "Basic", "Stage1", "LEVEL-UP", and "LEGEND" where it has none. */
+  stage?: [string | null, string];
+  hp?: [number | null, number];
+  evolveFrom?: [string | null, string];
+  illustrator?: [string | null, string];
 };
 
 export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
@@ -122,7 +161,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "2019sm-5": { rarity: ["None", "Promo"] },
   "2019sm-6": { rarity: ["None", "Promo"] },
   "2019sm-7": { rarity: ["None", "Promo"] },
-  "2019sm-8": { rarity: ["None", "Promo"] },
+  "2019sm-8": { rarity: ["None", "Promo"], hp: [50, 60] },
   "2019sm-9": { rarity: ["None", "Promo"] },
   "2021swsh-1": { rarity: ["None", "Promo"] },
   "2021swsh-10": { rarity: ["None", "Promo"] },
@@ -497,6 +536,30 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "bw9-85": { rarity: ["Rare", "Ultra Rare"] },
   "bw9-86": { rarity: ["Rare", "Ultra Rare"] },
   "bw9-98": { rarity: ["Rare", "Ultra Rare"] },
+  "bwp-BW87": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW88": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW89": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW90": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW91": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW92": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW93": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "bwp-BW94": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
   "cel25-1": { rarity: ["Rare", "Holo Rare"] },
   "cel25-10": { rarity: ["Rare", "Holo Rare"] },
   "cel25-12": { rarity: ["Rare", "Holo Rare"] },
@@ -515,10 +578,57 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "dc1-21": { rarity: ["Rare", "Holo Rare"] },
   "dc1-5": { rarity: ["Rare", "Holo Rare"] },
   "dc1-8": { rarity: ["Rare", "Holo Rare"] },
+  "dp1-120": { name: ["Empoleon", "Empoleon LV.X"] },
+  "dp1-121": { name: ["Infernape", "Infernape LV.X"] },
+  "dp1-122": { name: ["Torterra", "Torterra LV.X"] },
+  "dp2-121": { name: ["Electivire", "Electivire LV.X"] },
+  "dp2-122": { name: ["Lucario", "Lucario LV.X"] },
+  "dp2-123": { name: ["Magmortar", "Magmortar LV.X"] },
   "dp2-124": { rarity: ["Rare", "Holo Rare"] },
+  "dp3-131": { name: ["Gardevoir", "Gardevoir LV.X"] },
+  "dp3-132": { name: ["Honchkrow", "Honchkrow LV.X"] },
+  "dp4-103": { name: ["Cresselia", "Cresselia LV.X"] },
+  "dp4-104": { name: ["Darkrai", "Darkrai LV.X"] },
+  "dp4-105": { name: ["Dialga", "Dialga LV.X"] },
+  "dp4-106": { name: ["Palkia", "Palkia LV.X"] },
+  "dp5-100": { name: ["Porygon-Z", "Porygon-Z LV.X"] },
+  "dp5-97": { name: ["Garchomp", "Garchomp LV.X"] },
+  "dp5-98": { name: ["Glaceon", "Glaceon LV.X"] },
+  "dp5-99": { name: ["Leafeon", "Leafeon LV.X"] },
+  "dp6-140": { name: ["Azelf", "Azelf LV.X"] },
+  "dp6-141": { name: ["Gliscor", "Gliscor LV.X"] },
+  "dp6-142": { name: ["Magnezone", "Magnezone LV.X"] },
+  "dp6-143": { name: ["Mesprit", "Mesprit LV.X"] },
+  "dp6-144": { name: ["Mewtwo", "Mewtwo LV.X"] },
+  "dp6-145": { name: ["Rhyperior", "Rhyperior LV.X"] },
+  "dp6-146": { name: ["Uxie", "Uxie LV.X"] },
+  "dp7-100": { name: ["Regigigas", "Regigigas LV.X"] },
   "dp7-101": { rarity: ["Rare", "Secret Rare"] },
   "dp7-102": { rarity: ["Rare", "Secret Rare"] },
   "dp7-103": { rarity: ["Rare", "Secret Rare"] },
+  "dp7-96": { name: ["Dusknoir", "Dusknoir LV.X"] },
+  "dp7-97": { name: ["Heatran", "Heatran LV.X"] },
+  "dp7-98": { name: ["Machamp", "Machamp LV.X"] },
+  "dp7-99": { name: ["Raichu", "Raichu LV.X"] },
+  "dpp-DP09": { name: ["Torterra", "Torterra LV.X"] },
+  "dpp-DP10": { name: ["Infernape", "Infernape LV.X"] },
+  "dpp-DP11": { name: ["Empoleon", "Empoleon LV.X"] },
+  "dpp-DP12": { name: ["Lucario", "Lucario LV.X"] },
+  "dpp-DP17": { name: ["Dialga", "Dialga LV.X"], hp: [120, 110] },
+  "dpp-DP18": { name: ["Palkia", "Palkia LV.X"] },
+  "dpp-DP19": { name: ["Darkrai", "Darkrai LV.X"] },
+  "dpp-DP28": { name: ["Mewtwo", "Mewtwo LV.X"] },
+  "dpp-DP29": { name: ["Rhyperior", "Rhyperior LV.X"] },
+  "dpp-DP30": { name: ["Regigigas", "Regigigas LV.X"] },
+  "dpp-DP31": { name: ["Heatran", "Heatran LV.X"] },
+  "dpp-DP37": { name: ["Dialga", "Dialga LV.X"], hp: [120, 110] },
+  "dpp-DP38": { name: ["Giratina", "Giratina LV.X"] },
+  "dpp-DP39": { name: ["Shaymin", "Shaymin LV.X"] },
+  "dpp-DP45": { name: ["Charizard G", "Charizard G LV.X"] },
+  "dpp-DP46": { name: ["Garchomp C", "Garchomp C LV.X"] },
+  "dpp-DP47": { name: ["Rayquaza C", "Rayquaza C LV.X"] },
+  "dpp-DP53": { name: ["Arceus", "Arceus LV.X"] },
+  "dpp-DP56": { name: ["Arceus", "Arceus LV.X"] },
   "dv1-1": { rarity: ["Rare", "Holo Rare"] },
   "dv1-10": { rarity: ["Rare", "Holo Rare"] },
   "dv1-11": { rarity: ["Rare", "Holo Rare"] },
@@ -539,6 +649,19 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "dv1-7": { rarity: ["Rare", "Holo Rare"] },
   "dv1-8": { rarity: ["Rare", "Holo Rare"] },
   "dv1-9": { rarity: ["Rare", "Holo Rare"] },
+  "ecard1-118": { trainerType: ["Stadium", null] },
+  "ecard1-119": { illustrator: ['Sumiyoshi Kizuki"Big Mama" Tagawa', "Sumiyoshi Kizuki"] },
+  "ecard1-123": { trainerType: ["Supporter", null] },
+  "ecard1-126": { trainerType: ["Supporter", null] },
+  "ecard1-128": { trainerType: ["Tool", null] },
+  "ecard1-130": { trainerType: ["Supporter", null] },
+  "ecard1-131": { trainerType: ["Stadium", null] },
+  "ecard1-133": { trainerType: ["Supporter", null] },
+  "ecard1-135": { trainerType: ["Tool", null] },
+  "ecard1-136": { trainerType: ["Supporter", null] },
+  "ecard1-142": { types: [["Darkness"], []] },
+  "ecard1-143": { types: [["Metal"], []] },
+  "ecard2-122": { illustrator: ['"Big Mama" Tagawa"', '"Big Mama" Tagawa'] },
   "ecard2-148": { rarity: ["Rare", "Secret Rare"] },
   "ecard2-149": { rarity: ["Rare", "Secret Rare"] },
   "ecard2-150": { rarity: ["Rare", "Secret Rare"] },
@@ -601,7 +724,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "ex11-110": { rarity: ["Rare", "Ultra Rare"] },
   "ex11-111": { rarity: ["Rare", "Ultra Rare"] },
   "ex11-112": { rarity: ["Rare", "Ultra Rare"] },
-  "ex11-113": { rarity: ["Rare", "Ultra Rare"] },
+  "ex11-113": { rarity: ["Rare", "Ultra Rare"], hp: [70, 90] },
   "ex11-114": { rarity: ["Rare", "Secret Rare"] },
   "ex11-12": { rarity: ["Rare", "Holo Rare"] },
   "ex11-13": { rarity: ["Rare", "Holo Rare"] },
@@ -708,6 +831,8 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "ex15-12": { rarity: ["Rare", "Holo Rare"] },
   "ex15-2": { rarity: ["Rare", "Holo Rare"] },
   "ex15-3": { rarity: ["Rare", "Holo Rare"] },
+  "ex15-34": { evolveFrom: ["Nidoran?", "Nidoran♀"] },
+  "ex15-35": { evolveFrom: ["Nidoran?", "Nidoran♂"] },
   "ex15-4": { rarity: ["Rare", "Holo Rare"] },
   "ex15-5": { rarity: ["Rare", "Holo Rare"] },
   "ex15-6": { rarity: ["Rare", "Holo Rare"] },
@@ -756,14 +881,14 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "ex2-98": { rarity: ["Rare", "Ultra Rare"] },
   "ex2-99": { rarity: ["Rare", "Ultra Rare"] },
   "ex3-100": { rarity: ["Rare", "Secret Rare"] },
-  "ex3-89": { rarity: ["Rare", "Ultra Rare"] },
-  "ex3-90": { rarity: ["Rare", "Ultra Rare"] },
-  "ex3-91": { rarity: ["Rare", "Ultra Rare"] },
-  "ex3-92": { rarity: ["Rare", "Ultra Rare"] },
+  "ex3-89": { rarity: ["Rare", "Ultra Rare"], stage: ["Basic", "Stage2"] },
+  "ex3-90": { rarity: ["Rare", "Ultra Rare"], stage: ["Basic", "Stage2"] },
+  "ex3-91": { rarity: ["Rare", "Ultra Rare"], stage: ["Basic", "Stage2"] },
+  "ex3-92": { rarity: ["Rare", "Ultra Rare"], stage: ["Basic", "Stage2"] },
   "ex3-93": { rarity: ["Rare", "Ultra Rare"] },
   "ex3-94": { rarity: ["Rare", "Ultra Rare"] },
-  "ex3-95": { rarity: ["Rare", "Ultra Rare"] },
-  "ex3-96": { rarity: ["Rare", "Ultra Rare"] },
+  "ex3-95": { rarity: ["Rare", "Ultra Rare"], stage: ["Basic", "Stage1"] },
+  "ex3-96": { rarity: ["Rare", "Ultra Rare"], stage: ["Basic", "Stage1"] },
   "ex3-97": { rarity: ["Rare", "Ultra Rare"] },
   "ex3-98": { rarity: ["Rare", "Secret Rare"] },
   "ex3-99": { rarity: ["Rare", "Secret Rare"] },
@@ -788,6 +913,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "ex5-99": { rarity: ["Rare", "Ultra Rare"] },
   "ex6-1": { rarity: ["Rare", "Holo Rare"] },
   "ex6-10": { rarity: ["Rare", "Holo Rare"] },
+  "ex6-103": { illustrator: ["Tokumi Akabane", "Takumi Akabane"] },
   "ex6-104": { rarity: ["Rare", "Ultra Rare"] },
   "ex6-105": { rarity: ["Rare", "Ultra Rare"] },
   "ex6-106": { rarity: ["Rare", "Ultra Rare"] },
@@ -810,7 +936,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "ex6-17": { rarity: ["Rare", "Holo Rare"] },
   "ex6-2": { rarity: ["Rare", "Holo Rare"] },
   "ex6-3": { rarity: ["Rare", "Holo Rare"] },
-  "ex6-4": { rarity: ["Rare", "Holo Rare"] },
+  "ex6-4": { rarity: ["Rare", "Holo Rare"], illustrator: ["MikiTanaka", "Miki Tanaka"] },
   "ex6-5": { rarity: ["Rare", "Holo Rare"] },
   "ex6-6": { rarity: ["Rare", "Holo Rare"] },
   "ex6-7": { rarity: ["Rare", "Holo Rare"] },
@@ -836,8 +962,15 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "ex7-14": { rarity: ["Rare", "Holo Rare"] },
   "ex7-2": { rarity: ["Rare", "Holo Rare"] },
   "ex7-3": { rarity: ["Rare", "Holo Rare"] },
+  "ex7-32": { types: [["Darkness", "Darkness"], ["Darkness"]] },
   "ex7-4": { rarity: ["Rare", "Holo Rare"] },
-  "ex7-5": { rarity: ["Rare", "Holo Rare"], types: [["Darkness"], ["Fire", "Darkness"]] },
+  "ex7-5": {
+    rarity: ["Rare", "Holo Rare"],
+    types: [
+      ["Darkness", "Darkness"],
+      ["Fire", "Darkness"],
+    ],
+  },
   "ex7-6": { rarity: ["Rare", "Holo Rare"] },
   "ex7-7": { rarity: ["Rare", "Holo Rare"] },
   "ex7-8": { rarity: ["Rare", "Holo Rare"] },
@@ -931,16 +1064,56 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "exu-X": { rarity: ["Rare", "Holo Rare"] },
   "exu-Y": { rarity: ["Rare", "Holo Rare"] },
   "exu-Z": { rarity: ["Rare", "Holo Rare"] },
-  "fut2020-1": { rarity: ["None", "Promo"], types: [[], ["Lightning"]] },
-  "fut2020-2": { rarity: ["None", "Promo"], types: [[], ["Colorless"]] },
-  "fut2020-3": { rarity: ["None", "Promo"], types: [[], ["Grass"]] },
-  "fut2020-4": { rarity: ["None", "Promo"], types: [[], ["Fire"]] },
-  "fut2020-5": { rarity: ["None", "Promo"], types: [[], ["Water"]] },
+  "fut2020-1": {
+    rarity: ["None", "Promo"],
+    types: [[], ["Lightning"]],
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "fut2020-2": {
+    rarity: ["None", "Promo"],
+    types: [[], ["Colorless"]],
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "fut2020-3": {
+    rarity: ["None", "Promo"],
+    types: [[], ["Grass"]],
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "fut2020-4": {
+    rarity: ["None", "Promo"],
+    types: [[], ["Fire"]],
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "fut2020-5": {
+    rarity: ["None", "Promo"],
+    types: [[], ["Water"]],
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "g1-25": { rarity: ["Ultra Rare", "Holo Rare"] },
   "g1-27": { rarity: ["Rare", "Holo Rare"] },
+  "g1-29": { rarity: ["Ultra Rare", "Holo Rare"] },
   "g1-35": { rarity: ["Rare", "Holo Rare"] },
   "g1-42": { rarity: ["Rare", "Holo Rare"] },
   "g1-45": { rarity: ["Rare", "Holo Rare"] },
   "g1-5": { rarity: ["Rare", "Holo Rare"] },
+  "hgss1-111": { stage: ["Basic", "LEGEND"] },
+  "hgss1-112": { stage: ["Basic", "LEGEND"] },
+  "hgss1-113": { stage: ["Basic", "LEGEND"] },
+  "hgss1-114": { stage: ["Basic", "LEGEND"] },
+  "hgss2-90": { stage: ["Basic", "LEGEND"] },
+  "hgss2-91": { stage: ["Basic", "LEGEND"] },
+  "hgss2-92": { stage: ["Basic", "LEGEND"] },
+  "hgss2-93": { stage: ["Basic", "LEGEND"] },
+  "hgss2-94": { stage: ["Basic", "LEGEND"] },
+  "hgss2-95": { stage: ["Basic", "LEGEND"] },
+  "hgss3-87": { stage: ["Basic", "LEGEND"] },
+  "hgss3-88": { stage: ["Basic", "LEGEND"] },
+  "hgss3-89": { stage: ["Basic", "LEGEND"] },
+  "hgss3-90": { stage: ["Basic", "LEGEND"] },
+  "hgss4-100": { stage: ["Basic", "LEGEND"] },
+  "hgss4-101": { stage: ["Basic", "LEGEND"] },
+  "hgss4-102": { stage: ["Basic", "LEGEND"] },
+  "hgss4-99": { stage: ["Basic", "LEGEND"] },
   "hgss4-FOUR": { rarity: ["Rare", "Ultra Rare"] },
   "neo1-1": { rarity: ["Rare", "Holo Rare"] },
   "neo1-10": { rarity: ["Rare", "Holo Rare"] },
@@ -954,6 +1127,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "neo1-18": { rarity: ["Rare", "Holo Rare"] },
   "neo1-19": { rarity: ["Rare", "Holo Rare"] },
   "neo1-2": { rarity: ["Rare", "Holo Rare"] },
+  "neo1-22": { stage: ["Basic", "Baby"] },
   "neo1-3": { rarity: ["Rare", "Holo Rare"] },
   "neo1-4": { rarity: ["Rare", "Holo Rare"] },
   "neo1-5": { rarity: ["Rare", "Holo Rare"] },
@@ -1045,6 +1219,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "pop1-16": { rarity: ["Rare", "Ultra Rare"] },
   "pop1-17": { rarity: ["Rare", "Ultra Rare"] },
   "pop2-17": { rarity: ["Rare", "Ultra Rare"] },
+  "pop2-9": { illustrator: ['"Big Mama" Tagawa"Big Mama" Tagawa', '"Big Mama" Tagawa'] },
   "pop3-17": { rarity: ["Rare", "Ultra Rare"] },
   "pop4-17": { rarity: ["Rare", "Ultra Rare"] },
   "ru1-1": { rarity: ["None", "Promo"] },
@@ -1105,6 +1280,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "sm11-122": { rarity: ["Rare", "Holo Rare"] },
   "sm11-139": { rarity: ["Rare", "Holo Rare"] },
   "sm11-140": { rarity: ["Rare", "Holo Rare"] },
+  "sm11-149": { hp: [90, 100] },
   "sm11-156": { rarity: ["Rare", "Holo Rare"] },
   "sm11-163": { rarity: ["Rare", "Holo Rare"] },
   "sm11-170": { rarity: ["Rare", "Holo Rare"] },
@@ -1152,7 +1328,9 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "sm12-85": { rarity: ["Rare", "Holo Rare"] },
   "sm2-10": { rarity: ["Rare", "Holo Rare"] },
   "sm2-102": { rarity: ["Rare", "Holo Rare"] },
+  "sm2-124": { rarity: ["Rare", "Uncommon"] },
   "sm2-13": { rarity: ["Rare", "Holo Rare"] },
+  "sm2-130": { rarity: ["Rare", "Uncommon"] },
   "sm2-25": { rarity: ["Rare", "Holo Rare"] },
   "sm2-42": { rarity: ["Rare", "Holo Rare"] },
   "sm2-58": { rarity: ["Rare", "Holo Rare"] },
@@ -1168,6 +1346,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "sm2-97": { rarity: ["Rare", "Holo Rare"] },
   "sm3-100": { rarity: ["Rare", "Holo Rare"] },
   "sm3-105": { rarity: ["Rare", "Holo Rare"] },
+  "sm3-116": { rarity: ["Rare", "Uncommon"] },
   "sm3-31": { rarity: ["Rare", "Holo Rare"] },
   "sm3-33": { rarity: ["Rare", "Holo Rare"] },
   "sm3-39": { rarity: ["Rare", "Ultra Rare"] },
@@ -1220,6 +1399,8 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "sm5-9": { rarity: ["Rare", "Holo Rare"] },
   "sm6-105": { rarity: ["Rare", "Holo Rare"] },
   "sm6-11": { rarity: ["Rare", "Holo Rare"] },
+  "sm6-124": { stage: [null, "Basic"] },
+  "sm6-137": { stage: [null, "Basic"] },
   "sm6-17": { rarity: ["Rare", "Holo Rare"] },
   "sm6-19": { rarity: ["Rare", "Holo Rare"] },
   "sm6-28": { rarity: ["Rare", "Holo Rare"] },
@@ -1286,6 +1467,8 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "sm9-132": { rarity: ["Rare", "Holo Rare"] },
   "sm9-133": { rarity: ["Rare", "Holo Rare"] },
   "sm9-140": { rarity: ["Rare", "Holo Rare"] },
+  "sm9-167": { stage: [null, "Stage2"] },
+  "sm9-188": { stage: [null, "Stage2"] },
   "sm9-19": { rarity: ["Rare", "Holo Rare"] },
   "sm9-30": { rarity: ["Rare", "Holo Rare"] },
   "sm9-32": { rarity: ["Rare", "Holo Rare"] },
@@ -1297,7 +1480,12 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "sm9-88": { rarity: ["Rare", "Holo Rare"] },
   "sm9-91": { rarity: ["Rare", "Holo Rare"] },
   "sm9-95": { rarity: ["Rare", "Holo Rare"] },
+  "sm9-97": { stage: [null, "Stage2"] },
   "sm9-99": { rarity: ["Rare", "Holo Rare"] },
+  "sv02-064": { evolveFrom: ["Pikachu ex", "Pikachu"] },
+  "sv02-211": { evolveFrom: ["Pikachu ex", "Pikachu"] },
+  "swsh1-34": { rarity: ["Holo Rare VMAX", "Holo Rare"] },
+  "swsh1-35": { rarity: ["Holo Rare VMAX", "Holo Rare"] },
   "swsh10tg-TG01": { rarity: ["Rare", "Ultra Rare"] },
   "swsh10tg-TG02": { rarity: ["Rare", "Ultra Rare"] },
   "swsh10tg-TG03": { rarity: ["Rare", "Ultra Rare"] },
@@ -1355,18 +1543,43 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "swsh12.5gg-GG32": { rarity: ["Rare", "Ultra Rare"] },
   "swsh12.5gg-GG33": { rarity: ["Rare", "Ultra Rare"] },
   "swsh12.5gg-GG34": { rarity: ["Rare", "Ultra Rare"] },
+  "swsh12tg-TG01": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG02": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG03": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG04": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG05": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG06": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG07": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG08": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG09": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG10": { rarity: ["Holo Rare", "Ultra Rare"] },
+  "swsh12tg-TG11": { rarity: ["Holo Rare", "Ultra Rare"] },
   "swsh4.5-13": { rarity: ["Rare", "Holo Rare"] },
   "swsh4.5-8": { rarity: ["Rare", "Holo Rare"] },
+  "swsh9-183": { illustrator: ["akyCG Works", "aky CG Works"] },
   "swsh9tg-TG01": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG02": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG03": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG04": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG05": { rarity: ["Rare", "Ultra Rare"] },
-  "swsh9tg-TG06": { rarity: ["Rare", "Holo Rare"] },
+  "swsh9tg-TG06": { rarity: ["Rare", "Ultra Rare"] },
+  "swsh9tg-TG07": { rarity: ["Rare", "Ultra Rare"] },
+  "swsh9tg-TG08": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG09": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG10": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG11": { rarity: ["Rare", "Ultra Rare"] },
   "swsh9tg-TG12": { rarity: ["Rare", "Ultra Rare"] },
+  "swshp-SWSH074": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "swshp-SWSH075": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
+  "swshp-SWSH135": { name: ["Zacian", "Zacian LV.X"], stage: ["BREAK", "LEVEL-UP"] },
+  "swshp-SWSH146": { types: [["Lightning"], []] },
+  "swshp-SWSH177": {
+    illustrator: ["Illus. & Direc. The Pokémon Company Art Team", "The Pokémon Company Art Team"],
+  },
   "swshp-SWSH215": { types: [[], ["Lightning"]] },
   "swshp-SWSH216": { types: [[], ["Lightning"]] },
   "swshp-SWSH217": { types: [[], ["Lightning"]] },
@@ -1664,6 +1877,7 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "xy11-73": { rarity: ["Rare", "Holo Rare"] },
   "xy11-81": { rarity: ["Rare", "Holo Rare"] },
   "xy11-86": { rarity: ["Rare", "Holo Rare"] },
+  "xy12-109": { name: ["ナッシー[Exeggutor]", "Exeggutor"] },
   "xy12-11": { rarity: ["Rare", "Holo Rare"] },
   "xy12-15": { rarity: ["Rare", "Holo Rare"] },
   "xy12-25": { rarity: ["Rare", "Holo Rare"] },
@@ -1773,16 +1987,57 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
 const sameTypes = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && [...a].sort().join() === [...b].sort().join();
 
-/** A card's rarity and types with its correction applied, where TCGdex still says what was corrected. */
-export function correctedFacts<T extends { rarity: string | null; types: string[] }>(
-  id: string,
-  facts: T,
-): T {
+/** The right-hand side of a pair where the value is still its left-hand side. */
+const swapped = <V>(pair: [V, V] | undefined, value: V): V =>
+  pair && value === pair[0] ? pair[1] : value;
+
+/** The sheet fields a correction can reach, as englishFacts carries them. */
+type CorrectableSheet = {
+  illustrator: string | null;
+  hp: number | null;
+  stage: string | null;
+  evolveFrom: string | null;
+};
+
+/**
+ * A card's facts with its correction applied, field by field, where TCGdex still says what was
+ * corrected. The trainer type and the sheet are corrected where the facts carry them.
+ */
+export function correctedFacts<
+  T extends {
+    rarity: string | null;
+    types: string[];
+    trainerType?: string | null;
+    sheet?: CorrectableSheet;
+  },
+>(id: string, facts: T): T {
   const fix = CARD_FACT_CORRECTIONS[id];
   if (!fix) return facts;
-  return {
+  const out: T = {
     ...facts,
-    rarity: fix.rarity && facts.rarity === fix.rarity[0] ? fix.rarity[1] : facts.rarity,
+    rarity: swapped(fix.rarity, facts.rarity),
     types: fix.types && sameTypes(facts.types, fix.types[0]) ? [...fix.types[1]] : facts.types,
   };
+  if ("trainerType" in facts) out.trainerType = swapped(fix.trainerType, facts.trainerType ?? null);
+  if (facts.sheet)
+    out.sheet = {
+      ...facts.sheet,
+      illustrator: swapped(fix.illustrator, facts.sheet.illustrator),
+      hp: swapped(fix.hp, facts.sheet.hp),
+      stage: swapped(fix.stage, facts.sheet.stage),
+      evolveFrom: swapped(fix.evolveFrom, facts.sheet.evolveFrom),
+    };
+  return out;
+}
+
+/**
+ * A card's name as the app writes it: its correction, then one apostrophe.
+ *
+ * TCGdex writes 63 English names with a curly apostrophe (Rocket’s Mewtwo, bog-8; Red’s Challenge,
+ * sm10-184) and 959 with a straight one (2026-09-14), so a search for "Red's" missed the card. Straight is the one TCGplayer and pokemontcg.io use, and what a
+ * keyboard types. Matching a collection row (sameCard in matching.ts) drops every mark before it
+ * compares, so a row filed under either spelling keeps its card.
+ */
+export function correctedName(id: string, name: string): string {
+  return swapped(CARD_FACT_CORRECTIONS[id]?.name, name).replace(/[\u2018\u2019]/g, "'");
 }

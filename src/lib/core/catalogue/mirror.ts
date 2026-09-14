@@ -35,7 +35,8 @@ import {
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
-import { fullArtOf } from "./full-art";
+import { fullArtFlags } from "./full-art";
+import { type ProductFacts, productFactsOf } from "./tcgplayer-products";
 import {
   isScanFile,
   limitlessScan,
@@ -223,9 +224,13 @@ export async function storeSetArt(db: SupabaseClient): Promise<number> {
  * The shape of copy a set is written in. A set the copy holds in an older shape is copied again
  * ahead of the up-to-date ones, the way a set whose card count moved is, without working its
  * pictures out afresh. 1: the sheet's facts, printed languages and the set's serie
- * (migration 20260914220000).
+ * (migration 20260914220000). 2: the second pass over the English facts (2026-09-14): stage, HP,
+ * evolution, trainer type, name and illustrator corrections (card-fact-corrections.ts), a stage from
+ * TCGplayer's product where TCGdex has none, and full art where TCGplayer's product says so
+ * (tcgplayer-products.ts). mirror-language.ts builds its own format on this one, so the Japanese
+ * sets are copied again once too.
  */
-export const CATALOGUE_FORMAT = 1;
+export const CATALOGUE_FORMAT = 2;
 
 export type SyncReport = {
   /** Sets written this run, in the order they finished. */
@@ -244,6 +249,20 @@ export type SyncReport = {
   art: number;
   ms: number;
 };
+
+/**
+ * A card with TCGplayer's stage where TCGdex gives it none, as the copy writes it.
+ *
+ * Only an empty stage is filled, and only on a Pokémon: TCGdex's own word, or its correction, stands
+ * wherever there is one. Mew-EX (bw11-RC24) was copied with no stage on 2026-09-14 and is a Basic.
+ */
+export const withProductStage = (
+  card: CatalogueMatch,
+  product: ProductFacts | undefined,
+): CatalogueMatch =>
+  card.sheet && !card.sheet.stage && product?.stage && card.category === "Pokemon"
+    ? { ...card, sheet: { ...card.sheet, stage: product.stage } }
+    : card;
 
 /** The scan's stem, off the address the set page builds: the size and the format are the reader's. */
 const stemOf = (image: string | null) => image?.replace(/\/(low|high)\.webp$/, "") ?? null;
@@ -474,7 +493,12 @@ export async function syncMirror(
           report.failed.push(id);
           continue;
         }
-        const { set, cards } = read;
+        const { set } = read;
+        /* TCGplayer's product for each card: a stage where TCGdex has none, and whether it is
+           full art. A group that will not answer fails the set, which keeps last night's copy of it
+           and is tried again ahead of the rest (tcgplayer-products.ts). */
+        const products = await productFactsOf(read.cards.map((c) => c.id));
+        const cards = read.cards.map((c) => withProductStage(c, products.get(c.id)));
         /* Which Western languages each card was printed in: one read of the set per catalogue.
            A failure leaves the set's languages unknown, which the sheet answers as TCGdex would. */
         const languagesOf = await languagesOfSet(id).catch(() => () => null);
@@ -497,7 +521,9 @@ export async function syncMirror(
         ).length;
         /* Which of the set's cards are full art, worked out here because this is the one place
            that holds a whole set: the rule is about a card's place in it (full-art.ts). */
-        const arts = fullArtOf(pictured);
+        const arts = fullArtFlags(
+          pictured.map((c) => ({ ...c, productName: products.get(c.id)?.name ?? null })),
+        );
         // The set itself, beside its cards. Written first, and on its own line rather than
         // folded into writeCatalogueSet(): a collection read resolves its sets by name out of
         // this table (loadSetCatalogue), so a set whose cards are in the copy and whose own row
@@ -525,7 +551,7 @@ export async function syncMirror(
         await writeCatalogueSet(
           db,
           id,
-          pictured.map((c): CatalogueCardRecord => ({
+          pictured.map((c, i): CatalogueCardRecord => ({
             id: c.id,
             set_id: id,
             local_id: c.number,
@@ -538,7 +564,7 @@ export async function syncMirror(
             image: stemOf(c.image),
             category: c.category ?? null,
             trainer_type: c.trainerType ?? null,
-            full_art: arts.has(c),
+            full_art: arts[i] ?? false,
             // The sheet's facts, so opening a card asks nobody (getCardDetail).
             illustrator: c.sheet?.illustrator ?? null,
             hp: c.sheet?.hp ?? null,

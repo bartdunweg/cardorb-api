@@ -481,6 +481,11 @@ const keptFacts = (
     // The day of the stored prices is in the key: an entry holds dollars, and one made before
     // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
     // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
+    //
+    // v20: the second pass over English facts (card-fact-corrections.ts, 2026-09-14): 48 LV.X
+    // names, the Trainer Galleries of Lost Origin and Silver Tempest as Ultra Rare, Generations'
+    // Articuno and Zapdos as Holo Rare. A v19 entry holds TCGdex's words for its day.
+    //
     // v17: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
     //
     // v16: seventeen English cards relinked to their own TCGplayer product (2026-09-14): Pokémon
@@ -518,7 +523,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v19", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v20", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -624,6 +629,9 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v30: the second pass over English facts (card-fact-corrections.ts, 2026-09-14): rarity for
+      // 21 cards (Silver Tempest's TG01 to TG11 as Ultra Rare), 48 LV.X names, one apostrophe.
+      //
       // v29: TCGdex asked for no price the store holds, and no picture the copy already checked.
       //
       // v28: prices read out of tcgplayer_prices, the one store every price reads (printingsOfProducts).
@@ -655,7 +663,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v29", setName, factsSignature(identities)],
+      ["set-facts", "v30", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

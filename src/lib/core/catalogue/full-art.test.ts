@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type FullArtCard, fullArtOf } from "./full-art";
+import { type FullArtCard, fullArtOf, productSaysFullArt } from "./full-art";
 
 const card = (
   number: string,
@@ -87,7 +87,42 @@ describe("fullArtOf", () => {
     ).toEqual(["183"]);
   });
 
+  /* The spelling rarity-names.ts gives Shining Fates' shiny V and VMAX, which this list did not
+     carry until 2026-09-14. */
+  it("takes a shiny V and a shiny VMAX in the one spelling", () => {
+    expect(
+      numbers([
+        card("SV107", "Charizard VMAX", "Shiny Rare VMAX"),
+        card("SV108", "Centiskorch V", "Shiny Rare V"),
+      ]),
+    ).toEqual(["SV107", "SV108"]);
+  });
+
+  it("takes a card whose TCGplayer product is named full art, however alone in its set", () => {
+    expect(
+      numbers([
+        { ...card("51", "Jolteon VMAX", "Holo Rare VMAX"), productName: "Jolteon VMAX" },
+        { ...card("177", "Jolteon V", "Ultra Rare"), productName: "Jolteon V (Full Art)" },
+        {
+          ...card("152", "Grass Energy", "Ultra Rare", "Energy"),
+          productName: "Grass Energy (Texture Full Art)",
+        },
+      ]),
+    ).toEqual(["177", "152"]);
+  });
+
   it("is empty for a set that has none", () => {
     expect(numbers([card("1", "Pikachu", "Common"), card("2", "Raichu", "Rare")])).toEqual([]);
+  });
+});
+
+describe("productSaysFullArt", () => {
+  it("reads full art anywhere in the product's name, and nothing else", () => {
+    expect(productSaysFullArt("Piers (Full Art)")).toBe(true);
+    expect(productSaysFullArt("Latias (Full Art Promo)")).toBe(true);
+    expect(productSaysFullArt("Cheren (148 Full Art)")).toBe(true);
+    expect(productSaysFullArt("Jolteon V")).toBe(false);
+    expect(productSaysFullArt("Artful Fighter")).toBe(false);
+    expect(productSaysFullArt(null)).toBe(false);
   });
 });

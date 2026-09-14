@@ -5,7 +5,7 @@ import JA_NAMES from "./set-names.ja.json";
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { cardNamed } from "./card-names";
-import { correctedFacts } from "./card-fact-corrections";
+import { correctedFacts, correctedName } from "./card-fact-corrections";
 import { canonicalRarity } from "./rarity-names";
 
 /** One set, with enough to render a tile and sort a shelf. */
@@ -590,7 +590,9 @@ export async function englishSet(
   const cards = (detail.cards ?? []).map((c): CatalogueMatch => ({
     id: c.id,
     number: printedNumber(c.localId),
-    name: c.name,
+    // Corrected where TCGdex drops a card's LV.X or leaves a Japanese name on it, and with one
+    // apostrophe (card-fact-corrections.ts).
+    name: correctedName(c.id, c.name),
     localName: null,
     setName: set.name,
     series: set.series,
