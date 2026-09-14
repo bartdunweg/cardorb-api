@@ -57,18 +57,18 @@ describe("scrydexScan", () => {
   const fetchMock = vi.fn();
   beforeEach(() => vi.stubGlobal("fetch", fetchMock));
   afterEach(() => vi.unstubAllGlobals());
-  const answer = (length: string) =>
-    new Response(null, { status: 200, headers: { "content-length": length } });
+  // No Content-Length: Scrydex sends none to a server, only the ETag.
+  const answer = (etag: string) => new Response(null, { status: 200, headers: { etag } });
 
   it("takes a set read by hand, at the number without its padding", async () => {
-    fetchMock.mockResolvedValue(answer("1502225"));
+    fetchMock.mockResolvedValue(answer('W/"cfIW1_cPdxyo2OZPoh_Oh-4oGBCRBILXPqV9Rt6Cz3DQ"'));
     expect(await scrydexScan("tk-xy-b", "016")).toBe(
       "https://images.scrydex.com/pokemon/tk7b-16/large",
     );
   });
 
   it("refuses Scrydex's stand-in picture, a set nobody read, and a lettered number", async () => {
-    fetchMock.mockResolvedValue(answer("186316"));
+    fetchMock.mockResolvedValue(answer('W/"cfl2loWl84E8tUjrC-Q-I0D0JhCRBILXPqV9Rt6Cz3DQ"'));
     expect(await scrydexScan("tk-xy-b", "16")).toBeNull();
     fetchMock.mockReset();
     expect(await scrydexScan("base1", "4")).toBeNull();

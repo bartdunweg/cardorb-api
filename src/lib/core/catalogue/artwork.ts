@@ -176,9 +176,11 @@ const SCRYDEX_SETS: Record<string, string> = {
 
 /**
  * What Scrydex answers for an id it does not have: a 200 with a stand-in picture, always this
- * file. A HEAD tells it by its length, so the stand-in is never taken for a card.
+ * file. Its ETag says so. Not its length: a request without a browser's headers is answered
+ * compressed, with no Content-Length at all, which is how the first version of this refused
+ * every real scan from the server (2026-09-14).
  */
-const SCRYDEX_STAND_IN_BYTES = "186316";
+const SCRYDEX_STAND_IN_ETAG = "cfl2loWl84E8tUjrC-Q-I0D0JhCRBILXPqV9Rt6Cz3DQ";
 
 /**
  * Scrydex's scan of a card, the last catalogue asked (mirror.ts): 170 of the 178 English cards
@@ -196,8 +198,8 @@ export async function scrydexScan(setId: string, number: string): Promise<string
       next: { revalidate: DAY },
       signal: catalogueTimeout(),
     });
-    const length = head.headers.get("content-length");
-    return head.ok && length && length !== SCRYDEX_STAND_IN_BYTES ? url : null;
+    const etag = head.headers.get("etag");
+    return head.ok && etag && !etag.includes(SCRYDEX_STAND_IN_ETAG) ? url : null;
   } catch {
     return null;
   }
