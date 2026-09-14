@@ -1,0 +1,1 @@
+- A binder's value line no longer drops on a night some of its cards have no price: a card is valued at its last reading up to two weeks old, as the collection's line already was. Kanto on 2026-09-13 drew EUR 16,200 between two days of EUR 19,750.

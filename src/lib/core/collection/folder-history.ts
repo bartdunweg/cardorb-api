@@ -23,16 +23,25 @@ export function folderSeries(
   prices: CardPricePoint[],
   list: "owned" | "wishlist" = "owned",
 ): ValueSnapshot[] {
-  const byDate = new Map<string, Map<string, CardPricePoint>>();
+  const byDate = new Map<string, CardPricePoint[]>();
   for (const p of prices) {
-    let day = byDate.get(p.date);
-    if (!day) byDate.set(p.date, (day = new Map()));
-    day.set(p.tcgId, p);
+    const day = byDate.get(p.date);
+    if (day) day.push(p);
+    else byDate.set(p.date, [p]);
   }
   // The wishlist: a wish counts once, as sumValue() counts it, whatever its quantity.
   const owned = items.filter((it) => it.owned === (list === "owned"));
+  /*
+   * A card with no reading on a day is valued at its last one, up to CARRY_DAYS old, as the Home
+   * line (holdingsSeries) has done since 2026-09-13. Priced on the day alone, a binder's line fell
+   * wherever some of its cards missed a night: Kanto on 2026-09-13 drew EUR 16,200 between two
+   * days of EUR 19,750, with 36 cards unpriced that the store simply had no figure for that night.
+   */
+  const last = new Map<string, CardPricePoint>();
   return [...byDate.keys()].sort().map((date) => {
-    const day = byDate.get(date)!;
+    for (const p of byDate.get(date)!) if (isReading(p)) last.set(p.tcgId, p);
+    const day = new Map<string, CardPricePoint>();
+    for (const p of last.values()) if (daysBetween(p.date, date) <= CARRY_DAYS) day.set(p.tcgId, p);
     let value = 0;
     let cards = 0;
     let priced = 0;
@@ -62,6 +71,12 @@ const pointOn = (date: string, items: CardItem[], standing: CardPricePoint[]): V
 
 /** How long a card's last reading stands in for a day without one: two weekly readings' gap. */
 export const CARRY_DAYS = 14;
+
+/** A reading with a figure in it: a day whose market, foil and printings are all empty is no reading. */
+const isReading = (p: CardPricePoint) =>
+  p.market != null ||
+  p.holo != null ||
+  (p.printings != null && Object.keys(p.printings).length > 0);
 
 const daysBetween = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);

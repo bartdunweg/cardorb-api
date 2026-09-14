@@ -79,6 +79,27 @@ describe("folderSeries", () => {
   });
 });
 
+describe("folderSeries, a night without a reading", () => {
+  // Kanto on 2026-09-13: 36 of its 733 cards had no figure that night and the line fell by EUR 3,500.
+  it("values a card at its last reading on a day without one, and not past two weeks", () => {
+    const items = [copy({ tcgId: "base1-4" }), copy({ tcgId: "svp-1" })];
+    const prices = [
+      { tcgId: "base1-4", date: "2026-08-15", market: 100, holo: null },
+      { tcgId: "svp-1", date: "2026-08-15", market: 10, holo: null },
+      { tcgId: "base1-4", date: "2026-08-16", market: null, holo: null },
+      { tcgId: "svp-1", date: "2026-08-16", market: 11, holo: null },
+      { tcgId: "base1-4", date: "2026-08-17", market: 102, holo: null },
+      { tcgId: "base1-4", date: "2026-08-31", market: 104, holo: null },
+    ];
+    expect(folderSeries(items, prices)).toEqual([
+      { date: "2026-08-15", value: 110, cards: 2, priced: 2, unpriced: 0 },
+      { date: "2026-08-16", value: 111, cards: 2, priced: 2, unpriced: 0 },
+      { date: "2026-08-17", value: 113, cards: 2, priced: 2, unpriced: 0 },
+      { date: "2026-08-31", value: 104, cards: 2, priced: 1, unpriced: 1 },
+    ]);
+  });
+});
+
 describe("folderSeries, per printing", () => {
   // Bart, 2026-09-13: "ik wil liefst prijs per editie". A reading stored per printing values each
   // copy at its own run, as today's price does.
