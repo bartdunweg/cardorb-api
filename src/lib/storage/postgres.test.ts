@@ -6,9 +6,11 @@ import {
   createRows,
   deleteRow,
   listAccountIds,
+  listCardPrices,
   listRows,
   listValueSnapshots,
   updateRow,
+  writeCardPrices,
 } from "./postgres";
 import type { CardDraft } from "@/lib/core/collection/collection-row";
 
@@ -532,5 +534,116 @@ describe("one row per kind", () => {
     const { db, rpcs } = fakeFoldDb([], []);
     await createRows(db, ME, [], "csv");
     expect(rpcs).toEqual([{ fn: "fold_identical_cards", args: { p_user_id: ME } }]);
+  });
+});
+
+describe("listCardPrices across catalogues", () => {
+  /**
+   * A card_price_months that holds neo4-106 twice, Shining Celebi's English line and Lucky Stadium's
+   * Japanese one, and answers a query the way PostgREST does: every `eq` and `in` filter applied.
+   */
+  const store = () => {
+    const month = (language: string, printing: string, cents: number) => ({
+      language,
+      tcg_id: "neo4-106",
+      printing,
+      month: "2026-09-01",
+      cents: Array.from({ length: 31 }, (_, i) => (i === 0 ? cents : null)),
+    });
+    const rows = [
+      month("en", "unlimited-holofoil", 37500),
+      month("en", "1st-edition-holofoil", 90000),
+      month("ja", "holofoil", 900),
+    ];
+    const asked: Record<string, unknown>[] = [];
+    const db = {
+      from: () => {
+        const filters: Record<string, unknown> = {};
+        const chain: Record<string, unknown> = {
+          select: () => chain,
+          order: () => chain,
+          range: () => chain,
+          gte: () => chain,
+          eq: (column: string, value: unknown) => ((filters[column] = value), chain),
+          in: (column: string, values: unknown[]) => ((filters[column] = values), chain),
+          then: (resolve: (v: unknown) => unknown) => {
+            asked.push({ ...filters });
+            const data = rows.filter(
+              (r) =>
+                r.language === filters.language && (filters.tcg_id as string[]).includes(r.tcg_id),
+            );
+            return resolve({ data, error: null });
+          },
+        };
+        return chain;
+      },
+    } as unknown as SupabaseClient;
+    return { db, asked };
+  };
+
+  it("answers an English and a Japanese card of one id apart, each under its own language", async () => {
+    const { db, asked } = store();
+    const points = await listCardPrices(
+      db,
+      [
+        { tcgId: "neo4-106", language: "en" },
+        { tcgId: "neo4-106", language: "ja" },
+      ],
+      "2026-09-01",
+    );
+    expect(asked.map((a) => a.language)).toEqual(["en", "ja"]);
+    expect(points.map((p) => [p.language, p.market, p.printings])).toEqual([
+      ["en", 375, { "unlimited-holofoil": 375, "1st-edition-holofoil": 900 }],
+      ["ja", 9, { holofoil: 9 }],
+    ]);
+  });
+
+  it("never answers the other catalogue's card for the one asked", async () => {
+    const { db } = store();
+    const points = await listCardPrices(db, [{ tcgId: "neo4-106", language: "ja" }], "2026-09-01");
+    expect(points).toEqual([
+      {
+        language: "ja",
+        tcgId: "neo4-106",
+        date: "2026-09-01",
+        market: 9,
+        holo: 9,
+        printings: { holofoil: 9 },
+      },
+    ]);
+  });
+});
+
+describe("writeCardPrices", () => {
+  it("sends every month with its catalogue, and the same card of two catalogues as two rows", async () => {
+    const sent: unknown[] = [];
+    const db = {
+      rpc: async (_name: string, args: { p_rows: unknown[] }) => {
+        sent.push(...args.p_rows);
+        return { error: null };
+      },
+    } as unknown as SupabaseClient;
+    await writeCardPrices(db, [
+      {
+        language: "en",
+        tcgId: "neo4-106",
+        printing: "holofoil",
+        date: "2026-09-14",
+        price: 375,
+        source: "tcgplayer",
+      },
+      {
+        language: "ja",
+        tcgId: "neo4-106",
+        printing: "holofoil",
+        date: "2026-09-14",
+        price: 9,
+        source: "tcgplayer",
+      },
+    ]);
+    expect(sent).toMatchObject([
+      { language: "en", tcg_id: "neo4-106", printing: "holofoil", month: "2026-09-01" },
+      { language: "ja", tcg_id: "neo4-106", printing: "holofoil", month: "2026-09-01" },
+    ]);
   });
 });

@@ -20,6 +20,7 @@ const item = (over: Partial<CardItem>): CardItem => ({
   speciesId: 196,
   localName: null,
   tcgId: "bw5-48",
+  catalogue: "en",
   owned: true,
   finish: "normal",
   foilPattern: null,

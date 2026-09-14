@@ -59,6 +59,7 @@ const at = (
   market: number | null,
   holo: number | null = null,
 ): CardPricePoint => ({
+  language: "en",
   tcgId,
   date,
   market,
@@ -99,6 +100,30 @@ describe("moversOf", () => {
       ],
     );
     expect(up.map((m) => m.card.name)).toEqual(["Chase", "Bulk"]);
+  });
+
+  // neo4-106 is Shining Celebi in English and Lucky Stadium in Japanese: each card reads its own line.
+  it("matches readings to a card by its set's catalogue as well as its id", () => {
+    const english = set([card({ key: "celebi", tcgId: "neo4-106", name: "Shining Celebi" })]);
+    const japanese = {
+      ...set([card({ key: "stadium", tcgId: "neo4-106", name: "Lucky Stadium" })]),
+      language: "ja" as const,
+    };
+    const ja = (date: string, market: number): CardPricePoint => ({
+      ...at("neo4-106", date, market),
+      language: "ja",
+    });
+    const { up, down } = moversOf(
+      [english, japanese],
+      [
+        at("neo4-106", "2026-07-01", 300),
+        at("neo4-106", "2026-08-01", 375),
+        ja("2026-07-01", 12),
+        ja("2026-08-01", 9),
+      ],
+    );
+    expect(up.map((m) => [m.card.name, m.was, m.now])).toEqual([["Shining Celebi", 300, 375]]);
+    expect(down.map((m) => [m.card.name, m.was, m.now])).toEqual([["Lucky Stadium", 12, 9]]);
   });
 
   it("multiplies the change by the copies held", () => {
@@ -164,6 +189,7 @@ describe("moversOf", () => {
 
 describe("priceOfCopy", () => {
   const point = (printings: Record<string, number>): CardPricePoint => ({
+    language: "en",
     tcgId: "ecard3-54",
     date: "2026-09-14",
     market: printings.normal ?? null,

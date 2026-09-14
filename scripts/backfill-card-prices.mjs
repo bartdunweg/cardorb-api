@@ -54,6 +54,10 @@
  * months again: upsert_card_price_months merges days, so a re-sent month fills its days back in
  * and is never thinned a second time. Keep `--from` within the last six months.
  *
+ * Every reading names the catalogue its card id is from ("en" or "ja", migration 20260915161000):
+ * the two catalogues share ids (neo4-100 to neo4-113 are cards in both), and a row that does not say
+ * is refused.
+ *
  * Service role, because there is nobody to be: an
  * offline script run by a person, writing a table about cards that belongs to
  * nobody.
@@ -66,6 +70,7 @@ import { createClient } from "@supabase/supabase-js";
 import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 import {
   finishPrintingKey,
+  historyKey,
   legacyDays,
   monthsFromDays,
   printingKey,
@@ -176,7 +181,8 @@ async function mapLimit(items, limit, fn) {
  */
 async function pricedIds() {
   const ids = new Set(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
-  for (const id of (await heldNow()).ids) ids.add(id);
+  // The English cards held now: this path reads the English shelf and writes English rows.
+  for (const key of (await heldNow()).ids) if (key.startsWith("en|")) ids.add(key.slice(3));
   return [...ids].sort();
 }
 
@@ -299,12 +305,13 @@ const pickTcgcsv = pointFromTcgplayer;
  *
  * `write` takes the two old series in cents, which is what the weekly and Japanese sources
  * below build; they are stored as the printings 'market' and 'holo'. `writeDays` takes printing
- * days in euros, which is what `daily` builds.
+ * days in euros, which is what `daily` builds. Each row and day says its card's catalogue.
  */
 async function write(rows) {
   await writeDays(
     rows.flatMap((r) =>
       legacyDays({
+        language: r.language,
         tcgId: r.tcg_id,
         date: r.snapshot_date,
         market: r.market_cents == null ? null : r.market_cents / 100,
@@ -433,15 +440,19 @@ async function retried(what, query) {
   throw new Error(`${what} failed: ${last.message}`);
 }
 
-/** Every tcg_id with a reading on one day. */
+/** Every card with a reading on one day, as historyKey() keys it: its catalogue and its id. */
 async function idsOn(date) {
   const ids = new Set();
-  for (let from = 0; ; from += 1000) {
-    const { data } = await retried("Reading card prices", () =>
-      db.rpc("card_ids_priced_on", { p_date: date }).range(from, from + 999),
-    );
-    for (const id of data) ids.add(id);
-    if (data.length < 1000) break;
+  for (const language of ["en", "ja"]) {
+    for (let from = 0; ; from += 1000) {
+      const { data } = await retried("Reading card prices", () =>
+        db
+          .rpc("card_ids_priced_on", { p_date: date, p_language: language })
+          .range(from, from + 999),
+      );
+      for (const id of data) ids.add(historyKey(language, id));
+      if (data.length < 1000) break;
+    }
   }
   return ids;
 }
@@ -469,9 +480,12 @@ async function recent() {
   const end = newestArchive();
   const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
   const japanese = await japaneseIds();
+  // Each card under its own catalogue, so a Japanese card under an English card's id is its own card.
   const everyCard = [
-    ...Object.keys(english).filter((id) => english[id]),
-    ...Object.keys(japanese).filter((id) => !english[id]),
+    ...Object.keys(english)
+      .filter((id) => english[id])
+      .map((id) => historyKey("en", id)),
+    ...Object.keys(japanese).map((id) => historyKey("ja", id)),
   ].slice(0, LIMIT);
   const rate = await rates(CRON_FROM, end);
   const dates = [];
@@ -493,14 +507,17 @@ async function recent() {
     const en = tcgcsvDay(date, CATEGORY_EN);
     const ja = tcgcsvDay(date, CATEGORY_JA);
     const rows = [];
-    for (const id of wanted) {
-      const pick = english[id]
-        ? pickTcgcsv(en.get(english[id].productId))
-        : japanese[id]
-          ? pickTcgcsv(ja.get(japanese[id]))
-          : null;
+    for (const key of wanted) {
+      const [language, id] = [key.slice(0, 2), key.slice(3)];
+      const pick =
+        language === "en" && english[id]
+          ? pickTcgcsv(en.get(english[id].productId))
+          : language === "ja" && japanese[id]
+            ? pickTcgcsv(ja.get(japanese[id]))
+            : null;
       if (!pick) continue;
       rows.push({
+        language,
         tcg_id: id,
         snapshot_date: date,
         market_cents: cents(pick.market, r),
@@ -606,6 +623,7 @@ async function daily() {
           if (euros == null || seen.has(name(subType))) continue;
           seen.add(name(subType));
           month.push({
+            language: "en",
             tcgId: id,
             printing: name(subType),
             date,
@@ -694,9 +712,6 @@ async function japanese() {
   const products = args.includes("--copied-only")
     ? Object.fromEntries(Object.entries(copied).filter(([id]) => mapped[id] == null))
     : { ...copied, ...Object.fromEntries(Object.entries(mapped).filter(([, p]) => p != null)) };
-  // An id that is an English card is the English card's history (neo4-100 to 113 are both).
-  const english = JSON.parse(readFileSync(IDS, "utf8"));
-  for (const id of Object.keys(products)) if (english[id] !== undefined) delete products[id];
   // `--ids a,b`: only these cards, for cards the copy linked or relinked after the run.
   const wanted = flag("--ids")?.split(",").filter(Boolean);
   const ids = Object.keys(products)
@@ -746,6 +761,7 @@ async function japanese() {
         const euros = cents(usd, r);
         if (euros == null) continue;
         month.push({
+          language: "ja",
           tcgId: id,
           printing: printingKey(subType),
           date: used,
@@ -803,6 +819,7 @@ let written = 0;
       const pick = pickTcgcsv(prices.get(products[id].productId));
       if (!pick) continue;
       rows.push({
+        language: "en",
         tcg_id: id,
         snapshot_date: date,
         market_cents: cents(pick.market, r),

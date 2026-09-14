@@ -583,6 +583,7 @@ components:
         speciesId: { type: [integer, "null"] }
         localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it; null on English cards." }
         tcgId: { type: [string, "null"] }
+        catalogue: { type: string, enum: [en, ja], description: "The catalogue `tcgId` is an id of: `ja` for a card of the Japanese catalogue, `en` for every other. Not `language`, which is the copy's. Pass it as `language` to `GET /v1/cards/{tcgId}/prices`." }
         owned: { type: boolean, description: "`false` is a wishlist entry." }
         finish: { oneOf: [{ $ref: "#/components/schemas/Finish" }, { type: "null" }] }
         foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
@@ -1093,6 +1094,15 @@ paths:
       description: The nightly readings for a held card. A card with no readings answers an empty list, not a 404.
       parameters:
         - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
+        - name: language
+          in: query
+          required: false
+          schema: { type: string, enum: [en, ja] }
+          description: >-
+            The catalogue the id is from. English and Japanese ids collide (`neo4-106` is Shining Celebi
+            in English and Lucky Stadium in Japanese), and each card has its own line. Left out, the
+            id's own catalogue where only one has a card by that id, and `en` where both do. A copy's
+            card is Japanese where `catalogue` on its item says `ja`.
       responses:
         "200":
           description: The points, oldest first.
@@ -1104,6 +1114,7 @@ paths:
                 required: [points]
                 properties:
                   points: { type: array, items: { $ref: "#/components/schemas/CardPricePoint" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }

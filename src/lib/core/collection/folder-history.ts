@@ -1,5 +1,6 @@
 import type { CardItem } from "./items";
 import { type CardPricePoint, priceOfCopy } from "./movers";
+import { historyKey } from "../price-months.mjs";
 import type { ValueSnapshot } from "./value-snapshot";
 
 /** How long a card's last reading stands in for a day without one: two weekly readings' gap. */
@@ -10,6 +11,11 @@ const daysBetween = (from: string, to: string) =>
 
 /** A reading with no figure in it is no reading. */
 const hasFigure = (p: CardPricePoint) => p.market != null || p.holo != null;
+
+/** A reading's card: its catalogue and its id, since the two catalogues share ids. */
+const cardOf = (p: CardPricePoint) => historyKey(p.language, p.tcgId);
+/** A copy's card, the same way; null for a copy with no catalogue id. */
+const cardOfItem = (it: CardItem) => (it.tcgId ? historyKey(it.catalogue, it.tcgId) : null);
 
 /**
  * What a list of copies has been worth, day by day, from the per-card readings.
@@ -49,7 +55,8 @@ export function folderSeries(
   const recent = new Map<string, CardPricePoint[]>();
   /** The copy at its newest reading that prices it, no older than CARRY_DAYS. */
   const priceOn = (it: CardItem, date: string): number | null => {
-    const kept = it.tcgId ? recent.get(it.tcgId) : undefined;
+    const card = cardOfItem(it);
+    const kept = card ? recent.get(card) : undefined;
     for (let i = (kept?.length ?? 0) - 1; i >= 0; i--) {
       const p = kept![i]!;
       if (daysBetween(p.date, date) > CARRY_DAYS) break;
@@ -61,10 +68,10 @@ export function folderSeries(
   return [...byDate.keys()].sort().map((date) => {
     for (const p of byDate.get(date)!) {
       if (!hasFigure(p) && !Object.keys(p.printings ?? {}).length) continue;
-      const kept = recent.get(p.tcgId) ?? [];
+      const kept = recent.get(cardOf(p)) ?? [];
       while (kept.length && daysBetween(kept[0]!.date, date) > CARRY_DAYS) kept.shift();
       kept.push(p);
-      recent.set(p.tcgId, kept);
+      recent.set(cardOf(p), kept);
     }
     let value = 0;
     let cards = 0;
@@ -90,7 +97,7 @@ export function folderSeries(
  */
 const pointOn = (date: string, items: CardItem[], standing: CardPricePoint[]): ValueSnapshot =>
   folderSeries(items, standing)[0] ??
-  folderSeries(items, [{ tcgId: "", date, market: null, holo: null }])[0]!;
+  folderSeries(items, [{ language: "en", tcgId: "", date, market: null, holo: null }])[0]!;
 
 /**
  * What the collection held on each day a reading exists, at that day's prices: the Home line.
@@ -129,19 +136,20 @@ export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): Val
   const firstPriced = new Map<string, string>();
   for (const p of prices) {
     if (!hasFigure(p)) continue;
-    const known = firstPriced.get(p.tcgId);
-    if (!known || p.date < known) firstPriced.set(p.tcgId, p.date);
+    const known = firstPriced.get(cardOf(p));
+    if (!known || p.date < known) firstPriced.set(cardOf(p), p.date);
   }
   const countsFrom = (it: CardItem): string | null => {
     const added = it.acquiredAt ? it.acquiredAt.slice(0, 10) : null;
-    const priced = it.tcgId ? firstPriced.get(it.tcgId) : undefined;
+    const card = cardOfItem(it);
+    const priced = card ? firstPriced.get(card) : undefined;
     if (!priced) return added;
     return added && added > priced ? added : priced;
   };
   const last = new Map<string, CardPricePoint>();
   let previous: string | null = null;
   return [...byDate.keys()].sort().flatMap((date) => {
-    for (const p of byDate.get(date)!) if (hasFigure(p)) last.set(p.tcgId, p);
+    for (const p of byDate.get(date)!) if (hasFigure(p)) last.set(cardOf(p), p);
     const held = owned.filter((it) => {
       const from = countsFrom(it);
       return from == null || from <= date;

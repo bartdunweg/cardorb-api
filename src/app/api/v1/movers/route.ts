@@ -5,6 +5,7 @@ import { bearer } from "@/lib/api/viewer";
 import { ALL_READINGS, getCardPrices, getCollection } from "@/lib/core/collection/collection";
 import { copiesHeld } from "@/lib/core/collection/cards-stats";
 import { moversOf } from "@/lib/core/collection/movers";
+import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
 
 /**
  * The caller's cards whose price moved most over a period, up and down.
@@ -48,13 +49,24 @@ export async function GET(req: Request) {
     return apiError(503, "The collection is unavailable.", undefined, {
       headers: readHeaders(req),
     });
-  const ids = [...new Set(sets.flatMap((s) => s.cards.flatMap((c) => (c.tcgId ? [c.tcgId] : []))))];
+  // Each card by its id and its set's catalogue: the two catalogues share ids (neo4-106).
+  const cards = [
+    ...new Map(
+      sets.flatMap((s) =>
+        s.cards.flatMap((c) => {
+          if (!c.tcgId) return [];
+          const card = { tcgId: c.tcgId, language: priceLanguageOf(s.language) };
+          return [[historyKey(card.language, card.tcgId), card] as const];
+        }),
+      ),
+    ).values(),
+  ];
   const days = PERIODS[period as keyof typeof PERIODS];
   const from =
     days === null
       ? ALL_READINGS
       : new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
-  const prices = await getCardPrices(viewer.userId, ids, token, from);
+  const prices = await getCardPrices(viewer.userId, cards, token, from);
   if (prices.failed)
     return unavailable(
       "The price readings could not be read. Try again in a moment.",
