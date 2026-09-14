@@ -1,0 +1,66 @@
+# Checks every morning that the copy the pages read is whole and current, and files an issue
+# where it is not (scripts/data-health.mjs says what each check is for).
+#
+# After the night's jobs: the price job at 21:15 UTC and the catalogue copies at 03:30 and 03:45.
+# Reads through the Management API with the access token migrate.yml already holds, as
+# storage-watch.yml does; no database password, and nothing is written but the issue.
+name: data-health
+
+on:
+  schedule:
+    - cron: "30 7 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the report instead of filing it"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TITLE_PREFIX: "Data health"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Check the copy
+        id: health
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -uo pipefail
+          node scripts/data-health.mjs > report.md
+          status=$?
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "failed=$([ "$status" -eq 1 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          # 1 is a failed check, which is the report's to say; anything else is the script.
+          [ "$status" -le 1 ]
+
+      - name: File or update the issue
+        if: ${{ steps.health.outputs.failed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
+        run: |
+          set -euo pipefail
+          title="$TITLE_PREFIX: $(head -1 report.md | sed 's/^## Data health, //')"
+          existing="$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE_PREFIX\"" --json number --jq '.[0].number // empty')"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run. Would ${existing:+update #$existing}${existing:-open a new issue} titled: $title"
+            exit 0
+          fi
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" -R "$GITHUB_REPOSITORY" --title "$title"
+            gh issue comment "$existing" -R "$GITHUB_REPOSITORY" --body-file report.md
+          else
+            gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body-file report.md
+          fi
