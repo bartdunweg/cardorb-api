@@ -47,6 +47,13 @@ import { resolveSetIds } from "./set-resolve";
 import type { SetCatalogue } from "./catalogue";
 
 /**
+ * The copy's full-art flag, where the row carries one. A row read without the column leaves the
+ * field out, so a client never mistakes "not read" for "not full art".
+ */
+const copiedFullArt = (c: { full_art?: boolean | null }): { fullArt?: boolean } =>
+  typeof c.full_art === "boolean" ? { fullArt: c.full_art } : {};
+
+/**
  * The copy's sets, read whole and kept for ten minutes.
  *
  * A few hundred rows, and every set name resolved wants all of them, so reading them per set
@@ -246,6 +253,7 @@ export async function englishSetFromCopy(
     types: c.types ?? [],
     category: c.category ?? null,
     trainerType: c.trainer_type ?? null,
+    ...copiedFullArt(c),
     tcgId: c.id,
   }));
   return { set, cards: inBinderOrder(cards) };
@@ -347,6 +355,7 @@ export async function languageSetFromCopy(
     types: c.types ?? [],
     category: c.category ?? null,
     trainerType: c.trainer_type ?? null,
+    ...copiedFullArt(c),
     tcgId: c.id,
   }));
   return { set, cards };

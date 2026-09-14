@@ -1904,7 +1904,7 @@ export async function catalogueSetCards(
     db
       .from("catalogue_cards")
       .select(
-        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, local_name",
+        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, local_name",
         counted ? { count: "exact" } : {},
       )
       .eq("language", language)
