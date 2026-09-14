@@ -133,6 +133,32 @@ async function copyFile(source: string, key: string, secret: string): Promise<bo
 }
 
 /**
+ * Whether TCGdex lists a scan folder it has no file behind: its small or large scan answers 404.
+ *
+ * Nine English cards on 2026-09-14, among them Team Magma's Numel (dc1-1), where neither file is
+ * there, and Leftovers (sv03.5-163), whose small scan is and whose large one is not. The record
+ * names the scan, so the catalogue copy never treated them as gaps and asked nobody else. Only a
+ * 404 counts: a TCGdex that does not answer at all is an outage, not a missing picture.
+ */
+export async function tcgdexFolderMissing(stem: string): Promise<boolean> {
+  if (!stem.startsWith("https://assets.tcgdex.net/")) return false;
+  try {
+    const answers = await Promise.all(
+      ["low", "high"].map((size) =>
+        fetch(`${stem}/${size}.webp`, {
+          method: "HEAD",
+          cache: "no-store",
+          signal: catalogueTimeout(),
+        }),
+      ),
+    );
+    return answers.some((a) => a.status === 404);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The address to keep for a picture: ours once it is copied, the source's while it cannot be.
  *
  * A TCGdex folder is two files, the small and the large scan, and becomes ours only when both

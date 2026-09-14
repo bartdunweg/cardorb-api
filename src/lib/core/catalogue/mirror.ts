@@ -33,7 +33,7 @@ import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-sea
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
 import { fullArtOf } from "./full-art";
 import { isScanFile, limitlessScan, storedScan, tcgdexScan, tcgplayerScan } from "./artwork";
-import { canStoreImages, keepImage, storedAddress } from "./image-store";
+import { canStoreImages, keepImage, storedAddress, tcgdexFolderMissing } from "./image-store";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
 
@@ -300,7 +300,13 @@ async function withStoredImages(
     const ours = stem ? storedAddress(stem) : null;
     if (!stem || !ours) return card;
     const image = held.get(card.id) === ours ? ours : await keepImage(stem);
-    return image === stem ? card : { ...card, image, imageHigh: null };
+    if (image !== stem) return { ...card, image, imageHigh: null };
+    /* TCGdex names this scan and has no file behind it (tcgdexFolderMissing). TCGplayer's, by
+       the card's product, is the picture then, copied like any other. */
+    if (!(await tcgdexFolderMissing(stem))) return card;
+    const product = await tcgplayerScan(card.id).catch(() => null);
+    const kept = product ? await keepImage(product) : null;
+    return kept && kept !== product ? { ...card, image: kept, imageHigh: null } : card;
   });
 }
 

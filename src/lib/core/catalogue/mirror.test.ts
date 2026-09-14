@@ -25,10 +25,12 @@ vi.mock("./artwork", async (original) => ({
 /** Our own bucket: off unless a test turns it on. */
 const canStoreImages = vi.fn(async () => false);
 const keepImage = vi.fn(async (address: string | null) => address);
+const tcgdexFolderMissing = vi.fn(async (_stem: string) => false);
 vi.mock("./image-store", async (original) => ({
   ...(await original<Record<string, unknown>>()),
   canStoreImages: () => canStoreImages(),
   keepImage: (...a: unknown[]) => keepImage(...(a as [string | null])),
+  tcgdexFolderMissing: (...a: unknown[]) => tcgdexFolderMissing(...(a as [string])),
 }));
 vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as [])) }));
 
@@ -257,6 +259,7 @@ describe("syncMirror", () => {
     ptcgScan.mockResolvedValue(null);
     canStoreImages.mockResolvedValue(false);
     keepImage.mockImplementation(async (address: string | null) => address);
+    tcgdexFolderMissing.mockResolvedValue(false);
     englishSet.mockImplementation(async (id: string) => ({
       set: set(id, 1, "2024/01/01"),
       cards: [hit(`${id}-001`, "001")],
@@ -470,6 +473,39 @@ describe("syncMirror", () => {
       ],
     });
     expect((await syncMirror(moved.db)).pictures).toBe(1);
+  });
+
+  it("takes TCGplayer's picture where TCGdex names a scan it has no file for (dc1-1)", async () => {
+    englishSets.mockResolvedValue([set("dc1", 1, "2015/03/25")]);
+    englishSet.mockResolvedValue({ set: set("dc1", 1, "2015/03/25"), cards: [hit("dc1-1", "1")] });
+    canStoreImages.mockResolvedValue(true);
+    tcgdexFolderMissing.mockResolvedValue(true);
+    tcgplayerScan.mockResolvedValue(
+      "https://tcgplayer-cdn.tcgplayer.com/product/97047_in_1000x1000.jpg",
+    );
+    keepImage.mockImplementation(async (address: string | null) =>
+      address?.startsWith("https://tcgplayer-cdn")
+        ? "https://images.cardorb.com/tcgplayer/97047.jpg"
+        : address,
+    );
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(tcgplayerScan).toHaveBeenCalledWith("dc1-1");
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.cardorb.com/tcgplayer/97047.jpg" }),
+    ]);
+  });
+
+  it("keeps TCGdex's address when its copy fails for another reason than a missing file", async () => {
+    englishSets.mockResolvedValue([set("dc1", 1, "2015/03/25")]);
+    englishSet.mockResolvedValue({ set: set("dc1", 1, "2015/03/25"), cards: [hit("dc1-1", "1")] });
+    canStoreImages.mockResolvedValue(true);
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(tcgplayerScan).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://assets.tcgdex.net/en/x/dc1/1" }),
+    ]);
   });
 
   it("never guesses at Limitless for a gallery number", async () => {
