@@ -381,6 +381,10 @@ const factsTag = (userId: string) => `collection-facts:${userId}`;
 const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<KeptFacts>) =>
   unstable_cache(
     fill,
+    // v16: seventeen English cards relinked to their own TCGplayer product (2026-09-14): Pokémon
+    // Rumble Starmie and Gyarados priced as Ninetales, seven Brilliant Stars Trainer Gallery
+    // cards as their main-set namesakes, Aquapolis a/b swaps. A v15 entry holds the wrong figure.
+    //
     // v15: a card's facts no longer carry `priceHolo` or `priceShadowless`, and `price` is
     // TCGplayer's alone (2026-09-14). A v14 entry holds Cardmarket's foil figure for its day.
     //
@@ -412,7 +416,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v15", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v16", userId, usdToEur == null ? "-" : String(usdToEur)],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -517,6 +521,8 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v25: seventeen cards relinked to their own TCGplayer product (see collection-facts v16).
+      //
       // v16: a card from a catalogue that is not the English one resolves here now, and
       // CardFacts grew `rarity` and `catalogue` for it. An entry cached under v15 is a
       // SetFacts without either — which for a Japanese card means no rarity and, worse, a
@@ -538,7 +544,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v24", setName, factsSignature(identities)],
+      ["set-facts", "v25", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
