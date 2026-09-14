@@ -29,6 +29,8 @@ import {
   writeCatalogueIndex,
   writeCatalogueSet,
   writeCatalogueSetRecord,
+  listCatalogueSets,
+  updateCatalogueSetArt,
 } from "@/lib/storage/postgres";
 import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-search";
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
@@ -154,6 +156,33 @@ export async function searchMirror(
 }
 
 /** What one run of the sync did, for the cron's answer and its log. */
+/** A logo or symbol address as the copy should hold it: ours once the file is in the bucket. */
+const ownArt = async (address: string | null, storing: boolean): Promise<string | null> =>
+  storing && address && storedAddress(address) ? keepImage(address) : address;
+
+/**
+ * Every set's logo and symbol copied into our bucket, and the copy's addresses pointed at it.
+ *
+ * Bart, 2026-09-14: pages read our own copy, and the art on a shelf tile was the one thing still
+ * loaded from somebody else's host (assets.tcgdex.net, images.pokemontcg.io) on every view. A set
+ * whose file cannot be copied keeps its source address and is tried again the next night.
+ * Returns how many sets had an address rewritten.
+ */
+export async function storeSetArt(db: SupabaseClient): Promise<number> {
+  const rows = await listCatalogueSets(db);
+  const pending = rows.filter(
+    (r) => (r.logo && storedAddress(r.logo)) || (r.symbol && storedAddress(r.symbol)),
+  );
+  let rewritten = 0;
+  await mapLimit(pending, 8, async (r) => {
+    const [logo, symbol] = await Promise.all([ownArt(r.logo, true), ownArt(r.symbol, true)]);
+    if (logo === r.logo && symbol === r.symbol) return;
+    await updateCatalogueSetArt(db, r.id, { logo, symbol });
+    rewritten++;
+  });
+  return rewritten;
+}
+
 export type SyncReport = {
   /** Sets written this run, in the order they finished. */
   copied: string[];
@@ -167,6 +196,8 @@ export type SyncReport = {
    * day (set-facts in collection.ts), so a run that changes any tells the route to drop them.
    */
   pictures: number;
+  /** Sets whose logo or symbol address was moved into our bucket this run (storeSetArt). */
+  art: number;
   ms: number;
 };
 
@@ -369,7 +400,14 @@ export async function syncMirror(
   );
 
   const storing = await canStoreImages();
-  const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, ms: 0 };
+  const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, art: 0, ms: 0 };
+  // Every set's logo and symbol into our bucket first: a few hundred small files, and after the
+  // first night only the sets whose art is not ours yet are looked at.
+  if (storing)
+    report.art = await storeSetArt(db).catch((err) => {
+      console.error("[cron] storing set art failed:", err instanceof Error ? err.message : err);
+      return 0;
+    });
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);
   const worker = async () => {
     for (let id = next(); id !== undefined; id = next()) {
@@ -412,8 +450,8 @@ export async function syncMirror(
           // Resolved here, at night, as the shelf shows it: the promo star, and pokemontcg.io's
           // wordmark where TCGdex has none (set-logos.ts). The pages read this column and ask
           // nobody (copiedEnglishSets, Bart 2026-09-14).
-          logo: (await withSetLogos([set]))[0]?.logo ?? set.logo,
-          symbol: set.symbol,
+          logo: await ownArt((await withSetLogos([set]))[0]?.logo ?? set.logo, storing),
+          symbol: await ownArt(set.symbol, storing),
           abbreviation: set.abbreviation ?? null,
           total: set.total,
           printed_total: set.printedTotal,

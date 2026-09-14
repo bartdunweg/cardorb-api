@@ -2622,6 +2622,7 @@ paths:
                   copied: { type: array, items: { type: string } }
                   failed: { type: array, items: { type: string } }
                   left: { type: integer }
+                  art: { type: integer, description: "Sets whose logo or symbol was moved into images.cardorb.com this run." }
                   ms: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "502": { $ref: "#/components/responses/BadGateway" }

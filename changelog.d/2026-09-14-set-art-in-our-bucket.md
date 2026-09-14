@@ -1,0 +1,1 @@
+- A set's logo and symbol are served from images.cardorb.com: the nightly catalogue run (`GET /v1/cron/catalogue`, now answering `art`) copies each into our bucket and points `catalogue_sets` at the copy, so a shelf tile no longer loads from assets.tcgdex.net or images.pokemontcg.io. A file that cannot be copied keeps its source address and is tried again the next night.

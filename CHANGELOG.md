@@ -49,6 +49,8 @@ if the two have drifted apart.
 
 - Scrydex is the last picture source for an English card no other catalogue pictures: seven trainer kits read by hand (XY Latias, Latios, Bisharp, Wigglytuff; SM Lycanroc, Alolan Raichu; HGSS Gyarados), 170 of the 178 cards without a picture on 2026-09-14. Its stand-in picture is refused by its length. `docs/sources.md` lists every outside source both apps read, what for and when.
 
+- A set's logo and symbol are served from images.cardorb.com: the nightly catalogue run (`GET /v1/cron/catalogue`, now answering `art`) copies each into our bucket and points `catalogue_sets` at the copy, so a shelf tile no longer loads from assets.tcgdex.net or images.pokemontcg.io. A file that cannot be copied keeps its source address and is tried again the next night.
+
 - The collection reads card pictures from images.cardorb.com from the first request: the set catalogue's cache key moves to v7, so entries built before the pictures moved are not read.
 
 - `GET /v1/catalog/sets/{setId}` reads an English set out of the catalogue's copy in Postgres, one query, where it asked TCGdex for the set's record and then its rarities and types. A set the copy holds no cards of yet (jumbo, rc, sp and wp today, or one published since last night) is read from TCGdex as before. All 199 copied sets were compared card by card with the TCGdex answer on 2026-09-14: the same fields, values and order.
