@@ -1,5 +1,8 @@
 import type { BrowseLanguage } from "./tcgdex-browse";
 import JA from "../card-names.ja.generated.json";
+import SPECIES from "../pokedex.generated.json";
+import LOCAL_SPECIES from "../species-names.generated.json";
+import { printedNameOf } from "./english-card-name.mjs";
 
 /**
  * The English name of a card from a catalogue that has none, off the committed maps
@@ -28,7 +31,7 @@ export function englishCardNames(lang: BrowseLanguage): Readonly<Record<string, 
 /**
  * The two names a card shows under: `name` for the app, which is English throughout, and
  * `localName` for what the card itself says, where the two differ. An English name the maps do
- * not have leaves `name` in the catalogue's own script and `localName` null — one name, not the
+ * not have leaves `name` in the catalogue's own script and `localName` null: one name, not the
  * same one twice.
  */
 export function cardNamed(
@@ -40,4 +43,18 @@ export function cardNamed(
   return english && english !== own
     ? { name: english, localName: own }
     : { name: own, localName: null };
+}
+
+/**
+ * What the card itself says, as the copy stores it beside the English name: null for a vintage
+ * set's machine-translated or Latin printed name (english-card-name.mjs, printedNameOf), which is
+ * no name the card prints. E1-069 Weezing showed おしっこ under its name until 2026-09-14.
+ */
+export function printedLocalName(
+  setId: string,
+  localName: string | null,
+  name: string,
+  category: string | null | undefined,
+): string | null {
+  return printedNameOf(setId, localName, name, category, SPECIES, LOCAL_SPECIES);
 }

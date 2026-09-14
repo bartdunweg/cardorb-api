@@ -4,6 +4,7 @@
  *   node scripts/language-card-names.mjs            # every catalogue, print what it found
  *   node scripts/language-card-names.mjs --write    # write the maps
  *   node scripts/language-card-names.mjs --write ja # one catalogue
+ *   node scripts/language-card-names.mjs --again --write  # every card again, rules first
  *
  * ── Why this exists ──
  *
@@ -19,6 +20,12 @@
  * id maps that went with Cardmarket on 2026-09-12. Those names are kept as they are: a name
  * already written is never asked again, so a run only reads what was added since and asks again
  * about what it could not name last time.
+ *
+ * --again asks about every card, for when the rules change: the rules' name replaces a stored one
+ * unless the stored one only adds words the rules cannot read (keepsStoredName). The run of
+ * 2026-09-14 rewrote 957 names that way: 936 the old rules had written ("Clefable Clefable",
+ * "Machamp" for Bruno's Machamp), 14 Cardmarket names of another card ("Melmetal GX" for Lucario &
+ * Melmetal GX), 7 trainers named as a species.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -26,6 +33,7 @@ import { fileURLToPath } from "node:url";
 import {
   englishFromLocalName,
   englishFromRecord,
+  keepsStoredName,
 } from "../src/lib/core/catalogue/english-card-name.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -34,6 +42,7 @@ const LANGUAGES = ["ja"];
 
 const args = process.argv.slice(2);
 const write = args.includes("--write");
+const again = args.includes("--again");
 const only = args.filter((a) => !a.startsWith("--"));
 const languages = only.length ? LANGUAGES.filter((l) => only.includes(l)) : LANGUAGES;
 
@@ -78,16 +87,23 @@ for (const lang of languages) {
   const known = existsSync(namesFile(lang))
     ? JSON.parse(readFileSync(namesFile(lang), "utf8"))
     : {};
-  const wanted = list.map((card) => card.id).filter((id) => id && !known[id]);
+  const wanted = list.map((card) => card.id).filter((id) => id && (again || !known[id]));
 
   process.stdout.write(`${lang}: ${list.length} cards, ${wanted.length} to ask TCGdex… `);
   let fromRecord = 0;
   let asked = 0;
   await mapLimit(wanted, 8, async (id) => {
     const record = await json(`${HOST}/${lang}/cards/${encodeURIComponent(id)}`);
-    const name =
-      englishFromRecord(record, SPECIES) ??
-      englishFromLocalName(lang, record?.name, LOCAL_NAMES, SPECIES);
+    const derived =
+      englishFromRecord(record, SPECIES, LOCAL_NAMES) ??
+      englishFromLocalName(lang, record?.name, LOCAL_NAMES, SPECIES, record?.category);
+    const stored = known[id] ?? null;
+    const name = keepsStoredName(stored, derived, {
+      pokemon: record?.category === "Pokemon",
+      species: SPECIES,
+    })
+      ? stored
+      : derived;
     // Null is written too, so the map lists every card; the next run asks about it again.
     known[id] = name;
     if (name) fromRecord++;

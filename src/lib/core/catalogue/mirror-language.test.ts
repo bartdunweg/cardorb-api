@@ -158,7 +158,7 @@ describe("syncLanguageMirror", () => {
       }),
     ]);
     const stamped = calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert");
-    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 6 });
+    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 7 });
   });
 
   it("takes Limitless's plain print where TCGdex has no file, and TCGdex's where it has", async () => {
@@ -311,11 +311,124 @@ describe("syncLanguageMirror", () => {
     listSetsIn.mockResolvedValue([shelfSet("held"), shelfSet("behind"), shelfSet("new")]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 6 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 5 },
+        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 7 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 6 },
       ],
     });
     const report = await syncLanguageMirror(db, "ja", { parallel: 1 });
     expect(report.copied).toEqual(["new", "behind", "held"]);
+  });
+
+  const tcgplayer = (productId: number, number: string | null, name: string) => ({
+    productId,
+    number,
+    name,
+    rarity: null,
+    cardType: null,
+    hp: null,
+    stage: null,
+    image: `https://tcgplayer-cdn.tcgplayer.com/product/${productId}_in_1000x1000.jpg`,
+  });
+  const upserted = (calls: Call[]) =>
+    calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0] as Record<
+      string,
+      unknown
+    >[];
+
+  // SM10-026 Krabby held Kingler's picture: TCGplayer numbers both 026/095 (2026-09-14).
+  it("links the product whose name agrees and asks again for a picture of another product", async () => {
+    listSetsIn.mockResolvedValue([{ ...shelfSet("SM10"), name: "Double Blaze" }]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("SM10"), name: "Double Blaze", serieId: "SM" },
+      cards: [{ ...card("SM10-026", "026"), name: "Krabby", localName: "クラブ" }],
+    });
+    japanGroups.mockResolvedValue([
+      { groupId: 1, name: "SM10: Double Blaze", abbreviation: "SM10" },
+    ]);
+    groupCards.mockResolvedValue([
+      tcgplayer(573624, "026", "Kingler"),
+      tcgplayer(573625, "026", "Krabby"),
+    ]);
+    const { db, calls } = fakeStore({
+      catalogue_cards: [
+        { id: "SM10-026", image: "https://images.cardorb.com/tcgplayer/573624.jpg" },
+      ],
+    });
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    const [row] = upserted(calls);
+    expect(row).toMatchObject({ id: "SM10-026", tcgplayer_product_id: 573625 });
+    expect(row!.image).not.toBe("https://images.cardorb.com/tcgplayer/573624.jpg");
+  });
+
+  it("keeps a held picture of the product the card still has", async () => {
+    listSetsIn.mockResolvedValue([{ ...shelfSet("SM10"), name: "Double Blaze" }]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("SM10"), name: "Double Blaze", serieId: "SM" },
+      cards: [{ ...card("SM10-026", "026"), name: "Krabby", localName: "クラブ" }],
+    });
+    japanGroups.mockResolvedValue([
+      { groupId: 1, name: "SM10: Double Blaze", abbreviation: "SM10" },
+    ]);
+    groupCards.mockResolvedValue([tcgplayer(573625, "026", "Krabby")]);
+    const held = "https://images.cardorb.com/tcgplayer/573625.jpg";
+    const { db, calls } = fakeStore({ catalogue_cards: [{ id: "SM10-026", image: held }] });
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    expect(upserted(calls)[0]!.image).toBe(held);
+  });
+
+  // Fusion Arts prints Power Tablet at 126; TCGdex's record there is Training Court (2026-09-14).
+  it("reads a card's name and facts from the record TCGdex files under another number", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("S8")]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("S8"), serieId: "S" },
+      cards: [
+        { ...card("S8-126", "126"), name: "Training Court", localName: "トレーニングコート" },
+        { ...card("S8-129", "129"), name: "Power Tablet", localName: "パワータブレット" },
+      ],
+    });
+    json.mockImplementation(async (url: string) => ({
+      category: "Trainer",
+      trainerType: url.endsWith("S8-129") ? "Item" : "Stadium",
+      rarity: "Ultra Rare",
+    }));
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    expect(upserted(calls)[0]).toMatchObject({
+      id: "S8-126",
+      local_id: "126",
+      name: "Power Tablet",
+      local_name: "パワータブレット",
+      trainer_type: "Item",
+    });
+  });
+
+  it("names a card TCGdex names only in Japanese after its product, and drops a machine translation", async () => {
+    listSetsIn.mockResolvedValue([{ ...shelfSet("E1"), name: "Base Expansion Pack" }]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("E1"), name: "Base Expansion Pack", serieId: "E" },
+      cards: [
+        { ...card("E1-069", "069"), name: "Weezing", localName: "おしっこ" },
+        { ...card("E1-078", "078"), name: "ポケモンファンクラブ", localName: null },
+      ],
+    });
+    json.mockImplementation(async (url: string) =>
+      url.endsWith("E1-069") ? { category: "Pokemon" } : { category: "Trainer", rarity: "None" },
+    );
+    japanGroups.mockResolvedValue([{ groupId: 2, name: "Base Expansion Pack", abbreviation: "" }]);
+    groupCards.mockResolvedValue([
+      tcgplayer(10, "069", "Weezing"),
+      tcgplayer(11, "078", "Pokemon Fan Club"),
+    ]);
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    expect(upserted(calls)).toEqual([
+      expect.objectContaining({ id: "E1-069", name: "Weezing", local_name: null, rarity: "None" }),
+      expect.objectContaining({
+        id: "E1-078",
+        name: "Pokemon Fan Club",
+        local_name: "ポケモンファンクラブ",
+        tcgplayer_product_id: 11,
+      }),
+    ]);
   });
 });
