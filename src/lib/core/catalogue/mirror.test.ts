@@ -935,14 +935,42 @@ describe("storeSetArt", () => {
     expect(keepImage).toHaveBeenCalledTimes(2);
   });
 
+  it("takes TCGdex's PNG where it has no WebP, and drops a file that is not there at all", async () => {
+    keepImage.mockImplementation(async (address: string | null) =>
+      address === "https://assets.tcgdex.net/en/xy/xy3/logo.png"
+        ? "https://images.cardorb.com/en/xy/xy3/logo.png"
+        : address,
+    );
+    vi.stubGlobal("fetch", async () => new Response(null, { status: 404 }));
+    const { db, calls } = fakeStore({
+      catalogue_sets: [
+        {
+          id: "xy3",
+          logo: "https://assets.tcgdex.net/en/xy/xy3/logo.webp",
+          symbol: "https://assets.tcgdex.net/univ/xy/xy3/symbol.webp",
+        },
+      ],
+    });
+    expect(await storeSetArt(db)).toBe(1);
+    vi.unstubAllGlobals();
+    expect(calls.find((c) => c.op === "update")?.args[0]).toEqual({
+      logo: "https://images.cardorb.com/en/xy/xy3/logo.png",
+      symbol: null,
+    });
+  });
+
   it("leaves a set as it is when its file cannot be copied", async () => {
     keepImage.mockImplementation(async (address: string | null) => address);
+    vi.stubGlobal("fetch", async () => {
+      throw new Error("offline");
+    });
     const { db, calls } = fakeStore({
       catalogue_sets: [
         { id: "sv01", logo: "https://assets.tcgdex.net/en/sv/sv01/logo.webp", symbol: null },
       ],
     });
     expect(await storeSetArt(db)).toBe(0);
+    vi.unstubAllGlobals();
     expect(calls.some((c) => c.op === "update")).toBe(false);
   });
 });
