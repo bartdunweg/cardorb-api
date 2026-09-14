@@ -13,11 +13,11 @@
 
 import { copiesHeld } from "./cards-stats";
 import { copyPriceOf, shownPrice } from "../price-basis.mjs";
-import type { ShelfPrices } from "../catalogue/tcgcsv";
+import type { ShelfPrices, ShelfPrinting } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { PrintingDay } from "./movers";
-import { LEGACY, printingKey } from "../price-months.mjs";
+import { LEGACY, printingKey, shadowlessKey } from "../price-months.mjs";
 
 /**
  * The reading off an assembled collection: the card's own blended price, the one
@@ -62,13 +62,11 @@ export function snapshotFromSets(
 }
 
 /**
- * Every card TCGplayer prices, on this day, for the lines under cards nobody holds.
+ * Every card TCGplayer prices, on this day, for the line under every card.
  *
  * Read from one shelf's product ids against that shelf's figures from tcgcsv, converted at the
- * day's rate. Written weekly rather than nightly by the cron: some twenty-eight thousand cards a
- * night is gigabytes a year of readings about cards nobody is watching, and a chart over years
- * reads the same at one point a week. A card somebody holds is written nightly by
- * cardPricesFromSets() and takes precedence.
+ * day's rate. Since 2026-09-14 the tcgplayer-prices cron writes these for every linked card, held
+ * or not, from the same files it writes tcgplayer_prices from (cardPricesFromShelf).
  *
  * Until 2026-09-12 this read Cardmarket's guide, so a card nobody held had a line in one market
  * and the card itself showed another.
@@ -100,6 +98,57 @@ export function cardPricesFromTcgcsv(
   }
   return out;
 }
+
+/** A card's TCGplayer link as tcgplayer-ids.generated.json has it: the product, and Base Set's Shadowless run. */
+export type TcgplayerLink = { productId: number; shadowless?: { productId: number } } | null;
+
+/**
+ * One tcgcsv shelf, as the tcgplayer-prices cron reads it, as every linked card's points on this day.
+ *
+ * Every printing of the card's own product (cardPricesFromTcgcsv), then its Shadowless run's where
+ * tcgplayer-links.mjs linked one: TCGplayer files Base Set's Shadowless run as a product of its own,
+ * whose "Unlimited" is the Shadowless run and "1st Edition" the stamped one, so its printings are
+ * renamed by shadowlessKey() ("unlimited-holofoil" to "shadowless-holofoil", "normal" to
+ * "shadowless", "1st-edition-holofoil" kept). The same keys and order scripts/backfill-card-prices.mjs
+ * writes, so a Shadowless or 1st Edition Base Set copy keeps its own line; on a clash the run's
+ * figure is written last and stands, as it does in the backfill.
+ */
+export function cardPricesFromShelf(
+  links: Record<string, TcgplayerLink | undefined>,
+  rows: ShelfPrinting[],
+  usdToEur: number,
+  date: string,
+): PrintingDay[] {
+  const shelf: ShelfPrices = new Map();
+  for (const r of rows) {
+    const printings = shelf.get(r.productId) ?? new Map<string, number>();
+    printings.set(r.printing, r.market);
+    shelf.set(r.productId, printings);
+  }
+  const products: Record<string, number | null> = {};
+  const runs: Record<string, number | null> = {};
+  for (const [id, link] of Object.entries(links)) {
+    products[id] = link?.productId ?? null;
+    if (link?.shadowless) runs[id] = link.shadowless.productId;
+  }
+  const points = cardPricesFromTcgcsv(products, shelf, usdToEur, date);
+  for (const p of cardPricesFromTcgcsv(runs, shelf, usdToEur, date)) {
+    points.push({ ...p, printing: shadowlessKey(p.printing) });
+  }
+  return points;
+}
+
+/**
+ * The points only for cards with no TCGplayer product: the snapshot's share since 2026-09-14.
+ *
+ * A linked card is written by the tcgplayer-prices cron straight from tcgcsv. Writing it again from
+ * the assembled collection is the loop that could store an old price as a new day's (a figure the
+ * collection still carried from a stored row), so the collection writes only what the source cannot.
+ */
+export const unlinkedCardPrices = (
+  points: PrintingDay[],
+  links: Record<string, TcgplayerLink | undefined>,
+): PrintingDay[] => points.filter((p) => links[p.tcgId]?.productId == null);
 
 /**
  * Every held card's own price on this day, for the movers and the lines. Deduped on tcgId.

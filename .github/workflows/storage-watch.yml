@@ -4,8 +4,8 @@
 # The price archive (card_price_months) is most of the database and grows about 20 MB a month
 # with a daily figure for every English card (measured 2026-09-14: 370 MB in all, 321 MB of it
 # the archive). Bart's call that day: stay on the free plan and upgrade when it is needed, with a
-# warning well before. Past 480 MB the snapshot cron keeps the archive weekly instead of daily
-# (DAILY_CEILING in cron/snapshot/route.ts), because at 500 MB Supabase puts the project in
+# warning well before. Past 480 MB the price job keeps the archive weekly instead of daily
+# (DAILY_CEILING in src/app/api/v1/cron/tcgplayer-prices/route.ts), because at 500 MB Supabase puts the project in
 # read-only mode and nobody could add a card. This workflow is what makes that never a surprise.
 #
 # Reads the size through the Management API with the access token migrate.yml already holds; no
@@ -83,7 +83,7 @@ jobs:
           {
             echo "The database is at **$MB MB of $LIMIT_MB MB** ($pct%), measured $(date -u +%Y-%m-%d)."
             echo
-            echo "- At $CEILING_MB MB the nightly price pass writes the archive weekly instead of daily (DAILY_CEILING in \`src/app/api/v1/cron/snapshot/route.ts\`)."
+            echo "- At $CEILING_MB MB the nightly price pass writes the archive weekly instead of daily (DAILY_CEILING in \`src/app/api/v1/cron/tcgplayer-prices/route.ts\`)."
             echo "- At $LIMIT_MB MB Supabase puts the project in read-only mode: nobody can add a card."
             echo "- The plan (Bart, 2026-09-14): upgrade Supabase to Pro when this fires, then raise \`LIMIT_MB\` in \`.github/workflows/storage-watch.yml\` and \`DAILY_CEILING\`, and close this issue."
             echo

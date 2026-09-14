@@ -2486,7 +2486,11 @@ paths:
       tags: [Platform]
       operationId: runSnapshot
       summary: Record today's collection value for every account
-      description: Vercel's cron, with `CRON_SECRET` as the bearer. Sixty seconds at most.
+      description: |
+        Vercel's cron, daily at 04:00 UTC, with `CRON_SECRET` as the bearer. Sixty seconds at most.
+        Writes each account's value point and, where it needs one, its value history again. Card
+        prices (`prices`) are written only for held cards with no TCGplayer product: every card
+        TCGplayer sells gets its day's line from `/v1/cron/tcgplayer-prices`.
       security: [{ cron: [] }]
       responses:
         "200":
@@ -2538,26 +2542,48 @@ paths:
     get:
       tags: [Platform]
       operationId: copyTcgplayerPrices
-      summary: Copy TCGplayer's English shelf in, the market figure per product and printing
+      summary: Copy TCGplayer's English shelf in, the latest figures and the day's price history
       description: |
-        Vercel's cron, daily at 21:15 UTC, with `CRON_SECRET` as the bearer. Reads tcgcsv's files
-        for every English group and writes `tcgplayer_prices`, which the collection prices every
-        card from. Writes nothing when fewer than nine groups in ten answered, so the figures
-        already stored stand.
+        Vercel's cron, daily at 21:15 UTC, with `CRON_SECRET` as the bearer. Five minutes at most.
+        Reads tcgcsv's files for every English group once and writes `tcgplayer_prices`, which the
+        collection prices every card from. Writes nothing at all when fewer than nine groups in ten
+        answered, so the figures already stored stand.
+
+        Then today's point in the price history for every card TCGplayer sells, per printing and
+        in euros at the day's rate, Base Set's Shadowless runs under their own printings. Skipped
+        without a dollar rate, and on any day but Saturday when the database is at 480 MB or more
+        or its size could not be read (`history.skipped` says why). Last, up to three months
+        entirely older than six months are thinned to one figure a week; `thinned` lists them,
+        and is `null` when thinning failed, which does not fail the run.
       security: [{ cron: [] }]
       responses:
         "200":
-          description: What the run wrote.
+          description: What the run wrote. `ok` is false when writing the history failed.
           content:
             application/json:
               schema:
                 type: object
-                required: [ok, groups, answered, written, ms]
+                required: [ok, groups, answered, written, history, thinned, databaseBytes, ms]
                 properties:
                   ok: { type: boolean }
                   groups: { type: integer }
                   answered: { type: integer }
-                  written: { type: integer }
+                  written: { type: integer, description: Printings written to `tcgplayer_prices`. }
+                  history:
+                    type: object
+                    required: [written]
+                    properties:
+                      written: { type: integer, description: Price points written for today. }
+                      skipped: { type: string, description: Why no history was written tonight. }
+                  thinned:
+                    type: [array, "null"]
+                    items:
+                      type: object
+                      required: [month, rows]
+                      properties:
+                        month: { type: string, format: date }
+                        rows: { type: integer }
+                  databaseBytes: { type: [integer, "null"] }
                   ms: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "502": { $ref: "#/components/responses/BadGateway" }

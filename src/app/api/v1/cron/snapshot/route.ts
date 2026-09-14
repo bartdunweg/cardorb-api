@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { refuse, apiError } from "@/lib/api/respond";
-import { assembleFor, usdToEurForRequest } from "@/lib/core/collection/collection";
-import { TCGCSV_CATEGORY, shelfPrices } from "@/lib/core/catalogue/tcgcsv";
+import { assembleFor } from "@/lib/core/collection/collection";
 import {
   cardPricesFromSets,
-  cardPricesFromTcgcsv,
   snapshotFromSets,
+  unlinkedCardPrices,
+  type TcgplayerLink,
 } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
 import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
@@ -36,7 +36,7 @@ import { adminClient } from "@/lib/storage/supabase";
  * fetched; a card's own past can, and scripts/backfill-card-prices.mjs does.
  *
  * This is the half of per-user value history that was missing. The table it writes to shipped
- * with three points in it, put there by hand, and nothing added a fourth — a
+ * with three points in it, put there by hand, and nothing added a fourth: a
  * chart whose whole premise is "recorded over time" that would have shown the
  * same three readings for the rest of its life. The series cannot be fetched
  * (nobody publishes it), so it has to be recorded, and something has to do the
@@ -52,42 +52,23 @@ import { adminClient } from "@/lib/storage/supabase";
  * represent one is not hiding anything.
  *
  * It is also why the guard below is not optional. Row level security is doing
- * nothing here — this client is past it — so the only thing standing between
+ * nothing here (this client is past it), so the only thing standing between
  * this route and a stranger writing to everyone's history is CRON_SECRET, and
  * a missing secret is treated as a closed door rather than an open one.
  *
- * ── Each card's own price, the one the app shows ───────────────────────────
+ * ── The cards TCGplayer has no product for ────────────────────────────────
  *
- * The night reads the same assembly every request reads, and the warm cron has
- * usually just built it, so what the night writes is what the day shows. Every
- * figure in it is TCGplayer's since 2026-09-12 (price-basis.mjs), and every
- * point says so in card_prices.source, whose default is 'cardmarket'.
- *
- * ── Every other card, every night while there is room ──────────────────────
- *
- * Since 2026-09-13 the pass below runs nightly for the English shelf while the database is under
- * DAILY_CEILING, and on Saturdays only above it. What follows is its weekly history.
- *
- *
- * A card nobody held had no line at all: its sheet opened on an empty chart.
- * Since 2026-09-11 the night of a Monday also writes a point for every card the
- * id maps know. It read Cardmarket's guide until 2026-09-12 and reads TCGplayer's
- * figures from tcgcsv now, the English and the Japanese shelf: one market for
- * every line. The held cards stay nightly and are written first, so the weekly
- * pass never overwrites a card's own figure. `?all=1` runs that pass on any day,
- * for a week the cron missed. Saturdays, because the 2.8 million weekly points the
- * archive filled since 2024 are Saturdays (scripts/backfill-card-prices.mjs); this
- * said Mondays and ran on Mondays until 2026-09-12, so the two series never met.
+ * Since 2026-09-14 the day's line for every card TCGplayer sells, held or not, is written by the
+ * one price job (cron/tcgplayer-prices, 21:15 UTC) straight from tcgcsv, the same files it writes
+ * tcgplayer_prices from; its DAILY_CEILING rule and the every-card pass moved there with it. What
+ * is left here is a held card with no TCGplayer product in tcgplayer-ids.generated.json: the night
+ * reads it from the same assembly every request reads, so what the night writes is what the day
+ * shows. Writing a linked card from the collection as well was the loop that could store an old
+ * figure the collection still carried as a new day's, so a linked card is never written here.
  */
 
 export const dynamic = "force-dynamic";
 
-/**
- * Below this the every-card pass runs nightly; at or above it, Saturdays only. The free plan's limit
- * is 500 MB, where Supabase turns the project read-only. Never reached unannounced: from 400 MB
- * .github/workflows/storage-watch.yml opens an issue every Monday. Raise this with an upgrade.
- */
-const DAILY_CEILING = 480 * 1024 * 1024;
 /**
  * One assembly per account, memoised for ten minutes and mostly warm. Sixty
  * seconds is the ceiling this plan allows, and the work is ordered so that a
@@ -138,7 +119,7 @@ export async function GET(req: Request) {
       const point = snapshotFromSets(sets, date, since);
       await writeValueSnapshot(db, userId, point);
       // The read path caches for an hour under this tag and nothing else can
-      // drop it — the manual script writes from plain node, where this does not
+      // drop it: the manual script writes from plain node, where this does not
       // exist. Here it does, so the new point is on the dashboard immediately.
       revalidateTag(valueHistoryTag(userId), { expire: 0 });
 
@@ -172,10 +153,14 @@ export async function GET(req: Request) {
         failed.push(`history:${userId}`);
       }
 
-      // Every held card's own price, for the movers list. Deduped across
-      // accounts as it goes: two people holding the same card is one price, and
-      // writing it twice would only make the two able to disagree.
-      for (const p of cardPricesFromSets(sets, date)) {
+      // Every held card's own price with no TCGplayer product, for the movers list and the lines;
+      // the price job writes every linked one from tcgcsv. Deduped across accounts as it goes: two
+      // people holding the same card is one price, and writing it twice would only make the two
+      // able to disagree.
+      for (const p of unlinkedCardPrices(
+        cardPricesFromSets(sets, date),
+        TCGPLAYER_IDS as Record<string, TcgplayerLink>,
+      )) {
         const days = prices.get(p.tcgId);
         if (days) days.push(p);
         else prices.set(p.tcgId, [p]);
@@ -188,55 +173,6 @@ export async function GET(req: Request) {
       // a partial run rather than as a success.
       console.error(`[cron] snapshot failed for ${userId}:`, err);
       failed.push(userId);
-    }
-  }
-
-  // The weekly pass, added after the held cards so a held card's nightly point
-  // is the one that stands. TCGplayer's figures for both shelves it sells, from
-  // tcgcsv, in the one market every other line is in (since 2026-09-12; it read
-  // Cardmarket's guide before).
-  const url = new URL(req.url);
-  /*
-   * Every night since 2026-09-13, for the English shelf: Bart wanted a price for every card every
-   * day. About 4.3 MB a night in this table, which the free plan's 500 MB holds for a couple of
-   * weeks until card prices are stored a month to a row. So the size is read first, and at
-   * DAILY_CEILING or over the pass goes back to Saturdays; a size nobody could read counts as over.
-   * The Japanese shelf is paused: nobody holds a Japanese card, and its readings were the room.
-   */
-  const databaseBytes = await db
-    .rpc("database_size_bytes")
-    .then(({ data, error }) => (error || typeof data !== "number" ? null : data));
-  const roomForDaily = databaseBytes != null && databaseBytes < DAILY_CEILING;
-  const weekly =
-    url.searchParams.get("all") === "1" || roomForDaily || new Date().getUTCDay() === 6;
-  let everyCard = 0;
-  if (weekly) {
-    try {
-      const rate = await usdToEurForRequest();
-      // No rate, no pass: a week of dollars written as euros would stand in the chart for good.
-      if (rate == null) throw new Error("no dollar rate");
-      const english = Object.fromEntries(
-        Object.entries(TCGPLAYER_IDS as Record<string, { productId: number } | null>).map(
-          ([id, v]) => [id, v?.productId ?? null],
-        ),
-      );
-      const shelves: [Record<string, number | null>, number][] = [[english, TCGCSV_CATEGORY.en]];
-      for (const [products, category] of shelves) {
-        const shelf = await shelfPrices(category);
-        const fresh = new Map<string, ReturnType<typeof cardPricesFromTcgcsv>>();
-        for (const p of cardPricesFromTcgcsv(products, shelf, rate, date)) {
-          // A held card's own printings, written above, stand: the every-card pass adds the rest.
-          if (prices.has(p.tcgId)) continue;
-          const days = fresh.get(p.tcgId);
-          if (days) days.push(p);
-          else fresh.set(p.tcgId, [p]);
-        }
-        for (const [tcgId, days] of fresh) prices.set(tcgId, days);
-        everyCard += fresh.size;
-      }
-    } catch (err) {
-      console.error("[cron] weekly TCGplayer pass failed:", err);
-      failed.push("tcgcsv");
     }
   }
 
@@ -260,9 +196,6 @@ export async function GET(req: Request) {
       written: written.length,
       rebuilt,
       prices: prices.size,
-      everyCard,
-      databaseBytes,
-      everyCardDaily: roomForDaily,
       failed,
     },
     { status: failed.length ? 207 : 200, headers: { "Cache-Control": "no-store" } },

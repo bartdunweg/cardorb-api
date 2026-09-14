@@ -11,11 +11,10 @@
  *                    Pokémon part is read and the rest left packed. Weekly by
  *                    default (a chart over years does not need every day),
  *                    --daily for all of it.
- *   tcgplayer-sales  tcgdex/price-history on GitHub, TCGplayer sales per card
- *                    per day from 2022-11 to 2024-09, older sets only. Averaged
- *                    per week, Near Mint and Lightly Played together, because a
- *                    single sale is not a price. Used for the weeks before
- *                    tcgcsv starts.
+ *
+ *   Nothing older is written. tcgdex/price-history's sales averages (2022-11 to 2023-11, 451
+ *   cards, a source with no sale from December 2023 to February 2024) were read here until
+ *   2026-09-14 and removed with that day's migration (Bart): one kind of figure from 2024-02-08.
  *   japanese         The same tcgcsv archive, its "Pokemon Japan" category
  *                    (85), which it carries from 2024-08-24. TCGplayer sells
  *                    the Japanese shelf too, and its set code and card number
@@ -42,7 +41,12 @@
  *                    archive, a month to a row (daily). `--from` and `--to` resume a stopped run;
  *                    `--ids a,b` fills only those cards, for ones linked since.
  *
- *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|sales|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
+ *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
+ *
+ * Months older than six months are thinned to one figure a week since 2026-09-14 (migration
+ * 20260914150000, thin_oldest_price_month, called by the tcgplayer-prices cron). Do not send those
+ * months again: upsert_card_price_months merges days, so a re-sent month fills its days back in
+ * and is never thinned a second time. Keep `--from` within the last six months.
  *
  * Service role, because there is nobody to be: an
  * offline script run by a person, writing a table about cards that belongs to
@@ -99,8 +103,6 @@ const TCGCSV = "https://tcgcsv.com/tcgplayer";
 /** TCGplayer's categories: Pokémon, and Pokémon Japan. */
 const CATEGORY_EN = 3;
 const CATEGORY_JA = 85;
-/** The oldest sale in tcgdex/price-history. */
-const SALES_FROM = "2022-11-01";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -281,57 +283,13 @@ function tcgcsvDay(date, category = CATEGORY_EN) {
  */
 const pickTcgcsv = pointFromTcgplayer;
 
-// ── tcgdex/price-history: sales, averaged per week ───────────────────────────
-
-const RAW = "https://raw.githubusercontent.com/tcgdex/price-history/master/en";
-/** The conditions that count as a price; a Played or Poor sale says little about the card's value. */
-const CONDITIONS = new Set(["nearmint", "good"]);
-
-/** One card's weekly averages per printing, USD cents: week → { normal?, holo?, reverse? }. */
-async function salesWeeks(tcgId) {
-  const dash = tcgId.lastIndexOf("-");
-  const set = tcgId.slice(0, dash);
-  const local = tcgId.slice(dash + 1);
-  const n = /^\d+$/.test(local) ? String(Number(local)) : local;
-  const file = await fetchJson(`${RAW}/${set}/${n}.tcgplayer.json`, { optional: true });
-  if (!file?.data) return null;
-  const weeks = new Map();
-  for (const [bucket, { history }] of Object.entries(file.data)) {
-    const cut = bucket.lastIndexOf("-");
-    const printing = bucket.slice(0, cut);
-    const condition = bucket.slice(cut + 1);
-    if (!CONDITIONS.has(condition) || !history) continue;
-    for (const [date, sale] of Object.entries(history)) {
-      if (date >= TCGCSV_FROM || !(sale.count > 0)) continue;
-      const w = weekOf(date);
-      const week = weeks.get(w) ?? {};
-      const acc = week[printing] ?? { sum: 0, count: 0 };
-      acc.sum += sale.avg * sale.count;
-      acc.count += sale.count;
-      week[printing] = acc;
-      weeks.set(w, week);
-    }
-  }
-  const out = new Map();
-  for (const [w, week] of weeks) {
-    const avg = (p) => (week[p] && week[p].count >= 2 ? week[p].sum / week[p].count / 100 : null);
-    const normal = avg("normal");
-    const holo = avg("holo");
-    const reverse = avg("reverse");
-    const market = normal ?? holo;
-    if (market == null) continue;
-    out.set(w, { market, holo: reverse ?? (normal != null ? holo : null) });
-  }
-  return out;
-}
-
 // ── Writing ──────────────────────────────────────────────────────────────────
 
 /**
  * Readings written a printing-month to a row (card_price_months, since 2026-09-13), merged into
  * what is stored: a day sent replaces that day and a day not sent stays.
  *
- * `write` takes the two old series in cents, which is what the sales, weekly and Japanese sources
+ * `write` takes the two old series in cents, which is what the weekly and Japanese sources
  * below build; they are stored as the printings 'market' and 'holo'. `writeDays` takes printing
  * days in euros, which is what `daily` builds.
  */
@@ -554,8 +512,8 @@ async function recent() {
  * Every day for every English card, from tcgcsv's first archive to its newest.
  *
  * Bart, 2026-09-13: a price for every card every day, back as far as there is one. tcgcsv starts
- * on 2024-02-08, and that is as far back as TCGplayer's figures go for a whole shelf; the sales
- * history before it covers older sets only. Stored a month to a row (card_price_months), which is
+ * on 2024-02-08, and that is as far back as TCGplayer's figures go for a whole shelf, and as far
+ * back as the archive goes. Stored a month to a row (card_price_months), which is
  * what makes this fit: some twenty-five million day readings as seven hundred thousand month rows.
  * The Japanese shelf is paused and not filled.
  *
@@ -681,11 +639,11 @@ console.log(`${ids.length} cards${DRY ? " (dry run: nothing is written)" : ""}`)
 const products = await tcgplayerIds(ids);
 const withProduct = ids.filter((id) => products[id]);
 console.log(`${withProduct.length} of them have a TCGplayer product`);
-const rate = await rates(SALES_FROM, addDays(CRON_FROM, -1));
+const rate = await rates(TCGCSV_FROM, addDays(CRON_FROM, -1));
 
 let written = 0;
 
-if (ONLY !== "sales") {
+{
   const step = DAILY ? 1 : 7;
   // Ending on the cron's eve, so the last archive read sits right against the first reading.
   const dates = [];
@@ -712,34 +670,6 @@ if (ONLY !== "sales") {
     console.log(`  ${date}: ${rows.length} cards`);
     show(rows);
   }
-}
-
-if (ONLY !== "tcgplayer") {
-  console.log(`sales: ${ids.length} cards to look up`);
-  let found = 0;
-  const batches = await mapLimit(ids, 6, async (id) => {
-    const weeks = await salesWeeks(id);
-    if (!weeks) return [];
-    found += 1;
-    const rows = [];
-    for (const [week, pick] of weeks) {
-      const r = rate.get(week);
-      if (!r) continue;
-      rows.push({
-        tcg_id: id,
-        snapshot_date: week,
-        market_cents: cents(pick.market, r),
-        holo_cents: cents(pick.holo, r),
-        source: "tcgplayer-sales",
-      });
-    }
-    return rows;
-  });
-  const rows = batches.flat();
-  show(rows.filter((r) => r.tcg_id === "base1-4"));
-  await write(rows);
-  written += rows.length;
-  console.log(`  ${found} cards in the archive, ${rows.length} weekly readings`);
 }
 
 console.log(`${DRY ? "Would write" : "Wrote"} ${written} readings.`);
