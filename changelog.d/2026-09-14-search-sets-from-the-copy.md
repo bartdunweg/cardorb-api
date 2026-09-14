@@ -1,0 +1,1 @@
+- `GET /v1/catalog/search` marks what you hold against the English sets out of the catalogue's copy, the list the shelf reads, instead of TCGdex's index on every search; TCGdex is asked only when the copy is empty, or by the search's own fallback for cards the copy does not hold.
