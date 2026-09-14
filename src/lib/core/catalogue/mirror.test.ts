@@ -35,9 +35,19 @@ vi.mock("./image-store", async (original) => ({
   tcgdexFolderMissing: (...a: unknown[]) => tcgdexFolderMissing(...(a as [string])),
 }));
 vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as [])) }));
+/* A set's logo is resolved against pokemontcg.io, a network read with its own tests; here the set
+   keeps the logo it came with. */
+vi.mock("./set-logos", () => ({ withSetLogos: async (sets: unknown[]) => sets }));
 
-const { buildIndex, catalogueIndex, forgetCopy, mirrorQuery, searchMirror, syncMirror } =
-  await import("./mirror");
+const {
+  buildIndex,
+  catalogueIndex,
+  forgetCopy,
+  mirrorQuery,
+  searchMirror,
+  syncMirror,
+  storeSetArt,
+} = await import("./mirror");
 
 type Call = { table: string; op: string; args: unknown[] };
 
@@ -52,6 +62,7 @@ function fakeStore(seed: Record<string, unknown[]> = {}) {
     let head = false;
     const chain: Record<string, unknown> = {};
     for (const op of [
+      "update",
       "select",
       "ilike",
       "contains",
@@ -833,5 +844,50 @@ describe("catalogueIndex", () => {
     const { db, written } = store(stored);
     expect(await catalogueIndex(db)).toEqual(stored);
     expect(written).toHaveLength(0);
+  });
+});
+
+describe("storeSetArt", () => {
+  // Bart, 2026-09-14: a shelf tile's logo was the last thing loaded from somebody else's host.
+  it("copies every set's logo and symbol into our bucket and points the copy at it", async () => {
+    keepImage.mockImplementation(async (address: string | null) =>
+      address?.startsWith("https://assets.tcgdex.net/")
+        ? address.replace("https://assets.tcgdex.net/", "https://images.cardorb.com/")
+        : address,
+    );
+    const { db, calls } = fakeStore({
+      catalogue_sets: [
+        {
+          id: "sv01",
+          logo: "https://assets.tcgdex.net/en/sv/sv01/logo.webp",
+          symbol: "https://assets.tcgdex.net/en/sv/sv01/symbol.webp",
+        },
+        { id: "base1", logo: "https://images.cardorb.com/en/base/base1/logo.webp", symbol: null },
+        { id: "jumbo", logo: null, symbol: null },
+      ],
+    });
+
+    expect(await storeSetArt(db)).toBe(1);
+
+    const updates = calls.filter((c) => c.table === "catalogue_sets" && c.op === "update");
+    expect(updates.map((u) => u.args[0])).toEqual([
+      {
+        logo: "https://images.cardorb.com/en/sv/sv01/logo.webp",
+        symbol: "https://images.cardorb.com/en/sv/sv01/symbol.webp",
+      },
+    ]);
+    // A set whose art is ours already, or that has none, is not asked about.
+    expect(keepImage).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves a set as it is when its file cannot be copied", async () => {
+    keepImage.mockImplementation(async (address: string | null) => address);
+    const { db, calls } = fakeStore({
+      catalogue_sets: [
+        { id: "sv01", logo: "https://assets.tcgdex.net/en/sv/sv01/logo.webp", symbol: null },
+      ],
+    });
+    expect(await storeSetArt(db)).toBe(0);
+    expect(calls.some((c) => c.op === "update")).toBe(false);
   });
 });

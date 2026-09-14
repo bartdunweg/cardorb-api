@@ -1588,6 +1588,16 @@ export async function writeCatalogueSetRecord(
   if (error) throw new Error(`Copying the set ${set.id} failed: ${error.message}`);
 }
 
+/** A set's logo and symbol addresses, rewritten once their files are in our bucket. */
+export async function updateCatalogueSetArt(
+  db: SupabaseClient,
+  id: string,
+  art: { logo: string | null; symbol: string | null },
+): Promise<void> {
+  const { error } = await db.from("catalogue_sets").update(art).eq("id", id);
+  if (error) throw new Error(`Writing the art of the set ${id} failed: ${error.message}`);
+}
+
 /** One set the cron has copied, and when. */
 export type CatalogueSyncRecord = { setId: string; cards: number; syncedAt: string };
 
