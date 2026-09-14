@@ -40,6 +40,8 @@ if the two have drifted apart.
 
 - `GET /v1/movers?days=7|30|90|180|all&top=` answers the caller's cards whose price moved most over the period, up and down, ranked by what the move did to the collection. For Home's movers, over the period its value chart shows.
 
+- `GET /v1/movers` answers each mover's `setAbbr`, the code printed on the card, so a list can show "XYP 124" as the collection does.
+
 - The Bulbapedia naming comparison runs on request instead of every Monday: Bulbapedia refuses GitHub's runners (403 on the first run), so the scheduled workflow would only ever fail. `node scripts/bulbapedia-compare.mjs` from a Mac still reports every difference.
 
 - 65 foil cards in the owner's collection (XY and SM promos, Cosmic Eclipse's GX and Secret Rares, XY-era Secret Rare EX, Double Crisis) are recorded as the holo they are instead of the "normal" TCGdex calls a foil full art, so each is priced at its holo figure.

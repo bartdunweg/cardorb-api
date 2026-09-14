@@ -769,12 +769,13 @@ components:
 
     Mover:
       type: object
-      required: [tcgId, name, number, set, image, copies, was, now, change, pct, total, from, to]
+      required: [tcgId, name, number, set, setAbbr, image, copies, was, now, change, pct, total, from, to]
       properties:
         tcgId: { type: string }
         name: { type: string }
         number: { type: string }
         set: { type: string, description: "The set's name as the collection files it." }
+        setAbbr: { type: [string, "null"], description: "The code printed on the card (\"XYP\"), where the catalogue has one." }
         image: { type: [string, "null"] }
         copies: { type: integer, description: "Copies held." }
         was: { type: number, description: "One copy at the earliest reading in the window, euros." }
