@@ -58,6 +58,13 @@ export type CatalogueMatch = {
   category?: string | null;
   trainerType?: string | null;
   /**
+   * The illustration covers the whole card, as the nightly copy decided it (full-art.ts, written
+   * to catalogue_cards.full_art by mirror.ts and mirror-language.ts). Only a read out of the copy
+   * carries it: a set read live from TCGdex leaves it out rather than guess, and a client falls
+   * back to its own rule for a card without it.
+   */
+  fullArt?: boolean;
+  /**
    * What a card's sheet shows beyond the list's facts, where the read carried it: the nightly copy
    * keeps it (catalogue_cards) so the sheet asks nobody. Only englishSet() fills it.
    */

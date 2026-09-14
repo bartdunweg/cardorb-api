@@ -192,6 +192,18 @@ describe("englishSetFromCopy", () => {
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 
+  it("carries the copy's full-art flag, and leaves it out of a row read without one", async () => {
+    catalogueSetCards.mockResolvedValue([
+      card({ id: "sv03.5-001", local_id: "001", full_art: false }),
+      card({ id: "sv03.5-199", local_id: "199", name: "Charizard ex", full_art: true }),
+      card({ id: "sv03.5-200", local_id: "200", name: "Blastoise ex" }),
+    ]);
+    const found = await englishSetFromCopy("sv03.5");
+    expect(found?.cards[0]?.fullArt).toBe(false);
+    expect(found?.cards[1]?.fullArt).toBe(true);
+    expect(found?.cards[2]).not.toHaveProperty("fullArt");
+  });
+
   it("answers null for a set the copy has no cards of, so the page asks TCGdex", async () => {
     catalogueSetCards.mockResolvedValue([]);
     expect(await englishSetFromCopy("sv03.5")).toBeNull();
@@ -310,6 +322,7 @@ describe("the Japanese shelf out of the copy", () => {
         local_name: "リザードンex",
         rarity: "Double Rare",
         image: "https://images.cardorb.com/limitless/tpc/SV2a/SV2a_6_R_JP_LG.png",
+        full_art: true,
       }),
     ]);
     const found = await languageSetFromCopy("ja", "SV2a");
@@ -322,6 +335,7 @@ describe("the Japanese shelf out of the copy", () => {
       setName: "Pokémon Card 151",
       image: "https://images.cardorb.com/limitless/tpc/SV2a/SV2a_6_R_JP_LG.png",
       imageHigh: null,
+      fullArt: true,
       tcgId: "SV2a-006",
     });
   });

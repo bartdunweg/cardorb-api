@@ -176,6 +176,24 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.set).toHaveProperty("abbreviation", null);
   });
 
+  /* The copy decides full art at night (full-art.ts); the set page filters by it. A card read
+     live from TCGdex has no flag, and the answer leaves it out rather than say false. */
+  it("carries the copy's full-art flag per card, and leaves it out where the read has none", async () => {
+    englishSet.mockResolvedValue({
+      set: SET,
+      cards: [
+        { ...card("1"), fullArt: false },
+        { ...card("2", "Jolteon V"), fullArt: true },
+        card("4", "Charizard"),
+      ],
+    });
+    const body = await (await open()).json();
+
+    expect(body.cards[0].fullArt).toBe(false);
+    expect(body.cards[1].fullArt).toBe(true);
+    expect(body.cards[2]).not.toHaveProperty("fullArt");
+  });
+
   it("does not ask the copy for another language's shelf, which it does not hold", async () => {
     setIn.mockResolvedValue({ set: SET, cards: [card("1")] });
     await open("language=ja", "sv2a");
