@@ -50,7 +50,10 @@ export async function GET(req: Request) {
       return NextResponse.json(report);
     }
     const full = params.get("full") === "1";
-    const report = await syncMirror(db, { full });
+    /* `?sets=ex5.5,mep`: those sets alone, worked out from scratch, for a source added for a few of
+       their cards; the nightly schedule never sets it. */
+    const only = params.get("sets")?.split(",").filter(Boolean);
+    const report = await syncMirror(db, { full, ...(only?.length ? { only } : {}) });
     // The document the browser searches in, rebuilt from what was just copied (mirror.ts).
     if (report.copied.length) await catalogueIndex(db);
     /* The collection keeps each set's facts, pictures included, for a day under the catalogue
