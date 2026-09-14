@@ -1,0 +1,140 @@
+import { describe, expect, it } from "vitest";
+import REVERSE_HOLO from "./reverse-holo.generated.json";
+import { beforeReverseHolos, decideSet, energyKinds } from "./reverse-holo-rules.mjs";
+
+type Vote = boolean | null;
+const card = (setId: string, localId: string, name: string, rarity = "Common") => ({
+  id: `${setId}-${localId}`,
+  set_id: setId,
+  local_id: localId,
+  name,
+  rarity,
+});
+const row = (c: ReturnType<typeof card>, tcgdex: Vote, tcgplayer: Vote, scrydex: Vote) => ({
+  card: c,
+  tcgdex,
+  tcgplayer,
+  scrydex,
+});
+const general = () => ({ has: true, rule: "every card but Ultra Rares" });
+const committed = REVERSE_HOLO as unknown as {
+  sets: Record<string, { bulbapedia: string | null; energyExceptions?: string[] }>;
+  holoBeforeReverses: string[];
+  cards: Record<string, boolean>;
+};
+
+/**
+ * Reverse holos began with Legendary Collection (24 May 2002; Bulbapedia, "Holofoil": "Legendary
+ * Collection was the first set to include Reverse Holographic cards").
+ */
+describe("the era rule", () => {
+  it("gives no card sold before Legendary Collection a plain reverse, whatever the witnesses say", () => {
+    // Southern Islands Mew: TCGdex files it as a reverse, TCGplayer as "Reverse Holofoil"; it is a holo.
+    const mew = card("si1", "1", "Mew");
+    expect(beforeReverseHolos(mew, "2001/07/31")).toBe(true);
+    expect(beforeReverseHolos(card("lc", "1", "Alakazam"), "2002/05/24")).toBe(false);
+    const { decisions, era } = decideSet([row(mew, true, true, false)], {
+      released: "2001/07/31",
+      bulbapedia: () => null,
+    });
+    expect(era).toBe(true);
+    expect(decisions["si1-1"]).toBe(false);
+  });
+
+  it("reads Wizards Black Star Promos per card: to number 46, May 2002", () => {
+    expect(beforeReverseHolos(card("basep", "34", "Entei"), "1999/07/01")).toBe(true);
+    expect(beforeReverseHolos(card("basep", "47", "Aerodactyl"), "1999/07/01")).toBe(false);
+  });
+
+  it("holds in the committed decisions", () => {
+    const eraSets = Object.entries(committed.sets).filter(([, s]) =>
+      s.bulbapedia?.startsWith("none: sold before"),
+    );
+    expect(eraSets.map(([id]) => id)).toEqual(
+      expect.arrayContaining(["base1", "neo4", "si1", "gym1", "basep"]),
+    );
+    for (const [setId] of eraSets.filter(([id]) => id !== "basep"))
+      for (const [id, has] of Object.entries(committed.cards))
+        if (id.startsWith(`${setId}-`)) expect(has, id).toBe(false);
+    for (const n of [33, 34, 35]) expect(committed.cards[`basep-${n}`]).toBe(false);
+    expect(committed.holoBeforeReverses).toContain("si1-1");
+  });
+});
+
+describe("basic Energy decided as one kind", () => {
+  const energies = [
+    "Grass",
+    "Fire",
+    "Water",
+    "Lightning",
+    "Psychic",
+    "Fighting",
+    "Darkness",
+    "Metal",
+  ];
+
+  // Diamond & Pearl, 2026-09-14: TCGdex no on all eight; TCGplayer yes on Fighting and Darkness,
+  // Scrydex yes on Fire, Darkness and Metal. Taken card by card, Darkness had a reverse and the rest
+  // did not.
+  it("does not split a set's basic Energies on noisy witnesses", () => {
+    const votes: Record<string, [Vote, Vote, Vote]> = {
+      Fire: [false, false, true],
+      Fighting: [false, true, false],
+      Darkness: [false, true, true],
+      Metal: [false, false, true],
+    };
+    const rows = energies.map((e, i) =>
+      row(card("dp1", String(123 + i), `${e} Energy`), ...(votes[e] ?? [false, false, false])),
+    );
+    const { decisions, exceptions } = decideSet(rows, { bulbapedia: general });
+    expect(new Set(Object.values(decisions))).toEqual(new Set([false]));
+    expect(exceptions).toEqual([]);
+  });
+
+  it("lets a card leave its kind only where every witness, at least two, says so", () => {
+    // Power Keepers: Darkness and Metal Energy (Rare) with a reverse on TCGplayer and Scrydex, beside
+    // six Rare basics with none.
+    const rows = [
+      row(card("ex16", "87", "Darkness Energy", "Rare"), null, true, true),
+      row(card("ex16", "88", "Metal Energy", "Rare"), null, true, true),
+      ...energies
+        .slice(0, 6)
+        .map((e, i) =>
+          row(card("ex16", String(103 + i), `${e} Energy`, "Rare"), null, false, false),
+        ),
+    ];
+    const { decisions, exceptions } = decideSet(rows, { bulbapedia: general });
+    expect(exceptions).toEqual(["ex16-87", "ex16-88"]);
+    expect(decisions["ex16-103"]).toBe(false);
+    // One witness alone moves nothing.
+    const lone = decideSet(
+      [row(card("hgss1", "117", "Water Energy"), false, false, true), ...rows.slice(2)],
+      { bulbapedia: general },
+    );
+    expect(lone.decisions["hgss1-117"]).toBe(false);
+  });
+
+  it("keeps a rarity or a repeated run of names a kind of its own", () => {
+    const kinds = energyKinds([
+      card("sve", "001", "Grass Energy"),
+      card("sve", "009", "Grass Energy"),
+      card("ex9", "86", "Darkness Energy", "Rare"),
+      card("ex9", "101", "Grass Energy", "Holo Rare"),
+    ]);
+    expect(kinds.get("sve-001")).not.toBe(kinds.get("sve-009"));
+    expect(kinds.get("ex9-86")).not.toBe(kinds.get("ex9-101"));
+  });
+
+  it("holds in the committed decisions for Diamond & Pearl and HeartGold SoulSilver", () => {
+    for (const [setId, from] of [
+      ["dp1", 123],
+      ["hgss1", 115],
+    ] as const) {
+      const decided = new Set(
+        Array.from({ length: 8 }, (_, i) => committed.cards[`${setId}-${from + i}`]),
+      );
+      expect(decided, setId).toEqual(new Set([false]));
+      expect(committed.sets[setId]?.energyExceptions).toBeUndefined();
+    }
+  });
+});

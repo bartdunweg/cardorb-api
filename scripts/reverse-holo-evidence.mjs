@@ -37,6 +37,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { decideSet, splitKinds } from "../src/lib/core/reverse-holo-rules.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const CORE = join(ROOT, "src", "lib", "core");
@@ -198,7 +199,7 @@ function bulbapedia(card) {
 
 const cards = (
   await query(
-    "select c.id, c.set_id, c.local_id, c.name, c.rarity, c.variants, s.name as set_name, s.serie_id from catalogue_cards c left join catalogue_sets s on s.language = c.language and s.id = c.set_id where c.language = 'en' and coalesce(s.serie_id, '') <> 'tcgp'",
+    "select c.id, c.set_id, c.local_id, c.name, c.rarity, c.variants, s.name as set_name, s.serie_id, s.release_date::text as released from catalogue_cards c left join catalogue_sets s on s.language = c.language and s.id = c.set_id where c.language = 'en' and coalesce(s.serie_id, '') <> 'tcgp'",
   )
 ).sort((a, b) => a.id.localeCompare(b.id));
 console.error(`catalogue: ${cards.length} English cards`);
@@ -325,28 +326,19 @@ for (const rows of bySet.values()) {
 
 const decisions = {};
 const sets = {};
-const flag = (v) => (v == null ? "-" : v ? "1" : "0");
+/** Cards sold before reverse holos whose foil print TCGdex files as a reverse: the holo it is. */
+const holoBeforeReverses = [];
 for (const [setId, rows] of [...bySet].sort(([a], [b]) => a.localeCompare(b))) {
-  const disputed = [];
-  let reverse = 0;
-  let rule = null;
-  for (const w of rows) {
-    const b = bulbapedia(w.card);
-    rule ??= b?.rule ?? null;
-    const votes = [w.tcgdex, w.tcgplayer, w.scrydex].filter((v) => v != null);
-    if (!votes.length) continue;
-    const yes = votes.filter(Boolean).length;
-    const no = votes.length - yes;
-    /* Bulbapedia decides outright only where its page names the cards one by one (pop8, pop9); a
-       general rule breaks a tie and nothing more. */
-    const has = b?.decides ? b.has : yes !== no ? yes > no : (b?.has ?? w.tcgdex ?? yes > 0);
-    decisions[w.card.id] = has;
-    if (has) reverse++;
-    if ((yes && no) || (b?.decides && votes.some((v) => v !== b.has)))
-      disputed.push(
-        `${w.card.id} tcgdex ${flag(w.tcgdex)} tcgplayer ${flag(w.tcgplayer)} scrydex ${flag(w.scrydex)} bulbapedia ${flag(b?.has)}: ${has ? "yes" : "no"}`,
+  const decided = decideSet(rows, { released: rows[0].card.released, bulbapedia });
+  Object.assign(decisions, decided.decisions);
+  for (const w of rows)
+    if (decided.era && decided.decisions[w.card.id] === false) {
+      const named = (Array.isArray(w.card.variants) ? w.card.variants : []).some(
+        (v) => v.type === "reverse" && !v.foil,
       );
-  }
+      if (named) holoBeforeReverses.push(w.card.id);
+    }
+  const splits = splitKinds(rows, decided.decisions);
   const count = (key) => rows.filter((w) => w[key]).length;
   const answered = (key) => rows.filter((w) => w[key] != null).length;
   sets[setId] = {
@@ -355,9 +347,18 @@ for (const [setId, rows] of [...bySet].sort(([a], [b]) => a.localeCompare(b))) {
     tcgdex: `${count("tcgdex")}/${answered("tcgdex")}`,
     tcgplayer: `${count("tcgplayer")}/${answered("tcgplayer")}`,
     scrydex: `${count("scrydex")}/${answered("scrydex")}`,
-    bulbapedia: rule,
-    reverse,
-    ...(disputed.length ? { disputed } : {}),
+    bulbapedia: decided.era ? "none: sold before Legendary Collection" : decided.rule,
+    reverse: Object.values(decided.decisions).filter(Boolean).length,
+    ...(decided.exceptions.length ? { energyExceptions: decided.exceptions } : {}),
+    ...(splits.length
+      ? {
+          splits: splits.map(
+            (k) =>
+              `${k.kind}: ${k.yes.length} with (${k.yes.slice(0, 4).join(", ")}), ${k.no.length} without (${k.no.slice(0, 4).join(", ")})`,
+          ),
+        }
+      : {}),
+    ...(decided.disputed.length ? { disputed: decided.disputed } : {}),
   };
 }
 
@@ -365,4 +366,8 @@ const disputedCount = Object.values(sets).reduce((n, s) => n + (s.disputed?.leng
 console.error(
   `decided ${Object.keys(decisions).length} cards: ${Object.values(decisions).filter(Boolean).length} with a plain reverse; ${disputedCount} disputed`,
 );
-if (!DRY) writeFileSync(OUT, `${JSON.stringify({ sets, cards: decisions }, null, 1)}\n`);
+if (!DRY)
+  writeFileSync(
+    OUT,
+    `${JSON.stringify({ sets, holoBeforeReverses: holoBeforeReverses.sort(), cards: decisions }, null, 1)}\n`,
+  );

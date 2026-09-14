@@ -120,6 +120,10 @@ describe("printingsOf", () => {
       "normal",
       "reverse-holo",
     ]);
+    // Southern Islands Mew, sold before reverse holos existed: TCGdex's reverse is its holo.
+    expect(printingsOf([{ type: "reverse" }], "si1-1")).toEqual([
+      { finish: "holo", foilPattern: null },
+    ]);
     // No card id, or one the evidence run never saw: TCGdex's word, less what TCGplayer rules out.
     expect(printingsOf(plain, null).map((p) => p.finish)).toEqual(["normal", "reverse-holo"]);
     expect(reverseHoloExists("no-such-card")).toBeNull();

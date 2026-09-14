@@ -100,8 +100,12 @@ export function printingsOf(
 ): Printing[] {
   const seen = new Map<string, Printing>();
   const sold = tcgId ? finishPrintsFor(tcgId) : null;
+  const holoNotReverse = tcgId ? HOLO_BEFORE_REVERSES.has(tcgId) : false;
   for (const v of variants ?? []) {
-    const base = FINISH_OF[v.type ?? ""];
+    /* A card sold before reverse holos existed (Southern Islands, Wizards promos to May 2002) whose
+       foil print TCGdex files as a reverse: it is the holo. */
+    const type = holoNotReverse && v.type === "reverse" && !v.foil ? "holo" : v.type;
+    const base = FINISH_OF[type ?? ""];
     if (!base) continue;
     const foil = (v.foil ?? "").toLowerCase();
     const ball = BALL_OF[foil];
@@ -137,6 +141,9 @@ type TcgplayerLink = { productId?: number; variants?: string[]; shadowless?: unk
 const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
 
 const REVERSE_DECISIONS = (REVERSE_HOLO as { cards: Record<string, boolean> }).cards;
+const HOLO_BEFORE_REVERSES = new Set(
+  (REVERSE_HOLO as { holoBeforeReverses?: string[] }).holoBeforeReverses ?? [],
+);
 
 /**
  * Whether a plain reverse holo of this English card exists, as scripts/reverse-holo-evidence.mjs

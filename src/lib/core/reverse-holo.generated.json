@@ -114,7 +114,7 @@
    "tcgdex": "0/102",
    "tcgplayer": "0/102",
    "scrydex": "0/102",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "base2": {
@@ -123,7 +123,7 @@
    "tcgdex": "0/64",
    "tcgplayer": "0/64",
    "scrydex": "0/64",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "base3": {
@@ -132,7 +132,7 @@
    "tcgdex": "0/62",
    "tcgplayer": "0/62",
    "scrydex": "0/62",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "base4": {
@@ -141,7 +141,7 @@
    "tcgdex": "0/130",
    "tcgplayer": "0/130",
    "scrydex": "0/130",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "base5": {
@@ -150,7 +150,7 @@
    "tcgdex": "0/83",
    "tcgplayer": "0/83",
    "scrydex": "0/83",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "basep": {
@@ -159,10 +159,12 @@
    "tcgdex": "3/53",
    "tcgplayer": "2/53",
    "scrydex": "2/53",
-   "bulbapedia": null,
-   "reverse": 2,
+   "bulbapedia": "none: sold before Legendary Collection",
+   "reverse": 0,
    "disputed": [
-    "basep-33 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia -: no"
+    "basep-33 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia -: no (sold before Legendary Collection)",
+    "basep-34 tcgdex 1 tcgplayer 1 scrydex 1 bulbapedia -: no (sold before Legendary Collection)",
+    "basep-35 tcgdex 1 tcgplayer 1 scrydex 1 bulbapedia -: no (sold before Legendary Collection)"
    ]
   },
   "bog": {
@@ -172,7 +174,10 @@
    "tcgplayer": "5/9",
    "scrydex": "5/9",
    "bulbapedia": null,
-   "reverse": 5
+   "reverse": 5,
+   "splits": [
+    "Promo: 5 with (bog-1, bog-2, bog-3, bog-8), 4 without (bog-4, bog-5, bog-6, bog-7)"
+   ]
   },
   "bw1": {
    "name": "Black & White",
@@ -181,9 +186,12 @@
    "tcgplayer": "104/115",
    "scrydex": "105/115",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 105,
+   "reverse": 104,
+   "splits": [
+    "Common: 36 with (bw1-1, bw1-100, bw1-104, bw1-13), 8 without (bw1-105, bw1-106, bw1-107, bw1-108)"
+   ],
    "disputed": [
-    "bw1-108 tcgdex - tcgplayer 0 scrydex 1 bulbapedia 1: yes"
+    "bw1-108 tcgdex - tcgplayer 0 scrydex 1 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)"
    ]
   },
   "bw10": {
@@ -193,7 +201,10 @@
    "tcgplayer": "85/105",
    "scrydex": "85/105",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 85
+   "reverse": 85,
+   "splits": [
+    "Rare: 15 with (bw10-10, bw10-13, bw10-2, bw10-20), 4 without (bw10-92, bw10-93, bw10-94, bw10-95)"
+   ]
   },
   "bw11": {
    "name": "Legendary Treasures",
@@ -202,7 +213,11 @@
    "tcgplayer": "101/140",
    "scrydex": "101/140",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 101
+   "reverse": 101,
+   "splits": [
+    "Common: 27 with (bw11-1, bw11-10, bw11-103, bw11-104), 10 without (bw11-RC1, bw11-RC15, bw11-RC16, bw11-RC17)",
+    "Uncommon: 32 with (bw11-106, bw11-107, bw11-109, bw11-11), 9 without (bw11-RC10, bw11-RC12, bw11-RC13, bw11-RC14)"
+   ]
   },
   "bw2": {
    "name": "Emerging Powers",
@@ -259,7 +274,10 @@
    "tcgplayer": "130/153",
    "scrydex": "130/153",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 130
+   "reverse": 130,
+   "splits": [
+    "Rare: 17 with (bw7-10, bw7-100, bw7-102, bw7-125), 4 without (bw7-137, bw7-138, bw7-139, bw7-140)"
+   ]
   },
   "bw8": {
    "name": "Plasma Storm",
@@ -268,7 +286,10 @@
    "tcgplayer": "119/138",
    "scrydex": "119/138",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 119
+   "reverse": 119,
+   "splits": [
+    "Rare: 26 with (bw8-10, bw8-100, bw8-101, bw8-107), 3 without (bw8-128, bw8-129, bw8-130)"
+   ]
   },
   "bw9": {
    "name": "Plasma Freeze",
@@ -277,7 +298,10 @@
    "tcgplayer": "100/122",
    "scrydex": "100/122",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 100
+   "reverse": 100,
+   "splits": [
+    "Rare: 22 with (bw9-10, bw9-11, bw9-22, bw9-23), 2 without (bw9-107, bw9-108)"
+   ]
   },
   "bwp": {
    "name": "BW Black Star Promos",
@@ -287,6 +311,10 @@
    "scrydex": "4/101",
    "bulbapedia": null,
    "reverse": 3,
+   "splits": [
+    "Common: 1 with (bwp-BW52), 69 without (bwp-BW01, bwp-BW02, bwp-BW03, bwp-BW06)",
+    "Rare: 2 with (bwp-BW41, bwp-BW42), 28 without (bwp-BW04, bwp-BW05, bwp-BW09, bwp-BW20)"
+   ],
    "disputed": [
     "bwp-BW39 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
     "bwp-BW41 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
@@ -319,7 +347,11 @@
    "tcgplayer": "87/106",
    "scrydex": "87/106",
    "bulbapedia": "every card but the Pokémon LEGEND and Shiny cards; basic Energy only as reverses",
-   "reverse": 87
+   "reverse": 87,
+   "splits": [
+    "Holo Rare: 22 with (col1-1, col1-10, col1-11, col1-12), 11 without (col1-SL1, col1-SL10, col1-SL11, col1-SL2)",
+    "Common: 23 with (col1-53, col1-54, col1-55, col1-56), 8 without (col1-88, col1-89, col1-90, col1-91)"
+   ]
   },
   "dc1": {
    "name": "Double Crisis",
@@ -346,12 +378,15 @@
    "tcgplayer": "121/130",
    "scrydex": "122/130",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 120,
+   "reverse": 119,
+   "splits": [
+    "Common: 39 with (dp1-100, dp1-101, dp1-102, dp1-103), 8 without (dp1-123, dp1-124, dp1-125, dp1-126)"
+   ],
    "disputed": [
-    "dp1-124 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia 1: no",
-    "dp1-128 tcgdex 0 tcgplayer 1 scrydex 0 bulbapedia 1: no",
-    "dp1-129 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia 1: yes",
-    "dp1-130 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia 1: no"
+    "dp1-124 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)",
+    "dp1-128 tcgdex 0 tcgplayer 1 scrydex 0 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)",
+    "dp1-129 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)",
+    "dp1-130 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)"
    ]
   },
   "dp2": {
@@ -361,7 +396,10 @@
    "tcgplayer": "120/124",
    "scrydex": "120/124",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 120
+   "reverse": 120,
+   "splits": [
+    "Holo Rare: 18 with (dp2-1, dp2-10, dp2-11, dp2-12), 1 without (dp2-124)"
+   ]
   },
   "dp3": {
    "name": "Secret Wonders",
@@ -410,6 +448,9 @@
    "scrydex": "98/106",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
    "reverse": 98,
+   "splits": [
+    "Holo Rare LV.X: 3 with (dp7-SH1, dp7-SH2, dp7-SH3), 5 without (dp7-100, dp7-96, dp7-97, dp7-98)"
+   ],
    "disputed": [
     "dp7-SH1 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia 1: yes",
     "dp7-SH2 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia 1: yes",
@@ -442,14 +483,17 @@
    "scrydex": "159/165",
    "bulbapedia": "every card but the basic Energy",
    "reverse": 159,
+   "splits": [
+    "Common: 49 with (ecard1-100, ecard1-101, ecard1-102, ecard1-103), 6 without (ecard1-160, ecard1-161, ecard1-162, ecard1-163)"
+   ],
    "disputed": [
     "ecard1-128 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia 1: yes",
-    "ecard1-160 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no",
-    "ecard1-161 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no",
-    "ecard1-162 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no",
-    "ecard1-163 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no",
-    "ecard1-164 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no",
-    "ecard1-165 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no",
+    "ecard1-160 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no (decided with the set's Common basic Energy, run 1)",
+    "ecard1-161 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no (decided with the set's Common basic Energy, run 1)",
+    "ecard1-162 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no (decided with the set's Common basic Energy, run 1)",
+    "ecard1-163 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no (decided with the set's Common basic Energy, run 1)",
+    "ecard1-164 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no (decided with the set's Common basic Energy, run 1)",
+    "ecard1-165 tcgdex 1 tcgplayer 0 scrydex 0 bulbapedia 0: no (decided with the set's Common basic Energy, run 1)",
     "ecard1-94 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia 1: yes"
    ]
   },
@@ -540,7 +584,10 @@
    "tcgplayer": "98/111",
    "scrydex": "98/111",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 98
+   "reverse": 98,
+   "splits": [
+    "Holo Rare: 17 with (ex13-1, ex13-10, ex13-11, ex13-12), 6 without (ex13-105, ex13-106, ex13-107, ex13-108)"
+   ]
   },
   "ex14": {
    "name": "Crystal Guardians",
@@ -567,7 +614,14 @@
    "tcgplayer": "91/108",
    "scrydex": "91/108",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 91
+   "reverse": 91,
+   "energyExceptions": [
+    "ex16-87",
+    "ex16-88"
+   ],
+   "splits": [
+    "Rare: 15 with (ex16-14, ex16-15, ex16-16, ex16-17), 6 without (ex16-103, ex16-104, ex16-105, ex16-106)"
+   ]
   },
   "ex2": {
    "name": "Sandstorm",
@@ -655,7 +709,10 @@
    "tcgplayer": "89/107",
    "scrydex": "89/107",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 89
+   "reverse": 89,
+   "splits": [
+    "Holo Rare: 11 with (ex9-1, ex9-10, ex9-11, ex9-2), 6 without (ex9-101, ex9-102, ex9-103, ex9-104)"
+   ]
   },
   "exu": {
    "name": "Unseen Forces Unown Collection",
@@ -683,6 +740,12 @@
    "scrydex": "70/117",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
    "reverse": 70,
+   "splits": [
+    "Common: 28 with (g1-14, g1-16, g1-19, g1-21), 13 without (g1-RC1, g1-RC11, g1-RC12, g1-RC14)",
+    "Rare: 11 with (g1-15, g1-23, g1-36, g1-39), 1 without (g1-28a)",
+    "Uncommon: 26 with (g1-20, g1-31, g1-34, g1-4), 12 without (g1-RC10, g1-RC13, g1-RC15, g1-RC16)",
+    "Holo Rare: 5 with (g1-27, g1-35, g1-42, g1-45), 2 without (g1-25, g1-29)"
+   ],
    "disputed": [
     "g1-73a tcgdex - tcgplayer 0 scrydex 1 bulbapedia 1: yes"
    ]
@@ -693,7 +756,7 @@
    "tcgdex": "0/132",
    "tcgplayer": "0/132",
    "scrydex": "0/132",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "gym2": {
@@ -702,7 +765,7 @@
    "tcgdex": "0/132",
    "tcgplayer": "0/132",
    "scrydex": "0/132",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "hgss1": {
@@ -712,10 +775,13 @@
    "tcgplayer": "106/124",
    "scrydex": "107/124",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 106,
+   "reverse": 105,
+   "splits": [
+    "Common: 32 with (hgss1-57, hgss1-58, hgss1-59, hgss1-60), 8 without (hgss1-115, hgss1-116, hgss1-117, hgss1-118)"
+   ],
    "disputed": [
-    "hgss1-115 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia 1: yes",
-    "hgss1-117 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia 1: no"
+    "hgss1-115 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)",
+    "hgss1-117 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia 1: no (decided with the set's Common basic Energy, run 1)"
    ]
   },
   "hgss2": {
@@ -801,7 +867,11 @@
    "tcgplayer": "38/295",
    "scrydex": "38/295",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 38
+   "reverse": 38,
+   "splits": [
+    "Common: 10 with (me02.5-184, me02.5-186, me02.5-189, me02.5-193), 74 without (me02.5-001, me02.5-004, me02.5-007, me02.5-008)",
+    "Uncommon: 28 with (me02.5-180, me02.5-181, me02.5-182, me02.5-183), 41 without (me02.5-002, me02.5-005, me02.5-009, me02.5-013)"
+   ]
   },
   "me03": {
    "name": "Perfect Order",
@@ -863,7 +933,7 @@
    "tcgdex": "0/1",
    "tcgplayer": "0/1",
    "scrydex": "0/1",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "neo1": {
@@ -872,7 +942,7 @@
    "tcgdex": "0/111",
    "tcgplayer": "0/111",
    "scrydex": "0/111",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "neo2": {
@@ -881,7 +951,7 @@
    "tcgdex": "0/75",
    "tcgplayer": "0/75",
    "scrydex": "0/75",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "neo3": {
@@ -890,7 +960,7 @@
    "tcgdex": "0/66",
    "tcgplayer": "0/66",
    "scrydex": "0/66",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "neo4": {
@@ -899,7 +969,7 @@
    "tcgdex": "0/113",
    "tcgplayer": "0/113",
    "scrydex": "0/113",
-   "bulbapedia": null,
+   "bulbapedia": "none: sold before Legendary Collection",
    "reverse": 0
   },
   "np": {
@@ -909,7 +979,10 @@
    "tcgplayer": "3/33",
    "scrydex": "3/40",
    "bulbapedia": null,
-   "reverse": 3
+   "reverse": 3,
+   "splits": [
+    "Common: 3 with (np-10, np-3, np-8), 37 without (np-1, np-11, np-12, np-13)"
+   ]
   },
   "pl1": {
    "name": "Platinum",
@@ -958,7 +1031,10 @@
    "tcgplayer": "96/111",
    "scrydex": "96/111",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 96
+   "reverse": 96,
+   "splits": [
+    "Holo Rare: 12 with (pl4-1, pl4-10, pl4-11, pl4-12), 9 without (pl4-AR1, pl4-AR2, pl4-AR3, pl4-AR4)"
+   ]
   },
   "pop1": {
    "name": "POP Series 1",
@@ -1031,6 +1107,10 @@
    "scrydex": "0/17",
    "bulbapedia": "Carnivine, Cherrim, Chimchar, Croagunk, Luxio and Riolu only (Cracked Ice)",
    "reverse": 6,
+   "splits": [
+    "Uncommon: 3 with (pop8-6, pop8-7, pop8-8), 3 without (pop8-10, pop8-11, pop8-9)",
+    "Common: 3 with (pop8-12, pop8-13, pop8-16), 3 without (pop8-14, pop8-15, pop8-17)"
+   ],
    "disputed": [
     "pop8-12 tcgdex 0 tcgplayer 1 scrydex 0 bulbapedia 1: yes",
     "pop8-13 tcgdex 0 tcgplayer 0 scrydex 0 bulbapedia 1: yes",
@@ -1047,7 +1127,10 @@
    "tcgplayer": "1/17",
    "scrydex": "1/17",
    "bulbapedia": "Raichu only",
-   "reverse": 1
+   "reverse": 1,
+   "splits": [
+    "Rare: 1 with (pop9-3), 4 without (pop9-1, pop9-2, pop9-4, pop9-5)"
+   ]
   },
   "ru1": {
    "name": "Pokémon Rumble",
@@ -1064,15 +1147,15 @@
    "tcgdex": "6/18",
    "tcgplayer": "6/18",
    "scrydex": "0/18",
-   "bulbapedia": null,
-   "reverse": 6,
+   "bulbapedia": "none: sold before Legendary Collection",
+   "reverse": 0,
    "disputed": [
-    "si1-1 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: yes",
-    "si1-11 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: yes",
-    "si1-14 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: yes",
-    "si1-17 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: yes",
-    "si1-4 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: yes",
-    "si1-7 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: yes"
+    "si1-1 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: no (sold before Legendary Collection)",
+    "si1-11 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: no (sold before Legendary Collection)",
+    "si1-14 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: no (sold before Legendary Collection)",
+    "si1-17 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: no (sold before Legendary Collection)",
+    "si1-4 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: no (sold before Legendary Collection)",
+    "si1-7 tcgdex 1 tcgplayer 1 scrydex 0 bulbapedia -: no (sold before Legendary Collection)"
    ]
   },
   "sm1": {
@@ -1154,7 +1237,10 @@
    "tcgplayer": "92/125",
    "scrydex": "92/125",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 92
+   "reverse": 92,
+   "splits": [
+    "Rare: 20 with (sm4-14, sm4-16, sm4-21, sm4-23), 1 without (sm4-63a)"
+   ]
   },
   "sm5": {
    "name": "Ultra Prism",
@@ -1163,7 +1249,10 @@
    "tcgplayer": "125/173",
    "scrydex": "125/173",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 125
+   "reverse": 125,
+   "splits": [
+    "Rare: 23 with (sm5-103, sm5-110, sm5-111, sm5-115), 6 without (sm5-120, sm5-136, sm5-58, sm5-62)"
+   ]
   },
   "sm6": {
    "name": "Forbidden Light",
@@ -1172,7 +1261,10 @@
    "tcgplayer": "105/146",
    "scrydex": "105/146",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 105
+   "reverse": 105,
+   "splits": [
+    "Rare: 24 with (sm6-101, sm6-102, sm6-12, sm6-13), 5 without (sm6-110, sm6-117, sm6-31, sm6-74)"
+   ]
   },
   "sm7": {
    "name": "Celestial Storm",
@@ -1181,7 +1273,10 @@
    "tcgplayer": "137/183",
    "scrydex": "137/183",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 137
+   "reverse": 137,
+   "splits": [
+    "Rare: 17 with (sm7-10, sm7-101, sm7-119, sm7-22), 3 without (sm7-107, sm7-108, sm7-97)"
+   ]
   },
   "sm7.5": {
    "name": "Dragon Majesty",
@@ -1199,7 +1294,10 @@
    "tcgplayer": "174/236",
    "scrydex": "174/236",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 174
+   "reverse": 174,
+   "splits": [
+    "Rare: 38 with (sm8-100, sm8-104, sm8-112, sm8-119), 7 without (sm8-144, sm8-154, sm8-178, sm8-180)"
+   ]
   },
   "sm9": {
    "name": "Team Up",
@@ -1208,7 +1306,10 @@
    "tcgplayer": "143/196",
    "scrydex": "143/196",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 143
+   "reverse": 143,
+   "splits": [
+    "Rare: 31 with (sm9-101, sm9-103, sm9-105, sm9-112), 4 without (sm9-10, sm9-134, sm9-158, sm9-51)"
+   ]
   },
   "sma": {
    "name": "Hidden Fates Shiny Vault",
@@ -1380,31 +1481,34 @@
    "scrydex": "24/24",
    "bulbapedia": null,
    "reverse": 16,
+   "splits": [
+    "Common: 16 with (sve-009, sve-010, sve-011, sve-012), 8 without (sve-001, sve-002, sve-003, sve-004)"
+   ],
    "disputed": [
-    "sve-001 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-002 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-003 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-004 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-005 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-006 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-007 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-008 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no",
-    "sve-009 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-010 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-011 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-012 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-013 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-014 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-015 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-016 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes",
-    "sve-017 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-018 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-019 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-020 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-021 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-022 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-023 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes",
-    "sve-024 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes"
+    "sve-001 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-002 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-003 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-004 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-005 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-006 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-007 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-008 tcgdex 0 tcgplayer 0 scrydex 1 bulbapedia -: no (decided with the set's Common basic Energy, run 1)",
+    "sve-009 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-010 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-011 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-012 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-013 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-014 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-015 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-016 tcgdex 1 tcgplayer 0 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 2)",
+    "sve-017 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-018 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-019 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-020 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-021 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-022 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-023 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)",
+    "sve-024 tcgdex 0 tcgplayer 1 scrydex 1 bulbapedia -: yes (decided with the set's Common basic Energy, run 3)"
    ]
   },
   "svp": {
@@ -1444,7 +1548,10 @@
    "tcgplayer": "57/88",
    "scrydex": "57/88",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 57
+   "reverse": 57,
+   "splits": [
+    "Holo Rare: 15 with (swsh10.5-003, swsh10.5-010, swsh10.5-012, swsh10.5-017), 1 without (swsh10.5-053)"
+   ]
   },
   "swsh10tg": {
    "name": "Astral Radiance Trainer Gallery",
@@ -1480,7 +1587,10 @@
    "tcgplayer": "142/215",
    "scrydex": "142/215",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 142
+   "reverse": 142,
+   "splits": [
+    "Holo Rare: 12 with (swsh12-004, swsh12-022, swsh12-036, swsh12-073), 2 without (swsh12-154, swsh12-156)"
+   ]
   },
   "swsh12.5": {
    "name": "Crown Zenith",
@@ -1489,7 +1599,10 @@
    "tcgplayer": "112/160",
    "scrydex": "112/160",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 112
+   "reverse": 112,
+   "splits": [
+    "Holo Rare: 19 with (swsh12.5-016, swsh12.5-017, swsh12.5-021, swsh12.5-026), 1 without (swsh12.5-143)"
+   ]
   },
   "swsh12.5gg": {
    "name": "Crown Zenith Galarian Gallery",
@@ -1826,7 +1939,10 @@
    "tcgplayer": "123/146",
    "scrydex": "123/146",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 123
+   "reverse": 123,
+   "splits": [
+    "Common: 39 with (xy1-10, xy1-102, xy1-104, xy1-106), 9 without (xy1-132, xy1-133, xy1-134, xy1-135)"
+   ]
   },
   "xy10": {
    "name": "Fates Collide",
@@ -1835,7 +1951,11 @@
    "tcgplayer": "97/129",
    "scrydex": "97/129",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 97
+   "reverse": 97,
+   "splits": [
+    "Uncommon: 46 with (xy10-1, xy10-100, xy10-101, xy10-102), 1 without (xy10-111a)",
+    "Rare: 20 with (xy10-18, xy10-23, xy10-24, xy10-31), 2 without (xy10-43a, xy10-54a)"
+   ]
   },
   "xy11": {
    "name": "Steam Siege",
@@ -1874,7 +1994,10 @@
    "tcgplayer": "97/114",
    "scrydex": "97/114",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 97
+   "reverse": 97,
+   "splits": [
+    "Rare: 20 with (xy3-11, xy3-18, xy3-19, xy3-22), 1 without (xy3-55a)"
+   ]
   },
   "xy4": {
    "name": "Phantom Forces",
@@ -1883,7 +2006,11 @@
    "tcgplayer": "102/124",
    "scrydex": "102/124",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 102
+   "reverse": 102,
+   "splits": [
+    "Rare: 19 with (xy4-10, xy4-2, xy4-21, xy4-25), 2 without (xy4-24a, xy4-65a)",
+    "Holo Rare: 12 with (xy4-12, xy4-17, xy4-30, xy4-43), 2 without (xy4-97, xy4-98)"
+   ]
   },
   "xy5": {
    "name": "Primal Clash",
@@ -1901,7 +2028,11 @@
    "tcgplayer": "86/112",
    "scrydex": "86/112",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 86
+   "reverse": 86,
+   "splits": [
+    "Uncommon: 32 with (xy6-10, xy6-12, xy6-14, xy6-19), 1 without (xy6-92a)",
+    "Rare: 18 with (xy6-11, xy6-13, xy6-15, xy6-16), 1 without (xy6-77a)"
+   ]
   },
   "xy7": {
    "name": "Ancient Origins",
@@ -1910,7 +2041,10 @@
    "tcgplayer": "72/101",
    "scrydex": "72/101",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 72
+   "reverse": 72,
+   "splits": [
+    "Uncommon: 28 with (xy7-10, xy7-13, xy7-2, xy7-22), 1 without (xy7-75a)"
+   ]
   },
   "xy8": {
    "name": "BREAKthrough",
@@ -1928,7 +2062,10 @@
    "tcgplayer": "97/126",
    "scrydex": "97/126",
    "bulbapedia": "every card but Ultra Rares, Secret Rares and full-art cards",
-   "reverse": 97
+   "reverse": 97,
+   "splits": [
+    "Uncommon: 41 with (xy9-100, xy9-101, xy9-102, xy9-103), 3 without (xy9-107a, xy9-98a, xy9-98b)"
+   ]
   },
   "xya": {
    "name": "Yellow A Alternate",
@@ -1949,6 +2086,17 @@
    "reverse": 0
   }
  },
+ "holoBeforeReverses": [
+  "basep-33",
+  "basep-34",
+  "basep-35",
+  "si1-1",
+  "si1-11",
+  "si1-14",
+  "si1-17",
+  "si1-4",
+  "si1-7"
+ ],
  "cards": {
   "2011bw-1": false,
   "2011bw-10": false,
@@ -2584,8 +2732,8 @@
   "basep-31": false,
   "basep-32": false,
   "basep-33": false,
-  "basep-34": true,
-  "basep-35": true,
+  "basep-34": false,
+  "basep-35": false,
   "basep-36": false,
   "basep-37": false,
   "basep-38": false,
@@ -2629,7 +2777,7 @@
   "bw1-105": false,
   "bw1-106": false,
   "bw1-107": false,
-  "bw1-108": true,
+  "bw1-108": false,
   "bw1-109": false,
   "bw1-11": true,
   "bw1-110": false,
@@ -4276,7 +4424,7 @@
   "dp1-126": false,
   "dp1-127": false,
   "dp1-128": false,
-  "dp1-129": true,
+  "dp1-129": false,
   "dp1-13": true,
   "dp1-130": false,
   "dp1-14": true,
@@ -7828,7 +7976,7 @@
   "hgss1-112": false,
   "hgss1-113": false,
   "hgss1-114": false,
-  "hgss1-115": true,
+  "hgss1-115": false,
   "hgss1-116": false,
   "hgss1-117": false,
   "hgss1-118": false,
@@ -10561,22 +10709,22 @@
   "ru1-7": false,
   "ru1-8": false,
   "ru1-9": false,
-  "si1-1": true,
+  "si1-1": false,
   "si1-10": false,
-  "si1-11": true,
+  "si1-11": false,
   "si1-12": false,
   "si1-13": false,
-  "si1-14": true,
+  "si1-14": false,
   "si1-15": false,
   "si1-16": false,
-  "si1-17": true,
+  "si1-17": false,
   "si1-18": false,
   "si1-2": false,
   "si1-3": false,
-  "si1-4": true,
+  "si1-4": false,
   "si1-5": false,
   "si1-6": false,
-  "si1-7": true,
+  "si1-7": false,
   "si1-8": false,
   "si1-9": false,
   "sm1-1": true,
