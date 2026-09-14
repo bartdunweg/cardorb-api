@@ -2889,7 +2889,7 @@
     "language": "ja",
     "id": "SV11B",
     "name": "Black Bolt",
-    "page": "Black Bolt & White Flare (TCG)",
+    "page": "Black Bolt/White Flare (TCG)",
     "lists": ["Black Bolt"],
     "how": "hand"
   },
@@ -2897,9 +2897,9 @@
     "language": "ja",
     "id": "SV11W",
     "name": "White Flare",
-    "page": "Black Bolt & White Flare (TCG)",
+    "page": "Black Bolt/White Flare (TCG)",
     "lists": ["White Flare"],
-    "how": "name"
+    "how": "hand"
   },
   {
     "language": "ja",

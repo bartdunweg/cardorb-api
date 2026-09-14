@@ -93,6 +93,14 @@ describe("parseSetlists", () => {
 });
 
 describe("cardName", () => {
+  // Start Deck 100 Battle Collection marks its holo-capable cards with a dagger (2026-09-14).
+  it("leaves a footnote dagger out of the name", () => {
+    expect(
+      cardName("{{TCG ID|Start Deck 100 Battle Collection|Yanmega ex|22|Yanmega}}{{ex}} †"),
+    ).toBe("Yanmega ex");
+    expect(cardName("{{TCG ID|Start Deck 100 Battle Collection|Exeggcute|9}} †")).toBe("Exeggcute");
+  });
+
   it("does not repeat a suffix the TCG ID already names", () => {
     expect(cardName("{{TCG ID|Destined Rivals|Yanmega ex|3|Yanmega}}{{ex}}")).toBe("Yanmega ex");
   });

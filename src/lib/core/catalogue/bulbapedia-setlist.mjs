@@ -158,7 +158,10 @@ export function cardName(cell) {
   const s = first
     .replace(/<small>[\s\S]*?<\/small>/gi, "")
     .replace(/<[^>]+>/g, "")
-    .replace(/'''?/g, "");
+    .replace(/'''?/g, "")
+    // A footnote mark after the name: Start Deck 100 Battle Collection marks the cards that come as a
+    // holo with a dagger ("Exeggcute †", 218 of its 742 entries), which is no part of the name.
+    .replace(/\s*[†‡]/g, "");
   const link = /\[\[([^\]|]+?)\s*\(([^()]*)\)\s*(\|[^\]]*)?\]\]/.exec(s);
   if (link) return tidy(link[1]);
   const id = /\{\{\s*TCG ID\s*\|([^{}]*)\}\}/i.exec(s);
