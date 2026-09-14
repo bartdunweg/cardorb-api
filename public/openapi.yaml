@@ -750,6 +750,24 @@ components:
         added: { type: integer, description: "Copies added since the point before. The collection's line only; absent on a folder's, and 0 on an account's first point." }
         addedValue: { type: integer, description: "What those copies were worth on this date, whole euros. The part of the change since the point before that was adding cards rather than prices moving." }
 
+    Mover:
+      type: object
+      required: [tcgId, name, number, set, image, copies, was, now, change, pct, total, from, to]
+      properties:
+        tcgId: { type: string }
+        name: { type: string }
+        number: { type: string }
+        set: { type: string, description: "The set's name as the collection files it." }
+        image: { type: [string, "null"] }
+        copies: { type: integer, description: "Copies held." }
+        was: { type: number, description: "One copy at the earliest reading in the window, euros." }
+        now: { type: number, description: "One copy at the latest reading, euros." }
+        change: { type: number, description: "now minus was, per copy." }
+        pct: { type: number, description: "change over was, a fraction (0.25 is 25 %)." }
+        total: { type: number, description: "change times copies: what the move did to the collection." }
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+
     CardPricePoint:
       type: object
       required: [date, market, holo]
@@ -1714,6 +1732,47 @@ paths:
           description: >-
             The readings could not be read. Never an empty `snapshots` — that payload means the
             account has never been snapshotted, and both clients draw it as such.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+
+  /v1/movers:
+    get:
+      tags: [Value]
+      operationId: getMovers
+      summary: The caller's cards whose price moved most over a period
+      description: >-
+        Needs a bearer token or a session. Each owned card is compared between its earliest and latest
+        reading in the window, per copy at its own printing, and ranked by the change times the copies
+        held. `up` is largest gain first, `down` largest loss first. A card with one reading in the
+        window, or a move under ten cents a copy, is left out.
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema: { type: string, enum: ["7", "30", "90", "180", "all"], default: "30" }
+          description: The period, as the value chart names them.
+        - name: top
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 10, default: 5 }
+          description: How many each way.
+      responses:
+        "200":
+          description: The movers.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [up, down]
+                properties:
+                  up: { type: array, items: { $ref: "#/components/schemas/Mover" } }
+                  down: { type: array, items: { $ref: "#/components/schemas/Mover" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503":
+          description: The collection or its readings could not be read. Never an empty list.
           content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
   # ── Profile ───────────────────────────────────────────────────────────────
