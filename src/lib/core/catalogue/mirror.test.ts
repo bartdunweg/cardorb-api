@@ -47,6 +47,7 @@ vi.mock("./tcgplayer-products", () => ({
 }));
 
 const {
+  CATALOGUE_FORMAT,
   buildIndex,
   catalogueIndex,
   forgetCopy,
@@ -297,9 +298,9 @@ describe("syncMirror", () => {
     ]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "grown", cards: 10, synced_at: "2026-09-10T00:00:00Z", format: 2 },
-        { set_id: "stale", cards: 10, synced_at: "2026-09-01T00:00:00Z", format: 2 },
-        { set_id: "fresh", cards: 10, synced_at: "2026-09-11T00:00:00Z", format: 2 },
+        { set_id: "grown", cards: 10, synced_at: "2026-09-10T00:00:00Z", format: CATALOGUE_FORMAT },
+        { set_id: "stale", cards: 10, synced_at: "2026-09-01T00:00:00Z", format: CATALOGUE_FORMAT },
+        { set_id: "fresh", cards: 10, synced_at: "2026-09-11T00:00:00Z", format: CATALOGUE_FORMAT },
       ],
     });
     const report = await syncMirror(db, { parallel: 1 });
@@ -328,8 +329,13 @@ describe("syncMirror", () => {
     }));
     const { db, calls } = fakeStore({
       catalogue_sync: [
-        { set_id: "stale", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 2 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 },
+        { set_id: "stale", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: CATALOGUE_FORMAT },
+        {
+          set_id: "behind",
+          cards: 1,
+          synced_at: "2026-09-12T00:00:00Z",
+          format: CATALOGUE_FORMAT - 1,
+        },
       ],
     });
     const report = await syncMirror(db, { parallel: 1 });
@@ -349,7 +355,7 @@ describe("syncMirror", () => {
       expect.objectContaining({ id: "behind", serie_id: "base" }),
     );
     expect(calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert")?.args[0]).toEqual(
-      expect.objectContaining({ set_id: "behind", format: 2 }),
+      expect.objectContaining({ set_id: "behind", format: CATALOGUE_FORMAT }),
     );
   });
 

@@ -480,12 +480,13 @@ async function englishFacts(
   const out = new Map<string, SetFact>();
   try {
     const body = (await graphql(
-      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types category trainerType illustrator hp stage evolveFrom regulationMark variants { firstEdition } variants_detailed { type foil stamp } } }`,
+      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id name rarity types category trainerType illustrator hp stage evolveFrom regulationMark variants { firstEdition } variants_detailed { type foil stamp } } }`,
       `en set ${setId} facts`,
       { retries },
     )) as {
       cards?: ({
         id: string;
+        name?: string | null;
         rarity?: string | null;
         types?: string[] | null;
         category?: string | null;
@@ -505,21 +506,25 @@ async function englishFacts(
         out.set(
           c.id,
           withSpelling(
-            correctedFacts(c.id, {
-              rarity: c.rarity ?? null,
-              types: c.types ?? [],
-              category: c.category ?? null,
-              trainerType: c.trainerType ?? null,
-              sheet: {
-                illustrator: c.illustrator ?? null,
-                hp: intOrNull(c.hp),
-                stage: c.stage ?? null,
-                evolveFrom: c.evolveFrom ?? null,
-                regulationMark: c.regulationMark ?? null,
-                firstEdition: c.variants?.firstEdition ?? null,
-                variants: trimmedVariants(c.variants_detailed),
+            correctedFacts(
+              c.id,
+              {
+                rarity: c.rarity ?? null,
+                types: c.types ?? [],
+                category: c.category ?? null,
+                trainerType: c.trainerType ?? null,
+                sheet: {
+                  illustrator: c.illustrator ?? null,
+                  hp: intOrNull(c.hp),
+                  stage: c.stage ?? null,
+                  evolveFrom: c.evolveFrom ?? null,
+                  regulationMark: c.regulationMark ?? null,
+                  firstEdition: c.variants?.firstEdition ?? null,
+                  variants: trimmedVariants(c.variants_detailed),
+                },
               },
-            }),
+              c.name ?? undefined,
+            ),
           ),
         );
   } catch (err) {

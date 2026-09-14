@@ -1,5 +1,3 @@
-import { correctedFacts } from "./card-fact-corrections";
-
 /**
  * One spelling for each English rarity.
  *
@@ -48,9 +46,4 @@ export function languageRarity(
     return spelled && spelled.toLowerCase() !== "none" ? spelled : null;
   };
   return real(rarity) ?? real(fallback) ?? "None";
-}
-
-/** An English card's rarity as shown: its correction (card-fact-corrections.ts), then the spelling. */
-export function englishRarity(id: string, rarity: string | null | undefined): string | null {
-  return canonicalRarity(correctedFacts(id, { rarity: rarity ?? null, types: [] }).rarity);
 }

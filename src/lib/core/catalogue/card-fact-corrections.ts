@@ -1984,6 +1984,198 @@ export const CARD_FACT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "xy9-86": { rarity: ["Rare", "Holo Rare"] },
 };
 
+/**
+ * The third pass, the same day (2026-09-14, round two), where TCGdex leaves a field empty or names it
+ * wrongly and the other two sources say what the card is. Kept apart from the table above because
+ * several of these cards already have an entry there for another field; correctionOf() reads both.
+ *
+ * - **trainerType**: 34 trainers with none where TCGplayer's Card Type and pokemontcg.io's subtype
+ *   agree (neo's Berry is a Tool, Ecogym a Stadium, Aquapolis' Cubes and Skyridge's Miracle Spheres
+ *   Technical Machines); six Rocket's Secret Machines TCGdex left blank (pokemontcg.io, and the word
+ *   TCGdex itself writes for five others); 24 e-Card, neo and trainer kit trainers TCGplayer calls
+ *   an Item and pokemontcg.io, for the years before the game named Items, calls nothing; four
+ *   Technical Machines with none and two DP promos, Tropical Wind and Beginning Door, with none where
+ *   pokemontcg.io names an Item and TCGplayer nothing; Expedition's Dual Ball (ecard1-139), which TCGdex
+ *   calls a Stadium and TCGplayer an Item. Where TCGdex names one and both others name another: the
+ *   two Team Aqua and Team Magma Technical Machines (ex4-79, ex4-84) and Curse Powder (ex10-80), a
+ *   Tool. The three Ancient Technical Machines of Hidden Legends are Technical Machines, not Tools.
+ *   Left as TCGdex has them, and reported: 85 Tools TCGplayer calls an Item (Choice Belt, Eviolite:
+ *   the printed card says Pokémon Tool) and the 147 Base to neo trainers nobody names a type for.
+ * - **evolveFrom**: 73 Stage 1 and Stage 2 Pokémon with no evolution (Team Magma's Claydol, ex4-8,
+ *   evolves from Team Magma's Baltoy), from pokemontcg.io, and eleven more it does not list, read off
+ *   the printed card (Celebrations' Classic Collection, My First Battle, a trainer kit Gyarados).
+ */
+export const ROUND_TWO_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
+  "2012bw-1": { evolveFrom: [null, "Snivy"] },
+  "2012bw-11": { evolveFrom: [null, "Klink"] },
+  "2012bw-4": { evolveFrom: [null, "Tepig"] },
+  "2012bw-5": { evolveFrom: [null, "Oshawott"] },
+  "2019sm-11": { evolveFrom: [null, "Alolan Diglett"] },
+  "2019sm-2": { evolveFrom: [null, "Exeggcute"] },
+  "base3-1": { evolveFrom: [null, "Mysterious Fossil"] },
+  "base3-16": { evolveFrom: [null, "Mysterious Fossil"] },
+  "base3-50": { evolveFrom: [null, "Mysterious Fossil"] },
+  "base3-52": { evolveFrom: [null, "Mysterious Fossil"] },
+  "base5-75": { trainerType: [null, "Rocket's Secret Machine"] },
+  "base5-77": { trainerType: [null, "Rocket's Secret Machine"] },
+  "base5-79": { trainerType: [null, "Rocket's Secret Machine"] },
+  "basep-16": { trainerType: [null, "Rocket's Secret Machine"] },
+  "basep-41": { trainerType: [null, "Stadium"] },
+  "basep-42": { trainerType: [null, "Stadium"] },
+  "bog-6": { evolveFrom: [null, "Bulbasaur"] },
+  "bog-7": { evolveFrom: [null, "Dark Ivysaur"] },
+  "bwp-BW78": { evolveFrom: [null, "Pikachu"] },
+  "cel25cc-CC001": { evolveFrom: [null, "Wartortle"] },
+  "cel25cc-CC002": { evolveFrom: [null, "Charmeleon"] },
+  "cel25cc-CC003": { evolveFrom: [null, "Ivysaur"] },
+  "cel25cc-CC005": { evolveFrom: [null, "Magikarp"] },
+  "cel25cc-CC014": { evolveFrom: [null, "Kirlia"] },
+  "cel25cc-CC016": { evolveFrom: [null, "Baltoy"] },
+  "cel25cc-CC019": { evolveFrom: [null, "Phanpy"] },
+  "dpp-DP05": { trainerType: [null, "Item"] },
+  "dpp-DP25": { trainerType: [null, "Item"] },
+  "dpp-DP48": { trainerType: [null, "Item"] },
+  "dpp-DP54": { trainerType: [null, "Item"] },
+  "ecard1-139": { trainerType: ["Stadium", "Item"] },
+  "ecard1-140": { trainerType: [null, "Item"] },
+  "ecard1-141": { trainerType: [null, "Item"] },
+  "ecard1-143": { trainerType: [null, "Item"] },
+  "ecard1-144": { trainerType: [null, "Technical Machine"] },
+  "ecard1-146": { trainerType: [null, "Item"] },
+  "ecard1-147": { trainerType: [null, "Item"] },
+  "ecard1-151": { trainerType: [null, "Item"] },
+  "ecard1-152": { trainerType: [null, "Item"] },
+  "ecard1-153": { trainerType: [null, "Item"] },
+  "ecard1-154": { trainerType: [null, "Item"] },
+  "ecard1-155": { trainerType: [null, "Item"] },
+  "ecard1-157": { trainerType: [null, "Item"] },
+  "ecard1-35": { evolveFrom: [null, "Ekans"] },
+  "ecard1-37": { evolveFrom: [null, "Wartortle"] },
+  "ecard2-119": { trainerType: [null, "Technical Machine"] },
+  "ecard2-120": { trainerType: [null, "Item"] },
+  "ecard2-121": { trainerType: [null, "Technical Machine"] },
+  "ecard2-122": { trainerType: [null, "Technical Machine"] },
+  "ecard2-124": { trainerType: [null, "Technical Machine"] },
+  "ecard2-127": { trainerType: [null, "Technical Machine"] },
+  "ecard2-129": { trainerType: [null, "Technical Machine"] },
+  "ecard2-132": { trainerType: [null, "Technical Machine"] },
+  "ecard2-134": { trainerType: [null, "Item"] },
+  "ecard2-140": { trainerType: [null, "Technical Machine"] },
+  "ecard3-1": { evolveFrom: [null, "Mysterious Fossil"] },
+  "ecard3-124": { trainerType: [null, "Item"] },
+  "ecard3-126": { trainerType: [null, "Item"] },
+  "ecard3-127": { trainerType: [null, "Item"] },
+  "ecard3-128": { trainerType: [null, "Item"] },
+  "ecard3-129": { trainerType: [null, "Technical Machine"] },
+  "ecard3-130": { trainerType: [null, "Technical Machine"] },
+  "ecard3-131": { trainerType: [null, "Technical Machine"] },
+  "ecard3-133": { trainerType: [null, "Technical Machine"] },
+  "ecard3-134": { trainerType: [null, "Technical Machine"] },
+  "ecard3-135": { trainerType: [null, "Technical Machine"] },
+  "ecard3-136": { trainerType: [null, "Technical Machine"] },
+  "ecard3-37": { evolveFrom: [null, "Mysterious Fossil"] },
+  "ecard3-41": { evolveFrom: [null, "Mysterious Fossil"] },
+  "ex10-80": { trainerType: ["Item", "Tool"] },
+  "ex4-1": { evolveFrom: [null, "Team Aqua's Cacnea"] },
+  "ex4-10": { evolveFrom: [null, "Team Magma's Houndour"] },
+  "ex4-11": { evolveFrom: [null, "Team Magma's Rhyhorn"] },
+  "ex4-13": { evolveFrom: [null, "Pikachu"] },
+  "ex4-14": { evolveFrom: [null, "Team Aqua's Corphish"] },
+  "ex4-15": { evolveFrom: [null, "Team Aqua's Poochyena"] },
+  "ex4-16": { evolveFrom: [null, "Team Aqua's Spheal"] },
+  "ex4-18": { evolveFrom: [null, "Team Aqua's Carvanha"] },
+  "ex4-19": { evolveFrom: [null, "Team Magma's Numel"] },
+  "ex4-2": { evolveFrom: [null, "Team Aqua's Corphish"] },
+  "ex4-20": { evolveFrom: [null, "Team Magma's Aron"] },
+  "ex4-21": { evolveFrom: [null, "Team Magma's Poochyena"] },
+  "ex4-22": { evolveFrom: [null, "Team Magma's Rhyhorn"] },
+  "ex4-28": { evolveFrom: [null, "Team Aqua's Chinchou"] },
+  "ex4-29": { evolveFrom: [null, "Team Aqua's Electrike"] },
+  "ex4-30": { evolveFrom: [null, "Team Aqua's Poochyena"] },
+  "ex4-31": { evolveFrom: [null, "Team Aqua's Spheal"] },
+  "ex4-33": { evolveFrom: [null, "Team Magma's Baltoy"] },
+  "ex4-34": { evolveFrom: [null, "Team Magma's Houndour"] },
+  "ex4-36": { evolveFrom: [null, "Team Magma's Aron"] },
+  "ex4-37": { evolveFrom: [null, "Team Magma's Poochyena"] },
+  "ex4-4": { evolveFrom: [null, "Team Aqua's Electrike"] },
+  "ex4-5": { evolveFrom: [null, "Team Aqua's Carvanha"] },
+  "ex4-6": { evolveFrom: [null, "Team Aqua's Sealeo"] },
+  "ex4-7": { evolveFrom: [null, "Team Magma's Lairon"] },
+  "ex4-79": { trainerType: ["Item", "Technical Machine"] },
+  "ex4-8": { evolveFrom: [null, "Team Magma's Baltoy"] },
+  "ex4-84": { trainerType: ["Item", "Technical Machine"] },
+  "ex4-89": { evolveFrom: [null, "Combusken"] },
+  "ex4-90": { evolveFrom: [null, "Lileep"] },
+  "ex4-93": { evolveFrom: [null, "Grovyle"] },
+  "ex4-95": { evolveFrom: [null, "Marshtomp"] },
+  "ex5-84": { trainerType: ["Tool", "Technical Machine"] },
+  "ex5-85": { trainerType: ["Tool", "Technical Machine"] },
+  "ex5-86": { trainerType: ["Tool", "Technical Machine"] },
+  "ex8-86": { trainerType: [null, "Item"] },
+  "gym1-119": { trainerType: [null, "Rocket's Secret Machine"] },
+  "gym1-8": { evolveFrom: [null, "Lt. Surge's Magnemite"] },
+  "hgss2-16": { evolveFrom: [null, "Buizel"] },
+  "hgssp-HGSS18": { trainerType: [null, "Item"] },
+  "lc-48": { evolveFrom: [null, "Mysterious Fossil"] },
+  "lc-57": { evolveFrom: [null, "Mysterious Fossil"] },
+  "mfb-2": { evolveFrom: [null, "Bulbasaur"] },
+  "mfb-26": { evolveFrom: [null, "Squirtle"] },
+  "mfb-4": { evolveFrom: [null, "Oddish"] },
+  "neo1-38": { evolveFrom: [null, "Chinchou"] },
+  "neo1-84": { trainerType: [null, "Stadium"] },
+  "neo1-85": { trainerType: [null, "Item"] },
+  "neo1-86": { trainerType: [null, "Tool"] },
+  "neo1-91": { trainerType: [null, "Item"] },
+  "neo1-92": { trainerType: [null, "Item"] },
+  "neo1-93": { trainerType: [null, "Tool"] },
+  "neo1-94": { trainerType: [null, "Tool"] },
+  "neo1-97": { trainerType: [null, "Stadium"] },
+  "neo1-99": { trainerType: [null, "Tool"] },
+  "neo2-56": { evolveFrom: [null, "Mysterious Fossil"] },
+  "neo2-60": { evolveFrom: [null, "Mysterious Fossil"] },
+  "neo3-15": { evolveFrom: [null, "Mysterious Fossil"] },
+  "neo3-60": { trainerType: [null, "Tool"] },
+  "neo3-61": { trainerType: [null, "Stadium"] },
+  "neo3-63": { trainerType: [null, "Stadium"] },
+  "neo3-64": { trainerType: [null, "Item"] },
+  "neo4-100": { trainerType: [null, "Stadium"] },
+  "neo4-104": { trainerType: [null, "Item"] },
+  "neo4-37": { evolveFrom: [null, "Mysterious Fossil"] },
+  "neo4-92": { trainerType: [null, "Stadium"] },
+  "neo4-93": { trainerType: [null, "Tool"] },
+  "neo4-95": { trainerType: [null, "Stadium"] },
+  "neo4-96": { trainerType: [null, "Rocket's Secret Machine"] },
+  "neo4-97": { trainerType: [null, "Tool"] },
+  "neo4-99": { trainerType: [null, "Stadium"] },
+  "np-26": { trainerType: [null, "Item"] },
+  "pop3-14": { evolveFrom: [null, "Bulbasaur"] },
+  "pop3-7": { evolveFrom: [null, "Torchic"] },
+  "pop3-8": { evolveFrom: [null, "Phanpy"] },
+  "pop3-9": { evolveFrom: [null, "Pineco"] },
+  "sm3-150": { evolveFrom: [null, "Charmeleon"] },
+  "smp-SM181": { evolveFrom: [null, "Meltan"] },
+  "smp-SM182": { evolveFrom: [null, "Meowth"] },
+  "smp-SM185": { evolveFrom: [null, "Quilava"] },
+  "smp-SM189": { evolveFrom: [null, "Wartortle"] },
+  "smp-SM222": { evolveFrom: [null, "Misdreavus"] },
+  "smp-SM226": { evolveFrom: [null, "Charmeleon"] },
+  "smp-SM236": { evolveFrom: [null, "Alolan Sandshrew"] },
+  "smp-SM237": { evolveFrom: [null, "Eevee"] },
+  "smp-SM238": { evolveFrom: [null, "Eevee"] },
+  "smp-SM239": { evolveFrom: [null, "Tirtouga"] },
+  "tk-hs-g-20": { evolveFrom: [null, "Magikarp"] },
+  "tk-hs-g-21": { trainerType: [null, "Item"] },
+  "tk-hs-r-29": { trainerType: [null, "Item"] },
+  "xyp-XY161": { evolveFrom: [null, "Fennekin"] },
+};
+
+/** Both tables' corrections for one card, field by field. */
+const correctionOf = (id: string): FactCorrection | undefined => {
+  const first = CARD_FACT_CORRECTIONS[id];
+  const second = ROUND_TWO_CORRECTIONS[id];
+  return first && second ? { ...first, ...second } : (first ?? second);
+};
+
 const sameTypes = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && [...a].sort().join() === [...b].sort().join();
 
@@ -1999,9 +2191,59 @@ type CorrectableSheet = {
   evolveFrom: string | null;
 };
 
+/** The set a card id is filed under: everything before its last hyphen ("tk-hs-g-21" is tk-hs-g). */
+const setOf = (id: string) => id.slice(0, Math.max(0, id.lastIndexOf("-")));
+
+/**
+ * The rarity words a Trainer Gallery writes for what TCGplayer grades Ultra Rare. Silver Tempest's
+ * gallery (swsh12tg) alone says "Holo Rare V", "Holo Rare VMAX" and "Full Art Trainer" for 17 cards
+ * the other three galleries and TCGplayer call Ultra Rare (2026-09-14). Its Secret Rares stay.
+ */
+const GALLERY_ULTRA = new Set([
+  "holo rare",
+  "holo rare v",
+  "holo rare vmax",
+  "holo rare vstar",
+  "full art trainer",
+]);
+
+/**
+ * A rarity by the rules that hold for whole sets rather than single cards, after the corrections:
+ *
+ * - "None" is no rarity: TCGdex writes it for 39 English cards TCGplayer names none for either
+ *   (My First Battle's "Unconfirmed"), and a stored word reads as a rarity in a filter. Null.
+ * - Crown Zenith's Galarian Gallery (swsh12.5gg) is "Galarian Gallery", all 70 cards: Bart's call on
+ *   2026-09-14, where TCGdex and TCGplayer say Ultra Rare and Secret Rare. The subset is its rarity.
+ * - A Trainer Gallery card's sub-tier word is Ultra Rare (GALLERY_ULTRA).
+ */
+export function ruledRarity(id: string, rarity: string | null): string | null {
+  const word = rarity?.trim().toLowerCase() ?? "";
+  if (!word || word === "none") return null;
+  const set = setOf(id);
+  if (set === "swsh12.5gg") return "Galarian Gallery";
+  if (/tg$/.test(set) && GALLERY_ULTRA.has(word)) return "Ultra Rare";
+  return rarity;
+}
+
+/**
+ * What an LV.X card evolves from where TCGdex says nothing: the Pokémon it levels up, which is its
+ * name without the LV.X (Infernape LV.X, dp5-121, from Infernape; Garchomp C LV.X from Garchomp C).
+ * TCGdex left all 78 English LV.X cards without one on 2026-09-14.
+ */
+export function ruledEvolveFrom(
+  name: string | undefined,
+  stage: string | null,
+  evolveFrom: string | null,
+): string | null {
+  if (evolveFrom || !name) return evolveFrom;
+  const base = /^(.+?)\s+LV\.X$/.exec(name.trim())?.[1];
+  return base && (stage === "LEVEL-UP" || stage == null) ? base : evolveFrom;
+}
+
 /**
  * A card's facts with its correction applied, field by field, where TCGdex still says what was
- * corrected. The trainer type and the sheet are corrected where the facts carry them.
+ * corrected, and then the rules above. The trainer type and the sheet are corrected where the facts
+ * carry them; the LV.X rule needs the card's name, which the facts carry where the reader has it.
  */
 export function correctedFacts<
   T extends {
@@ -2010,34 +2252,69 @@ export function correctedFacts<
     trainerType?: string | null;
     sheet?: CorrectableSheet;
   },
->(id: string, facts: T): T {
-  const fix = CARD_FACT_CORRECTIONS[id];
-  if (!fix) return facts;
+>(id: string, facts: T, name?: string): T {
+  const fix = correctionOf(id) ?? {};
   const out: T = {
     ...facts,
-    rarity: swapped(fix.rarity, facts.rarity),
+    rarity: ruledRarity(id, swapped(fix.rarity, facts.rarity)),
     types: fix.types && sameTypes(facts.types, fix.types[0]) ? [...fix.types[1]] : facts.types,
   };
   if ("trainerType" in facts) out.trainerType = swapped(fix.trainerType, facts.trainerType ?? null);
-  if (facts.sheet)
+  if (facts.sheet) {
+    const stage = swapped(fix.stage, facts.sheet.stage);
     out.sheet = {
       ...facts.sheet,
       illustrator: swapped(fix.illustrator, facts.sheet.illustrator),
       hp: swapped(fix.hp, facts.sheet.hp),
-      stage: swapped(fix.stage, facts.sheet.stage),
-      evolveFrom: swapped(fix.evolveFrom, facts.sheet.evolveFrom),
+      stage,
+      evolveFrom: ruledEvolveFrom(
+        name === undefined ? undefined : correctedName(id, name),
+        stage,
+        swapped(fix.evolveFrom, facts.sheet.evolveFrom),
+      ),
     };
+  }
   return out;
 }
 
 /**
- * A card's name as the app writes it: its correction, then one apostrophe.
+ * A card's name as the app writes it: its correction, then one apostrophe, one Unown and one star.
  *
  * TCGdex writes 63 English names with a curly apostrophe (Rocket’s Mewtwo, bog-8; Red’s Challenge,
- * sm10-184) and 959 with a straight one (2026-09-14), so a search for "Red's" missed the card. Straight is the one TCGplayer and pokemontcg.io use, and what a
- * keyboard types. Matching a collection row (sameCard in matching.ts) drops every mark before it
- * compares, so a row filed under either spelling keeps its card.
+ * sm10-184) and 959 with a straight one (2026-09-14), so a search for "Red's" missed the card.
+ * Straight is the one TCGplayer and pokemontcg.io use, and what a keyboard types. Matching a
+ * collection row (sameCard in matching.ts) drops every mark before it compares, so a row filed
+ * under either spelling keeps its card.
+ *
+ * Unown carries its letter as Bulbapedia and TCGdex's own Diamond & Pearl cards write it, "Unown G":
+ * TCGdex wrote neo's in brackets ("Unown [G]", 23 cards) and Unseen Forces' 28 as plain "Unown",
+ * the letter only in the number (exu-G, exu-%3F). TCGplayer and pokemontcg.io bracket every one, and
+ * matching drops the brackets, so a row under either spelling finds the card.
+ *
+ * A gold star card is "Mewtwo ☆", as it prints and as 36 of them already were: five EX cards were
+ * "Mewtwo Star" and POP Series 5's two "Espeon ★" (2026-09-14). The search reads ☆ as "star" too
+ * (migration 20260915200000).
+ *
+ * And as the card and Bulbapedia write them, where TCGdex has its own spelling: "Shaymin-EX" and
+ * "Pikachu & Zekrom-GX" (TCGdex wrote 304 XY-era EX and 548 Sun & Moon GX names with a space, and
+ * its Black & White sets with the hyphen), "Ho-Oh" (four vintage cards had "Ho-oh"), "Nidoran♀"
+ * without a space (eleven had one). Rising Rivals' Elite Four stay "Drapion E4" as TCGplayer, pokemontcg.io
+ * and TCGdex write them; the card prints a 4 with the Elite mark, which Bulbapedia writes "Drapion 4",
+ * and a search for "Drapion 4" finds the card all the same.
+ * Matching reads a hyphen as a space (TYPE_SUFFIX in matching.ts), so a row filed "Shaymin EX"
+ * keeps its card.
  */
 export function correctedName(id: string, name: string): string {
-  return swapped(CARD_FACT_CORRECTIONS[id]?.name, name).replace(/[\u2018\u2019]/g, "'");
+  const named = swapped(correctionOf(id)?.name, name).replace(/[\u2018\u2019]/g, "'");
+  const bracketed = /^Unown \[([A-Z!?])\]$/.exec(named);
+  if (bracketed) return `Unown ${bracketed[1]}`;
+  if (named === "Unown" && setOf(id) === "exu") {
+    const letter = decodeURIComponent(id.slice(id.lastIndexOf("-") + 1));
+    if (/^[A-Z!?]$/.test(letter)) return `Unown ${letter}`;
+  }
+  return named
+    .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
+    .replace(/\s+(EX|GX)$/, "-$1")
+    .replace(/\bHo-oh\b/, "Ho-Oh")
+    .replace(/\bNidoran ([♀♂])/, "Nidoran$1");
 }

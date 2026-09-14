@@ -149,7 +149,8 @@ import { copyPriceOf, priceFromUsd } from "../price-basis.mjs";
 export { shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
-import { englishRarity } from "../catalogue/rarity-names";
+import { canonicalRarity } from "../catalogue/rarity-names";
+import { correctedFacts, correctedName } from "../catalogue/card-fact-corrections";
 
 const num = (v: unknown) => (typeof v === "number" ? v : null);
 
@@ -1499,21 +1500,41 @@ export async function getCardDetail(
   }
   if (!card?.id || !card.name) return null;
   const cm = card.pricing?.cardmarket;
+  /* The English card through the corrections and rules every other English read goes through
+     (englishFacts in tcgdex-browse.ts): this live read answered TCGdex's own words until 2026-09-14,
+     so a card opened before its set was copied showed "Mewtwo Star" and no evolution for an LV.X. */
+  const english = !language;
+  const facts = english
+    ? correctedFacts(
+        card.id,
+        {
+          rarity: card.rarity ?? null,
+          types: card.types ?? [],
+          sheet: {
+            illustrator: card.illustrator ?? null,
+            hp: num(card.hp),
+            stage: card.stage ?? null,
+            evolveFrom: card.evolveFrom ?? null,
+          },
+        },
+        card.name,
+      )
+    : null;
   // A card from a catalogue of its own is not on TCGplayer's English shelf; TCGdex relays
   // nothing for it, so this is null there without asking.
   const usd = usdOf(card.pricing?.tcgplayer);
   return {
     id: card.id,
-    name: card.name,
+    name: english ? correctedName(card.id, card.name) : card.name,
     image: card.image ?? null,
     // TCGdex's word, corrected where it is wrong and in the one spelling (rarity-names.ts), so
     // the sheet says what the lists and filters say.
-    rarity: englishRarity(card.id, card.rarity),
-    illustrator: card.illustrator ?? null,
-    hp: num(card.hp),
-    types: card.types ?? [],
-    stage: card.stage ?? null,
-    evolveFrom: card.evolveFrom ?? null,
+    rarity: canonicalRarity(facts ? facts.rarity : (card.rarity ?? null)),
+    illustrator: facts ? facts.sheet.illustrator : (card.illustrator ?? null),
+    hp: facts ? facts.sheet.hp : num(card.hp),
+    types: facts ? facts.types : (card.types ?? []),
+    stage: facts ? facts.sheet.stage : (card.stage ?? null),
+    evolveFrom: facts ? facts.sheet.evolveFrom : (card.evolveFrom ?? null),
     regulationMark: card.regulationMark ?? null,
     firstEdition: card.variants?.firstEdition ?? null,
     printings: printingsOf(card.variants_detailed, language ? null : card.id),

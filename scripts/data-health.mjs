@@ -63,8 +63,8 @@ const check = (name, ok, detail) => checks.push({ name, ok, detail });
  */
 const SET_STALE_DAYS = 7;
 /** The copy's shape each catalogue is written in now (mirror.ts, mirror-language.ts). */
-// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 2 + 6.
-const FORMATS = { en: 2, ja: 8 };
+// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 3 + 6.
+const FORMATS = { en: 3, ja: 9 };
 
 const sync = await query(
   "select language, count(*)::int as sets, min(format)::int as oldest_format, min(synced_at)::text as oldest from catalogue_sync group by language order by language",
@@ -102,6 +102,57 @@ for (const p of pictures) {
     `Card pictures (${p.language})`,
     p.none <= ceiling && p.elsewhere === 0,
     `${p.cards} cards; ${p.none} without a picture (ceiling ${ceiling}); ${p.elsewhere} still on another host`,
+  );
+}
+
+// ── The copy's facts ────────────────────────────────────────────────────────
+
+/**
+ * The rarity words each catalogue may hold, one spelling each (rarity-words.json, which the tests
+ * hold every correction to). "None" is not one: a card with no rarity holds none (2026-09-14, 39 English
+ * cards and 1,670 Japanese ones held the word).
+ */
+const RARITY_WORDS = JSON.parse(
+  readFileSync(join(ROOT, "src", "lib", "core", "catalogue", "rarity-words.json"), "utf8"),
+);
+const rarities = await query(
+  "select language, rarity, count(*)::int as n from catalogue_cards where rarity is not null group by language, rarity",
+);
+for (const language of Object.keys(RARITY_WORDS)) {
+  const rows = rarities.filter((r) => r.language === language);
+  const none = rows.filter((r) => r.rarity.trim().toLowerCase() === "none");
+  check(
+    `No "None" as a rarity (${language})`,
+    none.length === 0,
+    `${none.reduce((a, r) => a + r.n, 0)} cards hold the word`,
+  );
+  const allowed = new Set(RARITY_WORDS[language]);
+  const other = rows.filter(
+    (r) => !allowed.has(r.rarity) && r.rarity.trim().toLowerCase() !== "none",
+  );
+  check(
+    `Rarity spellings (${language})`,
+    other.length === 0,
+    `${other.length} words outside the list${
+      other.length ? `: ${other.map((r) => `${r.rarity} (${r.n})`).join(", ")}` : ""
+    }`,
+  );
+}
+
+/**
+ * Cards with no illustrator, per catalogue. Some print none (an energy, a McDonald's card with no
+ * credit), so this is a ceiling rather than zero: 719 English cards on 2026-09-14.
+ */
+const ILLUSTRATORLESS_CEILING = { en: 740 };
+const illustrators = await query(
+  "select language, count(*) filter (where illustrator is null or illustrator = '')::int as none, count(*)::int as cards from catalogue_cards group by language",
+);
+for (const [language, ceiling] of Object.entries(ILLUSTRATORLESS_CEILING)) {
+  const row = illustrators.find((r) => r.language === language);
+  check(
+    `Cards without an illustrator (${language})`,
+    !!row && row.none <= ceiling,
+    `${row?.none ?? 0} of ${row?.cards ?? 0} cards (ceiling ${ceiling})`,
   );
 }
 

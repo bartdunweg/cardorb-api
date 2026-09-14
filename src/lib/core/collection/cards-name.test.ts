@@ -21,6 +21,15 @@ describe("sameCard", () => {
     expect(sameCard("Charizard VMAX", "Charizard")).toBe(true);
   });
 
+  it("reads a gold star as the word, and an Unown's letter with or without brackets", () => {
+    expect(sameCard("Mewtwo Star", "Mewtwo ☆")).toBe(true);
+    expect(sameCard("Gyarados Star δ", "Gyarados ☆ δ")).toBe(true);
+    expect(sameCard("Espeon ★", "Espeon ☆")).toBe(true);
+    expect(sameCard("Unown [G]", "Unown G")).toBe(true);
+    expect(sameCard("Shaymin EX", "Shaymin-EX")).toBe(true);
+    expect(sameCard("Pikachu", "Pikachu-GX")).toBe(true);
+  });
+
   it("survives a typo in the binder", () => {
     const typos: [string, string][] = [
       ["Tyrantirar", "Tyranitar"],
