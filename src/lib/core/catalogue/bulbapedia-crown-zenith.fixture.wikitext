@@ -1,0 +1,530 @@
+<!-- From Bulbapedia, "Crown Zenith (TCG)", revision 4583468 (https://bulbapedia.bulbagarden.net/w/index.php?oldid=4583468), CC BY-NC-SA 2.5. Only the infobox and the set list templates are kept, as a test fixture for bulbapedia-setlist.mjs. -->
+{{TCGExpansionInfobox
+|setname=Crown Zenith
+|jasetname=ハイクラスパック VSTARユニバース
+|transsetname=High Class Pack VSTAR Universe
+|setsymbol=yes
+|setlogo=Crown Zenith Logo EN.png
+|encards=230
+|ensetnum=--
+|enrelease=January 20, 2023
+|jacards=262
+|jasetnum=--
+|jarelease=December 2, 2022
+|prevset=Incandesent Arcana
+|japrevset=Incandescent Arcana
+|japrevsetname=Incandescent Arcana
+|nextset=Triplet Beat
+|janextset=Triplet Beat
+|janextsetname=Triplet Beat
+}}
+{{Setlist/nmheader|title=Additional cards|tablecol=348bc9|bordercol=282665|cellcol=bc2a53|promo=yes|symbol=no}}
+{{Setlist/nmentry|020/159|{{TCG ID|Crown Zenith|Radiant Charizard|20}}|Fire|||Pokémon TCG Gym stamped Present Pack exclusive (Malaysia/Singapore)}}
+{{Setlist/nmentry|036/159|{{TCG ID|Crown Zenith|Kyogre|36}}|Water|||Cosmos Holo Sea & Sky Crown Zenith Collection exclusive}}
+{{Setlist/nmentry|130/159|{{TCG ID|Crown Zenith|Friends in Hisui|130}}|Supporter|||Reverse Holo Professor Cup Promo}}
+{{Setlist/nmentry|130/159|{{TCG ID|Crown Zenith|Friends in Hisui|130}}|Supporter|||Reverse Holo Professor Cup Promo - Staff}}
+{{Setlist/nmentry|130/159|{{TCG ID|Crown Zenith|Friends in Hisui|130}}|Supporter|||Reverse Holo Professor Cup Promo - Top 8}}
+{{Setlist/nmentry|130/159|{{TCG ID|Crown Zenith|Friends in Hisui|130}}|Supporter|||Reverse Holo Professor Cup Promo - Champion}}
+{{Setlist/nmentry|131/159|{{TCG ID|Crown Zenith|Friends in Sinnoh|131}}|Supporter|||Reverse Holo Professor Cup Promo}}
+{{Setlist/nmentry|131/159|{{TCG ID|Crown Zenith|Friends in Sinnoh|131}}|Supporter|||Reverse Holo Professor Cup Promo - Staff}}
+{{Setlist/nmentry|131/159|{{TCG ID|Crown Zenith|Friends in Sinnoh|131}}|Supporter|||Reverse Holo Professor Cup Promo - Top 8}}
+{{Setlist/nmentry|131/159|{{TCG ID|Crown Zenith|Friends in Sinnoh|131}}|Supporter|||Reverse Holo Professor Cup Promo - Champion}}
+{{Setlist/footer|cellcol=bc2a53}}
+{{Setlist/header|title=Crown Zenith|tablecol=348bc9|bordercol=282665|cellcol=bc2a53|rarity=yes|symbol=yes|image=SetSymbolCrown Zenith.png}}
+{{Setlist/entry|001/159|F|{{TCG ID|Crown Zenith|Oddish|1}}|Grass||Common}}
+{{Setlist/entry|002/159|F|{{TCG ID|Crown Zenith|Gloom|2}}|Grass||Uncommon}}
+{{Setlist/entry|003/159|F|{{TCG ID|Crown Zenith|Bellossom|3}}|Grass||Rare}}
+{{Setlist/entry|004/159|F|{{TCG ID|Crown Zenith|Tangela|4}}|Grass||Common}}
+{{Setlist/entry|005/159|F|{{TCG ID|Crown Zenith|Tangrowth|5}}|Grass||Rare}}
+{{Setlist/entry|006/159|F|{{TCG ID|Crown Zenith|Scyther|6}}|Grass||Common}}
+{{Setlist/entry|007/159|F|{{TCG ID|Crown Zenith|Sunkern|7}}|Grass||Common}}
+{{Setlist/entry|008/159|F|{{TCG ID|Crown Zenith|Yanma|8}}|Grass||Common}}
+{{Setlist/entry|009/159|F|{{TCG ID|Crown Zenith|Yanmega|9}}|Grass||Rare}}
+{{Setlist/entry|010/159|F|{{TCG ID|Crown Zenith|Kricketot|10}}|Grass||Common}}
+{{Setlist/entry|011/159|E|{{TCG ID|Crown Zenith|Cherubi|11}}|Grass||Common}}
+{{Setlist/entry|012/159|F|{{TCG ID|Crown Zenith|Carnivine|12}}|Grass||Uncommon}}
+{{Setlist/entry|013/159|F|[[Leafeon V (Crown Zenith 13)|Leafeon]]{{TCGV}}|Grass||Ultra-Rare Rare}}
+{{Setlist/entry|014/159|F|[[Leafeon VSTAR (Crown Zenith 14)|Leafeon]]{{VSTAR}}|Grass||Rare VSTAR}}
+{{Setlist/entry|015/159|E|{{TCG ID|Crown Zenith|Grubbin|15}}|Grass||Common}}
+{{Setlist/entry|016/159|F|{{TCG ID|Crown Zenith|Zarude|16}}|Grass||Rare Holo}}
+{{Setlist/entry|017/159|F|{{TCG ID|Crown Zenith|Calyrex|17}}|Grass||Rare Holo}}
+{{Setlist/entry|018/159|F|[[Charizard V (Crown Zenith 18)|Charizard]]{{TCGV}}|Fire||Ultra-Rare Rare}}
+{{Setlist/entry|019/159|F|[[Charizard VSTAR (Crown Zenith 19)|Charizard]]{{VSTAR}}|Fire||Rare VSTAR}}
+{{Setlist/entry|020/159|F|{{TCG ID|Crown Zenith|Radiant Charizard|20}}|Fire||Rare Radiant}}
+{{Setlist/entry|021/159|F|{{TCG ID|Crown Zenith|Entei|21}}|Fire||Rare Holo}}
+{{Setlist/entry|022/159|F|[[Simisear V (Crown Zenith 22)|Simisear]]{{TCGV}}|Fire||Ultra-Rare Rare}}
+{{Setlist/entry|023/159|F|[[Simisear VSTAR (Crown Zenith 23)|Simisear]]{{VSTAR}}|Fire||Rare VSTAR}}
+{{Setlist/entry|024/159|F|{{TCG ID|Crown Zenith|Larvesta|24}}|Fire||Common}}
+{{Setlist/entry|025/159|F|{{TCG ID|Crown Zenith|Volcarona|25}}|Fire||Rare}}
+{{Setlist/entry|026/159|F|{{TCG ID|Crown Zenith|Volcanion|26}}|Fire||Rare Holo}}
+{{Setlist/entry|027/159|F|{{TCG ID|Crown Zenith|Salandit|27}}|Fire||Common}}
+{{Setlist/entry|028/159|F|{{TCG ID|Crown Zenith|Salazzle|28}}|Fire||Uncommon}}
+{{Setlist/entry|029/159|F|{{TCG ID|Crown Zenith|Seel|29}}|Water||Common}}
+{{Setlist/entry|030/159|E|{{TCG ID|Crown Zenith|Galarian Mr. Mime|30}}|Water||Common}}
+{{Setlist/entry|031/159|F|{{TCG ID|Crown Zenith|Wailmer|31}}|Water||Common}}
+{{Setlist/entry|032/159|F|{{TCG ID|Crown Zenith|Wailord|32}}|Water||Rare}}
+{{Setlist/entry|033/159|F|{{TCG ID|Crown Zenith|Corphish|33}}|Water||Common}}
+{{Setlist/entry|034/159|E|{{TCG ID|Crown Zenith|Snorunt|34}}|Water||Common}}
+{{Setlist/entry|035/159|F|{{TCG ID|Crown Zenith|Luvdisc|35}}|Water||Common}}
+{{Setlist/entry|036/159|F|{{TCG ID|Crown Zenith|Kyogre|36}}|Water||Rare Holo}}
+{{Setlist/entry|037/159|F|[[Kyogre V (Crown Zenith 37)|Kyogre]]{{TCGV}}|Water||Ultra-Rare Rare}}
+{{Setlist/entry|038/159|F|[[Glaceon V (Crown Zenith 38)|Glaceon]]{{TCGV}}|Water||Ultra-Rare Rare}}
+{{Setlist/entry|039/159|E|{{TCG ID|Crown Zenith|Shinx|39}}|Lightning||Common}}
+{{Setlist/entry|040/159|F|{{TCG ID|Crown Zenith|Shinx|40}}|Lightning||Common}}
+{{Setlist/entry|041/159|E|{{TCG ID|Crown Zenith|Luxio|41}}|Lightning||Uncommon}}
+{{Setlist/entry|042/159|F|{{TCG ID|Crown Zenith|Luxio|42}}|Lightning||Uncommon}}
+{{Setlist/entry|043/159|E|{{TCG ID|Crown Zenith|Luxray|43}}|Lightning||Rare}}
+{{Setlist/entry|044/159|F|{{TCG ID|Crown Zenith|Luxray|44}}|Lightning||Rare}}
+{{Setlist/entry|045/159|F|[[Rotom V (Crown Zenith 45)|Rotom]]{{TCGV}}|Lightning||Ultra-Rare Rare}}
+{{Setlist/entry|046/159|F|[[Rotom VSTAR (Crown Zenith 46)|Rotom]]{{VSTAR}}|Lightning||Rare VSTAR}}
+{{Setlist/entry|047/159|E|{{TCG ID|Crown Zenith|Emolga|47}}|Lightning||Common}}
+{{Setlist/entry|048/159|F|{{TCG ID|Crown Zenith|Eelektrik|48}}|Lightning||Uncommon}}
+{{Setlist/entry|049/159|F|{{TCG ID|Crown Zenith|Helioptile|49}}|Lightning||Common}}
+{{Setlist/entry|050/159|F|{{TCG ID|Crown Zenith|Heliolisk|50}}|Lightning||Rare}}
+{{Setlist/entry|051/159|F|{{TCG ID|Crown Zenith|Radiant Charjabug|51}}|Lightning||Rare Radiant}}
+{{Setlist/entry|052/159|E|{{TCG ID|Crown Zenith|Zeraora|52}}|Lightning||Rare}}
+{{Setlist/entry|053/159|F|[[Zeraora V (Crown Zenith 53)|Zeraora]]{{TCGV}}|Lightning||Ultra-Rare Rare}}
+{{Setlist/entry|054/159|F|[[Zeraora VMAX (Crown Zenith 54)|Zeraora]]{{VMAX}}|Lightning||Rare VMAX}}
+{{Setlist/entry|055/159|F|[[Zeraora VSTAR (Crown Zenith 55)|Zeraora]]{{VSTAR}}|Lightning||Rare VSTAR}}
+{{Setlist/entry|056/159|F|{{TCG ID|Crown Zenith|Pincurchin|56}}|Lightning||Uncommon}}
+{{Setlist/entry|057/159|F|{{TCG ID|Crown Zenith|Exeggcute|57}}|Psychic||Common}}
+{{Setlist/entry|058/159|F|{{TCG ID|Crown Zenith|Exeggutor|58}}|Psychic||Rare}}
+{{Setlist/entry|059/159|F|{{TCG ID|Crown Zenith|Mewtwo|59}}|Psychic||Rare Holo}}
+{{Setlist/entry|060/159|E|[[Mew V (Crown Zenith 60)|Mew]]{{TCGV}}|Psychic||Ultra-Rare Rare}}
+{{Setlist/entry|061/159|F|{{TCG ID|Crown Zenith|Girafarig|61}}|Psychic||Uncommon}}
+{{Setlist/entry|062/159|F|{{TCG ID|Crown Zenith|Lunatone|62}}|Psychic||Uncommon}}
+{{Setlist/entry|063/159|F|{{TCG ID|Crown Zenith|Dusclops|63}}|Psychic||Uncommon}}
+{{Setlist/entry|064/159|F|{{TCG ID|Crown Zenith|Tapu Lele|64}}|Psychic||Rare Holo}}
+{{Setlist/entry|065/159|F|[[Hatterene V (Crown Zenith 65)|Hatterene]]{{TCGV}}|Psychic||Ultra-Rare Rare}}
+{{Setlist/entry|066/159|F|[[Hatterene VMAX (Crown Zenith 66)|Hatterene]]{{VMAX}}|Psychic||Rare VMAX}}
+{{Setlist/entry|067/159|F|{{TCG ID|Crown Zenith|Enamorus|67}}|Psychic||Rare}}
+{{Setlist/entry|068/159|E|{{TCG ID|Crown Zenith|Graveler|68}}|Fighting||Uncommon}}
+{{Setlist/entry|069/159|F|{{TCG ID|Crown Zenith|Solrock|69}}|Fighting||Uncommon}}
+{{Setlist/entry|070/159|E|{{TCG ID|Crown Zenith|Baltoy|70}}|Fighting||Common}}
+{{Setlist/entry|071/159|F|{{TCG ID|Crown Zenith|Riolu|71}}|Fighting||Common}}
+{{Setlist/entry|072/159|F|{{TCG ID|Crown Zenith|Pancham|72}}|Fighting||Common}}
+{{Setlist/entry|073/159|F|{{TCG ID|Crown Zenith|Rockruff|73}}|Fighting||Common}}
+{{Setlist/entry|074/159|F|{{TCG ID|Crown Zenith|Lycanroc|74}}|Fighting||Rare}}
+{{Setlist/entry|075/159|E|{{TCG ID|Crown Zenith|Koffing|75}}|Darkness||Common}}
+{{Setlist/entry|076/159|F|{{TCG ID|Crown Zenith|Absol|76}}|Darkness||Rare Holo}}
+{{Setlist/entry|077/159|F|{{TCG ID|Crown Zenith|Purrloin|77}}|Darkness||Common}}
+{{Setlist/entry|078/159|F|{{TCG ID|Crown Zenith|Liepard|78}}|Darkness||Rare}}
+{{Setlist/entry|079/159|D|{{TCG ID|Crown Zenith|Krokorok|79}}|Darkness||Uncommon}}
+{{Setlist/entry|080/159|F|{{TCG ID|Crown Zenith|Pangoro|80}}|Darkness||Rare}}
+{{Setlist/entry|081/159|F|{{TCG ID|Crown Zenith|Skrelp|81}}|Darkness||Common}}
+{{Setlist/entry|082/159|F|{{TCG ID|Crown Zenith|Dragalge|82}}|Darkness||Rare}}
+{{Setlist/entry|083/159|D|{{TCG ID|Crown Zenith|Hoopa|83}}|Darkness||Rare Holo}}
+{{Setlist/entry|084/159|F|{{TCG ID|Crown Zenith|Galarian Meowth|84}}|Metal||Common}}
+{{Setlist/entry|085/159|F|{{TCG ID|Crown Zenith|Galarian Perrserker|85}}|Metal||Rare}}
+{{Setlist/entry|086/159|F|{{TCG ID|Crown Zenith|Scizor|86}}|Metal||Rare}}
+{{Setlist/entry|087/159|F|{{TCG ID|Crown Zenith|Aron|87}}|Metal||Common}}
+{{Setlist/entry|088/159|F|{{TCG ID|Crown Zenith|Lairon|88}}|Metal||Uncommon}}
+{{Setlist/entry|089/159|F|{{TCG ID|Crown Zenith|Aggron|89}}|Metal||Rare Holo}}
+{{Setlist/entry|090/159|F|{{TCG ID|Crown Zenith|Metang|90}}|Metal||Uncommon}}
+{{Setlist/entry|091/159|F|{{TCG ID|Crown Zenith|Pawniard|91}}|Metal||Common}}
+{{Setlist/entry|092/159|F|{{TCG ID|Crown Zenith|Pawniard|92}}|Metal||Common}}
+{{Setlist/entry|093/159|F|{{TCG ID|Crown Zenith|Bisharp|93}}|Metal||Uncommon}}
+{{Setlist/entry|094/159|F|{{TCG ID|Crown Zenith|Zacian|94}}|Metal||Rare Holo}}
+{{Setlist/entry|095/159|F|[[Zacian V (Crown Zenith 95)|Zacian]]{{TCGV}}|Metal||Ultra-Rare Rare}}
+{{Setlist/entry|096/159|F|[[Zacian VSTAR (Crown Zenith 96)|Zacian]]{{VSTAR}}|Metal||Rare VSTAR}}
+{{Setlist/entry|097/159|F|{{TCG ID|Crown Zenith|Zamazenta|97}}|Metal||Rare Holo}}
+{{Setlist/entry|098/159|F|[[Zamazenta V (Crown Zenith 98)|Zamazenta]]{{TCGV}}|Metal||Ultra-Rare Rare}}
+{{Setlist/entry|099/159|F|[[Zamazenta VSTAR (Crown Zenith 99)|Zamazenta]]{{VSTAR}}|Metal||Rare VSTAR}}
+{{Setlist/entry|100/159|E|[[Rayquaza V (Crown Zenith 100)|Rayquaza]]{{TCGV}}|Dragon||Ultra-Rare Rare}}
+{{Setlist/entry|101/159|E|[[Rayquaza VMAX (Crown Zenith 101)|Rayquaza]]{{VMAX}}|Dragon||Rare VMAX}}
+{{Setlist/entry|102/159|E|[[Rayquaza VMAX (Crown Zenith 102)|Rayquaza]]{{VMAX}}|Dragon||Rare VMAX}}
+{{Setlist/entry|103/159|E|[[Duraludon V (Crown Zenith 103)|Duraludon]]{{TCGV}}|Dragon||Ultra-Rare Rare}}
+{{Setlist/entry|104/159|E|[[Duraludon VMAX (Crown Zenith 104)|Duraludon]]{{VMAX}}|Dragon||Rare VMAX}}
+{{Setlist/entry|105/159|F|{{TCG ID|Crown Zenith|Radiant Eternatus|105}}|Dragon||Rare Radiant}}
+{{Setlist/entry|106/159|F|{{TCG ID|Crown Zenith|Tauros|106}}|Colorless||Rare}}
+{{Setlist/entry|107/159|F|{{TCG ID|Crown Zenith|Ditto|107}}|Colorless||Rare Holo}}
+{{Setlist/entry|108/159|F|[[Eevee V (Crown Zenith 108)|Eevee]]{{TCGV}}|Colorless||Ultra-Rare Rare}}
+{{Setlist/entry|109/159|E|{{TCG ID|Crown Zenith|Snorlax|109}}|Colorless||Rare}}
+{{Setlist/entry|110/159|F|{{TCG ID|Crown Zenith|Starly|110}}|Colorless||Common}}
+{{Setlist/entry|111/159|F|{{TCG ID|Crown Zenith|Bidoof|111}}|Colorless||Common}}
+{{Setlist/entry|112/159|F|{{TCG ID|Crown Zenith|Chatot|112}}|Colorless||Common}}
+{{Setlist/entry|113/159|F|[[Regigigas V (Crown Zenith 113)|Regigigas]]{{TCGV}}|Colorless||Ultra-Rare Rare}}
+{{Setlist/entry|114/159|F|[[Regigigas VSTAR (Crown Zenith 114)|Regigigas]]{{VSTAR}}|Colorless||Rare VSTAR}}
+{{Setlist/entry|115/159|F|{{TCG ID|Crown Zenith|Shaymin|115}}|Colorless||Uncommon}}
+{{Setlist/entry|116/159|E|[[Stoutland V (Crown Zenith 116)|Stoutland]]{{TCGV}}|Colorless||Ultra-Rare Rare}}
+{{Setlist/entry|117/159|F|{{TCG ID|Crown Zenith|Yungoos|117}}|Colorless||Common}}
+{{Setlist/entry|118/159|F|{{TCG ID|Crown Zenith|Gumshoos|118}}|Colorless||Rare}}
+{{Setlist/entry|119/159|F|{{TCG ID|Crown Zenith|Oranguru|119}}|Colorless||Rare}}
+{{Setlist/entry|120/159|E|[[Greedent V (Crown Zenith 120)|Greedent]]{{TCGV}}|Colorless||Ultra-Rare Rare}}
+{{Setlist/entry|121/159|F|{{TCG ID|Crown Zenith|Wooloo|121}}|Colorless||Common}}
+{{Setlist/entry|122/159|F|{{TCG ID|Crown Zenith|Dubwool|122}}|Colorless||Rare}}
+{{Setlist/entry|123/159|D|{{TCG ID|Crown Zenith|Bea|123}}|Supporter||Rare Holo}}
+{{Setlist/entry|124/159|D|{{TCG ID|Crown Zenith|Bede|124}}|Supporter||Rare Holo}}
+{{Setlist/entry|125/159|F|{{TCG ID|Crown Zenith|Crushing Hammer|125}}|Item||Uncommon}}
+{{Setlist/entry|126/159|F|{{TCG ID|Crown Zenith|Digging Duo|126}}|Supporter||Uncommon}}
+{{Setlist/entry|127/159|F|{{TCG ID|Crown Zenith|Energy Retrieval|127}}|Item||Common}}
+{{Setlist/entry|128/159|F|{{TCG ID|Crown Zenith|Energy Search|128}}|Item||Common}}
+{{Setlist/entry|129/159|F|{{TCG ID|Crown Zenith|Energy Switch|129}}|Item||Uncommon}}
+{{Setlist/entry|130/159|F|{{TCG ID|Crown Zenith|Friends in Hisui|130}}|Supporter||Uncommon}}
+{{Setlist/entry|131/159|F|{{TCG ID|Crown Zenith|Friends in Sinnoh|131}}|Supporter||Uncommon}}
+{{Setlist/entry|132/159|F|{{TCG ID|Crown Zenith|Great Ball|132}}|Item||Uncommon}}
+{{Setlist/entry|133/159|D|{{TCG ID|Crown Zenith|Hop|133}}|Supporter||Rare Holo}}
+{{Setlist/entry|134/159|D|{{TCG ID|Crown Zenith|Leon|134}}|Supporter||Rare Holo}}
+{{Setlist/entry|135/159|F|{{TCG ID|Crown Zenith|Lost Vacuum|135}}|Item||Uncommon}}
+{{Setlist/entry|136/159|D|{{TCG ID|Crown Zenith|Nessa|136}}|Supporter||Rare Holo}}
+{{Setlist/entry|137/159|F|{{TCG ID|Crown Zenith|Poké Ball|137}}|Item||Common}}
+{{Setlist/entry|138/159|F|{{TCG ID|Crown Zenith|Pokémon Catcher|138}}|Item||Uncommon}}
+{{Setlist/entry|139/159|F|{{TCG ID|Crown Zenith|Potion|139}}|Item||Common}}
+{{Setlist/entry|140/159|E|{{TCG ID|Crown Zenith|Raihan|140}}|Supporter||Rare Holo}}
+{{Setlist/entry|141/159|F|{{TCG ID|Crown Zenith|Rare Candy|141}}|Item||Uncommon}}
+{{Setlist/entry|142/159|E|{{TCG ID|Crown Zenith|Rescue Carrier|142}}|Item||Uncommon}}
+{{Setlist/entry|143/159|F|{{TCG ID|Crown Zenith|Sky Seal Stone|143}}|Item||Rare Holo}}
+{{Setlist/entry|144/159|F|{{TCG ID|Crown Zenith|Switch|144}}|Item||Common}}
+{{Setlist/entry|145/159|F|{{TCG ID|Crown Zenith|Trekking Shoes|145}}|Item||Uncommon}}
+{{Setlist/entry|146/159|F|{{TCG ID|Crown Zenith|Ultra Ball|146}}|Item||Uncommon}}
+{{Setlist/entry|147/159|E|{{TCG ID|Crown Zenith|Elesa's Sparkle|147}}|Supporter||Rare Ultra}}
+{{Setlist/entry|148/159|F|{{TCG ID|Crown Zenith|Friends in Hisui|148}}|Supporter||Rare Ultra}}
+{{Setlist/entry|149/159|F|{{TCG ID|Crown Zenith|Friends in Sinnoh|149}}|Supporter||Rare Ultra}}
+{{Setlist/entry|150/159|F|{{TCG ID|Crown Zenith|Professor's Research|150}} <small>'''[Professor Rowan]'''</small>|Supporter||Rare Ultra}}
+{{Setlist/entry|151/159|F|{{TCG ID|Crown Zenith|Volo|151}}|Supporter||Rare Ultra}}
+{{Setlist/entry|152/159|—|{{TCG|Grass Energy}}|Energy|Grass|Rare Ultra}}
+{{Setlist/entry|153/159|—|{{TCG|Fire Energy}}|Energy|Fire|Rare Ultra}}
+{{Setlist/entry|154/159|—|{{TCG|Water Energy}}|Energy|Water|Rare Ultra}}
+{{Setlist/entry|155/159|—|{{TCG|Lightning Energy}}|Energy|Lightning|Rare Ultra}}
+{{Setlist/entry|156/159|—|{{TCG|Psychic Energy}}|Energy|Psychic|Rare Ultra}}
+{{Setlist/entry|157/159|—|{{TCG|Fighting Energy}}|Energy|Fighting|Rare Ultra}}
+{{Setlist/entry|158/159|—|{{OBP|Darkness Energy|Basic}}|Energy|Darkness|Rare Ultra}}
+{{Setlist/entry|159/159|—|{{OBP|Metal Energy|Basic}}|Energy|Metal|Rare Ultra}}
+{{Setlist/entry|160/159|F|{{TCG ID|Crown Zenith|Pikachu|160}}|Lightning||Rare Secret}}
+{{Setlist/footer|cellcol=bc2a53}}
+{{Setlist/header|title=Galarian Gallery|tablecol=348bc9|bordercol=282665|cellcol=bc2a53|rarity=yes|symbol=yes|image=SetSymbolCrown Zenith.png}}
+{{Setlist/entry|GG01/GG70|F|{{TCG ID|Crown Zenith|Hisuian Voltorb|GG1}}|Grass||GGH}}
+{{Setlist/entry|GG02/GG70|F|{{TCG ID|Crown Zenith|Kricketune|GG2}}|Grass||GGH}}
+{{Setlist/entry|GG03/GG70|F|{{TCG ID|Crown Zenith|Magmortar|GG3}}|Fire||GGH}}
+{{Setlist/entry|GG04/GG70|E|{{TCG ID|Crown Zenith|Oricorio|GG4}}|Fire||GGH}}
+{{Setlist/entry|GG05/GG70|F|{{TCG ID|Crown Zenith|Lapras|GG5}}|Water||GGH}}
+{{Setlist/entry|GG06/GG70|F|{{TCG ID|Crown Zenith|Manaphy|GG6}}|Water||GGH}}
+{{Setlist/entry|GG07/GG70|F|{{TCG ID|Crown Zenith|Keldeo|GG7}}|Water||GGH}}
+{{Setlist/entry|GG08/GG70|F|{{TCG ID|Crown Zenith|Electivire|GG8}}|Lightning||GGH}}
+{{Setlist/entry|GG09/GG70|E|{{TCG ID|Crown Zenith|Toxtricity|GG9}}|Lightning||GGH}}
+{{Setlist/entry|GG10/GG70|E|{{TCG ID|Crown Zenith|Mew|GG10}}|Psychic||GGH}}
+{{Setlist/entry|GG11/GG70|F|{{TCG ID|Crown Zenith|Lunatone|GG11}}|Psychic||GGH}}
+{{Setlist/entry|GG12/GG70|E|{{TCG ID|Crown Zenith|Deoxys|GG12}}|Psychic||GGH}}
+{{Setlist/entry|GG13/GG70|F|{{TCG ID|Crown Zenith|Diancie|GG13}}|Psychic||GGH}}
+{{Setlist/entry|GG14/GG70|F|{{TCG ID|Crown Zenith|Comfey|GG14}}|Psychic||GGH}}
+{{Setlist/entry|GG15/GG70|F|{{TCG ID|Crown Zenith|Solrock|GG15}}|Fighting||GGH}}
+{{Setlist/entry|GG16/GG70|F|{{TCG ID|Crown Zenith|Absol|GG16}}|Darkness||GGH}}
+{{Setlist/entry|GG17/GG70|F|{{TCG ID|Crown Zenith|Thievul|GG17}}|Darkness||GGH}}
+{{Setlist/entry|GG18/GG70|F|{{TCG ID|Crown Zenith|Magnezone|GG18}}|Metal||GGH}}
+{{Setlist/entry|GG19/GG70|E|{{TCG ID|Crown Zenith|Altaria|GG19}}|Dragon||GGH}}
+{{Setlist/entry|GG20/GG70|E|{{TCG ID|Crown Zenith|Latias|GG20}}|Dragon||GGH}}
+{{Setlist/entry|GG21/GG70|F|{{TCG ID|Crown Zenith|Hisuian Goodra|GG21}}|Dragon||GGH}}
+{{Setlist/entry|GG22/GG70|F|{{TCG ID|Crown Zenith|Ditto|GG22}}|Colorless||GGH}}
+{{Setlist/entry|GG23/GG70|E|{{TCG ID|Crown Zenith|Dunsparce|GG23}}|Colorless||GGH}}
+{{Setlist/entry|GG24/GG70|F|{{TCG ID|Crown Zenith|Miltank|GG24}}|Colorless||GGH}}
+{{Setlist/entry|GG25/GG70|F|{{TCG ID|Crown Zenith|Bibarel|GG25}}|Colorless||GGH}}
+{{Setlist/entry|GG26/GG70|F|{{TCG ID|Crown Zenith|Riolu|GG26}}|Fighting||GGH}}
+{{Setlist/entry|GG27/GG70|E|{{TCG ID|Crown Zenith|Swablu|GG27}}|Colorless||GGH}}
+{{Setlist/entry|GG28/GG70|F|{{TCG ID|Crown Zenith|Duskull|GG28}}|Psychic||GGH}}
+{{Setlist/entry|GG29/GG70|F|{{TCG ID|Crown Zenith|Bidoof|GG29}}|Colorless||GGH}}
+{{Setlist/entry|GG30/GG70|F|{{TCG ID|Crown Zenith|Pikachu|GG30}}|Lightning||GGH}}
+{{Setlist/entry|GG31/GG70|F|{{TCG ID|Crown Zenith|Turtwig|GG31}}|Grass||GGH}}
+{{Setlist/entry|GG32/GG70|F|{{TCG ID|Crown Zenith|Paras|GG32}}|Grass||GGH}}
+{{Setlist/entry|GG33/GG70|F|{{TCG ID|Crown Zenith|Poochyena|GG33}}|Darkness||GGH}}
+{{Setlist/entry|GG34/GG70|E|{{TCG ID|Crown Zenith|Mareep|GG34}}|Lightning||GGH}}
+{{Setlist/entry|GG35/GG70|F|[[Leafeon VSTAR (Crown Zenith GG35)|Leafeon]]{{VSTAR}}|Grass||GGU}}
+{{Setlist/entry|GG36/GG70|F|[[Entei V (Crown Zenith GG36)|Entei]]{{TCGV}}|Fire||GGU}}
+{{Setlist/entry|GG37/GG70|F|[[Simisear VSTAR (Crown Zenith GG37)|Simisear]]{{VSTAR}}|Fire||GGU}}
+{{Setlist/entry|GG38/GG70|E|[[Suicune V (Crown Zenith GG38)|Suicune]]{{TCGV}}|Water||GGU}}
+{{Setlist/entry|GG39/GG70|F|[[Lumineon V (Crown Zenith GG39)|Lumineon]]{{TCGV}}|Water||GGU}}
+{{Setlist/entry|GG40/GG70|F|[[Glaceon VSTAR (Crown Zenith GG40)|Glaceon]]{{VSTAR}}|Water||GGU}}
+{{Setlist/entry|GG41/GG70|F|[[Raikou V (Crown Zenith GG41)|Raikou]]{{TCGV}}|Lightning||GGU}}
+{{Setlist/entry|GG42/GG70|F|[[Zeraora VMAX (Crown Zenith GG42)|Zeraora]]{{VMAX}}|Lightning||GGU}}
+{{Setlist/entry|GG43/GG70|F|[[Zeraora VSTAR (Crown Zenith GG43)|Zeraora]]{{VSTAR}}|Lightning||GGU}}
+{{Setlist/entry|GG44/GG70|F|[[Mewtwo VSTAR (Crown Zenith GG44)|Mewtwo]]{{VSTAR}}|Psychic||GGU}}
+{{Setlist/entry|GG45/GG70|F|[[Deoxys VMAX (Crown Zenith GG45)|Deoxys]]{{VMAX}}|Psychic||GGU}}
+{{Setlist/entry|GG46/GG70|F|[[Deoxys VSTAR (Crown Zenith GG46)|Deoxys]]{{VSTAR}}|Psychic||GGU}}
+{{Setlist/entry|GG47/GG70|F|[[Hatterene VMAX (Crown Zenith GG47)|Hatterene]]{{VMAX}}|Psychic||GGU}}
+{{Setlist/entry|GG48/GG70|E|[[Zacian V (Crown Zenith GG48)|Zacian]]{{TCGV}}|Psychic||GGU}}
+{{Setlist/entry|GG49/GG70|F|[[Drapion V (Crown Zenith GG49)|Drapion]]{{TCGV}}|Darkness||GGU}}
+{{Setlist/entry|GG50/GG70|F|[[Darkrai VSTAR (Crown Zenith GG50)|Darkrai]]{{VSTAR}}|Darkness||GGU}}
+{{Setlist/entry|GG51/GG70|F|[[Hisuian Samurott V (Crown Zenith GG51)|Hisuian Samurott]]{{TCGV}}|Darkness||GGU}}
+{{Setlist/entry|GG52/GG70|F|[[Hisuian Samurott VSTAR (Crown Zenith GG52)|Hisuian Samurott]]{{VSTAR}}|Darkness||GGU}}
+{{Setlist/entry|GG53/GG70|E|[[Hoopa V (Crown Zenith GG53)|Hoopa]]{{TCGV}}|Darkness||GGU}}
+{{Setlist/entry|GG54/GG70|F|[[Zamazenta V (Crown Zenith GG54)|Zamazenta]]{{TCGV}}|Metal||GGU}}
+{{Setlist/entry|GG55/GG70|F|[[Regigigas VSTAR (Crown Zenith GG55)|Regigigas]]{{VSTAR}}|Colorless||GGU}}
+{{Setlist/entry|GG56/GG70|F|[[Hisuian Zoroark VSTAR (Crown Zenith GG56)|Hisuian Zoroark]]{{VSTAR}}|Colorless||GGU}}
+{{Setlist/entry|GG57/GG70|F|{{TCG ID|Crown Zenith|Adaman|GG57}}|Supporter||GGU}}
+{{Setlist/entry|GG58/GG70|F|{{TCG ID|Crown Zenith|Cheren's Care|GG58}}|Supporter||GGU}}
+{{Setlist/entry|GG59/GG70|F|{{TCG ID|Crown Zenith|Colress's Experiment|GG59}}|Supporter||GGU}}
+{{Setlist/entry|GG60/GG70|F|{{TCG ID|Crown Zenith|Cynthia's Ambition|GG60}}|Supporter||GGU}}
+{{Setlist/entry|GG61/GG70|F|{{TCG ID|Crown Zenith|Gardenia's Vigor|GG61}}|Supporter||GGU}}
+{{Setlist/entry|GG62/GG70|F|{{TCG ID|Crown Zenith|Grant|GG62}}|Supporter||GGU}}
+{{Setlist/entry|GG63/GG70|F|{{TCG ID|Crown Zenith|Irida|GG63}}|Supporter||GGU}}
+{{Setlist/entry|GG64/GG70|E|{{TCG ID|Crown Zenith|Melony|GG64}}|Supporter||GGU}}
+{{Setlist/entry|GG65/GG70|E|{{TCG ID|Crown Zenith|Raihan|GG65}}|Supporter||GGU}}
+{{Setlist/entry|GG66/GG70|F|{{TCG ID|Crown Zenith|Roxanne|GG66}}|Supporter||GGU}}
+{{Setlist/entry|GG67/GG70|F|[[Origin Forme Palkia VSTAR (Crown Zenith GG67)|Origin Forme Palkia]]{{VSTAR}}|Water||GGS}}
+{{Setlist/entry|GG68/GG70|F|[[Origin Forme Dialga VSTAR (Crown Zenith GG68)|Origin Forme Dialga]]{{VSTAR}}|Metal||GGS}}
+{{Setlist/entry|GG69/GG70|F|[[Giratina VSTAR (Crown Zenith GG69)|Giratina]]{{VSTAR}}|Dragon||GGS}}
+{{Setlist/entry|GG70/GG70|F|[[Arceus VSTAR (Crown Zenith GG70)|Arceus]]{{VSTAR}}|Colorless||GGS}}
+{{Setlist/footer|cellcol=bc2a53}}
+{{Setlist/header|title=VSTAR Universe|tablecol=d9bd64|bordercol=4a1708|cellcol=ebebeb|rarity=yes|symbol=yes|image=SetSymbolVSTAR Universe.png}}
+{{Setlist/entry|001/172|F|{{TCG ID|VSTAR Universe|Paras|1}}|Grass||None}}
+{{Setlist/entry|002/172|F|{{TCG ID|VSTAR Universe|Parasect|2}}|Grass||None}}
+{{Setlist/entry|003/172|F|{{TCG ID|VSTAR Universe|Hisuian Voltorb|3}}|Grass||None}}
+{{Setlist/entry|004/172|F|{{TCG ID|VSTAR Universe|Hisuian Electrode|4}}|Grass||None}}
+{{Setlist/entry|005/172|F|[[Hisuian Electrode V (VSTAR Universe 5)|Hisuian Electrode]]{{TCGV}}|Grass||RR}}
+{{Setlist/entry|006/172|F|{{TCG ID|VSTAR Universe|Turtwig|6}}|Grass||None}}
+{{Setlist/entry|007/172|F|{{TCG ID|VSTAR Universe|Grotle|7}}|Grass||None}}
+{{Setlist/entry|008/172|F|{{TCG ID|VSTAR Universe|Torterra|8}}|Grass||None}}
+{{Setlist/entry|009/172|F|{{TCG ID|VSTAR Universe|Kricketot|9}}|Grass||None}}
+{{Setlist/entry|010/172|F|{{TCG ID|VSTAR Universe|Kricketune|10}}|Grass||None}}
+{{Setlist/entry|011/172|F|[[Leafeon V (VSTAR Universe 11)|Leafeon]]{{TCGV}}|Grass||RR}}
+{{Setlist/entry|012/172|E|[[Leafeon VSTAR (VSTAR Universe 12)|Leafeon]]{{VSTAR}}|Grass||RRR}}
+{{Setlist/entry|013/172|F|[[Charizard V (VSTAR Universe 13)|Charizard]]{{TCGV}}|Fire||RR}}
+{{Setlist/entry|014/172|F|[[Charizard VSTAR (VSTAR Universe 14)|Charizard]]{{VSTAR}}|Fire||RRR}}
+{{Setlist/entry|015/172|F|{{TCG ID|VSTAR Universe|Radiant Charizard|15}}|Fire||K}}
+{{Setlist/entry|016/172|F|{{TCG ID|VSTAR Universe|Magmar|16}}|Fire||None}}
+{{Setlist/entry|017/172|F|{{TCG ID|VSTAR Universe|Magmortar|17}}|Fire||None}}
+{{Setlist/entry|018/172|F|{{TCG ID|VSTAR Universe|Moltres|18}}|Fire||None}}
+{{Setlist/entry|019/172|F|[[Entei V (VSTAR Universe 19)|Entei]]{{TCGV}}|Fire||RR}}
+{{Setlist/entry|020/172|F|[[Simisear V (VSTAR Universe 20)|Simisear]]{{TCGV}}|Fire||RR}}
+{{Setlist/entry|021/172|F|[[Simisear VSTAR (VSTAR Universe 21)|Simisear]]{{VSTAR}}|Fire||RRR}}
+{{Setlist/entry|022/172|E|{{TCG ID|VSTAR Universe|Oricorio|22}}|Fire||None}}
+{{Setlist/entry|023/172|F|{{TCG ID|VSTAR Universe|Lapras|23}}|Water||None}}
+{{Setlist/entry|024/172|E|[[Suicune V (VSTAR Universe 24)|Suicune]]{{TCGV}}|Water||RR}}
+{{Setlist/entry|025/172|F|{{TCG ID|VSTAR Universe|Regice|25}}|Water||None}}
+{{Setlist/entry|026/172|F|[[Lumineon V (VSTAR Universe 26)|Lumineon]]{{TCGV}}|Water||RR}}
+{{Setlist/entry|027/172|F|[[Origin Forme Palkia V (VSTAR Universe 27)|Origin Forme Palkia]]{{TCGV}}|Water||RR}}
+{{Setlist/entry|028/172|F|[[Origin Forme Palkia VSTAR (VSTAR Universe 28)|Origin Forme Palkia]]{{VSTAR}}|Water||RRR}}
+{{Setlist/entry|029/172|F|{{TCG ID|VSTAR Universe|Manaphy|29}}|Water||None}}
+{{Setlist/entry|030/172|F|{{TCG ID|VSTAR Universe|Hisuian Basculin|30}}|Water||None}}
+{{Setlist/entry|031/172|F|{{TCG ID|VSTAR Universe|Hisuian Basculegion|31}}|Water||None}}
+{{Setlist/entry|032/172|F|{{TCG ID|VSTAR Universe|Keldeo|32}}|Water||None}}
+{{Setlist/entry|033/172|F|{{TCG ID|VSTAR Universe|Radiant Greninja|33}}|Water||K}}
+{{Setlist/entry|034/172|F|{{TCG ID|VSTAR Universe|Electabuzz|34}}|Lightning||None}}
+{{Setlist/entry|035/172|F|{{TCG ID|VSTAR Universe|Electivire|35}}|Lightning||None}}
+{{Setlist/entry|036/172|E|{{TCG ID|VSTAR Universe|Mareep|36}}|Lightning||None}}
+{{Setlist/entry|037/172|E|{{TCG ID|VSTAR Universe|Flaaffy|37}}|Lightning||None}}
+{{Setlist/entry|038/172|F|[[Raikou V (VSTAR Universe 38)|Raikou]]{{TCGV}}|Lightning||RR}}
+{{Setlist/entry|039/172|F|{{TCG ID|VSTAR Universe|Radiant Charjabug|39}}|Lightning||K}}
+{{Setlist/entry|040/172|F|[[Zeraora V (VSTAR Universe 40)|Zeraora]]{{TCGV}}|Lightning||RR}}
+{{Setlist/entry|041/172|F|[[Zeraora VMAX (VSTAR Universe 41)|Zeraora]]{{VMAX}}|Lightning||RRR}}
+{{Setlist/entry|042/172|F|[[Zeraora VSTAR (VSTAR Universe 42)|Zeraora]]{{VSTAR}}|Lightning||RRR}}
+{{Setlist/entry|043/172|E|{{TCG ID|VSTAR Universe|Toxel|43}}|Lightning||None}}
+{{Setlist/entry|044/172|E|{{TCG ID|VSTAR Universe|Toxtricity|44}}|Lightning||None}}
+{{Setlist/entry|045/172|F|{{TCG ID|VSTAR Universe|Regieleki|45}}|Lightning||None}}
+{{Setlist/entry|046/172|F|{{TCG ID|VSTAR Universe|Gastly|46}}|Psychic||None}}
+{{Setlist/entry|047/172|F|{{TCG ID|VSTAR Universe|Haunter|47}}|Psychic||None}}
+{{Setlist/entry|048/172|F|{{TCG ID|VSTAR Universe|Gengar|48}}|Psychic||None}}
+{{Setlist/entry|049/172|E|{{TCG ID|VSTAR Universe|Galarian Articuno|49}}|Psychic||None}}
+{{Setlist/entry|050/172|F|[[Mewtwo V (VSTAR Universe 50)|Mewtwo]]{{TCGV}}|Psychic||RR}}
+{{Setlist/entry|051/172|F|[[Mewtwo VSTAR (VSTAR Universe 51)|Mewtwo]]{{VSTAR}}|Psychic||RRR}}
+{{Setlist/entry|052/172|E|{{TCG ID|VSTAR Universe|Mew|52}}|Psychic||None}}
+{{Setlist/entry|053/172|E|[[Mew V (VSTAR Universe 53)|Mew]]{{TCGV}}|Psychic||RR}}
+{{Setlist/entry|054/172|E|[[Mew VMAX (VSTAR Universe 54)|Mew]]{{VMAX}}|Psychic||RRR}}
+{{Setlist/entry|055/172|F|{{TCG ID|VSTAR Universe|Radiant Gardevoir|55}}|Psychic||K}}
+{{Setlist/entry|056/172|F|{{TCG ID|VSTAR Universe|Lunatone|56}}|Psychic||None}}
+{{Setlist/entry|057/172|F|{{TCG ID|VSTAR Universe|Duskull|57}}|Psychic||None}}
+{{Setlist/entry|058/172|F|{{TCG ID|VSTAR Universe|Dusclops|58}}|Psychic||None}}
+{{Setlist/entry|059/172|F|{{TCG ID|VSTAR Universe|Dusknoir|59}}|Psychic||None}}
+{{Setlist/entry|060/172|E|{{TCG ID|VSTAR Universe|Deoxys|60}}|Psychic||None}}
+{{Setlist/entry|061/172|E|{{TCG ID|VSTAR Universe|Pumpkaboo|61}}|Psychic||None}}
+{{Setlist/entry|062/172|E|{{TCG ID|VSTAR Universe|Gourgeist|62}}|Psychic||None}}
+{{Setlist/entry|063/172|F|{{TCG ID|VSTAR Universe|Diancie|63}}|Psychic||None}}
+{{Setlist/entry|064/172|F|{{TCG ID|VSTAR Universe|Comfey|64}}|Psychic||None}}
+{{Setlist/entry|065/172|F|[[Hatterene V (VSTAR Universe 65)|Hatterene]]{{TCGV}}|Psychic||RR}}
+{{Setlist/entry|066/172|F|[[Hatterene VMAX (VSTAR Universe 66)|Hatterene]]{{VMAX}}|Psychic||RRR}}
+{{Setlist/entry|067/172|F|[[Zacian V (VSTAR Universe 67)|Zacian]]{{TCGV}}|Psychic||RR}}
+{{Setlist/entry|068/172|F|[[Enamorus V (VSTAR Universe 68)|Enamorus]]{{TCGV}}|Psychic||RR}}
+{{Setlist/entry|069/172|F|{{TCG ID|VSTAR Universe|Hisuian Growlithe|69}}|Fighting||None}}
+{{Setlist/entry|070/172|F|{{TCG ID|VSTAR Universe|Hisuian Arcanine|70}}|Fighting||None}}
+{{Setlist/entry|071/172|F|[[Machamp V (VSTAR Universe 71)|Machamp]]{{TCGV}}|Fighting||RR}}
+{{Setlist/entry|072/172|F|[[Machamp VMAX (VSTAR Universe 72)|Machamp]]{{VMAX}}|Fighting||RRR}}
+{{Setlist/entry|073/172|E|{{TCG ID|VSTAR Universe|Galarian Zapdos|73}}|Fighting||None}}
+{{Setlist/entry|074/172|F|{{TCG ID|VSTAR Universe|Solrock|74}}|Fighting||None}}
+{{Setlist/entry|075/172|F|{{TCG ID|VSTAR Universe|Regirock|75}}|Fighting||None}}
+{{Setlist/entry|076/172|F|{{TCG ID|VSTAR Universe|Riolu|76}}|Fighting||None}}
+{{Setlist/entry|077/172|F|{{TCG ID|VSTAR Universe|Lucario|77}}|Fighting||None}}
+{{Setlist/entry|078/172|F|{{TCG ID|VSTAR Universe|Radiant Hawlucha|78}}|Fighting||None}}
+{{setlist/entry|079/172|E|{{TCG ID|VSTAR Universe|Galarian Moltres|79}}|Darkness||None}}
+{{Setlist/entry|080/172|E|[[Galarian Moltres V (VSTAR Universe 80)|Galarian Moltres]]{{TCGV}}|Darkness||RR}}
+{{Setlist/entry|081/172|F|{{TCG ID|VSTAR Universe|Poochyena|81}}|Darkness||None}}
+{{Setlist/entry|082/172|F|{{TCG ID|VSTAR Universe|Mightyena|82}}|Darkness||None}}
+{{Setlist/entry|083/172|F|{{TCG ID|VSTAR Universe|Absol|83}}|Darkness||None}}
+{{Setlist/entry|084/172|F|{{TCG ID|VSTAR Universe|Spiritomb|84}}|Darkness||None}}
+{{Setlist/entry|085/172|F|[[Drapion V (VSTAR Universe 85)|Drapion]]{{TCGV}}|Darkness||RR}}
+{{Setlist/entry|086/172|F|[[Hisuian Samurott V (VSTAR Universe 86)|Hisuian Samurott]]{{TCGV}}|Darkness||RR}}
+{{Setlist/entry|087/172|F|[[Hisuian Samurott VSTAR (VSTAR Universe 87)|Hisuian Samurott]]{{VSTAR}}|Darkness||RRR}}
+{{Setlist/entry|088/172|F|{{TCG ID|VSTAR Universe|Purrloin|88}}|Darkness||None}}
+{{Setlist/entry|089/172|F|{{TCG ID|VSTAR Universe|Liepard|89}}|Darkness||None}}
+{{Setlist/entry|090/172|E|{{TCG ID|VSTAR Universe|Zorua|90}}|Darkness||None}}
+{{Setlist/entry|091/172|E|{{TCG ID|VSTAR Universe|Zoroark|91}}|Darkness||None}}
+{{Setlist/entry|092/172|F|{{TCG ID|VSTAR Universe|Nickit|92}}|Darkness||None}}
+{{Setlist/entry|093/172|F|{{TCG ID|VSTAR Universe|Thievul|93}}|Darkness||None}}
+{{Setlist/entry|094/172|F|{{TCG ID|VSTAR Universe|Magnemite|94}}|Metal||None}}
+{{Setlist/entry|095/172|F|{{TCG ID|VSTAR Universe|Magneton|95}}|Metal||None}}
+{{Setlist/entry|096/172|F|{{TCG ID|VSTAR Universe|Magnezone|96}}|Metal||None}}
+{{Setlist/entry|097/172|F|{{TCG ID|VSTAR Universe|Registeel|97}}|Metal||None}}
+{{Setlist/entry|098/172|E|{{TCG ID|VSTAR Universe|Bronzor|98}}|Metal||None}}
+{{Setlist/entry|099/172|E|{{TCG ID|VSTAR Universe|Bronzong|99}}|Metal||None}}
+{{Setlist/entry|100/172|F|[[Origin Forme Dialga V (VSTAR Universe 100)|Origin Forme Dialga]]{{TCGV}}|Metal||RR}}
+{{Setlist/entry|101/172|F|[[Origin Forme Dialga VSTAR (VSTAR Universe 101)|Origin Forme Dialga]]{{VSTAR}}|Metal||RRR}}
+{{Setlist/entry|102/172|E|[[Genesect V (VSTAR Universe 102)|Genesect]]{{TCGV}}|Metal||RR}}
+{{Setlist/entry|103/172|F|[[Zamazenta V (VSTAR Universe 103)|Zamazenta]]{{TCGV}}|Metal||RR}}
+{{Setlist/entry|104/172|E|{{TCG ID|VSTAR Universe|Altaria|104}}|Dragon||None}}
+{{Setlist/entry|105/172|E|{{TCG ID|VSTAR Universe|Latias|105}}|Dragon||None}}
+{{Setlist/entry|106/172|E|{{TCG ID|VSTAR Universe|Latios|106}}|Dragon||None}}
+{{Setlist/entry|107/172|E|[[Rayquaza V (VSTAR Universe 107)|Rayquaza]]{{TCGV}}|Dragon||RR}}
+{{Setlist/entry|108/172|E|[[Rayquaza VMAX (VSTAR Universe 108)|Rayquaza]]{{VMAX}}|Dragon||RRR}}
+{{Setlist/entry|109/172|F|[[Garchomp V (VSTAR Universe 109)|Garchomp]]{{TCGV}}|Dragon||RR}}
+{{Setlist/entry|110/172|F|[[Giratina V (VSTAR Universe 110)|Giratina]]{{TCGV}}|Dragon||RR}}
+{{Setlist/entry|111/172|F|[[Giratina VSTAR (VSTAR Universe 111)|Giratina]]{{VSTAR}}|Dragon||RRR}}
+{{Setlist/entry|112/172|F|{{TCG ID|VSTAR Universe|Goomy|112}}|Dragon||None}}
+{{Setlist/entry|113/172|F|{{TCG ID|VSTAR Universe|Hisuian Sliggoo|113}}|Dragon||None}}
+{{Setlist/entry|114/172|F|{{TCG ID|VSTAR Universe|Hisuian Goodra|114}}|Dragon||None}}
+{{Setlist/entry|115/172|F|{{TCG ID|VSTAR Universe|Radiant Eternatus|115}}|Dragon||K}}
+{{Setlist/entry|116/172|F|{{TCG ID|VSTAR Universe|Regidrago|116}}|Dragon||None}}
+{{Setlist/entry|117/172|F|{{TCG ID|VSTAR Universe|Ditto|117}}|Colorless||None}}
+{{Setlist/entry|118/172|E|{{TCG ID|VSTAR Universe|Dunsparce|118}}|Colorless||None}}
+{{Setlist/entry|119/172|F|{{TCG ID|VSTAR Universe|Miltank|119}}|Colorless||None}}
+{{Setlist/entry|120/172|E|{{TCG ID|VSTAR Universe|Swablu|120}}|Colorless||None}}
+{{Setlist/entry|121/172|F|{{TCG ID|VSTAR Universe|Bidoof|121}}|Colorless||None}}
+{{Setlist/entry|122/172|F|{{TCG ID|VSTAR Universe|Bibarel|122}}|Colorless||None}}
+{{Setlist/entry|123/172|F|{{TCG ID|VSTAR Universe|Regigigas|123}}|Colorless||None}}
+{{Setlist/entry|124/172|F|[[Regigigas V (VSTAR Universe 124)|Regigigas]]{{TCGV}}|Colorless||RR}}
+{{Setlist/entry|125/172|F|[[Regigigas VSTAR (VSTAR Universe 125)|Regigigas]]{{VSTAR}}|Colorless||RRR}}
+{{Setlist/entry|126/172|F|[[Arceus V (VSTAR Universe 126)|Arceus]]{{TCGV}}|Colorless||RR}}
+{{Setlist/entry|127/172|F|[[Arceus VSTAR (VSTAR Universe 127)|Arceus]]{{VSTAR}}|Colorless||RRR}}
+{{Setlist/entry|128/172|F|[[Hisuian Zoroark V (VSTAR Universe 128)|Hisuian Zoroark]]{{TCGV}}|Colorless||RR}}
+{{Setlist/entry|129/172|F|[[Hisuian Zoroark VSTAR (VSTAR Universe 129)|Hisuian Zoroark]]{{VSTAR}}|Colorless||RRR}}
+{{Setlist/entry|130/172|F|[[Oranguru V (VSTAR Universe 130)|Oranguru]]{{TCGV}}|Colorless||RR}}
+{{Setlist/entry|131/172|F|[[Wyrdeer V (VSTAR Universe 131)|Wyrdeer]]{{TCGV}}|Colorless||RR}}
+{{Setlist/entry|132/172|E|{{TCG ID|VSTAR Universe|Fan of Waves|132}}|Item||None}}
+{{Setlist/entry|133/172|F|{{TCG ID|VSTAR Universe|Gutsy Pickaxe|133}}|Item||None}}
+{{Setlist/entry|134/172|E|{{TCG ID|VSTAR Universe|Fog Crystal|134}}|Item||None}}
+{{Setlist/entry|135/172|F|{{TCG ID|VSTAR Universe|Dark Patch|135}}|Item||None}}
+{{Setlist/entry|136/172|F|{{TCG ID|VSTAR Universe|Damage Pump|136}}|Item||None}}
+{{Setlist/entry|137/172|F|{{TCG ID|VSTAR Universe|Trekking Shoes|137}}|Item||None}}
+{{Setlist/entry|138/172|F|{{TCG ID|VSTAR Universe|Ultra Ball|138}}|Item||None}}
+{{Setlist/entry|139/172|E|{{TCG ID|VSTAR Universe|Power Tablet|139}}|Item||None}}
+{{Setlist/entry|140/172|F|{{TCG ID|VSTAR Universe|Hisuian Heavy Ball|140}}|Item||None}}
+{{Setlist/entry|141/172|F|{{TCG ID|VSTAR Universe|Mirage Gate|141}}|Item||None}}
+{{Setlist/entry|142/172|E|{{TCG ID|VSTAR Universe|Rescue Carrier|142}}|Item||None}}
+{{Setlist/entry|143/172|E|{{TCG ID|VSTAR Universe|Level Ball|143}}|Item||None}}
+{{Setlist/entry|144/172|F|{{TCG ID|VSTAR Universe|Lost Vacuum|144}}|Item||None}}
+{{Setlist/entry|145/172|F|{{TCG ID|VSTAR Universe|Choice Belt|145}}|Item||None}}
+{{Setlist/entry|146/172|F|{{TCG ID|VSTAR Universe|Sky Seal Stone|146}}|Item||None}}
+{{Setlist/entry|147/172|F|{{TCG ID|VSTAR Universe|Leafy Camo Poncho|147}}|Item||None}}
+{{Setlist/entry|148/172|F|{{TCG ID|VSTAR Universe|Colress's Experiment|148}}|Supporter||None}}
+{{Setlist/entry|149/172|F|{{TCG ID|VSTAR Universe|Irida|149}}|Supporter||None}}
+{{Setlist/entry|150/172|E|{{TCG ID|VSTAR Universe|Elesa's Sparkle|150}}|Supporter||None}}
+{{Setlist/entry|151/172|E|{{TCG ID|VSTAR Universe|Raihan|151}}|Supporter||None}}
+{{Setlist/entry|152/172|F|{{TCG ID|VSTAR Universe|Grant|152}}|Supporter||None}}
+{{Setlist/entry|153/172|F|{{TCG ID|VSTAR Universe|Cynthia's Ambition|153}}|Supporter||None}}
+{{Setlist/entry|154/172|F|{{TCG ID|VSTAR Universe|Friends in Sinnoh|154}}|Supporter||None}}
+{{Setlist/entry|155/172|F|{{TCG ID|VSTAR Universe|Adaman|155}}|Supporter||None}}
+{{Setlist/entry|156/172|F|{{TCG ID|VSTAR Universe|Cheren's Care|156}}|Supporter||None}}
+{{Setlist/entry|157/172|F|{{TCG ID|VSTAR Universe|Roxanne|157}}|Supporter||None}}
+{{Setlist/entry|158/172|F|{{TCG ID|VSTAR Universe|Gardenia's Vigor|158}}|Supporter||None}}
+{{Setlist/entry|159/172|F|{{TCG ID|VSTAR Universe|Professor's Research|159}} <small>'''[Professor Rowan]'''</small>|Supporter||None}}
+{{Setlist/entry|160/172|F|{{TCG ID|VSTAR Universe|Friends in Hisui|160}}|Supporter||None}}
+{{Setlist/entry|161/172|F|{{TCG ID|VSTAR Universe|Boss's Orders|161}} <small>'''[Cyrus]'''</small>|Supporter||None}}
+{{Setlist/entry|162/172|E|{{TCG ID|VSTAR Universe|Melony|162}}|Supporter||None}}
+{{Setlist/entry|163/172|E|{{TCG ID|VSTAR Universe|Cheryl|163}}|Supporter||None}}
+{{Setlist/entry|164/172|E|{{TCG ID|VSTAR Universe|Stormy Mountains|164}}|Stadium||None}}
+{{Setlist/entry|165/172|E|{{TCG ID|VSTAR Universe|Path to the Peak|165}}|Stadium||None}}
+{{Setlist/entry|166/172|F|{{TCG ID|VSTAR Universe|Gapejaw Bog|166}}|Stadium||None}}
+{{Setlist/entry|167/172|F|{{TCG ID|VSTAR Universe|Collapsed Stadium|167}}|Stadium||None}}
+{{Setlist/entry|168/172|F|{{TCG ID|VSTAR Universe|Jubilife Village|168}}|Stadium||None}}
+{{Setlist/entry|169/172|F|{{TCG ID|VSTAR Universe|Temple of Sinnoh|169}}|Stadium||None}}
+{{Setlist/entry|170/172|F|{{TCG ID|VSTAR Universe|Magma Basin|170}}|Stadium||None}}
+{{Setlist/entry|171/172|F|{{TCG ID|VSTAR Universe|Double Turbo Energy|171}}|Energy|Colorless|None}}
+{{Setlist/entry|172/172|E|{{TCG ID|VSTAR Universe|Fusion Strike Energy|172}}|Energy|Rainbow|None}}
+{{Setlist/entry|173/172|F|{{TCG ID|VSTAR Universe|Hisuian Voltorb|173}}|Grass||AR}}
+{{Setlist/entry|174/172|F|{{TCG ID|VSTAR Universe|Kricketune|174}}|Grass||AR}}
+{{Setlist/entry|175/172|F|{{TCG ID|VSTAR Universe|Magmortar|175}}|Fire||AR}}
+{{Setlist/entry|176/172|E|{{TCG ID|VSTAR Universe|Oricorio|176}}|Fire||AR}}
+{{Setlist/entry|177/172|F|{{TCG ID|VSTAR Universe|Lapras|177}}|Water||AR}}
+{{Setlist/entry|178/172|F|{{TCG ID|VSTAR Universe|Manaphy|178}}|Water||AR}}
+{{Setlist/entry|179/172|F|{{TCG ID|VSTAR Universe|Keldeo|179}}|Water||AR}}
+{{Setlist/entry|180/172|F|{{TCG ID|VSTAR Universe|Electivire|180}}|Lightning||AR}}
+{{Setlist/entry|181/172|E|{{TCG ID|VSTAR Universe|Toxtricity|181}}|Lightning||AR}}
+{{Setlist/entry|182/172|E|{{TCG ID|VSTAR Universe|Galarian Articuno|182}}|Psychic||AR}}
+{{Setlist/entry|183/172|E|{{TCG ID|VSTAR Universe|Mew|183}}|Psychic||AR}}
+{{Setlist/entry|184/172|F|{{TCG ID|VSTAR Universe|Lunatone|184}}|Psychic||AR}}
+{{Setlist/entry|185/172|E|{{TCG ID|VSTAR Universe|Deoxys|185}}|Psychic||AR}}
+{{Setlist/entry|186/172|F|{{TCG ID|VSTAR Universe|Diancie|186}}|Psychic||AR}}
+{{Setlist/entry|187/172|F|{{TCG ID|VSTAR Universe|Comfey|187}}|Psychic||AR}}
+{{Setlist/entry|188/172|E|{{TCG ID|VSTAR Universe|Galarian Zapdos|188}}|Fighting||AR}}
+{{Setlist/entry|189/172|F|{{TCG ID|VSTAR Universe|Solrock|189}}|Fighting||AR}}
+{{Setlist/entry|190/172|E|{{TCG ID|VSTAR Universe|Galarian Moltres|190}}|Darkness||AR}}
+{{Setlist/entry|191/172|F|{{TCG ID|VSTAR Universe|Absol|191}}|Darkness||AR}}
+{{Setlist/entry|192/172|F|{{TCG ID|VSTAR Universe|Thievul|192}}|Darkness||AR}}
+{{Setlist/entry|193/172|F|{{TCG ID|VSTAR Universe|Magnezone|193}}|Metal||AR}}
+{{Setlist/entry|194/172|E|{{TCG ID|VSTAR Universe|Altaria|194}}|Dragon||AR}}
+{{Setlist/entry|195/172|E|{{TCG ID|VSTAR Universe|Latias|195}}|Dragon||AR}}
+{{Setlist/entry|196/172|F|{{TCG ID|VSTAR Universe|Hisuian Goodra|196}}|Dragon||AR}}
+{{Setlist/entry|197/172|F|{{TCG ID|VSTAR Universe|Ditto|197}}|Colorless||AR}}
+{{Setlist/entry|198/172|E|{{TCG ID|VSTAR Universe|Dunsparce|198}}|Colorless||AR}}
+{{Setlist/entry|199/172|F|{{TCG ID|VSTAR Universe|Miltank|199}}|Colorless||AR}}
+{{Setlist/entry|200/172|F|{{TCG ID|VSTAR Universe|Bibarel|200}}|Colorless||AR}}
+{{Setlist/entry|201/172|F|{{TCG ID|VSTAR Universe|Riolu|201}}|Fighting||AR}}
+{{Setlist/entry|202/172|E|{{TCG ID|VSTAR Universe|Swablu|202}}|Colorless||AR}}
+{{Setlist/entry|203/172|F|{{TCG ID|VSTAR Universe|Duskull|203}}|Psychic||AR}}
+{{Setlist/entry|204/172|F|{{TCG ID|VSTAR Universe|Bidoof|204}}|Colorless||AR}}
+{{Setlist/entry|205/172|F|{{TCG ID|VSTAR Universe|Pikachu|205}}|Lightning||AR}}
+{{Setlist/entry|206/172|F|{{TCG ID|VSTAR Universe|Turtwig|206}}|Grass||AR}}
+{{Setlist/entry|207/172|F|{{TCG ID|VSTAR Universe|Paras|207}}|Grass||AR}}
+{{Setlist/entry|208/172|F|{{TCG ID|VSTAR Universe|Poochyena|208}}|Darkness||AR}}
+{{Setlist/entry|209/172|E|{{TCG ID|VSTAR Universe|Mareep|209}}|Lightning||AR}}
+{{Setlist/entry|210/172|F|[[Leafeon VSTAR (VSTAR Universe 210)|Leafeon]]{{VSTAR}}|Grass||SAR}}
+{{Setlist/entry|211/172|F|[[Charizard V (VSTAR Universe 211)|Charizard]]{{TCGV}}|Fire||SAR}}
+{{Setlist/entry|212/172|F|[[Charizard VSTAR (VSTAR Universe 212)|Charizard]]{{VSTAR}}|Fire||SAR}}
+{{Setlist/entry|213/172|F|[[Entei V (VSTAR Universe 213)|Entei]]{{TCGV}}|Fire||SAR}}
+{{Setlist/entry|214/172|F|[[Simisear VSTAR (VSTAR Universe 214)|Simisear]]{{VSTAR}}|Fire||SAR}}
+{{Setlist/entry|215/172|E|[[Suicune V (VSTAR Universe 215)|Suicune]]{{TCGV}}|Water||SAR}}
+{{Setlist/entry|216/172|F|[[Lumineon V (VSTAR Universe 216)|Lumineon]]{{TCGV}}|Water||SAR}}
+{{Setlist/entry|217/172|F|[[Glaceon VSTAR (VSTAR Universe 217)|Glaceon]]{{VSTAR}}|Water||SAR}}
+{{Setlist/entry|218/172|F|[[Raikou V (VSTAR Universe 218)|Raikou]]{{TCGV}}|Lightning||SAR}}
+{{Setlist/entry|219/172|F|[[Zeraora VMAX (VSTAR Universe 219)|Zeraora]]{{VMAX}}|Lightning||SAR}}
+{{Setlist/entry|220/172|F|[[Zeraora VSTAR (VSTAR Universe 220)|Zeraora]]{{VSTAR}}|Lightning||SAR}}
+{{Setlist/entry|221/172|F|[[Mewtwo VSTAR (VSTAR Universe 221)|Mewtwo]]{{VSTAR}}|Psychic||SAR}}
+{{Setlist/entry|222/172|F|[[Deoxys VMAX (VSTAR Universe 222)|Deoxys]]{{VMAX}}|Psychic||SAR}}
+{{Setlist/entry|223/172|F|[[Deoxys VSTAR (VSTAR Universe 223)|Deoxys]]{{VSTAR}}|Psychic||SAR}}
+{{Setlist/entry|224/172|F|[[Hatterene VMAX (VSTAR Universe 224)|Hatterene]]{{VMAX}}|Psychic||SAR}}
+{{Setlist/entry|225/172|E|[[Zacian V (VSTAR Universe 225)|Zacian]]{{TCGV}}|Psychic||SAR}}
+{{Setlist/entry|226/172|F|[[Lucario VSTAR (VSTAR Universe 226)|Lucario]]{{VSTAR}}|Fighting||SAR}}
+{{Setlist/entry|227/172|F|[[Drapion V (VSTAR Universe 227)|Drapion]]{{TCGV}}|Darkness||SAR}}
+{{Setlist/entry|228/172|F|[[Darkrai VSTAR (VSTAR Universe 228)|Darkrai]]{{VSTAR}}|Darkness||SAR}}
+{{Setlist/entry|229/172|F|[[Hisuian Samurott V (VSTAR Universe 229)|Hisuian Samurott]]{{TCGV}}|Darkness||SAR}}
+{{Setlist/entry|230/172|F|[[Hisuian Samurott VSTAR (VSTAR Universe 230)|Hisuian Samurott]]{{VSTAR}}|Darkness||SAR}}
+{{Setlist/entry|231/172|E|[[Hoopa V (VSTAR Universe 231)|Hoopa]]{{TCGV}}|Darkness||SAR}}
+{{Setlist/entry|232/172|F|[[Zamazenta V (VSTAR Universe 232)|Zamazenta]]{{TCGV}}|Metal||SAR}}
+{{Setlist/entry|233/172|F|[[Regigigas VSTAR (VSTAR Universe 233)|Regigigas]]{{VSTAR}}|Colorless||SAR}}
+{{Setlist/entry|234/172|F|[[Hisuian Zoroark VSTAR (VSTAR Universe 234)|Hisuian Zoroark]]{{VSTAR}}|Colorless||SAR}}
+{{Setlist/entry|235/172|F|{{TCG ID|VSTAR Universe|Colress's Experiment|235}}|Supporter||SAR}}
+{{Setlist/entry|236/172|F|{{TCG ID|VSTAR Universe|Irida|236}}|Supporter||SAR}}
+{{Setlist/entry|237/172|E|{{TCG ID|VSTAR Universe|Raihan|237}}|Supporter||SAR}}
+{{Setlist/entry|238/172|F|{{TCG ID|VSTAR Universe|Grant|238}}|Supporter||SAR}}
+{{Setlist/entry|239/172|F|{{TCG ID|VSTAR Universe|Cynthia's Ambition|239}}|Supporter||SAR}}
+{{Setlist/entry|240/172|F|{{TCG ID|VSTAR Universe|Adaman|240}}|Supporter||SAR}}
+{{Setlist/entry|241/172|F|{{TCG ID|VSTAR Universe|Cheren's Care|241}}|Supporter||SAR}}
+{{Setlist/entry|242/172|F|{{TCG ID|VSTAR Universe|Roxanne|242}}|Supporter||SAR}}
+{{Setlist/entry|243/172|F|{{TCG ID|VSTAR Universe|Gardenia's Vigor|243}}|Supporter||SAR}}
+{{Setlist/entry|244/172|F|{{TCG ID|VSTAR Universe|Melony|244}}|Supporter||SAR}}
+{{Setlist/entry|245/172|F|{{TCG ID|VSTAR Universe|Volo|245}}|Supporter||SR}}
+{{Setlist/entry|246/172|E|{{TCG ID|VSTAR Universe|Elesa's Sparkle|246}}|Supporter||SR}}
+{{Setlist/entry|247/172|F|{{TCG ID|VSTAR Universe|Friends in Sinnoh|247}}|Supporter||SR}}
+{{Setlist/entry|248/172|F|{{TCG ID|VSTAR Universe|Professor's Research|248}} <small>'''[Professor Rowan]'''</small>|Supporter||SR}}
+{{Setlist/entry|249/172|F|{{TCG ID|VSTAR Universe|Friends in Hisui|249}}|Supporter||SR}}
+{{Setlist/entry|250/172|F|{{TCG ID|VSTAR Universe|Boss's Orders|250}} <small>'''[Cyrus]'''</small>|Supporter||SR}}
+{{Setlist/entry|251/172|—|{{TCG|Grass Energy}}|Energy|Grass|SR}}
+{{Setlist/entry|252/172|—|{{TCG|Fire Energy}}|Energy|Fire|SR}}
+{{Setlist/entry|253/172|—|{{TCG|Water Energy}}|Energy|Water|SR}}
+{{Setlist/entry|254/172|—|{{TCG|Lightning Energy}}|Energy|Lightning|SR}}
+{{Setlist/entry|255/172|—|{{TCG|Psychic Energy}}|Energy|Psychic|SR}}
+{{Setlist/entry|256/172|—|{{TCG|Fighting Energy}}|Energy|Fighting|SR}}
+{{Setlist/entry|257/172|—|{{OBP|Darkness Energy|Basic}}|Energy|Darkness|SR}}
+{{Setlist/entry|258/172|—|{{OBP|Metal Energy|Basic}}|Energy|Metal|SR}}
+{{Setlist/entry|259/172|F|[[Origin Forme Palkia VSTAR (VSTAR Universe 259)|Origin Forme Palkia]]{{VSTAR}}|Water||UR}}
+{{Setlist/entry|260/172|F|[[Origin Forme Dialga VSTAR (VSTAR Universe 260)|Origin Forme Dialga]]{{VSTAR}}|Metal||UR}}
+{{Setlist/entry|261/172|F|[[Giratina VSTAR (VSTAR Universe 261)|Giratina]]{{VSTAR}}|Dragon||UR}}
+{{Setlist/entry|262/172|F|[[Arceus VSTAR (VSTAR Universe 262)|Arceus]]{{VSTAR}}|Colorless||UR}}
+{{Setlist/footer|cellcol=ebebeb}}

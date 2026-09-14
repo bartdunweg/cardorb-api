@@ -1,0 +1,2984 @@
+[
+  {
+    "language": "en",
+    "id": "miscp",
+    "name": "Miscellaneous Promos",
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "Bulbapedia lists miscellaneous promos by year of release, with no list for this one-card set"
+  },
+  {
+    "language": "en",
+    "id": "base1",
+    "name": "Base Set",
+    "page": "Base Set (TCG)",
+    "lists": ["Base Set"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "base2",
+    "name": "Jungle",
+    "page": "Jungle (TCG)",
+    "lists": ["Jungle"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "basep",
+    "name": "Wizards Black Star Promos",
+    "page": "Wizards Black Star Promos (TCG)",
+    "lists": ["Wizards Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "wp",
+    "name": "W Promotional",
+    "page": "W Promotional cards (TCG)",
+    "lists": ["Stamped Promos"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "base3",
+    "name": "Fossil",
+    "page": "Fossil (TCG)",
+    "lists": ["Fossil"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "jumbo",
+    "name": "Jumbo cards",
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "Bulbapedia lists jumbo cards as oversized reprints by era, none of them this set"
+  },
+  {
+    "language": "en",
+    "id": "base4",
+    "name": "Base Set 2",
+    "page": "Base Set 2 (TCG)",
+    "lists": ["Base Set 2"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "base5",
+    "name": "Team Rocket",
+    "page": "Team Rocket (TCG)",
+    "lists": ["Team Rocket"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "gym1",
+    "name": "Gym Heroes",
+    "page": "Gym Heroes (TCG)",
+    "lists": ["Gym Heroes"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "gym2",
+    "name": "Gym Challenge",
+    "page": "Gym Challenge (TCG)",
+    "lists": ["Gym Challenge"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "neo1",
+    "name": "Neo Genesis",
+    "page": "Neo Genesis (TCG)",
+    "lists": ["Neo Genesis"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "neo2",
+    "name": "Neo Discovery",
+    "page": "Neo Discovery (TCG)",
+    "lists": ["Neo Discovery"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "si1",
+    "name": "Southern Islands",
+    "page": "Southern Islands (TCG)",
+    "lists": ["Southern Islands"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "neo3",
+    "name": "Neo Revelation",
+    "page": "Neo Revelation (TCG)",
+    "lists": ["Neo Revelation"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "neo4",
+    "name": "Neo Destiny",
+    "page": "Neo Destiny (TCG)",
+    "lists": ["Neo Destiny"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "lc",
+    "name": "Legendary Collection",
+    "page": "Legendary Collection (TCG)",
+    "lists": ["Legendary Collection"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sp",
+    "name": "Sample",
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "Bulbapedia's Sample Set is five event lists, none of them this set"
+  },
+  {
+    "language": "en",
+    "id": "ecard1",
+    "name": "Expedition Base Set",
+    "page": "Expedition Base Set (TCG)",
+    "lists": ["Expedition Base Set"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bog",
+    "name": "Best of Game",
+    "page": "Best of Game (TCG)",
+    "lists": ["Best of Game"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ecard2",
+    "name": "Aquapolis",
+    "page": "Aquapolis (TCG)",
+    "lists": ["Aquapolis"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ecard3",
+    "name": "Skyridge",
+    "page": "Skyridge (TCG)",
+    "lists": ["Skyridge"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex1",
+    "name": "Ruby & Sapphire",
+    "page": "EX Ruby & Sapphire (TCG)",
+    "lists": ["EX Ruby & Sapphire"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex2",
+    "name": "Sandstorm",
+    "page": "EX Sandstorm (TCG)",
+    "lists": ["EX Sandstorm"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "np",
+    "name": "Nintendo Black Star Promos",
+    "page": "Nintendo Black Star Promos (TCG)",
+    "lists": ["Nintendo Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex3",
+    "name": "Dragon",
+    "page": "EX Dragon (TCG)",
+    "lists": ["EX Dragon"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex4",
+    "name": "Team Magma vs Team Aqua",
+    "page": "EX Team Magma vs Team Aqua (TCG)",
+    "lists": ["EX Team Magma vs Team Aqua"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex5",
+    "name": "Hidden Legends",
+    "page": "EX Hidden Legends (TCG)",
+    "lists": ["EX Hidden Legends"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex5.5",
+    "name": "Poké Card Creator Pack",
+    "page": "Poké Card Creator Pack (TCG)",
+    "lists": ["Poké Card Creator Pack"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-ex-latia",
+    "name": "EX trainer Kit (Latias)",
+    "page": "EX Trainer Kit (TCG)",
+    "lists": ["Latias Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-ex-latio",
+    "name": "EX trainer Kit (Latios)",
+    "page": "EX Trainer Kit (TCG)",
+    "lists": ["Latios Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "ex6",
+    "name": "FireRed & LeafGreen",
+    "page": "EX FireRed & LeafGreen (TCG)",
+    "lists": ["EX FireRed & LeafGreen"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop1",
+    "name": "POP Series 1",
+    "page": "POP Series 1 (TCG)",
+    "lists": ["POP Series 1"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex7",
+    "name": "Team Rocket Returns",
+    "page": "EX Team Rocket Returns (TCG)",
+    "lists": ["EX Team Rocket Returns"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex8",
+    "name": "Deoxys",
+    "page": "EX Deoxys (TCG)",
+    "lists": ["EX Deoxys"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex9",
+    "name": "Emerald",
+    "page": "EX Emerald (TCG)",
+    "lists": ["EX Emerald"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop2",
+    "name": "POP Series 2",
+    "page": "POP Series 2 (TCG)",
+    "lists": ["POP Series 2"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex10",
+    "name": "Unseen Forces",
+    "page": "EX Unseen Forces (TCG)",
+    "lists": ["EX Unseen Forces"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "exu",
+    "name": "Unseen Forces Unown Collection",
+    "page": "EX Unseen Forces (TCG)",
+    "lists": ["Unown cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "ex11",
+    "name": "Delta Species",
+    "page": "EX Delta Species (TCG)",
+    "lists": ["EX Delta Species"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex12",
+    "name": "Legend Maker",
+    "page": "EX Legend Maker (TCG)",
+    "lists": ["EX Legend Maker"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-ex-m",
+    "name": "EX trainer Kit 2 (Minun)",
+    "page": "EX Trainer Kit 2 (TCG)",
+    "lists": ["Minun Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-ex-p",
+    "name": "EX trainer Kit 2 (Plusle)",
+    "page": "EX Trainer Kit 2 (TCG)",
+    "lists": ["Plusle Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "pop3",
+    "name": "POP Series 3",
+    "page": "POP Series 3 (TCG)",
+    "lists": ["POP Series 3"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex13",
+    "name": "Holon Phantoms",
+    "page": "EX Holon Phantoms (TCG)",
+    "lists": ["EX Holon Phantoms"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop4",
+    "name": "POP Series 4",
+    "page": "POP Series 4 (TCG)",
+    "lists": ["POP Series 4"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex14",
+    "name": "Crystal Guardians",
+    "page": "EX Crystal Guardians (TCG)",
+    "lists": ["EX Crystal Guardians"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex15",
+    "name": "Dragon Frontiers",
+    "page": "EX Dragon Frontiers (TCG)",
+    "lists": ["EX Dragon Frontiers"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "ex16",
+    "name": "Power Keepers",
+    "page": "EX Power Keepers (TCG)",
+    "lists": ["EX Power Keepers"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop5",
+    "name": "POP Series 5",
+    "page": "POP Series 5 (TCG)",
+    "lists": ["POP Series 5"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dp1",
+    "name": "Diamond & Pearl",
+    "page": "Diamond & Pearl (TCG)",
+    "lists": ["Diamond & Pearl"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dpp",
+    "name": "DP Black Star Promos",
+    "page": "DP Black Star Promos (TCG)",
+    "lists": ["DP Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dp2",
+    "name": "Mysterious Treasures",
+    "page": "Mysterious Treasures (TCG)",
+    "lists": ["Mysterious Treasures"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop6",
+    "name": "POP Series 6",
+    "page": "POP Series 6 (TCG)",
+    "lists": ["POP Series 6"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-dp-l",
+    "name": "DP trainer Kit (Lucario)",
+    "page": "Diamond & Pearl Trainer Kit (TCG)",
+    "lists": ["Lucario Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-dp-m",
+    "name": "DP trainer Kit (Manaphy)",
+    "page": "Diamond & Pearl Trainer Kit (TCG)",
+    "lists": ["Manaphy Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "dp3",
+    "name": "Secret Wonders",
+    "page": "Secret Wonders (TCG)",
+    "lists": ["Secret Wonders"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dp4",
+    "name": "Great Encounters",
+    "page": "Great Encounters (TCG)",
+    "lists": ["Great Encounters"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop7",
+    "name": "POP Series 7",
+    "page": "POP Series 7 (TCG)",
+    "lists": ["POP Series 7"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dp5",
+    "name": "Majestic Dawn",
+    "page": "Majestic Dawn (TCG)",
+    "lists": ["Majestic Dawn"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dp6",
+    "name": "Legends Awakened",
+    "page": "Legends Awakened (TCG)",
+    "lists": ["Legends Awakened"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pop8",
+    "name": "POP Series 8",
+    "page": "POP Series 8 (TCG)",
+    "lists": ["POP Series 8"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dp7",
+    "name": "Stormfront",
+    "page": "Stormfront (TCG)",
+    "lists": ["Stormfront", "Stormfront #2"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "pl1",
+    "name": "Platinum",
+    "page": "Platinum (TCG)",
+    "lists": ["Platinum", "Shiny cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "pop9",
+    "name": "POP Series 9",
+    "page": "POP Series 9 (TCG)",
+    "lists": ["POP Series 9"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "pl2",
+    "name": "Rising Rivals",
+    "page": "Rising Rivals (TCG)",
+    "lists": ["Rising Rivals", "Rotom cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "pl3",
+    "name": "Supreme Victors",
+    "page": "Supreme Victors (TCG)",
+    "lists": ["Supreme Victors", "Shiny cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "pl4",
+    "name": "Arceus",
+    "page": "Platinum: Arceus (TCG)",
+    "lists": ["Arceus", "Arceus cards", "Shiny cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "ru1",
+    "name": "Pokémon Rumble",
+    "page": "Pokémon Rumble (TCG)",
+    "lists": ["Pokémon Rumble"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "hgss1",
+    "name": "HeartGold SoulSilver",
+    "page": "HeartGold & SoulSilver (TCG)",
+    "lists": ["HeartGold & SoulSilver"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "hgssp",
+    "name": "HGSS Black Star Promos",
+    "page": "HGSS Black Star Promos (TCG)",
+    "lists": ["HGSS Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-hs-g",
+    "name": "HS trainer Kit (Gyarados)",
+    "page": "HS Trainer Kit (TCG)",
+    "lists": ["Gyarados Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-hs-r",
+    "name": "HS trainer Kit (Raichu)",
+    "page": "HS Trainer Kit (TCG)",
+    "lists": ["Raichu Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "hgss2",
+    "name": "Unleashed",
+    "page": "Unleashed (TCG)",
+    "lists": ["Unleashed"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "hgss3",
+    "name": "Undaunted",
+    "page": "Undaunted (TCG)",
+    "lists": ["Undaunted"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "hgss4",
+    "name": "Triumphant",
+    "page": "Triumphant (TCG)",
+    "lists": ["Triumphant"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "col1",
+    "name": "Call of Legends",
+    "page": "Call of Legends (TCG)",
+    "lists": ["Call of Legends", "Shiny Legendary cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "bw1",
+    "name": "Black & White",
+    "page": "Black & White (TCG)",
+    "lists": ["Black & White"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bwp",
+    "name": "BW Black Star Promos",
+    "page": "BW Black Star Promos (TCG)",
+    "lists": ["BW Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2011bw",
+    "name": "McDonald's Collection 2011",
+    "page": "McDonald's Collection (TCG)",
+    "lists": ["McDonald's Collection"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "bw2",
+    "name": "Emerging Powers",
+    "page": "Emerging Powers (TCG)",
+    "lists": ["Emerging Powers"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-bw-e",
+    "name": "BW trainer Kit (Excadrill)",
+    "page": "Black & White Trainer Kit (TCG)",
+    "lists": ["Excadrill Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-bw-z",
+    "name": "BW trainer Kit (Zoroark)",
+    "page": "Black & White Trainer Kit (TCG)",
+    "lists": ["Zoroark Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "bw3",
+    "name": "Noble Victories",
+    "page": "Noble Victories (TCG)",
+    "lists": ["Noble Victories"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw4",
+    "name": "Next Destinies",
+    "page": "Next Destinies (TCG)",
+    "lists": ["Next Destinies"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw5",
+    "name": "Dark Explorers",
+    "page": "Dark Explorers (TCG)",
+    "lists": ["Dark Explorers"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2012bw",
+    "name": "McDonald's Collection 2012",
+    "page": "McDonald's Collection 2012 (TCG)",
+    "lists": ["McDonald's Collection 2012"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw6",
+    "name": "Dragons Exalted",
+    "page": "Dragons Exalted (TCG)",
+    "lists": ["Dragons Exalted"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dv1",
+    "name": "Dragon Vault",
+    "page": "Dragon Vault (TCG)",
+    "lists": ["Dragon Vault"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw7",
+    "name": "Boundaries Crossed",
+    "page": "Boundaries Crossed (TCG)",
+    "lists": ["Boundaries Crossed"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw8",
+    "name": "Plasma Storm",
+    "page": "Plasma Storm (TCG)",
+    "lists": ["Plasma Storm"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw9",
+    "name": "Plasma Freeze",
+    "page": "Plasma Freeze (TCG)",
+    "lists": ["Plasma Freeze"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw10",
+    "name": "Plasma Blast",
+    "page": "Plasma Blast (TCG)",
+    "lists": ["Plasma Blast"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xyp",
+    "name": "XY Black Star Promos",
+    "page": "XY Black Star Promos (TCG)",
+    "lists": ["XY Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "bw11",
+    "name": "Legendary Treasures",
+    "page": "Legendary Treasures (TCG)",
+    "lists": ["Legendary Treasures", "Radiant Collection"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "rc",
+    "name": "Radiant Collection",
+    "page": "Legendary Treasures (TCG)",
+    "lists": ["Radiant Collection"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy0",
+    "name": "Kalos Starter Set",
+    "page": "Kalos Starter Set (TCG)",
+    "lists": ["Kalos Starter Set"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy1",
+    "name": "XY",
+    "page": "XY (TCG)",
+    "lists": ["XY"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xya",
+    "name": "Yellow A Alternate",
+    "page": "Yellow A Alternate cards (TCG)",
+    "lists": ["Yellow A Alternate cards"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-n",
+    "name": "XY trainer Kit (Noivern)",
+    "page": "XY Trainer Kit (TCG)",
+    "lists": ["Noivern Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-sy",
+    "name": "XY trainer Kit (Sylveon)",
+    "page": "XY Trainer Kit (TCG)",
+    "lists": ["Sylveon Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "xy2",
+    "name": "Flashfire",
+    "page": "Flashfire (TCG)",
+    "lists": ["Flashfire"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2014xy",
+    "name": "McDonald's Collection 2014",
+    "page": "McDonald's Collection 2014 (TCG)",
+    "lists": ["McDonald's Collection 2014"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy3",
+    "name": "Furious Fists",
+    "page": "Furious Fists (TCG)",
+    "lists": ["Furious Fists"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-b",
+    "name": "XY trainer Kit (Bisharp)",
+    "page": "XY Trainer Kit: Bisharp & Wigglytuff (TCG)",
+    "lists": ["Bisharp Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-w",
+    "name": "XY trainer Kit (Wigglytuff)",
+    "page": "XY Trainer Kit: Bisharp & Wigglytuff (TCG)",
+    "lists": ["Wigglytuff Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "xy4",
+    "name": "Phantom Forces",
+    "page": "Phantom Forces (TCG)",
+    "lists": ["Phantom Forces"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy5",
+    "name": "Primal Clash",
+    "page": "Primal Clash (TCG)",
+    "lists": ["Primal Clash"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "dc1",
+    "name": "Double Crisis",
+    "page": "Double Crisis (TCG)",
+    "lists": ["Double Crisis"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-latia",
+    "name": "XY trainer Kit (Latias)",
+    "page": "XY Trainer Kit: Latias & Latios (TCG)",
+    "lists": ["Latias Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-latio",
+    "name": "XY trainer Kit (Latios)",
+    "page": "XY Trainer Kit: Latias & Latios (TCG)",
+    "lists": ["Latios Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "xy6",
+    "name": "Roaring Skies",
+    "page": "Roaring Skies (TCG)",
+    "lists": ["Roaring Skies"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy7",
+    "name": "Ancient Origins",
+    "page": "Ancient Origins (TCG)",
+    "lists": ["Ancient Origins"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy8",
+    "name": "BREAKthrough",
+    "page": "BREAKthrough (TCG)",
+    "lists": ["BREAKthrough"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2015xy",
+    "name": "McDonald's Collection 2015",
+    "page": "McDonald's Collection 2015 (TCG)",
+    "lists": ["McDonald's Collection 2015"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy9",
+    "name": "BREAKpoint",
+    "page": "BREAKpoint (TCG)",
+    "lists": ["BREAKpoint"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "g1",
+    "name": "Generations",
+    "page": "Generations (TCG)",
+    "lists": ["Generations", "Radiant Collection"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-p",
+    "name": "XY trainer Kit (Pikachu Libre)",
+    "page": "XY Trainer Kit: Pikachu Libre & Suicune (TCG)",
+    "lists": ["Pikachu Libre Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-xy-su",
+    "name": "XY trainer Kit (Suicune)",
+    "page": "XY Trainer Kit: Pikachu Libre & Suicune (TCG)",
+    "lists": ["Suicune Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "xy10",
+    "name": "Fates Collide",
+    "page": "Fates Collide (TCG)",
+    "lists": ["Fates Collide"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy11",
+    "name": "Steam Siege",
+    "page": "Steam Siege (TCG)",
+    "lists": ["Steam Siege"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2016xy",
+    "name": "McDonald's Collection 2016",
+    "page": "McDonald's Collection 2016 (TCG)",
+    "lists": ["McDonald's Collection 2016"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "xy12",
+    "name": "Evolutions",
+    "page": "Evolutions (TCG)",
+    "lists": ["Evolutions"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm1",
+    "name": "Sun & Moon",
+    "page": "Sun & Moon (TCG)",
+    "lists": ["Sun & Moon"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "smp",
+    "name": "SM Black Star Promos",
+    "page": "SM Black Star Promos (TCG)",
+    "lists": ["SM Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "tk-sm-l",
+    "name": "SM trainer Kit (Lycanroc)",
+    "page": "Sun & Moon Trainer Kit: Lycanroc & Alolan Raichu (TCG)",
+    "lists": ["Lycanroc Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "tk-sm-r",
+    "name": "SM trainer Kit (Alolan Raichu)",
+    "page": "Sun & Moon Trainer Kit: Lycanroc & Alolan Raichu (TCG)",
+    "lists": ["Alolan Raichu Half Deck"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "sm2",
+    "name": "Guardians Rising",
+    "page": "Guardians Rising (TCG)",
+    "lists": ["Guardians Rising"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm3",
+    "name": "Burning Shadows",
+    "page": "Burning Shadows (TCG)",
+    "lists": ["Burning Shadows"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm3.5",
+    "name": "Shining Legends",
+    "page": "Shining Legends (TCG)",
+    "lists": ["Shining Legends"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm4",
+    "name": "Crimson Invasion",
+    "page": "Crimson Invasion (TCG)",
+    "lists": ["Crimson Invasion"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2017sm",
+    "name": "McDonald's Collection 2017",
+    "page": "McDonald's Collection 2017 (TCG)",
+    "lists": ["McDonald's Collection 2017"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm5",
+    "name": "Ultra Prism",
+    "page": "Ultra Prism (TCG)",
+    "lists": ["Ultra Prism"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm6",
+    "name": "Forbidden Light",
+    "page": "Forbidden Light (TCG)",
+    "lists": ["Forbidden Light"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm7",
+    "name": "Celestial Storm",
+    "page": "Celestial Storm (TCG)",
+    "lists": ["Celestial Storm"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm7.5",
+    "name": "Dragon Majesty",
+    "page": "Dragon Majesty (TCG)",
+    "lists": ["Dragon Majesty"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2018sm",
+    "name": "McDonald's Collection 2018",
+    "page": "McDonald's Collection 2018 (TCG)",
+    "lists": ["International McDonald's Collection 2018"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "sm8",
+    "name": "Lost Thunder",
+    "page": "Lost Thunder (TCG)",
+    "lists": ["Lost Thunder"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm9",
+    "name": "Team Up",
+    "page": "Team Up (TCG)",
+    "lists": ["Team Up"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "det1",
+    "name": "Detective Pikachu",
+    "page": "Detective Pikachu (TCG)",
+    "lists": ["Detective Pikachu"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm10",
+    "name": "Unbroken Bonds",
+    "page": "Unbroken Bonds (TCG)",
+    "lists": ["Unbroken Bonds"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm11",
+    "name": "Unified Minds",
+    "page": "Unified Minds (TCG)",
+    "lists": ["Unified Minds"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sm115",
+    "name": "Hidden Fates",
+    "page": "Hidden Fates (TCG)",
+    "lists": ["Hidden Fates"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sma",
+    "name": "Hidden Fates Shiny Vault",
+    "page": "Hidden Fates (TCG)",
+    "lists": ["Shiny Vault"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2019sm",
+    "name": "McDonald's Collection 2019",
+    "page": "McDonald's Collection 2019 (TCG)",
+    "lists": ["English McDonald's Collection 2019"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "sm12",
+    "name": "Cosmic Eclipse",
+    "page": "Cosmic Eclipse (TCG)",
+    "lists": ["Cosmic Eclipse"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swshp",
+    "name": "SWSH Black Star Promos",
+    "page": "SWSH Black Star Promos (TCG)",
+    "lists": ["SWSH Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh1",
+    "name": "Sword & Shield",
+    "page": "Sword & Shield (TCG)",
+    "lists": ["Sword & Shield"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh2",
+    "name": "Rebel Clash",
+    "page": "Rebel Clash (TCG)",
+    "lists": ["Rebel Clash"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh3",
+    "name": "Darkness Ablaze",
+    "page": "Darkness Ablaze (TCG)",
+    "lists": ["Darkness Ablaze"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "fut2020",
+    "name": "Pokémon Futsal 2020",
+    "page": "Pokémon Futsal (TCG)",
+    "lists": ["Pokémon Futsal"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "swsh3.5",
+    "name": "Champion's Path",
+    "page": "Champion's Path (TCG)",
+    "lists": ["Champion's Path"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh4",
+    "name": "Vivid Voltage",
+    "page": "Vivid Voltage (TCG)",
+    "lists": ["Vivid Voltage"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2021swsh",
+    "name": "McDonald's Collection 2021",
+    "page": "McDonald's Collection 2021 (TCG)",
+    "lists": ["McDonald's Collection 2021"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh4.5",
+    "name": "Shining Fates",
+    "page": "Shining Fates (TCG)",
+    "lists": ["Shining Fates"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh4.5sv",
+    "name": "Shining Fates Shiny Vault",
+    "page": "Shining Fates (TCG)",
+    "lists": ["Shiny Vault"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh5",
+    "name": "Battle Styles",
+    "page": "Battle Styles (TCG)",
+    "lists": ["Battle Styles"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh6",
+    "name": "Chilling Reign",
+    "page": "Chilling Reign (TCG)",
+    "lists": ["Chilling Reign"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh7",
+    "name": "Evolving Skies",
+    "page": "Evolving Skies (TCG)",
+    "lists": ["Evolving Skies"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "cel25",
+    "name": "Celebrations",
+    "page": "Celebrations (TCG)",
+    "lists": ["Celebrations"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "cel25cc",
+    "name": "Celebrations Classic Collection",
+    "page": "Celebrations (TCG)",
+    "lists": ["Classic Collection"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh8",
+    "name": "Fusion Strike",
+    "page": "Fusion Strike (TCG)",
+    "lists": ["Fusion Strike"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh9",
+    "name": "Brilliant Stars",
+    "page": "Brilliant Stars (TCG)",
+    "lists": ["Brilliant Stars"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh9tg",
+    "name": "Brilliant Stars Trainer Gallery",
+    "page": "Brilliant Stars (TCG)",
+    "lists": ["Trainer Gallery"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh10",
+    "name": "Astral Radiance",
+    "page": "Astral Radiance (TCG)",
+    "lists": ["Astral Radiance"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh10tg",
+    "name": "Astral Radiance Trainer Gallery",
+    "page": "Astral Radiance (TCG)",
+    "lists": ["Trainer Gallery"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh10.5",
+    "name": "Pokémon GO",
+    "page": "Pokémon GO (TCG)",
+    "lists": ["Pokémon GO"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2022swsh",
+    "name": "McDonald's Collection 2022",
+    "page": "McDonald's Collection 2022 (TCG)",
+    "lists": ["Match Battle 2022"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "swsh11",
+    "name": "Lost Origin",
+    "page": "Lost Origin (TCG)",
+    "lists": ["Lost Origin"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh11tg",
+    "name": "Lost Origin Trainer Gallery",
+    "page": "Lost Origin (TCG)",
+    "lists": ["Trainer Gallery"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh12",
+    "name": "Silver Tempest",
+    "page": "Silver Tempest (TCG)",
+    "lists": ["Silver Tempest"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh12tg",
+    "name": "Silver Tempest Trainer Gallery",
+    "page": "Silver Tempest (TCG)",
+    "lists": ["Trainer Gallery"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh12.5",
+    "name": "Crown Zenith",
+    "page": "Crown Zenith (TCG)",
+    "lists": ["Crown Zenith"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "swsh12.5gg",
+    "name": "Crown Zenith Galarian Gallery",
+    "page": "Crown Zenith (TCG)",
+    "lists": ["Galarian Gallery"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv01",
+    "name": "Scarlet & Violet",
+    "page": "Scarlet & Violet (TCG)",
+    "lists": ["Scarlet & Violet"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sve",
+    "name": "Scarlet & Violet Energy",
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "Bulbapedia has no list of the Scarlet & Violet basic Energy cards as a set"
+  },
+  {
+    "language": "en",
+    "id": "svp",
+    "name": "SVP Black Star Promos",
+    "page": "SVP Black Star Promos (TCG)",
+    "lists": ["SVP Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv02",
+    "name": "Paldea Evolved",
+    "page": "Paldea Evolved (TCG)",
+    "lists": ["Paldea Evolved"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv03",
+    "name": "Obsidian Flames",
+    "page": "Obsidian Flames (TCG)",
+    "lists": ["Obsidian Flames"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2023sv",
+    "name": "McDonald's Collection 2023",
+    "page": "McDonald's Collection 2023 (TCG)",
+    "lists": ["Match Battle 2023"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "sv03.5",
+    "name": "151",
+    "page": "151 (TCG)",
+    "lists": ["151"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "mfb",
+    "name": "My First Battle",
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "Bulbapedia lists My First Battle as four unnumbered decks, not one set"
+  },
+  {
+    "language": "en",
+    "id": "sv04",
+    "name": "Paradox Rift",
+    "page": "Paradox Rift (TCG)",
+    "lists": ["Paradox Rift"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv04.5",
+    "name": "Paldean Fates",
+    "page": "Paldean Fates (TCG)",
+    "lists": ["Paldean Fates"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv05",
+    "name": "Temporal Forces",
+    "page": "Temporal Forces (TCG)",
+    "lists": ["Temporal Forces"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv06",
+    "name": "Twilight Masquerade",
+    "page": "Twilight Masquerade (TCG)",
+    "lists": ["Twilight Masquerade"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv06.5",
+    "name": "Shrouded Fable",
+    "page": "Shrouded Fable (TCG)",
+    "lists": ["Shrouded Fable"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv07",
+    "name": "Stellar Crown",
+    "page": "Stellar Crown (TCG)",
+    "lists": ["Stellar Crown"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv08",
+    "name": "Surging Sparks",
+    "page": "Surging Sparks (TCG)",
+    "lists": ["Surging Sparks"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv08.5",
+    "name": "Prismatic Evolutions",
+    "page": "Prismatic Evolutions (TCG)",
+    "lists": ["Prismatic Evolutions"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "2024sv",
+    "name": "McDonald's Collection 2024",
+    "page": "McDonald's Collection 2024 (TCG)",
+    "lists": ["McDonald's Collection 2024"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv09",
+    "name": "Journey Together",
+    "page": "Journey Together (TCG)",
+    "lists": ["Journey Together"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv10",
+    "name": "Destined Rivals",
+    "page": "Destined Rivals (TCG)",
+    "lists": ["Destined Rivals"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv10.5b",
+    "name": "Black Bolt",
+    "page": "Black Bolt & White Flare (TCG)",
+    "lists": ["Black Bolt"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "sv10.5w",
+    "name": "White Flare",
+    "page": "Black Bolt & White Flare (TCG)",
+    "lists": ["White Flare"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "mee",
+    "name": "Mega Evolution Energy",
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "Bulbapedia has no list of the Mega Evolution basic Energy cards as a set"
+  },
+  {
+    "language": "en",
+    "id": "me01",
+    "name": "Mega Evolution",
+    "page": "Mega Evolution (TCG)",
+    "lists": ["Mega Evolution"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "mep",
+    "name": "MEP Black Star Promos",
+    "page": "MEP Black Star Promos (TCG)",
+    "lists": ["MEP Black Star Promos"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "me02",
+    "name": "Phantasmal Flames",
+    "page": "Phantasmal Flames (TCG)",
+    "lists": ["Phantasmal Flames"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "me02.5",
+    "name": "Ascended Heroes",
+    "page": "Ascended Heroes (TCG)",
+    "lists": ["Ascended Heroes"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "me03",
+    "name": "Perfect Order",
+    "page": "Perfect Order (TCG)",
+    "lists": ["Perfect Order"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "me04",
+    "name": "Chaos Rising",
+    "page": "Chaos Rising (TCG)",
+    "lists": ["Chaos Rising"],
+    "how": "name"
+  },
+  {
+    "language": "en",
+    "id": "me05",
+    "name": "Pitch Black",
+    "page": "Pitch Black (TCG)",
+    "lists": ["Pitch Black"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PMCG1",
+    "name": "Expansion Pack",
+    "page": "Base Set (TCG)",
+    "lists": ["Expansion Pack"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PMCG2",
+    "name": "Pokémon Jungle",
+    "page": "Jungle (TCG)",
+    "lists": ["Pokémon Jungle"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PMCG3",
+    "name": "Mystery of the Fossils",
+    "page": "Fossil (TCG)",
+    "lists": ["Mystery of the Fossils"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PMCG4",
+    "name": "Rocket Gang",
+    "page": "Team Rocket (TCG)",
+    "lists": ["Rocket Gang"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PMCG5",
+    "name": "Leaders' Stadium",
+    "page": "Gym Heroes (TCG)",
+    "lists": ["Leaders' Stadium"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PMCG6",
+    "name": "Challenge from the Darkness",
+    "page": "Gym Challenge (TCG)",
+    "lists": ["Challenge from the Darkness"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "neo1",
+    "name": "Gold, Silver, to a New World…",
+    "page": "Neo Genesis (TCG)",
+    "lists": ["Gold, Silver, to a New World..."],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "neo2",
+    "name": "Crossing the Ruins…",
+    "page": "Neo Discovery (TCG)",
+    "lists": ["Crossing the Ruins..."],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "neo3",
+    "name": "Awakening Legends",
+    "page": "Neo Revelation (TCG)",
+    "lists": ["Awakening Legends"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "neo4",
+    "name": "Darkness, and to Light…",
+    "page": "Neo Destiny (TCG)",
+    "lists": ["Darkness, and to Light..."],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "VS1",
+    "name": "Pokémon Card VS",
+    "page": "Pokémon VS (TCG)",
+    "lists": ["Pokémon Card★VS"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "web1",
+    "name": "Pokémon Card Web",
+    "page": "Pokémon Web (TCG)",
+    "lists": ["Pokémon Card★web"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "E1",
+    "name": "Base Expansion Pack",
+    "page": "Expedition Base Set (TCG)",
+    "lists": ["Base Expansion Pack"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "E2",
+    "name": "The Town on No Map",
+    "page": "Aquapolis (TCG)",
+    "lists": ["The Town on No Map"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "E3",
+    "name": "Wind from the Sea",
+    "page": "Aquapolis (TCG)",
+    "lists": ["Wind from the Sea"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "E4",
+    "name": "Split Earth",
+    "page": "Skyridge (TCG)",
+    "lists": ["Split Earth"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "E5",
+    "name": "Mysterious Mountains",
+    "page": "Skyridge (TCG)",
+    "lists": ["Mysterious Mountains"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "ADV1",
+    "name": "ADV Expansion Pack",
+    "page": "EX Ruby & Sapphire (TCG)",
+    "lists": ["Expansion Pack"],
+    "how": "only list"
+  },
+  {
+    "language": "ja",
+    "id": "ADV2",
+    "name": "Miracle of the Desert",
+    "page": "EX Sandstorm (TCG)",
+    "lists": ["Miracle of the Desert"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "ADV3",
+    "name": "Rulers of the Heavens",
+    "page": "EX Dragon (TCG)",
+    "lists": ["Rulers of the Heavens"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "ADV4",
+    "name": "Magma VS Aqua: Two Ambitions",
+    "page": "EX Team Magma vs Team Aqua (TCG)",
+    "lists": ["Magma VS Aqua: Two Ambitions"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "ADV5",
+    "name": "Undone Seal",
+    "page": "EX Hidden Legends (TCG)",
+    "lists": ["Undone Seal"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG1",
+    "name": "Flight of Legends",
+    "page": "EX FireRed & LeafGreen (TCG)",
+    "lists": ["Flight of Legends"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG2",
+    "name": "Clash of the Blue Sky",
+    "page": "EX Deoxys (TCG)",
+    "lists": ["Clash of the Blue Sky"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG3",
+    "name": "Rocket Gang Strikes Back",
+    "page": "EX Team Rocket Returns (TCG)",
+    "lists": ["Rocket Gang Strikes Back"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG4",
+    "name": "Golden Sky, Silvery Ocean",
+    "page": "EX Unseen Forces (TCG)",
+    "lists": ["Golden Sky, Silvery Ocean"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG5",
+    "name": "Mirage Forest",
+    "page": "EX Legend Maker (TCG)",
+    "lists": ["Mirage Forest"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG6",
+    "name": "Holon Research Tower",
+    "page": "EX Delta Species (TCG)",
+    "lists": ["Holon Research Tower"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG7",
+    "name": "Holon Phantoms",
+    "page": "EX Holon Phantoms (TCG)",
+    "lists": ["Holon Phantom"],
+    "how": "only list"
+  },
+  {
+    "language": "ja",
+    "id": "PCG8",
+    "name": "Miracle Crystal",
+    "page": "EX Crystal Guardians (TCG)",
+    "lists": ["Miracle Crystal"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG9",
+    "name": "Offense and Defense of the Furthest Ends",
+    "page": "EX Dragon Frontiers (TCG)",
+    "lists": ["Offense and Defense of the Furthest Ends"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "PCG10",
+    "name": "World Champions Pack",
+    "page": "EX Power Keepers (TCG)",
+    "lists": ["World Champions Pack"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "L1a",
+    "name": "HeartGold Collection",
+    "page": "HeartGold & SoulSilver (TCG)",
+    "lists": ["HeartGold Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "L1b",
+    "name": "SoulSilver Collection",
+    "page": "HeartGold & SoulSilver (TCG)",
+    "lists": ["SoulSilver Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "L2",
+    "name": "Reviving Legends",
+    "page": "Undaunted (TCG)",
+    "lists": ["Reviving Legends"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "LL",
+    "name": "Lost Link",
+    "page": "Lost Link (TCG)",
+    "lists": ["Lost Link"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "L3",
+    "name": "Clash at the Summit",
+    "page": "Triumphant (TCG)",
+    "lists": ["Clash at the Summit"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY1a",
+    "name": "Collection X",
+    "page": "XY (TCG)",
+    "lists": ["Collection X"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY1b",
+    "name": "Collection Y",
+    "page": "XY (TCG)",
+    "lists": ["Collection Y"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY2",
+    "name": "Wild Blaze",
+    "page": "Flashfire (TCG)",
+    "lists": ["Wild Blaze"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY3",
+    "name": "Rising Fist",
+    "page": "Furious Fists (TCG)",
+    "lists": ["Rising Fist"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY4",
+    "name": "Phantom Gate",
+    "page": "Phantom Forces (TCG)",
+    "lists": ["Phantom Gate"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY5a",
+    "name": "Gaia Volcano",
+    "page": "Primal Clash (TCG)",
+    "lists": ["Gaia Volcano"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY5b",
+    "name": "Tidal Storm",
+    "page": "Primal Clash (TCG)",
+    "lists": ["Tidal Storm"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "CP1",
+    "name": "Magma Gang VS Aqua Gang: Double Crisis",
+    "page": "Double Crisis (TCG)",
+    "lists": ["Magma Gang VS Aqua Gang: Double Crisis"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY6",
+    "name": "Emerald Break",
+    "page": "Roaring Skies (TCG)",
+    "lists": ["Emerald Break"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY7",
+    "name": "Bandit Ring",
+    "page": "Ancient Origins (TCG)",
+    "lists": ["Bandit Ring"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "CP2",
+    "name": "Legendary Shine Collection",
+    "page": "Legendary Shine Collection (TCG)",
+    "lists": ["Legendary Shine Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY8a",
+    "name": "Blue Shock",
+    "page": "BREAKthrough (TCG)",
+    "lists": ["Blue Shock"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY8b",
+    "name": "Red Flash",
+    "page": "BREAKthrough (TCG)",
+    "lists": ["Red Flash"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY9",
+    "name": "Rage of the Broken Heavens",
+    "page": "BREAKpoint (TCG)",
+    "lists": ["Rage of the Broken Heavens"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "CP3",
+    "name": "PokéKyun Collection",
+    "page": "PokéKyun Collection (TCG)",
+    "lists": ["PokéKyun Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "XY10",
+    "name": "Awakening Psychic King",
+    "page": "Fates Collide (TCG)",
+    "lists": ["Awakening Psychic King"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "CP4",
+    "name": "Premium Champion Pack EX×M×BREAK",
+    "page": "Premium Champion Pack (TCG)",
+    "lists": ["Premium Champion Pack"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "XY11a",
+    "name": "Explosive Fighter",
+    "page": "Steam Siege (TCG)",
+    "lists": ["Fever-Burst Fighter"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "XY11b",
+    "name": "Cruel Traitor",
+    "page": "Steam Siege (TCG)",
+    "lists": ["Cruel Traitor"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "CP5",
+    "name": "Mythical & Legendary Dream Shine Collection",
+    "page": "Mythical & Legendary Dream Shine Collection (TCG)",
+    "lists": ["Mythical & Legendary Dream Shine Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "CP6",
+    "name": "Expansion Pack 20th Anniversary",
+    "page": "Evolutions (TCG)",
+    "lists": ["Expansion Pack 20th Anniversary"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM0",
+    "name": "Pikachu and New Friends",
+    "page": "Pikachu's New Friends (TCG)",
+    "lists": ["Pikachu's New Friends"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM1M",
+    "name": "Collection Moon",
+    "page": "Sun & Moon (TCG)",
+    "lists": ["Collection Moon"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM1S",
+    "name": "Collection Sun",
+    "page": "Sun & Moon (TCG)",
+    "lists": ["Collection Sun"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM1+",
+    "name": "Sun & Moon",
+    "page": "Enhanced Expansion Pack Sun & Moon (TCG)",
+    "lists": ["Sun & Moon"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM1p",
+    "name": "Sun & Moon",
+    "page": "Enhanced Expansion Pack Sun & Moon (TCG)",
+    "lists": ["Sun & Moon"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM2K",
+    "name": "Islands Await You",
+    "page": "Guardians Rising (TCG)",
+    "lists": ["Islands Await You"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM2L",
+    "name": "Alolan Moonlight",
+    "page": "Guardians Rising (TCG)",
+    "lists": ["Alolan Moonlight"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "sm2+",
+    "name": "Beyond a New Challenge",
+    "page": "Facing a New Trial (TCG)",
+    "lists": ["Facing a New Trial"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM2p",
+    "name": "Beyond a New Challenge",
+    "page": "Facing a New Trial (TCG)",
+    "lists": ["Facing a New Trial"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM3H",
+    "name": "To Have Seen the Battle Rainbow",
+    "page": "Burning Shadows (TCG)",
+    "lists": ["To Have Seen the Battle Rainbow"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM3N",
+    "name": "Darkness that Consumes Light",
+    "page": "Burning Shadows (TCG)",
+    "lists": ["Darkness that Consumes Light"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM3+",
+    "name": "Shining Legends",
+    "page": "Shining Legends (TCG)",
+    "lists": ["Shining Legends #2"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM3p",
+    "name": "Shining Legends",
+    "page": "Shining Legends (TCG)",
+    "lists": ["Shining Legends #2"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM4A",
+    "name": "Ultradimensional Beasts",
+    "page": "Crimson Invasion (TCG)",
+    "lists": ["Ultradimensional Beasts"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM4S",
+    "name": "Awakened Heroes",
+    "page": "Crimson Invasion (TCG)",
+    "lists": ["Awakened Heroes"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM4+",
+    "name": "GX Battle Boost",
+    "page": "GX Battle Boost (TCG)",
+    "lists": ["GX Battle Boost"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM4p",
+    "name": "GX Battle Boost",
+    "page": "GX Battle Boost (TCG)",
+    "lists": ["GX Battle Boost"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM5M",
+    "name": "Ultra Moon",
+    "page": "Ultra Prism (TCG)",
+    "lists": ["Ultra Moon"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM5S",
+    "name": "Ultra Sun",
+    "page": "Ultra Prism (TCG)",
+    "lists": ["Ultra Sun"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM5+",
+    "name": "Ultra Force",
+    "page": "Ultra Force (TCG)",
+    "lists": ["Ultra Force"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM5p",
+    "name": "Ultra Force",
+    "page": "Ultra Force (TCG)",
+    "lists": ["Ultra Force"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM6",
+    "name": "Forbidden Light",
+    "page": "Forbidden Light (TCG)",
+    "lists": ["Forbidden Light #2"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM6a",
+    "name": "Dragon Storm",
+    "page": "Dragon Majesty (TCG)",
+    "lists": ["Dragon Storm"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM6b",
+    "name": "Champion Road",
+    "page": "Champion Road (TCG)",
+    "lists": ["Champion Road"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM7",
+    "name": "Charisma of the Wrecked Sky",
+    "page": "Celestial Storm (TCG)",
+    "lists": ["Sky-Splitting Charisma"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM7a",
+    "name": "Thunderclap Spark",
+    "page": "Thunderclap Spark (TCG)",
+    "lists": ["Thunderclap Spark"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM7b",
+    "name": "Fairy Rise",
+    "page": "Fairy Rise (TCG)",
+    "lists": ["Fairy Rise"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM8",
+    "name": "Super-Burst Impact",
+    "page": "Lost Thunder (TCG)",
+    "lists": ["Super-Burst Impact"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM8a",
+    "name": "Dark Order",
+    "page": "Dark Order (TCG)",
+    "lists": ["Dark Order"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM8b",
+    "name": "GX Ultra Shiny",
+    "page": "Hidden Fates (TCG)",
+    "lists": ["GX Ultra Shiny"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM9",
+    "name": "Tag Bolt",
+    "page": "Team Up (TCG)",
+    "lists": ["Tag Bolt"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM9a",
+    "name": "Night Unison",
+    "page": "Night Unison (TCG)",
+    "lists": ["Night Unison"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM9b",
+    "name": "Full Metal Wall",
+    "page": "Full Metal Wall (TCG)",
+    "lists": ["Full Metal Wall"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM10",
+    "name": "Double Blaze",
+    "page": "Unbroken Bonds (TCG)",
+    "lists": ["Double Blaze"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM10a",
+    "name": "GG End",
+    "page": "GG End (TCG)",
+    "lists": ["GG End"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM10b",
+    "name": "Sky Legend",
+    "page": "Sky Legend (TCG)",
+    "lists": ["Sky Legend"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SMP2",
+    "name": "Detective Pikachu",
+    "page": "Detective Pikachu (TCG)",
+    "lists": ["Great Detective Pikachu"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SM11",
+    "name": "Miracle Twin",
+    "page": "Unified Minds (TCG)",
+    "lists": ["Miracle Twin"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM11a",
+    "name": "Remix Bout",
+    "page": "Remix Bout (TCG)",
+    "lists": ["Remix Bout"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM11b",
+    "name": "Dream League",
+    "page": "Dream League (TCG)",
+    "lists": ["Dream League"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM12",
+    "name": "Alter Genesis",
+    "page": "Cosmic Eclipse (TCG)",
+    "lists": ["Alter Genesis"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SM12a",
+    "name": "Tag All Stars",
+    "page": "Tag All Stars (TCG)",
+    "lists": ["Tag All Stars"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S1H",
+    "name": "Shield",
+    "page": "Sword & Shield (TCG)",
+    "lists": ["Shield"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S1W",
+    "name": "Sword",
+    "page": "Sword & Shield (TCG)",
+    "lists": ["Sword"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S1a",
+    "name": "VMAX Rising",
+    "page": "VMAX Rising (TCG)",
+    "lists": ["VMAX Rising"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S2",
+    "name": "Rebellion Crash",
+    "page": "Rebel Clash (TCG)",
+    "lists": ["Rebellion Crash"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S2a",
+    "name": "Explosive Walker",
+    "page": "Explosive Walker (TCG)",
+    "lists": ["Explosive Walker"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S3",
+    "name": "Infinity Zone",
+    "page": "Darkness Ablaze (TCG)",
+    "lists": ["Infinity Zone"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S3a",
+    "name": "Legendary Heartbeat",
+    "page": "Legendary Heartbeat (TCG)",
+    "lists": ["Legendary Heartbeat"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S4",
+    "name": "Amazing Volt Tackle",
+    "page": "Vivid Voltage (TCG)",
+    "lists": ["Amazing Volt Tackle"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S4a",
+    "name": "Shiny Star V",
+    "page": "Shining Fates (TCG)",
+    "lists": ["Shiny Star V"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S5I",
+    "name": "Single Strike Master",
+    "page": "Battle Styles (TCG)",
+    "lists": ["Single Strike Master"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S5R",
+    "name": "Rapid Strike Master",
+    "page": "Battle Styles (TCG)",
+    "lists": ["Rapid Strike Master"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S5a",
+    "name": "Matchless Fighters",
+    "page": "Peerless Fighters (TCG)",
+    "lists": ["Peerless Fighters"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "S6H",
+    "name": "Silver Lance",
+    "page": "Chilling Reign (TCG)",
+    "lists": ["Silver Lance"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S6K",
+    "name": "Jet-Black Spirit",
+    "page": "Chilling Reign (TCG)",
+    "lists": ["Jet-Black Spirit"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S6a",
+    "name": "Eevee Heroes",
+    "page": "Eevee Heroes (TCG)",
+    "lists": ["Eevee Heroes"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S7D",
+    "name": "Skyscraping Perfection",
+    "page": "Evolving Skies (TCG)",
+    "lists": ["Skyscraping Perfection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S7R",
+    "name": "Blue Sky Stream",
+    "page": "Evolving Skies (TCG)",
+    "lists": ["Blue Sky Stream"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S8",
+    "name": "Fusion Arts",
+    "page": "Fusion Strike (TCG)",
+    "lists": ["Fusion Arts"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S8a",
+    "name": "25th Anniversary Collection",
+    "page": "Celebrations (TCG)",
+    "lists": ["25th Anniversary Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S8b",
+    "name": "VMAX Climax",
+    "page": "VMAX Climax (TCG)",
+    "lists": ["VMAX Climax"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S9",
+    "name": "Star Birth",
+    "page": "Brilliant Stars (TCG)",
+    "lists": ["Star Birth"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S9a",
+    "name": "Battle Region",
+    "page": "Battle Region (TCG)",
+    "lists": ["Battle Region"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S10D",
+    "name": "Time Gazer",
+    "page": "Astral Radiance (TCG)",
+    "lists": ["Time Gazer"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S10P",
+    "name": "Space Juggler",
+    "page": "Astral Radiance (TCG)",
+    "lists": ["Space Juggler"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S10a",
+    "name": "Dark Phantasma",
+    "page": "Dark Phantasma (TCG)",
+    "lists": ["Dark Phantasma"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S10b",
+    "name": "Pokémon GO",
+    "page": "Pokémon GO (TCG)",
+    "lists": ["Pokémon GO #2"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S11",
+    "name": "Lost Abyss",
+    "page": "Lost Origin (TCG)",
+    "lists": ["Lost Abyss"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S11a",
+    "name": "Incandescent Arcana",
+    "page": "Incandescent Arcana (TCG)",
+    "lists": ["Incandescent Arcana"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "S12",
+    "name": "Paradigm Trigger",
+    "page": "Silver Tempest (TCG)",
+    "lists": ["Paradigm Trigger"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV-P",
+    "name": "Scarlet & Violet Promo Cards",
+    "page": "SV-P Promotional cards (TCG)",
+    "lists": ["SV-P Promotional cards"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "S12a",
+    "name": "VSTAR Universe",
+    "page": "Crown Zenith (TCG)",
+    "lists": ["VSTAR Universe"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV1S",
+    "name": "Scarlet ex",
+    "page": "Scarlet & Violet (TCG)",
+    "lists": ["Scarlet ex"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV1V",
+    "name": "Violet ex",
+    "page": "Scarlet & Violet (TCG)",
+    "lists": ["Violet ex"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV1a",
+    "name": "Triplet Beat",
+    "page": "Triplet Beat (TCG)",
+    "lists": ["Triplet Beat"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV2D",
+    "name": "Clay Burst",
+    "page": "Paldea Evolved (TCG)",
+    "lists": ["Clay Burst"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV2P",
+    "name": "Snow Hazard",
+    "page": "Paldea Evolved (TCG)",
+    "lists": ["Snow Hazard"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV2a",
+    "name": "Pokémon Card 151",
+    "page": "151 (TCG)",
+    "lists": ["Pokémon Card 151"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV3",
+    "name": "Ruler of the Black Flame",
+    "page": "Obsidian Flames (TCG)",
+    "lists": ["Ruler of the Black Flame"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV3a",
+    "name": "Raging Surf",
+    "page": "Raging Surf (TCG)",
+    "lists": ["Raging Surf"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV4K",
+    "name": "Ancient Roar",
+    "page": "Paradox Rift (TCG)",
+    "lists": ["Ancient Roar"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV4M",
+    "name": "Future Flash",
+    "page": "Paradox Rift (TCG)",
+    "lists": ["Future Flash"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV4a",
+    "name": "Shiny Treasure ex",
+    "page": "Paldean Fates (TCG)",
+    "lists": ["Shiny Treasure ex"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV5K",
+    "name": "Wild Force",
+    "page": "Temporal Forces (TCG)",
+    "lists": ["Wild Force"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV5M",
+    "name": "Cyber Judge",
+    "page": "Temporal Forces (TCG)",
+    "lists": ["Cyber Judge"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV5a",
+    "name": "Crimson Haze",
+    "page": "Crimson Haze (TCG)",
+    "lists": ["Crimson Haze"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV6",
+    "name": "Mask of Change",
+    "page": "Twilight Masquerade (TCG)",
+    "lists": ["Transformation Mask"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SV6a",
+    "name": "Night Wanderer",
+    "page": "Shrouded Fable (TCG)",
+    "lists": ["Night Wanderer"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV7",
+    "name": "Stellar Miracle",
+    "page": "Stellar Crown (TCG)",
+    "lists": ["Stellar Miracle"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SVK",
+    "name": "Deck Build Box Stellar Miracle",
+    "page": "Stellar Miracle Deck Build Box (TCG)",
+    "lists": ["Stellar Miracle Deck Build Box"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SVLN",
+    "name": "Starter Set Tera Type: Stellar Sylveon ex",
+    "page": "Stellar Tera Type Starter Sets (TCG)",
+    "lists": ["Stellar Tera Type Starter Set Sylveon ex"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SVLS",
+    "name": "Starter Set Tera Type: Stellar Ceruledge ex",
+    "page": "Stellar Tera Type Starter Sets (TCG)",
+    "lists": ["Stellar Tera Type Starter Set Ceruledge ex"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SV7a",
+    "name": "Paradise Dragona",
+    "page": "Paradise Dragona (TCG)",
+    "lists": ["Paradise Dragona"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV8",
+    "name": "Super Electric Breaker",
+    "page": "Super Electric Breaker (TCG)",
+    "lists": ["Super Electric Breaker"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV8a",
+    "name": "Terastal Festival ex",
+    "page": "Terastal Fest ex (TCG)",
+    "lists": ["Terastal Fest ex"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SV9",
+    "name": "Battle Partners",
+    "page": "Battle Partners (TCG)",
+    "lists": ["Battle Partners"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV9a",
+    "name": "Hot Wind Arena",
+    "page": "Hot Wind Arena (TCG)",
+    "lists": ["Hot Wind Arena"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "SV10",
+    "name": "Glory of Team Rocket",
+    "page": "Glory of the Rocket Gang (TCG)",
+    "lists": ["Glory of the Rocket Gang"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SV11B",
+    "name": "Black Bolt",
+    "page": "Black Bolt & White Flare (TCG)",
+    "lists": ["Black Bolt"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "SV11W",
+    "name": "White Flare",
+    "page": "Black Bolt & White Flare (TCG)",
+    "lists": ["White Flare"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M-P",
+    "name": "Mega Promo Cards",
+    "page": "M-P Promotional cards (TCG)",
+    "lists": ["M-P Promotional cards"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "M1L",
+    "name": "Mega Brave",
+    "page": "Mega Brave/Mega Symphonia (TCG)",
+    "lists": ["Mega Brave"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "M1S",
+    "name": "Mega Symphonia",
+    "page": "Mega Brave/Mega Symphonia (TCG)",
+    "lists": ["Mega Symphonia"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M2",
+    "name": "Inferno X",
+    "page": "Inferno X (TCG)",
+    "lists": ["Inferno X"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M2a",
+    "name": "Mega Dream ex",
+    "page": "MEGA Dream ex (TCG)",
+    "lists": ["MEGA Dream ex"],
+    "how": "hand"
+  },
+  {
+    "language": "ja",
+    "id": "MC",
+    "name": "Start Deck 100 Battle Collection",
+    "page": "Start Deck 100 Battle Collection (TCG)",
+    "lists": ["Start Deck 100 Battle Collection"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M3",
+    "name": "Nihil Zero",
+    "page": "Nihil Zero (TCG)",
+    "lists": ["Nihil Zero"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M4",
+    "name": "Ninja Spinner",
+    "page": "Ninja Spinner (TCG)",
+    "lists": ["Ninja Spinner"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M5",
+    "name": "Abyss Eye",
+    "page": "Abyss Eye (TCG)",
+    "lists": ["Abyss Eye"],
+    "how": "name"
+  },
+  {
+    "language": "ja",
+    "id": "M6",
+    "name": "Storm Emeralda",
+    "page": "Storm Emeralda (TCG)",
+    "lists": ["Storm Emeralda"],
+    "how": "name"
+  }
+]
