@@ -536,6 +536,80 @@ export async function replaceValueHistory(
   }
 }
 
+/** One printing of one TCGplayer product, as tcgplayer_prices holds it. Dollars. */
+export type TcgplayerPriceRecord = {
+  product_id: number;
+  printing: string;
+  market: number;
+  low: number | null;
+  updated_on: string;
+};
+
+/**
+ * The shelf's figures, written over what is there. Chunked for body size; a chunk is retried
+ * twice, as the nightly price writes are, because a dropped connection is not a lost day.
+ */
+export async function writeTcgplayerPrices(
+  db: SupabaseClient,
+  rows: TcgplayerPriceRecord[],
+  chunk = 2000,
+): Promise<void> {
+  for (let i = 0; i < rows.length; i += chunk) {
+    const part = rows.slice(i, i + chunk);
+    let last: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await db
+        .from("tcgplayer_prices")
+        .upsert(part, { onConflict: "product_id,printing" })
+        .then(
+          (r) => r,
+          (err: unknown) => ({
+            error: { message: err instanceof Error ? err.message : String(err) },
+          }),
+        );
+      if (!error) {
+        last = null;
+        break;
+      }
+      last = error.message;
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+    if (last) throw new Error(`Writing TCGplayer prices failed: ${last}`);
+  }
+}
+
+/**
+ * These products' printings, written on or after `since`. Chunked over the ids, because
+ * PostgREST puts the list in the URL, and paged, because it answers a thousand rows at most.
+ */
+export async function readTcgplayerPrices(
+  db: SupabaseClient,
+  productIds: number[],
+  since: string,
+): Promise<TcgplayerPriceRecord[]> {
+  const out: TcgplayerPriceRecord[] = [];
+  const BITE = 400;
+  for (let at = 0; at < productIds.length; at += BITE) {
+    const ids = productIds.slice(at, at + BITE);
+    out.push(
+      ...(await readAllPages<TcgplayerPriceRecord>("TCGplayer's prices", (page, counted) =>
+        db
+          .from("tcgplayer_prices")
+          .select(
+            "product_id, printing, market, low, updated_on",
+            counted ? { count: "exact" } : {},
+          )
+          .in("product_id", ids)
+          .gte("updated_on", since)
+          .order("product_id", { ascending: true })
+          .order("printing", { ascending: true })
+          .range(...pageRange(page)),
+      )),
+    );
+  }
+  return out;
+}
+
 /**
  * A night's prices, written a month to a row.
  *
