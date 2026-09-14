@@ -1,4 +1,5 @@
 import { EDITIONS, FINISHES, isFoilPattern } from "../collection/collection-row";
+import { PATTERNED_REVERSES } from "../price-basis.mjs";
 import type { Edition, Finish, FoilPattern } from "../collection/collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_PATTERNS from "../tcgplayer-patterns.generated.json";
@@ -44,7 +45,15 @@ const FINISH_OF: Record<string, Finish> = {
  * is true: the printing exists, and what its foil is called is not something we can record.
  */
 const PATTERN_OF: Record<string, FoilPattern> = { cosmos: "cosmos" };
-const BALL_OF: Record<string, Finish> = { pokeball: "poke-ball", masterball: "master-ball" };
+const BALL_OF: Record<string, Finish> = {
+  pokeball: "poke-ball",
+  masterball: "master-ball",
+  friendball: "friend-ball",
+  loveball: "love-ball",
+  quickball: "quick-ball",
+  duskball: "dusk-ball",
+  "team-rocket": "team-rocket",
+};
 /**
  * TCGdex's foil for a reverse TCGplayer sells as an Energy Symbol reverse. Only read beside
  * TCGplayer's list: the ex era's reverses (ex5, ex6) carry the same word and are plain reverses
@@ -56,7 +65,7 @@ export type TcgVariant = { type?: string; foil?: string; stamp?: string[] };
 
 /** One patterned reverse TCGplayer sells as a product of its own: "Eevee (Poke Ball Pattern)". */
 export type FinishPrint = {
-  finish: Extract<Finish, "poke-ball" | "master-ball" | "energy-symbol">;
+  finish: (typeof PATTERNED_REVERSES)[number];
   /** TCGplayer's product for the print. */
   productId: number;
   /** The printing its figure is filed under in tcgplayer_prices ("holofoil", "reverse-holofoil"). */
@@ -64,7 +73,7 @@ export type FinishPrint = {
 };
 
 /** The finishes a TCGplayer product can prove, and the only ones read from its list. */
-const FINISH_PRINT_FINISHES: readonly string[] = ["poke-ball", "master-ball", "energy-symbol"];
+const FINISH_PRINT_FINISHES: readonly string[] = PATTERNED_REVERSES;
 
 /**
  * The printings a card has, deduped, in FINISHES order.
@@ -72,6 +81,13 @@ const FINISH_PRINT_FINISHES: readonly string[] = ["poke-ball", "master-ball", "e
  * A stamped variant (`stamp: ["gamestop"]`) is not a printing of its own here: it is the same
  * finish with a shop's mark on it, and this app does not record the mark. Dropping the stamp
  * rather than the variant keeps the finish it proves.
+ *
+ * A plain reverse is offered only where TCGplayer prices one (since 2026-09-14): where the card's
+ * own product lists printings and none is a reverse holofoil, a reverse copy has no price of its
+ * own and read the normal card's. 152 English cards offered one that way, 106 of them Ascended
+ * Heroes cards whose only reverses are its ball, Team Rocket and Energy Symbol prints, the rest
+ * mostly e-Card reverses TCGplayer does not list. A copy already recorded as one keeps it (the
+ * forms keep a recorded finish in their options).
  */
 export function printingsOf(
   variants: TcgVariant[] | null | undefined,
@@ -104,6 +120,7 @@ export function printingsOf(
      finish then. A card TCGdex lists no variants for does not become "a Poké Ball reverse only". */
   if (seen.size)
     for (const p of sold ?? []) seen.set(`${p.finish}|`, { finish: p.finish, foilPattern: null });
+  if (tcgId && !pricesPlainReverse(tcgId)) seen.delete("reverse-holo|");
   return [...seen.values()].sort(
     (a, b) =>
       FINISHES.indexOf(a.finish) - FINISHES.indexOf(b.finish) ||
@@ -119,6 +136,16 @@ const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
  * Base Set, Machamp's from Deck Exclusives. It was Cardmarket's list until 2026-09-12. A run is
  * offered where the market the app prices from has a figure for it.
  */
+/**
+ * Whether TCGplayer prices a plain reverse holo of this card: false only where its own product lists
+ * printings and none of them is a reverse holofoil. No link, or a product with no printings listed,
+ * is no answer and counts as yes.
+ */
+export function pricesPlainReverse(tcgId: string): boolean {
+  const variants = LINKS[tcgId]?.variants ?? [];
+  return !variants.length || variants.some((v) => v.endsWith("reverse-holofoil"));
+}
+
 const SHADOWLESS = new Set(Object.entries(LINKS).flatMap(([id, v]) => (v?.shadowless ? [id] : [])));
 
 const stamped = (variant: string): boolean => variant.startsWith("1st-edition");

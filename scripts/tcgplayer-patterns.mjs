@@ -16,7 +16,11 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { finishOfName, patternPrintsOf } from "../src/lib/core/foil-pattern-products.mjs";
+import {
+  ballWithoutFinish,
+  finishOfName,
+  patternPrintsOf,
+} from "../src/lib/core/foil-pattern-products.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
@@ -70,10 +74,12 @@ const { cards, unmatched, ambiguous } = patternPrintsOf(products, subtypes, link
 const prints = Object.values(cards).reduce((n, c) => n + c.prints.length, 0);
 const finishPrints = Object.values(cards).reduce((n, c) => n + (c.finishPrints?.length ?? 0), 0);
 console.log(
-  `tcgcsv: ${groups.length} groups, ${products.length} products. ${Object.keys(cards).length} cards with ${prints} pattern prints and ${finishPrints} Poké Ball, Master Ball or Energy Symbol reverses; ${unmatched.length} pattern products matched no card, ${ambiguous.length} more than one.`,
+  `tcgcsv: ${groups.length} groups, ${products.length} products. ${Object.keys(cards).length} cards with ${prints} pattern prints and ${finishPrints} patterned reverses (balls, Team Rocket, Energy Symbol); ${unmatched.length} pattern products matched no card, ${ambiguous.length} more than one.`,
 );
 for (const p of unmatched)
   if (finishOfName(p.name)) console.log(`  unmatched reverse: ${p.productId} ${p.name}`);
+for (const p of products)
+  if (ballWithoutFinish(p.name)) console.log(`  a ball with no finish: ${p.productId} ${p.name}`);
 for (const p of ambiguous) console.log(`  ambiguous: ${p.productId} ${p.name}`);
 
 if (!DRY) writeFileSync(OUT, `${JSON.stringify(cards, null, 2)}\n`);

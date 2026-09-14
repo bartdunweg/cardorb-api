@@ -175,6 +175,10 @@ describe("finishFrom", () => {
     expect(finishFrom("Poke Ball Pattern")).toBe("poke-ball");
     expect(finishFrom("Energy Symbol Pattern")).toBe("energy-symbol");
     expect(finishFrom("energy-symbol")).toBe("energy-symbol");
+    expect(finishFrom("Friend Ball")).toBe("friend-ball");
+    expect(finishFrom("Dusk Ball Pattern")).toBe("dusk-ball");
+    expect(finishFrom("Team Rocket Reverse")).toBe("team-rocket");
+    expect(finishFrom("Great Ball League")).not.toBe("poke-ball");
   });
 
   it("does not mistake a league named after a ball for a ball pattern", () => {

@@ -78,10 +78,15 @@ const FINISH_WORDS: Record<string, string> = {
   holo: "Holo",
   "poke-ball": "Poké Ball Reverse",
   "master-ball": "Master Ball Reverse",
-  /* Not a word Dex is known to write: no Dex export with an Energy Symbol reverse has been read.
-     Variant says what Dex does know, a reverse holo, and the Finish column after Dex's own says
-     which (FINISH, below). */
+  /* Not words Dex is known to write: no Dex export with an Energy Symbol, Friend, Love, Quick or
+     Dusk Ball or Team Rocket reverse has been read. Variant says what Dex does know, a reverse
+     holo, and the Finish column after Dex's own says which. */
   "energy-symbol": "Reverse Holo",
+  "friend-ball": "Reverse Holo",
+  "love-ball": "Reverse Holo",
+  "quick-ball": "Reverse Holo",
+  "dusk-ball": "Reverse Holo",
+  "team-rocket": "Reverse Holo",
 };
 
 const PATTERN_WORDS: Record<string, string> = {

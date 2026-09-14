@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ballWithoutFinish,
   baseName,
   finishOfName,
   finishOfPrint,
@@ -42,11 +43,17 @@ describe("finishOfName", () => {
     expect(finishOfName("Eevee (Master Ball Pattern)")).toBe("master-ball");
     expect(finishOfName("Erika's Tangela - 007/217 (Poke Ball)")).toBe("poke-ball");
     expect(finishOfName("Pikachu (Energy Symbol Pattern)")).toBe("energy-symbol");
+    expect(finishOfName("Pikachu (Friend Ball)")).toBe("friend-ball");
+    expect(finishOfName("Team Rocket's Meowth (Team Rocket)")).toBe("team-rocket");
+    expect(finishOfName("Pansear - 21/114 (Energy Holo)")).toBe("energy-symbol");
   });
 
   it("reads no ball the store has no finish for, no league stamp and no card's own name", () => {
-    expect(finishOfName("Pikachu (Friend Ball)")).toBeNull();
+    expect(finishOfName("Pikachu (Heavy Ball)")).toBeNull();
+    expect(ballWithoutFinish("Pikachu (Heavy Ball)")).toBe(true);
     expect(finishOfName("Pikachu (Great Ball League)")).toBeNull();
+    expect(ballWithoutFinish("Pikachu (Great Ball League)")).toBe(false);
+    expect(finishOfName("Dark Dragonite - 15/109 (EX Team Rocket Returns)")).toBeNull();
     expect(finishOfName("Master Ball - 153/162")).toBeNull();
     expect(finishOfName("Machamp 068/165 (Cosmos Holo)")).toBeNull();
   });
@@ -176,6 +183,6 @@ describe("patternPrintsOf", () => {
     });
     // Oddish's own product is not on this shelf, so neither of its reverses has a card to join.
     expect(cards["me02.5-001"]).toBeUndefined();
-    expect(unmatched.map((p) => p.productId)).toEqual([676852, 676992]);
+    expect(unmatched.map((p) => p.productId)).toEqual([676852, 676992, 676858]);
   });
 });

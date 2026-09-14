@@ -535,6 +535,9 @@ const keptFacts = (
     // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
     // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
     //
+    // v22: Ascended Heroes' Friend, Love, Quick and Dusk Ball and Team Rocket reverses and three
+    // Black & White Energy Holo reverses priced under their own names (2026-09-14).
+    //
     // v21: a card's printings carry its Poké Ball, Master Ball and Energy Symbol reverses under
     // their own names (finishPrintingsForSet, 2026-09-14). A v20 entry prices those copies as the
     // plain reverse for its day.
@@ -580,7 +583,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v21", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v22", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -1601,13 +1604,14 @@ export const getCardPrices = cache(
         // thousand points of the whole collection.
         // v4: read from card_price_months, with printings (2026-09-13). v5: the same day, after the
         // backfill: v4 entries were cached while it ran and held a gap from June to 16 August.
+        // v10: the Friend, Love, Quick and Dusk Ball, Team Rocket and Energy Holo lines backfilled.
         // v9: the Poké Ball, Master Ball and Energy Symbol reverses' own lines backfilled
         // (2026-09-14); a v8 entry holds those cards without them for its hour.
         // v8: the plain line only where it is the card's own printing (price-months.mjs).
         // v7: one printing per card on every day of its line (price-months.mjs daysFromMonths).
         // v6: 971,250 Japanese readings backfilled for the cards the copy linked (2026-09-14); a v5
         // entry held those cards' empty line for its hour.
-        ["card-prices", "v9", userId, since, idsKey(tcgIds)],
+        ["card-prices", "v10", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
       return { points, failed: false };

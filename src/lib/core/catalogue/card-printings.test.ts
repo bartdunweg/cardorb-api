@@ -4,6 +4,7 @@ import {
   finishPrintsFor,
   foilPatternsOfSerie,
   patternPrintsFor,
+  pricesPlainReverse,
   printingsOf,
 } from "./card-printings";
 
@@ -67,7 +68,7 @@ describe("printingsOf", () => {
       { finish: "normal", foilPattern: null },
       { finish: "reverse-holo", foilPattern: "cosmos" },
     ]);
-    // Ascended Heroes Pikachu: a Friend Ball reverse (no finish of its own here) and an Energy Symbol one.
+    // Ascended Heroes Pikachu: a Friend Ball and an Energy Symbol reverse, and no plain one.
     expect(
       printingsOf(
         [
@@ -77,7 +78,7 @@ describe("printingsOf", () => {
         ],
         "me02.5-055",
       ).map((p) => p.finish),
-    ).toEqual(["normal", "reverse-holo", "energy-symbol"]);
+    ).toEqual(["normal", "energy-symbol", "friend-ball"]);
     // Erika's Oddish: a Poké Ball and an Energy Symbol reverse, and no plain reverse at all.
     expect(
       printingsOf(
@@ -98,6 +99,16 @@ describe("printingsOf", () => {
     expect(printingsOf([{ type: "reverse", foil: "pokeball" }], null)).toEqual([
       { finish: "poke-ball", foilPattern: null },
     ]);
+  });
+
+  // Skyridge Gengar (ecard3-10): TCGdex lists a reverse, TCGplayer prices the card as Normal only.
+  it("offers a plain reverse only where TCGplayer prices a reverse holofoil", () => {
+    const skyridge = [{ type: "normal" }, { type: "reverse" }];
+    expect(printingsOf(skyridge, "ecard3-10").map((p) => p.finish)).toEqual(["normal"]);
+    expect(printingsOf(skyridge, null).map((p) => p.finish)).toEqual(["normal", "reverse-holo"]);
+    expect(pricesPlainReverse("ecard3-10")).toBe(false);
+    expect(pricesPlainReverse("sv08.5-074")).toBe(true);
+    expect(pricesPlainReverse("no-such-card")).toBe(true);
   });
 
   it("adds no TCGplayer reverse to a card TCGdex lists no printings for", () => {
