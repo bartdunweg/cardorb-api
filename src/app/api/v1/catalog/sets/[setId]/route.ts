@@ -11,6 +11,7 @@ import { withSetLogos } from "@/lib/core/catalogue/set-logos";
 import { englishSetOfDay, englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
+import { elapsed, logTiming, timed } from "@/lib/core/timing";
 
 /**
  * One set, all of it, with the viewer's own cards marked.
@@ -40,6 +41,7 @@ const intParam = (raw: string | null, fallback: number, max: number) => {
 };
 
 export async function GET(req: Request, { params }: { params: Promise<{ setId: string }> }) {
+  const began = performance.now();
   const who = await authorise(req);
   if (refused(who)) {
     return apiError(who.status, who.error, undefined, {
@@ -77,11 +79,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       /* TCGdex's own id, or pokemontcg.io's from before 2026-09-11, which the
          shelf still reads (tcgdex-browse.ts). An id nobody carries is a 404, not
          an empty set. */
-      const found = await englishSetOfDay(setId);
+      const found = await timed("set read", () => englishSetOfDay(setId));
       if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
       /* The logo the shelf's tile shows, stored resolved in the copy (promo star, pokemontcg.io's
          wordmark); a set the copy has not listed yet is resolved the old way. */
-      const listed = (await englishShelfSets()).find((s) => s.id === found.set.id);
+      const shelf = await timed("set shelf", () => englishShelfSets());
+      const listed = shelf.find((s) => s.id === found.set.id);
       set = listed
         ? { ...found.set, logo: listed.logo }
         : ((await withSetLogos([found.set]))[0] ?? found.set);
@@ -89,8 +92,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       /* The set's gallery after its own cards: TG01 to TG30 are part of Brilliant Stars on the
          shelf, as they are in the collection (set-galleries.ts). A gallery that cannot be read
          leaves the set as it is rather than failing the page. */
-      const gallery = galleriesByParent(await englishShelfSets()).get(set.id);
-      const inside = gallery ? await englishSetOfDay(gallery.id).catch(() => null) : null;
+      const gallery = galleriesByParent(shelf).get(set.id);
+      const inside = gallery
+        ? await timed("set gallery", () => englishSetOfDay(gallery.id)).catch(() => null)
+        : null;
       if (inside) {
         set = {
           ...set,
@@ -104,7 +109,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
     return refuse("catalogue", { headers: readHeaders(req) });
   }
 
-  const { rows, failed } = await rowsRead;
+  const { rows, failed } = await timed("set rows", () => rowsRead);
   /* Keyed by the catalogue being shown. A row of that language carrying that catalogue's card
      id marks its own shelf exactly, by id; every other row marks the English one. Both
      directions matter, because a Japanese set named like an English one (Black Bolt) would
@@ -140,12 +145,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      The copy only swaps a card's pictures, never its ids, so the prices are asked for at the same
      time as the pictures rather than after them. */
   const priceKey = (c: (typeof onPage)[number]) => c.tcgId ?? c.id;
-  const [scans, prices] = await Promise.all([
-    scansRead,
-    tcgplayerPricesFor(onPage.map(priceKey), isBrowseLanguage(language) ? language : null),
-  ]);
+  const [scans, prices] = await timed("set scans and prices", () =>
+    Promise.all([
+      scansRead,
+      tcgplayerPricesFor(onPage.map(priceKey), isBrowseLanguage(language) ? language : null),
+    ]),
+  );
   const shown = scans?.size ? onPage.map((c) => ({ ...c, ...(scans.get(c.id) ?? {}) })) : onPage;
 
+  logTiming("route catalog/sets/:id", elapsed(began), `${cards.length} cards`);
   return NextResponse.json(
     {
       /* `abbreviation` always, null where unknown, so a client can print the code without

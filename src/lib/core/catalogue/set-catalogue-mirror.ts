@@ -22,6 +22,7 @@
  * - **Guessing an address from the set's logo.** A gallery card is in the copy with its own
  *   picture, so there is nothing left to build by hand.
  */
+import { timed } from "../timing";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueSetRecord,
@@ -186,10 +187,10 @@ export async function englishSetFromCopy(
   const { adminClient } = await import("@/lib/storage/supabase");
   const db = adminClient();
   if (!db) return null;
-  const all = await copiedSets(db);
+  const all = await timed("copy sets", () => copiedSets(db));
   const row = copiedSetFor(all, setId);
   if (!row) return null;
-  const rows = await catalogueSetCards(db, row.id);
+  const rows = await timed("copy set cards", () => catalogueSetCards(db, row.id), row.id);
   if (!row || !rows.length) return null;
   const set: CatalogueSet = {
     id: row.id,
