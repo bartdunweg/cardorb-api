@@ -31,13 +31,13 @@ import {
   listCatalogueSets,
 } from "@/lib/storage/postgres";
 import { storedScan } from "./artwork";
+import { localise } from "../util";
 import { type CatalogueSet, byShelfOrder, inBinderOrder } from "./tcgdex-browse";
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
 import { indexByNumber } from "./set-index";
 import { resolveSetIds } from "./set-resolve";
 import type { SetCatalogue } from "./catalogue";
-import { setArt } from "./set-art";
 
 /**
  * The copy's sets, read whole and kept for ten minutes.
@@ -115,9 +115,13 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
     // The copy only ever writes a picture it found. A set that has none simply has none, which
     // the per-card nulls already say, so there is no whole-set verdict to make here.
     setHasScans: true,
-    logo: await setArt(setName, main?.logo ?? null, main?.symbol ?? null),
+    /* The copy's own art, resolved at night the way the shelf shows it (the promo star,
+       pokemontcg.io's wordmark where TCGdex has none) and kept in our bucket. setArt() would ask
+       pokemontcg.io again for a set with no logo, on a request. */
+    logo: localise(main?.logo ?? main?.symbol ?? null),
     releaseDate: main?.release_date ?? null,
     total,
+    fromCopy: true,
   };
 }
 

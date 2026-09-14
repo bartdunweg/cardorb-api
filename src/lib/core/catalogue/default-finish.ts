@@ -1,6 +1,7 @@
 import type { Finish, Language } from "../collection/collection-row";
 import { mapLimit } from "../util";
 import { printingsOf, type Printing, type TcgVariant } from "./card-printings";
+import { readCardSheet } from "./card-sheet";
 import { json } from "./tcgdex-client";
 import { cataloguesFor, isTcgId } from "./tcgdex-language";
 
@@ -24,8 +25,8 @@ export function defaultFinish(printings: readonly Printing[]): Finish {
 }
 
 /**
- * The same, asked of TCGdex for one card. The per-card record is cached for a day, so the card
- * a sheet has just shown costs nothing here. Anything that is not an answer (no id, an id TCGdex
+ * The same, for one card: out of the catalogue copy where it holds the card's printings (English,
+ * card-sheet.ts), asked of TCGdex only where it does not. The per-card record is cached for a day. Anything that is not an answer (no id, an id TCGdex
  * does not have, an outage) is `normal`: a card is never refused for a finish nobody chose.
  */
 export async function defaultFinishFor(
@@ -34,6 +35,10 @@ export async function defaultFinishFor(
 ): Promise<Finish> {
   if (!isTcgId(tcgId)) return "normal";
   const catalogue = cataloguesFor(language)[0] ?? "en";
+  if (catalogue === "en") {
+    const sheet = await readCardSheet(tcgId);
+    if (sheet) return defaultFinish(printingsOf(sheet.card.variants));
+  }
   try {
     const card = (await json(
       `https://api.tcgdex.net/v2/${catalogue}/cards/${encodeURIComponent(tcgId)}`,

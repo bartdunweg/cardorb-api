@@ -84,6 +84,12 @@ export type SetCatalogue = {
   logo: string | null;
   releaseDate: string | null;
   total: number | null;
+  /**
+   * Read out of the nightly copy, where every card's picture was already checked against every
+   * source: a matched card with no picture has none anywhere, and asking Limitless and
+   * pokemontcg.io again on a request finds nothing again (resolveSetFacts).
+   */
+  fromCopy?: boolean;
 };
 
 /**
