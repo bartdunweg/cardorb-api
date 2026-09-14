@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { englishSets, isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
+import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
 import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
@@ -8,7 +8,7 @@ import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { galleriesByParent } from "@/lib/core/catalogue/set-galleries";
 import { withSetLogos } from "@/lib/core/catalogue/set-logos";
-import { englishSetOfDay } from "@/lib/core/catalogue/catalogue";
+import { englishSetOfDay, englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -79,12 +79,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
          an empty set. */
       const found = await englishSetOfDay(setId);
       if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
-      set = (await withSetLogos([found.set]))[0] ?? found.set;
+      /* The logo the shelf's tile shows, stored resolved in the copy (promo star, pokemontcg.io's
+         wordmark); a set the copy has not listed yet is resolved the old way. */
+      const listed = (await englishShelfSets()).find((s) => s.id === found.set.id);
+      set = listed
+        ? { ...found.set, logo: listed.logo }
+        : ((await withSetLogos([found.set]))[0] ?? found.set);
       cards = found.cards;
       /* The set's gallery after its own cards: TG01 to TG30 are part of Brilliant Stars on the
          shelf, as they are in the collection (set-galleries.ts). A gallery that cannot be read
          leaves the set as it is rather than failing the page. */
-      const gallery = galleriesByParent(await englishSets()).get(set.id);
+      const gallery = galleriesByParent(await englishShelfSets()).get(set.id);
       const inside = gallery ? await englishSetOfDay(gallery.id).catch(() => null) : null;
       if (inside) {
         set = {
@@ -107,7 +112,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   const index = ownershipIndex(
     rows,
     isBrowseLanguage(language) ? language : null,
-    isBrowseLanguage(language) ? [] : await englishSets(),
+    isBrowseLanguage(language) ? [] : await englishShelfSets(),
   );
   const marked = markOwnership(index, cards);
   const start = (page - 1) * pageSize;

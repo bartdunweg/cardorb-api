@@ -46,9 +46,10 @@ import { json, fetchSet } from "./tcgdex-client";
 import { eraRaritiesOfSet, loadEraRarities } from "./era-rarities";
 import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
-import { englishSetFromCopy, mirrorSetCatalogue } from "./set-catalogue-mirror";
+import { copiedEnglishSets, englishSetFromCopy, mirrorSetCatalogue } from "./set-catalogue-mirror";
+import { withSetLogos } from "./set-logos";
 import { setArt } from "./set-art";
-import { englishSet } from "./tcgdex-browse";
+import { englishSet, englishSets } from "./tcgdex-browse";
 
 export { resolveSetIds } from "./set-resolve";
 import type { TcgSet, TcgSetDetail } from "./tcgdex-client";
@@ -338,3 +339,12 @@ const englishSetEntry = unstable_cache(
 export const englishSetOfDay = async (setId: string): ReturnType<typeof englishSet> =>
   (await englishSetFromCopy(setId).catch(() => null)) ??
   englishSetEntry(setId).catch(() => englishSet(setId));
+
+/**
+ * The English shelf's sets as the pages read them: out of the copy, newest first, logos resolved;
+ * TCGdex and pokemontcg.io only where the copy has nothing (copiedEnglishSets). The nightly
+ * catalogue run still reads englishSets() itself, because finding a set the copy does not have yet
+ * is its job.
+ */
+export const englishShelfSets = async (): Promise<Awaited<ReturnType<typeof englishSets>>> =>
+  (await copiedEnglishSets().catch(() => null)) ?? withSetLogos(await englishSets());

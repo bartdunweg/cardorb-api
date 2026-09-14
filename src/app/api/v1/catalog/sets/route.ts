@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { englishSets, isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
+import { isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
+import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
 import { galleriesByParent, withoutFoldedGalleries } from "@/lib/core/catalogue/set-galleries";
-import { withSetLogos } from "@/lib/core/catalogue/set-logos";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 
@@ -48,9 +48,7 @@ export async function GET(req: Request) {
   try {
     // The English shelf with the promo star and pokemontcg.io's wordmark where TCGdex has none
     // (set-logos.ts): asked here and on a set's page, not in the index search and the collection read.
-    sets = isBrowseLanguage(language)
-      ? await listSetsIn(language)
-      : await withSetLogos(await englishSets());
+    sets = isBrowseLanguage(language) ? await listSetsIn(language) : await englishShelfSets();
   } catch {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
        refused, the request is worth retrying, and the client can say so. The

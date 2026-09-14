@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
-import { englishSets } from "@/lib/core/catalogue/tcgdex-browse";
+import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { mirrorCards } from "@/lib/core/catalogue/mirror";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     const [cards, { rows }, sets] = await Promise.all([
       mirrorCards(db, [...new Set(ids)]),
       getRows(who.userId, bearer(req) ?? undefined),
-      englishSets().catch(() => []),
+      englishShelfSets().catch(() => []),
     ]);
     const marked = markOwnership(ownershipIndex(rows, null, sets), cards);
     const prices = await tcgplayerPricesFor(marked.map((c) => c.tcgId ?? c.id));

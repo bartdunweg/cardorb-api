@@ -354,8 +354,15 @@ async function fetchEnglishSets(): Promise<CatalogueSet[]> {
   pocketSets = pocket;
   // Newest first, as every set list in the app reads: a collector opening the
   // shelf is looking for the set that just came out far more often than for Base.
-  return out.sort((a, b) => (b.releaseDate ?? "").localeCompare(a.releaseDate ?? ""));
+  // Within a day by id: the copy (copiedEnglishSets) sorts the same way, so a shelf read from either
+  // puts two sets released the same day (dp1 and dpp) in the same order.
+  return out.sort(byShelfOrder);
 }
+
+/** Newest first, then by id: the English shelf's one order, whichever source it was read from. */
+export const byShelfOrder = (a: CatalogueSet, b: CatalogueSet): number =>
+  (b.releaseDate ?? "").localeCompare(a.releaseDate ?? "") ||
+  (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 export function englishSets(): Promise<CatalogueSet[]> {
   if (english && Date.now() - english.at < ENGLISH_TTL_MS) return english.sets;

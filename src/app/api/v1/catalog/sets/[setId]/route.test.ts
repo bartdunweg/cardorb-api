@@ -35,6 +35,8 @@ vi.mock("@/lib/core/collection/collection", () => ({
 /* The day-cached read is Next's Data Cache around englishSet; here it is englishSet itself. */
 vi.mock("@/lib/core/catalogue/catalogue", () => ({
   englishSetOfDay: (...a: unknown[]) => englishSet(...a),
+  /* The shelf out of the copy; here the one set the tests read. */
+  englishShelfSets: async () => [SET],
 }));
 vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
   ...(await real<typeof import("@/lib/core/catalogue/tcgdex-browse")>()),

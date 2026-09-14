@@ -30,7 +30,8 @@ import {
   listCatalogueSets,
 } from "@/lib/storage/postgres";
 import { storedScan } from "./artwork";
-import { type CatalogueSet, inBinderOrder, resolveEnglishSetId } from "./tcgdex-browse";
+import { type CatalogueSet, byShelfOrder, inBinderOrder } from "./tcgdex-browse";
+import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueMatch } from "./ptcg-search";
 import { indexByNumber } from "./set-index";
 import { resolveSetIds } from "./set-resolve";
@@ -120,6 +121,56 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
 }
 
 /**
+ * The copy's row for a set id as a page or a row names it: TCGdex's own id, pokemontcg.io's from
+ * before 2026-09-11 (ptcg-set-ids.json), or either in another case. The same three rules as
+ * resolveEnglishSetId(), over the copy's sets rather than TCGdex's index, so a set page on a cold
+ * instance does not ask TCGdex for its index to find a row the copy already has.
+ */
+function copiedSetFor(rows: CatalogueSetRecord[], setId: string): CatalogueSetRecord | null {
+  const exact = rows.find((r) => r.id === setId);
+  if (exact) return exact;
+  const lower = setId.toLowerCase();
+  const mapped = (PTCG_SET_IDS as Record<string, string>)[lower];
+  return (
+    rows.find((r) => r.id === mapped) ?? rows.find((r) => r.id.toLowerCase() === lower) ?? null
+  );
+}
+
+/**
+ * Every English set out of the copy, newest first, the shape englishSets() answers and with the
+ * logo a tile shows (the nightly run stores it resolved: the promo star, pokemontcg.io's wordmark
+ * where TCGdex has none). Null where the copy holds no set or cannot be read, and the caller asks
+ * TCGdex as before.
+ *
+ * Bart, 2026-09-14: everything is read from our own copy; the catalogues are asked only at night,
+ * for what is new. The shelf asked TCGdex's GraphQL index and then pokemontcg.io for 57 logos on
+ * every cold instance: 289 ms and 339 ms measured, and 5 s a logo when pokemontcg.io refuses.
+ * Compared that day with englishSets() and withSetLogos(): all 203 sets the same in id, name,
+ * series, date, counts and symbol; the logos once the 36 resolved ones were stored.
+ */
+export async function copiedEnglishSets(): Promise<CatalogueSet[] | null> {
+  const { adminClient } = await import("@/lib/storage/supabase");
+  const db = adminClient();
+  if (!db) return null;
+  const rows = await copiedSets(db).catch(() => [] as CatalogueSetRecord[]);
+  if (!rows.length) return null;
+  return rows
+    .map((r): CatalogueSet => ({
+      id: r.id,
+      name: r.name,
+      localName: null,
+      series: r.series ?? "Other",
+      releaseDate: r.release_date,
+      total: r.total ?? 0,
+      printedTotal: r.printed_total,
+      cardsRecorded: true,
+      logo: r.logo,
+      symbol: r.symbol,
+    }))
+    .sort(byShelfOrder);
+}
+
+/**
  * One English set, whole, out of the copy: the answer englishSet() gives, without asking TCGdex.
  *
  * A set page read TCGdex twice per set (the record, then GraphQL for the rarities and types)
@@ -135,11 +186,10 @@ export async function englishSetFromCopy(
   const { adminClient } = await import("@/lib/storage/supabase");
   const db = adminClient();
   if (!db) return null;
-  const id = (await resolveEnglishSetId(setId)) ?? setId;
-  const [row, rows] = await Promise.all([
-    copiedSets(db).then((all) => all.find((r) => r.id === id) ?? null),
-    catalogueSetCards(db, id),
-  ]);
+  const all = await copiedSets(db);
+  const row = copiedSetFor(all, setId);
+  if (!row) return null;
+  const rows = await catalogueSetCards(db, row.id);
   if (!row || !rows.length) return null;
   const set: CatalogueSet = {
     id: row.id,
