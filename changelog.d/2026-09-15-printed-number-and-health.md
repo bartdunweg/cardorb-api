@@ -1,0 +1,1 @@
+- Unown ? reads "#?" rather than "#%3F": the catalogue copy keeps a card's number as printed where TCGdex keeps it percent-encoded. The morning data check also fails where a priced card has no price line, and where a card number is still percent-encoded, the two slips found on 2026-09-14.

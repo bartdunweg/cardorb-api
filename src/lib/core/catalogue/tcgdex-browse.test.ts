@@ -371,3 +371,11 @@ describe("tcgdex-browse", () => {
     });
   });
 });
+
+describe("printedNumber", () => {
+  it("reads Unown ?'s percent-encoded number as printed, and leaves every other number alone", async () => {
+    const { printedNumber } = await import("./tcgdex-browse");
+    expect(printedNumber("%3F")).toBe("?");
+    for (const n of ["001", "TG01", "!", "SV-P", "100%"]) expect(printedNumber(n)).toBe(n);
+  });
+});

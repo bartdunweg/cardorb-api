@@ -169,6 +169,19 @@ type TcgSetDetail = {
 
 const HOST = "https://api.tcgdex.net/v2";
 
+/**
+ * A card's number as printed, where TCGdex keeps it percent-encoded: Unown ?'s localId is "%3F", and
+ * every page wrote "#%3F" (2026-09-14). The id stays TCGdex's; only the number a person reads changes.
+ */
+export const printedNumber = (localId: string): string => {
+  if (!/%[0-9A-Fa-f]{2}/.test(localId)) return localId;
+  try {
+    return decodeURIComponent(localId);
+  } catch {
+    return localId;
+  }
+};
+
 const scan = (lang: string, serie: string, set: string, localId: string, size: "low" | "high") =>
   `https://assets.tcgdex.net/${lang}/${serie}/${set}/${localId}/${size}.webp`;
 
@@ -270,7 +283,7 @@ export async function setIn(
   };
   const cards: CatalogueMatch[] = (detail.cards ?? []).map((c) => ({
     id: c.id,
-    number: c.localId,
+    number: printedNumber(c.localId),
     ...cardNamed(lang, c.id, c.name),
     setName: set.name,
     image: serieId ? scan(lang, serieId, detail.id, c.localId, "low") : null,
@@ -576,7 +589,7 @@ export async function englishSet(
   };
   const cards = (detail.cards ?? []).map((c): CatalogueMatch => ({
     id: c.id,
-    number: c.localId,
+    number: printedNumber(c.localId),
     name: c.name,
     localName: null,
     setName: set.name,

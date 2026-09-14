@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - Japanese sets show their logo. No source Card Orb read had a Japanese wordmark (TCGdex names none, TCGplayer and Limitless publish none); Scrydex lists one for every Japanese expansion and gave permission to keep them. The nightly Japanese copy finds each set on Scrydex by id, by English title, or by a short hand-read list where Scrydex titles a set differently, and keeps the logo in our own bucket: 165 of 169 sets, all but three starter sets and Detective Pikachu.
 
+- Unown ? reads "#?" rather than "#%3F": the catalogue copy keeps a card's number as printed where TCGdex keeps it percent-encoded. The morning data check also fails where a priced card has no price line, and where a card number is still percent-encoded, the two slips found on 2026-09-14.
+
 - Six more English cards have a picture, from Scrydex: the five cards of the Poké Card Creator Pack (Scrydex's wb1) and Pikachu at the Museum (a jumbo card Scrydex files as MEP 1000). My First Battle's Potion and Switch are the two English cards no source pictures. The catalogue cron takes `?sets=` to work a few sets out from scratch when a source is added for them.
 
 - Japanese cards no other source had a picture of take Scrydex's scan, with Scrydex's permission: mostly the vintage shelves (Pokémon Card VS, the Gym sets, Neo, LEGEND, PCG) and the promos. Scrydex numbers some vintage sets its own way, so a card is matched by number only where Scrydex's name agrees with ours, by name where exactly one card carries it, and a card without an English name only in a set whose numbering was shown to agree. About 1,130 of the 1,194 blank cards were expected to match.
