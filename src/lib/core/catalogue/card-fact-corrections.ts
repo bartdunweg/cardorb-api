@@ -2298,7 +2298,9 @@ export function correctedFacts<
  * And as the card and Bulbapedia write them, where TCGdex has its own spelling: "Shaymin-EX" and
  * "Pikachu & Zekrom-GX" (TCGdex wrote 304 XY-era EX and 548 Sun & Moon GX names with a space, and
  * its Black & White sets with the hyphen), "Ho-Oh" (four vintage cards had "Ho-oh"), "Nidoran♀"
- * without a space (eleven had one), and Rising Rivals' Elite Four as "Drapion 4" (TCGdex "E4").
+ * without a space (eleven had one). Rising Rivals' Elite Four stay "Drapion E4" as TCGplayer, pokemontcg.io
+ * and TCGdex write them; the card prints a 4 with the Elite mark, which Bulbapedia writes "Drapion 4",
+ * and a search for "Drapion 4" finds the card all the same.
  * Matching reads a hyphen as a space (TYPE_SUFFIX in matching.ts), so a row filed "Shaymin EX"
  * keeps its card.
  */
@@ -2314,6 +2316,5 @@ export function correctedName(id: string, name: string): string {
     .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
     .replace(/\s+(EX|GX)$/, "-$1")
     .replace(/\bHo-oh\b/, "Ho-Oh")
-    .replace(/\bNidoran ([♀♂])/, "Nidoran$1")
-    .replace(/\s+E4$/, " 4");
+    .replace(/\bNidoran ([♀♂])/, "Nidoran$1");
 }

@@ -234,7 +234,7 @@ describe("correctedName", () => {
     expect(correctedName("ecard3-139", "Star Piece")).toBe("Star Piece");
   });
 
-  it("writes EX and GX with a hyphen, Ho-Oh, Nidoran and the Elite Four as the card does", () => {
+  it("writes EX and GX with a hyphen, Ho-Oh and Nidoran as the card does", () => {
     expect(correctedName("xy6-77", "Shaymin EX")).toBe("Shaymin-EX");
     expect(correctedName("xy8-160", "M Mewtwo EX")).toBe("M Mewtwo-EX");
     expect(correctedName("sm10-82", "Marshadow & Machamp GX")).toBe("Marshadow & Machamp-GX");
@@ -242,7 +242,7 @@ describe("correctedName", () => {
     expect(correctedName("sv03.5-006", "Charizard ex")).toBe("Charizard ex");
     expect(correctedName("neo3-7", "Ho-oh")).toBe("Ho-Oh");
     expect(correctedName("lc-82", "Nidoran ♀")).toBe("Nidoran♀");
-    expect(correctedName("pl2-17", "Drapion E4")).toBe("Drapion 4");
+    expect(correctedName("pl2-17", "Drapion E4")).toBe("Drapion E4");
   });
 
   it("writes every apostrophe straight", () => {
