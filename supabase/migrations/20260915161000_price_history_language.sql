@@ -67,6 +67,25 @@ begin
 end
 $$;
 
+-- The old key and the month index go before the update, so the update writes no index entries.
+drop index if exists public.card_price_months_month_idx;
+
+do $$
+begin
+  if exists (
+    select 1 from pg_constraint c
+    where c.conrelid = 'public.card_price_months'::regclass
+      and c.contype = 'p'
+      and not exists (
+        select 1 from pg_attribute a
+        where a.attrelid = c.conrelid and a.attnum = any (c.conkey) and a.attname = 'language'
+      )
+  ) then
+    alter table public.card_price_months drop constraint card_price_months_pkey;
+  end if;
+end
+$$;
+
 update public.card_price_months as m
 set language = 'ja'
 where m.language = 'en'
@@ -87,20 +106,4 @@ end
 $$;
 alter table public.card_price_months validate constraint card_price_months_language_check;
 
-drop index if exists public.card_price_months_month_idx;
 
-do $$
-begin
-  if exists (
-    select 1 from pg_constraint c
-    where c.conrelid = 'public.card_price_months'::regclass
-      and c.contype = 'p'
-      and not exists (
-        select 1 from pg_attribute a
-        where a.attrelid = c.conrelid and a.attnum = any (c.conkey) and a.attname = 'language'
-      )
-  ) then
-    alter table public.card_price_months drop constraint card_price_months_pkey;
-  end if;
-end
-$$;
