@@ -18,7 +18,9 @@ vi.mock("@/lib/storage/postgres", () => ({
   listCatalogueSets: (...a: unknown[]) => listCatalogueSets(...a),
   catalogueCardsBySets: (...a: unknown[]) => catalogueCardsBySets(...a),
   catalogueSetCards: (...a: unknown[]) => catalogueSetCards(...a),
+  listCatalogueSync: (...a: unknown[]) => listCatalogueSync(...a),
 }));
+const listCatalogueSync = vi.fn(async (..._a: unknown[]): Promise<unknown[]> => []);
 /* The id resolver asks TCGdex's set index; here every id is already TCGdex's own. */
 vi.mock("./tcgdex-browse", async (real) => ({
   ...(await real<typeof import("./tcgdex-browse")>()),
@@ -332,5 +334,29 @@ describe("the Japanese shelf out of the copy", () => {
     });
     expect(catalogueSetCards).not.toHaveBeenCalled();
     expect(await languageSetFromCopy("ja", "SV9")).toBeNull();
+  });
+});
+
+describe("empty sets on the shelf", () => {
+  beforeEach(() => {
+    forgetCopiedSets();
+    vi.clearAllMocks();
+  });
+
+  it("leaves out an English set the copy holds no card of", async () => {
+    listCatalogueSets.mockResolvedValue([set(), set({ id: "rc", name: "Radiant Collection" })]);
+    listCatalogueSync.mockResolvedValue([
+      { setId: "sv03.5", cards: 207, syncedAt: "", format: 1 },
+      { setId: "rc", cards: 0, syncedAt: "", format: 1 },
+    ]);
+    expect((await copiedEnglishSets())?.map((s) => s.id)).toEqual(["sv03.5"]);
+  });
+
+  it("leaves out a Japanese set with no cards recorded anywhere", async () => {
+    listCatalogueSets.mockResolvedValue([
+      set({ id: "SV2a", cards_recorded: true, sort_order: 0 }),
+      set({ id: "ADV1", cards_recorded: false, sort_order: 1 }),
+    ]);
+    expect((await copiedLanguageSets("ja"))?.map((s) => s.id)).toEqual(["SV2a"]);
   });
 });

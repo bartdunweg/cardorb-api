@@ -19,7 +19,7 @@ import type { CatalogueSet } from "./tcgdex-browse";
  * Classic Collection, which come in the same boosters and are numbered apart the same way (SV1,
  * SV001, CC001), so their numbers cannot be mistaken for the set's own.
  */
-const SUBSET_SUFFIX = /\s+(?:Shiny Vault|Classic Collection)$/i;
+const SUBSET_SUFFIX = /\s+(?:Shiny Vault|Classic Collection|Unown Collection)$/i;
 
 /** The parent set's name for a subset shown inside it, or null. */
 export const subsetParent = (name: string): string | null => {
@@ -31,7 +31,10 @@ export const subsetParent = (name: string): string | null => {
 
 /** A number only a subset carries: TG01, GG01, SV1, SV001, CC001. */
 export const isSubsetNumber = (number: string) =>
-  isGalleryNumber(number) || /^(SV|CC)\d/i.test(number.trim());
+  isGalleryNumber(number) ||
+  /^(SV|CC)\d/i.test(number.trim()) ||
+  // Unseen Forces' Unown Collection is numbered by the letter it shows: A to Z, ! and ?.
+  /^[A-Z!?]$/.test(number.trim());
 
 /** Each parent's gallery by the parent's id, for the galleries whose parent is on the shelf. */
 export function galleriesByParent(sets: CatalogueSet[]): Map<string, CatalogueSet> {
