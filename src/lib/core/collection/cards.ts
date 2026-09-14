@@ -436,6 +436,11 @@ export function forPublic(sets: CardSet[]): CardSet[] {
       ...card,
       price: null,
       priceFirstEd: null,
+      // Every printing's figure is a price as much as `price` is, and the product ids are the key to
+      // it: both reached /v1/public/:username/collection until 2026-09-14, unseen on the page and
+      // plain in the answer.
+      pricePrintings: null,
+      printingIds: null,
       // Eleven keys written as null rather than omitted, and that is 472.3 kB
       // of the 1,050 kB RSC flight payload on a 1,635-card profile — 45% of it,
       // measured. Omitting them instead is the obvious win and was attempted;

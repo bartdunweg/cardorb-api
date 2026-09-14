@@ -1,0 +1,1 @@
+- `GET /v1/public/{username}/collection` no longer carries `pricePrintings` or `printingIds`: every printing's euro figure and its TCGplayer product reached a public profile's answer, though the page showed neither. Both are null there now, like `price`.
