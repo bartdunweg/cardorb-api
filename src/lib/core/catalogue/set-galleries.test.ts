@@ -61,3 +61,12 @@ describe("Shiny Vault and Classic Collection", () => {
     expect(["49", "4", "SVP1"].some(isSubsetNumber)).toBe(false);
   });
 });
+
+describe("the Unown Collection", () => {
+  it("is part of Unseen Forces, numbered by its letters", async () => {
+    const { subsetParent, isSubsetNumber } = await import("./set-galleries");
+    expect(subsetParent("Unseen Forces Unown Collection")).toBe("Unseen Forces");
+    for (const n of ["A", "Z", "!", "?"]) expect(isSubsetNumber(n)).toBe(true);
+    for (const n of ["1", "115", "AB"]) expect(isSubsetNumber(n)).toBe(false);
+  });
+});

@@ -22,6 +22,8 @@ if the two have drifted apart.
 
 - No set wears Scrydex's generic Pokémon Trading Card Game wordmark as its logo. Scrydex answers that file for a set it has no logo for, and 29 of the 165 Japanese logos copied the day before were it (ADV, e-Card, neo, PCG, PMCG, CP6); those sets show no logo again. English sets TCGdex has no logo for take Scrydex's where it has a real one: the sixteen trainer kits, the McDonald's Collections 2023 and 2024, the Poké Card Creator Pack and Mega Evolution Energy.
 
+- The set shelf leaves out sets with no cards in the catalogue copy: Sample, W Promotional, Jumbo cards and Radiant Collection in English (Radiant Collection's cards are Generations' RC run, already there), and the four Japanese sets neither TCGdex nor TCGplayer lists cards for. Unseen Forces' Unown Collection is part of Unseen Forces on the shelf, as a Shiny Vault or Classic Collection is part of its set, its A to Z, ! and ? counted with it.
+
 - The Japanese copy also reads TCGplayer's Japanese shelf, where TCGdex falls short. The 53 Japanese sets TCGdex lists without cards (Shiny Star V, Eevee Heroes, the 25th Anniversary Collection, every SM+ set) get TCGplayer's card list, one card per printed number with its English name, rarity, type, HP and stage; a card TCGdex and Limitless have no picture of gets TCGplayer's product picture, matched by number or, on the unnumbered vintage shelves, by English name; and each card keeps its TCGplayer product, so the new cards are priced like every other.
 
 ## 2026-09-14

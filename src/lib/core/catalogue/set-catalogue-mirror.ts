@@ -30,6 +30,7 @@ import {
   type CatalogueLanguage,
   catalogueSetCards,
   listCatalogueSets,
+  listCatalogueSync,
 } from "@/lib/storage/postgres";
 import { storedScan } from "./artwork";
 import { localise } from "../util";
@@ -167,9 +168,17 @@ export async function copiedEnglishSets(): Promise<CatalogueSet[] | null> {
   const { adminClient } = await import("@/lib/storage/supabase");
   const db = adminClient();
   if (!db) return null;
-  const rows = await copiedSets(db).catch(() => [] as CatalogueSetRecord[]);
+  const [rows, sync] = await Promise.all([
+    copiedSets(db).catch(() => [] as CatalogueSetRecord[]),
+    listCatalogueSync(db).catch(() => []),
+  ]);
   if (!rows.length) return null;
+  /* A set the copy holds no card of is no tile: TCGdex lists Sample, W Promotional, Jumbo cards and
+     Radiant Collection (whose 32 cards are Generations' RC run) with none (Bart, 2026-09-14). A set
+     with no sync record yet is kept, as before. */
+  const cards = new Map(sync.map((s) => [s.setId, s.cards]));
   return rows
+    .filter((r) => cards.get(r.id) !== 0)
     .map((r): CatalogueSet => ({
       id: r.id,
       name: r.name,
@@ -252,7 +261,9 @@ export async function copiedLanguageSets(language: BrowseLanguage): Promise<Cata
   if (!db) return null;
   const rows = await copiedSets(db, language).catch(() => [] as CatalogueSetRecord[]);
   if (!rows.length) return null;
-  return [...rows]
+  // A set the catalogue lists with no cards, and TCGplayer has none of either, is no tile.
+  return rows
+    .filter((r) => r.cards_recorded !== false)
     .sort((a, b) => (a.sort_order ?? 1e9) - (b.sort_order ?? 1e9) || a.id.localeCompare(b.id))
     .map((r): CatalogueSet => ({
       id: r.id,
