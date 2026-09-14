@@ -7,6 +7,7 @@ import {
   unlinkedCardPrices,
 } from "./snapshot";
 import type { CardSet, OwnedCard, Variant } from "./cards";
+import { countStats } from "./items";
 
 /**
  * The arithmetic behind a point on the chart.
@@ -100,7 +101,7 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       date: "2026-09-07",
       value: 55,
       cards: 4,
-      priced: 2,
+      priced: 4,
       unpriced: 0,
       added: 0,
       addedValue: 0,
@@ -143,6 +144,44 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       added: 0,
       addedValue: 0,
     });
+  });
+
+  it("counts copies, never cards, so priced and unpriced add up to the copies held", () => {
+    // The owner's collection on 2026-09-14: 1,924 owned rows holding 1,928 copies of 1,611
+    // different cards, every copy priced. The point stored 1,928 cards, 1,611 priced (the cards)
+    // and 0 unpriced; it reads 1,928 priced now, and the same unpriced as /v1/stats.
+    const cards: OwnedCard[] = [];
+    let rows = 0;
+    for (let i = 0; i < 1611; i++) {
+      // 309 cards held in two rows (a normal and a reverse), and four rows holding two copies.
+      const variants = [variant({ id: `row-${rows++}`, quantity: i < 4 ? 2 : 1 })];
+      if (i >= 1611 - 309) variants.push(variant({ id: `row-${rows++}`, finish: "reverse-holo" }));
+      cards.push(priced(1, 2, { key: `k${i}`, tcgId: `c${i}`, variants }));
+    }
+    expect(rows).toBe(1920);
+    // Four more rows, so the rows are the owner's 1,924: a second normal on four of the cards.
+    for (let i = 10; i < 14; i++) cards[i]!.variants.push(variant({ id: `row-${rows++}` }));
+    const sets = [set(cards)];
+    const point = snapshotFromSets(sets, "2026-09-14");
+    const stats = countStats(sets);
+    expect([stats.cards, stats.copies]).toEqual([1924, 1928]);
+    expect([point.cards, point.priced, point.unpriced]).toEqual([1928, 1928, 0]);
+    expect(point.unpriced).toBe(stats.unpriced);
+  });
+
+  it("counts a reverse with no figure of its own as an unpriced copy beside its priced normal", () => {
+    // A card held as a normal and a reverse TCGplayer has no reverse figure for (price-basis.mjs,
+    // api#463). Counted by card, it was priced because the normal was, and unpriced stayed 0.
+    const sets = [
+      set([
+        priced(4, null, {
+          variants: [variant({ quantity: 2 }), variant({ id: "row-2", finish: "reverse-holo" })],
+        }),
+      ]),
+    ];
+    const point = snapshotFromSets(sets, "2026-09-14");
+    expect([point.value, point.cards, point.priced, point.unpriced]).toEqual([8, 3, 2, 1]);
+    expect(point.unpriced).toBe(countStats(sets).unpriced);
   });
 
   it("lists every printing of every held card with a price", () => {
