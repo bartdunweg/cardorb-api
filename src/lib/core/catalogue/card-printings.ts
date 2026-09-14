@@ -18,6 +18,11 @@ import TCGPLAYER_PATTERNS from "../tcgplayer-patterns.generated.json";
  * Ball prints are reverses whose foil TCGdex names, which settles a question this code used to
  * leave open: they were offered on every card with any reverse because nothing was thought to
  * say which cards got one.
+ *
+ * Since 2026-09-14 those patterned reverses come from TCGplayer's products instead, where the card
+ * has a TCGplayer link (finishPrintsFor): TCGdex named a Poké Ball reverse on eight basic energies
+ * TCGplayer never sold one of, and had no word for the Energy Symbol reverse beside the ex era's
+ * own energy foil.
  */
 
 /** One printing of a card: what it is, and what its foil looks like where that has a name. */
@@ -40,8 +45,26 @@ const FINISH_OF: Record<string, Finish> = {
  */
 const PATTERN_OF: Record<string, FoilPattern> = { cosmos: "cosmos" };
 const BALL_OF: Record<string, Finish> = { pokeball: "poke-ball", masterball: "master-ball" };
+/**
+ * TCGdex's foil for a reverse TCGplayer sells as an Energy Symbol reverse. Only read beside
+ * TCGplayer's list: the ex era's reverses (ex5, ex6) carry the same word and are plain reverses
+ * here, as they always were.
+ */
+const ENERGY_FOIL = "energy";
 
 export type TcgVariant = { type?: string; foil?: string; stamp?: string[] };
+
+/** One patterned reverse TCGplayer sells as a product of its own: "Eevee (Poke Ball Pattern)". */
+export type FinishPrint = {
+  finish: Extract<Finish, "poke-ball" | "master-ball" | "energy-symbol">;
+  /** TCGplayer's product for the print. */
+  productId: number;
+  /** The printing its figure is filed under in tcgplayer_prices ("holofoil", "reverse-holofoil"). */
+  printing: string;
+};
+
+/** The finishes a TCGplayer product can prove, and the only ones read from its list. */
+const FINISH_PRINT_FINISHES: readonly string[] = ["poke-ball", "master-ball", "energy-symbol"];
 
 /**
  * The printings a card has, deduped, in FINISHES order.
@@ -50,17 +73,37 @@ export type TcgVariant = { type?: string; foil?: string; stamp?: string[] };
  * finish with a shop's mark on it, and this app does not record the mark. Dropping the stamp
  * rather than the variant keeps the finish it proves.
  */
-export function printingsOf(variants: TcgVariant[] | null | undefined): Printing[] {
+export function printingsOf(
+  variants: TcgVariant[] | null | undefined,
+  /**
+   * The English card's id, for TCGplayer's patterned reverses (finishPrintsFor). Left out (a
+   * Japanese card, whose products are on another shelf), TCGdex's word stands for them.
+   */
+  tcgId?: string | null,
+): Printing[] {
   const seen = new Map<string, Printing>();
+  const sold = tcgId ? finishPrintsFor(tcgId) : null;
   for (const v of variants ?? []) {
     const base = FINISH_OF[v.type ?? ""];
     if (!base) continue;
     const foil = (v.foil ?? "").toLowerCase();
     const ball = BALL_OF[foil];
+    /* With TCGplayer's list in hand the balls and the Energy Symbol reverse come from it alone: a
+       ball TCGdex names and TCGplayer does not sell is not offered, and TCGdex's energy foil is
+       the Energy Symbol reverse where TCGplayer sells one (added below) and a plain reverse where
+       it does not. */
+    if (sold && base === "reverse-holo" && ball) continue;
+    if (sold && base === "reverse-holo" && foil === ENERGY_FOIL) {
+      if (sold.some((p) => p.finish === "energy-symbol")) continue;
+    }
     const finish = ball && base === "reverse-holo" ? ball : base;
     const foilPattern = ball ? null : (PATTERN_OF[foil] ?? null);
     seen.set(`${finish}|${foilPattern ?? ""}`, { finish, foilPattern });
   }
+  /* Only beside an answer: an empty list is the catalogue having none, and a form offers every
+     finish then. A card TCGdex lists no variants for does not become "a Poké Ball reverse only". */
+  if (seen.size)
+    for (const p of sold ?? []) seen.set(`${p.finish}|`, { finish: p.finish, foilPattern: null });
   return [...seen.values()].sort(
     (a, b) =>
       FINISHES.indexOf(a.finish) - FINISHES.indexOf(b.finish) ||
@@ -151,6 +194,7 @@ export type PatternPrints = { standard: boolean; prints: PatternPrint[] };
 type StoredPatterns = {
   standard?: boolean;
   prints: { foilPattern: string; finish: string; productId: number; printing: string }[];
+  finishPrints?: { finish: string; productId: number; printing: string }[];
 };
 const PATTERNS = TCGPLAYER_PATTERNS as Record<string, StoredPatterns>;
 
@@ -174,3 +218,30 @@ export function patternPrintsFor(tcgId: string): PatternPrints | null {
   );
   return { standard: stored?.standard !== false, prints };
 }
+
+/**
+ * The Poké Ball, Master Ball and Energy Symbol reverses TCGplayer sells of this card, each a
+ * product of its own with its own price (scripts/tcgplayer-patterns.mjs, the rules in
+ * foil-pattern-products.mjs). A form offers these finishes from here and not from TCGdex, and the
+ * price job files each one's figure under the card as `${finish}-reverse-holofoil`
+ * (finishPrintingKey).
+ *
+ * Null where the card has no TCGplayer product at all: no answer, and TCGdex's word stands.
+ */
+export function finishPrintsFor(tcgId: string): FinishPrint[] | null {
+  if (LINKS[tcgId]?.productId == null) return null;
+  return (PATTERNS[tcgId]?.finishPrints ?? []).flatMap((p) =>
+    FINISH_PRINT_FINISHES.includes(p.finish)
+      ? [{ ...p, finish: p.finish as FinishPrint["finish"] }]
+      : [],
+  );
+}
+
+/** Every English card's patterned reverses, for the price job and its tests. */
+export const allFinishPrints = (): Record<string, FinishPrint[]> =>
+  Object.fromEntries(
+    Object.keys(PATTERNS).flatMap((id) => {
+      const prints = finishPrintsFor(id);
+      return prints?.length ? [[id, prints]] : [];
+    }),
+  );

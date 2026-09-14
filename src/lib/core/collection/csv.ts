@@ -252,8 +252,10 @@ export function finishFrom(variant: string): Finish | null {
   // The 151 and Prismatic Evolutions reverse patterns, and nothing that merely
   // shares their name. "Master Ball League", "Ultra Ball League", "Great Ball
   // League" are league promos and fall through to the tests below.
-  const ball = /^(pok[eé] ?ball|master ?ball)( reverse| holo| reverse holo)?$/.exec(v);
+  const ball = /^(pok[eé] ?ball|master ?ball)( pattern)?( reverse| holo| reverse holo)?$/.exec(v);
   if (ball) return ball[1]!.startsWith("master") ? "master-ball" : "poke-ball";
+  // TCGplayer's label for Ascended Heroes' reverse, and the same words with a finish after them.
+  if (/^energy symbol( pattern)?( reverse| holo| reverse holo)?$/.test(v)) return "energy-symbol";
 
   if (v.includes("reverse")) return "reverse-holo";
   if (v.includes("holo")) return "holo";

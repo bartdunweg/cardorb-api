@@ -37,6 +37,10 @@ import { type CardItem, copyPrice } from "./items";
  * Edition is one of ours, after Note 5: Dex has no column for it and writes the run in Variant
  * instead, which it can only do by giving up saying "1st Edition Holo". Ours says both.
  *
+ * Finish is one of ours too, the copy's finish in this app's word ("energy-symbol"), and read back
+ * ahead of Variant: Dex has no known word for an Energy Symbol reverse, and inventing one would put
+ * a name in Dex's column that no Dex file carries.
+ *
  * Illustrator is empty: this app does not keep it, and an empty column is a
  * column a reader can skip, where a missing one shifts every column after it.
  */
@@ -65,6 +69,7 @@ const HEADER = [
   "Acquired",
   "Purchase price",
   "Edition",
+  "Finish",
 ] as const;
 
 const FINISH_WORDS: Record<string, string> = {
@@ -73,6 +78,10 @@ const FINISH_WORDS: Record<string, string> = {
   holo: "Holo",
   "poke-ball": "Poké Ball Reverse",
   "master-ball": "Master Ball Reverse",
+  /* Not a word Dex is known to write: no Dex export with an Energy Symbol reverse has been read.
+     Variant says what Dex does know, a reverse holo, and the Finish column after Dex's own says
+     which (FINISH, below). */
+  "energy-symbol": "Reverse Holo",
 };
 
 const PATTERN_WORDS: Record<string, string> = {
@@ -138,6 +147,7 @@ export function dexCsv(items: readonly CardItem[]): string {
         it.acquiredAt ? it.acquiredAt.slice(0, 10) : "",
         it.purchasePrice === null ? "" : it.purchasePrice.toFixed(2).replace(".", ","),
         it.edition ?? "",
+        it.finish ?? "",
       ]),
     );
   }

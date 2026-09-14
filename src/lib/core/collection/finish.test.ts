@@ -13,6 +13,7 @@ describe("finish", () => {
     expect(isReverseFinish("reverse-holo")).toBe(true);
     expect(isReverseFinish("poke-ball")).toBe(true);
     expect(isReverseFinish("master-ball")).toBe(true);
+    expect(isReverseFinish("energy-symbol")).toBe(true);
     expect(isReverseFinish("holo")).toBe(false);
     expect(isReverseFinish("normal")).toBe(false);
     expect(isReverseFinish(null)).toBe(false);

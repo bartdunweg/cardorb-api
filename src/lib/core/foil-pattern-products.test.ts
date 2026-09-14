@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   baseName,
+  finishOfName,
   finishOfPrint,
   keyOf,
   patternOfName,
@@ -32,6 +33,22 @@ describe("patternOfName", () => {
     expect(patternOfName("Solgaleo - 87/145 (Water Web Holo)")).toBeNull();
     expect(patternOfName("Exeggcute (Poke Ball Pattern)")).toBeNull();
     expect(patternOfName("Cosmog - 99/236")).toBeNull();
+  });
+});
+
+describe("finishOfName", () => {
+  it("reads the patterned reverses a copy records as a finish, as TCGplayer labels them", () => {
+    expect(finishOfName("Eevee (Poke Ball Pattern)")).toBe("poke-ball");
+    expect(finishOfName("Eevee (Master Ball Pattern)")).toBe("master-ball");
+    expect(finishOfName("Erika's Tangela - 007/217 (Poke Ball)")).toBe("poke-ball");
+    expect(finishOfName("Pikachu (Energy Symbol Pattern)")).toBe("energy-symbol");
+  });
+
+  it("reads no ball the store has no finish for, no league stamp and no card's own name", () => {
+    expect(finishOfName("Pikachu (Friend Ball)")).toBeNull();
+    expect(finishOfName("Pikachu (Great Ball League)")).toBeNull();
+    expect(finishOfName("Master Ball - 153/162")).toBeNull();
+    expect(finishOfName("Machamp 068/165 (Cosmos Holo)")).toBeNull();
   });
 });
 
@@ -124,5 +141,41 @@ describe("patternPrintsOf", () => {
     );
     expect(cards).toEqual({});
     expect(ambiguous.map((p) => p.productId)).toEqual([8001]);
+  });
+
+  it("keeps the patterned reverses apart from the foil patterns, and never lets them unset Standard", () => {
+    const { cards, unmatched } = patternPrintsOf(
+      [
+        product(610429, 23821, "Eevee", "074/131"),
+        product(610590, 23821, "Eevee (Poke Ball Pattern)", "074/131"),
+        product(610691, 23821, "Eevee (Master Ball Pattern)", "074/131"),
+        product(619725, 2374, "Eevee - 074/131 (Reverse Cosmos Holo)", "074/131"),
+        product(676852, 24541, "Erika's Oddish (Poke Ball)", "001/217"),
+        product(676992, 24541, "Erika's Oddish (Energy Symbol Pattern)", "001/217"),
+        product(676858, 24541, "Chikorita (Friend Ball)", "008/217"),
+      ],
+      new Map([
+        [610590, ["Holofoil"]],
+        [676992, ["Reverse Holofoil"]],
+      ]),
+      { "sv08.5-074": { productId: 610429 }, "me02.5-001": { productId: 675813 } },
+    );
+    expect(cards["sv08.5-074"]).toEqual({
+      prints: [
+        {
+          foilPattern: "cosmos",
+          finish: "reverse-holo",
+          printing: "reverse-holofoil",
+          productId: 619725,
+        },
+      ],
+      finishPrints: [
+        { finish: "poke-ball", productId: 610590, printing: "holofoil" },
+        { finish: "master-ball", productId: 610691, printing: "reverse-holofoil" },
+      ],
+    });
+    // Oddish's own product is not on this shelf, so neither of its reverses has a card to join.
+    expect(cards["me02.5-001"]).toBeUndefined();
+    expect(unmatched.map((p) => p.productId)).toEqual([676852, 676992]);
   });
 });

@@ -38,7 +38,11 @@ export async function readCardSheet(
  * The sheet as getCardDetail() answers it. No price: the route prices every card from the one
  * store (detailPrice). No Cardmarket id: nothing reads it since prices are TCGplayer's alone.
  */
-export function detailFromSheet({ card, set }: CatalogueCardSheet): CardDetail {
+export function detailFromSheet(
+  { card, set }: CatalogueCardSheet,
+  /** The catalogue the sheet is from: TCGplayer's patterned reverses are read for English cards. */
+  language: CatalogueLanguage = "en",
+): CardDetail {
   return {
     id: card.id,
     // A Japanese card's sheet has always carried the name it prints, as TCGdex's record says it.
@@ -52,7 +56,7 @@ export function detailFromSheet({ card, set }: CatalogueCardSheet): CardDetail {
     evolveFrom: card.evolve_from,
     regulationMark: card.regulation_mark,
     firstEdition: card.first_edition,
-    printings: printingsOf(card.variants),
+    printings: printingsOf(card.variants, language === "en" ? card.id : null),
     editions: editionsOf(card.id, card.first_edition),
     set: set
       ? { id: set.id, name: set.local_name ?? set.name, logo: set.logo, total: set.total }

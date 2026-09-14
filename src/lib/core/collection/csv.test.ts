@@ -172,6 +172,9 @@ describe("finishFrom", () => {
     expect(finishFrom("Poke Ball Reverse")).toBe("poke-ball");
     expect(finishFrom("Master Ball")).toBe("master-ball");
     expect(finishFrom("Master Ball Holo")).toBe("master-ball");
+    expect(finishFrom("Poke Ball Pattern")).toBe("poke-ball");
+    expect(finishFrom("Energy Symbol Pattern")).toBe("energy-symbol");
+    expect(finishFrom("energy-symbol")).toBe("energy-symbol");
   });
 
   it("does not mistake a league named after a ball for a ball pattern", () => {

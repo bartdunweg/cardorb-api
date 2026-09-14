@@ -1516,7 +1516,7 @@ export async function getCardDetail(
     evolveFrom: card.evolveFrom ?? null,
     regulationMark: card.regulationMark ?? null,
     firstEdition: card.variants?.firstEdition ?? null,
-    printings: printingsOf(card.variants_detailed),
+    printings: printingsOf(card.variants_detailed, language ? null : card.id),
     editions: editionsOf(card.id, card.variants?.firstEdition ?? null),
     set: card.set?.id
       ? {

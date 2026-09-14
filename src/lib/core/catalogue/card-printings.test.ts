@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { editionsOf, foilPatternsOfSerie, patternPrintsFor, printingsOf } from "./card-printings";
+import {
+  editionsOf,
+  finishPrintsFor,
+  foilPatternsOfSerie,
+  patternPrintsFor,
+  printingsOf,
+} from "./card-printings";
 
 describe("printingsOf", () => {
   it("is nothing where TCGdex lists no variants, which is no answer rather than none", () => {
@@ -31,6 +37,71 @@ describe("printingsOf", () => {
       { finish: "poke-ball", foilPattern: null },
       { finish: "master-ball", foilPattern: null },
     ]);
+  });
+
+  // What TCGdex lists for these cards in our copy, 2026-09-14, beside what TCGplayer sells.
+  it("offers the ball and Energy Symbol reverses TCGplayer sells, and none it does not", () => {
+    // Prismatic Evolutions Eevee: TCGplayer sells both balls, as TCGdex says.
+    expect(
+      printingsOf(
+        [
+          { type: "normal" },
+          { type: "reverse" },
+          { type: "reverse", foil: "pokeball" },
+          { type: "reverse", foil: "masterball" },
+        ],
+        "sv08.5-074",
+      ).map((p) => p.finish),
+    ).toEqual(["normal", "reverse-holo", "poke-ball", "master-ball"]);
+    // Scarlet & Violet Energies' Grass Energy: TCGdex names a Poké Ball reverse TCGplayer never sold.
+    expect(
+      printingsOf(
+        [
+          { type: "normal" },
+          { type: "reverse", foil: "cosmos" },
+          { type: "reverse", foil: "pokeball" },
+        ],
+        "sve-001",
+      ),
+    ).toEqual([
+      { finish: "normal", foilPattern: null },
+      { finish: "reverse-holo", foilPattern: "cosmos" },
+    ]);
+    // Ascended Heroes Pikachu: a Friend Ball reverse (no finish of its own here) and an Energy Symbol one.
+    expect(
+      printingsOf(
+        [
+          { type: "normal" },
+          { type: "reverse", foil: "friendball" },
+          { type: "reverse", foil: "energy" },
+        ],
+        "me02.5-055",
+      ).map((p) => p.finish),
+    ).toEqual(["normal", "reverse-holo", "energy-symbol"]);
+    // Erika's Oddish: a Poké Ball and an Energy Symbol reverse, and no plain reverse at all.
+    expect(
+      printingsOf(
+        [
+          { type: "normal" },
+          { type: "reverse", foil: "pokeball" },
+          { type: "reverse", foil: "energy" },
+        ],
+        "me02.5-001",
+      ).map((p) => p.finish),
+    ).toEqual(["normal", "poke-ball", "energy-symbol"]);
+  });
+
+  it("keeps the ex era's energy foil a plain reverse, and TCGdex's word where there is no link", () => {
+    expect(printingsOf([{ type: "reverse", foil: "energy" }], "ex5-1")).toEqual([
+      { finish: "reverse-holo", foilPattern: null },
+    ]);
+    expect(printingsOf([{ type: "reverse", foil: "pokeball" }], null)).toEqual([
+      { finish: "poke-ball", foilPattern: null },
+    ]);
+  });
+
+  it("adds no TCGplayer reverse to a card TCGdex lists no printings for", () => {
+    expect(printingsOf([], "sv08.5-074")).toEqual([]);
   });
 
   it("keeps the finish a foil it has no word for proves, and not the word", () => {
@@ -124,5 +195,16 @@ describe("patternPrintsFor", () => {
 
   it("is no answer for a card with no TCGplayer product", () => {
     expect(patternPrintsFor("no-such-card")).toBeNull();
+  });
+});
+
+describe("finishPrintsFor", () => {
+  it("names TCGplayer's patterned reverse products for a card, and none where it sells none", () => {
+    expect(finishPrintsFor("sv08.5-074")).toEqual([
+      { finish: "poke-ball", productId: 610590, printing: "holofoil" },
+      { finish: "master-ball", productId: 610691, printing: "holofoil" },
+    ]);
+    expect(finishPrintsFor("sve-001")).toEqual([]);
+    expect(finishPrintsFor("no-such-card")).toBeNull();
   });
 });

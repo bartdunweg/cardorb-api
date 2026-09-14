@@ -17,7 +17,7 @@ import type { ShelfPrices, ShelfPrinting } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
 import type { ValueSnapshot } from "./value-snapshot";
 import type { PrintingDay } from "./movers";
-import { LEGACY, printingKey, shadowlessKey } from "../price-months.mjs";
+import { LEGACY, finishPrintingKey, printingKey, shadowlessKey } from "../price-months.mjs";
 
 /**
  * The reading off an assembled collection: the card's own blended price, the one
@@ -115,12 +115,21 @@ export type TcgplayerLink = { productId: number; shadowless?: { productId: numbe
  * names win a clash"): Machamp is filed in Deck Exclusives with a 1st Edition of its own ($27.42 on
  * 2026-09-14) beside its Shadowless group's 1st Edition ($88.13), and the history carried the second
  * while the sheet showed the first, a 68 percent drop that never happened.
+ *
+ * Then the card's Poké Ball, Master Ball and Energy Symbol reverses, where `finishPrints` names them
+ * (card-printings.ts finishPrintsFor): each a product of its own, written under the card as
+ * `${finish}-reverse-holofoil` (finishPrintingKey), whatever subtype TCGplayer files its figure under.
+ * The same key scripts/backfill-card-prices.mjs writes their past under.
  */
 export function cardPricesFromShelf(
   links: Record<string, TcgplayerLink | undefined>,
   rows: ShelfPrinting[],
   usdToEur: number,
   date: string,
+  finishPrints: Record<
+    string,
+    readonly { finish: string; productId: number; printing: string }[]
+  > = {},
 ): PrintingDay[] {
   const shelf: ShelfPrices = new Map();
   for (const r of rows) {
@@ -139,6 +148,21 @@ export function cardPricesFromShelf(
   for (const p of cardPricesFromTcgcsv(runs, shelf, usdToEur, date)) {
     const printing = shadowlessKey(p.printing);
     if (!own.has(`${p.tcgId}\u0001${printing}`)) points.push({ ...p, printing });
+  }
+  for (const [tcgId, prints] of Object.entries(finishPrints)) {
+    if (links[tcgId]?.productId == null) continue;
+    for (const print of prints) {
+      const printings = shelf.get(print.productId);
+      const usd = printings?.get(print.printing) ?? [...(printings?.values() ?? [])][0];
+      if (usd == null || !(usd > 0)) continue;
+      points.push({
+        tcgId,
+        printing: finishPrintingKey(print.finish),
+        date,
+        price: Math.round(usd * usdToEur * 100) / 100,
+        source: "tcgplayer",
+      });
+    }
   }
   return points;
 }

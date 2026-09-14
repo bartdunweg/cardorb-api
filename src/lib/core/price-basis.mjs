@@ -61,7 +61,17 @@ export const num = (v) => (typeof v === "number" ? v : null);
  * @returns {boolean}
  */
 export const isReverseFinish = (f) =>
-  f === "reverse-holo" || f === "poke-ball" || f === "master-ball";
+  f === "reverse-holo" || f === "poke-ball" || f === "master-ball" || f === "energy-symbol";
+
+/**
+ * The patterned reverses TCGplayer sells as products of their own, each priced under the card as
+ * `${finish}-reverse-holofoil` (price-months.mjs finishPrintingKey).
+ *
+ * @param {string | null | undefined} f
+ * @returns {boolean}
+ */
+export const isPatternedReverse = (f) =>
+  f === "poke-ball" || f === "master-ball" || f === "energy-symbol";
 
 /**
  * Which of a card's price series one copy reads.
@@ -120,6 +130,11 @@ export const printingKeysOf = (copy) => {
         ? "shadowless"
         : "unlimited";
   const keys = [];
+  /* A Poké Ball, Master Ball or Energy Symbol reverse reads its own product first (since
+     2026-09-14): TCGplayer sells each apart from the plain reverse, at several times its price
+     (Prismatic Evolutions Eevee: $0.29 plain reverse, $1.50 Poké Ball, $18.63 Master Ball). Where
+     that printing has no figure it falls to the plain reverse's chain below, as it always read. */
+  if (isPatternedReverse(copy.finish)) keys.push(`${copy.finish}-reverse-holofoil`);
   // The run and the foil together first, then the run, then the foil, then the plain card: every
   // step drops the fact TCGplayer is least likely to price apart.
   if (run && foil) keys.push(`${run}-${foil}`);

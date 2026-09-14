@@ -1,6 +1,8 @@
 /**
  * Writes tcgplayer-patterns.generated.json: for every English card TCGplayer sells a cosmos or
- * cracked ice print of, which prints, their finish and their TCGplayer product.
+ * cracked ice print of, which prints, their finish and their TCGplayer product; and for every card
+ * it sells a Poké Ball, Master Ball or Energy Symbol reverse of, those (`finishPrints`), which a
+ * form offers as finishes and the price job prices under their own printing.
  *
  * The card's sheet answers these as `patternPrints`, and a form offers Standard plus those patterns
  * and nothing else (card-printings.ts patternPrintsFor). The rules for matching a pattern product
@@ -14,7 +16,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { patternPrintsOf } from "../src/lib/core/foil-pattern-products.mjs";
+import { finishOfName, patternPrintsOf } from "../src/lib/core/foil-pattern-products.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
@@ -66,9 +68,12 @@ await mapLimit(groups, 8, async (g) => {
 
 const { cards, unmatched, ambiguous } = patternPrintsOf(products, subtypes, links);
 const prints = Object.values(cards).reduce((n, c) => n + c.prints.length, 0);
+const finishPrints = Object.values(cards).reduce((n, c) => n + (c.finishPrints?.length ?? 0), 0);
 console.log(
-  `tcgcsv: ${groups.length} groups, ${products.length} products. ${Object.keys(cards).length} cards with ${prints} pattern prints; ${unmatched.length} pattern products matched no card, ${ambiguous.length} more than one.`,
+  `tcgcsv: ${groups.length} groups, ${products.length} products. ${Object.keys(cards).length} cards with ${prints} pattern prints and ${finishPrints} Poké Ball, Master Ball or Energy Symbol reverses; ${unmatched.length} pattern products matched no card, ${ambiguous.length} more than one.`,
 );
+for (const p of unmatched)
+  if (finishOfName(p.name)) console.log(`  unmatched reverse: ${p.productId} ${p.name}`);
 for (const p of ambiguous) console.log(`  ambiguous: ${p.productId} ${p.name}`);
 
 if (!DRY) writeFileSync(OUT, `${JSON.stringify(cards, null, 2)}\n`);

@@ -33,6 +33,14 @@ const FOIL = [
   "shadowless-holofoil",
 ];
 
+/**
+ * A Poké Ball, Master Ball or Energy Symbol reverse's printing, under the card it is a print of:
+ * "poke-ball-reverse-holofoil". TCGplayer files each as a product of its own, priced as "Holofoil"
+ * in one set and "Reverse Holofoil" in another; stored under one name, so a copy and a chart ask
+ * for it the same way everywhere (price-basis.mjs printingKeysOf).
+ */
+export const finishPrintingKey = (/** @type {string} */ finish) => `${finish}-reverse-holofoil`;
+
 /** tcgcsv's subtype ("Reverse Holofoil") as the printing key the app uses ("reverse-holofoil"). */
 export const printingKey = (/** @type {string} */ subType) =>
   subType.toLowerCase().replace(/\s+/g, "-");

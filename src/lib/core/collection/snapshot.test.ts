@@ -298,6 +298,34 @@ describe("cardPricesFromShelf", () => {
     expect(points.map((p) => [p.printing, p.price])).toEqual([["1st-edition-holofoil", 27.42]]);
   });
 
+  // Prismatic Evolutions Eevee's Poké Ball reverse is priced as Holofoil, Ascended Heroes Pikachu's
+  // Energy Symbol one as Reverse Holofoil; both are stored under the finish they are.
+  it("writes the patterned reverses under the card, named after their finish", () => {
+    const points = cardPricesFromShelf(
+      { "sv08.5-074": { productId: 610429 }, "me02.5-055": { productId: 675867 }, "gone-1": null },
+      [
+        { productId: 610429, printing: "reverse-holofoil", market: 0.29 },
+        { productId: 610590, printing: "holofoil", market: 1.5 },
+        { productId: 677037, printing: "reverse-holofoil", market: 0.64 },
+        { productId: 9, printing: "holofoil", market: 5 },
+      ],
+      1,
+      "2026-09-14",
+      {
+        "sv08.5-074": [{ finish: "poke-ball", productId: 610590, printing: "holofoil" }],
+        "me02.5-055": [
+          { finish: "energy-symbol", productId: 677037, printing: "reverse-holofoil" },
+        ],
+        "gone-1": [{ finish: "poke-ball", productId: 9, printing: "holofoil" }],
+      },
+    );
+    expect(points.map((p) => [p.tcgId, p.printing, p.price])).toEqual([
+      ["sv08.5-074", "reverse-holofoil", 0.29],
+      ["sv08.5-074", "poke-ball-reverse-holofoil", 1.5],
+      ["me02.5-055", "energy-symbol-reverse-holofoil", 0.64],
+    ]);
+  });
+
   it("names a plain Shadowless run shadowless", () => {
     const points = cardPricesFromShelf(
       { "base1-60": { productId: 1, shadowless: { productId: 2 } } },

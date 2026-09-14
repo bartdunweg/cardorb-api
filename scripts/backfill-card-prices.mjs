@@ -41,6 +41,9 @@
  *                    a row: every day of the last six months, one a week (the Saturday) before,
  *                    as the price job keeps them. `--from` and `--to` resume a stopped run;
  *                    `--ids a,b` fills only those cards, for ones linked since.
+ *                    `--finish-prints` writes only the Poké Ball, Master Ball and Energy Symbol
+ *                    reverses (tcgplayer-patterns.generated.json finishPrints), under the card as
+ *                    "poke-ball-reverse-holofoil" and so on, and nothing of the cards' own products.
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
  *   `--only japanese --copied-only` fills only the Japanese cards the copy matched and the map does not name.
@@ -62,6 +65,7 @@ import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 import {
+  finishPrintingKey,
   legacyDays,
   monthsFromDays,
   printingKey,
@@ -71,6 +75,7 @@ import {
 const ROOT = new URL("..", import.meta.url).pathname;
 const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
 const IDS_JA = join(ROOT, "src", "lib", "core", "tcgplayer-ids.ja.generated.json");
+const PATTERNS = join(ROOT, "src", "lib", "core", "tcgplayer-patterns.generated.json");
 const CACHE = join(ROOT, ".cache", "tcgcsv");
 
 for (const file of [".env.local", ".env"]) {
@@ -529,8 +534,18 @@ async function daily() {
   const english = await tcgplayerIds(Object.keys(JSON.parse(readFileSync(IDS, "utf8"))));
   // `--ids a,b`: only these cards, for cards linked after the run (tcgplayer-links.mjs).
   const only = flag("--ids")?.split(",").filter(Boolean);
+  /* `--finish-prints`: only the patterned reverses TCGplayer sells as products of their own, for the
+     cards it sells them of. Their rows are new printings, so nothing already stored is sent again. */
+  const FINISH_ONLY = args.includes("--finish-prints");
+  const finishPrints = Object.fromEntries(
+    Object.entries(JSON.parse(readFileSync(PATTERNS, "utf8"))).flatMap(([id, c]) =>
+      c.finishPrints?.length ? [[id, c.finishPrints]] : [],
+    ),
+  );
   const ids = Object.keys(english)
-    .filter((id) => english[id] && (!only || only.includes(id)))
+    .filter(
+      (id) => english[id] && (!only || only.includes(id)) && (!FINISH_ONLY || finishPrints[id]),
+    )
     .slice(0, LIMIT);
   const from = flag("--from") ?? TCGCSV_FROM;
   const to = flag("--to") ?? newestArchive();
@@ -571,9 +586,14 @@ async function daily() {
     for (const id of ids) {
       // Every printing TCGplayer prices, and the Shadowless run's where tcgplayer-links.mjs linked
       // the card to that group, under the run it is.
-      const sources = [[english[id].productId, printingKey]];
-      if (english[id].shadowless) {
+      const sources = FINISH_ONLY ? [] : [[english[id].productId, printingKey]];
+      if (english[id].shadowless && !FINISH_ONLY) {
         sources.push([english[id].shadowless.productId, (s) => shadowlessKey(printingKey(s))]);
+      }
+      // Its Poké Ball, Master Ball and Energy Symbol reverses, each under the finish it is, as the
+      // price job writes them (snapshot.ts cardPricesFromShelf). One figure per product.
+      for (const print of finishPrints[id] ?? []) {
+        sources.push([print.productId, () => finishPrintingKey(print.finish)]);
       }
       let any = false;
       // The card's own product first; a run's printing of the same name is dropped, as the cron

@@ -37,13 +37,14 @@ export async function defaultFinishFor(
   if (!isTcgId(tcgId)) return "normal";
   const catalogue = cataloguesFor(language)[0] ?? "en";
   const sheet = await readCardSheet(tcgId, catalogue);
-  if (sheet) return defaultFinish(printingsOf(sheet.card.variants));
+  const english = catalogue === "en" ? tcgId : null;
+  if (sheet) return defaultFinish(printingsOf(sheet.card.variants, english));
   try {
     const card = (await json(
       `https://api.tcgdex.net/v2/${catalogue}/cards/${encodeURIComponent(tcgId)}`,
       `${catalogue} card ${tcgId}`,
     )) as { variants_detailed?: TcgVariant[] } | null;
-    return defaultFinish(printingsOf(card?.variants_detailed));
+    return defaultFinish(printingsOf(card?.variants_detailed, english));
   } catch {
     return "normal";
   }

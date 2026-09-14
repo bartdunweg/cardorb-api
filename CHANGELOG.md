@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-15
 
+- The Poké Ball, Master Ball and Energy Symbol reverse holos come from TCGplayer's own products, with their own prices and history. TCGplayer sells 645 of them apart from the plain card (Prismatic Evolutions, Black Bolt, White Flare, Ascended Heroes); each is priced under the card as `poke-ball-reverse-holofoil`, `master-ball-reverse-holofoil` or `energy-symbol-reverse-holofoil`, in today's price, the nightly price line and a backfilled history. A card's printings offer those finishes where TCGplayer sells them and no longer where only TCGdex names one (eight basic energies of Scarlet & Violet). A copy's `finish` can be `energy-symbol` (migration 20260915060000); the Dex export writes it as "Reverse Holo" and names every finish in a new Finish column after Edition, which the import reads first. data-health checks that every such product has its own price line and that no form offers a ball TCGplayer cannot confirm.
+
 - Unown ? from the Unseen Forces Unown Collection opens with its details and its price chart. TCGdex files it as `exu-%3F`, and the path reached the card routes decoded twice, as `exu-?`, so the sheet answered "No such card" and the chart drew no line while 31 months of its prices were stored.
 
 - The morning data check fails where one TCGplayer product prices two cards, where two sets with cards share a name in one catalogue, and where a linked card carries a stray market series, and reports one-day price spikes over €10 and ids that are cards in both catalogues: each a slip the audits of 2026-09-14 found. Run against production that day it named the four Japanese links and the duplicate set pair still being fixed.

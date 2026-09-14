@@ -180,7 +180,7 @@ components:
           required: [conditions, finishes, languages]
           properties:
             conditions: { type: array, items: { type: string }, description: "Mint, Near Mint, Excellent, Good, Light Played, Played, Poor, then any other value A to Z. Each named once, in its first spelling." }
-            finishes: { type: array, items: { $ref: "#/components/schemas/Finish" }, description: "normal, holo, reverse-holo, poke-ball, master-ball, those present." }
+            finishes: { type: array, items: { $ref: "#/components/schemas/Finish" }, description: "normal, holo, reverse-holo, poke-ball, master-ball, energy-symbol, those present." }
             languages: { type: array, items: { type: string }, description: "Lower-case codes, `en` first, then A to Z. A copy with no language counts as `en`." }
     Error:
       type: object
@@ -200,8 +200,8 @@ components:
 
     Finish:
       type: string
-      enum: [normal, reverse-holo, holo, poke-ball, master-ball]
-      description: Which printing a copy is; `poke-ball` and `master-ball` are the patterned reverse holos of 151 and Prismatic Evolutions, priced as a reverse holo. `null` on a copy means "nobody has said", not `normal`.
+      enum: [normal, reverse-holo, holo, poke-ball, master-ball, energy-symbol]
+      description: Which printing a copy is; `poke-ball`, `master-ball` and `energy-symbol` are patterned reverse holos (Prismatic Evolutions, Black Bolt, White Flare, Ascended Heroes), each priced from its own TCGplayer product as the printing `poke-ball-reverse-holofoil` and so on, and as a plain reverse holo where that has no figure. `null` on a copy means "nobody has said", not `normal`.
 
     FoilPattern:
       type: string
@@ -776,7 +776,7 @@ components:
         setName: { type: string }
         setTitle: { type: string }
         acquiredAt: { type: string, format: date-time }
-        finish: { type: [string, "null"], enum: [normal, reverse-holo, holo, poke-ball, master-ball, null], description: "How this copy is printed; null where nobody said." }
+        finish: { type: [string, "null"], enum: [normal, reverse-holo, holo, poke-ball, master-ball, energy-symbol, null], description: "How this copy is printed; null where nobody said." }
         foilPattern: { type: [string, "null"], enum: [cosmos, cracked-ice, starlight, confetti, vertical-line, null], description: "What the foil looks like, where recorded." }
         gen: { type: [string, "null"], description: "The era, as recorded: `Base`, `Scarlet & Violet`." }
         types: { type: array, items: { type: string }, description: "The Pokémon's types; empty for a trainer or an energy." }

@@ -525,7 +525,7 @@ describe("readItemQuery", () => {
     expect(read("finish=poke-ball").kind).toBe("ok");
     expect(read("finish=holo&finish=foil")).toEqual({
       kind: "invalid",
-      error: "finish must be normal, reverse-holo, holo, poke-ball or master-ball.",
+      error: "finish must be normal, reverse-holo, holo, poke-ball, master-ball or energy-symbol.",
     });
     expect(read("finish=Holo").kind).toBe("invalid");
     expect(read("condition=").kind).toBe("invalid");
