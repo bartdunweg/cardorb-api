@@ -1,0 +1,1 @@
+- 65 foil cards in the owner's collection (XY and SM promos, Cosmic Eclipse's GX and Secret Rares, XY-era Secret Rare EX, Double Crisis) are recorded as the holo they are instead of the "normal" TCGdex calls a foil full art, so each is priced at its holo figure.
