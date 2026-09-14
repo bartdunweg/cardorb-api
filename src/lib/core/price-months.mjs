@@ -168,7 +168,17 @@ export function daysFromMonths(rows, since = "0000-00-00") {
   };
   /** @type {Map<string, { plain: string | null, foil: string | null }>} */
   const lines = new Map(
-    [...counts].map(([tcgId, c]) => [tcgId, { plain: lineOf(c, PLAIN), foil: lineOf(c, FOIL) }]),
+    [...counts].map(([tcgId, c]) => {
+      /* The plain line only where it is the card's own: a printing read on at least half as many
+         days as the card's most-read printing of any kind. ex8-15's 95 days of "normal" beside
+         306 of holofoil made its line the scattered plain one (pricing audit, 2026-09-14). */
+      const most = Math.max(0, ...Object.values(c));
+      const plain = lineOf(c, PLAIN);
+      return [
+        tcgId,
+        { plain: plain && (c[plain] ?? 0) * 2 >= most ? plain : null, foil: lineOf(c, FOIL) },
+      ];
+    }),
   );
   const out = [];
   for (const d of days.values()) {

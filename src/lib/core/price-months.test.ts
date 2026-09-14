@@ -87,6 +87,14 @@ describe("daysFromMonths", () => {
     ]);
   });
 
+  // ex8-15: a scattered "normal" series on 95 days beside its holo on 306.
+  it("draws the holo where the card's plain printing is a stray few readings", () => {
+    const rows = [1, 2, 3, 4, 5]
+      .flatMap((d) => [month("holofoil", d, 2200 + d)])
+      .concat([month("normal", 3, 300)]);
+    expect(daysFromMonths(rows).map((d) => d.market)).toEqual([22.01, 22.02, 22.03, 22.04, 22.05]);
+  });
+
   it("leaves out days before `since` and past the month's end", () => {
     expect(
       daysFromMonths([month("normal", 1, 100), month("normal", 31, 999)], "2026-02-01"),

@@ -172,7 +172,8 @@ describe("detailPrice", () => {
   it("puts the Japanese shelf's price and product on a card's detail", async () => {
     const card = await detailPrice({ id: "M1S-001", price: null, tcgplayerId: null }, "ja", 0.5);
     expect(groupPrintings).toHaveBeenCalledWith(24001, 85);
-    expect(card).toEqual({ id: "M1S-001", price: { market: 2 }, tcgplayerId: 640001 });
+    expect(card).toMatchObject({ id: "M1S-001", price: { market: 2 }, tcgplayerId: 640001 });
+    expect(Object.keys(card.pricePrintings ?? {})).not.toHaveLength(0);
   });
 
   it("replaces the figure TCGdex relays on an English card with the one every list shows", async () => {
@@ -182,7 +183,9 @@ describe("detailPrice", () => {
       0.5,
     );
     expect(groupPrintings).toHaveBeenCalledWith(604, 3);
-    expect(card).toEqual({ id: "base1-4", price: { market: 400 }, tcgplayerId: 42382 });
+    expect(card).toMatchObject({ id: "base1-4", price: { market: 400 }, tcgplayerId: 42382 });
+    // Every printing beside it, so the sheet can show them apart.
+    expect(card.printingIds).toMatchObject({ holofoil: 42382 });
   });
 
   it("keeps TCGdex's figure for an English card with no TCGplayer product", async () => {

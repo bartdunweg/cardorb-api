@@ -86,8 +86,16 @@ describe("canonNumber", () => {
   it("keeps a letter prefix, so TG01 is not card 1", () => {
     expect(canonNumber("TG01")).toBe("tg1");
     expect(canonNumber("tg1")).toBe("tg1");
-    expect(canonNumber("SVP001")).toBe("svp1");
+    expect(canonNumber("GG05")).toBe("gg5");
     expect(canonNumber("004")).not.toBe(canonNumber("TG04"));
+  });
+
+  // Charizard V: SWSH Black Star Promos files it "SWSH260", the collection holds "260".
+  it("drops a promo set's letters, which are the set's and not the card's", () => {
+    expect(canonNumber("SWSH260")).toBe(canonNumber("260"));
+    expect(canonNumber("XY67")).toBe("67");
+    expect(canonNumber("SVP085")).toBe("85");
+    expect(canonNumber("SM168")).toBe("168");
   });
 
   it("keeps a letter suffix, which is a different printing", () => {
