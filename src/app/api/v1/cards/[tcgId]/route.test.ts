@@ -42,9 +42,11 @@ vi.mock("@/lib/core/catalogue/card-languages", () => ({
    real one sits in collection.ts behind server-only and asks frankfurter; neither belongs here. */
 const usdToEurForRequest = vi.fn();
 const detailPrice = vi.fn();
+const pricePatternPrints = vi.fn(async (patterns: unknown) => patterns);
 vi.mock("@/lib/core/collection/collection", () => ({
   usdToEurForRequest: () => usdToEurForRequest(),
   detailPrice: (...a: unknown[]) => detailPrice(...a),
+  pricePatternPrints: (...a: [unknown]) => pricePatternPrints(...a),
 }));
 const raritiesOfEra = vi.fn();
 vi.mock("@/lib/core/catalogue/catalogue", () => ({
@@ -91,7 +93,28 @@ describe("GET /api/v1/cards/[tcgId]", () => {
       languages: ["en", "de"],
       eraRarities: null,
       foilPatterns: null,
+      patternPrints: { standard: true, prints: [] },
     });
+  });
+
+  /* The patterns TCGplayer sells the card in, priced at the day's rate: 151's Machamp has a
+     collection box cosmos holo beside the plain card, Charizard above has none. */
+  it("answers the foil patterns a copy can have, priced at the day's rate", async () => {
+    getCardDetail.mockResolvedValue({ id: "sv03.5-068", name: "Machamp", set: { id: "sv03.5" } });
+    const body = await (await get("sv03.5-068")).json();
+    expect(body.patternPrints).toEqual({
+      standard: true,
+      prints: [{ foilPattern: "cosmos", finish: "holo", productId: 662070, printing: "holofoil" }],
+    });
+    expect(pricePatternPrints).toHaveBeenCalledWith(expect.anything(), 0.92);
+  });
+
+  it("answers no pattern prints for a Japanese card", async () => {
+    getCardDetail.mockResolvedValue({ id: "SV2a-068", name: "Machamp" });
+    const res = await GET(new Request("https://api.cardorb.com/v1/cards/SV2a-068?language=ja"), {
+      params: Promise.resolve({ tcgId: "SV2a-068" }),
+    });
+    expect((await res.json()).patternPrints).toBeNull();
   });
 
   /* The era's rarities, for the cards that need them and no others: a promo answers "Promo",

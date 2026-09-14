@@ -43,11 +43,13 @@ jobs:
       - run: node scripts/tcgplayer-ids.mjs
       - run: node scripts/tcgplayer-groups.mjs
       - run: node scripts/tcgplayer-links.mjs
+      # Which cosmos and cracked ice prints TCGplayer sells of each linked card: reads the links above.
+      - run: node scripts/tcgplayer-patterns.mjs
 
       - name: Anything new?
         id: diff
         run: |
-          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json scripts/tcgplayer-coverage.json; then
+          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json scripts/tcgplayer-coverage.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Nothing new to link." >> "$GITHUB_STEP_SUMMARY"
           else
@@ -68,7 +70,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json scripts/tcgplayer-coverage.json
+          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json scripts/tcgplayer-coverage.json
           git commit -m "TCGplayer links for the cards published this week"
           git push origin "$branch"
           body="$(printf '%s\n\n%s\n\n%s\n' \
