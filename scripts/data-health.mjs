@@ -16,6 +16,12 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  copyPriceOf,
+  isPatternedReverse,
+  isReverseFinish,
+  printingKeysOf,
+} from "../src/lib/core/price-basis.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -336,7 +342,7 @@ if (day) {
             .map((r) => `${r.id} ${r.foil}`)
             .join(", ")})`
         : ""
-    }; ${storedWithout.length} kinds of stored copy with such a finish on a card TCGplayer sells none of, priced as a plain reverse${
+    }; ${storedWithout.length} kinds of stored copy with such a finish on a card TCGplayer sells none of, unpriced${
       storedWithout.length
         ? ` (${storedWithout
             .slice(0, 8)
@@ -348,48 +354,87 @@ if (day) {
 }
 
 /**
- * A plain reverse is offered only where TCGplayer prices one (card-printings.ts pricesPlainReverse,
- * which reads the product's printings in tcgplayer-ids.generated.json). This compares that weekly
- * list with the night's prices for every linked English card TCGdex lists a plain reverse of:
- * offered with no reverse figure tonight is a reverse copy priced as the normal card, hidden while
- * TCGplayer prices one is a real choice missing. A few either way is the week between runs; more is
- * a stale list. Stored reverse copies on cards that no longer offer one are reported.
+ * Whether a plain reverse exists is decided per card from four witnesses (reverse-holo.generated.json,
+ * scripts/reverse-holo-evidence.mjs): TCGdex, TCGplayer and Scrydex, and Bulbapedia's set rule where
+ * they tie. Reported, not failed: the sets whose witnesses disagreed on the run that decided, and the
+ * cards on which tonight's TCGdex variants or this week's TCGplayer printings now disagree with the
+ * decision, per set. A card with a reverse figure tonight that the decision gives no reverse is a
+ * decision to look at again; so is a linked card the run never saw. Stored reverse copies on a card
+ * decided without one are counted.
  */
-const REVERSE_DRIFT_CEILING = 10;
+const reverseHolo = JSON.parse(
+  readFileSync(join(ROOT, "src", "lib", "core", "reverse-holo.generated.json"), "utf8"),
+);
 if (day) {
-  const [reverses, reversePrices, storedReverse] = await Promise.all([
+  const [variants, reversePrices, storedReverse] = await Promise.all([
     query(
-      "select distinct id from catalogue_cards, jsonb_array_elements(variants) v where language = 'en' and v->>'type' = 'reverse' and coalesce(v->>'foil', '') not in ('cosmos', 'pokeball', 'masterball', 'friendball', 'loveball', 'quickball', 'duskball', 'team-rocket')",
+      "select id, set_id, variants from catalogue_cards where language = 'en' and jsonb_array_length(coalesce(variants, '[]'::jsonb)) > 0",
     ),
     query(
-      `select distinct product_id from tcgplayer_prices where updated_on = '${day}' and printing like '%reverse-holofoil'`,
+      `select distinct product_id from tcgplayer_prices where updated_on = '${day}' and printing = 'reverse-holofoil'`,
     ),
     query(
-      "select tcg_id, count(*)::int as n from cards where finish = 'reverse-holo' and tcg_id is not null group by 1",
+      "select tcg_id, count(*)::int as n from cards where finish = 'reverse-holo' and tcg_id is not null and language is distinct from 'ja' group by 1",
     ),
   ]);
   const priced = new Set(reversePrices.map((r) => r.product_id));
-  const energySold = (id) =>
-    (patterns[id]?.finishPrints ?? []).some((p) => p.finish === "energy-symbol");
-  const offers = (id) => {
-    const variants = links[id]?.variants ?? [];
-    return !variants.length || variants.some((v) => v.endsWith("reverse-holofoil"));
-  };
-  const linked = reverses.filter((r) => links[r.id]?.productId && !energySold(r.id));
-  const unpricedOffer = linked.filter((r) => offers(r.id) && !priced.has(links[r.id].productId));
-  const hidden = linked.filter((r) => !offers(r.id) && priced.has(links[r.id].productId));
-  const withdrawn = storedReverse.filter((r) => links[r.tcg_id]?.productId && !offers(r.tcg_id));
-  const ids = (rows, key = "id") =>
-    rows.length
-      ? ` (${rows
-          .slice(0, 6)
-          .map((r) => r[key])
-          .join(", ")})`
-      : "";
+  // The cards the run already found the witnesses split on are its table, not tonight's news.
+  const disputed = new Set(
+    Object.values(reverseHolo.sets).flatMap((v) => (v.disputed ?? []).map((d) => d.split(" ")[0])),
+  );
+  const drift = new Map();
+  const note = (setId, id) => drift.set(setId, [...(drift.get(setId) ?? []), id]);
+  let unseen = 0;
+  for (const c of variants) {
+    const decided = reverseHolo.cards[c.id];
+    if (disputed.has(c.id)) continue;
+    if (decided === undefined) {
+      if (links[c.id]?.productId) unseen++;
+      continue;
+    }
+    const energySold = (patterns[c.id]?.finishPrints ?? []).some(
+      (p) => p.finish === "energy-symbol",
+    );
+    // A plain reverse names no foil, or the ex era's energy foil (reverse-holo-evidence.mjs).
+    const tcgdex = c.variants.some((v) => {
+      const foil = (v.foil ?? "").toLowerCase();
+      return v.type === "reverse" && (foil === "" || (foil === "energy" && !energySold));
+    });
+    const productId = links[c.id]?.productId;
+    const tcgplayer = productId ? priced.has(productId) : null;
+    /* TCGdex silent on a card decided with a reverse is the gap the decision fills (whole Black &
+       White and XY sets), so only a reverse it names against a "no" counts; TCGplayer counts either
+       way where it prices the card tonight. */
+    if ((tcgdex && !decided) || (tcgplayer === true && !decided)) note(c.set_id, c.id);
+  }
+  const bySet = [...drift].sort((x, y) => y[1].length - x[1].length);
+  const disputedSets = Object.entries(reverseHolo.sets)
+    .filter(([, v]) => v.disputed?.length)
+    .sort((x, y) => y[1].disputed.length - x[1].disputed.length);
+  const withdrawn = storedReverse.filter((r) => reverseHolo.cards[r.tcg_id] === false);
   check(
-    "A plain reverse is offered only where TCGplayer prices one",
-    unpricedOffer.length <= REVERSE_DRIFT_CEILING && hidden.length <= REVERSE_DRIFT_CEILING,
-    `${linked.length} linked cards TCGdex lists a plain reverse of; ${linked.filter((r) => !offers(r.id)).length} not offered, TCGplayer pricing none; ${unpricedOffer.length} offered with no reverse figure on ${day}${ids(unpricedOffer)}; ${hidden.length} hidden though TCGplayer prices one${ids(hidden)} (ceiling ${REVERSE_DRIFT_CEILING} each); ${withdrawn.length} cards with a stored reverse copy no longer offered${ids(withdrawn, "tcg_id")}`,
+    "Reverse holo witnesses (reported)",
+    true,
+    `${Object.keys(reverseHolo.cards).length} cards decided, ${Object.values(reverseHolo.cards).filter(Boolean).length} with a plain reverse; witnesses disagreed on ${disputedSets.reduce((n, [, v]) => n + v.disputed.length, 0)} cards in ${disputedSets.length} sets (${disputedSets
+      .slice(0, 8)
+      .map(([id, v]) => `${id} ${v.disputed.length}`)
+      .join(
+        ", ",
+      )}); tonight TCGdex or TCGplayer newly names a reverse the decision does not on ${[...drift.values()].reduce((n, ids) => n + ids.length, 0)} cards${
+      bySet.length
+        ? ` (${bySet
+            .slice(0, 8)
+            .map(([id, ids]) => `${id} ${ids.length}: ${ids.slice(0, 3).join(", ")}`)
+            .join("; ")})`
+        : ""
+    }; ${unseen} linked cards the decision never saw; ${withdrawn.length} cards with a stored reverse copy decided without one${
+      withdrawn.length
+        ? ` (${withdrawn
+            .slice(0, 6)
+            .map((r) => r.tcg_id)
+            .join(", ")})`
+        : ""
+    }`,
   );
 }
 
@@ -587,7 +632,8 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
  * answers. Fourteen of the owner's tag team and V promos were "normal" where both say holo only.
  * Only the plain finishes, and read leniently (any reverse variant counts, whatever its foil), so
  * this cannot disagree with what card-printings.ts offers on top: the ball and Energy Symbol
- * finishes have their own check above.
+ * finishes have their own check above. A reverse holo copy is held against the evidence run's decision
+ * where there is one (reverse-holo.generated.json), as card-printings.ts offers it.
  */
 {
   const rows = await query(
@@ -602,6 +648,9 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
     "reverse-holo": (v) => v === "reverse-holofoil",
   };
   const wrong = rows.filter((r) => {
+    // A plain reverse exists where the evidence run decided so (reverse-holo.generated.json).
+    const decided = r.finish === "reverse-holo" ? reverseHolo.cards[r.tcg_id] : undefined;
+    if (decided !== undefined) return !decided;
     const variants = Array.isArray(r.variants) ? r.variants : [];
     const sold = links[r.tcg_id]?.variants ?? [];
     const tcgdex = variants.length ? variants.some((v) => v.type === TCGDEX_TYPE[r.finish]) : null;
@@ -620,6 +669,104 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
             .join(", ")}`
         : ""
     }; other accounts ${wrong.length - owner.length}`,
+  );
+}
+
+/**
+ * Every copy is priced as the printing it is, or not at all (Bart, 2026-09-14: a missing price shows
+ * as unknown, never as another printing's). Tonight's TCGplayer figures for each linked card, read the
+ * way copyPriceOf() reads them (price-basis.mjs), for every stored English copy.
+ *
+ * Fails where a reverse copy reads anything but its own reverse figure (the plain reverse's for a
+ * reverse holo, its own product's for a Poké Ball or Energy Symbol one), or a normal or holo copy reads
+ * the other of the two on a card TCGplayer prices both of. Reported only: a normal or holo copy on a
+ * card TCGplayer sells as one printing under the other name (the Black Star promos TCGdex calls normal
+ * and TCGplayer "Holofoil"), where the figure is the card's only one and the finish is the question.
+ */
+if (day) {
+  const [rows, prices] = await Promise.all([
+    query(
+      `select ${ownerIs} as owner, c.tcg_id, c.finish, c.edition from cards c where c.owned and c.tcg_id is not null and c.language is distinct from 'ja' and c.finish is not null`,
+    ),
+    query(
+      `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and market is not null`,
+    ),
+  ]);
+  const byProduct = new Map();
+  for (const p of prices)
+    byProduct.set(p.product_id, { ...byProduct.get(p.product_id), [p.printing]: p.market });
+  const printingsOfCard = (id) => {
+    const own = byProduct.get(links[id]?.productId);
+    if (!own) return null;
+    const out = { ...own };
+    for (const fp of patterns[id]?.finishPrints ?? []) {
+      const figure = byProduct.get(fp.productId)?.[fp.printing];
+      if (figure != null) out[`${fp.finish}-reverse-holofoil`] = figure;
+    }
+    return out;
+  };
+  const PLAIN = new Set(["normal", "unlimited", "1st-edition", "shadowless"]);
+  const HEADLINE = [
+    "normal",
+    "holofoil",
+    "reverse-holofoil",
+    "unlimited",
+    "unlimited-holofoil",
+    "1st-edition",
+    "1st-edition-holofoil",
+  ];
+  const familyOf = (key) =>
+    key.endsWith("reverse-holofoil")
+      ? key
+      : key.endsWith("holofoil")
+        ? "holo"
+        : PLAIN.has(key)
+          ? "normal"
+          : key;
+  const ownFamily = (finish) =>
+    finish === "reverse-holo"
+      ? "reverse-holofoil"
+      : isPatternedReverse(finish)
+        ? `${finish}-reverse-holofoil`
+        : finish;
+  const wrong = [];
+  const oneName = [];
+  let compared = 0;
+  for (const r of rows) {
+    const printings = printingsOfCard(r.tcg_id);
+    if (!printings) continue;
+    compared++;
+    const pricePrintings = Object.fromEntries(
+      Object.entries(printings).map(([k, v]) => [k, { market: v }]),
+    );
+    // The card's own figure is TCGplayer's first printing in usdOf()'s order (tcgdex-client.ts).
+    const headline = HEADLINE.find((k) => pricePrintings[k]);
+    const card = { price: headline ? pricePrintings[headline] : null, pricePrintings };
+    const price = copyPriceOf(r, card);
+    if (!price) continue;
+    const key =
+      Object.keys(pricePrintings).find(
+        (k) => pricePrintings[k] === price && printingKeysOf(r).includes(k),
+      ) ?? headline;
+    const own = ownFamily(r.finish);
+    if (familyOf(key) === own) continue;
+    const families = new Set(Object.keys(printings).map(familyOf));
+    const slip = { ...r, key };
+    if (isReverseFinish(r.finish) || families.has(own)) wrong.push(slip);
+    else oneName.push(slip);
+  }
+  const list = (slips) =>
+    slips.length
+      ? ` (${slips
+          .slice(0, 8)
+          .map((w) => `${w.tcg_id} ${w.finish} as ${w.key}`)
+          .join(", ")})`
+      : "";
+  const ownerWrong = wrong.filter((w) => w.owner);
+  check(
+    "Copies priced as their own printing",
+    ownerWrong.length === 0,
+    `${compared} priced copies compared on ${day}; ${ownerWrong.length} of the owner's priced as another printing${list(ownerWrong)}; other accounts ${wrong.length - ownerWrong.length}; reported: ${oneName.length} normal or holo copies on a card TCGplayer sells as one printing under the other name${list(oneName.filter((w) => w.owner))}`,
   );
 }
 

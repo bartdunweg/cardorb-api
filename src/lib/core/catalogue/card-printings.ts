@@ -3,6 +3,7 @@ import { PATTERNED_REVERSES } from "../price-basis.mjs";
 import type { Edition, Finish, FoilPattern } from "../collection/collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_PATTERNS from "../tcgplayer-patterns.generated.json";
+import REVERSE_HOLO from "../reverse-holo.generated.json";
 
 /**
  * Which printings of a card exist, and which print runs, from what TCGdex says per card.
@@ -82,12 +83,12 @@ const FINISH_PRINT_FINISHES: readonly string[] = PATTERNED_REVERSES;
  * finish with a shop's mark on it, and this app does not record the mark. Dropping the stamp
  * rather than the variant keeps the finish it proves.
  *
- * A plain reverse is offered only where TCGplayer prices one (since 2026-09-14): where the card's
- * own product lists printings and none is a reverse holofoil, a reverse copy has no price of its
- * own and read the normal card's. 152 English cards offered one that way, 106 of them Ascended
- * Heroes cards whose only reverses are its ball, Team Rocket and Energy Symbol prints, the rest
- * mostly e-Card reverses TCGplayer does not list. A copy already recorded as one keeps it (the
- * forms keep a recorded finish in their options).
+ * Whether a plain reverse exists is decided from evidence, not from one source (reverseHoloExists):
+ * TCGdex, TCGplayer and Scrydex per card, Bulbapedia's set rule where they tie. That decision adds a
+ * plain reverse TCGdex does not list (every Black & White and XY card that has one) and takes away
+ * one it lists wrongly (Expedition's basic Energy, Aquapolis's H cards), whether or not TCGplayer
+ * prices it: a reverse nobody prices is offered and shows no price. A copy already recorded as one
+ * keeps it (the forms keep a recorded finish in their options).
  */
 export function printingsOf(
   variants: TcgVariant[] | null | undefined,
@@ -120,7 +121,11 @@ export function printingsOf(
      finish then. A card TCGdex lists no variants for does not become "a Poké Ball reverse only". */
   if (seen.size)
     for (const p of sold ?? []) seen.set(`${p.finish}|`, { finish: p.finish, foilPattern: null });
-  if (tcgId && !pricesPlainReverse(tcgId)) seen.delete("reverse-holo|");
+  const reverse = tcgId ? reverseHoloExists(tcgId) : null;
+  if (reverse === false || (reverse === null && tcgId && !pricesPlainReverse(tcgId)))
+    seen.delete("reverse-holo|");
+  if (reverse && seen.size)
+    seen.set("reverse-holo|", { finish: "reverse-holo", foilPattern: null });
   return [...seen.values()].sort(
     (a, b) =>
       FINISHES.indexOf(a.finish) - FINISHES.indexOf(b.finish) ||
@@ -131,21 +136,32 @@ export function printingsOf(
 type TcgplayerLink = { productId?: number; variants?: string[]; shadowless?: unknown } | null;
 const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
 
+const REVERSE_DECISIONS = (REVERSE_HOLO as { cards: Record<string, boolean> }).cards;
+
 /**
- * The cards TCGplayer prices a Shadowless run for, as tcgplayer-links.mjs linked them: all 102 of
- * Base Set, Machamp's from Deck Exclusives. It was Cardmarket's list until 2026-09-12. A run is
- * offered where the market the app prices from has a figure for it.
+ * Whether a plain reverse holo of this English card exists, as scripts/reverse-holo-evidence.mjs
+ * decided it: the majority of TCGdex's variants, TCGplayer's printings and Scrydex's variants that
+ * answer for the card, and Bulbapedia's rule for its set where they tie (the witnesses and the rule per
+ * set are in reverse-holo.generated.json). Null for a card the run did not see, a set released since.
  */
+export const reverseHoloExists = (tcgId: string): boolean | null =>
+  REVERSE_DECISIONS[tcgId] ?? null;
+
 /**
  * Whether TCGplayer prices a plain reverse holo of this card: false only where its own product lists
  * printings and none of them is a reverse holofoil. No link, or a product with no printings listed,
- * is no answer and counts as yes.
+ * is no answer and counts as yes. The rule for a card reverseHoloExists has no decision for.
  */
 export function pricesPlainReverse(tcgId: string): boolean {
   const variants = LINKS[tcgId]?.variants ?? [];
   return !variants.length || variants.some((v) => v.endsWith("reverse-holofoil"));
 }
 
+/**
+ * The cards TCGplayer prices a Shadowless run for, as tcgplayer-links.mjs linked them: all 102 of
+ * Base Set, Machamp's from Deck Exclusives. It was Cardmarket's list until 2026-09-12. A run is
+ * offered where the market the app prices from has a figure for it.
+ */
 const SHADOWLESS = new Set(Object.entries(LINKS).flatMap(([id, v]) => (v?.shadowless ? [id] : [])));
 
 const stamped = (variant: string): boolean => variant.startsWith("1st-edition");

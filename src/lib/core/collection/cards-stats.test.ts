@@ -124,8 +124,9 @@ describe("heldValue with a foil printing", () => {
     ).toBe(10);
   });
 
-  it("falls back to the normal price where there is no foil figure", () => {
-    // The copy really is a reverse holo; there is simply no separate price.
+  it("leaves a reverse holo unpriced where there is no reverse figure", () => {
+    // The copy really is a reverse holo, and the normal card's figure is another printing's
+    // (Bart, 2026-09-14): it counts as unpriced, never at the normal price.
     expect(
       heldValue(
         card({
@@ -134,7 +135,7 @@ describe("heldValue with a foil printing", () => {
           variants: [variant({ finish: "reverse-holo" })],
         }),
       ),
-    ).toBe(10);
+    ).toBe(0);
   });
 
   it("prices an unclassified copy as normal", () => {
