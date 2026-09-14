@@ -155,6 +155,55 @@ export function limitlessJapaneseScan(id: string, number: string): { low: string
 }
 
 /**
+ * Scrydex's set id for the English sets no other catalogue has a picture of, read by hand.
+ *
+ * Scrydex publishes every scan at `images.scrydex.com/pokemon/<set>-<number>/large` with no key,
+ * but it names its sets its own way and has no index to read without a paid account. So only a
+ * set checked by eye is here: on 2026-09-14 the first card and one or two more of each were
+ * opened beside the TCGdex list (Latios kit #1 Skitty, Bisharp kit #16 and #30 Bisharp,
+ * Wigglytuff kit #14, Lycanroc kit #16, Alolan Raichu kit #17 and #26, the Gyarados kit's
+ * Pokémon Communication at #22 and #27). The numbers agree with TCGdex's.
+ */
+const SCRYDEX_SETS: Record<string, string> = {
+  "tk-xy-latio": "tk8a",
+  "tk-xy-latia": "tk8b",
+  "tk-xy-w": "tk7a",
+  "tk-xy-b": "tk7b",
+  "tk-sm-l": "tk10a",
+  "tk-sm-r": "tk10b",
+  "tk-hs-g": "tk4b",
+};
+
+/**
+ * What Scrydex answers for an id it does not have: a 200 with a stand-in picture, always this
+ * file. A HEAD tells it by its length, so the stand-in is never taken for a card.
+ */
+const SCRYDEX_STAND_IN_BYTES = "186316";
+
+/**
+ * Scrydex's scan of a card, the last catalogue asked (mirror.ts): 170 of the 178 English cards
+ * no other source had a picture of on 2026-09-14, the six trainer kits TCGplayer sells without
+ * photos. A 1 MB PNG; the copy in our bucket is what is served.
+ */
+export async function scrydexScan(setId: string, number: string): Promise<string | null> {
+  const set = SCRYDEX_SETS[setId];
+  const n = number.replace(/^0+(?=\d)/, "");
+  if (!set || !/^\d+$/.test(n)) return null;
+  const url = `https://images.scrydex.com/pokemon/${set}-${n}/large`;
+  try {
+    const head = await fetch(url, {
+      method: "HEAD",
+      next: { revalidate: DAY },
+      signal: catalogueTimeout(),
+    });
+    const length = head.headers.get("content-length");
+    return head.ok && length && length !== SCRYDEX_STAND_IN_BYTES ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Whether a stored picture address is a whole file rather than a scan's folder.
  *
  * TCGdex's addresses are folders: the size and the format are the reader's, `${stem}/low.webp`.
