@@ -578,6 +578,40 @@ export async function writeTcgplayerPrices(
 }
 
 /**
+ * The day's dollar rate (euros per dollar), written over what that day holds. The nightly price
+ * cron writes it; requests read the latest day through readLatestUsdEurRate().
+ */
+export async function writeUsdEurRate(
+  db: SupabaseClient,
+  day: string,
+  rate: number,
+): Promise<void> {
+  const { error } = await db
+    .from("usd_eur_rates")
+    .upsert({ day, rate, fetched_at: new Date().toISOString() }, { onConflict: "day" });
+  if (error) throw new Error(`Writing the dollar rate failed: ${error.message}`);
+}
+
+/**
+ * The most recent stored dollar rate, or null when none is stored. Throws when the table cannot
+ * be read, so the caller can tell an empty table from a broken read in its log.
+ */
+export async function readLatestUsdEurRate(
+  db: SupabaseClient,
+): Promise<{ day: string; rate: number } | null> {
+  const { data, error } = await db
+    .from("usd_eur_rates")
+    .select("day, rate")
+    .order("day", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`Reading the dollar rate failed: ${error.message}`);
+  if (!data) return null;
+  const rate = Number((data as { rate: unknown }).rate);
+  return rate > 0 ? { day: String((data as { day: unknown }).day), rate } : null;
+}
+
+/**
  * These products' printings, written on or after `since`. Chunked over the ids, because
  * PostgREST puts the list in the URL, and paged, because it answers a thousand rows at most.
  */

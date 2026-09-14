@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
+import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
 import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
 import { usdToEurForRequest } from "@/lib/core/collection/collection";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
-import { writeCardPrices, writeTcgplayerPrices } from "@/lib/storage/postgres";
+import { writeCardPrices, writeTcgplayerPrices, writeUsdEurRate } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +63,12 @@ const JAPANESE_LINKS: Record<string, TcgplayerLink> = Object.fromEntries(
  * cards are keyed by TCGdex's Japanese ids (tcgplayer-ids.ja.generated.json, 9,259 linked). Its
  * current price was already read live from the same files (shelfUsdFor); what it gains is a history.
  * A Japanese shelf that does not answer costs only its own rows tonight; the English ones stand.
+ *
+ * The day's dollar rate since 2026-09-14: read from frankfurter here and written to usd_eur_rates,
+ * which every request reads (collection.ts, storedUsdToEur), so no request asks an outside host for
+ * it. The history below is converted at that same rate. A rate that cannot be read or written is
+ * logged and answered as `rate.skipped`; the prices stand, and the history falls back to the rate a
+ * request would use.
  *
  * Same bearer as the other crons: `CRON_SECRET`.
  */
@@ -147,6 +154,20 @@ export async function GET(req: Request) {
     }
   })();
 
+  // The day's dollar rate, into our own store. Never fails the job.
+  const usdEur: { rate: number | null; stored: boolean; skipped?: string } = {
+    rate: null,
+    stored: false,
+  };
+  try {
+    usdEur.rate = await fetchUsdToEur();
+    await writeUsdEurRate(db, today, usdEur.rate);
+    usdEur.stored = true;
+  } catch (err) {
+    console.error("[cron] storing the dollar rate failed:", err);
+    usdEur.skipped = usdEur.rate == null ? "read failed" : "write failed";
+  }
+
   // Today's line in the history, from the same rows.
   const history: { written: number; skipped?: string } = { written: 0 };
   const roomForDaily = databaseBytes != null && databaseBytes < DAILY_CEILING;
@@ -154,7 +175,7 @@ export async function GET(req: Request) {
     history.skipped =
       databaseBytes == null ? "database size unknown" : "database over the daily ceiling";
   } else {
-    const rate = await usdToEurForRequest();
+    const rate = usdEur.rate ?? (await usdToEurForRequest());
     if (rate == null) {
       console.error("[cron] tcgplayer prices: no dollar rate, no history tonight");
       history.skipped = "no dollar rate";
@@ -202,6 +223,7 @@ export async function GET(req: Request) {
     answered,
     written: rows.length,
     japanese,
+    rate: usdEur,
     history,
     thinned,
     databaseBytes,
