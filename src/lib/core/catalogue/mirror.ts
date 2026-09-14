@@ -159,9 +159,41 @@ export async function searchMirror(
 }
 
 /** What one run of the sync did, for the cron's answer and its log. */
-/** A logo or symbol address as the copy should hold it: ours once the file is in the bucket. */
-export const ownArt = async (address: string | null, storing: boolean): Promise<string | null> =>
-  storing && address && storedAddress(address) ? keepImage(address) : address;
+/** Whether a source answers that the file is not there, as opposed to not answering at all. */
+async function sourceMissing(address: string): Promise<boolean> {
+  try {
+    const head = await fetch(address, { method: "HEAD", cache: "no-store" });
+    return head.status === 404 || head.status === 403;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A logo or symbol address as the copy should hold it: ours once the file is in the bucket, and
+ * none where the source has no file at all.
+ *
+ * On 2026-09-14 every set symbol TCGdex names (163 English, 4 Japanese) answered 404, and two
+ * logos (Undaunted, Furious Fists) exist only as PNG: the copy kept all of them as addresses on
+ * TCGdex's host, which a page would have loaded and found nothing behind. A file TCGdex publishes
+ * as PNG only is taken as PNG; a file that is not there becomes no address; a source that did not
+ * answer keeps its address, to be copied the next night.
+ */
+export const ownArt = async (address: string | null, storing: boolean): Promise<string | null> => {
+  if (!storing || !address || !storedAddress(address)) return address;
+  const kept = await keepImage(address);
+  if (kept !== address) return kept;
+  const png =
+    address.startsWith("https://assets.tcgdex.net/") && address.endsWith(".webp")
+      ? address.replace(/\.webp$/, ".png")
+      : null;
+  if (png) {
+    const keptPng = await keepImage(png);
+    if (keptPng !== png) return keptPng;
+  }
+  const gone = (await sourceMissing(address)) && (!png || (await sourceMissing(png)));
+  return gone ? null : address;
+};
 
 /**
  * Every set's logo and symbol copied into our bucket, and the copy's addresses pointed at it.

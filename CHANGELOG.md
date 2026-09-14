@@ -69,6 +69,8 @@ if the two have drifted apart.
 
 - A set's logo and symbol are served from images.cardorb.com: the nightly catalogue run (`GET /v1/cron/catalogue`, now answering `art`) copies each into our bucket and points `catalogue_sets` at the copy, so a shelf tile no longer loads from assets.tcgdex.net or images.pokemontcg.io. A file that cannot be copied keeps its source address and is tried again the next night.
 
+- A set's logo and symbol in the catalogue copy are our own copy of the file or nothing. Every set symbol TCGdex names answers 404, and two logos (Undaunted, Furious Fists) exist only as PNG, so the copy held 167 addresses on TCGdex's host with no file behind them. A logo published only as PNG is copied as PNG; a file that is not there is left out; a source that did not answer is tried again the next night.
+
 - The collection reads card pictures from images.cardorb.com from the first request: the set catalogue's cache key moves to v7, so entries built before the pictures moved are not read.
 
 - `GET /v1/catalog/sets/{setId}` reads an English set out of the catalogue's copy in Postgres, one query, where it asked TCGdex for the set's record and then its rarities and types. A set the copy holds no cards of yet (jumbo, rc, sp and wp today, or one published since last night) is read from TCGdex as before. All 199 copied sets were compared card by card with the TCGdex answer on 2026-09-14: the same fields, values and order.
