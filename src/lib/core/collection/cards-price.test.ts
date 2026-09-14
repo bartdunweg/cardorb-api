@@ -60,11 +60,8 @@ describe("copyPriceOf", () => {
     priceFirstEd: { market: 30 },
   };
 
-  it("reads the stamped run's price for a 1st Edition copy, whatever its finish", () => {
+  it("reads the stamped run's price for a 1st Edition copy", () => {
     expect(copyPriceOf({ edition: "1st-edition", finish: "holo" }, card)).toBe(card.priceFirstEd);
-    expect(copyPriceOf({ edition: "1st-edition", finish: "reverse-holo" }, card)).toBe(
-      card.priceFirstEd,
-    );
   });
 
   // The run's own figure was Cardmarket's, and it left with Cardmarket: base1-4 Charizard was
@@ -85,11 +82,21 @@ describe("copyPriceOf", () => {
   // The foil used to have a series of its own here, out of Cardmarket's `-holo` fields. It is
   // TCGplayer's printings that tell a foil from the plain card now, and they are read above:
   // what is left on the card itself is one figure, whatever the finish.
-  it("reads the card's own figure for every finish, the foil series having gone", () => {
-    expect(copyPriceOf({ finish: "reverse-holo" }, card)).toBe(card.price);
-    expect(copyPriceOf({ finish: "poke-ball" }, card)).toBe(card.price);
+  it("reads the card's own figure for a plain finish, the foil series having gone", () => {
     expect(copyPriceOf({ finish: "holo" }, card)).toBe(card.price);
     expect(copyPriceOf({ finish: null, edition: "unlimited" }, card)).toBe(card.price);
+  });
+
+  // Bart, 2026-09-14: a missing price shows as unknown, never as another printing's. The card's
+  // own figure and the stamped run's are the plain card's, so a reverse reads neither.
+  it("leaves a reverse unpriced where no reverse figure exists", () => {
+    expect(copyPriceOf({ finish: "reverse-holo" }, card)).toBeNull();
+    expect(copyPriceOf({ finish: "poke-ball" }, card)).toBeNull();
+    expect(copyPriceOf({ edition: "1st-edition", finish: "reverse-holo" }, card)).toBeNull();
+    const priced = { ...card, pricePrintings: { normal: { market: 10 } } };
+    expect(copyPriceOf({ finish: "reverse-holo" }, priced)).toBeNull();
+    const reverse = { ...card, pricePrintings: { "reverse-holofoil": { market: 12 } } };
+    expect(copyPriceOf({ finish: "reverse-holo" }, reverse)?.market).toBe(12);
   });
 
   it("falls back to the ordinary price where no stamped figure exists", () => {
@@ -142,8 +149,8 @@ describe("printingKeysOf and printingPriceOf", () => {
         { ...eevee, "friend-ball-reverse-holofoil": eur(0.74) },
       )?.market,
     ).toBe(0.74);
-    // A print with no figure of its own reads the plain reverse, as every ball copy did before.
-    expect(printingPriceOf({ finish: "energy-symbol" }, eevee)?.market).toBe(0.29);
+    // A print with no figure of its own is unpriced: the plain reverse is another printing.
+    expect(printingPriceOf({ finish: "energy-symbol" }, eevee)).toBeNull();
   });
   const jungleScyther = { holofoil: eur(53.23), normal: eur(15.19) };
 
@@ -204,7 +211,12 @@ describe("printingKeysOf and printingPriceOf", () => {
   });
 
   it("falls back through less and less of what it knows, and then answers nothing", () => {
-    expect(printingPriceOf({ finish: "reverse-holo" }, { holofoil: eur(9) })?.market).toBe(9);
+    // A reverse never reads the holo or the plain card (e-Card Eevee, ecard3-54: TCGplayer lists
+    // "Normal" only, so its reverse is unpriced rather than the normal card's figure).
+    expect(printingPriceOf({ finish: "reverse-holo" }, { holofoil: eur(9) })).toBeNull();
+    expect(
+      printingPriceOf({ finish: "reverse-holo" }, { normal: eur(2), unlimited: eur(2) }),
+    ).toBeNull();
     expect(printingPriceOf({ finish: "holo" }, {})).toBeNull();
     expect(printingPriceOf({ finish: "holo" }, null)).toBeNull();
   });

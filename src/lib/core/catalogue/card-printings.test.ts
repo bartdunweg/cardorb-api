@@ -5,6 +5,7 @@ import {
   foilPatternsOfSerie,
   patternPrintsFor,
   pricesPlainReverse,
+  reverseHoloExists,
   printingsOf,
 } from "./card-printings";
 
@@ -101,12 +102,31 @@ describe("printingsOf", () => {
     ]);
   });
 
-  // Skyridge Gengar (ecard3-10): TCGdex lists a reverse, TCGplayer prices the card as Normal only.
-  it("offers a plain reverse only where TCGplayer prices a reverse holofoil", () => {
-    const skyridge = [{ type: "normal" }, { type: "reverse" }];
-    expect(printingsOf(skyridge, "ecard3-10").map((p) => p.finish)).toEqual(["normal"]);
-    expect(printingsOf(skyridge, null).map((p) => p.finish)).toEqual(["normal", "reverse-holo"]);
+  // Skyridge Gengar (ecard3-10): TCGdex and Scrydex list a reverse and Bulbapedia says every Skyridge
+  // card but the H cards has one; TCGplayer prices the card as Normal only. The reverse is offered,
+  // and priced as unknown (price-basis.mjs).
+  it("offers a plain reverse where the witnesses decided one exists, priced or not", () => {
+    const plain = [{ type: "normal" }, { type: "reverse" }];
+    expect(reverseHoloExists("ecard3-10")).toBe(true);
     expect(pricesPlainReverse("ecard3-10")).toBe(false);
+    expect(printingsOf(plain, "ecard3-10").map((p) => p.finish)).toEqual([
+      "normal",
+      "reverse-holo",
+    ]);
+    // Expedition Grass Energy: TCGdex lists a reverse; TCGplayer, Scrydex and Bulbapedia do not.
+    expect(printingsOf(plain, "ecard1-160").map((p) => p.finish)).toEqual(["normal"]);
+    // Black & White Snivy: TCGdex lists no reverse for the whole set, TCGplayer and Scrydex do.
+    expect(printingsOf([{ type: "normal" }], "bw1-1").map((p) => p.finish)).toEqual([
+      "normal",
+      "reverse-holo",
+    ]);
+    // Southern Islands Mew, sold before reverse holos existed: TCGdex's reverse is its holo.
+    expect(printingsOf([{ type: "reverse" }], "si1-1")).toEqual([
+      { finish: "holo", foilPattern: null },
+    ]);
+    // No card id, or one the evidence run never saw: TCGdex's word, less what TCGplayer rules out.
+    expect(printingsOf(plain, null).map((p) => p.finish)).toEqual(["normal", "reverse-holo"]);
+    expect(reverseHoloExists("no-such-card")).toBeNull();
     expect(pricesPlainReverse("sv08.5-074")).toBe(true);
     expect(pricesPlainReverse("no-such-card")).toBe(true);
   });

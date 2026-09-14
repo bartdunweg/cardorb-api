@@ -1,0 +1,1 @@
+- Black Bolt Haxorus and White Flare Emboar and Gothitelle in the owner's collection are the holo they are, not a normal print none of them was ever printed as, so they are priced at the holo figure and the morning check's finish check passes.
