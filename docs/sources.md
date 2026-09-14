@@ -58,6 +58,8 @@ product, no photo), Pikachu at the Museum (a jumbo card) and the five Poké Card
 | TCGdex GraphQL       | https://api.tcgdex.net/v2/graphql         | English set index (era, date, counts, logo), rarities and types                       | Live: 24 h in memory per instance, era rarities 1 day cached                                       |
 | pokemontcg.io API    | https://api.pokemontcg.io/v2              | Set and card lists behind the picture fallback and set logos                          | Cron and cached builds, 1 day; refuses most calls since 2026-09                                    |
 | Bulbapedia           | https://bulbapedia.bulbagarden.net        | Which languages each pre-Black & White set was printed in                             | Script `set-languages.mjs`, writes `set-languages.generated.json`                                  |
+| Bulbapedia           | https://bulbapedia.bulbagarden.net        | Which cards of a set have a reverse holo (the general rule and each set page's own), a tie-breaker | Script `reverse-holo-evidence.mjs`, rules read by hand 2026-09-14, writes `reverse-holo.generated.json` |
+| Scrydex expansions   | https://scrydex.com/pokemon/expansions    | Which variants of each English card exist (its reverse holo), one witness of three; never its prices | Script `reverse-holo-evidence.mjs` (with permission, 2026-09-14), one page a second, cached |
 | PokeAPI (GitHub raw) | https://raw.githubusercontent.com/PokeAPI | Species names                                                                         | Script `pokedex.mjs`, writes `pokedex.generated.json`                                              |
 
 ## What a page waits on

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moversOf, type CardPricePoint } from "./movers";
+import { moversOf, priceOfCopy, type CardPricePoint } from "./movers";
 import type { CardSet, OwnedCard, Variant } from "./cards";
 
 const variant = (over: Partial<Variant> = {}): Variant => ({
@@ -159,5 +159,23 @@ describe("moversOf", () => {
 
   it("survives a card with no reading at all", () => {
     expect(moversOf([set([card({ tcgId: "a" })])], []).up).toEqual([]);
+  });
+});
+
+describe("priceOfCopy", () => {
+  const point = (printings: Record<string, number>): CardPricePoint => ({
+    tcgId: "ecard3-54",
+    date: "2026-09-14",
+    market: printings.normal ?? null,
+    holo: null,
+    printings,
+  });
+
+  // Bart, 2026-09-14: a reverse with no reverse figure that day is unpriced, never the normal card.
+  it("leaves a reverse unpriced on a day with printings but no reverse figure", () => {
+    expect(priceOfCopy({ finish: "reverse-holo" }, point({ normal: 0.4 }))).toBeNull();
+    expect(priceOfCopy({ finish: "poke-ball" }, point({ "reverse-holofoil": 0.3 }))).toBeNull();
+    expect(priceOfCopy({ finish: "reverse-holo" }, point({ "reverse-holofoil": 0.9 }))).toBe(0.9);
+    expect(priceOfCopy({ finish: "normal" }, point({ normal: 0.4 }))).toBe(0.4);
   });
 });

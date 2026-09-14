@@ -66,8 +66,11 @@ export function priceOfCopy(
       const v = point.printings[key];
       if (v != null) return v;
     }
-    return point.market;
+    // A reverse with no reverse figure that day is unpriced, not the plain card (copyPriceOf).
+    return isReverseFinish(copy.finish) ? null : point.market;
   }
+  /* A reading from before printings were stored (LEGACY in price-months.mjs) has one foil figure and
+     cannot say which printing it was, so it reads as it always did. */
   return (isReverseFinish(copy.finish) ? point.holo : null) ?? point.market;
 }
 
