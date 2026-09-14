@@ -38,7 +38,7 @@ export type CardPricePoint = {
    * market it was not from (every nightly TCGplayer point, for the hours after 2026-09-12's
    * change). Absent on the way out, where nothing reads it yet.
    */
-  source?: "tcgplayer" | "tcgplayer-sales" | "cardmarket";
+  source?: "tcgplayer" | "cardmarket";
 };
 
 /** One printing's figure on one day, on its way into card_price_months. Euros. */

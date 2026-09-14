@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { cardPricesFromSets, cardPricesFromTcgcsv, snapshotFromSets } from "./snapshot";
+import {
+  cardPricesFromSets,
+  cardPricesFromShelf,
+  cardPricesFromTcgcsv,
+  snapshotFromSets,
+  unlinkedCardPrices,
+} from "./snapshot";
 import type { CardSet, OwnedCard, Variant } from "./cards";
 
 /**
  * The arithmetic behind a point on the chart.
  *
- * Worth testing on its own because two things have to agree on it — this and
- * scripts/snapshot-collection-value.mjs — and because it is written down
+ * Worth testing on its own because two things have to agree on it (this and
+ * scripts/snapshot-collection-value.mjs), and because it is written down
  * permanently. A page that renders a wrong total is wrong until it is fixed; a
  * snapshot that records one is wrong for as long as the chart exists.
  */
@@ -242,5 +248,66 @@ describe("cardPricesFromTcgcsv", () => {
         source: "tcgplayer",
       },
     ]);
+  });
+});
+
+describe("cardPricesFromShelf", () => {
+  const rows = [
+    { productId: 42382, printing: "holofoil", market: 869.02 },
+    { productId: 106999, printing: "unlimited-holofoil", market: 2257.87 },
+    { productId: 106999, printing: "1st-edition-holofoil", market: 10000 },
+    { productId: 502552, printing: "normal", market: 0.25 },
+    { productId: 502552, printing: "reverse-holofoil", market: 1.5 },
+    { productId: 7, printing: "normal", market: 3 },
+  ];
+  const links = {
+    "base1-4": { productId: 42382, shadowless: { productId: 106999 } },
+    "sv03.5-001": { productId: 502552 },
+    "not-linked": null,
+  };
+
+  it("writes every linked card's printings, and the Shadowless run under the keys the backfill uses", () => {
+    const point = (tcgId: string, printing: string, price: number) => ({
+      tcgId,
+      printing,
+      date: "2026-09-14",
+      price,
+      source: "tcgplayer",
+    });
+    expect(cardPricesFromShelf(links, rows, 0.9, "2026-09-14")).toEqual([
+      point("base1-4", "holofoil", 782.12),
+      point("sv03.5-001", "normal", 0.23),
+      point("sv03.5-001", "reverse-holofoil", 1.35),
+      point("base1-4", "shadowless-holofoil", 2032.08),
+      point("base1-4", "1st-edition-holofoil", 9000),
+    ]);
+  });
+
+  it("names a plain Shadowless run shadowless", () => {
+    const points = cardPricesFromShelf(
+      { "base1-60": { productId: 1, shadowless: { productId: 2 } } },
+      [{ productId: 2, printing: "normal", market: 10 }],
+      1,
+      "2026-09-14",
+    );
+    expect(points.map((p) => p.printing)).toEqual(["shadowless"]);
+  });
+});
+
+describe("unlinkedCardPrices", () => {
+  it("keeps only the cards with no TCGplayer product", () => {
+    const at = (tcgId: string) => ({
+      tcgId,
+      printing: "normal",
+      date: "2026-09-14",
+      price: 1,
+      source: "tcgplayer" as const,
+    });
+    expect(
+      unlinkedCardPrices([at("linked"), at("null-link"), at("absent")], {
+        linked: { productId: 1 },
+        "null-link": null,
+      }).map((p) => p.tcgId),
+    ).toEqual(["null-link", "absent"]);
   });
 });

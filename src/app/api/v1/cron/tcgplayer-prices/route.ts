@@ -1,21 +1,51 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
-import { writeTcgplayerPrices } from "@/lib/storage/postgres";
+import { usdToEurForRequest } from "@/lib/core/collection/collection";
+import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
+import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
+import { writeCardPrices, writeTcgplayerPrices } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+/** The shelf, a day of history for every English card and three months of thinning: more than a minute. */
+export const maxDuration = 300;
 
 /**
- * TCGplayer's English shelf into tcgplayer_prices, once a day.
+ * Below this a day of history is written every night; at or above it, Saturdays only. The free
+ * plan's limit is 500 MB, where Supabase turns the project read-only. Never reached unannounced: from
+ * 400 MB .github/workflows/storage-watch.yml opens an issue every Monday. Raise this with an upgrade.
+ */
+const DAILY_CEILING = 480 * 1024 * 1024;
+
+/** Months thinned to one figure a week per run, so the months behind are caught up in days. */
+const THIN_MONTHS = 3;
+
+type Thinned = { month: string; rows: number };
+
+/**
+ * TCGplayer's English shelf, once a day: the latest figures and the day's line in the history.
  *
- * What the collection prices every card from (collection.ts, storedPricesFor): one query instead
- * of a request per card to TCGdex. tcgcsv publishes the day's figures in the evening, US time, so
- * this runs at 21:15 UTC and the snapshot at 04:00 prices the night's point off them.
+ * The one price job since 2026-09-14. tcgcsv publishes the day's figures at 20:00 UTC, so this runs
+ * at 21:15 and reads them once, for two tables:
  *
- * A shelf where fewer than nine groups in ten answered is not written: the rows already there
- * are yesterday's figures, which is better than today's for some sets and none for the rest.
+ * 1. tcgplayer_prices, what the collection prices every card from (collection.ts, storedPricesFor):
+ *    one query instead of a request per card to TCGdex. A shelf where fewer than nine groups in ten
+ *    answered is not written at all, neither table: the rows already there are yesterday's figures,
+ *    which is better than today's for some sets and none for the rest.
+ *
+ * 2. card_price_months, today's point for every linked card, held or not, per printing and in euros
+ *    at the day's rate (cardPricesFromShelf), Base Set's Shadowless runs under their own printings.
+ *    The 04:00 snapshot used to write these from the same files and from the assembled collection;
+ *    it now writes only the cards with no TCGplayer product. No rate, no history tonight: dollars
+ *    written as euros would stand in the chart for good, and the latest prices are written anyway.
+ *    At DAILY_CEILING or over, history is written on Saturdays only; a size nobody could read counts
+ *    as over.
+ *
+ * Then the archive is thinned: months entirely older than six months keep one figure a week
+ * (migration 20260914150000, thin_oldest_price_month), up to THIN_MONTHS a run. A failure there is
+ * logged and answered as `thinned: null`; the night's prices stand.
+ *
  * Same bearer as the other crons: `CRON_SECRET`.
  */
 export async function GET(req: Request) {
@@ -31,31 +61,102 @@ export async function GET(req: Request) {
   if (!db) return refuse("noDatabase");
 
   const start = performance.now();
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  let shelf: Awaited<ReturnType<typeof shelfPrintings>>;
   try {
-    const { rows, groups, answered } = await shelfPrintings(TCGCSV_CATEGORY.en);
+    shelf = await shelfPrintings(TCGCSV_CATEGORY.en);
+    const { groups, answered } = shelf;
     if (!groups || answered < groups * 0.9) {
       console.error(
         `[cron] tcgplayer prices: ${answered} of ${groups} groups answered, not written`,
       );
       return NextResponse.json({ ok: false, groups, answered, written: 0 }, { status: 502 });
     }
-    const today = new Date().toISOString().slice(0, 10);
     await writeTcgplayerPrices(
       db,
-      rows.map((r) => ({
+      shelf.rows.map((r) => ({
         product_id: r.productId,
         printing: r.printing,
         market: r.market,
         updated_on: today,
       })),
     );
-    const ms = Math.round(performance.now() - start);
-    console.log(
-      `[cron] tcgplayer prices: ${rows.length} printings from ${answered} groups, ${ms} ms`,
-    );
-    return NextResponse.json({ ok: true, groups, answered, written: rows.length, ms });
   } catch (err) {
     console.error("[cron] copying TCGplayer's prices failed:", err);
     return refuse("catalogue");
   }
+  const { rows, groups, answered } = shelf;
+
+  let ok = true;
+  const databaseBytes = await (async (): Promise<number | null> => {
+    try {
+      const { data, error } = await db.rpc("database_size_bytes");
+      return error || typeof data !== "number" ? null : data;
+    } catch {
+      return null;
+    }
+  })();
+
+  // Today's line in the history, from the same rows.
+  const history: { written: number; skipped?: string } = { written: 0 };
+  const roomForDaily = databaseBytes != null && databaseBytes < DAILY_CEILING;
+  if (!roomForDaily && now.getUTCDay() !== 6) {
+    history.skipped =
+      databaseBytes == null ? "database size unknown" : "database over the daily ceiling";
+  } else {
+    const rate = await usdToEurForRequest();
+    if (rate == null) {
+      console.error("[cron] tcgplayer prices: no dollar rate, no history tonight");
+      history.skipped = "no dollar rate";
+    } else {
+      try {
+        const points = cardPricesFromShelf(
+          TCGPLAYER_IDS as Record<string, TcgplayerLink>,
+          rows,
+          rate,
+          today,
+        );
+        await writeCardPrices(db, points);
+        history.written = points.length;
+      } catch (err) {
+        console.error("[cron] writing today's price history failed:", err);
+        history.skipped = "write failed";
+        ok = false;
+      }
+    }
+  }
+
+  // Months entirely older than six months: before the first of the month six months back.
+  const cutoff = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 6, 1))
+    .toISOString()
+    .slice(0, 10);
+  let thinned: Thinned[] | null = null;
+  try {
+    const { data, error } = await db.rpc("thin_oldest_price_month", {
+      p_before: cutoff,
+      p_months: THIN_MONTHS,
+    });
+    if (error) throw new Error(error.message);
+    thinned = ((data ?? []) as Thinned[]).map((t) => ({ month: t.month, rows: t.rows }));
+  } catch (err) {
+    console.error("[cron] thinning the price archive failed:", err);
+  }
+
+  const ms = Math.round(performance.now() - start);
+  console.log(
+    `[cron] tcgplayer prices: ${rows.length} printings from ${answered} groups, ` +
+      `${history.written} history points${history.skipped ? ` (${history.skipped})` : ""}, ` +
+      `${thinned ? thinned.length : "no"} months thinned, ${ms} ms`,
+  );
+  return NextResponse.json({
+    ok,
+    groups,
+    answered,
+    written: rows.length,
+    history,
+    thinned,
+    databaseBytes,
+    ms,
+  });
 }
