@@ -266,6 +266,7 @@ export async function setIn(
     cardsRecorded: (detail.cards ?? []).length > 0,
     logo: detail.logo ? `${detail.logo}.png` : null,
     symbol: detail.symbol ? `${detail.symbol}.png` : null,
+    serieId: serieId || null,
   };
   const cards: CatalogueMatch[] = (detail.cards ?? []).map((c) => ({
     id: c.id,

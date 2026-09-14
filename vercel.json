@@ -19,6 +19,10 @@
       "schedule": "30 3 * * *"
     },
     {
+      "path": "/api/v1/cron/catalogue?language=ja",
+      "schedule": "45 3 * * *"
+    },
+    {
       "path": "/api/v1/cron/tcgplayer-prices",
       "schedule": "15 21 * * *"
     }

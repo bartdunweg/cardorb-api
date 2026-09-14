@@ -158,7 +158,7 @@ export async function searchMirror(
 
 /** What one run of the sync did, for the cron's answer and its log. */
 /** A logo or symbol address as the copy should hold it: ours once the file is in the bucket. */
-const ownArt = async (address: string | null, storing: boolean): Promise<string | null> =>
+export const ownArt = async (address: string | null, storing: boolean): Promise<string | null> =>
   storing && address && storedAddress(address) ? keepImage(address) : address;
 
 /**

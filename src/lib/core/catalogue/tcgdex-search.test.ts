@@ -317,7 +317,8 @@ describe("searchCards with the catalogue's copy", () => {
   const store = (cards: unknown[], copied = true) => {
     const chain: Record<string, unknown> = {};
     let table = "";
-    for (const op of ["select", "ilike", "contains", "order", "range"]) chain[op] = () => chain;
+    for (const op of ["select", "eq", "ilike", "contains", "order", "range"])
+      chain[op] = () => chain;
     chain.then = (resolve: (v: unknown) => unknown) =>
       resolve(
         table === "catalogue_sync"
@@ -365,7 +366,11 @@ describe("searchCards with the catalogue's copy", () => {
 
   it("asks TCGdex when the store will not answer, rather than failing the search", async () => {
     installFetch({ list: [brief("pl4-1", "1", "Charizard")] });
-    const broken = { from: () => ({ select: () => Promise.reject(new Error("down")) }) } as never;
+    const refusing = (): unknown => ({
+      eq: refusing,
+      then: (_: unknown, reject: (e: Error) => unknown) => reject(new Error("down")),
+    });
+    const broken = { from: () => ({ select: refusing }) } as never;
     const { searchCards } = await load();
     const { cards } = await searchCards("charizard", 1, null, broken);
     expect(cards.map((c) => c.id)).toEqual(["pl4-1"]);
