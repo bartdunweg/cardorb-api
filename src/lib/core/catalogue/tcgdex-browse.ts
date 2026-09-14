@@ -458,12 +458,17 @@ const withSpelling = (fact: SetFact): SetFact => ({
   rarity: canonicalRarity(fact.rarity),
 });
 
-async function englishFacts(setId: string): Promise<Map<string, SetFact> | null> {
+async function englishFacts(
+  setId: string,
+  /** How often a busy TCGdex is asked again: the nightly copy waits, a page does not. */
+  retries = 0,
+): Promise<Map<string, SetFact> | null> {
   const out = new Map<string, SetFact>();
   try {
     const body = (await graphql(
       `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types category trainerType illustrator hp stage evolveFrom regulationMark variants { firstEdition } variants_detailed { type foil stamp } } }`,
       `en set ${setId} facts`,
+      { retries },
     )) as {
       cards?: ({
         id: string;
@@ -546,7 +551,7 @@ export async function englishSet(
   }
   const [index, read] = await Promise.all([
     englishSetIndex().catch(() => new Map<string, CatalogueSet>()),
-    englishFacts(id),
+    englishFacts(id, factsRequired ? 2 : 0),
   ]);
   if (!read && factsRequired) throw new Error(`TCGdex facts for ${id} unavailable`);
   const facts = read ?? new Map<string, SetFact>();

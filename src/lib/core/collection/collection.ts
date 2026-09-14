@@ -476,7 +476,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v18", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v19", userId, usdToEur == null ? "-" : String(usdToEur)],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -581,6 +581,8 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v29: TCGdex asked for no price the store holds, and no picture the copy already checked.
+      //
       // v28: prices read out of tcgplayer_prices, the one store every price reads (printingsOfProducts).
       //
       // v27: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
@@ -610,7 +612,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v28", setName, factsSignature(identities)],
+      ["set-facts", "v29", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -675,33 +677,41 @@ const cachedGroupPrintings = (groupId: number, category: number = TCGCSV_CATEGOR
     )(),
   );
 
-/** Exported for its test rather than for any caller: the rule is about money. */
+/**
+ * Every card's TCGplayer dollars, every printing of each. Exported for its test: the rule is about money.
+ *
+ * Out of the one store every price reads (printingsOfProducts, tcgplayer_prices) for each card
+ * linked to a TCGplayer product, which is nearly all of them: tcgplayer-ids.generated.json holds
+ * TCGdex's product for every English card it relays one for, and tcgplayer-links.mjs the promo and
+ * gallery groups TCGdex relays none for. Until 2026-09-14 TCGdex's per-card relay was asked first
+ * for every set, and the store only for what it left out (Bart: pages read our own store).
+ *
+ * TCGdex only for a card the map has not seen yet (a set published since the weekly links run),
+ * never for one the map already says has no product: TCGdex relayed nothing for that one when
+ * the map was built, and asking again on every request found nothing again.
+ */
 export const usdForSet = async (
   setName: string,
   ids: string[],
 ): Promise<Record<string, UsdPair>> => {
   if (!ids.length) return {};
-  let answer: Record<string, UsdPair> = {};
-  try {
-    answer = await cachedTcgdexUsd(setName, ids);
-  } catch (err) {
-    console.error(`TCGplayer prices unavailable for ${setName} from TCGdex:`, err);
+  const out: Record<string, UsdPair> = {};
+  const linked = ids.filter((id) => TCGCSV_LINKS[id]?.productId != null);
+  if (linked.length) {
+    const printings = await printingsOfProducts(linked.map((id) => TCGCSV_LINKS[id]!.productId));
+    for (const id of linked) {
+      const tp = printings.get(TCGCSV_LINKS[id]!.productId);
+      const usd = tp ? usdOf(tp) : null;
+      if (!tp || !usd) continue;
+      out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
+    }
   }
-  /*
-   * Then tcgcsv, for the linked cards TCGdex said nothing about. Read through the same pickers as
-   * TCGdex's figures (usdOf, usdFirstEdOf, usdPrintingsOf), because groupPrintings() hands back
-   * the same shape: a promo is priced by exactly the rules a set card is. A group that does not
-   * answer costs its cards their price for this request, not TCGdex's answer for the others.
-   */
-  const linked = ids.filter((id) => !answer[id]?.usd && TCGCSV_LINKS[id]?.groupId != null);
-  if (!linked.length) return answer;
-  const out = { ...answer };
-  const printings = await printingsOfProducts(linked.map((id) => TCGCSV_LINKS[id]!.productId));
-  for (const id of linked) {
-    const tp = printings.get(TCGCSV_LINKS[id]!.productId);
-    const usd = tp ? usdOf(tp) : null;
-    if (!tp || !usd) continue;
-    out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
+  const unseen = ids.filter((id) => !(id in TCGCSV_LINKS));
+  if (!unseen.length) return out;
+  try {
+    Object.assign(out, await cachedTcgdexUsd(setName, unseen));
+  } catch (err) {
+    console.error(`TCGplayer prices unavailable for ${setName}'s new cards from TCGdex:`, err);
   }
   return out;
 };
@@ -905,7 +915,9 @@ export async function storedPricesFor(ids: string[]): Promise<Map<string, CardPr
   if (!ids.length) return out;
   const db = adminClient();
   const links = ids.map((id) => [id, TCGCSV_LINKS[id]?.productId ?? null] as const);
-  const unlinked = links.flatMap(([id, pid]) => (pid == null ? [id] : []));
+  /* TCGdex only for a card the map has not seen yet: one it holds as null relayed no product when
+     the map was built (usdForSet). */
+  const unlinked = ids.filter((id) => !(id in TCGCSV_LINKS));
   const since = new Date(Date.now() - STORED_PRICES_DAYS * 86_400_000).toISOString().slice(0, 10);
   let rows: Awaited<ReturnType<typeof readTcgplayerPrices>> | null = null;
   if (db && (await storedPricesCurrent(db, since))) {

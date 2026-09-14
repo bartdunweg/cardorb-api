@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CatalogueNotFound, json } from "./tcgdex-client";
+import { CatalogueNotFound, graphql, json } from "./tcgdex-client";
 
 /**
  * A 404 from TCGdex is an answer, not an outage.
@@ -20,6 +20,27 @@ describe("json", () => {
   afterEach(() => {
     globalThis.fetch = realFetch;
     vi.restoreAllMocks();
+  });
+
+  it("asks GraphQL again after a pause where TCGdex answered busy", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("busy", { status: 503 }))
+      .mockResolvedValueOnce(Response.json({ data: { cards: [] } }));
+    globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
+    expect(await graphql("{ cards { id } }", "facts", { retries: 2, backoffMs: 1 })).toEqual({
+      cards: [],
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("gives up on GraphQL after its retries", async () => {
+    const fetch = vi.fn(async () => new Response("busy", { status: 503 }));
+    globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
+    await expect(
+      graphql("{ cards { id } }", "facts", { retries: 2, backoffMs: 1 }),
+    ).rejects.toThrow("503");
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it("does not retry a 404, and names it", async () => {

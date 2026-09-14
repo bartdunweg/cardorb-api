@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const json = vi.fn();
 vi.mock("./tcgdex-client", () => ({ json: (...args: unknown[]) => json(...args) }));
+const readCardSheet = vi.fn(async (_id: string): Promise<unknown> => null);
+vi.mock("./card-sheet", () => ({ readCardSheet: (id: string) => readCardSheet(id) }));
 
 const { defaultFinish, defaultFinishFor, withDefaultFinishes } = await import("./default-finish");
 
@@ -33,6 +35,12 @@ describe("defaultFinish", () => {
 });
 
 describe("defaultFinishFor", () => {
+  it("reads an English card's printings out of the copy, asking TCGdex nothing", async () => {
+    readCardSheet.mockResolvedValueOnce({ card: { variants: [{ type: "holo" }] }, set: null });
+    expect(await defaultFinishFor("sv03-125", "en")).toBe("holo");
+    expect(json).not.toHaveBeenCalled();
+  });
+
   it("asks the catalogue the card lives in", async () => {
     json.mockResolvedValueOnce({ variants_detailed: [{ type: "holo" }] });
     expect(await defaultFinishFor("sv10-233", "ja")).toBe("holo");

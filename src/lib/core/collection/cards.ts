@@ -947,7 +947,9 @@ export async function resolveSetFacts(
     const scan = storedScan(tcgBase);
     let image = scan.image ? localise(scan.image) : null;
     let imageHigh = scan.imageHigh ? localise(scan.imageHigh) : null;
-    if (!image && number && fallbacks > 0) {
+    // A card the copy matched was checked against every source at night; only a row whose number
+    // the copy does not hold is worth asking the other catalogues about now.
+    if (!image && number && fallbacks > 0 && !(cat.fromCopy && matched)) {
       fallbacks--;
       // Limitless first, where the set has a code there. Not every set does,
       // and the second catalogue does not need one: it is asked by set name.

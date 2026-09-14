@@ -98,6 +98,24 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe("a set read out of the nightly copy", () => {
+  it("asks no other catalogue about a matched card the copy holds no picture for", async () => {
+    // The copy checked every source for this card at night and found nothing.
+    answer = catalogue({
+      fromCopy: true,
+      assetBase: null,
+      byNumber: {
+        "088": { id: "base1-088", localId: "088", name: "Pikachu", image: null },
+        "88": { id: "base1-088", localId: "088", name: "Pikachu", image: null },
+      },
+    });
+    ptcgScan.mockResolvedValue("fallback/scan.png");
+    const [set] = await buildCollection([row()]);
+    expect(set!.cards[0]!.image).toBeNull();
+    expect(ptcgScan).not.toHaveBeenCalled();
+  });
+});
+
 describe("a row that remembers its picture", () => {
   it("draws the remembered scan when the catalogue has none", async () => {
     answer = quiet();

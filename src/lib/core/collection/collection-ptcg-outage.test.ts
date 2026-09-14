@@ -61,33 +61,30 @@ beforeEach(() => {
 });
 
 describe("usdForSet", () => {
-  it("asks TCGdex for the set's cards and keys the answer by card id", async () => {
-    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100 }]]));
+  // Base Set Charizard, product 42382 (tcgplayer-ids.generated.json), read out of the one store
+  // every price reads; the store is TCGplayer's own files here, as it is before the price job ran.
+  const charizard = new Map([[42382, { holofoil: { marketPrice: 400, productId: 42382 } }]]);
+
+  it("prices a linked card out of the store and asks TCGdex nothing", async () => {
+    groupPrintings.mockResolvedValue(charizard);
     const usdForSet = await fresh();
-    expect(await usdForSet("Base", ["base1-4", "base1-2"])).toEqual({
-      "base1-4": { market: 100 },
-    });
-    expect(usdFor).toHaveBeenCalledWith(["base1-4", "base1-2"]);
+    const answer = await usdForSet("Base", ["base1-4"]);
+    expect(answer["base1-4"]?.usd).toEqual({ market: 400, productId: 42382 });
+    expect(usdFor).not.toHaveBeenCalled();
   });
 
   it("asks for nothing when there is nothing to ask for", async () => {
     const usdForSet = await fresh();
     expect(await usdForSet("Base", [])).toEqual({});
     expect(usdFor).not.toHaveBeenCalled();
-  });
-
-  it("reads Cardmarket alone for this request when TCGdex answered for nothing, rather than throwing", async () => {
-    usdFor.mockRejectedValue(new Error("TCGdex answered for none of the cards"));
-    const usdForSet = await fresh();
-    expect(await usdForSet("Base", ["base1-4"])).toEqual({});
+    expect(groupPrintings).not.toHaveBeenCalled();
   });
 
   // SVP 027 Pikachu: TCGdex relays no TCGplayer figure for any Scarlet & Violet promo, and
   // TCGplayer prices it at $21.45 in a group of its own, which tcgplayer-links.mjs linked
   // (tcgplayer-ids.generated.json: product 500263 in group 22872). The plain product, not the
   // Pokemon Center stamp beside it at $163.38.
-  it("asks tcgcsv for a linked card TCGdex has no TCGplayer figure for", async () => {
-    usdFor.mockResolvedValue(new Map());
+  it("prices a card linked to a group of its own the same way", async () => {
     groupPrintings.mockResolvedValue(
       new Map([[500263, { holofoil: { marketPrice: 21.45, productId: 500263 } }]]),
     );
@@ -98,20 +95,28 @@ describe("usdForSet", () => {
     expect(answer["svp-027"]?.printings?.holofoil?.productId).toBe(500263);
   });
 
-  it("does not ask tcgcsv for a card TCGdex already priced, nor for one nobody linked", async () => {
-    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100 }]]));
+  it("asks TCGdex only for a card the map has not seen, never for one it holds as unlinked", async () => {
+    usdFor.mockResolvedValue(new Map([["zz-new-1", { market: 3 }]]));
     const usdForSet = await fresh();
-    await usdForSet("Base", ["base1-4", "A1-001"]);
-    expect(groupPrintings).not.toHaveBeenCalled();
+    // A1-001 is a Pocket card: the map holds it as null, TCGplayer sells no such product.
+    expect(await usdForSet("Mixed", ["zz-new-1", "A1-001"])).toEqual({
+      "zz-new-1": { market: 3 },
+    });
+    expect(usdFor).toHaveBeenCalledWith(["zz-new-1"]);
   });
 
-  it("keeps TCGdex's answer when tcgcsv does not answer", async () => {
-    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100 }]]));
+  it("keeps the store's answer when TCGdex does not answer for a new card", async () => {
+    groupPrintings.mockResolvedValue(charizard);
+    usdFor.mockRejectedValue(new Error("TCGdex answered for none of the cards"));
+    const usdForSet = await fresh();
+    const answer = await usdForSet("Mixed", ["base1-4", "zz-new-1"]);
+    expect(Object.keys(answer)).toEqual(["base1-4"]);
+  });
+
+  it("leaves a linked card unpriced for this request when its group does not answer", async () => {
     groupPrintings.mockRejectedValue(new Error("tcgcsv 503"));
     const usdForSet = await fresh();
-    expect(await usdForSet("Mixed", ["base1-4", "svp-027"])).toEqual({
-      "base1-4": { market: 100 },
-    });
+    expect(await usdForSet("Base", ["base1-4"])).toEqual({});
   });
 });
 

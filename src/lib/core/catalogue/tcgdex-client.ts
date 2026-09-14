@@ -153,18 +153,32 @@ export async function json(
  * what is worth keeping. A field GraphQL cannot fill for one item nulls that
  * item alone, which is why every caller reads the answer as "maybe".
  */
-export async function graphql(query: string, label: string): Promise<unknown> {
+export async function graphql(
+  query: string,
+  label: string,
+  { retries = 0, backoffMs = 1_000 }: { retries?: number; backoffMs?: number } = {},
+): Promise<unknown> {
   refused(label);
-  const res = await fetch("https://api.tcgdex.net/v2/graphql", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ query }),
-    cache: "no-store",
-    signal: catalogueTimeout(),
-  });
-  if (!res.ok) throw new Error(`TCGdex ${label} answered ${res.status}`);
-  const body = (await res.json()) as { data?: unknown };
-  return body.data ?? null;
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch("https://api.tcgdex.net/v2/graphql", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query }),
+      cache: "no-store",
+      signal: catalogueTimeout(),
+    });
+    /* A 429 or a 5xx is TCGdex busy, not an answer: on 2026-09-14 the nightly copy's second run
+       had 144 of 203 sets refused with 503 inside 37 seconds, and the same questions answered in
+       0.3 s a minute later. Asked again after a pause, longer each time, where the caller can
+       wait (the nightly copy); a request asks once. */
+    if ((res.status === 429 || res.status >= 500) && attempt < retries) {
+      await new Promise((r) => setTimeout(r, backoffMs * 2 ** attempt));
+      continue;
+    }
+    if (!res.ok) throw new Error(`TCGdex ${label} answered ${res.status}`);
+    const body = (await res.json()) as { data?: unknown };
+    return body.data ?? null;
+  }
 }
 
 /**
