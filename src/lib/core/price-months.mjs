@@ -110,17 +110,6 @@ export const legacyDays = (p) => [
 ];
 
 /**
- * The first figure among these printings.
- *
- * @param {Record<string, number>} printings
- * @param {string[]} names
- */
-const firstOf = (printings, names) => {
-  for (const name of names) if (printings[name] != null) return printings[name];
-  return null;
-};
-
-/**
  * @typedef {object} DayPrices
  * @property {string} tcgId
  * @property {string} date
@@ -159,15 +148,38 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       (isLegacy ? day.legacy : day.real)[row.printing] = c / 100;
     }
   }
+  /* One printing per card for each series, the same on every day. Chosen per day, a day the
+     card's own printing had no figure fell to the next in line: Base Set Charizard read its
+     1st Edition ($5,266) on 14 days its unlimited holo ($869) was missing, and its chart climbed
+     sixfold and back each time (Bart, 2026-09-14). The first printing in line that the card has on
+     at least half as many days as its most-read one stands for it; a day without that printing
+     has no figure in that series. */
+  /** @type {Map<string, Record<string, number>>} */
+  const counts = new Map();
+  for (const d of days.values()) {
+    const c = counts.get(d.tcgId) ?? {};
+    for (const name of Object.keys(d.real)) c[name] = (c[name] ?? 0) + 1;
+    counts.set(d.tcgId, c);
+  }
+  /** @param {Record<string, number>} c @param {string[]} names */
+  const lineOf = (c, names) => {
+    const most = Math.max(0, ...names.map((n) => c[n] ?? 0));
+    return most ? (names.find((n) => (c[n] ?? 0) * 2 >= most) ?? null) : null;
+  };
+  /** @type {Map<string, { plain: string | null, foil: string | null }>} */
+  const lines = new Map(
+    [...counts].map(([tcgId, c]) => [tcgId, { plain: lineOf(c, PLAIN), foil: lineOf(c, FOIL) }]),
+  );
   const out = [];
   for (const d of days.values()) {
     if (Object.keys(d.real).length) {
-      const plain = firstOf(d.real, PLAIN);
-      const foil = firstOf(d.real, FOIL);
+      const line = lines.get(d.tcgId) ?? { plain: null, foil: null };
+      const foil = line.foil ? (d.real[line.foil] ?? null) : null;
+      const plain = line.plain ? (d.real[line.plain] ?? null) : null;
       out.push({
         tcgId: d.tcgId,
         date: d.date,
-        market: plain ?? foil,
+        market: line.plain ? plain : foil,
         holo: foil,
         printings: d.real,
       });

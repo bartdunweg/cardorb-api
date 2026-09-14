@@ -71,6 +71,22 @@ describe("daysFromMonths", () => {
     ]);
   });
 
+  // Base Set Charizard: its unlimited holo on most days, its 1st Edition on a few more.
+  it("follows one printing on every day, and leaves a day without it out of the series", () => {
+    const rows = [
+      month("holofoil", 1, 86900),
+      month("1st-edition-holofoil", 1, 526600),
+      month("1st-edition-holofoil", 2, 526600),
+      month("holofoil", 3, 87000),
+      month("1st-edition-holofoil", 3, 527000),
+    ];
+    expect(daysFromMonths(rows).map((d) => [d.date, d.market, d.holo])).toEqual([
+      ["2026-02-01", 869, 869],
+      ["2026-02-02", null, null],
+      ["2026-02-03", 870, 870],
+    ]);
+  });
+
   it("leaves out days before `since` and past the month's end", () => {
     expect(
       daysFromMonths([month("normal", 1, 100), month("normal", 31, 999)], "2026-02-01"),
