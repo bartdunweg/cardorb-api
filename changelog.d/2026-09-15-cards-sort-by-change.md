@@ -1,0 +1,1 @@
+- `GET /v1/cards?sort=change&from=&to=` sorts a list by what each copy's price did between two days, times the copies (biggest gain first, `order=asc` biggest loss first), and each card carries its `priceChange`. For sorting the collection by price movement over any window.
