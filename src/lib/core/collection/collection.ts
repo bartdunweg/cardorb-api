@@ -132,10 +132,11 @@ const cachedRows = async (userId: string, db: SupabaseClient | null) => {
         ran();
         return timed("store listRows", () => listRows(userId, db));
       },
+      // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000); the migration moves stored rows without touching their version.
       // The shape version belongs here too: #234 added foilPattern to what toRow builds, and
       // without a version part there was no way to say so — every cached row kept the shape it
       // had before.
-      ["collection-rows", "v2", userId, version === null ? "-" : String(version)],
+      ["collection-rows", "v3", userId, version === null ? "-" : String(version)],
       { revalidate: 3600, tags: [cardsTag(userId)] },
     )(),
   );
@@ -381,6 +382,8 @@ const factsTag = (userId: string) => `collection-facts:${userId}`;
 const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<KeptFacts>) =>
   unstable_cache(
     fill,
+    // v17: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
+    //
     // v16: seventeen English cards relinked to their own TCGplayer product (2026-09-14): Pokémon
     // Rumble Starmie and Gyarados priced as Ninetales, seven Brilliant Stars Trainer Gallery
     // cards as their main-set namesakes, Aquapolis a/b swaps. A v15 entry holds the wrong figure.
@@ -416,7 +419,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v16", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v17", userId, usdToEur == null ? "-" : String(usdToEur)],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -521,6 +524,8 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v27: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
+      //
       // v26: rarity and types corrected for 481 English cards (card-fact-corrections.ts).
       //
       // v25: seventeen cards relinked to their own TCGplayer product (see collection-facts v16).
@@ -546,7 +551,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v26", setName, factsSignature(identities)],
+      ["set-facts", "v27", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

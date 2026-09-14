@@ -38,6 +38,7 @@ import { englishCardNames } from "./card-names";
 import { compareCardNumbers } from "../util";
 import { setIdOf } from "./tcgdex-language";
 import { setIn } from "./tcgdex-browse";
+import { englishRarity } from "./rarity-names";
 
 /* One catalogue per language. English is the one every search asked until 2026-09-11; the
    Japanese one is the same host under its own code, and a name typed in its script is found only
@@ -175,7 +176,7 @@ async function withFacts(cards: CatalogueMatch[]): Promise<CatalogueMatch[]> {
     return fact
       ? {
           ...card,
-          rarity: fact.rarity ?? null,
+          rarity: englishRarity(card.id, fact.rarity),
           types: fact.types ?? [],
           category: fact.category ?? null,
           trainerType: fact.trainerType ?? null,
