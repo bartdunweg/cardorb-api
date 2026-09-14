@@ -1,0 +1,1 @@
+- The nightly catalogue copy may run for five minutes, as the price job does. The Japanese copy reads one record per card, and its first run was cut off after four sets at the one-minute limit.
