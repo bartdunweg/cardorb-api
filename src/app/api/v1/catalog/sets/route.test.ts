@@ -23,6 +23,10 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", async (real) => ({
   ...(await real<typeof import("@/lib/core/catalogue/tcgdex-browse")>()),
   englishSets: (...a: unknown[]) => listSets(...a),
 }));
+/* The English shelf is read out of the copy (englishShelfSets); here it is the same listing. */
+vi.mock("@/lib/core/catalogue/catalogue", () => ({
+  englishShelfSets: (...a: unknown[]) => listSets(...a),
+}));
 
 const { GET } = await import("./route");
 

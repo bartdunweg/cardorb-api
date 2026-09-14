@@ -14,8 +14,8 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/core/catalogue/mirror", () => ({
   mirrorCards: (...a: unknown[]) => mirrorCards(...a),
 }));
-vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
-  englishSets: async () => [{ id: "base1", name: "Base" }],
+vi.mock("@/lib/core/catalogue/catalogue", () => ({
+  englishShelfSets: async () => [{ id: "base1", name: "Base" }],
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),

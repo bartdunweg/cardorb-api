@@ -27,7 +27,7 @@ vi.mock("./tcgdex-browse", async (real) => ({
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
 vi.mock("./ptcg", () => ({ ptcgLogo: async () => null }));
 
-const { englishSetFromCopy, forgetCopiedSets, mirrorSetCatalogue } =
+const { copiedEnglishSets, englishSetFromCopy, forgetCopiedSets, mirrorSetCatalogue } =
   await import("./set-catalogue-mirror");
 
 const set = (over: Partial<CatalogueSetRecord> = {}): CatalogueSetRecord => ({
@@ -192,5 +192,56 @@ describe("englishSetFromCopy", () => {
   it("answers null for a set the copy has no record of", async () => {
     catalogueSetCards.mockResolvedValue([card()]);
     expect(await englishSetFromCopy("sv99")).toBeNull();
+  });
+});
+
+describe("copiedEnglishSets", () => {
+  it("answers the shelf out of the copy, newest first, with the logo stored for it", async () => {
+    listCatalogueSets.mockResolvedValue([
+      set({
+        id: "base1",
+        name: "Base Set",
+        series: "Base",
+        release_date: "1999/01/09",
+        logo: null,
+      }),
+      set({
+        id: "svp",
+        name: "SVP Black Star Promos",
+        logo: "https://assets.tcgdex.net/en/swsh/swshp/logo.webp",
+      }),
+    ]);
+
+    const sets = await copiedEnglishSets();
+
+    expect(sets?.map((s) => s.id)).toEqual(["svp", "base1"]);
+    expect(sets?.[0]).toEqual({
+      id: "svp",
+      name: "SVP Black Star Promos",
+      localName: null,
+      series: "Scarlet & Violet",
+      releaseDate: "2023/09/22",
+      total: 207,
+      printedTotal: 165,
+      cardsRecorded: true,
+      logo: "https://assets.tcgdex.net/en/swsh/swshp/logo.webp",
+      symbol: null,
+    });
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it("answers null for an empty copy, so the shelf asks TCGdex", async () => {
+    listCatalogueSets.mockResolvedValue([]);
+    expect(await copiedEnglishSets()).toBeNull();
+  });
+});
+
+describe("englishSetFromCopy, by another id", () => {
+  it("finds a set by pokemontcg.io's id without asking TCGdex for its index", async () => {
+    catalogueSetCards.mockResolvedValue([card()]);
+    const found = await englishSetFromCopy("sv3pt5");
+    expect(found?.set.id).toBe("sv03.5");
+    expect(catalogueSetCards).toHaveBeenCalledWith(expect.anything(), "sv03.5");
+    expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });

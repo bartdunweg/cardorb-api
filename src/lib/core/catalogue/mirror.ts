@@ -14,6 +14,7 @@
  * does not read it — those shelves have their own path (tcgdex-search.ts, searchEnglishNames)
  * — and before the first night has run, the copy is empty and the search asks TCGdex as it did.
  */
+import { withSetLogos } from "./set-logos";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueCardRecord,
@@ -408,7 +409,10 @@ export async function syncMirror(
           name: set.name,
           series: set.series,
           release_date: set.releaseDate,
-          logo: set.logo,
+          // Resolved here, at night, as the shelf shows it: the promo star, and pokemontcg.io's
+          // wordmark where TCGdex has none (set-logos.ts). The pages read this column and ask
+          // nobody (copiedEnglishSets, Bart 2026-09-14).
+          logo: (await withSetLogos([set]))[0]?.logo ?? set.logo,
           symbol: set.symbol,
           abbreviation: set.abbreviation ?? null,
           total: set.total,
