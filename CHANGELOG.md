@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-15
 
+- Every priced Japanese card gets a line in the price history. The nightly price job wrote history only for the 9,259 cards in the committed Japanese map; since the Japanese copy matched 15,844 cards to TCGplayer products, about 4,300 priced cards had a price and no history. The job now takes the copy's products as well, and the backfill script's `--only japanese --copied-only` fills their past from TCGplayer's archive.
+
 - Japanese sets show their logo. No source Card Orb read had a Japanese wordmark (TCGdex names none, TCGplayer and Limitless publish none); Scrydex lists one for every Japanese expansion and gave permission to keep them. The nightly Japanese copy finds each set on Scrydex by id, by English title, or by a short hand-read list where Scrydex titles a set differently, and keeps the logo in our own bucket: 165 of 169 sets, all but three starter sets and Detective Pikachu.
 
 - Six more English cards have a picture, from Scrydex: the five cards of the Poké Card Creator Pack (Scrydex's wb1) and Pikachu at the Museum (a jumbo card Scrydex files as MEP 1000). My First Battle's Potion and Switch are the two English cards no source pictures. The catalogue cron takes `?sets=` to work a few sets out from scratch when a source is added for them.

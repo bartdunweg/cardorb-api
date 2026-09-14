@@ -6,7 +6,12 @@ import { usdToEurForRequest } from "@/lib/core/collection/collection";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
-import { writeCardPrices, writeTcgplayerPrices, writeUsdEurRate } from "@/lib/storage/postgres";
+import {
+  listCatalogueProducts,
+  writeCardPrices,
+  writeTcgplayerPrices,
+  writeUsdEurRate,
+} from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
 export const dynamic = "force-dynamic";
@@ -181,9 +186,18 @@ export async function GET(req: Request) {
       history.skipped = "no dollar rate";
     } else {
       try {
+        /* The Japanese links are the committed map and every product the copy matched out of
+           TCGplayer's Japanese shelf (tcgplayer-japan.ts): 9,259 in the map, 15,844 in the copy on
+           2026-09-14, and a card priced from the second had no line in the history. */
+        const copied = await listCatalogueProducts(db, "ja").catch((err) => {
+          console.error("[cron] the copy's Japanese products unreadable, the map alone:", err);
+          return new Map<string, number>();
+        });
+        const japaneseLinks: Record<string, TcgplayerLink> = { ...JAPANESE_LINKS };
+        for (const [id, productId] of copied) japaneseLinks[id] ??= { productId };
         const points = [
           ...cardPricesFromShelf(TCGPLAYER_IDS as Record<string, TcgplayerLink>, rows, rate, today),
-          ...cardPricesFromShelf(JAPANESE_LINKS, japaneseRows, rate, today),
+          ...cardPricesFromShelf(japaneseLinks, japaneseRows, rate, today),
         ];
         await writeCardPrices(db, points);
         history.written = points.length;
