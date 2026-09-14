@@ -574,10 +574,15 @@ async function daily() {
         sources.push([english[id].shadowless.productId, (s) => shadowlessKey(printingKey(s))]);
       }
       let any = false;
+      // The card's own product first; a run's printing of the same name is dropped, as the cron
+      // does (snapshot.ts cardPricesFromShelf): Machamp's Deck Exclusives 1st Edition, not its
+      // Shadowless group's.
+      const seen = new Set();
       for (const [productId, name] of sources) {
         for (const [subType, usd] of en.get(productId) ?? []) {
           const euros = cents(usd, r);
-          if (euros == null) continue;
+          if (euros == null || seen.has(name(subType))) continue;
+          seen.add(name(subType));
           month.push({
             tcgId: id,
             printing: name(subType),

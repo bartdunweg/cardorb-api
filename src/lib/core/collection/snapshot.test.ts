@@ -283,6 +283,21 @@ describe("cardPricesFromShelf", () => {
     ]);
   });
 
+  // Machamp 8/102: Deck Exclusives 42425 sells a 1st Edition of its own ($27.42 on 2026-09-14) and
+  // its Shadowless group 107004 another ($88.13). The sheet prices the first; the line follows it.
+  it("keeps the card's own printing where its Shadowless run has one of the same name", () => {
+    const points = cardPricesFromShelf(
+      { "base1-8": { productId: 42425, shadowless: { productId: 107004 } } },
+      [
+        { productId: 42425, printing: "1st-edition-holofoil", market: 27.42 },
+        { productId: 107004, printing: "1st-edition-holofoil", market: 88.13 },
+      ],
+      1,
+      "2026-09-14",
+    );
+    expect(points.map((p) => [p.printing, p.price])).toEqual([["1st-edition-holofoil", 27.42]]);
+  });
+
   it("names a plain Shadowless run shadowless", () => {
     const points = cardPricesFromShelf(
       { "base1-60": { productId: 1, shadowless: { productId: 2 } } },

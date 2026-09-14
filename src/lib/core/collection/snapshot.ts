@@ -110,8 +110,11 @@ export type TcgplayerLink = { productId: number; shadowless?: { productId: numbe
  * whose "Unlimited" is the Shadowless run and "1st Edition" the stamped one, so its printings are
  * renamed by shadowlessKey() ("unlimited-holofoil" to "shadowless-holofoil", "normal" to
  * "shadowless", "1st-edition-holofoil" kept). The same keys and order scripts/backfill-card-prices.mjs
- * writes, so a Shadowless or 1st Edition Base Set copy keeps its own line; on a clash the run's
- * figure is written last and stands, as it does in the backfill.
+ * writes, so a Shadowless or 1st Edition Base Set copy keeps its own line. On a clash the card's own
+ * product stands and the run's figure is dropped, as the collection prices it (collection.ts, "TCGdex's
+ * names win a clash"): Machamp is filed in Deck Exclusives with a 1st Edition of its own ($27.42 on
+ * 2026-09-14) beside its Shadowless group's 1st Edition ($88.13), and the history carried the second
+ * while the sheet showed the first, a 68 percent drop that never happened.
  */
 export function cardPricesFromShelf(
   links: Record<string, TcgplayerLink | undefined>,
@@ -132,8 +135,10 @@ export function cardPricesFromShelf(
     if (link?.shadowless) runs[id] = link.shadowless.productId;
   }
   const points = cardPricesFromTcgcsv(products, shelf, usdToEur, date);
+  const own = new Set(points.map((p) => `${p.tcgId}\u0001${p.printing}`));
   for (const p of cardPricesFromTcgcsv(runs, shelf, usdToEur, date)) {
-    points.push({ ...p, printing: shadowlessKey(p.printing) });
+    const printing = shadowlessKey(p.printing);
+    if (!own.has(`${p.tcgId}\u0001${printing}`)) points.push({ ...p, printing });
   }
   return points;
 }
