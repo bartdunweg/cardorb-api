@@ -35,7 +35,14 @@ import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { canonicalRarity } from "./rarity-names";
 import { CatalogueNotFound, json } from "./tcgdex-client";
 import { type BrowseLanguage, listSetsIn, setIn } from "./tcgdex-browse";
-import { scrydexJapanExpansions, scrydexLogoFor } from "./scrydex-japan-logos";
+import {
+  scrydexExpansionCards,
+  scrydexExpansionFor,
+  scrydexJapanExpansions,
+  scrydexJapanScan,
+  scrydexLogoFor,
+  scrydexNumbers,
+} from "./scrydex-japan-logos";
 import {
   type TcgplayerJapanCard,
   factsOfCardType,
@@ -54,8 +61,9 @@ const HOST = "https://api.tcgdex.net/v2";
  * 3: TCGplayer's Japanese shelf as a catalogue (tcgplayer-japan.ts): the cards of a set TCGdex lists
  * without any, a picture matched by number or English name, and each card's TCGplayer product.
  * 4: each set's wordmark from Scrydex (scrydex-japan-logos.ts).
+ * 5: Scrydex's scan for a card no other source pictures (scrydexNumbers).
  */
-const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 3;
+const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 4;
 
 /** TCGplayer's 1000 px product picture for a Japanese card, where its Japanese shelf sells one. */
 async function tcgplayerJapaneseScan(id: string): Promise<string | null> {
@@ -273,6 +281,27 @@ export async function syncLanguageMirror(
             sheet: sheetOf(facts),
           };
         });
+        /* The last source, with Scrydex's permission (2026-09-14): its scan for the cards still
+           without a picture, matched to Scrydex's numbering set by set. One page read per set, and
+           only for a set with such a card. */
+        const blank = storing ? resolved.filter((c) => !c.image) : [];
+        const expansion =
+          blank.length && expansions
+            ? scrydexExpansionFor(expansions, { id, name: set.name })
+            : null;
+        if (expansion) {
+          const listed = await scrydexExpansionCards(expansion).catch(() => []);
+          const numbers = scrydexNumbers(listed, resolved);
+          await mapLimit(blank, cardParallel, async (card) => {
+            const number = numbers.get(card.id);
+            const scan = number ? await scrydexJapanScan(expansion.code, number) : null;
+            const kept = scan ? await keepImage(scan) : null;
+            if (kept && kept !== scan) {
+              card.image = kept;
+              report.pictures++;
+            }
+          });
+        }
         const arts = fullArtOf(resolved);
         await writeCatalogueSetRecord(db, {
           language: lang,

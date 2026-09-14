@@ -83,7 +83,7 @@ export function imageKey(address: string): string | null {
       return `limitless/${path}`;
     case "images.scrydex.com": {
       // pokemon/tk7b-16/large: the file has no extension, and a key needs one to be a file.
-      const card = /^pokemon\/([A-Za-z0-9.-]+)\/large$/.exec(path)?.[1];
+      const card = /^pokemon\/([A-Za-z0-9._-]+)\/large$/.exec(path)?.[1];
       if (card) return `scrydex/${card}.png`;
       // pokemon/sv2a_ja-logo/logo: a set's wordmark (scrydex-japan-logos.ts).
       const logo = /^pokemon\/([a-z0-9_]+)-logo\/logo$/.exec(path)?.[1];

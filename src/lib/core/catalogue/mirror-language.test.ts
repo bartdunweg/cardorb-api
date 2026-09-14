@@ -31,6 +31,7 @@ vi.mock("./image-store", () => ({
 vi.mock("./scrydex-japan-logos", async (actual) => ({
   ...(await actual<typeof import("./scrydex-japan-logos")>()),
   scrydexJapanExpansions: async () => [{ name: "Pokémon Card 151", code: "sv2a_ja" }],
+  scrydexExpansionCards: async () => [],
 }));
 const japanGroups = vi.fn(async (): Promise<unknown[]> => []);
 const groupCards = vi.fn(async (): Promise<unknown[]> => []);
@@ -156,7 +157,7 @@ describe("syncLanguageMirror", () => {
       }),
     ]);
     const stamped = calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert");
-    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 4 });
+    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 5 });
   });
 
   it("takes Limitless's plain print where TCGdex has no file, and TCGdex's where it has", async () => {
@@ -277,8 +278,8 @@ describe("syncLanguageMirror", () => {
     listSetsIn.mockResolvedValue([shelfSet("held"), shelfSet("behind"), shelfSet("new")]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 4 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 3 },
+        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 5 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 4 },
       ],
     });
     const report = await syncLanguageMirror(db, "ja", { parallel: 1 });

@@ -20,6 +20,7 @@ TCGplayer prices 21:15, warm every 10 minutes.
 | pokemontcg.io images                        | https://images.pokemontcg.io                          | A scan by set name; logos for 57 sets TCGdex has none for                               | Catalogue cron; logo HEADs live, 24 h in memory                             |
 | Scrydex images                              | https://images.scrydex.com                            | A scan for seven trainer kits no other source pictures (`SCRYDEX_SETS` in `artwork.ts`) | Catalogue cron only                                                         |
 | Scrydex Japanese set logos                  | https://scrydex.com/pokemon/jp/expansions             | Every Japanese set's wordmark, with Scrydex's permission (2026-09-14; `scrydex-japan-logos.ts`) | Japanese catalogue cron only                                                |
+| Scrydex Japanese scans | https://images.scrydex.com | A Japanese card's scan where TCGdex, Limitless and TCGplayer have none, matched by `scrydexNumbers` (2026-09-14, with permission) | Japanese catalogue cron only |
 | PokeAPI (GitHub raw)                        | https://raw.githubusercontent.com/PokeAPI             | Pokédex artwork, 1,025 files in `public/artwork/pokedex`                                | Script `pokedex-art.mjs` only                                               |
 
 ### The order a picture is looked for
