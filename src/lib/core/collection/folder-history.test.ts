@@ -17,6 +17,7 @@ const copy = (over: Partial<CardItem>): CardItem =>
     imageHigh: null,
     speciesId: 25,
     tcgId: "base1-25",
+    catalogue: "en",
     owned: true,
     finish: null,
     quantity: 1,
@@ -37,10 +38,10 @@ describe("folderSeries", () => {
   it("sums each day's readings over the copies, quantity times, in whole euros", () => {
     const items = [copy({ quantity: 2 }), copy({ tcgId: "base1-4" })];
     const prices = [
-      { tcgId: "base1-25", date: "2026-09-02", market: 10.4, holo: null },
-      { tcgId: "base1-4", date: "2026-09-02", market: 100, holo: null },
-      { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
-      { tcgId: "base1-4", date: "2026-09-01", market: 90, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2026-09-02", market: 10.4, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-09-02", market: 100, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-09-01", market: 90, holo: null },
     ];
     expect(folderSeries(items, prices)).toEqual([
       { date: "2026-09-01", value: 110, cards: 3, priced: 3, unpriced: 0 },
@@ -56,8 +57,8 @@ describe("folderSeries", () => {
       copy({ tcgId: "wish", owned: false }),
     ];
     const prices = [
-      { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: 30 },
-      { tcgId: "base1-4", date: "2026-09-01", market: 5, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2026-09-01", market: 10, holo: 30 },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-09-01", market: 5, holo: null },
     ];
     expect(folderSeries(items, prices)).toEqual([
       { date: "2026-09-01", value: 35, cards: 3, priced: 2, unpriced: 1 },
@@ -67,8 +68,8 @@ describe("folderSeries", () => {
   it("values the wishlist: every wish once, owned copies left out", () => {
     const items = [copy({ owned: false, quantity: 3 }), copy({ tcgId: "base1-4" })];
     const prices = [
-      { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
-      { tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
     ];
     expect(folderSeries(items, prices, "wishlist")).toEqual([
       { date: "2026-09-01", value: 10, cards: 1, priced: 1, unpriced: 0 },
@@ -77,6 +78,30 @@ describe("folderSeries", () => {
 
   it("is empty without readings", () => {
     expect(folderSeries([copy({})], [])).toEqual([]);
+  });
+});
+
+describe("folderSeries and holdingsSeries across catalogues", () => {
+  // neo4-106 is Shining Celebi in English and Lucky Stadium in Japanese (2026-09-14): each copy is
+  // valued from its own card's readings, never the other's.
+  const prices = [
+    { language: "en" as const, tcgId: "neo4-106", date: "2026-09-01", market: 375, holo: null },
+    { language: "ja" as const, tcgId: "neo4-106", date: "2026-09-01", market: 9, holo: null },
+    { language: "ja" as const, tcgId: "neo4-106", date: "2026-09-02", market: 10, holo: null },
+  ];
+  const celebi = copy({ tcgId: "neo4-106", catalogue: "en", id: "celebi" });
+  const stadium = copy({ tcgId: "neo4-106", catalogue: "ja", language: "ja", id: "stadium" });
+
+  it("values each copy at its own catalogue's card", () => {
+    expect(folderSeries([celebi], prices).map((p) => p.value)).toEqual([375, 375]);
+    expect(folderSeries([stadium], prices).map((p) => p.value)).toEqual([9, 10]);
+  });
+
+  it("draws the Home line the same way", () => {
+    expect(holdingsSeries([celebi, stadium], prices).map((p) => [p.date, p.value])).toEqual([
+      ["2026-09-01", 384],
+      ["2026-09-02", 385],
+    ]);
   });
 });
 
@@ -89,6 +114,7 @@ describe("folderSeries, a day without a reading", () => {
    * reading over such a day (holdingsSeries); a binder's line did not.
    */
   const month = (tcgId: string, printing: string, days: Record<number, number>) => ({
+    language: "en" as const,
     tcg_id: tcgId,
     printing,
     month: "2026-09-01",
@@ -126,10 +152,10 @@ describe("folderSeries, a day without a reading", () => {
   it("stops carrying a reading after two weeks, as the Home line does", () => {
     const items = [copy({ tcgId: "a" }), copy({ tcgId: "b", id: "row-2" })];
     const prices = [
-      { tcgId: "a", date: "2026-08-01", market: 10, holo: null },
-      { tcgId: "b", date: "2026-08-01", market: 5, holo: null },
-      { tcgId: "b", date: "2026-08-15", market: 6, holo: null },
-      { tcgId: "b", date: "2026-08-16", market: 7, holo: null },
+      { language: "en" as const, tcgId: "a", date: "2026-08-01", market: 10, holo: null },
+      { language: "en" as const, tcgId: "b", date: "2026-08-01", market: 5, holo: null },
+      { language: "en" as const, tcgId: "b", date: "2026-08-15", market: 6, holo: null },
+      { language: "en" as const, tcgId: "b", date: "2026-08-16", market: 7, holo: null },
     ];
     expect(folderSeries(items, prices).map((p) => [p.date, p.value, p.unpriced])).toEqual([
       ["2026-08-01", 15, 0],
@@ -149,6 +175,7 @@ describe("folderSeries, per printing", () => {
     ];
     const prices = [
       {
+        language: "en" as const,
         tcgId: "base2-10",
         date: "2026-09-12",
         market: 15.19,
@@ -173,10 +200,10 @@ describe("holdingsSeries", () => {
       copy({ tcgId: "base1-25", acquiredAt: "2024-02-20T09:00:00Z", quantity: 2 }),
     ];
     const prices = [
-      { tcgId: "base1-4", date: "2024-02-17", market: 100, holo: null },
-      { tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
-      { tcgId: "base1-4", date: "2024-02-24", market: 110, holo: null },
-      { tcgId: "base1-25", date: "2024-02-24", market: 6, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2024-02-17", market: 100, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2024-02-24", market: 110, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2024-02-24", market: 6, holo: null },
     ];
     expect(holdingsSeries(items, prices)).toEqual([
       { date: "2024-02-17", value: 100, cards: 1, priced: 1, unpriced: 0, added: 0, addedValue: 0 },
@@ -199,8 +226,8 @@ describe("holdingsSeries", () => {
       copy({ tcgId: "base1-25", acquiredAt: "2024-03-01T00:00:00Z" }),
     ];
     const prices = [
-      { tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
-      { tcgId: "base1-4", date: "2024-02-24", market: 100, holo: null },
+      { language: "en" as const, tcgId: "base1-25", date: "2024-02-17", market: 5, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2024-02-24", market: 100, holo: null },
     ];
     // 2024-02-17: base1-25 was not held yet and base1-4 had no price yet, so there is no point.
     // Until 2026-09-13 base1-4 counted from the start, unpriced; now from its first price.
@@ -213,7 +240,9 @@ describe("holdingsSeries", () => {
     const items = [
       copy({ tcgId: "sv01-1", finish: "reverse-holo", acquiredAt: "2024-01-01T00:00:00Z" }),
     ];
-    const prices = [{ tcgId: "sv01-1", date: "2024-02-17", market: 1, holo: 4 }];
+    const prices = [
+      { language: "en" as const, tcgId: "sv01-1", date: "2024-02-17", market: 1, holo: 4 },
+    ];
     expect(holdingsSeries(items, prices)[0]?.value).toBe(4);
   });
 
@@ -222,11 +251,11 @@ describe("holdingsSeries", () => {
   it("values a card at its last reading on a day without one, and not past two weeks", () => {
     const items = [copy({ tcgId: "base1-4" }), copy({ tcgId: "svp-1" })];
     const prices = [
-      { tcgId: "base1-4", date: "2026-08-15", market: 100, holo: null },
-      { tcgId: "svp-1", date: "2026-08-15", market: 10, holo: null },
-      { tcgId: "base1-4", date: "2026-08-16", market: null, holo: null },
-      { tcgId: "base1-4", date: "2026-08-17", market: 102, holo: null },
-      { tcgId: "base1-4", date: "2026-08-30", market: 104, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-08-15", market: 100, holo: null },
+      { language: "en" as const, tcgId: "svp-1", date: "2026-08-15", market: 10, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-08-16", market: null, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-08-17", market: 102, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2026-08-30", market: 104, holo: null },
     ];
     expect(holdingsSeries(items, prices)).toEqual([
       { date: "2026-08-15", value: 110, cards: 2, priced: 2, unpriced: 0, added: 0, addedValue: 0 },
@@ -244,9 +273,9 @@ describe("holdingsSeries", () => {
       copy({ tcgId: "never", acquiredAt: "2025-02-06T00:00:00Z", id: "row-3" }),
     ];
     const prices = [
-      { tcgId: "old", date: "2025-02-08", market: 10, holo: null },
-      { tcgId: "old", date: "2025-03-28", market: 10, holo: null },
-      { tcgId: "preorder", date: "2025-03-28", market: 5, holo: null },
+      { language: "en" as const, tcgId: "old", date: "2025-02-08", market: 10, holo: null },
+      { language: "en" as const, tcgId: "old", date: "2025-03-28", market: 10, holo: null },
+      { language: "en" as const, tcgId: "preorder", date: "2025-03-28", market: 5, holo: null },
     ];
     expect(holdingsSeries(items, prices)).toEqual([
       { date: "2025-02-08", value: 10, cards: 2, priced: 1, unpriced: 1, added: 0, addedValue: 0 },
@@ -257,8 +286,8 @@ describe("holdingsSeries", () => {
   it("draws no point before the first copy was added", () => {
     const items = [copy({ tcgId: "base1-4", acquiredAt: "2025-01-01T00:00:00Z" })];
     const prices = [
-      { tcgId: "base1-4", date: "2024-02-17", market: 100, holo: null },
-      { tcgId: "base1-4", date: "2025-01-04", market: 120, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2024-02-17", market: 100, holo: null },
+      { language: "en" as const, tcgId: "base1-4", date: "2025-01-04", market: 120, holo: null },
     ];
     expect(holdingsSeries(items, prices).map((p) => p.date)).toEqual(["2025-01-04"]);
   });

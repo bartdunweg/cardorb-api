@@ -10,7 +10,7 @@ import {
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
 import { folderSeries } from "@/lib/core/collection/folder-history";
-import { filterItems, flattenItems } from "@/lib/core/collection/items";
+import { filterItems, flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
 
 /**
  * What the caller's collection has been worth, oldest reading first.
@@ -85,8 +85,7 @@ export async function GET(req: Request) {
       headers: readHeaders(req),
     });
   const items = filterItems(flattenItems(sets), filter);
-  const ids = [...new Set(items.flatMap((it) => (it.tcgId ? [it.tcgId] : [])))];
-  const prices = await getCardPrices(viewer.userId, ids, token);
+  const prices = await getCardPrices(viewer.userId, pricedCardsOf(items), token);
   if (prices.failed)
     return unavailable(
       "The value history could not be read. Try again in a moment.",

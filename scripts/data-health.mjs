@@ -142,7 +142,7 @@ if (day) {
   const dayIndex = Number(day.slice(8, 10));
   const [history, prices] = await Promise.all([
     query(
-      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where month = '${month}' and cents[${dayIndex}] is not null`,
+      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where language = 'en' and month = '${month}' and cents[${dayIndex}] is not null`,
     ),
     query(
       `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}'`,
@@ -197,11 +197,11 @@ if (day) {
       "select language, id, tcgplayer_product_id as pid from catalogue_cards where tcgplayer_product_id is not null",
     ),
     query(
-      `select distinct tcg_id from card_price_months where month >= '${day.slice(0, 7)}-01'::date - interval '1 month'`,
+      `select distinct language, tcg_id from card_price_months where month >= '${day.slice(0, 7)}-01'::date - interval '1 month'`,
     ),
     query(`select distinct product_id from tcgplayer_prices where updated_on = '${day}'`),
   ]);
-  const withHistory = new Set(historyIds.map((r) => r.tcg_id));
+  const withHistory = new Set(historyIds.map((r) => `${r.language}|${r.tcg_id}`));
   const priced = new Set(pricedProducts.map((r) => r.product_id));
   const products = { en: new Map(), ja: new Map() };
   for (const [id, v] of Object.entries(links)) if (v?.productId) products.en.set(id, v.productId);
@@ -210,7 +210,7 @@ if (day) {
     if (!products[r.language]?.has(r.id)) products[r.language]?.set(r.id, r.pid);
   for (const language of ["en", "ja"]) {
     const missing = [...products[language]].filter(
-      ([id, pid]) => priced.has(pid) && !withHistory.has(id),
+      ([id, pid]) => priced.has(pid) && !withHistory.has(`${language}|${id}`),
     );
     check(
       `Priced cards have a price line (${language})`,
@@ -260,7 +260,7 @@ if (day) {
   );
   const [lines, prices, rateRow] = await Promise.all([
     query(
-      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where month = '${month}' and printing in (${[...new Set(prints.map((p) => `'${p.key}'`))].join(",") || "''"})`,
+      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where language = 'en' and month = '${month}' and printing in (${[...new Set(prints.map((p) => `'${p.key}'`))].join(",") || "''"})`,
     ),
     query(
       `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and product_id in (${prints.map((p) => p.productId).join(",") || "0"})`,
@@ -499,23 +499,34 @@ check(
 }
 
 /**
- * An id that is an English card never holds a Japanese price: card_price_months has no language,
- * and neo4-106 Shining Celebi carried Japanese Chansey's figure as a `normal` printing.
+ * Every price line is a card of the catalogue it is filed under. The history's key is (language,
+ * tcg_id, printing, month) since migration 20260915161000, because the catalogues share ids: neo4-106
+ * Shining Celebi carried Japanese Chansey's figure while the key was the id alone. A line under a
+ * language whose catalogue has no card by that id is a writer that named the wrong catalogue, or a
+ * card the copy has since dropped (sm2+). Ids of both catalogues are counted beside it.
  */
 {
-  const both = await query(
-    "select c.id, c.tcgplayer_product_id as pid from catalogue_cards c where c.language = 'ja' and c.tcgplayer_product_id is not null and exists (select 1 from catalogue_cards e where e.language = 'en' and e.id = c.id)",
-  );
-  const risky = both.filter((r) => links[r.id]?.productId);
+  const [stray, shared] = await Promise.all([
+    query(
+      `with ids as (select language, tcg_id, count(*)::int as months from card_price_months group by 1, 2)
+       select i.language, count(*)::int as ids, sum(i.months)::int as months,
+         (array_agg(i.tcg_id order by i.tcg_id))[1:8] as examples
+       from ids i
+       where not exists (select 1 from catalogue_cards k where k.language = i.language and k.id = i.tcg_id)
+       group by 1 order by 1`,
+    ),
+    query(
+      "select count(distinct m.tcg_id)::int as ids from card_price_months m where m.language = 'ja' and exists (select 1 from catalogue_cards e where e.language = 'en' and e.id = m.tcg_id)",
+    ),
+  ]);
   check(
-    "No Japanese price under an English id",
-    true,
-    `${risky.length} ids are cards in both catalogues with a Japanese product; the price job leaves those off (${
-      risky
-        .slice(0, 6)
-        .map((r) => r.id)
-        .join(", ") || "none"
-    })`,
+    "Price lines are cards of their own catalogue",
+    stray.length === 0,
+    `${stray.reduce((n, r) => n + r.ids, 0)} cards with a line under a catalogue that has no card by that id${
+      stray.length
+        ? `: ${stray.map((r) => `${r.language} ${r.ids} cards, ${r.months} months (${(r.examples ?? []).join(", ")})`).join("; ")}`
+        : ""
+    }; ${shared[0]?.ids ?? 0} Japanese lines on an id English also has, each its own line`,
   );
 }
 
@@ -523,7 +534,7 @@ check(
 {
   const month = `${today.slice(0, 7)}-01`;
   const market = await query(
-    `select distinct tcg_id from card_price_months where printing = 'market' and month = '${month}'`,
+    `select distinct tcg_id from card_price_months where language = 'en' and printing = 'market' and month = '${month}'`,
   );
   const linked = market.filter((r) => links[r.tcg_id]?.productId);
   check(
@@ -560,7 +571,7 @@ check(
 if (day) {
   const month = `${day.slice(0, 7)}-01`;
   const rows = await query(
-    `select tcg_id, printing, cents from card_price_months where month = '${month}'`,
+    `select language, tcg_id, printing, cents from card_price_months where month = '${month}'`,
   );
   const spikes = [];
   for (const r of rows) {
@@ -569,7 +580,7 @@ if (day) {
       const [a, b, n] = [c[i - 1], c[i], c[i + 1]];
       if (a == null || b == null || n == null || Math.min(a, n) < 1000) continue;
       if (b > 3 * Math.max(a, n) || b * 3 < Math.min(a, n))
-        spikes.push(`${r.tcg_id} ${r.printing} day ${i + 1}`);
+        spikes.push(`${r.language} ${r.tcg_id} ${r.printing} day ${i + 1}`);
     }
   }
   check(
@@ -591,10 +602,13 @@ if (day) {
  */
 {
   const holes = await query(
-    `with held as (select distinct tcg_id from cards where owned and coalesce(tcg_id, '') <> ''),
+    `with held as (
+         select distinct case when language = 'ja' then 'ja' else 'en' end as language, tcg_id
+         from cards where owned and coalesce(tcg_id, '') <> ''
+       ),
        d as (
-         select distinct m.tcg_id, (m.month + (i - 1))::date as day
-         from card_price_months m join held h using (tcg_id) cross join generate_series(1, 31) i
+         select distinct m.language, m.tcg_id, (m.month + (i - 1))::date as day
+         from card_price_months m join held h using (language, tcg_id) cross join generate_series(1, 31) i
          where m.month >= date_trunc('month', current_date - 45)::date
            and m.printing not in ('market', 'holo')
            and m.cents[i] is not null
@@ -604,8 +618,8 @@ if (day) {
        (array_agg(a.tcg_id order by a.tcg_id))[1:6] as examples
      from d a
      where a.day + 1 >= current_date - 45
-       and not exists (select 1 from d x where x.tcg_id = a.tcg_id and x.day = a.day + 1)
-       and exists (select 1 from d y where y.tcg_id = a.tcg_id and y.day = a.day + 2)
+       and not exists (select 1 from d x where x.language = a.language and x.tcg_id = a.tcg_id and x.day = a.day + 1)
+       and exists (select 1 from d y where y.language = a.language and y.tcg_id = a.tcg_id and y.day = a.day + 2)
      group by 1 order by 1`,
   );
   check(

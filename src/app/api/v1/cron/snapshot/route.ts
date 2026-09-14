@@ -8,6 +8,8 @@ import {
   type TcgplayerLink,
 } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
+import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
+import { historyKey } from "@/lib/core/price-months.mjs";
 import { valueHistoryTag } from "@/lib/core/collection/value-snapshot";
 import { revalidateTag } from "next/cache";
 import {
@@ -20,9 +22,23 @@ import {
   writeValueSnapshot,
 } from "@/lib/storage/postgres";
 import { holdingsSeries } from "@/lib/core/collection/folder-history";
-import { flattenItems } from "@/lib/core/collection/items";
+import { flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
 import { HISTORY_FROM, needsHistoryRebuild } from "@/lib/core/collection/value-history";
 import { adminClient } from "@/lib/storage/supabase";
+
+/**
+ * Each catalogue's committed TCGplayer links, the cards the price job writes from tcgcsv. The Japanese
+ * map names a product alone.
+ */
+const LINKS = {
+  en: TCGPLAYER_IDS as Record<string, TcgplayerLink>,
+  ja: Object.fromEntries(
+    Object.entries(TCGPLAYER_IDS_JA as Record<string, number | null>).map(([id, productId]) => [
+      id,
+      productId == null ? null : { productId },
+    ]),
+  ),
+};
 
 /**
  * One value reading per account, once a night.
@@ -61,7 +77,8 @@ import { adminClient } from "@/lib/storage/supabase";
  * Since 2026-09-14 the day's line for every card TCGplayer sells, held or not, is written by the
  * one price job (cron/tcgplayer-prices, 21:15 UTC) straight from tcgcsv, the same files it writes
  * tcgplayer_prices from; its DAILY_CEILING rule and the every-card pass moved there with it. What
- * is left here is a held card with no TCGplayer product in tcgplayer-ids.generated.json: the night
+ * is left here is a held card with no TCGplayer product in its own catalogue's committed map
+ * (tcgplayer-ids.generated.json, tcgplayer-ids.ja.generated.json since 2026-09-15): the night
  * reads it from the same assembly every request reads, so what the night writes is what the day
  * shows. Writing a linked card from the collection as well was the loop that could store an old
  * figure the collection still carried as a new day's, so a linked card is never written here.
@@ -139,8 +156,8 @@ export async function GET(req: Request) {
             items,
           )
         ) {
-          const ids = [...new Set(items.flatMap((it) => (it.owned && it.tcgId ? [it.tcgId] : [])))];
-          const readings = await listHistoryPrices(db, ids, HISTORY_FROM);
+          const cards = pricedCardsOf(items.filter((it) => it.owned));
+          const readings = await listHistoryPrices(db, cards, HISTORY_FROM);
           const series = holdingsSeries(items, readings).filter((p) => p.date < date);
           await replaceValueHistory(db, userId, series, date);
           revalidateTag(valueHistoryTag(userId), { expire: 0 });
@@ -157,13 +174,11 @@ export async function GET(req: Request) {
       // the price job writes every linked one from tcgcsv. Deduped across accounts as it goes: two
       // people holding the same card is one price, and writing it twice would only make the two
       // able to disagree.
-      for (const p of unlinkedCardPrices(
-        cardPricesFromSets(sets, date),
-        TCGPLAYER_IDS as Record<string, TcgplayerLink>,
-      )) {
-        const days = prices.get(p.tcgId);
+      for (const p of unlinkedCardPrices(cardPricesFromSets(sets, date), LINKS)) {
+        const key = historyKey(p.language, p.tcgId);
+        const days = prices.get(key);
         if (days) days.push(p);
-        else prices.set(p.tcgId, [p]);
+        else prices.set(key, [p]);
       }
 
       written.push({ user: userId, value: Math.round(point.value), cards: point.cards });

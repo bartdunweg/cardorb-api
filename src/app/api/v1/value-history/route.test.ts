@@ -166,8 +166,8 @@ describe("GET /api/v1/value-history", () => {
       });
       getCardPrices.mockResolvedValue({
         points: [
-          { tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
-          { tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
+          { language: "en", tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
+          { language: "en", tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
         ],
         failed: false,
       });
@@ -177,7 +177,11 @@ describe("GET /api/v1/value-history", () => {
       findFolder.mockResolvedValue({ id: FOLDER, rule: null });
       const body = await (await get("t.o.k.e.n", `?folder=${FOLDER}`)).json();
       expect(getValueHistory).not.toHaveBeenCalled();
-      expect(getCardPrices).toHaveBeenCalledWith("me-uuid", ["base1-25"], "t.o.k.e.n");
+      expect(getCardPrices).toHaveBeenCalledWith(
+        "me-uuid",
+        [{ tcgId: "base1-25", language: "en" }],
+        "t.o.k.e.n",
+      );
       expect(body).toEqual({
         snapshots: [{ date: "2026-09-01", value: 20, cards: 2, priced: 2, unpriced: 0 }],
       });

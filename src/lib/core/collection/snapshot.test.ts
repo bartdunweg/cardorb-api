@@ -159,8 +159,16 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
       ]),
     ];
     expect(cardPricesFromSets(sets, "2026-09-07")).toEqual([
-      { tcgId: "sv03-125", printing: "normal", date: "2026-09-07", price: 10, source: "tcgplayer" },
       {
+        language: "en",
+        tcgId: "sv03-125",
+        printing: "normal",
+        date: "2026-09-07",
+        price: 10,
+        source: "tcgplayer",
+      },
+      {
+        language: "en",
         tcgId: "sv03-125",
         printing: "reverse-holofoil",
         date: "2026-09-07",
@@ -188,6 +196,7 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
     ];
     expect(cardPricesFromSets(sets, "2026-09-12")).toEqual([
       {
+        language: "en",
         tcgId: "base2-10",
         printing: "unlimited-holofoil",
         date: "2026-09-12",
@@ -195,13 +204,21 @@ describe("snapshotFromSets and cardPricesFromSets", () => {
         source: "tcgplayer",
       },
       {
+        language: "en",
         tcgId: "base2-10",
         printing: "unlimited",
         date: "2026-09-12",
         price: 15.19,
         source: "tcgplayer",
       },
-      { tcgId: "svp-1", printing: "market", date: "2026-09-12", price: 7, source: "tcgplayer" },
+      {
+        language: "en",
+        tcgId: "svp-1",
+        printing: "market",
+        date: "2026-09-12",
+        price: 7,
+        source: "tcgplayer",
+      },
     ]);
   });
 });
@@ -220,6 +237,7 @@ describe("cardPricesFromTcgcsv", () => {
 
   it("prices every printing of every mapped card TCGplayer has a figure for, in euros", () => {
     const points = cardPricesFromTcgcsv(
+      "en",
       { "sv03.5-001": 502552, "base1-4": 42382, "no-product": null, "not-on-shelf": 1 },
       shelf,
       0.9,
@@ -227,6 +245,7 @@ describe("cardPricesFromTcgcsv", () => {
     );
     expect(points).toEqual([
       {
+        language: "en",
         tcgId: "sv03.5-001",
         printing: "normal",
         date: "2026-09-14",
@@ -234,6 +253,7 @@ describe("cardPricesFromTcgcsv", () => {
         source: "tcgplayer",
       },
       {
+        language: "en",
         tcgId: "sv03.5-001",
         printing: "reverse-holofoil",
         date: "2026-09-14",
@@ -241,6 +261,7 @@ describe("cardPricesFromTcgcsv", () => {
         source: "tcgplayer",
       },
       {
+        language: "en",
         tcgId: "base1-4",
         printing: "holofoil",
         date: "2026-09-14",
@@ -268,13 +289,14 @@ describe("cardPricesFromShelf", () => {
 
   it("writes every linked card's printings, and the Shadowless run under the keys the backfill uses", () => {
     const point = (tcgId: string, printing: string, price: number) => ({
+      language: "en",
       tcgId,
       printing,
       date: "2026-09-14",
       price,
       source: "tcgplayer",
     });
-    expect(cardPricesFromShelf(links, rows, 0.9, "2026-09-14")).toEqual([
+    expect(cardPricesFromShelf("en", links, rows, 0.9, "2026-09-14")).toEqual([
       point("base1-4", "holofoil", 782.12),
       point("sv03.5-001", "normal", 0.23),
       point("sv03.5-001", "reverse-holofoil", 1.35),
@@ -287,6 +309,7 @@ describe("cardPricesFromShelf", () => {
   // its Shadowless group 107004 another ($88.13). The sheet prices the first; the line follows it.
   it("keeps the card's own printing where its Shadowless run has one of the same name", () => {
     const points = cardPricesFromShelf(
+      "en",
       { "base1-8": { productId: 42425, shadowless: { productId: 107004 } } },
       [
         { productId: 42425, printing: "1st-edition-holofoil", market: 27.42 },
@@ -302,6 +325,7 @@ describe("cardPricesFromShelf", () => {
   // Energy Symbol one as Reverse Holofoil; both are stored under the finish they are.
   it("writes the patterned reverses under the card, named after their finish", () => {
     const points = cardPricesFromShelf(
+      "en",
       { "sv08.5-074": { productId: 610429 }, "me02.5-055": { productId: 675867 }, "gone-1": null },
       [
         { productId: 610429, printing: "reverse-holofoil", market: 0.29 },
@@ -328,6 +352,7 @@ describe("cardPricesFromShelf", () => {
 
   it("names a plain Shadowless run shadowless", () => {
     const points = cardPricesFromShelf(
+      "en",
       { "base1-60": { productId: 1, shadowless: { productId: 2 } } },
       [{ productId: 2, printing: "normal", market: 10 }],
       1,
@@ -338,19 +363,55 @@ describe("cardPricesFromShelf", () => {
 });
 
 describe("unlinkedCardPrices", () => {
+  const at = (tcgId: string, language: "en" | "ja" = "en") => ({
+    language,
+    tcgId,
+    printing: "normal",
+    date: "2026-09-14",
+    price: 1,
+    source: "tcgplayer" as const,
+  });
+
   it("keeps only the cards with no TCGplayer product", () => {
-    const at = (tcgId: string) => ({
-      tcgId,
-      printing: "normal",
-      date: "2026-09-14",
-      price: 1,
-      source: "tcgplayer" as const,
-    });
     expect(
       unlinkedCardPrices([at("linked"), at("null-link"), at("absent")], {
-        linked: { productId: 1 },
-        "null-link": null,
+        en: { linked: { productId: 1 }, "null-link": null },
+        ja: {},
       }).map((p) => p.tcgId),
     ).toEqual(["null-link", "absent"]);
+  });
+
+  // neo4-106 is Shining Celebi in English and Lucky Stadium in Japanese: an English link says
+  // nothing about the Japanese card.
+  it("reads each card's link in its own catalogue", () => {
+    expect(
+      unlinkedCardPrices([at("neo4-106", "en"), at("neo4-106", "ja"), at("CP1-001", "ja")], {
+        en: { "neo4-106": { productId: 89162 } },
+        ja: { "CP1-001": { productId: 605292 } },
+      }).map((p) => `${p.language} ${p.tcgId}`),
+    ).toEqual(["ja neo4-106"]);
+  });
+});
+
+describe("cardPricesFromSets across catalogues", () => {
+  it("files each card under its set's catalogue, and keeps an English and a Japanese card of one id apart", () => {
+    const holo = (market: number, key: string) =>
+      card({
+        tcgId: "neo4-106",
+        key,
+        pricePrintings: { holofoil: { market } as unknown as NonNullable<OwnedCard["price"]> },
+      });
+    const english = set([holo(375, "celebi")]);
+    const japanese = { ...set([holo(9, "stadium")]), language: "ja" as const };
+    expect(
+      cardPricesFromSets([english, japanese], "2026-09-15").map((p) => [
+        p.language,
+        p.tcgId,
+        p.price,
+      ]),
+    ).toEqual([
+      ["en", "neo4-106", 375],
+      ["ja", "neo4-106", 9],
+    ]);
   });
 });
