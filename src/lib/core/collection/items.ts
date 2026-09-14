@@ -850,6 +850,11 @@ const FINISH_ORDER: readonly string[] = [
   "poke-ball",
   "master-ball",
   "energy-symbol",
+  "friend-ball",
+  "love-ball",
+  "quick-ball",
+  "dusk-ball",
+  "team-rocket",
 ];
 
 /** By a known order first, then A to Z for anything the order does not name. */

@@ -60,18 +60,32 @@ export const num = (v) => (typeof v === "number" ? v : null);
  * @param {string | null | undefined} f
  * @returns {boolean}
  */
-export const isReverseFinish = (f) =>
-  f === "reverse-holo" || f === "poke-ball" || f === "master-ball" || f === "energy-symbol";
+export const isReverseFinish = (f) => f === "reverse-holo" || isPatternedReverse(f);
 
 /**
- * The patterned reverses TCGplayer sells as products of their own, each priced under the card as
- * `${finish}-reverse-holofoil` (price-months.mjs finishPrintingKey).
- *
+ * The patterned reverses TCGplayer sells as products of their own, each a finish of its own and
+ * priced under the card as `${finish}-reverse-holofoil` (price-months.mjs finishPrintingKey).
+ * Every named reverse pattern on TCGplayer's English shelf, measured 2026-09-14 across 220 groups
+ * (foil-pattern-products.mjs FINISH_LABELS has the counts). FINISHES in collection-row.ts lists
+ * them in the same order.
+ */
+export const PATTERNED_REVERSES = /** @type {const} */ ([
+  "poke-ball",
+  "master-ball",
+  "energy-symbol",
+  "friend-ball",
+  "love-ball",
+  "quick-ball",
+  "dusk-ball",
+  "team-rocket",
+]);
+
+/**
  * @param {string | null | undefined} f
  * @returns {boolean}
  */
 export const isPatternedReverse = (f) =>
-  f === "poke-ball" || f === "master-ball" || f === "energy-symbol";
+  /** @type {readonly (string | null | undefined)[]} */ (PATTERNED_REVERSES).includes(f);
 
 /**
  * Which of a card's price series one copy reads.
@@ -130,7 +144,7 @@ export const printingKeysOf = (copy) => {
         ? "shadowless"
         : "unlimited";
   const keys = [];
-  /* A Poké Ball, Master Ball or Energy Symbol reverse reads its own product first (since
+  /* A patterned reverse (Poké Ball, Master Ball, Friend Ball, Team Rocket, Energy Symbol, ...) reads its own product first (since
      2026-09-14): TCGplayer sells each apart from the plain reverse, at several times its price
      (Prismatic Evolutions Eevee: $0.29 plain reverse, $1.50 Poké Ball, $18.63 Master Ball). Where
      that printing has no figure it falls to the plain reverse's chain below, as it always read. */
@@ -138,6 +152,9 @@ export const printingKeysOf = (copy) => {
   // The run and the foil together first, then the run, then the foil, then the plain card: every
   // step drops the fact TCGplayer is least likely to price apart.
   if (run && foil) keys.push(`${run}-${foil}`);
+  /* A reverse reads TCGplayer's reverse holofoil before the run's plain printing: "unlimited" on its
+     own is the plain card, and a reverse copy is never the plain card while a reverse figure exists. */
+  if (foil === "reverse-holofoil") keys.push(foil);
   if (run) keys.push(run);
   if (foil) keys.push(foil);
   /*

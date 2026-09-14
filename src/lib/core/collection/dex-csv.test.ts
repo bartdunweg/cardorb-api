@@ -162,6 +162,7 @@ describe("Dex's words", () => {
     expect(variantWord("reverse-holo", "cracked-ice")).toBe("Reverse Holo (Cracked Ice Holo)");
     expect(variantWord("poke-ball", null)).toBe("Poké Ball Reverse");
     expect(variantWord("energy-symbol", null)).toBe("Reverse Holo");
+    expect(variantWord("love-ball", null)).toBe("Reverse Holo");
     expect(variantWord(null, null)).toBe("");
   });
 

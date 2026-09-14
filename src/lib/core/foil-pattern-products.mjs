@@ -29,6 +29,8 @@
  * with it and a script cannot import TypeScript.
  */
 
+import { PATTERNED_REVERSES } from "./price-basis.mjs";
+
 /**
  * TCGplayer's words for a pattern, in this app's (FOIL_PATTERNS in collection-row.ts). Only the
  * two patterns the store can record and TCGplayer names: Water Web, Sheen, Wave, Mirage and the
@@ -57,36 +59,54 @@ export function patternOfName(name) {
 }
 
 /**
- * TCGplayer's labels for the patterned reverses a copy records as a finish (FINISHES in
- * collection-row.ts), each matched as the whole label so nothing that only shares a word counts.
+ * TCGplayer's labels for the patterned reverses a copy records as a finish (PATTERNED_REVERSES in
+ * price-basis.mjs), each matched as the whole label so nothing that only shares a word counts.
  *
- * Measured on 2026-09-14 across the 220 English groups: "(Poke Ball Pattern)" 100 in Prismatic
- * Evolutions and 80 each in Black Bolt and White Flare, "(Master Ball Pattern)" 67, 72 and 72 in
- * the same three, "(Energy Symbol Pattern)" 140 and "(Poke Ball)" 34 in Ascended Heroes. Ascended
- * Heroes' other balls (Friend 23, Love 25, Quick 22, Dusk 26) have no finish in the store and are
- * not read; neither are "Great Ball League" and "Ultra Ball League", which are league stamps.
+ * Every named reverse pattern on the English shelf, measured on 2026-09-14 across the 220 groups:
+ * "(Poke Ball Pattern)" 100 in Prismatic Evolutions and 80 each in Black Bolt and White Flare,
+ * "(Master Ball Pattern)" 67, 72 and 72 in the same three; in Ascended Heroes "(Poke Ball)" 34,
+ * "(Dusk Ball)" 26, "(Love Ball)" 25, "(Friend Ball)" 23, "(Quick Ball)" 22, "(Team Rocket)" 10 and
+ * "(Energy Symbol Pattern)" 140; "(Energy Holo)" 3 in Miscellaneous Cards & Products (Black & White
+ * blister reverses of Pansage, Pansear and Panpour). Not read: "Great Ball League" and "Ultra Ball
+ * League" (league stamps), "EX Team Rocket Returns" (a set name), "Mirror Reverse Holo" (a plain
+ * reverse). A ball label with no finish is reported by scripts/tcgplayer-patterns.mjs (ballWithoutFinish).
  */
 const FINISH_LABELS = [
   [/^pok[eé] ?ball( pattern)?$/i, "poke-ball"],
   [/^master ?ball( pattern)?$/i, "master-ball"],
-  [/^energy symbol( pattern)?$/i, "energy-symbol"],
+  [/^friend ?ball( pattern)?$/i, "friend-ball"],
+  [/^love ?ball( pattern)?$/i, "love-ball"],
+  [/^quick ?ball( pattern)?$/i, "quick-ball"],
+  [/^dusk ?ball( pattern)?$/i, "dusk-ball"],
+  [/^team rocket( pattern)?$/i, "team-rocket"],
+  [/^energy (symbol( pattern)?|holo)$/i, "energy-symbol"],
 ];
 
 /**
  * The patterned reverse finish a product's name carries in a parenthesised label, or null.
  *
  * @param {string} name
- * @returns {"poke-ball" | "master-ball" | "energy-symbol" | null}
+ * @returns {string | null}
  */
 export function finishOfName(name) {
   for (const m of name.matchAll(/\(([^()]*)\)/g)) {
     const label = (m[1] ?? "").trim();
-    for (const [re, finish] of FINISH_LABELS)
-      if (re.test(label))
-        return /** @type {"poke-ball" | "master-ball" | "energy-symbol"} */ (finish);
+    for (const [re, finish] of FINISH_LABELS) if (re.test(label)) return finish;
   }
   return null;
 }
+
+/**
+ * A label that names a ball pattern this file has no finish for ("(Heavy Ball)"), so the weekly run
+ * says so instead of quietly offering it as a plain reverse. League stamps are not patterns.
+ *
+ * @param {string} name
+ */
+export const ballWithoutFinish = (name) =>
+  !finishOfName(name) &&
+  [...name.matchAll(/\(([^()]*)\)/g)].some((m) =>
+    /^[a-z]+ ?ball( pattern)?$/i.test((m[1] ?? "").trim()),
+  );
 
 /**
  * The printing a patterned reverse's figure is filed under in tcgplayer_prices: its one priced
@@ -165,7 +185,7 @@ export function finishOfPrint(reverse, subtypes) {
 /**
  * @typedef {{ productId: number, groupId: number, name: string, extendedData?: { name: string, value: string }[] }} Product
  * @typedef {{ foilPattern: string, finish: "holo" | "reverse-holo", productId: number, printing: string }} PatternPrint
- * @typedef {{ finish: "poke-ball" | "master-ball" | "energy-symbol", productId: number, printing: string }} FinishPrint
+ * @typedef {{ finish: string, productId: number, printing: string }} FinishPrint
  * @typedef {{ standard?: false, prints: PatternPrint[], finishPrints?: FinishPrint[] }} CardPatterns
  */
 
@@ -268,7 +288,7 @@ export function patternPrintsOf(products, subtypesOf, links) {
 
   // Stable order, so the weekly run's diff is only what changed.
   const order = ["cosmos", "cracked-ice"];
-  const finishOrder = ["poke-ball", "master-ball", "energy-symbol"];
+  const finishOrder = PATTERNED_REVERSES;
   const sorted = /** @type {Record<string, CardPatterns>} */ ({});
   for (const id of Object.keys(cards).sort()) {
     const { standard, prints, finishPrints } = cards[id];

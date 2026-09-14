@@ -222,7 +222,8 @@ if (day) {
 }
 
 /**
- * The Poké Ball, Master Ball and Energy Symbol reverses are TCGplayer products of their own
+ * The patterned reverses (Poké Ball, Master Ball, Friend, Love, Quick and Dusk Ball, Team Rocket,
+ * Energy Symbol) are TCGplayer products of their own
  * (tcgplayer-patterns.generated.json finishPrints), priced under the card as
  * "poke-ball-reverse-holofoil" and so on. Every one TCGplayer priced today has a line for that
  * printing, and at the figure of its own product: a line missing or off is a Poké Ball copy whose
@@ -232,6 +233,16 @@ if (day) {
  * from that file wherever a card has a TCGplayer link (card-printings.ts printingsOf), so the one way
  * back is a card TCGdex names a ball foil on and no link, where TCGdex's word still stands.
  */
+/** TCGdex's foil on a reverse, and the finish TCGplayer sells it as (card-printings.ts BALL_OF). */
+const BALL_FOILS = {
+  pokeball: "poke-ball",
+  masterball: "master-ball",
+  friendball: "friend-ball",
+  loveball: "love-ball",
+  quickball: "quick-ball",
+  duskball: "dusk-ball",
+  "team-rocket": "team-rocket",
+};
 const patterns = JSON.parse(
   readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-patterns.generated.json"), "utf8"),
 );
@@ -243,7 +254,7 @@ if (day) {
   );
   const [lines, prices, rateRow] = await Promise.all([
     query(
-      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where month = '${month}' and printing in ('poke-ball-reverse-holofoil', 'master-ball-reverse-holofoil', 'energy-symbol-reverse-holofoil')`,
+      `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where month = '${month}' and printing in (${[...new Set(prints.map((p) => `'${p.key}'`))].join(",") || "''"})`,
     ),
     query(
       `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and product_id in (${prints.map((p) => p.productId).join(",") || "0"})`,
@@ -270,7 +281,7 @@ if (day) {
     );
   });
   check(
-    "Poké Ball, Master Ball and Energy Symbol reverses have their own price line",
+    "Patterned reverses (balls, Team Rocket, Energy Symbol) have their own price line",
     prints.length > 0 && missing.length === 0 && off.length === 0,
     `${prints.length} products, ${priced.length} priced on ${day}; ${missing.length} without a line that day, ${off.length} off their product's figure${
       missing.length + off.length
@@ -284,7 +295,11 @@ if (day) {
 }
 {
   const named = await query(
-    "select id, v->>'foil' as foil from catalogue_cards, jsonb_array_elements(variants) v where language = 'en' and v->>'type' = 'reverse' and v->>'foil' in ('pokeball', 'masterball')",
+    `select id, v->>'foil' as foil from catalogue_cards, jsonb_array_elements(variants) v where language = 'en' and v->>'type' = 'reverse' and v->>'foil' in (${Object.keys(
+      BALL_FOILS,
+    )
+      .map((f) => `'${f}'`)
+      .join(",")})`,
   );
   const unlinked = named.filter((r) => !links[r.id]?.productId);
   const sold = new Set(
@@ -293,12 +308,15 @@ if (day) {
     ),
   );
   const dropped = named.filter(
-    (r) =>
-      links[r.id]?.productId &&
-      !sold.has(`${r.id}|${r.foil === "pokeball" ? "poke-ball" : "master-ball"}`),
+    (r) => links[r.id]?.productId && !sold.has(`${r.id}|${BALL_FOILS[r.foil]}`),
   );
   const stored = await query(
-    "select tcg_id, finish, count(*)::int as n from cards where finish in ('poke-ball', 'master-ball', 'energy-symbol') and tcg_id is not null group by 1, 2",
+    `select tcg_id, finish, count(*)::int as n from cards where finish in (${[
+      ...Object.values(BALL_FOILS),
+      "energy-symbol",
+    ]
+      .map((f) => `'${f}'`)
+      .join(",")}) and tcg_id is not null group by 1, 2`,
   );
   const storedWithout = stored.filter((r) => !sold.has(`${r.tcg_id}|${r.finish}`));
   check(
@@ -326,6 +344,52 @@ if (day) {
             .join(", ")})`
         : ""
     }`,
+  );
+}
+
+/**
+ * A plain reverse is offered only where TCGplayer prices one (card-printings.ts pricesPlainReverse,
+ * which reads the product's printings in tcgplayer-ids.generated.json). This compares that weekly
+ * list with the night's prices for every linked English card TCGdex lists a plain reverse of:
+ * offered with no reverse figure tonight is a reverse copy priced as the normal card, hidden while
+ * TCGplayer prices one is a real choice missing. A few either way is the week between runs; more is
+ * a stale list. Stored reverse copies on cards that no longer offer one are reported.
+ */
+const REVERSE_DRIFT_CEILING = 10;
+if (day) {
+  const [reverses, reversePrices, storedReverse] = await Promise.all([
+    query(
+      "select distinct id from catalogue_cards, jsonb_array_elements(variants) v where language = 'en' and v->>'type' = 'reverse' and coalesce(v->>'foil', '') not in ('cosmos', 'pokeball', 'masterball', 'friendball', 'loveball', 'quickball', 'duskball', 'team-rocket')",
+    ),
+    query(
+      `select distinct product_id from tcgplayer_prices where updated_on = '${day}' and printing like '%reverse-holofoil'`,
+    ),
+    query(
+      "select tcg_id, count(*)::int as n from cards where finish = 'reverse-holo' and tcg_id is not null group by 1",
+    ),
+  ]);
+  const priced = new Set(reversePrices.map((r) => r.product_id));
+  const energySold = (id) =>
+    (patterns[id]?.finishPrints ?? []).some((p) => p.finish === "energy-symbol");
+  const offers = (id) => {
+    const variants = links[id]?.variants ?? [];
+    return !variants.length || variants.some((v) => v.endsWith("reverse-holofoil"));
+  };
+  const linked = reverses.filter((r) => links[r.id]?.productId && !energySold(r.id));
+  const unpricedOffer = linked.filter((r) => offers(r.id) && !priced.has(links[r.id].productId));
+  const hidden = linked.filter((r) => !offers(r.id) && priced.has(links[r.id].productId));
+  const withdrawn = storedReverse.filter((r) => links[r.tcg_id]?.productId && !offers(r.tcg_id));
+  const ids = (rows, key = "id") =>
+    rows.length
+      ? ` (${rows
+          .slice(0, 6)
+          .map((r) => r[key])
+          .join(", ")})`
+      : "";
+  check(
+    "A plain reverse is offered only where TCGplayer prices one",
+    unpricedOffer.length <= REVERSE_DRIFT_CEILING && hidden.length <= REVERSE_DRIFT_CEILING,
+    `${linked.length} linked cards TCGdex lists a plain reverse of; ${linked.filter((r) => !offers(r.id)).length} not offered, TCGplayer pricing none; ${unpricedOffer.length} offered with no reverse figure on ${day}${ids(unpricedOffer)}; ${hidden.length} hidden though TCGplayer prices one${ids(hidden)} (ceiling ${REVERSE_DRIFT_CEILING} each); ${withdrawn.length} cards with a stored reverse copy no longer offered${ids(withdrawn, "tcg_id")}`,
   );
 }
 

@@ -282,6 +282,12 @@ const { results: groups } = await fetchJson("https://tcgcsv.com/tcgplayer/3/grou
 // Every English product, by number, with its group and the printings it is priced as.
 const byNumber = new Map();
 const printingsOf = new Map();
+/**
+ * Every printing TCGplayer lists for a product, priced this week or not. A linked card's `variants`
+ * gain these each run and never lose one (below): a printing TCGplayer sells does not stop existing
+ * in a week nobody sold it, and card-printings.ts offers a plain reverse only where one is listed.
+ */
+const subtypesOf = new Map();
 const groupOfProduct = new Map();
 const nameOfProduct = new Map();
 /** Every product by each spelling of its name, for a card whose number TCGplayer writes differently. */
@@ -297,6 +303,10 @@ await mapLimit(groups, 8, async (g) => {
     fetchJson(`https://tcgcsv.com/tcgplayer/3/${g.groupId}/prices`),
   ]);
   for (const p of prices?.results ?? []) {
+    subtypesOf.set(
+      p.productId,
+      new Set([...(subtypesOf.get(p.productId) ?? []), printingKey(p.subTypeName)]),
+    );
     if (!(p.marketPrice > 0)) continue;
     printingsOf.set(p.productId, [
       ...(printingsOf.get(p.productId) ?? []),
@@ -570,6 +580,20 @@ for (const [set, r] of Object.entries(coverage)
   if (r.ambiguous + r.notFound)
     console.log(`  ${set} (${r.name}): ${r.ambiguous} ambiguous, ${r.notFound} not found`);
 }
+
+/* The printings of every linked card brought up to what TCGplayer lists now. They were written once,
+   when a card was linked, and never again: Skyridge Oddish (ecard3-96) and two HeartGold SoulSilver
+   cards had a reverse TCGplayer priced and a map that said Normal only (2026-09-14). */
+let widened = 0;
+for (const [id, link] of Object.entries(ids)) {
+  const listed = link?.productId != null ? subtypesOf.get(link.productId) : undefined;
+  if (!listed) continue;
+  const missing = [...listed].filter((v) => !(link.variants ?? []).includes(v));
+  if (!missing.length) continue;
+  ids[id] = { ...link, variants: [...(link.variants ?? []), ...missing] };
+  widened++;
+}
+console.log(`Widened the printings of ${widened} linked cards to what TCGplayer lists.`);
 
 if (!DRY) {
   const sorted = Object.fromEntries(

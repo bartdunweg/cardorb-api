@@ -41,11 +41,17 @@ export const FINISHES = [
   "poke-ball",
   "master-ball",
   "energy-symbol",
+  "friend-ball",
+  "love-ball",
+  "quick-ball",
+  "dusk-ball",
+  "team-rocket",
 ] as const;
 /**
  * The finishes that are a reverse holo with a pattern on it: the Poké Ball and Master Ball
- * reverses of Prismatic Evolutions, Black Bolt and White Flare, and the Poké Ball and Energy Symbol
- * reverses of Ascended Heroes. TCGplayer sells each as a product with its own price, filed under
+ * reverses of Prismatic Evolutions, Black Bolt and White Flare, and Ascended Heroes' Poké Ball,
+ * Friend Ball, Love Ball, Quick Ball, Dusk Ball, Team Rocket and Energy Symbol reverses
+ * (PATTERNED_REVERSES in price-basis.mjs, in this order). TCGplayer sells each as a product with its own price, filed under
  * the card as `${finish}-reverse-holofoil` (price-basis.mjs printingKeysOf).
  *
  * Defined in ../price-basis.mjs and re-exported here, where callers look for it. It is a rule

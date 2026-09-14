@@ -136,6 +136,12 @@ describe("printingKeysOf and printingPriceOf", () => {
     expect(printingPriceOf({ finish: "poke-ball" }, eevee)?.market).toBe(1.5);
     expect(printingPriceOf({ finish: "master-ball" }, eevee)?.market).toBe(18.63);
     expect(printingPriceOf({ finish: "reverse-holo" }, eevee)?.market).toBe(0.29);
+    expect(
+      printingPriceOf(
+        { finish: "friend-ball" },
+        { ...eevee, "friend-ball-reverse-holofoil": eur(0.74) },
+      )?.market,
+    ).toBe(0.74);
     // A print with no figure of its own reads the plain reverse, as every ball copy did before.
     expect(printingPriceOf({ finish: "energy-symbol" }, eevee)?.market).toBe(0.29);
   });
@@ -144,6 +150,12 @@ describe("printingKeysOf and printingPriceOf", () => {
   it("reads the foil the copy is, not whichever printing came first", () => {
     expect(printingPriceOf({ finish: "holo" }, jungleScyther)?.market).toBe(53.23);
     expect(printingPriceOf({ finish: "normal" }, jungleScyther)?.market).toBe(15.19);
+  });
+
+  it("prices a reverse from the reverse holofoil before the run's plain printing", () => {
+    const printings = { unlimited: eur(3), "reverse-holofoil": eur(9) };
+    expect(printingPriceOf({ finish: "reverse-holo" }, printings)?.market).toBe(9);
+    expect(printingPriceOf({ finish: "normal" }, printings)?.market).toBe(3);
   });
 
   it("puts the run before the foil, and the ordinary run first where nobody has said", () => {
