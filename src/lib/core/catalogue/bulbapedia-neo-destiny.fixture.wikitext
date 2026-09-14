@@ -1,0 +1,254 @@
+<!-- From Bulbapedia, "Neo Destiny (TCG)", revision 4193129 (https://bulbapedia.bulbagarden.net/w/index.php?oldid=4193129), CC BY-NC-SA 2.5. Only the infobox and the set list templates are kept, as a test fixture for bulbapedia-setlist.mjs. -->
+{{TCGExpansionInfobox
+|setname=Neo Destiny
+|jasetname=闇、そして光へ...
+|transsetname=Darkness, and to Light...
+|setsymbol=yes
+|setlogo=Neo Destiny Logo EN.png
+|encards=113
+|ensetnum=11
+|enrelease=February 28, 2002
+|jacards=113
+|jasetnum=10
+|jarelease=April 20, 2001
+|deck1=Dark
+|deck1type={{e|Fire}}{{e|Psychic}}
+|deck2=Light
+|deck2type={{e|Fighting}}{{e|Water}}
+|prevset=Awakening Legends
+|japrevset=Awakening Legends
+|japrevsetname=Awakening Legends
+|nextset=Pokémon Card★VS
+|janextset=Pokémon VS
+|janextsetname=Pokémon Card★VS
+}}
+{{Setlist/nmheader|title=Neo Destiny|tablecol=8F54D8|bordercol=500082|cellcol=F9E889|rarity=yes|symbol=yes|image=SetSymbolNeo Destiny.png}}
+{{Setlist/nmentry|1/105|{{TCG ID|Neo Destiny|Dark Ampharos|1}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|2/105|{{TCG ID|Neo Destiny|Dark Crobat|2}}|Grass||Rare Holo}}
+{{Setlist/nmentry|3/105|{{TCG ID|Neo Destiny|Dark Donphan|3}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|4/105|{{TCG ID|Neo Destiny|Dark Espeon|4}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|5/105|{{TCG ID|Neo Destiny|Dark Feraligatr|5}}|Water||Rare Holo}}
+{{Setlist/nmentry|6/105|{{TCG ID|Neo Destiny|Dark Gengar|6}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|7/105|{{TCG ID|Neo Destiny|Dark Houndoom|7}}|Fire||Rare Holo}}
+{{Setlist/nmentry|8/105|{{TCG ID|Neo Destiny|Dark Porygon2|8}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|9/105|{{TCG ID|Neo Destiny|Dark Scizor|9}}|Metal||Rare Holo}}
+{{Setlist/nmentry|10/105|{{TCG ID|Neo Destiny|Dark Typhlosion|10}}|Fire||Rare Holo}}
+{{Setlist/nmentry|11/105|{{TCG ID|Neo Destiny|Dark Tyranitar|11}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|12/105|{{TCG ID|Neo Destiny|Light Arcanine|12}}|Fire||Rare Holo}}
+{{Setlist/nmentry|13/105|{{TCG ID|Neo Destiny|Light Azumarill|13}}|Water||Rare Holo}}
+{{Setlist/nmentry|14/105|{{TCG ID|Neo Destiny|Light Dragonite|14}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|15/105|{{TCG ID|Neo Destiny|Light Togetic|15}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|16/105|{{TCG ID|Neo Destiny|Miracle Energy|16}}|Energy|Rainbow|Rare Holo}}
+{{Setlist/nmentry|17/105|{{TCG ID|Neo Destiny|Dark Ariados|17}}|Grass||Rare}}
+{{Setlist/nmentry|18/105|{{TCG ID|Neo Destiny|Dark Magcargo|18}}|Fire||Rare}}
+{{Setlist/nmentry|19/105|{{TCG ID|Neo Destiny|Dark Omastar|19}}|Water||Rare}}
+{{Setlist/nmentry|20/105|{{TCG ID|Neo Destiny|Dark Slowking|20}}|Psychic||Rare}}
+{{Setlist/nmentry|21/105|{{TCG ID|Neo Destiny|Dark Ursaring|21}}|Colorless||Rare}}
+{{Setlist/nmentry|22/105|{{TCG ID|Neo Destiny|Light Dragonair|22}}|Colorless||Rare}}
+{{Setlist/nmentry|23/105|{{TCG ID|Neo Destiny|Light Lanturn|23}}|Lightning||Rare}}
+{{Setlist/nmentry|24/105|{{TCG ID|Neo Destiny|Light Ledian|24}}|Grass||Rare}}
+{{Setlist/nmentry|25/105|{{TCG ID|Neo Destiny|Light Machamp|25}}|Fighting||Rare}}
+{{Setlist/nmentry|26/105|{{TCG ID|Neo Destiny|Light Piloswine|26}}|Water||Rare}}
+{{Setlist/nmentry|27/105|{{TCG ID|Neo Destiny|Unown G|27}}|Psychic||Rare}}
+{{Setlist/nmentry|28/105|{{TCG ID|Neo Destiny|Unown H|28}}|Psychic||Rare}}
+{{Setlist/nmentry|29/105|{{TCG ID|Neo Destiny|Unown W|29}}|Psychic||Rare}}
+{{Setlist/nmentry|30/105|{{TCG ID|Neo Destiny|Unown X|30}}|Psychic||Rare}}
+{{Setlist/nmentry|31/105|{{TCG ID|Neo Destiny|Chansey|31}}|Colorless||Uncommon}}
+{{Setlist/nmentry|32/105|{{TCG ID|Neo Destiny|Dark Croconaw|32}}|Water||Uncommon}}
+{{Setlist/nmentry|33/105|{{TCG ID|Neo Destiny|Dark Exeggutor|33}}|Psychic||Uncommon}}
+{{Setlist/nmentry|34/105|{{TCG ID|Neo Destiny|Dark Flaaffy|34}}|Lightning||Uncommon}}
+{{Setlist/nmentry|35/105|{{TCG ID|Neo Destiny|Dark Forretress|35}}|Grass||Uncommon}}
+{{Setlist/nmentry|36/105|{{TCG ID|Neo Destiny|Dark Haunter|36}}|Psychic||Uncommon}}
+{{Setlist/nmentry|37/105|{{TCG ID|Neo Destiny|Dark Omanyte|37}}|Water||Uncommon}}
+{{Setlist/nmentry|38/105|{{TCG ID|Neo Destiny|Dark Pupitar|38}}|Fighting||Uncommon}}
+{{Setlist/nmentry|39/105|{{TCG ID|Neo Destiny|Dark Quilava|39}}|Fire||Uncommon}}
+{{Setlist/nmentry|40/105|{{TCG ID|Neo Destiny|Dark Wigglytuff|40}}|Colorless||Uncommon}}
+{{Setlist/nmentry|41/105|{{TCG ID|Neo Destiny|Heracross|41}}|Grass||Uncommon}}
+{{Setlist/nmentry|42/105|{{TCG ID|Neo Destiny|Hitmonlee|42}}|Fighting||Uncommon}}
+{{Setlist/nmentry|43/105|{{TCG ID|Neo Destiny|Houndour|43}}|Darkness||Uncommon}}
+{{Setlist/nmentry|44/105|{{TCG ID|Neo Destiny|Jigglypuff|44}}|Colorless||Uncommon}}
+{{Setlist/nmentry|45/105|{{TCG ID|Neo Destiny|Light Dewgong|45}}|Water||Uncommon}}
+{{Setlist/nmentry|46/105|{{TCG ID|Neo Destiny|Light Flareon|46}}|Fire||Uncommon}}
+{{Setlist/nmentry|47/105|{{TCG ID|Neo Destiny|Light Golduck|47}}|Water||Uncommon}}
+{{Setlist/nmentry|48/105|{{TCG ID|Neo Destiny|Light Jolteon|48}}|Lightning||Uncommon}}
+{{Setlist/nmentry|49/105|{{TCG ID|Neo Destiny|Light Machoke|49}}|Fighting||Uncommon}}
+{{Setlist/nmentry|50/105|{{TCG ID|Neo Destiny|Light Ninetales|50}}|Fire||Uncommon}}
+{{Setlist/nmentry|51/105|{{TCG ID|Neo Destiny|Light Slowbro|51}}|Psychic||Uncommon}}
+{{Setlist/nmentry|52/105|{{TCG ID|Neo Destiny|Light Vaporeon|52}}|Water||Uncommon}}
+{{Setlist/nmentry|53/105|{{TCG ID|Neo Destiny|Light Venomoth|53}}|Grass||Uncommon}}
+{{Setlist/nmentry|54/105|{{TCG ID|Neo Destiny|Light Wigglytuff|54}}|Colorless||Uncommon}}
+{{Setlist/nmentry|55/105|{{TCG ID|Neo Destiny|Scyther|55}}|Grass||Uncommon}}
+{{Setlist/nmentry|56/105|{{TCG ID|Neo Destiny|Togepi|56}}|Colorless||Uncommon}}
+{{Setlist/nmentry|57/105|{{TCG ID|Neo Destiny|Unown C|57}}|Psychic||Uncommon}}
+{{Setlist/nmentry|58/105|{{TCG ID|Neo Destiny|Unown P|58}}|Psychic||Uncommon}}
+{{Setlist/nmentry|59/105|{{TCG ID|Neo Destiny|Unown Q|59}}|Psychic||Uncommon}}
+{{Setlist/nmentry|60/105|{{TCG ID|Neo Destiny|Unown Z|60}}|Psychic||Uncommon}}
+{{Setlist/nmentry|61/105|{{TCG ID|Neo Destiny|Cyndaquil|61}}|Fire||Common}}
+{{Setlist/nmentry|62/105|{{TCG ID|Neo Destiny|Dark Octillery|62}}|Water||Common}}
+{{Setlist/nmentry|63/105|{{TCG ID|Neo Destiny|Dratini|63}}|Colorless||Common}}
+{{Setlist/nmentry|64/105|{{TCG ID|Neo Destiny|Exeggcute|64}}|Psychic||Common}}
+{{Setlist/nmentry|65/105|{{TCG ID|Neo Destiny|Gastly|65}}|Psychic||Common}}
+{{Setlist/nmentry|66/105|{{TCG ID|Neo Destiny|Girafarig|66}}|Colorless||Common}}
+{{Setlist/nmentry|67/105|{{TCG ID|Neo Destiny|Gligar|67}}|Fighting||Common}}
+{{Setlist/nmentry|68/105|{{TCG ID|Neo Destiny|Growlithe|68}}|Fire||Common}}
+{{Setlist/nmentry|69/105|{{TCG ID|Neo Destiny|Hitmonchan|69}}|Fighting||Common}}
+{{Setlist/nmentry|70/105|{{TCG ID|Neo Destiny|Larvitar|70}}|Fighting||Common}}
+{{Setlist/nmentry|71/105|{{TCG ID|Neo Destiny|Ledyba|71}}|Grass||Common}}
+{{Setlist/nmentry|72/105|{{TCG ID|Neo Destiny|Light Sunflora|72}}|Grass||Common}}
+{{Setlist/nmentry|73/105|{{TCG ID|Neo Destiny|Machop|73}}|Fighting||Common}}
+{{Setlist/nmentry|74/105|{{TCG ID|Neo Destiny|Mantine|74}}|Water||Common}}
+{{Setlist/nmentry|75/105|{{TCG ID|Neo Destiny|Mareep|75}}|Lightning||Common}}
+{{Setlist/nmentry|76/105|{{TCG ID|Neo Destiny|Phanpy|76}}|Fighting||Common}}
+{{Setlist/nmentry|77/105|{{TCG ID|Neo Destiny|Pineco|77}}|Grass||Common}}
+{{Setlist/nmentry|78/105|{{TCG ID|Neo Destiny|Porygon|78}}|Colorless||Common}}
+{{Setlist/nmentry|79/105|{{TCG ID|Neo Destiny|Psyduck|79}}|Water||Common}}
+{{Setlist/nmentry|80/105|{{TCG ID|Neo Destiny|Remoraid|80}}|Water||Common}}
+{{Setlist/nmentry|81/105|{{TCG ID|Neo Destiny|Seel|81}}|Water||Common}}
+{{Setlist/nmentry|82/105|{{TCG ID|Neo Destiny|Slugma|82}}|Fire||Common}}
+{{Setlist/nmentry|83/105|{{TCG ID|Neo Destiny|Sunkern|83}}|Grass||Common}}
+{{Setlist/nmentry|84/105|{{TCG ID|Neo Destiny|Swinub|84}}|Water||Common}}
+{{Setlist/nmentry|85/105|{{TCG ID|Neo Destiny|Totodile|85}}|Water||Common}}
+{{Setlist/nmentry|86/105|{{TCG ID|Neo Destiny|Unown L|86}}|Psychic||Common}}
+{{Setlist/nmentry|87/105|{{TCG ID|Neo Destiny|Unown S|87}}|Psychic||Common}}
+{{Setlist/nmentry|88/105|{{TCG ID|Neo Destiny|Unown T|88}}|Psychic||Common}}
+{{Setlist/nmentry|89/105|{{TCG ID|Neo Destiny|Unown V|89}}|Psychic||Common}}
+{{Setlist/nmentry|90/105|{{TCG ID|Neo Destiny|Venonat|90}}|Grass||Common}}
+{{Setlist/nmentry|91/105|{{TCG ID|Neo Destiny|Vulpix|91}}|Fire||Common}}
+{{Setlist/nmentry|92/105|{{TCG ID|Neo Destiny|Broken Ground Gym|92}}|Trainer|Stadium|Rare}}
+{{Setlist/nmentry|93/105|{{TCG ID|Neo Destiny|EXP.ALL|93}}|Trainer|Pokémon Tool|Rare}}
+{{Setlist/nmentry|94/105|{{TCG ID|Neo Destiny|Impostor Professor Oak's Invention|94}}|Trainer||Rare}}
+{{Setlist/nmentry|95/105|{{TCG ID|Neo Destiny|Radio Tower|95}}|Trainer|Stadium|Rare}}
+{{Setlist/nmentry|96/105|{{TCG ID|Neo Destiny|Thought Wave Machine|96}}|Trainer|Rocket's Secret Machine|Rare}}
+{{Setlist/nmentry|97/105|{{TCG ID|Neo Destiny|Counterattack Claws|97}}|Trainer|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|98/105|{{TCG ID|Neo Destiny|Energy Amplifier|98}}|Trainer||Uncommon}}
+{{Setlist/nmentry|99/105|{{TCG ID|Neo Destiny|Energy Stadium|99}}|Trainer|Stadium|Uncommon}}
+{{Setlist/nmentry|100/105|{{TCG ID|Neo Destiny|Lucky Stadium|100}}|Trainer|Stadium|Uncommon}}
+{{Setlist/nmentry|101/105|{{TCG ID|Neo Destiny|Magnifier|101}}|Trainer||Uncommon}}
+{{Setlist/nmentry|102/105|{{TCG ID|Neo Destiny|Pokémon Personality Test|102}}|Trainer||Uncommon}}
+{{Setlist/nmentry|103/105|{{TCG ID|Neo Destiny|Team Rocket's Evil Deeds|103}}|Trainer||Uncommon}}
+{{Setlist/nmentry|104/105|{{TCG ID|Neo Destiny|Heal Powder|104}}|Trainer||Common}}
+{{Setlist/nmentry|105/105|{{TCG ID|Neo Destiny|Mail from Bill|105}}|Trainer||Common}}
+{{Setlist/nmentry|106/105|{{TCG ID|Neo Destiny|Shining Celebi|106}}|Grass||Shining Holo}}
+{{Setlist/nmentry|107/105|{{TCG ID|Neo Destiny|Shining Charizard|107}}|Fire||Shining Holo}}
+{{Setlist/nmentry|108/105|{{TCG ID|Neo Destiny|Shining Kabutops|108}}|Fighting||Shining Holo}}
+{{Setlist/nmentry|109/105|{{TCG ID|Neo Destiny|Shining Mewtwo|109}}|Psychic||Shining Holo}}
+{{Setlist/nmentry|110/105|{{TCG ID|Neo Destiny|Shining Noctowl|110}}|Colorless||Shining Holo}}
+{{Setlist/nmentry|111/105|{{TCG ID|Neo Destiny|Shining Raichu|111}}|Lightning||Shining Holo}}
+{{Setlist/nmentry|112/105|{{TCG ID|Neo Destiny|Shining Steelix|112}}|Metal||Shining Holo}}
+{{Setlist/nmentry|113/105|{{TCG ID|Neo Destiny|Shining Tyranitar|113}}|Darkness||Shining Holo}}
+{{Setlist/nmfooter|cellcol=F9E889}}
+{{Setlist/nmheader|title=Darkness, and to Light...|tablecol=8F54D8|bordercol=500082|cellcol=F9E889|rarity=yes|symbol=yes|image=SetSymbolNeo Destiny.png}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Venonat|and to Light...}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Ledyba|and to Light...}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Sunkern|and to Light...}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Sunflora|and to Light...}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Pineco|and to Light...}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Venomoth|and to Light...}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Scyther|and to Light...}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Forretress|and to Light...}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Heracross|and to Light...}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Ledian|and to Light...}}|Grass||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Ariados|and to Light...}}|Grass||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Crobat|and to Light...}}|Grass||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Celebi|and to Light...}}|Grass||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Vulpix|and to Light...}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Growlithe|and to Light...}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Cyndaquil|and to Light...}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Slugma|and to Light...}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Ninetales|and to Light...}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Flareon|and to Light...}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Quilava|and to Light...}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Arcanine|and to Light...}}|Fire||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Typhlosion|and to Light...}}|Fire||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Magcargo|and to Light...}}|Fire||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Houndoom|and to Light...}}|Fire||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Charizard|and to Light...}}|Fire||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Psyduck|and to Light...}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Seel|and to Light...}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Totodile|and to Light...}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Swinub|and to Light...}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Remoraid|and to Light...}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Mantine|and to Light...}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Golduck|and to Light...}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Dewgong|and to Light...}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Vaporeon|and to Light...}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Omanyte|and to Light...}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Croconaw|and to Light...}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Octillery|and to Light...}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Omastar|and to Light...}}|Water||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Feraligatr|and to Light...}}|Water||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Azumarill|and to Light...}}|Water||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Piloswine|and to Light...}}|Water||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Mareep|and to Light...}}|Lightning||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Jolteon|and to Light...}}|Lightning||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Flaaffy|and to Light...}}|Lightning||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Lanturn|and to Light...}}|Lightning||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Ampharos|and to Light...}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Raichu|and to Light...}}|Lightning||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Gastly|and to Light...}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Exeggcute|and to Light...}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown L|and to Light...}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown S|and to Light...}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown T|and to Light...}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown V|and to Light...}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Slowbro|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Haunter|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Exeggutor|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown C|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown P|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown Q|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown Z|and to Light...}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Slowking|and to Light...}}|Psychic||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown G|and to Light...}}|Psychic||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown H|and to Light...}}|Psychic||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown W|and to Light...}}|Psychic||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Unown X|and to Light...}}|Psychic||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Gengar|and to Light...}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Espeon|and to Light...}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Mewtwo|and to Light...}}|Psychic||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Machop|and to Light...}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Hitmonchan|and to Light...}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Gligar|and to Light...}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Phanpy|and to Light...}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Larvitar|and to Light...}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Machoke|and to Light...}}|Fighting||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Hitmonlee|and to Light...}}|Fighting||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Pupitar|and to Light...}}|Fighting||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Machamp|and to Light...}}|Fighting||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Donphan|and to Light...}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Tyranitar|and to Light...}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Kabutops|and to Light...}}|Fighting||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Houndour|and to Light...}}|Darkness||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Tyranitar|and to Light...}}|Darkness||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Scizor|and to Light...}}|Metal||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Steelix|and to Light...}}|Metal||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Jigglypuff|and to Light...}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Porygon|and to Light...}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dratini|and to Light...}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Togepi|and to Light...}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Girafarig|and to Light...}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Wigglytuff|and to Light...}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Wigglytuff|and to Light...}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Chansey|and to Light...}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Dragonair|and to Light...}}|Colorless||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Dragonite|and to Light...}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Light Togetic|and to Light...}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Ursaring|and to Light...}}|Colorless||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Dark Porygon2|and to Light...}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Shining Noctowl|and to Light...}}|Colorless||Shining Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Heal Powder|and to Light...}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Mail from Bill|and to Light...}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Energy Stadium|and to Light...}}|Trainer|Stadium|Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Energy Amplifier|and to Light...}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Counterattack Claws|and to Light...}}|Trainer|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Magnifier|and to Light...}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Pokémon Personality Test|and to Light...}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Lucky Stadium|and to Light...}}|Trainer|Stadium|Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Team Rocket's Evil Deeds|and to Light...}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Thought Wave Machine|and to Light...}}|Trainer|Rocket's Secret Machine|Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|EXP. ALL|and to Light...}}|Trainer|Pokémon Tool|Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Broken Ground Gym|and to Light...}}|Trainer|Stadium|Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Impostor Oak's Invention|and to Light...}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Radio Tower|and to Light...}}|Trainer|Stadium|Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Darkness,|Miracle Energy|and to Light...}}|Energy|Rainbow|Rare Holo}}
+{{Setlist/nmfooter|cellcol=F9E889}}

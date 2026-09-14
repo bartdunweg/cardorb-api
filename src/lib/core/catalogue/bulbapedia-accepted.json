@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "card name",
+    "language": "en",
+    "set": "base1",
+    "number": "73",
+    "ours": "Impostor Professor Oak",
+    "bulbapedia": "Imposter Professor Oak",
+    "reason": "Bulbapedia spells it Imposter on its English lists and Impostor on the Japanese Expansion Pack list and on Neo Destiny; the copy keeps TCGdex's Impostor."
+  },
+  {
+    "kind": "card name",
+    "language": "en",
+    "set": "base4",
+    "number": "102",
+    "ours": "Impostor Professor Oak",
+    "bulbapedia": "Imposter Professor Oak",
+    "reason": "The Base Set 2 reprint of Base Set 73, spelt the same two ways as there."
+  }
+]

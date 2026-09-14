@@ -1,0 +1,355 @@
+<!-- From Bulbapedia, "BREAKthrough (TCG)", revision 4387404 (https://bulbapedia.bulbagarden.net/w/index.php?oldid=4387404), CC BY-NC-SA 2.5. Only the infobox and the set list templates are kept, as a test fixture for bulbapedia-setlist.mjs. -->
+{{TCGExpansionInfobox
+|setname=BREAKthrough
+|jasetname=青い衝撃 • 赤い閃光
+|transsetname=Blue Shock • Red Flash
+|setsymbol=yes
+|setlogo=XY8 Logo EN.png
+|encards=164
+|ensetnum=66
+|enrelease=November 4, 2015
+|jacards={{tt|130|65 in Blue Shock; 65 in Red Flash; 1 shared card}}
+|jasetnum=60
+|jarelease=September 26, 2015
+|deck1=Burning Spark
+|deck1type={{e|Lightning}}{{e|Fire}}
+|deck2=Night Striker
+|deck2type={{e|Psychic}}{{e|Darkness}}
+|prevset=Bandit Ring
+|japrevset=Bandit Ring
+|japrevsetname=Bandit Ring
+|nextset=Rage of the Broken Heavens
+|janextset=Rage of the Broken Heavens
+|janextsetname=Rage of the Broken Heavens
+}}
+{{Setlist/nmheader|title=Additional cards|tablecol=065CAE|bordercol=CA2648|cellcol=D00000|promo=yes|symbol=no}}
+{{Setlist/nmentry|15/162|{{TCG ID|BREAKthrough|Vivillon|15}}|Grass|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|Sun & Moon Knock Out Collection}} exclusive}}
+{{Setlist/nmentry|20/162|{{TCG ID|BREAKthrough|Typhlosion|20}}|Fire|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|Sun & Moon Two Pack Blister}} exclusive}}
+{{Setlist/nmentry|33/162|{{TCG ID|BREAKthrough|Octillery|33}}|Water|||Non Holo {{TCG|Battle Arena Decks: Rayquaza vs. Keldeo}} exclusive}}
+{{Setlist/nmentry|38/162|{{TCG ID|BREAKthrough|Empoleon|38}}|Water|||Non Holo {{TCG|Battle Arena Decks—Mega Charizard X vs. Mega Blastoise|Battle Arena Deck—Mega Blastoise}} exclusive}}
+{{Setlist/nmentry|49/162|{{TCG ID|BREAKthrough|Raichu|49}}|Lightning|||Cracked Ice Holo {{TCG|Burning Spark}} Theme Deck exclusive}}
+{{Setlist/nmentry|54/162|{{TCG ID|BREAKthrough|Magnezone|54}}|Lightning|||Non Holo {{TCG|Burning Spark}} Theme Deck and {{TCG|Battle Arena Decks: Black Kyurem vs. White Kyurem}} exclusive}}
+{{Setlist/nmentry|55/162|{{TCG ID|BREAKthrough|Raikou|55}}|Lightning|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|Guardians Rising Blisters}} exclusive}}
+{{Setlist/nmentry|60/162|{{TCG ID|BREAKthrough|Gengar|60}}|Psychic|||Non Holo {{TCG|Night Striker}} Theme Deck exclusive}}
+{{Setlist/nmentry|60/162|{{TCG ID|BREAKthrough|Gengar|60}}|Psychic|||Cosmos Holo {{TCGMerch|XY BREAK|Series|Pokémon Champions Tins}} exclusive}}
+{{Setlist/nmentry|78/162|{{TCG ID|BREAKthrough|Marowak|78}}|Fighting|||1st Place Reverse Holo {{TCG|Pokémon League}} {{TCG|League Challenge}} promo}}
+{{Setlist/nmentry|78/162|{{TCG ID|BREAKthrough|Marowak|78}}|Fighting|||2nd Place Reverse Holo {{TCG|Pokémon League}} {{TCG|League Challenge}} promo}}
+{{Setlist/nmentry|78/162|{{TCG ID|BREAKthrough|Marowak|78}}|Fighting|||3rd Place Reverse Holo {{TCG|Pokémon League}} {{TCG|League Challenge}} promo}}
+{{Setlist/nmentry|78/162|{{TCG ID|BREAKthrough|Marowak|78}}|Fighting|||4th Place Reverse Holo {{TCG|Pokémon League}} {{TCG|League Challenge}} promo}}
+{{Setlist/nmentry|84/162|{{TCG ID|BREAKthrough|Gallade|84}}|Fighting|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|XY Premium Checklane Blisters}} exclusive}}
+{{Setlist/nmentry|91/162|{{TCG ID|BREAKthrough|Zoroark|91}}|Darkness|||Non Holo {{TCG|Night Striker}} Theme Deck exclusive}}
+{{Setlist/nmentry|91/162|{{TCG ID|BREAKthrough|Zoroark|91}}|Darkness|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|Sun & Moon Knock Out Collection}} exclusive}}
+{{Setlist/nmentry|94/162|{{TCG ID|BREAKthrough|Yveltal|94}}|Darkness|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|Xerneas and Yveltal Three Pack Blisters}} exclusive}}
+{{Setlist/nmentry|101/162|{{TCG ID|BREAKthrough|Flabébé|101}}|Fairy|||Reverse Holo {{TCG|Pokémon League}} Promo}}
+{{Setlist/nmentry|102/162|{{TCG ID|BREAKthrough|Floette|102}}|Fairy|||Reverse Holo {{TCG|Pokémon League}} Promo}}
+{{Setlist/nmentry|103/162|{{TCG ID|BREAKthrough|Florges|103}}|Fairy|||Reverse Holo {{TCG|Pokémon League}} Promo}}
+{{Setlist/nmentry|107/162|{{TCG ID|BREAKthrough|Xerneas|107}}|Fairy|||Cosmos Holo {{TCGMerch|Sun & Moon|Series|Xerneas and Yveltal Three Pack Blisters}} exclusive}}
+{{Setlist/nmentry|107/162|{{TCG ID|BREAKthrough|Xerneas|107}}|Fairy|||Non Holo {{TCG|Ho-Oh Legendary Battle Deck}} exclusive}}
+{{Setlist/nmentry|112/162|{{TCG ID|BREAKthrough|Noivern|112}}|Dragon|||Cracked Ice Holo {{TCG|Night Striker}} Theme Deck exclusive}}
+{{Setlist/nmentry|138/162|{{TCG ID|BREAKthrough|Giovanni's Scheme|138}}|Supporter|||Reverse Holo Regional Championships 2016 promo}}
+{{Setlist/nmentry|138/162|{{TCG ID|BREAKthrough|Giovanni's Scheme|138}}|Supporter|||Staff Reverse Holo Regional Championships 2016 promo}}
+{{Setlist/nmentry|145/162|{{TCG ID|BREAKthrough|Parallel City|145}}|Stadium|||Reverse Holo City Championships 2016 promo}}
+{{Setlist/nmentry|145/162|{{TCG ID|BREAKthrough|Parallel City|145}}|Stadium|||Staff Reverse Holo City Championships 2016 promo}}
+{{Setlist/nmentry|146a/162|{{TCG ID|BREAKthrough|Professor's Letter|146a}}|Item|||Holo {{TCG|Yellow A Alternate cards|Yellow A Alternate art}} {{TCG|Battle Arena Decks—Mega Charizard X vs. Mega Blastoise|Battle Arena Deck—Mega Charizard X}} exclusive}}
+{{Setlist/nmentry|146a/162|{{TCG ID|BREAKthrough|Professor's Letter|146a}}|Item|||Non Holo {{TCG|Yellow A Alternate cards|Yellow A Alternate art}} {{TCG|Battle Arena Decks—Mega Charizard X vs. Mega Blastoise|Battle Arena Deck—Mega Blastoise}} exclusive}}
+{{Setlist/nmfooter|cellcol=D00000}}
+{{Setlist/nmheader|title=BREAKthrough|tablecol=065CAE|bordercol=CA2648|cellcol=D00000|rarity=yes|symbol=yes|image=SetSymbolBREAKthrough.png}}
+{{Setlist/nmentry|1/162|{{TCG ID|BREAKthrough|Paras|1}}|Grass||Common}}
+{{Setlist/nmentry|2/162|{{TCG ID|BREAKthrough|Parasect|2}}|Grass||Rare}}
+{{Setlist/nmentry|3/162|{{TCG ID|BREAKthrough|Pinsir|3}}|Grass||Uncommon}}
+{{Setlist/nmentry|4/162|{{TCG ID|BREAKthrough|Cacnea|4}}|Grass||Common}}
+{{Setlist/nmentry|5/162|{{TCG ID|BREAKthrough|Pansage|5}}|Grass||Common}}
+{{Setlist/nmentry|6/162|{{TCG ID|BREAKthrough|Simisage|6}}|Grass||Rare}}
+{{Setlist/nmentry|7/162|{{TCG ID|BREAKthrough|Chespin|7}}|Grass||Common}}
+{{Setlist/nmentry|8/162|{{TCG ID|BREAKthrough|Chespin|8}}|Grass||Common}}
+{{Setlist/nmentry|9/162|{{TCG ID|BREAKthrough|Chespin|9}}|Grass||Common}}
+{{Setlist/nmentry|10/162|{{TCG ID|BREAKthrough|Quilladin|10}}|Grass||Uncommon}}
+{{Setlist/nmentry|11/162|{{TCG ID|BREAKthrough|Chesnaught|11}}|Grass||Rare Holo}}
+{{Setlist/nmentry|12/162|[[Chesnaught BREAK (BREAKthrough 12)|Chesnaught]]{{BREAK}}|Grass||Rare BREAK}}
+{{Setlist/nmentry|13/162|{{TCG ID|BREAKthrough|Scatterbug|13}}|Grass||Common}}
+{{Setlist/nmentry|14/162|{{TCG ID|BREAKthrough|Spewpa|14}}|Grass||Uncommon}}
+{{Setlist/nmentry|15/162|{{TCG ID|BREAKthrough|Vivillon|15}}|Grass||Rare Holo}}
+{{Setlist/nmentry|16/162|{{TCG ID|BREAKthrough|Skiddo|16}}|Grass||Common}}
+{{Setlist/nmentry|17/162|{{TCG ID|BREAKthrough|Gogoat|17}}|Grass||Uncommon}}
+{{Setlist/nmentry|18/162|{{TCG ID|BREAKthrough|Cyndaquil|18}}|Fire||Common}}
+{{Setlist/nmentry|19/162|{{TCG ID|BREAKthrough|Quilava|19}}|Fire||Uncommon}}
+{{Setlist/nmentry|20/162|{{TCG ID|BREAKthrough|Typhlosion|20}}|Fire||Rare Holo}}
+{{Setlist/nmentry|21/162|[[Houndoom-EX (BREAKthrough 21)|Houndoom]]{{EX}}|Fire||Rare Holo ex}}
+{{Setlist/nmentry|22/162|{{Mega}}[[M Houndoom-EX (BREAKthrough 22)|Houndoom]]{{EX}}|Fire||Rare Holo ex}}
+{{Setlist/nmentry|23/162|{{TCG ID|BREAKthrough|Pansear|23}}|Fire||Common}}
+{{Setlist/nmentry|24/162|{{TCG ID|BREAKthrough|Simisear|24}}|Fire||Rare}}
+{{Setlist/nmentry|25/162|{{TCG ID|BREAKthrough|Fennekin|25}}|Fire||Common}}
+{{Setlist/nmentry|26/162|{{TCG ID|BREAKthrough|Braixen|26}}|Fire||Uncommon}}
+{{Setlist/nmentry|27/162|{{TCG ID|BREAKthrough|Goldeen|27}}|Water||Common}}
+{{Setlist/nmentry|28/162|{{TCG ID|BREAKthrough|Seaking|28}}|Water||Uncommon}}
+{{Setlist/nmentry|29/162|{{TCG ID|BREAKthrough|Staryu|29}}|Water||Common}}
+{{Setlist/nmentry|30/162|{{TCG ID|BREAKthrough|Starmie|30}}|Water||Uncommon}}
+{{Setlist/nmentry|31/162|{{TCG ID|BREAKthrough|Remoraid|31}}|Water||Common}}
+{{Setlist/nmentry|32/162|{{TCG ID|BREAKthrough|Remoraid|32}}|Water||Common}}
+{{Setlist/nmentry|33/162|{{TCG ID|BREAKthrough|Octillery|33}}|Water||Rare Holo}}
+{{Setlist/nmentry|34/162|[[Glalie-EX (BREAKthrough 34)|Glalie]]{{EX}}|Water||Rare Holo ex}}
+{{Setlist/nmentry|35/162|{{Mega}}[[M Glalie-EX (BREAKthrough 35)|Glalie]]{{EX}}|Water||Rare Holo ex}}
+{{Setlist/nmentry|36/162|{{TCG ID|BREAKthrough|Piplup|36}}|Water||Common}}
+{{Setlist/nmentry|37/162|{{TCG ID|BREAKthrough|Prinplup|37}}|Water||Uncommon}}
+{{Setlist/nmentry|38/162|{{TCG ID|BREAKthrough|Empoleon|38}}|Water||Rare Holo}}
+{{Setlist/nmentry|39/162|{{TCG ID|BREAKthrough|Snover|39}}|Water||Common}}
+{{Setlist/nmentry|40/162|{{TCG ID|BREAKthrough|Abomasnow|40}}|Water||Rare}}
+{{Setlist/nmentry|41/162|{{TCG ID|BREAKthrough|Panpour|41}}|Water||Common}}
+{{Setlist/nmentry|42/162|{{TCG ID|BREAKthrough|Simipour|42}}|Water||Rare}}
+{{Setlist/nmentry|43/162|{{TCG ID|BREAKthrough|Vanillite|43}}|Water||Common}}
+{{Setlist/nmentry|44/162|{{TCG ID|BREAKthrough|Vanillish|44}}|Water||Uncommon}}
+{{Setlist/nmentry|45/162|{{TCG ID|BREAKthrough|Vanilluxe|45}}|Water||Rare}}
+{{Setlist/nmentry|46/162|{{TCG ID|BREAKthrough|Froakie|46}}|Water||Common}}
+{{Setlist/nmentry|47/162|{{TCG ID|BREAKthrough|Frogadier|47}}|Water||Uncommon}}
+{{Setlist/nmentry|48/162|{{TCG ID|BREAKthrough|Pikachu|48}}|Lightning||Common}}
+{{Setlist/nmentry|49/162|{{TCG ID|BREAKthrough|Raichu|49}}|Lightning||Rare}}
+{{Setlist/nmentry|50/162|[[Raichu BREAK (BREAKthrough 50)|Raichu]]{{BREAK}}|Lightning||Rare BREAK}}
+{{Setlist/nmentry|51/162|{{TCG ID|BREAKthrough|Magnemite|51}}|Lightning||Common}}
+{{Setlist/nmentry|52/162|{{TCG ID|BREAKthrough|Magnemite|52}}|Lightning||Common}}
+{{Setlist/nmentry|53/162|{{TCG ID|BREAKthrough|Magneton|53}}|Lightning||Uncommon}}
+{{Setlist/nmentry|54/162|{{TCG ID|BREAKthrough|Magnezone|54}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|55/162|{{TCG ID|BREAKthrough|Raikou|55}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|56/162|{{TCG ID|BREAKthrough|Stunfisk|56}}|Lightning||Uncommon}}
+{{Setlist/nmentry|57/162|{{TCG ID|BREAKthrough|Dedenne|57}}|Lightning||Uncommon}}
+{{Setlist/nmentry|58/162|{{TCG ID|BREAKthrough|Gastly|58}}|Psychic||Common}}
+{{Setlist/nmentry|59/162|{{TCG ID|BREAKthrough|Haunter|59}}|Psychic||Uncommon}}
+{{Setlist/nmentry|60/162|{{TCG ID|BREAKthrough|Gengar|60}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|61/162|[[Mewtwo-EX (BREAKthrough 61)|Mewtwo]]{{EX}}|Psychic||Rare Holo ex}}
+{{Setlist/nmentry|62/162|[[Mewtwo-EX (BREAKthrough 62)|Mewtwo]]{{EX}}|Psychic||Rare Holo ex}}
+{{Setlist/nmentry|63/162|{{Mega}}[[M Mewtwo-EX (BREAKthrough 63)|Mewtwo]]{{EX}}|Psychic||Rare Holo ex}}
+{{Setlist/nmentry|64/162|{{Mega}}[[M Mewtwo-EX (BREAKthrough 64)|Mewtwo]]{{EX}}|Psychic||Rare Holo ex}}
+{{Setlist/nmentry|65/162|{{TCG ID|BREAKthrough|Misdreavus|65}}|Psychic||Common}}
+{{Setlist/nmentry|66/162|{{TCG ID|BREAKthrough|Mismagius|66}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|67/162|{{TCG ID|BREAKthrough|Wobbuffet|67}}|Psychic||Uncommon}}
+{{Setlist/nmentry|68/162|{{TCG ID|BREAKthrough|Ralts|68}}|Psychic||Common}}
+{{Setlist/nmentry|69/162|{{TCG ID|BREAKthrough|Kirlia|69}}|Psychic||Uncommon}}
+{{Setlist/nmentry|70/162|{{TCG ID|BREAKthrough|Cresselia|70}}|Psychic||Rare}}
+{{Setlist/nmentry|71/162|{{TCG ID|BREAKthrough|Woobat|71}}|Psychic||Common}}
+{{Setlist/nmentry|72/162|{{TCG ID|BREAKthrough|Swoobat|72}}|Psychic||Uncommon}}
+{{Setlist/nmentry|73/162|{{TCG ID|BREAKthrough|Elgyem|73}}|Psychic||Common}}
+{{Setlist/nmentry|74/162|{{TCG ID|BREAKthrough|Beheeyem|74}}|Psychic||Uncommon}}
+{{Setlist/nmentry|75/162|{{TCG ID|BREAKthrough|Sandshrew|75}}|Fighting||Common}}
+{{Setlist/nmentry|76/162|{{TCG ID|BREAKthrough|Sandslash|76}}|Fighting||Uncommon}}
+{{Setlist/nmentry|77/162|{{TCG ID|BREAKthrough|Cubone|77}}|Fighting||Common}}
+{{Setlist/nmentry|78/162|{{TCG ID|BREAKthrough|Marowak|78}}|Fighting||Rare}}
+{{Setlist/nmentry|79/162|[[Marowak BREAK (BREAKthrough 79)|Marowak]]{{BREAK}}|Fighting||Rare BREAK}}
+{{Setlist/nmentry|80/162|{{TCG ID|BREAKthrough|Swinub|80}}|Fighting||Common}}
+{{Setlist/nmentry|81/162|{{TCG ID|BREAKthrough|Piloswine|81}}|Fighting||Uncommon}}
+{{Setlist/nmentry|82/162|{{TCG ID|BREAKthrough|Mamoswine|82}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|83/162|{{TCG ID|BREAKthrough|Hippopotas|83}}|Fighting||Common}}
+{{Setlist/nmentry|84/162|{{TCG ID|BREAKthrough|Gallade|84}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|85/162|{{TCG ID|BREAKthrough|Meloetta|85}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|86/162|{{TCG ID|BREAKthrough|Pancham|86}}|Fighting||Common}}
+{{Setlist/nmentry|87/162|{{TCG ID|BREAKthrough|Hawlucha|87}}|Fighting||Rare}}
+{{Setlist/nmentry|88/162|{{TCG ID|BREAKthrough|Cacturne|88}}|Darkness||Uncommon}}
+{{Setlist/nmentry|89/162|{{TCG ID|BREAKthrough|Zorua|89}}|Darkness||Common}}
+{{Setlist/nmentry|90/162|{{TCG ID|BREAKthrough|Zorua|90}}|Darkness||Common}}
+{{Setlist/nmentry|91/162|{{TCG ID|BREAKthrough|Zoroark|91}}|Darkness||Rare Holo}}
+{{Setlist/nmentry|92/162|[[Zoroark BREAK (BREAKthrough 92)|Zoroark]]{{BREAK}}|Darkness||Rare BREAK}}
+{{Setlist/nmentry|93/162|{{TCG ID|BREAKthrough|Inkay|93}}|Darkness||Common}}
+{{Setlist/nmentry|94/162|{{TCG ID|BREAKthrough|Yveltal|94}}|Darkness||Rare Holo}}
+{{Setlist/nmentry|95/162|{{TCG ID|BREAKthrough|Bronzor|95}}|Metal||Common}}
+{{Setlist/nmentry|96/162|{{TCG ID|BREAKthrough|Bronzong|96}}|Metal||Rare}}
+{{Setlist/nmentry|97/162|{{TCG ID|BREAKthrough|Mr. Mime|97}}|Fairy||Rare}}
+{{Setlist/nmentry|98/162|{{TCG ID|BREAKthrough|Snubbull|98}}|Fairy||Common}}
+{{Setlist/nmentry|99/162|{{TCG ID|BREAKthrough|Granbull|99}}|Fairy||Uncommon}}
+{{Setlist/nmentry|100/162|{{TCG ID|BREAKthrough|Ralts|100}}|Fairy||Common}}
+{{Setlist/nmentry|101/162|{{TCG ID|BREAKthrough|Flabébé|101}}|Fairy||Common}}
+{{Setlist/nmentry|102/162|{{TCG ID|BREAKthrough|Floette|102}}|Fairy||Uncommon}}
+{{Setlist/nmentry|103/162|{{TCG ID|BREAKthrough|Florges|103}}|Fairy||Rare}}
+{{Setlist/nmentry|104/162|[[Florges BREAK (BREAKthrough 104)|Florges]]{{BREAK}}|Fairy||Rare BREAK}}
+{{Setlist/nmentry|105/162|{{TCG ID|BREAKthrough|Spritzee|105}}|Fairy||Common}}
+{{Setlist/nmentry|106/162|{{TCG ID|BREAKthrough|Aromatisse|106}}|Fairy||Rare}}
+{{Setlist/nmentry|107/162|{{TCG ID|BREAKthrough|Xerneas|107}}|Fairy||Rare Holo}}
+{{Setlist/nmentry|108/162|{{TCG ID|BREAKthrough|Axew|108}}|Dragon||Common}}
+{{Setlist/nmentry|109/162|{{TCG ID|BREAKthrough|Axew|109}}|Dragon||Common}}
+{{Setlist/nmentry|110/162|{{TCG ID|BREAKthrough|Fraxure|110}}|Dragon||Uncommon}}
+{{Setlist/nmentry|111/162|{{TCG ID|BREAKthrough|Haxorus|111}}|Dragon||Rare Holo}}
+{{Setlist/nmentry|112/162|{{TCG ID|BREAKthrough|Noivern|112}}|Dragon||Rare}}
+{{Setlist/nmentry|113/162|[[Noivern BREAK (BREAKthrough 113)|Noivern]]{{BREAK}}|Dragon||Rare BREAK}}
+{{Setlist/nmentry|114/162|{{TCG ID|BREAKthrough|Meowth|114}}|Colorless||Common}}
+{{Setlist/nmentry|115/162|{{TCG ID|BREAKthrough|Doduo|115}}|Colorless||Common}}
+{{Setlist/nmentry|116/162|{{TCG ID|BREAKthrough|Doduo|116}}|Colorless||Common}}
+{{Setlist/nmentry|117/162|{{TCG ID|BREAKthrough|Dodrio|117}}|Colorless||Rare}}
+{{Setlist/nmentry|118/162|{{TCG ID|BREAKthrough|Snorlax|118}}|Colorless||Uncommon}}
+{{Setlist/nmentry|119/162|{{TCG ID|BREAKthrough|Hoothoot|119}}|Colorless||Common}}
+{{Setlist/nmentry|120/162|{{TCG ID|BREAKthrough|Noctowl|120}}|Colorless||Rare}}
+{{Setlist/nmentry|121/162|{{TCG ID|BREAKthrough|Teddiursa|121}}|Colorless||Common}}
+{{Setlist/nmentry|122/162|{{TCG ID|BREAKthrough|Ursaring|122}}|Colorless||Uncommon}}
+{{Setlist/nmentry|123/162|{{TCG ID|BREAKthrough|Smeargle|123}}|Colorless||Rare}}
+{{Setlist/nmentry|124/162|{{TCG ID|BREAKthrough|Swablu|124}}|Colorless||Common}}
+{{Setlist/nmentry|125/162|{{TCG ID|BREAKthrough|Starly|125}}|Colorless||Common}}
+{{Setlist/nmentry|126/162|{{TCG ID|BREAKthrough|Staravia|126}}|Colorless||Uncommon}}
+{{Setlist/nmentry|127/162|{{TCG ID|BREAKthrough|Staraptor|127}}|Colorless||Rare}}
+{{Setlist/nmentry|128/162|{{TCG ID|BREAKthrough|Chatot|128}}|Colorless||Rare}}
+{{Setlist/nmentry|129/162|{{TCG ID|BREAKthrough|Rufflet|129}}|Colorless||Common}}
+{{Setlist/nmentry|130/162|{{TCG ID|BREAKthrough|Braviary|130}}|Colorless||Rare}}
+{{Setlist/nmentry|131/162|{{TCG ID|BREAKthrough|Noibat|131}}|Colorless||Common}}
+{{Setlist/nmentry|132/162|{{TCG ID|BREAKthrough|Noibat|132}}|Colorless||Common}}
+{{Setlist/nmentry|133/162|{{TCG ID|BREAKthrough|Assault Vest|133}}|Item|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|134/162|{{TCG ID|BREAKthrough|Brigette|134}}|Supporter||Uncommon}}
+{{Setlist/nmentry|135/162|{{TCG ID|BREAKthrough|Buddy-Buddy Rescue|135}}|Item||Uncommon}}
+{{Setlist/nmentry|136/162|{{TCG ID|BREAKthrough|Fisherman|136}}|Supporter||Uncommon}}
+{{Setlist/nmentry|137/162|{{TCG ID|BREAKthrough|Float Stone|137}}|Item|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|138/162|{{TCG ID|BREAKthrough|Giovanni's Scheme|138}}|Supporter||Uncommon}}
+{{Setlist/nmentry|139/162|{{TCG ID|BREAKthrough|Glalie Spirit Link|139}}|Item|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|140/162|{{TCG ID|BREAKthrough|Heavy Ball|140}}|Item||Uncommon}}
+{{Setlist/nmentry|141/162|{{TCG ID|BREAKthrough|Heavy Boots|141}}|Item|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|142/162|{{TCG ID|BREAKthrough|Houndoom Spirit Link|142}}|Item|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|143/162|{{TCG ID|BREAKthrough|Judge|143}}|Supporter||Uncommon}}
+{{Setlist/nmentry|144/162|{{TCG ID|BREAKthrough|Mewtwo Spirit Link|144}}|Item|Pokémon Tool|Uncommon}}
+{{Setlist/nmentry|145/162|{{TCG ID|BREAKthrough|Parallel City|145}}|Stadium||Uncommon}}
+{{Setlist/nmentry|146/162|{{TCG ID|BREAKthrough|Professor's Letter|146}}|Item||Uncommon}}
+{{Setlist/nmentry|147/162|{{TCG ID|BREAKthrough|Reserved Ticket|147}}|Item||Uncommon}}
+{{Setlist/nmentry|148/162|{{TCG ID|BREAKthrough|Skyla|148}}|Supporter||Uncommon}}
+{{Setlist/nmentry|149/162|{{TCG ID|BREAKthrough|Super Rod|149}}|Item||Uncommon}}
+{{Setlist/nmentry|150/162|{{TCG ID|BREAKthrough|Town Map|150}}|Item||Uncommon}}
+{{Setlist/nmentry|151/162|{{TCG ID|BREAKthrough|Burning Energy|151}}|Energy|Fire|Uncommon}}
+{{Setlist/nmentry|152/162|{{TCG ID|BREAKthrough|Rainbow Energy|152}}|Energy|Colorless|Uncommon}}
+{{Setlist/nmentry|153/162|[[Houndoom-EX (BREAKthrough 153)|Houndoom]]{{EX}}|Fire||Rare Ultra}}
+{{Setlist/nmentry|154/162|{{Mega}}[[M Houndoom-EX (BREAKthrough 154)|Houndoom]]{{EX}}|Fire||Rare Ultra}}
+{{Setlist/nmentry|155/162|[[Glalie-EX (BREAKthrough 155)|Glalie]]{{EX}}|Water||Rare Ultra}}
+{{Setlist/nmentry|156/162|{{Mega}}[[M Glalie-EX (BREAKthrough 156)|Glalie]]{{EX}}|Water||Rare Ultra}}
+{{Setlist/nmentry|157/162|[[Mewtwo-EX (BREAKthrough 157)|Mewtwo]]{{EX}}|Psychic||Rare Ultra}}
+{{Setlist/nmentry|158/162|[[Mewtwo-EX (BREAKthrough 158)|Mewtwo]]{{EX}}|Psychic||Rare Ultra}}
+{{Setlist/nmentry|159/162|{{Mega}}[[M Mewtwo-EX (BREAKthrough 159)|Mewtwo]]{{EX}}|Psychic||Rare Ultra}}
+{{Setlist/nmentry|160/162|{{Mega}}[[M Mewtwo-EX (BREAKthrough 160)|Mewtwo]]{{EX}}|Psychic||Rare Ultra}}
+{{Setlist/nmentry|161/162|{{TCG ID|BREAKthrough|Brigette|161}}|Supporter||Rare Ultra}}
+{{Setlist/nmentry|162/162|{{TCG ID|BREAKthrough|Giovanni's Scheme|162}}|Supporter||Rare Ultra}}
+{{Setlist/nmentry|163/162|[[Mewtwo-EX (BREAKthrough 163)|Mewtwo]]{{EX}}|Psychic||Rare Secret}}
+{{Setlist/nmentry|164/162|[[Mewtwo-EX (BREAKthrough 164)|Mewtwo]]{{EX}}|Psychic||Rare Secret}}
+{{Setlist/nmfooter|cellcol=D00000}}
+{{Setlist/nmheader|title=Blue Shock|tablecol=065CAE|bordercol=0C377B|cellcol=068BD3|rarity=yes|symbol=yes|image=SetSymbolBlue Shock.png}}
+{{Setlist/nmentry|001/059|{{TCG ID|Blue Shock|Pinsir|1}}|Grass||U}}
+{{Setlist/nmentry|002/059|{{TCG ID|Blue Shock|Cacnea|2}}|Grass||C}}
+{{Setlist/nmentry|003/059|{{TCG ID|Blue Shock|Pansage|3}}|Grass||C}}
+{{Setlist/nmentry|004/059|{{TCG ID|Blue Shock|Simisage|4}}|Grass||C}}
+{{Setlist/nmentry|005/059|{{TCG ID|Blue Shock|Chespin|5}}|Grass||C}}
+{{Setlist/nmentry|006/059|{{TCG ID|Blue Shock|Scatterbug|6}}|Grass||C}}
+{{Setlist/nmentry|007/059|{{TCG ID|Blue Shock|Spewpa|7}}|Grass||C}}
+{{Setlist/nmentry|008/059|{{TCG ID|Blue Shock|Vivillon|8}}|Grass||R}}
+{{Setlist/nmentry|009/059|{{TCG ID|Blue Shock|Cyndaquil|9}}|Fire||C}}
+{{Setlist/nmentry|010/059|{{TCG ID|Blue Shock|Quilava|10}}|Fire||C}}
+{{Setlist/nmentry|011/059|{{TCG ID|Blue Shock|Typhlosion|11}}|Fire||R}}
+{{Setlist/nmentry|012/059|{{TCG ID|Blue Shock|Remoraid|12}}|Water||C}}
+{{Setlist/nmentry|013/059|{{TCG ID|Blue Shock|Octillery|13}}|Water||R}}
+{{Setlist/nmentry|014/059|[[Glalie-EX (Blue Shock 14)|Glalie]]{{EX}}|Water||RR}}
+{{Setlist/nmentry|015/059|{{Mega}}[[M Glalie-EX (Blue Shock 15)|Glalie]]{{EX}}|Water||RR}}
+{{Setlist/nmentry|016/059|{{TCG ID|Blue Shock|Panpour|16}}|Water||C}}
+{{Setlist/nmentry|017/059|{{TCG ID|Blue Shock|Simipour|17}}|Water||C}}
+{{Setlist/nmentry|018/059|{{TCG ID|Blue Shock|Vanillite|18}}|Water||C}}
+{{Setlist/nmentry|019/059|{{TCG ID|Blue Shock|Vanillish|19}}|Water||C}}
+{{Setlist/nmentry|020/059|{{TCG ID|Blue Shock|Vanilluxe|20}}|Water||U}}
+{{Setlist/nmentry|021/059|{{TCG ID|Blue Shock|Magnemite|21}}|Lightning||C}}
+{{Setlist/nmentry|022/059|{{TCG ID|Blue Shock|Gastly|22}}|Psychic||C}}
+{{Setlist/nmentry|023/059|{{TCG ID|Blue Shock|Haunter|23}}|Psychic||U}}
+{{Setlist/nmentry|024/059|{{TCG ID|Blue Shock|Gengar|24}}|Psychic||R}}
+{{Setlist/nmentry|025/059|[[Mewtwo-EX (Blue Shock 25)|Mewtwo]]{{EX}}|Psychic||RR}}
+{{Setlist/nmentry|026/059|{{Mega}}[[M Mewtwo-EX (Blue Shock 26)|Mewtwo]]{{EX}}|Psychic||RR}}
+{{Setlist/nmentry|027/059|{{TCG ID|Blue Shock|Woobat|27}}|Psychic||C}}
+{{Setlist/nmentry|028/059|{{TCG ID|Blue Shock|Swoobat|28}}|Psychic||C}}
+{{Setlist/nmentry|029/059|{{TCG ID|Blue Shock|Elgyem|29}}|Psychic||C}}
+{{Setlist/nmentry|030/059|{{TCG ID|Blue Shock|Beheeyem|30}}|Psychic||U}}
+{{Setlist/nmentry|031/059|{{TCG ID|Blue Shock|Sandshrew|31}}|Fighting||C}}
+{{Setlist/nmentry|032/059|{{TCG ID|Blue Shock|Sandslash|32}}|Fighting||U}}
+{{Setlist/nmentry|033/059|{{TCG ID|Blue Shock|Meloetta|33}}|Fighting||R}}
+{{Setlist/nmentry|034/059|{{TCG ID|Blue Shock|Cacturne|34}}|Darkness||U}}
+{{Setlist/nmentry|035/059|{{TCG ID|Blue Shock|Zorua|35}}|Darkness||C}}
+{{Setlist/nmentry|036/059|{{TCG ID|Blue Shock|Zoroark|36}}|Darkness||R}}
+{{Setlist/nmentry|037/059|[[Zoroark BREAK (Blue Shock 37)|Zoroark]]{{BREAK}}|Darkness||RR}}
+{{Setlist/nmentry|038/059|{{TCG ID|Blue Shock|Snubbull|38}}|Fairy||C}}
+{{Setlist/nmentry|039/059|{{TCG ID|Blue Shock|Granbull|39}}|Fairy||U}}
+{{Setlist/nmentry|040/059|{{TCG ID|Blue Shock|Flabébé|40}}|Fairy||C}}
+{{Setlist/nmentry|041/059|{{TCG ID|Blue Shock|Floette|41}}|Fairy||C}}
+{{Setlist/nmentry|042/059|{{TCG ID|Blue Shock|Florges|42}}|Fairy||U}}
+{{Setlist/nmentry|043/059|[[Florges BREAK (Blue Shock 43)|Florges]]{{BREAK}}|Fairy||RR}}
+{{Setlist/nmentry|044/059|{{TCG ID|Blue Shock|Xerneas|44}}|Fairy||R}}
+{{Setlist/nmentry|045/059|{{TCG ID|Blue Shock|Axew|45}}|Dragon||C}}
+{{Setlist/nmentry|046/059|{{TCG ID|Blue Shock|Fraxure|46}}|Dragon||U}}
+{{Setlist/nmentry|047/059|{{TCG ID|Blue Shock|Haxorus|47}}|Dragon||R}}
+{{Setlist/nmentry|048/059|{{TCG ID|Blue Shock|Doduo|48}}|Colorless||C}}
+{{Setlist/nmentry|049/059|{{TCG ID|Blue Shock|Hoothoot|49}}|Colorless||C}}
+{{Setlist/nmentry|050/059|{{TCG ID|Blue Shock|Noctowl|50}}|Colorless||U}}
+{{Setlist/nmentry|051/059|{{TCG ID|Blue Shock|Teddiursa|51}}|Colorless||C}}
+{{Setlist/nmentry|052/059|{{TCG ID|Blue Shock|Ursaring|52}}|Colorless||U}}
+{{Setlist/nmentry|053/059|{{TCG ID|Blue Shock|Smeargle|53}}|Colorless||U}}
+{{Setlist/nmentry|054/059|{{TCG ID|Blue Shock|Float Stone|54}}|Item|Pokémon Tool|U}}
+{{Setlist/nmentry|055/059|{{TCG ID|Blue Shock|Glalie Spirit Link|55}}|Item|Pokémon Tool|U}}
+{{Setlist/nmentry|056/059|{{TCG ID|Blue Shock|Mewtwo Spirit Link|56}}|Item|Pokémon Tool|U}}
+{{Setlist/nmentry|057/059|{{TCG ID|Blue Shock|Brigette|57}}|Supporter||U}}
+{{Setlist/nmentry|058/059|{{TCG ID|Blue Shock|Parallel City|58}}|Stadium||U}}
+{{Setlist/nmentry|059/059|{{TCG ID|Blue Shock|Rainbow Energy|59}}|Energy|Colorless|U}}
+{{Setlist/nmentry|060/059|[[Glalie-EX (Blue Shock 60)|Glalie]]{{EX}}|Water||SR}}
+{{Setlist/nmentry|061/059|{{Mega}}[[M Glalie-EX (Blue Shock 61)|Glalie]]{{EX}}|Water||SR}}
+{{Setlist/nmentry|062/059|[[Mewtwo-EX (Blue Shock 62)|Mewtwo]]{{EX}}|Psychic||SR}}
+{{Setlist/nmentry|063/059|{{Mega}}[[M Mewtwo-EX (Blue Shock 63)|Mewtwo]]{{EX}}|Psychic||SR}}
+{{Setlist/nmentry|064/059|{{TCG ID|Blue Shock|Brigette|64}}|Supporter||SR}}
+{{Setlist/nmentry|065/059|[[Mewtwo-EX (Blue Shock 65)|Mewtwo]]{{EX}}|Psychic||UR}}
+{{Setlist/nmfooter|cellcol=068BD3}}
+{{Setlist/nmheader|title=Red Flash|tablecol=CA2648|bordercol=820012|cellcol=E72422|rarity=yes|symbol=yes|image=SetSymbolRed Flash.png}}
+{{Setlist/nmentry|001/059|{{TCG ID|Red Flash|Paras|1}}|Grass||C}}
+{{Setlist/nmentry|002/059|{{TCG ID|Red Flash|Parasect|2}}|Grass||U}}
+{{Setlist/nmentry|003/059|{{TCG ID|Red Flash|Chespin|3}}|Grass||C}}
+{{Setlist/nmentry|004/059|{{TCG ID|Red Flash|Quilladin|4}}|Grass||C}}
+{{Setlist/nmentry|005/059|{{TCG ID|Red Flash|Chesnaught|5}}|Grass||R}}
+{{Setlist/nmentry|006/059|[[Chesnaught BREAK (Red Flash 6)|Chesnaught]]{{BREAK}}|Grass||RR}}
+{{Setlist/nmentry|007/059|{{TCG ID|Red Flash|Skiddo|7}}|Grass||C}}
+{{Setlist/nmentry|008/059|{{TCG ID|Red Flash|Gogoat|8}}|Grass||U}}
+{{Setlist/nmentry|009/059|[[Houndoom-EX (Red Flash 9)|Houndoom]]{{EX}}|Fire||RR}}
+{{Setlist/nmentry|010/059|{{Mega}}[[M Houndoom-EX (Red Flash 10)|Houndoom]]{{EX}}|Fire||RR}}
+{{Setlist/nmentry|011/059|{{TCG ID|Red Flash|Pansear|11}}|Fire||C}}
+{{Setlist/nmentry|012/059|{{TCG ID|Red Flash|Simisear|12}}|Fire||C}}
+{{Setlist/nmentry|013/059|{{TCG ID|Red Flash|Goldeen|13}}|Water||C}}
+{{Setlist/nmentry|014/059|{{TCG ID|Red Flash|Seaking|14}}|Water||C}}
+{{Setlist/nmentry|015/059|{{TCG ID|Red Flash|Staryu|15}}|Water||C}}
+{{Setlist/nmentry|016/059|{{TCG ID|Red Flash|Starmie|16}}|Water||C}}
+{{Setlist/nmentry|017/059|{{TCG ID|Red Flash|Remoraid|17}}|Water||C}}
+{{Setlist/nmentry|018/059|{{TCG ID|Red Flash|Piplup|18}}|Water||C}}
+{{Setlist/nmentry|019/059|{{TCG ID|Red Flash|Prinplup|19}}|Water||U}}
+{{Setlist/nmentry|020/059|{{TCG ID|Red Flash|Empoleon|20}}|Water||R}}
+{{Setlist/nmentry|021/059|{{TCG ID|Red Flash|Snover|21}}|Water||C}}
+{{Setlist/nmentry|022/059|{{TCG ID|Red Flash|Abomasnow|22}}|Water||U}}
+{{Setlist/nmentry|023/059|{{TCG ID|Red Flash|Magnemite|23}}|Lightning||C}}
+{{Setlist/nmentry|024/059|{{TCG ID|Red Flash|Magneton|24}}|Lightning||C}}
+{{Setlist/nmentry|025/059|{{TCG ID|Red Flash|Magnezone|25}}|Lightning||R}}
+{{Setlist/nmentry|026/059|{{TCG ID|Red Flash|Raikou|26}}|Lightning||R}}
+{{Setlist/nmentry|027/059|[[Mewtwo-EX (Red Flash 27)|Mewtwo]]{{EX}}|Psychic||RR}}
+{{Setlist/nmentry|028/059|{{Mega}}[[M Mewtwo-EX (Red Flash 28)|Mewtwo]]{{EX}}|Psychic||RR}}
+{{Setlist/nmentry|029/059|{{TCG ID|Red Flash|Misdreavus|29}}|Psychic||C}}
+{{Setlist/nmentry|030/059|{{TCG ID|Red Flash|Mismagius|30}}|Psychic||R}}
+{{Setlist/nmentry|031/059|{{TCG ID|Red Flash|Ralts|31}}|Psychic||C}}
+{{Setlist/nmentry|032/059|{{TCG ID|Red Flash|Kirlia|32}}|Psychic||U}}
+{{Setlist/nmentry|033/059|{{TCG ID|Red Flash|Cresselia|33}}|Psychic||C}}
+{{Setlist/nmentry|034/059|{{TCG ID|Red Flash|Cubone|34}}|Fighting||C}}
+{{Setlist/nmentry|035/059|{{TCG ID|Red Flash|Marowak|35}}|Fighting||U}}
+{{Setlist/nmentry|036/059|[[Marowak BREAK (Red Flash 36)|Marowak]]{{BREAK}}|Fighting||RR}}
+{{Setlist/nmentry|037/059|{{TCG ID|Red Flash|Swinub|37}}|Fighting||C}}
+{{Setlist/nmentry|038/059|{{TCG ID|Red Flash|Piloswine|38}}|Fighting||U}}
+{{Setlist/nmentry|039/059|{{TCG ID|Red Flash|Mamoswine|39}}|Fighting||R}}
+{{Setlist/nmentry|040/059|{{TCG ID|Red Flash|Gallade|40}}|Fighting||R}}
+{{Setlist/nmentry|041/059|{{TCG ID|Red Flash|Zorua|41}}|Darkness||C}}
+{{Setlist/nmentry|042/059|{{TCG ID|Red Flash|Yveltal|42}}|Darkness||R}}
+{{Setlist/nmentry|043/059|{{TCG ID|Red Flash|Bronzor|43}}|Metal||C}}
+{{Setlist/nmentry|044/059|{{TCG ID|Red Flash|Bronzong|44}}|Metal||U}}
+{{Setlist/nmentry|045/059|{{TCG ID|Red Flash|Mr. Mime|45}}|Fairy||C}}
+{{Setlist/nmentry|046/059|{{TCG ID|Red Flash|Spritzee|46}}|Fairy||C}}
+{{Setlist/nmentry|047/059|{{TCG ID|Red Flash|Aromatisse|47}}|Fairy||U}}
+{{Setlist/nmentry|048/059|{{TCG ID|Red Flash|Axew|48}}|Dragon||C}}
+{{Setlist/nmentry|049/059|{{TCG ID|Red Flash|Doduo|49}}|Colorless||C}}
+{{Setlist/nmentry|050/059|{{TCG ID|Red Flash|Dodrio|50}}|Colorless||U}}
+{{Setlist/nmentry|051/059|{{TCG ID|Red Flash|Starly|51}}|Colorless||C}}
+{{Setlist/nmentry|052/059|{{TCG ID|Red Flash|Staravia|52}}|Colorless||U}}
+{{Setlist/nmentry|053/059|{{TCG ID|Red Flash|Staraptor|53}}|Colorless||U}}
+{{Setlist/nmentry|054/059|{{TCG ID|Red Flash|Heavy Ball|54}}|Item||U}}
+{{Setlist/nmentry|055/059|{{TCG ID|Red Flash|Assault Vest|55}}|Item|Pokémon Tool|U}}
+{{Setlist/nmentry|056/059|{{TCG ID|Red Flash|Houndoom Spirit Link|56}}|Item|Pokémon Tool|U}}
+{{Setlist/nmentry|057/059|{{TCG ID|Red Flash|Mewtwo Spirit Link|57}}|Item|Pokémon Tool|U}}
+{{Setlist/nmentry|058/059|{{TCG ID|Red Flash|Giovanni's Scheme|58}}|Supporter||U}}
+{{Setlist/nmentry|059/059|{{TCG ID|Red Flash|Burning Energy|59}}|Energy|Fire|U}}
+{{Setlist/nmentry|060/059|[[Houndoom-EX (Red Flash 60)|Houndoom]]{{EX}}|Fire||SR}}
+{{Setlist/nmentry|061/059|{{Mega}}[[M Houndoom-EX (Red Flash 61)|Houndoom]]{{EX}}|Fire||SR}}
+{{Setlist/nmentry|062/059|[[Mewtwo-EX (Red Flash 62)|Mewtwo]]{{EX}}|Psychic||SR}}
+{{Setlist/nmentry|063/059|{{Mega}}[[M Mewtwo-EX (Red Flash 63)|Mewtwo]]{{EX}}|Psychic||SR}}
+{{Setlist/nmentry|064/059|{{TCG ID|Red Flash|Giovanni's Scheme|64}}|Supporter||SR}}
+{{Setlist/nmentry|065/059|[[Mewtwo-EX (Red Flash 65)|Mewtwo]]{{EX}}|Psychic||UR}}
+{{Setlist/nmfooter|cellcol=E72422}}

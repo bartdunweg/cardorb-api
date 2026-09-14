@@ -1,0 +1,96 @@
+# Puts every set name, set size, card number and card name in the copy beside Bulbapedia's once a
+# week, and keeps one issue, "Naming differences", saying where they differ. Nothing is changed but
+# the issue: a difference is for a person to look at (scripts/bulbapedia-compare.mjs), and one kept
+# on purpose goes into src/lib/core/catalogue/bulbapedia-accepted.json with its reason.
+#
+# Reads the database through the Management API with the access token migrate.yml already holds, as
+# data-health.yml does. Bulbapedia's pages are cached between runs by revision, so a week in which
+# nobody edited a set page is one request per fifty pages.
+#
+# Monday 06:00 UTC: after the weekend's catalogue copies, and before data-health at 07:30.
+name: naming-compare
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the report instead of filing it"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: naming-compare
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TITLE: "Naming differences"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # Keyed by run so every run saves what it fetched, restored from the newest before it.
+      - uses: actions/cache@v4
+        with:
+          path: .cache/bulbapedia
+          key: bulbapedia-${{ github.run_id }}
+          restore-keys: bulbapedia-
+
+      - name: Compare with Bulbapedia
+        id: compare
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          node scripts/bulbapedia-compare.mjs --issue issue.md --run-url "$RUN_URL" > report.md
+          status=$?
+          # The step summary holds a megabyte; the report artifact holds all of it.
+          head -c 1000000 report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          # 1 is a difference, which is the issue's to say; anything else is the script.
+          [ "$status" -le 1 ]
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: naming-differences
+          path: report.md
+          if-no-files-found: ignore
+
+      - name: File, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
+          STATUS: ${{ steps.compare.outputs.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          existing="$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number,title --jq "[.[] | select(.title == \"$TITLE\")][0].number // empty")"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run. Status $STATUS; open issue: ${existing:-none}."
+            exit 0
+          fi
+          if [ "$STATUS" = "1" ]; then
+            if [ -n "$existing" ]; then
+              gh issue edit "$existing" -R "$GITHUB_REPOSITORY" --body-file issue.md
+              gh issue comment "$existing" -R "$GITHUB_REPOSITORY" --body "Updated by $RUN_URL: $(head -1 issue.md | sed 's/^## //')"
+            else
+              gh issue create -R "$GITHUB_REPOSITORY" --title "$TITLE" --body-file issue.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" -R "$GITHUB_REPOSITORY" --comment "No differences left that are not accepted ($RUN_URL)."
+          else
+            echo "No differences, and no issue open."
+          fi

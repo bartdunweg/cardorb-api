@@ -1,0 +1,264 @@
+<!-- From Bulbapedia, "Base Set (TCG)", revision 4615919 (https://bulbapedia.bulbagarden.net/w/index.php?oldid=4615919), CC BY-NC-SA 2.5. Only the infobox and the set list templates are kept, as a test fixture for bulbapedia-setlist.mjs. -->
+{{TCGExpansionInfobox
+|setname=Base Set
+|jasetname=拡張パック
+|transsetname=Expansion Pack
+|setsymbol=no
+|setlogo=Pokémon TCG logo old.png
+|encards=102
+|ensetnum=1
+|enrelease=January 9, 1999
+|jacards=102
+|jasetnum=1
+|jarelease=October 20, 1996
+|deck1=Overgrowth
+|deck1type={{e|Water}}{{e|Grass}}
+|deck2=Zap!
+|deck2type={{e|Lightning}}{{e|Psychic}}
+|deck3=Brushfire
+|deck3type={{e|Fire}}{{e|Grass}}
+|deck4=Blackout
+|deck4type={{e|Water}}{{e|Fighting}}
+|prevset=
+|japrevset=
+|japrevsetname=
+|nextset=Pokémon Jungle
+|janextset=Pokémon Jungle
+|janextsetname=Pokémon Jungle
+}}
+{{Setlist/nmheader|title=Additional cards|tablecol=DD494E|bordercol=222D60|cellcol=3363AF|promo=yes|symbol=no}}
+{{Setlist/nmentry|2/102|{{TCG ID|Base Set|Blastoise|2}}|Water|||{{TCG|Celebrations}} Classic Collection "[[Pokémon 25th Anniversary]]" Stamp Holofoil reprint}}
+{{Setlist/nmentry|4/102|{{TCG ID|Base Set|Charizard|4}}|Fire|||{{TCG|Celebrations}} Classic Collection "[[Pokémon 25th Anniversary]]" Stamp Holofoil reprint}}
+{{Setlist/nmentry|4/102|{{TCG ID|Base Set|Charizard|4}} <small>'''[Metal]'''</small>|Fire|||{{TCGMerch|Sword & Shield|Series|Celebrations Ultra-Premium Collection}} {{TCG|metal cards|metal card}} reprint}}
+{{Setlist/nmentry|4/102|{{TCG ID|Base Set|Charizard|4}}|Fire|||{{TCG|30th Celebration}} Classic Collection "[[Pokémon 30th Anniversary]]" Stamp Holofoil reprint}}
+{{Setlist/nmentry|8/102|{{TCG ID|Base Set|Machamp|8}}|Fighting|||Cosmos Holo {{TCG|2-Player CD-ROM Starter Set}} exclusive}}
+{{Setlist/nmentry|15/102|{{TCG ID|Base Set|Venusaur|15}}|Grass|||{{TCG|Celebrations}} Classic Collection "[[Pokémon 25th Anniversary]]" Stamp Holofoil reprint}}
+{{Setlist/nmentry|44/102|{{TCG ID|Base Set|Bulbasaur|44}} <small>'''[Jumbo]'''</small>|Grass|||{{TCGMerch|Sword & Shield|Series|First Partner Packs|Kanto First Partner Pack}}}}
+{{Setlist/nmentry|46/102|{{TCG ID|Base Set|Charmander|46}} <small>'''[Jumbo]'''</small>|Fire|||Kanto First Partner Pack}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}}|Lightning|||Red Cheeks Original Print}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}}|Lightning|||"Red Cheek" [[E3]] Stamp - E3 Convention (May 1999)}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}}|Lightning|||"Yellow Cheek" E3 Stamp - Nintendo Power Magazine (September 1999)}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}}|Lightning|||"PokéTour 1999" Stamp - PokéTour 1999 (Australia)}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}} <small>'''[Jumbo]'''</small>|Lightning|||{{TCGMerch|Sword & Shield|Series|First Partner Collector's Binder}}}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}} <small>'''[Metal]'''</small>|Lightning|||Celebrations Ultra-Premium Collection metal card reprint}}
+{{Setlist/nmentry|63/102|{{TCG ID|Base Set|Squirtle|63}} <small>'''[Jumbo]'''</small>|Water|||Kanto First Partner Pack}}
+{{Setlist/nmentry|73/102|{{TCG ID|Base Set|Imposter Professor Oak|73}}|Trainer|||{{TCG|Celebrations}} Classic Collection "[[Pokémon 25th Anniversary]]" Stamp Holofoil reprint}}
+{{Setlist/nmfooter|cellcol=3363AF}}
+{{Setlist/nmheader|title=Corrected error cards|tablecol=DD494E|bordercol=222D60|cellcol=3363AF|promo=yes|symbol=no}}
+{{Setlist/nmentry|2/102|{{TCG ID|Base Set|Blastoise|2}}|Water|||Printed without the word "Stage"}}
+{{Setlist/nmentry|12/102|{{TCG ID|Base Set|Ninetales|12}}|Fire|||Shadowless Ninetales missing attack damage}}
+{{Setlist/nmentry|14/102|{{TCG ID|Base Set|Raichu|14}}|Lightning|||Pre-release stamp}}
+{{Setlist/nmentry|17/102|{{TCG ID|Base Set|Beedrill|17}}|Grass|||"D.efending" typo}}
+{{Setlist/nmentry|42/102|{{TCG ID|Base Set|Wartortle|42}}|Water|||Wartortle in its Evolution box}}
+{{Setlist/nmentry|47/102|{{TCG ID|Base Set|Diglett|47}}|Fighting|||Attack energy cost symbols rotated 90 degrees}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}}|Lightning|||"1st“ and the letter "d“ in "{{tcg|1st Edition|1st edition}}" missing}}
+{{Setlist/nmentry|102/102|{{TCG ID|Base Set|Water Energy|102}}|Water|||No space between the margin and the water symbol, along with "ENERGY"}}
+{{Setlist/nmfooter|cellcol=3363AF}}
+{{Setlist/nmheader|title=Base Set|tablecol=DD494E|bordercol=222D60|cellcol=3363AF|rarity=yes|symbol=no}}
+{{Setlist/nmentry|1/102|{{TCG ID|Base Set|Alakazam|1}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|2/102|{{TCG ID|Base Set|Blastoise|2}}|Water||Rare Holo}}
+{{Setlist/nmentry|3/102|{{TCG ID|Base Set|Chansey|3}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|4/102|{{TCG ID|Base Set|Charizard|4}}|Fire||Rare Holo}}
+{{Setlist/nmentry|5/102|{{TCG ID|Base Set|Clefairy|5}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|6/102|{{TCG ID|Base Set|Gyarados|6}}|Water||Rare Holo}}
+{{Setlist/nmentry|7/102|{{TCG ID|Base Set|Hitmonchan|7}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|8/102|{{TCG ID|Base Set|Machamp|8}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|9/102|{{TCG ID|Base Set|Magneton|9}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|10/102|{{TCG ID|Base Set|Mewtwo|10}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|11/102|{{TCG ID|Base Set|Nidoking|11}}|Grass||Rare Holo}}
+{{Setlist/nmentry|12/102|{{TCG ID|Base Set|Ninetales|12}}|Fire||Rare Holo}}
+{{Setlist/nmentry|13/102|{{TCG ID|Base Set|Poliwrath|13}}|Water||Rare Holo}}
+{{Setlist/nmentry|14/102|{{TCG ID|Base Set|Raichu|14}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|15/102|{{TCG ID|Base Set|Venusaur|15}}|Grass||Rare Holo}}
+{{Setlist/nmentry|16/102|{{TCG ID|Base Set|Zapdos|16}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|17/102|{{TCG ID|Base Set|Beedrill|17}}|Grass||Rare}}
+{{Setlist/nmentry|18/102|{{TCG ID|Base Set|Dragonair|18}}|Colorless||Rare}}
+{{Setlist/nmentry|19/102|{{TCG ID|Base Set|Dugtrio|19}}|Fighting||Rare}}
+{{Setlist/nmentry|20/102|{{TCG ID|Base Set|Electabuzz|20}}|Lightning||Rare}}
+{{Setlist/nmentry|21/102|{{TCG ID|Base Set|Electrode|21}}|Lightning||Rare}}
+{{Setlist/nmentry|22/102|{{TCG ID|Base Set|Pidgeotto|22}}|Colorless||Rare}}
+{{Setlist/nmentry|23/102|{{TCG ID|Base Set|Arcanine|23}}|Fire||Uncommon}}
+{{Setlist/nmentry|24/102|{{TCG ID|Base Set|Charmeleon|24}}|Fire||Uncommon}}
+{{Setlist/nmentry|25/102|{{TCG ID|Base Set|Dewgong|25}}|Water||Uncommon}}
+{{Setlist/nmentry|26/102|{{TCG ID|Base Set|Dratini|26}}|Colorless||Uncommon}}
+{{Setlist/nmentry|27/102|{{TCG ID|Base Set|Farfetch'd|27}}|Colorless||Uncommon}}
+{{Setlist/nmentry|28/102|{{TCG ID|Base Set|Growlithe|28}}|Fire||Uncommon}}
+{{Setlist/nmentry|29/102|{{TCG ID|Base Set|Haunter|29}}|Psychic||Uncommon}}
+{{Setlist/nmentry|30/102|{{TCG ID|Base Set|Ivysaur|30}}|Grass||Uncommon}}
+{{Setlist/nmentry|31/102|{{TCG ID|Base Set|Jynx|31}}|Psychic||Uncommon}}
+{{Setlist/nmentry|32/102|{{TCG ID|Base Set|Kadabra|32}}|Psychic||Uncommon}}
+{{Setlist/nmentry|33/102|{{TCG ID|Base Set|Kakuna|33}}|Grass||Uncommon}}
+{{Setlist/nmentry|34/102|{{TCG ID|Base Set|Machoke|34}}|Fighting||Uncommon}}
+{{Setlist/nmentry|35/102|{{TCG ID|Base Set|Magikarp|35}}|Water||Uncommon}}
+{{Setlist/nmentry|36/102|{{TCG ID|Base Set|Magmar|36}}|Fire||Uncommon}}
+{{Setlist/nmentry|37/102|{{TCG ID|Base Set|Nidorino|37}}|Grass||Uncommon}}
+{{Setlist/nmentry|38/102|{{TCG ID|Base Set|Poliwhirl|38}}|Water||Uncommon}}
+{{Setlist/nmentry|39/102|{{TCG ID|Base Set|Porygon|39}}|Colorless||Uncommon}}
+{{Setlist/nmentry|40/102|{{TCG ID|Base Set|Raticate|40}}|Colorless||Uncommon}}
+{{Setlist/nmentry|41/102|{{TCG ID|Base Set|Seel|41}}|Water||Uncommon}}
+{{Setlist/nmentry|42/102|{{TCG ID|Base Set|Wartortle|42}}|Water||Uncommon}}
+{{Setlist/nmentry|43/102|{{TCG ID|Base Set|Abra|43}}|Psychic||Common}}
+{{Setlist/nmentry|44/102|{{TCG ID|Base Set|Bulbasaur|44}}|Grass||Common}}
+{{Setlist/nmentry|45/102|{{TCG ID|Base Set|Caterpie|45}}|Grass||Common}}
+{{Setlist/nmentry|46/102|{{TCG ID|Base Set|Charmander|46}}|Fire||Common}}
+{{Setlist/nmentry|47/102|{{TCG ID|Base Set|Diglett|47}}|Fighting||Common}}
+{{Setlist/nmentry|48/102|{{TCG ID|Base Set|Doduo|48}}|Colorless||Common}}
+{{Setlist/nmentry|49/102|{{TCG ID|Base Set|Drowzee|49}}|Psychic||Common}}
+{{Setlist/nmentry|50/102|{{TCG ID|Base Set|Gastly|50}}|Psychic||Common}}
+{{Setlist/nmentry|51/102|{{TCG ID|Base Set|Koffing|51}}|Grass||Common}}
+{{Setlist/nmentry|52/102|{{TCG ID|Base Set|Machop|52}}|Fighting||Common}}
+{{Setlist/nmentry|53/102|{{TCG ID|Base Set|Magnemite|53}}|Lightning||Common}}
+{{Setlist/nmentry|54/102|{{TCG ID|Base Set|Metapod|54}}|Grass||Common}}
+{{Setlist/nmentry|55/102|{{TCG ID|Base Set|Nidoran♂|55}}|Grass||Common}}
+{{Setlist/nmentry|56/102|{{TCG ID|Base Set|Onix|56}}|Fighting||Common}}
+{{Setlist/nmentry|57/102|{{TCG ID|Base Set|Pidgey|57}}|Colorless||Common}}
+{{Setlist/nmentry|58/102|{{TCG ID|Base Set|Pikachu|58}}|Lightning||Common}}
+{{Setlist/nmentry|59/102|{{TCG ID|Base Set|Poliwag|59}}|Water||Common}}
+{{Setlist/nmentry|60/102|{{TCG ID|Base Set|Ponyta|60}}|Fire||Common}}
+{{Setlist/nmentry|61/102|{{TCG ID|Base Set|Rattata|61}}|Colorless||Common}}
+{{Setlist/nmentry|62/102|{{TCG ID|Base Set|Sandshrew|62}}|Fighting||Common}}
+{{Setlist/nmentry|63/102|{{TCG ID|Base Set|Squirtle|63}}|Water||Common}}
+{{Setlist/nmentry|64/102|{{TCG ID|Base Set|Starmie|64}}|Water||Common}}
+{{Setlist/nmentry|65/102|{{TCG ID|Base Set|Staryu|65}}|Water||Common}}
+{{Setlist/nmentry|66/102|{{TCG ID|Base Set|Tangela|66}}|Grass||Common}}
+{{Setlist/nmentry|67/102|{{TCG ID|Base Set|Voltorb|67}}|Lightning||Common}}
+{{Setlist/nmentry|68/102|{{TCG ID|Base Set|Vulpix|68}}|Fire||Common}}
+{{Setlist/nmentry|69/102|{{TCG ID|Base Set|Weedle|69}}|Grass||Common}}
+{{Setlist/nmentry|70/102|{{TCG ID|Base Set|Clefairy Doll|70}}|Trainer||Rare}}
+{{Setlist/nmentry|71/102|{{TCG ID|Base Set|Computer Search|71}}|Trainer||Rare}}
+{{Setlist/nmentry|72/102|{{TCG ID|Base Set|Devolution Spray|72}}|Trainer||Rare}}
+{{Setlist/nmentry|73/102|{{TCG ID|Base Set|Imposter Professor Oak|73}}|Trainer||Rare}}
+{{Setlist/nmentry|74/102|{{TCG ID|Base Set|Item Finder|74}}|Trainer||Rare}}
+{{Setlist/nmentry|75/102|{{TCG ID|Base Set|Lass|75}}|Trainer||Rare}}
+{{Setlist/nmentry|76/102|{{TCG ID|Base Set|Pokémon Breeder|76}}|Trainer||Rare}}
+{{Setlist/nmentry|77/102|{{TCG ID|Base Set|Pokémon Trader|77}}|Trainer||Rare}}
+{{Setlist/nmentry|78/102|{{TCG ID|Base Set|Scoop Up|78}}|Trainer||Rare}}
+{{Setlist/nmentry|79/102|{{TCG ID|Base Set|Super Energy Removal|79}}|Trainer||Rare}}
+{{Setlist/nmentry|80/102|{{TCG ID|Base Set|Defender|80}}|Trainer||Uncommon}}
+{{Setlist/nmentry|81/102|{{TCG ID|Base Set|Energy Retrieval|81}}|Trainer||Uncommon}}
+{{Setlist/nmentry|82/102|{{TCG ID|Base Set|Full Heal|82}}|Trainer||Uncommon}}
+{{Setlist/nmentry|83/102|{{TCG ID|Base Set|Maintenance|83}}|Trainer||Uncommon}}
+{{Setlist/nmentry|84/102|{{TCG ID|Base Set|PlusPower|84}}|Trainer||Uncommon}}
+{{Setlist/nmentry|85/102|{{TCG ID|Base Set|Pokémon Center|85}}|Trainer||Uncommon}}
+{{Setlist/nmentry|86/102|{{TCG ID|Base Set|Pokémon Flute|86}}|Trainer||Uncommon}}
+{{Setlist/nmentry|87/102|{{TCG ID|Base Set|Pokédex|87}}|Trainer||Uncommon}}
+{{Setlist/nmentry|88/102|{{TCG ID|Base Set|Professor Oak|88}}|Trainer||Uncommon}}
+{{Setlist/nmentry|89/102|{{TCG ID|Base Set|Revive|89}}|Trainer||Uncommon}}
+{{Setlist/nmentry|90/102|{{TCG ID|Base Set|Super Potion|90}}|Trainer||Uncommon}}
+{{Setlist/nmentry|91/102|{{TCG ID|Base Set|Bill|91}}|Trainer||Common}}
+{{Setlist/nmentry|92/102|{{TCG ID|Base Set|Energy Removal|92}}|Trainer||Common}}
+{{Setlist/nmentry|93/102|{{TCG ID|Base Set|Gust of Wind|93}}|Trainer||Common}}
+{{Setlist/nmentry|94/102|{{TCG ID|Base Set|Potion|94}}|Trainer||Common}}
+{{Setlist/nmentry|95/102|{{TCG ID|Base Set|Switch|95}}|Trainer||Common}}
+{{Setlist/nmentry|96/102|{{TCG ID|Base Set|Double Colorless Energy|96}}|Energy|Colorless|Uncommon}}
+{{Setlist/nmentry|97/102|{{TCG ID|Base Set|Fighting Energy|97}}|Energy|Fighting|None}}
+{{Setlist/nmentry|98/102|{{TCG ID|Base Set|Fire Energy|98}}|Energy|Fire|None}}
+{{Setlist/nmentry|99/102|{{TCG ID|Base Set|Grass Energy|99}}|Energy|Grass|None}}
+{{Setlist/nmentry|100/102|{{TCG ID|Base Set|Lightning Energy|100}}|Energy|Lightning|None}}
+{{Setlist/nmentry|101/102|{{TCG ID|Base Set|Psychic Energy|101}}|Energy|Psychic|None}}
+{{Setlist/nmentry|102/102|{{TCG ID|Base Set|Water Energy|102}}|Energy|Water|None}}
+{{Setlist/nmfooter|cellcol=3363AF}}
+{{Setlist/nmheader|title=Expansion Pack|tablecol=C0C0C0|bordercol=A70E13|cellcol=DD494E|rarity=yes|symbol=no}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Bulbasaur|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Caterpie|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Metapod|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Weedle|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Nidoran♂|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Koffing|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Tangela|Pack}}|Grass||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Ivysaur|Pack}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Kakuna|Pack}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Nidorino|Pack}}|Grass||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Venusaur|Pack}}|Grass||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Beedrill|Pack}}|Grass||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Nidoking|Pack}}|Grass||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Charmander|Pack}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Vulpix|Pack}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Ponyta|Pack}}|Fire||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Charmeleon|Pack}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Growlithe|Pack}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Arcanine|Pack}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Magmar|Pack}}|Fire||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Charizard|Pack}}|Fire||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Ninetales|Pack}}|Fire||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Squirtle|Pack}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Poliwag|Pack}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Staryu|Pack}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Starmie|Pack}}|Water||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Wartortle|Pack}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Poliwhirl|Pack}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Seel|Pack}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Dewgong|Pack}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Magikarp|Pack}}|Water||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Blastoise|Pack}}|Water||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Poliwrath|Pack}}|Water||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Gyarados|Pack}}|Water||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pikachu|Pack}}|Lightning||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Magnemite|Pack}}|Lightning||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Voltorb|Pack}}|Lightning||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Raichu|Pack}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Magneton|Pack}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Electrode|Pack}}|Lightning||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Electabuzz|Pack}}|Lightning||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Zapdos|Pack}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Abra|Pack}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Gastly|Pack}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Drowzee|Pack}}|Psychic||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Kadabra|Pack}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Haunter|Pack}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Jynx|Pack}}|Psychic||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Alakazam|Pack}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Mewtwo|Pack}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Sandshrew|Pack}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Diglett|Pack}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Machop|Pack}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Onix|Pack}}|Fighting||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Machoke|Pack}}|Fighting||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Dugtrio|Pack}}|Fighting||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Machamp|Pack}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Hitmonchan|Pack}}|Fighting||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pidgey|Pack}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Rattata|Pack}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Doduo|Pack}}|Colorless||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Raticate|Pack}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Farfetch'd|Pack}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Porygon|Pack}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Dratini|Pack}}|Colorless||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pidgeotto|Pack}}|Colorless||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Clefairy|Pack}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Chansey|Pack}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Dragonair|Pack}}|Colorless||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Energy Removal|Pack}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Potion|Pack}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Gust of Wind|Pack}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Switch|Pack}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Bill|Pack}}|Trainer||Common}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Super Potion|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Energy Retrieval|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Professor Oak|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Revive|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Defender|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Full Heal|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|PlusPower|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pokédex|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pokémon Center|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pokémon Flute|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Maintenance|Pack}}|Trainer||Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Devolution Spray|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Item Finder|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Super Energy Removal|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Impostor Professor Oak|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Computer Search|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Clefairy Doll|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Scoop Up|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pokémon Trader|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Pokémon Breeder|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Lass|Pack}}|Trainer||Rare}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Double Colorless Energy|Pack}}|Energy|Colorless|Uncommon}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Grass Energy|Pack}}|Energy|Grass|None}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Fire Energy|Pack}}|Energy|Fire|None}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Water Energy|Pack}}|Energy|Water|None}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Lightning Energy|Pack}}|Energy|Lightning|None}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Psychic Energy|Pack}}|Energy|Psychic|None}}
+{{Setlist/nmentry|None|{{TCG ID|Expansion|Fighting Energy|Pack}}|Energy|Fighting|None}}
+{{Setlist/nmfooter|cellcol=DD494E}}
