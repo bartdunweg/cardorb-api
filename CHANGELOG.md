@@ -60,6 +60,8 @@ if the two have drifted apart.
 
 - The Japanese copy also reads TCGplayer's Japanese shelf, where TCGdex falls short. The 53 Japanese sets TCGdex lists without cards (Shiny Star V, Eevee Heroes, the 25th Anniversary Collection, every SM+ set) get TCGplayer's card list, one card per printed number with its English name, rarity, type, HP and stage; a card TCGdex and Limitless have no picture of gets TCGplayer's product picture, matched by number or, on the unnumbered vintage shelves, by English name; and each card keeps its TCGplayer product, so the new cards are priced like every other.
 
+- Black Bolt Haxorus and White Flare Emboar and Gothitelle in the owner's collection are the holo they are, not a normal print none of them was ever printed as, so they are priced at the holo figure and the morning check's finish check passes.
+
 ## 2026-09-14
 
 - Dragons Exalted 117 Blend Energy GFPD links to its TCGplayer product (normal and reverse holo priced), by hand: TCGplayer names it "Blend Energy GFPD" where TCGdex spells the four types out. 25 English cards stay unlinked.
