@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - A card's sheet says which foil patterns a copy of it can really have (`patternPrints`), from TCGplayer's own products: it sells a cosmos or cracked ice print as a product beside the plain card, most of them under Miscellaneous, Prize Pack, Blister and Deck Exclusives rather than the card's set. 683 English cards have one, each print with its finish, its TCGplayer product and its price, and whether a print without a pattern exists at all. Every other linked card answers none, so a form can stop asking which pattern a holo has. The weekly links run keeps the list current.
 
+- The price history backfill fills named Japanese cards with `--only japanese --ids a,b`, the way it already did English ones. The Japanese copy linked 569 priced cards on 2026-09-14 (SM10's Krabby and Martial Arts Dojo relinked, SM1p and SM2p found) that had a price and no line; the morning check named them and this filled them.
+
 - Every priced Japanese card has its price history: 971,250 readings from TCGplayer's Japanese archive for the 6,585 cards the copy linked beyond the committed map, weekly before March 2026 and daily after. Before, 4,300 priced Japanese cards had a price and no line. `card-prices` cache v6, so no sheet keeps an empty line for its hour.
 
 - Every priced Japanese card gets a line in the price history. The nightly price job wrote history only for the 9,259 cards in the committed Japanese map; since the Japanese copy matched 15,844 cards to TCGplayer products, about 4,300 priced cards had a price and no history. The job now takes the copy's products as well, and the backfill script's `--only japanese --copied-only` fills their past from TCGplayer's archive.

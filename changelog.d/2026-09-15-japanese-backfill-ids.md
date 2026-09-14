@@ -1,0 +1,1 @@
+- The price history backfill fills named Japanese cards with `--only japanese --ids a,b`, the way it already did English ones. The Japanese copy linked 569 priced cards on 2026-09-14 (SM10's Krabby and Martial Arts Dojo relinked, SM1p and SM2p found) that had a price and no line; the morning check named them and this filled them.

@@ -44,6 +44,7 @@
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
  *   `--only japanese --copied-only` fills only the Japanese cards the copy matched and the map does not name.
+ *   `--only japanese --ids a,b` fills only those Japanese cards.
  *
  * Months older than six months are thinned to one figure a week since 2026-09-14 (migration
  * 20260914150000, thin_oldest_price_month, called by the tcgplayer-prices cron). Do not send those
@@ -676,8 +677,10 @@ async function japanese() {
   // An id that is an English card is the English card's history (neo4-100 to 113 are both).
   const english = JSON.parse(readFileSync(IDS, "utf8"));
   for (const id of Object.keys(products)) if (english[id] !== undefined) delete products[id];
+  // `--ids a,b`: only these cards, for cards the copy linked or relinked after the run.
+  const wanted = flag("--ids")?.split(",").filter(Boolean);
   const ids = Object.keys(products)
-    .filter((id) => products[id] != null)
+    .filter((id) => products[id] != null && (!wanted || wanted.includes(id)))
     .slice(0, LIMIT);
   const from = flag("--from") ?? JAPAN_FROM;
   const to = flag("--to") ?? addDays(day(new Date()), -1);
