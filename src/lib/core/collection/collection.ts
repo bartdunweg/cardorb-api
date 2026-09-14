@@ -1440,7 +1440,9 @@ export const getCardPrices = cache(
         // thousand points of the whole collection.
         // v4: read from card_price_months, with printings (2026-09-13). v5: the same day, after the
         // backfill: v4 entries were cached while it ran and held a gap from June to 16 August.
-        ["card-prices", "v5", userId, since, idsKey(tcgIds)],
+        // v6: 971,250 Japanese readings backfilled for the cards the copy linked (2026-09-14); a v5
+        // entry held those cards' empty line for its hour.
+        ["card-prices", "v6", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
       return { points, failed: false };
