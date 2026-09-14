@@ -1974,6 +1974,25 @@ export async function catalogueCardSheet(
   return { card, set: (sets.data as CatalogueCardSheet["set"]) ?? null };
 }
 
+/** Every card of one catalogue the copy matched to a TCGplayer product: id to product. */
+export async function listCatalogueProducts(
+  db: SupabaseClient,
+  language: CatalogueLanguage,
+): Promise<Map<string, number>> {
+  const rows = await readAllPages<{ id: string; tcgplayer_product_id: number }>(
+    "the copy's TCGplayer products",
+    (page, counted) =>
+      db
+        .from("catalogue_cards")
+        .select("id, tcgplayer_product_id", counted ? { count: "exact" } : {})
+        .eq("language", language)
+        .not("tcgplayer_product_id", "is", null)
+        .order("id", { ascending: true })
+        .range(...pageRange(page)),
+  );
+  return new Map(rows.map((r) => [r.id, r.tcgplayer_product_id]));
+}
+
 /** The TCGplayer product the copy matched for each of these cards, by id; a card with none is left out. */
 export async function catalogueProductIds(
   db: SupabaseClient,

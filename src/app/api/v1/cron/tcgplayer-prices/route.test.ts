@@ -21,7 +21,10 @@ vi.mock("@/lib/storage/postgres", () => ({
   writeTcgplayerPrices: (...a: unknown[]) => writeTcgplayerPrices(...a),
   writeCardPrices: (...a: unknown[]) => writeCardPrices(...a),
   writeUsdEurRate: (...a: unknown[]) => writeUsdEurRate(...a),
+  listCatalogueProducts: (...a: unknown[]) => listCatalogueProducts(...a),
 }));
+/** The Japanese cards the copy matched to a product beyond the committed map; none unless a test says. */
+const listCatalogueProducts = vi.fn(async (..._a: unknown[]) => new Map<string, number>());
 vi.mock("@/lib/storage/supabase", () => ({
   adminClient: () => ({ rpc: (...a: unknown[]) => rpc(...a) }),
 }));
@@ -307,6 +310,22 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
         }),
       );
       expect(body.japanese).toEqual({ groups: 20, answered: 20, written: 1 });
+    });
+
+    // S4a-003 Charizard V: a set TCGdex lists without cards, filled from TCGplayer's Japanese shelf
+    // (tcgplayer-japan.ts), so its product is in the copy and not in the committed map.
+    it("writes history for a Japanese card the copy matched and the map does not name", async () => {
+      monday();
+      byCategory(
+        { rows: CHARIZARD, groups: 10, answered: 10 },
+        { rows: JAPANESE, groups: 20, answered: 20 },
+      );
+      listCatalogueProducts.mockResolvedValueOnce(new Map([["S4a-003", 605292]]));
+      await get("Bearer s3cret");
+      expect(listCatalogueProducts).toHaveBeenCalledWith(expect.anything(), "ja");
+      expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
+        expect.objectContaining({ tcgId: "S4a-003", printing: "holofoil", price: 2.7 }),
+      );
     });
 
     it("leaves the English night standing when the Japanese shelf fails", async () => {

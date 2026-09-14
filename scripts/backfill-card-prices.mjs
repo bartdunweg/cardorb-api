@@ -43,6 +43,7 @@
  *                    `--ids a,b` fills only those cards, for ones linked since.
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
+ *   `--only japanese --copied-only` fills only the Japanese cards the copy matched and the map does not name.
  *
  * Months older than six months are thinned to one figure a week since 2026-09-14 (migration
  * 20260914150000, thin_oldest_price_month, called by the tcgplayer-prices cron). Do not send those
@@ -645,8 +646,33 @@ function japaneseDays(from, to, cutoff) {
  * 2026-09-14. It wrote the two old series once a week up to 2026-08-15 until then; those rows
  * were gone by 2026-09-14. `--to` defaults to the day before today, the price job's first night.
  */
+/**
+ * Every Japanese card the catalogue copy matched to a TCGplayer product (tcgplayer-japan.ts): the
+ * sets TCGdex lists without cards, and cards the committed map does not name.
+ */
+async function copiedJapaneseProducts() {
+  const out = {};
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select("id, tcgplayer_product_id")
+      .eq("language", "ja")
+      .not("tcgplayer_product_id", "is", null)
+      .order("id")
+      .range(from, from + 999);
+    if (error) throw new Error(`Reading the copy's Japanese products failed: ${error.message}`);
+    for (const r of data) out[r.id] = r.tcgplayer_product_id;
+    if (data.length < 1000) return out;
+  }
+}
+
 async function japanese() {
-  const products = await japaneseIds();
+  const mapped = await japaneseIds();
+  const copied = await copiedJapaneseProducts();
+  // `--copied-only`: just the cards the committed map does not name, whose history starts empty.
+  const products = args.includes("--copied-only")
+    ? Object.fromEntries(Object.entries(copied).filter(([id]) => mapped[id] == null))
+    : { ...copied, ...Object.fromEntries(Object.entries(mapped).filter(([, p]) => p != null)) };
   const ids = Object.keys(products)
     .filter((id) => products[id] != null)
     .slice(0, LIMIT);
