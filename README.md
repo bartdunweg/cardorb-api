@@ -162,7 +162,6 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
 | `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — the web app, where the links in auth emails land |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
-| `CATALOGUE_SET_PRICING_MAX` | no | `0` until there is a second account; see below |
 
 `NEXT_PUBLIC_SITE_URL` matters more than its "recommended" tag suggests: without it,
 `SITE_URL` falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, which is this API's own
@@ -216,13 +215,6 @@ level security is the wall here and it cannot be unit tested — CI has no secre
 and should keep having none. So it is a script: two users on a scratch project,
 each trying to read, update and delete the other's rows, asserting that every
 attempt comes back empty. Run it by hand and read the output.
-
-`CATALOGUE_SET_PRICING_MAX` is a bet worth leaving unmade for now. The catalogue
-is cached per set and shared by everyone who owns a card from it, so pricing a
-whole set once is cheaper than pricing each owner's holdings separately — but
-only once a set has more than one owner. At `0` it prices only what is held,
-which is what this always did. Set it to `400` when there is a second account,
-and measure rather than assume.
 
 ## Shape
 

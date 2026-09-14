@@ -52,7 +52,6 @@ const card = (name: string, variants: Variant[], over: Partial<OwnedCard> = {}):
   variants,
   owned: variants.some((v) => v.owned),
   price: null,
-  priceHolo: null,
   tcgId: null,
   ...over,
 });
@@ -140,10 +139,9 @@ describe("filterItems", () => {
     const priced = {
       ...items[0]!,
       id: "p",
-      price: { low: 1, market: 4.5, avg30: 4, nm: null },
-      priceHolo: null,
+      price: { market: 4.5 },
     };
-    const free = { ...items[0]!, id: "f", price: null, priceHolo: null };
+    const free = { ...items[0]!, id: "f", price: null };
     expect(filterItems([priced, free], { priced: true }).map((it) => it.id)).toEqual(["p"]);
     expect(filterItems([priced, free], { priced: false }).map((it) => it.id)).toEqual(["f"]);
     expect(filterItems([priced, free], {}).map((it) => it.id)).toEqual(["p", "f"]);
@@ -430,8 +428,8 @@ describe("copy-level filters", () => {
 });
 
 describe("sortItems", () => {
-  const price = { market: 2, low: null, nm: null } as unknown as Price;
-  const foil = { market: 5, low: null, nm: null } as unknown as Price;
+  const price = { market: 2 } as unknown as Price;
+  const foil = { market: 5 } as unknown as Price;
   // TCGplayer's printings: the foil is its reverse-holofoil, which is where a reverse holo's
   // own figure comes from since Cardmarket's -holo fields stopped being read (2026-09-12).
   const pricePrintings = { normal: price, "reverse-holofoil": foil };
@@ -606,8 +604,8 @@ describe("countStats", () => {
   });
 
   it("values the copies held at today's price, printing by printing, and counts the unpriced apart", () => {
-    const price = { market: 2, low: null, nm: null } as unknown as Price;
-    const foil = { market: 5, low: null, nm: null } as unknown as Price;
+    const price = { market: 2 } as unknown as Price;
+    const foil = { market: 5 } as unknown as Price;
     const pricePrintings = { normal: price, "reverse-holofoil": foil };
     const sets: CardSet[] = [
       {
@@ -803,12 +801,7 @@ describe("public filters, sort and facets", () => {
 });
 
 describe("sumValue", () => {
-  const price = (market: number) => ({
-    low: market,
-    market,
-    avg30: market,
-    nm: { low: market, mid: market, high: market },
-  });
+  const price = (market: number) => ({ market });
   it("values the whole list: owned copies by quantity, a wish once, the unpriced counted", () => {
     const items = flattenItems([
       set("Base Set", [

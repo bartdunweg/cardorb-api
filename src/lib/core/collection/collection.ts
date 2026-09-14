@@ -47,7 +47,7 @@ import {
   resolveSetFacts,
 } from "./cards";
 import { DAY, mapLimit } from "../util";
-import { priceFromMarket, priceFromUsd } from "../price-basis.mjs";
+import { priceFromUsd, type Price } from "../price-basis.mjs";
 import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import {
@@ -229,14 +229,14 @@ export const tcgplayerPricesFor = async (
   ids: string[],
   /** Which catalogue the ids are from. A Japanese set page prices from the Japanese shelf. */
   language: BrowseLanguage | null = null,
-): Promise<Map<string, CardPrices>> => {
-  const out = new Map<string, CardPrices>();
+): Promise<Map<string, { price: Price }>> => {
+  const out = new Map<string, { price: Price }>();
   if (!ids.length) return out;
   const rate = await usdToEurForRequest();
   if (rate == null) return out;
   for (const [id, { usd }] of Object.entries(await shelfUsdFor(ids, language))) {
     const price = usd ? priceFromUsd(usd, rate) : null;
-    if (price) out.set(id, { price, holo: null });
+    if (price) out.set(id, { price });
   }
   return out;
 };
@@ -381,6 +381,9 @@ const factsTag = (userId: string) => `collection-facts:${userId}`;
 const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<KeptFacts>) =>
   unstable_cache(
     fill,
+    // v15: a card's facts no longer carry `priceHolo` or `priceShadowless`, and `price` is
+    // TCGplayer's alone (2026-09-14). A v14 entry holds Cardmarket's foil figure for its day.
+    //
     // v14: card pictures come from our own bucket at images.cardorb.com (#394, #398). A v13 entry
     // names TCGdex and pokemontcg.io for its whole day, which still load but skip the bucket.
     //
@@ -409,7 +412,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v14", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v15", userId, usdToEur == null ? "-" : String(usdToEur)],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -486,6 +489,9 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v24: the facts carry no Cardmarket figure at all: `price` starts null here and is
+      // TCGplayer's (factsWithUsd), and `priceHolo` and `priceShadowless` are gone (2026-09-14).
+      //
       // v23: a Japanese card's facts carry no Cardmarket figure any more; its price is read from
       // TCGplayer's Japanese shelf outside this entry (factsWithUsd). A v22 entry still holds
       // Cardmarket's foil price for it as priceHolo, which would stand for a day.
@@ -529,7 +535,7 @@ const cachedSetFacts = (
       // through a deploy that had already fixed them.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v23", setName, factsSignature(identities)],
+      ["set-facts", "v24", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -541,12 +547,12 @@ const cachedSetFacts = (
  * last-good answer, and by 2026-09-11 it answered one set in eight: the same card
  * blended two markets on one instance and stood on Cardmarket alone on the next.
  * TCGdex relays TCGplayer's number on every card's own record (usdFor), the read
- * pricesFor() already makes for a card the guide does not price.
+ * pricesFor() already makes for a card the store does not price.
  *
  * Keyed by the set and the cards asked for, so a set that gains a card is asked
  * again. A read that answered for nothing throws, so an outage is not kept for a
- * day; the caller reads Cardmarket alone for that request and asks again on the
- * next. An object rather than a Map: a Map does not survive the Data Cache.
+ * day; the caller leaves those cards unpriced for that request and asks again on
+ * the next. An object rather than a Map: a Map does not survive the Data Cache.
  */
 const cachedTcgdexUsd = (setName: string, ids: string[]) =>
   timedCache(`cache tcgplayer ${setName}`, (ran) =>
@@ -685,19 +691,12 @@ export const runPrintingsForSet = async (
 /**
  * Every card in a set's facts with no price on it at all.
  *
- * Not a price of zero and not the guide's euros: nothing. Used where the day's dollar rate
+ * Not a price of zero: nothing. Used where the day's dollar rate
  * could not be read, which is the one case where TCGplayer's figure exists and cannot be
  * stated in this collection's currency.
  */
-const unpriced = <T extends { price?: unknown; priceHolo?: unknown; priceShadowless?: unknown }>(
-  cards: Record<string, T>,
-): Record<string, T> =>
-  Object.fromEntries(
-    Object.entries(cards).map(([key, f]) => [
-      key,
-      { ...f, price: null, priceHolo: null, priceShadowless: null },
-    ]),
-  );
+const unpriced = <T extends { price?: unknown }>(cards: Record<string, T>): Record<string, T> =>
+  Object.fromEntries(Object.entries(cards).map(([key, f]) => [key, { ...f, price: null }]));
 
 /** The set's facts with TCGplayer's figure as every price, where the rate allows. */
 async function factsWithUsd(
@@ -707,14 +706,12 @@ async function factsWithUsd(
   usdToEur: number | null,
 ) {
   const facts = await cachedSetFacts(setName, identities, priceSource);
-  /* No rate, no price. The figures underneath are the guide's euros, and handing those back
-     would quietly put a card on the European market's number without saying so, which is the
-     confusion this whole change exists to end. The rate is cached for a day, so this bites
-     only on a cold cache during a frankfurter outage, and then every card reads "no price"
-     rather than the wrong one. */
+  /* No rate, no price. The rate is cached for a day, so this bites only on a cold cache during
+     a frankfurter outage, and then every card reads "no price" rather than one at a guessed
+     rate. */
   if (usdToEur == null) return { ...facts, cards: unpriced(facts.cards) };
   /* The English cards by their TCGdex id, from TCGdex and the English links. A card whose facts
-     already carry the dollar figure, priced by TCGdex because the guide had nothing, is not asked
+     already carry the dollar figure, priced by TCGdex or the store already, is not asked
      twice. A Japanese card is not on TCGplayer's English shelf and TCGdex relays nothing for it,
      so it is asked of the Japanese shelf instead (shelfUsdFor). */
   const wanted = Object.values(facts.cards).flatMap((f) =>
@@ -768,7 +765,7 @@ async function factsWithUsd(
         key,
         {
           ...f,
-          price: priceFromMarket(f.price, p ? priceFromUsd(p, usdToEur) : null),
+          price: p ? priceFromUsd(p, usdToEur) : null,
           priceFirstEd: first ? priceFromUsd(first, usdToEur) : null,
           pricePrintings,
           printingIds,
@@ -818,8 +815,7 @@ const STORED_PRICES_DAYS = 7;
  * requests for the owner's collection, and on a cold instance /cards waited 7 to 12 s for them
  * (2026-09-14). The cron (cron/tcgplayer-prices) writes the whole shelf daily; this is one query.
  * Compared that day over 1,564 held cards: the same printings and product ids on every card both
- * price, and 187 cards priced here that TCGdex has no figure for. Cardmarket's `price` and `holo`
- * are left null, as no price on screen has read them since 2026-09-12 (priceFromMarket).
+ * price, and 187 cards priced here that TCGdex has no figure for.
  *
  * TCGdex still answers for a card with no TCGplayer product linked, and for every card while the
  * table holds nothing current (before the cron's first run, or a store that cannot be read).
@@ -864,19 +860,14 @@ export function pricesFromStoredRows(
     product_id: number;
     printing: string;
     market: number | string;
-    low: number | string | null;
   }[],
 ): Map<string, CardPrices> {
   const out = new Map<string, CardPrices>();
-  const byProduct = new Map<
-    number,
-    Record<string, { marketPrice: number; lowPrice: number | null; productId: number }>
-  >();
+  const byProduct = new Map<number, Record<string, { marketPrice: number; productId: number }>>();
   for (const r of rows) {
     const printings = byProduct.get(r.product_id) ?? {};
     printings[r.printing] = {
       marketPrice: Number(r.market),
-      lowPrice: r.low == null ? null : Number(r.low),
       productId: r.product_id,
     };
     byProduct.set(r.product_id, printings);
@@ -886,8 +877,6 @@ export function pricesFromStoredRows(
     const usd = tp ? usdOf(tp) : null;
     if (!tp || !usd) continue;
     out.set(id, {
-      price: null,
-      holo: null,
       usd,
       usdFirstEd: usdFirstEdOf(tp),
       usdPrintings: usdPrintingsOf(tp),

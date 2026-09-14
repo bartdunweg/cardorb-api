@@ -30,7 +30,7 @@ import type { CardSet, OwnedCard, Price, Variant } from "./cards";
  * sixteenth field on Variant has to be spelled here before it can leave.
  */
 
-const PRICE: Price = { low: 1, market: 90, avg30: 95, nm: { low: 95, mid: 100, high: 110 } };
+const PRICE: Price = { market: 90 };
 
 const variant = (over: Partial<Variant> = {}): Variant => ({
   id: "row-1",
@@ -96,7 +96,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   variants: [variant()],
   owned: true,
   price: PRICE,
-  priceHolo: PRICE,
+  priceFirstEd: PRICE,
   tcgId: "sv03-125",
   ...over,
 });

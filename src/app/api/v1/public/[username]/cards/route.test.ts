@@ -40,7 +40,6 @@ const card = (name: string, variants: ReturnType<typeof variant>[]) => ({
   variants,
   owned: true,
   price: { market: 9 },
-  priceHolo: null,
   tcgId: null,
 });
 const SETS = [

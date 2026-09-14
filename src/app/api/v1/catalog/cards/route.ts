@@ -49,7 +49,6 @@ export async function GET(req: Request) {
         cards: marked.map((c) => ({
           ...c,
           price: prices.get(c.tcgId ?? c.id)?.price ?? null,
-          priceHolo: prices.get(c.tcgId ?? c.id)?.holo ?? null,
         })),
       },
       { headers: readHeaders(req) },

@@ -56,8 +56,8 @@ beforeEach(() => {
   groupPrintings.mockReset();
   groupPrintings.mockImplementation(async (groupId: number) =>
     groupId === 604
-      ? new Map([[42382, { holofoil: { marketPrice: 800, lowPrice: 450, productId: 42382 } }]])
-      : new Map([[640001, { normal: { marketPrice: 4, lowPrice: 2, productId: 640001 } }]]),
+      ? new Map([[42382, { holofoil: { marketPrice: 800, productId: 42382 } }]])
+      : new Map([[640001, { normal: { marketPrice: 4, productId: 640001 } }]]),
   );
 });
 
@@ -65,7 +65,7 @@ describe("tcgplayerPricesFor", () => {
   it("prices an English card from its product's group, in euros", async () => {
     const prices = await tcgplayerPricesFor(["base1-4"]);
     expect(groupPrintings).toHaveBeenCalledWith(604, 3);
-    expect(prices.get("base1-4")?.price).toEqual({ low: 225, market: 400, avg30: null, nm: null });
+    expect(prices.get("base1-4")?.price).toEqual({ market: 400 });
   });
 
   it("reads the Japanese shelf for a Japanese page", async () => {
@@ -150,10 +150,9 @@ describe("a Japanese card in a collection", () => {
     const card = set!.cards[0]!;
     expect(groupPrintings).toHaveBeenCalledWith(24001, 85);
     // $4 at 0.5 a dollar. Cardmarket's €99 on the record is nowhere.
-    expect(card.price).toEqual({ low: 1, market: 2, avg30: null, nm: null });
+    expect(card.price).toEqual({ market: 2 });
     expect(card.pricePrintings?.normal?.market).toBe(2);
     expect(card.printingIds).toEqual({ normal: 640001 });
-    expect(card.priceHolo).toBeNull();
     expect(JSON.stringify(card)).not.toContain("99");
   });
 
@@ -162,7 +161,6 @@ describe("a Japanese card in a collection", () => {
     const [set] = await assembleFor("ja-holder-2", {} as SupabaseClient);
     const card = set!.cards[0]!;
     expect(card.price).toBeNull();
-    expect(card.priceHolo).toBeNull();
     expect(card.pricePrintings ?? null).toBeNull();
   });
 });
@@ -173,7 +171,7 @@ describe("japaneseDetailPrice", () => {
     expect(groupPrintings).toHaveBeenCalledWith(24001, 85);
     expect(card).toEqual({
       id: "M1S-001",
-      price: { low: 1, market: 2, avg30: null, nm: null },
+      price: { market: 2 },
       tcgplayerId: 640001,
     });
   });

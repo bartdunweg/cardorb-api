@@ -61,10 +61,10 @@ beforeEach(() => {
 
 describe("usdForSet", () => {
   it("asks TCGdex for the set's cards and keys the answer by card id", async () => {
-    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100, low: 80 }]]));
+    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100 }]]));
     const usdForSet = await fresh();
     expect(await usdForSet("Base", ["base1-4", "base1-2"])).toEqual({
-      "base1-4": { market: 100, low: 80 },
+      "base1-4": { market: 100 },
     });
     expect(usdFor).toHaveBeenCalledWith(["base1-4", "base1-2"]);
   });
@@ -88,28 +88,28 @@ describe("usdForSet", () => {
   it("asks tcgcsv for a linked card TCGdex has no TCGplayer figure for", async () => {
     usdFor.mockResolvedValue(new Map());
     groupPrintings.mockResolvedValue(
-      new Map([[500263, { holofoil: { marketPrice: 21.45, lowPrice: 17.99, productId: 500263 } }]]),
+      new Map([[500263, { holofoil: { marketPrice: 21.45, productId: 500263 } }]]),
     );
     const usdForSet = await fresh();
     const answer = await usdForSet("SVP Black Star Promos", ["svp-027"]);
     expect(groupPrintings).toHaveBeenCalledWith(22872, 3);
-    expect(answer["svp-027"]?.usd).toEqual({ market: 21.45, low: 17.99, productId: 500263 });
+    expect(answer["svp-027"]?.usd).toEqual({ market: 21.45, productId: 500263 });
     expect(answer["svp-027"]?.printings?.holofoil?.productId).toBe(500263);
   });
 
   it("does not ask tcgcsv for a card TCGdex already priced, nor for one nobody linked", async () => {
-    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100, low: 80 }]]));
+    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100 }]]));
     const usdForSet = await fresh();
     await usdForSet("Base", ["base1-4", "A1-001"]);
     expect(groupPrintings).not.toHaveBeenCalled();
   });
 
   it("keeps TCGdex's answer when tcgcsv does not answer", async () => {
-    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100, low: 80 }]]));
+    usdFor.mockResolvedValue(new Map([["base1-4", { market: 100 }]]));
     groupPrintings.mockRejectedValue(new Error("tcgcsv 503"));
     const usdForSet = await fresh();
     expect(await usdForSet("Mixed", ["base1-4", "svp-027"])).toEqual({
-      "base1-4": { market: 100, low: 80 },
+      "base1-4": { market: 100 },
     });
   });
 });
@@ -124,8 +124,8 @@ describe("runPrintingsForSet", () => {
         [
           106999,
           {
-            "unlimited-holofoil": { marketPrice: 2257.87, lowPrice: 1900, productId: 106999 },
-            "1st-edition-holofoil": { marketPrice: 10000, lowPrice: 8500, productId: 106999 },
+            "unlimited-holofoil": { marketPrice: 2257.87, productId: 106999 },
+            "1st-edition-holofoil": { marketPrice: 10000, productId: 106999 },
           },
         ],
       ]),

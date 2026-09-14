@@ -208,8 +208,8 @@ components:
       enum: [cosmos, cracked-ice, starlight, confetti, vertical-line]
       description: |
         What the foil on a copy looks like. Says nothing about price — that is
-        `finish`, which chooses between the two series Cardmarket publishes and
-        holds the ball patterns because those two are priced apart. Null means
+        `finish`, which chooses which of TCGplayer's printings a copy reads and
+        holds the ball patterns because those are priced as a reverse holo. Null means
         not recorded, which is every card added by hand.
     Edition:
       type: string
@@ -223,18 +223,10 @@ components:
         same as unlimited.
     Price:
       type: object
-      description: "One card's price, in euros: TCGplayer's figures, English and Japanese cards alike, converted from dollars at the ECB's daily rate. `market` is the shown figure, `low` where there is no market figure. Where TCGplayer prices nothing the price is null; no other market stands in."
+      required: [market]
+      description: "One card's price, in euros: TCGplayer's market figure, English and Japanese cards alike, converted from dollars at the ECB's daily rate. Where TCGplayer publishes no market figure the price is null; no other market and no lowest listing stands in."
       properties:
-        low: { type: [number, "null"], description: "The lowest listing at any condition. A floor, not a price." }
-        market: { type: [number, "null"], description: "What one copy trades at." }
-        avg30: { type: [number, "null"], description: "The thirty-day average." }
-        nm:
-          type: [object, "null"]
-          description: An estimated English Near Mint asking range. `mid` is the number the grid shows.
-          properties:
-            low: { type: number }
-            mid: { type: number }
-            high: { type: number }
+        market: { type: [number, "null"], description: "What one copy trades at: TCGplayer's market figure for the printing, in euros." }
 
     ImageSize:
       type: [object, "null"]
@@ -268,7 +260,7 @@ components:
     OwnedCard:
       type: object
       description: A card as the collection groups it, with every copy under it.
-      required: [key, name, number, type, gen, image, imageHigh, imageSize, speciesId, variants, owned, price, priceHolo, tcgId]
+      required: [key, name, number, type, gen, image, imageHigh, imageSize, speciesId, variants, owned, price, tcgId]
       properties:
         key: { type: string }
         name: { type: string }
@@ -283,13 +275,11 @@ components:
         variants: { type: array, items: { $ref: "#/components/schemas/Variant" } }
         owned: { type: boolean }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
-        priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceFirstEd:
           oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
           description: |
             What the stamped first run trades at, where anything prices that run apart: TCGplayer
-            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros, and Cardmarket
-            does not for any card (one figure per product id, the ordinary run's). Null
+            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Null
             everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
         tcgId: { type: [string, "null"], description: "TCGdex's card id, for `GET /v1/cards/{tcgId}`." }
 
@@ -550,14 +540,11 @@ components:
         price:
           $ref: "#/components/schemas/Price"
           description: "TCGplayer's price, in euros, from the day's figures for the card's set. Null where TCGplayer does not price the card; only sent by GET /catalog/sets/{setId}."
-        priceHolo:
-          $ref: "#/components/schemas/Price"
-          description: "The foil's price, on the same terms as price."
 
     CardItem:
       type: object
       description: One copy of a card, flat, for a list that pages. `GET /v1/cards`.
-      required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price, priceHolo]
+      required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
         name: { type: string }
@@ -589,13 +576,11 @@ components:
         acquiredAt: { type: [string, "null"], format: date-time }
         collectionId: { type: [string, "null"], format: uuid }
         price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
-        priceHolo: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
         priceFirstEd:
           oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
           description: |
             What the stamped first run trades at, where anything prices that run apart: TCGplayer
-            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros, and Cardmarket
-            does not for any card (one figure per product id, the ordinary run's). Null
+            does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Null
             everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
 
     PublicItem:
@@ -2553,7 +2538,7 @@ paths:
     get:
       tags: [Platform]
       operationId: copyTcgplayerPrices
-      summary: Copy TCGplayer's English shelf in, market and low per product and printing
+      summary: Copy TCGplayer's English shelf in, the market figure per product and printing
       description: |
         Vercel's cron, daily at 21:15 UTC, with `CRON_SECRET` as the bearer. Reads tcgcsv's files
         for every English group and writes `tcgplayer_prices`, which the collection prices every

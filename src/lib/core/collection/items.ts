@@ -59,17 +59,8 @@ export type CardItem = {
   acquiredAt: string | null;
   collectionId: string | null;
   price: Price | null;
-  /**
-   * Always null since 2026-09-12. It was Cardmarket's foil series, and nothing reads Cardmarket
-   * for a price any more: a reverse holo's figure is TCGplayer's reverse-holofoil printing, in
-   * `printingPrice`. Sent as null rather than dropped so a client that still decodes it (the web
-   * app until it stops) keeps working through the deploy, and dropped once none does.
-   */
-  priceHolo: Price | null;
   /** The stamped first run's price, where TCGplayer prices that run apart. See OwnedCard.priceFirstEd. */
   priceFirstEd?: Price | null;
-  /** Always null since 2026-09-12, for the reason `priceHolo` is: it was Cardmarket's product. */
-  priceShadowless?: Price | null;
   /**
    * Which market and which printing this copy's figure came from, and where to see it.
    *
@@ -184,9 +175,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   acquiredAt: v.acquiredAt,
   collectionId: v.collectionId,
   price: card.price,
-  priceHolo: null,
   priceFirstEd: card.priceFirstEd ?? null,
-  priceShadowless: null,
   ...sourceOf(v, card),
 });
 
@@ -609,26 +598,23 @@ export function pageOf<T>(items: T[], page: Page): { items: T[]; total: number }
  * use — R-DATA-006). It is a whole-collection figure, which is why it lives
  * here rather than on a page of a hundred cards: summing a page would state a
  * value for a collection it had not seen. `unpriced` is how many of those
- * copies Cardmarket has no number for, so a reader can tell "€900" from
+ * copies TCGplayer has no number for, so a reader can tell "€900" from
  * "€900 plus whatever these 40 are worth".
  *
  * ── Two things this is not, both inherited from the tally it replaced ──────
  *
- * `value` is on the shown price, which is what a single copy trades at, and not
- * on Cardmarket's `low`. That is a measurement rather than a preference: `low`
- * is the cheapest listing at any condition in any language, 421 of this
- * collection's 1,211 priced cards list under €0.10 because their cheapest
- * listing is a bulk lot, and the same cards totalled €9,355 that way against
+ * `value` is on the shown price, which is what a single copy trades at, and never
+ * on a lowest listing. That is a measurement rather than a preference: Cardmarket's
+ * `low` was the cheapest listing at any condition in any language, 421 of this
+ * collection's 1,211 priced cards listed under €0.10 because their cheapest
+ * listing was a bulk lot, and the same cards totalled €9,355 that way against
  * €25,880 valued one at a time. A third of the binder as a rounding error.
  *
- * There is no `movement` here, and there is not going to be one out of a Price.
- * The obvious version — today's `market` against `avg30` — is wrong on a
- * blended price, which is every price this app carries: `market` is the average
- * of Cardmarket's Near Mint estimate and TCGplayer's dollars in euros while
- * `avg30` stays Cardmarket's raw month, so a card that has not moved reports
- * +13.75%. It cost getCardsStats() its life (see ./cards-stats.ts). "What
- * moved" is answered by ./movers.ts, out of the recorded daily readings, where
- * both sides of the comparison are the same measurement taken twice.
+ * There is no `movement` here, and there is not going to be one out of a Price,
+ * which is one figure for one day. It cost getCardsStats() its life (see
+ * ./cards-stats.ts). "What moved" is answered by ./movers.ts, out of the recorded
+ * daily readings, where both sides of the comparison are the same measurement
+ * taken twice.
  */
 export type Stats = {
   cards: number;

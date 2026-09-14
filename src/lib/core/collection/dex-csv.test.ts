@@ -37,7 +37,6 @@ const item = (over: Partial<CardItem>): CardItem => ({
   acquiredAt: null,
   collectionId: null,
   price: { market: 8.63 } as unknown as CardItem["price"],
-  priceHolo: null,
   ...over,
 });
 

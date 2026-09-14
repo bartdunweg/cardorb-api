@@ -91,8 +91,8 @@ export type Variant = {
   /**
    * Which printing this copy is, or null where nobody has said.
    *
-   * The field that makes `priceHolo` on the card usable: Cardmarket prices the
-   * foil separately, but only the copy knows whether it is one. Null is priced
+   * The field that makes the card's TCGplayer printings usable: TCGplayer prices
+   * the foil separately, but only the copy knows whether it is one. Null is priced
    * as normal — see the 20260816200000 migration for why that is not the same
    * as being told it is normal.
    */
@@ -138,22 +138,6 @@ export type Variant = {
 };
 
 /**
- * What a card costs, from Cardmarket via TCGdex, in euros.
- *
- * This used to be Cardmarket's `low` under the label "From", on the reasoning
- * that the lowest listing is what you would actually pay. Measured, it is not a
- * price at all. It is the lowest listing at any condition in any language, and
- * over 269 sampled cards the median `low` came to 16% of the same card's trend.
- * Worse, 421 of the 1,211 priced cards in this collection sat under €0.10 and
- * together made up 0.1% of the total: their cheapest listing is a bulk lot, not
- * a card. A third of the binder was valued at a rounding error.
- *
- * So `low` is kept for what it honestly is, a floor, and `market` is what a
- * single copy actually changes hands for. `nm` is the estimate of what an
- * English Near Mint copy is listed at, which is the number a collector means
- * when they ask what a card costs, and which no free feed publishes.
- */
-/**
  * The price maths lives in lib/price-basis.mjs, re-exported here so every caller
  * keeps importing it from the same place it always did.
  *
@@ -162,7 +146,7 @@ export type Variant = {
  * calibration comments moved with it; that file is where they are now.
  */
 import { copyPriceOf, priceFromUsd } from "../price-basis.mjs";
-export { priceOf, holoPriceOf, shownPrice } from "../price-basis.mjs";
+export { shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 
@@ -214,19 +198,6 @@ export type OwnedCard = {
   /** Null when TCGdex has no match for it, or no price for the match. */
   price: Price | null;
   /**
-   * The same card's foil printing, where Cardmarket prices one separately.
-   *
-   * A second price on one card rather than a second card, because that is how
-   * Cardmarket files it: one idProduct, two sets of figures. Null for the 865
-   * of this collection's 1,526 products that have no foil listing at all — and
-   * null rather than zero, which is what the feeds actually publish and what
-   * would otherwise value a reverse holo at nothing.
-   *
-   * Which of the two a copy is worth is a question about the copy, so it is
-   * answered per variant. See variantPrice() below.
-   */
-  priceHolo: Price | null;
-  /**
    * The stamped first run's price, where anything prices that run apart; null otherwise.
    *
    * A third price on one card for the same reason there is a second: which of them a copy is
@@ -234,8 +205,6 @@ export type OwnedCard = {
    * price-basis.mjs.
    */
   priceFirstEd?: Price | null;
-  /** The Shadowless run's price, where Cardmarket prices that run apart. See CardFacts.priceShadowless. */
-  priceShadowless?: Price | null;
   /** Every printing TCGplayer prices, in euros. Which of them a copy is worth is copyPriceOf()'s. */
   pricePrintings?: Record<string, Price | null> | null;
   /** The TCGplayer product id per printing, so a copy can be checked on the page its figure came from. */
@@ -324,13 +293,13 @@ export type CardSet = {
  * developer tools. Removing it here means the number never leaves the server:
  * /user/<name> renders from this, and there is nothing to find.
  *
- * `price` is already nullable, because plenty of cards have no Cardmarket
- * entry, so nothing downstream needs a new branch. Every place that shows money
+ * `price` is already nullable, because plenty of cards have no TCGplayer
+ * figure, so nothing downstream needs a new branch. Every place that shows money
  * is already written as `card.price && …` for that reason, and all of them go
  * quiet on their own.
  *
- * Only `price` needs clearing: the raw Cardmarket figures live on `CardDetail`,
- * which the public page does not build. If a `market` field ever moves onto
+ * `price` and `priceFirstEd` are what needs clearing: the card's
+ * detail lives on `CardDetail`, which the public page does not build. If a `market` field ever moves onto
  * `OwnedCard`, it has to be cleared here too.
  *
  * A new array rather than a mutation: `getCards()` hands out a memoised object
@@ -466,9 +435,7 @@ export function forPublic(sets: CardSet[]): CardSet[] {
     cards: set.cards.map((card) => ({
       ...card,
       price: null,
-      priceHolo: null,
       priceFirstEd: null,
-      priceShadowless: null,
       // Eleven keys written as null rather than omitted, and that is 472.3 kB
       // of the 1,050 kB RSC flight payload on a 1,635-card profile — 45% of it,
       // measured. Omitting them instead is the obvious win and was attempted;
@@ -603,25 +570,16 @@ export type BuildOptions = {
    * Whether to resolve what each card is worth. On by default, because every
    * screen that draws a collection shows prices.
    *
-   * Off is for a caller that already has prices from somewhere cheaper, and
-   * there is exactly one: the weekly snapshot, which downloads Cardmarket's
-   * whole price guide in a single request and needs this function only for the
-   * matching. With CATALOGUE_SET_PRICING_MAX at 0 — the default — pricing here
-   * means one TCGdex request per matched card, so a batch job that priced this
-   * way would make sixteen hundred requests to arrive at numbers it already had
-   * in one file.
-   *
-   * It only skips the fetching. Whatever the set catalogue happened to
-   * pre-price is still ignored too, so `price` is null on every card rather
-   * than null on most of them — a caller that asked not to be given prices
-   * should not have to wonder which ones it got anyway.
+   * Off is for a caller that already has prices from somewhere cheaper and
+   * needs this function only for the matching: pricing here means one TCGdex
+   * request per matched card, so a batch job that priced this way would make
+   * sixteen hundred requests to arrive at numbers it already had.
    */
   prices?: boolean;
   /**
-   * Where a price comes from, given the TCGdex ids that need one. The default
-   * asks TCGdex card by card; collection.ts hands in the Cardmarket guide first
-   * and TCGdex only for what the guide does not know. The nightly snapshot
-   * passes `prices: false` and never reaches this.
+   * Where TCGplayer's figures come from, given the TCGdex ids that need one. The
+   * default asks TCGdex card by card; collection.ts hands in the stored
+   * tcgplayer_prices first and TCGdex only for what the store does not hold.
    */
   priceSource?: (ids: string[]) => Promise<Map<string, CardPrices>>;
   /**
@@ -662,7 +620,6 @@ const OFFLINE_CATALOGUE: SetCatalogue = {
   logo: null,
   releaseDate: null,
   total: null,
-  prices: {},
 };
 
 /**
@@ -758,28 +715,23 @@ export type CardFacts = {
   localName?: string | null;
   /** The printed number, for the second market's lookup outside these facts (collection.ts). */
   number: string;
-  /** Cardmarket's alone; TCGplayer is blended in by the caller, from a cache of its own. */
+  /**
+   * TCGplayer's market figure in euros. Null as resolved here: the caller converts `usd` at the
+   * day's rate (factsWithUsd in collection.ts), from a cache of its own.
+   */
   price: Price | null;
-  /** TCGplayer's dollars as TCGdex relays them, where the card was fetched there: the blend's fallback. */
+  /** TCGplayer's dollars as TCGdex relays them, where the card was fetched there. */
   usd: UsdPrice | null;
   /** The stamped first run's dollars, where TCGplayer prices that run apart. See CardPrices.usdFirstEd. */
   usdFirstEd?: UsdPrice | null;
-  priceHolo: Price | null;
   /**
    * What the stamped first run trades at, in euros, where anything prices that run apart.
    *
-   * TCGplayer's figure converted and nothing else: Cardmarket publishes one price per card id
-   * and it is the ordinary run's, so there is nothing here to average it with. Null on every
+   * TCGplayer's figure converted and nothing else. Null on every
    * card nobody prices a stamped run for, which is most of them, and a 1st Edition copy of one
    * of those falls back to the ordinary price. See copyPriceOf() in price-basis.mjs.
    */
   priceFirstEd?: Price | null;
-  /**
-   * What the Shadowless run trades at, in euros, where Cardmarket files that run as a product of
-   * its own. Base Set is the one set it does, every card of it; null everywhere else, and a
-   * Shadowless copy of a card nobody prices apart falls back to the ordinary price.
-   */
-  priceShadowless?: Price | null;
   /**
    * Every printing TCGplayer prices, in euros, by TCGplayer's own name for it, and the product
    * id of each. This is the market that tells a holo from the plain card and a stamped run from
@@ -788,10 +740,7 @@ export type CardFacts = {
   pricePrintings?: Record<string, Price | null> | null;
   printingIds?: Record<string, number> | null;
   /** The same printings in dollars, as the catalogue relayed them, before the day's rate. */
-  usdPrintings?: Record<
-    string,
-    { market: number | null; low: number | null; productId: number | null }
-  > | null;
+  usdPrintings?: Record<string, { market: number | null; productId: number | null }> | null;
   /**
    * TCGdex's word for how rare this printing is, from a catalogue that is not
    * the English one — and null on every English card, always.
@@ -860,18 +809,16 @@ function factsOfLanguageCard(identity: CardIdentity, card: LanguageCard): CardFa
     localName: card.name || null,
     number: card.number || identity.number,
     // Unpriced here, and priced by the caller: TCGdex relays no TCGplayer figure for a
-    // Japanese card, only Cardmarket's, which Card Orb does not show (2026-09-13). factsWithUsd()
+    // Japanese card. factsWithUsd()
     // in collection.ts reads TCGplayer's Japanese shelf from tcgcsv, through the Japanese id
     // map, and fills the price and the printings in. A card that shelf does not price stays
     // null: unpriced, never free, and no other market stands in.
     price: null,
-    priceHolo: null,
     usd: null,
     usdFirstEd: null,
     usdPrintings: null,
-    // No Japanese set had a stamped or a Shadowless run.
+    // No Japanese set had a stamped run.
     priceFirstEd: null,
-    priceShadowless: null,
     rarity: card.rarity,
     catalogue: card.catalogue,
   };
@@ -881,16 +828,14 @@ function factsOfLanguageCard(identity: CardIdentity, card: LanguageCard): CardFa
  * The catalogue half of a set: which card each printing is, its scan, and what
  * it is worth. A pure function of the set name and the identities, and the
  * whole of what a rebuild used to pay for — one to three lookups per card the
- * set catalogue does not place, and one TCGdex request per card the price
- * guide does not know. Twenty seconds for this collection, paid again on every
+ * set catalogue does not place, and one price request per matched card. Twenty seconds for this collection, paid again on every
  * write until the caller put a day-long cache in front of it (collection.ts).
  *
  * ── Two paths, and the first one is untouched ──────────────────────────────
  *
  * Everything below the language block is what it always was: the set catalogue
  * found by English name, every printing matched by number within it, the
- * Limitless and pokemontcg.io fallbacks, one price request per card the guide
- * does not know. A set with no card of its own catalogue never enters the new
+ * Limitless and pokemontcg.io fallbacks, one price request per matched card. A set with no card of its own catalogue never enters the new
  * code and never pays a request for it.
  *
  * The second path is for a row that names a catalogue of its own: a Japanese
@@ -1031,26 +976,13 @@ export async function resolveSetFacts(
   // that map already runs eight at a time, and a nested fetch would have made
   // it eight times eight.
   //
-  // Whatever the catalogue already priced is free; the rest is asked for
-  // here. With pre-pricing off — which is the default — that is every matched
-  // card, exactly as before. With it on, this list is usually empty.
-  const wanted = [...new Set(resolved.map((r) => r.tcgId).filter(Boolean))] as string[];
-  const missing = prices ? wanted.filter((id) => !(id in cat.prices)) : [];
-  const fetched = missing.length ? await priceSource(missing) : new Map<string, CardPrices>();
-  const priceOfId = (id: string | null) =>
-    (prices && id && (fetched.get(id)?.price ?? cat.prices[id])) || null;
-  /**
-   * The foil price, where the fetch found one.
-   *
-   * Only from the fetch, never from cat.prices: the set catalogue pre-prices
-   * a whole set into a Record<string, Price> and has no second slot, so a
-   * pre-priced card has no foil figure and falls back to the normal one.
-   * That is invisible today — pre-pricing ships off (CATALOGUE_SET_PRICING_MAX
-   * defaults to 0) — and is the reason this is a lookup rather than a field
-   * on that Record: widening the catalogue's shape is a bigger change than
-   * the one this is part of, and it would want its own cache version bump.
-   */
-  const holoOfId = (id: string | null) => (prices && id && fetched.get(id)?.holo) || null;
+  // Every matched card's TCGplayer figures, in dollars. The price itself is converted by the
+  // caller at the day's rate (factsWithUsd in collection.ts), so it starts null here.
+  const wanted = prices
+    ? ([...new Set(resolved.map((r) => r.tcgId).filter(Boolean))] as string[])
+    : [];
+  const fetched = wanted.length ? await priceSource(wanted) : new Map<string, CardPrices>();
+  const pricesOf = (id: string | null) => (prices && id ? fetched.get(id) : undefined);
 
   const cards: Record<string, CardFacts> = {};
   for (const r of resolved) {
@@ -1061,13 +993,11 @@ export async function resolveSetFacts(
       matchedName: r.matchedName,
       localName: null,
       number: r.number,
-      price: priceOfId(r.tcgId),
-      usd: (prices && r.tcgId && fetched.get(r.tcgId)?.usd) || null,
-      usdFirstEd: (prices && r.tcgId && fetched.get(r.tcgId)?.usdFirstEd) || null,
+      price: null,
+      usd: pricesOf(r.tcgId)?.usd || null,
+      usdFirstEd: pricesOf(r.tcgId)?.usdFirstEd || null,
       // Every printing TCGplayer prices, which is what tells this card's holo from its plain rare.
-      usdPrintings: (prices && r.tcgId && fetched.get(r.tcgId)?.usdPrintings) || null,
-      priceHolo: holoOfId(r.tcgId),
-      priceShadowless: (prices && r.tcgId && fetched.get(r.tcgId)?.shadowless) || null,
+      usdPrintings: pricesOf(r.tcgId)?.usdPrintings || null,
       // Always null on this path. See CardFacts.rarity: the row's own column is
       // the one source for an English card's rarity and is to stay so.
       rarity: null,
@@ -1251,9 +1181,7 @@ export async function buildCollection(
           localName: card?.localName ?? null,
           tcgId: card?.tcgId ?? null,
           price: card?.price ?? null,
-          priceHolo: card?.priceHolo ?? null,
           priceFirstEd: card?.priceFirstEd ?? null,
-          priceShadowless: card?.priceShadowless ?? null,
           pricePrintings: card?.pricePrintings ?? null,
           printingIds: card?.printingIds ?? null,
           // The catalogue's word where it has one, the row's where it does not.
@@ -1331,7 +1259,6 @@ export async function buildCollection(
           // its rows TCGdex matched is the one that knows what it is worth.
           existing.image ??= p.image;
           existing.price ??= p.price;
-          existing.priceHolo ??= p.priceHolo;
           existing.tcgId ??= p.tcgId;
           existing.localName ??= p.localName;
           continue;
@@ -1348,9 +1275,7 @@ export async function buildCollection(
           imageSize: p.imageSize,
           speciesId: p.speciesId,
           price: p.price,
-          priceHolo: p.priceHolo,
           priceFirstEd: p.priceFirstEd,
-          priceShadowless: p.priceShadowless,
           pricePrintings: p.pricePrintings,
           printingIds: p.printingIds,
           tcgId: p.tcgId,
@@ -1438,7 +1363,6 @@ export function mergeSetsByTitle(sets: CardSet[]): CardSet[] {
       same.image ??= card.image;
       same.imageHigh ??= card.imageHigh;
       same.price ??= card.price;
-      same.priceHolo ??= card.priceHolo;
       same.tcgId ??= card.tcgId;
       same.localName ??= card.localName;
     }
@@ -1493,8 +1417,7 @@ export type CardDetail = {
    */
   cmUrl: string | null;
   /**
-   * What the card trades at: TCGplayer's market figure and lowest listing, converted at the
-   * day's rate. Null where TCGplayer prices nothing or the rate could not be read. It was
+   * What the card trades at: TCGplayer's market figure, converted at the day's rate. Null where TCGplayer prices nothing or the rate could not be read. It was
    * Cardmarket's until 2026-09-12; see price-basis.mjs for why one market.
    */
   price: Price | null;
@@ -1557,14 +1480,8 @@ export async function getCardDetail(
       variants_detailed?: TcgVariant[];
       set?: { id?: string; name?: string; logo?: string; cardCount?: { total?: number } };
       pricing?: {
-        cardmarket?: {
-          idProduct?: number;
-          low?: number | null;
-          avg30?: number | null;
-          avg?: number | null;
-          trend?: number | null;
-          avg7?: number | null;
-        };
+        /** Only the product id is read: cmId. Cardmarket's figures are not a price here. */
+        cardmarket?: { idProduct?: number };
         tcgplayer?: Parameters<typeof usdOf>[0];
       };
     } | null;

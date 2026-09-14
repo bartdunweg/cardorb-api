@@ -45,7 +45,6 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   variants: [variant({ owned: over.owned ?? true })],
   owned: true,
   price: null,
-  priceHolo: null,
   tcgId: null,
   ...over,
 });
@@ -87,8 +86,8 @@ describe("copiesHeld", () => {
  * movers.ts and the nightly snapshot all add up.
  */
 describe("heldValue with a foil printing", () => {
-  const NORMAL = { low: 1, market: 10, avg30: 10, nm: null };
-  const FOIL = { low: 2, market: 20, avg30: 20, nm: null };
+  const NORMAL = { market: 10 };
+  const FOIL = { market: 20 };
 
   it("prices a reverse holo as a reverse holo, and its normal twin as normal", () => {
     // The whole reason the finish column exists: one card, two copies, two
@@ -109,22 +108,31 @@ describe("heldValue with a foil printing", () => {
     ).toBe(30);
   });
 
-  it("prices a plain holo from the plain fields, not the foil ones", () => {
+  it("prices a plain holo from the plain figure, not the reverse's", () => {
     // Measured, not assumed. On a card that exists only as a holo, Cardmarket's
-    // plain fields already describe the holo — there is no other printing — and
-    // its -holo fields are a thinner market at 0.47x. Treating a holo like a
-    // reverse holo dropped this collection by €2,488.
+    // plain fields already described the holo and its -holo fields were a thinner
+    // market at 0.47x. Treating a holo like a reverse holo dropped this collection
+    // by €2,488, and a holo still never reads a reverse's figure.
     expect(
-      heldValue(card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: "holo" })] })),
+      heldValue(
+        card({
+          price: NORMAL,
+          pricePrintings: { "reverse-holofoil": FOIL },
+          variants: [variant({ finish: "holo" })],
+        }),
+      ),
     ).toBe(10);
   });
 
-  it("falls back to the normal price where Cardmarket has no foil listing", () => {
-    // 865 of this collection's 1,526 products are in exactly this position.
+  it("falls back to the normal price where there is no foil figure", () => {
     // The copy really is a reverse holo; there is simply no separate price.
     expect(
       heldValue(
-        card({ price: NORMAL, priceHolo: null, variants: [variant({ finish: "reverse-holo" })] }),
+        card({
+          price: NORMAL,
+          pricePrintings: null,
+          variants: [variant({ finish: "reverse-holo" })],
+        }),
       ),
     ).toBe(10);
   });
@@ -134,7 +142,13 @@ describe("heldValue with a foil printing", () => {
     // somebody fills it in. It must not be worth nothing, and it must not
     // silently claim the foil price either.
     expect(
-      heldValue(card({ price: NORMAL, priceHolo: FOIL, variants: [variant({ finish: null })] })),
+      heldValue(
+        card({
+          price: NORMAL,
+          pricePrintings: { "reverse-holofoil": FOIL },
+          variants: [variant({ finish: null })],
+        }),
+      ),
     ).toBe(10);
   });
 

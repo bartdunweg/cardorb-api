@@ -29,7 +29,6 @@ const copy = (over: Partial<CardItem>): CardItem =>
     acquiredAt: null,
     collectionId: null,
     price: null,
-    priceHolo: null,
     ...over,
   }) as CardItem;
 

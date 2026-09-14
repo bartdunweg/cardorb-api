@@ -33,7 +33,7 @@ const detail = {
   set: { id: "sv03", name: "Obsidian Flames", logo: null, total: 197 },
   cmId: 1234,
   cmUrl: "https://www.cardmarket.com/en/Pokemon/Products/Singles/x",
-  price: { market: 300, low: 210, nm: { low: 280, high: 340 } },
+  price: { market: 300 },
   market: { avg: 305, trend: 298, avg7: 301 },
 };
 

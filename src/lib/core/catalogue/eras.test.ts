@@ -15,7 +15,6 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   variants: [],
   owned: true,
   price: null,
-  priceHolo: null,
   tcgId: null,
   ...over,
 });

@@ -32,12 +32,10 @@ import {
 import { storedScan } from "./artwork";
 import { type CatalogueSet, inBinderOrder, resolveEnglishSetId } from "./tcgdex-browse";
 import type { CatalogueMatch } from "./ptcg-search";
-import type { Price } from "../price-basis.mjs";
 import { indexByNumber } from "./set-index";
 import { resolveSetIds } from "./set-resolve";
 import type { SetCatalogue } from "./catalogue";
 import { setArt } from "./set-art";
-import { pricesFor } from "./tcgdex-client";
 
 /**
  * The copy's sets, read whole and kept for ten minutes.
@@ -60,12 +58,6 @@ async function copiedSets(db: SupabaseClient): Promise<CatalogueSetRecord[]> {
 /** For the tests, and for the one place that needs the next read to go to the database. */
 export function forgetCopiedSets(): void {
   sets = null;
-}
-
-/** How big a set may be before pre-pricing it stops being a saving. Same rule as the live path. */
-function pricingMax(): number {
-  const raw = Number(process.env.CATALOGUE_SET_PRICING_MAX);
-  return Number.isFinite(raw) && raw > 0 ? raw : 0;
 }
 
 /**
@@ -109,19 +101,7 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
     ),
   );
 
-  // Off by default, and kept only so turning it on keeps meaning what it means: a copied set
-  // would otherwise silently stop pre-pricing while an uncopied one still did.
-  const max = pricingMax();
   const total = main?.total ?? null;
-  let prices: Record<string, Price> = {};
-  if (max > 0 && total !== null && total <= max) {
-    const cardIds = [...new Set(Object.values(byNumber).map((c) => c.id))];
-    prices = Object.fromEntries(
-      [...(await pricesFor(cardIds))].flatMap(([id, p]) =>
-        p.price ? [[id, p.price] as const] : [],
-      ),
-    );
-  }
 
   return {
     byNumber,
@@ -136,7 +116,6 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
     logo: await setArt(setName, main?.logo ?? null, main?.symbol ?? null),
     releaseDate: main?.release_date ?? null,
     total,
-    prices,
   };
 }
 
