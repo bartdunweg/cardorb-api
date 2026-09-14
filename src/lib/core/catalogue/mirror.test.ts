@@ -446,6 +446,32 @@ describe("syncMirror", () => {
     ]);
   });
 
+  it("counts the pictures a run changes, and none where the copy already holds them", async () => {
+    englishSets.mockResolvedValue([set("swsh11", 1, "2022/09/09")]);
+    englishSet.mockResolvedValue({
+      set: set("swsh11", 1, "2022/09/09"),
+      cards: [hit("swsh11-186", "186")],
+    });
+    const fresh = fakeStore();
+    expect((await syncMirror(fresh.db)).pictures).toBe(1);
+    const same = fakeStore({
+      catalogue_sync: [{ set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [
+        row({ id: "swsh11-186", image: "https://assets.tcgdex.net/en/x/swsh11/186" }),
+      ],
+    });
+    expect((await syncMirror(same.db)).pictures).toBe(0);
+    canStoreImages.mockResolvedValue(true);
+    keepImage.mockResolvedValue("https://images.cardorb.com/en/x/swsh11/186");
+    const moved = fakeStore({
+      catalogue_sync: [{ set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_cards: [
+        row({ id: "swsh11-186", image: "https://assets.tcgdex.net/en/x/swsh11/186" }),
+      ],
+    });
+    expect((await syncMirror(moved.db)).pictures).toBe(1);
+  });
+
   it("never guesses at Limitless for a gallery number", async () => {
     englishSets.mockResolvedValue([set("swsh12tg", 1, "2022/09/09")]);
     englishSet.mockResolvedValue({

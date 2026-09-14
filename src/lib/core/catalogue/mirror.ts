@@ -153,6 +153,12 @@ export type SyncReport = {
   failed: string[];
   /** Sets the budget did not reach: missing, changed or older than the ones copied. */
   left: number;
+  /**
+   * Cards whose picture is not the one the copy held before this run: a scan found, a picture
+   * moved into our bucket, a card new to the copy. The collection keeps a set's pictures for a
+   * day (set-facts in collection.ts), so a run that changes any tells the route to drop them.
+   */
+  pictures: number;
   ms: number;
 };
 
@@ -282,18 +288,13 @@ async function withResolvedScans(
  * are, which is how a local run and the tests behave.
  */
 async function withStoredImages(
-  db: SupabaseClient,
   cards: CatalogueMatch[],
+  /** The pictures the copy holds for these cards now, by id. */
+  held: Map<string, string | null>,
   /** canStoreImages(), asked once per run rather than once per set. */
   storing: boolean,
 ): Promise<CatalogueMatch[]> {
   if (!storing || !cards.length) return cards;
-  const held = await catalogueCardsById(
-    db,
-    cards.map((c) => c.id),
-  )
-    .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
-    .catch(() => new Map<string, string | null>());
   return mapLimit(cards, 8, async (card) => {
     const stem = stemOf(card.image);
     const ours = stem ? storedAddress(stem) : null;
@@ -352,7 +353,7 @@ export async function syncMirror(
   );
 
   const storing = await canStoreImages();
-  const report: SyncReport = { copied: [], failed: [], left: 0, ms: 0 };
+  const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, ms: 0 };
   const next = () => (now() - start < budgetMs ? queue.shift() : undefined);
   const worker = async () => {
     for (let id = next(); id !== undefined; id = next()) {
@@ -363,11 +364,23 @@ export async function syncMirror(
           continue;
         }
         const { set, cards } = read;
-        const pictured = await withStoredImages(
+        /* What the copy holds for this set before the run writes it. A store that will not
+           answer counts every card as changed, which costs the collection a day's cache early
+           and never a stale picture. */
+        const held = await catalogueCardsById(
           db,
+          cards.map((c) => c.id),
+        )
+          .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
+          .catch(() => new Map<string, string | null>());
+        const pictured = await withStoredImages(
           await withResolvedScans(db, id, set.name, cards, fresh.has(id)),
+          held,
           storing,
         );
+        report.pictures += pictured.filter(
+          (c) => !held.has(c.id) || held.get(c.id) !== stemOf(c.image),
+        ).length;
         /* Which of the set's cards are full art, worked out here because this is the one place
            that holds a whole set: the rule is about a card's place in it (full-art.ts). */
         const arts = fullArtOf(pictured);
