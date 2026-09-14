@@ -1568,6 +1568,8 @@ export type CatalogueCardRecord = {
   variants?: { type?: string; foil?: string; stamp?: string[] }[] | null;
   /** The Western languages it was printed in; null where nobody could say. */
   languages?: string[] | null;
+  /** What the card itself says where `name` is the English the app shows; null on an English card. */
+  local_name?: string | null;
 };
 
 /** What the copy asks of a search: every word in the row's text, and the filters as typed. */
@@ -1603,23 +1605,46 @@ export type CatalogueSetRecord = {
   printed_total: number | null;
   /** TCGdex's serie id. Written by the copy; not in SET_COLUMNS, which readers of the shelf share. */
   serie_id?: string | null;
+  /** The catalogue the set is in; English where left out (migration 20260914230000). */
+  language?: CatalogueLanguage;
+  /** The set's own name where `name` is the English the shelf shows; null on an English set. */
+  local_name?: string | null;
+  /** Whether the catalogue lists the set's cards, or only the set and its count. */
+  cards_recorded?: boolean;
+  /** The shelf's order within the catalogue, for one whose sets carry no date on its shelf. */
+  sort_order?: number | null;
 };
+
+/** The catalogues the copy holds: TCGdex's English and Japanese. */
+export type CatalogueLanguage = "en" | "ja";
 
 const SET_COLUMNS =
   "id, name, series, release_date, logo, symbol, abbreviation, total, printed_total";
+
+/** A catalogue of its own also reads what its shelf needs beside: the printed name and the order. */
+const LANGUAGE_SET_COLUMNS: string = `${SET_COLUMNS}, serie_id, local_name, cards_recorded, sort_order`;
 
 /** What a reader of the copy's cards is given. The search adds its own filters on top. */
 const CARD_COLUMNS =
   "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image";
 
-/** Every set the copy holds. A few hundred rows, read whole and kept behind one cache entry. */
-export async function listCatalogueSets(db: SupabaseClient): Promise<CatalogueSetRecord[]> {
-  return readAllPages<CatalogueSetRecord>("the catalogue's sets", (page, counted) =>
-    db
-      .from("catalogue_sets")
-      .select(SET_COLUMNS, counted ? { count: "exact" } : {})
-      .order("id", { ascending: true })
-      .range(...pageRange(page)),
+/** Every set one catalogue of the copy holds. A few hundred rows, read whole and kept behind one cache entry. */
+export async function listCatalogueSets(
+  db: SupabaseClient,
+  language: CatalogueLanguage = "en",
+): Promise<CatalogueSetRecord[]> {
+  return readAllPages<CatalogueSetRecord>(
+    "the catalogue's sets",
+    (page, counted) =>
+      db
+        .from("catalogue_sets")
+        .select(
+          language === "en" ? SET_COLUMNS : LANGUAGE_SET_COLUMNS,
+          counted ? { count: "exact" } : {},
+        )
+        .eq("language", language)
+        .order("id", { ascending: true })
+        .range(...pageRange(page)) as unknown as PromiseLike<PageResult<CatalogueSetRecord>>,
   );
 }
 
@@ -1630,7 +1655,10 @@ export async function writeCatalogueSetRecord(
 ): Promise<void> {
   const { error } = await db
     .from("catalogue_sets")
-    .upsert({ ...set, synced_at: new Date().toISOString() }, { onConflict: "id" });
+    .upsert(
+      { ...set, language: set.language ?? "en", synced_at: new Date().toISOString() },
+      { onConflict: "language,id" },
+    );
   if (error) throw new Error(`Copying the set ${set.id} failed: ${error.message}`);
 }
 
@@ -1639,8 +1667,13 @@ export async function updateCatalogueSetArt(
   db: SupabaseClient,
   id: string,
   art: { logo: string | null; symbol: string | null },
+  language: CatalogueLanguage = "en",
 ): Promise<void> {
-  const { error } = await db.from("catalogue_sets").update(art).eq("id", id);
+  const { error } = await db
+    .from("catalogue_sets")
+    .update(art)
+    .eq("language", language)
+    .eq("id", id);
   if (error) throw new Error(`Writing the art of the set ${id} failed: ${error.message}`);
 }
 
@@ -1654,7 +1687,10 @@ export type CatalogueSyncRecord = {
 };
 
 /** Which sets the copy holds, so a run knows what is missing and what is oldest. */
-export async function listCatalogueSync(db: SupabaseClient): Promise<CatalogueSyncRecord[]> {
+export async function listCatalogueSync(
+  db: SupabaseClient,
+  language: CatalogueLanguage = "en",
+): Promise<CatalogueSyncRecord[]> {
   const rows = await readAllPages<{
     set_id: string;
     cards: number;
@@ -1664,6 +1700,7 @@ export async function listCatalogueSync(db: SupabaseClient): Promise<CatalogueSy
     db
       .from("catalogue_sync")
       .select("set_id, cards, synced_at, format", counted ? { count: "exact" } : {})
+      .eq("language", language)
       .order("set_id", { ascending: true })
       .range(...pageRange(page)),
   );
@@ -1676,10 +1713,14 @@ export async function listCatalogueSync(db: SupabaseClient): Promise<CatalogueSy
 }
 
 /** True once at least one set has been copied: the search may read the copy. */
-export async function catalogueCopied(db: SupabaseClient): Promise<boolean> {
+export async function catalogueCopied(
+  db: SupabaseClient,
+  language: CatalogueLanguage = "en",
+): Promise<boolean> {
   const { count, error } = await db
     .from("catalogue_sync")
-    .select("set_id", { count: "exact", head: true });
+    .select("set_id", { count: "exact", head: true })
+    .eq("language", language);
   if (error) throw new Error(`Reading the catalogue's sync record failed: ${error.message}`);
   return (count ?? 0) > 0;
 }
@@ -1695,13 +1736,14 @@ export async function writeCatalogueSet(
   cards: CatalogueCardRecord[],
   chunk = 500,
   format = 0,
+  language: CatalogueLanguage = "en",
 ): Promise<void> {
   const now = new Date().toISOString();
   for (let i = 0; i < cards.length; i += chunk) {
     const { error } = await db.from("catalogue_cards").upsert(
-      cards.slice(i, i + chunk).map((c) => ({ ...c, synced_at: now })),
+      cards.slice(i, i + chunk).map((c) => ({ ...c, language, synced_at: now })),
       {
-        onConflict: "id",
+        onConflict: "language,id",
       },
     );
     if (error) throw new Error(`Writing the catalogue's ${setId} failed: ${error.message}`);
@@ -1710,15 +1752,20 @@ export async function writeCatalogueSet(
     // What the set held before and the catalogue lists no more: the rows this write did
     // not touch. Only when something was written: an empty answer is not a reason to
     // empty the set.
-    const gone = await db.from("catalogue_cards").delete().eq("set_id", setId).lt("synced_at", now);
+    const gone = await db
+      .from("catalogue_cards")
+      .delete()
+      .eq("language", language)
+      .eq("set_id", setId)
+      .lt("synced_at", now);
     if (gone.error)
       throw new Error(`Dropping ${setId}'s stale cards failed: ${gone.error.message}`);
   }
   const stamped = await db
     .from("catalogue_sync")
     .upsert(
-      { set_id: setId, cards: cards.length, synced_at: now, format },
-      { onConflict: "set_id" },
+      { language, set_id: setId, cards: cards.length, synced_at: now, format },
+      { onConflict: "language,set_id" },
     );
   if (stamped.error)
     throw new Error(`Recording ${setId} as copied failed: ${stamped.error.message}`);
@@ -1744,6 +1791,7 @@ export async function searchCatalogueCards(
   query: CatalogueQuery,
   page: number,
   pageSize: number,
+  language: CatalogueLanguage = "en",
 ): Promise<{ rows: CatalogueCardRecord[]; total: number }> {
   let q = db
     .from("catalogue_cards")
@@ -1752,7 +1800,8 @@ export async function searchCatalogueCards(
       {
         count: "exact",
       },
-    );
+    )
+    .eq("language", language);
   for (const word of query.words) q = q.ilike("search", contains(word.toLowerCase()));
   if (query.name) q = q.ilike("name", contains(query.name));
   if (query.number) q = q.ilike("local_id", contains(query.number));
@@ -1770,10 +1819,14 @@ export async function searchCatalogueCards(
 }
 
 /** The copy's latest write, as the version everything built from it carries. Null before the first night. */
-export async function catalogueVersion(db: SupabaseClient): Promise<string | null> {
+export async function catalogueVersion(
+  db: SupabaseClient,
+  language: CatalogueLanguage = "en",
+): Promise<string | null> {
   const { data, error } = await db
     .from("catalogue_sync")
     .select("synced_at")
+    .eq("language", language)
     .order("synced_at", { ascending: false })
     .limit(1);
   if (error) throw new Error(`Reading the catalogue's version failed: ${error.message}`);
@@ -1781,7 +1834,10 @@ export async function catalogueVersion(db: SupabaseClient): Promise<string | nul
 }
 
 /** Every card in the copy, in the order every list reads: newest set first, by number within one. */
-export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueCardRecord[]> {
+export async function listCatalogueCards(
+  db: SupabaseClient,
+  language: CatalogueLanguage = "en",
+): Promise<CatalogueCardRecord[]> {
   return readAllPages<CatalogueCardRecord>("the catalogue's copy", (page, counted) =>
     db
       .from("catalogue_cards")
@@ -1789,6 +1845,7 @@ export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueC
         "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art",
         counted ? { count: "exact" } : {},
       )
+      .eq("language", language)
       .order("release_date", { ascending: false, nullsFirst: false })
       .order("set_id", { ascending: true })
       .order("number_order", { ascending: true })
@@ -1806,6 +1863,7 @@ export async function listCatalogueCards(db: SupabaseClient): Promise<CatalogueC
 export async function catalogueCardsBySets(
   db: SupabaseClient,
   setIds: readonly string[],
+  language: CatalogueLanguage = "en",
 ): Promise<CatalogueCardRecord[][]> {
   if (!setIds.length) return [];
   const rows = await readAllPages<CatalogueCardRecord>(
@@ -1814,6 +1872,7 @@ export async function catalogueCardsBySets(
       db
         .from("catalogue_cards")
         .select(CARD_COLUMNS, counted ? { count: "exact" } : {})
+        .eq("language", language)
         .in("set_id", setIds as string[])
         .order("set_id", { ascending: true })
         .order("number_order", { ascending: true })
@@ -1833,6 +1892,7 @@ export async function catalogueCardsBySets(
 export async function catalogueSetCards(
   db: SupabaseClient,
   setId: string,
+  language: CatalogueLanguage = "en",
 ): Promise<CatalogueCardRecord[]> {
   return readAllPages<CatalogueCardRecord>("one set of the catalogue's copy", (page, counted) =>
     db
@@ -1841,6 +1901,7 @@ export async function catalogueSetCards(
         "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type",
         counted ? { count: "exact" } : {},
       )
+      .eq("language", language)
       .eq("set_id", setId)
       .order("number_order", { ascending: true })
       .range(...pageRange(page)),
@@ -1851,6 +1912,7 @@ export async function catalogueSetCards(
 export async function catalogueCardsById(
   db: SupabaseClient,
   ids: string[],
+  language: CatalogueLanguage = "en",
 ): Promise<CatalogueCardRecord[]> {
   if (!ids.length) return [];
   const { data, error } = await db
@@ -1858,6 +1920,7 @@ export async function catalogueCardsById(
     .select(
       "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art",
     )
+    .eq("language", language)
     .in("id", ids);
   if (error) throw new Error(`Reading cards from the catalogue's copy failed: ${error.message}`);
   const byId = new Map((data as CatalogueCardRecord[]).map((r) => [r.id, r]));
@@ -1873,6 +1936,7 @@ export type CatalogueCardSheet = {
     logo: string | null;
     total: number | null;
     serie_id: string | null;
+    local_name?: string | null;
   } | null;
 };
 
@@ -1884,12 +1948,14 @@ export type CatalogueCardSheet = {
 export async function catalogueCardSheet(
   db: SupabaseClient,
   id: string,
+  language: CatalogueLanguage = "en",
 ): Promise<CatalogueCardSheet | null> {
   const { data, error } = await db
     .from("catalogue_cards")
     .select(
-      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, illustrator, hp, stage, evolve_from, regulation_mark, first_edition, variants, languages",
+      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, illustrator, hp, stage, evolve_from, regulation_mark, first_edition, variants, languages, local_name",
     )
+    .eq("language", language)
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(`Reading ${id}'s sheet from the copy failed: ${error.message}`);
@@ -1897,7 +1963,8 @@ export async function catalogueCardSheet(
   if (!card || card.variants == null) return null;
   const sets = await db
     .from("catalogue_sets")
-    .select("id, name, logo, total, serie_id")
+    .select("id, name, logo, total, serie_id, local_name")
+    .eq("language", language)
     .eq("id", card.set_id)
     .maybeSingle();
   if (sets.error)
@@ -1906,8 +1973,15 @@ export async function catalogueCardSheet(
 }
 
 /** Every rarity the era of one set printed, out of the copy; empty where it holds none. */
-export async function catalogueEraRarities(db: SupabaseClient, setId: string): Promise<string[]> {
-  const { data, error } = await db.rpc("catalogue_era_rarities", { p_set_id: setId });
+export async function catalogueEraRarities(
+  db: SupabaseClient,
+  setId: string,
+  language: CatalogueLanguage = "en",
+): Promise<string[]> {
+  const { data, error } = await db.rpc("catalogue_era_rarities", {
+    p_set_id: setId,
+    p_language: language,
+  });
   if (error) throw new Error(`Reading ${setId}'s era rarities failed: ${error.message}`);
   return (data as string[] | null) ?? [];
 }
@@ -1925,6 +1999,7 @@ export async function fullArtIdsAmong(db: SupabaseClient, ids: string[]): Promis
     const { data, error } = await db
       .from("catalogue_cards")
       .select("id")
+      .eq("language", "en")
       .eq("full_art", true)
       .in("id", ids.slice(at, at + BITE));
     if (error)

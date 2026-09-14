@@ -224,7 +224,7 @@ describe("searchMirror", () => {
     const { db, calls } = fakeStore({ catalogue_sync: [{ set_id: "x" }] });
     await searchMirror(db, "a");
     await searchMirror(db, "b");
-    expect(calls.filter((c) => c.table === "catalogue_sync")).toHaveLength(1);
+    expect(calls.filter((c) => c.table === "catalogue_sync" && c.op === "select")).toHaveLength(1);
   });
 
   it("draws a hit without a scan as its name", async () => {

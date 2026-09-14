@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { catalogueIndex, syncMirror } from "@/lib/core/catalogue/mirror";
+import { syncLanguageMirror } from "@/lib/core/catalogue/mirror-language";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -35,7 +36,17 @@ export async function GET(req: Request) {
     /* `?full=1`: work every set out from scratch instead of keeping the pictures the copy
        already has. For the day a source is added to the chain, whose cards were copied without
        a picture before it existed; the nightly schedule never asks for it. */
-    const full = new URL(req.url).searchParams.get("full") === "1";
+    const params = new URL(req.url).searchParams;
+    /* `?language=ja`: the Japanese catalogue into the same copy (mirror-language.ts), on a schedule
+       of its own so each has the whole minute. */
+    if (params.get("language") === "ja") {
+      const report = await syncLanguageMirror(db, "ja");
+      console.log(
+        `[cron] catalogue ja: ${report.copied.length} sets copied, ${report.failed.length} failed, ${report.left} left, ${report.pictures} pictures changed, ${report.ms} ms`,
+      );
+      return NextResponse.json(report);
+    }
+    const full = params.get("full") === "1";
     const report = await syncMirror(db, { full });
     // The document the browser searches in, rebuilt from what was just copied (mirror.ts).
     if (report.copied.length) await catalogueIndex(db);
