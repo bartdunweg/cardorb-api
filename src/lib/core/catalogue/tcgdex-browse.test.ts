@@ -300,6 +300,15 @@ describe("tcgdex-browse", () => {
         types: ["Grass"],
         category: "Pokemon",
         trainerType: null,
+        sheet: {
+          illustrator: null,
+          hp: null,
+          stage: null,
+          evolveFrom: null,
+          regulationMark: null,
+          firstEdition: null,
+          variants: [],
+        },
         tcgId: "sv03.5-010",
       });
       // A card the facts did not cover keeps what the other shelves show.

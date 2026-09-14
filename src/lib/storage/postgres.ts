@@ -1558,6 +1558,16 @@ export type CatalogueCardRecord = {
   trainer_type?: string | null;
   /** The illustration covers the whole card. Worked out per set: lib/core/catalogue/full-art.ts. */
   full_art?: boolean;
+  /** The sheet's facts (migration 20260914220000). `variants` null: the copy has not kept them yet. */
+  illustrator?: string | null;
+  hp?: number | null;
+  stage?: string | null;
+  evolve_from?: string | null;
+  regulation_mark?: string | null;
+  first_edition?: boolean | null;
+  variants?: { type?: string; foil?: string; stamp?: string[] }[] | null;
+  /** The Western languages it was printed in; null where nobody could say. */
+  languages?: string[] | null;
 };
 
 /** What the copy asks of a search: every word in the row's text, and the filters as typed. */
@@ -1591,6 +1601,8 @@ export type CatalogueSetRecord = {
   abbreviation: string | null;
   total: number | null;
   printed_total: number | null;
+  /** TCGdex's serie id. Written by the copy; not in SET_COLUMNS, which readers of the shelf share. */
+  serie_id?: string | null;
 };
 
 const SET_COLUMNS =
@@ -1633,20 +1645,34 @@ export async function updateCatalogueSetArt(
 }
 
 /** One set the cron has copied, and when. */
-export type CatalogueSyncRecord = { setId: string; cards: number; syncedAt: string };
+export type CatalogueSyncRecord = {
+  setId: string;
+  cards: number;
+  syncedAt: string;
+  /** The shape of copy the set was written in (CATALOGUE_FORMAT in mirror.ts). */
+  format: number;
+};
 
 /** Which sets the copy holds, so a run knows what is missing and what is oldest. */
 export async function listCatalogueSync(db: SupabaseClient): Promise<CatalogueSyncRecord[]> {
-  const rows = await readAllPages<{ set_id: string; cards: number; synced_at: string }>(
-    "the catalogue's sync record",
-    (page, counted) =>
-      db
-        .from("catalogue_sync")
-        .select("set_id, cards, synced_at", counted ? { count: "exact" } : {})
-        .order("set_id", { ascending: true })
-        .range(...pageRange(page)),
+  const rows = await readAllPages<{
+    set_id: string;
+    cards: number;
+    synced_at: string;
+    format: number | null;
+  }>("the catalogue's sync record", (page, counted) =>
+    db
+      .from("catalogue_sync")
+      .select("set_id, cards, synced_at, format", counted ? { count: "exact" } : {})
+      .order("set_id", { ascending: true })
+      .range(...pageRange(page)),
   );
-  return rows.map((r) => ({ setId: r.set_id, cards: r.cards, syncedAt: r.synced_at }));
+  return rows.map((r) => ({
+    setId: r.set_id,
+    cards: r.cards,
+    syncedAt: r.synced_at,
+    format: r.format ?? 0,
+  }));
 }
 
 /** True once at least one set has been copied: the search may read the copy. */
@@ -1668,6 +1694,7 @@ export async function writeCatalogueSet(
   setId: string,
   cards: CatalogueCardRecord[],
   chunk = 500,
+  format = 0,
 ): Promise<void> {
   const now = new Date().toISOString();
   for (let i = 0; i < cards.length; i += chunk) {
@@ -1689,7 +1716,10 @@ export async function writeCatalogueSet(
   }
   const stamped = await db
     .from("catalogue_sync")
-    .upsert({ set_id: setId, cards: cards.length, synced_at: now }, { onConflict: "set_id" });
+    .upsert(
+      { set_id: setId, cards: cards.length, synced_at: now, format },
+      { onConflict: "set_id" },
+    );
   if (stamped.error)
     throw new Error(`Recording ${setId} as copied failed: ${stamped.error.message}`);
 }
@@ -1832,6 +1862,54 @@ export async function catalogueCardsById(
   if (error) throw new Error(`Reading cards from the catalogue's copy failed: ${error.message}`);
   const byId = new Map((data as CatalogueCardRecord[]).map((r) => [r.id, r]));
   return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
+/** One card of the copy with everything its sheet shows, and the set it is in. */
+export type CatalogueCardSheet = {
+  card: Required<CatalogueCardRecord>;
+  set: {
+    id: string;
+    name: string;
+    logo: string | null;
+    total: number | null;
+    serie_id: string | null;
+  } | null;
+};
+
+/**
+ * One card's sheet out of the copy, or null where the copy has no sheet for it: a card it does not
+ * hold, or one it holds from before it kept sheets (`variants` still null). Throws where the store
+ * would not answer, so the caller can ask TCGdex instead.
+ */
+export async function catalogueCardSheet(
+  db: SupabaseClient,
+  id: string,
+): Promise<CatalogueCardSheet | null> {
+  const { data, error } = await db
+    .from("catalogue_cards")
+    .select(
+      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, illustrator, hp, stage, evolve_from, regulation_mark, first_edition, variants, languages",
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(`Reading ${id}'s sheet from the copy failed: ${error.message}`);
+  const card = data as Required<CatalogueCardRecord> | null;
+  if (!card || card.variants == null) return null;
+  const sets = await db
+    .from("catalogue_sets")
+    .select("id, name, logo, total, serie_id")
+    .eq("id", card.set_id)
+    .maybeSingle();
+  if (sets.error)
+    throw new Error(`Reading ${card.set_id} from the copy failed: ${sets.error.message}`);
+  return { card, set: (sets.data as CatalogueCardSheet["set"]) ?? null };
+}
+
+/** Every rarity the era of one set printed, out of the copy; empty where it holds none. */
+export async function catalogueEraRarities(db: SupabaseClient, setId: string): Promise<string[]> {
+  const { data, error } = await db.rpc("catalogue_era_rarities", { p_set_id: setId });
+  if (error) throw new Error(`Reading ${setId}'s era rarities failed: ${error.message}`);
+  return (data as string[] | null) ?? [];
 }
 
 /**

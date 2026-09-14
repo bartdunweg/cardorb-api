@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
+import {
+  detailFromSheet,
+  eraRaritiesFromCopy,
+  languagesFromSheet,
+  readCardSheet,
+} from "@/lib/core/catalogue/card-sheet";
 import { detailPrice, usdToEurForRequest } from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
@@ -48,11 +54,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     });
   const own = isBrowseLanguage(language) ? language : null;
   let card;
+  /* The copy's sheet for an English card: everything below out of our own store, and TCGdex asked
+     only for a card the copy does not hold yet (card-sheet.ts). */
+  const sheet = own ? null : await readCardSheet(tcgId);
   try {
     // The day's rate beside it: the price is TCGplayer's dollars, and a figure is only shown in
     // the currency the collection is valued in.
     const rate = await usdToEurForRequest();
-    card = await getCardDetail(tcgId, own, rate);
+    card = sheet ? detailFromSheet(sheet) : await getCardDetail(tcgId, own, rate);
     // The price every other surface shows for this printing (detailPrice), not the figure TCGdex
     // relays on the record, which runs behind and is missing for a Japanese card.
     if (card) card = await detailPrice(card, own, rate);
@@ -76,15 +85,23 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   let foilPatterns;
   try {
     [languages, eraRarities, foilPatterns] = await Promise.all([
-      own ? Promise.resolve([]) : languagesOf(tcgId, card.set?.id ?? null),
+      own
+        ? Promise.resolve([])
+        : sheet && languagesFromSheet(sheet)
+          ? Promise.resolve(languagesFromSheet(sheet))
+          : languagesOf(tcgId, card.set?.id ?? null),
       rarityOrNull(card.rarity) === null && card.set?.id
-        ? raritiesOfEra(card.set.id)
+        ? sheet
+          ? eraRaritiesFromCopy(card.set.id)
+          : raritiesOfEra(card.set.id)
         : Promise.resolve(null),
       /* `foilPatterns` is [] for a Wizards card, whose holo had its set's one foil, and null
          everywhere else (foilPatternsOfSerie). A set nobody can find is null: no answer. */
       own || !card.set?.id
         ? Promise.resolve(null)
-        : serieOfSet(card.set.id).then(foilPatternsOfSerie, () => null),
+        : sheet?.set?.serie_id
+          ? Promise.resolve(foilPatternsOfSerie(sheet.set.serie_id))
+          : serieOfSet(card.set.id).then(foilPatternsOfSerie, () => null),
     ]);
   } catch (err) {
     console.error(`The printings of ${tcgId} could not be read:`, err);

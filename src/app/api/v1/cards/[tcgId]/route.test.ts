@@ -16,11 +16,27 @@ vi.mock("@/lib/api/guard", () => ({
 vi.mock("@/lib/core/collection/cards", () => ({
   getCardDetail: (...a: unknown[]) => getCardDetail(...a),
 }));
+/* The copy's sheet (card-sheet.ts): none by default, so these tests read the card as TCGdex answers
+   it; the ones about the copy hand a sheet in. */
+const readCardSheet = vi.fn();
+vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => null }));
+vi.mock("@/lib/core/catalogue/card-sheet", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/core/catalogue/card-sheet")>(
+    "@/lib/core/catalogue/card-sheet",
+  );
+  return {
+    ...actual,
+    readCardSheet: (...a: unknown[]) => readCardSheet(...a),
+    eraRaritiesFromCopy: async () => ["Promo"],
+  };
+});
 /* The printings beside the card are five real TCGdex reads, three attempts each, when left
    unmocked — which this test did, and the CI runner's 2026-09-11 15:39 run timed out on it at
    5 s (main, #270's run), the only red thing in it. A unit test asks the network for nothing. */
+const languagesOf = vi.fn(async () => ["en", "de"]);
 vi.mock("@/lib/core/catalogue/card-languages", () => ({
-  languagesOf: async () => ["en", "de"],
+  WESTERN: ["en", "de", "fr", "it", "es", "pt", "nl"],
+  languagesOf: () => languagesOf(),
 }));
 /* The day's dollar rate, which the route reads so the price can be TCGplayer's in euros. The
    real one sits in collection.ts behind server-only and asks frankfurter; neither belongs here. */
@@ -48,6 +64,7 @@ const get = (tcgId = "sv03-125") =>
   });
 
 beforeEach(() => {
+  readCardSheet.mockResolvedValue(null);
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
   getCardDetail.mockResolvedValue({ id: "sv03-125", name: "Charizard" });
   usdToEurForRequest.mockResolvedValue(0.92);
@@ -172,5 +189,58 @@ describe("the price's currency", () => {
     detailPrice.mockClear();
     await get();
     expect(detailPrice).toHaveBeenCalledWith(expect.anything(), null, 0.92);
+  });
+
+  it("reads an English card's sheet out of the copy and asks TCGdex nothing", async () => {
+    readCardSheet.mockResolvedValue({
+      card: {
+        id: "base1-8",
+        set_id: "base1",
+        local_id: "8",
+        name: "Machamp",
+        set_name: "Base Set",
+        series: "Base",
+        release_date: "1999/01/09",
+        rarity: null,
+        types: ["Fighting"],
+        image: "https://images.cardorb.com/en/base/base1/8",
+        category: "Pokemon",
+        trainer_type: null,
+        full_art: false,
+        illustrator: "Ken Sugimori",
+        hp: 100,
+        stage: "Stage2",
+        evolve_from: "Machoke",
+        regulation_mark: null,
+        first_edition: true,
+        variants: [{ type: "holo" }],
+        languages: ["de", "en"],
+      },
+      set: {
+        id: "base1",
+        name: "Base Set",
+        logo: "https://images.cardorb.com/logo",
+        total: 102,
+        serie_id: "base",
+      },
+    });
+    const res = await get("base1-8");
+    expect(res.status).toBe(200);
+    expect(getCardDetail).not.toHaveBeenCalled();
+    expect(languagesOf).not.toHaveBeenCalled();
+    expect(serieOfSet).not.toHaveBeenCalled();
+    expect(raritiesOfEra).not.toHaveBeenCalled();
+    expect(await res.json()).toMatchObject({
+      id: "base1-8",
+      illustrator: "Ken Sugimori",
+      hp: 100,
+      evolveFrom: "Machoke",
+      firstEdition: true,
+      printings: [{ finish: "holo", foilPattern: null }],
+      set: { id: "base1", total: 102 },
+      languages: ["en", "de"],
+      eraRarities: ["Promo"],
+      foilPatterns: [],
+    });
   });
 });

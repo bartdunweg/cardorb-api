@@ -5,6 +5,7 @@ const englishSets = vi.fn();
 const englishSet = vi.fn();
 /** Which numbers TCGdex names no scan for, and the set's printed code; none unless a test says so. */
 const setScans = vi.fn(async () => ({ gaps: new Set<string>(), code: null as string | null }));
+vi.mock("./card-languages", () => ({ languagesOfSet: async () => () => ["en"] }));
 vi.mock("./tcgdex-browse", () => ({
   englishSets: () => englishSets(),
   englishSet: (...a: unknown[]) => englishSet(...a),
@@ -289,14 +290,60 @@ describe("syncMirror", () => {
     ]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "grown", cards: 10, synced_at: "2026-09-10T00:00:00Z" },
-        { set_id: "stale", cards: 10, synced_at: "2026-09-01T00:00:00Z" },
-        { set_id: "fresh", cards: 10, synced_at: "2026-09-11T00:00:00Z" },
+        { set_id: "grown", cards: 10, synced_at: "2026-09-10T00:00:00Z", format: 1 },
+        { set_id: "stale", cards: 10, synced_at: "2026-09-01T00:00:00Z", format: 1 },
+        { set_id: "fresh", cards: 10, synced_at: "2026-09-11T00:00:00Z", format: 1 },
       ],
     });
     const report = await syncMirror(db, { parallel: 1 });
     expect(report.copied).toEqual(["new", "grown", "stale", "fresh"]);
     expect(report.left).toBe(0);
+  });
+
+  it("copies a set held in an older shape ahead of the oldest, and writes it in the new one", async () => {
+    englishSets.mockResolvedValue([set("stale", 1, "2024/01/01"), set("behind", 1, "2023/01/01")]);
+    englishSet.mockImplementation(async (id: string) => ({
+      set: { ...set(id, 1, "2024/01/01"), serieId: "base" },
+      cards: [
+        {
+          ...hit(`${id}-001`, "001"),
+          sheet: {
+            illustrator: "Ken Sugimori",
+            hp: 100,
+            stage: "Stage2",
+            evolveFrom: "Machoke",
+            regulationMark: null,
+            firstEdition: true,
+            variants: [{ type: "holo" }],
+          },
+        },
+      ],
+    }));
+    const { db, calls } = fakeStore({
+      catalogue_sync: [
+        { set_id: "stale", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 1 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 0 },
+      ],
+    });
+    const report = await syncMirror(db, { parallel: 1 });
+    expect(report.copied).toEqual(["behind", "stale"]);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({
+        id: "behind-001",
+        illustrator: "Ken Sugimori",
+        hp: 100,
+        evolve_from: "Machoke",
+        first_edition: true,
+        variants: [{ type: "holo" }],
+        languages: ["en"],
+      }),
+    ]);
+    expect(calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0]).toEqual(
+      expect.objectContaining({ id: "behind", serie_id: "base" }),
+    );
+    expect(calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert")?.args[0]).toEqual(
+      expect.objectContaining({ set_id: "behind", format: 1 }),
+    );
   });
 
   it("stops at the budget and says how many it left, keeping what it wrote", async () => {
@@ -451,7 +498,9 @@ describe("syncMirror", () => {
     });
     canStoreImages.mockResolvedValue(true);
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [
+        { set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 },
+      ],
       catalogue_cards: [
         row({ id: "swsh11-186", image: "https://images.cardorb.com/en/x/swsh11/186" }),
       ],
@@ -472,7 +521,9 @@ describe("syncMirror", () => {
     const fresh = fakeStore();
     expect((await syncMirror(fresh.db)).pictures).toBe(1);
     const same = fakeStore({
-      catalogue_sync: [{ set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [
+        { set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 },
+      ],
       catalogue_cards: [
         row({ id: "swsh11-186", image: "https://assets.tcgdex.net/en/x/swsh11/186" }),
       ],
@@ -481,7 +532,9 @@ describe("syncMirror", () => {
     canStoreImages.mockResolvedValue(true);
     keepImage.mockResolvedValue("https://images.cardorb.com/en/x/swsh11/186");
     const moved = fakeStore({
-      catalogue_sync: [{ set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [
+        { set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 },
+      ],
       catalogue_cards: [
         row({ id: "swsh11-186", image: "https://assets.tcgdex.net/en/x/swsh11/186" }),
       ],
@@ -564,7 +617,7 @@ describe("syncMirror", () => {
     });
     setScans.mockResolvedValue({ gaps: new Set(["085"]), code: "SVP" });
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 }],
       catalogue_cards: [row({ id: "svp-085", image: "https://images.pokemontcg.io/svp/85.png" })],
     });
     await syncMirror(db);
@@ -585,7 +638,7 @@ describe("syncMirror", () => {
     setScans.mockResolvedValue({ gaps: new Set(["190"]), code: "SVP" });
     tcgdexScan.mockResolvedValue(null);
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 }],
       catalogue_cards: [row({ id: "svp-190", image: null })],
     });
     await syncMirror(db);
@@ -646,7 +699,9 @@ describe("syncMirror", () => {
     tcgdexScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue("https://images.pokemontcg.io/swsh12pt5gg/GG69.png");
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "swsh12.5gg", cards: 2, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [
+        { set_id: "swsh12.5gg", cards: 2, synced_at: "2026-09-12T00:00:00Z", format: 1 },
+      ],
       catalogue_cards: [
         row({ id: "swsh12.5gg-GG40", image: "https://images.pokemontcg.io/swsh12pt5gg/GG40.png" }),
         row({ id: "swsh12.5gg-GG69", image: null }),
@@ -671,7 +726,7 @@ describe("syncMirror", () => {
     });
     setScans.mockResolvedValue({ gaps: new Set(["190"]), code: "SVP" });
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 }],
       catalogue_cards: [row({ id: "svp-190", image: null })],
     });
     await syncMirror(db);
@@ -690,7 +745,7 @@ describe("syncMirror", () => {
     tcgdexScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue("https://images.pokemontcg.io/svp/85.png");
     const { db } = fakeStore({
-      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 }],
       catalogue_cards: [row({ id: "svp-085", image: null })],
     });
     await syncMirror(db);
@@ -709,7 +764,7 @@ describe("syncMirror", () => {
     tcgdexScan.mockResolvedValue(null);
     limitlessScan.mockResolvedValue("/api/cover?url=limitless");
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z" }],
+      catalogue_sync: [{ set_id: "svp", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 }],
       catalogue_cards: [row({ id: "svp-102", image: null })],
     });
     await syncMirror(db, { full: true });

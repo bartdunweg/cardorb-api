@@ -3,7 +3,7 @@ import RECORDED_SETS from "../recorded-sets.generated.json";
 import { CatalogueNotFound, graphql, json } from "./tcgdex-client";
 import JA_NAMES from "./set-names.ja.json";
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
-import type { CatalogueMatch } from "./ptcg-search";
+import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { cardNamed } from "./card-names";
 import { correctedFacts } from "./card-fact-corrections";
 import { canonicalRarity } from "./rarity-names";
@@ -44,6 +44,8 @@ export type CatalogueSet = {
    * and a shelf that could not tell showed "0 of 60" for those.
    */
   cardsRecorded: boolean;
+  /** TCGdex's serie id ("base", "sv"), where the read carried it: the era's foil rule and rarities. */
+  serieId?: string | null;
 };
 
 /**
@@ -428,7 +430,27 @@ type SetFact = {
   types: string[];
   category: string | null;
   trainerType: string | null;
+  sheet: CardSheetFacts;
 };
+
+/** The sheet facts of a card whose facts were read; nothing for one that was not. */
+const sheetOf = (fact: SetFact | undefined): { sheet?: CardSheetFacts } =>
+  fact ? { sheet: fact.sheet } : {};
+
+/** A GraphQL number, or null for anything that is not one. */
+const intOrNull = (n: unknown): number | null =>
+  typeof n === "number" && Number.isFinite(n) ? Math.round(n) : null;
+
+/** The variants as printingsOf() reads them, nothing TCGdex adds beside (pricing, ids). */
+const trimmedVariants = (
+  list:
+    { type?: string | null; foil?: string | null; stamp?: string[] | null }[] | null | undefined,
+): CardSheetFacts["variants"] =>
+  (list ?? []).map((v) => ({
+    ...(v.type ? { type: v.type } : {}),
+    ...(v.foil ? { foil: v.foil } : {}),
+    ...(v.stamp?.length ? { stamp: v.stamp } : {}),
+  }));
 
 /** The fact with its rarity in the one spelling (rarity-names.ts). */
 const withSpelling = (fact: SetFact): SetFact => ({
@@ -440,7 +462,7 @@ async function englishFacts(setId: string): Promise<Map<string, SetFact> | null>
   const out = new Map<string, SetFact>();
   try {
     const body = (await graphql(
-      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types category trainerType } }`,
+      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id rarity types category trainerType illustrator hp stage evolveFrom regulationMark variants { firstEdition } variants_detailed { type foil stamp } } }`,
       `en set ${setId} facts`,
     )) as {
       cards?: ({
@@ -449,6 +471,14 @@ async function englishFacts(setId: string): Promise<Map<string, SetFact> | null>
         types?: string[] | null;
         category?: string | null;
         trainerType?: string | null;
+        illustrator?: string | null;
+        hp?: number | null;
+        stage?: string | null;
+        evolveFrom?: string | null;
+        regulationMark?: string | null;
+        variants?: { firstEdition?: boolean | null } | null;
+        variants_detailed?:
+          { type?: string | null; foil?: string | null; stamp?: string[] | null }[] | null;
       } | null)[];
     } | null;
     for (const c of body?.cards ?? [])
@@ -461,6 +491,15 @@ async function englishFacts(setId: string): Promise<Map<string, SetFact> | null>
               types: c.types ?? [],
               category: c.category ?? null,
               trainerType: c.trainerType ?? null,
+              sheet: {
+                illustrator: c.illustrator ?? null,
+                hp: intOrNull(c.hp),
+                stage: c.stage ?? null,
+                evolveFrom: c.evolveFrom ?? null,
+                regulationMark: c.regulationMark ?? null,
+                firstEdition: c.variants?.firstEdition ?? null,
+                variants: trimmedVariants(c.variants_detailed),
+              },
             }),
           ),
         );
@@ -527,6 +566,7 @@ export async function englishSet(
     cardsRecorded: (detail.cards ?? []).length > 0,
     logo: detail.logo ? `${detail.logo}.webp` : (known?.logo ?? null),
     symbol: detail.symbol ? `${detail.symbol}.webp` : (known?.symbol ?? null),
+    serieId: serieId || null,
   };
   const cards = (detail.cards ?? []).map((c): CatalogueMatch => ({
     id: c.id,
@@ -543,6 +583,7 @@ export async function englishSet(
     types: facts.get(c.id)?.types ?? [],
     category: facts.get(c.id)?.category ?? null,
     trainerType: facts.get(c.id)?.trainerType ?? null,
+    ...sheetOf(facts.get(c.id)),
     // TCGdex's id, because this is TCGdex: what every price in this repo is keyed by.
     tcgId: c.id,
   }));

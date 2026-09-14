@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { languagesOf, westernLanguagesOf } from "./card-languages";
+import { languagesOf, languagesOfSet, westernLanguagesOf } from "./card-languages";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -72,5 +72,41 @@ describe("languagesOf", () => {
     answering("en", "de");
     expect(await languagesOf("sv01-001", "sv01")).toEqual(["en", "de"]);
     expect(await languagesOf("sv01-001", null)).toEqual(["en", "de"]);
+  });
+});
+
+describe("languagesOfSet", () => {
+  it("answers every card of a set in the map without asking anyone", async () => {
+    vi.stubGlobal("fetch", async () => {
+      throw new Error("no catalogue is asked for a set in the map");
+    });
+    const of = await languagesOfSet("base1");
+    expect(of("base1-4")).toEqual(["en", "de", "fr", "it", "es", "pt", "nl"]);
+  });
+
+  it("reads each catalogue's set once and gives each card the ones that list it", async () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(url);
+      if (url.includes("/v2/de/sets/sv01"))
+        return new Response(JSON.stringify({ cards: [{ id: "sv01-001" }] }));
+      if (url.includes("/v2/pt/sets/sv01"))
+        return new Response(JSON.stringify({ cards: [{ id: "sv01-001" }, { id: "sv01-002" }] }));
+      return new Response("", { status: 404 });
+    });
+    const of = await languagesOfSet("sv01");
+    expect(of("sv01-001")).toEqual(["en", "de", "pt"]);
+    // Portuguese beside English alone is a translation, as card by card.
+    expect(of("sv01-002")).toEqual(["en"]);
+    expect(asked).toHaveLength(5);
+  });
+
+  it("leaves the whole set unknown where a catalogue did not answer", async () => {
+    vi.stubGlobal("fetch", async (url: string) => {
+      if (url.includes("/v2/fr/")) throw new Error("down");
+      return new Response("", { status: 404 });
+    });
+    const of = await languagesOfSet("sv01");
+    expect(of("sv01-001")).toBeNull();
   });
 });
