@@ -1,0 +1,1 @@
+- The collection reads card pictures from images.cardorb.com from the first request: the set catalogue's cache key moves to v7, so entries built before the pictures moved are not read.
