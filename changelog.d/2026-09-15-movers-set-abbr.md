@@ -1,0 +1,1 @@
+- `GET /v1/movers` answers each mover's `setAbbr`, the code printed on the card, so a list can show "XYP 124" as the collection does.

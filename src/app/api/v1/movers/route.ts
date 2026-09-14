@@ -79,6 +79,7 @@ export async function GET(req: Request) {
     name: m.card.name,
     number: m.card.number,
     set: m.set,
+    setAbbr: m.setAbbr,
     image: m.card.image,
     copies: copiesHeld(m.card),
     was: m.was,

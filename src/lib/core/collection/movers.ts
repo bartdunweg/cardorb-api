@@ -85,6 +85,8 @@ export function priceOfCopy(
 export type Mover = {
   card: OwnedCard;
   set: string;
+  /** The code printed on the card's corner ("XYP"), where the catalogue has one: what a list shows beside the number. */
+  setAbbr: string | null;
   /** What one copy was worth at the earliest reading in the window. */
   was: number;
   /** And at the latest. */
@@ -183,6 +185,7 @@ export function moversOf(
       movers.push({
         card,
         set: set.name,
+        setAbbr: set.abbreviation ?? null,
         was,
         now,
         change,
