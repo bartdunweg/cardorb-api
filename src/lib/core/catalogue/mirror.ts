@@ -47,6 +47,7 @@ import {
 import { canStoreImages, keepImage, storedAddress, tcgdexFolderMissing } from "./image-store";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
+import { scrydexEnglishLogo } from "./scrydex-japan-logos";
 import { languagesOfSet } from "./card-languages";
 
 /** The energy types a card can carry, as TCGdex names them. A word that is one is a type filter, not a name. */
@@ -509,7 +510,12 @@ export async function syncMirror(
           // Resolved here, at night, as the shelf shows it: the promo star, and pokemontcg.io's
           // wordmark where TCGdex has none (set-logos.ts). The pages read this column and ask
           // nobody (copiedEnglishSets, Bart 2026-09-14).
-          logo: await ownArt((await withSetLogos([set]))[0]?.logo ?? set.logo, storing),
+          // Scrydex's, with its permission, for the sets neither source has one for (trainer kits,
+          // McDonald's collections).
+          logo: await ownArt(
+            (await withSetLogos([set]))[0]?.logo ?? set.logo ?? (await scrydexEnglishLogo(id)),
+            storing,
+          ),
           symbol: await ownArt(set.symbol, storing),
           abbreviation: set.abbreviation ?? null,
           total: set.total,

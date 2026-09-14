@@ -183,3 +183,63 @@ export async function scrydexJapanScan(code: string, number: string): Promise<st
     return null;
   }
 }
+
+// ── Logos that are really there ───────────────────────────────────────────────
+
+/**
+ * What Scrydex answers for a set whose logo it does not have: a 200 with the generic Pokémon Trading
+ * Card Game wordmark, the same file for every such set. 29 of the 165 Japanese logos first copied on
+ * 2026-09-14 were this file (ADV, e-Card, neo, PCG, PMCG, CP6), and every one of those sets drew the
+ * same logo.
+ */
+const LOGO_STAND_IN = "cf-lVkzmA0aekAMPnwN5JhK5nygITfWme2fetQNLVvDQ";
+
+/** A Scrydex logo address where Scrydex has a real logo behind it; null for its stand-in or no answer. */
+export async function scrydexRealLogo(address: string | null): Promise<string | null> {
+  if (!address) return null;
+  try {
+    const head = await fetch(address, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: catalogueTimeout(),
+    });
+    const etag = head.headers.get("etag") ?? "";
+    return head.ok && etag !== "" && !etag.includes(LOGO_STAND_IN) ? address : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Scrydex's code for the English sets TCGdex publishes no logo for, read by hand on 2026-09-14: the
+ * trainer kits (whose logo is the kit line's wordmark), the McDonald's collections, the Poké Card
+ * Creator Pack and the Mega Evolution Energy.
+ */
+const ENGLISH_LOGO_CODES: Record<string, string> = {
+  "tk-dp-m": "tk3a",
+  "tk-dp-l": "tk3b",
+  "tk-hs-r": "tk4a",
+  "tk-hs-g": "tk4b",
+  "tk-bw-z": "tk5a",
+  "tk-bw-e": "tk5b",
+  "tk-xy-sy": "tk6a",
+  "tk-xy-n": "tk6b",
+  "tk-xy-w": "tk7a",
+  "tk-xy-b": "tk7b",
+  "tk-xy-latio": "tk8a",
+  "tk-xy-latia": "tk8b",
+  "tk-xy-su": "tk9a",
+  "tk-xy-p": "tk9b",
+  "tk-sm-l": "tk10a",
+  "tk-sm-r": "tk10b",
+  "2023sv": "mcd23",
+  "2024sv": "mcd24",
+  "ex5.5": "wb1",
+  mee: "mee",
+};
+
+/** Scrydex's logo for an English set TCGdex has none for, where Scrydex has a real one. */
+export const scrydexEnglishLogo = (setId: string): Promise<string | null> => {
+  const code = ENGLISH_LOGO_CODES[setId];
+  return scrydexRealLogo(code ? `https://images.scrydex.com/pokemon/${code}-logo/logo` : null);
+};
