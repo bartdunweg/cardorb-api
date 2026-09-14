@@ -305,6 +305,9 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
  * the same commit as the shape, or the first deploy reads yesterday's fields
  * into today's type and finds undefined where it expected a string.
  */
+// v7: the copy's pictures moved to our own bucket at images.cardorb.com on 2026-09-14 (#394).
+// The entries on disk still name TCGdex and pokemontcg.io, which load; this is so the collection
+// reads from the bucket from the first request rather than from tomorrow.
 // v6: a set the nightly copy holds is answered from Postgres now (set-catalogue-mirror.ts), and
 // the entries on disk were all built from TCGdex. They are not wrong, so this is not a repair;
 // it is so the change is true from the first request rather than from tomorrow.
@@ -314,7 +317,7 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v4: #230 changed what an entry contains — five promo aliases, and resolveSetIds now takes the
 // longest overlap and requires a shared id prefix. The key stayed at v3, so for a whole day every
 // set already in the Data Cache kept a byNumber built by the old rule.
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v6"], {
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v7"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
