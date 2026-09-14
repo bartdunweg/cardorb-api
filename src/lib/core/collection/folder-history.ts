@@ -2,15 +2,29 @@ import type { CardItem } from "./items";
 import { type CardPricePoint, priceOfCopy } from "./movers";
 import type { ValueSnapshot } from "./value-snapshot";
 
+/** How long a card's last reading stands in for a day without one: two weekly readings' gap. */
+export const CARRY_DAYS = 14;
+
+const daysBetween = (from: string, to: string) =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+
+/** A reading with no figure in it is no reading. */
+const hasFigure = (p: CardPricePoint) => p.market != null || p.holo != null;
+
 /**
  * What a list of copies has been worth, day by day, from the per-card readings.
  *
  * The nightly snapshot table holds the whole collection and nothing smaller, so a
  * folder's line is built here instead: for every day a reading exists, each owned
  * copy at that day's price for its printing (the foil for a reverse holo, the plain
- * price otherwise — copyPrice()'s rule), `quantity` times. A copy with no reading
- * that day counts as unpriced, the same convention as sumValue(). Whole euros, like
- * the snapshots, so the two series read the same on one chart.
+ * price otherwise: copyPrice()'s rule), `quantity` times. Whole euros, like the
+ * snapshots, so the two series read the same on one chart.
+ *
+ * A card with no reading on a day is valued at its last one, up to CARRY_DAYS old, as the Home
+ * line is (holdingsSeries); a copy with none that recent counts as unpriced, the same convention
+ * as sumValue(). Priced on the day alone, Kanto's line fell from EUR 19,750 to 16,200 on
+ * 2026-09-13 and was back at 19,794 the next day: 184 held promos and gallery cards had no
+ * reading that one day, and 36 of Kanto's copies were among them (Bart, 2026-09-14).
  *
  * `list` "wishlist" values the wishes instead: what the cards you lack would cost.
  * Membership is today's: a card filed into the folder last week is on the line
@@ -23,24 +37,42 @@ export function folderSeries(
   prices: CardPricePoint[],
   list: "owned" | "wishlist" = "owned",
 ): ValueSnapshot[] {
-  const byDate = new Map<string, Map<string, CardPricePoint>>();
+  const byDate = new Map<string, CardPricePoint[]>();
   for (const p of prices) {
-    let day = byDate.get(p.date);
-    if (!day) byDate.set(p.date, (day = new Map()));
-    day.set(p.tcgId, p);
+    const day = byDate.get(p.date);
+    if (day) day.push(p);
+    else byDate.set(p.date, [p]);
   }
   // The wishlist: a wish counts once, as sumValue() counts it, whatever its quantity.
   const owned = items.filter((it) => it.owned === (list === "owned"));
+  // Each card's readings of the last CARRY_DAYS, oldest first.
+  const recent = new Map<string, CardPricePoint[]>();
+  /** The copy at its newest reading that prices it, no older than CARRY_DAYS. */
+  const priceOn = (it: CardItem, date: string): number | null => {
+    const kept = it.tcgId ? recent.get(it.tcgId) : undefined;
+    for (let i = (kept?.length ?? 0) - 1; i >= 0; i--) {
+      const p = kept![i]!;
+      if (daysBetween(p.date, date) > CARRY_DAYS) break;
+      const price = priceOfCopy(it, p);
+      if (price != null) return price;
+    }
+    return null;
+  };
   return [...byDate.keys()].sort().map((date) => {
-    const day = byDate.get(date)!;
+    for (const p of byDate.get(date)!) {
+      if (!hasFigure(p) && !Object.keys(p.printings ?? {}).length) continue;
+      const kept = recent.get(p.tcgId) ?? [];
+      while (kept.length && daysBetween(kept[0]!.date, date) > CARRY_DAYS) kept.shift();
+      kept.push(p);
+      recent.set(p.tcgId, kept);
+    }
     let value = 0;
     let cards = 0;
     let priced = 0;
     let unpriced = 0;
     for (const it of owned) {
       const n = list === "owned" ? Math.max(0, it.quantity) : 1;
-      const p = it.tcgId ? day.get(it.tcgId) : undefined;
-      const price = p ? priceOfCopy(it, p) : null;
+      const price = priceOn(it, date);
       cards += n;
       if (price == null) unpriced += n;
       else {
@@ -59,12 +91,6 @@ export function folderSeries(
 const pointOn = (date: string, items: CardItem[], standing: CardPricePoint[]): ValueSnapshot =>
   folderSeries(items, standing)[0] ??
   folderSeries(items, [{ tcgId: "", date, market: null, holo: null }])[0]!;
-
-/** How long a card's last reading stands in for a day without one: two weekly readings' gap. */
-export const CARRY_DAYS = 14;
-
-const daysBetween = (from: string, to: string) =>
-  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 
 /**
  * What the collection held on each day a reading exists, at that day's prices: the Home line.
@@ -102,7 +128,7 @@ export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): Val
    */
   const firstPriced = new Map<string, string>();
   for (const p of prices) {
-    if (p.market == null && p.holo == null) continue;
+    if (!hasFigure(p)) continue;
     const known = firstPriced.get(p.tcgId);
     if (!known || p.date < known) firstPriced.set(p.tcgId, p.date);
   }
@@ -115,7 +141,7 @@ export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): Val
   const last = new Map<string, CardPricePoint>();
   let previous: string | null = null;
   return [...byDate.keys()].sort().flatMap((date) => {
-    for (const p of byDate.get(date)!) if (p.market != null || p.holo != null) last.set(p.tcgId, p);
+    for (const p of byDate.get(date)!) if (hasFigure(p)) last.set(p.tcgId, p);
     const held = owned.filter((it) => {
       const from = countsFrom(it);
       return from == null || from <= date;
