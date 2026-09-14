@@ -23,12 +23,31 @@ export const RARITY_SPELLING: Readonly<Record<string, string>> = {
   "shiny rare vmax": "Shiny Rare VMAX",
   "rare holo": "Holo Rare",
   "rare holo lv.x": "Holo Rare LV.X",
+  // TCGplayer's Japanese shelf writes the Radiant cards' rarity in Japanese (S10a, S11a, S12a).
+  kagayaku: "Radiant Rare",
 };
 
 /** A rarity in the one spelling, or the word as given where it has no other. */
 export function canonicalRarity(rarity: string | null | undefined): string | null {
   if (rarity == null) return null;
   return RARITY_SPELLING[rarity.trim().toLowerCase()] ?? rarity;
+}
+
+/**
+ * A Japanese card's rarity in the one spelling, TCGplayer's product rarity where TCGdex's record
+ * has none, and "None" where neither has one. The English copy stores TCGdex's "None" as written;
+ * the Japanese copy held "None" for 2,502 cards and nothing at all for 800 more on 2026-09-14,
+ * which a filter showed as two answers to one question.
+ */
+export function languageRarity(
+  rarity: string | null | undefined,
+  fallback: string | null | undefined = null,
+): string {
+  const real = (r: string | null | undefined) => {
+    const spelled = canonicalRarity(r?.trim() || null);
+    return spelled && spelled.toLowerCase() !== "none" ? spelled : null;
+  };
+  return real(rarity) ?? real(fallback) ?? "None";
 }
 
 /** An English card's rarity as shown: its correction (card-fact-corrections.ts), then the spelling. */

@@ -32,7 +32,8 @@ import TCGPLAYER_JA from "../tcgplayer-ids.ja.generated.json";
 import { fullArtOf } from "./full-art";
 import { canStoreImages, keepImage } from "./image-store";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
-import { canonicalRarity } from "./rarity-names";
+import { printedLocalName } from "./card-names";
+import { languageRarity } from "./rarity-names";
 import { CatalogueNotFound, json } from "./tcgdex-client";
 import { type BrowseLanguage, listSetsIn, setIn } from "./tcgdex-browse";
 import {
@@ -50,7 +51,9 @@ import {
   groupCards,
   groupForSet,
   japanGroups,
-  matchCard,
+  matchCards,
+  productIsAnother,
+  sharedCodeGroups,
 } from "./tcgplayer-japan";
 
 const HOST = "https://api.tcgdex.net/v2";
@@ -64,12 +67,39 @@ const HOST = "https://api.tcgdex.net/v2";
  * 4: each set's wordmark from Scrydex (scrydex-japan-logos.ts).
  * 5: Scrydex's scan for a card no other source pictures (scrydexNumbers).
  * 6: no Scrydex logo where Scrydex answers its generic stand-in (scrydexRealLogo).
+ * 7: the names and links put right on 2026-09-14: English names by the new rules
+ * (english-card-name.mjs), no machine-translated printed name, a product only where its name
+ * agrees and for one card, the groups found by hand, and a picture that follows its product.
  */
-const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 5;
+const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 6;
+
+/**
+ * Cards whose TCGdex record is another number's, read from that number instead. Checked on
+ * 2026-09-14 against TCGplayer, Limitless and Bulbapedia's set lists: Fusion Arts prints Power
+ * Tablet at 126, Training Court at 127 and the Grass and Fire Energy at 128 and 129, where TCGdex
+ * has Training Court, the two energies and Power Tablet; Storm Emeralda prints Pokémon Catcher at
+ * 98 and Custom Vest at 99, which TCGdex swaps. The picture stays the number's own.
+ */
+export const RECORD_BY_HAND: Readonly<Record<string, string>> = {
+  "S8-126": "S8-129",
+  "S8-127": "S8-126",
+  "S8-128": "S8-127",
+  "S8-129": "S8-128",
+  "M6-098": "M6-099",
+  "M6-099": "M6-098",
+};
+
+/** The product id in a copy of TCGplayer's picture: images.cardorb.com/tcgplayer/602654.jpg. */
+const heldProduct = (image: string | null | undefined) =>
+  /\/tcgplayer\/(\d+)\.jpg$/.exec(image ?? "")?.[1] ?? null;
+
+/** The product the price map links a card to, outside the copy's own match. */
+const linkedProduct = (id: string): number | null =>
+  (TCGPLAYER_JA as Record<string, number | null | undefined>)[id] ?? null;
 
 /** TCGplayer's 1000 px product picture for a Japanese card, where its Japanese shelf sells one. */
 async function tcgplayerJapaneseScan(id: string): Promise<string | null> {
-  const product = (TCGPLAYER_JA as Record<string, number | null | undefined>)[id];
+  const product = linkedProduct(id);
   if (!product) return null;
   const url = `https://tcgplayer-cdn.tcgplayer.com/product/${product}_in_1000x1000.jpg`;
   try {
@@ -141,8 +171,17 @@ async function pictureOf(
   held: string | null | undefined,
   storing: boolean,
   product: TcgplayerJapanCard | null = null,
+  productId: number | null = product?.productId ?? null,
 ): Promise<string | null> {
-  if (held && held.startsWith("https://images.cardorb.com/")) return held;
+  /* A held copy of a TCGplayer picture is that product's: where the card's product changed or went
+     (neo2-039 Houndour held Houndour (HR)'s, 2026-09-14), it is asked for again. */
+  const heldId = heldProduct(held);
+  if (
+    held &&
+    held.startsWith("https://images.cardorb.com/") &&
+    (!heldId || heldId === String(productId))
+  )
+    return held;
   const setId = card.id.slice(0, card.id.lastIndexOf("-"));
   const stem = stemOf(card.image);
   const tcgdex = stem && !tcgdexScanIsReverse(setId) ? await tcgdexScan(stem) : null;
@@ -197,6 +236,18 @@ export async function syncLanguageMirror(
   // Scrydex's Japanese expansions, for each set's wordmark; a page that does not answer costs the run
   // its logos, which are kept as they were.
   const expansions = lang === "ja" ? await scrydexJapanExpansions().catch(() => null) : null;
+  /* Groups sharing a code with another are told apart by how many numbered cards each holds
+     ("SM1+" has one, "sm1+" 68): one products read per such group, only for those. */
+  const numbered = new Map<number, number>(
+    await Promise.all(
+      sharedCodeGroups(groups, shelf).map(async (g): Promise<[number, number]> => [
+        g,
+        await groupCards(g)
+          .then((cards) => cards.filter((c) => c.number).length)
+          .catch(() => -1),
+      ]),
+    ),
+  );
   /* The TCGplayer groups a set TCGdex lists cards for already reads. TCGdex lists SM3p with cards
      and SM3+ with none under one name, and both found TCGplayer's "SM3+" group: the copy held every
      card of it twice, and SM1+ was one energy from a booster box group (2026-09-14). A set is built
@@ -204,7 +255,7 @@ export async function syncLanguageMirror(
   const claimed = new Map<number, string>();
   for (const s of shelf) {
     if (!s.cardsRecorded) continue;
-    const g = groupForSet(groups, { id: s.id, name: s.name })?.groupId;
+    const g = groupForSet(groups, { id: s.id, name: s.name }, numbered)?.groupId;
     if (g != null && !claimed.has(g)) claimed.set(g, s.id);
   }
   const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, art: 0, ms: 0 };
@@ -218,7 +269,7 @@ export async function syncLanguageMirror(
           continue;
         }
         const { set } = read;
-        const group = groupForSet(groups, { id, name: set.name });
+        const group = groupForSet(groups, { id, name: set.name }, numbered);
         const products = group ? await groupCards(group.groupId).catch(() => []) : [];
         /* A set TCGdex lists without its cards is TCGplayer's list where TCGplayer has the set:
            one card per printed number, filed under TCGdex's id rule (set id, number). */
@@ -227,31 +278,64 @@ export async function syncLanguageMirror(
           !!group &&
           (claimed.get(group.groupId) ?? id) === id &&
           products.some((p) => p.number);
+        // One card per printed number: the plain product where a labelled one shares it.
+        const perNumber: (TcgplayerJapanCard & { number: string })[] = [];
+        for (const p of products) {
+          if (!p.number) continue;
+          const at = perNumber.findIndex((q) => q.number === p.number);
+          if (at < 0) perNumber.push({ ...p, number: p.number });
+          else if (perNumber[at]!.label && !p.label) perNumber[at] = { ...p, number: p.number };
+        }
+        const own = new Map(read.cards.map((c) => [c.id, c]));
         const cards: CatalogueMatch[] = fromTcgplayer
-          ? products
-              .filter((p): p is TcgplayerJapanCard & { number: string } => !!p.number)
-              .map((p) => ({
-                id: `${id}-${p.number}`,
-                number: p.number,
-                name: p.name,
-                localName: null,
-                setName: set.name,
-                image: null,
-                imageHigh: null,
-                rarity: null,
-                types: [],
-                series: set.series || null,
-                tcgId: `${id}-${p.number}`,
-              }))
-          : read.cards;
-        const productOf = new Map(
-          cards.map((c) => [
-            c.id,
-            fromTcgplayer
-              ? (products.find((p) => p.number === c.number) ?? null)
-              : matchCard(products, c),
-          ]),
-        );
+          ? perNumber.map((p) => ({
+              id: `${id}-${p.number}`,
+              number: p.number,
+              name: p.name,
+              localName: null,
+              setName: set.name,
+              image: null,
+              imageHigh: null,
+              rarity: null,
+              types: [],
+              series: set.series || null,
+              tcgId: `${id}-${p.number}`,
+            }))
+          : read.cards.map((c) => {
+              const from = own.get(RECORD_BY_HAND[c.id] ?? "");
+              return from
+                ? {
+                    ...from,
+                    id: c.id,
+                    number: c.number,
+                    tcgId: c.tcgId,
+                    image: c.image,
+                    imageHigh: c.imageHigh,
+                  }
+                : c;
+            });
+        const matched = fromTcgplayer
+          ? new Map(cards.map((c) => [c.id, perNumber.find((p) => p.number === c.number) ?? null]))
+          : matchCards(
+              products,
+              cards.map((c) => ({
+                id: c.id,
+                number: c.number,
+                name: c.name,
+                localName: c.localName,
+                printedTotal: set.printedTotal,
+              })),
+            );
+        const productOf = new Map(cards.map((c) => [c.id, matched.get(c.id) ?? null]));
+        /* The price map's product where the copy matched none, unless the group lists that product
+           under another card's name: the map was built by number and carries the same swaps. */
+        const productIdOf = (c: CatalogueMatch): number | null => {
+          const product = productOf.get(c.id);
+          if (product) return product.productId;
+          const listed = linkedProduct(c.id);
+          const there = listed == null ? null : products.find((p) => p.productId === listed);
+          return there && productIsAnother(products, c.name, there) ? null : listed;
+        };
         const held = await catalogueCardsById(
           db,
           cards.map((c) => c.id),
@@ -261,15 +345,16 @@ export async function syncLanguageMirror(
           .catch(() => new Map<string, string | null>());
         const resolved = await mapLimit(cards, cardParallel, async (card) => {
           const product = productOf.get(card.id) ?? null;
-          const image = await pictureOf(card, held.get(card.id), storing, product);
+          const productId = productIdOf(card);
+          const image = await pictureOf(card, held.get(card.id), storing, product, productId);
           if (held.get(card.id) !== image) report.pictures++;
           if (fromTcgplayer && product) {
-            const kind = factsOfCardType(product.cardType);
+            const kind = factsOfCardType(product.cardType, product.hp);
             return {
               ...card,
               image,
               imageHigh: null,
-              rarity: canonicalRarity(product.rarity),
+              rarity: languageRarity(product.rarity),
               types: kind.types,
               category: kind.category,
               trainerType: kind.trainerType,
@@ -281,19 +366,24 @@ export async function syncLanguageMirror(
               },
             };
           }
-          const facts = await cardRecord(lang, card.id);
+          const facts = await cardRecord(lang, RECORD_BY_HAND[card.id] ?? card.id);
+          /* A card TCGdex names only in Japanese takes its product's English name, where one
+             matched: trainers and energies, which english-card-name.mjs cannot translate. */
+          const named =
+            !card.localName && product && !/[A-Za-z]/.test(card.name)
+              ? { name: product.name, localName: card.name }
+              : { name: card.name, localName: card.localName };
           return {
             ...card,
+            ...named,
             image,
             imageHigh: null,
-            rarity: canonicalRarity(facts?.rarity ?? null),
+            // TCGdex has no rarity for SV4a's shiny cards; TCGplayer does (Klefki SV4a-264).
+            rarity: languageRarity(facts?.rarity, product?.rarity),
             types: facts?.types ?? [],
             category: facts?.category ?? null,
             trainerType: facts?.trainerType ?? null,
-            productId:
-              product?.productId ??
-              (TCGPLAYER_JA as Record<string, number | null | undefined>)[card.id] ??
-              null,
+            productId,
             sheet: sheetOf(facts),
           };
         });
@@ -349,7 +439,7 @@ export async function syncLanguageMirror(
             set_id: id,
             local_id: c.number,
             name: c.name,
-            local_name: c.localName,
+            local_name: printedLocalName(id, c.localName, c.name, c.category),
             set_name: set.name,
             series: set.series,
             release_date: set.releaseDate,

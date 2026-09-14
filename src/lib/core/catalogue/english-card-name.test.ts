@@ -1,70 +1,218 @@
 import { describe, expect, it } from "vitest";
-import { englishFromLocalName, englishFromRecord, printedSuffix } from "./english-card-name.mjs";
+import {
+  englishFromLocalName,
+  englishFromRecord,
+  keepsStoredName,
+  printedNameOf,
+  printedSuffix,
+} from "./english-card-name.mjs";
+
+/** A small Pokédex and its Japanese column, at the real Dex numbers. */
+const species: string[] = [];
+const local: { ja: string }[] = [];
+const add = (dex: number, en: string, ja: string) => {
+  species[dex - 1] = en;
+  local[dex - 1] = { ja };
+};
+add(1, "Bulbasaur", "フシギダネ");
+add(3, "Venusaur", "フシギバナ");
+add(5, "Charmeleon", "リザード");
+add(6, "Charizard", "リザードン");
+add(29, "Nidoran♀", "ニドラン♀");
+add(35, "Clefairy", "ピッピ");
+add(36, "Clefable", "ピクシー");
+add(43, "Oddish", "ナゾノクサ");
+add(68, "Machamp", "カイリキー");
+add(98, "Krabby", "クラブ");
+add(107, "Hitmonchan", "エビワラー");
+add(122, "Mr. Mime", "バリヤード");
+add(127, "Pinsir", "カイロス");
+add(150, "Mewtwo", "ミュウツー");
+add(151, "Mew", "ミュウ");
+add(193, "Yanma", "ヤンマ");
+add(201, "Unown", "アンノーン");
+add(209, "Snubbull", "ブルー");
+add(251, "Celebi", "セレビィ");
+add(448, "Lucario", "ルカリオ");
+add(469, "Yanmega", "メガヤンマ");
+add(658, "Greninja", "ゲッコウガ");
+add(684, "Swirlix", "ペロッパフ");
+add(685, "Slurpuff", "ペロリーム");
+add(760, "Stufful", "ヌイコグマ");
+add(809, "Melmetal", "メルメタル");
+add(881, "Arctozolt", "パッチルドン");
+add(883, "Arctovish", "ウオチルドン");
+add(1017, "Ogerpon", "オーガポン");
+
+const record = (name: string, dexId: number[] | null, extra: Record<string, unknown> = {}) => ({
+  name,
+  dexId,
+  category: "Pokemon",
+  ...extra,
+});
+const fromRecord = (name: string, dexId: number[] | null, extra: Record<string, unknown> = {}) =>
+  englishFromRecord(record(name, dexId, extra), species, local);
+const fromName = (name: string, category = "Pokemon") =>
+  englishFromLocalName("ja", name, local, species, category);
 
 describe("printedSuffix", () => {
-  it("is the Latin tail of a name in another script", () => {
+  it("is the mechanic printed after the species, in English", () => {
     expect(printedSuffix("マスカーニャex")).toBe("ex");
     expect(printedSuffix("セレビィ&フシギバナGX")).toBe("GX");
     expect(printedSuffix("ピカチュウVMAX")).toBe("VMAX");
+    expect(printedSuffix("メガリザードンXex")).toBe("X ex");
+    expect(printedSuffix("メタグロス（デルタ種）")).toBe("δ");
     expect(printedSuffix("ナゾノクサ")).toBe("");
+  });
+
+  // 2026-09-14: TCGdex's vintage names are English, and their Latin tail was read as a suffix.
+  it("is nothing where the Latin tail is a word of its own", () => {
+    expect(printedSuffix("Clefable")).toBe("");
+    expect(printedSuffix("nidoranf")).toBe("");
+    expect(printedSuffix("Farfetch'd")).toBe("");
+    expect(printedSuffix("v")).toBe("");
+  });
+
+  it("reads TCGdex's Ex as the ex the card prints", () => {
+    expect(printedSuffix("Politoed Ex")).toBe("ex");
+    expect(printedSuffix("Latios Ex（デルタ種）")).toBe("ex δ");
   });
 });
 
 describe("englishFromRecord", () => {
-  const species = ["Bulbasaur", "Ivysaur", "Venusaur"];
-  species[250] = "Celebi";
-  species[42] = "Oddish";
-
-  it("names a Pokémon by its Dex number, with the suffix as printed", () => {
-    expect(englishFromRecord({ name: "ナゾノクサ", dexId: [43] }, species)).toBe("Oddish");
-    expect(englishFromRecord({ name: "フシギバナex", dexId: [3] }, species)).toBe("Venusaur ex");
+  it("names a Pokémon by its Dex number, with the mechanic as printed", () => {
+    expect(fromRecord("ナゾノクサ", [43])).toBe("Oddish");
+    expect(fromRecord("フシギバナex", [3])).toBe("Venusaur ex");
   });
 
-  it("joins a tag team with an ampersand", () => {
-    expect(englishFromRecord({ name: "セレビィ&フシギバナGX", dexId: [251, 3] }, species)).toBe(
-      "Celebi & Venusaur GX",
+  it("names a tag team in full", () => {
+    expect(fromRecord("セレビィ&フシギバナGX", [251, 3])).toBe("Celebi & Venusaur GX");
+    expect(fromRecord("ルカリオ&メルメタルGX", [448, 809])).toBe("Lucario & Melmetal GX");
+  });
+
+  it("names a card of an English or machine-translated record once", () => {
+    expect(fromRecord("Clefable", [36])).toBe("Clefable");
+    expect(fromRecord("Mime Ex", [122])).toBe("Mr. Mime ex");
+    expect(fromRecord("nidoranf", [29])).toBe("Nidoran♀");
+    expect(fromRecord("Rocket's Hitmonchan ex", [107])).toBe("Rocket's Hitmonchan ex");
+  });
+
+  it("keeps the owner the card prints before its Pokémon", () => {
+    expect(fromRecord("エリカのナゾノクサ", [43])).toBe("Erika's Oddish");
+    expect(fromRecord("ヒビキのカイロス", [127])).toBe("Ethan's Pinsir");
+    // VS1: Bruno's ブルーノ holds Snubbull's ブルー.
+    expect(fromRecord("ブルーノのカイリキー", [68])).toBe("Bruno's Machamp");
+    // VS1: TCGdex's katakana for Falkner, and the species left in English.
+    expect(fromRecord("フォークナーのpinsir", [127])).toBe("Falkner's Pinsir");
+    expect(fromRecord("MortyのPinsir", [127])).toBe("Morty's Pinsir");
+  });
+
+  it("keeps a kind and a form the card prints", () => {
+    expect(fromRecord("かがやくゲッコウガ", [658])).toBe("Radiant Greninja");
+    expect(fromRecord("わるいリザードン", [6])).toBe("Dark Charizard");
+    expect(fromRecord("暗いカリザード", [6])).toBe("Dark Charizard");
+    expect(fromRecord("輝くチャリザード", [6])).toBe("Shining Charizard");
+    expect(fromRecord("オーガポン みどりのめんex", [1017])).toBe("Teal Mask Ogerpon ex");
+  });
+
+  it("reads a spelled-out Star only on a card rated a star", () => {
+    expect(fromRecord("カリザードスター（デルタ種）", [6], { rarity: "Shiny rare" })).toBe(
+      "Charizard Star δ",
     );
+    // PCG1's machine translation of Scyther, スキスター, ends in スター too; it is a Rare.
+    expect(fromRecord("スキスター", [127], { rarity: "Rare" })).toBe("Pinsir");
+  });
+
+  it("gives neo's Unown its letter", () => {
+    expect(fromRecord("v", [201])).toBe("Unown V");
+    expect(fromRecord("未定のt", [201])).toBe("Unown T");
+  });
+
+  it("takes the species a name is exactly over a wrong Dex number", () => {
+    expect(fromRecord("ウオチルドンV", [881])).toBe("Arctovish V");
+    expect(fromRecord("ペロッパフ", [684])).toBe("Swirlix");
+    // A machine translation only holding a species' name (リザード) is not that species.
+    expect(fromRecord("カリザード", [6])).toBe("Charizard");
   });
 
   it("is null for a trainer, an energy, or a species the table does not have", () => {
-    expect(englishFromRecord({ name: "ルミナスエネルギー", dexId: null }, species)).toBeNull();
-    expect(englishFromRecord({ name: "?", dexId: [9999] }, species)).toBeNull();
-    expect(englishFromRecord(null, species)).toBeNull();
+    expect(fromRecord("ピッピ人形", [35], { category: "Trainer" })).toBeNull();
+    expect(fromRecord("ルミナスエネルギー", null)).toBeNull();
+    expect(fromRecord("?", [9999])).toBeNull();
+    expect(englishFromRecord(null, species, local)).toBeNull();
   });
 });
 
 describe("englishFromLocalName", () => {
-  const species = ["Bulbasaur", "Ivysaur", "Venusaur"];
-  species[150] = "Mewtwo";
-  species[151] = "Mew";
-  species[759] = "Stufful";
-  const local: Record<string, string>[] = [];
-  local[0] = { ja: "フシギダネ" };
-  local[2] = { ja: "フシギバナ" };
-  local[150] = { ja: "ミュウツー" };
-  local[151] = { ja: "ミュウ" };
-  local[759] = { ja: "ヌイコグマ" };
-
-  it("names a Pokémon by the species written inside its printed name, suffix kept", () => {
-    expect(englishFromLocalName("ja", "ヌイコグマ", local, species)).toBe("Stufful");
-    expect(englishFromLocalName("ja", "フシギバナex", local, species)).toBe("Venusaur ex");
-    expect(englishFromLocalName("ja", "フシギバナVMAX", local, species)).toBe("Venusaur VMAX");
+  it("names a Pokémon by the species written inside its printed name, mechanic kept", () => {
+    expect(fromName("ヌイコグマ")).toBe("Stufful");
+    expect(fromName("フシギバナex")).toBe("Venusaur ex");
   });
 
-  it("takes the longest species, so Mewtwo is not Mew", () => {
-    expect(englishFromLocalName("ja", "ミュウツーex", local, species)).toBe("Mewtwo ex");
-    expect(englishFromLocalName("ja", "ミュウex", local, species)).toBe("Mew ex");
+  it("takes the longest species, so Mewtwo is not Mew and Yanmega no Mega Yanma", () => {
+    expect(fromName("ミュウツーex")).toBe("Mewtwo ex");
+    expect(fromName("ミュウex")).toBe("Mew ex");
+    expect(fromName("メガヤンマex")).toBe("Yanmega ex");
   });
 
   it("splits a tag team at the ampersand", () => {
-    expect(englishFromLocalName("ja", "ミュウツー&ミュウGX", local, species)).toBe(
-      "Mewtwo & Mew GX",
-    );
+    expect(fromName("ミュウツー&ミュウGX")).toBe("Mewtwo & Mew GX");
+  });
+
+  it("reads the species after the owner", () => {
+    expect(fromName("ブルーノのカイリキー")).toBe("Bruno's Machamp");
+  });
+
+  it("is null for anything but a Pokémon, whatever species its name holds", () => {
+    expect(fromName("ポケモンファンクラブ", "Trainer")).toBeNull();
+    expect(fromName("ブルーノのテクニカルマシン01", "Trainer")).toBeNull();
   });
 
   it("is null where no species is written in the name", () => {
-    expect(englishFromLocalName("ja", "博士の研究", local, species)).toBeNull();
-    expect(englishFromLocalName("ja", "", local, species)).toBeNull();
-    expect(englishFromLocalName("de", "Bisasam", local, species)).toBeNull();
+    expect(fromName("博士の研究")).toBeNull();
+    expect(fromName("")).toBeNull();
+    expect(englishFromLocalName("de", "Bisasam", local, species, "Pokemon")).toBeNull();
+  });
+});
+
+describe("keepsStoredName", () => {
+  it("keeps a stored name that only adds words the rules cannot read", () => {
+    expect(keepsStoredName("Victini ◇", "Victini")).toBe(true);
+    expect(keepsStoredName("Tohoku's Pikachu", "Pikachu")).toBe(true);
+    expect(keepsStoredName("Lillie's Determination", null, { pokemon: false, species })).toBe(true);
+  });
+
+  it("replaces a doubled, garbled, short or other card's name", () => {
+    expect(keepsStoredName("Clefable Clefable", "Clefable")).toBe(false);
+    expect(keepsStoredName("Hitmonchan s Hitmonchan ex", "Rocket's Hitmonchan ex")).toBe(false);
+    expect(keepsStoredName("Nidoran♀ f", "Nidoran♀")).toBe(false);
+    expect(keepsStoredName("Nidoran♀ nidoranf", "Nidoran♀")).toBe(false);
+    expect(keepsStoredName("Unown d", "Unown D")).toBe(false);
+    expect(keepsStoredName("Machamp", "Bruno's Machamp")).toBe(false);
+    expect(keepsStoredName("Melmetal GX", "Lucario & Melmetal GX")).toBe(false);
+    expect(keepsStoredName("Slurpuff", "Swirlix")).toBe(false);
+  });
+
+  it("drops a species name from a trainer", () => {
+    expect(keepsStoredName("Krabby", null, { pokemon: false, species })).toBe(false);
+  });
+});
+
+describe("printedNameOf", () => {
+  const of = (setId: string, localName: string | null, name: string, category = "Pokemon") =>
+    printedNameOf(setId, localName, name, category, species, local);
+
+  it("drops a vintage set's Latin or machine-translated printed name", () => {
+    expect(of("E1", "Clefable", "Clefable")).toBeNull();
+    expect(of("E1", "おしっこ", "Machamp")).toBeNull();
+    expect(of("VS1", "ブルーノのカイリキー", "Bruno's Machamp")).toBe("ブルーノのカイリキー");
+  });
+
+  it("keeps every printed name outside those sets, and a trainer's", () => {
+    expect(of("SV2a", "Clefable", "Clefable")).toBe("Clefable");
+    expect(of("E2", "ポケモンファンクラブ", "Pokémon Fan Club", "Trainer")).toBe(
+      "ポケモンファンクラブ",
+    );
+    expect(of("E1", null, "Clefable")).toBeNull();
   });
 });
