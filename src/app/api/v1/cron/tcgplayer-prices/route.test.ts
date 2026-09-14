@@ -4,10 +4,15 @@ const shelfPrintings = vi.fn();
 const writeTcgplayerPrices = vi.fn();
 const writeCardPrices = vi.fn();
 const usdToEurForRequest = vi.fn();
+const fetchUsdToEur = vi.fn();
+const writeUsdEurRate = vi.fn();
 const rpc = vi.fn();
 vi.mock("@/lib/core/catalogue/tcgcsv", () => ({
   TCGCSV_CATEGORY: { en: 3, ja: 85 },
   shelfPrintings: (...a: unknown[]) => shelfPrintings(...a),
+}));
+vi.mock("@/lib/core/catalogue/rates", () => ({
+  fetchUsdToEur: () => fetchUsdToEur(),
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
   usdToEurForRequest: () => usdToEurForRequest(),
@@ -15,6 +20,7 @@ vi.mock("@/lib/core/collection/collection", () => ({
 vi.mock("@/lib/storage/postgres", () => ({
   writeTcgplayerPrices: (...a: unknown[]) => writeTcgplayerPrices(...a),
   writeCardPrices: (...a: unknown[]) => writeCardPrices(...a),
+  writeUsdEurRate: (...a: unknown[]) => writeUsdEurRate(...a),
 }));
 vi.mock("@/lib/storage/supabase", () => ({
   adminClient: () => ({ rpc: (...a: unknown[]) => rpc(...a) }),
@@ -47,7 +53,9 @@ beforeEach(() => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   writeTcgplayerPrices.mockResolvedValue(undefined);
   writeCardPrices.mockResolvedValue(undefined);
-  usdToEurForRequest.mockResolvedValue(0.9);
+  usdToEurForRequest.mockResolvedValue(0.8);
+  fetchUsdToEur.mockResolvedValue(0.9);
+  writeUsdEurRate.mockResolvedValue(undefined);
   size = 300 * MB;
   thin = { data: [], error: null };
   rpc.mockImplementation(async (name: string) => {
@@ -141,6 +149,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
 
   it("writes no history without a dollar rate, and still writes the latest prices", async () => {
     monday();
+    fetchUsdToEur.mockRejectedValue(new Error("Dollar rate: 503"));
     usdToEurForRequest.mockResolvedValue(null);
 
     const res = await get("Bearer s3cret");
@@ -150,7 +159,49 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     expect(writeCardPrices).not.toHaveBeenCalled();
     expect(await res.json()).toMatchObject({
       ok: true,
+      rate: { rate: null, stored: false, skipped: "read failed" },
       history: { written: 0, skipped: "no dollar rate" },
+    });
+  });
+
+  it("stores today's dollar rate and converts the history at it", async () => {
+    monday();
+
+    const res = await get("Bearer s3cret");
+
+    expect(writeUsdEurRate).toHaveBeenCalledWith(expect.anything(), "2026-09-14", 0.9);
+    expect(usdToEurForRequest).not.toHaveBeenCalled();
+    expect(writeCardPrices.mock.calls[0]?.[1][0].price).toBe(900);
+    expect(await res.json()).toMatchObject({ ok: true, rate: { rate: 0.9, stored: true } });
+  });
+
+  it("a rate that cannot be read falls back to the request's rate and fails nothing", async () => {
+    monday();
+    fetchUsdToEur.mockRejectedValue(new Error("Dollar rate: 503"));
+
+    const res = await get("Bearer s3cret");
+
+    expect(res.status).toBe(200);
+    expect(writeUsdEurRate).not.toHaveBeenCalled();
+    expect(writeCardPrices.mock.calls[0]?.[1][0].price).toBe(800);
+    expect(await res.json()).toMatchObject({
+      ok: true,
+      rate: { stored: false, skipped: "read failed" },
+      history: { written: 3 },
+    });
+  });
+
+  it("a rate that cannot be written is logged, and the history still uses the day's rate", async () => {
+    monday();
+    writeUsdEurRate.mockRejectedValue(new Error("Writing the dollar rate failed: boom"));
+
+    const res = await get("Bearer s3cret");
+
+    expect(res.status).toBe(200);
+    expect(writeCardPrices.mock.calls[0]?.[1][0].price).toBe(900);
+    expect(await res.json()).toMatchObject({
+      ok: true,
+      rate: { rate: 0.9, stored: false, skipped: "write failed" },
     });
   });
 

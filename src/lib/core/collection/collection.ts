@@ -74,6 +74,7 @@ import {
   listPublicFolders,
   rememberScans,
   type Folder,
+  readLatestUsdEurRate,
   readTcgplayerPrices,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
@@ -834,19 +835,41 @@ async function factsWithUsd(
 }
 
 /**
- * The day's dollar rate, once per request and a day across them, read at the top level
- * like the guide: inside a set's facts callback it would be fetched again per set. Null
- * keeps every TCGplayer price out rather than showing one at a guessed rate.
+ * The dollar rate out of our own store: the latest day the nightly price cron wrote to
+ * usd_eur_rates. Only when nothing is stored, or the table cannot be read, is frankfurter asked
+ * as before, so a first night without a row still prices cards.
+ */
+export async function storedUsdToEur(): Promise<number> {
+  const db = adminClient();
+  if (db) {
+    try {
+      const stored = await readLatestUsdEurRate(db);
+      if (stored) return stored.rate;
+      console.error("No stored dollar rate, asking frankfurter");
+    } catch (err) {
+      console.error("Stored dollar rate unreadable, asking frankfurter:", err);
+    }
+  }
+  return fetchUsdToEur();
+}
+
+/**
+ * The day's dollar rate, once per request and an hour across them, read at the top level
+ * like the guide: inside a set's facts callback it would be read again per set. Null
+ * keeps every TCGplayer price out rather than showing one at a guessed rate. An hour, not a
+ * day: the read is one row of our own, and the night's new rate should not wait a day.
  */
 const cachedUsdToEur = () =>
   timedCache("cache usd-eur", (ran) =>
     unstable_cache(
       () => {
         ran();
-        return fetchUsdToEur();
+        return storedUsdToEur();
       },
-      ["usd-eur"],
-      { revalidate: DAY, tags: ["catalogue"] },
+      // v2: read from usd_eur_rates. The Data Cache survives a deploy; without the bump the
+      // frankfurter answer would stand for its day.
+      ["usd-eur", "v2"],
+      { revalidate: DAY / 24, tags: ["catalogue"] },
     )(),
   );
 
