@@ -324,11 +324,36 @@ export const detailPrice = async <
   card: T,
   language: BrowseLanguage | null,
   usdToEur: number | null,
-): Promise<T> => {
+): Promise<
+  T & {
+    pricePrintings?: Record<string, ReturnType<typeof priceFromUsd>>;
+    printingIds?: Record<string, number>;
+  }
+> => {
   if (usdToEur == null) return { ...card, price: null, tcgplayerId: null };
-  const usd = (await shelfUsdFor([card.id], language))[card.id]?.usd ?? null;
+  const pair = (await shelfUsdFor([card.id], language))[card.id];
+  const usd = pair?.usd ?? null;
   if (!usd) return language === "ja" ? { ...card, price: null, tcgplayerId: null } : card;
-  return { ...card, price: priceFromUsd(usd, usdToEur), tcgplayerId: usd.productId ?? null };
+  /* Every printing's figure beside the headline one, the Shadowless group's runs included, so a
+     sheet opened from a set page or a search can show normal against reverse and 1st Edition,
+     Unlimited and Shadowless, as a copy in the collection already could (pricing audit). */
+  const runs = language ? {} : await runPrintingsForSet([card.id]);
+  const printings = { ...(runs[card.id]?.printings ?? {}), ...(pair?.printings ?? {}) };
+  const pricePrintings = Object.fromEntries(
+    Object.entries(printings).map(([name, v]) => [name, priceFromUsd(v, usdToEur)]),
+  );
+  const printingIds = Object.fromEntries(
+    Object.entries(printings).flatMap(([name, v]) =>
+      v.productId == null ? [] : [[name, v.productId]],
+    ),
+  );
+  return {
+    ...card,
+    price: priceFromUsd(usd, usdToEur),
+    tcgplayerId: usd.productId ?? null,
+    pricePrintings,
+    printingIds,
+  };
 };
 
 /**
@@ -445,9 +470,17 @@ type KeptFacts = { groups: Record<string, { signature: string; facts: SetFacts }
 
 const factsTag = (userId: string) => `collection-facts:${userId}`;
 
-const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<KeptFacts>) =>
+const keptFacts = (
+  userId: string,
+  usdToEur: number | null,
+  priceDay: string,
+  fill: () => Promise<KeptFacts>,
+) =>
   unstable_cache(
     fill,
+    // The day of the stored prices is in the key: an entry holds dollars, and one made before
+    // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
+    // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
     // v17: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
     //
     // v16: seventeen English cards relinked to their own TCGplayer product (2026-09-14): Pokémon
@@ -485,7 +518,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v19", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v19", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -495,8 +528,9 @@ const cachedFactsBundle = async (
   priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
   usdToEur: number | null,
 ): Promise<Record<string, SetFacts>> => {
+  const priceDay = await latestPriceDay();
   const kept = await timedCache(`cache collection-facts`, (ran) =>
-    keptFacts(userId, usdToEur, async () => {
+    keptFacts(userId, usdToEur, priceDay, async () => {
       ran();
       return { groups: {} };
     }),
@@ -544,7 +578,7 @@ const cachedFactsBundle = async (
   // resolves the same stale groups (hits by then) and tries again.
   try {
     revalidateTag(factsTag(userId), { expire: 0 });
-    await keptFacts(userId, usdToEur, async () => next);
+    await keptFacts(userId, usdToEur, priceDay, async () => next);
   } catch (err) {
     console.error("Keeping the collection facts failed:", err);
   }
@@ -988,6 +1022,26 @@ export function pricesFromStoredRows(
 
 /** Whether the table holds a figure written since `since`: one row asked, remembered ten minutes. */
 let pricesCurrent: { at: number; since: string; yes: boolean } | null = null;
+/** The newest day in tcgplayer_prices, asked at most every ten minutes; "-" where it cannot be read. */
+let priceDayKnown: { at: number; day: string } | null = null;
+async function latestPriceDay(): Promise<string> {
+  if (priceDayKnown && Date.now() - priceDayKnown.at < 600_000) return priceDayKnown.day;
+  const db = adminClient();
+  if (!db) return "-";
+  const { data, error } = await Promise.resolve()
+    .then(() =>
+      db
+        .from("tcgplayer_prices")
+        .select("updated_on")
+        .order("updated_on", { ascending: false })
+        .limit(1),
+    )
+    .catch((err: unknown) => ({ data: null, error: err }));
+  const day = !error && data?.[0] ? String((data[0] as { updated_on: string }).updated_on) : "-";
+  if (!error) priceDayKnown = { at: Date.now(), day };
+  return day;
+}
+
 async function storedPricesCurrent(db: SupabaseClient, since: string): Promise<boolean> {
   if (pricesCurrent && pricesCurrent.since === since && Date.now() - pricesCurrent.at < 600_000)
     return pricesCurrent.yes;
@@ -1440,10 +1494,11 @@ export const getCardPrices = cache(
         // thousand points of the whole collection.
         // v4: read from card_price_months, with printings (2026-09-13). v5: the same day, after the
         // backfill: v4 entries were cached while it ran and held a gap from June to 16 August.
+        // v8: the plain line only where it is the card's own printing (price-months.mjs).
         // v7: one printing per card on every day of its line (price-months.mjs daysFromMonths).
         // v6: 971,250 Japanese readings backfilled for the cards the copy linked (2026-09-14); a v5
         // entry held those cards' empty line for its hour.
-        ["card-prices", "v7", userId, since, idsKey(tcgIds)],
+        ["card-prices", "v8", userId, since, idsKey(tcgIds)],
         { revalidate: 3600, tags: [cardPricesTag(userId)] },
       )();
       return { points, failed: false };

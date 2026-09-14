@@ -73,7 +73,11 @@ const NONE: Ownership = { owned: false, wishlist: false, quantity: 0, itemIds: [
  * padding, and case stops mattering.
  */
 export const canonNumber = (n: string): string => {
-  const m = /^([A-Za-z]*)0*(\d+)(.*)$/.exec(n.trim());
+  /* A promo set's letters are its set's, not the card's: SWSH Black Star Promos files Charizard V as
+     "SWSH260" and a collector writes "260". The set page and a sheet said "You do not hold this card"
+     for every such promo while the collection matched it (set-index.ts strips the same prefixes). */
+  const bare = n.trim().replace(/^(HGSS|SWSH|SVP|XY|SM|BW|DP)(?=\d)/i, "");
+  const m = /^([A-Za-z]*)0*(\d+)(.*)$/.exec(bare);
   return m ? `${m[1] ?? ""}${Number(m[2])}${m[3] ?? ""}`.toLowerCase() : norm(n);
 };
 
