@@ -50,6 +50,8 @@ let size: number | null;
 let thin: { data: unknown; error: { message: string } | null } | Error;
 
 beforeEach(() => {
+  // tcgcsv's last-updated.txt unreadable: the job dates by the clock, as these tests expect.
+  vi.stubGlobal("fetch", async () => new Response("", { status: 503 }));
   vi.clearAllMocks();
   process.env.CRON_SECRET = "s3cret";
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -326,6 +328,31 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
         expect.objectContaining({ tcgId: "S4a-003", printing: "holofoil", price: 2.7 }),
       );
+    });
+
+    // neo4-106 is Shining Celebi in English; a Japanese product under that id wrote Chansey into it.
+    it("never writes a Japanese product under an id that is an English card", async () => {
+      monday();
+      byCategory(
+        { rows: CHARIZARD, groups: 10, answered: 10 },
+        { rows: JAPANESE, groups: 20, answered: 20 },
+      );
+      listCatalogueProducts.mockResolvedValueOnce(new Map([["base1-4", 605292]]));
+      await get("Bearer s3cret");
+      const written = writeCardPrices.mock.calls[0]![1] as { tcgId: string; price: number }[];
+      expect(written.filter((p) => p.tcgId === "base1-4").some((p) => p.price === 2.7)).toBe(false);
+    });
+
+    it("dates the night by the day tcgcsv published, not the clock", async () => {
+      at("2026-09-14T15:31:00Z");
+      vi.stubGlobal("fetch", async () => new Response("2026-09-13T20:05:38+0000"));
+      byCategory(
+        { rows: CHARIZARD, groups: 10, answered: 10 },
+        { rows: JAPANESE, groups: 20, answered: 20 },
+      );
+      await get("Bearer s3cret");
+      expect(writeTcgplayerPrices.mock.calls[0]![1][0]).toMatchObject({ updated_on: "2026-09-13" });
+      expect((writeCardPrices.mock.calls[0]![1] as { date: string }[])[0]!.date).toBe("2026-09-13");
     });
 
     it("leaves the English night standing when the Japanese shelf fails", async () => {

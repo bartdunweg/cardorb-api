@@ -265,6 +265,38 @@ describe("syncLanguageMirror", () => {
     });
   });
 
+  it("builds no set from a TCGplayer group another set with TCGdex cards already reads", async () => {
+    listSetsIn.mockResolvedValue([
+      { ...shelfSet("SM3p"), name: "Shining Legends", cardsRecorded: true },
+      { ...shelfSet("SM3+"), name: "Shining Legends", cardsRecorded: false },
+    ]);
+    setIn.mockImplementation(async (_l: string, id: string) =>
+      id === "SM3+"
+        ? { set: { ...shelfSet(id), name: "Shining Legends", cardsRecorded: false }, cards: [] }
+        : { set: { ...shelfSet(id), name: "Shining Legends" }, cards: [card(`${id}-001`, "001")] },
+    );
+    japanGroups.mockResolvedValue([
+      { groupId: 2208, name: "SM3+: Shining Legends", abbreviation: "SM3+" },
+    ]);
+    groupCards.mockResolvedValue([
+      {
+        productId: 1,
+        number: "001",
+        name: "Pikachu",
+        rarity: null,
+        cardType: null,
+        hp: null,
+        stage: null,
+        image: "x",
+      },
+    ]);
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    const upserts = calls.filter((c) => c.table === "catalogue_cards" && c.op === "upsert");
+    const ids = upserts.flatMap((u) => (u.args[0] as { id: string }[]).map((r) => r.id));
+    expect(ids).toEqual(["SM3p-001"]);
+  });
+
   it("leaves a set for the next run where a card's record could not be read", async () => {
     listSetsIn.mockResolvedValue([shelfSet("SV1a")]);
     json.mockRejectedValue(new Error("TCGdex answered 503"));
