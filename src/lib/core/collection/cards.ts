@@ -149,7 +149,7 @@ import { copyPriceOf, priceFromUsd } from "../price-basis.mjs";
 export { shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
-import { canonicalRarity } from "../catalogue/rarity-names";
+import { canonicalRarity, japaneseRarityWord } from "../catalogue/rarity-names";
 import { correctedFacts, correctedName } from "../catalogue/card-fact-corrections";
 
 const num = (v: unknown) => (typeof v === "number" ? v : null);
@@ -1529,11 +1529,13 @@ export async function getCardDetail(
     image: card.image ?? null,
     // TCGdex's word, corrected where it is wrong and in the one spelling (rarity-names.ts), so
     // the sheet says what the lists and filters say.
-    rarity: canonicalRarity(facts ? facts.rarity : (card.rarity ?? null)),
+    // A Japanese card's in its own spelling, and no rarity for TCGdex's "None" (rarity-names.ts).
+    rarity: facts ? canonicalRarity(facts.rarity) : japaneseRarityWord(card.rarity),
     illustrator: facts ? facts.sheet.illustrator : (card.illustrator ?? null),
     hp: facts ? facts.sheet.hp : num(card.hp),
     types: facts ? facts.types : (card.types ?? []),
-    stage: facts ? facts.sheet.stage : (card.stage ?? null),
+    // TCGdex writes a Japanese stage "Stage 1" as often as "Stage1"; the copy writes the second.
+    stage: facts ? facts.sheet.stage : (card.stage?.replace(/^Stage (\d)$/, "Stage$1") ?? null),
     evolveFrom: facts ? facts.sheet.evolveFrom : (card.evolveFrom ?? null),
     regulationMark: card.regulationMark ?? null,
     firstEdition: card.variants?.firstEdition ?? null,

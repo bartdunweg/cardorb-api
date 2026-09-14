@@ -428,6 +428,9 @@ export function keepsStoredName(stored, derived, { pokemon = true, species = [] 
  */
 const MACHINE_NAMED = /^(?:E[1-5]|neo[1-4]|VS1|web1|PCG[1-9])$/;
 
+/** Whether TCGdex filled a set's printed names through a machine translation (MACHINE_NAMED). */
+export const isMachineNamedSet = (setId) => MACHINE_NAMED.test(setId);
+
 /**
  * The printed name a card of those sets can show beside its English one: none where it is Latin
  * only, or where, for a Pokémon, it does not hold the Japanese name of a species its English name
@@ -447,4 +450,36 @@ export function printedNameOf(setId, localName, englishName, category, species, 
   if (!own.length) return localName;
   const printed = kana(localName);
   return own.some((ja) => printed.includes(ja)) ? localName : null;
+}
+
+/**
+ * A Japanese card's English name in the style the English game prints such a card, by the era of
+ * its set: "M Houndoom-EX" and "Pikachu-EX" in XY and its concept packs, "Charizard-GX" in Sun &
+ * Moon, "Rayquaza ex δ" in the ADV and PCG sets, "Charizard ex" and "Pikachu V" as they come. The
+ * copy held "M Houndoom Ex" (XY8b-061), "Mega Gengar EX" (CP4-049) and "Reshiram & Charizard GX" out
+ * of TCGplayer's product names and the name rules (2026-09-14). Also, as the English shelf writes
+ * them: a gold star card as "Latias ☆", an Unown as "Unown F", a LEGEND half in capitals and one
+ * straight apostrophe.
+ *
+ * @param {string} setId TCGdex's Japanese set id
+ * @param {string} name
+ */
+export function printedStyleName(setId, name) {
+  let out = String(name ?? "")
+    .replace(/\s*-\s*\d+\/\d+\s*$/, "")
+    .replace(/\s*[（(]\s*デルタ種\s*[)）]/g, " δ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (/^(?:XY|CP)/.test(setId)) {
+    out = out.replace(/[\s-]+(?:EX|Ex|ex)$/, "-EX").replace(/^(?:Mega|M)\s+(.+-EX)$/, "M $1");
+  } else if (/^(?:SM|sm)/.test(setId)) {
+    out = out.replace(/[\s-]+GX$/, "-GX").replace(/[\s-]+(?:EX|Ex)$/, "-EX");
+  } else if (/^(?:ADV|PCG)/.test(setId)) {
+    out = out.replace(/[\s-]+(?:EX|Ex)(?=$|\s+δ$|\s+☆)/, " ex");
+  }
+  return out
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\s+Legend$/, " LEGEND")
+    .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
+    .replace(/^Unown \[([A-Z!?])\]$/, "Unown $1");
 }

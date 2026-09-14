@@ -41,6 +41,27 @@ vi.mock("./tcgplayer-japan", async (actual) => ({
   japanGroups: () => japanGroups(),
   groupCards: () => groupCards(),
 }));
+/** What Scrydex knows, as scripts/scrydex-japan-cards.mjs writes it. */
+const scrydexMap = vi.hoisted(() => ({
+  cards: {
+    "XY8b-006": { n: "M Houndoom-EX", j: "MヘルガーEX", m: "SR", a: "5ban Graphics" },
+    "SV4a-006": { n: "Charizard ex", j: "リザードンex", m: "none", a: "PLANETA" },
+    "SV4a-127": {
+      n: "Shroodle",
+      j: "シルシュルー",
+      m: "C",
+      a: "Kurata So",
+      c: "Pokemon",
+      s: "Basic",
+      t: ["Darkness"],
+      h: 60,
+      p: "127/190",
+      x: 1,
+    },
+  },
+  sets: { SV4a: { code: "sv4a_ja", cards: 2 } },
+}));
+vi.mock("../scrydex-cards.ja.generated.json", () => ({ default: scrydexMap }));
 vi.mock("./mirror", () => ({
   CATALOGUE_FORMAT: 1,
   ownArt: async (a: string | null) => a,
@@ -158,7 +179,72 @@ describe("syncLanguageMirror", () => {
       }),
     ]);
     const stamped = calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert");
-    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 7 });
+    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 8 });
+  });
+
+  /* XY8b-061 M Houndoom-EX was "M Houndoom Ex" with no artist; SM2p-050 Tapu Bulu GX prints SR and
+     read Ultra Rare (2026-09-14). */
+  it("writes the printed mark, Scrydex's artist and the English game's name", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("XY8b")]);
+    json.mockResolvedValue({ rarity: "Ultra Rare", category: "Pokemon", illustrator: null });
+    setIn.mockImplementation(async (_lang: string, id: string) => ({
+      set: { ...shelfSet(id), serieId: "XY" },
+      cards: [{ ...card(`${id}-006`, "006"), name: "Houndoom" }],
+    }));
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    const rows = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0];
+    expect(rows).toEqual([
+      expect.objectContaining({
+        id: "XY8b-006",
+        name: "M Houndoom-EX",
+        rarity: "Super Rare",
+        illustrator: "5ban Graphics",
+      }),
+    ]);
+  });
+
+  it("has no rarity where the card prints no mark, and an evolution in English", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("SV4a")]);
+    json.mockResolvedValue({
+      rarity: "None",
+      category: "Pokemon",
+      stage: "Stage 2",
+      evolveFrom: "リザード",
+    });
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    const rows = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")
+      ?.args[0] as Record<string, unknown>[];
+    expect(rows.find((r) => r.id === "SV4a-006")).toMatchObject({
+      rarity: null,
+      stage: "Stage2",
+      evolve_from: "Charmeleon",
+    });
+  });
+
+  // Shiny Treasure ex's 127 to 166 are on Scrydex and not at TCGdex (2026-09-14).
+  it("adds the cards Scrydex lists and TCGdex does not, and counts them in the set's total", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("SV4a")]);
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    const rows = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")
+      ?.args[0] as Record<string, unknown>[];
+    expect(rows.map((r) => r.id)).toEqual(["SV4a-006", "SV4a-127"]);
+    expect(rows[1]).toMatchObject({
+      local_id: "127",
+      name: "Shroodle",
+      local_name: "シルシュルー",
+      rarity: "Common",
+      category: "Pokemon",
+      stage: "Basic",
+      types: ["Darkness"],
+      hp: 60,
+      illustrator: "Kurata So",
+    });
+    expect(json).not.toHaveBeenCalledWith(expect.stringContaining("SV4a-127"), expect.anything());
+    const setRow = calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert");
+    expect(setRow?.args[0]).toMatchObject({ id: "SV4a", total: 2 });
   });
 
   it("takes Limitless's plain print where TCGdex has no file, and TCGdex's where it has", async () => {
@@ -311,8 +397,8 @@ describe("syncLanguageMirror", () => {
     listSetsIn.mockResolvedValue([shelfSet("held"), shelfSet("behind"), shelfSet("new")]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 7 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 6 },
+        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 8 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 7 },
       ],
     });
     const report = await syncLanguageMirror(db, "ja", { parallel: 1 });
@@ -422,7 +508,7 @@ describe("syncLanguageMirror", () => {
     const { db, calls } = fakeStore();
     await syncLanguageMirror(db, "ja", { parallel: 1 });
     expect(upserted(calls)).toEqual([
-      expect.objectContaining({ id: "E1-069", name: "Weezing", local_name: null, rarity: "None" }),
+      expect.objectContaining({ id: "E1-069", name: "Weezing", local_name: null, rarity: null }),
       expect.objectContaining({
         id: "E1-078",
         name: "Pokemon Fan Club",

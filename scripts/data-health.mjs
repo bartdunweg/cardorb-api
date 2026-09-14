@@ -63,8 +63,8 @@ const check = (name, ok, detail) => checks.push({ name, ok, detail });
  */
 const SET_STALE_DAYS = 7;
 /** The copy's shape each catalogue is written in now (mirror.ts, mirror-language.ts). */
-// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 3 + 6.
-const FORMATS = { en: 3, ja: 9 };
+// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 3 + 7.
+const FORMATS = { en: 3, ja: 10 };
 
 const sync = await query(
   "select language, count(*)::int as sets, min(format)::int as oldest_format, min(synced_at)::text as oldest from catalogue_sync group by language order by language",
@@ -141,9 +141,10 @@ for (const language of Object.keys(RARITY_WORDS)) {
 
 /**
  * Cards with no illustrator, per catalogue. Some print none (an energy, a McDonald's card with no
- * credit), so this is a ceiling rather than zero: 719 English cards on 2026-09-14.
+ * credit), so this is a ceiling rather than zero: 719 English cards on 2026-09-14, and 562 Japanese
+ * ones once Scrydex's artists are in (6,192 before).
  */
-const ILLUSTRATORLESS_CEILING = { en: 740 };
+const ILLUSTRATORLESS_CEILING = { en: 740, ja: 600 };
 const illustrators = await query(
   "select language, count(*) filter (where illustrator is null or illustrator = '')::int as none, count(*)::int as cards from catalogue_cards group by language",
 );
@@ -153,6 +154,48 @@ for (const [language, ceiling] of Object.entries(ILLUSTRATORLESS_CEILING)) {
     `Cards without an illustrator (${language})`,
     !!row && row.none <= ceiling,
     `${row?.none ?? 0} of ${row?.cards ?? 0} cards (ceiling ${ceiling})`,
+  );
+}
+
+/**
+ * A Japanese Stage 1 or Stage 2 Pokémon with no evolution: 2,985 on 2026-09-14, before Scrydex's
+ * filled them (scrydex-cards.ja.generated.json); 80 are left that no source names.
+ */
+const JA_UNEVOLVED_CEILING = 100;
+const unevolved = await query(
+  "select count(*)::int as n, string_agg(id, ', ') filter (where true) as ids from (select id from catalogue_cards where language = 'ja' and stage in ('Stage1', 'Stage2', 'Stage 1', 'Stage 2') and (evolve_from is null or evolve_from = '') order by id) x",
+);
+check(
+  "Japanese Stage 1 and 2 cards name their evolution",
+  unevolved[0].n <= JA_UNEVOLVED_CEILING,
+  `${unevolved[0].n} without one (ceiling ${JA_UNEVOLVED_CEILING})${
+    unevolved[0].n > JA_UNEVOLVED_CEILING
+      ? `: ${unevolved[0].ids.split(", ").slice(0, 10).join(", ")}`
+      : ""
+  }`,
+);
+
+/**
+ * Every Japanese set holds the cards it prints: the count Scrydex lists for it with a printed number
+ * (scripts/scrydex-japan-cards.mjs writes it). Shiny Treasure ex held 320 of 360 on 2026-09-14.
+ */
+const SCRYDEX_JA = JSON.parse(
+  readFileSync(join(ROOT, "src", "lib", "core", "scrydex-cards.ja.generated.json"), "utf8"),
+);
+{
+  const held = await query(
+    "select set_id, count(*)::int as n from catalogue_cards where language = 'ja' group by set_id",
+  );
+  const count = new Map(held.map((r) => [r.set_id, r.n]));
+  const short = Object.entries(SCRYDEX_JA.sets)
+    .map(([id, s]) => ({ id, expected: s.cards, held: count.get(id) ?? 0 }))
+    .filter((s) => s.held < s.expected);
+  check(
+    "Japanese sets hold every card they print",
+    short.length === 0,
+    `${Object.keys(SCRYDEX_JA.sets).length} sets compared; ${short.length} short${
+      short.length ? `: ${short.map((s) => `${s.id} ${s.held} of ${s.expected}`).join(", ")}` : ""
+    }`,
   );
 }
 

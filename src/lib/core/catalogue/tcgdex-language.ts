@@ -39,7 +39,7 @@ import { CatalogueNotFound, json } from "./tcgdex-client";
 import { isScanFile, limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
 import type { BrowseLanguage } from "./tcgdex-browse";
 import type { Language } from "../collection/collection-row";
-import { canonicalRarity } from "./rarity-names";
+import { japaneseRarityWord } from "./rarity-names";
 
 const HOST = "https://api.tcgdex.net/v2";
 
@@ -196,7 +196,8 @@ export async function languageCard(
       // The catalogues outside English do grade their cards, but not all of
       // them and not every card. Null is "this catalogue does not say", and the
       // row's own rarity stands where it does not.
-      rarity: canonicalRarity(card.rarity),
+      // In the Japanese spelling, and no rarity for TCGdex's "None" (rarity-names.ts).
+      rarity: japaneseRarityWord(card.rarity),
       image: card.image ?? null,
       scan,
       setId: card.set?.id ?? setIdOf(tcgId),

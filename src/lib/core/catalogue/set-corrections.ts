@@ -16,6 +16,21 @@ const CORRECTIONS: Record<string, SetCorrection> = {
   "ja:SM8b": { release_date: "2018/11/02" },
   // PMCG1 is "Expansion Pack" too; TCGplayer and Scrydex call this one ADV Expansion Pack.
   "ja:ADV1": { name: "ADV Expansion Pack" },
+  /* English titles where Bulbapedia and Scrydex agree against TCGdex's own translation (naming pass,
+     2026-09-14): "Beyond a New Challenge" is Facing a New Trial, "Explosive Fighter" Fever-Burst
+     Fighter, and the vintage titles end in three dots, not an ellipsis. */
+  "ja:SM2p": { name: "Facing a New Trial" },
+  "ja:sm2+": { name: "Facing a New Trial" },
+  "ja:PCG7": { name: "Holon Phantom" },
+  "ja:CP4": { name: "Premium Champion Pack" },
+  "ja:XY11a": { name: "Fever-Burst Fighter" },
+  "ja:SM0": { name: "Pikachu's New Friends" },
+  "ja:SM7": { name: "Sky-Splitting Charisma" },
+  "ja:S5a": { name: "Peerless Fighters" },
+  "ja:neo1": { name: "Gold, Silver, to a New World..." },
+  "ja:neo2": { name: "Crossing the Ruins..." },
+  "ja:neo4": { name: "Darkness, and to Light..." },
+  "ja:M2a": { name: "MEGA Dream ex" },
   "en:det1": { release_date: "2019/04/05" },
   "en:sv10.5w": { release_date: "2025/07/18" },
   "en:sv10.5b": { release_date: "2025/07/18" },
