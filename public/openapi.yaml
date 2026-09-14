@@ -570,6 +570,11 @@ components:
       required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
+        priceChange:
+          description: "Only with `sort=change`: the copy's price move over the window, or null without two readings in it."
+          oneOf:
+            - { $ref: "#/components/schemas/PriceChange" }
+            - { type: "null" }
         name: { type: string }
         number: { type: string }
         set: { type: string, description: "The set's name as the catalogue spells it." }
@@ -750,6 +755,17 @@ components:
         unpriced: { type: integer }
         added: { type: integer, description: "Copies added since the point before. The collection's line only; absent on a folder's, and 0 on an account's first point." }
         addedValue: { type: integer, description: "What those copies were worth on this date, whole euros. The part of the change since the point before that was adding cards rather than prices moving." }
+
+    PriceChange:
+      type: object
+      required: [was, now, change, total, from, to]
+      properties:
+        was: { type: number, description: "One copy at its first reading on or after `from`, euros." }
+        now: { type: number, description: "One copy at its last reading on or before `to`." }
+        change: { type: number, description: "now minus was, per copy." }
+        total: { type: number, description: "change times the copies (a wish once)." }
+        from: { type: string, format: date, description: "The day of the first reading." }
+        to: { type: string, format: date, description: "The day of the last reading." }
 
     Mover:
       type: object
@@ -975,7 +991,9 @@ paths:
         - { name: condition, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's condition, whole, as written on it; case does not matter. Repeat it for several: any of them counts. A copy with no condition matches none. At most 50." }
         - { name: finish, in: query, schema: { $ref: "#/components/schemas/Finish" }, description: "A copy's finish. Repeat it for several: any of them counts. A copy with no finish matches none. A value outside the list is a 400. At most 50." }
         - { name: language, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's language code (`en`, `ja`, `de`); case does not matter. Repeat it for several: any of them counts. A copy with no language is English and matches `en`. At most 50." }
-        - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last." }
+        - { name: sort, in: query, schema: { type: string, enum: [set, name, price, added, dex, change], default: set }, description: "`set` is the assembly's order (set by set, number by number). `price` is the copy's own printing. `added` is the day it joined the collection. `dex` is the national Pokédex number; a trainer or energy has none and goes last. `change` is what the copy's price did between `from` and `to`, times the copies, biggest gain first (`order=asc`: biggest loss first); each card then carries `priceChange`, and a card without two readings in the window goes last with `priceChange: null`." }
+        - { name: from, in: query, schema: { type: string, format: date }, description: "`sort=change` only, and required with it: the window's first day." }
+        - { name: to, in: query, schema: { type: string, format: date }, description: "`sort=change`: the window's last day; today when left out. Not before `from`." }
         - { name: order, in: query, schema: { type: string, enum: [asc, desc] }, description: "Absent, each sort reads the way a person means it: `added` newest first, the rest up. A copy without the key (no price, no date) goes last either way." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 2000, default: 100 }, description: "Above 2000 is read as 2000: a whole collection in one page, for a Pokédex. Not a whole number, or below 1, is a 400." }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 }, description: "Not a whole number, or below 0, is a 400." }
