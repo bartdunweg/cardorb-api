@@ -148,3 +148,21 @@ export async function groupPrintings(
   }
   return out;
 }
+
+/** One product of a group as tcgcsv lists it: its name and TCGplayer's card facts beside it. */
+export type GroupProduct = {
+  productId: number;
+  name: string;
+  extendedData?: { name: string; value: string }[];
+};
+
+/** Every product of one group, cards and sealed product alike. */
+export async function groupProducts(
+  groupId: number,
+  category: number = TCGCSV_CATEGORY.en,
+): Promise<GroupProduct[]> {
+  const { results } = await read<{ results: GroupProduct[] }>(
+    `${BASE}/${category}/${groupId}/products`,
+  );
+  return results;
+}

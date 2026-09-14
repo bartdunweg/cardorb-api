@@ -35,6 +35,8 @@ export type FullArtCard = {
   category?: string | null;
   /** "Supporter", "Item", "Tool", "Stadium"; null for anything that is not a trainer. */
   trainerType?: string | null;
+  /** The name of the card's TCGplayer product, where the caller has read it (tcgplayer-products.ts). */
+  productName?: string | null;
 };
 
 /** Rarities that are full art wherever they appear, so the numbering is never asked. */
@@ -43,6 +45,11 @@ const ALWAYS_FULL_ART = new Set([
   "special illustration rare",
   "shiny ultra rare",
   "shiny rare",
+  /* The spellings rarity-names.ts gives Shining Fates' shiny V and VMAX (Charizard VMAX,
+     swsh4.5sv-SV107): "Shiny rare V" was never listed, and 16 of the Shiny Vault's full arts
+     stopped counting as full art when the spelling moved (2026-09-14). */
+  "shiny rare v",
+  "shiny rare vmax",
   "full art trainer",
   "black white rare",
   "crown",
@@ -54,6 +61,16 @@ const ALWAYS_FULL_ART = new Set([
  * "Hyper rare" is deliberately absent: that is the gold card.
  */
 const REPRINT_RARITIES = new Set(["ultra rare", "secret rare"]);
+
+/**
+ * TCGplayer names a full art product as one: "Jolteon V (Full Art)", "Grass Energy (Texture Full
+ * Art)", "Latias (Full Art Promo)". On 2026-09-14 that named 72 English cards the rule below does
+ * not reach: Evolving Skies' Jolteon V (swsh7-177) is the set's only Jolteon V, so it is nobody's
+ * reprint, and Legendary Treasures' Reshiram from the Radiant Collection (bw11-RC22) reads as number
+ * 22, ahead of the set's own Reshiram at 28.
+ */
+export const productSaysFullArt = (productName: string | null | undefined): boolean =>
+  /\bfull art\b/i.test(productName ?? "");
 
 /** A trainer that is not a Supporter is the gold print at these rarities, never the full art. */
 const FULL_ART_TRAINER = "supporter";
@@ -81,7 +98,7 @@ export function fullArtOf<T extends FullArtCard>(cards: T[]): Set<T> {
   const out = new Set<T>();
   for (const card of cards) {
     const rarity = lower(card.rarity);
-    if (ALWAYS_FULL_ART.has(rarity)) {
+    if (ALWAYS_FULL_ART.has(rarity) || productSaysFullArt(card.productName)) {
       out.add(card);
       continue;
     }

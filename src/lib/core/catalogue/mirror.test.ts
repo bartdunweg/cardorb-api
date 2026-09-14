@@ -40,6 +40,11 @@ vi.mock("./ptcg", () => ({ ptcgScan: (...a: unknown[]) => ptcgScan(...(a as []))
 /* A set's logo is resolved against pokemontcg.io, a network read with its own tests; here the set
    keeps the logo it came with. */
 vi.mock("./set-logos", () => ({ withSetLogos: async (sets: unknown[]) => sets }));
+/* TCGplayer's product per card, a tcgcsv read with its own tests: none unless a test says so. */
+const productFactsOf = vi.fn(async (_ids: string[]) => new Map<string, unknown>());
+vi.mock("./tcgplayer-products", () => ({
+  productFactsOf: (...a: unknown[]) => productFactsOf(...(a as [string[]])),
+}));
 
 const {
   buildIndex,
@@ -276,6 +281,7 @@ describe("syncMirror", () => {
     canStoreImages.mockResolvedValue(false);
     keepImage.mockImplementation(async (address: string | null) => address);
     tcgdexFolderMissing.mockResolvedValue(false);
+    productFactsOf.mockResolvedValue(new Map());
     englishSet.mockImplementation(async (id: string) => ({
       set: set(id, 1, "2024/01/01"),
       cards: [hit(`${id}-001`, "001")],
@@ -291,9 +297,9 @@ describe("syncMirror", () => {
     ]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "grown", cards: 10, synced_at: "2026-09-10T00:00:00Z", format: 1 },
-        { set_id: "stale", cards: 10, synced_at: "2026-09-01T00:00:00Z", format: 1 },
-        { set_id: "fresh", cards: 10, synced_at: "2026-09-11T00:00:00Z", format: 1 },
+        { set_id: "grown", cards: 10, synced_at: "2026-09-10T00:00:00Z", format: 2 },
+        { set_id: "stale", cards: 10, synced_at: "2026-09-01T00:00:00Z", format: 2 },
+        { set_id: "fresh", cards: 10, synced_at: "2026-09-11T00:00:00Z", format: 2 },
       ],
     });
     const report = await syncMirror(db, { parallel: 1 });
@@ -322,8 +328,8 @@ describe("syncMirror", () => {
     }));
     const { db, calls } = fakeStore({
       catalogue_sync: [
-        { set_id: "stale", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 1 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 0 },
+        { set_id: "stale", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 2 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 },
       ],
     });
     const report = await syncMirror(db, { parallel: 1 });
@@ -343,8 +349,55 @@ describe("syncMirror", () => {
       expect.objectContaining({ id: "behind", serie_id: "base" }),
     );
     expect(calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert")?.args[0]).toEqual(
-      expect.objectContaining({ set_id: "behind", format: 1 }),
+      expect.objectContaining({ set_id: "behind", format: 2 }),
     );
+  });
+
+  /* Mew-EX (bw11-RC24) was copied with no stage on 2026-09-14, and Jolteon V (swsh7-177) as no
+     full art: TCGplayer's product says both. */
+  it("fills a stage TCGdex leaves empty from TCGplayer's product, and takes its full art", async () => {
+    englishSets.mockResolvedValue([set("bw11", 3, "2013/11/08")]);
+    const sheet = (stage: string | null) => ({
+      illustrator: null,
+      hp: 120,
+      stage,
+      evolveFrom: null,
+      regulationMark: null,
+      firstEdition: null,
+      variants: [],
+    });
+    englishSet.mockResolvedValue({
+      set: set("bw11", 3, "2013/11/08"),
+      cards: [
+        { ...hit("bw11-RC24", "RC24"), name: "Mew-EX", category: "Pokemon", sheet: sheet(null) },
+        { ...hit("bw11-29", "29"), name: "Reshiram", category: "Pokemon", sheet: sheet("Basic") },
+        { ...hit("bw11-100", "100"), name: "Potion", category: "Trainer", sheet: sheet(null) },
+      ],
+    });
+    productFactsOf.mockResolvedValue(
+      new Map([
+        ["bw11-RC24", { name: "Mew EX (Full Art)", stage: "Basic" }],
+        ["bw11-29", { name: "Reshiram", stage: "Stage1" }],
+        ["bw11-100", { name: "Potion", stage: "Basic" }],
+      ]),
+    );
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(productFactsOf).toHaveBeenCalledWith(["bw11-RC24", "bw11-29", "bw11-100"]);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ id: "bw11-RC24", stage: "Basic", full_art: true }),
+      expect.objectContaining({ id: "bw11-29", stage: "Basic", full_art: false }),
+      expect.objectContaining({ id: "bw11-100", stage: null, full_art: false }),
+    ]);
+  });
+
+  it("leaves a set for the next run where TCGplayer's products will not answer", async () => {
+    englishSets.mockResolvedValue([set("bw11", 1, "2013/11/08")]);
+    productFactsOf.mockRejectedValue(new Error("tcgcsv 503"));
+    const { db, calls } = fakeStore();
+    const report = await syncMirror(db);
+    expect(report.failed).toEqual(["bw11"]);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")).toBeUndefined();
   });
 
   it("stops at the budget and says how many it left, keeping what it wrote", async () => {
