@@ -18,6 +18,9 @@ describe("imageKey", () => {
           ),
       ),
     ).toBe("limitless/tpci/DRM/DRM_024_R_EN_LG.png");
+    expect(imageKey("https://images.scrydex.com/pokemon/tk7b-16/large")).toBe(
+      "scrydex/tk7b-16.png",
+    );
     expect(imageKey("https://tcgplayer-cdn.tcgplayer.com/product/90168_in_1000x1000.jpg")).toBe(
       "tcgplayer/90168.jpg",
     );

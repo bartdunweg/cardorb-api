@@ -16,11 +16,13 @@ const tcgdexScan = vi.fn(async (base: string) => base as string | null);
 const limitlessScan = vi.fn(async () => null as string | null);
 const ptcgScan = vi.fn(async () => null as string | null);
 const tcgplayerScan = vi.fn(async () => null as string | null);
+const scrydexScan = vi.fn(async () => null as string | null);
 vi.mock("./artwork", async (original) => ({
   ...(await original<Record<string, unknown>>()),
   tcgdexScan: (...a: unknown[]) => tcgdexScan(...(a as [string])),
   limitlessScan: (...a: unknown[]) => limitlessScan(...(a as [])),
   tcgplayerScan: (...a: unknown[]) => tcgplayerScan(...(a as [])),
+  scrydexScan: (...a: unknown[]) => scrydexScan(...(a as [])),
 }));
 /** Our own bucket: off unless a test turns it on. */
 const canStoreImages = vi.fn(async () => false);
@@ -256,6 +258,7 @@ describe("syncMirror", () => {
     tcgdexScan.mockImplementation(async (base: string) => base);
     limitlessScan.mockResolvedValue(null);
     tcgplayerScan.mockResolvedValue(null);
+    scrydexScan.mockResolvedValue(null);
     ptcgScan.mockResolvedValue(null);
     canStoreImages.mockResolvedValue(false);
     keepImage.mockImplementation(async (address: string | null) => address);
@@ -505,6 +508,24 @@ describe("syncMirror", () => {
     expect(tcgplayerScan).not.toHaveBeenCalled();
     expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
       expect.objectContaining({ image: "https://assets.tcgdex.net/en/x/dc1/1" }),
+    ]);
+  });
+
+  it("asks Scrydex last, where no other catalogue has the card", async () => {
+    englishSets.mockResolvedValue([set("tk-xy-b", 1, "2014/03/01")]);
+    englishSet.mockResolvedValue({
+      set: set("tk-xy-b", 1, "2014/03/01"),
+      cards: [hit("tk-xy-b-16", "16")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["16"]), code: null });
+    tcgdexScan.mockResolvedValue(null);
+    scrydexScan.mockResolvedValue("https://images.scrydex.com/pokemon/tk7b-16/large");
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(ptcgScan).toHaveBeenCalled();
+    expect(scrydexScan).toHaveBeenCalledWith("tk-xy-b", "16");
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.scrydex.com/pokemon/tk7b-16/large" }),
     ]);
   });
 
