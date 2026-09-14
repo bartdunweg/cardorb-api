@@ -1570,6 +1570,8 @@ export type CatalogueCardRecord = {
   languages?: string[] | null;
   /** What the card itself says where `name` is the English the app shows; null on an English card. */
   local_name?: string | null;
+  /** TCGplayer's product for the card, where the copy matched one (Japanese, migration 20260915000000). */
+  tcgplayer_product_id?: number | null;
 };
 
 /** What the copy asks of a search: every word in the row's text, and the filters as typed. */
@@ -1970,6 +1972,28 @@ export async function catalogueCardSheet(
   if (sets.error)
     throw new Error(`Reading ${card.set_id} from the copy failed: ${sets.error.message}`);
   return { card, set: (sets.data as CatalogueCardSheet["set"]) ?? null };
+}
+
+/** The TCGplayer product the copy matched for each of these cards, by id; a card with none is left out. */
+export async function catalogueProductIds(
+  db: SupabaseClient,
+  ids: string[],
+  language: CatalogueLanguage,
+): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  const BITE = 500;
+  for (let at = 0; at < ids.length; at += BITE) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select("id, tcgplayer_product_id")
+      .eq("language", language)
+      .in("id", ids.slice(at, at + BITE))
+      .not("tcgplayer_product_id", "is", null);
+    if (error) throw new Error(`Reading the copy's TCGplayer products failed: ${error.message}`);
+    for (const r of (data ?? []) as { id: string; tcgplayer_product_id: number }[])
+      out.set(r.id, r.tcgplayer_product_id);
+  }
+  return out;
 }
 
 /** Every rarity the era of one set printed, out of the copy; empty where it holds none. */

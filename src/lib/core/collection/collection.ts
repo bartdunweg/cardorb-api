@@ -76,6 +76,7 @@ import {
   type Folder,
   readLatestUsdEurRate,
   readTcgplayerPrices,
+  catalogueProductIds,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
 import type { CardPricePoint } from "./movers";
@@ -252,8 +253,16 @@ export const shelfUsdFor = async (
     if (language === "ja") return (TCGPLAYER_IDS_JA as Record<string, number | null>)[id] ?? null;
     return TCGCSV_LINKS[id]?.productId ?? null;
   };
+  /* A Japanese card the committed map does not name may still have a product: the one the copy
+     matched out of TCGplayer's Japanese shelf (tcgplayer-japan.ts), which is every card of a set
+     TCGdex lists without cards. One query for the ones the map leaves out. */
+  const unmapped = language === "ja" ? [...new Set(ids)].filter((id) => productOf(id) == null) : [];
+  const db = unmapped.length ? adminClient() : null;
+  const copied = db
+    ? await catalogueProductIds(db, unmapped, "ja").catch(() => new Map<string, number>())
+    : new Map<string, number>();
   const links = [...new Set(ids)].flatMap((id) => {
-    const productId = productOf(id);
+    const productId = productOf(id) ?? copied.get(id) ?? null;
     return productId == null ? [] : [[id, productId] as const];
   });
   const printings = await printingsOfProducts(

@@ -28,6 +28,13 @@ vi.mock("./image-store", () => ({
   keepImage: (a: string | null) => keepImage(a),
   storedAddress: () => null,
 }));
+const japanGroups = vi.fn(async (): Promise<unknown[]> => []);
+const groupCards = vi.fn(async (): Promise<unknown[]> => []);
+vi.mock("./tcgplayer-japan", async (actual) => ({
+  ...(await actual<typeof import("./tcgplayer-japan")>()),
+  japanGroups: () => japanGroups(),
+  groupCards: () => groupCards(),
+}));
 vi.mock("./mirror", () => ({
   CATALOGUE_FORMAT: 1,
   ownArt: async (a: string | null) => a,
@@ -83,6 +90,8 @@ const card = (id: string, number: string) => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  japanGroups.mockResolvedValue([]);
+  groupCards.mockResolvedValue([]);
   keepImage.mockImplementation(async (a: string | null) => a);
   tcgdexScan.mockImplementation(async (stem: string) => stem);
   canStoreImages.mockResolvedValue(false);
@@ -141,7 +150,7 @@ describe("syncLanguageMirror", () => {
       }),
     ]);
     const stamped = calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert");
-    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 2 });
+    expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 3 });
   });
 
   it("takes Limitless's plain print where TCGdex has no file, and TCGdex's where it has", async () => {
@@ -201,6 +210,53 @@ describe("syncLanguageMirror", () => {
     expect(rows[0]!.image).toBe("https://images.cardorb.com/tcgplayer/587779.jpg");
   });
 
+  it("fills a set TCGdex lists without cards from TCGplayer's Japanese shelf", async () => {
+    listSetsIn.mockResolvedValue([{ ...shelfSet("S4a"), name: "Shiny Star V" }]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("S4a"), name: "Shiny Star V", cardsRecorded: false, serieId: "S" },
+      cards: [],
+    });
+    japanGroups.mockResolvedValue([
+      { groupId: 23643, name: "S4a: Shiny Star V", abbreviation: "S4a" },
+    ]);
+    groupCards.mockResolvedValue([
+      {
+        productId: 578001,
+        number: "003",
+        name: "Charizard V",
+        rarity: "Double Rare",
+        cardType: "Fire",
+        hp: 220,
+        stage: "Basic",
+        image: "https://tcgplayer-cdn.tcgplayer.com/product/578001_in_1000x1000.jpg",
+      },
+    ]);
+    const { db, calls } = fakeStore();
+    const report = await syncLanguageMirror(db, "ja", { parallel: 1 });
+    expect(report.copied).toEqual(["S4a"]);
+    expect(json).not.toHaveBeenCalled();
+    const rows = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0];
+    expect(rows).toEqual([
+      expect.objectContaining({
+        id: "S4a-003",
+        local_id: "003",
+        name: "Charizard V",
+        rarity: "Double Rare",
+        types: ["Fire"],
+        category: "Pokemon",
+        hp: 220,
+        tcgplayer_product_id: 578001,
+        image: "https://tcgplayer-cdn.tcgplayer.com/product/578001_in_1000x1000.jpg",
+      }),
+    ]);
+    expect(
+      calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0],
+    ).toMatchObject({
+      id: "S4a",
+      cards_recorded: true,
+    });
+  });
+
   it("leaves a set for the next run where a card's record could not be read", async () => {
     listSetsIn.mockResolvedValue([shelfSet("SV1a")]);
     json.mockRejectedValue(new Error("TCGdex answered 503"));
@@ -215,8 +271,8 @@ describe("syncLanguageMirror", () => {
     listSetsIn.mockResolvedValue([shelfSet("held"), shelfSet("behind"), shelfSet("new")]);
     const { db } = fakeStore({
       catalogue_sync: [
-        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 2 },
-        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 1 },
+        { set_id: "held", cards: 1, synced_at: "2026-09-01T00:00:00Z", format: 3 },
+        { set_id: "behind", cards: 1, synced_at: "2026-09-13T00:00:00Z", format: 2 },
       ],
     });
     const report = await syncLanguageMirror(db, "ja", { parallel: 1 });

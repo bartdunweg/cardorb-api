@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-15
+
+- The Japanese copy also reads TCGplayer's Japanese shelf, where TCGdex falls short. The 53 Japanese sets TCGdex lists without cards (Shiny Star V, Eevee Heroes, the 25th Anniversary Collection, every SM+ set) get TCGplayer's card list, one card per printed number with its English name, rarity, type, HP and stage; a card TCGdex and Limitless have no picture of gets TCGplayer's product picture, matched by number or, on the unnumbered vintage shelves, by English name; and each card keeps its TCGplayer product, so the new cards are priced like every other.
+
 ## 2026-09-14
 
 - Dragons Exalted 117 Blend Energy GFPD links to its TCGplayer product (normal and reverse holo priced), by hand: TCGplayer names it "Blend Energy GFPD" where TCGdex spells the four types out. 25 English cards stay unlinked.
