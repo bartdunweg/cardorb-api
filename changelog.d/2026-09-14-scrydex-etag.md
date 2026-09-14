@@ -1,0 +1,1 @@
+- Scrydex's stand-in picture is told apart by its ETag, not its length: Scrydex sends a server no Content-Length, so #407 refused every real scan and the seven trainer kits stayed blank.

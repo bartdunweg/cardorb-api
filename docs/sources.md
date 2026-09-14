@@ -30,7 +30,7 @@ For an English card, in the catalogue cron (`mirror.ts`, `image-store.ts`):
 3. **Limitless**, by the set's printed code, never for a lettered number.
 4. **TCGplayer**, by the card's product.
 5. **pokemontcg.io**, by set name.
-6. **Scrydex**, for the sets read by hand; its stand-in picture (186,316 bytes) is refused.
+6. **Scrydex**, for the sets read by hand; its stand-in picture is refused by its ETag.
 7. **Nothing found**: `catalogue_cards.image` stays null and the card draws its back.
 
 Whatever is found is copied into the bucket once and never fetched again. A blank card is asked
