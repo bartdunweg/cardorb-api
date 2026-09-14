@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - Unown ? from the Unseen Forces Unown Collection opens with its details and its price chart. TCGdex files it as `exu-%3F`, and the path reached the card routes decoded twice, as `exu-?`, so the sheet answered "No such card" and the chart drew no line while 31 months of its prices were stored.
 
+- The morning data check fails where one TCGplayer product prices two cards, where two sets with cards share a name in one catalogue, and where a linked card carries a stray market series, and reports one-day price spikes over €10 and ids that are cards in both catalogues: each a slip the audits of 2026-09-14 found. Run against production that day it named the four Japanese links and the duplicate set pair still being fixed.
+
 - Every priced Japanese card has its price history: 971,250 readings from TCGplayer's Japanese archive for the 6,585 cards the copy linked beyond the committed map, weekly before March 2026 and daily after. Before, 4,300 priced Japanese cards had a price and no line. `card-prices` cache v6, so no sheet keeps an empty line for its hour.
 
 - Every priced Japanese card gets a line in the price history. The nightly price job wrote history only for the 9,259 cards in the committed Japanese map; since the Japanese copy matched 15,844 cards to TCGplayer products, about 4,300 priced cards had a price and no history. The job now takes the copy's products as well, and the backfill script's `--only japanese --copied-only` fills their past from TCGplayer's archive.
