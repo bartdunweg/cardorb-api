@@ -63,6 +63,8 @@ if the two have drifted apart.
 
 - `GET /v1/catalog/sets` and a set page read the English sets out of the catalogue's copy, logos included, instead of asking TCGdex's index and pokemontcg.io for 57 logos on every cold instance; TCGdex is asked only when the copy is empty or unreadable, and by the nightly run, which stores each set's resolved logo now. Compared on 2026-09-14: all 203 sets identical in every field and in order. Sets released the same day are ordered by id on both paths, so five pairs (dp1 and dpp among them) swap places once.
 
+- Prices in euros no longer wait on an outside currency service. The nightly price job now stores the European Central Bank's dollar rate in our own database, and every request converts TCGplayer's dollars at the latest stored rate. Only while no rate is stored yet does the API still ask frankfurter directly.
+
 - Seventeen English cards link to their own TCGplayer product instead of another card's, found by laying TCGdex's list beside TCGplayer's: Pokémon Rumble 5 Starmie and 6 Gyarados (were Ninetales), Nintendo Black Star Promos 16 Treecko (was Torchic), seven Brilliant Stars Trainer Gallery cards (were their main-set namesakes), SM Trainer Kit (Alolan Raichu) 2 Lightning Energy, Celebrations Classic Collection CC020 Reshiram and CC021 Zekrom (were the Celebrations main set), and Aquapolis 50b, 74b, 103b and 95a (were their a/b twin). Each was priced, and a gallery card pictured, as the other card. A test now fails when one product is linked to two cards that are not one printing listed twice. `collection-facts` v16, `set-facts` v25.
 
 ## 2026-09-13

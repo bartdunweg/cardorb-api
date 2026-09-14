@@ -1,0 +1,1 @@
+- Prices in euros no longer wait on an outside currency service. The nightly price job now stores the European Central Bank's dollar rate in our own database, and every request converts TCGplayer's dollars at the latest stored rate. Only while no rate is stored yet does the API still ask frankfurter directly.
