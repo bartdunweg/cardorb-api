@@ -22,6 +22,7 @@ import {
   isReverseFinish,
   printingKeysOf,
 } from "../src/lib/core/price-basis.mjs";
+import { shadowlessKey } from "../src/lib/core/price-months.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -859,6 +860,100 @@ if (day) {
     ownerWrong.length === 0,
     `${compared} priced copies compared on ${day}; ${ownerWrong.length} of the owner's priced as another printing${list(ownerWrong)}; other accounts ${wrong.length - ownerWrong.length}; reported: ${oneName.length} normal or holo copies on a card TCGplayer sells as one printing under the other name${list(oneName.filter((w) => w.owner))}`,
   );
+}
+
+// ── The Home chart ──────────────────────────────────────────────────────────
+
+/**
+ * The night's value point counts what /v1/stats counts (Bart, 2026-09-14). Every account's latest
+ * point holds priced + unpriced = cards: until then the cron counted `priced` and `unpriced` in
+ * different cards and `cards` in copies, and the owner's point read 1,928 copies, 1,611 priced and
+ * 0 unpriced. And the owner's `unpriced` is the copies held that night with no figure for their own
+ * printing, counted here from the stored TCGplayer prices the way copyPriceOf() reads them
+ * (collection.ts storedPricesFor: the last seven days, a card with no headline figure unpriced
+ * whole). The prices are the same at 07:30 as at the cron's 04:00: the price job writes at 21:15.
+ * Held means owned and added by the point's day; a copy deleted since is not in the table any more.
+ */
+{
+  const points = await query(
+    `select distinct on (s.user_id) s.user_id = (select id from profiles where username = '${OWNER}') as owner, s.snapshot_date::text as day, s.cards, s.priced, s.unpriced from collection_value_snapshots s order by s.user_id, s.snapshot_date desc`,
+  );
+  const mine = points.find((p) => p.owner);
+  const off = points.filter((p) => p.priced + p.unpriced !== p.cards);
+  check(
+    "Value points add up",
+    off.length === 0,
+    `latest point per account: priced + unpriced = cards on ${points.length - off.length} of ${points.length}${
+      mine
+        ? `; the owner's on ${mine.day}: ${mine.cards} cards, ${mine.priced} priced, ${mine.unpriced} unpriced`
+        : ""
+    }${off.some((p) => !p.owner) ? `; other accounts off ${off.filter((p) => !p.owner).length}` : ""}`,
+  );
+
+  if (mine) {
+    const since = new Date(Date.parse(mine.day) - 7 * 86_400_000).toISOString().slice(0, 10);
+    const [copies, stored] = await Promise.all([
+      query(
+        `select c.tcg_id, c.finish, c.edition, c.language, c.quantity::int as quantity from cards c where c.owned and ${ownerIs} and (c.acquired_at is null or c.acquired_at::date <= '${mine.day}')`,
+      ),
+      query(
+        `select product_id, printing, market::float as market from tcgplayer_prices where updated_on >= '${since}' and market is not null`,
+      ),
+    ]);
+    const byProduct = new Map();
+    for (const p of stored)
+      byProduct.set(p.product_id, { ...byProduct.get(p.product_id), [p.printing]: p.market });
+    const HEADLINE = [
+      "normal",
+      "holofoil",
+      "reverse-holofoil",
+      "unlimited",
+      "unlimited-holofoil",
+      "1st-edition",
+      "1st-edition-holofoil",
+    ];
+    /** The card as the collection prices it, or null where it carries no price at all. */
+    const cardOf = (id) => {
+      const link = links[id];
+      const own = link ? byProduct.get(link.productId) : undefined;
+      const headline = own && HEADLINE.find((k) => own[k] != null);
+      if (!headline) return null;
+      const printings = { ...own };
+      for (const [k, v] of Object.entries(byProduct.get(link.shadowless?.productId) ?? {}))
+        printings[shadowlessKey(k)] ??= v;
+      for (const fp of patterns[id]?.finishPrints ?? []) {
+        const figure = byProduct.get(fp.productId)?.[fp.printing];
+        if (figure != null) printings[`${fp.finish}-reverse-holofoil`] = figure;
+      }
+      const pricePrintings = Object.fromEntries(
+        Object.entries(printings).map(([k, v]) => [k, { market: v }]),
+      );
+      return { price: pricePrintings[headline], pricePrintings };
+    };
+    let held = 0;
+    let unpriced = 0;
+    /** Copies this count cannot price the way the collection does: Japanese, or with no TCGplayer link. */
+    let outside = 0;
+    for (const r of copies) {
+      const n = Math.max(0, r.quantity ?? 0);
+      held += n;
+      if (r.language === "ja" || !r.tcg_id || !links[r.tcg_id]) {
+        outside += n;
+        continue;
+      }
+      const card = cardOf(r.tcg_id);
+      if (!card || copyPriceOf(r, card)?.market == null) unpriced += n;
+    }
+    check(
+      "The owner's value point counts the unpriced copies",
+      outside === 0
+        ? mine.unpriced === unpriced
+        : mine.unpriced >= unpriced && mine.unpriced <= unpriced + outside,
+      `point on ${mine.day}: ${mine.unpriced} unpriced of ${mine.cards}; held now by that day ${held} copies, ${unpriced} without a figure for their own printing${
+        outside ? ` and ${outside} this count cannot price (Japanese or unlinked)` : ""
+      }`,
+    );
+  }
 }
 
 // ── Report ──────────────────────────────────────────────────────────────────
