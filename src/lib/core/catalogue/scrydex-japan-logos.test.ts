@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   parseExpansionCards,
   parseExpansions,
   scrydexLogoFor,
   scrydexNumbers,
+  scrydexRealLogo,
 } from "./scrydex-japan-logos";
 
 const page = `
@@ -107,5 +108,29 @@ describe("scrydexNumbers", () => {
       unnamed,
     ]);
     expect(disagreeing.get("X-6")).toBeUndefined();
+  });
+});
+
+describe("scrydexRealLogo", () => {
+  it("refuses Scrydex's generic wordmark, answered for a set it has no logo for", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async (url: string) =>
+        new Response(null, {
+          status: 200,
+          headers: {
+            etag: url.includes("pcg1_ja")
+              ? '"cf-lVkzmA0aekAMPnwN5JhK5nygITfWme2fetQNLVvDQ"'
+              : '"cfLxXi6wCtW5oIhUh260Yy"',
+          },
+        }),
+    );
+    expect(
+      await scrydexRealLogo("https://images.scrydex.com/pokemon/pcg1_ja-logo/logo"),
+    ).toBeNull();
+    expect(await scrydexRealLogo("https://images.scrydex.com/pokemon/mcd23-logo/logo")).toBe(
+      "https://images.scrydex.com/pokemon/mcd23-logo/logo",
+    );
+    vi.unstubAllGlobals();
   });
 });

@@ -16,6 +16,8 @@ if the two have drifted apart.
 
 - Japanese cards no other source had a picture of take Scrydex's scan, with Scrydex's permission: mostly the vintage shelves (Pokémon Card VS, the Gym sets, Neo, LEGEND, PCG) and the promos. Scrydex numbers some vintage sets its own way, so a card is matched by number only where Scrydex's name agrees with ours, by name where exactly one card carries it, and a card without an English name only in a set whose numbering was shown to agree. About 1,130 of the 1,194 blank cards were expected to match.
 
+- No set wears Scrydex's generic Pokémon Trading Card Game wordmark as its logo. Scrydex answers that file for a set it has no logo for, and 29 of the 165 Japanese logos copied the day before were it (ADV, e-Card, neo, PCG, PMCG, CP6); those sets show no logo again. English sets TCGdex has no logo for take Scrydex's where it has a real one: the sixteen trainer kits, the McDonald's Collections 2023 and 2024, the Poké Card Creator Pack and Mega Evolution Energy.
+
 - The Japanese copy also reads TCGplayer's Japanese shelf, where TCGdex falls short. The 53 Japanese sets TCGdex lists without cards (Shiny Star V, Eevee Heroes, the 25th Anniversary Collection, every SM+ set) get TCGplayer's card list, one card per printed number with its English name, rarity, type, HP and stage; a card TCGdex and Limitless have no picture of gets TCGplayer's product picture, matched by number or, on the unnumbered vintage shelves, by English name; and each card keeps its TCGplayer product, so the new cards are priced like every other.
 
 ## 2026-09-14

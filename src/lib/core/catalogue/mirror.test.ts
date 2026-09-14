@@ -6,6 +6,7 @@ const englishSet = vi.fn();
 /** Which numbers TCGdex names no scan for, and the set's printed code; none unless a test says so. */
 const setScans = vi.fn(async () => ({ gaps: new Set<string>(), code: null as string | null }));
 vi.mock("./card-languages", () => ({ languagesOfSet: async () => () => ["en"] }));
+vi.mock("./scrydex-japan-logos", () => ({ scrydexEnglishLogo: async () => null }));
 vi.mock("./tcgdex-browse", () => ({
   englishSets: () => englishSets(),
   englishSet: (...a: unknown[]) => englishSet(...a),

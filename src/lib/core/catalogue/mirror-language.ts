@@ -42,6 +42,7 @@ import {
   scrydexJapanScan,
   scrydexLogoFor,
   scrydexNumbers,
+  scrydexRealLogo,
 } from "./scrydex-japan-logos";
 import {
   type TcgplayerJapanCard,
@@ -62,8 +63,9 @@ const HOST = "https://api.tcgdex.net/v2";
  * without any, a picture matched by number or English name, and each card's TCGplayer product.
  * 4: each set's wordmark from Scrydex (scrydex-japan-logos.ts).
  * 5: Scrydex's scan for a card no other source pictures (scrydexNumbers).
+ * 6: no Scrydex logo where Scrydex answers its generic stand-in (scrydexRealLogo).
  */
-const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 4;
+const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 5;
 
 /** TCGplayer's 1000 px product picture for a Japanese card, where its Japanese shelf sells one. */
 async function tcgplayerJapaneseScan(id: string): Promise<string | null> {
@@ -311,7 +313,10 @@ export async function syncLanguageMirror(
           series: set.series,
           release_date: set.releaseDate,
           logo: await ownArt(
-            set.logo ?? (expansions ? scrydexLogoFor(expansions, { id, name: set.name }) : null),
+            set.logo ??
+              (expansions
+                ? await scrydexRealLogo(scrydexLogoFor(expansions, { id, name: set.name }))
+                : null),
             storing,
           ),
           symbol: await ownArt(set.symbol, storing),

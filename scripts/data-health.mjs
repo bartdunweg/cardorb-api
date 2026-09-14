@@ -56,7 +56,7 @@ const check = (name, ok, detail) => checks.push({ name, ok, detail });
  */
 const SET_STALE_DAYS = 7;
 /** The copy's shape each catalogue is written in now (mirror.ts, mirror-language.ts). */
-const FORMATS = { en: 1, ja: 5 };
+const FORMATS = { en: 1, ja: 6 };
 
 const sync = await query(
   "select language, count(*)::int as sets, min(format)::int as oldest_format, min(synced_at)::text as oldest from catalogue_sync group by language order by language",
