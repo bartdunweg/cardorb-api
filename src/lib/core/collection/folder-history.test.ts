@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { daysFromMonths } from "../price-months.mjs";
 import { folderSeries, holdingsSeries } from "./folder-history";
 import type { CardItem } from "./items";
 
@@ -76,6 +77,65 @@ describe("folderSeries", () => {
 
   it("is empty without readings", () => {
     expect(folderSeries([copy({})], [])).toEqual([]);
+  });
+});
+
+describe("folderSeries, a day without a reading", () => {
+  /*
+   * Kanto on Home, 2026-09-14: EUR 19,750 on the 12th, 16,200 on the 13th, 19,794 on the 14th. The
+   * 13th has no reading at all for 184 held promos and gallery cards (the old snapshot wrote them
+   * only a `market` series that day, which #444 deleted), so 36 copies, Pikachu with Grey Felt Hat
+   * twice among them, counted as unpriced for one day. The Home line already carries a card's last
+   * reading over such a day (holdingsSeries); a binder's line did not.
+   */
+  const month = (tcgId: string, printing: string, days: Record<number, number>) => ({
+    tcg_id: tcgId,
+    printing,
+    month: "2026-09-01",
+    cents: Array.from({ length: 31 }, (_, i) => days[i + 1] ?? null),
+  });
+
+  it("values a card at its last reading on a day its printing month has no figure", () => {
+    const items = [
+      copy({ tcgId: "svp-085", finish: "normal", quantity: 2 }),
+      copy({ tcgId: "sv03.5-170", finish: "holo", id: "row-2" }),
+    ];
+    const prices = daysFromMonths([
+      month("svp-085", "normal", { 12: 93193, 14: 93154 }),
+      month("sv03.5-170", "holofoil", { 12: 8238, 13: 8100, 14: 8137 }),
+    ]);
+    expect(folderSeries(items, prices)).toEqual([
+      {
+        date: "2026-09-12",
+        value: Math.round(2 * 931.93 + 82.38),
+        cards: 3,
+        priced: 3,
+        unpriced: 0,
+      },
+      { date: "2026-09-13", value: Math.round(2 * 931.93 + 81), cards: 3, priced: 3, unpriced: 0 },
+      {
+        date: "2026-09-14",
+        value: Math.round(2 * 931.54 + 81.37),
+        cards: 3,
+        priced: 3,
+        unpriced: 0,
+      },
+    ]);
+  });
+
+  it("stops carrying a reading after two weeks, as the Home line does", () => {
+    const items = [copy({ tcgId: "a" }), copy({ tcgId: "b", id: "row-2" })];
+    const prices = [
+      { tcgId: "a", date: "2026-08-01", market: 10, holo: null },
+      { tcgId: "b", date: "2026-08-01", market: 5, holo: null },
+      { tcgId: "b", date: "2026-08-15", market: 6, holo: null },
+      { tcgId: "b", date: "2026-08-16", market: 7, holo: null },
+    ];
+    expect(folderSeries(items, prices).map((p) => [p.date, p.value, p.unpriced])).toEqual([
+      ["2026-08-01", 15, 0],
+      ["2026-08-15", 16, 0],
+      ["2026-08-16", 7, 1],
+    ]);
   });
 });
 

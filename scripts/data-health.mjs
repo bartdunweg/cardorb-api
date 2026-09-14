@@ -579,6 +579,46 @@ if (day) {
   );
 }
 
+/**
+ * A held card with a reading the day before and the day after and none on the day itself, in any
+ * of its printings: tcgcsv publishes every product every day, so a hole like that is a night the
+ * history was not written, never the market. On 2026-09-13 the old collection snapshot wrote 184
+ * held promos and gallery cards only a `market` series, the every-card pass left held cards to it,
+ * and #444 deleted that series: Kanto's line on Home fell EUR 3,550 for the day. A binder's line
+ * carries a card's last reading over a hole since then; this says the hole is there. The legacy
+ * `market` and `holo` series do not count, as they did not fill that day's printings. The last 45
+ * days, every account's held cards.
+ */
+{
+  const holes = await query(
+    `with held as (select distinct tcg_id from cards where owned and coalesce(tcg_id, '') <> ''),
+       d as (
+         select distinct m.tcg_id, (m.month + (i - 1))::date as day
+         from card_price_months m join held h using (tcg_id) cross join generate_series(1, 31) i
+         where m.month >= date_trunc('month', current_date - 45)::date
+           and m.printing not in ('market', 'holo')
+           and m.cents[i] is not null
+           and i <= extract(day from (m.month + interval '1 month' - interval '1 day'))
+       )
+     select (a.day + 1)::text as missing, count(*)::int as cards,
+       (array_agg(a.tcg_id order by a.tcg_id))[1:6] as examples
+     from d a
+     where a.day + 1 >= current_date - 45
+       and not exists (select 1 from d x where x.tcg_id = a.tcg_id and x.day = a.day + 1)
+       and exists (select 1 from d y where y.tcg_id = a.tcg_id and y.day = a.day + 2)
+     group by 1 order by 1`,
+  );
+  check(
+    "Held cards' price lines miss no day",
+    holes.length === 0,
+    `${holes.reduce((n, r) => n + r.cards, 0)} missing days between two readings in the last 45 days${
+      holes.length
+        ? `: ${holes.map((r) => `${r.missing} ${r.cards} cards (${(r.examples ?? []).join(", ")})`).join("; ")}`
+        : ""
+    }`,
+  );
+}
+
 // ── The collection rows ─────────────────────────────────────────────────────
 
 /**

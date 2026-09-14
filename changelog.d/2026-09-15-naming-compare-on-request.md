@@ -1,0 +1,1 @@
+- The Bulbapedia naming comparison runs on request instead of every Monday: Bulbapedia refuses GitHub's runners (403 on the first run), so the scheduled workflow would only ever fail. `node scripts/bulbapedia-compare.mjs` from a Mac still reports every difference.

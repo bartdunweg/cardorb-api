@@ -1,0 +1,198 @@
+<!-- From Bulbapedia, "EX Holon Phantoms (TCG)", revision 4559526 (https://bulbapedia.bulbagarden.net/w/index.php?oldid=4559526), CC BY-NC-SA 2.5. Only the infobox and the set list templates are kept, as a test fixture for bulbapedia-setlist.mjs. -->
+{{TCGExpansionInfobox
+|setname=EX Holon Phantoms
+|jasetname=ホロンの幻影
+|transsetname=Holon Phantom
+|setsymbol=yes
+|alt=Holon Phantoms
+|setlogo=EX13 Logo EN.png
+|encards=111
+|ensetnum=28
+|enrelease=May 3, 2006
+|jacards=52
+|jasetnum=28
+|jarelease=January 27, 2006
+|deck1=FireMist
+|deck1type={{e|Fire}}{{e|Fighting}}
+|deck2=FloodRush
+|deck2type={{e|Water}}{{e|Psychic}}
+|prevset=Holon Research Tower
+|japrevset=Holon Research Tower
+|japrevsetname=Holon Research Tower
+|nextset=Miracle Crystal
+|janextset=Miracle Crystal
+|janextsetname=Miracle Crystal
+}}
+{{Setlist/nmheader|title=Additional cards|tablecol=A65E9A|bordercol=493963|cellcol=C596BD|promo=yes|symbol=no}}
+{{Setlist/nmentry|21/110|{{TCG ID|EX Holon Phantoms|Latias δ|21}}|Fire|||Holo {{TCG|FireMist}} Theme Deck exclusive}}
+{{Setlist/nmentry|22/110|{{TCG ID|EX Holon Phantoms|Latios δ|22}}|Water|||Holo {{TCG|FloodRush}} Theme Deck exclusive}}
+{{Setlist/nmentry|41/100|{{TCG ID|EX Holon Phantoms|Exeggutor δ|41}}|Fighting|||"Prerelease" stamp {{TCG|Prerelease cards|Prerelease promo}}}}
+{{Setlist/nmentry|111/110|{{TCG ID|EX Holon Phantoms|Mew|111}}|Psychic|||Non Holo [[M08|Lucario and the Mystery of Mew]] DVD exclusive}}
+{{Setlist/nmfooter|cellcol=C596BD}}
+{{Setlist/nmheader|title=EX Holon Phantoms|tablecol=A65E9A|bordercol=493963|cellcol=C596BD|rarity=yes|symbol=yes|image=SetSymbolHolon Phantoms.png}}
+{{Setlist/nmentry|1/110|{{TCG ID|EX Holon Phantoms|Armaldo δ|1}}|Fighting|Metal|Rare Holo}}
+{{Setlist/nmentry|2/110|{{TCG ID|EX Holon Phantoms|Cradily δ|2}}|Darkness|Metal|Rare Holo}}
+{{Setlist/nmentry|3/110|{{TCG ID|EX Holon Phantoms|Deoxys δ|3}}|Darkness||Rare Holo}}
+{{Setlist/nmentry|4/110|{{TCG ID|EX Holon Phantoms|Deoxys δ|4}}|Metal||Rare Holo}}
+{{Setlist/nmentry|5/110|{{TCG ID|EX Holon Phantoms|Deoxys δ|5}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|6/110|{{TCG ID|EX Holon Phantoms|Deoxys δ|6}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|7/110|{{TCG ID|EX Holon Phantoms|Flygon δ|7}}|Grass|Metal|Rare Holo}}
+{{Setlist/nmentry|8/110|{{TCG ID|EX Holon Phantoms|Gyarados δ|8}}|Lightning|Metal|Rare Holo}}
+{{Setlist/nmentry|9/110|{{TCG ID|EX Holon Phantoms|Kabutops δ|9}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|10/110|{{TCG ID|EX Holon Phantoms|Kingdra δ|10}}|Fire|Metal|Rare Holo}}
+{{Setlist/nmentry|11/110|{{TCG ID|EX Holon Phantoms|Latias δ|11}}|Fire||Rare Holo}}
+{{Setlist/nmentry|12/110|{{TCG ID|EX Holon Phantoms|Latios δ|12}}|Water||Rare Holo}}
+{{Setlist/nmentry|13/110|{{TCG ID|EX Holon Phantoms|Omastar δ|13}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|14/110|{{TCG ID|EX Holon Phantoms|Pidgeot δ|14}}|Lightning|Metal|Rare Holo}}
+{{Setlist/nmentry|15/110|{{TCG ID|EX Holon Phantoms|Raichu δ|15}}|Metal||Rare Holo}}
+{{Setlist/nmentry|16/110|{{TCG ID|EX Holon Phantoms|Rayquaza δ|16}}|Water|Metal|Rare Holo}}
+{{Setlist/nmentry|17/110|{{TCG ID|EX Holon Phantoms|Vileplume δ|17}}|Psychic|Metal|Rare Holo}}
+{{Setlist/nmentry|18/110|{{TCG ID|EX Holon Phantoms|Absol|18}}|Darkness||Rare}}
+{{Setlist/nmentry|19/110|{{TCG ID|EX Holon Phantoms|Bellossom δ|19}}|Water||Rare}}
+{{Setlist/nmentry|20/110|{{TCG ID|EX Holon Phantoms|Blaziken|20}}|Fire||Rare}}
+{{Setlist/nmentry|21/110|{{TCG ID|EX Holon Phantoms|Latias δ|21}}|Fire||Rare}}
+{{Setlist/nmentry|22/110|{{TCG ID|EX Holon Phantoms|Latios δ|22}}|Water||Rare}}
+{{Setlist/nmentry|23/110|{{TCG ID|EX Holon Phantoms|Mawile|23}}|Metal||Rare}}
+{{Setlist/nmentry|24/110|{{TCG ID|EX Holon Phantoms|Mewtwo δ|24}}|Lightning||Rare}}
+{{Setlist/nmentry|25/110|{{TCG ID|EX Holon Phantoms|Nosepass|25}}|Fighting||Rare}}
+{{Setlist/nmentry|26/110|{{TCG ID|EX Holon Phantoms|Rayquaza δ|26}}|Fire||Rare}}
+{{Setlist/nmentry|27/110|{{TCG ID|EX Holon Phantoms|Regice|27}}|Water||Rare}}
+{{Setlist/nmentry|28/110|{{TCG ID|EX Holon Phantoms|Regirock|28}}|Fighting||Rare}}
+{{Setlist/nmentry|29/110|{{TCG ID|EX Holon Phantoms|Registeel|29}}|Metal||Rare}}
+{{Setlist/nmentry|30/110|{{TCG ID|EX Holon Phantoms|Relicanth|30}}|Water||Rare}}
+{{Setlist/nmentry|31/110|{{TCG ID|EX Holon Phantoms|Sableye|31}}|Darkness||Rare}}
+{{Setlist/nmentry|32/110|{{TCG ID|EX Holon Phantoms|Seviper|32}}|Grass||Rare}}
+{{Setlist/nmentry|33/110|{{TCG ID|EX Holon Phantoms|Torkoal|33}}|Fire||Rare}}
+{{Setlist/nmentry|34/110|{{TCG ID|EX Holon Phantoms|Zangoose|34}}|Colorless||Rare}}
+{{Setlist/nmentry|35/110|{{TCG ID|EX Holon Phantoms|Aerodactyl δ|35}}|Fire||Uncommon}}
+{{Setlist/nmentry|36/110|{{TCG ID|EX Holon Phantoms|Camerupt|36}}|Fire||Uncommon}}
+{{Setlist/nmentry|37/110|{{TCG ID|EX Holon Phantoms|Chimecho δ|37}}|Metal||Uncommon}}
+{{Setlist/nmentry|38/110|{{TCG ID|EX Holon Phantoms|Claydol|38}}|Psychic||Uncommon}}
+{{Setlist/nmentry|39/110|{{TCG ID|EX Holon Phantoms|Combusken|39}}|Fire||Uncommon}}
+{{Setlist/nmentry|40/110|{{TCG ID|EX Holon Phantoms|Donphan|40}}|Fighting||Uncommon}}
+{{Setlist/nmentry|41/110|{{TCG ID|EX Holon Phantoms|Exeggutor δ|41}}|Fighting||Uncommon}}
+{{Setlist/nmentry|42/110|{{TCG ID|EX Holon Phantoms|Gloom δ|42}}|Psychic||Uncommon}}
+{{Setlist/nmentry|43/110|{{TCG ID|EX Holon Phantoms|Golduck δ|43}}|Lightning||Uncommon}}
+{{Setlist/nmentry|44/110|{{TCG ID|EX Holon Phantoms|Holon's Castform|44}}|Colorless||Uncommon}}
+{{Setlist/nmentry|45/110|{{TCG ID|EX Holon Phantoms|Lairon|45}}|Metal||Uncommon}}
+{{Setlist/nmentry|46/110|{{TCG ID|EX Holon Phantoms|Manectric|46}}|Lightning||Uncommon}}
+{{Setlist/nmentry|47/110|{{TCG ID|EX Holon Phantoms|Masquerain|47}}|Grass||Uncommon}}
+{{Setlist/nmentry|48/110|{{TCG ID|EX Holon Phantoms|Persian δ|48}}|Darkness|Metal|Uncommon}}
+{{Setlist/nmentry|49/110|{{TCG ID|EX Holon Phantoms|Pidgeotto δ|49}}|Lightning||Uncommon}}
+{{Setlist/nmentry|50/110|{{TCG ID|EX Holon Phantoms|Primeape δ|50}}|Fire||Uncommon}}
+{{Setlist/nmentry|51/110|{{TCG ID|EX Holon Phantoms|Raichu|51}}|Lightning||Uncommon}}
+{{Setlist/nmentry|52/110|{{TCG ID|EX Holon Phantoms|Seadra δ|52}}|Fire||Uncommon}}
+{{Setlist/nmentry|53/110|{{TCG ID|EX Holon Phantoms|Sharpedo δ|53}}|Fighting||Uncommon}}
+{{Setlist/nmentry|54/110|{{TCG ID|EX Holon Phantoms|Vibrava δ|54}}|Grass||Uncommon}}
+{{Setlist/nmentry|55/110|{{TCG ID|EX Holon Phantoms|Whiscash|55}}|Fighting||Uncommon}}
+{{Setlist/nmentry|56/110|{{TCG ID|EX Holon Phantoms|Wobbuffet|56}}|Psychic||Uncommon}}
+{{Setlist/nmentry|57/110|{{TCG ID|EX Holon Phantoms|Anorith δ|57}}|Metal||Common}}
+{{Setlist/nmentry|58/110|{{TCG ID|EX Holon Phantoms|Aron|58}}|Metal||Common}}
+{{Setlist/nmentry|59/110|{{TCG ID|EX Holon Phantoms|Baltoy|59}}|Psychic||Common}}
+{{Setlist/nmentry|60/110|{{TCG ID|EX Holon Phantoms|Barboach|60}}|Fighting||Common}}
+{{Setlist/nmentry|61/110|{{TCG ID|EX Holon Phantoms|Carvanha δ|61}}|Fighting||Common}}
+{{Setlist/nmentry|62/110|{{TCG ID|EX Holon Phantoms|Corphish|62}}|Water||Common}}
+{{Setlist/nmentry|63/110|{{TCG ID|EX Holon Phantoms|Corphish|63}}|Water||Common}}
+{{Setlist/nmentry|64/110|{{TCG ID|EX Holon Phantoms|Electrike|64}}|Lightning||Common}}
+{{Setlist/nmentry|65/110|{{TCG ID|EX Holon Phantoms|Exeggcute δ|65}}|Fighting||Common}}
+{{Setlist/nmentry|66/110|{{TCG ID|EX Holon Phantoms|Horsea δ|66}}|Fire||Common}}
+{{Setlist/nmentry|67/110|{{TCG ID|EX Holon Phantoms|Kabuto δ|67}}|Lightning||Common}}
+{{Setlist/nmentry|68/110|{{TCG ID|EX Holon Phantoms|Lileep δ|68}}|Darkness||Common}}
+{{Setlist/nmentry|69/110|{{TCG ID|EX Holon Phantoms|Magikarp δ|69}}|Metal||Common}}
+{{Setlist/nmentry|70/110|{{TCG ID|EX Holon Phantoms|Mankey δ|70}}|Fire||Common}}
+{{Setlist/nmentry|71/110|{{TCG ID|EX Holon Phantoms|Meowth δ|71}}|Darkness|Metal|Common}}
+{{Setlist/nmentry|72/110|{{TCG ID|EX Holon Phantoms|Numel|72}}|Fire||Common}}
+{{Setlist/nmentry|73/110|{{TCG ID|EX Holon Phantoms|Oddish δ|73}}|Water||Common}}
+{{Setlist/nmentry|74/110|{{TCG ID|EX Holon Phantoms|Omanyte δ|74}}|Psychic||Common}}
+{{Setlist/nmentry|75/110|{{TCG ID|EX Holon Phantoms|Phanpy|75}}|Fighting||Common}}
+{{Setlist/nmentry|76/110|{{TCG ID|EX Holon Phantoms|Pichu δ|76}}|Metal||Common}}
+{{Setlist/nmentry|77/110|{{TCG ID|EX Holon Phantoms|Pidgey δ|77}}|Lightning||Common}}
+{{Setlist/nmentry|78/110|{{TCG ID|EX Holon Phantoms|Pikachu|78}}|Lightning||Common}}
+{{Setlist/nmentry|79/110|{{TCG ID|EX Holon Phantoms|Pikachu δ|79}}|Metal||Common}}
+{{Setlist/nmentry|80/110|{{TCG ID|EX Holon Phantoms|Poochyena|80}}|Darkness||Common}}
+{{Setlist/nmentry|81/110|{{TCG ID|EX Holon Phantoms|Psyduck δ|81}}|Lightning||Common}}
+{{Setlist/nmentry|82/110|{{TCG ID|EX Holon Phantoms|Surskit|82}}|Grass||Common}}
+{{Setlist/nmentry|83/110|{{TCG ID|EX Holon Phantoms|Torchic|83}}|Fire||Common}}
+{{Setlist/nmentry|84/110|{{TCG ID|EX Holon Phantoms|Trapinch δ|84}}|Grass||Common}}
+{{Setlist/nmentry|85/110|{{TCG ID|EX Holon Phantoms|Holon Adventurer|85}}|Trainer|Supporter|Uncommon}}
+{{Setlist/nmentry|86/110|{{TCG ID|EX Holon Phantoms|Holon Fossil|86}}|Trainer||Uncommon}}
+{{Setlist/nmentry|87/110|{{TCG ID|EX Holon Phantoms|Holon Lake|87}}|Trainer|Stadium|Uncommon}}
+{{Setlist/nmentry|88/110|{{TCG ID|EX Holon Phantoms|Mr. Stone's Project|88}}|Trainer|Supporter|Uncommon}}
+{{Setlist/nmentry|89/110|{{TCG ID|EX Holon Phantoms|Professor Cozmo's Discovery|89}}|Trainer|Supporter|Uncommon}}
+{{Setlist/nmentry|90/110|{{TCG ID|EX Holon Phantoms|Rare Candy|90}}|Trainer||Uncommon}}
+{{Setlist/nmentry|91/110|{{TCG ID|EX Holon Phantoms|Claw Fossil|91}}|Trainer||Common}}
+{{Setlist/nmentry|92/110|{{TCG ID|EX Holon Phantoms|Mysterious Fossil|92}}|Trainer||Common}}
+{{Setlist/nmentry|93/110|{{TCG ID|EX Holon Phantoms|Root Fossil|93}}|Trainer||Common}}
+{{Setlist/nmentry|94/110|{{TCG ID|EX Holon Phantoms|Darkness Energy|94}}|Energy|Darkness|Rare}}
+{{Setlist/nmentry|95/110|{{TCG ID|EX Holon Phantoms|Metal Energy|95}}|Energy|Metal|Rare}}
+{{Setlist/nmentry|96/110|{{TCG ID|EX Holon Phantoms|Multi Energy|96}}|Energy|Rainbow|Rare}}
+{{Setlist/nmentry|97/110|{{TCG ID|EX Holon Phantoms|Dark Metal Energy|97}}|Energy|Darkness|Uncommon}}
+{{Setlist/nmentry|98/110|{{TCG ID|EX Holon Phantoms|δ Rainbow Energy|98}}|Energy|Rainbow|Uncommon}}
+{{Setlist/nmentry|99/110|{{TCG ID|EX Holon Phantoms|Crawdaunt ex|99}}|Water||Rare Holo ex}}
+{{Setlist/nmentry|100/110|{{TCG ID|EX Holon Phantoms|Mew ex|100}}|Psychic||Rare Holo ex}}
+{{Setlist/nmentry|101/110|{{TCG ID|EX Holon Phantoms|Mightyena ex|101}}|Darkness||Rare Holo ex}}
+{{Setlist/nmentry|102/110|[[Gyarados ☆ δ (EX Holon Phantoms 102)|Gyarados]] {{Star}} [[Gyarados ☆ δ (EX Holon Phantoms 102)|δ]]|Fire||Rare Holo ☆}}
+{{Setlist/nmentry|103/110|[[Mewtwo ☆ (EX Holon Phantoms 103)|Mewtwo]] {{Star}}|Psychic||Rare Holo ☆}}
+{{Setlist/nmentry|104/110|[[Pikachu ☆ (EX Holon Phantoms 104)|Pikachu]] {{Star}}|Lightning||Rare Holo ☆}}
+{{Setlist/nmentry|105/110|{{TCG ID|EX Holon Phantoms|Grass Energy|105}}|Energy|Grass|Rare Holo}}
+{{Setlist/nmentry|106/110|{{TCG ID|EX Holon Phantoms|Fire Energy|106}}|Energy|Fire|Rare Holo}}
+{{Setlist/nmentry|107/110|{{TCG ID|EX Holon Phantoms|Water Energy|107}}|Energy|Water|Rare Holo}}
+{{Setlist/nmentry|108/110|{{TCG ID|EX Holon Phantoms|Lightning Energy|108}}|Energy|Lightning|Rare Holo}}
+{{Setlist/nmentry|109/110|{{TCG ID|EX Holon Phantoms|Psychic Energy|109}}|Energy|Psychic|Rare Holo}}
+{{Setlist/nmentry|110/110|{{TCG ID|EX Holon Phantoms|Fighting Energy|110}}|Energy|Fighting|Rare Holo}}
+{{Setlist/nmentry|111/110|{{TCG ID|EX Holon Phantoms|Mew|111}}|Psychic||Rare Secret}}
+{{Setlist/nmfooter|cellcol=C596BD}}
+{{Setlist/nmheader|title=Holon Phantom|tablecol=7792BD|bordercol=3D6633|cellcol=C3D8DE|rarity=yes|symbol=yes|image=SetSymbolHolon Phantoms.png}}
+{{Setlist/nmentry|001/052|{{TCG ID|Holon Phantom|Trapinch δ|1}}|Grass||Common}}
+{{Setlist/nmentry|002/052|{{TCG ID|Holon Phantom|Vibrava δ|2}}|Grass||Uncommon}}
+{{Setlist/nmentry|003/052|{{TCG ID|Holon Phantom|Flygon δ|3}}|Grass|Metal|Rare Holo}}
+{{Setlist/nmentry|004/052|{{TCG ID|Holon Phantom|Mankey δ|4}}|Fire||Common}}
+{{Setlist/nmentry|005/052|{{TCG ID|Holon Phantom|Primeape δ|5}}|Fire||Uncommon}}
+{{Setlist/nmentry|006/052|{{TCG ID|Holon Phantom|Horsea δ|6}}|Fire||Common}}
+{{Setlist/nmentry|007/052|{{TCG ID|Holon Phantom|Seadra δ|7}}|Fire||Uncommon}}
+{{Setlist/nmentry|008/052|[[Gyarados ☆ δ (Holon Phantom 8)|Gyarados]] {{Star}} [[Gyarados ☆ δ (Holon Phantom 8)|δ]]|Fire||ShinyRare Holo}}
+{{Setlist/nmentry|009/052|{{TCG ID|Holon Phantom|Aerodactyl δ|9}}|Fire||Uncommon}}
+{{Setlist/nmentry|010/052|{{TCG ID|Holon Phantom|Latias δ|10}}|Fire||Rare Holo}}
+{{Setlist/nmentry|011/052|{{TCG ID|Holon Phantom|Kingdra δ|11}}|Fire|Metal|Rare Holo}}
+{{Setlist/nmentry|012/052|{{TCG ID|Holon Phantom|Oddish δ|12}}|Water||Common}}
+{{Setlist/nmentry|013/052|{{TCG ID|Holon Phantom|Bellossom δ|13}}|Water||Uncommon}}
+{{Setlist/nmentry|014/052|{{TCG ID|Holon Phantom|Latios δ|14}}|Water||Rare Holo}}
+{{Setlist/nmentry|015/052|{{TCG ID|Holon Phantom|Rayquaza δ|15}}|Water|Metal|Rare Holo}}
+{{Setlist/nmentry|016/052|{{TCG ID|Holon Phantom|Pidgey δ|16}}|Lightning||Common}}
+{{Setlist/nmentry|017/052|{{TCG ID|Holon Phantom|Pidgeotto δ|17}}|Lightning||Uncommon}}
+{{Setlist/nmentry|018/052|{{TCG ID|Holon Phantom|Psyduck δ|18}}|Lightning||Common}}
+{{Setlist/nmentry|019/052|{{TCG ID|Holon Phantom|Golduck δ|19}}|Lightning||Uncommon}}
+{{Setlist/nmentry|020/052|{{TCG ID|Holon Phantom|Kabuto δ|20}}|Lightning||Common}}
+{{Setlist/nmentry|021/052|{{TCG ID|Holon Phantom|Kabutops δ|21}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|022/052|{{TCG ID|Holon Phantom|Deoxys δ|22}}|Lightning||Rare Holo}}
+{{Setlist/nmentry|023/052|{{TCG ID|Holon Phantom|Pidgeot δ|23}}|Lightning|Metal|Rare Holo}}
+{{Setlist/nmentry|024/052|{{TCG ID|Holon Phantom|Gyarados δ|24}}|Lightning|Metal|Rare Holo}}
+{{Setlist/nmentry|025/052|{{TCG ID|Holon Phantom|Gloom δ|25}}|Psychic||Uncommon}}
+{{Setlist/nmentry|026/052|{{TCG ID|Holon Phantom|Omanyte δ|26}}|Psychic||Common}}
+{{Setlist/nmentry|027/052|{{TCG ID|Holon Phantom|Omastar δ|27}}|Psychic||Rare Holo}}
+{{Setlist/nmentry|028/052|{{TCG ID|Holon Phantom|Vileplume δ|28}}|Psychic|Metal|Rare Holo}}
+{{Setlist/nmentry|029/052|{{TCG ID|Holon Phantom|Exeggcute δ|29}}|Fighting||Common}}
+{{Setlist/nmentry|030/052|{{TCG ID|Holon Phantom|Exeggutor δ|30}}|Fighting||Uncommon}}
+{{Setlist/nmentry|031/052|{{TCG ID|Holon Phantom|Carvanha δ|31}}|Fighting||Common}}
+{{Setlist/nmentry|032/052|{{TCG ID|Holon Phantom|Sharpedo δ|32}}|Fighting||Uncommon}}
+{{Setlist/nmentry|033/052|{{TCG ID|Holon Phantom|Armaldo δ|33}}|Fighting|Metal|Rare Holo}}
+{{Setlist/nmentry|034/052|{{TCG ID|Holon Phantom|Holon's Castform|34}}|Colorless||Uncommon}}
+{{Setlist/nmentry|035/052|{{TCG ID|Holon Phantom|Deoxys δ|35}}|Colorless||Rare Holo}}
+{{Setlist/nmentry|036/052|{{TCG ID|Holon Phantom|Lileep δ|36}}|Darkness||Common}}
+{{Setlist/nmentry|037/052|{{TCG ID|Holon Phantom|Deoxys δ|37}}|Darkness||Rare Holo}}
+{{Setlist/nmentry|038/052|{{TCG ID|Holon Phantom|Meowth δ|38}}|Darkness|Metal|Common}}
+{{Setlist/nmentry|039/052|{{TCG ID|Holon Phantom|Persian δ|39}}|Darkness|Metal|Uncommon}}
+{{Setlist/nmentry|040/052|{{TCG ID|Holon Phantom|Cradily δ|40}}|Darkness|Metal|Rare Holo}}
+{{Setlist/nmentry|041/052|{{TCG ID|Holon Phantom|Pikachu δ|41}}|Metal||Common}}
+{{Setlist/nmentry|042/052|{{TCG ID|Holon Phantom|Raichu δ|42}}|Metal||Rare Holo}}
+{{Setlist/nmentry|043/052|{{TCG ID|Holon Phantom|Magikarp δ|43}}|Metal||Common}}
+{{Setlist/nmentry|044/052|{{TCG ID|Holon Phantom|Pichu δ|44}}|Metal||Common}}
+{{Setlist/nmentry|045/052|{{TCG ID|Holon Phantom|Anorith δ|45}}|Metal||Common}}
+{{Setlist/nmentry|046/052|{{TCG ID|Holon Phantom|Chimecho δ|46}}|Metal||Uncommon}}
+{{Setlist/nmentry|047/052|{{TCG ID|Holon Phantom|Deoxys δ|47}}|Metal||Rare Holo}}
+{{Setlist/nmentry|048/052|{{TCG ID|Holon Phantom|Rare Candy|48}}|Trainer||Uncommon}}
+{{Setlist/nmentry|049/052|{{TCG ID|Holon Phantom|Holon Fossil|49}}|Trainer||Uncommon}}
+{{Setlist/nmentry|050/052|{{TCG ID|Holon Phantom|Holon Adventurer|50}}|Trainer|Supporter|Uncommon}}
+{{Setlist/nmentry|051/052|{{TCG ID|Holon Phantom|Holon Lake|51}}|Trainer|Stadium|Uncommon}}
+{{Setlist/nmentry|052/052|{{TCG ID|Holon Phantom|δ Rainbow Energy|52}}|Energy|Rainbow|Uncommon}}
+{{Setlist/nmfooter|cellcol=C3D8DE}}
