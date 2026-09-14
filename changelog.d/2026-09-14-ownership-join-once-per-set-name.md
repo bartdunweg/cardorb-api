@@ -1,0 +1,1 @@
+- The shelf and a set page answer faster: marking a collection against the English sets resolved every row's set name on its own, 1,946 times for 52 names, which took 400 to 520 ms of each answer on Vercel. It resolves each name once now (105 ms to 8 ms on a laptop), with the same marks and counts for every account.

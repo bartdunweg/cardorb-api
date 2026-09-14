@@ -137,6 +137,19 @@ export function ownershipIndex(
      its number: TG12 is in the gallery, 12 is not. */
   // Shiny Vault and Classic Collection too, since the shelf shows them inside their set (set-galleries.ts).
   const galleries = new Set(sets.filter((s) => subsetParent(s.name) !== null).map((s) => s.id));
+  /* Resolved once per set name, not once per row. The resolver compares the name with every set
+     (aliases, longest overlap, galleries), and a collection files 1,946 rows under 52 names: the
+     shelf and every set page spent 400 to 520 ms in this loop on Vercel, measured 2026-09-14, and
+     105 ms of 108 on a laptop were the resolver. Same sets, same name, same answer. */
+  const resolved = new Map<string, string[]>();
+  const idsFor = (setName: string): string[] => {
+    let ids = resolved.get(setName);
+    if (!ids) {
+      ids = resolveSetIds(setName, sets);
+      resolved.set(setName, ids);
+    }
+    return ids;
+  };
   for (const row of rows) {
     if (!row.setName || !row.name) continue;
     const own = row.tcgId && cataloguesFor(row.language).includes(language as BrowseLanguage);
@@ -151,7 +164,7 @@ export function ownershipIndex(
     // language says which set it is really from, and the name it is filed under
     // is a translation of ours.
     if (cataloguesFor(row.language).length && row.tcgId) continue;
-    const ids = resolveSetIds(row.setName, sets);
+    const ids = idsFor(row.setName);
     const gallery = isSubsetNumber(row.number);
     const mine = ids.filter((id) => galleries.has(id) === gallery);
     // A row no set claims is a row this shelf cannot mark, and says nothing about.
