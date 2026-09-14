@@ -161,6 +161,71 @@ const cachedRows = async (userId: string, db: SupabaseClient | null) => {
  * no separate invalidation path needed. revalidate matches cachedRows()'s TTL:
  * the assembled collection can never be fresher than the rows it is built from.
  */
+type Printings = Record<
+  string,
+  { marketPrice: number; lowPrice?: number | null; productId: number }
+>;
+
+/**
+ * Every priced printing of these TCGplayer products: the one read every price in this API makes.
+ *
+ * Out of tcgplayer_prices, which the price job writes each night for both shelves, while it holds
+ * a figure from the past week; out of the products' tcgcsv group files (a day in the Data Cache)
+ * only before that, or when the store cannot be read. Bart, 2026-09-14: every set, card and price
+ * the same way. A set page, a search, a card's sheet and the collection read the same figure for
+ * the same printing on the same day, where the sheet read TCGdex's relay and the lists a group file
+ * a day old, and a card could show three prices in three places.
+ *
+ * `category` is the shelf the products are on (tcgcsv's 3 or 85), for the group-file fallback only:
+ * a product id is TCGplayer's and names one product across both shelves.
+ */
+export async function printingsOfProducts(
+  productIds: number[],
+  category: number = TCGCSV_CATEGORY.en,
+): Promise<Map<number, Printings>> {
+  const out = new Map<number, Printings>();
+  const wanted = [...new Set(productIds)];
+  if (!wanted.length) return out;
+  const db = adminClient();
+  const since = new Date(Date.now() - STORED_PRICES_DAYS * 86_400_000).toISOString().slice(0, 10);
+  if (db && (await storedPricesCurrent(db, since))) {
+    const rows = await readTcgplayerPrices(db, wanted, since).catch((err) => {
+      console.error("Stored TCGplayer prices unreadable, reading tcgcsv's files:", err);
+      return null;
+    });
+    if (rows) {
+      for (const r of rows) {
+        const printings = out.get(r.product_id) ?? {};
+        printings[r.printing] = { marketPrice: Number(r.market), productId: r.product_id };
+        out.set(r.product_id, printings);
+      }
+      return out;
+    }
+  }
+  const groupsOf =
+    (TCGPLAYER_GROUPS as Record<string, Record<string, number>>)[String(category)] ?? {};
+  const byGroup = new Map<number, number[]>();
+  for (const productId of wanted) {
+    const groupId = groupsOf[String(productId)];
+    if (groupId == null) continue;
+    byGroup.set(groupId, [...(byGroup.get(groupId) ?? []), productId]);
+  }
+  await mapLimit([...byGroup.keys()], 6, async (groupId) => {
+    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
+    try {
+      printings = await cachedGroupPrintings(groupId, category);
+    } catch (err) {
+      console.error(`tcgcsv group ${category}/${groupId} unavailable, its cards unpriced:`, err);
+      return;
+    }
+    for (const productId of byGroup.get(groupId) ?? []) {
+      const tp = printings[String(productId)];
+      if (tp) out.set(productId, tp);
+    }
+  });
+  return out;
+}
+
 /**
  * TCGplayer's dollars for these cards, from their tcgcsv groups, every printing of each.
  *
@@ -171,7 +236,7 @@ const cachedRows = async (userId: string, db: SupabaseClient | null) => {
  * usdFirstEdOf, usdPrintingsOf), because groupPrintings() hands back the same shape.
  *
  * Both the browse surfaces (tcgplayerPricesFor) and a Japanese card someone holds or opens
- * (factsWithUsd, japaneseDetailPrice) read it: TCGdex relays no TCGplayer figure for a Japanese
+ * (factsWithUsd, detailPrice) read it: TCGdex relays no TCGplayer figure for a Japanese
  * card, so this is the only place one comes from. A card with no product, or a group that does
  * not answer, is left out.
  */
@@ -182,34 +247,24 @@ export const shelfUsdFor = async (
   const out: Record<string, UsdPair> = {};
   if (!ids.length) return out;
   const category = language === "ja" ? TCGCSV_CATEGORY.ja : TCGCSV_CATEGORY.en;
-  const groupsOf =
-    (TCGPLAYER_GROUPS as Record<string, Record<string, number>>)[String(category)] ?? {};
   const productOf = (id: string): number | null => {
     if (language === "ja") return (TCGPLAYER_IDS_JA as Record<string, number | null>)[id] ?? null;
     return TCGCSV_LINKS[id]?.productId ?? null;
   };
-  const wanted = new Map<number, { id: string; productId: number }[]>();
-  for (const id of new Set(ids)) {
+  const links = [...new Set(ids)].flatMap((id) => {
     const productId = productOf(id);
-    const groupId = productId == null ? undefined : groupsOf[String(productId)];
-    if (productId == null || groupId == null) continue;
-    wanted.set(groupId, [...(wanted.get(groupId) ?? []), { id, productId }]);
-  }
-  await mapLimit([...wanted.keys()], 6, async (groupId) => {
-    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
-    try {
-      printings = await cachedGroupPrintings(groupId, category);
-    } catch (err) {
-      console.error(`tcgcsv group ${category}/${groupId} unavailable, its cards unpriced:`, err);
-      return;
-    }
-    for (const { id, productId } of wanted.get(groupId) ?? []) {
-      const tp = printings[String(productId)];
-      const usd = tp ? usdOf(tp) : null;
-      if (!tp || !usd) continue;
-      out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
-    }
+    return productId == null ? [] : [[id, productId] as const];
   });
+  const printings = await printingsOfProducts(
+    links.map(([, productId]) => productId),
+    category,
+  );
+  for (const [id, productId] of links) {
+    const tp = printings.get(productId);
+    const usd = tp ? usdOf(tp) : null;
+    if (!tp || !usd) continue;
+    out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
+  }
   return out;
 };
 
@@ -243,26 +298,27 @@ export const tcgplayerPricesFor = async (
 };
 
 /**
- * A Japanese card's detail with TCGplayer's price on it, from the Japanese shelf.
+ * A card's detail with TCGplayer's price on it, read the way every other price is
+ * (shelfUsdFor, printingsOfProducts).
  *
- * getCardDetail() reads the price TCGdex relays, and TCGdex relays no TCGplayer figure for a
- * Japanese card. So the route hands the detail here, and the price and the product id come from
- * the same tcgcsv group the card's set page is priced from. No rate, no price; no product, no
- * price: never Cardmarket's in its place.
+ * getCardDetail() reads the figure TCGdex relays on the card's record, which runs a day or more
+ * behind TCGplayer's own (identical on 61% of printings, 2026-09-14) and is not there at all for a
+ * Japanese card. So the card's sheet showed another figure than the tile it was opened from. The
+ * route hands the detail here, and the price and product id come from the same read as the set
+ * page's, the search's and the collection's. A card with no TCGplayer product keeps TCGdex's
+ * figure on the English shelf, the one place a price can come from for it; no rate, no price.
  */
-export const japaneseDetailPrice = async <
+export const detailPrice = async <
   T extends { id: string; price: unknown; tcgplayerId: number | null },
 >(
   card: T,
+  language: BrowseLanguage | null,
   usdToEur: number | null,
 ): Promise<T> => {
   if (usdToEur == null) return { ...card, price: null, tcgplayerId: null };
-  const usd = (await shelfUsdFor([card.id], "ja"))[card.id]?.usd ?? null;
-  return {
-    ...card,
-    price: usd ? priceFromUsd(usd, usdToEur) : null,
-    tcgplayerId: usd?.productId ?? null,
-  };
+  const usd = (await shelfUsdFor([card.id], language))[card.id]?.usd ?? null;
+  if (!usd) return language === "ja" ? { ...card, price: null, tcgplayerId: null } : card;
+  return { ...card, price: priceFromUsd(usd, usdToEur), tcgplayerId: usd.productId ?? null };
 };
 
 /**
@@ -419,7 +475,7 @@ const keptFacts = (userId: string, usdToEur: number | null, fill: () => Promise<
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v17", userId, usdToEur == null ? "-" : String(usdToEur)],
+    ["collection-facts", "v18", userId, usdToEur == null ? "-" : String(usdToEur)],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -524,6 +580,8 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v28: prices read out of tcgplayer_prices, the one store every price reads (printingsOfProducts).
+      //
       // v27: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
       //
       // v26: rarity and types corrected for 481 English cards (card-fact-corrections.ts).
@@ -551,7 +609,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v27", setName, factsSignature(identities)],
+      ["set-facts", "v28", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -637,24 +695,13 @@ export const usdForSet = async (
   const linked = ids.filter((id) => !answer[id]?.usd && TCGCSV_LINKS[id]?.groupId != null);
   if (!linked.length) return answer;
   const out = { ...answer };
-  const groups = [...new Set(linked.map((id) => TCGCSV_LINKS[id]!.groupId!))];
-  await mapLimit(groups, 4, async (groupId) => {
-    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
-    try {
-      printings = await cachedGroupPrintings(groupId);
-    } catch (err) {
-      console.error(`tcgcsv group ${groupId} unavailable, its linked cards unpriced for now:`, err);
-      return;
-    }
-    for (const id of linked) {
-      const link = TCGCSV_LINKS[id]!;
-      if (link.groupId !== groupId) continue;
-      const tp = printings[String(link.productId)];
-      const usd = tp ? usdOf(tp) : null;
-      if (!tp || !usd) continue;
-      out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
-    }
-  });
+  const printings = await printingsOfProducts(linked.map((id) => TCGCSV_LINKS[id]!.productId));
+  for (const id of linked) {
+    const tp = printings.get(TCGCSV_LINKS[id]!.productId);
+    const usd = tp ? usdOf(tp) : null;
+    if (!tp || !usd) continue;
+    out[id] = { usd, firstEd: usdFirstEdOf(tp), printings: usdPrintingsOf(tp) };
+  }
   return out;
 };
 
@@ -677,19 +724,13 @@ export const runPrintingsForSet = async (
   const linked = ids.filter((id) => TCGCSV_LINKS[id]?.shadowless);
   if (!linked.length) return {};
   const out: Awaited<ReturnType<typeof runPrintingsForSet>> = {};
-  const groups = [...new Set(linked.map((id) => TCGCSV_LINKS[id]!.shadowless!.groupId))];
-  await mapLimit(groups, 2, async (groupId) => {
-    let printings: Awaited<ReturnType<typeof cachedGroupPrintings>>;
-    try {
-      printings = await cachedGroupPrintings(groupId);
-    } catch (err) {
-      console.error(`tcgcsv group ${groupId} unavailable, Shadowless runs unpriced for now:`, err);
-      return;
-    }
+  const printings = await printingsOfProducts(
+    linked.map((id) => TCGCSV_LINKS[id]!.shadowless!.productId),
+  );
+  {
     for (const id of linked) {
       const run = TCGCSV_LINKS[id]!.shadowless!;
-      if (run.groupId !== groupId) continue;
-      const tp = printings[String(run.productId)];
+      const tp = printings.get(run.productId);
       if (!tp) continue;
       // "unlimited" in the Shadowless group is the Shadowless run; "1st-edition" keeps its name.
       const renamed = Object.fromEntries(
@@ -700,7 +741,7 @@ export const runPrintingsForSet = async (
       );
       out[id] = { printings: usdPrintingsOf(renamed), firstEd: usdFirstEdOf(renamed) };
     }
-  });
+  }
   return out;
 };
 
@@ -906,11 +947,9 @@ let pricesCurrent: { at: number; since: string; yes: boolean } | null = null;
 async function storedPricesCurrent(db: SupabaseClient, since: string): Promise<boolean> {
   if (pricesCurrent && pricesCurrent.since === since && Date.now() - pricesCurrent.at < 600_000)
     return pricesCurrent.yes;
-  const { data, error } = await db
-    .from("tcgplayer_prices")
-    .select("product_id")
-    .gte("updated_on", since)
-    .limit(1);
+  const { data, error } = await Promise.resolve()
+    .then(() => db.from("tcgplayer_prices").select("product_id").gte("updated_on", since).limit(1))
+    .catch((err: unknown) => ({ data: null, error: err }));
   const yes = !error && (data?.length ?? 0) > 0;
   // A failed look is not remembered: the next request asks again.
   if (!error) pricesCurrent = { at: Date.now(), since, yes };
