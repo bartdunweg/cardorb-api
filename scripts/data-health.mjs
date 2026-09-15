@@ -515,6 +515,46 @@ if (day) {
 }
 
 /**
+ * A card whose rarity says holo offers a holo. TCGdex writes "normal" for most holo cards of Black &
+ * White, XY and Sun & Moon, and until api#495 (2026-09-15) 2,087 of them offered a Standard copy and
+ * no holo (Reshiram bw1-113). card-printings.ts offers a holo where TCGdex names one, where the
+ * evidence run decided the card is one (holoNotNormal, holoBesideNormal in
+ * reverse-holo.generated.json), and where a pre-reverse card's foil is filed as a reverse
+ * (holoBeforeReverses). A card named "Holo Rare" (and its V, VMAX, VSTAR, LV.X kin) outside all
+ * three is a card a form offers wrongly: the evidence run is behind, or TCGdex changed.
+ */
+{
+  const decided = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "reverse-holo.generated.json"), "utf8"),
+  );
+  const holoIds = new Set([...(decided.holoNotNormal ?? []), ...(decided.holoBesideNormal ?? [])]);
+  const beforeReverses = new Set(decided.holoBeforeReverses ?? []);
+  const named = await query(
+    "select id, variants from catalogue_cards where language = 'en' and rarity ilike '%holo%' and jsonb_array_length(coalesce(variants, '[]'::jsonb)) > 0",
+  );
+  const without = named.filter((r) => {
+    const types = new Set((r.variants ?? []).map((v) => v.type));
+    return !(
+      types.has("holo") ||
+      holoIds.has(r.id) ||
+      (beforeReverses.has(r.id) && types.has("reverse"))
+    );
+  });
+  check(
+    "A card whose rarity says holo offers a holo",
+    without.length === 0,
+    `${named.length} English cards named holo; ${without.length} offer no holo${
+      without.length
+        ? ` (${without
+            .slice(0, 10)
+            .map((r) => r.id)
+            .join(", ")}): rerun scripts/reverse-holo-evidence.mjs and review its holo lists`
+        : ""
+    }`,
+  );
+}
+
+/**
  * Whether a plain reverse exists is decided per card from four witnesses (reverse-holo.generated.json,
  * scripts/reverse-holo-evidence.mjs): TCGdex, TCGplayer and Scrydex, and Bulbapedia's set rule where
  * they tie. Reported, not failed: the sets whose witnesses disagreed on the run that decided, and the

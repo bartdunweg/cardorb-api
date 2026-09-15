@@ -1,0 +1,1 @@
+- Data health checks that a card whose rarity says holo (Holo Rare, and its V, VMAX, VSTAR and LV.X kin) offers a holo, as card-printings.ts decides it: a holo in TCGdex's variants, or one of the evidence run's holo lists. On 2026-09-15 all 2,066 do; before api#495 two thousand did not.
