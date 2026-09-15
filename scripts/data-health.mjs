@@ -818,6 +818,73 @@ if (day) {
 }
 
 /**
+ * A held card's printing whose line jumps five times or more between two readings, at least four
+ * times in 90 days: two figures filed under one printing, not a price that moved. Bart, 2026-09-15:
+ * Base Set Charizard's 1st Edition read €8,700 and €219 by turns, and the chart looked broken before
+ * anyone knew why. The card sheet holds a dip that comes back and starts a line after its last jump
+ * (cardorb-web#617, #621); this finds the lines that needed it, so they are seen before a person sees
+ * them. Readings under €1 do not count: a cent or two is a jump of five times at that price.
+ *
+ * FLIP_ACCEPTED holds the lines looked at and left as TCGplayer files them, each with its reason, so
+ * a known thin market does not file the issue every morning.
+ */
+const FLIP_ACCEPTED = new Map([
+  [
+    "en|base1-4|1st-edition-holofoil",
+    "TCGplayer's own market price for a card that hardly sells: $10,000 and $250 by turns with the cheapest listing at $100,000 (tcgcsv, 2026-07-15); the sheet starts the line in April",
+  ],
+]);
+{
+  const rows = await query(
+    `with held as (
+         select distinct case when language = 'ja' then 'ja' else 'en' end as language, tcg_id
+         from cards where owned and coalesce(tcg_id, '') <> ''
+       )
+     select m.language, m.tcg_id, m.printing, m.month::text as month, m.cents
+     from card_price_months m join held h using (language, tcg_id)
+     where m.month >= date_trunc('month', current_date - 90)::date
+       and m.printing not in ('market', 'holo')`,
+  );
+  const since = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
+  /** @type {Map<string, { day: string, cents: number }[]>} */
+  const lines = new Map();
+  for (const r of rows) {
+    const key = `${r.language}|${r.tcg_id}|${r.printing}`;
+    const line = lines.get(key) ?? [];
+    (r.cents ?? []).forEach((c, i) => {
+      const date = `${r.month.slice(0, 8)}${String(i + 1).padStart(2, "0")}`;
+      if (c != null && date >= since) line.push({ day: date, cents: c });
+    });
+    lines.set(key, line);
+  }
+  const flipping = [];
+  for (const [key, line] of lines) {
+    line.sort((a, b) => (a.day < b.day ? -1 : 1));
+    let jumps = 0;
+    for (let i = 1; i < line.length; i++) {
+      const lo = Math.min(line[i - 1].cents, line[i].cents);
+      const hi = Math.max(line[i - 1].cents, line[i].cents);
+      if (lo >= 100 && hi >= lo * 5) jumps++;
+    }
+    if (jumps >= 4) flipping.push({ key, jumps });
+  }
+  const open = flipping.filter((f) => !FLIP_ACCEPTED.has(f.key)).sort((a, b) => b.jumps - a.jumps);
+  const accepted = flipping.length - open.length;
+  check(
+    "Held price lines do not flip between two levels",
+    open.length === 0,
+    `${open.length} held printings jumped five times or more at least four times in 90 days${
+      open.length
+        ? `: ${open
+            .slice(0, 10)
+            .map((f) => `${f.key.replaceAll("|", " ")} (${f.jumps}×)`)
+            .join("; ")}`
+        : ""
+    }${accepted ? `; ${accepted} accepted (FLIP_ACCEPTED)` : ""}`,
+  );
+}
+
+/**
  * A held card with a reading the day before and the day after and none on the day itself, in any
  * of its printings: tcgcsv publishes every product every day, so a hole like that is a night the
  * history was not written, never the market. On 2026-09-13 the old collection snapshot wrote 184
