@@ -1,0 +1,1 @@
+- The print-pictures cron writes its night again. TCGplayer lists two cosmos holo products for 18 English cards, the night's rows named those printings twice, and Postgres refused the whole write: the first hand run on 2026-09-15 copied 2,317 pictures into the bucket and stored none. Each printing is now named once, and the write drops a repeated row before it asks.
