@@ -78,6 +78,14 @@ const FOIL = [
  */
 export const finishPrintingKey = (/** @type {string} */ finish) => `${finish}-reverse-holofoil`;
 
+/**
+ * A printing sold as a product of its own, under the card, by its finish: a Japanese mirror holo
+ * (finish "reverse-holo") is the card's "reverse-holofoil", the name a reverse copy already asks
+ * for (price-basis.mjs printingKeysOf); a patterned reverse is finishPrintingKey's.
+ */
+export const printProductKey = (/** @type {string} */ finish) =>
+  finish === "reverse-holo" ? "reverse-holofoil" : finishPrintingKey(finish);
+
 /** tcgcsv's subtype ("Reverse Holofoil") as the printing key the app uses ("reverse-holofoil"). */
 export const printingKey = (/** @type {string} */ subType) =>
   subType.toLowerCase().replace(/\s+/g, "-");

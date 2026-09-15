@@ -10,6 +10,7 @@ import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
 import {
   listCatalogueProducts,
+  printProductsOfCards,
   writeCardPrices,
   writeTcgplayerPrices,
   writeUsdEurRate,
@@ -213,6 +214,19 @@ export async function GET(req: Request) {
           return new Map<string, number>();
         });
         const japaneseLinks: Record<string, TcgplayerLink> = { ...JAPANESE_LINKS };
+        /* A Japanese card's mirror holo and ball reverses, each a product of its own, matched by the
+           print-pictures cron (card_print_pictures): their own line under the card, as an English
+           card's patterned reverses have had since 2026-09-14. Unreadable, the cards' own lines stand. */
+        const japaneseFinishPrints = Object.fromEntries(
+          [
+            ...(
+              await printProductsOfCards(db, "ja").catch((err) => {
+                console.error("[cron] the Japanese printings' products unreadable:", err);
+                return new Map<string, { finish: string; productId: number }[]>();
+              })
+            ).entries(),
+          ].map(([id, prints]) => [id, prints.map((p) => ({ ...p, printing: "holofoil" }))]),
+        );
         for (const [id, productId] of copied) japaneseLinks[id] ??= { productId };
         /* Each shelf's points under its own catalogue: 14 ids are cards in both (neo4-100 to
            neo4-113), and a Japanese product under one of them once wrote Chansey's figure into
@@ -227,7 +241,14 @@ export async function GET(req: Request) {
             today,
             allFinishPrints(),
           ),
-          ...cardPricesFromShelf("ja", japaneseLinks, japaneseRows, rate, today),
+          ...cardPricesFromShelf(
+            "ja",
+            japaneseLinks,
+            japaneseRows,
+            rate,
+            today,
+            japaneseFinishPrints,
+          ),
         ];
         await writeCardPrices(db, points);
         history.written = points.length;

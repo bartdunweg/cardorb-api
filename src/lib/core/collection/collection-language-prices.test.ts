@@ -32,6 +32,11 @@ vi.mock("../../storage/supabase", () => ({
 vi.mock("../../storage/postgres", () => ({
   listCardPrices: vi.fn(),
   catalogueProductIds: async () => new Map(),
+  // M1S-001's Master Ball reverse, a product of its own (card_print_pictures).
+  printProductsOfCards: async (_db: unknown, _language: string, ids: string[]) =>
+    new Map(
+      ids.includes("M1S-001") ? [["M1S-001", [{ finish: "master-ball", productId: 640002 }]]] : [],
+    ),
 }));
 const listRows = vi.fn();
 vi.mock("../../storage/collection", () => ({
@@ -46,18 +51,22 @@ vi.mock("../tcgplayer-ids.generated.json", () => ({
 }));
 vi.mock("../tcgplayer-ids.ja.generated.json", () => ({ default: { "M1S-001": 640001 } }));
 vi.mock("../tcgplayer-groups.generated.json", () => ({
-  default: { "3": { "42382": 604 }, "85": { "640001": 24001 } },
+  default: { "3": { "42382": 604 }, "85": { "640001": 24001, "640002": 24001 } },
 }));
 
 const { assembleFor, detailPrice, pricePatternPrints, tcgplayerPricesFor } =
   await import("./collection");
+const { copyPriceOf } = await import("../price-basis.mjs");
 
 beforeEach(() => {
   groupPrintings.mockReset();
   groupPrintings.mockImplementation(async (groupId: number) =>
     groupId === 604
       ? new Map([[42382, { holofoil: { marketPrice: 800, productId: 42382 } }]])
-      : new Map([[640001, { normal: { marketPrice: 4, productId: 640001 } }]]),
+      : new Map([
+          [640001, { normal: { marketPrice: 4, productId: 640001 } }],
+          [640002, { holofoil: { marketPrice: 40, productId: 640002 } }],
+        ]),
   );
 });
 
@@ -152,8 +161,18 @@ describe("a Japanese card in a collection", () => {
     // $4 at 0.5 a dollar. Cardmarket's €99 on the record is nowhere.
     expect(card.price).toEqual({ market: 2 });
     expect(card.pricePrintings?.normal?.market).toBe(2);
-    expect(card.printingIds).toEqual({ normal: 640001 });
+    expect(card.printingIds).toEqual({ normal: 640001, "master-ball-reverse-holofoil": 640002 });
     expect(JSON.stringify(card)).not.toContain("99");
+  });
+
+  // Bart, 2026-09-15: a Japanese Master Ball copy was priced from the plain product.
+  it("prices a Japanese Master Ball copy from its own product, not the plain card's", async () => {
+    listRows.mockResolvedValue([jaRow({ id: "row-ja-mb", finish: "master-ball" })]);
+    const [set] = await assembleFor("ja-holder-mb", {} as SupabaseClient);
+    const card = set!.cards[0]!;
+    expect(card.pricePrintings?.["master-ball-reverse-holofoil"]?.market).toBe(20);
+    // What the copy is worth reads that printing, not the card's plain headline figure ($4, €2).
+    expect(copyPriceOf({ finish: "master-ball", edition: null }, card)).toEqual({ market: 20 });
   });
 
   it("has no price where TCGplayer has no product for it, rather than Cardmarket's", async () => {

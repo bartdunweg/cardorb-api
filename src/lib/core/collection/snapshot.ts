@@ -20,9 +20,9 @@ import type { PrintingDay } from "./movers";
 import {
   LEGACY,
   type PriceLanguage,
-  finishPrintingKey,
   historyKey,
   priceLanguageOf,
+  printProductKey,
   printingKey,
   runKey,
   runLinksOf,
@@ -139,7 +139,9 @@ export type TcgplayerLink = {
  *
  * Then the card's Poké Ball, Master Ball and Energy Symbol reverses, where `finishPrints` names them
  * (card-printings.ts finishPrintsFor): each a product of its own, written under the card as
- * `${finish}-reverse-holofoil` (finishPrintingKey), whatever subtype TCGplayer files its figure under.
+ * `${finish}-reverse-holofoil` (printProductKey), whatever subtype TCGplayer files its figure under.
+ * A Japanese card's are read from card_print_pictures, its mirror holo among them, written as the
+ * card's "reverse-holofoil".
  * The same key scripts/backfill-card-prices.mjs writes their past under.
  *
  * `language` is the catalogue the links' ids are from, and every point carries it: an English and a
@@ -186,7 +188,7 @@ export function cardPricesFromShelf(
       points.push({
         language,
         tcgId,
-        printing: finishPrintingKey(print.finish),
+        printing: printProductKey(print.finish),
         date,
         price: Math.round(usd * usdToEur * 100) / 100,
         source: "tcgplayer",
