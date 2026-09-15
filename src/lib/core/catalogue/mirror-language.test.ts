@@ -28,9 +28,12 @@ vi.mock("./image-store", () => ({
   keepImage: (a: string | null) => keepImage(a),
   storedAddress: () => null,
 }));
+const scrydexJapanExpansions = vi.fn(async (): Promise<unknown[]> => [
+  { name: "Pokémon Card 151", code: "sv2a_ja" },
+]);
 vi.mock("./scrydex-japan-logos", async (actual) => ({
   ...(await actual<typeof import("./scrydex-japan-logos")>()),
-  scrydexJapanExpansions: async () => [{ name: "Pokémon Card 151", code: "sv2a_ja" }],
+  scrydexJapanExpansions: () => scrydexJapanExpansions(),
   scrydexExpansionCards: async () => [],
   scrydexRealLogo: async (address: string | null) => address,
 }));
@@ -118,6 +121,7 @@ const card = (id: string, number: string) => ({
 beforeEach(() => {
   vi.clearAllMocks();
   japanGroups.mockResolvedValue([]);
+  scrydexJapanExpansions.mockResolvedValue([{ name: "Pokémon Card 151", code: "sv2a_ja" }]);
   groupCards.mockResolvedValue([]);
   keepImage.mockImplementation(async (a: string | null) => a);
   tcgdexScan.mockImplementation(async (stem: string) => stem);
@@ -180,6 +184,29 @@ describe("syncLanguageMirror", () => {
     ]);
     const stamped = calls.find((c) => c.table === "catalogue_sync" && c.op === "upsert");
     expect(stamped?.args[0]).toMatchObject({ language: "ja", set_id: "SV2a", format: 8 });
+  });
+
+  /* On 2026-09-15 Scrydex's expansions page answered 524 and a run wrote all 169 Japanese sets
+     without their logo. */
+  it("takes the Scrydex code on file, or keeps the held logo, where Scrydex's page does not answer", async () => {
+    scrydexJapanExpansions.mockRejectedValue(new Error("Scrydex expansions: 524"));
+    listSetsIn.mockResolvedValue([shelfSet("SV4a"), shelfSet("SV2a")]);
+    const held = "https://images.cardorb.com/scrydex/logos/sv2a_ja.png";
+    const { db, calls } = fakeStore({ catalogue_sets: [{ id: "SV2a", logo: held }] });
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+
+    const logos = Object.fromEntries(
+      calls
+        .filter((c) => c.table === "catalogue_sets" && c.op === "upsert")
+        .map((c) => {
+          const row = c.args[0] as { id: string; logo: string | null };
+          return [row.id, row.logo];
+        }),
+    );
+    expect(logos).toEqual({
+      SV4a: "https://images.scrydex.com/pokemon/sv4a_ja-logo/logo",
+      SV2a: held,
+    });
   });
 
   /* XY8b-061 M Houndoom-EX was "M Houndoom Ex" with no artist; SM2p-050 Tapu Bulu GX prints SR and
