@@ -2158,7 +2158,8 @@ export type PrintPictureRow = {
   print: string;
   /** TCGplayer's product the picture is; null for a scan from TCGdex (migration 20260915270000). */
   product_id: number | null;
-  image: string;
+  /** Null for a product TCGplayer holds no picture of: the row proves the printing (migration 20260915280000). */
+  image: string | null;
 };
 
 /** Every printing's picture the store holds for one catalogue. */
@@ -2223,14 +2224,16 @@ export async function printPicturesOf(
   db: SupabaseClient,
   language: CatalogueLanguage,
   cardId: string,
-): Promise<Map<string, string>> {
+): Promise<Map<string, string | null>> {
   const { data, error } = await db
     .from("card_print_pictures")
     .select("print, image")
     .eq("language", language)
     .eq("card_id", cardId);
   if (error) throw new Error(`Reading ${cardId}'s printings' pictures failed: ${error.message}`);
-  return new Map((data ?? []).map((r: { print: string; image: string }) => [r.print, r.image]));
+  return new Map(
+    (data ?? []).map((r: { print: string; image: string | null }) => [r.print, r.image]),
+  );
 }
 
 /** Many cards' printings' pictures at once, by card and then by print, for a page of tiles. */
@@ -2238,8 +2241,8 @@ export async function printPicturesOfCards(
   db: SupabaseClient,
   language: CatalogueLanguage,
   cardIds: string[],
-): Promise<Map<string, Map<string, string>>> {
-  const out = new Map<string, Map<string, string>>();
+): Promise<Map<string, Map<string, string | null>>> {
+  const out = new Map<string, Map<string, string | null>>();
   const BITE = 250;
   for (let at = 0; at < cardIds.length; at += BITE) {
     const { data, error } = await db
@@ -2248,8 +2251,8 @@ export async function printPicturesOfCards(
       .eq("language", language)
       .in("card_id", cardIds.slice(at, at + BITE));
     if (error) throw new Error(`Reading the printings' pictures failed: ${error.message}`);
-    for (const r of (data ?? []) as { card_id: string; print: string; image: string }[]) {
-      const card = out.get(r.card_id) ?? new Map<string, string>();
+    for (const r of (data ?? []) as { card_id: string; print: string; image: string | null }[]) {
+      const card = out.get(r.card_id) ?? new Map<string, string | null>();
       card.set(r.print, r.image);
       out.set(r.card_id, card);
     }

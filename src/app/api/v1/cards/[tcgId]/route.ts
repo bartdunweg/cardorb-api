@@ -17,7 +17,7 @@ import { foilPatternsOfSerie, patternPrintsFor } from "@/lib/core/catalogue/card
 import { serieOfSet } from "@/lib/core/catalogue/tcgdex-client";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
-import { withPrintPictures } from "@/lib/core/catalogue/print-pictures";
+import { withPrintPictures, withProvenPrintings } from "@/lib/core/catalogue/print-pictures";
 import { printPicturesOf } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
@@ -88,7 +88,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   let languages;
   let foilPatterns;
   let patternPrints;
-  let pictures: Map<string, string> = new Map();
+  let pictures: Map<string, string | null> = new Map();
   try {
     [languages, foilPatterns, patternPrints, pictures] = await Promise.all([
       own
@@ -114,9 +114,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
         return db
           ? printPicturesOf(db, own ?? "en", card.id).catch((err) => {
               console.error(`The printings' pictures of ${tcgId} could not be read:`, err);
-              return new Map<string, string>();
+              return new Map<string, string | null>();
             })
-          : new Map<string, string>();
+          : new Map<string, string | null>();
       })(),
     ]);
   } catch (err) {
@@ -130,7 +130,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   return NextResponse.json(
     {
       ...card,
-      printings: withPrintPictures(card.printings, pictures),
+      /* A Japanese card offers the printings TCGplayer sells of it too, where TCGdex lists fewer
+         (withProvenPrintings); an English card's printings read TCGplayer's products already. */
+      printings: withPrintPictures(
+        own === "ja" && card.printings
+          ? withProvenPrintings(card.printings, pictures)
+          : card.printings,
+        pictures,
+      ),
       languages,
       foilPatterns,
       patternPrints: patternPrints

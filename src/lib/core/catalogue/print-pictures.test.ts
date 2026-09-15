@@ -6,6 +6,7 @@ import {
   printKey,
   tcgdexPrintScans,
   withPrintPictures,
+  withProvenPrintings,
 } from "./print-pictures";
 
 const product = (productId: number, name: string, number: string | null, imageCount = 1) => ({
@@ -47,8 +48,8 @@ describe("japanesePrintProducts", () => {
 
   it("files each printing under the card its plain product is", () => {
     expect(japanesePrintProducts(bulbasaur, new Map([[566346, "SV2a-001"]]))).toEqual([
-      { cardId: "SV2a-001", print: "poke-ball", productId: 566553 },
-      { cardId: "SV2a-001", print: "master-ball", productId: 566706 },
+      { cardId: "SV2a-001", print: "poke-ball", productId: 566553, pictured: true },
+      { cardId: "SV2a-001", print: "master-ball", productId: 566706, pictured: true },
     ]);
   });
 
@@ -56,12 +57,25 @@ describe("japanesePrintProducts", () => {
     expect(japanesePrintProducts(bulbasaur, new Map())).toEqual([]);
   });
 
-  it("leaves out a printing TCGplayer holds no picture of", () => {
+  it("keeps a printing TCGplayer holds no picture of, unpictured, as the proof it exists", () => {
     const products = [
       product(1, "Oddish - 001/190", "001/190"),
       product(2, "Oddish - 001/190 (Mirror Holofoil)", "001/190", 0),
     ];
-    expect(japanesePrintProducts(products, new Map([[1, "S4a-001"]]))).toEqual([]);
+    expect(japanesePrintProducts(products, new Map([[1, "S4a-001"]]))).toEqual([
+      { cardId: "S4a-001", print: "reverse-holo", productId: 2, pictured: false },
+    ]);
+  });
+
+  it("takes the product with a picture where a printing is listed twice", () => {
+    const products = [
+      product(1, "Oddish - 001/190", "001/190"),
+      product(2, "Oddish - 001/190 (Mirror Holofoil)", "001/190", 0),
+      product(3, "Oddish - 001/190 (Mirror Holo)", "001/190"),
+    ];
+    expect(japanesePrintProducts(products, new Map([[1, "S4a-001"]]))).toEqual([
+      { cardId: "S4a-001", print: "reverse-holo", productId: 3, pictured: true },
+    ]);
   });
 
   it("never files a printing under a same-named card with another number", () => {
@@ -75,7 +89,7 @@ describe("japanesePrintProducts", () => {
       [2, "X-026"],
     ]);
     expect(japanesePrintProducts(products, cards)).toEqual([
-      { cardId: "X-026", print: "reverse-holo", productId: 3 },
+      { cardId: "X-026", print: "reverse-holo", productId: 3, pictured: true },
     ]);
   });
 });
@@ -152,5 +166,37 @@ describe("tcgdexPrintScans", () => {
     expect(
       tcgdexPrintScans(cards, "master-ball", new Map([["SV2a-003", [{ type: "holo" }]]])),
     ).toEqual([]);
+  });
+});
+
+describe("withProvenPrintings", () => {
+  it("adds a printing TCGplayer sells that TCGdex does not list, in FINISHES order", () => {
+    const proven = new Map<string, string | null>([["reverse-holo", null]]);
+    expect(
+      withProvenPrintings(
+        [
+          { finish: "normal", foilPattern: null },
+          { finish: "holo", foilPattern: null },
+        ],
+        proven,
+      ),
+    ).toEqual([
+      { finish: "normal", foilPattern: null },
+      { finish: "reverse-holo", foilPattern: null },
+      { finish: "holo", foilPattern: null },
+    ]);
+  });
+
+  it("adds nothing TCGdex already lists, and no pattern key", () => {
+    const printings = [{ finish: "normal" as const, foilPattern: null }];
+    expect(
+      withProvenPrintings(
+        printings,
+        new Map([
+          ["normal", "x"],
+          ["holo/cosmos", "y"],
+        ]),
+      ),
+    ).toBe(printings);
   });
 });

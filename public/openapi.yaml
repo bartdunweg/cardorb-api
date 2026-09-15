@@ -2841,12 +2841,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [ok, en, ja, tcgdex, candidates, missing, groups, answered, ms]
+                required: [ok, en, ja, tcgdex, proven, candidates, missing, groups, answered, ms]
                 properties:
                   ok: { type: boolean }
                   en: { type: integer, description: English printings' pictures copied. }
                   ja: { type: integer, description: Japanese printings' pictures copied. }
                   tcgdex: { type: integer, description: "Printings' pictures copied from TCGdex's scans of a set it photographed as one printing (Pokémon Card 151's Poké Ball reverses)." }
+                  proven: { type: integer, description: "Japanese printing products TCGplayer holds no picture of, written as proof the printing exists." }
                   candidates: { type: integer, description: Printing products not yet in the store. }
                   missing: { type: integer, description: Products whose photo could not be copied tonight. }
                   groups: { type: integer }
