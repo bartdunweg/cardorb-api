@@ -382,6 +382,20 @@ components:
             from on a card that was only ever printed once.
         # required: firstEdition is sent on every answer; kept out of `required` so a client
         # generated from an older contract still validates one.
+        printings:
+          type: [array, "null"]
+          description: |
+            The printings this card really exists in, deduped. `image` is that printing's own
+            picture where TCGplayer sells it as a product of its own (a Poké Ball reverse, a Japanese
+            mirror holo), copied to our bucket by the nightly print-pictures job; null where there is
+            none, and the card's `image` stands for it. Sent by GET /v1/cards/{tcgId} only.
+          items:
+            type: object
+            required: [finish, foilPattern]
+            properties:
+              finish: { $ref: "#/components/schemas/Finish" }
+              foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+              image: { type: [string, "null"], description: "A file at https://images.cardorb.com, or null." }
         patternPrints:
           type: [object, "null"]
           description: |
@@ -404,6 +418,7 @@ components:
                   finish: { $ref: "#/components/schemas/Finish" }
                   tcgplayerId: { type: integer, description: "TCGplayer's product for the print." }
                   price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }], description: "TCGplayer's market figure for the print at the day's rate; null where it has none." }
+                  image: { type: [string, "null"], description: "The print's own picture, a file at https://images.cardorb.com; null where there is none of ours." }
 
         set:
           type: [object, "null"]
@@ -2801,6 +2816,41 @@ paths:
                   databaseBytes: { type: [integer, "null"] }
                   ms: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorised" }
+        "502": { $ref: "#/components/responses/BadGateway" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/cron/print-pictures:
+    get:
+      tags: [Platform]
+      operationId: copyPrintPictures
+      summary: Copy a picture of every printing TCGplayer sells as a product of its own
+      description: |
+        Vercel's cron, daily at 23:00 UTC, with `CRON_SECRET` as the bearer. Five minutes at most.
+        The English patterned reverses and pattern holos the committed map names, and the printing
+        products of TCGplayer's Japanese shelf (mirror holos, ball patterns) under the card their
+        plain product is. Each product's photo is copied into our bucket once and written to
+        `card_print_pictures`; a product already there is not asked again, and what the budget does
+        not reach is copied the next night.
+      security: [{ cron: [] }]
+      responses:
+        "200":
+          description: What the run copied.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, en, ja, candidates, missing, groups, answered, ms]
+                properties:
+                  ok: { type: boolean }
+                  en: { type: integer, description: English printings' pictures copied. }
+                  ja: { type: integer, description: Japanese printings' pictures copied. }
+                  candidates: { type: integer, description: Printing products not yet in the store. }
+                  missing: { type: integer, description: Products whose photo could not be copied tonight. }
+                  groups: { type: integer }
+                  answered: { type: integer }
+                  ms: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "500": { $ref: "#/components/responses/BadGateway" }
         "502": { $ref: "#/components/responses/BadGateway" }
         "503": { $ref: "#/components/responses/Unavailable" }
 

@@ -1,0 +1,50 @@
+{
+  "cards": {
+    "en": {},
+    "ja": {
+      "neo2-057": {
+        "file": "ja/neo2-057.jpg",
+        "source": "https://archives.bulbagarden.net/media/upload/e/e6/RuinWallCrossingtheRuins.jpg",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/Ruin_Wall_%28Neo_Discovery_74%29",
+        "note": "Bulbapedia's gallery captions it as the Aerodactyl print, the second Ruin Wall of Crossing the Ruins..."
+      }
+    }
+  },
+  "logos": {
+    "en": {
+      "mfb": {
+        "file": "logos/en/mfb.png",
+        "source": "https://archives.bulbagarden.net/media/upload/1/1d/My_First_Battle_logo.png",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/My_First_Battle_%28TCG%29"
+      }
+    },
+    "ja": {
+      "CP6": {
+        "file": "logos/ja/CP6.png",
+        "source": "https://archives.bulbagarden.net/media/upload/2/27/CP6_Logo.png",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/File%3ACP6_Logo.png",
+        "note": "Found by file name on Bulbapedia's archive; no page uses it."
+      },
+      "E3": {
+        "file": "logos/ja/E3.png",
+        "source": "https://archives.bulbagarden.net/media/upload/b/b0/E3_Logo.png",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/List_of_Japanese_Pok%C3%A9mon_Trading_Card_Game_expansions"
+      },
+      "E4": {
+        "file": "logos/ja/E4.png",
+        "source": "https://archives.bulbagarden.net/media/upload/0/06/E4_Logo.png",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/List_of_Japanese_Pok%C3%A9mon_Trading_Card_Game_expansions"
+      },
+      "E5": {
+        "file": "logos/ja/E5.png",
+        "source": "https://archives.bulbagarden.net/media/upload/f/fd/E5_Logo.png",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/List_of_Japanese_Pok%C3%A9mon_Trading_Card_Game_expansions"
+      },
+      "neo4": {
+        "file": "logos/ja/neo4.png",
+        "source": "https://archives.bulbagarden.net/media/upload/1/19/Neo4_Logo.png",
+        "page": "https://bulbapedia.bulbagarden.net/wiki/Neo_Destiny_%28TCG%29"
+      }
+    }
+  }
+}

@@ -20,9 +20,11 @@ import { catalogueTimeout } from "../util";
 const BASE = "https://tcgcsv.com/tcgplayer/85";
 
 type Group = { groupId: number; name: string; abbreviation?: string | null };
-type Product = {
+export type Product = {
   productId: number;
   name: string;
+  /** How many pictures TCGplayer holds of the product; 0 where its picture address answers 403. */
+  imageCount?: number;
   extendedData?: { name: string; value: string }[];
 };
 
@@ -65,8 +67,12 @@ const fold = (s: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
 
-const extended = (p: Product, name: string) =>
+export const extended = (p: Product, name: string) =>
   p.extendedData?.find((e) => e.name === name)?.value ?? null;
+
+/** Every product of one Japanese group, sealed ones and printings included. */
+export const groupProducts = (groupId: number): Promise<Product[]> =>
+  read<{ results: Product[] }>(`${BASE}/${groupId}/products`).then((b) => b.results);
 
 /** The printed number TCGplayer writes into a product's name: " - 003/190". */
 const NUMBER_IN_NAME = /\s+-\s+[A-Za-z0-9-]*\d+\/[A-Za-z0-9-]+(?=\s*(?:\(|$))/g;
@@ -83,7 +89,7 @@ export const cardName = (productName: string) =>
     .trim();
 
 /** A product's labels in brackets at the end of its name, in order: ["CoroCoro …", "Jumbo"]. */
-const labelsOf = (productName: string) =>
+export const labelsOf = (productName: string) =>
   [
     ...(/(?:\s*\([^)]*\))+\s*$/.exec(productName.replace(NUMBER_IN_NAME, ""))?.[0] ?? "").matchAll(
       /\(([^)]*)\)/g,
@@ -186,7 +192,7 @@ export function sharedCodeGroups(groups: Group[], sets: { id: string }[]): numbe
  * decks) carry none of number, rarity or type and are left out.
  */
 export async function groupCards(groupId: number): Promise<TcgplayerJapanCard[]> {
-  const { results } = await read<{ results: Product[] }>(`${BASE}/${groupId}/products`);
+  const results = await groupProducts(groupId);
   const cards = new Map<string, TcgplayerJapanCard & { printed: boolean }>();
   for (const p of results) {
     const numbered = extended(p, "Number");
