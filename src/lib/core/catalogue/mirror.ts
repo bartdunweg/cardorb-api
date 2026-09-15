@@ -684,8 +684,10 @@ export function buildIndex(version: string, rows: CatalogueCardRecord[]): Catalo
  * is behind the copy and built again, and its ETag moves with it. "#n2": the cards in binder
  * order (number_order) instead of by the number as a string. A stored version without it
  * compares lower than the same copy with it, and a later copy compares higher than either.
+ * "#n3": every picture passed through ownPicture (#484), so a document built before holds no
+ * outside address.
  */
-const INDEX_FORMAT = "#n2";
+const INDEX_FORMAT = "#n3";
 
 /**
  * The document, current to the copy: read as stored, rebuilt when the copy has been written

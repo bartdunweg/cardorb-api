@@ -41,7 +41,7 @@ tags:
   - name: Collection
     description: What the signed-in person owns, and the writes that change it.
   - name: Catalogue
-    description: Every set and every card, whether owned or not. Read from pokemontcg.io and cached for a day; the caller's own counts are read fresh.
+    description: Every set and every card, whether owned or not. Read from Card Orb's own copy of the catalogues, written nightly; the caller's own counts are read fresh.
   - name: Value
     description: What the collection is worth, over time.
   - name: Profile
@@ -511,7 +511,7 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
-        series: { type: string, description: "The era, as pokemontcg.io names it." }
+        series: { type: string, description: "The era the set belongs to." }
         releaseDate: { type: [string, "null"], description: "`YYYY/MM/DD`, sortable as a string." }
         total: { type: integer, description: "Every card, secret rares included, and on the English shelf the set's gallery (Trainer Gallery, Galarian Gallery)." }
         printedTotal: { type: [integer, "null"], description: "The number printed on the cards." }
@@ -522,7 +522,7 @@ components:
           properties:
             name: { type: string }
             total: { type: integer }
-        logo: { type: [string, "null"], description: "The set's wordmark (TCGdex's, the black star on every Black Star Promos set, or pokemontcg.io's where TCGdex has none), as a file at https://images.cardorb.com; null where there is none of ours yet." }
+        logo: { type: [string, "null"], description: "The set's wordmark as a file at https://images.cardorb.com; null where there is none of ours yet." }
         symbol: { type: [string, "null"] }
         localName: { type: [string, "null"], description: "The set's name in its own language where `name` is a translation (a Japanese set); null for English." }
         cardsRecorded: { type: boolean, description: "Whether the catalogue has recorded the set's cards, or only the set and its count. Always true for English; TCGdex lists many Japanese sets with a count and no card yet." }
