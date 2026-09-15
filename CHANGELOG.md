@@ -88,6 +88,8 @@ if the two have drifted apart.
 
 - Black Bolt Haxorus and White Flare Emboar and Gothitelle in the owner's collection are the holo they are, not a normal print none of them was ever printed as, so they are priced at the holo figure and the morning check's finish check passes.
 
+- The English price history loses 55,308 rows a mistaken backfill run wrote on 2026-09-15 under the retired `market` and `holo` printing names for February and March 2024. The run touched no existing row, so the history is as it was before.
+
 - The nightly value point on the Home chart counts priced and unpriced copies, as the collection stats do. It counted `cards` in copies but `priced` and `unpriced` in different cards, and a card held twice with one copy unpriced counted as priced: the owner's points for 2026-09-13 and 09-14 read 1,928 cards, 1,611 priced (the different cards held) and 0 unpriced. Both counts now read one rule (`copyUnpriced`), so priced and unpriced add up to the copies held and unpriced is the number `/v1/stats` says. Those two points and one of another account's stay as written: the prices they were counted at are not stored, so the right counts cannot be worked out afterwards. data-health checks that every account's latest point adds up and that the owner's unpriced count matches the held copies without a figure for their own printing.
 
 ## 2026-09-14
