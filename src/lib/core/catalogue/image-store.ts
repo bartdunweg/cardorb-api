@@ -98,6 +98,22 @@ export function imageKey(address: string): string | null {
   }
 }
 
+/** Whether an address is a file in our own bucket. */
+export const isOurs = (address: string | null | undefined): address is string =>
+  !!address && address.startsWith(`${IMAGES_ORIGIN}/`);
+
+/**
+ * What the copy writes for a picture it may already hold: a file of ours stands. A run that found
+ * another file of ours writes that; a run that found nothing, or only somebody else's address,
+ * keeps the one held. Bart, 2026-09-15: every picture lives in our bucket, and an outside source
+ * that is down for a night (Scrydex's 524 blanked every Japanese logo that morning) or a bucket
+ * check that timed out never takes one away.
+ */
+export const heldUnlessOurs = (
+  held: string | null | undefined,
+  found: string | null,
+): string | null => (isOurs(found) ? found : isOurs(held) ? held : found);
+
 /** What an address becomes once its picture is in the bucket. */
 export const storedAddress = (address: string): string | null => {
   const key = imageKey(address);

@@ -31,7 +31,7 @@ import { limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwor
 import { CATALOGUE_FORMAT, ownArt, type SyncReport } from "./mirror";
 import TCGPLAYER_JA from "../tcgplayer-ids.ja.generated.json";
 import { fullArtOf } from "./full-art";
-import { canStoreImages, keepImage } from "./image-store";
+import { canStoreImages, heldUnlessOurs, isOurs, keepImage } from "./image-store";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { printedLocalName } from "./card-names";
 import { correctedSet } from "./set-corrections";
@@ -169,6 +169,12 @@ export const SCRYDEX_NUMBER_BY_HAND: Readonly<Record<string, string>> = {
 const heldProduct = (image: string | null | undefined) =>
   /\/tcgplayer\/(\d+)\.jpg$/.exec(image ?? "")?.[1] ?? null;
 
+/** A held TCGplayer photo whose product is not the card's any more. */
+const heldOfAnotherProduct = (image: string | null | undefined, productId: number | null) => {
+  const id = heldProduct(image);
+  return id !== null && id !== String(productId);
+};
+
 /** The product the price map links a card to, outside the copy's own match. */
 const linkedProduct = (id: string): number | null =>
   (TCGPLAYER_JA as Record<string, number | null | undefined>)[id] ?? null;
@@ -266,13 +272,7 @@ async function pictureOf(
 ): Promise<string | null> {
   /* A held copy of a TCGplayer picture is that product's: where the card's product changed or went
      (neo2-039 Houndour held Houndour (HR)'s, 2026-09-14), it is asked for again. */
-  const heldId = heldProduct(held);
-  if (
-    held &&
-    held.startsWith("https://images.cardorb.com/") &&
-    (!heldId || heldId === String(productId))
-  )
-    return held;
+  if (isOurs(held) && !heldOfAnotherProduct(held, productId)) return held;
   const setId = card.id.slice(0, card.id.lastIndexOf("-"));
   const stem = stemOf(card.image);
   const tcgdex = stem && !tcgdexScanIsReverse(setId) ? await tcgdexScan(stem) : null;
@@ -329,9 +329,7 @@ export async function syncLanguageMirror(
      run that asked it for every set wrote all 169 Japanese sets without their logo. Only a set
      without one asks, off the expansions page read once (and only then), or where that page does
      not answer, by the Scrydex code on file (scrydexCodeOf). */
-  const heldLogos = new Map<string, string | null>(
-    lang === "ja" ? (await listCatalogueSets(db, lang)).map((s) => [s.id, s.logo]) : [],
-  );
+  const heldSets = new Map((await listCatalogueSets(db, lang)).map((s) => [s.id, s]));
   let expansionsRead: Promise<ScrydexExpansion[] | null> | null = null;
   const scrydexExpansions = (): Promise<ScrydexExpansion[] | null> =>
     lang === "ja"
@@ -339,8 +337,8 @@ export async function syncLanguageMirror(
       : Promise.resolve(null);
   const scrydexLogo = async (id: string, name: string): Promise<string | null> => {
     if (lang !== "ja") return null;
-    const held = heldLogos.get(id);
-    if (held?.startsWith("https://images.cardorb.com/")) return held;
+    const held = heldSets.get(id)?.logo;
+    if (isOurs(held)) return held;
     const listed = await scrydexExpansions();
     const code = listed ? scrydexExpansionFor(listed, { id, name })?.code : scrydexCodeOf(id);
     const found = code
@@ -511,9 +509,8 @@ export async function syncLanguageMirror(
           db,
           cards.map((c) => c.id),
           lang,
-        )
-          .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
-          .catch(() => new Map<string, string | null>());
+          // A store that will not answer fails the set rather than write over pictures it cannot see.
+        ).then((rows) => new Map(rows.map((r) => [r.id, r.image])));
         const resolved = await mapLimit(cards, cardParallel, async (card) => {
           const product = productOf.get(card.id) ?? null;
           const productId = productIdOf(card);
@@ -653,8 +650,14 @@ export async function syncLanguageMirror(
           local_name: set.localName,
           series: set.series,
           release_date: set.releaseDate,
-          logo: await ownArt(set.logo ?? (await scrydexLogo(id, set.name)), storing),
-          symbol: await ownArt(set.symbol, storing),
+          logo: heldUnlessOurs(
+            heldSets.get(id)?.logo,
+            await ownArt(set.logo ?? (await scrydexLogo(id, set.name)), storing),
+          ),
+          // A symbol held in our bucket stands, and nobody is asked for it again.
+          symbol: isOurs(heldSets.get(id)?.symbol)
+            ? heldSets.get(id)!.symbol
+            : heldUnlessOurs(heldSets.get(id)?.symbol, await ownArt(set.symbol, storing)),
           abbreviation: set.abbreviation ?? null,
           // At least the cards the copy holds: TCGdex counts Blue Shock and Red Flash as 59 cards, and
           // each prints 65 (060 to 065 are its secret rares).
@@ -684,7 +687,11 @@ export async function syncLanguageMirror(
             release_date: set.releaseDate,
             rarity: c.rarity,
             types: c.types,
-            image: c.image,
+            /* A held picture of ours stands, except a TCGplayer photo of a product the card no
+               longer has: that one is wrong, and goes even where nothing replaces it (pictureOf). */
+            image: heldOfAnotherProduct(held.get(c.id), c.productId)
+              ? c.image
+              : heldUnlessOurs(held.get(c.id), c.image),
             category: c.category,
             trainer_type: c.trainerType,
             full_art: arts.has(c),
