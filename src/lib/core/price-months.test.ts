@@ -6,6 +6,8 @@ import {
   monthOf,
   monthsFromDays,
   printingKey,
+  runKey,
+  runLinksOf,
   shadowlessKey,
 } from "./price-months.mjs";
 
@@ -189,6 +191,14 @@ describe("printing names", () => {
     expect(shadowlessKey("unlimited-holofoil")).toBe("shadowless-holofoil");
     expect(shadowlessKey("normal")).toBe("shadowless");
     expect(shadowlessKey("1st-edition-holofoil")).toBe("1st-edition-holofoil");
+    expect(runKey("blue-border", "normal")).toBe("blue-border");
+    expect(
+      runLinksOf({ shadowless: { productId: 1 }, blueBorder: { productId: 2, groupId: 3 } }),
+    ).toEqual([
+      { edition: "shadowless", productId: 1 },
+      { edition: "blue-border", productId: 2, groupId: 3 },
+    ]);
+    expect(runLinksOf(null)).toEqual([]);
     expect(monthOf("2024-02-29")).toBe("2024-02-01");
   });
 });

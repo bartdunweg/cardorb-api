@@ -54262,7 +54262,11 @@
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 523984,
+      "groupId": 23330
+    }
   },
   "mfb-10": {
     "productId": 524085,
@@ -54311,14 +54315,22 @@
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 532087,
+      "groupId": 23330
+    }
   },
   "mfb-17": {
     "productId": 524060,
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 524061,
+      "groupId": 23330
+    }
   },
   "mfb-18": {
     "productId": 524062,
@@ -54374,14 +54386,22 @@
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 532090,
+      "groupId": 23330
+    }
   },
   "mfb-25": {
     "productId": 524047,
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 524046,
+      "groupId": 23330
+    }
   },
   "mfb-26": {
     "productId": 524048,
@@ -54437,7 +54457,11 @@
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 532091,
+      "groupId": 23330
+    }
   },
   "mfb-33": {
     "productId": 524026,
@@ -54486,14 +54510,22 @@
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 532088,
+      "groupId": 23330
+    }
   },
   "mfb-9": {
     "productId": 524082,
     "variants": [
       "normal"
     ],
-    "groupId": 23330
+    "groupId": 23330,
+    "blueBorder": {
+      "productId": 524084,
+      "groupId": 23330
+    }
   },
   "miscp-001": {
     "productId": 108589,

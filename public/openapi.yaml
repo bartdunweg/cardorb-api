@@ -213,14 +213,15 @@ components:
         not recorded, which is every card added by hand.
     Edition:
       type: string
-      enum: [1st-edition, shadowless, unlimited]
+      enum: [1st-edition, shadowless, unlimited, blue-border]
       description: |
         Which print run a copy is from. A third axis beside `finish` and
         `foilPattern`: an edition is when the card was printed, not which price
         series it reads, and a 1st Edition holo is still a holo. `shadowless` is
         Base Set's second run and comes from the person holding the card, since
-        no catalogue records it. Null means nobody has said, which is not the
-        same as unlimited.
+        no catalogue records it. `blue-border` is My First Battle's Blue Border
+        print, offered on the eight cards TCGplayer sells one of. Null means
+        nobody has said, which is not the same as unlimited.
     Price:
       type: object
       required: [market]

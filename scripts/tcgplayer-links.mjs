@@ -33,7 +33,9 @@
  * digital and are not counted.
  *
  * Runs too: TCGplayer files the Shadowless Base Set as a group of its own, where "Unlimited" is
- * the Shadowless run and "1st Edition" the stamped one. Those are linked under `shadowless`.
+ * the Shadowless run and "1st Edition" the stamped one. Those are linked under `shadowless`. And
+ * My First Battle's Blue Border print, a product beside the card's own named "<its name> (Blue
+ * Border)", under `blueBorder`.
  *
  *   node scripts/tcgplayer-links.mjs [--dry]
  */
@@ -576,6 +578,25 @@ for (const [set, name] of Object.entries(RUN_GROUPS)) {
   }
 }
 
+// The Blue Border prints, beside each card's own product in the same group: "Pikachu" and "Pikachu
+// (Blue Border)", "Basic Grass Energy" and "Basic Grass Energy (Blue Border)" (My First Battle).
+let blueBorders = 0;
+{
+  const byGroupName = new Map();
+  for (const [productId, name] of nameOfProduct)
+    byGroupName.set(`${groupOfProduct.get(productId).groupId}\u0001${name}`, productId);
+  for (const [id, link] of Object.entries(ids)) {
+    if (link?.productId == null) continue;
+    const name = nameOfProduct.get(link.productId);
+    const group = groupOfProduct.get(link.productId);
+    if (!name || !group) continue;
+    const productId = byGroupName.get(`${group.groupId}\u0001${name} (Blue Border)`);
+    if (productId == null) continue;
+    ids[id] = { ...link, blueBorder: { productId, groupId: group.groupId } };
+    blueBorders++;
+  }
+}
+
 const totals = Object.values(coverage).reduce(
   (t, r) => ({
     linked: t.linked + r.linked,
@@ -586,7 +607,7 @@ const totals = Object.values(coverage).reduce(
 );
 console.log(`Removed ${removed} empty ids of sets TCGdex no longer lists.`);
 console.log(
-  `Linked ${linked} cards and ${runs} Shadowless runs. Left: ${totals.ambiguous} ambiguous, ${totals.notFound} not found.`,
+  `Linked ${linked} cards, ${runs} Shadowless runs and ${blueBorders} Blue Border prints. Left: ${totals.ambiguous} ambiguous, ${totals.notFound} not found.`,
 );
 for (const [set, r] of Object.entries(coverage)
   .sort((a, b) => b[1].ambiguous + b[1].notFound - (a[1].ambiguous + a[1].notFound))

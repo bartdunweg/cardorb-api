@@ -22,7 +22,7 @@ import {
   isReverseFinish,
   printingKeysOf,
 } from "../src/lib/core/price-basis.mjs";
-import { shadowlessKey } from "../src/lib/core/price-months.mjs";
+import { runKey, runLinksOf } from "../src/lib/core/price-months.mjs";
 import { THREE_DIGIT_SETS, canonNumber, correctedNumber } from "../src/lib/core/card-number.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -916,7 +916,7 @@ if (day) {
     }
     return out;
   };
-  const PLAIN = new Set(["normal", "unlimited", "1st-edition", "shadowless"]);
+  const PLAIN = new Set(["normal", "unlimited", "1st-edition", "shadowless", "blue-border"]);
   const HEADLINE = [
     "normal",
     "holofoil",
@@ -1038,8 +1038,9 @@ if (day) {
       const headline = own && HEADLINE.find((k) => own[k] != null);
       if (!headline) return null;
       const printings = { ...own };
-      for (const [k, v] of Object.entries(byProduct.get(link.shadowless?.productId) ?? {}))
-        printings[shadowlessKey(k)] ??= v;
+      for (const run of runLinksOf(link))
+        for (const [k, v] of Object.entries(byProduct.get(run.productId) ?? {}))
+          printings[runKey(run.edition, k)] ??= v;
       for (const fp of patterns[id]?.finishPrints ?? []) {
         const figure = byProduct.get(fp.productId)?.[fp.printing];
         if (figure != null) printings[`${fp.finish}-reverse-holofoil`] = figure;

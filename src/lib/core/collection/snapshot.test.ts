@@ -344,6 +344,25 @@ describe("cardPricesFromShelf", () => {
     ]);
   });
 
+  // My First Battle Pikachu: its own product 524060 and "Pikachu (Blue Border)" 524061, each priced
+  // as Normal (2026-09-15).
+  it("writes a Blue Border print under its own run", () => {
+    const points = cardPricesFromShelf(
+      "en",
+      { "mfb-17": { productId: 524060, blueBorder: { productId: 524061 } } },
+      [
+        { productId: 524060, printing: "normal", market: 17.56 },
+        { productId: 524061, printing: "normal", market: 29.58 },
+      ],
+      1,
+      "2026-09-15",
+    );
+    expect(points.map((p) => [p.printing, p.price])).toEqual([
+      ["normal", 17.56],
+      ["blue-border", 29.58],
+    ]);
+  });
+
   // Machamp 8/102: Deck Exclusives 42425 sells a 1st Edition of its own ($27.42 on 2026-09-14) and
   // its Shadowless group 107004 another ($88.13). The sheet prices the first; the line follows it.
   it("keeps the card's own printing where its Shadowless run has one of the same name", () => {

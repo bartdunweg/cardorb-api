@@ -74,7 +74,8 @@ import {
   legacyDays,
   monthsFromDays,
   printingKey,
-  shadowlessKey,
+  runKey,
+  runLinksOf,
 } from "../src/lib/core/price-months.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -604,8 +605,9 @@ async function daily() {
       // Every printing TCGplayer prices, and the Shadowless run's where tcgplayer-links.mjs linked
       // the card to that group, under the run it is.
       const sources = FINISH_ONLY ? [] : [[english[id].productId, printingKey]];
-      if (english[id].shadowless && !FINISH_ONLY) {
-        sources.push([english[id].shadowless.productId, (s) => shadowlessKey(printingKey(s))]);
+      if (!FINISH_ONLY) {
+        for (const run of runLinksOf(english[id]))
+          sources.push([run.productId, (s) => runKey(run.edition, printingKey(s))]);
       }
       // Its Poké Ball, Master Ball and Energy Symbol reverses, each under the finish it is, as the
       // price job writes them (snapshot.ts cardPricesFromShelf). One figure per product.

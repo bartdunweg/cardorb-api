@@ -10,6 +10,8 @@ if the two have drifted apart.
 
 - A binder's value line no longer dips on a day a card has no price reading. Kanto on Home read EUR 16,200 on 2026-09-13 between 19,750 and 19,794, because 184 held promos and gallery cards had no reading that day; a binder's line now values a card at its last reading up to two weeks old, as the whole collection's line already did, and Kanto reads 19,736. The day itself is filled from tcgcsv's archive for those 184 cards, and data health reports a held card's line with a day missing between two readings.
 
+- My First Battle's Blue Border print is a run a copy can be from, beside Unlimited, as Shadowless is for Base Set. The eight cards TCGplayer sells a Blue Border product of (Bulbasaur, Charmander, Pikachu, Squirtle and the four basic energies) offer it, and a Blue Border copy reads its own price and line (`blue-border`): Pikachu is $29.58 against $17.56 for the plain card. A copy's `edition` can be `blue-border` (migration 20260915240000); a CSV that says "Blue Border" is read as it.
+
 - Unown ? from the Unseen Forces Unown Collection opens with its details and its price chart. TCGdex files it as `exu-%3F`, and the path reached the card routes decoded twice, as `exu-?`, so the sheet answered "No such card" and the chart drew no line while 31 months of its prices were stored.
 
 - `GET /v1/cards?sort=change&from=&to=` sorts a list by what each copy's price did between two days, times the copies (biggest gain first, `order=asc` biggest loss first), and each card carries its `priceChange`. For sorting the collection by price movement over any window.
