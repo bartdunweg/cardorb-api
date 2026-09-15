@@ -14,12 +14,10 @@ import {
   type CatalogueCardSheet,
   type CatalogueLanguage,
   catalogueCardSheet,
-  catalogueEraRarities,
 } from "@/lib/storage/postgres";
 import type { CardDetail } from "../collection/cards";
 import { editionsOf, printingsOf } from "./card-printings";
 import { WESTERN, type Western } from "./card-languages";
-import { rarityOrNull } from "../collection/collection-row";
 import { ownPicture } from "./image-store";
 
 /** The copy's sheet for one English card, or null where the copy has none or will not answer. */
@@ -80,18 +78,3 @@ export function detailFromSheet(
 /** The languages the copy recorded, in WESTERN order; null where it could not say. */
 export const languagesFromSheet = ({ card }: CatalogueCardSheet): Western[] | null =>
   card.languages ? WESTERN.filter((l) => card.languages?.includes(l)) : null;
-
-/** The rarities of the card's era out of the copy, or null where it holds none or will not answer. */
-export async function eraRaritiesFromCopy(
-  setId: string,
-  language: CatalogueLanguage = "en",
-): Promise<string[] | null> {
-  const db = adminClient();
-  if (!db) return null;
-  const rarities = await catalogueEraRarities(db, setId, language).catch((err) => {
-    console.error(`The copy could not give ${setId}'s era rarities:`, err);
-    return [] as string[];
-  });
-  const named = rarities.filter((r) => rarityOrNull(r) !== null);
-  return named.length ? named : null;
-}

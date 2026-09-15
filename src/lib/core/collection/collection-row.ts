@@ -521,18 +521,17 @@ export function validateCardDraft(body: unknown): CardValidation {
  * than blank.
  */
 /**
- * The words a catalogue writes in the rarity field when it has no rarity to give.
+ * A rarity, or null where there is none: blank, or "None", which is what TCGdex writes for a card
+ * it has no rarity for (My First Battle's), and is no rarity in a filter or a count.
  *
- * Every card in a promo set answers "Promo", which names the set and is already in `set_name`;
- * "None" is the same answer spelled differently. A set is not a rarity, so neither is stored: the
- * column stays empty, which is the true answer, and the owner can say what the card is
- * (validateCardPatch takes a rarity by hand).
+ * "Promo" is one since 2026-09-15. From 2026-09-12 it was dropped here too, so that the owner could
+ * name a promo's kind by hand; read off the art that proved unreliable, and a promo prints a black
+ * star where a rarity symbol goes, so every card of a promo set is a "Promo" (promo-sets.ts) and
+ * nobody sets a rarity by hand.
  */
-const NOT_A_RARITY = ["promo", "none"];
-
 export const rarityOrNull = (rarity: string | null | undefined): string | null => {
   const r = (rarity ?? "").trim();
-  return r === "" || NOT_A_RARITY.includes(r.toLowerCase()) ? null : r;
+  return r === "" || r.toLowerCase() === "none" ? null : r;
 };
 
 export function rowFromDraft(
@@ -599,14 +598,6 @@ export type CardPatch = Partial<{
   dexFace: boolean;
   /** null takes the copy out of its folder. */
   collectionId: string | null;
-  /**
-   * What kind of printing this is, in the catalogue's own words. Set by hand, and only where the
-   * catalogue says nothing: every card in a promo set answers "Promo", which is the set's name and
-   * not a rarity, and no source publishes what such a card actually is. See the note on
-   * CardFacts.rarity: the row's column is the one source for an English card, so what is written
-   * here stands. null puts it back to "nobody has said".
-   */
-  rarity: string | null;
   /** When the copy was pulled: an ISO date or timestamp, not in the future. Decides Newest first. */
   acquiredAt: string;
 }>;
@@ -666,17 +657,6 @@ export function validateCardPatch(body: unknown): CardPatchValidation {
         return { kind: "invalid", error: `${key} must be true or false.` };
       patch[key] = b[key];
     }
-  }
-  if ("rarity" in b) {
-    // A word, not a vocabulary: the catalogue's list grows with every set, and a rarity nobody
-    // here has heard of is still the right answer on the card. Blank reads as null, so a cleared
-    // field and an explicit null mean the same thing.
-    if (b.rarity !== null && typeof b.rarity !== "string")
-      return { kind: "invalid", error: "rarity must be a word or null." };
-    const value = typeof b.rarity === "string" ? b.rarity.trim() : null;
-    if (value !== null && value.length > MAX.option)
-      return { kind: "invalid", error: "That value is too long." };
-    patch.rarity = value === "" ? null : value;
   }
   if ("finish" in b) {
     // null is accepted and kept on a wish, which has no finish. On a copy you own the store turns

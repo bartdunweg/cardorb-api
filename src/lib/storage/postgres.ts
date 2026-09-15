@@ -32,6 +32,7 @@ import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collecti
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { storedCardNumber } from "@/lib/core/util";
 import { correctedSet } from "@/lib/core/catalogue/set-corrections";
+import { isPromoSet, promoRarity } from "@/lib/core/catalogue/promo-sets";
 import {
   isFinish,
   type CardDraft,
@@ -732,7 +733,8 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
       // One stored form: XY123 is written 123, like its siblings (storedCardNumber).
       number: storedCardNumber(draft.number),
       set_name: draft.set,
-      rarity: draft.rarity || null,
+      // "Promo" for a card of a promo set, whatever the draft says (promo-sets.ts).
+      rarity: promoRarity(draft.tcgId, draft.rarity || null),
       gen: draft.gen || null,
       types: draft.types,
       tcg_id: draft.tcgId,
@@ -800,7 +802,6 @@ function patchColumns(patch: CardPatch): Record<string, unknown> {
   if ("isFavorite" in patch) row.is_favorite = patch.isFavorite;
   if ("dexFace" in patch) row.dex_face = patch.dexFace;
   if ("collectionId" in patch) row.collection_id = patch.collectionId;
-  if ("rarity" in patch) row.rarity = patch.rarity;
   if ("acquiredAt" in patch) row.acquired_at = patch.acquiredAt;
   return row;
 }
@@ -983,7 +984,8 @@ export async function createRows(
       name: r.name,
       number: storedCardNumber(r.number),
       set_name: r.setName,
-      rarity: r.rarity,
+      // An import names a promo's kind as its own file had it; the card is a "Promo" (promo-sets.ts).
+      rarity: promoRarity(r.tcgId, r.rarity),
       gen: r.gen,
       types: r.types,
       tcg_id: r.tcgId,
@@ -1778,9 +1780,14 @@ export async function writeCatalogueSet(
   language: CatalogueLanguage = "en",
 ): Promise<void> {
   const now = new Date().toISOString();
+  // Every card of a promo set is a "Promo" (promo-sets.ts). Here rather than in each reader, so the
+  // English and the Japanese copy both hold the word whichever catalogue filled them.
+  const promo = isPromoSet(setId);
   for (let i = 0; i < cards.length; i += chunk) {
     const { error } = await db.from("catalogue_cards").upsert(
-      cards.slice(i, i + chunk).map((c) => ({ ...c, language, synced_at: now })),
+      cards
+        .slice(i, i + chunk)
+        .map((c) => ({ ...c, ...(promo ? { rarity: "Promo" } : {}), language, synced_at: now })),
       {
         onConflict: "language,id",
       },
@@ -2050,20 +2057,6 @@ export async function catalogueProductIds(
       out.set(r.id, r.tcgplayer_product_id);
   }
   return out;
-}
-
-/** Every rarity the era of one set printed, out of the copy; empty where it holds none. */
-export async function catalogueEraRarities(
-  db: SupabaseClient,
-  setId: string,
-  language: CatalogueLanguage = "en",
-): Promise<string[]> {
-  const { data, error } = await db.rpc("catalogue_era_rarities", {
-    p_set_id: setId,
-    p_language: language,
-  });
-  if (error) throw new Error(`Reading ${setId}'s era rarities failed: ${error.message}`);
-  return (data as string[] | null) ?? [];
 }
 
 /**

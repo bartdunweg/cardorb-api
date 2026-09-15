@@ -43,7 +43,6 @@
 import { DAY, mapLimit } from "../util";
 import { unstable_cache } from "next/cache";
 import { json, fetchSet } from "./tcgdex-client";
-import { eraRaritiesOfSet, loadEraRarities } from "./era-rarities";
 import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
 import { copiedEnglishSets, englishSetFromCopy, mirrorSetCatalogue } from "./set-catalogue-mirror";
@@ -225,28 +224,11 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v10: the third pass over the English facts (card-fact-corrections.ts): Galarian Gallery, "None" as no rarity, Unown and ☆ names.
 // v12: numbers as the cards print them (CATALOGUE_FORMAT 5): the byNumber of a set copied again holds 001.
 // v13: no picture that is not a file of ours, and no assetBase, setHasScans or fromCopy (2026-09-15).
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v13"], {
+// v14: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v14"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
-
-/**
- * The rarities one era printed, a day old at most, one entry per series.
- *
- * Per series rather than per set, because that is the grain of the answer: the
- * nineteen Scarlet & Violet sets share one vocabulary, and the promo set that
- * needs it most is the one whose own cards say nothing.
- */
-// v2: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
-// v3: Galarian Gallery is a rarity of its own, and the Trainer Galleries' sub-tier words are Ultra Rare.
-export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v4"], {
-  revalidate: DAY,
-  tags: ["catalogue"],
-});
-
-/** The rarities the era of one set printed, or null where the catalogue could not say. */
-export const raritiesOfEra = (setId: string): Promise<string[] | null> =>
-  eraRaritiesOfSet(setId, eraRarities);
 
 /**
  * One English set whole, its rarities and types included, a day old at most.
@@ -260,6 +242,7 @@ export const raritiesOfEra = (setId: string): Promise<string[] | null> =>
  * unknown id throws too, so neither a set without its rarities nor a 404 is kept for a day; both
  * fall back to the uncached read, which answers exactly as it did before this cache.
  */
+// v6: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
 // v4: the third pass over the English facts: trainer types, evolutions, gallery rarities, Unown and ☆ names.
 // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
 // v2: rarity and types corrected for 481 English cards (card-fact-corrections.ts), 2026-09-14.
@@ -269,7 +252,7 @@ const englishSetEntry = unstable_cache(
     if (!found) throw new Error(`No English set ${setId}`);
     return found;
   },
-  ["english-set", "v5"],
+  ["english-set", "v6"],
   { revalidate: DAY, tags: ["catalogue"] },
 );
 

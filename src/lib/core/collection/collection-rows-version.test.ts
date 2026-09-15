@@ -94,7 +94,7 @@ describe("the rows cache key", () => {
     cardsVersion.mockResolvedValue(7);
     await getCollection("me", "t.o.k.e.n");
     expect(cardsVersion).toHaveBeenCalledWith("me", expect.anything());
-    expect(rowsKey()).toEqual(["collection-rows", "v3", "me", "7"]);
+    expect(rowsKey()).toEqual(["collection-rows", "v4", "me", "7"]);
   });
 
   it("moves with the version, so a write is a miss and never a stale fill", async () => {
@@ -111,13 +111,13 @@ describe("the rows cache key", () => {
   it("stays the key it was when the store cannot say a version", async () => {
     cardsVersion.mockResolvedValue(null);
     await getCollection("me", "t.o.k.e.n");
-    expect(rowsKey()).toEqual(["collection-rows", "v3", "me", "-"]);
+    expect(rowsKey()).toEqual(["collection-rows", "v4", "me", "-"]);
   });
 
   it("does not let a failed version read take the rows down with it", async () => {
     cardsVersion.mockRejectedValue(new Error("column cards_version does not exist"));
     const got = await getCollection("me", "t.o.k.e.n");
     expect(got.failed).toBe(false);
-    expect(rowsKey()).toEqual(["collection-rows", "v3", "me", "-"]);
+    expect(rowsKey()).toEqual(["collection-rows", "v4", "me", "-"]);
   });
 });

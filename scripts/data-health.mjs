@@ -141,6 +141,68 @@ for (const language of Object.keys(RARITY_WORDS)) {
 }
 
 /**
+ * The promo sets, whose every card is a "Promo" (Bart, 2026-09-15): a promo prints a black star and
+ * no rarity symbol. The same list as PROMO_SETS in src/lib/core/catalogue/promo-sets.ts, which this
+ * plain script cannot import; promo-sets.test.ts holds the two lists to each other.
+ */
+const PROMO_SETS = [
+  "basep",
+  "np",
+  "dpp",
+  "hgssp",
+  "bwp",
+  "xyp",
+  "smp",
+  "swshp",
+  "svp",
+  "mep",
+  "miscp",
+  "wp",
+  "M-P",
+  "SV-P",
+];
+const promoList = PROMO_SETS.map((id) => `'${id}'`).join(", ");
+
+/** Every card of a promo set in the copy says "Promo", whichever catalogue filled it. */
+{
+  const rows = await query(
+    `select language, set_id, coalesce(rarity, 'no rarity') as rarity, count(*)::int as n from catalogue_cards where set_id in (${promoList}) and rarity is distinct from 'Promo' group by 1, 2, 3 order by 1, 2, 3`,
+  );
+  check(
+    "Every promo set's cards are Promo",
+    rows.length === 0,
+    `${rows.reduce((n, r) => n + r.n, 0)} cards say otherwise${
+      rows.length
+        ? `: ${rows
+            .slice(0, 8)
+            .map((r) => `${r.language} ${r.set_id} ${r.rarity} (${r.n})`)
+            .join(", ")}`
+        : ""
+    }`,
+  );
+}
+
+/**
+ * Every set the copy calls a promo set is in PROMO_SETS. A new one that is not would have its cards
+ * keep TCGdex's word, or none, and nothing else would say so.
+ */
+{
+  const sets = await query(
+    "select language, id, name from catalogue_sets where name ~* 'promo' order by language, id",
+  );
+  const missing = sets.filter((r) => !PROMO_SETS.includes(r.id));
+  check(
+    "Every promo set is listed",
+    missing.length === 0,
+    `${sets.length} sets named promo; ${missing.length} not in PROMO_SETS${
+      missing.length
+        ? `: ${missing.map((r) => `${r.language} ${r.id} (${r.name})`).join(", ")}`
+        : ""
+    }`,
+  );
+}
+
+/**
  * Cards with no illustrator, per catalogue. Some print none (an energy, a McDonald's card with no
  * credit), so this is a ceiling rather than zero: 719 English cards on 2026-09-14, and 562 Japanese
  * ones once Scrydex's artists are in (6,192 before). The Japanese count rose to 634 on 2026-09-15:
@@ -802,6 +864,30 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
     `${owner.missing} of the owner's rows on an id their catalogue does not have (${owner.other_language} of them a card in the other language's)${
       owner.missing ? `: ${(owner.examples ?? []).join(", ")}` : ""
     }; other accounts ${sum("missing")} (${sum("other_language")} in the other language's)`,
+  );
+}
+
+/**
+ * Every row on a card of a promo set says "Promo" (promo-sets.ts): createRow() and createRows()
+ * write it, and migration 20260915250000 moved the rows its owners had named by hand.
+ */
+{
+  const rows = await query(
+    `select ${ownerIs} as owner, count(*)::int as n, (array_agg(distinct c.tcg_id))[1:8] as examples
+     from cards c
+     where c.tcg_id is not null
+       and regexp_replace(c.tcg_id, '-[^-]*$', '') in (${promoList})
+       and c.rarity is distinct from 'Promo'
+     group by 1`,
+  );
+  const owner = rows.find((r) => r.owner) ?? { n: 0, examples: [] };
+  const others = rows.filter((r) => !r.owner).reduce((n, r) => n + r.n, 0);
+  check(
+    "The owner's promo rows are Promo",
+    owner.n === 0,
+    `${owner.n} rows say otherwise${
+      owner.n ? `: ${(owner.examples ?? []).join(", ")}` : ""
+    }; other accounts ${others}`,
   );
 }
 

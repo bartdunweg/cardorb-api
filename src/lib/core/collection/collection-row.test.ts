@@ -239,22 +239,18 @@ describe("validateCardPatch", () => {
     expect(refused({ finish: "shiny" })).toMatch(/finish must be null/);
   });
 
-  it("takes a rarity by hand, and lets a blank clear it", () => {
-    // What a promo needs: the catalogue answers "Promo" for every card in the set, which is the
-    // set's name, so the owner is the only one who can say what the card is.
-    expect(patched({ rarity: "  Ultra Rare  " }).rarity).toBe("Ultra Rare");
-    expect(patched({ rarity: null }).rarity).toBeNull();
-    expect(patched({ rarity: "   " }).rarity).toBeNull();
-    expect(refused({ rarity: 7 })).toMatch(/rarity must be a word or null/);
-    expect(refused({ rarity: "r".repeat(MAX.option + 1) })).toMatch(/too long/);
+  it("takes no rarity by hand: every card of a promo set is a Promo, and every other card the catalogue's", () => {
+    // An unknown key is left out like any other, so a client still sending one changes nothing.
+    expect(refused({ rarity: "Ultra Rare" })).toMatch(/nothing to change/i);
+    expect(patched({ rarity: "Ultra Rare", notes: "mint" })).toEqual({ notes: "mint" });
   });
 
-  it("never stores a set's name as a rarity", () => {
-    // Every card in a promo set answers "Promo", and "None" is the same answer spelled
-    // differently. The set already says it, so the column stays empty and its owner can speak.
-    expect(rarityOrNull("Promo")).toBeNull();
-    expect(rarityOrNull("promo")).toBeNull();
+  it("keeps Promo as a rarity and drops only a blank and None", () => {
+    // "None" is what TCGdex writes where it has no rarity. "Promo" is the rarity of every card of a
+    // promo set since 2026-09-15 (promo-sets.ts), so it is kept as written.
+    expect(rarityOrNull("Promo")).toBe("Promo");
     expect(rarityOrNull("None")).toBeNull();
+    expect(rarityOrNull("none")).toBeNull();
     expect(rarityOrNull("  ")).toBeNull();
     expect(rarityOrNull(null)).toBeNull();
     expect(rarityOrNull("Illustration rare")).toBe("Illustration rare");

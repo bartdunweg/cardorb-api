@@ -363,6 +363,14 @@ describe("createRow", () => {
     await createRow(db, draft({ number: "TG01", set: "Silver Tempest" }));
     expect(written.map((w) => w.number)).toEqual(["123", "050", "TG01"]);
   });
+
+  it("writes a card of a promo set as a Promo, whatever rarity the draft names", async () => {
+    const { db, written } = fakeInsertDb();
+    await createRow(db, draft({ tcgId: "svp-085", rarity: "Illustration Rare" }));
+    await createRow(db, draft({ tcgId: "SV-P-051", rarity: "" }));
+    await createRow(db, draft({ tcgId: "base1-58", rarity: "Common" }));
+    expect(written.map((w) => w.rarity)).toEqual(["Promo", "Promo", "Common"]);
+  });
 });
 
 describe("createRows", () => {
@@ -383,6 +391,30 @@ describe("createRows", () => {
     const row = (number: string) => ({ ...draft(), number, setName: "XY Black Star Promos" });
     await createRows(db, ME, [row("XY67a"), row("122")] as never, "csv");
     expect(batches.flat().map((b) => b.number)).toEqual(["67A", "122"]);
+  });
+
+  it("imports a card of a promo set as a Promo, whatever rarity the file names", async () => {
+    const batches: Record<string, unknown>[][] = [];
+    const chain: Record<string, unknown> = {
+      select: () => chain,
+      eq: async () => ({ count: 0, error: null }),
+      upsert: async (batch: Record<string, unknown>[]) => {
+        batches.push(batch);
+        return { error: null };
+      },
+    };
+    const db = {
+      from: () => chain,
+      rpc: async () => ({ data: 0, error: null }),
+    } as unknown as SupabaseClient;
+    const row = (tcgId: string, rarity: string | null) => ({ ...draft(), tcgId, rarity });
+    await createRows(
+      db,
+      ME,
+      [row("smp-SM167", "Ultra Rare"), row("sm1-1", "Common")] as never,
+      "csv",
+    );
+    expect(batches.flat().map((b) => b.rarity)).toEqual(["Promo", "Common"]);
   });
 });
 

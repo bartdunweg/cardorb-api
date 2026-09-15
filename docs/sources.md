@@ -55,7 +55,7 @@ product, no photo), Pikachu at the Museum (a jumbo card) and the five Poké Card
 | -------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Supabase (Postgres)  | `NEXT_PUBLIC_SUPABASE_URL`                | Collections, the English catalogue copy, prices, history, snapshots, auth, avatars    | Every request; rows 1 h, facts 1 day cached                                                        |
 | TCGdex REST          | https://api.tcgdex.net/v2                 | Sets, cards, numbers, variants, languages; the Japanese and other language catalogues | Catalogue cron. Live: card sheet, adding a card (default finish), the Japanese shelf; 1 day cached |
-| TCGdex GraphQL       | https://api.tcgdex.net/v2/graphql         | English set index (era, date, counts, logo), rarities and types                       | Live: 24 h in memory per instance, era rarities 1 day cached                                       |
+| TCGdex GraphQL       | https://api.tcgdex.net/v2/graphql         | English set index (era, date, counts, logo), rarities and types                       | Live: 24 h in memory per instance                                                                  |
 | pokemontcg.io API    | https://api.pokemontcg.io/v2              | Set and card lists behind the picture fallback and set logos                          | Cron and cached builds, 1 day; refuses most calls since 2026-09                                    |
 | Bulbapedia           | https://bulbapedia.bulbagarden.net        | Which languages each pre-Black & White set was printed in                             | Script `set-languages.mjs`, writes `set-languages.generated.json`                                  |
 | Bulbapedia           | https://bulbapedia.bulbagarden.net        | Which cards of a set have a reverse holo (the general rule and each set page's own), a tie-breaker | Script `reverse-holo-evidence.mjs`, rules read by hand 2026-09-14, writes `reverse-holo.generated.json` |
@@ -70,7 +70,7 @@ product, no photo), Pikachu at the Museum (a jumbo card) and the five Poké Card
   first visitor after a deploy or on a cold instance pays them.
 - **Browse set page**: the copy; tcgcsv group and Frankfurter, 1 day. Japanese: TCGdex REST and
   Limitless, live with 1 day cached.
-- **Card sheet**: TCGdex REST card and GraphQL era rarities, 1 day; Frankfurter.
+- **Card sheet**: the copy; TCGdex REST card for a card the copy lacks, 1 day; Frankfurter.
 - **Search**: the copy, then tcgcsv and Frankfurter for prices; TCGdex only when the copy cannot
   answer.
 

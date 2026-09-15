@@ -41,6 +41,7 @@ import { ownPicture } from "./image-store";
 import type { BrowseLanguage } from "./tcgdex-browse";
 import type { Language } from "../collection/collection-row";
 import { japaneseRarityWord } from "./rarity-names";
+import { promoRarity } from "./promo-sets";
 
 const HOST = "https://api.tcgdex.net/v2";
 
@@ -193,8 +194,9 @@ export async function languageCard(
       // The catalogues outside English do grade their cards, but not all of
       // them and not every card. Null is "this catalogue does not say", and the
       // row's own rarity stands where it does not.
-      // In the Japanese spelling, and no rarity for TCGdex's "None" (rarity-names.ts).
-      rarity: japaneseRarityWord(card.rarity),
+      // In the Japanese spelling, and no rarity for TCGdex's "None" (rarity-names.ts). A card of a
+      // promo set is a "Promo" whatever TCGdex writes (promo-sets.ts).
+      rarity: promoRarity(id, japaneseRarityWord(card.rarity)),
       // No picture. A card read live is one the nightly copy has not been through, so none of its
       // pictures is in our bucket yet, and a client is sent only a file of ours (ownPicture). The
       // HEAD to TCGdex and the Limitless guess that stood here went on 2026-09-15.

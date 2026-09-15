@@ -145,11 +145,13 @@ const cachedRows = async (userId: string, db: SupabaseClient | null) => {
         ran();
         return timed("store listRows", () => listRows(userId, db));
       },
+      // v4: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000); the
+      // migration moves stored rows without touching their version, as v3's did.
       // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000); the migration moves stored rows without touching their version.
       // The shape version belongs here too: #234 added foilPattern to what toRow builds, and
       // without a version part there was no way to say so — every cached row kept the shape it
       // had before.
-      ["collection-rows", "v3", userId, version === null ? "-" : String(version)],
+      ["collection-rows", "v4", userId, version === null ? "-" : String(version)],
       { revalidate: 3600, tags: [cardsTag(userId)] },
     )(),
   );
@@ -543,6 +545,9 @@ const keptFacts = (
     // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
     // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
     //
+    // v25: every card of a promo set is a "Promo" (promo-sets.ts, 2026-09-15). A v24 entry holds
+    // no rarity, or one named by hand, for its day.
+    //
     // v24: pictures are files of ours or null (ownPicture, 2026-09-15). A v23 entry can hold a
     // Limitless or pokemontcg.io address found for a row the copy had not matched, for its day.
     //
@@ -594,7 +599,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v24", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v25", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -700,6 +705,9 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v34: every card of a promo set is a "Promo" (promo-sets.ts, 2026-09-15). A v33 entry holds
+      // TCGdex's word for it, or none, for its day.
+      //
       // v33: no picture looked for on a request, and none handed out that is not a file of ours
       // (ownPicture, 2026-09-15). A v32 entry can hold a Limitless or pokemontcg.io address.
       //
@@ -743,7 +751,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v33", setName, factsSignature(identities)],
+      ["set-facts", "v34", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

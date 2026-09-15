@@ -4,7 +4,6 @@ import { apiError, unavailable } from "@/lib/api/respond";
 import { getCardDetail } from "@/lib/core/collection/cards";
 import {
   detailFromSheet,
-  eraRaritiesFromCopy,
   languagesFromSheet,
   readCardSheet,
 } from "@/lib/core/catalogue/card-sheet";
@@ -14,10 +13,8 @@ import {
   usdToEurForRequest,
 } from "@/lib/core/collection/collection";
 import { languagesOf } from "@/lib/core/catalogue/card-languages";
-import { raritiesOfEra } from "@/lib/core/catalogue/catalogue";
 import { foilPatternsOfSerie, patternPrintsFor } from "@/lib/core/catalogue/card-printings";
-import { serieOfSet } from "@/lib/core/catalogue/era-rarities";
-import { rarityOrNull } from "@/lib/core/collection/collection-row";
+import { serieOfSet } from "@/lib/core/catalogue/tcgdex-client";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 
@@ -80,28 +77,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   if (!card) {
     return apiError(404, "No such card.", undefined, { headers: readHeaders(req) });
   }
-  /* Both of these need the card in hand, so they are asked after it rather than beside it.
+  /* These need the card in hand, so they are asked after it rather than beside it.
      `languages` is which Western printings exist, and the source that can answer depends on the
      set (languagesOf); none can for a card from a catalogue of its own, where its own language is
-     the only one a copy can be. The era's rarities are asked for only where the catalogue has no
-     rarity to give: those are the promos, the cards somebody has to name by hand, and a form that
-     offers the era's own words cannot be used to write a word the era never had. */
+     the only one a copy can be. The era's rarities that stood beside it went on 2026-09-15: they
+     were offered for naming a promo's kind by hand, and a promo is a "Promo" now (promo-sets.ts). */
   let languages;
-  let eraRarities;
   let foilPatterns;
   let patternPrints;
   try {
-    [languages, eraRarities, foilPatterns, patternPrints] = await Promise.all([
+    [languages, foilPatterns, patternPrints] = await Promise.all([
       own
         ? Promise.resolve([])
         : sheet && languagesFromSheet(sheet)
           ? Promise.resolve(languagesFromSheet(sheet))
           : languagesOf(tcgId, card.set?.id ?? null),
-      rarityOrNull(card.rarity) === null && card.set?.id
-        ? sheet
-          ? eraRaritiesFromCopy(card.set.id, own ?? "en")
-          : raritiesOfEra(card.set.id)
-        : Promise.resolve(null),
       /* `foilPatterns` is [] for a Wizards card, whose holo had its set's one foil, and null
          everywhere else (foilPatternsOfSerie). A set nobody can find is null: no answer. */
       own || !card.set?.id
@@ -123,7 +113,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // would undo the check above. getCardDetail memoises upstream, so what this
   // costs is the round trip, not the walk.
   return NextResponse.json(
-    { ...card, languages, eraRarities, foilPatterns, patternPrints },
+    { ...card, languages, foilPatterns, patternPrints },
     { headers: readHeaders(req) },
   );
 }

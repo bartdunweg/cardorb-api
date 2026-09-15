@@ -164,6 +164,15 @@ describe("correctedFacts", () => {
     );
   });
 
+  it("calls every card of a promo set Promo, whatever the catalogue writes", () => {
+    expect(ruledRarity("svp-085", "Illustration rare")).toBe("Promo");
+    expect(ruledRarity("smp-SM167", null)).toBe("Promo");
+    expect(ruledRarity("basep-1", "None")).toBe("Promo");
+    expect(correctedFacts("swshp-SWSH050", { rarity: "Ultra Rare", types: [] }).rarity).toBe(
+      "Promo",
+    );
+  });
+
   it("never corrects to nothing, and keeps to the words TCGdex uses", () => {
     /* The three trainers TCGdex gave an energy type (2026-09-14) are the only cards corrected to
        no type at all. */
