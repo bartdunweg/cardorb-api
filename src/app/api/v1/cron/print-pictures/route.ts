@@ -79,6 +79,7 @@ export async function GET(req: Request) {
   ]);
   const heldProducts = new Set(heldEn.flatMap((r) => (r.product_id == null ? [] : [r.product_id])));
   const heldJaImage = new Map(heldJa.map((r) => [`${r.card_id}|${r.print}`, r.image]));
+  const heldJaProduct = new Map(heldJa.map((r) => [`${r.card_id}|${r.print}`, r.product_id]));
 
   // The Japanese cards by their plain product: the committed map, and what the copy matched.
   const cardOf = new Map<number, string>();
@@ -130,15 +131,31 @@ export async function GET(req: Request) {
     source: string;
     /** False for a product TCGplayer holds no picture of: a row that proves the printing, no copy. */
     pictured?: boolean;
+    /** A TCGdex folder, copied as two files. */
+    folder?: boolean;
   };
+  /* The TCGplayer product of each Japanese printing, so a TCGdex scan's row keeps it: the price of
+     that printing is read by the product (collection.ts japaneseFinishPrintingsFor), and a scan row
+     without one left 151's Poké Ball reverses unpriced (2026-09-15). */
+  const productOfPrint = new Map(japanese.map((p) => [`${p.cardId}|${p.print}`, p.productId]));
   const todo: Job[] = [
     ...scans
-      // Held already as this very scan: nothing to do. Held as TCGplayer's photo: replaced.
+      /* Held already as this very scan, with its product where TCGplayer sells one: nothing to do.
+         Held as TCGplayer's photo, or without the product: written again. */
       .filter((s) => {
-        const key = imageKey(s.folder);
-        return heldJaImage.get(`${s.cardId}|${s.print}`) !== `${IMAGES_ORIGIN}/${key}/high.webp`;
+        const at = `${s.cardId}|${s.print}`;
+        return (
+          heldJaImage.get(at) !== `${IMAGES_ORIGIN}/${imageKey(s.folder)}/high.webp` ||
+          (heldJaProduct.get(at) ?? null) !== (productOfPrint.get(at) ?? null)
+        );
       })
-      .map((s) => ({ language: "ja" as const, ...s, productId: null, source: s.folder })),
+      .map((s) => ({
+        language: "ja" as const,
+        ...s,
+        productId: productOfPrint.get(`${s.cardId}|${s.print}`) ?? null,
+        source: s.folder,
+        folder: true,
+      })),
     ...englishPrintProducts()
       .filter((p) => !heldProducts.has(p.productId))
       .map((p) => ({ language: "en" as const, ...p, source: productPicture(p.productId) })),
@@ -174,7 +191,7 @@ export async function GET(req: Request) {
       report.missing++;
       return;
     }
-    const folder = job.productId == null;
+    const folder = job.folder === true;
     rows.push({
       language: job.language,
       card_id: job.cardId,
