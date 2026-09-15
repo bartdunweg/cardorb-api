@@ -66,6 +66,7 @@ import {
   finishPrintingKey,
   historyKey,
   priceLanguageOf,
+  printProductKey,
   runKey,
   runLinksOf,
 } from "../price-months.mjs";
@@ -90,6 +91,7 @@ import {
   readLatestUsdEurRate,
   readTcgplayerPrices,
   catalogueProductIds,
+  printProductsOfCards,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
 import { holdStrayPrices } from "./held-prices";
@@ -353,9 +355,12 @@ export const detailPrice = async <
   /* Every printing's figure beside the headline one, the Shadowless group's runs included, so a
      sheet opened from a set page or a search can show normal against reverse and 1st Edition,
      Unlimited and Shadowless, as a copy in the collection already could (pricing audit). */
-  const [runs, finishes] = language
-    ? [{}, {}]
-    : await Promise.all([runPrintingsForSet([card.id]), finishPrintingsForSet([card.id])]);
+  const [runs, finishes] =
+    language === "ja"
+      ? [{}, await japaneseFinishPrintingsFor([card.id])]
+      : language
+        ? [{}, {}]
+        : await Promise.all([runPrintingsForSet([card.id]), finishPrintingsForSet([card.id])]);
   const printings = {
     ...(runs[card.id as keyof typeof runs]?.printings ?? {}),
     ...(pair?.printings ?? {}),
@@ -548,6 +553,9 @@ const keptFacts = (
     // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
     // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
     //
+    // v26: a Japanese card's mirror holo and ball reverses priced from their own products
+    // (japaneseFinishPrintingsFor, 2026-09-15). A v25 entry prices those copies from the plain one.
+    //
     // v25: every card of a promo set is a "Promo" (promo-sets.ts, 2026-09-15). A v24 entry holds
     // no rarity, or one named by hand, for its day.
     //
@@ -602,7 +610,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v25", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v26", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -939,6 +947,45 @@ export const finishPrintingsForSet = async (
 };
 
 /**
+ * A Japanese card's mirror holo, Poké Ball, Master Ball and other reverses, each a TCGplayer
+ * product of its own on the Japanese shelf, under the name an English card's print is priced by
+ * (printProductKey: "reverse-holofoil", "poke-ball-reverse-holofoil").
+ *
+ * Bart, 2026-09-15: the English reverses had their own prices since the 14th, and a Japanese Master
+ * Ball Bulbasaur of 151 was priced from its plain product, $0.21 where its own reads $43. The
+ * products are the ones the print-pictures cron matched to each card (card_print_pictures). A store
+ * that will not answer costs these figures, not the card's own. Exported for its test.
+ */
+export const japaneseFinishPrintingsFor = async (
+  ids: string[],
+): Promise<Record<string, NonNullable<UsdPair["printings"]>>> => {
+  const db = ids.length ? adminClient() : null;
+  if (!db) return {};
+  const products = await printProductsOfCards(db, "ja", [...new Set(ids)]).catch((err) => {
+    console.error("The Japanese printings' products could not be read:", err);
+    return new Map<string, { finish: string; productId: number }[]>();
+  });
+  if (!products.size) return {};
+  const printings = await printingsOfProducts(
+    [...products.values()].flatMap((prints) => prints.map((p) => p.productId)),
+    TCGCSV_CATEGORY.ja,
+  );
+  const out: Record<string, NonNullable<UsdPair["printings"]>> = {};
+  for (const [id, prints] of products) {
+    for (const p of prints) {
+      // A printing product has one priced subtype ("Holofoil" on the Japanese shelf): that one.
+      const figure = Object.values(printings.get(p.productId) ?? {})[0];
+      if (!figure || typeof figure.marketPrice !== "number") continue;
+      (out[id] ??= {})[printProductKey(p.finish)] = {
+        market: figure.marketPrice,
+        productId: p.productId,
+      };
+    }
+  }
+  return out;
+};
+
+/**
  * Every card in a set's facts with no price on it at all.
  *
  * Not a price of zero: nothing. Used where the day's dollar rate
@@ -973,11 +1020,12 @@ async function factsWithUsd(
   const english = Object.values(facts.cards).flatMap((f) =>
     !f.catalogue && f.tcgId ? [f.tcgId] : [],
   );
-  const [usd, jaUsd, runs, finishes] = await Promise.all([
+  const [usd, jaUsd, runs, finishes, jaFinishes] = await Promise.all([
     usdForSet(setName, [...new Set(wanted)]),
     shelfUsdFor(japanese, "ja"),
     runPrintingsForSet(english),
     finishPrintingsForSet(english),
+    japaneseFinishPrintingsFor(japanese),
   ]);
   const cards = Object.fromEntries(
     Object.entries(facts.cards).map(([key, f]) => {
@@ -1002,7 +1050,13 @@ async function factsWithUsd(
       const own = f.usdPrintings ?? fetched?.printings ?? null;
       const withRun = run ? { ...run.printings, ...own } : own;
       // The Poké Ball, Master Ball and Energy Symbol reverses under their own names beside them.
-      const finish = !f.catalogue && f.tcgId ? finishes[f.tcgId] : undefined;
+      const finish = !f.tcgId
+        ? undefined
+        : f.catalogue === "ja"
+          ? jaFinishes[f.tcgId]
+          : !f.catalogue
+            ? finishes[f.tcgId]
+            : undefined;
       const printings = finish ? { ...withRun, ...finish } : withRun;
       const pricePrintings = printings
         ? Object.fromEntries(

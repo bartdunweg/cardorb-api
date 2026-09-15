@@ -2236,6 +2236,56 @@ export async function printPicturesOf(
   );
 }
 
+/**
+ * The TCGplayer products that are a printing of these cards (card_print_pictures, pictured or not),
+ * by card: the finish and the product. Pattern holos ("holo/cosmos") are left out: they are priced
+ * as pattern prints, not as a finish. All of a catalogue's where `cardIds` is left out.
+ */
+export async function printProductsOfCards(
+  db: SupabaseClient,
+  language: CatalogueLanguage,
+  cardIds?: string[],
+): Promise<Map<string, { finish: string; productId: number }[]>> {
+  const out = new Map<string, { finish: string; productId: number }[]>();
+  const add = (rows: { card_id: string; print: string; product_id: number | null }[]) => {
+    for (const r of rows) {
+      if (r.product_id == null || r.print.includes("/")) continue;
+      const card = out.get(r.card_id) ?? [];
+      card.push({ finish: r.print, productId: r.product_id });
+      out.set(r.card_id, card);
+    }
+  };
+  if (!cardIds) {
+    add(
+      await readAllPages<{ card_id: string; print: string; product_id: number | null }>(
+        "the printings' products",
+        (page, counted) =>
+          db
+            .from("card_print_pictures")
+            .select("card_id, print, product_id", counted ? { count: "exact" } : {})
+            .eq("language", language)
+            .not("product_id", "is", null)
+            .order("card_id", { ascending: true })
+            .order("print", { ascending: true })
+            .range(...pageRange(page)),
+      ),
+    );
+    return out;
+  }
+  const BITE = 250;
+  for (let at = 0; at < cardIds.length; at += BITE) {
+    const { data, error } = await db
+      .from("card_print_pictures")
+      .select("card_id, print, product_id")
+      .eq("language", language)
+      .not("product_id", "is", null)
+      .in("card_id", cardIds.slice(at, at + BITE));
+    if (error) throw new Error(`Reading the printings' products failed: ${error.message}`);
+    add((data ?? []) as { card_id: string; print: string; product_id: number | null }[]);
+  }
+  return out;
+}
+
 /** Many cards' printings' pictures at once, by card and then by print, for a page of tiles. */
 export async function printPicturesOfCards(
   db: SupabaseClient,

@@ -408,6 +408,39 @@ describe("cardPricesFromShelf", () => {
     ]);
   });
 
+  // Pokémon Card 151 Bulbasaur (SV2a-001): the plain card 566346, its Poké Ball 566553 and Master Ball
+  // 566706 products, and a mirror of Start Deck 100 Chikorita (MC-016, 670327), all priced as Holofoil
+  // on tcgcsv's Japanese shelf (2026-09-15).
+  it("writes a Japanese card's mirror as its reverse holo and its balls after their finish", () => {
+    const points = cardPricesFromShelf(
+      "ja",
+      { "SV2a-001": { productId: 566346 }, "MC-016": { productId: 669735 } },
+      [
+        { productId: 566346, printing: "normal", market: 0.21 },
+        { productId: 566553, printing: "holofoil", market: 1.88 },
+        { productId: 566706, printing: "holofoil", market: 43.17 },
+        { productId: 669735, printing: "normal", market: 0.1 },
+        { productId: 670327, printing: "holofoil", market: 0.4 },
+      ],
+      1,
+      "2026-09-15",
+      {
+        "SV2a-001": [
+          { finish: "poke-ball", productId: 566553, printing: "holofoil" },
+          { finish: "master-ball", productId: 566706, printing: "holofoil" },
+        ],
+        "MC-016": [{ finish: "reverse-holo", productId: 670327, printing: "holofoil" }],
+      },
+    );
+    expect(points.map((p) => [p.language, p.tcgId, p.printing, p.price])).toEqual([
+      ["ja", "SV2a-001", "normal", 0.21],
+      ["ja", "MC-016", "normal", 0.1],
+      ["ja", "SV2a-001", "poke-ball-reverse-holofoil", 1.88],
+      ["ja", "SV2a-001", "master-ball-reverse-holofoil", 43.17],
+      ["ja", "MC-016", "reverse-holofoil", 0.4],
+    ]);
+  });
+
   it("names a plain Shadowless run shadowless", () => {
     const points = cardPricesFromShelf(
       "en",

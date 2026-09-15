@@ -28,9 +28,13 @@ vi.mock("@/lib/storage/postgres", () => ({
   writeCardPrices: (...a: unknown[]) => writeCardPrices(...a),
   writeUsdEurRate: (...a: unknown[]) => writeUsdEurRate(...a),
   listCatalogueProducts: (...a: unknown[]) => listCatalogueProducts(...a),
+  printProductsOfCards: (...a: unknown[]) => printProductsOfCards(...a),
 }));
 /** The Japanese cards the copy matched to a product beyond the committed map; none unless a test says. */
 const listCatalogueProducts = vi.fn(async (..._a: unknown[]) => new Map<string, number>());
+const printProductsOfCards = vi.fn(
+  async (..._a: unknown[]) => new Map<string, { finish: string; productId: number }[]>(),
+);
 vi.mock("@/lib/storage/supabase", () => ({
   adminClient: () => ({ rpc: (...a: unknown[]) => rpc(...a) }),
 }));
@@ -339,6 +343,28 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       expect(listCatalogueProducts).toHaveBeenCalledWith(expect.anything(), "ja");
       expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
         expect.objectContaining({ tcgId: "S4a-003", printing: "holofoil", price: 2.7 }),
+      );
+    });
+
+    // S4a-003 Charizard V's mirror, as the print-pictures cron matched it: its own line under the card.
+    it("writes a Japanese card's mirror from its own product as the card's reverse holo", async () => {
+      monday();
+      byCategory(
+        { rows: CHARIZARD, groups: 10, answered: 10 },
+        {
+          rows: [...JAPANESE, { productId: 999001, printing: "holofoil", market: 5 }],
+          groups: 20,
+          answered: 20,
+        },
+      );
+      listCatalogueProducts.mockResolvedValueOnce(new Map([["S4a-003", 605292]]));
+      printProductsOfCards.mockResolvedValueOnce(
+        new Map([["S4a-003", [{ finish: "reverse-holo", productId: 999001 }]]]),
+      );
+      await get("Bearer s3cret");
+      expect(printProductsOfCards).toHaveBeenCalledWith(expect.anything(), "ja");
+      expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
+        expect.objectContaining({ language: "ja", tcgId: "S4a-003", printing: "reverse-holofoil" }),
       );
     });
 
