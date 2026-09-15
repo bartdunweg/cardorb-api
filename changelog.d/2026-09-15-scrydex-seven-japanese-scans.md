@@ -1,0 +1,1 @@
+- Seven old Japanese cards get Scrydex's scan (neo1 New Pokédex, World Champions Pack Flareon, Vaporeon and Jolteon ☆ and Energy Removal, VS1 Bugsy's Technical Machine 01 and 02): their Scrydex numbers are kept by hand, and the Scrydex step still runs by the set's known code when scrydex.com's expansions page does not answer in time.

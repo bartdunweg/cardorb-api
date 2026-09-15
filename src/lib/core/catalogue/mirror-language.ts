@@ -147,6 +147,24 @@ export const PRODUCT_BY_HAND: Readonly<Record<string, number | null>> = {
   "M-P-098": 714049,
 };
 
+/**
+ * Cards whose Scrydex number the nightly name match cannot find, read off the scans on 2026-09-15.
+ * The match reads a set's page on scrydex.com, which now answers slower than the copy waits (40 s
+ * and more), and two of these are named so no match could find them anyway: VS1's Bugsy's
+ * Technical Machines carry half a machine translation, and PCG10 084 is "Energy Removal 2" where
+ * Scrydex says Energy Removal. Each scan was opened: New Pokédex HANDY808, Flareon, Vaporeon and
+ * Jolteon ☆, Energy Removal, and ツクシのワザマシン 01 and 02.
+ */
+export const SCRYDEX_NUMBER_BY_HAND: Readonly<Record<string, string>> = {
+  "neo1-082": "82",
+  "PCG10-011": "11",
+  "PCG10-015": "15",
+  "PCG10-027": "27",
+  "PCG10-084": "84",
+  "VS1-105": "105",
+  "VS1-106": "106",
+};
+
 /** The product id in a copy of TCGplayer's picture: images.cardorb.com/tcgplayer/602654.jpg. */
 const heldProduct = (image: string | null | undefined) =>
   /\/tcgplayer\/(\d+)\.jpg$/.exec(image ?? "")?.[1] ?? null;
@@ -597,18 +615,21 @@ export async function syncLanguageMirror(
            without a picture, matched to Scrydex's numbering set by set. One page read per set, and
            only for a set with such a card. */
         const blank = storing ? resolved.filter((c) => !c.image) : [];
-        const expansion =
-          blank.length && expansions
-            ? (scrydexExpansionFor(expansions, { id, name: set.name }) ??
-              (scrydexCodeOf(id) ? { name: set.name, code: scrydexCodeOf(id)! } : null))
-            : null;
+        /* The expansions page can fail like any other (scrydex.com is slow); the code the map was
+           read from still names the set's scans. */
+        const expansion = blank.length
+          ? ((expansions ? scrydexExpansionFor(expansions, { id, name: set.name }) : null) ??
+            (scrydexCodeOf(id) ? { name: set.name, code: scrydexCodeOf(id)! } : null))
+          : null;
         if (expansion) {
           const onScrydex = await scrydexExpansionCards(expansion).catch(() => []);
           const scrydexByName = scrydexNumbers(onScrydex, resolved);
           await mapLimit(blank, cardParallel, async (card) => {
-            const number = scrydexCard(card.id)?.x
-              ? card.number.replace(/^0+(?=\d)/, "")
-              : scrydexByName.get(card.id);
+            const number =
+              SCRYDEX_NUMBER_BY_HAND[card.id] ??
+              (scrydexCard(card.id)?.x
+                ? card.number.replace(/^0+(?=\d)/, "")
+                : scrydexByName.get(card.id));
             const scan = number ? await scrydexJapanScan(expansion.code, number) : null;
             const kept = scan ? await keepImage(scan) : null;
             if (kept && kept !== scan) {
