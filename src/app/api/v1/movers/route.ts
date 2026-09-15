@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
-import { ALL_READINGS, getCardPrices, getCollection } from "@/lib/core/collection/collection";
+import { ALL_READINGS, getCollection, getMoverPrices } from "@/lib/core/collection/collection";
 import { copiesHeld } from "@/lib/core/collection/cards-stats";
 import { moversOf } from "@/lib/core/collection/movers";
 import { printedNumberOf } from "@/lib/core/catalogue/set-codes";
@@ -67,7 +67,7 @@ export async function GET(req: Request) {
     days === null
       ? ALL_READINGS
       : new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
-  const prices = await getCardPrices(viewer.userId, cards, token, from);
+  const prices = await getMoverPrices(viewer.userId, cards, token, from);
   if (prices.failed)
     return unavailable(
       "The price readings could not be read. Try again in a moment.",
