@@ -1056,12 +1056,18 @@ describe("catalogueIndex", () => {
   it("builds again a document stored before the cards were in binder order", async () => {
     const { db, written } = store({ version: "2026-09-12T02:00:00+00:00", body: "{}" });
     const index = await catalogueIndex(db);
-    expect(index?.version).toBe("2026-09-12T02:00:00+00:00#n2");
+    expect(index?.version).toBe("2026-09-12T02:00:00+00:00#n3");
     expect(written).toHaveLength(1);
   });
 
-  it("keeps a document built in binder order from the same copy", async () => {
-    const stored = { version: "2026-09-12T02:00:00+00:00#n2", body: "{}" };
+  it("builds again a document stored before every picture was our own", async () => {
+    const { db, written } = store({ version: "2026-09-12T02:00:00+00:00#n2", body: "{}" });
+    expect((await catalogueIndex(db))?.version).toBe("2026-09-12T02:00:00+00:00#n3");
+    expect(written).toHaveLength(1);
+  });
+
+  it("keeps a document built in the current format from the same copy", async () => {
+    const stored = { version: "2026-09-12T02:00:00+00:00#n3", body: "{}" };
     const { db, written } = store(stored);
     expect(await catalogueIndex(db)).toEqual(stored);
     expect(written).toHaveLength(0);
