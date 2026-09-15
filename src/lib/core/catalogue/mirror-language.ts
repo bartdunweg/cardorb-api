@@ -21,6 +21,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueCardRecord,
   catalogueCardsById,
+  listCatalogueSets,
   listCatalogueSync,
   writeCatalogueSet,
   writeCatalogueSetRecord,
@@ -305,9 +306,24 @@ export async function syncLanguageMirror(
   // TCGplayer's Japanese groups, once for the run; a shelf that does not answer costs the run its
   // second source, not its copy.
   const groups = lang === "ja" ? await japanGroups().catch(() => []) : [];
-  // Scrydex's Japanese expansions, for each set's wordmark; a page that does not answer costs the run
-  // its logos, which are kept as they were.
+  // Scrydex's Japanese expansions, for each set's wordmark. Where the page does not answer, a set
+  // takes the Scrydex code on file (scrydexCodeOf) and otherwise keeps the logo the copy holds: on
+  // 2026-09-15 the page answered 524 and a run wrote every Japanese set without its logo.
   const expansions = lang === "ja" ? await scrydexJapanExpansions().catch(() => null) : null;
+  const heldLogos = new Map<string, string | null>(
+    lang === "ja" && !expansions
+      ? (await listCatalogueSets(db, lang).catch(() => [])).map((s) => [s.id, s.logo])
+      : [],
+  );
+  const scrydexLogo = async (id: string, name: string): Promise<string | null> => {
+    if (lang !== "ja") return null;
+    if (expansions) return scrydexRealLogo(scrydexLogoFor(expansions, { id, name }));
+    const code = scrydexCodeOf(id);
+    const onFile = code
+      ? await scrydexRealLogo(`https://images.scrydex.com/pokemon/${code}-logo/logo`)
+      : null;
+    return onFile ?? heldLogos.get(id) ?? null;
+  };
   /* Groups sharing a code with another are told apart by how many numbered cards each holds
      ("SM1+" has one, "sm1+" 68): one products read per such group, only for those. */
   const numbered = new Map<number, number>(
@@ -609,13 +625,7 @@ export async function syncLanguageMirror(
           local_name: set.localName,
           series: set.series,
           release_date: set.releaseDate,
-          logo: await ownArt(
-            set.logo ??
-              (expansions
-                ? await scrydexRealLogo(scrydexLogoFor(expansions, { id, name: set.name }))
-                : null),
-            storing,
-          ),
+          logo: await ownArt(set.logo ?? (await scrydexLogo(id, set.name)), storing),
           symbol: await ownArt(set.symbol, storing),
           abbreviation: set.abbreviation ?? null,
           // At least the cards the copy holds: TCGdex counts Blue Shock and Red Flash as 59 cards, and
