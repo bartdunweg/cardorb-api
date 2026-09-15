@@ -86,6 +86,18 @@ export const finishPrintingKey = (/** @type {string} */ finish) => `${finish}-re
 export const printProductKey = (/** @type {string} */ finish) =>
   finish === "reverse-holo" ? "reverse-holofoil" : finishPrintingKey(finish);
 
+/**
+ * A foil pattern print's printing, under the card it is a print of: "cosmos-holofoil",
+ * "cracked-ice-holofoil". TCGplayer sells each as a product of its own (card-printings.ts
+ * patternPrintsFor); its history is stored beside the card's own printings under the pattern and the
+ * printing its figure is filed under, so a cosmos holo has a line of its own (Bart, 2026-09-15).
+ * Never one of the card's plain or foil series (PLAIN, FOIL): a pattern is a print apart.
+ */
+export const patternPrintingKey = (
+  /** @type {string} */ foilPattern,
+  /** @type {string} */ printing,
+) => `${foilPattern}-${printing}`;
+
 /** tcgcsv's subtype ("Reverse Holofoil") as the printing key the app uses ("reverse-holofoil"). */
 export const printingKey = (/** @type {string} */ subType) =>
   subType.toLowerCase().replace(/\s+/g, "-");

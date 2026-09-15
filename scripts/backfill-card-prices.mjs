@@ -44,6 +44,9 @@
  *                    `--finish-prints` writes only the Poké Ball, Master Ball and Energy Symbol
  *                    reverses (tcgplayer-patterns.generated.json finishPrints), under the card as
  *                    "poke-ball-reverse-holofoil" and so on, and nothing of the cards' own products.
+ *                    `--pattern-prints` writes only the cosmos and cracked ice prints
+ *                    (tcgplayer-patterns.generated.json prints), under the card as "cosmos-holofoil"
+ *                    and so on (patternPrintingKey), and nothing else.
  *
  *   node scripts/backfill-card-prices.mjs [--dry] [--daily] [--limit 20] [--only tcgplayer|japanese|recent|daily] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
  *   `--only japanese --copied-only` fills only the Japanese cards the copy matched and the map does not name.
@@ -71,6 +74,7 @@ import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 import {
   finishPrintingKey,
   historyKey,
+  patternPrintingKey,
   legacyDays,
   monthsFromDays,
   printingKey,
@@ -555,14 +559,25 @@ async function daily() {
   /* `--finish-prints`: only the patterned reverses TCGplayer sells as products of their own, for the
      cards it sells them of. Their rows are new printings, so nothing already stored is sent again. */
   const FINISH_ONLY = args.includes("--finish-prints");
+  const patterns = JSON.parse(readFileSync(PATTERNS, "utf8"));
   const finishPrints = Object.fromEntries(
-    Object.entries(JSON.parse(readFileSync(PATTERNS, "utf8"))).flatMap(([id, c]) =>
+    Object.entries(patterns).flatMap(([id, c]) =>
       c.finishPrints?.length ? [[id, c.finishPrints]] : [],
     ),
   );
+  /* `--pattern-prints`: only the cosmos and cracked ice prints, each a product of its own, under the
+     card as "cosmos-holofoil" (2026-09-15: their price was shown and never kept). New printings too. */
+  const PATTERN_ONLY = args.includes("--pattern-prints");
+  const patternPrints = Object.fromEntries(
+    Object.entries(patterns).flatMap(([id, c]) => (c.prints?.length ? [[id, c.prints]] : [])),
+  );
   const ids = Object.keys(english)
     .filter(
-      (id) => english[id] && (!only || only.includes(id)) && (!FINISH_ONLY || finishPrints[id]),
+      (id) =>
+        english[id] &&
+        (!only || only.includes(id)) &&
+        (!FINISH_ONLY || finishPrints[id]) &&
+        (!PATTERN_ONLY || patternPrints[id]),
     )
     .slice(0, LIMIT);
   const from = flag("--from") ?? TCGCSV_FROM;
@@ -604,15 +619,18 @@ async function daily() {
     for (const id of ids) {
       // Every printing TCGplayer prices, and the Shadowless run's where tcgplayer-links.mjs linked
       // the card to that group, under the run it is.
-      const sources = FINISH_ONLY ? [] : [[english[id].productId, printingKey]];
-      if (!FINISH_ONLY) {
+      const own = !FINISH_ONLY && !PATTERN_ONLY;
+      const sources = own ? [[english[id].productId, printingKey]] : [];
+      if (own) {
         for (const run of runLinksOf(english[id]))
           sources.push([run.productId, (s) => runKey(run.edition, printingKey(s))]);
       }
       // Its Poké Ball, Master Ball and Energy Symbol reverses, each under the finish it is, as the
       // price job writes them (snapshot.ts cardPricesFromShelf). One figure per product.
-      for (const print of finishPrints[id] ?? []) {
-        sources.push([print.productId, () => finishPrintingKey(print.finish)]);
+      if (!PATTERN_ONLY) {
+        for (const print of finishPrints[id] ?? []) {
+          sources.push([print.productId, () => finishPrintingKey(print.finish)]);
+        }
       }
       let any = false;
       // The card's own product first; a run's printing of the same name is dropped, as the cron
@@ -622,12 +640,34 @@ async function daily() {
       for (const [productId, name] of sources) {
         for (const [subType, usd] of en.get(productId) ?? []) {
           const euros = cents(usd, r);
-          if (euros == null || seen.has(name(subType))) continue;
-          seen.add(name(subType));
+          const printing = name(subType);
+          if (euros == null || seen.has(printing)) continue;
+          seen.add(printing);
           month.push({
             language: "en",
             tcgId: id,
-            printing: name(subType),
+            printing,
+            date,
+            price: euros / 100,
+            source: "tcgplayer",
+          });
+          any = true;
+        }
+      }
+      // Its cosmos and cracked ice prints, under the pattern and the printing TCGplayer files it
+      // under, as the price job writes them (snapshot.ts cardPricesFromShelf): the filed printing's
+      // figure, or the product's one figure where TCGplayer has moved it to another subtype.
+      if (!FINISH_ONLY) {
+        for (const print of patternPrints[id] ?? []) {
+          const figures = [...(en.get(print.productId) ?? [])];
+          const usd = (figures.find(([subType]) => printingKey(subType) === print.printing) ??
+            figures[0])?.[1];
+          const euros = usd == null ? null : cents(usd, r);
+          if (euros == null) continue;
+          month.push({
+            language: "en",
+            tcgId: id,
+            printing: patternPrintingKey(print.foilPattern, print.printing),
             date,
             price: euros / 100,
             source: "tcgplayer",

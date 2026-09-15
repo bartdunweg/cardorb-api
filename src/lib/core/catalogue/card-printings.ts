@@ -394,6 +394,15 @@ export function finishPrintsFor(tcgId: string): FinishPrint[] | null {
   );
 }
 
+/** Every English card's foil pattern prints (cosmos, cracked ice), for the price job's history. */
+export const allPatternPrints = (): Record<string, PatternPrint[]> =>
+  Object.fromEntries(
+    Object.keys(PATTERNS).flatMap((id) => {
+      const prints = patternPrintsFor(id)?.prints;
+      return prints?.length ? [[id, prints]] : [];
+    }),
+  );
+
 /** Every English card's patterned reverses, for the price job and its tests. */
 export const allFinishPrints = (): Record<string, FinishPrint[]> =>
   Object.fromEntries(
