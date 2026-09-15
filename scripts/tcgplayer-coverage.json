@@ -1,5 +1,5 @@
 {
-  "unlinked": 25,
+  "unlinked": 23,
   "digitalSets": [
     "A1",
     "A1a",
@@ -33,10 +33,6 @@
     "mep": {
       "name": "MEP Black Star Promos",
       "unlinked": 1
-    },
-    "mfb": {
-      "name": "My First Battle",
-      "unlinked": 2
     },
     "pop5": {
       "name": "POP Series 5",

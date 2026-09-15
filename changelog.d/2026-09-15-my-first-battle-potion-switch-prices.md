@@ -1,0 +1,1 @@
+- My First Battle's Potion and Switch have a TCGplayer price. TCGplayer sells each as four products, one per deck, with no number, where TCGdex has one card; the Bulbasaur deck's product is taken by hand. TCGplayer has no photo of either, so they stay without a picture.
