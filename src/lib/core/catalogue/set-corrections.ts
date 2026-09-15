@@ -16,6 +16,9 @@ export type SetCorrection = {
 const CORRECTIONS: Record<string, SetCorrection> = {
   "ja:CP5": { local_name: "幻・伝説ドリームキラコレクション" },
   "ja:SV4a": { local_name: "シャイニートレジャーex" },
+  // The pack prints its title in Latin capitals (pokemon-card.com, 拡張パック「25th ANNIVERSARY COLLECTION」);
+  // TCGdex writes it in katakana (2026-09-15).
+  "ja:S8a": { local_name: "25th ANNIVERSARY COLLECTION" },
   "ja:XY3": { release_date: "2014/06/14" },
   "ja:SM7a": { release_date: "2018/07/06", printed_total: 60 },
   "ja:SM8b": { release_date: "2018/11/02" },
