@@ -4,6 +4,7 @@ import {
   finishOfPrintingLabel,
   japanesePrintProducts,
   printKey,
+  tcgdexPrintScans,
   withPrintPictures,
 } from "./print-pictures";
 
@@ -109,5 +110,42 @@ describe("withPrintPictures", () => {
         image: "https://images.cardorb.com/tcgplayer/566553.jpg",
       },
     ]);
+  });
+});
+
+describe("tcgdexPrintScans", () => {
+  // Pokémon Card 151 as TCGdex and the copy list it: Bulbasaur has a Poké Ball reverse, Venusaur ex does not.
+  const cards = [
+    { id: "SV2a-001", image: "https://assets.tcgdex.net/ja/SV/SV2a/001" },
+    { id: "SV2a-003", image: "https://assets.tcgdex.net/ja/SV/SV2a/003" },
+    { id: "SV2a-004", image: null },
+  ];
+  const variants = new Map([
+    [
+      "SV2a-001",
+      [
+        { type: "normal" },
+        { type: "reverse", foil: "pokeball" },
+        { type: "reverse", foil: "masterball" },
+      ],
+    ],
+    ["SV2a-003", [{ type: "holo" }]],
+    ["SV2a-004", [{ type: "reverse", foil: "pokeball" }]],
+  ]);
+
+  it("takes the scan as the printing's picture for a card printed that way", () => {
+    expect(tcgdexPrintScans(cards, "poke-ball", variants)).toEqual([
+      {
+        cardId: "SV2a-001",
+        print: "poke-ball",
+        folder: "https://assets.tcgdex.net/ja/SV/SV2a/001",
+      },
+    ]);
+  });
+
+  it("never files a plain scan under a printing the card was not printed in", () => {
+    expect(
+      tcgdexPrintScans(cards, "master-ball", new Map([["SV2a-003", [{ type: "holo" }]]])),
+    ).toEqual([]);
   });
 });

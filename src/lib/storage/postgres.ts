@@ -2156,26 +2156,48 @@ export type PrintPictureRow = {
   language: CatalogueLanguage;
   card_id: string;
   print: string;
-  product_id: number;
+  /** TCGplayer's product the picture is; null for a scan from TCGdex (migration 20260915270000). */
+  product_id: number | null;
   image: string;
 };
 
-/** The TCGplayer products whose picture the store already holds, for one catalogue. */
-export async function listPrintPictureProducts(
+/** Every printing's picture the store holds for one catalogue. */
+export async function listPrintPictures(
   db: SupabaseClient,
   language: CatalogueLanguage,
-): Promise<Set<number>> {
-  const rows = await readAllPages<{ product_id: number }>(
+): Promise<Pick<PrintPictureRow, "card_id" | "print" | "product_id" | "image">[]> {
+  return readAllPages<Pick<PrintPictureRow, "card_id" | "print" | "product_id" | "image">>(
     "the printings' pictures",
     (page, counted) =>
       db
         .from("card_print_pictures")
-        .select("product_id", counted ? { count: "exact" } : {})
+        .select("card_id, print, product_id, image", counted ? { count: "exact" } : {})
         .eq("language", language)
-        .order("product_id", { ascending: true })
+        .order("card_id", { ascending: true })
+        .order("print", { ascending: true })
         .range(...pageRange(page)),
   );
-  return new Set(rows.map((r) => r.product_id));
+}
+
+/** One set's cards of the copy with the variants TCGdex lists for each, by id. */
+export async function catalogueSetVariants(
+  db: SupabaseClient,
+  setId: string,
+  language: CatalogueLanguage,
+): Promise<Map<string, { type?: string; foil?: string }[] | null>> {
+  const rows = await readAllPages<{
+    id: string;
+    variants: { type?: string; foil?: string }[] | null;
+  }>("one set's variants", (page, counted) =>
+    db
+      .from("catalogue_cards")
+      .select("id, variants", counted ? { count: "exact" } : {})
+      .eq("language", language)
+      .eq("set_id", setId)
+      .order("id", { ascending: true })
+      .range(...pageRange(page)),
+  );
+  return new Map(rows.map((r) => [r.id, r.variants]));
 }
 
 /** Printings' pictures, written over what each printing held. */

@@ -1,20 +1,29 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
-import { canStoreImages, isOurs, keepImage } from "@/lib/core/catalogue/image-store";
+import { TCGDEX_SCAN_PRINT } from "@/lib/core/catalogue/artwork";
 import {
-  type PrintProduct,
+  IMAGES_ORIGIN,
+  canStoreImages,
+  imageKey,
+  isOurs,
+  keepImage,
+} from "@/lib/core/catalogue/image-store";
+import {
   englishPrintProducts,
   japanesePrintProducts,
   productPicture,
+  tcgdexPrintScans,
 } from "@/lib/core/catalogue/print-pictures";
+import { json } from "@/lib/core/catalogue/tcgdex-client";
 import { groupProducts, japanGroups } from "@/lib/core/catalogue/tcgplayer-japan";
 import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
 import { mapLimit } from "@/lib/core/util";
 import {
   type CatalogueLanguage,
   type PrintPictureRow,
+  catalogueSetVariants,
   listCatalogueProducts,
-  listPrintPictureProducts,
+  listPrintPictures,
   writePrintPictures,
 } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
@@ -51,13 +60,24 @@ export async function GET(req: Request) {
   if (!(await canStoreImages())) return refuse("catalogue");
 
   const start = performance.now();
-  const report = { en: 0, ja: 0, candidates: 0, missing: 0, groups: 0, answered: 0, ms: 0 };
+  const report = {
+    en: 0,
+    ja: 0,
+    tcgdex: 0,
+    candidates: 0,
+    missing: 0,
+    groups: 0,
+    answered: 0,
+    ms: 0,
+  };
 
   const [heldEn, heldJa, copiedJa] = await Promise.all([
-    listPrintPictureProducts(db, "en"),
-    listPrintPictureProducts(db, "ja"),
+    listPrintPictures(db, "en"),
+    listPrintPictures(db, "ja"),
     listCatalogueProducts(db, "ja"),
   ]);
+  const heldProducts = new Set(heldEn.flatMap((r) => (r.product_id == null ? [] : [r.product_id])));
+  const heldJaImage = new Map(heldJa.map((r) => [`${r.card_id}|${r.print}`, r.image]));
 
   // The Japanese cards by their plain product: the committed map, and what the copy matched.
   const cardOf = new Map<number, string>();
@@ -76,33 +96,75 @@ export async function GET(req: Request) {
     })
   ).flat();
 
-  const todo: { language: CatalogueLanguage; product: PrintProduct }[] = [
+  /* TCGdex's scans of a set it photographed as one printing (artwork.ts, TCGDEX_SCAN_PRINT): the
+     printing's picture before TCGplayer's product photo, being a scan of the card and not a photo
+     of a listing. One TCGdex read and one copy read per such set. A set that does not answer is
+     tried the next night; TCGplayer's photo stands for it meanwhile. */
+  const scans = (
+    await Promise.all(
+      Object.entries(TCGDEX_SCAN_PRINT).map(async ([setId, print]) => {
+        try {
+          const [set, variants] = await Promise.all([
+            json(`https://api.tcgdex.net/v2/ja/sets/${setId}`, `ja set ${setId}`) as Promise<{
+              cards?: { id: string; image?: string | null }[];
+            }>,
+            catalogueSetVariants(db, setId, "ja"),
+          ]);
+          return tcgdexPrintScans(set.cards ?? [], print, variants);
+        } catch (err) {
+          console.error(`[cron] print pictures: TCGdex's ${setId} could not be read:`, err);
+          return [];
+        }
+      }),
+    )
+  ).flat();
+  const scanned = new Set(scans.map((s) => `${s.cardId}|${s.print}`));
+
+  type Job = {
+    language: CatalogueLanguage;
+    cardId: string;
+    print: string;
+    productId: number | null;
+    /** A file, or a TCGdex folder whose `high.webp` is the picture. */
+    source: string;
+  };
+  const todo: Job[] = [
+    ...scans
+      // Held already as this very scan: nothing to do. Held as TCGplayer's photo: replaced.
+      .filter((s) => {
+        const key = imageKey(s.folder);
+        return heldJaImage.get(`${s.cardId}|${s.print}`) !== `${IMAGES_ORIGIN}/${key}/high.webp`;
+      })
+      .map((s) => ({ language: "ja" as const, ...s, productId: null, source: s.folder })),
     ...englishPrintProducts()
-      .filter((p) => !heldEn.has(p.productId))
-      .map((product) => ({ language: "en" as const, product })),
+      .filter((p) => !heldProducts.has(p.productId))
+      .map((p) => ({ language: "en" as const, ...p, source: productPicture(p.productId) })),
     ...japanese
-      .filter((p) => !heldJa.has(p.productId))
-      .map((product) => ({ language: "ja" as const, product })),
+      .filter(
+        (p) => !heldJaImage.has(`${p.cardId}|${p.print}`) && !scanned.has(`${p.cardId}|${p.print}`),
+      )
+      .map((p) => ({ language: "ja" as const, ...p, source: productPicture(p.productId) })),
   ];
   report.candidates = todo.length;
 
   const rows: PrintPictureRow[] = [];
-  await mapLimit(todo, 8, async ({ language, product }) => {
+  await mapLimit(todo, 8, async (job) => {
     if (performance.now() - start > BUDGET_MS) return;
-    const source = productPicture(product.productId);
-    const kept = await keepImage(source);
+    const kept = await keepImage(job.source);
     if (!isOurs(kept)) {
       report.missing++;
       return;
     }
+    const folder = job.productId == null;
     rows.push({
-      language,
-      card_id: product.cardId,
-      print: product.print,
-      product_id: product.productId,
-      image: kept,
+      language: job.language,
+      card_id: job.cardId,
+      print: job.print,
+      product_id: job.productId,
+      // A copied TCGdex folder is two files; the sheet shows the large one.
+      image: folder ? `${kept}/high.webp` : kept,
     });
-    report[language]++;
+    report[folder ? "tcgdex" : job.language]++;
   });
 
   try {
@@ -113,7 +175,7 @@ export async function GET(req: Request) {
   }
   report.ms = Math.round(performance.now() - start);
   console.log(
-    `[cron] print pictures: ${report.en} English and ${report.ja} Japanese copied of ` +
+    `[cron] print pictures: ${report.en} English, ${report.ja} Japanese and ${report.tcgdex} TCGdex copied of ` +
       `${report.candidates}, ${report.missing} without a photo, ${report.answered}/${report.groups} groups, ${report.ms} ms`,
   );
   return NextResponse.json({ ok: true, ...report });
