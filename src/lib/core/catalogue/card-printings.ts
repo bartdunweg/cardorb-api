@@ -124,6 +124,8 @@ export function printingsOf(
     const base = FINISH_OF[type ?? ""];
     if (!base) continue;
     const foil = (v.foil ?? "").toLowerCase();
+    if (tcgId && foil === "cosmos" && v.type === "reverse" && NO_COSMOS_REVERSE.has(tcgId))
+      continue;
     const ball = BALL_OF[foil];
     /* With TCGplayer's list in hand the balls and the Energy Symbol reverse come from it alone: a
        ball TCGdex names and TCGplayer does not sell is not offered, and TCGdex's energy foil is
@@ -202,6 +204,24 @@ function productPrintingsOf(tcgId: string): Printing[] {
   if (finishes.size) for (const p of finishPrintsFor(tcgId) ?? []) finishes.add(p.finish);
   return FINISHES.filter((f) => finishes.has(f)).map((finish) => ({ finish, foilPattern: null }));
 }
+
+/**
+ * Cards TCGdex lists a Cosmos reverse for that was never printed. The Scarlet & Violet basic Energies
+ * 009 to 016 (the Stellar Crown design): TCGplayer sells their plain card, a reverse and a Cracked Ice
+ * holo, Scrydex shows the same three, and neither has a Cosmos print (2026-09-15). Their 001 to 008
+ * had one (Scrydex's cosmosHolofoil), and so do the Paldean Fates cards Scrydex does not show it for
+ * (Bulbapedia on Maschiff and Fidough), so a missing witness alone does not take a Cosmos reverse away.
+ */
+const NO_COSMOS_REVERSE = new Set([
+  "sve-009",
+  "sve-010",
+  "sve-011",
+  "sve-012",
+  "sve-013",
+  "sve-014",
+  "sve-015",
+  "sve-016",
+]);
 
 const REVERSE_DECISIONS = (REVERSE_HOLO as { cards: Record<string, boolean> }).cards;
 const HOLO_BEFORE_REVERSES = new Set(

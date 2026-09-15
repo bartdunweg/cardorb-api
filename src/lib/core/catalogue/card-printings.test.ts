@@ -69,6 +69,20 @@ describe("printingsOf", () => {
       { finish: "normal", foilPattern: null },
       { finish: "reverse-holo", foilPattern: "cosmos" },
     ]);
+    // The Stellar Crown design's Grass Energy: TCGdex names a Cosmos reverse nobody sells or shows.
+    expect(
+      printingsOf(
+        [{ type: "normal" }, { type: "reverse" }, { type: "reverse", foil: "cosmos" }],
+        "sve-009",
+      ).map((p) => p.finish + (p.foilPattern ? `/${p.foilPattern}` : "")),
+    ).toEqual(["normal", "reverse-holo"]);
+    // Paldean Fates Maschiff keeps its Cosmos reverse (Bulbapedia), though Scrydex does not show it.
+    expect(
+      printingsOf(
+        [{ type: "normal" }, { type: "reverse" }, { type: "reverse", foil: "cosmos" }],
+        "sv04.5-062",
+      ).map((p) => p.finish + (p.foilPattern ? `/${p.foilPattern}` : "")),
+    ).toEqual(["normal", "reverse-holo", "reverse-holo/cosmos"]);
     // Ascended Heroes Pikachu: a Friend Ball and an Energy Symbol reverse, and no plain one.
     expect(
       printingsOf(
