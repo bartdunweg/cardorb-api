@@ -106,6 +106,8 @@ if the two have drifted apart.
 
 - The set shelf leaves out sets with no cards in the catalogue copy: Sample, W Promotional, Jumbo cards and Radiant Collection in English (Radiant Collection's cards are Generations' RC run, already there), and the four Japanese sets neither TCGdex nor TCGplayer lists cards for. Unseen Forces' Unown Collection is part of Unseen Forces on the shelf, as a Shiny Vault or Classic Collection is part of its set, its A to Z, ! and ? counted with it.
 
+- The Scarlet & Violet basic Energies 009 to 016 no longer offer a Cosmos reverse: TCGdex lists one, while TCGplayer and Scrydex both show only the plain card, a reverse and a Cracked Ice holo. The other 17 cards TCGdex lists a plain and a Cosmos reverse for (151, Paldean Fates, Temporal Forces, Prismatic Evolutions) keep both: TCGplayer sells the Cosmos print apart, or Bulbapedia names it.
+
 - The Japanese copy also reads TCGplayer's Japanese shelf, where TCGdex falls short. The 53 Japanese sets TCGdex lists without cards (Shiny Star V, Eevee Heroes, the 25th Anniversary Collection, every SM+ set) get TCGplayer's card list, one card per printed number with its English name, rarity, type, HP and stage; a card TCGdex and Limitless have no picture of gets TCGplayer's product picture, matched by number or, on the unnumbered vintage shelves, by English name; and each card keeps its TCGplayer product, so the new cards are priced like every other.
 
 - Black Bolt Haxorus and White Flare Emboar and Gothitelle in the owner's collection are the holo they are, not a normal print none of them was ever printed as, so they are priced at the holo figure and the morning check's finish check passes.
