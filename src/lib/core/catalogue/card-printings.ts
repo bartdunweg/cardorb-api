@@ -4,6 +4,7 @@ import type { Edition, Finish, FoilPattern } from "../collection/collection-row"
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_PATTERNS from "../tcgplayer-patterns.generated.json";
 import REVERSE_HOLO from "../reverse-holo.generated.json";
+import EXTRA_CARDS from "./extra-cards.json";
 
 /**
  * Which printings of a card exist, and which print runs, from what TCGdex says per card.
@@ -98,6 +99,15 @@ export function printingsOf(
    */
   tcgId?: string | null,
 ): Printing[] {
+  /* A card TCGdex lists no variants for, that is one TCGplayer product of its own
+     (extra-cards.json): the league and championship prints, sold as a reverse holo only; the
+     alternate prints, as a holo; a trainer kit's energies, plain. That product's printings are the
+     card's, and nothing else decides them: until 2026-09-15 a form offered every finish for these
+     91 cards. */
+  if (!variants?.length && tcgId && FROM_PRODUCT.has(tcgId)) {
+    const own = productPrintingsOf(tcgId);
+    if (own.length) return own;
+  }
   const seen = new Map<string, Printing>();
   const sold = tcgId ? finishPrintsFor(tcgId) : null;
   const holoNotReverse = tcgId ? HOLO_BEFORE_REVERSES.has(tcgId) : false;
@@ -164,6 +174,34 @@ const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
  * SH cards as holo, so a form offered a Standard or a holo copy that was never printed.
  */
 const REVERSE_ONLY = new Set(["bwp-BW41", "bwp-BW42", "bwp-BW52", "dp7-SH1", "dp7-SH2", "dp7-SH3"]);
+
+/** The English cards this catalogue added from a TCGplayer product of their own (extra-cards.json). */
+const FROM_PRODUCT = new Set(
+  Object.entries((EXTRA_CARDS as { en?: Record<string, { product?: number }> }).en ?? {}).flatMap(
+    ([id, card]) => (card.product ? [id] : []),
+  ),
+);
+
+/** TCGplayer's printing names ("1st-edition-holofoil", "reverse-holofoil") as this app's finishes. */
+const PRODUCT_FINISH: Record<string, Finish> = {
+  normal: "normal",
+  holofoil: "holo",
+  "reverse-holofoil": "reverse-holo",
+};
+
+/** The printings a card's own TCGplayer product lists, where it lists any. */
+function productPrintingsOf(tcgId: string): Printing[] {
+  const finishes = new Set<Finish>();
+  for (const v of LINKS[tcgId]?.variants ?? []) {
+    const finish =
+      PRODUCT_FINISH[
+        v.replace(/^(1st-edition|unlimited)-/, "").replace(/^(1st-edition|unlimited)$/, "normal")
+      ];
+    if (finish) finishes.add(finish);
+  }
+  if (finishes.size) for (const p of finishPrintsFor(tcgId) ?? []) finishes.add(p.finish);
+  return FINISHES.filter((f) => finishes.has(f)).map((finish) => ({ finish, foilPattern: null }));
+}
 
 const REVERSE_DECISIONS = (REVERSE_HOLO as { cards: Record<string, boolean> }).cards;
 const HOLO_BEFORE_REVERSES = new Set(
