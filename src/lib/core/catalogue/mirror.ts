@@ -15,6 +15,7 @@
  * — and before the first night has run, the copy is empty and the search asks TCGdex as it did.
  */
 import { withSetLogos } from "./set-logos";
+import { handCardPicture, handSetLogo } from "./pictures-by-hand";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type CatalogueCardRecord,
@@ -545,6 +546,18 @@ export async function syncMirror(
           held,
           storing,
         );
+        /* The last resort: a picture found by hand (pictures-by-hand.ts), for a card every source
+           left blank and the copy holds nothing of ours for. */
+        if (storing)
+          await mapLimit(pictured, 8, async (card) => {
+            if (card.image || isOurs(held.get(card.id))) return;
+            const hand = handCardPicture("en", card.id);
+            const kept = hand ? await keepImage(hand) : null;
+            if (kept && kept !== hand) {
+              card.image = kept;
+              card.imageHigh = null;
+            }
+          });
         report.pictures += pictured.filter(
           (c) => !held.has(c.id) || held.get(c.id) !== stemOf(c.image),
         ).length;
@@ -575,7 +588,8 @@ export async function syncMirror(
                 await ownArt(
                   (await withSetLogos([set]))[0]?.logo ??
                     set.logo ??
-                    (await scrydexEnglishLogo(id)),
+                    (await scrydexEnglishLogo(id)) ??
+                    handSetLogo("en", id),
                   storing,
                 ),
               ),

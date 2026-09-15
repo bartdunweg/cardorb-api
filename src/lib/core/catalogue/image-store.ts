@@ -89,6 +89,14 @@ export function imageKey(address: string): string | null {
       const logo = /^pokemon\/([a-z0-9_]+)-logo\/logo$/.exec(path)?.[1];
       return logo ? `scrydex/logos/${logo}.png` : null;
     }
+    case "api.cardorb.com": {
+      // pictures-by-hand/ja/neo2-057.jpg: a file committed with its source (pictures-by-hand.ts).
+      const hand =
+        /^pictures-by-hand\/((?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\.(?:png|jpe?g|webp))$/.exec(
+          path,
+        )?.[1];
+      return hand ? `hand/${hand}` : null;
+    }
     case "tcgplayer-cdn.tcgplayer.com": {
       const product = /^product\/(\d+)_/.exec(path)?.[1];
       return product ? `tcgplayer/${product}.jpg` : null;
