@@ -133,6 +133,18 @@ describe("printingsOf", () => {
     ]);
   });
 
+  // Added from TCGplayer's own products (extra-cards.json), with no variants at TCGdex.
+  it("offers a card TCGdex lists no variants for what its own TCGplayer product sells", () => {
+    // Choice Band 121a, North America Championships: a reverse holo only.
+    expect(printingsOf([], "sm2-121a").map((p) => p.finish)).toEqual(["reverse-holo"]);
+    // Jirachi GX 79a, an alternate print: the holo.
+    expect(printingsOf([], "sm11-79a").map((p) => p.finish)).toEqual(["holo"]);
+    // A trainer kit's Fighting Energy: plain.
+    expect(printingsOf(undefined, "tk-sm-l-2").map((p) => p.finish)).toEqual(["normal"]);
+    // A product that lists nothing yet stays no answer.
+    expect(printingsOf([], "mep-089")).toEqual([]);
+  });
+
   // Skyridge Gengar (ecard3-10): TCGdex and Scrydex list a reverse and Bulbapedia says every Skyridge
   // card but the H cards has one; TCGplayer prices the card as Normal only. The reverse is offered,
   // and priced as unknown (price-basis.mjs).
