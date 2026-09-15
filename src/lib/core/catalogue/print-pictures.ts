@@ -14,12 +14,17 @@
  * picture. Base Set's Shadowless product is left out on purpose: TCGplayer's photo of Charizard
  * there is the 1st Edition print, stamp and all, so it is no picture of the Shadowless run.
  *
+ * A print run is a printing too (Bart, 2026-09-15: "edities van dezelfde kaart moet je hetzelfde
+ * behandelen"). Base Set's own product is the Unlimited print, so its photo is filed under the run,
+ * `unlimited` (allEditionPrints). A run and a finish never cross: no card TCGplayer sells in two
+ * runs is sold in two finishes (0 of 674, 2026-09-15), so a run's key needs no finish beside it.
+ *
  * The nightly job (cron/print-pictures) copies each photo into our bucket once and writes the
  * address to card_print_pictures; the card route hands each printing its picture from there.
  */
 import { finishOfName } from "../foil-pattern-products.mjs";
 import { FINISHES, type Finish, type FoilPattern } from "../collection/collection-row";
-import { finishPrintsFor, patternPrintsFor } from "./card-printings";
+import { allEditionPrints, finishPrintsFor, patternPrintsFor } from "./card-printings";
 import TCGPLAYER_PATTERNS from "../tcgplayer-patterns.generated.json";
 import { type Product, cardName, extended, isPrintingLabel, labelsOf } from "./tcgplayer-japan";
 
@@ -46,7 +51,10 @@ export const printKey = (finish: Finish | string, foilPattern?: FoilPattern | st
 export const productPicture = (productId: number) =>
   `https://tcgplayer-cdn.tcgplayer.com/product/${productId}_in_1000x1000.jpg`;
 
-/** Every English printing product the committed map names, patterned reverses and pattern holos. */
+/**
+ * Every English printing product the committed maps name: patterned reverses, pattern holos, and
+ * Base Set's Unlimited run under its run.
+ */
 export function englishPrintProducts(): PrintProduct[] {
   const out = new Map<string, PrintProduct>();
   /* One product per printing: TCGplayer lists a second cosmos holo of 18 cards (me01-028 and on,
@@ -61,6 +69,8 @@ export function englishPrintProducts(): PrintProduct[] {
     for (const p of patternPrintsFor(cardId)?.prints ?? [])
       add({ cardId, print: printKey(p.finish, p.foilPattern), productId: p.productId });
   }
+  for (const p of allEditionPrints())
+    add({ cardId: p.cardId, print: p.edition, productId: p.productId });
   return [...out.values()];
 }
 
@@ -156,6 +166,22 @@ export function withPrintPictures<P extends { finish: string; foilPattern?: stri
     ...p,
     image: pictures.get(printKey(p.finish, p.foilPattern)) ?? null,
   }));
+}
+
+/**
+ * The print runs that have a picture of their own, by run: `{ unlimited: "https://images…" }`. A run
+ * without one is left out, and the card's scan stands for it, as for a printing.
+ */
+export function editionPictures(
+  editions: readonly string[] | null | undefined,
+  pictures: ReadonlyMap<string, string | null>,
+): Record<string, string> {
+  return Object.fromEntries(
+    (editions ?? []).flatMap((e) => {
+      const image = pictures.get(e);
+      return image ? [[e, image]] : [];
+    }),
+  );
 }
 
 /**

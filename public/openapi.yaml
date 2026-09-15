@@ -211,6 +211,14 @@ components:
         `finish`, which chooses which of TCGplayer's printings a copy reads and
         holds the ball patterns because those are priced as a reverse holo. Null means
         not recorded, which is every card added by hand.
+    EditionPictures:
+      type: object
+      description: |
+        A print run's own picture, by run, where the store holds one: today Base Set's `unlimited`,
+        TCGplayer's photo of the unstamped card. A run left out has none, and the card's `image`
+        stands for it, as for a printing. Sent by GET /v1/cards/{tcgId} and POST /v1/cards/facts.
+      propertyNames: { $ref: "#/components/schemas/Edition" }
+      additionalProperties: { type: string, description: "A file at https://images.cardorb.com." }
     Edition:
       type: string
       enum: [1st-edition, shadowless, unlimited, blue-border]
@@ -341,6 +349,7 @@ components:
               foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
               image: { type: [string, "null"], description: "The printing's own picture, a file at https://images.cardorb.com, or null." }
         editions: { type: [array, "null"], items: { $ref: "#/components/schemas/Edition" } }
+        editionPictures: { $ref: "#/components/schemas/EditionPictures" }
         languages: { type: array, items: { type: string, enum: [en, de, fr, it, es, pt, nl] }, description: "Empty for a Japanese card, as on `CardDetail`." }
         foilPatterns: { type: [array, "null"], items: { $ref: "#/components/schemas/FoilPattern" } }
         patternPrints:
@@ -397,6 +406,7 @@ components:
               finish: { $ref: "#/components/schemas/Finish" }
               foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
               image: { type: [string, "null"], description: "A file at https://images.cardorb.com, or null." }
+        editionPictures: { $ref: "#/components/schemas/EditionPictures" }
         patternPrints:
           type: [object, "null"]
           description: |

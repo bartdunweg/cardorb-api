@@ -87,6 +87,7 @@ describe("GET /api/v1/cards/[tcgId]", () => {
     expect(await res.json()).toEqual({
       id: "sv03-125",
       name: "Charizard",
+      editionPictures: {},
       languages: ["en", "de"],
       foilPatterns: null,
       patternPrints: { standard: true, prints: [] },
