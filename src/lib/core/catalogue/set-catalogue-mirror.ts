@@ -45,6 +45,7 @@ import type { CatalogueMatch } from "./ptcg-search";
 import { indexByNumber } from "./set-index";
 import { resolveSetIds } from "./set-resolve";
 import type { SetCatalogue } from "./catalogue";
+import { setCodeOf } from "./set-codes";
 
 /**
  * The copy's full-art flag, where the row carries one. A row read without the column leaves the
@@ -129,7 +130,7 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
     // carries the picture that was checked for it, or none at all.
     assetBase: null,
     officialName: main?.name ?? null,
-    code: main?.abbreviation ?? null,
+    code: setCodeOf(main?.id, main?.abbreviation),
     // The copy only ever writes a picture it found. A set that has none simply has none, which
     // the per-card nulls already say, so there is no whole-set verdict to make here.
     setHasScans: true,
@@ -236,7 +237,7 @@ export async function englishSetFromCopy(
     releaseDate: row.release_date,
     total: row.total ?? rows.length,
     printedTotal: row.printed_total,
-    abbreviation: row.abbreviation,
+    abbreviation: setCodeOf(row.id, row.abbreviation),
     cardsRecorded: true,
     logo: row.logo,
     symbol: row.symbol,
@@ -338,7 +339,7 @@ export async function languageSetFromCopy(
     releaseDate: row.release_date,
     total: row.total ?? rows.length,
     printedTotal: row.printed_total,
-    abbreviation: row.abbreviation,
+    abbreviation: setCodeOf(row.id, row.abbreviation),
     cardsRecorded: row.cards_recorded ?? true,
     logo: row.logo,
     symbol: row.symbol,

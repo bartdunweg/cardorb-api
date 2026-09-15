@@ -5,6 +5,7 @@ import { bearer } from "@/lib/api/viewer";
 import { ALL_READINGS, getCardPrices, getCollection } from "@/lib/core/collection/collection";
 import { copiesHeld } from "@/lib/core/collection/cards-stats";
 import { moversOf } from "@/lib/core/collection/movers";
+import { printedNumberOf } from "@/lib/core/catalogue/set-codes";
 import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
 
 /**
@@ -78,6 +79,7 @@ export async function GET(req: Request) {
     tcgId: m.card.tcgId,
     name: m.card.name,
     number: m.card.number,
+    printedNumber: printedNumberOf(m.card.tcgId),
     set: m.set,
     setAbbr: m.setAbbr,
     image: m.card.image,

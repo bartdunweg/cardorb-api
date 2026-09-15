@@ -6,6 +6,7 @@ import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
 import { type PriceLanguage, historyKey, priceLanguageOf } from "../price-months.mjs";
+import { printedNumberOf } from "../catalogue/set-codes";
 
 /**
  * The collection as a flat list of copies, for a screen that pages through it.
@@ -30,6 +31,8 @@ export type CardItem = {
   setTitle: string;
   /** The code printed on the card: MEW, SFA, DEX. Null where the catalogue names but does not code the set. */
   setAbbr: string | null;
+  /** The number as the card prints it ("XY124", "085"), from the catalogue's id; null where nothing matched. `number` is the row's. */
+  printedNumber: string | null;
   rarity: string | null;
   gen: string | null;
   type: string | null;
@@ -171,6 +174,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   set: set.name,
   setTitle: set.title,
   setAbbr: set.abbreviation,
+  printedNumber: printedNumberOf(card.tcgId),
   rarity: v.rarity,
   gen: card.gen,
   type: card.type,

@@ -1,0 +1,1 @@
+- Every card on `GET /v1/cards` and every mover carries `printedNumber`, the number as the card prints it ("XY124", "085"), and a set without an official abbreviation takes Pokémon TCG Online's code (Wizards Black Star Promos "PR", Nintendo "PR-NP", DP "PR-DPP", HGSS "PR-HS"). So a card reads the same everywhere and matches its print.
