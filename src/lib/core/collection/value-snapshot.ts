@@ -50,8 +50,8 @@ export type ValueSnapshot = {
  * reaches the dashboard immediately rather than on the one-hour TTL.
  *
  * The paragraph is kept rather than deleted because it explains why the tag is
- * separate from cardsTag(), which is still the reason it exists. Note that
- * cardPricesTag in ./collection.ts is the one now in the position this used to
- * describe: declared, applied, and dropped by nothing.
+ * separate from cardsTag(), which is still the reason it exists. Its sibling for
+ * card lines, priceHistoryTag in ./collection.ts, is dropped by the TCGplayer
+ * prices cron the same way since 2026-09-15.
  */
 export const valueHistoryTag = (userId: string) => `value-history:${userId}`;

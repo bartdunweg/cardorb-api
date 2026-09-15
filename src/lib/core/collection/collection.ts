@@ -1545,21 +1545,11 @@ export const getValueHistory = cache(
  * history changes when the cron runs, not when somebody edits a card, so it has
  * no business being dropped by cardsTag().
  *
- * ── The tag is declared and nothing drops it ───────────────────────────────
- *
- * This comment used to say the cron revalidates the tag after it writes, so a
- * fresh week's prices reach the dashboard immediately. It does not. Grep
- * revalidateTag across src: the calls are cardsTag() and valueHistoryTag().
- * Never this one.
- *
- * So the one-hour TTL is the whole mechanism, and a fresh reading can be up to
- * an hour late on the dashboard. That may well be fine — it is a nightly series,
- * and the sibling tag in value-snapshot.ts made the same trade deliberately for
- * years. What was not fine was a comment promising the opposite, which is how
- * you debug a staleness that the code never claimed to prevent.
- *
- * If it should be immediate, the fix is one line in api/v1/cron/snapshot/route.ts
- * beside the valueHistoryTag call that is already there.
+ * Two tags. cardPricesTag is per person, as every cache here is keyed. priceHistoryTag is the
+ * same readings as a fact about cards: the nightly TCGplayer job drops it the moment the day's
+ * line is written (api/v1/cron/tcgplayer-prices/route.ts), so a new day reaches every card's
+ * chart then, not up to an hour later. Until 2026-09-15 nothing dropped either tag and the
+ * one-hour TTL was the whole mechanism: the first open after it answered the old line.
  *
  * The window is ninety days rather than everything. Movers is a question about
  * recent movement, the table will only grow, and reading two years of readings
@@ -1567,6 +1557,9 @@ export const getValueHistory = cache(
  * that does not change.
  */
 export const cardPricesTag = (userId: string) => `card-prices:${userId}`;
+
+/** Every cached price history, whoever asked: dropped by the nightly job once the day is written. */
+export const priceHistoryTag = "card-prices";
 
 const WINDOW_DAYS = 90;
 /** A `since` before any reading: one card's own line is everything it has, back to the backfill. */
@@ -1655,7 +1648,7 @@ export const getCardPrices = cache(
         // v11: a card is its catalogue and its id (migration 20260915161000), every point carries its
         // language, and the key hashes both; a v10 entry answers a Japanese card under an English id.
         ["card-prices", "v11", userId, since, idsKey(cards)],
-        { revalidate: 3600, tags: [cardPricesTag(userId)] },
+        { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag] },
       )();
       return { points, failed: false };
     } catch (err) {

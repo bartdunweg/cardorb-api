@@ -1,8 +1,9 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
 import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
-import { usdToEurForRequest } from "@/lib/core/collection/collection";
+import { priceHistoryTag, usdToEurForRequest } from "@/lib/core/collection/collection";
 import { allFinishPrints } from "@/lib/core/catalogue/card-printings";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
@@ -230,6 +231,8 @@ export async function GET(req: Request) {
         ];
         await writeCardPrices(db, points);
         history.written = points.length;
+        // Every card's chart reads the new day now, not when its hour in the cache runs out.
+        revalidateTag(priceHistoryTag, { expire: 0 });
       } catch (err) {
         console.error("[cron] writing today's price history failed:", err);
         history.skipped = "write failed";
