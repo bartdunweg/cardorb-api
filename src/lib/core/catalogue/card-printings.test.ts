@@ -102,6 +102,20 @@ describe("printingsOf", () => {
     ]);
   });
 
+  // What TCGdex lists for these cards in our copy, 2026-09-15.
+  it("offers only the reverse holo of a card printed as nothing else", () => {
+    for (const id of ["bwp-BW41", "bwp-BW42", "bwp-BW52"])
+      expect(printingsOf([{ type: "normal" }], id)).toEqual([
+        { finish: "reverse-holo", foilPattern: null },
+      ]);
+    for (const id of ["dp7-SH1", "dp7-SH2", "dp7-SH3"])
+      expect(printingsOf([{ type: "holo" }], id)).toEqual([
+        { finish: "reverse-holo", foilPattern: null },
+      ]);
+    // Landorus BW43, from the same box, is a full art holo and keeps it.
+    expect(printingsOf([{ type: "holo" }], "bwp-BW43").map((p) => p.finish)).toEqual(["holo"]);
+  });
+
   // Skyridge Gengar (ecard3-10): TCGdex and Scrydex list a reverse and Bulbapedia says every Skyridge
   // card but the H cards has one; TCGplayer prices the card as Normal only. The reverse is offered,
   // and priced as unknown (price-basis.mjs).

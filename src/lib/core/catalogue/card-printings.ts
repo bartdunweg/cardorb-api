@@ -130,6 +130,8 @@ export function printingsOf(
     seen.delete("reverse-holo|");
   if (reverse && seen.size)
     seen.set("reverse-holo|", { finish: "reverse-holo", foilPattern: null });
+  if (tcgId && REVERSE_ONLY.has(tcgId) && seen.has("reverse-holo|"))
+    for (const key of [...seen.keys()]) if (key !== "reverse-holo|") seen.delete(key);
   return [...seen.values()].sort(
     (a, b) =>
       FINISHES.indexOf(a.finish) - FINISHES.indexOf(b.finish) ||
@@ -139,6 +141,17 @@ export function printingsOf(
 
 type TcgplayerLink = { productId?: number; variants?: string[]; shadowless?: unknown } | null;
 const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
+
+/**
+ * English cards printed only as a reverse holo, where TCGdex lists another printing beside it.
+ *
+ * Bulbapedia names the one print and TCGplayer sells no other (2026-09-15): Thundurus BW41 and
+ * Tornadus BW42 came in the Forces of Nature Collection, Lillipup BW52 in the Emerging Challenges
+ * Box, all three "Mirror Parallel Holofoil"; Stormfront's Shiny Pokémon (SH1 to SH3) were Starlight
+ * holos in Japan and reverse holos in English. TCGdex lists BW41, BW42 and BW52 as normal and the
+ * SH cards as holo, so a form offered a Standard or a holo copy that was never printed.
+ */
+const REVERSE_ONLY = new Set(["bwp-BW41", "bwp-BW42", "bwp-BW52", "dp7-SH1", "dp7-SH2", "dp7-SH3"]);
 
 const REVERSE_DECISIONS = (REVERSE_HOLO as { cards: Record<string, boolean> }).cards;
 const HOLO_BEFORE_REVERSES = new Set(
