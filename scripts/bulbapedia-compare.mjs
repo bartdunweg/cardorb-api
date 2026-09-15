@@ -15,6 +15,11 @@
  * where a difference is not accepted, 2 where the check itself failed.
  *
  *   node scripts/bulbapedia-compare.mjs [--set en/base1] [--issue issue.md] [--run-url <url>]
+ *   node scripts/bulbapedia-compare.mjs --copy <dir>
+ *
+ * --copy reads the copy from <dir>/sets.json and <dir>/cards.json (rows of catalogue_sets and
+ * catalogue_cards) instead of the database: the copy as a change to its rules will write it, for a
+ * report on that change before a night has run it.
  *
  * Run by hand, from a machine Bulbapedia answers: it refuses GitHub's runners with a 403 (first
  * scheduled run, 2026-09-14), so there is no workflow. Bart chose to run it on request.
@@ -22,7 +27,12 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { KINDS, compareSet, isAccepted } from "../src/lib/core/catalogue/bulbapedia-compare.mjs";
+import {
+  KINDS,
+  compareSet,
+  isAccepted,
+  listedEntries,
+} from "../src/lib/core/catalogue/bulbapedia-compare.mjs";
 import {
   findList,
   parseInfobox,
@@ -36,8 +46,17 @@ const arg = (name) => {
   return i > 0 ? process.argv[i + 1] : null;
 };
 const ONLY = arg("--set");
+const COPY = arg("--copy");
 const ISSUE = arg("--issue");
 const RUN_URL = arg("--run-url");
+/**
+ * Lists of cards from many sets, each card naming its own set in italics: a set's cards on one of
+ * these are compared with that set, where its own list does not hold them. Yellow A Alternate cards
+ * are the lettered reprints (Blacksmith 88a of Flashfire) the copy files under the set they print.
+ */
+const ALTERNATE_LISTS = [
+  { page: "Yellow A Alternate cards (TCG)", list: "Yellow A Alternate cards" },
+];
 /** GitHub refuses an issue body over 65,536 characters. */
 const ISSUE_LIMIT = 60_000;
 
@@ -53,12 +72,17 @@ async function main() {
   const accepted = JSON.parse(readFileSync(join(CATALOGUE, "bulbapedia-accepted.json"), "utf8"));
   const today = new Date().toISOString().slice(0, 10);
 
-  const sets = new Map((await ourSets()).map((s) => [`${s.language}/${s.id}`, s]));
+  const copied = (file) => JSON.parse(readFileSync(join(COPY, file), "utf8"));
+  const sets = new Map(
+    (COPY ? copied("sets.json") : await ourSets()).map((s) => [`${s.language}/${s.id}`, s]),
+  );
   const cards = new Map();
   for (const language of ["en", "ja"]) {
-    const rows = await query(
-      `select set_id, id, local_id, name from catalogue_cards where language = '${language}'`,
-    );
+    const rows = COPY
+      ? copied("cards.json").filter((r) => r.language === language)
+      : await query(
+          `select set_id, id, local_id, name from catalogue_cards where language = '${language}'`,
+        );
     for (const r of rows) {
       const k = `${language}/${r.set_id}`;
       if (!cards.has(k)) cards.set(k, []);
@@ -67,13 +91,30 @@ async function main() {
   }
 
   const wanted = mapping.filter((m) => !ONLY || `${m.language}/${m.id}` === ONLY);
-  const titles = [...new Set(wanted.filter((m) => m.page).map((m) => m.page))];
+  const titles = [
+    ...new Set([
+      ...wanted.filter((m) => m.page).map((m) => m.page),
+      ...ALTERNATE_LISTS.map((a) => a.page),
+    ]),
+  ];
   const info = await pageInfo(titles);
   const resolved = new Map([...info.values()].filter(Boolean).map((p) => [p.title, p]));
   const { texts, fetched } = await pageTexts(resolved);
   const pages = new Map();
   for (const [title, wikitext] of texts)
     pages.set(title, { lists: parseSetlists(wikitext), infobox: parseInfobox(wikitext) });
+
+  // Each alternate by the English list title of the set it names ("Flashfire").
+  const alternatesOf = new Map();
+  for (const a of ALTERNATE_LISTS) {
+    const target = info.get(a.page);
+    const list = target ? pages.get(target.title)?.lists.find((l) => l.title === a.list) : null;
+    for (const e of list?.entries ?? []) {
+      if (!e.from) continue;
+      if (!alternatesOf.has(e.from)) alternatesOf.set(e.from, []);
+      alternatesOf.get(e.from).push(e);
+    }
+  }
 
   /** @type {{ key: string, set: any, map: any, status: string, differences: any[], ours: number, theirs: number }[]} */
   const results = [];
@@ -89,12 +130,15 @@ async function main() {
     const target = info.get(map.page);
     const page = target ? pages.get(target.title) : null;
     const found = page ? map.lists.map((ref) => findList(page.lists, ref)) : [];
+    const listed = {
+      lists: map.lists,
+      found,
+      alternates:
+        map.language === "en" ? map.lists.flatMap((ref) => alternatesOf.get(ref) ?? []) : [],
+      jasetname: page?.infobox.jasetname ?? null,
+    };
     const differences = page
-      ? compareSet(set, cards.get(key) ?? [], {
-          lists: map.lists,
-          found,
-          jasetname: page.infobox.jasetname,
-        })
+      ? compareSet(set, cards.get(key) ?? [], listed)
       : [
           {
             kind: "list not found",
@@ -107,7 +151,7 @@ async function main() {
     for (const d of differences) d.accepted = isAccepted(d, accepted);
     const open = differences.filter((d) => !d.accepted);
     const ours = (cards.get(key) ?? []).length;
-    const theirs = found.reduce((n, l) => n + (l?.entries.length ?? 0), 0);
+    const theirs = listedEntries(listed).length;
     const status = !open.length
       ? "clean"
       : open.some((d) => d.kind === "list not found")

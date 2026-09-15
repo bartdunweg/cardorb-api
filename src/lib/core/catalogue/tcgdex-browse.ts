@@ -7,6 +7,7 @@ import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { cardNamed } from "./card-names";
 import { correctedFacts, correctedName } from "./card-fact-corrections";
 import { canonicalRarity } from "./rarity-names";
+import { extraCardsOf } from "./extra-cards";
 
 /** One set, with enough to render a tile and sort a shelf. */
 export type CatalogueSet = {
@@ -359,7 +360,9 @@ async function fetchEnglishSets(): Promise<CatalogueSet[]> {
       localName: null,
       series: s.serie?.name ?? "Other",
       releaseDate: shelfDate(s.releaseDate),
-      total: s.cardCount?.total ?? 0,
+      // With the cards the copy adds to the set (extra-cards.ts), so its count is the copy's.
+      total:
+        (s.cardCount?.total ?? 0) + extraCardsOf("en", s.id).filter(([, c]) => !c.counted).length,
       printedTotal: s.cardCount?.official ?? null,
       cardsRecorded: true,
       logo: s.logo ? `${s.logo}.webp` : null,
@@ -582,7 +585,9 @@ export async function englishSet(
     localName: null,
     series: known?.series ?? detail.serie?.name ?? "Other",
     releaseDate: shelfDate(detail.releaseDate) ?? known?.releaseDate ?? null,
-    total: detail.cardCount?.total ?? detail.cards?.length ?? 0,
+    total:
+      (detail.cardCount?.total ?? detail.cards?.length ?? 0) +
+      extraCardsOf("en", id).filter(([, c]) => !c.counted).length,
     printedTotal: detail.cardCount?.official ?? null,
     // Only the parent set's own, never a gallery's "ASR:TG", which is not one: see the
     // comment on `code` in catalogue.ts, which has always taken the half before the colon.
@@ -613,7 +618,34 @@ export async function englishSet(
     // TCGdex's id, because this is TCGdex: what every price in this repo is keyed by.
     tcgId: c.id,
   }));
-  return { set, cards: inBinderOrder(cards) };
+  // The cards TCGdex does not list and the copy adds (extra-cards.ts), with their own facts.
+  const extra = extraCardsOf("en", id)
+    .filter(([cardId]) => !cards.some((c) => c.id === cardId))
+    .map(([cardId, x]): CatalogueMatch => ({
+      id: cardId,
+      number: x.number,
+      name: x.name,
+      localName: null,
+      setName: set.name,
+      series: set.series,
+      image: x.image ?? null,
+      imageHigh: null,
+      rarity: x.rarity ?? null,
+      types: x.types,
+      category: x.category,
+      trainerType: x.trainerType ?? null,
+      sheet: {
+        illustrator: x.illustrator ?? null,
+        hp: x.hp ?? null,
+        stage: x.stage ?? null,
+        evolveFrom: x.evolveFrom ?? null,
+        regulationMark: null,
+        firstEdition: null,
+        variants: [],
+      },
+      tcgId: cardId,
+    }));
+  return { set, cards: inBinderOrder([...cards, ...extra]) };
 }
 
 /**

@@ -63,8 +63,8 @@ const check = (name, ok, detail) => checks.push({ name, ok, detail });
  */
 const SET_STALE_DAYS = 7;
 /** The copy's shape each catalogue is written in now (mirror.ts, mirror-language.ts). */
-// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 3 + 7.
-const FORMATS = { en: 3, ja: 10 };
+// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 4 + 7.
+const FORMATS = { en: 4, ja: 11 };
 
 const sync = await query(
   "select language, count(*)::int as sets, min(format)::int as oldest_format, min(synced_at)::text as oldest from catalogue_sync group by language order by language",
@@ -142,7 +142,10 @@ for (const language of Object.keys(RARITY_WORDS)) {
 /**
  * Cards with no illustrator, per catalogue. Some print none (an energy, a McDonald's card with no
  * credit), so this is a ceiling rather than zero: 719 English cards on 2026-09-14, and 562 Japanese
- * ones once Scrydex's artists are in (6,192 before).
+ * ones once Scrydex's artists are in (6,192 before). The Japanese count rose to 634 on 2026-09-15:
+ * TCGdex answers an empty string for 448 artists it does not know, which kept Scrydex's out for 236
+ * of them (mirror-language.ts reads the empty string as none since), and the 118 cards added that
+ * day are mostly Energy, which print no artist.
  */
 const ILLUSTRATORLESS_CEILING = { en: 740, ja: 600 };
 const illustrators = await query(

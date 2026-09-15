@@ -47,6 +47,49 @@ function mode(values) {
   return best;
 }
 
+/**
+ * The one mark two code points draw alike: the Prism Star is ◇ in the copy and ♢ on Bulbapedia's
+ * lists, and neither is a naming or a spelling of the card, which prints a star in a diamond.
+ */
+const sameMarks = (s) => String(s ?? "").replace(/♢/g, "◇");
+
+/**
+ * An entry's name as the list shows it, whole: Unseen Forces' Unown carry their letter only in the
+ * number ("Unown", B) where the card prints "Unown B".
+ */
+const listedName = (e) =>
+  e.name === "Unown" && /^[A-Z!?]$/.test(e.number ?? "") ? `Unown ${e.number}` : e.name;
+
+/**
+ * The name to hold a card's against: the entry's own, or with the small print after it where that
+ * is the card's form or subtitle ("Gastrodon" East Sea, "Professor's Research" [Professor Magnolia])
+ * and the copy's name carries it.
+ */
+function theirNameFor(e, ours) {
+  const name = listedName(e);
+  if (!e.note) return name;
+  const full = `${name} ${e.note}`;
+  return nameKey(full) === nameKey(ours) ? full : name;
+}
+
+/**
+ * Every card Bulbapedia lists for the set: its own lists' entries, and the cards of it another page
+ * lists among cards of many sets (Yellow A Alternate cards) where its own lists do not hold them.
+ *
+ * @param {{ found: ({ entries: { number: string|null, name: string }[] } | undefined)[], alternates?: { number: string|null, name: string }[] }} bulbapedia
+ */
+export function listedEntries(bulbapedia) {
+  const own = bulbapedia.found.flatMap((l) => l?.entries ?? []);
+  const alternates = (bulbapedia.alternates ?? []).filter(
+    (a) =>
+      !own.some(
+        (e) =>
+          numberKey(e.number) === numberKey(a.number) && nameKey(listedName(e)) === nameKey(a.name),
+      ),
+  );
+  return [...own, ...alternates];
+}
+
 /** Japanese text folded for comparison: width, spaces and the dots between words. */
 const jaKey = (s) =>
   String(s ?? "")
@@ -57,7 +100,7 @@ const jaKey = (s) =>
 /**
  * @param {{ language: string, id: string, name: string, local_name?: string|null, total?: number|null, printed_total?: number|null }} set
  * @param {{ id: string, local_id: string, name: string }[]} cards the copy's cards of the set
- * @param {{ lists: string[], found: ({ title: string, entries: { number: string|null, printedTotal: string|null, name: string }[] } | undefined)[], jasetname?: string|null }} bulbapedia the mapping's list references, and the list each names (undefined where the page has none)
+ * @param {{ lists: string[], found: ({ title: string, entries: { number: string|null, printedTotal: string|null, name: string, note?: string }[] } | undefined)[], alternates?: { number: string|null, printedTotal: string|null, name: string }[], jasetname?: string|null }} bulbapedia the mapping's list references, the list each names (undefined where the page has none), and the set's cards listed on a page of many sets
  * @returns {Difference[]}
  */
 export function compareSet(set, cards, bulbapedia) {
@@ -69,14 +112,21 @@ export function compareSet(set, cards, bulbapedia) {
     if (!bulbapedia.found[i]?.entries.length)
       add({ kind: "list not found", ours: set.name, bulbapedia: `no list "${ref}" on the page` });
   });
-  const entries = bulbapedia.found.flatMap((l) => l?.entries ?? []);
+  const entries = listedEntries(bulbapedia);
   if (!entries.length) return out;
 
   // The set's name, where one list is the set: a subset the copy names after its parent ("Crown
   // Zenith Galarian Gallery" for "Galarian Gallery") says the same thing more fully.
+  // A trainer kit's half deck is the kit's name with the deck's Pokémon: "XY Trainer Kit (Latias)"
+  // for Bulbapedia's "Latias Half Deck".
   if (bulbapedia.found.length === 1) {
     const theirs = bulbapedia.found[0].title;
-    if (set.name !== theirs && !set.name.endsWith(` ${theirs}`))
+    const deck = / Half Deck$/.test(theirs) ? ` (${theirs.replace(/ Half Deck$/, "")})` : null;
+    if (
+      set.name !== theirs &&
+      !set.name.endsWith(` ${theirs}`) &&
+      !(deck && / Trainer Kit( \d)?\b/.test(set.name) && set.name.endsWith(deck))
+    )
       add({
         kind: nameKey(set.name) === nameKey(theirs) ? "set name spelling" : "set name",
         ours: set.name,
@@ -135,15 +185,16 @@ export function compareSet(set, cards, bulbapedia) {
     }
     const i = Math.max(
       0,
-      candidates.findIndex((e) => nameKey(e.name) === nameKey(card.name)),
+      candidates.findIndex((e) => nameKey(theirNameFor(e, card.name)) === nameKey(card.name)),
     );
     const [theirs] = candidates.splice(i, 1);
+    const theirName = theirNameFor(theirs, card.name);
     const at = { card: card.id, number: card.local_id };
     if (theirs.number !== card.local_id) spelt.push([card.local_id, theirs.number]);
-    if (nameKey(theirs.name) !== nameKey(card.name))
-      add({ kind: "card name", ...at, ours: card.name, bulbapedia: theirs.name });
-    else if (theirs.name !== card.name)
-      add({ kind: "card name spelling", ...at, ours: card.name, bulbapedia: theirs.name });
+    if (nameKey(theirName) !== nameKey(card.name))
+      add({ kind: "card name", ...at, ours: card.name, bulbapedia: theirName });
+    else if (sameMarks(theirName) !== sameMarks(card.name))
+      add({ kind: "card name spelling", ...at, ours: card.name, bulbapedia: theirName });
   }
   // Numbers spelt another way ("1" beside "001") are one difference a set, with its first examples.
   if (spelt.length) {
@@ -156,16 +207,19 @@ export function compareSet(set, cards, bulbapedia) {
   }
   const extra = [];
   for (const card of leftOurs) {
-    const i = unnumbered.findIndex((e) => nameKey(e.name) === nameKey(card.name));
+    const i = unnumbered.findIndex(
+      (e) => nameKey(theirNameFor(e, card.name)) === nameKey(card.name),
+    );
     if (i >= 0) {
       const [theirs] = unnumbered.splice(i, 1);
-      if (theirs.name !== card.name)
+      const theirName = theirNameFor(theirs, card.name);
+      if (sameMarks(theirName) !== sameMarks(card.name))
         add({
           kind: "card name spelling",
           card: card.id,
           number: card.local_id,
           ours: card.name,
-          bulbapedia: theirs.name,
+          bulbapedia: theirName,
         });
     } else extra.push(card);
   }
@@ -174,7 +228,7 @@ export function compareSet(set, cards, bulbapedia) {
       kind: "missing card",
       number: e.number ?? "",
       ours: "",
-      bulbapedia: e.number ? `${e.number} ${e.name}` : e.name,
+      bulbapedia: e.number ? `${e.number} ${listedName(e)}` : e.name,
     });
   for (const card of extra)
     add({

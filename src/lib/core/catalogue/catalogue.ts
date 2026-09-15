@@ -306,7 +306,7 @@ export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "
  */
 // v2: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
 // v3: Galarian Gallery is a rarity of its own, and the Trainer Galleries' sub-tier words are Ultra Rare.
-export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v3"], {
+export const eraRarities = unstable_cache(loadEraRarities, ["era-rarities", "v4"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
@@ -336,7 +336,7 @@ const englishSetEntry = unstable_cache(
     if (!found) throw new Error(`No English set ${setId}`);
     return found;
   },
-  ["english-set", "v4"],
+  ["english-set", "v5"],
   { revalidate: DAY, tags: ["catalogue"] },
 );
 

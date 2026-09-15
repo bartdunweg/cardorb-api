@@ -53,6 +53,8 @@
  * Each entry is [what TCGdex says, what the card is]. It applies only while TCGdex still says the
  * first, so a fix upstream wins and a stale entry does nothing.
  */
+import { nameConventions } from "./english-card-name.mjs";
+
 export type FactCorrection = {
   name?: [string, string];
   rarity?: [string, string];
@@ -2169,11 +2171,36 @@ export const ROUND_TWO_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "xyp-XY161": { evolveFrom: [null, "Fennekin"] },
 };
 
-/** Both tables' corrections for one card, field by field. */
+/**
+ * Names put right in the naming pass against Bulbapedia's set lists (2026-09-15), each where
+ * Bulbapedia and TCGplayer's product agree against TCGdex, or where the copy held one card two ways.
+ * The conventions every name follows (Energy icons as letters, bracketed subtitles, Team Flare's Gear)
+ * are rules, in nameConventions (english-card-name.mjs); these are single cards.
+ *
+ * - "_____'s Pikachu" (basep-24) with the five underscores Bulbapedia writes and the copy's own
+ *   Classic Collection reprint (cel25cc-CC008) has; TCGdex wrote eleven here.
+ * - "Gardevoir ex δ" (cel25cc-CC014), the Classic Collection's reprint of Holon Phantoms' Delta Species
+ *   card, as TCGplayer ("Gardevoir ex (Delta Species)") and Bulbapedia write it.
+ * - "Ash-Greninja-EX" (xyp-XY133) and "Ho-Oh" (xyp-XY153), hyphenated as the cards and TCGplayer
+ *   write them.
+ * - "EXP.ALL" (ex6-91), as FireRed & LeafGreen prints it and TCGplayer and Bulbapedia write it.
+ * - "Mimikyu δ" (swshp-SWSH136), the Celebrations Collector Chest's Delta Species card, as TCGplayer
+ *   ("Mimikyu (Delta Species)") and Bulbapedia write it; TCGdex left the δ off.
+ */
+export const NAMING_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
+  "basep-24": { name: ["___________'s Pikachu", "_____'s Pikachu"] },
+  "cel25cc-CC014": { name: ["Gardevoir ex", "Gardevoir ex δ"] },
+  "ex6-91": { name: ["EXP. ALL", "EXP.ALL"] },
+  "swshp-SWSH136": { name: ["Mimikyu", "Mimikyu δ"] },
+  "xyp-XY133": { name: ["Ash Greninja EX", "Ash-Greninja-EX"] },
+  "xyp-XY153": { name: ["Ho Oh", "Ho-Oh"] },
+};
+
+/** Every table's corrections for one card, field by field. */
 const correctionOf = (id: string): FactCorrection | undefined => {
-  const first = CARD_FACT_CORRECTIONS[id];
-  const second = ROUND_TWO_CORRECTIONS[id];
-  return first && second ? { ...first, ...second } : (first ?? second);
+  const tables = [CARD_FACT_CORRECTIONS[id], ROUND_TWO_CORRECTIONS[id], NAMING_CORRECTIONS[id]];
+  const found = tables.filter((t): t is FactCorrection => !!t);
+  return found.length > 1 ? Object.assign({}, ...found) : found[0];
 };
 
 const sameTypes = (a: readonly string[], b: readonly string[]) =>
@@ -2312,9 +2339,30 @@ export function correctedName(id: string, name: string): string {
     const letter = decodeURIComponent(id.slice(id.lastIndexOf("-") + 1));
     if (/^[A-Z!?]$/.test(letter)) return `Unown ${letter}`;
   }
-  return named
-    .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
-    .replace(/\s+(EX|GX)$/, "-$1")
-    .replace(/\bHo-oh\b/, "Ho-Oh")
-    .replace(/\bNidoran ([♀♂])/, "Nidoran$1");
+  return nameConventions(
+    named
+      .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
+      .replace(/\s+(EX|GX)$/, "-$1")
+      .replace(/\bHo-oh\b/, "Ho-Oh")
+      .replace(/\bNidoran ([♀♂])/, "Nidoran$1"),
+  );
+}
+
+/**
+ * A card's number as it prints, where TCGdex writes it another way (naming pass, 2026-09-15, read
+ * off TCGplayer's and Scrydex's pictures of the cards): Aquapolis' and Skyridge's holo run prints
+ * H1 to H9 without the zero TCGdex gives them (H01), and two Black & White promos print BW004 and
+ * BW005 among BW01 to BW101. Only the number a person reads moves: the card's id, its picture's
+ * address and its price link stay TCGdex's, and the collection folds zeros when it matches a row.
+ *
+ * Left as TCGdex writes them, and reported: Sword & Shield's sets through Fusion Strike,
+ * Celebrations, the 2023 and 2024 McDonald's collections and the Nintendo promos print 001 where
+ * TCGdex writes 1, and the collection's copy sheet still compares a number exactly (items.ts,
+ * copies.ts in the web app), so padding them would lose the owner's rows there.
+ */
+export function correctedNumber(id: string, number: string): string {
+  const set = setOf(id);
+  if ((set === "ecard2" || set === "ecard3") && /^H0\d$/.test(number)) return `H${number.slice(2)}`;
+  if (set === "bwp" && /^BW0[45]$/.test(number)) return `BW00${number.slice(3)}`;
+  return number;
 }

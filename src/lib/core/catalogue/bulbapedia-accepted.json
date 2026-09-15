@@ -214,5 +214,1616 @@
     "ours": "Infernape E4 LV.X",
     "bulbapedia": "Infernape 4 LV.X",
     "reason": "Rising Rivals' Elite Four print a 4 with the Elite mark; TCGplayer, pokemontcg.io and TCGdex write it E4, which the copy keeps (a search for the 4 still finds it)."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "wp",
+    "number": null,
+    "ours": "W Promotional",
+    "bulbapedia": "Stamped Promos",
+    "reason": "Bulbapedia titles the list Stamped Promos on its W Promotional cards page; TCGdex names the set W Promotional and holds no card of it (the seven W stamps are printings of their parent cards), so the set is no tile."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "exu",
+    "number": null,
+    "ours": "Unseen Forces Unown Collection",
+    "bulbapedia": "Unown cards",
+    "reason": "Bulbapedia lists the 28 Unown as \"Unown cards\" on EX Unseen Forces' page; no source names the subset as a set, and TCGdex's Unseen Forces Unown Collection is kept."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "hgss1",
+    "number": null,
+    "ours": "HeartGold SoulSilver",
+    "bulbapedia": "HeartGold & SoulSilver",
+    "reason": "The set's logo prints HeartGold SoulSilver without an ampersand, and TCGplayer's group writes it the same; Bulbapedia titles the page HeartGold & SoulSilver."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "2011bw",
+    "number": null,
+    "ours": "McDonald's Collection 2011",
+    "bulbapedia": "McDonald's Collection",
+    "reason": "Bulbapedia's list has no year; the copy names each McDonald's collection by its year, as TCGplayer's groups do (McDonald's Promos 2011)."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "2018sm",
+    "number": null,
+    "ours": "McDonald's Collection 2018",
+    "bulbapedia": "International McDonald's Collection 2018",
+    "reason": "Bulbapedia names the English and the international run apart; the copy names each McDonald's collection by its year, as TCGplayer's groups do (McDonald's Promos 2018)."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "2019sm",
+    "number": null,
+    "ours": "McDonald's Collection 2019",
+    "bulbapedia": "English McDonald's Collection 2019",
+    "reason": "Bulbapedia names the English and the international run apart; the copy names each McDonald's collection by its year, as TCGplayer's groups do (McDonald's Promos 2019)."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "fut2020",
+    "number": null,
+    "ours": "Pokémon Futsal 2020",
+    "bulbapedia": "Pokémon Futsal",
+    "reason": "Bulbapedia's list has no year; TCGdex names the five-card Futsal promotion by its year, and no other Futsal set exists to tell it from."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "2022swsh",
+    "number": null,
+    "ours": "McDonald's Collection 2022",
+    "bulbapedia": "Match Battle 2022",
+    "reason": "Match Battle was the name of the US promotion; the copy names each McDonald's collection by its year, as TCGplayer's groups do (McDonald's Promos 2022)."
+  },
+  {
+    "kind": "set name",
+    "language": "en",
+    "set": "2023sv",
+    "number": null,
+    "ours": "McDonald's Collection 2023",
+    "bulbapedia": "Match Battle 2023",
+    "reason": "Match Battle was the name of the US promotion; the copy names each McDonald's collection by its year, as TCGplayer's groups do (McDonald's Promos 2023)."
+  },
+  {
+    "kind": "set name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Pokémon VS",
+    "bulbapedia": "Pokémon Card★VS",
+    "reason": "Pokémon VS is the set's name at Scrydex and TCGplayer and the title of Bulbapedia's own page; its list title copies the logo's star (Pokémon Card★VS)."
+  },
+  {
+    "kind": "set name",
+    "language": "ja",
+    "set": "web1",
+    "number": null,
+    "ours": "Pokémon Web",
+    "bulbapedia": "Pokémon Card★web",
+    "reason": "Pokémon Web is the set's name at Scrydex and TCGplayer and the title of Bulbapedia's own page; its list title copies the logo's star (Pokémon Card★web)."
+  },
+  {
+    "kind": "set name",
+    "language": "ja",
+    "set": "SV10",
+    "number": null,
+    "ours": "Glory of Team Rocket",
+    "bulbapedia": "Glory of the Rocket Gang",
+    "reason": "No two sources agree: TCGplayer writes The Glory of Team Rocket, Bulbapedia Glory of the Rocket Gang; Scrydex and TCGdex's Glory of Team Rocket is kept."
+  },
+  {
+    "kind": "set total",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "173",
+    "bulbapedia": "164",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "set total",
+    "language": "en",
+    "set": "mep",
+    "number": null,
+    "ours": "112",
+    "bulbapedia": "115",
+    "reason": "MEP 115 to 117 are Delta Reign promos (out 2026-11-06): Bulbapedia announces them, and Scrydex and TCGplayer have no card, picture or product yet (2026-09-15)."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "neo2",
+    "number": null,
+    "ours": "57",
+    "bulbapedia": "56",
+    "reason": "Crossing the Ruins has two Ruin Walls, the Kabuto carving (054) and the Aerodactyl one (057), sold apart at TCGplayer (575445, 575446); Bulbapedia puts both on one row, so its list counts 56."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "79",
+    "bulbapedia": "71",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "79",
+    "bulbapedia": "71",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "SVK",
+    "number": null,
+    "ours": "44",
+    "bulbapedia": "52",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "SVLN",
+    "number": null,
+    "ours": "22",
+    "bulbapedia": "25",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "SVLS",
+    "number": null,
+    "ours": "22",
+    "bulbapedia": "25",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "set total",
+    "language": "ja",
+    "set": "M-P",
+    "number": null,
+    "ours": "137",
+    "bulbapedia": "162",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "printed total",
+    "language": "en",
+    "set": "xy7",
+    "number": null,
+    "ours": "98",
+    "bulbapedia": "95",
+    "reason": "Ancient Origins prints /98 (Oddish 1/98, TCGplayer and TCGdex scans); Bulbapedia's page writes /95 on every entry, a slip on the wiki."
+  },
+  {
+    "kind": "printed total",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "25",
+    "bulbapedia": "102",
+    "reason": "Each Classic Collection card prints its original number and total (Blastoise 2/102, Umbreon ☆ 17/17), so the set has no one printed total; TCGdex's 25 is the count."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "wp",
+    "number": "",
+    "ours": "no cards",
+    "bulbapedia": "7 cards",
+    "reason": "The seven W Promotional cards are W-stamped printings of their parent cards (Jungle Pikachu 60/64 and six more), which TCGdex records as a variant of the parent and TCGplayer sells as [W Stamped] products; they are not cards of a set of their own."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "2",
+    "ours": "",
+    "bulbapedia": "2 Blastoise",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "4",
+    "ours": "",
+    "bulbapedia": "4 Charizard",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "15",
+    "ours": "",
+    "bulbapedia": "15 Venusaur",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "15",
+    "ours": "",
+    "bulbapedia": "15 Here Comes Team Rocket!",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "15",
+    "ours": "",
+    "bulbapedia": "15 Rocket's Zapdos",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "15",
+    "ours": "",
+    "bulbapedia": "15 Claydol",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "73",
+    "ours": "",
+    "bulbapedia": "73 Imposter Professor Oak",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "8",
+    "ours": "",
+    "bulbapedia": "8 Dark Gyarados",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "24",
+    "ours": "",
+    "bulbapedia": "24 _____'s Pikachu",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "20",
+    "ours": "",
+    "bulbapedia": "20 Cleffa",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "66",
+    "ours": "",
+    "bulbapedia": "66 Shining Magikarp",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "9",
+    "ours": "",
+    "bulbapedia": "9 Team Magma's Groudon",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "86",
+    "ours": "",
+    "bulbapedia": "86 Rocket's Admin.",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "88",
+    "ours": "",
+    "bulbapedia": "88 Mew ex",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "93",
+    "ours": "",
+    "bulbapedia": "93 Gardevoir ex δ",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "17",
+    "ours": "",
+    "bulbapedia": "17 Umbreon ☆",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "109",
+    "ours": "",
+    "bulbapedia": "109 Luxray GL LV.X",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "145",
+    "ours": "",
+    "bulbapedia": "145 Garchomp C LV.X",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "107",
+    "ours": "",
+    "bulbapedia": "107 Donphan",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "113",
+    "ours": "",
+    "bulbapedia": "113 Reshiram",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "114",
+    "ours": "",
+    "bulbapedia": "114 Zekrom",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "54",
+    "ours": "",
+    "bulbapedia": "54 Mewtwo-EX",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "97",
+    "ours": "",
+    "bulbapedia": "97 Xerneas-EX",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "76",
+    "ours": "",
+    "bulbapedia": "76 M Rayquaza-EX",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": "60",
+    "ours": "",
+    "bulbapedia": "60 Tapu Lele-GX",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "mep",
+    "number": "115",
+    "ours": "",
+    "bulbapedia": "115 Spritzee",
+    "reason": "MEP 115 to 117 are Delta Reign promos (out 2026-11-06): Bulbapedia announces them, and Scrydex and TCGplayer have no card, picture or product yet (2026-09-15)."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "mep",
+    "number": "116",
+    "ours": "",
+    "bulbapedia": "116 Seel",
+    "reason": "MEP 115 to 117 are Delta Reign promos (out 2026-11-06): Bulbapedia announces them, and Scrydex and TCGplayer have no card, picture or product yet (2026-09-15)."
+  },
+  {
+    "kind": "missing card",
+    "language": "en",
+    "set": "mep",
+    "number": "117",
+    "ours": "",
+    "bulbapedia": "117 Kyogre",
+    "reason": "MEP 115 to 117 are Delta Reign promos (out 2026-11-06): Bulbapedia announces them, and Scrydex and TCGplayer have no card, picture or product yet (2026-09-15)."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "neo4",
+    "number": "",
+    "ours": "",
+    "bulbapedia": "Impostor Oak's Invention",
+    "reason": "にせオーキドの発明 is Impostor Professor Oak's Invention at TCGdex and Scrydex; Bulbapedia's Japanese list writes Impostor Oak's Invention. The English print is a different card (Imposter Oak's Revenge)."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "GRA",
+    "ours": "",
+    "bulbapedia": "GRA Basic Grass Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "FIR",
+    "ours": "",
+    "bulbapedia": "FIR Basic Fire Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "WAT",
+    "ours": "",
+    "bulbapedia": "WAT Basic Water Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "LIG",
+    "ours": "",
+    "bulbapedia": "LIG Basic Lightning Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "PSY",
+    "ours": "",
+    "bulbapedia": "PSY Basic Psychic Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "FIG",
+    "ours": "",
+    "bulbapedia": "FIG Basic Fighting Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "DAR",
+    "ours": "",
+    "bulbapedia": "DAR Basic Darkness Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVK",
+    "number": "MET",
+    "ours": "",
+    "bulbapedia": "MET Basic Metal Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVLN",
+    "number": "WAT",
+    "ours": "",
+    "bulbapedia": "WAT Basic Water Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVLN",
+    "number": "LIG",
+    "ours": "",
+    "bulbapedia": "LIG Basic Lightning Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVLN",
+    "number": "PSY",
+    "ours": "",
+    "bulbapedia": "PSY Basic Psychic Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVLS",
+    "number": "FIR",
+    "ours": "",
+    "bulbapedia": "FIR Basic Fire Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVLS",
+    "number": "PSY",
+    "ours": "",
+    "bulbapedia": "PSY Basic Psychic Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "SVLS",
+    "number": "MET",
+    "ours": "",
+    "bulbapedia": "MET Basic Metal Energy",
+    "reason": "The box's basic Energy are deck contents: the generic Scarlet & Violet basic Energy, printed with a code and no set mark or number (Scrydex, TCGplayer), not cards of this set; Bulbapedia lists a deck's whole contents."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "077",
+    "ours": "",
+    "bulbapedia": "077 Jumbo Ice Cream",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "078",
+    "ours": "",
+    "bulbapedia": "078 Ultra Ball",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "079",
+    "ours": "",
+    "bulbapedia": "079 Rare Candy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "080",
+    "ours": "",
+    "bulbapedia": "080 Pokégear 3.0",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "081",
+    "ours": "",
+    "bulbapedia": "081 Air Balloon",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "083",
+    "ours": "",
+    "bulbapedia": "083 Brock's Scouting",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "084",
+    "ours": "",
+    "bulbapedia": "084 Boss's Orders",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "145",
+    "ours": "",
+    "bulbapedia": "145 Lillie's Determination",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "146",
+    "ours": "",
+    "bulbapedia": "146 Mega Audino ex",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "148",
+    "ours": "",
+    "bulbapedia": "148 Alolan Exeggutor",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "149",
+    "ours": "",
+    "bulbapedia": "149 Moltres",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "150",
+    "ours": "",
+    "bulbapedia": "150 Articuno",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "151",
+    "ours": "",
+    "bulbapedia": "151 Greninja ex",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "152",
+    "ours": "",
+    "bulbapedia": "152 Zapdos",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "153",
+    "ours": "",
+    "bulbapedia": "153 Sylveon ex",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "154",
+    "ours": "",
+    "bulbapedia": "154 Lucario",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "156",
+    "ours": "",
+    "bulbapedia": "156 Basic Grass Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "157",
+    "ours": "",
+    "bulbapedia": "157 Basic Fire Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "158",
+    "ours": "",
+    "bulbapedia": "158 Basic Water Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "159",
+    "ours": "",
+    "bulbapedia": "159 Basic Lightning Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "160",
+    "ours": "",
+    "bulbapedia": "160 Basic Psychic Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "161",
+    "ours": "",
+    "bulbapedia": "161 Basic Fighting Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "162",
+    "ours": "",
+    "bulbapedia": "162 Basic Darkness Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "163",
+    "ours": "",
+    "bulbapedia": "163 Basic Metal Energy",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "missing card",
+    "language": "ja",
+    "set": "M-P",
+    "number": "165",
+    "ours": "",
+    "bulbapedia": "165 Mega Signal",
+    "reason": "An M-P promo Bulbapedia announces and no other source has yet: Scrydex and TCGplayer list no card, picture or product for it (2026-09-15); it is added when one does."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "164 Grass Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "165 Fire Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "166 Water Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "167 Lightning Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "168 Psychic Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "169 Fighting Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "170 Darkness Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "171 Metal Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "sm1",
+    "number": null,
+    "ours": "172 Fairy Energy",
+    "bulbapedia": "",
+    "reason": "The nine 2017 basic Energy of Sun & Moon boosters print no number; TCGdex files them as 164 to 172 and TCGplayer sells them in SM Base Set as \"(2017 Unnumbered)\"; Bulbapedia lists no unnumbered basic Energy in a set."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC001 Blastoise",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC002 Charizard",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC003 Venusaur",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC004 Imposter Professor Oak",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC005 Dark Gyarados",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC006 Here Comes Team Rocket!",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC007 Rocket's Zapdos",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC008 _____'s Pikachu",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC009 Cleffa",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC010 Shining Magikarp",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC011 Team Magma's Groudon",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC012 Rocket's Admin.",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC013 Mew ex",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC014 Gardevoir ex δ",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC015 Umbreon ☆",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC016 Claydol",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC017 Luxray GL LV.X",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC018 Garchomp C LV.X",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC019 Donphan",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC020 Reshiram",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC021 Zekrom",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC022 Mewtwo-EX",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC023 Xerneas-EX",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC024 M Rayquaza-EX",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "en",
+    "set": "cel25cc",
+    "number": null,
+    "ours": "CC025 Tapu Lele-GX",
+    "bulbapedia": "",
+    "reason": "Classic Collection cards print their original number (2/102 Blastoise, TCGplayer and Scrydex pictures); four print 15, and the copy keeps TCGdex's CC001 to CC025 because a set's cards are matched by number (set-index.ts) and must not share one."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "neo2",
+    "number": null,
+    "ours": "057 Ruin Wall",
+    "bulbapedia": "",
+    "reason": "Crossing the Ruins has two Ruin Walls, the Kabuto carving (054) and the Aerodactyl one (057), sold apart at TCGplayer (575445, 575446); Bulbapedia puts both on one row, so its list counts 56."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "neo4",
+    "number": null,
+    "ours": "111 Impostor Professor Oak's Invention",
+    "bulbapedia": "",
+    "reason": "にせオーキドの発明 is Impostor Professor Oak's Invention at TCGdex and Scrydex; Bulbapedia's Japanese list writes Impostor Oak's Invention. The English print is a different card (Imposter Oak's Revenge)."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "072 Grass Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "073 Fire Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "074 Water Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "075 Lightning Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "076 Psychic Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "077 Fighting Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "078 Darkness Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1a",
+    "number": null,
+    "ours": "079 Metal Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "072 Grass Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "073 Fire Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "074 Water Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "075 Lightning Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "076 Psychic Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "077 Fighting Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "078 Darkness Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "extra card",
+    "language": "ja",
+    "set": "L1b",
+    "number": null,
+    "ours": "079 Metal Energy",
+    "bulbapedia": "",
+    "reason": "HeartGold and SoulSilver Collection's basic Energy print no number or set mark (Scrydex and TCGplayer pictures); TCGdex and Scrydex file them after 071, Bulbapedia leaves them off the list."
+  },
+  {
+    "kind": "card name",
+    "language": "en",
+    "set": "neo4",
+    "number": null,
+    "ours": "Thought Wave Machine (Rocket's Secret Machine)",
+    "bulbapedia": "Thought Wave Machine",
+    "reason": "The card is Thought Wave Machine with Rocket's Secret Machine as its kind; TCGplayer and TCGdex write the kind into the name, Bulbapedia into its type column."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Falkner's Technical Machine 01",
+    "bulbapedia": "Falkner's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Falkner's Technical Machine 02",
+    "bulbapedia": "Falkner's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Bugsy's Technical Machine 01",
+    "bulbapedia": "Bugsy's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Bugsy's Technical Machine 02",
+    "bulbapedia": "Bugsy's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Whitney's Technical Machine 01",
+    "bulbapedia": "Whitney's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Whitney's Technical Machine 02",
+    "bulbapedia": "Whitney's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Morty's Technical Machine 01",
+    "bulbapedia": "Morty's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Morty's Technical Machine 02",
+    "bulbapedia": "Morty's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Jasmine's Technical Machine 01",
+    "bulbapedia": "Jasmine's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Jasmine's Technical Machine 02",
+    "bulbapedia": "Jasmine's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Chuck's Technical Machine 01",
+    "bulbapedia": "Chuck's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Chuck's Technical Machine 02",
+    "bulbapedia": "Chuck's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Pryce's Technical Machine 01",
+    "bulbapedia": "Pryce's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Pryce's Technical Machine 02",
+    "bulbapedia": "Pryce's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Clair's Technical Machine 01",
+    "bulbapedia": "Clair's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Clair's Technical Machine 02",
+    "bulbapedia": "Clair's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Janine's Technical Machine 01",
+    "bulbapedia": "Janine's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Janine's Technical Machine 02",
+    "bulbapedia": "Janine's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Will's Technical Machine 01",
+    "bulbapedia": "Will's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Will's Technical Machine 02",
+    "bulbapedia": "Will's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Bruno's Technical Machine 01",
+    "bulbapedia": "Bruno's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Bruno's Technical Machine 02",
+    "bulbapedia": "Bruno's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Karen's Technical Machine 01",
+    "bulbapedia": "Karen's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Karen's Technical Machine 02",
+    "bulbapedia": "Karen's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Rocket's Technical Machine 01",
+    "bulbapedia": "Rocket's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Lance's Technical Machine 01",
+    "bulbapedia": "Lance's TM 01",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "VS1",
+    "number": null,
+    "ours": "Lance's Technical Machine 02",
+    "bulbapedia": "Lance's TM 02",
+    "reason": "TCGdex and Scrydex write Technical Machine in full; the card prints わざマシン and no English print exists. Bulbapedia abbreviates it TM."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "S8b",
+    "number": null,
+    "ours": "Boss's Orders [Lysandre]",
+    "bulbapedia": "Boss's Orders",
+    "reason": "The card prints its Supporter's name under the title; the copy brackets it as Bulbapedia's other lists and TCGplayer do ([Lysandre], [Professor Juniper]), where Bulbapedia's VMAX Climax list leaves it off."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "S8b",
+    "number": null,
+    "ours": "Professor's Research [Professor Juniper]",
+    "bulbapedia": "Professor's Research",
+    "reason": "The card prints its Supporter's name under the title; the copy brackets it as Bulbapedia's other lists and TCGplayer do ([Lysandre], [Professor Juniper]), where Bulbapedia's VMAX Climax list leaves it off."
+  },
+  {
+    "kind": "card name",
+    "language": "ja",
+    "set": "S8b",
+    "number": null,
+    "ours": "Boss's Orders [Lysandre]",
+    "bulbapedia": "Boss's Orders",
+    "reason": "The card prints its Supporter's name under the title; the copy brackets it as Bulbapedia's other lists and TCGplayer do ([Lysandre], [Professor Juniper]), where Bulbapedia's VMAX Climax list leaves it off."
+  },
+  {
+    "kind": "card name spelling",
+    "language": "en",
+    "set": "ex6",
+    "number": null,
+    "ours": "PokéDex (HANDY909)",
+    "bulbapedia": "PokéDex HANDY909",
+    "reason": "TCGdex and TCGplayer write PokéDex (HANDY909); Bulbapedia writes it without brackets. Only one source for either spelling beyond the card, which prints HANDY909 smaller beside the name."
+  },
+  {
+    "kind": "card name spelling",
+    "language": "ja",
+    "set": "neo4",
+    "number": null,
+    "ours": "EXP.ALL",
+    "bulbapedia": "EXP. ALL",
+    "reason": "にせオーキドの発明 is Impostor Professor Oak's Invention at TCGdex and Scrydex; Bulbapedia's Japanese list writes Impostor Oak's Invention. The English print is a different card (Imposter Oak's Revenge)."
+  },
+  {
+    "kind": "card name spelling",
+    "language": "ja",
+    "set": "PCG1",
+    "number": null,
+    "ours": "EXP.ALL",
+    "bulbapedia": "EXP. ALL",
+    "reason": "EXP.ALL, as the English FireRed & LeafGreen card prints it and TCGplayer and Bulbapedia's English list write it; Bulbapedia's Japanese lists add a space."
+  },
+  {
+    "kind": "card name spelling",
+    "language": "ja",
+    "set": "S8b",
+    "number": null,
+    "ours": "Adventurer's Discovery",
+    "bulbapedia": "Adventurer’s Discovery",
+    "reason": "A straight apostrophe, the one the copy writes everywhere (card-fact-corrections.ts); Bulbapedia's list has a curly one."
   }
 ]

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { compareSet, isAccepted } from "./bulbapedia-compare.mjs";
 import {
+  cardEntry,
   cardName,
   nameKey,
   numberKey,
@@ -211,5 +212,121 @@ describe("compareSet", () => {
     expect(isAccepted({ ...difference, bulbapedia: "Impostor Professor Oak" }, accepted)).toBe(
       false,
     );
+  });
+});
+
+describe("cardEntry, naming pass", () => {
+  it("keeps the small print beside a name, and the parent set a list of many sets names", () => {
+    expect(
+      cardEntry(
+        "{{TCG ID|Sword & Shield|Professor's Research|178}} <small>'''[Professor Magnolia]'''</small>",
+      ),
+    ).toEqual({ name: "Professor's Research", note: "[Professor Magnolia]" });
+    expect(
+      cardEntry("{{Mega}}[[M Lucario-EX (Furious Fists 55a)|Lucario]]{{EX}} (''Furious Fists'')"),
+    ).toEqual({
+      name: "M Lucario-EX",
+      from: "Furious Fists",
+    });
+  });
+
+  it("reads a whole link's text where the page title cannot hold the printed name", () => {
+    expect(cardName("[[Blaine's Quiz 1 (Gym Heroes 97)|Blaine's Quiz #1]]")).toBe(
+      "Blaine's Quiz #1",
+    );
+    expect(
+      cardName(
+        "[[Ancient Technical Machine Ice (EX Hidden Legends 84)|Ancient Technical Machine [Ice]]]",
+      ),
+    ).toBe("Ancient Technical Machine [Ice]");
+    expect(
+      cardName(
+        "[[Unit Energy GRW (Ultra Prism 137)|Unit Energy]] {{e|Grass}}{{e|Fire}}{{e|Water}}",
+      ),
+    ).toBe("Unit Energy GRW");
+  });
+
+  it("does not repeat a suffix a plain template's first field carries", () => {
+    expect(cardName("{{OBP|Tapu Lele-GX|SV-P Promo 133|Tapu Lele}}{{GX}}")).toBe("Tapu Lele-GX");
+  });
+});
+
+describe("compareSet, naming pass", () => {
+  const entry = (number: string, name: string, extra: Record<string, string> = {}) => ({
+    number,
+    printedTotal: null,
+    name,
+    ...extra,
+  });
+  const run = (
+    set: { id: string; name: string },
+    cards: { id: string; local_id: string; name: string }[],
+    entries: ReturnType<typeof entry>[],
+    alternates: ReturnType<typeof entry>[] = [],
+    title = set.name,
+  ) =>
+    compareSet({ language: "en", total: null, printed_total: null, ...set }, cards, {
+      lists: [title],
+      found: [{ title, entries }],
+      alternates,
+    });
+
+  it("matches a form or subtitle in the small print, and a Prism Star however it is drawn", () => {
+    expect(
+      run(
+        { id: "dp3", name: "Secret Wonders" },
+        [
+          { id: "dp3-8", local_id: "8", name: "Gastrodon East Sea" },
+          { id: "sm5-58", local_id: "58", name: "Giratina ◇" },
+        ],
+        [entry("8", "Gastrodon", { note: "East Sea" }), entry("58", "Giratina ♢")],
+      ),
+    ).toEqual([]);
+    const [spelling] = run(
+      { id: "swsh1", name: "Sword & Shield" },
+      [{ id: "swsh1-178", local_id: "178", name: "Professor's Research (Professor Magnolia)" }],
+      [entry("178", "Professor's Research", { note: "[Professor Magnolia]" })],
+    );
+    expect(spelling).toMatchObject({
+      kind: "card name spelling",
+      bulbapedia: "Professor's Research [Professor Magnolia]",
+    });
+  });
+
+  it("holds a set's Yellow A cards to the list of many sets, once where its own list has them too", () => {
+    expect(
+      run(
+        { id: "smp", name: "SM Black Star Promos" },
+        [
+          { id: "smp-SM30", local_id: "SM30", name: "Tapu Koko" },
+          { id: "smp-SM30a", local_id: "SM30a", name: "Tapu Koko" },
+        ],
+        [entry("SM30", "Tapu Koko"), entry("SM30a", "Tapu Koko")],
+        [entry("SM30a", "Tapu Koko", { from: "SM Black Star Promos" })],
+      ),
+    ).toEqual([]);
+    expect(
+      run(
+        { id: "xy2", name: "Flashfire" },
+        [
+          { id: "xy2-88", local_id: "88", name: "Blacksmith" },
+          { id: "xy2-88a", local_id: "88a", name: "Blacksmith" },
+        ],
+        [entry("88", "Blacksmith")],
+        [entry("88a", "Blacksmith", { from: "Flashfire" })],
+      ),
+    ).toEqual([]);
+  });
+
+  it("reads Unseen Forces' Unown by their letter, and a half deck as its trainer kit", () => {
+    expect(
+      run(
+        { id: "tk-ex-p", name: "EX Trainer Kit 2 (Plusle)" },
+        [{ id: "exu-B", local_id: "B", name: "Unown B" }],
+        [entry("B", "Unown")],
+        [],
+        "Plusle Half Deck",
+      ),
+    ).toEqual([]);
   });
 });

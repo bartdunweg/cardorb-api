@@ -150,20 +150,63 @@ function plainText(cell) {
 
 /** The card's name out of one entry's name cell (see the header for the four ways). */
 export function cardName(cell) {
+  return cardEntry(cell).name;
+}
+
+/**
+ * The card's name out of one entry's name cell, with what the list writes beside it:
+ *
+ *   note  the small print after the name: the card's form or subtitle where it has one (Gastrodon
+ *         <small>East Sea</small>, Professor's Research <small>[Professor Magnolia]</small>), a
+ *         promo's release where it has none ([Pokémon: The First Movie])
+ *   from  the set a list of cards from many sets names in italics after each card (Blacksmith
+ *         (''Flashfire'') on the Yellow A Alternate cards page)
+ *
+ * @returns {{ name: string, note?: string, from?: string }}
+ */
+export function cardEntry(cell) {
   // A promo's cell lists each version of the card on its own line ("[Staff]", "[Jumbo]"); the first
   // line is the card.
   const [first = ""] = String(cell ?? "")
     .split(/<br\s*\/?>/i)
     .filter((part) => part.trim());
-  const s = first
+  const small = /<small>([\s\S]*?)<\/small>/i.exec(first);
+  const note = small ? tidy(plainText(small[1].replace(/<[^>]+>/g, "").replace(/'''?/g, ""))) : "";
+  let s = first
     .replace(/<small>[\s\S]*?<\/small>/gi, "")
     .replace(/<[^>]+>/g, "")
-    .replace(/'''?/g, "")
     // A footnote mark after the name: Start Deck 100 Battle Collection marks the cards that come as a
     // holo with a dagger ("Exeggcute †", 218 of its 742 entries), which is no part of the name.
     .replace(/\s*[†‡]/g, "");
-  const link = /\[\[([^\]|]+?)\s*\(([^()]*)\)\s*(\|[^\]]*)?\]\]/.exec(s);
-  if (link) return tidy(link[1]);
+  const parent = /\s*\(''([^'()]+)''\)\s*$/.exec(s);
+  if (parent) s = s.slice(0, parent.index);
+  s = s.replace(/'''?/g, "");
+  return {
+    name: nameOfCell(s),
+    ...(note ? { note } : {}),
+    ...(parent ? { from: tidy(parent[1]) } : {}),
+  };
+}
+
+/** The name in a cell cut to its first line, its small print and its parent set gone. */
+function nameOfCell(s) {
+  // The text shown may hold a bracketed part of its own ("[Ice]").
+  const link = /\[\[([^\]|]+?)\s*\(([^()]*)\)\s*(\|(?:[^[\]]|\[[^\]]*\])*)?\]\]/.exec(s);
+  if (link) {
+    /* A cell that is one link and nothing more shows the card's whole name as the link's text, and
+       that text is the name as printed where the page title cannot carry it: "Blaine's Quiz #1" on
+       the page "Blaine's Quiz 1", "Ancient Technical Machine [Ice]" on "Ancient Technical Machine
+       Ice". Only where both are the same name once # and brackets are set aside; a link drawn
+       around part of a name ("Horror" {{e|Psychic}} "Energy") says less than its page. */
+    const shown = link[3]?.slice(1).trim();
+    const bare = (x) =>
+      nameKey(x)
+        .replace(/[#[\]]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    if (shown && s.trim() === link[0] && bare(shown) === bare(link[1])) return tidy(shown);
+    return tidy(link[1]);
+  }
   const id = /\{\{\s*TCG ID\s*\|([^{}]*)\}\}/i.exec(s);
   if (id) {
     // The second field is the whole name ("Yanmega ex"). A prefix or suffix template around it
@@ -179,6 +222,14 @@ export function cardName(cell) {
     const prefix = before && !name.startsWith(before) ? `${before} ` : "";
     const suffix = after.trim() && !name.endsWith(after.trim()) ? after : "";
     return tidy(`${prefix}${name}${suffix}`);
+  }
+  // A plain template whose first field already carries the mechanic its suffix adds:
+  // {{OBP|Tapu Lele-GX|SV-P Promo 133|Tapu Lele}}{{GX}} is Tapu Lele-GX, not Tapu Lele-GX-GX.
+  const plain = /^\s*\{\{[^{}|]+\|([^{}|]*)(?:\|[^{}]*)?\}\}\s*(\{\{[^{}|]+\}\})\s*$/.exec(s);
+  if (plain) {
+    const name = tidy(plain[1]);
+    const suffix = plainText(plain[2]).trim();
+    if (suffix && name.endsWith(suffix)) return name;
   }
   return tidy(plainText(s));
 }
@@ -198,7 +249,7 @@ export function readNumber(cell) {
 /**
  * Every set list on a page, in page order.
  *
- * @returns {{ title: string, promo: boolean, entries: { number: string|null, printedTotal: string|null, name: string }[] }[]}
+ * @returns {{ title: string, promo: boolean, entries: { number: string|null, printedTotal: string|null, name: string, note?: string, from?: string }[] }[]}
  */
 export function parseSetlists(wikitext) {
   const lists = [];
@@ -221,9 +272,9 @@ export function parseSetlists(wikitext) {
       // nmentry: number, name, type, …; entry: number, symbol, name, type, …
       const nameAt = kind[1] ? 1 : 2;
       const { number, printedTotal } = readNumber(t.positional[0]);
-      const name = cardName(t.positional[nameAt]);
+      const { name, ...beside } = cardEntry(t.positional[nameAt]);
       // A promo list holds rows for numbers not yet announced, with nothing in them.
-      if (name) current.entries.push({ number, printedTotal, name });
+      if (name) current.entries.push({ number, printedTotal, name, ...beside });
     }
   }
   return lists;
@@ -270,6 +321,7 @@ export function nameKey(s) {
     .replace(/\s+star$/i, " ☆")
     .replace(/\sE4(?=\s|$)/g, " 4")
     .replace(/\[([^\]]*)\]/g, "$1")
+    .replace(/\(([^()]*)\)/g, "$1")
     .replace(/★/g, "☆")
     .replace(/\s*☆\s*/g, " ☆ ")
     .replace(/\s*δ\s*/g, " δ ")
