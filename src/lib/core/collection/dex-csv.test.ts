@@ -12,6 +12,7 @@ const item = (over: Partial<CardItem>): CardItem => ({
   set: "Dark Explorers",
   setTitle: "Dark Explorers",
   setAbbr: "DEX",
+  printedNumber: "48",
   rarity: "Rare",
   gen: "Black & White",
   type: "Psychic",

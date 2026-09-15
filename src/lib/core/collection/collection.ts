@@ -585,7 +585,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v22", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v23", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 

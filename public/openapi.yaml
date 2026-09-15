@@ -570,6 +570,7 @@ components:
       required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
+        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\"), from the catalogue's card id; null where nothing matched. `number` is the row's." }
         priceChange:
           description: "Only with `sort=change`: the copy's price move over the window, or null without two readings in it."
           oneOf:
@@ -775,7 +776,8 @@ components:
         name: { type: string }
         number: { type: string }
         set: { type: string, description: "The set's name as the collection files it." }
-        setAbbr: { type: [string, "null"], description: "The code printed on the card (\"XYP\"), where the catalogue has one." }
+        setAbbr: { type: [string, "null"], description: "The set's code: the official abbreviation (\"XYP\"), or Pokémon TCG Online's where there is none (\"PR\")." }
+        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\")." }
         image: { type: [string, "null"] }
         copies: { type: integer, description: "Copies held." }
         was: { type: number, description: "One copy at the earliest reading in the window, euros." }
