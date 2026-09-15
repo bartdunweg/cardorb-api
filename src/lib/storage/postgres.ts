@@ -2205,11 +2205,15 @@ export async function writePrintPictures(
   db: SupabaseClient,
   rows: PrintPictureRow[],
 ): Promise<void> {
+  // One row per printing: an upsert naming a key twice fails whole ("cannot affect row a second time").
+  const unique = [
+    ...new Map(rows.map((r) => [`${r.language}|${r.card_id}|${r.print}`, r])).values(),
+  ];
   const BITE = 500;
-  for (let at = 0; at < rows.length; at += BITE) {
+  for (let at = 0; at < unique.length; at += BITE) {
     const { error } = await db
       .from("card_print_pictures")
-      .upsert(rows.slice(at, at + BITE), { onConflict: "language,card_id,print" });
+      .upsert(unique.slice(at, at + BITE), { onConflict: "language,card_id,print" });
     if (error) throw new Error(`Writing the printings' pictures failed: ${error.message}`);
   }
 }

@@ -42,14 +42,20 @@ export const productPicture = (productId: number) =>
 
 /** Every English printing product the committed map names, patterned reverses and pattern holos. */
 export function englishPrintProducts(): PrintProduct[] {
-  const out: PrintProduct[] = [];
+  const out = new Map<string, PrintProduct>();
+  /* One product per printing: TCGplayer lists a second cosmos holo of 18 cards (me01-028 and on,
+     2026-09-15), and two rows for one printing made the whole night's write fail. The first stands. */
+  const add = (p: PrintProduct) => {
+    const key = `${p.cardId}|${p.print}`;
+    if (!out.has(key)) out.set(key, p);
+  };
   for (const cardId of Object.keys(TCGPLAYER_PATTERNS)) {
     for (const p of finishPrintsFor(cardId) ?? [])
-      out.push({ cardId, print: printKey(p.finish), productId: p.productId });
+      add({ cardId, print: printKey(p.finish), productId: p.productId });
     for (const p of patternPrintsFor(cardId)?.prints ?? [])
-      out.push({ cardId, print: printKey(p.finish, p.foilPattern), productId: p.productId });
+      add({ cardId, print: printKey(p.finish, p.foilPattern), productId: p.productId });
   }
-  return out;
+  return [...out.values()];
 }
 
 /**

@@ -86,6 +86,11 @@ describe("englishPrintProducts", () => {
     expect(exeggcute.map((p) => p.print).sort()).toEqual(["master-ball", "poke-ball"]);
   });
 
+  it("names each printing once, where TCGplayer lists two products of it", () => {
+    const keys = englishPrintProducts().map((p) => `${p.cardId}|${p.print}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
   it("keys a pattern holo with its pattern", () => {
     expect(englishPrintProducts().some((p) => p.print === printKey("holo", "cosmos"))).toBe(true);
   });
