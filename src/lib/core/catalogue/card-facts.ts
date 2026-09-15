@@ -18,7 +18,7 @@ import { catalogueCardSheets, printPicturesOfCards } from "@/lib/storage/postgre
 import { adminClient } from "@/lib/storage/supabase";
 import { detailFromSheet, languagesFromSheet } from "./card-sheet";
 import { type Printing, foilPatternsOfSerie, patternPrintsFor } from "./card-printings";
-import { withPrintPictures, withProvenPrintings } from "./print-pictures";
+import { editionPictures, withPrintPictures, withProvenPrintings } from "./print-pictures";
 
 /** The most ids one request may name: a set page's grid, or a page of the collection. */
 export const FACTS_BATCH_MAX = 250;
@@ -51,6 +51,8 @@ export type CardFacts = {
   /** Each with its own picture where the store holds one (print-pictures.ts), as the route answers it. */
   printings: (Printing & { image?: string | null })[];
   editions: Edition[] | null;
+  /** Each print run's own picture where the store holds one, by run (print-pictures.ts). */
+  editionPictures: Record<string, string>;
   languages: string[];
   foilPatterns: FoilPattern[] | null;
   /** As GET /v1/cards/{tcgId} answers it, without each print's price. */
@@ -88,6 +90,8 @@ export function factsFromSheet(
     firstEdition: detail.firstEdition,
     printings: detail.printings,
     editions: detail.editions,
+    // Filled from the store beside the printings' pictures (cardFactsOf).
+    editionPictures: {},
     languages,
     foilPatterns: english ? foilPatternsOfSerie(serie) : null,
     patternPrints: english ? unpricedPatternPrints(detail.id) : null,
@@ -142,6 +146,7 @@ export async function cardFactsOf(
               language === "ja" ? withProvenPrintings(facts.printings, own) : facts.printings,
               own,
             ) ?? [],
+          editionPictures: editionPictures(facts.editions, own),
           patternPrints: facts.patternPrints
             ? {
                 ...facts.patternPrints,

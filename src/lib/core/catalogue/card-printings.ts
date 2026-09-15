@@ -268,6 +268,27 @@ export function pricesPlainReverse(tcgId: string): boolean {
  */
 const SHADOWLESS = new Set(Object.entries(LINKS).flatMap(([id, v]) => (v?.shadowless ? [id] : [])));
 
+/** One print run of a card TCGplayer sells as a product whose photo is that run. */
+export type EditionPrint = { cardId: string; edition: Edition; productId: number };
+
+/**
+ * The print runs whose TCGplayer photo is that run and no other: Base Set's Unlimited print.
+ *
+ * Base Set is the one set TCGplayer sells in two groups. Its "Base Set" product is the Unlimited
+ * card, no stamp and the 1999-2000 copyright line; its "Base Set (Shadowless)" product is priced as
+ * the Shadowless run but photographed as the 1st Edition, stamp and all (checked by eye on twelve
+ * cards, 2026-09-15). So the first is a picture of a run and the second of none it names: the
+ * catalogue's scan is the 1st Edition already. Every other Wizards set sells both runs as one
+ * product, whose photo is of a run nobody wrote down, so it pictures neither. Machamp from Deck
+ * Exclusives has no unstamped run and no Unlimited picture.
+ */
+export const allEditionPrints = (): EditionPrint[] =>
+  Object.entries(LINKS).flatMap(([cardId, v]) =>
+    v?.shadowless && v.productId != null && (v.variants ?? []).some((x) => !stamped(x))
+      ? [{ cardId, edition: "unlimited" as const, productId: v.productId }]
+      : [],
+  );
+
 /**
  * The My First Battle cards TCGplayer sells a Blue Border print of, as tcgplayer-links.mjs linked
  * them: the four starters and the four basic energies.

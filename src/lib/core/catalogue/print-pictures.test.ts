@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  editionPictures,
   englishPrintProducts,
   finishOfPrintingLabel,
   japanesePrintProducts,
@@ -107,6 +108,33 @@ describe("englishPrintProducts", () => {
 
   it("keys a pattern holo with its pattern", () => {
     expect(englishPrintProducts().some((p) => p.print === printKey("holo", "cosmos"))).toBe(true);
+  });
+});
+
+describe("Base Set's runs", () => {
+  it("files Base Set's own product under its Unlimited run", () => {
+    const charizard = englishPrintProducts().filter((p) => p.cardId === "base1-4");
+    expect(charizard).toContainEqual({ cardId: "base1-4", print: "unlimited", productId: 42382 });
+    // The Shadowless group's photo is the 1st Edition print: no picture of any run it names.
+    expect(charizard.some((p) => p.productId === 106999)).toBe(false);
+  });
+
+  it("gives no Unlimited picture to a card never printed without the stamp", () => {
+    // Machamp from Deck Exclusives: a Shadowless link, 1st Edition only.
+    expect(
+      englishPrintProducts().some((p) => p.cardId === "base1-8" && p.print === "unlimited"),
+    ).toBe(false);
+  });
+
+  it("gives a run its picture and leaves out a run without one", () => {
+    const pictures = new Map([
+      ["unlimited", "https://images.cardorb.com/tcgplayer/42382.jpg"],
+      ["holo/cosmos", "https://images.cardorb.com/tcgplayer/1.jpg"],
+    ]);
+    expect(editionPictures(["unlimited", "1st-edition", "shadowless"], pictures)).toEqual({
+      unlimited: "https://images.cardorb.com/tcgplayer/42382.jpg",
+    });
+    expect(editionPictures(null, pictures)).toEqual({});
   });
 });
 

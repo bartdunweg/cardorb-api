@@ -17,7 +17,11 @@ import { foilPatternsOfSerie, patternPrintsFor } from "@/lib/core/catalogue/card
 import { serieOfSet } from "@/lib/core/catalogue/tcgdex-client";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
-import { withPrintPictures, withProvenPrintings } from "@/lib/core/catalogue/print-pictures";
+import {
+  editionPictures,
+  withPrintPictures,
+  withProvenPrintings,
+} from "@/lib/core/catalogue/print-pictures";
 import { printPicturesOf } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 
@@ -138,6 +142,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
           : card.printings,
         pictures,
       ),
+      /* A print run's own picture, as a printing has one: Base Set's Unlimited print. */
+      editionPictures: editionPictures(card.editions, pictures),
       languages,
       foilPatterns,
       patternPrints: patternPrints
