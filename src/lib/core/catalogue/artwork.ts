@@ -119,22 +119,9 @@ export function highScan(image: string | null): string | null {
 }
 
 /**
- * Where Limitless keeps a Japanese card's scan, guessed the way the English
- * one above is: from the set's printed abbreviation, which is the id TCGdex
- * uses for a Japanese set, and the number without its padding — SV5M-001 is
- * `tpc/SV5M/SV5M_1_R_JP_SM.png` there. Four sets checked by hand on
- * 2026-09-11, four present. SM (274×381) does the grid's job, LG (460×640)
- * the sheet's; through /api/cover, because Limitless sends no CORS header.
- *
- * Not checked here. The two callers decide differently whether to ask —
- * a set page probes once per set, a collection once per card — and both
- * hand the guess over unverified, which costs what a dead TCGdex address
- * cost before: the browser finds out, and draws the card's back.
- */
-/**
  * Japanese sets TCGdex photographed in a reverse-holo variant rather than the plain print.
- * Pokémon Card 151 (SV2a): every one of its scans is the Master Ball print — 001, 011, 025 and
- * 150 looked at on 2026-09-11 — so a shelf of commons read as a shelf of reverse holos. Both
+ * Pokémon Card 151 (SV2a): every one of its scans is the Master Ball print (001, 011, 025 and
+ * 150 looked at on 2026-09-11), so a shelf of commons read as a shelf of reverse holos. Both
  * callers of limitlessJapaneseScan() take Limitless's plain print for these without asking
  * TCGdex whether its file is there: it is, and it is the wrong one.
  */
@@ -142,10 +129,26 @@ const SCANNED_AS_REVERSE: ReadonlySet<string> = new Set(["SV2a"]);
 export const tcgdexScanIsReverse = (setId: string | null): boolean =>
   !!setId && SCANNED_AS_REVERSE.has(setId);
 
+/**
+ * Where Limitless keeps a Japanese card's scan, guessed the way the English
+ * one above is: from the set's printed abbreviation, which is the id TCGdex
+ * uses for a Japanese set, and the number without its padding. SV5M-001 is
+ * `tpc/SV5M/SV5M_1_R_JP_SM.png` there. Four sets checked by hand on
+ * 2026-09-11, four present. SM (274×381) does the grid's job, LG (460×640)
+ * the sheet's; through /api/cover, because Limitless sends no CORS header.
+ *
+ * A promo set is the exception: Limitless files SV-P as SVP and M-P as MP, so
+ * the hyphen goes. Until 2026-09-15 every guess for those two was a 403 and 27
+ * of their cards had no picture; SV-P 188, 251, 280 and 290 and M-P 164 were
+ * opened and are the cards their numbers say.
+ *
+ * Not checked here. The callers decide differently whether to ask (a set page
+ * probes once per set, a collection once per card) and hand the guess over
+ * unverified, which costs what a dead TCGdex address cost before: the browser
+ * finds out, and draws the card's back.
+ */
 export function limitlessJapaneseScan(id: string, number: string): { low: string; high: string } {
-  const set = id.slice(0, id.lastIndexOf("-"));
-  // A number that is not digits (a promo's "SV-P") is left as it is, and the
-  // guess is simply wrong for it.
+  const set = id.slice(0, id.lastIndexOf("-")).replaceAll("-", "");
   const n = number.replace(/^0+(?=\d)/, "");
   const at = (size: "SM" | "LG") =>
     `/api/cover?url=${encodeURIComponent(

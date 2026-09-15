@@ -1,0 +1,1 @@
+- 27 Japanese promo cards (26 in SV-P, Mega Zeraora ex in M-P) get a picture: the Limitless address for a promo set is built without its hyphen (SVP, MP), the way Limitless files it, where every guess used to be a 403.
