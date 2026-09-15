@@ -116,6 +116,23 @@ describe("printingsOf", () => {
     expect(printingsOf([{ type: "holo" }], "bwp-BW43").map((p) => p.finish)).toEqual(["holo"]);
   });
 
+  // TCGdex lists these as normal only (2026-09-15); TCGplayer and Scrydex both sell and show a holo.
+  it("offers the holo, not a Standard copy, of a holo TCGdex lists as normal", () => {
+    // Reshiram, Black & White's Ultra Rare: one printing, the holo.
+    expect(printingsOf([{ type: "normal" }], "bw1-113").map((p) => p.finish)).toEqual(["holo"]);
+    // Emboar, a Holo Rare: the holo beside the plain print its theme deck had, and the reverse.
+    expect(printingsOf([{ type: "normal" }], "bw1-19").map((p) => p.finish)).toEqual([
+      "normal",
+      "reverse-holo",
+      "holo",
+    ]);
+    // Snivy, a common: stays plain.
+    expect(printingsOf([{ type: "normal" }], "bw1-1").map((p) => p.finish)).toEqual([
+      "normal",
+      "reverse-holo",
+    ]);
+  });
+
   // Skyridge Gengar (ecard3-10): TCGdex and Scrydex list a reverse and Bulbapedia says every Skyridge
   // card but the H cards has one; TCGplayer prices the card as Normal only. The reverse is offered,
   // and priced as unknown (price-basis.mjs).

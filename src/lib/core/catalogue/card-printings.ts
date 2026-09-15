@@ -101,10 +101,16 @@ export function printingsOf(
   const seen = new Map<string, Printing>();
   const sold = tcgId ? finishPrintsFor(tcgId) : null;
   const holoNotReverse = tcgId ? HOLO_BEFORE_REVERSES.has(tcgId) : false;
+  const holoNotNormal = tcgId ? HOLO_NOT_NORMAL.has(tcgId) : false;
+  const holoBeside = tcgId ? HOLO_BESIDE_NORMAL.has(tcgId) : false;
   for (const v of variants ?? []) {
     /* A card sold before reverse holos existed (Southern Islands, Wizards promos to May 2002) whose
-       foil print TCGdex files as a reverse: it is the holo. */
-    const type = holoNotReverse && v.type === "reverse" && !v.foil ? "holo" : v.type;
+       foil print TCGdex files as a reverse: it is the holo. And a holo TCGdex files as a normal
+       (HOLO_NOT_NORMAL): the holo too. */
+    const type =
+      (holoNotReverse && v.type === "reverse" && !v.foil) || (holoNotNormal && v.type === "normal")
+        ? "holo"
+        : v.type;
     const base = FINISH_OF[type ?? ""];
     if (!base) continue;
     const foil = (v.foil ?? "").toLowerCase();
@@ -120,6 +126,7 @@ export function printingsOf(
     const finish = ball && base === "reverse-holo" ? ball : base;
     const foilPattern = ball ? null : (PATTERN_OF[foil] ?? null);
     seen.set(`${finish}|${foilPattern ?? ""}`, { finish, foilPattern });
+    if (holoBeside && type === "normal") seen.set("holo|", { finish: "holo", foilPattern: null });
   }
   /* Only beside an answer: an empty list is the catalogue having none, and a form offers every
      finish then. A card TCGdex lists no variants for does not become "a Poké Ball reverse only". */
@@ -161,6 +168,20 @@ const REVERSE_ONLY = new Set(["bwp-BW41", "bwp-BW42", "bwp-BW52", "dp7-SH1", "dp
 const REVERSE_DECISIONS = (REVERSE_HOLO as { cards: Record<string, boolean> }).cards;
 const HOLO_BEFORE_REVERSES = new Set(
   (REVERSE_HOLO as { holoBeforeReverses?: string[] }).holoBeforeReverses ?? [],
+);
+/**
+ * Cards TCGdex lists as a plain printing that are holos: TCGplayer and Scrydex both name a holofoil
+ * and no plain printing (scripts/reverse-holo-evidence.mjs). Most holo cards of Black & White, XY
+ * and Sun & Moon, where TCGdex writes "normal" (Reshiram bw1-113, an Ultra Rare).
+ */
+const HOLO_NOT_NORMAL = new Set((REVERSE_HOLO as { holoNotNormal?: string[] }).holoNotNormal ?? []);
+/**
+ * Cards TCGdex lists as a plain printing only that have a holo beside it: TCGplayer and Scrydex both
+ * name a holofoil, and one of them the plain card too (Emboar bw1-19, a Holo Rare whose plain print
+ * came in a theme deck).
+ */
+const HOLO_BESIDE_NORMAL = new Set(
+  (REVERSE_HOLO as { holoBesideNormal?: string[] }).holoBesideNormal ?? [],
 );
 
 /**
