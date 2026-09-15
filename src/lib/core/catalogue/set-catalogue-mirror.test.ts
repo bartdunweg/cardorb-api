@@ -27,7 +27,6 @@ vi.mock("./tcgdex-browse", async (real) => ({
   resolveEnglishSetId: async (id: string) => id,
 }));
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
-vi.mock("./ptcg", () => ({ ptcgLogo: async () => null }));
 
 const {
   copiedEnglishSets,
@@ -43,7 +42,7 @@ const set = (over: Partial<CatalogueSetRecord> = {}): CatalogueSetRecord => ({
   name: "151",
   series: "Scarlet & Violet",
   release_date: "2023/09/22",
-  logo: "https://assets.tcgdex.net/en/sv/sv03.5/logo.webp",
+  logo: "https://images.cardorb.com/en/sv/sv03.5/logo.webp",
   symbol: null,
   abbreviation: "MEW",
   total: 207,
@@ -62,7 +61,7 @@ const card = (over: Partial<CatalogueCardRecord> = {}): CatalogueCardRecord =>
     release_date: "2023/09/22",
     rarity: "Common",
     types: ["Grass"],
-    image: "https://assets.tcgdex.net/en/sv/sv03.5/001",
+    image: "https://images.cardorb.com/en/sv/sv03.5/001",
     ...over,
   }) as CatalogueCardRecord;
 
@@ -179,8 +178,8 @@ describe("englishSetFromCopy", () => {
       localName: null,
       setName: "151",
       series: "Scarlet & Violet",
-      image: "https://assets.tcgdex.net/en/sv/sv03.5/001/low.webp",
-      imageHigh: "https://assets.tcgdex.net/en/sv/sv03.5/001/high.webp",
+      image: "https://images.cardorb.com/en/sv/sv03.5/001/low.webp",
+      imageHigh: "https://images.cardorb.com/en/sv/sv03.5/001/high.webp",
       rarity: "Common",
       types: ["Grass"],
       category: "Pokemon",
@@ -228,7 +227,7 @@ describe("copiedEnglishSets", () => {
       set({
         id: "svp",
         name: "SVP Black Star Promos",
-        logo: "https://assets.tcgdex.net/en/swsh/swshp/logo.webp",
+        logo: "https://images.cardorb.com/en/swsh/swshp/logo.webp",
       }),
     ]);
 
@@ -244,7 +243,7 @@ describe("copiedEnglishSets", () => {
       total: 207,
       printedTotal: 165,
       cardsRecorded: true,
-      logo: "https://assets.tcgdex.net/en/swsh/swshp/logo.webp",
+      logo: "https://images.cardorb.com/en/swsh/swshp/logo.webp",
       symbol: null,
     });
     expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -253,6 +252,58 @@ describe("copiedEnglishSets", () => {
   it("answers null for an empty copy, so the shelf asks TCGdex", async () => {
     listCatalogueSets.mockResolvedValue([]);
     expect(await copiedEnglishSets()).toBeNull();
+  });
+});
+
+describe("a picture in the copy that is not a file of ours", () => {
+  // Bart, 2026-09-15: a client is sent only files in our bucket. The copy holds nothing else today;
+  // an outside address that ever reached it reads as no picture, and nobody is asked for one.
+  const OUTSIDE = {
+    logo: "https://images.pokemontcg.io/sv3pt5/logo.png",
+    symbol: "https://assets.tcgdex.net/en/sv/sv03.5/symbol.webp",
+  };
+  const outsideCard = card({ image: "https://assets.tcgdex.net/en/sv/sv03.5/001" });
+
+  it("is no picture on a set page", async () => {
+    listCatalogueSets.mockResolvedValue([set(OUTSIDE)]);
+    catalogueSetCards.mockResolvedValue([outsideCard]);
+    const found = await englishSetFromCopy("sv03.5");
+    expect(found?.set).toMatchObject({ logo: null, symbol: null });
+    expect(found?.cards[0]).toMatchObject({ image: null, imageHigh: null });
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it("is no wordmark on the shelves", async () => {
+    listCatalogueSets.mockResolvedValue([set(OUTSIDE)]);
+    expect((await copiedEnglishSets())?.[0]).toMatchObject({ logo: null, symbol: null });
+    forgetCopiedSets();
+    listCatalogueSets.mockResolvedValue([set({ ...OUTSIDE, id: "SV2a", cards_recorded: true })]);
+    expect((await copiedLanguageSets("ja"))?.[0]).toMatchObject({ logo: null });
+  });
+
+  it("is no picture in the collection's set catalogue, where the symbol of ours stands in", async () => {
+    listCatalogueSets.mockResolvedValue([
+      set({ logo: OUTSIDE.logo, symbol: "https://images.cardorb.com/en/sv/sv03.5/symbol.webp" }),
+    ]);
+    catalogueCardsBySets.mockResolvedValue([[outsideCard]]);
+    const cat = await mirrorSetCatalogue("151");
+    expect(cat?.byNumber["001"]?.image).toBeNull();
+    expect(cat?.logo).toBe("https://images.cardorb.com/en/sv/sv03.5/symbol.webp");
+  });
+
+  it("is no picture on another language's set page", async () => {
+    listCatalogueSets.mockResolvedValue([set({ ...OUTSIDE, id: "SV2a", cards_recorded: true })]);
+    catalogueSetCards.mockResolvedValue([
+      card({
+        id: "SV2a-006",
+        set_id: "SV2a",
+        image:
+          "/api/cover?url=https%3A%2F%2Flimitlesstcg.nyc3.cdn.digitaloceanspaces.com%2Ftpc%2FSV2a%2FSV2a_6_R_JP_LG.png",
+      }),
+    ]);
+    const found = await languageSetFromCopy("ja", "SV2a");
+    expect(found?.set.logo).toBeNull();
+    expect(found?.cards[0]).toMatchObject({ image: null, imageHigh: null });
   });
 });
 

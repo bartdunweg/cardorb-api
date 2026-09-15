@@ -22,10 +22,6 @@ vi.mock("../catalogue/rates", () => ({
     throw new Error("offline");
   },
 }));
-vi.mock("../catalogue/ptcg", () => ({
-  ptcgScan: async () => null,
-  ptcgLogo: async () => null,
-}));
 vi.mock("../../storage/supabase", () => ({
   adminClient: () => ({}),
   serverClient: async () => ({}),
@@ -142,10 +138,8 @@ describe("getCollection during a TCGdex outage", () => {
   it("carries no flag when the catalogue answered", async () => {
     setCatalogue.mockResolvedValue({
       byNumber: {},
-      assetBase: null,
       officialName: "Base Set",
       code: null,
-      setHasScans: false,
       logo: null,
       releaseDate: null,
       total: 102,

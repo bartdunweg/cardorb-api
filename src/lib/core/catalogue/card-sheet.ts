@@ -20,6 +20,7 @@ import type { CardDetail } from "../collection/cards";
 import { editionsOf, printingsOf } from "./card-printings";
 import { WESTERN, type Western } from "./card-languages";
 import { rarityOrNull } from "../collection/collection-row";
+import { ownPicture } from "./image-store";
 
 /** The copy's sheet for one English card, or null where the copy has none or will not answer. */
 export async function readCardSheet(
@@ -47,7 +48,9 @@ export function detailFromSheet(
     id: card.id,
     // A Japanese card's sheet has always carried the name it prints, as TCGdex's record says it.
     name: card.local_name ?? card.name,
-    image: card.image,
+    // Only a file of ours: the copy holds nothing else today, and an address from another host
+    // that ever reached it would be no picture (ownPicture).
+    image: ownPicture(card.image),
     rarity: card.rarity,
     illustrator: card.illustrator,
     hp: card.hp,
@@ -59,7 +62,12 @@ export function detailFromSheet(
     printings: printingsOf(card.variants, language === "en" ? card.id : null),
     editions: editionsOf(card.id, card.first_edition),
     set: set
-      ? { id: set.id, name: set.local_name ?? set.name, logo: set.logo, total: set.total }
+      ? {
+          id: set.id,
+          name: set.local_name ?? set.name,
+          logo: ownPicture(set.logo),
+          total: set.total,
+        }
       : { id: card.set_id, name: card.set_name, logo: null, total: null },
     cmId: null,
     cmUrl: null,

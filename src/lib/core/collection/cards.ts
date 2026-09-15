@@ -14,8 +14,9 @@
  * for a collection: a few hundred cards would mean a few hundred round trips on
  * every revalidation. TCGdex returns every card in a set, with its image, in
  * one response, so the cost scales with the number of sets pulled from rather
- * than the number of cards owned. Only the cards that miss fall back to a
- * per-card lookup.
+ * than the number of cards owned. A card that misses has no picture: there is
+ * no per-card lookup since 2026-09-15, because a client is sent only files in
+ * our bucket and the nightly copy is what fills it.
  *
  * It does not know where the collection is kept. It is handed CollectionRows
  * and matches them against the catalogues; lib/storage decides who answered and
@@ -30,7 +31,7 @@
  * getCardDetail() below use, not one the other needs to know about. This file is what assembles their answers into a collection.
  */
 
-import { compareCardNumbers, localise, mapLimit, measure, numberForms } from "../util";
+import { compareCardNumbers, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices, usdOf } from "../catalogue/tcgdex-client";
 import { speciesOf } from "./pokedex";
@@ -41,9 +42,9 @@ import {
   type TcgVariant,
 } from "../catalogue/card-printings";
 import { LOCALE } from "../config";
-import { limitlessScan, storedScan, tcgdexScan } from "../catalogue/artwork";
+import { ownScan } from "../catalogue/artwork";
+import { isOurs, ownPicture } from "../catalogue/image-store";
 import { sameCard } from "../catalogue/matching";
-import { ptcgScan } from "../catalogue/ptcg";
 import type { UsdPrice } from "../catalogue/tcgdex-client";
 import {
   cataloguesFor,
@@ -271,7 +272,7 @@ export type CardSet = {
    * card when they want to know which set it is — a full set name under a tile is a line of
    * text you have to parse where three letters are recognised.
    *
-   * Already read for the Limitless link guess (SetCatalogue.code); this only carries it out.
+   * Read off the catalogue (SetCatalogue.code); this only carries it out.
    * Null for a set the catalogue names but does not code — of 69 sets in a real collection,
    * exactly one, the Sword & Shield promos.
    */
@@ -620,10 +621,8 @@ export type BuildOptions = {
 /** What the catalogue knows about a set it cannot be asked about: nothing. */
 const OFFLINE_CATALOGUE: SetCatalogue = {
   byNumber: {},
-  assetBase: null,
   officialName: null,
   code: null,
-  setHasScans: false,
   logo: null,
   releaseDate: null,
   total: null,
@@ -807,10 +806,11 @@ function factsOfLanguageCard(identity: CardIdentity, card: LanguageCard): CardFa
   return {
     // The same two addresses the English path builds, off the base the
     // catalogue hands over: low for the grid, high for the slider past 180px.
-    // Or Limitless's pair, where TCGdex has recorded the card and not photographed it —
-    // languageCard() found that out, once per card, and says so with `scan`.
-    image: card.scan?.low ?? (card.image ? localise(`${card.image}/low.webp`) : null),
-    imageHigh: card.scan?.high ?? (card.image ? localise(`${card.image}/high.webp`) : null),
+    // Or the one file the copy keeps (`scan`). Only a file of ours is handed out: a card read
+    // live from TCGdex, before the nightly copy has been through its set, has none yet and
+    // draws as its placeholder (ownPicture).
+    image: ownPicture(card.scan?.low ?? (card.image ? `${card.image}/low.webp` : null)),
+    imageHigh: ownPicture(card.scan?.high ?? (card.image ? `${card.image}/high.webp` : null)),
     tcgId: card.id,
     matchedName: card.name || null,
     localName: card.name || null,
@@ -841,14 +841,19 @@ function factsOfLanguageCard(identity: CardIdentity, card: LanguageCard): CardFa
  * ── Two paths, and the first one is untouched ──────────────────────────────
  *
  * Everything below the language block is what it always was: the set catalogue
- * found by English name, every printing matched by number within it, the
- * Limitless and pokemontcg.io fallbacks, one price request per matched card. A set with no card of its own catalogue never enters the new
+ * found by English name, every printing matched by number within it, one price
+ * request per matched card. A set with no card of its own catalogue never enters the new
  * code and never pays a request for it.
+ *
+ * No picture is looked for here. The Limitless and pokemontcg.io fallbacks, and the HEAD that
+ * checked an address built off TCGdex's asset folder, went on 2026-09-15: a picture a client is
+ * sent is a file in our bucket (ownPicture in image-store.ts), and finding one for a card that
+ * has none is the nightly copy's job. A card the copy holds no file for carries null.
  *
  * The second path is for a row that names a catalogue of its own: a Japanese
  * card, with the id it has there. It does not match anything:
  * the id *is* the match, so there is no set to resolve by name, no number to
- * fold, no name to check, and none of the three artwork fallbacks (all English).
+ * fold, no name to check.
  * One request per card answers the picture and the rarity; the price is TCGplayer's
  * Japanese shelf, read by the caller (factsWithUsd in collection.ts).
  *
@@ -889,20 +894,10 @@ export async function resolveSetFacts(
   // would otherwise resolve an English set by a name that is a translation of
   // ours, and wear its logo, its date and its card count.
   const cat = offline || english.length === 0 ? OFFLINE_CATALOGUE : await setCatalogue(setName);
-  const { assetBase, code, setHasScans } = cat;
-
-  // The fallback is one to three HEAD requests per card, so on a set TCGdex
-  // does not know at all it would fire hundreds and find nothing. A cap keeps
-  // it useful for the handful of cards from a set too new to be indexed,
-  // which is the only case it was ever for.
-  //
-  // None at all offline: the fallbacks are the other two catalogues, and an
-  // outage answer should cost the rows and nothing over the network.
-  let fallbacks = offline ? 0 : 40;
 
   // Eight at a time, as the rows were walked before this was a function of
-  // identities. The set catalogue is one cached read; the fallbacks are what
-  // the limit is for.
+  // identities. The set catalogue is one cached read, and nothing below asks
+  // anybody else.
   const resolved = await mapLimit(english, 8, async (identity) => {
     const { name, number } = identity;
     const match = numberForms(number)
@@ -912,65 +907,10 @@ export async function resolveSetFacts(
     // not line up, and a wrong scan is worse than a missing one.
     const matched = match?.name && !sameCard(match.name, name) ? undefined : match;
 
-    // low, not high. TCGdex publishes both; high is around 600px wide and
-    // 77kB, low is 245px and 22kB. The grid draws these at 104 to 132px and
-    // the list view at 44px, and there is no detail view anywhere on the
-    // route, so every one of those 55 extra kilobytes was decoded and thrown
-    // away. It is the page's LCP element, measured at seven seconds on a
-    // throttled phone.
-    //
-    // Through localise(), which is the identity function here (see ./util). This was the
-    // one place that skipped it: scripts/localise-images.mjs had already
-    // pulled 1,449 of these scans into public/artwork/cards, the manifest
-    // mapped every one of them, and nothing read it. Every card on the page
-    // was still being fetched from TCGdex' CDN, which is why the sets that
-    // happen to sit on a cold edge there load visibly slower than the rest.
-    //
-    // The size the grid draws at is a slider now, and past about 180px the
-    // 245px file is being stretched. So the big one is resolved too and
-    // handed over beside the small one, for the browser to ask for only if
-    // the reader ever pushes the grid up that far. Only from TCGdex, whose
-    // URLs carry the size as the last segment: the two fallbacks below
-    // publish one file each and there is no larger one to name.
-    // A path we built ourselves is checked before it is used: TCGdex lists a
-    // gallery's cards without an `image` and the files are there under the
-    // parent set, but it also lists cards it has no scan of at all, and those
-    // paths are 404s that looked like artwork and so kept the fallbacks below
-    // from ever running.
-    const guessed = matched?.localId && assetBase ? `${assetBase}/${matched.localId}` : null;
-    const tcgBase = !setHasScans
-      ? null
-      : (matched?.image ?? (guessed ? await tcgdexScan(guessed) : null));
-    // Through storedScan() rather than by appending, because the two sources hold a picture
-    // differently: TCGdex publishes a stem with the size as its last segment, and the copy in
-    // Postgres stores whatever it checked, which for a card TCGdex has no scan of is a whole
-    // file from one of the other two catalogues, with no larger version to name.
-    const scan = storedScan(tcgBase);
-    let image = scan.image ? localise(scan.image) : null;
-    let imageHigh = scan.imageHigh ? localise(scan.imageHigh) : null;
-    // A card the copy matched was checked against every source at night; only a row whose number
-    // the copy does not hold is worth asking the other catalogues about now.
-    if (!image && number && fallbacks > 0 && !(cat.fromCopy && matched)) {
-      fallbacks--;
-      // Limitless first, where the set has a code there. Not every set does,
-      // and the second catalogue does not need one: it is asked by set name.
-      //
-      // Never for a gallery number, though: Limitless renumbers those into the
-      // parent set's run, so TG04 would be asked for under the parent's 04 and
-      // answer with a different card. That is the offset lib/core/catalogue/catalogue.ts
-      // declines to guess, and it is why this line keeps the letter check the
-      // one below no longer needs.
-      if (code && !/^[A-Za-z]/.test(number)) image = await limitlessScan(code, number);
-      // The last resort, for the cards neither TCGdex nor Limitless has. This
-      // is the one that finds the €440 Pikachu with the grey felt hat, the
-      // most expensive card in the binder and the only one on the dashboard
-      // with an empty square where its picture goes.
-      image ??= await ptcgScan(setName, number, name);
-      // A fallback scan is one file, so there is no larger version of it to
-      // offer and the grid keeps drawing the one it has.
-      imageHigh = null;
-    }
-
+    // Through ownScan() rather than by appending, because a stored picture is either a folder
+    // (both sizes under it) or one whole file with no larger version to name. And only a file
+    // of ours: an address the catalogue read live from TCGdex is not one, and is no picture.
+    const { image, imageHigh } = ownScan(matched?.image);
     return {
       key: identityKey(identity),
       number,
@@ -1026,7 +966,7 @@ export async function resolveSetFacts(
   return {
     title: own?.name ?? cat.officialName,
     abbreviation: cat.code,
-    logo: cat.logo,
+    logo: ownPicture(cat.logo),
     releaseDate: own?.releaseDate ?? cat.releaseDate,
     total: own?.total ?? cat.total,
     cards,
@@ -1068,8 +1008,8 @@ export async function buildCollection(
   // it. This deliberately ignores any cover art set by hand in the store: in
   // Notion those come back as presigned S3 URLs on a host the CSP does not
   // allow, so across a whole grid they would be a wall of blocked images rather
-  // than the one that was picked. TCGdex and Limitless are both allowed (see
-  // next.config.ts).
+  // than the one that was picked. Every picture this answers is a file in our own
+  // bucket at images.cardorb.com, or null.
   /**
    * By set name, and by which catalogue the cards in it come from.
    *
@@ -1145,9 +1085,13 @@ export async function buildCollection(
       const printings = setRows.map((row) => {
         const { name, number } = row;
         const card = set.cards[identityKey(identityOf(row))];
+        // The row's memory only where it is a file of ours: a row written before every picture
+        // lived in our bucket may still name another host, and that is no picture (ownPicture).
         const scan = card?.image
           ? { image: card.image, imageHigh: card.imageHigh }
-          : { image: row.imageUrl ?? null, imageHigh: row.imageHighUrl ?? null };
+          : isOurs(row.imageUrl)
+            ? { image: row.imageUrl, imageHigh: ownPicture(row.imageHighUrl) }
+            : { image: null, imageHigh: null };
         return {
           // Prefixed by the catalogue where there is one, and by nothing at all
           // where there is not — so every key in this collection today is the key
@@ -1526,7 +1470,9 @@ export async function getCardDetail(
   return {
     id: card.id,
     name: english ? correctedName(card.id, card.name) : card.name,
-    image: card.image ?? null,
+    // A card read live is one the nightly copy has not been through, so TCGdex's address is all
+    // there is, and that is no picture: only a file of ours is handed out (ownPicture).
+    image: ownPicture(card.image),
     // TCGdex's word, corrected where it is wrong and in the one spelling (rarity-names.ts), so
     // the sheet says what the lists and filters say.
     // A Japanese card's in its own spelling, and no rarity for TCGdex's "None" (rarity-names.ts).
@@ -1545,7 +1491,8 @@ export async function getCardDetail(
       ? {
           id: card.set.id,
           name: card.set.name ?? card.set.id,
-          logo: card.set.logo ? `${card.set.logo}.webp` : null,
+          // TCGdex's wordmark is not a file of ours either (ownPicture).
+          logo: ownPicture(card.set.logo ? `${card.set.logo}.webp` : null),
           total: num(card.set.cardCount?.total),
         }
       : null,

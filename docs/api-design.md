@@ -70,8 +70,9 @@ and the same missing-database condition was worded four ways.
   contract at build time and draws plain HTML. No Swagger UI, no Redoc, no script from a
   third-party host: the content security policy allows scripts from this origin only, and two
   clients we wrote do not need a try-it-out console.
-- `/api/cover` is deliberately outside the contract. It is the web tool's image proxy for
-  scans hosted by Limitless; it answers a picture, not JSON, and no client calls it by name.
+- Every picture an answer names is a file at `https://images.cardorb.com`, or `null`. The API
+  never hands out another host's address and proxies no picture: `/api/cover`, the proxy for
+  Limitless's scans, was deleted on 2026-09-15 once nothing handed its address out.
 
 ### One error shape, written in one place
 

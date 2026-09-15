@@ -104,20 +104,18 @@ describe("loadSetCatalogue", () => {
     expect(Object.keys(cat.byNumber)).toHaveLength(0);
   }, 15_000);
 
-  it("keeps the set's scans on when the picture host is having a bad minute", async () => {
-    // One HEAD decides it for the whole set and the answer is cached for a day: on 2026-09-12
-    // a 502 on that one request drew 207 empty tiles for set 151 while every file was served.
-    globalThis.fetch = serve(record([CARD]), { status: 502 });
+  it("asks no picture host and hands out no wordmark for a set read live from TCGdex", async () => {
+    // Bart, 2026-09-15: a client is sent only files of ours. A set the copy does not hold has
+    // none yet, so the HEAD on its first scan and pokemontcg.io's logo are not asked for at all.
+    const fetchMock = serve(record([CARD]), { status: 200 });
+    globalThis.fetch = fetchMock;
 
-    expect((await loadSetCatalogue("Pitch Black")).setHasScans).toBe(true);
-  }, 15_000);
+    const cat = await loadSetCatalogue("Pitch Black");
 
-  it("still says a set has no scans when the file really is not there", async () => {
-    // What the probe is for: TCGdex publishes the record before the artwork, and every image
-    // URL of a just-announced set is a 404 that carries no cache-control.
-    globalThis.fetch = serve(record([CARD]), { status: 404 });
-
-    expect((await loadSetCatalogue("Pitch Black")).setHasScans).toBe(false);
+    expect(cat.logo).toBeNull();
+    expect(cat.byNumber["001"]?.name).toBe("Bulbasaur");
+    const asked = vi.mocked(fetchMock).mock.calls.map(([input]) => String(input));
+    expect(asked.every((url) => url.startsWith("https://api.tcgdex.net/"))).toBe(true);
   }, 15_000);
 
   it("resolves to no cards, and caches that, for a set the index does not know", async () => {

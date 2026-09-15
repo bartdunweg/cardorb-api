@@ -29,10 +29,6 @@ vi.mock("../catalogue/tcgcsv", () => ({
   TCGCSV_CATEGORY: { en: 3, ja: 85 },
   groupPrintings: (groupId: number, category: number) => groupPrintings(groupId, category),
 }));
-vi.mock("../catalogue/ptcg", () => ({
-  ptcgScan: async () => null,
-  ptcgLogo: async () => null,
-}));
 vi.mock("../../storage/supabase", () => ({
   createServiceClient: () => null,
   createClient: async () => null,

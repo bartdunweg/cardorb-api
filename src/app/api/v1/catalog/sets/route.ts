@@ -3,6 +3,7 @@ import { apiError, refuse } from "@/lib/api/respond";
 import { isBrowseLanguage, listSetsIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { copiedLanguageSets } from "@/lib/core/catalogue/set-catalogue-mirror";
 import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
+import { withOwnArt } from "@/lib/core/catalogue/image-store";
 import { getRows } from "@/lib/core/collection/collection";
 import { ownershipIndex, setCounts } from "@/lib/core/collection/ownership";
 import { galleriesByParent, withoutFoldedGalleries } from "@/lib/core/catalogue/set-galleries";
@@ -49,8 +50,8 @@ export async function GET(req: Request) {
     });
   let sets;
   try {
-    // The English shelf with the promo star and pokemontcg.io's wordmark where TCGdex has none
-    // (set-logos.ts): asked here and on a set's page, not in the index search and the collection read.
+    // The English shelf with the promo star and pokemontcg.io's wordmark where TCGdex has none,
+    // resolved at night and kept in our bucket (set-logos.ts, mirror.ts).
     sets = isBrowseLanguage(language)
       ? // Out of the copy (mirror-language.ts); TCGdex only while the copy holds none of it.
         ((await copiedLanguageSets(language).catch(() => null)) ?? (await listSetsIn(language)))
@@ -83,7 +84,9 @@ export async function GET(req: Request) {
   const shown = withoutFoldedGalleries(sets, galleries);
 
   const body = {
-    sets: shown.map((set) => {
+    /* Every wordmark a file of ours, or null (ownPicture in image-store.ts): whichever read
+       answered, no other host's address leaves this route (Bart, 2026-09-15). */
+    sets: shown.map(withOwnArt).map((set) => {
       const own = setCounts(index, set);
       const gallery = galleries.get(set.id);
       if (!gallery) return { ...set, ...own };

@@ -53,11 +53,6 @@ vi.mock("@/lib/core/catalogue/mirror", () => ({
   mirrorScans: (...a: unknown[]) => mirrorScans(...(a as [])),
 }));
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
-/* The Limitless probe is a network call with its own tests; replaced with the
-   identity it degrades to when the probe cannot be made. */
-vi.mock("@/lib/core/catalogue/browse-artwork", () => ({
-  withLimitlessScans: (_lang: unknown, cards: unknown) => cards,
-}));
 
 const { GET } = await import("./route");
 
@@ -134,36 +129,75 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.cards[2]).toMatchObject({ quantity: 3, itemIds: ["row-1"] });
   });
 
-  /* The copy is where a picture has been checked: this route builds one from the serie, the
-     set and the number, and TCGdex has no file behind it for a handful of cards a set. */
+  /* The copy is where a picture has been checked, and kept in our bucket. */
   it("takes the page's pictures from the catalogue's copy where it holds them", async () => {
     englishSet.mockResolvedValue({
       set: SET,
       cards: [
-        { ...card("85"), image: "https://assets.tcgdex.net/en/sv/svp/085/low.webp" },
-        { ...card("86"), image: "https://assets.tcgdex.net/en/sv/svp/086/low.webp" },
+        { ...card("85"), image: "https://images.cardorb.com/en/sv/svp/085/low.webp" },
+        { ...card("86"), image: "https://images.cardorb.com/en/sv/svp/086/low.webp" },
       ],
     });
     mirrorScans.mockResolvedValue(
       new Map([
-        ["base1-85", { image: "https://images.pokemontcg.io/svp/85.png", imageHigh: null }],
+        [
+          "base1-85",
+          { image: "https://images.cardorb.com/pokemontcg/svp/85.png", imageHigh: null },
+        ],
       ]),
     );
     const body = await (await open()).json();
     expect(body.cards.map((c: { image: string | null }) => c.image)).toEqual([
-      "https://images.pokemontcg.io/svp/85.png",
-      "https://assets.tcgdex.net/en/sv/svp/086/low.webp",
+      "https://images.cardorb.com/pokemontcg/svp/85.png",
+      "https://images.cardorb.com/en/sv/svp/086/low.webp",
     ]);
   });
 
-  it("keeps what it built when the copy cannot be read", async () => {
+  it("keeps what it read when the copy cannot be read", async () => {
     englishSet.mockResolvedValue({
       set: SET,
-      cards: [{ ...card("85"), image: "https://assets.tcgdex.net/en/sv/svp/085/low.webp" }],
+      cards: [{ ...card("85"), image: "https://images.cardorb.com/en/sv/svp/085/low.webp" }],
     });
     mirrorScans.mockRejectedValue(new Error("the store said no"));
     const body = await (await open()).json();
-    expect(body.cards[0].image).toBe("https://assets.tcgdex.net/en/sv/svp/085/low.webp");
+    expect(body.cards[0].image).toBe("https://images.cardorb.com/en/sv/svp/085/low.webp");
+  });
+
+  /* Bart, 2026-09-15: a client is sent only files in our bucket. */
+  it("sends no picture that is not a file of ours, whichever read answered", async () => {
+    englishSet.mockResolvedValue({
+      set: { ...SET, logo: "https://images.pokemontcg.io/base1/logo.png" },
+      cards: [
+        {
+          ...card("1"),
+          image: "https://assets.tcgdex.net/en/base/base1/1/low.webp",
+          imageHigh: "https://assets.tcgdex.net/en/base/base1/1/high.webp",
+        },
+      ],
+    });
+    mirrorScans.mockResolvedValue(new Map());
+    const english = await (await open()).json();
+    expect(english.cards[0]).toMatchObject({ image: null, imageHigh: null });
+  });
+
+  it("asks no picture host for a Japanese set the copy does not hold, and sends none of theirs", async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    setIn.mockResolvedValue({
+      set: { ...SET, logo: "https://assets.tcgdex.net/ja/SV/SV5M/logo.png" },
+      cards: [
+        {
+          ...card("1"),
+          image: "https://assets.tcgdex.net/ja/SV/SV5M/001/low.webp",
+          imageHigh: "https://assets.tcgdex.net/ja/SV/SV5M/001/high.webp",
+        },
+      ],
+    });
+    const body = await (await open("language=ja", "SV5M")).json();
+    expect(body.set.logo).toBeNull();
+    expect(body.cards[0]).toMatchObject({ image: null, imageHigh: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 
   it("prints the set's code, and says null rather than nothing where there is none", async () => {

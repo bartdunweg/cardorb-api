@@ -103,6 +103,36 @@ export const isOurs = (address: string | null | undefined): address is string =>
   !!address && address.startsWith(`${IMAGES_ORIGIN}/`);
 
 /**
+ * A picture as a client may be sent it: a file in our bucket, or null.
+ *
+ * Bart, 2026-09-15: every picture a client is sent is a file of ours. An answer built while
+ * serving a request never names TCGdex, pokemontcg.io, Limitless, Scrydex or TCGplayer, and never
+ * the cover proxy in front of one: a card or a set with no file of ours carries null, and the
+ * clients draw their placeholder. Getting the file into the bucket is the nightly copy's job,
+ * which asks again every night for what is still blank.
+ */
+export const ownPicture = (address: string | null | undefined): string | null =>
+  isOurs(address) ? address : null;
+
+/** A card's two scans through ownPicture(), everything else about it as it was. */
+export const withOwnScans = <T extends { image: string | null; imageHigh?: string | null }>(
+  card: T,
+): T => ({
+  ...card,
+  image: ownPicture(card.image),
+  ...("imageHigh" in card ? { imageHigh: ownPicture(card.imageHigh) } : {}),
+});
+
+/** A set's wordmark and symbol through ownPicture(), everything else about it as it was. */
+export const withOwnArt = <T extends { logo: string | null; symbol?: string | null }>(
+  set: T,
+): T => ({
+  ...set,
+  logo: ownPicture(set.logo),
+  ...("symbol" in set ? { symbol: ownPicture(set.symbol) } : {}),
+});
+
+/**
  * What the copy writes for a picture it may already hold: a file of ours stands. A run that found
  * another file of ours writes that; a run that found nothing, or only somebody else's address,
  * keeps the one held. Bart, 2026-09-15: every picture lives in our bucket, and an outside source

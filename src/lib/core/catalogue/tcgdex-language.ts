@@ -36,7 +36,8 @@
  */
 
 import { CatalogueNotFound, json } from "./tcgdex-client";
-import { isScanFile, limitlessJapaneseScan, tcgdexScan, tcgdexScanIsReverse } from "./artwork";
+import { isScanFile } from "./artwork";
+import { ownPicture } from "./image-store";
 import type { BrowseLanguage } from "./tcgdex-browse";
 import type { Language } from "../collection/collection-row";
 import { japaneseRarityWord } from "./rarity-names";
@@ -93,14 +94,15 @@ export type LanguageCard = {
   name: string;
   /** TCGdex's word for it, or null where this catalogue does not grade its cards. */
   rarity: string | null;
-  /** The scan's address without its size, exactly as the English catalogue hands one over. */
+  /**
+   * The scan's folder in our bucket, without its size, as the English copy keeps one. Null where
+   * the copy holds no folder of ours for the card.
+   */
   image: string | null;
   /**
-   * The picture pair to draw instead, where TCGdex's own is not there. Japanese only, from
-   * Limitless: TCGdex had no file behind 41 of 72 sampled Japanese cards on 2026-09-11, whole
-   * sets at a time, and a card you own from one of those sets showed its back on the shelf that
-   * had its picture (#262). One HEAD per card, cached a day, says which; a probe that cannot be
-   * made keeps TCGdex's address, as the shelf does. Null where the catalogue's own scan stands.
+   * The one file the copy keeps instead of a folder, in our bucket: a Japanese card TCGdex did not
+   * photograph has Limitless's or TCGplayer's picture, copied at night (mirror-language.ts). Null
+   * where there is none of ours.
    */
   scan: { low: string; high: string } | null;
   setId: string | null;
@@ -153,7 +155,9 @@ export async function languageCard(
     const copied = await copiedSheet(lang, tcgId);
     if (!copied) continue;
     const { card, set } = copied;
-    const file = card.image && isScanFile(card.image) ? card.image : null;
+    // Only a file of ours (ownPicture): the copy holds nothing else today.
+    const own = ownPicture(card.image);
+    const file = own && isScanFile(own) ? own : null;
     return {
       catalogue: lang,
       id: card.id,
@@ -161,7 +165,7 @@ export async function languageCard(
       // What the card prints, as TCGdex's record says it: the English name rides elsewhere.
       name: card.local_name ?? card.name,
       rarity: card.rarity,
-      image: file ? null : card.image,
+      image: file ? null : own,
       scan: file ? { low: file, high: file } : null,
       setId: card.set_id,
       setName: set?.local_name ?? set?.name ?? null,
@@ -181,13 +185,6 @@ export async function languageCard(
     if (!card) continue;
     const id = card.id ?? tcgId;
     const number = card.localId ?? "";
-    // Limitless's plain print where TCGdex has no file — or has the reverse
-    // variant's, which is worse than none (artwork.ts, SCANNED_AS_REVERSE).
-    const scan =
-      tcgdexScanIsReverse(card.set?.id ?? setIdOf(tcgId)) ||
-      !(card.image && (await tcgdexScan(card.image)))
-        ? limitlessJapaneseScan(id, number)
-        : null;
     return {
       catalogue: lang,
       id,
@@ -198,8 +195,11 @@ export async function languageCard(
       // row's own rarity stands where it does not.
       // In the Japanese spelling, and no rarity for TCGdex's "None" (rarity-names.ts).
       rarity: japaneseRarityWord(card.rarity),
-      image: card.image ?? null,
-      scan,
+      // No picture. A card read live is one the nightly copy has not been through, so none of its
+      // pictures is in our bucket yet, and a client is sent only a file of ours (ownPicture). The
+      // HEAD to TCGdex and the Limitless guess that stood here went on 2026-09-15.
+      image: null,
+      scan: null,
       setId: card.set?.id ?? setIdOf(tcgId),
       setName: card.set?.name ?? null,
     };

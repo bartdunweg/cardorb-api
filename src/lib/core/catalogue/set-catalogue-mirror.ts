@@ -18,7 +18,8 @@
  *   (withResolvedScans in mirror.ts), so a card with no scan has no scan written down, and there
  *   is nothing to find out per read.
  * - **The per-card fallbacks.** Same reason: Limitless and pokemontcg.io were asked at copy
- *   time, for the whole set, once.
+ *   time, for the whole set, once. (The live path has none either since 2026-09-15: a picture a
+ *   client is sent is a file of ours, and only the nightly copy puts one there.)
  * - **Guessing an address from the set's logo.** A gallery card is in the copy with its own
  *   picture, so there is nothing left to build by hand.
  */
@@ -32,8 +33,8 @@ import {
   listCatalogueSets,
   listCatalogueSync,
 } from "@/lib/storage/postgres";
-import { storedScan } from "./artwork";
-import { localise } from "../util";
+import { ownScan } from "./artwork";
+import { ownPicture } from "./image-store";
 import {
   type BrowseLanguage,
   type CatalogueSet,
@@ -116,9 +117,16 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
   if (!groups.some((g) => g.length)) return null;
   const main = rows.find((r) => r.id === ids[0]) ?? null;
 
+  // Only a file of ours as a card's picture (ownPicture): the copy holds nothing else today, and
+  // an address from another host that ever reached it is no picture to hand a client.
   const byNumber = indexByNumber(
     groups.map((cards) =>
-      cards.map((c) => ({ id: c.id, localId: c.local_id, name: c.name, image: c.image })),
+      cards.map((c) => ({
+        id: c.id,
+        localId: c.local_id,
+        name: c.name,
+        image: ownPicture(c.image),
+      })),
     ),
   );
 
@@ -126,21 +134,14 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
 
   return {
     byNumber,
-    // Nothing to guess an address from, and nothing that needs one: every card in the copy
-    // carries the picture that was checked for it, or none at all.
-    assetBase: null,
     officialName: main?.name ?? null,
     code: setCodeOf(main?.id, main?.abbreviation),
-    // The copy only ever writes a picture it found. A set that has none simply has none, which
-    // the per-card nulls already say, so there is no whole-set verdict to make here.
-    setHasScans: true,
     /* The copy's own art, resolved at night the way the shelf shows it (the promo star,
-       pokemontcg.io's wordmark where TCGdex has none) and kept in our bucket. setArt() would ask
-       pokemontcg.io again for a set with no logo, on a request. */
-    logo: localise(main?.logo ?? main?.symbol ?? null),
+       pokemontcg.io's wordmark where TCGdex has none) and kept in our bucket. The symbol where
+       the wordmark is not a file of ours. */
+    logo: ownPicture(main?.logo) ?? ownPicture(main?.symbol),
     releaseDate: main?.release_date ?? null,
     total,
-    fromCopy: true,
   };
 }
 
@@ -202,8 +203,8 @@ export async function copiedEnglishSets(): Promise<CatalogueSet[] | null> {
       total: r.total ?? 0,
       printedTotal: r.printed_total,
       cardsRecorded: true,
-      logo: r.logo,
-      symbol: r.symbol,
+      logo: ownPicture(r.logo),
+      symbol: ownPicture(r.symbol),
     }))
     .sort(byShelfOrder);
 }
@@ -239,8 +240,8 @@ export async function englishSetFromCopy(
     printedTotal: row.printed_total,
     abbreviation: setCodeOf(row.id, row.abbreviation),
     cardsRecorded: true,
-    logo: row.logo,
-    symbol: row.symbol,
+    logo: ownPicture(row.logo),
+    symbol: ownPicture(row.symbol),
   };
   const cards = rows.map((c): CatalogueMatch => ({
     id: c.id,
@@ -249,7 +250,7 @@ export async function englishSetFromCopy(
     localName: null,
     setName: set.name,
     series: set.series,
-    ...storedScan(c.image),
+    ...ownScan(c.image),
     rarity: c.rarity,
     types: c.types ?? [],
     category: c.category ?? null,
@@ -305,7 +306,7 @@ export async function copiedLanguageSets(language: BrowseLanguage): Promise<Cata
         total: Math.max(r.total ?? 0, held.get(r.id) ?? 0),
         printedTotal: r.printed_total,
         cardsRecorded: r.cards_recorded ?? true,
-        logo: r.logo,
+        logo: ownPicture(r.logo),
         symbol: null,
       }))
   );
@@ -341,8 +342,8 @@ export async function languageSetFromCopy(
     printedTotal: row.printed_total,
     abbreviation: setCodeOf(row.id, row.abbreviation),
     cardsRecorded: row.cards_recorded ?? true,
-    logo: row.logo,
-    symbol: row.symbol,
+    logo: ownPicture(row.logo),
+    symbol: ownPicture(row.symbol),
   };
   const cards = rows.map((c): CatalogueMatch => ({
     id: c.id,
@@ -351,7 +352,7 @@ export async function languageSetFromCopy(
     localName: c.local_name ?? null,
     setName: set.name,
     series: set.series || null,
-    ...storedScan(c.image),
+    ...ownScan(c.image),
     rarity: c.rarity,
     types: c.types ?? [],
     category: c.category ?? null,

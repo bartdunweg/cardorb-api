@@ -25,7 +25,6 @@ vi.mock("../catalogue/tcgdex-client", async (real) => ({
   ...(await real<typeof import("../catalogue/tcgdex-client")>()),
   pricesFor: (ids: string[]) => pricesFor(ids),
 }));
-vi.mock("../catalogue/ptcg", () => ({ ptcgScan: async () => null, ptcgLogo: async () => null }));
 vi.mock("../../storage/supabase", () => ({
   // Just enough of a client for the one "is anything current" look.
   adminClient: () => ({

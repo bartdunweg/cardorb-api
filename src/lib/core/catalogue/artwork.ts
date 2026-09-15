@@ -4,6 +4,7 @@
  */
 import { DAY, numberForms, catalogueTimeout } from "../util";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
+import { ownPicture } from "./image-store";
 
 const PRODUCTS = TCGPLAYER_IDS as Record<string, { productId?: number } | null>;
 
@@ -39,8 +40,10 @@ export async function tcgplayerScan(cardId: string): Promise<string | null> {
  * Limitless publishes scans as soon as a set is out, at a path built from the
  * set's printed abbreviation, which is where a card too new for TCGdex comes
  * from. The path is guessed rather than looked up, so the file is checked
- * before it is handed out, and it is served through our own origin because
- * Limitless sends no CORS header.
+ * before the nightly copy takes it. Only the copy asks (mirror.ts): the answer
+ * is still wrapped the way the cover proxy wanted it, because imageKey() and the
+ * copy's held values read that shape, but the proxy itself is gone and no client
+ * is sent the address (ownPicture in image-store.ts).
  *
  * The code is the abbreviation ("SSP"), not the TCGdex id ("sv08"). That was
  * the bug: every guess was built as SV08_088 and quietly 403'd, so a fallback
@@ -102,8 +105,7 @@ export async function tcgdexScan(base: string): Promise<string | null> {
  * restating a string the client already holds.
  *
  * The rule is the host, not the URL shape: TCGdex publishes both sizes, and the
- * two fallback catalogues (pokemontcg.io, and Limitless through /api/cover)
- * publish a single file. That is exactly the 62.
+ * two fallback catalogues (pokemontcg.io and Limitless) publish a single file. That is exactly the 62.
  *
  * Kept on OwnedCard and on the API for now, because /v1/collection is a
  * published shape with a client that does not exist yet to renegotiate it
@@ -121,8 +123,8 @@ export function highScan(image: string | null): string | null {
 /**
  * Japanese sets TCGdex photographed in a reverse-holo variant rather than the plain print.
  * Pokémon Card 151 (SV2a): every one of its scans is the Master Ball print (001, 011, 025 and
- * 150 looked at on 2026-09-11), so a shelf of commons read as a shelf of reverse holos. Both
- * callers of limitlessJapaneseScan() take Limitless's plain print for these without asking
+ * 150 looked at on 2026-09-11), so a shelf of commons read as a shelf of reverse holos.
+ * The nightly copy takes Limitless's plain print for these without asking
  * TCGdex whether its file is there: it is, and it is the wrong one.
  */
 const SCANNED_AS_REVERSE: ReadonlySet<string> = new Set(["SV2a"]);
@@ -135,17 +137,15 @@ export const tcgdexScanIsReverse = (setId: string | null): boolean =>
  * uses for a Japanese set, and the number without its padding. SV5M-001 is
  * `tpc/SV5M/SV5M_1_R_JP_SM.png` there. Four sets checked by hand on
  * 2026-09-11, four present. SM (274×381) does the grid's job, LG (460×640)
- * the sheet's; through /api/cover, because Limitless sends no CORS header.
+ * the sheet's. Wrapped as the cover proxy wanted it, for the copy's sake (limitlessScan above).
  *
  * A promo set is the exception: Limitless files SV-P as SVP and M-P as MP, so
  * the hyphen goes. Until 2026-09-15 every guess for those two was a 403 and 27
  * of their cards had no picture; SV-P 188, 251, 280 and 290 and M-P 164 were
  * opened and are the cards their numbers say.
  *
- * Not checked here. The callers decide differently whether to ask (a set page
- * probes once per set, a collection once per card) and hand the guess over
- * unverified, which costs what a dead TCGdex address cost before: the browser
- * finds out, and draws the card's back.
+ * Not checked here: the nightly copy (mirror-language.ts) is the one caller, and it finds out
+ * when it copies the file into our bucket.
  */
 export function limitlessJapaneseScan(id: string, number: string): { low: string; high: string } {
   const set = id.slice(0, id.lastIndexOf("-")).replaceAll("-", "");
@@ -223,7 +223,7 @@ export async function scrydexScan(setId: string, number: string): Promise<string
  *
  * TCGdex's addresses are folders: the size and the format are the reader's, `${stem}/low.webp`.
  * The two fallbacks publish one file each, and a file is what the catalogue's copy keeps for a
- * card TCGdex has no scan of. A path on this origin is the cover proxy, which is also a file.
+ * card TCGdex has no scan of. A path on this origin is the old cover proxy's shape, also a file.
  */
 export const isScanFile = (value: string): boolean =>
   value.startsWith("/") || /\.(webp|png|jpe?g)(\?|$)/i.test(value);
@@ -240,3 +240,12 @@ export const storedScan = (
     : isScanFile(value)
       ? { image: value, imageHigh: null }
       : { image: `${value}/low.webp`, imageHigh: `${value}/high.webp` };
+
+/**
+ * storedScan() for an answer a client is sent: an address that is not a file of ours reads as no
+ * picture at all (ownPicture in image-store.ts). The nightly copy reads storedScan() itself, because
+ * an outside address is exactly what it copies from.
+ */
+export const ownScan = (
+  value: string | null | undefined,
+): { image: string | null; imageHigh: string | null } => storedScan(ownPicture(value));

@@ -537,6 +537,9 @@ const keptFacts = (
     // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
     // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
     //
+    // v24: pictures are files of ours or null (ownPicture, 2026-09-15). A v23 entry can hold a
+    // Limitless or pokemontcg.io address found for a row the copy had not matched, for its day.
+    //
     // v22: Ascended Heroes' Friend, Love, Quick and Dusk Ball and Team Rocket reverses and three
     // Black & White Energy Holo reverses priced under their own names (2026-09-14).
     //
@@ -585,7 +588,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v23", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v24", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -691,6 +694,9 @@ const cachedSetFacts = (
       // stayed unpriced after the deploy, for a day, per set — the guide key moved and this
       // one did not.
       //
+      // v33: no picture looked for on a request, and none handed out that is not a file of ours
+      // (ownPicture, 2026-09-15). A v32 entry can hold a Limitless or pokemontcg.io address.
+      //
       // v30: the second pass over English facts (card-fact-corrections.ts, 2026-09-14): rarity for
       // 21 cards (Silver Tempest's TG01 to TG11 as Ultra Rare), 48 LV.X names, one apostrophe.
       //
@@ -731,7 +737,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v32", setName, factsSignature(identities)],
+      ["set-facts", "v33", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

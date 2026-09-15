@@ -183,7 +183,7 @@ describe("searchMirror", () => {
   it("asks the copy for every word, and hands a hit back in the add-card form's shape", async () => {
     const { db, calls } = fakeStore({
       catalogue_sync: [{ set_id: "sv03.5" }],
-      catalogue_cards: [row()],
+      catalogue_cards: [row({ image: "https://images.cardorb.com/en/sv/sv03.5/006" })],
     });
     const found = await searchMirror(db, "Charizard 151 fire", 1);
     expect(found).toEqual({
@@ -196,8 +196,8 @@ describe("searchMirror", () => {
           localName: null,
           setName: "151",
           series: "Scarlet & Violet",
-          image: "https://assets.tcgdex.net/en/sv/sv03.5/006/low.webp",
-          imageHigh: "https://assets.tcgdex.net/en/sv/sv03.5/006/high.webp",
+          image: "https://images.cardorb.com/en/sv/sv03.5/006/low.webp",
+          imageHigh: "https://images.cardorb.com/en/sv/sv03.5/006/high.webp",
           rarity: "Double Rare",
           types: ["Fire"],
           category: null,
@@ -957,20 +957,37 @@ describe("syncMirror", () => {
   });
 });
 
+describe("searchMirror, pictures", () => {
+  it("hands a hit whose copied picture is not a file of ours no picture at all", async () => {
+    const { db } = fakeStore({
+      catalogue_sync: [{ set_id: "sv03.5" }],
+      catalogue_cards: [row({ image: "/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png" })],
+    });
+    const found = await searchMirror(db, "Charizard", 1);
+    expect(found?.cards[0]).toMatchObject({ image: null, imageHigh: null });
+  });
+});
+
 describe("buildIndex", () => {
+  const OURS = "https://images.cardorb.com/en/sv/sv03.5";
   it("writes a set once and each card as an array, with a seventh element only where the scan is elsewhere", () => {
     const index = buildIndex("v1", [
-      row(),
+      row({ image: `${OURS}/006` }),
       row({
         id: "sv03.5-007",
         local_id: "007",
         name: "Charmeleon",
         rarity: "Uncommon",
         types: ["Fire"],
-        image: "https://assets.tcgdex.net/en/sv/sv03.5/007",
+        image: `${OURS}/007`,
       }),
       row({ id: "sv03.5-008", local_id: "008", name: "Nobody", image: null }),
-      row({ id: "sv03.5-009", local_id: "009", name: "Elsewhere", image: "https://limitless/x" }),
+      row({
+        id: "sv03.5-009",
+        local_id: "009",
+        name: "Elsewhere",
+        image: "https://images.cardorb.com/pokemontcg/sv3pt5/9.png",
+      }),
     ]);
     expect(index.version).toBe("v1");
     expect(index.sets).toEqual({
@@ -978,15 +995,32 @@ describe("buildIndex", () => {
         name: "151",
         series: "Scarlet & Violet",
         date: "2023/09/22",
-        image: "https://assets.tcgdex.net/en/sv/sv03.5",
+        image: OURS,
       },
     });
     expect(index.cards).toEqual([
       ["sv03.5-006", "sv03.5", "006", "Charizard ex", "Double Rare", ["Fire"]],
       ["sv03.5-007", "sv03.5", "007", "Charmeleon", "Uncommon", ["Fire"]],
       ["sv03.5-008", "sv03.5", "008", "Nobody", "Double Rare", ["Fire"], null],
-      ["sv03.5-009", "sv03.5", "009", "Elsewhere", "Double Rare", ["Fire"], "https://limitless/x"],
+      [
+        "sv03.5-009",
+        "sv03.5",
+        "009",
+        "Elsewhere",
+        "Double Rare",
+        ["Fire"],
+        "https://images.cardorb.com/pokemontcg/sv3pt5/9.png",
+      ],
     ]);
+  });
+
+  it("names no folder and no scan that is not a file of ours", () => {
+    const index = buildIndex("v1", [
+      row(),
+      row({ id: "sv03.5-009", local_id: "009", name: "Elsewhere", image: "https://limitless/x" }),
+    ]);
+    expect(index.sets["sv03.5"]?.image).toBeNull();
+    expect(index.cards.map((c) => c[6] ?? null)).toEqual([null, null]);
   });
 });
 

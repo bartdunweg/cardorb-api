@@ -40,15 +40,14 @@
  * allowed to import (see eslint.config.mjs).
  */
 
-import { DAY, mapLimit, catalogueTimeout } from "../util";
+import { DAY, mapLimit } from "../util";
 import { unstable_cache } from "next/cache";
 import { json, fetchSet } from "./tcgdex-client";
 import { eraRaritiesOfSet, loadEraRarities } from "./era-rarities";
 import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
 import { copiedEnglishSets, englishSetFromCopy, mirrorSetCatalogue } from "./set-catalogue-mirror";
-import { withSetLogos } from "./set-logos";
-import { setArt } from "./set-art";
+import { withOwnArt, withOwnScans } from "./image-store";
 import { englishSet, englishSets } from "./tcgdex-browse";
 
 export { resolveSetIds } from "./set-resolve";
@@ -69,7 +68,6 @@ export type SetCatalogue = {
    * likely to be "tidied" back into a bug.
    */
   byNumber: Record<string, CatalogueCard>;
-  assetBase: string | null;
   /**
    * What the catalogue calls this set.
    *
@@ -78,18 +76,12 @@ export type SetCatalogue = {
    * is the one its owner typed.
    */
   officialName: string | null;
-  /** The printed abbreviation, for the Limitless guess. */
+  /** The printed abbreviation, which the collection prints beside the set's name. */
   code: string | null;
-  setHasScans: boolean;
+  /** The set's wordmark, a file of ours, or null (ownPicture in image-store.ts). */
   logo: string | null;
   releaseDate: string | null;
   total: number | null;
-  /**
-   * Read out of the nightly copy, where every card's picture was already checked against every
-   * source: a matched card with no picture has none anywhere, and asking Limitless and
-   * pokemontcg.io again on a request finds nothing again (resolveSetFacts).
-   */
-  fromCopy?: boolean;
 };
 
 /**
@@ -108,13 +100,6 @@ export class CatalogueUnavailable extends Error {
     this.name = "CatalogueUnavailable";
   }
 }
-
-/**
- * The answers from a picture host that mean the file is not there, as opposed to not being
- * handed over just now. 403 is in because object stores answer a missing key that way when
- * listing is denied, which is how TCGdex' CDN is configured.
- */
-const GONE = new Set([403, 404, 410]);
 
 /** The whole of the per-set work, on a cache miss. Exported for its test only. */
 export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
@@ -191,78 +176,24 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
     );
   }
 
-  // Where this set keeps its artwork, taken off the logo it already handed over
-  // rather than guessed: ".../en/swsh/swsh12.5/logo" minus the logo.
-  //
-  // The gallery subsets need it. TCGdex lists their cards with an id, a localId
-  // and a name and no image at all, so a Galarian Gallery card matched
-  // perfectly and then had nothing to build a URL from: Crown Zenith rendered
-  // one scan out of 58. The files do exist, filed under the parent set rather
-  // than the subset (swsh12.5/GG69, not swsh12.5gg/GG69, which is a 404).
-  const assetBase = detail?.logo?.replace(/\/logo$/, "") ?? null;
-
   // One rule for both sources, in set-index.ts: the set first, its galleries after it.
   const byNumber = indexByNumber(details.map((d) => d.cards ?? []));
 
-  // Only the parent set has a printed abbreviation worth guessing with. The
-  // galleries carry theirs as "ASR:TG", which is not a path segment, and
-  // Limitless files those cards under the parent's numbering instead. Working
-  // out that offset would mean guessing, and an off-by-one there shows a
-  // confidently wrong card, so this code is never used for a gallery number.
-  //
-  // That still holds for Limitless. What has changed since is where those cards
-  // come from instead: pokemontcg.io publishes the galleries as sets of their
-  // own, addressed by the printed number, so there is no offset to guess there
-  // and ptcgScan() picks them up.
+  // Only the parent set has a printed abbreviation. The galleries carry theirs as "ASR:TG",
+  // which is not a code anybody prints beside a set's name.
   const code = detail?.abbreviation?.official?.split(":")[0]?.toUpperCase() ?? null;
-
-  /**
-   * Does this set have scans at all?
-   *
-   * TCGdex publishes the record before the artwork, and it does not say so:
-   * every card in a set that has just been announced still carries an `image`
-   * URL, and every one of those URLs is a 404. Pitch Black is 120 of them.
-   *
-   * The browser used to find that out the hard way, one card at a time, and the
-   * 404 of a missing scan carries no cache-control, so each attempt travelled
-   * all the way back to origin. That is what made a new set take seconds to
-   * fail to paint. One HEAD, here, decides it for the whole set.
-   */
-  const probe = details.flatMap((d) => d.cards ?? []).find((c) => c.image)?.image;
-  let setHasScans = true;
-  if (probe) {
-    try {
-      const res = await fetch(`${probe}/low.webp`, {
-        method: "HEAD",
-        next: { revalidate: DAY },
-        signal: catalogueTimeout(),
-      });
-      // Only a "there is no such file" is proof of absence. It used to be every answer that
-      // was not a 200, so one 502 from the CDN turned a whole set's scans off for a day: on
-      // 2026-09-12 set 151 drew 207 empty tiles while every one of those files was being
-      // served. A server that is having a bad minute is not a set without artwork, and this
-      // decides it for the whole set, so it errs towards asking again.
-      setHasScans = res.ok || !GONE.has(res.status);
-    } catch {
-      // A probe that cannot be made is not proof of absence: assume the scans
-      // are there and let the per-card fallback do what it always did.
-      setHasScans = true;
-    }
-  }
 
   const total = detail?.cardCount?.official ?? detail?.cardCount?.total ?? null;
 
   return {
     byNumber,
-    assetBase,
     officialName: detail?.name ?? null,
     code,
-    setHasScans,
-    logo: await setArt(
-      setName,
-      detail?.logo ? `${detail.logo}.webp` : null,
-      detail?.symbol ? `${detail.symbol}.webp` : null,
-    ),
+    // No wordmark, and no card picture either (resolveSetFacts): a set read live from TCGdex is
+    // one the nightly copy has not been through, so nothing of it is in our bucket yet, and a
+    // client is sent only a file of ours (ownPicture in image-store.ts). The HEAD that asked
+    // TCGdex whether the set had scans at all, and pokemontcg.io's logo, went on 2026-09-15.
+    logo: null,
     releaseDate: detail?.releaseDate ?? null,
     total,
   };
@@ -293,7 +224,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v9: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
 // v10: the third pass over the English facts (card-fact-corrections.ts): Galarian Gallery, "None" as no rarity, Unown and ☆ names.
 // v12: numbers as the cards print them (CATALOGUE_FORMAT 5): the byNumber of a set copied again holds 001.
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v12"], {
+// v13: no picture that is not a file of ours, and no assetBase, setHasScans or fromCopy (2026-09-15).
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v13"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
@@ -345,16 +277,22 @@ const englishSetEntry = unstable_cache(
  * The copy first (set-catalogue-mirror.ts): one query where TCGdex took two requests, and no
  * TCGdex at all between a person and a set page. A set the copy holds no cards of yet, or a copy
  * that cannot be read, goes to the day-cached read above, which is where every set went before.
+ * Its facts, that is: the addresses that read builds are TCGdex's, so its cards and its wordmark
+ * carry null until the nightly copy has put them in our bucket (ownPicture).
  */
-export const englishSetOfDay = async (setId: string): ReturnType<typeof englishSet> =>
-  (await englishSetFromCopy(setId).catch(() => null)) ??
-  englishSetEntry(setId).catch(() => englishSet(setId));
+export const englishSetOfDay = async (setId: string): ReturnType<typeof englishSet> => {
+  const copied = await englishSetFromCopy(setId).catch(() => null);
+  if (copied) return copied;
+  const live = await englishSetEntry(setId).catch(() => englishSet(setId));
+  return live && { set: withOwnArt(live.set), cards: live.cards.map(withOwnScans) };
+};
 
 /**
- * The English shelf's sets as the pages read them: out of the copy, newest first, logos resolved;
- * TCGdex and pokemontcg.io only where the copy has nothing (copiedEnglishSets). The nightly
- * catalogue run still reads englishSets() itself, because finding a set the copy does not have yet
- * is its job.
+ * The English shelf's sets as the pages read them: out of the copy, newest first, logos resolved.
+ * TCGdex's index only where the copy has nothing (copiedEnglishSets), and then without a wordmark:
+ * its addresses are not files of ours (ownPicture), and the HEADs that looked for pokemontcg.io's
+ * logos went on 2026-09-15. The nightly catalogue run still reads englishSets() and withSetLogos()
+ * itself, because finding a set and its wordmark is its job.
  */
 export const englishShelfSets = async (): Promise<Awaited<ReturnType<typeof englishSets>>> =>
-  (await copiedEnglishSets().catch(() => null)) ?? withSetLogos(await englishSets());
+  (await copiedEnglishSets().catch(() => null)) ?? (await englishSets()).map(withOwnArt);

@@ -14,10 +14,8 @@ const answers: Record<string, unknown> = {
       tcgplayer: null,
     },
   },
-  // TCGdex has photographed SV1a-007; the HEAD the Japanese path spends says so.
-  "https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp": true,
-  // A card from a set TCGdex has recorded and not photographed — SV5M was 12 of 12 on
-  // 2026-09-11 — carries an address with no file behind it.
+  // A card from a set TCGdex has recorded and not photographed (SV5M was 12 of 12 on
+  // 2026-09-11) carries an address with no file behind it.
   "/ja/cards/SV5M-001": {
     id: "SV5M-001",
     localId: "001",
@@ -91,7 +89,9 @@ describe("languageCard", () => {
       number: "007",
       name: "マスカーニャex",
       rarity: "Double Rare",
-      image: "https://assets.tcgdex.net/ja/SV/SV1a/007",
+      // Read live, so not a file of ours: no picture (ownPicture).
+      image: null,
+      scan: null,
       setId: "SV1a",
       setName: "トリプレットビート",
     });
@@ -108,50 +108,31 @@ describe("languageCard", () => {
     expect(JSON.stringify(card)).not.toContain("0.17");
   });
 
-  it("keeps TCGdex's own scan where the file is there, after one probe", async () => {
-    const asked = stub();
-    const card = await languageCard(["ja"], "SV1a-007");
-    expect(card!.scan).toBeNull();
-    expect(asked).toEqual([
-      "/ja/cards/SV1a-007",
-      "HEAD https://assets.tcgdex.net/ja/SV/SV1a/007/low.webp",
-    ]);
-  });
-
-  it("names Limitless's pair where TCGdex has the card and not its picture", async () => {
-    stub();
-    const card = await languageCard(["ja"], "SV5M-001");
-    const cover = (f: string) =>
-      `/api/cover?url=${encodeURIComponent(`https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV5M/${f}`)}`;
-    expect(card!.scan).toEqual({
-      low: cover("SV5M_1_R_JP_SM.png"),
-      high: cover("SV5M_1_R_JP_LG.png"),
-    });
-    // TCGdex's address is still carried, as the row's record of where it looked.
-    expect(card!.image).toBe("https://assets.tcgdex.net/ja/SV/SV5M/001");
-  });
-
-  it("names Limitless's pair, without a probe, for a set TCGdex photographed in its reverse variant", async () => {
-    // Pokémon Card 151: TCGdex's file is there and it is the Master Ball print of every card.
-    const asked = stub({
-      "/ja/cards/SV2a-011": {
-        id: "SV2a-011",
-        localId: "011",
-        name: "トランセル",
-        image: "https://assets.tcgdex.net/ja/SV/SV2a/011",
-        set: { id: "SV2a", name: "ポケモンカード151" },
+  // Bart, 2026-09-15: a client is sent only files in our bucket. A card read live is one the
+  // nightly copy has not been through, so it has no picture, and no picture host is asked:
+  // not TCGdex's assets for a HEAD, and no Limitless address is guessed.
+  it.each([
+    ["one TCGdex photographed", "SV1a-007", {}],
+    ["one TCGdex recorded and did not photograph", "SV5M-001", {}],
+    ["one whose record names no picture at all", "SV5M-002", {}],
+    [
+      "one from a set TCGdex photographed in its reverse variant",
+      "SV2a-011",
+      {
+        "/ja/cards/SV2a-011": {
+          id: "SV2a-011",
+          localId: "011",
+          name: "トランセル",
+          image: "https://assets.tcgdex.net/ja/SV/SV2a/011",
+          set: { id: "SV2a", name: "ポケモンカード151" },
+        },
       },
-    });
-    const card = await languageCard(["ja"], "SV2a-011");
-    expect(card!.scan?.low).toContain("SV2a_11_R_JP_SM.png");
-    expect(asked).toEqual(["/ja/cards/SV2a-011"]);
-  });
-
-  it("guesses without a probe where the record names no picture at all", async () => {
-    const asked = stub();
-    const card = await languageCard(["ja"], "SV5M-002");
-    expect(card!.scan?.low).toContain("SV5M_2_R_JP_SM.png");
-    expect(asked).toEqual(["/ja/cards/SV5M-002"]);
+    ],
+  ])("names no picture and asks only for the record, for %s", async (_, id, extra) => {
+    const asked = stub(extra);
+    const card = await languageCard(["ja"], id);
+    expect(card).toMatchObject({ id, image: null, scan: null });
+    expect(asked).toEqual([`/ja/cards/${id}`]);
   });
 
   it("is null for a card no catalogue in the list has", async () => {

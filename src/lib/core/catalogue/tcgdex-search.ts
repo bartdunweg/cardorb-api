@@ -25,7 +25,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { graphql, json } from "./tcgdex-client";
 import { ENERGY_TYPES, MAX_WORDS, searchMirror } from "./mirror";
-import { withLimitlessScansPerSet } from "./browse-artwork";
+import { withOwnScans } from "./image-store";
 import {
   type BrowseLanguage,
   englishSetIndex,
@@ -66,14 +66,6 @@ const WINDOW = 250;
 type Brief = { id: string; localId?: string; name?: string; image?: string | null };
 
 const lower = (s: string) => s.trim().toLowerCase();
-
-/**
- * A scan's address. TCGdex hands back the stem and leaves the size and the
- * format to the caller; a card whose scan has not been published carries no
- * stem at all and draws as its name.
- */
-const scan = (stem: string | null | undefined, size: "low" | "high") =>
-  stem ? `${stem}/${size}.webp` : null;
 
 /**
  * The filters TCGdex can answer itself, and the words it cannot.
@@ -295,8 +287,10 @@ export async function searchCards(
         name: language ? c.name : correctedName(c.id, c.name),
         localName: null,
         setName: set?.name ?? setId,
-        image: scan(c.image, "low"),
-        imageHigh: scan(c.image, "high"),
+        /* No picture: TCGdex's address is not a file of ours, and a client is sent nothing else
+           (ownPicture in image-store.ts). A hit the copy holds comes with ours, above. */
+        image: null,
+        imageHigh: null,
         rarity: null,
         types: [],
         series: set?.series ?? null,
@@ -314,11 +308,9 @@ export async function searchCards(
      more", which is the honest thing a capped count can say. */
   const shown = matched.slice(from, from + MAX_RESULTS);
   /* Rarity and type are the English catalogue's facts; the shelves of the other languages leave
-     both empty (tcgdex-browse.ts, setIn), and a search in one of them does the same. A Japanese
-     hit's picture goes through the same step the set page's does: Limitless's plain print where
-     TCGdex has no file, or the wrong one, or the record names none. */
+     both empty (tcgdex-browse.ts, setIn), and a search in one of them does the same. */
   return {
-    cards: language ? await withLimitlessScansPerSet(language, shown) : await withFacts(shown),
+    cards: language ? shown : await withFacts(shown),
     total: matched.length,
   };
 }
@@ -400,5 +392,8 @@ async function searchEnglishNames(
     const card = bySet.get(setOf(id))?.get(id);
     return card ? [card] : [];
   });
-  return { cards: await withLimitlessScansPerSet(language, cards), total: ids.length };
+  /* setIn() builds TCGdex's addresses, which are not files of ours: the hits carry no picture
+     until the nightly copy holds the set (ownPicture). The Limitless guess and the TCGdex HEAD that
+     stood here went on 2026-09-15. */
+  return { cards: cards.map(withOwnScans), total: ids.length };
 }

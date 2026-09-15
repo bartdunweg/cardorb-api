@@ -2,12 +2,13 @@
  * A wordmark for every English set on the shelf, where TCGdex publishes none.
  *
  * TCGdex has no logo for 57 of its 203 English sets (2026-09-13): Temporal Forces, the Trainer
- * Galleries, every McDonald's Collection, the trainer kits. The collection has long filled that gap
- * from pokemontcg.io (set-art.ts), and the shelf did not, so Bart saw Temporal Forces without one.
+ * Galleries, every McDonald's Collection, the trainer kits. The collection filled that gap from
+ * pokemontcg.io, and the shelf did not, so Bart saw Temporal Forces without one.
  * pokemontcg.io's API answers 500s and 502s most of the time (since 2026-09), but its image host
  * does not, and a set's logo there is at a fixed address: images.pokemontcg.io/<their id>/logo.png.
- * So the address is built from TCGdex's id and checked once a day, and a set whose address is not
- * there keeps what it had.
+ * So the address is built from TCGdex's id and checked, and a set whose address is not there keeps
+ * what it had. Only the nightly copy asks (mirror.ts), which puts the file in our bucket: a request
+ * never does, and a client is sent only a file of ours (ownPicture in image-store.ts).
  *
  * And every Black Star Promos set wears the black star, the mark printed on the cards themselves,
  * where TCGdex gives Wizards' promos a wordmark and SVP's none (Bart: "moet wizard black star
@@ -16,7 +17,10 @@
 import PTCG_SET_IDS from "./ptcg-set-ids.json";
 import type { CatalogueSet } from "./tcgdex-browse";
 
-/** The star TCGdex publishes once, under the Sword & Shield promos: see set-art.ts. */
+/**
+ * The black star every promo set wears, which TCGdex publishes once, under the Sword & Shield
+ * promos. It is not that set's branding: it is the mark printed on the cards themselves.
+ */
 export const PROMO_STAR = "https://assets.tcgdex.net/en/swsh/swshp/logo.webp";
 
 const THEIRS: Record<string, string> = Object.fromEntries(
