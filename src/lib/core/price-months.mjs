@@ -245,9 +245,10 @@ const SCARCER_PREMIUM = 2;
  * their unlimited run on every day read, and a rule that the stamped run is always dearer took out
  * all 106 days of neo4-11's line.
  *
- * @param {{ card: string, real: Record<string, number> }[]} days
+ * @param {{ card: string, date: string, real: Record<string, number> }[]} days
+ * @param {Taken[]} taken the figures taken out, added to
  */
-function dropScarcerRunsUnderTheirBase(days) {
+function dropScarcerRunsUnderTheirBase(days, taken) {
   /** @param {Record<string, number>} real @param {string[]} bases */
   const baseOf = (real, bases) => bases.map((b) => real[b]).find((v) => v != null) ?? null;
   /** @type {Map<string, number[]>} */
@@ -266,11 +267,13 @@ function dropScarcerRunsUnderTheirBase(days) {
     const sorted = list.sort((a, b) => a - b);
     if (sorted[sorted.length >> 1] >= SCARCER_PREMIUM) premium.add(key);
   }
-  for (const { card, real } of days) {
+  for (const { card, date, real } of days) {
     for (const [scarce, bases] of SCARCER_RUNS) {
       const base = baseOf(real, bases);
-      if (premium.has(`${card}|${scarce}`) && base != null && real[scarce] < base)
+      if (premium.has(`${card}|${scarce}`) && base != null && real[scarce] < base) {
         delete real[scarce];
+        taken.push({ card, date, figures: real, printing: scarce });
+      }
     }
   }
 }
@@ -291,16 +294,17 @@ function dropScarcerRunsUnderTheirBase(days) {
  * price outnumbers the old.
  *
  * @param {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number> }[]} days
+ * @param {Taken[]} taken the figures taken out, added to
  */
-function dropStrayFigures(days) {
-  /** @type {Map<string, { day: number, figures: Record<string, number>, printing: string, value: number }[]>} */
+function dropStrayFigures(days, taken) {
+  /** @type {Map<string, { card: string, date: string, day: number, figures: Record<string, number>, printing: string, value: number }[]>} */
   const series = new Map();
   for (const d of days) {
     for (const figures of [d.real, d.legacy]) {
       for (const [printing, value] of Object.entries(figures)) {
         const key = `${d.card}|${printing}`;
         const list = series.get(key) ?? [];
-        list.push({ day: dayNumber(d.date), figures, printing, value });
+        list.push({ card: d.card, date: d.date, day: dayNumber(d.date), figures, printing, value });
         series.set(key, list);
       }
     }
@@ -325,7 +329,55 @@ function dropStrayFigures(days) {
         stray.push(point);
     }
     // Taken out after the pass, so each figure is weighed against what was stored, not what is left.
-    for (const p of stray) delete p.figures[p.printing];
+    for (const p of stray) {
+      delete p.figures[p.printing];
+      taken.push(p);
+    }
+  }
+}
+
+/**
+ * @typedef {object} Taken
+ * @property {string} card
+ * @property {string} date
+ * @property {Record<string, number>} figures the day's figures the printing was taken out of
+ * @property {string} printing
+ */
+
+/**
+ * Puts back in each figure taken out the printing's last figure before it, so the line stays flat
+ * until the next sale instead of dipping or leaving a gap. That is what TCGplayer's own market price
+ * does between two sales, and what Bart asked the chart to do (2026-09-15). A figure with nothing
+ * before it stays out.
+ *
+ * @param {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number> }[]} days
+ * @param {Taken[]} taken
+ */
+function holdLastFigure(days, taken) {
+  if (!taken.length) return;
+  const wanted = new Set(taken.map((t) => `${t.card}|${t.printing}`));
+  /** @type {Map<string, { date: string, value: number }[]>} */
+  const kept = new Map();
+  for (const d of days) {
+    for (const figures of [d.real, d.legacy]) {
+      for (const [printing, value] of Object.entries(figures)) {
+        const key = `${d.card}|${printing}`;
+        if (!wanted.has(key)) continue;
+        const list = kept.get(key) ?? [];
+        list.push({ date: d.date, value });
+        kept.set(key, list);
+      }
+    }
+  }
+  for (const list of kept.values()) list.sort((a, b) => (a.date < b.date ? -1 : 1));
+  for (const t of taken) {
+    const list = kept.get(`${t.card}|${t.printing}`) ?? [];
+    let before = null;
+    for (const k of list) {
+      if (k.date >= t.date) break;
+      before = k.value;
+    }
+    if (before != null) t.figures[t.printing] = before;
   }
 }
 
@@ -363,9 +415,12 @@ export function daysFromMonths(rows, since = "0000-00-00") {
     }
   }
   /* Judged on every day read, the days before `since` too: they are the neighbours the first days
-     after it are weighed against. */
-  dropScarcerRunsUnderTheirBase([...days.values()]);
-  dropStrayFigures([...days.values()]);
+     after it are weighed against, and the last figure a stray one right after it holds. */
+  /** @type {Taken[]} */
+  const taken = [];
+  dropScarcerRunsUnderTheirBase([...days.values()], taken);
+  dropStrayFigures([...days.values()], taken);
+  holdLastFigure([...days.values()], taken);
   for (const [key, d] of days) {
     if (d.date < since || (!Object.keys(d.real).length && !Object.keys(d.legacy).length))
       days.delete(key);

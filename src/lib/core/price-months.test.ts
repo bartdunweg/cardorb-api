@@ -161,8 +161,8 @@ describe("daysFromMonths", () => {
   });
 
   // Base Set Charizard's 1st Edition, July 2026: TCGplayer's market price $10,000 on most days and
-  // $250 for eleven, off a sale nobody else made. Stored as it came; read without the $250.
-  it("leaves out a printing's figure five times off its median, and a day left with nothing", () => {
+  // $250 for eleven, off a sale nobody else made. Stored as it came; read as the $10,000 held.
+  it("holds a printing's last figure over one five times off its median", () => {
     const july = (printing: string, days: Record<number, number>) => ({
       language: "en" as const,
       tcg_id: "base1-4",
@@ -171,22 +171,34 @@ describe("daysFromMonths", () => {
       cents: Array.from({ length: 31 }, (_, i) => days[i + 1] ?? null),
     });
     const first = Object.fromEntries(
-      Array.from({ length: 31 }, (_, i) => [i + 1, i >= 11 && i < 22 ? 21900 : 874500]),
+      Array.from({ length: 31 }, (_, i) => [i + 1, i >= 11 && i < 22 ? 21900 : 874500 + i]),
     );
     const days = daysFromMonths([
       july("1st-edition-holofoil", first),
       july("holofoil", { 12: 69000 }),
     ]);
-    expect(days.filter((d) => d.printings?.["1st-edition-holofoil"] === 219)).toEqual([]);
-    expect(days.filter((d) => d.printings?.["1st-edition-holofoil"] === 8745)).toHaveLength(20);
-    // The 12th keeps its holo; the 13th had only the stray figure, and is no day at all.
-    expect(days.find((d) => d.date === "2026-07-12")?.printings).toEqual({ holofoil: 690 });
-    expect(days.find((d) => d.date === "2026-07-13")).toBeUndefined();
+    const line = days.map((d) => d.printings?.["1st-edition-holofoil"]);
+    expect(line).toHaveLength(31);
+    // The 11th's figure stands until the 23rd's sale, and the 12th keeps its holo beside it.
+    expect(line.slice(10, 23)).toEqual([...Array(12).fill(8745.1), 8745.22]);
+    expect(days.find((d) => d.date === "2026-07-12")?.printings).toEqual({
+      "1st-edition-holofoil": 8745.1,
+      holofoil: 690,
+    });
+  });
+
+  it("leaves out a stray figure with nothing before it to hold", () => {
+    const cents = Array.from({ length: 31 }, (_, i) => (i < 2 ? 100 : 5000));
+    const days = daysFromMonths([
+      { language: "en", tcg_id: "base1-2", printing: "holofoil", month: "2026-07-01", cents },
+    ]);
+    expect(days.map((d) => d.date)[0]).toBe("2026-07-03");
+    expect(days).toHaveLength(29);
   });
 
   // June 2026: more days at €260 than at €8,600, beside the unlimited holo at €470, after a May at
   // €8,600 every day. The median of June alone would have kept the €260 and dropped the €8,600.
-  it("leaves out a 1st Edition figure under the card's unlimited run, where it is typically dearer", () => {
+  it("holds a 1st Edition figure over one under the card's unlimited run, where it is typically dearer", () => {
     const run = (printing: string, month: string, cents: (day: number) => number) => ({
       language: "en" as const,
       tcg_id: "base1-4",
@@ -201,10 +213,9 @@ describe("daysFromMonths", () => {
       run("holofoil", "2026-06-01", () => 47000),
     ]);
     const june = days.filter((d) => d.date >= "2026-06-01");
-    expect(june.map((d) => d.printings?.["1st-edition-holofoil"] ?? null)).toEqual([
-      ...Array(18).fill(null),
-      ...Array(12).fill(8600),
-    ]);
+    expect(june.map((d) => d.printings?.["1st-edition-holofoil"] ?? null)).toEqual(
+      Array(30).fill(8600),
+    );
     // A card whose stamped run sells under its unlimited one keeps every day of it (neo4-11).
     const cheaper = daysFromMonths([
       run("1st-edition-holofoil", "2026-06-01", () => 15000),
