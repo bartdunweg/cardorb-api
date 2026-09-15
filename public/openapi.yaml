@@ -570,7 +570,7 @@ components:
       required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
-        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\"), from the catalogue's card id; null where nothing matched. `number` is the row's." }
+        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\", \"001\" for Sword & Shield), from the catalogue's card id; null where nothing matched. `number` is the row's, which may be spelt without the zeros." }
         priceChange:
           description: "Only with `sort=change`: the copy's price move over the window, or null without two readings in it."
           oneOf:
@@ -990,7 +990,7 @@ paths:
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id. A rule folder answers with the owned copies its rule matches, whatever `owned` says. An id that is no folder of the caller's is a 404." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "A set, whole, by its name or its title; case does not matter. Repeat it for several (`set=Jungle&set=Fossil`): a card in any of them counts. At most 50." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "A rarity, whole, in the catalogue's words; case does not matter. Repeat it for several (`rarity=Rare&rarity=Holo%20Rare`): any of them counts. At most 50." }
-        - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole, as printed; with `set` it names one card's every row." }
+        - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole; with `set` it names one card's every row. Either spelling finds a row: `001` the row stored as `1`, `SWSH020` the promo stored as `020`; a gallery's letters stay (`TG01` is not `1`)." }
         - { name: gen, in: query, schema: { type: string, maxLength: 100 }, description: "A generation, whole, as the catalogue names its series; case does not matter. Repeat it for several: any of them counts. At most 50." }
         - { name: type, in: query, schema: { type: string, maxLength: 100 }, description: "An energy type, whole, as the catalogue names it; case does not matter. Repeat it for several: any of them counts. At most 50." }
         - { name: condition, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's condition, whole, as written on it; case does not matter. Repeat it for several: any of them counts. A copy with no condition matches none. At most 50." }

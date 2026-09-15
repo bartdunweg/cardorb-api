@@ -7,6 +7,7 @@ import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
 import { type PriceLanguage, historyKey, priceLanguageOf } from "../price-months.mjs";
 import { printedNumberOf } from "../catalogue/set-codes";
+import { canonNumber } from "../card-number.mjs";
 
 /**
  * The collection as a flat list of copies, for a screen that pages through it.
@@ -262,7 +263,11 @@ export type ItemFilter = {
   set?: Several;
   /** One rarity or several, each whole, in the catalogue's words; any of them counts, in any case. */
   rarity?: Several;
-  /** A card number, whole, as printed; with `set` it names one card's every row. */
+  /**
+   * A card number, whole; with `set` it names one card's every row. Spelt either way: "001" finds the
+   * row stored as 1 and "SWSH020" the promo stored as 020 (canonNumber), because the catalogue writes a
+   * number as the card prints it and a row keeps what was typed.
+   */
   number?: string;
   /** One generation or several, each whole, as the catalogue names its series; any counts, in any case. */
   gen?: Several;
@@ -315,7 +320,7 @@ const languageOf = (it: { language: string | null }): string => (it.language ?? 
 
 /** One printing, as `duplicates` counts it: the catalogue id (the set and number without one), the finish and the run. */
 const printingKey = (it: CardItem): string =>
-  `${it.tcgId ?? `${it.set}#${it.number}`}|${it.finish ?? ""}|${it.edition ?? ""}`;
+  `${it.tcgId ?? `${it.set}#${canonNumber(it.number)}`}|${it.finish ?? ""}|${it.edition ?? ""}`;
 
 export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   let held: Map<string, number> | undefined;
@@ -329,7 +334,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   const q = f.q?.trim().toLowerCase();
   const set = wantedOf(f.set);
   const rarity = wantedOf(f.rarity);
-  const number = f.number?.trim().toLowerCase();
+  const number = f.number?.trim() ? canonNumber(f.number) : undefined;
   const gen = wantedOf(f.gen);
   const type = wantedOf(f.type);
   const condition = wantedOf(f.condition);
@@ -344,7 +349,7 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
     if (set && !set.has(it.set.toLowerCase()) && !set.has(it.setTitle.toLowerCase())) return false;
     if (rarity && !rarity.has((it.rarity ?? "").toLowerCase())) return false;
     if (f.fullArtIds && !(it.tcgId && f.fullArtIds.has(it.tcgId))) return false;
-    if (number && it.number.toLowerCase() !== number) return false;
+    if (number !== undefined && canonNumber(it.number) !== number) return false;
     if (gen && !gen.has((it.gen ?? "").toLowerCase())) return false;
     if (type && !type.has((it.type ?? "").toLowerCase())) return false;
     if (condition && !(it.condition && condition.has(it.condition.toLowerCase()))) return false;

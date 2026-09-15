@@ -236,9 +236,11 @@ export async function storeSetArt(db: SupabaseClient): Promise<number> {
  * (card-fact-corrections.ts). 4: the naming pass against Bulbapedia (2026-09-15): the conventions every
  * name follows (nameConventions in english-card-name.mjs) and the names and numbers read by hand, the
  * EX sets' and trainer kits' names on their cards (set-corrections.ts), and the cards TCGdex does not
- * list (extra-cards.ts).
+ * list (extra-cards.ts). 5: numbers as the cards print them (2026-09-15): Sword & Shield through Fusion
+ * Strike, Celebrations, Pokémon Futsal 2020, the 2023 and 2024 McDonald's collections and the Nintendo
+ * promos write 001 where TCGdex writes 1 (correctedNumber in card-number.mjs).
  */
-export const CATALOGUE_FORMAT = 4;
+export const CATALOGUE_FORMAT = 5;
 
 export type SyncReport = {
   /** Sets written this run, in the order they finished. */

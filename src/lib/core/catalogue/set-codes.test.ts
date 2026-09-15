@@ -21,4 +21,13 @@ describe("printedNumberOf", () => {
     expect(printedNumberOf(null)).toBeNull();
     expect(printedNumberOf("nodash")).toBeNull();
   });
+
+  it("reads the number as the card prints it where TCGdex's id spells it another way", () => {
+    expect(printedNumberOf("swsh1-1")).toBe("001");
+    expect(printedNumberOf("swsh3.5-74")).toBe("074");
+    expect(printedNumberOf("swsh1-202")).toBe("202");
+    expect(printedNumberOf("cel25-5")).toBe("005");
+    expect(printedNumberOf("ecard3-H01")).toBe("H1");
+    expect(printedNumberOf("sm12-1")).toBe("1");
+  });
 });

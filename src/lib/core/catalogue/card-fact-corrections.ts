@@ -2349,20 +2349,8 @@ export function correctedName(id: string, name: string): string {
 }
 
 /**
- * A card's number as it prints, where TCGdex writes it another way (naming pass, 2026-09-15, read
- * off TCGplayer's and Scrydex's pictures of the cards): Aquapolis' and Skyridge's holo run prints
- * H1 to H9 without the zero TCGdex gives them (H01), and two Black & White promos print BW004 and
- * BW005 among BW01 to BW101. Only the number a person reads moves: the card's id, its picture's
- * address and its price link stay TCGdex's, and the collection folds zeros when it matches a row.
- *
- * Left as TCGdex writes them, and reported: Sword & Shield's sets through Fusion Strike,
- * Celebrations, the 2023 and 2024 McDonald's collections and the Nintendo promos print 001 where
- * TCGdex writes 1, and the collection's copy sheet still compares a number exactly (items.ts,
- * copies.ts in the web app), so padding them would lose the owner's rows there.
+ * A card's number as it prints, where TCGdex writes it another way: e-Card's H1 to H9, BW004 and
+ * BW005, and the sets that print 001 where TCGdex writes 1. The rule lives in card-number.mjs, where
+ * data-health.mjs holds the copy to it.
  */
-export function correctedNumber(id: string, number: string): string {
-  const set = setOf(id);
-  if ((set === "ecard2" || set === "ecard3") && /^H0\d$/.test(number)) return `H${number.slice(2)}`;
-  if (set === "bwp" && /^BW0[45]$/.test(number)) return `BW00${number.slice(3)}`;
-  return number;
-}
+export { correctedNumber } from "../card-number.mjs";

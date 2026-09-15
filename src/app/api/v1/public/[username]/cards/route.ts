@@ -14,6 +14,7 @@ import {
   sortPublicItems,
 } from "@/lib/core/collection/items";
 import { createRateLimiter } from "@/lib/api/rate-limit";
+import { canonNumber } from "@/lib/core/card-number.mjs";
 
 export const dynamic = "force-dynamic";
 
@@ -60,8 +61,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   // The star is a fact about the owner's copy, so forPublic() strips it with the rest; it is read
   // here off the private items, the way a folder's contents are below, and only when the owner
   // shows the favorites. Everyone else gets a list on which nothing is starred.
+  // The number folded (canonNumber), so two rows of one card spelt 1 and 001 count together.
   const sameCard = (it: { set: string; number: string; name: string }) =>
-    `${it.set}\u0000${it.number}\u0000${it.name}`;
+    `${it.set}\u0000${canonNumber(it.number)}\u0000${it.name}`;
   const starred = owner.favoritesPublic
     ? new Set(filterItems(flattenItems(sets), { owned: true, favorite: true }).map(sameCard))
     : new Set<string>();

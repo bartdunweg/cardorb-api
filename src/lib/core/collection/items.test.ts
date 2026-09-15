@@ -251,6 +251,27 @@ describe("filterItems", () => {
     expect(filterItems(items, { rarity: "Rare" })).toEqual([]);
   });
 
+  // The copy writes Sword & Shield's numbers as printed (001) where a row may hold 1, and a promo's
+  // with its letters (SWSH020) where the row holds 020: the copy sheet asks with the catalogue's.
+  it("a number finds its rows whichever way either is spelt, and never another card's", () => {
+    const at = (id: string, number: string) => ({ ...items[0]!, id, number });
+    const rows = [
+      at("one", "1"),
+      at("padded", "001"),
+      at("ten", "10"),
+      at("tg", "TG01"),
+      at("alt", "1a"),
+      at("promo", "020"),
+    ];
+    const ids = (number: string) => filterItems(rows, { number }).map((i) => i.id);
+    expect(ids("001")).toEqual(["one", "padded"]);
+    expect(ids("1")).toEqual(["one", "padded"]);
+    expect(ids("TG1")).toEqual(["tg"]);
+    expect(ids("1A")).toEqual(["alt"]);
+    expect(ids("SWSH020")).toEqual(["promo"]);
+    expect(ids("100")).toEqual([]);
+  });
+
   it("matches any of several values within a key, and every key across them", () => {
     const kanto = { ...items[0]!, id: "k", gen: "Base", type: "Lightning" };
     const johto = { ...items[0]!, id: "j", gen: "Neo", type: "Grass" };

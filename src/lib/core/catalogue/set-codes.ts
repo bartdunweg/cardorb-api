@@ -1,3 +1,5 @@
+import { correctedNumber } from "../card-number.mjs";
+
 /**
  * The code a set goes by where TCGdex publishes no official abbreviation.
  *
@@ -27,16 +29,20 @@ export function setCodeOf(
  * The number as the card prints it, out of the catalogue's card id: "XY124" from `xyp-XY124`,
  * "085" from `svp-085`, "4" from `base1-4`. A card id is the set's id, a dash and the printed
  * number; a set id can hold a dash (the sets of 895 cards do) and a printed number never does (0 of 37,951 on 2026-09-15), so the number is what follows the last dash. One id
- * escapes its number (`exu-%3F` is Unown "?"). Null without an id.
+ * escapes its number (`exu-%3F` is Unown "?"). Where TCGdex writes the number another way than the
+ * card prints it, the copy's correction applies here too (correctedNumber): `swsh1-1` prints 001 and
+ * `ecard3-H01` prints H1, so the collection reads the number the set page does. Null without an id.
  */
 export function printedNumberOf(tcgId: string | null | undefined): string | null {
   if (!tcgId) return null;
   const at = tcgId.lastIndexOf("-");
   if (at < 0 || at === tcgId.length - 1) return null;
   const raw = tcgId.slice(at + 1);
+  let number = raw;
   try {
-    return decodeURIComponent(raw);
+    number = decodeURIComponent(raw);
   } catch {
-    return raw;
+    // A lone percent sign: the id's own spelling is the best there is.
   }
+  return correctedNumber(tcgId, number);
 }

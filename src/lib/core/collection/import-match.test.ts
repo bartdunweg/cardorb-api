@@ -37,6 +37,15 @@ describe("importKey", () => {
     );
   });
 
+  it("reads a number as printed and as stored as one, and keeps a gallery's letters", () => {
+    const key = (number: string) =>
+      importKey({ name: "Grookey", setName: "Sword & Shield", number });
+    expect(key("001")).toBe(key("1"));
+    expect(key("SWSH179")).toBe(key("179"));
+    expect(key("TG01")).toBe(key("TG1"));
+    expect(key("TG01")).not.toBe(key("1"));
+  });
+
   it("sees one set through the name it was filed under, given the official one", () => {
     const titleOf = (s: string) => (s === "Set 1 Unlimited" ? "Base Set" : s);
     expect(importKey({ name: "Pikachu", setName: "Set 1 Unlimited", number: "58" }, titleOf)).toBe(
