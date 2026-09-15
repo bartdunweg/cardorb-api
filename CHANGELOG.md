@@ -46,6 +46,8 @@ if the two have drifted apart.
 
 - 27 Japanese promo cards (26 in SV-P, Mega Zeraora ex in M-P) get a picture: the Limitless address for a promo set is built without its hyphen (SVP, MP), the way Limitless files it, where every guess used to be a 403.
 
+- Home's movers are cached again. `/v1/movers` cached every reading of every held card over the period, 7.5 MB for thirty days, past the Data Cache's 2 MB an entry, so nothing was kept and every visit read the price lines again (production logs, 2026-09-15). It now keeps only each card's earliest and latest reading, all the ranking compares, read in parallel chunks and cached under the same tags, so the night's lines still arrive when the cron writes them.
+
 - `GET /v1/movers?days=7|30|90|180|all&top=` answers the caller's cards whose price moved most over the period, up and down, ranked by what the move did to the collection. For Home's movers, over the period its value chart shows.
 
 - `GET /v1/movers` answers each mover's `setAbbr`, the code printed on the card, so a list can show "XYP 124" as the collection does.

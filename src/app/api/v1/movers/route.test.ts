@@ -12,11 +12,11 @@ vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 const getCollection = vi.fn();
-const getCardPrices = vi.fn();
+const getMoverPrices = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   ALL_READINGS: "2000-01-01",
   getCollection: (...a: unknown[]) => getCollection(...a),
-  getCardPrices: (...a: unknown[]) => getCardPrices(...a),
+  getMoverPrices: (...a: unknown[]) => getMoverPrices(...a),
 }));
 
 const { GET } = await import("./route");
@@ -41,7 +41,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   authorise.mockResolvedValue(VIEWER);
   getCollection.mockResolvedValue({ sets: [{ name: "Base Set", cards: [card] }], failed: false });
-  getCardPrices.mockResolvedValue({
+  getMoverPrices.mockResolvedValue({
     failed: false,
     points: [
       { language: "en", tcgId: "base1-4", date: "2026-09-07", market: 300, holo: null },
@@ -80,7 +80,7 @@ describe("GET /v1/movers", () => {
       failed: false,
     });
     await ask("?days=7");
-    expect(getCardPrices.mock.calls[0]![1]).toEqual([
+    expect(getMoverPrices.mock.calls[0]![1]).toEqual([
       { tcgId: "neo4-106", language: "en" },
       { tcgId: "neo4-106", language: "ja" },
     ]);
@@ -88,10 +88,10 @@ describe("GET /v1/movers", () => {
 
   it("reads the window the period names, and every reading for all", async () => {
     await ask("?days=7");
-    const from7 = getCardPrices.mock.calls[0]![3] as string;
+    const from7 = getMoverPrices.mock.calls[0]![3] as string;
     expect(Date.parse(from7)).toBeGreaterThan(Date.now() - 8 * 86_400_000);
     await ask("?days=all");
-    expect(getCardPrices.mock.calls[1]![3]).toBe("2000-01-01");
+    expect(getMoverPrices.mock.calls[1]![3]).toBe("2000-01-01");
   });
 
   it("refuses a period the chart does not have, and a top out of range", async () => {
@@ -101,7 +101,7 @@ describe("GET /v1/movers", () => {
   });
 
   it("answers 503, not an empty list, when the readings could not be read", async () => {
-    getCardPrices.mockResolvedValue({ failed: true, points: [] });
+    getMoverPrices.mockResolvedValue({ failed: true, points: [] });
     expect((await ask()).status).toBe(503);
     getCollection.mockResolvedValue({ sets: [], failed: true });
     expect((await ask()).status).toBe(503);

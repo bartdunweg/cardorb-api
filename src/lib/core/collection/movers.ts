@@ -140,6 +140,32 @@ export type MoversOptions = {
 };
 
 /**
+ * Each card's earliest and latest reading, and nothing between: all moversOf compares.
+ *
+ * The movers route caches this rather than the whole window. Every reading of sixteen hundred held
+ * cards over thirty days is 7.5 MB, past the Data Cache's 2 MB an entry, so it was never cached and
+ * Home read the lines again on every visit (production logs, 2026-09-15); two readings a card is a
+ * few hundred KB whatever the period. Ties keep the reading moversOf would take from a stable sort:
+ * the first of the earliest date, the last of the latest.
+ */
+export function endsOfLines(points: CardPricePoint[]): CardPricePoint[] {
+  const ends = new Map<string, { first: CardPricePoint; last: CardPricePoint }>();
+  for (const p of points) {
+    const key = historyKey(p.language, p.tcgId);
+    const end = ends.get(key);
+    if (!end) {
+      ends.set(key, { first: p, last: p });
+      continue;
+    }
+    if (p.date < end.first.date) end.first = p;
+    if (p.date >= end.last.date) end.last = p;
+  }
+  return [...ends.values()].flatMap(({ first, last }) =>
+    first === last ? [first] : [first, last],
+  );
+}
+
+/**
  * Risers and fallers over whatever window the readings cover.
  *
  * `was` is the earliest reading available per card and `now` the latest, rather

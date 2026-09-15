@@ -93,7 +93,7 @@ import {
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
 import { holdStrayPrices } from "./held-prices";
-import type { CardPricePoint } from "./movers";
+import { endsOfLines, type CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
 
@@ -1723,6 +1723,39 @@ export const getCardPrices = cache(
       return { points, failed: false };
     } catch (err) {
       console.error("Card price history unavailable, retrying on the next render:", err);
+      return { points: [], failed: true };
+    }
+  },
+);
+
+/**
+ * The readings moversOf needs for these cards since `from`: each card's earliest and latest only.
+ *
+ * getCardPrices keeps the whole window, which for a collection over thirty days and more is past
+ * the Data Cache's 2 MB an entry and so was never kept (endsOfLines). The lines are read in parallel
+ * chunks (listHistoryPrices), trimmed, and the trimmed answer is cached under the same tags, so the
+ * night's lines still reach Home the moment the cron writes them.
+ */
+export const getMoverPrices = cache(
+  async (
+    userId: string,
+    cards: PricedCard[],
+    token: string | undefined,
+    from: string,
+  ): Promise<CardPriceHistory> => {
+    if (!cards.length) return { points: [], failed: false };
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      if (!db) return { points: [], failed: false };
+      const points = await unstable_cache(
+        async () => endsOfLines(await listHistoryPrices(db, cards, from)),
+        // Versioned with getCardPrices: the same lines, so a change to how they are built is both.
+        ["mover-prices", "v14", userId, from, idsKey(cards)],
+        { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag] },
+      )();
+      return { points, failed: false };
+    } catch (err) {
+      console.error("Mover price readings unavailable, retrying on the next render:", err);
       return { points: [], failed: true };
     }
   },

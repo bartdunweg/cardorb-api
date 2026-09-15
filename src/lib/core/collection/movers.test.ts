@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { moversOf, priceOfCopy, type CardPricePoint } from "./movers";
+import { endsOfLines, moversOf, priceOfCopy, type CardPricePoint } from "./movers";
 import type { CardSet, OwnedCard, Variant } from "./cards";
 
 const variant = (over: Partial<Variant> = {}): Variant => ({
@@ -184,6 +184,39 @@ describe("moversOf", () => {
 
   it("survives a card with no reading at all", () => {
     expect(moversOf([set([card({ tcgId: "a" })])], []).up).toEqual([]);
+  });
+});
+
+describe("endsOfLines", () => {
+  // The movers route caches only these, so they must give moversOf the very answer the whole window does.
+  it("keeps each card's earliest and latest reading, and moversOf answers the same", () => {
+    const sets = [
+      set([
+        card({ key: "a", tcgId: "a", name: "A" }),
+        card({ key: "b", tcgId: "b", name: "B" }),
+        card({ key: "one", tcgId: "one", name: "One reading" }),
+      ]),
+      { ...set([card({ key: "ja", tcgId: "a", name: "A in Japanese" })]), language: "ja" as const },
+    ];
+    const points: CardPricePoint[] = [
+      at("a", "2026-08-01", 15),
+      at("b", "2026-07-15", 9),
+      at("a", "2026-07-01", 10),
+      at("one", "2026-07-20", 4),
+      at("a", "2026-07-08", 30),
+      { ...at("a", "2026-07-01", 50), language: "ja" },
+      { ...at("a", "2026-08-01", 40), language: "ja" },
+      at("b", "2026-07-01", 20),
+      // Two readings on a line's last day: a stable sort takes the later one, so this must too.
+      at("b", "2026-07-15", 11),
+    ];
+    const ends = endsOfLines(points);
+    expect(ends).toHaveLength(7);
+    expect(moversOf(sets, ends)).toEqual(moversOf(sets, points));
+    expect(moversOf(sets, ends).down.find((m) => m.card.name === "B")).toMatchObject({
+      was: 20,
+      now: 11,
+    });
   });
 });
 
