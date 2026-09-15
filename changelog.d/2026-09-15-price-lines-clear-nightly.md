@@ -1,0 +1,1 @@
+- A card's price chart shows the new day as soon as the nightly TCGplayer job has written it. The cached price lines were kept for an hour whatever happened, so the first time a card was opened after that hour it still showed the old line. The job now clears every cached price line once the day's prices are stored (`priceHistoryTag`).

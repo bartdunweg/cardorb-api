@@ -14,7 +14,13 @@ vi.mock("@/lib/core/catalogue/tcgcsv", () => ({
 vi.mock("@/lib/core/catalogue/rates", () => ({
   fetchUsdToEur: () => fetchUsdToEur(),
 }));
+const revalidateTag = vi.fn();
+vi.mock("next/cache", () => ({
+  revalidateTag: (...a: unknown[]) => revalidateTag(...a),
+  unstable_cache: (fn: unknown) => fn,
+}));
 vi.mock("@/lib/core/collection/collection", () => ({
+  priceHistoryTag: "card-prices",
   usdToEurForRequest: () => usdToEurForRequest(),
 }));
 vi.mock("@/lib/storage/postgres", () => ({
@@ -153,6 +159,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       history: { written: 3 },
       databaseBytes: 300 * MB,
     });
+    expect(revalidateTag).toHaveBeenCalledWith("card-prices", { expire: 0 });
   });
 
   it("writes no history without a dollar rate, and still writes the latest prices", async () => {
@@ -165,6 +172,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     expect(res.status).toBe(200);
     expect(writeTcgplayerPrices).toHaveBeenCalled();
     expect(writeCardPrices).not.toHaveBeenCalled();
+    expect(revalidateTag).not.toHaveBeenCalled();
     expect(await res.json()).toMatchObject({
       ok: true,
       rate: { rate: null, stored: false, skipped: "read failed" },
