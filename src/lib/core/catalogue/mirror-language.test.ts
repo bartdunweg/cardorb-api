@@ -188,6 +188,17 @@ describe("syncLanguageMirror", () => {
 
   /* On 2026-09-15 Scrydex's expansions page answered 524 and a run wrote all 169 Japanese sets
      without their logo. */
+  it("keeps a logo held in our bucket without asking Scrydex", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("SV2a")]);
+    const held = "https://images.cardorb.com/scrydex/logos/sv2a_ja.png";
+    const { db, calls } = fakeStore({ catalogue_sets: [{ id: "SV2a", logo: held }] });
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+
+    const setRow = calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert");
+    expect(setRow?.args[0]).toMatchObject({ id: "SV2a", logo: held });
+    expect(scrydexJapanExpansions).not.toHaveBeenCalled();
+  });
+
   it("takes the Scrydex code on file, or keeps the held logo, where Scrydex's page does not answer", async () => {
     scrydexJapanExpansions.mockRejectedValue(new Error("Scrydex expansions: 524"));
     listSetsIn.mockResolvedValue([shelfSet("SV4a"), shelfSet("SV2a")]);

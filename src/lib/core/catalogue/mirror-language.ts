@@ -53,9 +53,9 @@ import {
   scrydexExpansionFor,
   scrydexJapanExpansions,
   scrydexJapanScan,
-  scrydexLogoFor,
   scrydexNumbers,
   scrydexRealLogo,
+  type ScrydexExpansion,
 } from "./scrydex-japan-logos";
 import {
   type TcgplayerJapanCard,
@@ -324,23 +324,29 @@ export async function syncLanguageMirror(
   // TCGplayer's Japanese groups, once for the run; a shelf that does not answer costs the run its
   // second source, not its copy.
   const groups = lang === "ja" ? await japanGroups().catch(() => []) : [];
-  // Scrydex's Japanese expansions, for each set's wordmark. Where the page does not answer, a set
-  // takes the Scrydex code on file (scrydexCodeOf) and otherwise keeps the logo the copy holds: on
-  // 2026-09-15 the page answered 524 and a run wrote every Japanese set without its logo.
-  const expansions = lang === "ja" ? await scrydexJapanExpansions().catch(() => null) : null;
+  /* A set's wordmark. One the copy already holds in our bucket is kept and Scrydex is not asked
+     again, as a held card picture is: on 2026-09-15 Scrydex's expansions page answered 524 and a
+     run that asked it for every set wrote all 169 Japanese sets without their logo. Only a set
+     without one asks, off the expansions page read once (and only then), or where that page does
+     not answer, by the Scrydex code on file (scrydexCodeOf). */
   const heldLogos = new Map<string, string | null>(
-    lang === "ja" && !expansions
-      ? (await listCatalogueSets(db, lang).catch(() => [])).map((s) => [s.id, s.logo])
-      : [],
+    lang === "ja" ? (await listCatalogueSets(db, lang)).map((s) => [s.id, s.logo]) : [],
   );
+  let expansionsRead: Promise<ScrydexExpansion[] | null> | null = null;
+  const scrydexExpansions = (): Promise<ScrydexExpansion[] | null> =>
+    lang === "ja"
+      ? (expansionsRead ??= scrydexJapanExpansions().catch(() => null))
+      : Promise.resolve(null);
   const scrydexLogo = async (id: string, name: string): Promise<string | null> => {
     if (lang !== "ja") return null;
-    if (expansions) return scrydexRealLogo(scrydexLogoFor(expansions, { id, name }));
-    const code = scrydexCodeOf(id);
-    const onFile = code
+    const held = heldLogos.get(id);
+    if (held?.startsWith("https://images.cardorb.com/")) return held;
+    const listed = await scrydexExpansions();
+    const code = listed ? scrydexExpansionFor(listed, { id, name })?.code : scrydexCodeOf(id);
+    const found = code
       ? await scrydexRealLogo(`https://images.scrydex.com/pokemon/${code}-logo/logo`)
       : null;
-    return onFile ?? heldLogos.get(id) ?? null;
+    return found ?? held ?? null;
   };
   /* Groups sharing a code with another are told apart by how many numbered cards each holds
      ("SM1+" has one, "sm1+" 68): one products read per such group, only for those. */
@@ -618,8 +624,9 @@ export async function syncLanguageMirror(
         /* The expansions page can fail like any other (scrydex.com is slow); the code the map was
            read from still names the set's scans. */
         const expansion = blank.length
-          ? ((expansions ? scrydexExpansionFor(expansions, { id, name: set.name }) : null) ??
-            (scrydexCodeOf(id) ? { name: set.name, code: scrydexCodeOf(id)! } : null))
+          ? ((await scrydexExpansions().then((listed) =>
+              listed ? scrydexExpansionFor(listed, { id, name: set.name }) : null,
+            )) ?? (scrydexCodeOf(id) ? { name: set.name, code: scrydexCodeOf(id)! } : null))
           : null;
         if (expansion) {
           const onScrydex = await scrydexExpansionCards(expansion).catch(() => []);
