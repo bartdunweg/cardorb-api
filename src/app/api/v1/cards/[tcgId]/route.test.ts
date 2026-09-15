@@ -27,7 +27,6 @@ vi.mock("@/lib/core/catalogue/card-sheet", async () => {
   return {
     ...actual,
     readCardSheet: (...a: unknown[]) => readCardSheet(...a),
-    eraRaritiesFromCopy: async () => ["Promo"],
   };
 });
 /* The printings beside the card are five real TCGdex reads, three attempts each, when left
@@ -48,13 +47,11 @@ vi.mock("@/lib/core/collection/collection", () => ({
   detailPrice: (...a: unknown[]) => detailPrice(...a),
   pricePatternPrints: (...a: [unknown]) => pricePatternPrints(...a),
 }));
-const raritiesOfEra = vi.fn();
-vi.mock("@/lib/core/catalogue/catalogue", () => ({
-  raritiesOfEra: (...a: unknown[]) => raritiesOfEra(...a),
-}));
-
 const serieOfSet = vi.fn();
-vi.mock("@/lib/core/catalogue/era-rarities", () => ({
+vi.mock("@/lib/core/catalogue/tcgdex-client", async () => ({
+  ...(await vi.importActual<typeof import("@/lib/core/catalogue/tcgdex-client")>(
+    "@/lib/core/catalogue/tcgdex-client",
+  )),
   serieOfSet: (...a: unknown[]) => serieOfSet(...a),
 }));
 
@@ -91,7 +88,6 @@ describe("GET /api/v1/cards/[tcgId]", () => {
       id: "sv03-125",
       name: "Charizard",
       languages: ["en", "de"],
-      eraRarities: null,
       foilPatterns: null,
       patternPrints: { standard: true, prints: [] },
     });
@@ -117,31 +113,18 @@ describe("GET /api/v1/cards/[tcgId]", () => {
     expect((await res.json()).patternPrints).toBeNull();
   });
 
-  /* The era's rarities, for the cards that need them and no others: a promo answers "Promo",
-     which is the set's mark and not a rarity, and somebody has to say what the card is. A card
-     the catalogue has named needs no list and the walk is not made. */
-  it("answers the era's rarities for a card the catalogue could not name", async () => {
+  /* The rarities of the card's era went on 2026-09-15 with rarity by hand: a promo is a "Promo"
+     (promo-sets.ts), and nothing is offered for naming it otherwise. */
+  it("answers no era rarities, for a promo or any other card", async () => {
     getCardDetail.mockResolvedValue({
       id: "svp-085",
       name: "Pikachu with Grey Felt Hat",
       rarity: "Promo",
       set: { id: "svp" },
     });
-    raritiesOfEra.mockResolvedValue(["Common", "Illustration rare"]);
-    expect((await get("svp-085")).status).toBe(200);
-    expect(raritiesOfEra).toHaveBeenCalledWith("svp");
-  });
-
-  it("asks for no era rarities where the catalogue named the card", async () => {
-    getCardDetail.mockResolvedValue({
-      id: "sv03-125",
-      name: "Charizard",
-      rarity: "Double rare",
-      set: { id: "sv03" },
-    });
-    const res = await get();
-    expect((await res.json()).eraRarities).toBeNull();
-    expect(raritiesOfEra).not.toHaveBeenCalled();
+    const body = await (await get("svp-085")).json();
+    expect(body.rarity).toBe("Promo");
+    expect(body).not.toHaveProperty("eraRarities");
   });
 
   /* A Wizards holo had its set's one foil, so a pattern is not something to ask; a later card's
@@ -252,7 +235,6 @@ describe("the price's currency", () => {
     expect(getCardDetail).not.toHaveBeenCalled();
     expect(languagesOf).not.toHaveBeenCalled();
     expect(serieOfSet).not.toHaveBeenCalled();
-    expect(raritiesOfEra).not.toHaveBeenCalled();
     expect(await res.json()).toMatchObject({
       id: "base1-8",
       illustrator: "Ken Sugimori",
@@ -262,7 +244,6 @@ describe("the price's currency", () => {
       printings: [{ finish: "holo", foilPattern: null }],
       set: { id: "base1", total: 102 },
       languages: ["en", "de"],
-      eraRarities: ["Promo"],
       foilPatterns: [],
     });
   });

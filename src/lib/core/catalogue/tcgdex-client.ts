@@ -199,6 +199,12 @@ export async function fetchSet(id: string): Promise<TcgSetDetail | null> {
   }
 }
 
+/** The series a set belongs to, as TCGdex files it: "svp" is in "sv". */
+export async function serieOfSet(setId: string): Promise<string | null> {
+  const detail = await fetchSet(setId);
+  return detail?.serie?.id ?? null;
+}
+
 /**
  * TCGplayer's figures for one card, in dollars, as TCGdex relays them.
  *

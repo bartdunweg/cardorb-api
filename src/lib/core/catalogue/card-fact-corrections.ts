@@ -54,6 +54,7 @@
  * first, so a fix upstream wins and a stale entry does nothing.
  */
 import { nameConventions } from "./english-card-name.mjs";
+import { isPromoSet } from "./promo-sets";
 
 export type FactCorrection = {
   name?: [string, string];
@@ -2237,6 +2238,8 @@ const GALLERY_ULTRA = new Set([
 /**
  * A rarity by the rules that hold for whole sets rather than single cards, after the corrections:
  *
+ * - Every card in a promo set is "Promo" (promo-sets.ts), whatever TCGdex writes: a promo prints a
+ *   black star and no rarity symbol, and Bart decided on 2026-09-15 that this is its rarity.
  * - "None" is no rarity: TCGdex writes it for 39 English cards TCGplayer names none for either
  *   (My First Battle's "Unconfirmed"), and a stored word reads as a rarity in a filter. Null.
  * - Crown Zenith's Galarian Gallery (swsh12.5gg) is "Galarian Gallery", all 70 cards: Bart's call on
@@ -2244,6 +2247,7 @@ const GALLERY_ULTRA = new Set([
  * - A Trainer Gallery card's sub-tier word is Ultra Rare (GALLERY_ULTRA).
  */
 export function ruledRarity(id: string, rarity: string | null): string | null {
+  if (isPromoSet(setOf(id))) return "Promo";
   const word = rarity?.trim().toLowerCase() ?? "";
   if (!word || word === "none") return null;
   const set = setOf(id);

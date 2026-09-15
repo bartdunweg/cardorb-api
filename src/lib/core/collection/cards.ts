@@ -151,6 +151,7 @@ export { shownPrice } from "../price-basis.mjs";
 export type { Price } from "../price-basis.mjs";
 import type { Price } from "../price-basis.mjs";
 import { canonicalRarity, japaneseRarityWord } from "../catalogue/rarity-names";
+import { promoRarity } from "../catalogue/promo-sets";
 import { correctedFacts, correctedName } from "../catalogue/card-fact-corrections";
 
 const num = (v: unknown) => (typeof v === "number" ? v : null);
@@ -1138,14 +1139,15 @@ export async function buildCollection(
           pricePrintings: card?.pricePrintings ?? null,
           printingIds: card?.printingIds ?? null,
           // The catalogue's word where it has one, the row's where it does not.
-          // Only a card from its own catalogue ever carries the first — the
+          // Only a card from its own catalogue ever carries the first: the
           // shelves those are added from publish no rarity, so a row written from
           // one has nothing in this column, and the per-card request the price
           // already costs carries the answer. See CardFacts.rarity.
           //
-          // "Promo" is not one it has: that names the set, and letting it through
-          // here would put it back over a rarity its owner said by hand.
-          rarity: rarityOrNull(card?.rarity) ?? row.rarity,
+          // A card of a promo set is a "Promo" whichever of the two says what
+          // (promo-sets.ts): a row written before 2026-09-15 may still hold the
+          // kind its owner once named by hand.
+          rarity: promoRarity(card?.tcgId ?? row.tcgId, rarityOrNull(card?.rarity) ?? row.rarity),
           owned: row.owned,
           // The row's own id and inventory facts, carried through untouched so
           // the merge below can build one Variant per row. See Variant's own
@@ -1475,8 +1477,11 @@ export async function getCardDetail(
     image: ownPicture(card.image),
     // TCGdex's word, corrected where it is wrong and in the one spelling (rarity-names.ts), so
     // the sheet says what the lists and filters say.
-    // A Japanese card's in its own spelling, and no rarity for TCGdex's "None" (rarity-names.ts).
-    rarity: facts ? canonicalRarity(facts.rarity) : japaneseRarityWord(card.rarity),
+    // A Japanese card's in its own spelling, and no rarity for TCGdex's "None" (rarity-names.ts),
+    // and "Promo" for a card of a Japanese promo set, as ruledRarity() says it for an English one.
+    rarity: facts
+      ? canonicalRarity(facts.rarity)
+      : promoRarity(card.id, japaneseRarityWord(card.rarity)),
     illustrator: facts ? facts.sheet.illustrator : (card.illustrator ?? null),
     hp: facts ? facts.sheet.hp : num(card.hp),
     types: facts ? facts.types : (card.types ?? []),

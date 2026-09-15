@@ -47,7 +47,7 @@ vi.mock("@/lib/core/catalogue/card-sheet", async () => {
   const actual = await vi.importActual<typeof import("@/lib/core/catalogue/card-sheet")>(
     "@/lib/core/catalogue/card-sheet",
   );
-  return { ...actual, readCardSheet: (...a: unknown[]) => readCardSheet(...a), eraRaritiesFromCopy: async () => ["Promo"] };
+  return { ...actual, readCardSheet: (...a: unknown[]) => readCardSheet(...a) };
 });
 
 const ownerOf = vi.fn();
