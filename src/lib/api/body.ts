@@ -42,6 +42,8 @@ export const BODY_LIMIT = {
   patch: 4_096,
   /** The same patch on many rows: up to a hundred row ids (38 bytes each) and the fields. */
   patchMany: 8_192,
+  /** A page of card ids to read facts for: up to 250 catalogue ids, each a few dozen bytes. */
+  cardIds: 16_384,
   /** A folder: a name, a Pokédex setting and a rule of two lists of twenty (sets, rarities). */
   folder: 8_192,
   /** A profile: a display name, a username, a URL. */
