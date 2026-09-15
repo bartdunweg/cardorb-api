@@ -1656,7 +1656,8 @@ export const getCardPrices = cache(
         // entry held those cards' empty line for its hour.
         // v11: a card is its catalogue and its id (migration 20260915161000), every point carries its
         // language, and the key hashes both; a v10 entry answers a Japanese card under an English id.
-        ["card-prices", "v11", userId, since, idsKey(cards)],
+        // v12: a stray sale's figure left out of a printing's line (price-months.mjs dropStrayFigures).
+        ["card-prices", "v12", userId, since, idsKey(cards)],
         { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag] },
       )();
       return { points, failed: false };
