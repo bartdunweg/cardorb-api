@@ -28,9 +28,12 @@ vi.mock("./image-store", () => ({
   keepImage: (a: string | null) => keepImage(a),
   storedAddress: () => null,
 }));
+const scrydexJapanExpansions = vi.fn(async (): Promise<{ name: string; code: string }[]> => [
+  { name: "Pokémon Card 151", code: "sv2a_ja" },
+]);
 vi.mock("./scrydex-japan-logos", async (actual) => ({
   ...(await actual<typeof import("./scrydex-japan-logos")>()),
-  scrydexJapanExpansions: async () => [{ name: "Pokémon Card 151", code: "sv2a_ja" }],
+  scrydexJapanExpansions: () => scrydexJapanExpansions(),
   scrydexExpansionCards: async () => [],
   scrydexRealLogo: async (address: string | null) => address,
 }));
@@ -59,7 +62,7 @@ const scrydexMap = vi.hoisted(() => ({
       x: 1,
     },
   },
-  sets: { SV4a: { code: "sv4a_ja", cards: 2 } },
+  sets: { SV4a: { code: "sv4a_ja", cards: 2 }, PCG10: { code: "pcg10_ja", cards: 108 } },
 }));
 vi.mock("../scrydex-cards.ja.generated.json", () => ({ default: scrydexMap }));
 vi.mock("./mirror", () => ({
@@ -117,6 +120,7 @@ const card = (id: string, number: string) => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  scrydexJapanExpansions.mockResolvedValue([{ name: "Pokémon Card 151", code: "sv2a_ja" }]);
   japanGroups.mockResolvedValue([]);
   groupCards.mockResolvedValue([]);
   keepImage.mockImplementation(async (a: string | null) => a);
@@ -279,6 +283,35 @@ describe("syncLanguageMirror", () => {
       image: string | null;
     }[];
     expect(rows[0]!.image).toBeNull();
+  });
+
+  // PCG10 011, Flareon ☆: no TCGdex file, no Limitless or TCGplayer picture, and a Scrydex page the
+  // name match could not read in time. Its Scrydex number is kept by hand.
+  it("takes Scrydex's scan at a number read by hand, when Scrydex's pages do not answer", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("PCG10")]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("PCG10"), serieId: "PCG" },
+      cards: [card("PCG10-011", "011")],
+    });
+    scrydexJapanExpansions.mockRejectedValue(new Error("timeout"));
+    tcgdexScan.mockResolvedValue(null);
+    canStoreImages.mockResolvedValue(true);
+    keepImage.mockImplementation(async (a: string | null) =>
+      a === "https://images.scrydex.com/pokemon/pcg10_ja-11/large"
+        ? "https://images.cardorb.com/scrydex/pcg10_ja-11.png"
+        : a,
+    );
+    vi.stubGlobal(
+      "fetch",
+      async () => new Response(null, { status: 200, headers: { etag: '"a-real-scan"' } }),
+    );
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    vi.unstubAllGlobals();
+    const rows = calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0] as {
+      image: string | null;
+    }[];
+    expect(rows[0]!.image).toBe("https://images.cardorb.com/scrydex/pcg10_ja-11.png");
   });
 
   // SV-P 022: a promo, whose number is no file name at Limitless; TCGplayer's Japanese shelf sells
