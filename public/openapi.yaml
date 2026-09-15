@@ -2827,6 +2827,7 @@ paths:
       summary: Copy a picture of every printing TCGplayer sells as a product of its own
       description: |
         Vercel's cron, daily at 23:00 UTC, with `CRON_SECRET` as the bearer. Five minutes at most.
+        Pokémon Card 151's Japanese Poké Ball reverses take TCGdex's scans first, which are that print.
         The English patterned reverses and pattern holos the committed map names, and the printing
         products of TCGplayer's Japanese shelf (mirror holos, ball patterns) under the card their
         plain product is. Each product's photo is copied into our bucket once and written to
@@ -2840,11 +2841,12 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [ok, en, ja, candidates, missing, groups, answered, ms]
+                required: [ok, en, ja, tcgdex, candidates, missing, groups, answered, ms]
                 properties:
                   ok: { type: boolean }
                   en: { type: integer, description: English printings' pictures copied. }
                   ja: { type: integer, description: Japanese printings' pictures copied. }
+                  tcgdex: { type: integer, description: "Printings' pictures copied from TCGdex's scans of a set it photographed as one printing (Pokémon Card 151's Poké Ball reverses)." }
                   candidates: { type: integer, description: Printing products not yet in the store. }
                   missing: { type: integer, description: Products whose photo could not be copied tonight. }
                   groups: { type: integer }

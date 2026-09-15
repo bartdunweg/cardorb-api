@@ -121,13 +121,17 @@ export function highScan(image: string | null): string | null {
 }
 
 /**
- * Japanese sets TCGdex photographed in a reverse-holo variant rather than the plain print.
- * Pokémon Card 151 (SV2a): every one of its scans is the Master Ball print (001, 011, 025 and
- * 150 looked at on 2026-09-11), so a shelf of commons read as a shelf of reverse holos.
- * The nightly copy takes Limitless's plain print for these without asking
- * TCGdex whether its file is there: it is, and it is the wrong one.
+ * Japanese sets TCGdex photographed in a patterned reverse rather than the plain print, with the
+ * printing the scans are. Pokémon Card 151 (SV2a): every card printed with a Poké Ball reverse is
+ * scanned as that print (001, 011, 025 and 150 looked at on 2026-09-11 and read then as the Master
+ * Ball print; twelve across the set on 2026-09-15 beside TCGplayer's three prints of 001, and they
+ * are the Poké Ball one). The cards with no such print, the rares from 166 on, are scanned plain.
+ * The nightly copy takes Limitless's plain print as the card's picture for these without asking
+ * TCGdex whether its file is there: it is, and it is the wrong one. It is the right one for the
+ * printing (print-pictures.ts).
  */
-const SCANNED_AS_REVERSE: ReadonlySet<string> = new Set(["SV2a"]);
+export const TCGDEX_SCAN_PRINT: Readonly<Record<string, "poke-ball">> = { SV2a: "poke-ball" };
+const SCANNED_AS_REVERSE: ReadonlySet<string> = new Set(Object.keys(TCGDEX_SCAN_PRINT));
 export const tcgdexScanIsReverse = (setId: string | null): boolean =>
   !!setId && SCANNED_AS_REVERSE.has(setId);
 

@@ -26,6 +26,12 @@ import { type Product, cardName, extended, isPrintingLabel, labelsOf } from "./t
 /** One printing's product: the card it is a printing of, which printing, and the product. */
 export type PrintProduct = { cardId: string; print: string; productId: number };
 
+/**
+ * One printing's scan from TCGdex (artwork.ts, TCGDEX_SCAN_PRINT): the card, which printing, and
+ * TCGdex's folder for the scan, with `low.webp` and `high.webp` under it.
+ */
+export type PrintScan = { cardId: string; print: string; folder: string };
+
 /** A printing as card_print_pictures keys it: "poke-ball", "reverse-holo", "holo/cosmos". */
 export const printKey = (finish: Finish | string, foilPattern?: FoilPattern | string | null) =>
   foilPattern ? `${finish}/${foilPattern}` : finish;
@@ -102,6 +108,26 @@ export function japanesePrintProducts(
     out.push({ cardId, print: printKey(finish), productId });
   }
   return out;
+}
+
+/**
+ * The scans of a set TCGdex photographed as one printing, for the cards that exist in that
+ * printing. A card without it (a rare, scanned plain) is left out: its scan is no picture of a
+ * printing it never had.
+ */
+export function tcgdexPrintScans(
+  cards: { id: string; image?: string | null }[],
+  print: Finish,
+  /** Each card's variants as the copy holds them (TCGdex's: `{ type: "reverse", foil: "pokeball" }`). */
+  variantsOf: ReadonlyMap<string, { type?: string; foil?: string }[] | null>,
+): PrintScan[] {
+  const foil = print.replace("-", "");
+  return cards.flatMap((c) =>
+    c.image?.startsWith("https://assets.tcgdex.net/") &&
+    (variantsOf.get(c.id) ?? []).some((v) => v.type === "reverse" && v.foil === foil)
+      ? [{ cardId: c.id, print: printKey(print), folder: c.image }]
+      : [],
+  );
 }
 
 /**
