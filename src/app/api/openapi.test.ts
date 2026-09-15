@@ -12,10 +12,6 @@ import { parse } from "yaml";
  * directions: a handler with no operation, and an operation with no handler,
  * both fail here, naming the pair.
  *
- * Only `/api/v1`. `/api/cover` is the web tool's image proxy for scans that
- * come from Limitless; it answers a picture, not JSON, and no client is meant
- * to call it by name.
- *
  * Every error response is also held to one shape: each 4xx and 5xx either
  * references the shared `Error` schema or extends it. That is the rule the
  * clients rely on — `{ error: "<sentence>" }` at a status they can branch on —

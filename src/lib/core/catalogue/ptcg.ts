@@ -2,15 +2,13 @@
  * The second catalogue, for what the first one has not published.
  *
  * TCGdex is where /cards gets everything, and it is missing a handful of
- * pictures rather than a handful of facts: Temporal Forces has no set logo at
- * all, and the priciest card in the binder (a €440 Pikachu with a grey felt
- * hat) has no scan. Neither is going to be fixed by asking again, and both
- * exist at pokemontcg.io.
+ * pictures rather than a handful of facts: the priciest card in the binder (a
+ * €440 Pikachu with a grey felt hat) has no scan there, and pokemontcg.io has it.
  *
- * So for pictures this is a fallback and nothing else: consulted only where the
- * first source came back empty, one index request per build, and it never
- * overrides anything TCGdex does have. It used to be the second market as
- * well — TCGplayer's numbers for a whole set, once a day — until 2026-09-11,
+ * So for pictures this is a fallback and nothing else, and only the nightly copy
+ * asks it (mirror.ts): the file it finds goes into our bucket, and a request
+ * never asks this host anything (Bart, 2026-09-15). It used to be the second market as
+ * well (TCGplayer's numbers for a whole set, once a day) until 2026-09-11,
  * when it answered one set in eight and TCGdex's relay of the same number
  * (tcgdex-client.ts, usdFor) took over. Keeping what is left here rather than
  * in lib/cards.ts is the point: the day it goes away, one file's worth of
@@ -22,7 +20,7 @@ import { DAY, norm, catalogueTimeout } from "../util";
 import { sameCard } from "./matching";
 import { isGalleryNumber, ptcgSetName } from "./set-aliases";
 
-type PtcgSet = { id: string; name: string; images?: { logo?: string } };
+type PtcgSet = { id: string; name: string };
 
 /* Where the two catalogues call the same set by different names — three
    entries, and they moved to set-aliases.ts once browse started asking the same
@@ -107,11 +105,6 @@ const findGallery = async (setName: string) => {
   }
   return null;
 };
-
-/** Their logo for a set, when they have one and TCGdex does not. */
-export async function ptcgLogo(setName: string): Promise<string | null> {
-  return (await find(setName))?.images?.logo ?? null;
-}
 
 /**
  * The cards in one of their sets, by number, fetched once per set and cached

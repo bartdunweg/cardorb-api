@@ -14,7 +14,6 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: unknown) => fn,
   revalidateTag: vi.fn(),
 }));
-vi.mock("../catalogue/ptcg", () => ({ ptcgScan: async () => null, ptcgLogo: async () => null }));
 vi.mock("../catalogue/rates", () => ({ fetchUsdToEur: () => fetchUsdToEur() }));
 vi.mock("../../storage/supabase", () => ({
   adminClient: () => db,

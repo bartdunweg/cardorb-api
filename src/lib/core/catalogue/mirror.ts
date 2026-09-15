@@ -41,7 +41,7 @@ import {
   isScanFile,
   limitlessScan,
   scrydexScan,
-  storedScan,
+  ownScan,
   tcgdexScan,
   tcgplayerScan,
 } from "./artwork";
@@ -50,6 +50,7 @@ import {
   heldUnlessOurs,
   isOurs,
   keepImage,
+  ownPicture,
   storedAddress,
   tcgdexFolderMissing,
 } from "./image-store";
@@ -120,7 +121,8 @@ const matchOf = (r: CatalogueCardRecord): CatalogueMatch => ({
   name: r.name,
   localName: r.local_name ?? null,
   setName: r.set_name,
-  ...storedScan(r.image),
+  // A hit is sent to a client, so only a file of ours (ownScan): the copy holds nothing else today.
+  ...ownScan(r.image),
   rarity: r.rarity,
   types: r.types,
   series: r.series,
@@ -655,6 +657,9 @@ export type CatalogueIndex = {
 /** The sets' scan folder, off the first card that has one: every English scan sits at `folder/number`. */
 export function buildIndex(version: string, rows: CatalogueCardRecord[]): CatalogueIndex {
   const sets: Record<string, IndexSet> = {};
+  // The document goes to the browser, so a card's picture in it is a file of ours or none
+  // (ownPicture): the copy holds nothing else today, and this keeps it that way on the wire.
+  rows = rows.map((r) => ({ ...r, image: ownPicture(r.image) }));
   for (const r of rows) {
     const set = (sets[r.set_id] ??= {
       name: r.set_name,
@@ -717,7 +722,7 @@ export async function mirrorScans(
 ): Promise<Map<string, { image: string | null; imageHigh: string | null }>> {
   if (!ids.length) return new Map();
   const rows = await catalogueCardsById(db, ids);
-  return new Map(rows.map((r) => [r.id, storedScan(r.image)]));
+  return new Map(rows.map((r) => [r.id, ownScan(r.image)]));
 }
 
 /** These cards of the copy as the add-card form reads them, in the order asked; an id the copy lacks is left out. */

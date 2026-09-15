@@ -34,7 +34,6 @@ vi.mock("../catalogue/rates", () => ({
     throw new Error("offline");
   },
 }));
-vi.mock("../catalogue/ptcg", () => ({ ptcgScan: async () => null, ptcgLogo: async () => null }));
 vi.mock("../../storage/supabase", () => ({
   adminClient: () => ({}),
   serverClient: async () => ({}),

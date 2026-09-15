@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
-import { withLimitlessScans } from "@/lib/core/catalogue/browse-artwork";
+import { withOwnArt, withOwnScans } from "@/lib/core/catalogue/image-store";
 import { languageSetFromCopy } from "@/lib/core/catalogue/set-catalogue-mirror";
 import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { galleriesByParent } from "@/lib/core/catalogue/set-galleries";
-import { withSetLogos } from "@/lib/core/catalogue/set-logos";
 import { englishSetOfDay, englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -70,19 +69,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   try {
     if (isBrowseLanguage(language)) {
       /* Out of the copy, pictures resolved and kept in our bucket at night (mirror-language.ts).
-         TCGdex and Limitless only for a set the copy does not hold yet. */
+         TCGdex only for a set the copy does not hold yet. */
       const copied = await languageSetFromCopy(language, setId).catch(() => null);
       if (copied) {
         set = copied.set;
         cards = copied.cards;
       } else {
-        // That language's catalogue, pictures and all: TCGdex has the set whole.
+        /* That language's catalogue: TCGdex has the set whole, facts and all. Not its pictures:
+           the addresses it builds are not files of ours, so the set and its cards carry null
+           until the nightly copy holds them (the answer below). The TCGdex HEAD and the
+           Limitless guesses that stood here went on 2026-09-15. */
         const found = await setIn(language, setId);
         if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
         set = found.set;
-        /* TCGdex has the set whole and, on the Japanese shelf, often none of its pictures —
-           whole sets at a time. Limitless has those; see browse-artwork.ts for the count. */
-        cards = await withLimitlessScans(language, found.cards);
+        cards = found.cards;
       }
     } else {
       /* TCGdex's own id, or pokemontcg.io's from before 2026-09-11, which the
@@ -91,12 +91,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       const found = await timed("set read", () => englishSetOfDay(setId));
       if (!found) return apiError(404, "No such set.", undefined, { headers: readHeaders(req) });
       /* The logo the shelf's tile shows, stored resolved in the copy (promo star, pokemontcg.io's
-         wordmark); a set the copy has not listed yet is resolved the old way. */
+         wordmark) and kept in our bucket. A set the copy has not listed yet keeps the one its own
+         read gave, which is a file of ours or null: nothing is asked of pokemontcg.io here. */
       const shelf = await timed("set shelf", () => englishShelfSets());
       const listed = shelf.find((s) => s.id === found.set.id);
-      set = listed
-        ? { ...found.set, logo: listed.logo }
-        : ((await withSetLogos([found.set]))[0] ?? found.set);
+      set = listed ? { ...found.set, logo: listed.logo } : found.set;
       cards = found.cards;
       /* The set's gallery after its own cards: TG01 to TG30 are part of Brilliant Stars on the
          shelf, as they are in the collection (set-galleries.ts). A gallery that cannot be read
@@ -134,9 +133,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   /* The pictures as the catalogue's copy has them, for the English shelf: this route builds a
      card's address from the serie, the set and the number, and TCGdex has no file behind it for
      a handful of cards a set (svp-085, Pikachu with Grey Felt Hat, among them). The copy has
-     checked each of those and holds the second catalogue's file where there is one. One query
-     for the page's ids, and no probe on this request; a card the copy does not hold keeps the
-     address this route built. The copy holds no person's data, so it is the service role's to
+     checked each of those and holds the second catalogue's file where there is one, in our
+     bucket. One query for the page's ids, and no probe on this request. The copy holds no person's data, so it is the service role's to
      read, as the search reads it. */
   const copy = isBrowseLanguage(language) ? null : adminClient();
   const scansRead = copy
@@ -169,11 +167,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
          telling a missing field from an empty one. Both reads fill it from the set's own TCGdex
          record, the source the collection's `setAbbr` is copied from too, so a set page and a
          collection tile print the same code. */
-      set: { ...set, abbreviation: set.abbreviation ?? null },
-      cards: shown.map((c) => ({
-        ...c,
-        price: prices.get(priceKey(c))?.price ?? null,
-      })),
+      set: withOwnArt({ ...set, abbreviation: set.abbreviation ?? null }),
+      /* Every picture on the page a file of ours, or null (ownPicture in image-store.ts): Bart,
+         2026-09-15. Whichever read answered, the copy or TCGdex for a set the copy does not hold
+         yet, no other host's address leaves this route. */
+      cards: shown.map((c) =>
+        withOwnScans({
+          ...c,
+          price: prices.get(priceKey(c))?.price ?? null,
+        }),
+      ),
       page,
       pageSize,
       totalCount: marked.length,

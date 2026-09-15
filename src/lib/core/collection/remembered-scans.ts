@@ -14,6 +14,7 @@
  */
 import type { CardSet } from "./cards";
 import type { CollectionRow } from "./collection-row";
+import { isOurs, ownPicture } from "../catalogue/image-store";
 
 /** One picture and the rows that should be holding it. */
 export type ScanMemory = { image: string; imageHigh: string | null; ids: string[] };
@@ -32,8 +33,10 @@ export function rememberedScans(rows: CollectionRow[], sets: CardSet[]): ScanMem
   const byPicture = new Map<string, ScanMemory>();
   for (const set of sets) {
     for (const card of set.cards) {
-      if (!card.image) continue;
-      const imageHigh = card.imageHigh ?? null;
+      // Only a file of ours is worth remembering: the row's memory is handed out when the
+      // catalogue is silent, and a picture a client is sent lives in our bucket (ownPicture).
+      if (!isOurs(card.image)) continue;
+      const imageHigh = ownPicture(card.imageHigh);
       for (const variant of card.variants) {
         const row = variant.id ? stored.get(variant.id) : undefined;
         if (!row?.id) continue;

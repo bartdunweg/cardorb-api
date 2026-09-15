@@ -15,23 +15,25 @@ import type { CollectionRow } from "./collection-row";
  * setCatalogue() is wrapped in unstable_cache and none of this is about the network.
  */
 
+/** A folder and a file in our bucket: the only pictures a client is sent. */
+const IMG = "https://images.cardorb.com/en/base/base1/088";
+const FILE = "https://images.cardorb.com/pokemontcg/base1/88.png";
+
 const catalogue = (over: Partial<SetCatalogue> = {}): SetCatalogue => ({
   byNumber: {
-    "088": { id: "base1-088", localId: "088", name: "Pikachu", image: "img/088" },
-    "88": { id: "base1-088", localId: "088", name: "Pikachu", image: "img/088" },
+    "088": { id: "base1-088", localId: "088", name: "Pikachu", image: IMG },
+    "88": { id: "base1-088", localId: "088", name: "Pikachu", image: IMG },
   },
-  assetBase: "https://assets.tcgdex.net/en/base/base1",
   officialName: "Base Set",
   code: "BS",
-  setHasScans: true,
-  logo: "https://assets.tcgdex.net/en/base/base1/logo.webp",
+  logo: "https://images.cardorb.com/en/base/base1/logo.webp",
   releaseDate: "1999-01-09",
   total: 102,
   ...over,
 });
 
 /** The set as it comes back on the bad day: known, with nothing in it. */
-const quiet = (): SetCatalogue => catalogue({ byNumber: {}, assetBase: null, setHasScans: false });
+const quiet = (): SetCatalogue => catalogue({ byNumber: {} });
 
 let answer: SetCatalogue = catalogue();
 const setCatalogue = vi.fn(async () => answer);
@@ -40,14 +42,6 @@ vi.mock("../catalogue/catalogue", () => ({
   setCatalogue: () => setCatalogue(),
   pricesFor: async () => new Map(),
   json: async () => null,
-}));
-
-/** The last-resort scan, controllable: it is the one source that answers with a low file alone. */
-const ptcgScan = vi.fn(async (): Promise<string | null> => null);
-
-vi.mock("../catalogue/ptcg", () => ({
-  ptcgScan: () => ptcgScan(),
-  ptcgLogo: async () => null,
 }));
 
 const { buildCollection } = await import("./cards");
@@ -84,10 +78,7 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
 beforeEach(() => {
   answer = catalogue();
   setCatalogue.mockClear();
-  ptcgScan.mockClear();
-  ptcgScan.mockResolvedValue(null);
-  // The per-card fallbacks are the only thing left that reaches the network, and they run only
-  // for a card the catalogue did not match. Refused, so an unmatched card stays unmatched.
+  // Nothing here may reach the network: no picture is looked for on a request (2026-09-15).
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => ({ ok: false, status: 404 }) as Response),
@@ -98,21 +89,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("a set read out of the nightly copy", () => {
-  it("asks no other catalogue about a matched card the copy holds no picture for", async () => {
-    // The copy checked every source for this card at night and found nothing.
+describe("a card with no picture of ours", () => {
+  it("asks no other catalogue about it, matched or not", async () => {
+    // The nightly copy asks every source for a blank card; a request asks nobody.
     answer = catalogue({
-      fromCopy: true,
-      assetBase: null,
       byNumber: {
         "088": { id: "base1-088", localId: "088", name: "Pikachu", image: null },
         "88": { id: "base1-088", localId: "088", name: "Pikachu", image: null },
       },
     });
-    ptcgScan.mockResolvedValue("fallback/scan.png");
-    const [set] = await buildCollection([row()]);
-    expect(set!.cards[0]!.image).toBeNull();
-    expect(ptcgScan).not.toHaveBeenCalled();
+    const [set] = await buildCollection([row(), row({ id: "b", name: "Mew", number: "151" })]);
+    expect(set!.cards.map((c) => c.image)).toEqual([null, null]);
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
 
@@ -120,10 +108,24 @@ describe("a row that remembers its picture", () => {
   it("draws the remembered scan when the catalogue has none", async () => {
     answer = quiet();
     const [set] = await buildCollection([
-      row({ imageUrl: "img/088/low.webp", imageHighUrl: "img/088/high.webp" }),
+      row({ imageUrl: `${IMG}/low.webp`, imageHighUrl: `${IMG}/high.webp` }),
     ]);
-    expect(set!.cards[0]!.image).toBe("img/088/low.webp");
-    expect(set!.cards[0]!.imageHigh).toBe("img/088/high.webp");
+    expect(set!.cards[0]!.image).toBe(`${IMG}/low.webp`);
+    expect(set!.cards[0]!.imageHigh).toBe(`${IMG}/high.webp`);
+  });
+
+  it("draws nothing from a memory that is not a file of ours", async () => {
+    // A row written before every picture lived in our bucket may still name another host.
+    answer = quiet();
+    const [set] = await buildCollection([
+      row({
+        imageUrl:
+          "/api/cover?url=https%3A%2F%2Flimitlesstcg.nyc3.cdn.digitaloceanspaces.com%2Fx.png",
+        imageHighUrl: null,
+      }),
+    ]);
+    expect(set!.cards[0]!.image).toBeNull();
+    expect(set!.cards[0]!.imageHigh).toBeNull();
   });
 
   it("still draws nothing for a card no one has ever resolved", async () => {
@@ -134,19 +136,20 @@ describe("a row that remembers its picture", () => {
 
   it("prefers the catalogue, so a better scan replaces the remembered one", async () => {
     const [set] = await buildCollection([row({ imageUrl: "stale", imageHighUrl: "stale/high" })]);
-    expect(set!.cards[0]!.image).toBe("img/088/low.webp");
-    expect(set!.cards[0]!.imageHigh).toBe("img/088/high.webp");
+    expect(set!.cards[0]!.image).toBe(`${IMG}/low.webp`);
+    expect(set!.cards[0]!.imageHigh).toBe(`${IMG}/high.webp`);
   });
 
   it("never pairs a catalogue scan with a remembered one of another picture", async () => {
-    // A fallback scan is one file and carries no high version. Taking that low beside the
+    // A copied fallback scan is one file and carries no high version. Taking that low beside the
     // remembered high would draw two different pictures as one card.
-    answer = quiet();
-    ptcgScan.mockResolvedValue("fallback/scan.png");
+    answer = catalogue({
+      byNumber: { "088": { id: "base1-088", localId: "088", name: "Pikachu", image: FILE } },
+    });
     const [set] = await buildCollection([
-      row({ imageUrl: "remembered/low", imageHighUrl: "remembered/high" }),
+      row({ imageUrl: `${IMG}/low.webp`, imageHighUrl: `${IMG}/high.webp` }),
     ]);
-    expect(set!.cards[0]!.image).toBe("fallback/scan.png");
+    expect(set!.cards[0]!.image).toBe(FILE);
     expect(set!.cards[0]!.imageHigh).toBeNull();
   });
 });
@@ -156,20 +159,34 @@ describe("rememberedScans", () => {
     const rows = [row({ id: "a" })];
     const sets = await buildCollection(rows);
     expect(rememberedScans(rows, sets)).toEqual([
-      { image: "img/088/low.webp", imageHigh: "img/088/high.webp", ids: ["a"] },
+      { image: `${IMG}/low.webp`, imageHigh: `${IMG}/high.webp`, ids: ["a"] },
     ]);
   });
 
+  it("never writes a picture that is not a file of ours onto a row", () => {
+    const rows = [row({ id: "a" })];
+    const sets = [
+      {
+        cards: [
+          {
+            image: "https://images.pokemontcg.io/base1/58.png",
+            imageHigh: null,
+            variants: [{ id: "a" }],
+          },
+        ],
+      },
+    ] as never;
+    expect(rememberedScans(rows, sets)).toEqual([]);
+  });
+
   it("says nothing about a collection that already remembers what was resolved", async () => {
-    const rows = [
-      row({ id: "a", imageUrl: "img/088/low.webp", imageHighUrl: "img/088/high.webp" }),
-    ];
+    const rows = [row({ id: "a", imageUrl: `${IMG}/low.webp`, imageHighUrl: `${IMG}/high.webp` })];
     expect(rememberedScans(rows, await buildCollection(rows))).toEqual([]);
   });
 
   it("records no absence: a catalogue that answered nothing writes nothing", async () => {
     answer = quiet();
-    const rows = [row({ id: "a", imageUrl: "img/088/low.webp" })];
+    const rows = [row({ id: "a", imageUrl: `${IMG}/low.webp` })];
     expect(rememberedScans(rows, await buildCollection(rows))).toEqual([]);
   });
 

@@ -53,4 +53,22 @@ describe("getCardDetail", () => {
     json.mockResolvedValue({ id: "swsh12.5gg-GG01", name: "Hisuian Voltorb", rarity: "Rare" });
     expect((await getCardDetail("swsh12.5gg-GG01"))?.rarity).toBe("Galarian Gallery");
   });
+
+  /* Bart, 2026-09-15: a client is sent only files in our bucket. A card read live is one the
+     nightly copy has not been through, so TCGdex's addresses are all there is: no picture. */
+  it("names no picture and no wordmark for a card read live, and asks no picture host", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    json.mockResolvedValue({
+      id: "sv03.5-006",
+      name: "Charizard ex",
+      image: "https://assets.tcgdex.net/en/sv/sv03.5/006",
+      set: { id: "sv03.5", name: "151", logo: "https://assets.tcgdex.net/en/sv/sv03.5/logo" },
+    });
+    const card = await getCardDetail("sv03.5-006");
+    expect(card?.image).toBeNull();
+    expect(card?.set).toMatchObject({ id: "sv03.5", logo: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
 });

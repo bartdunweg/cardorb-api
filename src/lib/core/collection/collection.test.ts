@@ -20,20 +20,19 @@ import type { CollectionRow } from "./collection-row";
  * response to ask about variant folding was describing the wrong thing.
  */
 
+const IMG = "https://images.cardorb.com/en/base/base1/img";
 const CARDS = {
-  "088": { id: "base1-088", localId: "088", name: "Pikachu", image: "img/088" },
-  "88": { id: "base1-088", localId: "088", name: "Pikachu", image: "img/088" },
-  "004": { id: "base1-004", localId: "004", name: "Charizard", image: "img/004" },
-  "4": { id: "base1-004", localId: "004", name: "Charizard", image: "img/004" },
+  "088": { id: "base1-088", localId: "088", name: "Pikachu", image: `${IMG}/088` },
+  "88": { id: "base1-088", localId: "088", name: "Pikachu", image: `${IMG}/088` },
+  "004": { id: "base1-004", localId: "004", name: "Charizard", image: `${IMG}/004` },
+  "4": { id: "base1-004", localId: "004", name: "Charizard", image: `${IMG}/004` },
 };
 
 const catalogue = (over: Partial<SetCatalogue> = {}): SetCatalogue => ({
   byNumber: CARDS,
-  assetBase: "https://assets.tcgdex.net/en/base/base1",
   officialName: "Base Set",
   code: "BS",
-  setHasScans: true,
-  logo: "https://assets.tcgdex.net/en/base/base1/logo.webp",
+  logo: "https://images.cardorb.com/en/base/base1/logo.webp",
   releaseDate: "1999-01-09",
   total: 102,
   ...over,
@@ -57,10 +56,8 @@ const KNOWN: Record<string, SetCatalogue> = {
 
 const empty = (): SetCatalogue => ({
   byNumber: {},
-  assetBase: null,
   officialName: null,
   code: null,
-  setHasScans: false,
   logo: null,
   releaseDate: null,
   total: null,
@@ -77,16 +74,6 @@ vi.mock("../catalogue/catalogue", () => ({
   setCatalogue: (name: string) => setCatalogue(name),
   pricesFor: (ids: string[]) => pricesFor(ids),
   json: async () => null,
-}));
-
-// The last-resort scan lookup, silenced. Left real it treats an empty index as
-// a failure and retries three times behind a growing backoff, which cost this
-// file 1.5 seconds per unmatched card and told us nothing: whether a card the
-// catalogue could not place also fails to turn up at pokemontcg.io is that
-// module's question, not this one's.
-vi.mock("../catalogue/ptcg", () => ({
-  ptcgScan: async () => null,
-  ptcgLogo: async () => null,
 }));
 
 const { buildCollection, identityKey, setIdentities } = await import("./cards");
@@ -122,9 +109,8 @@ const row = (over: Partial<CollectionRow> = {}): CollectionRow => ({
 beforeEach(() => {
   setCatalogue.mockClear();
   pricesFor.mockClear();
-  // The per-card fallbacks (Limitless, pokemontcg.io) are the only thing left
-  // that reaches the network, and they only run for a card the catalogue did
-  // not match. Refused, so an unmatched card stays unmatched.
+  // Nothing in buildCollection may reach the network: the catalogue and the prices are mocked,
+  // and no picture is looked for on a request (2026-09-15). Stubbed so a test can say so.
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => ({ ok: false, status: 404 }) as Response),
@@ -268,14 +254,24 @@ describe("buildCollection", () => {
     expect(set!.cards[0]!.tcgId).toBe("base1-088");
   });
 
-  it("hands out no scans at all for a set that has none yet", async () => {
-    // TCGdex publishes the record before the artwork and does not say so, so
-    // every card in an announced set carries an image URL that 404s.
-    KNOWN.Base = catalogue({ setHasScans: false });
-    const [set] = await buildCollection([row()]);
-    expect(set!.cards[0]!.image).toBeNull();
+  it("hands out no picture that is not a file of ours, and asks nobody for one", async () => {
+    // Bart, 2026-09-15: a client is sent only files in our bucket. A set read live from TCGdex
+    // carries TCGdex's addresses, and an unmatched card used to ask Limitless and pokemontcg.io.
+    KNOWN.Base = catalogue({
+      byNumber: {
+        "088": { ...CARDS["088"], image: "https://assets.tcgdex.net/en/base/base1/088" },
+      },
+      logo: "https://images.pokemontcg.io/base1/logo.png",
+    });
+    const [set] = await buildCollection([row(), row({ name: "Mew", number: "151" })]);
+    expect(set!.logo).toBeNull();
+    expect(set!.cards.map((c) => [c.number, c.image, c.imageHigh])).toEqual([
+      ["088", null, null],
+      ["151", null, null],
+    ]);
     // Still matched, though: the id and the price do not depend on the picture.
     expect(set!.cards[0]!.tcgId).toBe("base1-088");
+    expect(fetch).not.toHaveBeenCalled();
     KNOWN.Base = catalogue();
   });
 

@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { canStoreImages, imageKey, keepImage, storedAddress } from "./image-store";
+import {
+  canStoreImages,
+  imageKey,
+  keepImage,
+  ownPicture,
+  storedAddress,
+  withOwnArt,
+  withOwnScans,
+} from "./image-store";
+import { ownScan } from "./artwork";
 
 const WRITER = "https://cardorb-images-writer.bart-dunweg.workers.dev";
 
@@ -33,6 +42,62 @@ describe("imageKey", () => {
     expect(storedAddress("https://assets.tcgdex.net/en/swsh/swsh11/186")).toBe(
       "https://images.cardorb.com/en/swsh/swsh11/186",
     );
+  });
+});
+
+describe("ownPicture", () => {
+  // Bart, 2026-09-15: every picture a client is sent is a file in our bucket, or null.
+  it("passes a file of ours and nothing else", () => {
+    expect(ownPicture("https://images.cardorb.com/en/swsh/swsh11/186")).toBe(
+      "https://images.cardorb.com/en/swsh/swsh11/186",
+    );
+    for (const outside of [
+      "https://assets.tcgdex.net/en/swsh/swsh11/186",
+      "https://images.pokemontcg.io/sm75/1.png",
+      "https://images.scrydex.com/pokemon/tk7b-16/large",
+      "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/DRM/DRM_024_R_EN_LG.png",
+      "https://tcgplayer-cdn.tcgplayer.com/product/90168_in_1000x1000.jpg",
+      "/api/cover?url=https%3A%2F%2Flimitlesstcg.nyc3.cdn.digitaloceanspaces.com%2Fx.png",
+      "https://images.cardorb.com.example.com/x.png",
+      "",
+    ])
+      expect(ownPicture(outside)).toBeNull();
+    expect(ownPicture(null)).toBeNull();
+    expect(ownPicture(undefined)).toBeNull();
+  });
+
+  it("shapes a card's scans and a set's art, and leaves out a field the thing did not have", () => {
+    expect(
+      withOwnScans({
+        id: "a",
+        image: "https://assets.tcgdex.net/en/x/1/low.webp",
+        imageHigh: "https://images.cardorb.com/en/x/1/high.webp",
+      }),
+    ).toEqual({ id: "a", image: null, imageHigh: "https://images.cardorb.com/en/x/1/high.webp" });
+    expect(withOwnScans({ image: "https://images.pokemontcg.io/x/1.png" })).toEqual({
+      image: null,
+    });
+    expect(
+      withOwnArt({ id: "s", logo: "https://images.pokemontcg.io/s/logo.png", symbol: null }),
+    ).toEqual({ id: "s", logo: null, symbol: null });
+    expect(withOwnArt({ logo: "https://images.cardorb.com/s/logo.webp" })).toEqual({
+      logo: "https://images.cardorb.com/s/logo.webp",
+    });
+  });
+
+  it("reads a stored folder or file of ours as both sizes or one, and anything else as none", () => {
+    expect(ownScan("https://images.cardorb.com/en/sv/sv03.5/006")).toEqual({
+      image: "https://images.cardorb.com/en/sv/sv03.5/006/low.webp",
+      imageHigh: "https://images.cardorb.com/en/sv/sv03.5/006/high.webp",
+    });
+    expect(ownScan("https://images.cardorb.com/pokemontcg/svp/85.png")).toEqual({
+      image: "https://images.cardorb.com/pokemontcg/svp/85.png",
+      imageHigh: null,
+    });
+    expect(ownScan("https://assets.tcgdex.net/en/sv/sv03.5/006")).toEqual({
+      image: null,
+      imageHigh: null,
+    });
   });
 });
 

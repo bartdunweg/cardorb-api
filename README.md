@@ -110,9 +110,9 @@ if (res.ok) {
 
 Three things to know before you render it:
 
-- **`image` can be relative.** A scan that comes from Limitless is served through this
-  app's CORS proxy as `/api/cover?url=…`, so prefix anything starting with `/` with
-  `https://api.cardorb.com`. It can also be `null`.
+- **`image` is a file at `https://images.cardorb.com`, or `null`.** Every picture this API
+  sends is in our own bucket; a card whose picture is not there yet carries `null`, so draw a
+  placeholder.
 - **`imageHigh` is only set for a TCGdex scan** (at TCGdex or copied to
   `images.cardorb.com`), `null` for a picture from another catalogue. Never rely on it alone. `rarity`, `speciesId` and `tcgId` are nullable too.
 - **404 means nothing to show** — `{"error":"No card found."}` for an empty or entirely
@@ -254,8 +254,6 @@ with a bearer token.
 
 ```
 src/app/api/v1/<route>/route.ts   one route handler per operation in public/openapi.yaml
-src/app/api/cover/route.ts        a same-origin passthrough for the one image host that
-                                  sends no CORS headers
 src/app/layout.tsx                the root layout Next requires; there is no page
 src/lib/core/                     the domain layer. No React, no routes. The part worth having.
 src/lib/core/catalogue/           what a card is: the three catalogues, matching, artwork, prices

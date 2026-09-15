@@ -75,6 +75,27 @@ beforeEach(() => {
 afterEach(() => vi.clearAllMocks());
 
 describe("GET /api/v1/catalog/sets", () => {
+  /* Bart, 2026-09-15: a client is sent only files in our bucket. */
+  it("sends a wordmark or symbol only where it is a file of ours", async () => {
+    listSets.mockResolvedValue([
+      { ...SET, logo: "https://images.pokemontcg.io/base1/logo.png", symbol: null },
+      {
+        ...SET,
+        id: "base2",
+        name: "Jungle",
+        logo: "https://images.cardorb.com/en/base/base2/logo.webp",
+        symbol: "https://assets.tcgdex.net/en/base/base2/symbol.webp",
+      },
+    ]);
+    const body = await (await sets()).json();
+    expect(
+      body.sets.map((s: { logo: string | null; symbol: string | null }) => [s.logo, s.symbol]),
+    ).toEqual([
+      [null, null],
+      ["https://images.cardorb.com/en/base/base2/logo.webp", null],
+    ]);
+  });
+
   it("refuses when authorisation refuses, without asking the catalogue", async () => {
     authorise.mockResolvedValue({ status: 401, error: "Sign in to see this." });
     const res = await sets();
