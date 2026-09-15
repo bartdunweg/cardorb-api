@@ -408,6 +408,33 @@ describe("cardPricesFromShelf", () => {
     ]);
   });
 
+  // Fossil's base3-15 has a cosmos holo and Black & White's bw1-17 a cracked ice one: each a TCGplayer product of its own, priced as Holofoil.
+  it("writes the foil pattern prints under the card, named after their pattern and printing", () => {
+    const points = cardPricesFromShelf(
+      "en",
+      { "base3-15": { productId: 42500 }, "bw1-17": { productId: 88001 }, "gone-2": null },
+      [
+        { productId: 42500, printing: "holofoil", market: 40 },
+        { productId: 254761, printing: "holofoil", market: 55 },
+        { productId: 153067, printing: "holofoil", market: 3.2 },
+        { productId: 7, printing: "holofoil", market: 5 },
+      ],
+      1,
+      "2026-09-15",
+      {},
+      {
+        "base3-15": [{ foilPattern: "cosmos", productId: 254761, printing: "holofoil" }],
+        "bw1-17": [{ foilPattern: "cracked-ice", productId: 153067, printing: "holofoil" }],
+        "gone-2": [{ foilPattern: "cosmos", productId: 7, printing: "holofoil" }],
+      },
+    );
+    expect(points.map((p) => [p.tcgId, p.printing, p.price])).toEqual([
+      ["base3-15", "holofoil", 40],
+      ["base3-15", "cosmos-holofoil", 55],
+      ["bw1-17", "cracked-ice-holofoil", 3.2],
+    ]);
+  });
+
   // Pokémon Card 151 Bulbasaur (SV2a-001): the plain card 566346, its Poké Ball 566553 and Master Ball
   // 566706 products, and a mirror of Start Deck 100 Chikorita (MC-016, 670327), all priced as Holofoil
   // on tcgcsv's Japanese shelf (2026-09-15).

@@ -4,7 +4,7 @@ import { apiError, refuse } from "@/lib/api/respond";
 import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
 import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
 import { priceHistoryTag, usdToEurForRequest } from "@/lib/core/collection/collection";
-import { allFinishPrints } from "@/lib/core/catalogue/card-printings";
+import { allFinishPrints, allPatternPrints } from "@/lib/core/catalogue/card-printings";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
@@ -67,7 +67,8 @@ async function publishedDay(): Promise<string> {
  *
  * 2. card_price_months, today's point for every linked card, held or not, per printing and in euros
  *    at the day's rate (cardPricesFromShelf), Base Set's Shadowless runs under their own printings,
- *    and the Poké Ball, Master Ball and Energy Symbol reverses as "poke-ball-reverse-holofoil" and so on.
+ *    the Poké Ball, Master Ball and Energy Symbol reverses as "poke-ball-reverse-holofoil" and so on, and
+ *    the cosmos and cracked ice prints as "cosmos-holofoil" (since 2026-09-15).
  *    The 04:00 snapshot used to write these from the same files and from the assembled collection;
  *    it now writes only the cards with no TCGplayer product. No rate, no history tonight: dollars
  *    written as euros would stand in the chart for good, and the latest prices are written anyway.
@@ -240,6 +241,7 @@ export async function GET(req: Request) {
             rate,
             today,
             allFinishPrints(),
+            allPatternPrints(),
           ),
           ...cardPricesFromShelf(
             "ja",

@@ -22,6 +22,7 @@ import {
   type PriceLanguage,
   historyKey,
   priceLanguageOf,
+  patternPrintingKey,
   printProductKey,
   printingKey,
   runKey,
@@ -144,6 +145,11 @@ export type TcgplayerLink = {
  * card's "reverse-holofoil".
  * The same key scripts/backfill-card-prices.mjs writes their past under.
  *
+ * Then its foil pattern prints, where `patternPrints` names them (card-printings.ts patternPrintsFor):
+ * a cosmos or cracked ice holo, each a product of its own, written as "cosmos-holofoil"
+ * (patternPrintingKey). Their price was shown and never kept, so a pattern pressed on the sheet had
+ * no line (Bart, 2026-09-15); `--pattern-prints` in the backfill writes their past.
+ *
  * `language` is the catalogue the links' ids are from, and every point carries it: an English and a
  * Japanese card can share an id (neo4-106), and each is its own line.
  */
@@ -156,6 +162,10 @@ export function cardPricesFromShelf(
   finishPrints: Record<
     string,
     readonly { finish: string; productId: number; printing: string }[]
+  > = {},
+  patternPrints: Record<
+    string,
+    readonly { foilPattern: string; productId: number; printing: string }[]
   > = {},
 ): PrintingDay[] {
   const shelf: ShelfPrices = new Map();
@@ -189,6 +199,22 @@ export function cardPricesFromShelf(
         language,
         tcgId,
         printing: printProductKey(print.finish),
+        date,
+        price: Math.round(usd * usdToEur * 100) / 100,
+        source: "tcgplayer",
+      });
+    }
+  }
+  for (const [tcgId, prints] of Object.entries(patternPrints)) {
+    if (links[tcgId]?.productId == null) continue;
+    for (const print of prints) {
+      const printings = shelf.get(print.productId);
+      const usd = printings?.get(print.printing) ?? [...(printings?.values() ?? [])][0];
+      if (usd == null || !(usd > 0)) continue;
+      points.push({
+        language,
+        tcgId,
+        printing: patternPrintingKey(print.foilPattern, print.printing),
         date,
         price: Math.round(usd * usdToEur * 100) / 100,
         source: "tcgplayer",
