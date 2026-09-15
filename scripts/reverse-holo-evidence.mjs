@@ -29,6 +29,15 @@
  * (POP Series 8 and 9), it decides outright. A card nobody answers for is left out, and
  * card-printings.ts keeps its earlier rule for it.
  *
+ * And a second question from the same witnesses: whether a card TCGdex lists as a plain printing
+ * only is a holo instead. TCGdex writes "normal" for most holo cards of Black & White, XY and Sun &
+ * Moon (Reshiram bw1-113, an Ultra Rare, 2026-09-15), so a form offered a Standard copy and no
+ * holo. A card is `holoNotNormal` where TCGdex names a normal and no holo, and TCGplayer's product
+ * and Scrydex's page both name a holofoil and no plain printing. Where both name a holofoil and
+ * one of them a plain printing too (Emboar bw1-19, whose plain print came in a theme deck), the card
+ * is `holoBesideNormal`: the holo is added and the plain card kept. Anything short of both naming a
+ * holofoil is left as TCGdex has it.
+ *
  * Read-only against the database (the catalogue copy) and polite to Scrydex: one page a second,
  * cached under --cache so a second run asks nothing. About 500 Scrydex pages and 440 tcgcsv requests.
  *
@@ -86,6 +95,12 @@ async function cached(file, url, { json = false, pause = 0 } = {}) {
       writeFileSync(path, body);
       if (pause) await sleep(pause);
       return json ? JSON.parse(body) : body;
+    }
+    /* A page its own site links to and answers 404 for (Scrydex's EX Deoxys, 2026-09-15) is no
+       answer for its cards, not a reason to stop the run. */
+    if (res.status === 404 && !json) {
+      console.error(`${url}: 404, read as empty`);
+      return "";
     }
     await sleep(2000 * (attempt + 1));
   }
@@ -305,11 +320,30 @@ const witnessed = cards.map((c) => {
         reverseProducts.has(`${groupOf.get(link.productId)}|${numberKey(c.local_id)}`);
   }
   const onScrydex = scrydex.get(c.set_id)?.get(numberKey(c.local_id));
+  /* Holo or plain: the three answers about the card's non-reverse printing. */
+  const types = new Set(variants.map((v) => v.type));
+  const sold = link?.productId
+    ? new Set([
+        ...(link.variants ?? []),
+        ...[...(printingsOf.get(link.productId) ?? [])].map((s) =>
+          s.toLowerCase().replace(/\s+/g, "-"),
+        ),
+      ])
+    : new Set();
   return {
     card: c,
     tcgdex,
     tcgplayer,
     scrydex: onScrydex ? onScrydex.has("reverseHolofoil") : null,
+    holo:
+      types.has("normal") &&
+      !types.has("holo") &&
+      (sold.has("holofoil") || sold.has("unlimited-holofoil")) &&
+      !!onScrydex?.has("holofoil")
+        ? sold.has("normal") || sold.has("unlimited") || onScrydex.has("normal")
+          ? "beside"
+          : "instead"
+        : null,
   };
 });
 
@@ -362,6 +396,18 @@ for (const [setId, rows] of [...bySet].sort(([a], [b]) => a.localeCompare(b))) {
   };
 }
 
+const holoNotNormal = witnessed
+  .filter((w) => w.holo === "instead")
+  .map((w) => w.card.id)
+  .sort();
+const holoBesideNormal = witnessed
+  .filter((w) => w.holo === "beside")
+  .map((w) => w.card.id)
+  .sort();
+console.error(
+  `TCGdex lists as normal: ${holoNotNormal.length} holos, ${holoBesideNormal.length} with a holo beside the plain card`,
+);
+
 const disputedCount = Object.values(sets).reduce((n, s) => n + (s.disputed?.length ?? 0), 0);
 console.error(
   `decided ${Object.keys(decisions).length} cards: ${Object.values(decisions).filter(Boolean).length} with a plain reverse; ${disputedCount} disputed`,
@@ -369,5 +415,5 @@ console.error(
 if (!DRY)
   writeFileSync(
     OUT,
-    `${JSON.stringify({ sets, holoBeforeReverses: holoBeforeReverses.sort(), cards: decisions }, null, 1)}\n`,
+    `${JSON.stringify({ sets, holoBeforeReverses: holoBeforeReverses.sort(), holoNotNormal, holoBesideNormal, cards: decisions }, null, 1)}\n`,
   );
