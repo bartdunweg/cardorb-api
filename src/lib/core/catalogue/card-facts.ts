@@ -18,7 +18,7 @@ import { catalogueCardSheets, printPicturesOfCards } from "@/lib/storage/postgre
 import { adminClient } from "@/lib/storage/supabase";
 import { detailFromSheet, languagesFromSheet } from "./card-sheet";
 import { type Printing, foilPatternsOfSerie, patternPrintsFor } from "./card-printings";
-import { withPrintPictures } from "./print-pictures";
+import { withPrintPictures, withProvenPrintings } from "./print-pictures";
 
 /** The most ids one request may name: a set page's grid, or a page of the collection. */
 export const FACTS_BATCH_MAX = 250;
@@ -123,21 +123,25 @@ export async function cardFactsOf(
            give them costs the pictures, not the facts: the card's scan stands for each printing. */
         printPicturesOfCards(db, language, ids).catch((err) => {
           console.error("The printings' pictures of a page could not be read:", err);
-          return new Map<string, Map<string, string>>();
+          return new Map<string, Map<string, string | null>>();
         }),
       ])
-    : [new Map(), new Map<string, Map<string, string>>()];
+    : [new Map(), new Map<string, Map<string, string | null>>()];
   return Object.fromEntries(
     ids.map((id) => {
       const sheet = sheets.get(id);
       const facts = sheet ? factsFromSheet(sheet, language) : null;
       if (!facts) return [id, null];
-      const own = pictures.get(id) ?? new Map<string, string>();
+      const own = pictures.get(id) ?? new Map<string, string | null>();
       return [
         id,
         {
           ...facts,
-          printings: withPrintPictures(facts.printings, own) ?? [],
+          printings:
+            withPrintPictures(
+              language === "ja" ? withProvenPrintings(facts.printings, own) : facts.printings,
+              own,
+            ) ?? [],
           patternPrints: facts.patternPrints
             ? {
                 ...facts.patternPrints,

@@ -64,6 +64,7 @@ export async function GET(req: Request) {
     en: 0,
     ja: 0,
     tcgdex: 0,
+    proven: 0,
     candidates: 0,
     missing: 0,
     groups: 0,
@@ -127,6 +128,8 @@ export async function GET(req: Request) {
     productId: number | null;
     /** A file, or a TCGdex folder whose `high.webp` is the picture. */
     source: string;
+    /** False for a product TCGplayer holds no picture of: a row that proves the printing, no copy. */
+    pictured?: boolean;
   };
   const todo: Job[] = [
     ...scans
@@ -140,9 +143,12 @@ export async function GET(req: Request) {
       .filter((p) => !heldProducts.has(p.productId))
       .map((p) => ({ language: "en" as const, ...p, source: productPicture(p.productId) })),
     ...japanese
-      .filter(
-        (p) => !heldJaImage.has(`${p.cardId}|${p.print}`) && !scanned.has(`${p.cardId}|${p.print}`),
-      )
+      .filter((p) => {
+        const key = `${p.cardId}|${p.print}`;
+        if (scanned.has(key)) return false;
+        // Held with a picture: done. Held without one: asked again only once TCGplayer has one.
+        return !heldJaImage.has(key) || (heldJaImage.get(key) == null && p.pictured !== false);
+      })
       .map((p) => ({ language: "ja" as const, ...p, source: productPicture(p.productId) })),
   ];
   report.candidates = todo.length;
@@ -150,6 +156,19 @@ export async function GET(req: Request) {
   const rows: PrintPictureRow[] = [];
   await mapLimit(todo, 8, async (job) => {
     if (performance.now() - start > BUDGET_MS) return;
+    /* A Japanese product TCGplayer holds no picture of still proves its printing (withProvenPrintings):
+       its row has no image, and nothing is copied. */
+    if (job.pictured === false) {
+      rows.push({
+        language: job.language,
+        card_id: job.cardId,
+        print: job.print,
+        product_id: job.productId,
+        image: null,
+      });
+      report.proven++;
+      return;
+    }
     const kept = await keepImage(job.source);
     if (!isOurs(kept)) {
       report.missing++;
@@ -175,7 +194,7 @@ export async function GET(req: Request) {
   }
   report.ms = Math.round(performance.now() - start);
   console.log(
-    `[cron] print pictures: ${report.en} English, ${report.ja} Japanese and ${report.tcgdex} TCGdex copied of ` +
+    `[cron] print pictures: ${report.en} English, ${report.ja} Japanese and ${report.tcgdex} TCGdex copied, ${report.proven} proven without one, of ` +
       `${report.candidates}, ${report.missing} without a photo, ${report.answered}/${report.groups} groups, ${report.ms} ms`,
   );
   return NextResponse.json({ ok: true, ...report });
