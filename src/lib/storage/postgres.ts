@@ -2018,6 +2018,46 @@ export async function catalogueCardSheet(
   return { card, set: (sets.data as CatalogueCardSheet["set"]) ?? null };
 }
 
+/**
+ * The sheets of many cards at once, by id: catalogueCardSheet for a page of tiles in two reads
+ * a bite rather than two per card. An id the copy has no sheet for is left out of the map.
+ * Throws where the store would not answer.
+ */
+export async function catalogueCardSheets(
+  db: SupabaseClient,
+  ids: string[],
+  language: CatalogueLanguage = "en",
+): Promise<Map<string, CatalogueCardSheet>> {
+  const cards: Required<CatalogueCardRecord>[] = [];
+  /* A bite of ids a request line holds: `.in()` goes out in the query string. */
+  const BITE = 200;
+  for (let at = 0; at < ids.length; at += BITE) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select(
+        "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, illustrator, hp, stage, evolve_from, regulation_mark, first_edition, variants, languages, local_name",
+      )
+      .eq("language", language)
+      .in("id", ids.slice(at, at + BITE));
+    if (error) throw new Error(`Reading sheets from the copy failed: ${error.message}`);
+    for (const card of (data ?? []) as Required<CatalogueCardRecord>[])
+      if (card.variants != null) cards.push(card);
+  }
+  const setIds = [...new Set(cards.map((c) => c.set_id))];
+  const sets = new Map<string, NonNullable<CatalogueCardSheet["set"]>>();
+  if (setIds.length) {
+    const { data, error } = await db
+      .from("catalogue_sets")
+      .select("id, name, logo, total, serie_id, local_name")
+      .eq("language", language)
+      .in("id", setIds);
+    if (error) throw new Error(`Reading sets from the copy failed: ${error.message}`);
+    for (const set of (data ?? []) as NonNullable<CatalogueCardSheet["set"]>[])
+      sets.set(set.id, set);
+  }
+  return new Map(cards.map((card) => [card.id, { card, set: sets.get(card.set_id) ?? null }]));
+}
+
 /** Every card of one catalogue the copy matched to a TCGplayer product: id to product. */
 export async function listCatalogueProducts(
   db: SupabaseClient,

@@ -318,6 +318,46 @@ components:
           const: true
           description: "Present only when TCGdex could not be reached: the cards are the rows alone, without a scan, a catalogue id or a price, and nothing has cached them. An app should not cache these sets as the collection."
 
+    CardFacts:
+      type: object
+      description: "One card's facts for a form, as `POST /v1/cards/facts` answers them: `CardDetail`'s fields of the same names, without a price."
+      required: [id, rarity, illustrator, hp, stage, evolveFrom, regulationMark, firstEdition, printings, editions, languages, foilPatterns, patternPrints]
+      properties:
+        id: { type: string }
+        rarity: { type: [string, "null"] }
+        illustrator: { type: [string, "null"] }
+        hp: { type: [integer, "null"] }
+        stage: { type: [string, "null"] }
+        evolveFrom: { type: [string, "null"] }
+        regulationMark: { type: [string, "null"] }
+        firstEdition: { type: [boolean, "null"] }
+        printings:
+          type: array
+          items:
+            type: object
+            required: [finish, foilPattern]
+            properties:
+              finish: { $ref: "#/components/schemas/Finish" }
+              foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+        editions: { type: [array, "null"], items: { $ref: "#/components/schemas/Edition" } }
+        languages: { type: array, items: { type: string, enum: [en, de, fr, it, es, pt, nl] }, description: "Empty for a Japanese card, as on `CardDetail`." }
+        foilPatterns: { type: [array, "null"], items: { $ref: "#/components/schemas/FoilPattern" } }
+        patternPrints:
+          type: [object, "null"]
+          description: "`CardDetail.patternPrints` without each print's price."
+          required: [standard, prints]
+          properties:
+            standard: { type: boolean }
+            prints:
+              type: array
+              items:
+                type: object
+                required: [foilPattern, finish, tcgplayerId]
+                properties:
+                  foilPattern: { $ref: "#/components/schemas/FoilPattern" }
+                  finish: { $ref: "#/components/schemas/Finish" }
+                  tcgplayerId: { type: integer }
+
     CardDetail:
       type: object
       description: One card from TCGdex, with its price where the caller may see one.
@@ -1087,6 +1127,55 @@ paths:
       responses:
         "204": { description: "Allowed. Carries the `Access-Control-Allow-*` headers." }
         "403": { description: "That origin is not in `ALLOWED_ORIGINS`. Empty body." }
+
+  /v1/cards/facts:
+    post:
+      tags: [Collection]
+      operationId: getCardFacts
+      summary: What a form needs to know about many cards, in one request
+      description: |
+        The facts `GET /v1/cards/{tcgId}` answers that a form reads (printings, runs, languages,
+        foil patterns, pattern prints, and the sheet's rarity, illustrator, HP, stage and regulation
+        mark), for up to 250 cards at once: a client asks for a page of tiles before anybody opens
+        one, so a card's sheet opens with its choices in place. Read from the catalogue copy alone,
+        so no price and no price per pattern print. Every id asked is a key of `cards`; `null` is
+        not "no such card" but "ask `GET /v1/cards/{tcgId}`": the copy does not hold the card, or
+        holds it without everything that route would answer. A read, so it changes nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  minItems: 1
+                  maxItems: 250
+                  items: { type: string, minLength: 1, maxLength: 64 }
+                  description: "TCGdex card ids, e.g. `swsh3-136`. One named twice is answered once."
+                language: { type: string, enum: [en, ja], description: "Which catalogue holds these ids; left out, English." }
+      responses:
+        "200":
+          description: The facts, by id.
+          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cards]
+                properties:
+                  cards:
+                    type: object
+                    additionalProperties:
+                      oneOf: [{ $ref: "#/components/schemas/CardFacts" }, { type: "null" }]
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503": { $ref: "#/components/responses/Unavailable" }
 
   /v1/cards/{tcgId}:
     get:

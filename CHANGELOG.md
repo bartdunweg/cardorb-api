@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - My First Battle's Blue Border print is a run a copy can be from, beside Unlimited, as Shadowless is for Base Set. The eight cards TCGplayer sells a Blue Border product of (Bulbasaur, Charmander, Pikachu, Squirtle and the four basic energies) offer it, and a Blue Border copy reads its own price and line (`blue-border`): Pikachu is $29.58 against $17.56 for the plain card. A copy's `edition` can be `blue-border` (migration 20260915240000); a CSV that says "Blue Border" is read as it.
 
+- `POST /v1/cards/facts` answers what a form needs to know about up to 250 cards in one request: the printings, runs, languages, foil patterns and pattern prints `GET /v1/cards/{tcgId}` answers, with the sheet's rarity, illustrator, HP, stage and regulation mark, out of the catalogue copy alone and without prices. A client asks for a page of tiles before anybody opens one, so a card's sheet opens with its choices in place instead of filling them in half a second later. A card the copy cannot answer in full is `null`, and the single route stays the way to ask about it.
+
 - Unown ? from the Unseen Forces Unown Collection opens with its details and its price chart. TCGdex files it as `exu-%3F`, and the path reached the card routes decoded twice, as `exu-?`, so the sheet answered "No such card" and the chart drew no line while 31 months of its prices were stored.
 
 - `GET /v1/cards?sort=change&from=&to=` sorts a list by what each copy's price did between two days, times the copies (biggest gain first, `order=asc` biggest loss first), and each card carries its `priceChange`. For sorting the collection by price movement over any window.
