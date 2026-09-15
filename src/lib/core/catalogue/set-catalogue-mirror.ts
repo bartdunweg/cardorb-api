@@ -298,9 +298,9 @@ export async function copiedLanguageSets(language: BrowseLanguage): Promise<Cata
         name: r.name,
         localName: r.local_name ?? null,
         series: r.series ?? "",
-        // No date on the tile, as the shelf has always shown these. The wordmark is Scrydex's, kept in
-        // our bucket (scrydex-japan-logos.ts), where the copy has one.
-        releaseDate: null,
+        // The set's own date, which the tile writes under its name as the English shelf does. The
+        // wordmark is Scrydex's, kept in our bucket (scrydex-japan-logos.ts), where the copy has one.
+        releaseDate: r.release_date,
         /* Never fewer than the cards the copy holds: TCGdex gives some XY and Sword & Shield sets their
          printed count as the total (Shiny Star V 190, 330 cards held), and a tile read over 100%. */
         total: Math.max(r.total ?? 0, held.get(r.id) ?? 0),

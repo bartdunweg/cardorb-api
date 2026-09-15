@@ -339,7 +339,7 @@ describe("the Japanese shelf out of the copy", () => {
     vi.clearAllMocks();
   });
 
-  it("lists the sets in the shelf's own order, printed names beside, without dates or art", async () => {
+  it("lists the sets in the shelf's own order, printed names and release dates beside, without art", async () => {
     listCatalogueSets.mockResolvedValue([
       jaSet(),
       jaSet({
@@ -352,8 +352,8 @@ describe("the Japanese shelf out of the copy", () => {
     const sets = await copiedLanguageSets("ja");
     expect(listCatalogueSets).toHaveBeenCalledWith(expect.anything(), "ja");
     expect(sets?.map((s) => [s.id, s.localName, s.releaseDate, s.logo])).toEqual([
-      ["SV3", "黒炎の支配者", null, null],
-      ["SV2a", "ポケモンカード151", null, null],
+      ["SV3", "黒炎の支配者", "2023/06/16", null],
+      ["SV2a", "ポケモンカード151", "2023/06/16", null],
     ]);
   });
 
