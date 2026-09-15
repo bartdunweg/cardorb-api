@@ -1,0 +1,67 @@
+import { historyKey, priceLanguageOf } from "../price-months.mjs";
+import type { Price } from "../price-basis.mjs";
+import type { CardSet, OwnedCard } from "./cards";
+import type { CardPricePoint } from "./movers";
+
+/**
+ * The collection's prices with a stray sale held over, the way the price line holds it.
+ *
+ * A card's price is TCGplayer's latest market figure (tcgplayer_prices), and its line is the same
+ * figures day by day (card_price_months). The line leaves out a stray sale and holds the figure
+ * before it (price-months.mjs, cardorb-api#493 and #496); the price above it did not, so on a day
+ * Base Set Charizard's 1st Edition sold once for $250 the sheet said €219 over a flat €8,700 line,
+ * and the collection's value moved by the difference (Bart, 2026-09-15).
+ *
+ * Only where the line's last day is the day the prices are from (`priceDay`): the line is written
+ * from the same shelf the same night, and on a night it was not, its last held figure is about
+ * another day. Scaled by the held figure over the stray one rather than set to it, because the
+ * line is in euros at that night's rate and the price at today's.
+ */
+export function holdStrayPrices(
+  sets: CardSet[],
+  points: readonly CardPricePoint[],
+  priceDay: string,
+): CardSet[] {
+  const held = new Map<
+    string,
+    { printings: Record<string, number>; held: Record<string, number> }
+  >();
+  for (const p of points) {
+    if (p.date !== priceDay || !p.held || !p.printings) continue;
+    held.set(historyKey(p.language, p.tcgId), { printings: p.printings, held: p.held });
+  }
+  if (!held.size) return sets;
+  return sets.map((set) => {
+    const language = priceLanguageOf(set.language);
+    let changed = false;
+    const cards = set.cards.map((card) => {
+      const day = card.tcgId ? held.get(historyKey(language, card.tcgId)) : undefined;
+      if (!day) return card;
+      changed = true;
+      return holdCard(card, day);
+    });
+    return changed ? { ...set, cards } : set;
+  });
+}
+
+function holdCard(
+  card: OwnedCard,
+  day: { printings: Record<string, number>; held: Record<string, number> },
+): OwnedCard {
+  if (!card.pricePrintings) return card;
+  const pricePrintings = { ...card.pricePrintings };
+  let price = card.price;
+  let priceFirstEd = card.priceFirstEd ?? null;
+  for (const [printing, stray] of Object.entries(day.held)) {
+    const kept = day.printings[printing];
+    const now = pricePrintings[printing];
+    if (kept == null || now?.market == null || !(stray > 0)) continue;
+    const scaled: Price = { market: Math.round(now.market * (kept / stray) * 100) / 100 };
+    pricePrintings[printing] = scaled;
+    // The card's own price and its stamped run's are one of its printings' figures: held with it.
+    if (price?.market === now.market) price = scaled;
+    if (printing.startsWith("1st-edition") && priceFirstEd?.market === now.market)
+      priceFirstEd = scaled;
+  }
+  return { ...card, price, priceFirstEd, pricePrintings };
+}

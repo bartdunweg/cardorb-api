@@ -214,6 +214,8 @@ export const legacyDays = (p) => [
  * @property {number | null} market the plain printing, or the foil where there is no plain one
  * @property {number | null} holo the foil printing, or null
  * @property {Record<string, number>} [printings] every printing's figure that day, where known
+ * @property {Record<string, number>} [held] the printings whose figure that day is an earlier one held
+ *   over a stray one, each with the stray figure it stands in for
  */
 
 /** How far off its neighbours' median a figure may be, either way, before it is not read. */
@@ -222,6 +224,11 @@ const STRAY_RATIO = 5;
 const STRAY_WINDOW_DAYS = 30;
 /** Fewer figures than this in the window, the figure itself included, and nothing is judged. */
 const STRAY_MIN_FIGURES = 3;
+/**
+ * A run of stray figures this long at the end of a printing's line is its new price, not a stray:
+ * a week of one level with nothing after it to say otherwise.
+ */
+const STRAY_SETTLED_FIGURES = 7;
 
 const dayNumber = (/** @type {string} */ date) => Date.parse(`${date}T00:00:00Z`) / 86_400_000;
 
@@ -245,7 +252,7 @@ const SCARCER_PREMIUM = 2;
  * their unlimited run on every day read, and a rule that the stamped run is always dearer took out
  * all 106 days of neo4-11's line.
  *
- * @param {{ card: string, date: string, real: Record<string, number> }[]} days
+ * @param {{ card: string, date: string, real: Record<string, number>, held: Record<string, number> }[]} days
  * @param {Taken[]} taken the figures taken out, added to
  */
 function dropScarcerRunsUnderTheirBase(days, taken) {
@@ -267,12 +274,12 @@ function dropScarcerRunsUnderTheirBase(days, taken) {
     const sorted = list.sort((a, b) => a - b);
     if (sorted[sorted.length >> 1] >= SCARCER_PREMIUM) premium.add(key);
   }
-  for (const { card, date, real } of days) {
+  for (const { card, date, real, held } of days) {
     for (const [scarce, bases] of SCARCER_RUNS) {
       const base = baseOf(real, bases);
       if (premium.has(`${card}|${scarce}`) && base != null && real[scarce] < base) {
+        taken.push({ card, date, figures: real, held, printing: scarce, value: real[scarce] });
         delete real[scarce];
-        taken.push({ card, date, figures: real, printing: scarce });
       }
     }
   }
@@ -293,18 +300,26 @@ function dropScarcerRunsUnderTheirBase(days, taken) {
  * real move of five times or more within a month, whose first days read as stray until the new
  * price outnumbers the old.
  *
- * @param {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number> }[]} days
+ * @param {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }[]} days
  * @param {Taken[]} taken the figures taken out, added to
  */
 function dropStrayFigures(days, taken) {
-  /** @type {Map<string, { card: string, date: string, day: number, figures: Record<string, number>, printing: string, value: number }[]>} */
+  /** @type {Map<string, (Taken & { day: number })[]>} */
   const series = new Map();
   for (const d of days) {
     for (const figures of [d.real, d.legacy]) {
       for (const [printing, value] of Object.entries(figures)) {
         const key = `${d.card}|${printing}`;
         const list = series.get(key) ?? [];
-        list.push({ card: d.card, date: d.date, day: dayNumber(d.date), figures, printing, value });
+        list.push({
+          card: d.card,
+          date: d.date,
+          day: dayNumber(d.date),
+          figures,
+          held: d.held,
+          printing,
+          value,
+        });
         series.set(key, list);
       }
     }
@@ -328,6 +343,17 @@ function dropStrayFigures(days, taken) {
       if (median > 0 && (point.value > median * STRAY_RATIO || point.value * STRAY_RATIO < median))
         stray.push(point);
     }
+    /* The line's last figures, all stray and all one level, are a new price that has not yet
+       outnumbered the old one in its window: #463 gave ex11-12's reverse its own figure (€905
+       against €86) on 1 September, and a fortnight on it still read €86. Further back, the days
+       after a run say what it was; at the end nothing does, so a week of it is taken as the price.
+       Should the old level come back, the run is judged again with that behind it. */
+    let settled = 0;
+    while (settled < stray.length && stray.at(-1 - settled) === list.at(-1 - settled)) settled++;
+    if (settled >= STRAY_SETTLED_FIGURES) {
+      const run = stray.slice(-settled).map((p) => p.value);
+      if (Math.max(...run) < Math.min(...run) * STRAY_RATIO) stray.length -= settled;
+    }
     // Taken out after the pass, so each figure is weighed against what was stored, not what is left.
     for (const p of stray) {
       delete p.figures[p.printing];
@@ -341,7 +367,9 @@ function dropStrayFigures(days, taken) {
  * @property {string} card
  * @property {string} date
  * @property {Record<string, number>} figures the day's figures the printing was taken out of
+ * @property {Record<string, number>} held the day's held figures, the stray ones they stand in for
  * @property {string} printing
+ * @property {number} value the figure taken out
  */
 
 /**
@@ -377,7 +405,9 @@ function holdLastFigure(days, taken) {
       if (k.date >= t.date) break;
       before = k.value;
     }
-    if (before != null) t.figures[t.printing] = before;
+    if (before == null) continue;
+    t.figures[t.printing] = before;
+    t.held[t.printing] = t.value;
   }
 }
 
@@ -394,7 +424,7 @@ function holdLastFigure(days, taken) {
  * @returns {DayPrices[]}
  */
 export function daysFromMonths(rows, since = "0000-00-00") {
-  /** @type {Map<string, { language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number> }>} */
+  /** @type {Map<string, { language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }>} */
   const days = new Map();
   for (const row of rows) {
     const language = languageOrThrow(row.language);
@@ -410,7 +440,10 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       const key = `${card}|${date}`;
       let day = days.get(key);
       if (!day)
-        days.set(key, (day = { language, card, tcgId: row.tcg_id, date, real: {}, legacy: {} }));
+        days.set(
+          key,
+          (day = { language, card, tcgId: row.tcg_id, date, real: {}, legacy: {}, held: {} }),
+        );
       (isLegacy ? day.legacy : day.real)[row.printing] = c / 100;
     }
   }
@@ -470,6 +503,7 @@ export function daysFromMonths(rows, since = "0000-00-00") {
         market: line.plain ? plain : foil,
         holo: foil,
         printings: d.real,
+        ...(Object.keys(d.held).some((k) => k in d.real) ? { held: d.held } : {}),
       });
     } else {
       const market = d.legacy[LEGACY.market] ?? null;

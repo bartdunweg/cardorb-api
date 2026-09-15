@@ -39,6 +39,11 @@ export type CardPricePoint = {
    */
   printings?: Record<string, number>;
   /**
+   * The printings whose figure that day is an earlier one held over a stray sale, each with the
+   * stray figure it stands in for (price-months.mjs holdLastFigure). Absent on a day with none.
+   */
+  held?: Record<string, number>;
+  /**
    * Which market the reading is from, as card_prices.source stores it. Required on the way in:
    * the column defaults to 'cardmarket', so a point written without one was labelled with the
    * market it was not from (every nightly TCGplayer point, for the hours after 2026-09-12's
