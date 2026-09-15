@@ -26,7 +26,9 @@ import { type CardItem, copyPrice } from "./items";
  *   Series     The era, which is what gen holds.
  *   Set        The official name, the one every screen shows since #306.
  *   Id         The catalogue id, where the card was matched.
- *   Number     As printed, without the denominator: the catalogue's number.
+ *   Number     As Dex writes it, without the denominator (dexNumber): a number
+ *              that opens on its digits without its zeros (3 for 003), a
+ *              lettered one as printed (TG03, SWSH179).
  *   Variant    Dex's words for the finish, the pattern in brackets as Dex
  *              writes a cosmos holo: "Reverse Holo (Cosmos Holo)".
  *   Quantity   The count. Never 0: a row here is a copy somebody has or wants,
@@ -109,6 +111,18 @@ export function variantWord(finish: string | null, pattern: string | null): stri
   return base || shape;
 }
 
+/**
+ * The number as Dex writes it. Dex drops the zeros a card prints in front of its digits (Shrouded
+ * Fable's 003/064 is "3/64", Obsidian Flames' 056/197 is "56/197") and keeps a lettered number whole (TG03,
+ * SV064, SWSH179, SM210): every row of dex-export.fixture.csv, a real export, reads that way. The
+ * printed number is the catalogue's (printedNumber), the row's where nothing matched; either way the
+ * copy's "001" and a row's "1" write the same line.
+ */
+export function dexNumber(it: Pick<CardItem, "number" | "printedNumber">): string {
+  const n = (it.printedNumber ?? it.number).trim();
+  return /^\d/.test(n) ? n.replace(/^0+(?=\d)/, "") : n;
+}
+
 /** Dex's price: a euro sign, a space, the amount with a comma; its dash where there is none. */
 export const priceWord = (euros: number | null): string =>
   euros === null ? "—" : `€ ${euros.toFixed(2).replace(".", ",")}`;
@@ -135,7 +149,7 @@ export function dexCsv(items: readonly CardItem[]): string {
         it.gen ?? "",
         it.setTitle || it.set,
         it.tcgId ?? "",
-        it.number,
+        dexNumber(it),
         it.name,
         variantWord(it.finish, it.foilPattern),
         it.rarity ?? "",

@@ -23,6 +23,7 @@ import {
   printingKeysOf,
 } from "../src/lib/core/price-basis.mjs";
 import { shadowlessKey } from "../src/lib/core/price-months.mjs";
+import { THREE_DIGIT_SETS, canonNumber, correctedNumber } from "../src/lib/core/card-number.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -63,8 +64,8 @@ const check = (name, ok, detail) => checks.push({ name, ok, detail });
  */
 const SET_STALE_DAYS = 7;
 /** The copy's shape each catalogue is written in now (mirror.ts, mirror-language.ts). */
-// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 4 + 7.
-const FORMATS = { en: 4, ja: 11 };
+// ja is CATALOGUE_FORMAT + LANGUAGE_FORMAT's own step: 5 + 7.
+const FORMATS = { en: 5, ja: 12 };
 
 const sync = await query(
   "select language, count(*)::int as sets, min(format)::int as oldest_format, min(synced_at)::text as oldest from catalogue_sync group by language order by language",
@@ -546,6 +547,32 @@ check(
   `${encoded[0].n} card numbers still percent-encoded${encoded[0].n ? `: ${encoded[0].ids}` : ""}`,
 );
 
+/**
+ * A number the copy holds another way than the card prints it, where the rule knows how it prints
+ * (correctedNumber in card-number.mjs): Sword & Shield's 001 written 1, e-Card's H1 written H01. A set
+ * copied before CATALOGUE_FORMAT 5 still holds TCGdex's spelling, so this is also the count of those
+ * cards the nightly runs have yet to reach.
+ */
+{
+  const sets = [...THREE_DIGIT_SETS, "ecard2", "ecard3", "bwp"];
+  const cards = await query(
+    `select id, local_id from catalogue_cards where language = 'en' and set_id in (${sets.map((id) => `'${id}'`).join(", ")})`,
+  );
+  const spelt = cards.filter((c) => correctedNumber(c.id, c.local_id) !== c.local_id);
+  check(
+    "Card numbers spelt as the cards print them",
+    cards.length > 0 && spelt.length === 0,
+    `${spelt.length} of ${cards.length} cards in the ${sets.length} sets with a printed spelling of their own still spelt TCGdex's way${
+      spelt.length
+        ? `: ${spelt
+            .slice(0, 8)
+            .map((c) => `${c.id} ${c.local_id}`)
+            .join(", ")}`
+        : ""
+    }`,
+  );
+}
+
 // ── The slips the audits of 2026-09-14 found, each kept from coming back ────────
 
 /**
@@ -775,6 +802,38 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
     `${owner.missing} of the owner's rows on an id their catalogue does not have (${owner.other_language} of them a card in the other language's)${
       owner.missing ? `: ${(owner.examples ?? []).join(", ")}` : ""
     }; other accounts ${sum("missing")} (${sum("other_language")} in the other language's)`,
+  );
+}
+
+/**
+ * Every row's number is its card's, whichever way either is spelt. The copy writes a number as the
+ * card prints it (001) and a row keeps what was typed (1, or 020 for the promo SWSH020); the collection,
+ * the copy sheet and the import all compare the two folded (canonNumber in card-number.mjs), so a
+ * spelling alone never loses a row its card. A row whose number folds to another number than its
+ * card's does: the sheet opened on the card lists no copies, and the set page says it is not held.
+ * The rows spelt another way and found by the fold are counted beside it, for the record.
+ */
+{
+  const rows = await query(
+    `select ${ownerIs} as owner, c.tcg_id, c.number, k.local_id
+       from cards c join catalogue_cards k on k.id = c.tcg_id and k.language = ${rowCatalogue}`,
+  );
+  const lost = rows.filter((r) => canonNumber(r.number) !== canonNumber(r.local_id));
+  const folded = rows.filter(
+    (r) => r.owner && r.number !== r.local_id && canonNumber(r.number) === canonNumber(r.local_id),
+  );
+  const owner = lost.filter((r) => r.owner);
+  check(
+    "Every copy's number finds its card",
+    owner.length === 0,
+    `${owner.length} of the owner's ${rows.filter((r) => r.owner).length} rows carry a number that is not their card's${
+      owner.length
+        ? `: ${owner
+            .slice(0, 8)
+            .map((r) => `${r.tcg_id} as ${r.number}`)
+            .join(", ")}`
+        : ""
+    }; ${folded.length} spelt another way and found by the fold; other accounts ${lost.length - owner.length}`,
   );
 }
 

@@ -229,7 +229,8 @@ describe("correctedNumber", () => {
     expect(correctedNumber("ecard3-H20", "H20")).toBe("H20");
     expect(correctedNumber("bwp-BW04", "BW04")).toBe("BW004");
     expect(correctedNumber("bwp-BW06", "BW06")).toBe("BW06");
-    expect(correctedNumber("swsh1-1", "1")).toBe("1");
+    expect(correctedNumber("swsh1-1", "1")).toBe("001");
+    expect(correctedNumber("sm12-1", "1")).toBe("1");
   });
 });
 

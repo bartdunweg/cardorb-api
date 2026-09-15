@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseCsv } from "./csv";
 import { editionFrom } from "./csv";
 import { dexRows, looksLikeDex } from "./dex";
-import { dexCsv, priceWord, variantWord } from "./dex-export";
+import { dexCsv, dexNumber, priceWord, variantWord } from "./dex-export";
 import type { CardItem } from "./items";
 
 const item = (over: Partial<CardItem>): CardItem => ({
@@ -40,6 +40,18 @@ const item = (over: Partial<CardItem>): CardItem => ({
   collectionId: null,
   price: { market: 8.63 } as unknown as CardItem["price"],
   ...over,
+});
+
+describe("dexNumber", () => {
+  it("writes a number as a real Dex export does: digits without their zeros, letters as printed", () => {
+    expect(dexNumber({ number: "1", printedNumber: "001" })).toBe("1");
+    expect(dexNumber({ number: "003", printedNumber: "003" })).toBe("3");
+    expect(dexNumber({ number: "010", printedNumber: null })).toBe("10");
+    expect(dexNumber({ number: "0", printedNumber: "0" })).toBe("0");
+    expect(dexNumber({ number: "60A", printedNumber: "60a" })).toBe("60a");
+    expect(dexNumber({ number: "TG03", printedNumber: "TG03" })).toBe("TG03");
+    expect(dexNumber({ number: "179", printedNumber: "SWSH179" })).toBe("SWSH179");
+  });
 });
 
 describe("dexCsv", () => {

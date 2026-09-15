@@ -1,4 +1,5 @@
 import type { CollectionRow } from "./collection-row";
+import { canonNumber } from "../card-number.mjs";
 import { cardNumber } from "./csv";
 import { norm } from "../util";
 
@@ -29,9 +30,9 @@ const TYPE_SUFFIX = /[\s-]+(ex|gx|v|vmax|vstar|v-union|prime|legend|break|lv\.?\
 
 /**
  * What makes two rows the same card: the set, the printed number and the name
- * without its card-type suffix. Leading zeros go for the reason numberForms()
- * tries both — one export writes 064 where another writes 64, and they are one
- * card.
+ * without its card-type suffix. The number is folded (canonNumber): one export
+ * writes 064 where another writes 64, and Dex writes a promo SWSH179 where the
+ * collection stores 179, and each pair is one card.
  *
  * Two things are deliberately *not* in the key.
  *
@@ -69,7 +70,7 @@ export const importKey = (
 ): string =>
   [
     norm(titleOf(row.setName)),
-    cardNumber(row.number).toLowerCase().replace(/^0+/, ""),
+    canonNumber(cardNumber(row.number)),
     norm(row.name.replace(TYPE_SUFFIX, "")),
   ].join(" ");
 

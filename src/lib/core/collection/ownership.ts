@@ -32,7 +32,7 @@
  */
 
 import { sameCard } from "../catalogue/matching";
-import { norm } from "../util";
+import { canonNumber } from "../card-number.mjs";
 import { isSubsetNumber, subsetParent } from "../catalogue/set-galleries";
 import { resolveSetIds } from "../catalogue/set-resolve";
 import { cataloguesFor, setIdOf } from "../catalogue/tcgdex-language";
@@ -64,22 +64,14 @@ const NONE: Ownership = { owned: false, wishlist: false, quantity: 0, itemIds: [
 /**
  * A number folded down to what it means rather than how it was typed.
  *
- * The collection pads to three digits and the catalogues mostly do not, so
- * "088" and "88" are one card — util.ts's numberForms() exists for exactly this
- * and takes the other approach, trying every form against an index built from
- * every form. A single canonical form is the cheaper half of the same idea, and
- * it is the one that works here because both sides are being indexed at once:
- * the letters keep their place ("TG01" is not card 1), the digits lose their
- * padding, and case stops mattering.
+ * The collection pads to three digits in places and the catalogues do not, and the copy writes a set's
+ * numbers as the cards print them (001 for Sword & Shield), so "088" and "88" are one card.
+ * util.ts's numberForms() takes the other approach, trying every form against an index built from
+ * every form. A single canonical form is the cheaper half of the same idea, and it is the one that
+ * works here because both sides are being indexed at once. The rule lives in card-number.mjs, where
+ * the copy sheet, the import count and the morning check read it too.
  */
-export const canonNumber = (n: string): string => {
-  /* A promo set's letters are its set's, not the card's: SWSH Black Star Promos files Charizard V as
-     "SWSH260" and a collector writes "260". The set page and a sheet said "You do not hold this card"
-     for every such promo while the collection matched it (set-index.ts strips the same prefixes). */
-  const bare = n.trim().replace(/^(HGSS|SWSH|SVP|XY|SM|BW|DP)(?=\d)/i, "");
-  const m = /^([A-Za-z]*)0*(\d+)(.*)$/.exec(bare);
-  return m ? `${m[1] ?? ""}${Number(m[2])}${m[3] ?? ""}`.toLowerCase() : norm(n);
-};
+export { canonNumber };
 
 /** The set half of a card's id: `sv03.5-006` is card 006 of `sv03.5`. */
 const setOf = (cardId: string) => cardId.slice(0, cardId.lastIndexOf("-")).toLowerCase();

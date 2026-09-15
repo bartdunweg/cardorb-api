@@ -292,7 +292,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // set already in the Data Cache kept a byNumber built by the old rule.
 // v9: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
 // v10: the third pass over the English facts (card-fact-corrections.ts): Galarian Gallery, "None" as no rarity, Unown and ☆ names.
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v11"], {
+// v12: numbers as the cards print them (CATALOGUE_FORMAT 5): the byNumber of a set copied again holds 001.
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v12"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
