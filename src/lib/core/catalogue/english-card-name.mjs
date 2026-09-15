@@ -477,9 +477,91 @@ export function printedStyleName(setId, name) {
   } else if (/^(?:ADV|PCG)/.test(setId)) {
     out = out.replace(/[\s-]+(?:EX|Ex)(?=$|\s+δ$|\s+☆)/, " ex");
   }
+  return nameConventions(
+    out
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/\s+Legend$/, " LEGEND")
+      .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
+      .replace(/^Unown \[([A-Z!?])\]$/, "Unown $1"),
+  );
+}
+
+/** The letter an Energy type's icon is written with inside a card's name, as Bulbapedia and TCGplayer write it. */
+const TYPE_LETTER = {
+  Grass: "G",
+  Fire: "R",
+  Water: "W",
+  Lightning: "L",
+  Psychic: "P",
+  Fighting: "F",
+  Darkness: "D",
+  Metal: "M",
+  Fairy: "Y",
+  Dragon: "N",
+  Colorless: "C",
+};
+const TYPE_WORD = Object.keys(TYPE_LETTER).join("|");
+
+/** The Sword & Shield and Mega Evolution Special Energy that print a type's icon between two words. */
+const ICON_ENERGY = new RegExp(
+  `^(Aromatic|Coating|Heat|Hiding|Horror|Powerful|Speed|Stone|Wash|Growing|Rocky|Telepathic|Bubbly|Magnetic|Nitro|Shadowy|Voltaic) (${TYPE_WORD}) Energy$`,
+);
+
+/**
+ * Unit and Blend Energy as TCGdex and Scrydex spell their icons wrong: F for Fire where the icon's
+ * letter is R, F for Fairy where it is Y.
+ */
+const ICON_LETTERS = { GFW: "GRW", FDF: "FDY", GFPD: "GRPD" };
+
+/**
+ * A card's name with the conventions every source of the copy writes one way or another, written
+ * the one way, for an English card and the English name of a Japanese one alike (naming pass,
+ * 2026-09-15, each where Bulbapedia's set list and TCGplayer's product agree):
+ *
+ * - an Energy icon printed inside a name is its letter: "Horror P Energy", "Unit Energy GRW",
+ *   "Blend Energy GRPD", "Fairy Charm N" (TCGdex wrote "Horror Psychic Energy", "Unit Energy
+ *   GrassFireWater", "Fairy Charm Dragon"; the Japanese copy had both, and "Unit Energy GFW");
+ * - a Supporter's subtitle is bracketed: "Professor's Research [Professor Magnolia]", "Boss's Orders
+ *   [Ghetsis]" (TCGdex's English "(Professor Magnolia)", its Japanese "- Professor Sada");
+ * - Team Flare's Gear is the card's kind, not its name: "Head Ringer", not "Head Ringer Team Flare
+ *   Hyper Gear";
+ * - "Pokémon" and "Poké" keep their accent (the Japanese copy had "Pok Kid", "PokStop", "Pokegear
+ *   3.0"), a GX and an EX their hyphen ("Tapu Lele-GX" in a Scarlet & Violet promo), Nidoran its
+ *   sign ("Nidoran F" is Nidoran♀), Holon's energy its δ, an Ancient Technical Machine its bracketed
+ *   type, and no name an em dash ("Rotom Dex Poké Finder Mode").
+ *
+ * @param {string} name
+ */
+export function nameConventions(name) {
+  let out = String(name ?? "");
+  const icon = ICON_ENERGY.exec(out);
+  if (icon) out = `${icon[1]} ${TYPE_LETTER[icon[2]]} Energy`;
+  const charm = new RegExp(`^Fairy Charm (${TYPE_WORD})$`).exec(out);
+  if (charm) out = `Fairy Charm ${TYPE_LETTER[charm[1]]}`;
+  const unit = /^(Unit|Blend) Energy (.+)$/.exec(out);
+  if (unit) {
+    const words = unit[2].split(/\s+|(?<=[a-z])(?=[A-Z])/);
+    const letters = words.every((w) => TYPE_LETTER[w])
+      ? words.map((w) => TYPE_LETTER[w]).join("")
+      : /^[A-Z]+$/.test(unit[2])
+        ? (ICON_LETTERS[unit[2]] ?? unit[2])
+        : null;
+    if (letters) out = `${unit[1]} Energy ${letters}`;
+  }
   return out
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/\s+Legend$/, " LEGEND")
-    .replace(/\s+(?:Star|★)(?=(?:\s+δ)?$)/, " ☆")
-    .replace(/^Unown \[([A-Z!?])\]$/, "Unown $1");
+    .replace(
+      /^(Professor's Research|Boss's Orders) (?:\((.+)\)|- (.+))$/,
+      (all, card, a, b) => `${card} [${a ?? b}]`,
+    )
+    .replace(/ Team Flare (?:Hyper )?Gear$/, "")
+    .replace(/\bPokemon\b/g, "Pokémon")
+    .replace(/\bPokegear\b/g, "Pokégear")
+    .replace(/\bPok(?=[A-Z]|\s)/g, "Poké")
+    .replace(/(\S)[\s-]*\bGX$/, "$1-GX")
+    .replace(/(\S)\s+EX$/, "$1-EX")
+    .replace(/^Nidoran ?(?:F|♀)(?=$|\s)/, "Nidoran♀")
+    .replace(/^Nidoran ?(?:M|♂)(?=$|\s)/, "Nidoran♂")
+    .replace(/^Delta Rainbow Energy$/, "δ Rainbow Energy")
+    .replace(/^Ancient Technical Machine (Ice|Rock|Steel)$/, "Ancient Technical Machine [$1]")
+    .replace(/\s*\u2014\s*/g, " ");
 }

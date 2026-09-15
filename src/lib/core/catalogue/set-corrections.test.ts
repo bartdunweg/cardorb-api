@@ -18,6 +18,18 @@ describe("correctedSet", () => {
     ).toMatchObject({ local_name: "シャイニートレジャーex" });
   });
 
+  it("names the EX sets and the trainer kits as their packs do, and a set's printed total as its cards", () => {
+    expect(correctedSet({ id: "ex8", name: "Deoxys", language: "en" }).name).toBe("EX Deoxys");
+    expect(
+      correctedSet({ id: "tk-sm-l", name: "SM trainer Kit (Lycanroc)", language: "en" }).name,
+    ).toBe("SM Trainer Kit (Lycanroc)");
+    expect(
+      correctedSet({ id: "SV11B", name: "Black Bolt", language: "ja", printed_total: 174 }),
+    ).toMatchObject({
+      printed_total: 86,
+    });
+  });
+
   it("leaves a set it has no correction for, and another catalogue's set of the same id, alone", () => {
     const set = {
       id: "sv01",

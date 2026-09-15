@@ -50,6 +50,8 @@ import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
 import { scrydexEnglishLogo } from "./scrydex-japan-logos";
 import { languagesOfSet } from "./card-languages";
+import { correctedSet } from "./set-corrections";
+import { correctedNumber } from "./card-fact-corrections";
 
 /** The energy types a card can carry, as TCGdex names them. A word that is one is a type filter, not a name. */
 export const ENERGY_TYPES = [
@@ -231,9 +233,12 @@ export async function storeSetArt(db: SupabaseClient): Promise<number> {
  * sets are copied again once too. 3: the third pass (2026-09-14, round two): a trainer type and an
  * evolution where TCGdex has none, "None" as no rarity, Galarian Gallery and the Trainer Galleries'
  * one grade, an LV.X's evolution, and one spelling for Unown and the gold star cards
- * (card-fact-corrections.ts).
+ * (card-fact-corrections.ts). 4: the naming pass against Bulbapedia (2026-09-15): the conventions every
+ * name follows (nameConventions in english-card-name.mjs) and the names and numbers read by hand, the
+ * EX sets' and trainer kits' names on their cards (set-corrections.ts), and the cards TCGdex does not
+ * list (extra-cards.ts).
  */
-export const CATALOGUE_FORMAT = 3;
+export const CATALOGUE_FORMAT = 4;
 
 export type SyncReport = {
   /** Sets written this run, in the order they finished. */
@@ -557,9 +562,11 @@ export async function syncMirror(
           pictured.map((c, i): CatalogueCardRecord => ({
             id: c.id,
             set_id: id,
-            local_id: c.number,
+            local_id: correctedNumber(c.id, c.number),
             name: c.name,
-            set_name: set.name,
+            // The set's name as its own row has it, corrections included (set-corrections.ts): the
+            // cards of EX Deoxys read "Deoxys" beside their set's corrected name.
+            set_name: correctedSet({ id, name: set.name, language: "en" }).name,
             series: set.series,
             release_date: set.releaseDate,
             rarity: c.rarity,

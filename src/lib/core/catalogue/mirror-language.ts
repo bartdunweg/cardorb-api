@@ -34,6 +34,7 @@ import { canStoreImages, keepImage } from "./image-store";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { printedLocalName } from "./card-names";
 import { correctedSet } from "./set-corrections";
+import { extraCardsOf } from "./extra-cards";
 import {
   englishEvolveFrom,
   japaneseCardName,
@@ -88,6 +89,38 @@ const HOST = "https://api.tcgdex.net/v2";
 const LANGUAGE_FORMAT = CATALOGUE_FORMAT + 7;
 
 /**
+ * The code a pack's basic Energy prints where a card number would be ("s8b GRA"): VMAX Climax's,
+ * Pokémon GO's and Sun & Moon's (SM1+) print no number, and the numbers the copy held for them
+ * (S8b 286 to 293, S10b 094 to 101, SM1p 070 and 071) were Scrydex's placing, read off the printed
+ * cards on 2026-09-15. Bulbapedia lists them by the code. Only the number a person reads moves; the id
+ * stays.
+ */
+const ENERGY_CODE: Readonly<Record<string, string>> = {
+  Grass: "GRA",
+  Fire: "FIR",
+  Water: "WAT",
+  Lightning: "LIG",
+  Psychic: "PSY",
+  Fighting: "FIG",
+  Darkness: "DAR",
+  Metal: "MET",
+  Fairy: "FAI",
+};
+const CODED_ENERGY_SETS = new Set(["S8b", "S10b", "SM1p"]);
+export function printedCode(
+  id: string,
+  number: string,
+  name: string,
+  scrydexOnly: boolean,
+): string {
+  const set = id.slice(0, id.lastIndexOf("-"));
+  const type = /^(\w+) Energy$/.exec(name)?.[1];
+  return scrydexOnly && CODED_ENERGY_SETS.has(set) && type && ENERGY_CODE[type]
+    ? ENERGY_CODE[type]
+    : number;
+}
+
+/**
  * Cards whose TCGdex record is another number's, read from that number instead. Checked on
  * 2026-09-14 against TCGplayer, Limitless and Bulbapedia's set lists: Fusion Arts prints Power
  * Tablet at 126, Training Court at 127 and the Grass and Fire Energy at 128 and 129, where TCGdex
@@ -101,6 +134,16 @@ export const RECORD_BY_HAND: Readonly<Record<string, string>> = {
   "S8-129": "S8-128",
   "M6-098": "M6-099",
   "M6-099": "M6-098",
+};
+
+/**
+ * Cards whose TCGplayer product the match and the price map give to the wrong card, read off the
+ * pictures on 2026-09-15: TCGplayer lists M-P's Spritzee at 090, where the card printed 090 is
+ * Basic Lightning Energy and Spritzee is 098 (the product's attacks are 098's). Null is no product.
+ */
+export const PRODUCT_BY_HAND: Readonly<Record<string, number | null>> = {
+  "M-P-090": null,
+  "M-P-098": 714049,
 };
 
 /** The product id in a copy of TCGplayer's picture: images.cardorb.com/tcgplayer/602654.jpg. */
@@ -180,7 +223,8 @@ const withScrydexSheet = (
   sx: ReturnType<typeof scrydexCard>,
 ): CardSheetFacts => ({
   ...sheet,
-  illustrator: sheet.illustrator ?? sx?.a ?? null,
+  // TCGdex answers an empty string for an artist it does not know (448 of 634 on 2026-09-15).
+  illustrator: sheet.illustrator || sx?.a || null,
   stage: japaneseStage(sheet.stage),
   evolveFrom: sx?.e ?? englishEvolveFrom(sheet.evolveFrom),
 });
@@ -345,8 +389,27 @@ export async function syncLanguageMirror(
         /* The cards Scrydex lists with a printed number of this set and neither TCGdex nor TCGplayer's
            list has: Shiny Treasure ex's 127 to 166 (2026-09-14). */
         const numbers = new Set(listed.map((c) => c.number.replace(/^0+(?=\d)/, "")));
+        // The cards the copy adds by hand (extra-cards.ts): pack Energy that print a code, promos.
+        const extras = new Map(
+          extraCardsOf(lang, id).filter(
+            ([cardId]) => !own.has(cardId) && !listed.some((c) => c.id === cardId),
+          ),
+        );
         const cards: CatalogueMatch[] = [
           ...listed,
+          ...[...extras].map(([cardId, x]) => ({
+            id: cardId,
+            number: x.number,
+            name: x.name,
+            localName: x.localName ?? null,
+            setName: set.name,
+            image: null,
+            imageHigh: null,
+            rarity: x.rarity ?? null,
+            types: x.types,
+            series: set.series || null,
+            tcgId: cardId,
+          })),
           ...scrydexOnlyCards(id)
             .filter(
               ([cardId]) => !numbers.has(cardId.slice(id.length + 1).replace(/^0+(?=\d)/, "")),
@@ -374,13 +437,30 @@ export async function syncLanguageMirror(
                 number: c.number,
                 name: c.name,
                 localName: c.localName,
-                printedTotal: set.printedTotal,
+                printedTotal: correctedSet({
+                  id,
+                  name: set.name,
+                  language: lang,
+                  printed_total: set.printedTotal,
+                }).printed_total,
               })),
             );
-        const productOf = new Map(cards.map((c) => [c.id, matched.get(c.id) ?? null]));
+        const productOf = new Map(
+          cards.map((c) => {
+            const hand = PRODUCT_BY_HAND[c.id];
+            if (hand === undefined) return [c.id, matched.get(c.id) ?? null];
+            return [
+              c.id,
+              hand === null ? null : (products.find((p) => p.productId === hand) ?? null),
+            ];
+          }),
+        );
         /* The price map's product where the copy matched none, unless the group lists that product
            under another card's name: the map was built by number and carries the same swaps. */
         const productIdOf = (c: CatalogueMatch): number | null => {
+          if (PRODUCT_BY_HAND[c.id] !== undefined) return PRODUCT_BY_HAND[c.id]!;
+          const extraProduct = extras.get(c.id)?.product;
+          if (extraProduct) return extraProduct;
           const product = productOf.get(c.id);
           if (product) return product.productId;
           const listed = linkedProduct(c.id);
@@ -397,6 +477,39 @@ export async function syncLanguageMirror(
         const resolved = await mapLimit(cards, cardParallel, async (card) => {
           const product = productOf.get(card.id) ?? null;
           const productId = productIdOf(card);
+          const extra = extras.get(card.id);
+          if (extra) {
+            /* Its own picture, into our bucket; one TCGplayer does not show yet (M-P 052, the Ultra
+               Force Energy) is no picture, and the one held is kept. */
+            const before = held.get(card.id) ?? null;
+            const kept = extra.image && storing ? await keepImage(extra.image) : null;
+            const image =
+              before?.startsWith("https://images.cardorb.com/") || !extra.image
+                ? before
+                : kept && kept !== extra.image
+                  ? kept
+                  : storing
+                    ? before
+                    : extra.image;
+            if (held.get(card.id) !== image) report.pictures++;
+            return {
+              ...card,
+              image,
+              imageHigh: null,
+              rarity: extra.rarity ?? null,
+              types: extra.types,
+              category: extra.category,
+              trainerType: extra.trainerType ?? null,
+              productId,
+              sheet: {
+                ...sheetOf(null),
+                illustrator: extra.illustrator ?? null,
+                hp: extra.hp ?? null,
+                stage: extra.stage ?? null,
+                evolveFrom: extra.evolveFrom ?? null,
+              },
+            };
+          }
           const image = await pictureOf(card, held.get(card.id), storing, product, productId);
           if (held.get(card.id) !== image) report.pictures++;
           const sx = scrydexCard(card.id);
@@ -519,8 +632,8 @@ export async function syncLanguageMirror(
           resolved.map((c): CatalogueCardRecord => ({
             id: c.id,
             set_id: id,
-            local_id: c.number,
-            name: japaneseCardName(id, c.name, scrydexCard(c.id)?.n),
+            local_id: printedCode(c.id, c.number, c.name, !!scrydexCard(c.id)?.x),
+            name: japaneseCardName(id, c.name, scrydexCard(c.id)?.n, c.id),
             local_name: japaneseLocalName(
               id,
               printedLocalName(id, c.localName, c.name, c.category),

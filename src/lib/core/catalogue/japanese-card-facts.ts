@@ -91,9 +91,66 @@ export function japaneseCardName(
   setId: string,
   name: string,
   scrydex: string | null | undefined,
+  cardId?: string,
 ): string {
-  return printedStyleName(setId, scrydexNameIsFuller(name, scrydex) ? scrydex! : name);
+  const written = printedStyleName(setId, scrydexNameIsFuller(name, scrydex) ? scrydex! : name);
+  const fix = cardId ? JAPANESE_NAME_CORRECTIONS[cardId] : undefined;
+  return fix && written === fix[0] ? fix[1] : written;
 }
+
+/**
+ * Japanese cards whose English name the rules write wrong, read by hand in the naming pass against
+ * Bulbapedia's set lists (2026-09-15). Each is [what the copy writes, what the card is], and applies
+ * only while the copy still writes the first, so a source that corrects itself wins.
+ *
+ * - Where the English game printed the card: its English name, as Bulbapedia's Japanese list writes
+ *   it too (Max Rod is sv08.5-116, Emcee's Hype sv10-163, Grimsley's Move me02-090, Anthea &
+ *   Concordia me02.5-182, Adversity Policy me04-074). TCGplayer and Scrydex translate the Japanese.
+ * - Names TCGdex left in Japanese or half-translated, in English where Bulbapedia and a second source
+ *   agree: the vintage Clefairy Doll and Mysterious Fossil (the English Base Set and Fossil cards of
+ *   the same name), VS's Bugsy's Technical Machines, e-Card's Mystery Plates and Miracle Spheres by
+ *   their Greek letter (TCGdex's "b", "o", "y" are β, δ, γ; the English Skyridge cards print them).
+ * - Names TCGdex has wrong where Scrydex and Bulbapedia agree: Tag All Stars' 184 and 217 are
+ *   Melmetal-GX (TCGplayer too), Mirage Forest's 064 plain Spinda (TCGplayer too), Primal Clash's
+ *   and Cruel Traitor's Nidoran their ♀ and ♂, Peerless Fighters' Fighting Energy, Premium Champion
+ *   Pack's 139 Metal Energy (Scrydex's own Japanese name 基本鋼エネルギー, where its English one says
+ *   Colorless), the Stellar Ceruledge deck's Switch (ポケモンいれかえ).
+ * - Gold, Silver, to a New World's Ecogym with its capital, as Scrydex, TCGplayer and Bulbapedia write it.
+ * - Crossing the Ruins' 057 is the second Ruin Wall (遺跡の石版, the Aerodactyl carving beside 054's
+ *   Kabuto), which TCGdex named by machine translation; TCGplayer sells both as Ruin Wall.
+ * - One card written two ways: Expansion Pack's Impostor Professor Oak as the English Base Set card
+ *   (base1-73), Challenge from the Darkness' _____'s Chansey with the underscores of _____'s Pikachu.
+ */
+export const JAPANESE_NAME_CORRECTIONS: Readonly<Record<string, readonly [string, string]>> = {
+  "CP4-139": ["Colorless Energy", "Metal Energy"],
+  "E4-084": ["ミステリープレートb", "Mystery Plate β"],
+  "E4-086": ["ミステリープレートo", "Mystery Plate δ"],
+  "E5-082": ["奇跡の球体b", "Miracle Sphere β"],
+  "E5-083": ["奇跡の球体y", "Miracle Sphere γ"],
+  "M-P-049": ["Struggle Policy", "Adversity Policy"],
+  "M2-076": ["Grimsley's One Move", "Grimsley's Move"],
+  "M2-105": ["Grimsley's One Move", "Grimsley's Move"],
+  "M2a-173": ["Anthea and Concordia", "Anthea & Concordia"],
+  "M2a-221": ["Anthea and Concordia", "Anthea & Concordia"],
+  "neo1-086": ["ecogym", "Ecogym"],
+  "neo2-057": ["壁を台無しにする[aerodactyl]", "Ruin Wall"],
+  "PCG5-064": ["Fan Spinda", "Spinda"],
+  "PMCG1-089": ["Imposter Professor Oak", "Impostor Professor Oak"],
+  "PMCG1-091": ["ピッピ人形", "Clefairy Doll"],
+  "PMCG3-046": ["なにかの化石", "Mysterious Fossil"],
+  "PMCG6-075": ["_'s Chansey", "_____'s Chansey"],
+  "S5a-096": ["Basic Fighting Energy", "Fighting Energy"],
+  "SM12a-184": ["Lucario & Melmetal-GX", "Melmetal-GX"],
+  "SM12a-217": ["Lucario & Melmetal-GX", "Melmetal-GX"],
+  "SV8a-142": ["Fishing Rod MAX", "Max Rod"],
+  "SV9a-061": ["Emcee's Excitement", "Emcee's Hype"],
+  "SV9a-082": ["Emcee's Excitement", "Emcee's Hype"],
+  "SVLS-017": ["ポケモンいれかえ", "Switch"],
+  "VS1-105": ["Bugsyのテクニカルマシン01", "Bugsy's Technical Machine 01"],
+  "VS1-106": ["Bugsyのテクニカルマシン02", "Bugsy's Technical Machine 02"],
+  "XY11b-020": ["Nidoran", "Nidoran♂"],
+  "XY5a-025": ["Nidoran", "Nidoran♀"],
+};
 
 /**
  * The name the card prints, beside its English one: TCGdex's, or Scrydex's where TCGdex has none

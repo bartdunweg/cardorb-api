@@ -4,6 +4,7 @@ import {
   ROUND_TWO_CORRECTIONS,
   correctedFacts,
   correctedName,
+  correctedNumber,
   ruledEvolveFrom,
   ruledRarity,
 } from "./card-fact-corrections";
@@ -205,6 +206,30 @@ describe("correctedFacts", () => {
     ])
       if (fix.rarity) expect(RARITY_WORDS.en).toContain(fix.rarity[1]);
     expect(RARITY_WORDS.en).toContain(ruledRarity("swsh12.5gg-GG01", "Rare"));
+  });
+});
+
+describe("correctedName, naming pass", () => {
+  it("follows the name conventions on an English card, and reads the cards put right by hand", () => {
+    expect(correctedName("swsh2-172", "Horror Psychic Energy")).toBe("Horror P Energy");
+    expect(correctedName("swsh1-178", "Professor's Research (Professor Magnolia)")).toBe(
+      "Professor's Research [Professor Magnolia]",
+    );
+    expect(correctedName("xy4-92", "Battle Compressor Team Flare Gear")).toBe("Battle Compressor");
+    expect(correctedName("xyp-XY133", "Ash Greninja EX")).toBe("Ash-Greninja-EX");
+    expect(correctedName("swshp-SWSH136", "Mimikyu")).toBe("Mimikyu δ");
+    expect(correctedName("basep-24", "___________'s Pikachu")).toBe("_____'s Pikachu");
+  });
+});
+
+describe("correctedNumber", () => {
+  it("writes the number the card prints, and leaves every other set's alone", () => {
+    expect(correctedNumber("ecard3-H01", "H01")).toBe("H1");
+    expect(correctedNumber("ecard2-H09", "H09")).toBe("H9");
+    expect(correctedNumber("ecard3-H20", "H20")).toBe("H20");
+    expect(correctedNumber("bwp-BW04", "BW04")).toBe("BW004");
+    expect(correctedNumber("bwp-BW06", "BW06")).toBe("BW06");
+    expect(correctedNumber("swsh1-1", "1")).toBe("1");
   });
 });
 

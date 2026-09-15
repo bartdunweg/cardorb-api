@@ -766,9 +766,10 @@
     "language": "en",
     "id": "rc",
     "name": "Radiant Collection",
-    "page": "Legendary Treasures (TCG)",
-    "lists": ["Radiant Collection"],
-    "how": "name"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's empty second listing of Legendary Treasures' Radiant Collection, whose 25 cards the copy holds as bw11-RC1 to RC25 and compares there"
   },
   {
     "language": "en",
@@ -790,9 +791,10 @@
     "language": "en",
     "id": "xya",
     "name": "Yellow A Alternate",
-    "page": "Yellow A Alternate cards (TCG)",
-    "lists": ["Yellow A Alternate cards"],
-    "how": "hand"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's grouping of six Yellow A Alternate cards the copy also holds under the sets they print (xy3-55a and five more), hidden from the shelf; every Yellow A card is compared with its own set"
   },
   {
     "language": "en",
@@ -2121,9 +2123,10 @@
     "language": "ja",
     "id": "SM1+",
     "name": "Sun & Moon",
-    "page": "Enhanced Expansion Pack Sun & Moon (TCG)",
-    "lists": ["Sun & Moon"],
-    "how": "hand"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's empty second listing of SM1p, whose cards the copy holds and compares under SM1p"
   },
   {
     "language": "ja",
@@ -2153,9 +2156,10 @@
     "language": "ja",
     "id": "sm2+",
     "name": "Beyond a New Challenge",
-    "page": "Facing a New Trial (TCG)",
-    "lists": ["Facing a New Trial"],
-    "how": "hand"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's empty second listing of SM2p, whose cards the copy holds and compares under SM2p"
   },
   {
     "language": "ja",
@@ -2185,9 +2189,10 @@
     "language": "ja",
     "id": "SM3+",
     "name": "Shining Legends",
-    "page": "Shining Legends (TCG)",
-    "lists": ["Shining Legends #2"],
-    "how": "name"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's empty second listing of SM3p, whose cards the copy holds and compares under SM3p"
   },
   {
     "language": "ja",
@@ -2217,9 +2222,10 @@
     "language": "ja",
     "id": "SM4+",
     "name": "GX Battle Boost",
-    "page": "GX Battle Boost (TCG)",
-    "lists": ["GX Battle Boost"],
-    "how": "name"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's empty second listing of SM4p, whose cards the copy holds and compares under SM4p"
   },
   {
     "language": "ja",
@@ -2249,9 +2255,10 @@
     "language": "ja",
     "id": "SM5+",
     "name": "Ultra Force",
-    "page": "Ultra Force (TCG)",
-    "lists": ["Ultra Force"],
-    "how": "name"
+    "page": null,
+    "lists": [],
+    "how": "hand",
+    "reason": "TCGdex's empty second listing of SM5p, whose cards the copy holds and compares under SM5p"
   },
   {
     "language": "ja",

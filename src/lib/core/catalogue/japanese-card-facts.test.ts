@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { nameConventions } from "./english-card-name.mjs";
 import {
+  JAPANESE_NAME_CORRECTIONS,
   englishEvolveFrom,
   japaneseCardName,
   japaneseLocalName,
@@ -30,6 +32,30 @@ describe("japaneseCardName", () => {
     expect(japaneseCardName("XY8b", "M Houndoom Ex", "M Houndoom-EX")).toBe("M Houndoom-EX");
     expect(japaneseCardName("neo4", "Arcanine", "Light Arcanine")).toBe("Light Arcanine");
     expect(japaneseCardName("PCG2", "Latias Star", "Latias ☆")).toBe("Latias ☆");
+  });
+});
+
+describe("JAPANESE_NAME_CORRECTIONS", () => {
+  it("puts a name right only while the copy still writes the wrong one", () => {
+    expect(japaneseCardName("SM12a", "Lucario & Melmetal-GX", null, "SM12a-184")).toBe(
+      "Melmetal-GX",
+    );
+    expect(japaneseCardName("SV8a", "Fishing Rod MAX", "Fishing Rod MAX", "SV8a-142")).toBe(
+      "Max Rod",
+    );
+    expect(japaneseCardName("PMCG1", "ピッピ人形", null, "PMCG1-091")).toBe("Clefairy Doll");
+    // Another name at that id (a source that put itself right) is left as it comes.
+    expect(japaneseCardName("SM12a", "Melmetal-GX", "Melmetal-GX", "SM12a-184")).toBe(
+      "Melmetal-GX",
+    );
+    expect(japaneseCardName("SM12a", "Lucario & Melmetal-GX", null, "SM12a-083")).toBe(
+      "Lucario & Melmetal-GX",
+    );
+  });
+
+  it("writes every correction in the copy's own conventions", () => {
+    for (const [, right] of Object.values(JAPANESE_NAME_CORRECTIONS))
+      expect(nameConventions(right)).toBe(right);
   });
 });
 

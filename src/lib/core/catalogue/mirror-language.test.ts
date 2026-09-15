@@ -511,7 +511,8 @@ describe("syncLanguageMirror", () => {
       expect.objectContaining({ id: "E1-069", name: "Weezing", local_name: null, rarity: null }),
       expect.objectContaining({
         id: "E1-078",
-        name: "Pokemon Fan Club",
+        // With the accent TCGplayer's product name drops (nameConventions).
+        name: "Pokémon Fan Club",
         local_name: "ポケモンファンクラブ",
         tcgplayer_product_id: 11,
       }),

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   printedStyleName,
+  nameConventions,
   englishFromLocalName,
   englishFromRecord,
   keepsStoredName,
@@ -247,5 +248,52 @@ describe("printedStyleName", () => {
     expect(printedStyleName("SM12a", "Victini ◇")).toBe("Victini ◇");
     expect(printedStyleName("neo2", "Unown [F]")).toBe("Unown F");
     expect(printedStyleName("neo1", "Farfetch’d")).toBe("Farfetch'd");
+  });
+});
+
+describe("nameConventions", () => {
+  // Naming pass against Bulbapedia's set lists, 2026-09-15.
+  it("writes an Energy icon inside a name as its letter, Fire as R and Fairy as Y", () => {
+    expect(nameConventions("Horror Psychic Energy")).toBe("Horror P Energy");
+    expect(nameConventions("Heat Fire Energy")).toBe("Heat R Energy");
+    expect(nameConventions("Unit Energy GrassFireWater")).toBe("Unit Energy GRW");
+    expect(nameConventions("Unit Energy Fighting Darkness Fairy")).toBe("Unit Energy FDY");
+    expect(nameConventions("Unit Energy GFW")).toBe("Unit Energy GRW");
+    expect(nameConventions("Blend Energy Grass Fire Psychic Darkness")).toBe("Blend Energy GRPD");
+    expect(nameConventions("Fairy Charm Dragon")).toBe("Fairy Charm N");
+  });
+
+  it("leaves a name whose words only look like it alone", () => {
+    for (const name of ["Heat Rotom", "Rocky Helmet", "Fairy Charm UB", "Wash Rotom", "Poké Ball"])
+      expect(nameConventions(name)).toBe(name);
+  });
+
+  it("brackets a Supporter's subtitle, drops Team Flare's Gear and keeps the accent", () => {
+    expect(nameConventions("Professor's Research (Professor Magnolia)")).toBe(
+      "Professor's Research [Professor Magnolia]",
+    );
+    expect(nameConventions("Boss's Orders - Ghetsis")).toBe("Boss's Orders [Ghetsis]");
+    expect(nameConventions("Head Ringer Team Flare Hyper Gear")).toBe("Head Ringer");
+    expect(nameConventions("Pok Kid")).toBe("Poké Kid");
+    expect(nameConventions("PokStop")).toBe("PokéStop");
+    expect(nameConventions("Pokegear 3.0")).toBe("Pokégear 3.0");
+  });
+
+  it("hyphenates GX and EX, signs Nidoran, and writes no em dash", () => {
+    expect(nameConventions("Tapu Lele GX")).toBe("Tapu Lele-GX");
+    expect(nameConventions("Dragonite EX")).toBe("Dragonite-EX");
+    expect(nameConventions("Pikachu ex")).toBe("Pikachu ex");
+    expect(nameConventions("NidoranM")).toBe("Nidoran♂");
+    expect(nameConventions("Nidoran F")).toBe("Nidoran♀");
+    expect(nameConventions("Delta Rainbow Energy")).toBe("δ Rainbow Energy");
+    expect(nameConventions("Ancient Technical Machine Ice")).toBe(
+      "Ancient Technical Machine [Ice]",
+    );
+    expect(nameConventions("Rotom Dex\u2014Poké Finder Mode")).toBe("Rotom Dex Poké Finder Mode");
+  });
+
+  it("is what printedStyleName ends with, whatever the set", () => {
+    expect(printedStyleName("SV-P", "Tapu Lele GX")).toBe("Tapu Lele-GX");
+    expect(printedStyleName("S8b", "Heat Fire Energy")).toBe("Heat R Energy");
   });
 });
