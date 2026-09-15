@@ -13,9 +13,11 @@ vi.mock("@/lib/api/guard", () => ({
   readHeaders: () => ({ "Cache-Control": "private, no-store" }),
 }));
 const catalogueCardSheets = vi.fn();
+const printPicturesOfCards = vi.fn();
 vi.mock("@/lib/storage/supabase", () => ({ adminClient: () => ({}) }));
 vi.mock("@/lib/storage/postgres", () => ({
   catalogueCardSheets: (...a: unknown[]) => catalogueCardSheets(...a),
+  printPicturesOfCards: (...a: unknown[]) => printPicturesOfCards(...a),
 }));
 
 const { POST } = await import("./route");
@@ -65,6 +67,7 @@ const sheet = (
 beforeEach(() => {
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
   catalogueCardSheets.mockResolvedValue(new Map());
+  printPicturesOfCards.mockResolvedValue(new Map());
 });
 afterEach(() => {
   vi.clearAllMocks();
@@ -111,9 +114,31 @@ describe("POST /api/v1/cards/facts", () => {
     // 151's Machamp: the collection box cosmos holo beside the plain card, as the single route's test.
     expect(cards["sv03.5-068"].patternPrints).toEqual({
       standard: true,
-      prints: [{ foilPattern: "cosmos", finish: "holo", tcgplayerId: 662070 }],
+      prints: [{ foilPattern: "cosmos", finish: "holo", tcgplayerId: 662070, image: null }],
     });
     expect(cards["sv03.5-068"]).not.toHaveProperty("price");
+  });
+
+  it("gives each printing its own picture where the store holds one, in one read for the page", async () => {
+    const cosmos = "https://images.cardorb.com/tcgplayer/662070.jpg";
+    catalogueCardSheets.mockResolvedValue(new Map([["sv03.5-068", sheet("sv03.5-068")]]));
+    printPicturesOfCards.mockResolvedValue(
+      new Map([["sv03.5-068", new Map([["holo/cosmos", cosmos]])]]),
+    );
+    const { cards } = await (await post({ ids: ["sv03.5-068"] })).json();
+    expect(printPicturesOfCards).toHaveBeenCalledTimes(1);
+    expect(cards["sv03.5-068"].patternPrints.prints[0].image).toBe(cosmos);
+    expect(cards["sv03.5-068"].printings.every((p: { image: unknown }) => p.image === null)).toBe(
+      true,
+    );
+  });
+
+  it("answers the facts without pictures when the pictures cannot be read", async () => {
+    catalogueCardSheets.mockResolvedValue(new Map([["sv03.5-068", sheet("sv03.5-068")]]));
+    printPicturesOfCards.mockRejectedValue(new Error("down"));
+    const res = await post({ ids: ["sv03.5-068"] });
+    expect(res.status).toBe(200);
+    expect((await res.json()).cards["sv03.5-068"].printings.length).toBeGreaterThan(0);
   });
 
   it("answers a Wizards card's one foil as nothing to choose", async () => {

@@ -339,6 +339,7 @@ components:
             properties:
               finish: { $ref: "#/components/schemas/Finish" }
               foilPattern: { oneOf: [{ $ref: "#/components/schemas/FoilPattern" }, { type: "null" }] }
+              image: { type: [string, "null"], description: "The printing's own picture, a file at https://images.cardorb.com, or null." }
         editions: { type: [array, "null"], items: { $ref: "#/components/schemas/Edition" } }
         languages: { type: array, items: { type: string, enum: [en, de, fr, it, es, pt, nl] }, description: "Empty for a Japanese card, as on `CardDetail`." }
         foilPatterns: { type: [array, "null"], items: { $ref: "#/components/schemas/FoilPattern" } }

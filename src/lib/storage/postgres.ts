@@ -2206,3 +2206,27 @@ export async function printPicturesOf(
   if (error) throw new Error(`Reading ${cardId}'s printings' pictures failed: ${error.message}`);
   return new Map((data ?? []).map((r: { print: string; image: string }) => [r.print, r.image]));
 }
+
+/** Many cards' printings' pictures at once, by card and then by print, for a page of tiles. */
+export async function printPicturesOfCards(
+  db: SupabaseClient,
+  language: CatalogueLanguage,
+  cardIds: string[],
+): Promise<Map<string, Map<string, string>>> {
+  const out = new Map<string, Map<string, string>>();
+  const BITE = 250;
+  for (let at = 0; at < cardIds.length; at += BITE) {
+    const { data, error } = await db
+      .from("card_print_pictures")
+      .select("card_id, print, image")
+      .eq("language", language)
+      .in("card_id", cardIds.slice(at, at + BITE));
+    if (error) throw new Error(`Reading the printings' pictures failed: ${error.message}`);
+    for (const r of (data ?? []) as { card_id: string; print: string; image: string }[]) {
+      const card = out.get(r.card_id) ?? new Map<string, string>();
+      card.set(r.print, r.image);
+      out.set(r.card_id, card);
+    }
+  }
+  return out;
+}

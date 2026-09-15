@@ -14,10 +14,11 @@
  */
 import type { Edition, FoilPattern, Finish } from "../collection/collection-row";
 import type { CatalogueCardSheet, CatalogueLanguage } from "@/lib/storage/postgres";
-import { catalogueCardSheets } from "@/lib/storage/postgres";
+import { catalogueCardSheets, printPicturesOfCards } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 import { detailFromSheet, languagesFromSheet } from "./card-sheet";
 import { type Printing, foilPatternsOfSerie, patternPrintsFor } from "./card-printings";
+import { withPrintPictures } from "./print-pictures";
 
 /** The most ids one request may name: a set page's grid, or a page of the collection. */
 export const FACTS_BATCH_MAX = 250;
@@ -47,14 +48,20 @@ export type CardFacts = {
   evolveFrom: string | null;
   regulationMark: string | null;
   firstEdition: boolean | null;
-  printings: Printing[];
+  /** Each with its own picture where the store holds one (print-pictures.ts), as the route answers it. */
+  printings: (Printing & { image?: string | null })[];
   editions: Edition[] | null;
   languages: string[];
   foilPatterns: FoilPattern[] | null;
   /** As GET /v1/cards/{tcgId} answers it, without each print's price. */
   patternPrints: {
     standard: boolean;
-    prints: { foilPattern: FoilPattern; finish: Finish; tcgplayerId: number }[];
+    prints: {
+      foilPattern: FoilPattern;
+      finish: Finish;
+      tcgplayerId: number;
+      image?: string | null;
+    }[];
   } | null;
 };
 
@@ -109,11 +116,36 @@ export async function cardFactsOf(
   language: CatalogueLanguage,
 ): Promise<Record<string, CardFacts | null>> {
   const db = adminClient();
-  const sheets = db ? await catalogueCardSheets(db, ids, language) : new Map();
+  const [sheets, pictures] = db
+    ? await Promise.all([
+        catalogueCardSheets(db, ids, language),
+        /* The printings' own pictures (cardorb-api#501), one query for the page. A store that will not
+           give them costs the pictures, not the facts: the card's scan stands for each printing. */
+        printPicturesOfCards(db, language, ids).catch((err) => {
+          console.error("The printings' pictures of a page could not be read:", err);
+          return new Map<string, Map<string, string>>();
+        }),
+      ])
+    : [new Map(), new Map<string, Map<string, string>>()];
   return Object.fromEntries(
     ids.map((id) => {
       const sheet = sheets.get(id);
-      return [id, sheet ? factsFromSheet(sheet, language) : null];
+      const facts = sheet ? factsFromSheet(sheet, language) : null;
+      if (!facts) return [id, null];
+      const own = pictures.get(id) ?? new Map<string, string>();
+      return [
+        id,
+        {
+          ...facts,
+          printings: withPrintPictures(facts.printings, own) ?? [],
+          patternPrints: facts.patternPrints
+            ? {
+                ...facts.patternPrints,
+                prints: withPrintPictures(facts.patternPrints.prints, own) ?? [],
+              }
+            : null,
+        },
+      ];
     }),
   );
 }
