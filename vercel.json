@@ -25,6 +25,10 @@
     {
       "path": "/api/v1/cron/tcgplayer-prices",
       "schedule": "15 21 * * *"
+    },
+    {
+      "path": "/api/v1/cron/print-pictures",
+      "schedule": "0 23 * * *"
     }
   ]
 }

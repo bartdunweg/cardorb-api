@@ -2110,3 +2110,59 @@ export async function writeCatalogueIndex(
     );
   if (error) throw new Error(`Writing the catalogue index failed: ${error.message}`);
 }
+
+/** One printing's picture in our bucket (print-pictures.ts, migration 20260915260000). */
+export type PrintPictureRow = {
+  language: CatalogueLanguage;
+  card_id: string;
+  print: string;
+  product_id: number;
+  image: string;
+};
+
+/** The TCGplayer products whose picture the store already holds, for one catalogue. */
+export async function listPrintPictureProducts(
+  db: SupabaseClient,
+  language: CatalogueLanguage,
+): Promise<Set<number>> {
+  const rows = await readAllPages<{ product_id: number }>(
+    "the printings' pictures",
+    (page, counted) =>
+      db
+        .from("card_print_pictures")
+        .select("product_id", counted ? { count: "exact" } : {})
+        .eq("language", language)
+        .order("product_id", { ascending: true })
+        .range(...pageRange(page)),
+  );
+  return new Set(rows.map((r) => r.product_id));
+}
+
+/** Printings' pictures, written over what each printing held. */
+export async function writePrintPictures(
+  db: SupabaseClient,
+  rows: PrintPictureRow[],
+): Promise<void> {
+  const BITE = 500;
+  for (let at = 0; at < rows.length; at += BITE) {
+    const { error } = await db
+      .from("card_print_pictures")
+      .upsert(rows.slice(at, at + BITE), { onConflict: "language,card_id,print" });
+    if (error) throw new Error(`Writing the printings' pictures failed: ${error.message}`);
+  }
+}
+
+/** One card's printings' pictures, by print ("poke-ball", "holo/cosmos"). */
+export async function printPicturesOf(
+  db: SupabaseClient,
+  language: CatalogueLanguage,
+  cardId: string,
+): Promise<Map<string, string>> {
+  const { data, error } = await db
+    .from("card_print_pictures")
+    .select("print, image")
+    .eq("language", language)
+    .eq("card_id", cardId);
+  if (error) throw new Error(`Reading ${cardId}'s printings' pictures failed: ${error.message}`);
+  return new Map((data ?? []).map((r: { print: string; image: string }) => [r.print, r.image]));
+}
