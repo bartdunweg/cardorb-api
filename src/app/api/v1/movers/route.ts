@@ -82,6 +82,8 @@ export async function GET(req: Request) {
     printedNumber: printedNumberOf(m.card.tcgId),
     set: m.set,
     setAbbr: m.setAbbr,
+    // The rarity of a printing held, so the line under the name reads as every list's: "PFL 004 · Double Rare".
+    rarity: m.card.variants.find((v) => v.owned && v.rarity)?.rarity ?? null,
     image: m.card.image,
     copies: copiesHeld(m.card),
     was: m.was,

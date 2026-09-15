@@ -28,7 +28,7 @@ const card = {
   number: "4",
   image: "https://images.cardorb.com/en/base/base1/4/low.webp",
   tcgId: "base1-4",
-  variants: [{ owned: true, quantity: 2, finish: null, edition: null }],
+  variants: [{ owned: true, quantity: 2, finish: null, edition: null, rarity: "Holo Rare" }],
 };
 const ask = (query = "") =>
   GET(
@@ -60,6 +60,7 @@ describe("GET /v1/movers", () => {
       expect.objectContaining({
         tcgId: "base1-4",
         set: "Base Set",
+        rarity: "Holo Rare",
         copies: 2,
         was: 300,
         now: 320,
