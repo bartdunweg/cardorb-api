@@ -216,6 +216,119 @@ export const legacyDays = (p) => [
  * @property {Record<string, number>} [printings] every printing's figure that day, where known
  */
 
+/** How far off its neighbours' median a figure may be, either way, before it is not read. */
+const STRAY_RATIO = 5;
+/** The neighbours: the same printing's figures this many days either side. */
+const STRAY_WINDOW_DAYS = 30;
+/** Fewer figures than this in the window, the figure itself included, and nothing is judged. */
+const STRAY_MIN_FIGURES = 3;
+
+const dayNumber = (/** @type {string} */ date) => Date.parse(`${date}T00:00:00Z`) / 86_400_000;
+
+/** A scarcer run of a card, and the run it cannot sell under: the first of these the day has. */
+const SCARCER_RUNS = /** @type {[string, string[]][]} */ ([
+  ["1st-edition-holofoil", ["holofoil", "unlimited-holofoil"]],
+  ["shadowless-holofoil", ["holofoil", "unlimited-holofoil"]],
+  ["1st-edition", ["normal", "unlimited"]],
+  ["shadowless", ["normal", "unlimited"]],
+]);
+/** How many times its base a scarcer run's figure is on a typical day, before a day under it is stray. */
+const SCARCER_PREMIUM = 2;
+
+/**
+ * Takes out a 1st Edition or Shadowless figure under the same card's unlimited run that day, on a
+ * card whose stamped run typically sells for SCARCER_PREMIUM times that run or more.
+ *
+ * Where half a printing's figures are a stray sale, a median cannot tell which half is: Base Set
+ * Charizard's 1st Edition read €260 on as many days of June 2026 as €8,600, beside an unlimited holo
+ * at €470. Judged per card rather than for every card: Neo Destiny's 1st Edition holos sell under
+ * their unlimited run on every day read, and a rule that the stamped run is always dearer took out
+ * all 106 days of neo4-11's line.
+ *
+ * @param {{ card: string, real: Record<string, number> }[]} days
+ */
+function dropScarcerRunsUnderTheirBase(days) {
+  /** @param {Record<string, number>} real @param {string[]} bases */
+  const baseOf = (real, bases) => bases.map((b) => real[b]).find((v) => v != null) ?? null;
+  /** @type {Map<string, number[]>} */
+  const ratios = new Map();
+  for (const { card, real } of days) {
+    for (const [scarce, bases] of SCARCER_RUNS) {
+      const base = baseOf(real, bases);
+      if (real[scarce] == null || !base) continue;
+      const key = `${card}|${scarce}`;
+      ratios.set(key, [...(ratios.get(key) ?? []), real[scarce] / base]);
+    }
+  }
+  /** @type {Set<string>} */
+  const premium = new Set();
+  for (const [key, list] of ratios) {
+    const sorted = list.sort((a, b) => a - b);
+    if (sorted[sorted.length >> 1] >= SCARCER_PREMIUM) premium.add(key);
+  }
+  for (const { card, real } of days) {
+    for (const [scarce, bases] of SCARCER_RUNS) {
+      const base = baseOf(real, bases);
+      if (premium.has(`${card}|${scarce}`) && base != null && real[scarce] < base)
+        delete real[scarce];
+    }
+  }
+}
+
+/**
+ * Takes out of each day a printing's figure that is STRAY_RATIO times off the median of that
+ * printing's figures within STRAY_WINDOW_DAYS either side.
+ *
+ * TCGplayer's market price is its last sales, and a card that hardly sells has a market price one
+ * odd sale sets. Base Set Charizard's 1st Edition read $10,000 on most days of July 2026 and $250 on
+ * eleven, with its cheapest listing at $100,000 throughout (tcgcsv's archive for 2026-07-15), and
+ * the sheet's chart dropped from €8,700 to €219 and back each time (Bart, 2026-09-15). 277 printings
+ * moved more than five times between March and September 2026.
+ *
+ * On read rather than on write: the rows stay what TCGplayer said, so a wrong call here is undone by
+ * changing a number, and the rows already stored are judged the same as tonight's. The cost is a
+ * real move of five times or more within a month, whose first days read as stray until the new
+ * price outnumbers the old.
+ *
+ * @param {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number> }[]} days
+ */
+function dropStrayFigures(days) {
+  /** @type {Map<string, { day: number, figures: Record<string, number>, printing: string, value: number }[]>} */
+  const series = new Map();
+  for (const d of days) {
+    for (const figures of [d.real, d.legacy]) {
+      for (const [printing, value] of Object.entries(figures)) {
+        const key = `${d.card}|${printing}`;
+        const list = series.get(key) ?? [];
+        list.push({ day: dayNumber(d.date), figures, printing, value });
+        series.set(key, list);
+      }
+    }
+  }
+  for (const list of series.values()) {
+    if (list.length < STRAY_MIN_FIGURES) continue;
+    list.sort((a, b) => a.day - b.day);
+    const stray = [];
+    let from = 0;
+    let to = 0;
+    for (const point of list) {
+      while (list[from].day < point.day - STRAY_WINDOW_DAYS) from++;
+      while (to < list.length && list[to].day <= point.day + STRAY_WINDOW_DAYS) to++;
+      if (to - from < STRAY_MIN_FIGURES) continue;
+      const values = list
+        .slice(from, to)
+        .map((p) => p.value)
+        .sort((a, b) => a - b);
+      const mid = values.length >> 1;
+      const median = values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+      if (median > 0 && (point.value > median * STRAY_RATIO || point.value * STRAY_RATIO < median))
+        stray.push(point);
+    }
+    // Taken out after the pass, so each figure is weighed against what was stored, not what is left.
+    for (const p of stray) delete p.figures[p.printing];
+  }
+}
+
 /**
  * Rows laid out as days, one per card per date with a figure, from `since` on, oldest first. A card
  * is its catalogue and its id: an English and a Japanese card under one id are two lines.
@@ -242,13 +355,20 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       const c = row.cents?.[i];
       if (c == null) continue;
       const date = `${prefix}${String(i + 1).padStart(2, "0")}`;
-      if (date < since) continue;
       const key = `${card}|${date}`;
       let day = days.get(key);
       if (!day)
         days.set(key, (day = { language, card, tcgId: row.tcg_id, date, real: {}, legacy: {} }));
       (isLegacy ? day.legacy : day.real)[row.printing] = c / 100;
     }
+  }
+  /* Judged on every day read, the days before `since` too: they are the neighbours the first days
+     after it are weighed against. */
+  dropScarcerRunsUnderTheirBase([...days.values()]);
+  dropStrayFigures([...days.values()]);
+  for (const [key, d] of days) {
+    if (d.date < since || (!Object.keys(d.real).length && !Object.keys(d.legacy).length))
+      days.delete(key);
   }
   /* One printing per card for each series, the same on every day. Chosen per day, a day the
      card's own printing had no figure fell to the next in line: Base Set Charizard read its
