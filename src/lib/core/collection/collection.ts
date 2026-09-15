@@ -697,6 +697,9 @@ const cachedSetFacts = (
       // v31: the third pass over the English facts (card-fact-corrections.ts): Galarian Gallery,
       // the Trainer Galleries' Ultra Rare, "None" as no rarity, Unown and ☆ names.
       //
+      // v32: a set without an official abbreviation takes Pokémon TCG Online's code (set-codes.ts, #472);
+      // a v31 entry holds null for Wizards Black Star Promos and three others for a day.
+      //
       // v29: TCGdex asked for no price the store holds, and no picture the copy already checked.
       //
       // v28: prices read out of tcgplayer_prices, the one store every price reads (printingsOfProducts).
@@ -728,7 +731,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v31", setName, factsSignature(identities)],
+      ["set-facts", "v32", setName, factsSignature(identities)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
