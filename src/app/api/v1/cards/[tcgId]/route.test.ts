@@ -100,7 +100,15 @@ describe("GET /api/v1/cards/[tcgId]", () => {
     const body = await (await get("sv03.5-068")).json();
     expect(body.patternPrints).toEqual({
       standard: true,
-      prints: [{ foilPattern: "cosmos", finish: "holo", productId: 662070, printing: "holofoil" }],
+      prints: [
+        {
+          foilPattern: "cosmos",
+          finish: "holo",
+          productId: 662070,
+          printing: "holofoil",
+          image: null,
+        },
+      ],
     });
     expect(pricePatternPrints).toHaveBeenCalledWith(expect.anything(), 0.92);
   });

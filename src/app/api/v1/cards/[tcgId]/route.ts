@@ -17,6 +17,9 @@ import { foilPatternsOfSerie, patternPrintsFor } from "@/lib/core/catalogue/card
 import { serieOfSet } from "@/lib/core/catalogue/tcgdex-client";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { withPrintPictures } from "@/lib/core/catalogue/print-pictures";
+import { printPicturesOf } from "@/lib/storage/postgres";
+import { adminClient } from "@/lib/storage/supabase";
 
 /**
  * One card, by the id TCGdex gives it ("sv03-125").
@@ -85,8 +88,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   let languages;
   let foilPatterns;
   let patternPrints;
+  let pictures: Map<string, string> = new Map();
   try {
-    [languages, foilPatterns, patternPrints] = await Promise.all([
+    [languages, foilPatterns, patternPrints, pictures] = await Promise.all([
       own
         ? Promise.resolve([])
         : sheet && languagesFromSheet(sheet)
@@ -103,6 +107,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
          whether a print without one exists. A form offers those and nothing else, so a card with
          none is not asked. English only: the pattern products are on the English shelf. */
       own ? Promise.resolve(null) : pricePatternPrints(patternPrintsFor(tcgId), rate),
+      /* A picture per printing TCGplayer sells apart (print-pictures.ts): the Poké Ball reverse's
+         own photo. No store, or one that will not answer, is no pictures: the card's scan stands. */
+      (async () => {
+        const db = adminClient();
+        return db
+          ? printPicturesOf(db, own ?? "en", card.id).catch((err) => {
+              console.error(`The printings' pictures of ${tcgId} could not be read:`, err);
+              return new Map<string, string>();
+            })
+          : new Map<string, string>();
+      })(),
     ]);
   } catch (err) {
     console.error(`The printings of ${tcgId} could not be read:`, err);
@@ -113,7 +128,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
   // would undo the check above. getCardDetail memoises upstream, so what this
   // costs is the round trip, not the walk.
   return NextResponse.json(
-    { ...card, languages, foilPatterns, patternPrints },
+    {
+      ...card,
+      printings: withPrintPictures(card.printings, pictures),
+      languages,
+      foilPatterns,
+      patternPrints: patternPrints
+        ? { ...patternPrints, prints: withPrintPictures(patternPrints.prints, pictures) ?? [] }
+        : patternPrints,
+    },
     { headers: readHeaders(req) },
   );
 }
