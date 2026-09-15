@@ -1,0 +1,1 @@
+- The English price history loses 55,308 rows a mistaken backfill run wrote on 2026-09-15 under the retired `market` and `holo` printing names for February and March 2024. The run touched no existing row, so the history is as it was before.
