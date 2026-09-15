@@ -32,6 +32,7 @@ import { CATALOGUE_FORMAT, ownArt, type SyncReport } from "./mirror";
 import TCGPLAYER_JA from "../tcgplayer-ids.ja.generated.json";
 import { fullArtOf } from "./full-art";
 import { canStoreImages, heldUnlessOurs, isOurs, keepImage } from "./image-store";
+import { handCardPicture, handSetLogo } from "./pictures-by-hand";
 import type { CardSheetFacts, CatalogueMatch } from "./ptcg-search";
 import { printedLocalName } from "./card-names";
 import { correctedSet } from "./set-corrections";
@@ -642,6 +643,21 @@ export async function syncLanguageMirror(
             }
           });
         }
+        /* The last resort: a picture found by hand (pictures-by-hand.ts), for a card Scrydex left
+           blank too and the copy holds nothing of ours for. */
+        if (storing)
+          await mapLimit(
+            resolved.filter((c) => !c.image && !isOurs(held.get(c.id))),
+            cardParallel,
+            async (card) => {
+              const hand = lang === "ja" ? handCardPicture("ja", card.id) : null;
+              const kept = hand ? await keepImage(hand) : null;
+              if (kept && kept !== hand) {
+                card.image = kept;
+                report.pictures++;
+              }
+            },
+          );
         const arts = fullArtOf(resolved);
         await writeCatalogueSetRecord(db, {
           language: lang,
@@ -652,7 +668,12 @@ export async function syncLanguageMirror(
           release_date: set.releaseDate,
           logo: heldUnlessOurs(
             heldSets.get(id)?.logo,
-            await ownArt(set.logo ?? (await scrydexLogo(id, set.name)), storing),
+            await ownArt(
+              set.logo ??
+                (await scrydexLogo(id, set.name)) ??
+                (lang === "ja" ? handSetLogo("ja", id) : null),
+              storing,
+            ),
           ),
           // A symbol held in our bucket stands, and nobody is asked for it again.
           symbol: isOurs(heldSets.get(id)?.symbol)
