@@ -572,6 +572,78 @@ describe("syncMirror", () => {
     ]);
   });
 
+  /* Bart, 2026-09-15: a picture in our bucket stands. The night the bucket check timed out, every
+     card would have gone back to TCGdex's address, and a logo to nothing. */
+  it("keeps every picture, logo and symbol held in our bucket where the bucket check fails", async () => {
+    englishSets.mockResolvedValue([set("swsh11", 1, "2022/09/09")]);
+    englishSet.mockResolvedValue({
+      set: { ...set("swsh11", 1, "2022/09/09"), logo: null, symbol: null },
+      cards: [hit("swsh11-186", "186")],
+    });
+    canStoreImages.mockResolvedValue(false);
+    const { db, calls } = fakeStore({
+      catalogue_sync: [
+        { set_id: "swsh11", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 },
+      ],
+      catalogue_sets: [
+        {
+          id: "swsh11",
+          logo: "https://images.cardorb.com/en/swsh/swsh11/logo.webp",
+          symbol: "https://images.cardorb.com/en/swsh/swsh11/symbol.webp",
+        },
+      ],
+      catalogue_cards: [
+        row({ id: "swsh11-186", image: "https://images.cardorb.com/en/x/swsh11/186" }),
+      ],
+    });
+    await syncMirror(db);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: "https://images.cardorb.com/en/x/swsh11/186" }),
+    ]);
+    expect(
+      calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0],
+    ).toMatchObject({
+      logo: "https://images.cardorb.com/en/swsh/swsh11/logo.webp",
+      symbol: "https://images.cardorb.com/en/swsh/swsh11/symbol.webp",
+    });
+  });
+
+  it("asks nobody for a card held as our copy of another source's picture, in a full pass too", async () => {
+    englishSets.mockResolvedValue([set("dc1", 1, "2016/02/22")]);
+    englishSet.mockResolvedValue({ set: set("dc1", 1, "2016/02/22"), cards: [hit("dc1-1", "1")] });
+    setScans.mockResolvedValue({ gaps: new Set(["1"]), code: null });
+    canStoreImages.mockResolvedValue(true);
+    tcgdexFolderMissing.mockResolvedValue(true);
+    const held = "https://images.cardorb.com/tcgplayer/112233.jpg";
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "dc1", cards: 1, synced_at: "2026-09-12T00:00:00Z", format: 1 }],
+      catalogue_cards: [row({ id: "dc1-1", image: held })],
+    });
+    await syncMirror(db, { full: true });
+    expect(tcgdexScan).not.toHaveBeenCalled();
+    expect(tcgplayerScan).not.toHaveBeenCalled();
+    expect(keepImage).not.toHaveBeenCalled();
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ image: held }),
+    ]);
+  });
+
+  it("leaves a set as it was where the copy cannot say what it holds", async () => {
+    englishSets.mockResolvedValue([set("swsh11", 1, "2022/09/09")]);
+    const { db, calls } = fakeStore();
+    const from = db.from.bind(db);
+    (db as { from: (t: string) => unknown }).from = (table: string) => {
+      const chain = from(table) as unknown as Record<string, unknown>;
+      if (table === "catalogue_cards")
+        chain.then = (resolve: (v: unknown) => unknown) =>
+          resolve({ data: null, error: { message: "timeout" }, count: 0 });
+      return chain;
+    };
+    const report = await syncMirror(db);
+    expect(report.failed).toEqual(["swsh11"]);
+    expect(calls.some((c) => c.table === "catalogue_cards" && c.op === "upsert")).toBe(false);
+  });
+
   it("counts the pictures a run changes, and none where the copy already holds them", async () => {
     englishSets.mockResolvedValue([set("swsh11", 1, "2022/09/09")]);
     englishSet.mockResolvedValue({

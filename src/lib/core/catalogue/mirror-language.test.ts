@@ -23,7 +23,9 @@ vi.mock("./artwork", async (actual) => ({
 
 const canStoreImages = vi.fn(async () => false);
 const keepImage = vi.fn(async (a: string | null) => a);
-vi.mock("./image-store", () => ({
+vi.mock("./image-store", async (actual) => ({
+  isOurs: (await actual<typeof import("./image-store")>()).isOurs,
+  heldUnlessOurs: (await actual<typeof import("./image-store")>()).heldUnlessOurs,
   canStoreImages: () => canStoreImages(),
   keepImage: (a: string | null) => keepImage(a),
   storedAddress: () => null,
@@ -197,6 +199,28 @@ describe("syncLanguageMirror", () => {
     const setRow = calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert");
     expect(setRow?.args[0]).toMatchObject({ id: "SV2a", logo: held });
     expect(scrydexJapanExpansions).not.toHaveBeenCalled();
+  });
+
+  it("keeps a card picture and a symbol held in our bucket where the run finds nothing of ours", async () => {
+    listSetsIn.mockResolvedValue([shelfSet("SV2a")]);
+    canStoreImages.mockResolvedValue(false);
+    const picture = "https://images.cardorb.com/limitless/SV2a_006.png";
+    const symbol = "https://images.cardorb.com/ja/SV/SV2a/symbol.png";
+    const { db, calls } = fakeStore({
+      catalogue_sets: [{ id: "SV2a", logo: null, symbol }],
+      catalogue_cards: [{ id: "SV2a-006", image: picture }],
+    });
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    expect(
+      calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0],
+    ).toMatchObject({ symbol });
+    expect(
+      (
+        calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0] as {
+          image: string;
+        }[]
+      )[0],
+    ).toMatchObject({ image: picture });
   });
 
   it("takes the Scrydex code on file, or keeps the held logo, where Scrydex's page does not answer", async () => {

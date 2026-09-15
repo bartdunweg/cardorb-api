@@ -45,7 +45,14 @@ import {
   tcgdexScan,
   tcgplayerScan,
 } from "./artwork";
-import { canStoreImages, keepImage, storedAddress, tcgdexFolderMissing } from "./image-store";
+import {
+  canStoreImages,
+  heldUnlessOurs,
+  isOurs,
+  keepImage,
+  storedAddress,
+  tcgdexFolderMissing,
+} from "./image-store";
 import { ptcgScan } from "./ptcg";
 import { mapLimit } from "../util";
 import { scrydexEnglishLogo } from "./scrydex-japan-logos";
@@ -325,6 +332,8 @@ async function withResolvedScans(
   cards: CatalogueMatch[],
   /** The set is new to the copy or its card count has moved: every gap is worked out afresh. */
   fresh: boolean,
+  /** The pictures the copy holds for these cards now, by id: one of ours is never asked again. */
+  held: Map<string, string | null>,
 ): Promise<CatalogueMatch[]> {
   const { gaps, code } = await englishSetScans(setId).catch(() => ({
     gaps: new Set<string>(),
@@ -359,6 +368,8 @@ async function withResolvedScans(
   return mapLimit(cards, 8, async (card) => {
     const stem = stemOf(card.image);
     if (!stem || !gaps.has(card.number)) return card;
+    const ours = held.get(card.id);
+    if (isOurs(ours)) return at(card, ours);
     const answered = known.get(card.id);
     // A picture the copy already holds for this card is kept as it is: it was checked, and
     // checking it again is two requests for the same answer.
@@ -411,7 +422,11 @@ async function withStoredImages(
     const stem = stemOf(card.image);
     const ours = stem ? storedAddress(stem) : null;
     if (!stem || !ours) return card;
-    const image = held.get(card.id) === ours ? ours : await keepImage(stem);
+    // Ours already, under this key or another (a TCGplayer photo where TCGdex has no file): kept,
+    // and nobody is asked.
+    const before = held.get(card.id);
+    if (isOurs(before)) return { ...card, image: before, imageHigh: null };
+    const image = await keepImage(stem);
     if (image !== stem) return { ...card, image, imageHigh: null };
     /* TCGdex names this scan and has no file behind it (tcgdexFolderMissing). TCGplayer's, by
        the card's product, is the picture then, copied like any other. */
@@ -485,6 +500,9 @@ export async function syncMirror(
 
   const storing = await canStoreImages();
   const report: SyncReport = { copied: [], failed: [], left: 0, pictures: 0, art: 0, ms: 0 };
+  // Each set's logo and symbol as the copy holds them, read once for the run. A store that will not
+  // answer ends the run before it writes anything it could not compare.
+  const heldSets = new Map((await listCatalogueSets(db)).map((s) => [s.id, s]));
   // Every set's logo and symbol into our bucket first: a few hundred small files, and after the
   // first night only the sets whose art is not ours yet are looked at.
   if (storing)
@@ -502,6 +520,7 @@ export async function syncMirror(
           continue;
         }
         const { set } = read;
+        const heldSet = heldSets.get(id);
         /* TCGplayer's product for each card: a stage where TCGdex has none, and whether it is
            full art. A group that will not answer fails the set, which keeps last night's copy of it
            and is tried again ahead of the rest (tcgplayer-products.ts). */
@@ -511,16 +530,14 @@ export async function syncMirror(
            A failure leaves the set's languages unknown, which the sheet answers as TCGdex would. */
         const languagesOf = await languagesOfSet(id).catch(() => () => null);
         /* What the copy holds for this set before the run writes it. A store that will not
-           answer counts every card as changed, which costs the collection a day's cache early
-           and never a stale picture. */
+           answer fails the set, which keeps last night's copy: written without knowing what is
+           held, a night a source is down could take held pictures away. */
         const held = await catalogueCardsById(
           db,
           cards.map((c) => c.id),
-        )
-          .then((rows) => new Map(rows.map((r) => [r.id, r.image])))
-          .catch(() => new Map<string, string | null>());
+        ).then((rows) => new Map(rows.map((r) => [r.id, r.image])));
         const pictured = await withStoredImages(
-          await withResolvedScans(db, id, set.name, cards, fresh.has(id)),
+          await withResolvedScans(db, id, set.name, cards, fresh.has(id), held),
           held,
           storing,
         );
@@ -546,11 +563,21 @@ export async function syncMirror(
           // nobody (copiedEnglishSets, Bart 2026-09-14).
           // Scrydex's, with its permission, for the sets neither source has one for (trainer kits,
           // McDonald's collections).
-          logo: await ownArt(
-            (await withSetLogos([set]))[0]?.logo ?? set.logo ?? (await scrydexEnglishLogo(id)),
-            storing,
-          ),
-          symbol: await ownArt(set.symbol, storing),
+          // A logo or symbol held in our bucket stands, and nobody is asked for it again.
+          logo: isOurs(heldSet?.logo)
+            ? heldSet.logo
+            : heldUnlessOurs(
+                heldSet?.logo,
+                await ownArt(
+                  (await withSetLogos([set]))[0]?.logo ??
+                    set.logo ??
+                    (await scrydexEnglishLogo(id)),
+                  storing,
+                ),
+              ),
+          symbol: isOurs(heldSet?.symbol)
+            ? heldSet.symbol
+            : heldUnlessOurs(heldSet?.symbol, await ownArt(set.symbol, storing)),
           abbreviation: set.abbreviation ?? null,
           total: set.total,
           printed_total: set.printedTotal,
@@ -571,7 +598,7 @@ export async function syncMirror(
             release_date: set.releaseDate,
             rarity: c.rarity,
             types: c.types,
-            image: stemOf(c.image),
+            image: heldUnlessOurs(held.get(c.id), stemOf(c.image)),
             category: c.category ?? null,
             trainer_type: c.trainerType ?? null,
             full_art: arts[i] ?? false,
