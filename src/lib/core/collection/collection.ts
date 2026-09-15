@@ -81,6 +81,7 @@ import {
   getFolder,
   catalogueLanguagesOfCard,
   listCardPrices,
+  listHistoryPrices,
   type PricedCard,
   listFolders,
   listPublicFolders,
@@ -1261,9 +1262,12 @@ const HELD_PRICES_DAYS = 60;
 /**
  * The collection with a stray sale's price held over, as the price line holds it (held-prices.ts).
  *
- * One read of the collection's lines over HELD_PRICES_DAYS, an hour in the Data Cache and dropped
- * with every other line when the cron writes the night's (priceHistoryTag). A line that cannot be
- * read leaves TCGplayer's figures as they are: a price is still better than none.
+ * The lines are read over HELD_PRICES_DAYS in parallel chunks (listHistoryPrices), and only the
+ * price day's held points are kept: a day in the Data Cache under that day, dropped with every other
+ * line when the cron writes the night's (priceHistoryTag). The whole read was cached at first and
+ * is past the Data Cache's 2 MB an entry for a collection of 1,945 rows, so every build read it
+ * again and took 3.6 to 4.7 s longer (production logs, 2026-09-15). A line that cannot be read
+ * leaves TCGplayer's figures as they are: a price is still better than none.
  */
 async function withHeldPrices(sets: CardSet[]): Promise<CardSet[]> {
   const db = adminClient();
@@ -1283,12 +1287,15 @@ async function withHeldPrices(sets: CardSet[]): Promise<CardSet[]> {
     const since = new Date(Date.parse(`${priceDay}T00:00:00Z`) - HELD_PRICES_DAYS * 86_400_000)
       .toISOString()
       .slice(0, 10);
-    const points = await unstable_cache(
-      () => listCardPrices(db, list, since),
-      ["held-prices", "v1", since, idsKey(list)],
-      { revalidate: 3600, tags: [priceHistoryTag] },
+    const held = await unstable_cache(
+      async () =>
+        (await listHistoryPrices(db, list, since)).flatMap((p) =>
+          p.date === priceDay && p.held ? [p] : [],
+        ),
+      ["held-prices", "v2", priceDay, idsKey(list)],
+      { revalidate: DAY, tags: [priceHistoryTag] },
     )();
-    return holdStrayPrices(sets, points, priceDay);
+    return holdStrayPrices(sets, held, priceDay);
   } catch (err) {
     console.error("Price lines unreadable, today's prices not held:", err);
     return sets;
