@@ -174,3 +174,19 @@ export function holdingsSeries(items: CardItem[], prices: CardPricePoint[]): Val
     return [{ ...point, added: gained?.cards ?? 0, addedValue: gained?.value ?? 0 }];
   });
 }
+
+/**
+ * The Home line: the stored points before `recent` begins, then `recent`.
+ *
+ * A collection's value is its cards' prices added up, day by day (Bart, 2026-09-15). The stored
+ * points after the one-time rebuild were written by the 04:00 snapshot from the collection as
+ * assembled then, at that moment's rate, under the night's date: a day behind the cards' lines and
+ * a few cents off, so an account holding one Pikachu with Grey Felt Hat saw a flat line on Home
+ * while the card's own line moved (€932.00, €931.93, €931.54, €931.54 against €932, €928, €933,
+ * €933). The recent days are holdingsSeries over the same readings every card's line reads.
+ */
+export function joinHistory(stored: ValueSnapshot[], recent: ValueSnapshot[]): ValueSnapshot[] {
+  if (!recent.length) return stored;
+  const from = recent[0]!.date;
+  return [...stored.filter((p) => p.date < from), ...recent];
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { daysFromMonths } from "../price-months.mjs";
-import { folderSeries, holdingsSeries } from "./folder-history";
+import { folderSeries, holdingsSeries, joinHistory } from "./folder-history";
 import type { CardItem } from "./items";
 
 const copy = (over: Partial<CardItem>): CardItem =>
@@ -290,5 +290,33 @@ describe("holdingsSeries", () => {
       { language: "en" as const, tcgId: "base1-4", date: "2025-01-04", market: 120, holo: null },
     ];
     expect(holdingsSeries(items, prices).map((p) => p.date)).toEqual(["2025-01-04"]);
+  });
+});
+
+describe("joinHistory", () => {
+  const point = (date: string, value: number) => ({
+    date,
+    value,
+    cards: 1,
+    priced: 1,
+    unpriced: 0,
+  });
+
+  // Aylan's account, 2026-09-15: the nightly points read €932.00, €931.93, €931.54, €931.54 while her
+  // one card's line read €932, €928, €933, €933. The recent days are the card lines summed.
+  it("keeps the stored points before the recent series and the recent series from its first day", () => {
+    const stored = [point("2026-06-01", 900), point("2026-09-12", 932), point("2026-09-13", 932)];
+    const recent = [point("2026-09-12", 932), point("2026-09-13", 928), point("2026-09-14", 933)];
+    expect(joinHistory(stored, recent).map((p) => [p.date, p.value])).toEqual([
+      ["2026-06-01", 900],
+      ["2026-09-12", 932],
+      ["2026-09-13", 928],
+      ["2026-09-14", 933],
+    ]);
+  });
+
+  it("answers the stored points where there is no recent series", () => {
+    const stored = [point("2026-09-12", 932)];
+    expect(joinHistory(stored, [])).toBe(stored);
   });
 });

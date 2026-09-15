@@ -40,6 +40,16 @@ vi.mock("@/lib/core/collection/collection", () => ({
   getCardPrices: (...a: unknown[]) => getCardPrices(...a),
 }));
 
+const flattenItems = vi.fn();
+vi.mock("@/lib/core/collection/items", async (actual) => {
+  const real = await actual<typeof import("@/lib/core/collection/items")>();
+  flattenItems.mockImplementation(real.flattenItems);
+  return {
+    ...real,
+    flattenItems: (...a: Parameters<typeof real.flattenItems>) => flattenItems(...a),
+  };
+});
+
 const { GET } = await import("./route");
 
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
@@ -63,6 +73,51 @@ beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue(VIEWER);
   getValueHistory.mockResolvedValue({ snapshots: [SNAPSHOT], failed: false });
+});
+
+describe("GET /api/v1/value-history, the recent days", () => {
+  // Bart, 2026-09-15: a collection's value is its cards' prices added up, and moves with them.
+  it("answers the recent days as the held cards' readings add up, after the stored points before them", async () => {
+    getValueHistory.mockResolvedValue({
+      snapshots: [
+        { date: "2026-06-01", value: 900, cards: 1, priced: 1, unpriced: 0 },
+        { date: "2026-09-13", value: 932, cards: 1, priced: 1, unpriced: 0 },
+      ],
+      failed: false,
+    });
+    const pikachu = {
+      id: "row",
+      tcgId: "svp-085",
+      catalogue: "en",
+      owned: true,
+      finish: "normal",
+      quantity: 1,
+      acquiredAt: "2026-09-12T10:00:00Z",
+    };
+    getCollection.mockResolvedValue({ sets: [{ cards: [] }], failed: false });
+    getCardPrices.mockResolvedValue({
+      points: [
+        { language: "en", tcgId: "svp-085", date: "2026-09-12", market: 932, holo: null },
+        { language: "en", tcgId: "svp-085", date: "2026-09-13", market: 928, holo: null },
+      ],
+      failed: false,
+    });
+    flattenItems.mockReturnValueOnce([pikachu]);
+    const body = await (await get()).json();
+    expect(body.snapshots.map((p: { date: string; value: number }) => [p.date, p.value])).toEqual([
+      ["2026-06-01", 900],
+      ["2026-09-12", 932],
+      ["2026-09-13", 928],
+    ]);
+  });
+
+  it("answers the stored points alone when the readings cannot be read", async () => {
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([]);
+    getCardPrices.mockResolvedValue({ points: [], failed: true });
+    const body = await (await get()).json();
+    expect(body.snapshots).toEqual([SNAPSHOT]);
+  });
 });
 
 describe("GET /api/v1/value-history", () => {

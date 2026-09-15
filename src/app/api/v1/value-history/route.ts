@@ -9,8 +9,9 @@ import {
   getValueHistory,
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
-import { folderSeries } from "@/lib/core/collection/folder-history";
+import { folderSeries, holdingsSeries, joinHistory } from "@/lib/core/collection/folder-history";
 import { filterItems, flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
+import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
 
 /**
  * What the caller's collection has been worth, oldest reading first.
@@ -55,7 +56,28 @@ export async function GET(req: Request) {
         "The value history could not be read. Try again in a moment.",
         readHeaders(req),
       );
-    return NextResponse.json({ snapshots }, { headers: readHeaders(req) });
+    /* The recent days as the cards' own lines add up (joinHistory): the same readings a card's chart
+       draws, the same ninety days the movers read. Where the collection or its readings cannot be
+       read, the stored points alone, as before. */
+    let recent: ValueSnapshot[] = [];
+    try {
+      const collection = await getCollection(viewer.userId, token);
+      if (collection && !collection.failed) {
+        const items = flattenItems(collection.sets);
+        const prices = await getCardPrices(
+          viewer.userId,
+          pricedCardsOf(items.filter((it) => it.owned)),
+          token,
+        );
+        if (!prices.failed) recent = holdingsSeries(items, prices.points);
+      }
+    } catch (err) {
+      console.error("Recent value line unavailable, the stored points alone:", err);
+    }
+    return NextResponse.json(
+      { snapshots: joinHistory(snapshots, recent) },
+      { headers: readHeaders(req) },
+    );
   }
 
   if (folder !== "favorites" && folder !== "wishlist" && !UUID.test(folder))
