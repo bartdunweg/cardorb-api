@@ -185,6 +185,11 @@ describe("daysFromMonths", () => {
       "1st-edition-holofoil": 8745.1,
       holofoil: 690,
     });
+    // A held figure says what it stands in for, so today's price can be held the same way.
+    expect(days.find((d) => d.date === "2026-07-12")?.held).toEqual({
+      "1st-edition-holofoil": 219,
+    });
+    expect(days.find((d) => d.date === "2026-07-11")).not.toHaveProperty("held");
   });
 
   it("leaves out a stray figure with nothing before it to hold", () => {
@@ -222,6 +227,30 @@ describe("daysFromMonths", () => {
       run("holofoil", "2026-06-01", () => 17000),
     ]);
     expect(cheaper.filter((d) => d.printings?.["1st-edition-holofoil"] === 150)).toHaveLength(30);
+  });
+
+  // ex11-12's reverse: €86 through August, €905 from 1 September once #463 read its own figure.
+  it("takes a new level at the end of the line once it has held a week", () => {
+    const line = (days: number) => [
+      {
+        language: "en" as const,
+        tcg_id: "ex11-12",
+        printing: "reverse-holofoil",
+        month: "2026-08-01",
+        cents: Array.from({ length: 31 }, () => 8600),
+      },
+      {
+        language: "en" as const,
+        tcg_id: "ex11-12",
+        printing: "reverse-holofoil",
+        month: "2026-09-01",
+        cents: Array.from({ length: 31 }, (_, i) => (i < days ? 90500 : null)),
+      },
+    ];
+    const last = (days: number) => daysFromMonths(line(days)).at(-1)!;
+    expect(last(6).printings).toEqual({ "reverse-holofoil": 86 });
+    expect(last(7).printings).toEqual({ "reverse-holofoil": 905 });
+    expect(last(7)).not.toHaveProperty("held");
   });
 
   it("keeps a climb under five times, and a printing with too few figures to judge", () => {

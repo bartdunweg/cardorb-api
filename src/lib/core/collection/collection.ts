@@ -65,6 +65,7 @@ import {
   type PriceLanguage,
   finishPrintingKey,
   historyKey,
+  priceLanguageOf,
   runKey,
   runLinksOf,
 } from "../price-months.mjs";
@@ -90,6 +91,7 @@ import {
   catalogueProductIds,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
+import { holdStrayPrices } from "./held-prices";
 import type { CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -1239,8 +1241,9 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
       factsBundle: (groups) => cachedFactsBundle(userId, groups, priceSource, usdToEur),
     });
     logTiming("buildCollection", elapsed(start), `${rows.length} rows ${sets.length} sets`);
-    remember(key, sets);
-    return sets;
+    const held = await timed("held prices", () => withHeldPrices(sets), `${sets.length} sets`);
+    remember(key, held);
+    return held;
   })();
   building.set(key, build);
   // Gone once it settles either way: a join that failed is tried again by the next request, not
@@ -1250,6 +1253,46 @@ async function assemble(userId: string, db: SupabaseClient | null): Promise<Card
     () => building.delete(key),
   );
   return build;
+}
+
+/** How far back the line is read to hold today's prices: the median's month and a stray run before it. */
+const HELD_PRICES_DAYS = 60;
+
+/**
+ * The collection with a stray sale's price held over, as the price line holds it (held-prices.ts).
+ *
+ * One read of the collection's lines over HELD_PRICES_DAYS, an hour in the Data Cache and dropped
+ * with every other line when the cron writes the night's (priceHistoryTag). A line that cannot be
+ * read leaves TCGplayer's figures as they are: a price is still better than none.
+ */
+async function withHeldPrices(sets: CardSet[]): Promise<CardSet[]> {
+  const db = adminClient();
+  if (!db) return sets;
+  try {
+    const priceDay = await latestPriceDay();
+    if (priceDay === "-") return sets;
+    const cards = new Map<string, PricedCard>();
+    for (const set of sets) {
+      const language = priceLanguageOf(set.language);
+      for (const card of set.cards)
+        if (card.tcgId)
+          cards.set(historyKey(language, card.tcgId), { tcgId: card.tcgId, language });
+    }
+    if (!cards.size) return sets;
+    const list = [...cards.values()];
+    const since = new Date(Date.parse(`${priceDay}T00:00:00Z`) - HELD_PRICES_DAYS * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const points = await unstable_cache(
+      () => listCardPrices(db, list, since),
+      ["held-prices", "v1", since, idsKey(list)],
+      { revalidate: 3600, tags: [priceHistoryTag] },
+    )();
+    return holdStrayPrices(sets, points, priceDay);
+  } catch (err) {
+    console.error("Price lines unreadable, today's prices not held:", err);
+    return sets;
+  }
 }
 
 /**
@@ -1666,7 +1709,8 @@ export const getCardPrices = cache(
         // language, and the key hashes both; a v10 entry answers a Japanese card under an English id.
         // v12: a stray sale's figure left out of a printing's line (price-months.mjs dropStrayFigures).
         // v13: a stray figure holds the printing's last figure instead of leaving a gap.
-        ["card-prices", "v13", userId, since, idsKey(cards)],
+        // v14: a week of a new level at the end of a line is its price; held days say what they hold.
+        ["card-prices", "v14", userId, since, idsKey(cards)],
         { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag] },
       )();
       return { points, failed: false };
