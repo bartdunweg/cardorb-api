@@ -1,0 +1,1 @@
+- A printing's TCGdex scan keeps TCGplayer's product beside it. The print-pictures cron wrote 151's 153 Japanese Poké Ball scans without a product, and a Japanese reverse is priced by its product since the reverses got their own prices, so those copies had no figure and no history. A held scan row without the product is written again.
