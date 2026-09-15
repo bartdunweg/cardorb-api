@@ -46,6 +46,15 @@ const IDS = join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json");
 const COVERAGE = join(ROOT, "scripts", "tcgplayer-coverage.json");
 const DRY = process.argv.includes("--dry");
 
+/**
+ * One product chosen by hand where a card has several equal ones and no rule can pick. My First
+ * Battle's Potion and Switch came in each of its four decks, and TCGplayer sells them as four
+ * products each ("Potion (Bulbasaur)", ...) with no number, where TCGdex has one card. They are the
+ * same card; the Bulbasaur deck's is taken, the deck TCGdex numbers first (Bart, 2026-09-15:
+ * "koppel er eentje dan"). Only used where the name-only match finds more than one product.
+ */
+const CHOSEN_PRODUCTS = { "mfb-33": 524026, "mfb-34": 524037 };
+
 /** TCGdex set id to the tcgcsv group that holds its Shadowless run. Read by hand on 2026-09-12. */
 const RUN_GROUPS = {
   base1: "Base Set (Shadowless)",
@@ -497,8 +506,13 @@ for (const [set, catalogue] of catalogues) {
         .filter((e) => e.shared > 0)
         .sort((a, b) => b.shared - a.shared);
       const top = own[0];
-      if (top && (own.length === 1 || own[1].shared < top.shared) && top.products.size === 1) {
-        const [product] = top.products.values();
+      const chosen = top?.products.get(CHOSEN_PRODUCTS[card.id]);
+      if (
+        top &&
+        (own.length === 1 || own[1].shared < top.shared) &&
+        (top.products.size === 1 || chosen)
+      ) {
+        const product = chosen ?? [...top.products.values()][0];
         ids[card.id] = {
           productId: product.productId,
           variants: printingsOf.get(product.productId) ?? [],
