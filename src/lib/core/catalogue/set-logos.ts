@@ -23,6 +23,15 @@ import type { CatalogueSet } from "./tcgdex-browse";
  */
 export const PROMO_STAR = "https://assets.tcgdex.net/en/swsh/swshp/logo.webp";
 
+/**
+ * A set sold as part of another that wears that set's wordmark, as TCGdex publishes it for the
+ * other. The Unown Collection came in Unseen Forces boosters, one Unown in each (Bart,
+ * 2026-09-15: "unown collection zelfde unseen forces logo geven"); no source has a logo of its own.
+ */
+export const LOGO_OF: Readonly<Record<string, string>> = {
+  exu: "https://assets.tcgdex.net/en/ex/ex10/logo.webp",
+};
+
 const THEIRS: Record<string, string> = Object.fromEntries(
   Object.entries(PTCG_SET_IDS as Record<string, string>).map(([ptcg, tcgdex]) => [tcgdex, ptcg]),
 );
@@ -77,6 +86,8 @@ export async function withSetLogos(sets: CatalogueSet[]): Promise<CatalogueSet[]
     sets.map(async (set) => {
       if (/black star promos/i.test(set.name)) return { ...set, logo: PROMO_STAR };
       if (set.logo) return set;
+      const borrowed = LOGO_OF[set.id];
+      if (borrowed) return { ...set, logo: borrowed };
       const logo = await theirLogo(set.id);
       return logo ? { ...set, logo } : set;
     }),

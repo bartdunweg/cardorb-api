@@ -1,0 +1,1 @@
+- The Unseen Forces Unown Collection wears the Unseen Forces wordmark, the set whose boosters it came in; no source publishes a logo of its own. The nightly copy puts it in place.
