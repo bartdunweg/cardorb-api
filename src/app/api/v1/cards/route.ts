@@ -29,7 +29,8 @@ import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
 import { forgetOnTheWeb } from "@/lib/api/web-cache";
-import { fullArtIdsAmong } from "@/lib/storage/postgres";
+import { copyPictureOf } from "@/lib/core/catalogue/print-pictures";
+import { fullArtIdsAmong, printPicturesOfCards } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
 /**
  * Adding a card. The only endpoint here that changes anything, and the reason
@@ -143,10 +144,16 @@ export async function GET(req: Request) {
     ? sortByChange(filtered, changes, order ?? "desc")
     : sortItems(filtered, sort, order);
   const paged = pageOf(shown, read.query);
+  const pictures = await pagePictures(paged.items);
   const total = paged.total;
-  const items = changes
-    ? paged.items.map((it) => ({ ...it, priceChange: changes.get(it.id) ?? null }))
-    : paged.items;
+  const items = (
+    changes
+      ? paged.items.map((it) => ({ ...it, priceChange: changes.get(it.id) ?? null }))
+      : paged.items
+  ).map((it) => ({
+    ...it,
+    printImage: copyPictureOf(pictures.get(`${it.catalogue}|${it.tcgId}`), it),
+  }));
   // The facets ride along with every page, over the owned collection (the wishes when
   // `owned=false`) whatever the other filters: the web app used to fetch GET /v1/collection —
   // a megabyte — to draw the two menus.
@@ -169,6 +176,35 @@ export async function GET(req: Request) {
     },
     { headers: readHeaders(req) },
   );
+}
+
+/**
+ * The printings' own pictures of the cards on a page, by catalogue and card id: one read per
+ * catalogue on the page. A store that will not answer costs the pictures, never the page; every
+ * copy then shows the card's scan, as before there were any.
+ */
+async function pagePictures(
+  items: { tcgId: string | null; catalogue: "en" | "ja" }[],
+): Promise<Map<string, Map<string, string | null>>> {
+  const out = new Map<string, Map<string, string | null>>();
+  const db = adminClient();
+  if (!db) return out;
+  await Promise.all(
+    (["en", "ja"] as const).map(async (language) => {
+      const ids = [
+        ...new Set(
+          items.flatMap((it) => (it.catalogue === language && it.tcgId ? [it.tcgId] : [])),
+        ),
+      ];
+      if (!ids.length) return;
+      const found = await printPicturesOfCards(db, language, ids).catch((err) => {
+        console.error("The printings' pictures of a page of copies could not be read:", err);
+        return new Map<string, Map<string, string | null>>();
+      });
+      for (const [id, pictures] of found) out.set(`${language}|${id}`, pictures);
+    }),
+  );
+  return out;
 }
 
 export async function POST(req: Request) {

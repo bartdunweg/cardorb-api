@@ -653,6 +653,7 @@ components:
         type: { type: [string, "null"] }
         image: { type: [string, "null"] }
         imageHigh: { type: [string, "null"] }
+        printImage: { type: [string, "null"], description: "The picture of the printing this copy is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print); null where the card's `image` stands for it. `image` stays the card's scan." }
         speciesId: { type: [integer, "null"] }
         localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it; null on English cards." }
         tcgId: { type: [string, "null"] }

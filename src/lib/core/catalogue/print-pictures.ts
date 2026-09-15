@@ -185,6 +185,27 @@ export function editionPictures(
 }
 
 /**
+ * The picture of the printing a copy is: its finish and pattern's own picture first, then its print
+ * run's, or null where neither has one and the card's scan stands for the copy.
+ *
+ * Bart, 2026-09-16: a tile is a kind of copy (items.ts), so an Unlimited Charizard or a Poké Ball
+ * reverse shows the card it is, the way the sheet does when that printing is pressed. A run and a
+ * finish never both have a picture of one card (print-pictures.ts), so the order only matters in
+ * name.
+ */
+export function copyPictureOf(
+  pictures: ReadonlyMap<string, string | null> | undefined,
+  copy: { finish: string | null; foilPattern: string | null; edition: string | null },
+): string | null {
+  if (!pictures?.size) return null;
+  return (
+    (copy.finish ? pictures.get(printKey(copy.finish, copy.foilPattern)) : null) ??
+    (copy.edition ? pictures.get(copy.edition) : null) ??
+    null
+  );
+}
+
+/**
  * A Japanese card's printings with the ones TCGplayer proves added (Bart, 2026-09-15). TCGdex lists a
  * mirror holo for 513 Japanese cards; TCGplayer sells some 890 as products of their own, so a card
  * whose printings came from TCGdex alone offered no Reverse where the store even held its picture.
