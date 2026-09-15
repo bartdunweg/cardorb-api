@@ -1,0 +1,1 @@
+- Six cards printed only as a reverse holo offer only that finish: Thundurus BW41, Tornadus BW42 and Lillipup BW52 (TCGdex lists them as normal) and Stormfront's Drifloon, Duskull and Voltorb SH1 to SH3 (TCGdex lists them as holo). Bulbapedia names the one print for each and TCGplayer sells no other.
