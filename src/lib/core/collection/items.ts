@@ -39,6 +39,12 @@ export type CardItem = {
   type: string | null;
   image: string | null;
   imageHigh: string | null;
+  /**
+   * The picture of the printing this copy is, where it has its own (copyPictureOf): a Poké Ball
+   * reverse's photo, Base Set's Unlimited print. Only on GET /v1/cards, set on the page it answers;
+   * `image` stays the card's scan, which the sheet draws the other printings over.
+   */
+  printImage?: string | null;
   speciesId: number | null;
   /** What the card prints where `name` is the English for it (a Japanese card); null otherwise. */
   localName: string | null;

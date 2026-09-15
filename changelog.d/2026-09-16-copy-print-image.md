@@ -1,0 +1,1 @@
+- `GET /v1/cards` gives each copy a `printImage`: the picture of the printing it is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print), so a list shows the card the copy is. Null where the card's scan stands for it; `image` is unchanged.

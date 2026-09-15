@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  copyPictureOf,
   editionPictures,
   englishPrintProducts,
   finishOfPrintingLabel,
@@ -135,6 +136,45 @@ describe("Base Set's runs", () => {
       unlimited: "https://images.cardorb.com/tcgplayer/42382.jpg",
     });
     expect(editionPictures(null, pictures)).toEqual({});
+  });
+});
+
+describe("copyPictureOf", () => {
+  const pictures = new Map<string, string | null>([
+    ["poke-ball", "https://images.cardorb.com/tcgplayer/1.jpg"],
+    ["holo/cosmos", "https://images.cardorb.com/tcgplayer/2.jpg"],
+    ["unlimited", "https://images.cardorb.com/tcgplayer/42382.jpg"],
+    ["master-ball", null],
+  ]);
+  const copy = (
+    finish: string | null,
+    foilPattern: string | null = null,
+    edition: string | null = null,
+  ) => ({
+    finish,
+    foilPattern,
+    edition,
+  });
+
+  it("shows a copy the picture of the printing it is", () => {
+    expect(copyPictureOf(pictures, copy("poke-ball"))).toBe(
+      "https://images.cardorb.com/tcgplayer/1.jpg",
+    );
+    expect(copyPictureOf(pictures, copy("holo", "cosmos"))).toBe(
+      "https://images.cardorb.com/tcgplayer/2.jpg",
+    );
+    expect(copyPictureOf(pictures, copy("holo", null, "unlimited"))).toBe(
+      "https://images.cardorb.com/tcgplayer/42382.jpg",
+    );
+  });
+
+  it("leaves the card's scan to a copy whose printing has no picture", () => {
+    expect(copyPictureOf(pictures, copy("holo"))).toBeNull();
+    expect(copyPictureOf(pictures, copy("holo", null, "1st-edition"))).toBeNull();
+    expect(copyPictureOf(pictures, copy("master-ball"))).toBeNull();
+    // A run not recorded is not the Unlimited run.
+    expect(copyPictureOf(pictures, copy("holo", null, null))).toBeNull();
+    expect(copyPictureOf(undefined, copy("poke-ball"))).toBeNull();
   });
 });
 
