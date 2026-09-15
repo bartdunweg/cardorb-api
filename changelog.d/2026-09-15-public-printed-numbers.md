@@ -1,0 +1,1 @@
+- Public profile cards carry `printedNumber` and `setAbbr` as the owner's list does, so a public page labels a card as it is printed too.

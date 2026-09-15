@@ -621,6 +621,8 @@ components:
         key: { type: string }
         name: { type: string }
         number: { type: string }
+        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\"), from the catalogue's card id." }
+        setAbbr: { type: [string, "null"], description: "The set's code: the official abbreviation, or Pokémon TCG Online's where there is none." }
         set: { type: string }
         setTitle: { type: string }
         rarity: { type: [string, "null"] }

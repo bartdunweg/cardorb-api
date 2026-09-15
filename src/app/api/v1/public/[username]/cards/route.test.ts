@@ -85,8 +85,11 @@ describe("GET /api/v1/public/{username}/cards", () => {
       key: "Pikachu",
       name: "Pikachu",
       number: "1",
+      // The printed number and the set's code are facts about the card, public like its name.
+      printedNumber: null,
       set: "Base Set",
       setTitle: "Base Set",
+      setAbbr: null,
       rarity: "Common",
       gen: null,
       type: null,

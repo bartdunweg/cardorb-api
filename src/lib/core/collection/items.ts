@@ -713,8 +713,12 @@ export type PublicItem = {
   key: string;
   name: string;
   number: string;
+  /** The number as the card prints it ("XY124"), as on CardItem. Optional in the type for the hand-built fixtures. */
+  printedNumber?: string | null;
   set: string;
   setTitle: string;
+  /** The set's code ("BS", or Pokémon TCG Online's "PR"), as on CardItem. Optional in the type for the fixtures. */
+  setAbbr?: string | null;
   rarity: string | null;
   gen: string | null;
   type: string | null;
@@ -761,8 +765,10 @@ export function publicItems(sets: CardSet[], { newestFirst = false } = {}): Publ
         key: card.key,
         name: card.name,
         number: card.number,
+        printedNumber: printedNumberOf(card.tcgId),
         set: set.name,
         setTitle: set.title,
+        setAbbr: set.abbreviation ?? null,
         rarity: card.variants.find((v) => v.owned)?.rarity ?? null,
         gen: card.gen,
         type: card.type,
