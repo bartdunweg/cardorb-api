@@ -1,0 +1,1 @@
+- The Japanese 25th Anniversary Collection (S8a) carries its title as the pack prints it, "25th ANNIVERSARY COLLECTION", instead of TCGdex's katakana; the last naming difference with Bulbapedia.
