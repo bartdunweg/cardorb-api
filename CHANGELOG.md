@@ -38,6 +38,8 @@ if the two have drifted apart.
 
 - Japanese sets show their logo. No source Card Orb read had a Japanese wordmark (TCGdex names none, TCGplayer and Limitless publish none); Scrydex lists one for every Japanese expansion and gave permission to keep them. The nightly Japanese copy finds each set on Scrydex by id, by English title, or by a short hand-read list where Scrydex titles a set differently, and keeps the logo in our own bucket: 165 of 169 sets, all but three starter sets and Detective Pikachu.
 
+- 27 Japanese promo cards (26 in SV-P, Mega Zeraora ex in M-P) get a picture: the Limitless address for a promo set is built without its hyphen (SVP, MP), the way Limitless files it, where every guess used to be a 403.
+
 - `GET /v1/movers?days=7|30|90|180|all&top=` answers the caller's cards whose price moved most over the period, up and down, ranked by what the move did to the collection. For Home's movers, over the period its value chart shows.
 
 - `GET /v1/movers` answers each mover's `setAbbr`, the code printed on the card, so a list can show "XYP 124" as the collection does.

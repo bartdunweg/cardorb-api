@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { scrydexScan, storedScan, tcgdexScan } from "./artwork";
+import { limitlessJapaneseScan, scrydexScan, storedScan, tcgdexScan } from "./artwork";
 
 const BASE = "https://assets.tcgdex.net/en/sm/smp/SM191";
 
@@ -89,5 +89,24 @@ describe("scrydexScan", () => {
     expect(await scrydexScan("base1", "4")).toBeNull();
     expect(await scrydexScan("tk-xy-b", "SWSH1")).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("limitlessJapaneseScan", () => {
+  const file = (address: string) => decodeURIComponent(address.replace("/api/cover?url=", ""));
+
+  it("reads a set's own abbreviation and the number without its padding", () => {
+    expect(file(limitlessJapaneseScan("SV5M-001", "001").high)).toBe(
+      "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SV5M/SV5M_1_R_JP_LG.png",
+    );
+  });
+
+  it("writes a promo set without its hyphen, the way Limitless files it", () => {
+    expect(file(limitlessJapaneseScan("SV-P-188", "188").high)).toBe(
+      "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/SVP/SVP_188_R_JP_LG.png",
+    );
+    expect(file(limitlessJapaneseScan("M-P-164", "164").low)).toBe(
+      "https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpc/MP/MP_164_R_JP_SM.png",
+    );
   });
 });
