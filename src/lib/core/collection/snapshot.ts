@@ -24,7 +24,8 @@ import {
   historyKey,
   priceLanguageOf,
   printingKey,
-  shadowlessKey,
+  runKey,
+  runLinksOf,
 } from "../price-months.mjs";
 
 /**
@@ -115,7 +116,12 @@ export function cardPricesFromTcgcsv(
 }
 
 /** A card's TCGplayer link as tcgplayer-ids.generated.json has it: the product, and Base Set's Shadowless run. */
-export type TcgplayerLink = { productId: number; shadowless?: { productId: number } } | null;
+export type TcgplayerLink = {
+  productId: number;
+  shadowless?: { productId: number };
+  /** My First Battle's Blue Border print, a product of its own. */
+  blueBorder?: { productId: number };
+} | null;
 
 /**
  * One tcgcsv shelf, as the tcgplayer-prices cron reads it, as every linked card's points on this day.
@@ -157,16 +163,19 @@ export function cardPricesFromShelf(
     shelf.set(r.productId, printings);
   }
   const products: Record<string, number | null> = {};
-  const runs: Record<string, number | null> = {};
+  const runs = new Map<string, Record<string, number | null>>();
   for (const [id, link] of Object.entries(links)) {
     products[id] = link?.productId ?? null;
-    if (link?.shadowless) runs[id] = link.shadowless.productId;
+    for (const run of runLinksOf(link))
+      runs.set(run.edition, { ...runs.get(run.edition), [id]: run.productId });
   }
   const points = cardPricesFromTcgcsv(language, products, shelf, usdToEur, date);
   const own = new Set(points.map((p) => `${p.tcgId}\u0001${p.printing}`));
-  for (const p of cardPricesFromTcgcsv(language, runs, shelf, usdToEur, date)) {
-    const printing = shadowlessKey(p.printing);
-    if (!own.has(`${p.tcgId}\u0001${printing}`)) points.push({ ...p, printing });
+  for (const [edition, ofRun] of runs) {
+    for (const p of cardPricesFromTcgcsv(language, ofRun, shelf, usdToEur, date)) {
+      const printing = runKey(edition, p.printing);
+      if (!own.has(`${p.tcgId}\u0001${printing}`)) points.push({ ...p, printing });
+    }
   }
   for (const [tcgId, prints] of Object.entries(finishPrints)) {
     if (links[tcgId]?.productId == null) continue;

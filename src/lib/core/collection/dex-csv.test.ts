@@ -157,6 +157,8 @@ describe("editionFrom", () => {
     expect(editionFrom("1st Edition Holofoil")).toBe("1st-edition");
     expect(editionFrom("First Edition")).toBe("1st-edition");
     expect(editionFrom("Shadowless")).toBe("shadowless");
+    expect(editionFrom("Blue Border")).toBe("blue-border");
+    expect(editionFrom("blue-border")).toBe("blue-border");
     expect(editionFrom("Unlimited Holofoil")).toBe("unlimited");
     expect(editionFrom("1st-edition")).toBe("1st-edition");
   });

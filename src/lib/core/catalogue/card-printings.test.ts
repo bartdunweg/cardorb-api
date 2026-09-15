@@ -189,6 +189,14 @@ describe("editionsOf", () => {
     expect(editionsOf("base1-999", true)).toEqual(["1st-edition", "unlimited"]);
   });
 
+  // My First Battle Pikachu: TCGplayer sells the plain card and "Pikachu (Blue Border)" apart
+  // ($17.56 and $29.58 on 2026-09-15); Charmeleon had no Blue Border print.
+  it("offers a Blue Border run where TCGplayer sells one, beside the plain card", () => {
+    expect(editionsOf("mfb-17", null)).toEqual(["unlimited", "blue-border"]);
+    expect(editionsOf("mfb-32", null)).toEqual(["unlimited", "blue-border"]);
+    expect(editionsOf("mfb-10", null)).toBeNull();
+  });
+
   it("reads a stamped run from TCGplayer where TCGdex said nothing", () => {
     expect(editionsOf("base2-10", null)).toEqual(["1st-edition", "unlimited"]);
   });

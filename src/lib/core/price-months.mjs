@@ -61,7 +61,7 @@ const languageOrThrow = (language) => {
 export const LEGACY = { market: "market", holo: "holo" };
 
 const DAYS = 31;
-const PLAIN = ["normal", "unlimited", "1st-edition", "shadowless"];
+const PLAIN = ["normal", "unlimited", "1st-edition", "shadowless", "blue-border"];
 const FOIL = [
   "holofoil",
   "unlimited-holofoil",
@@ -87,8 +87,39 @@ export const printingKey = (/** @type {string} */ subType) =>
  * a group of its own, whose "Unlimited" is the Shadowless run and "1st Edition" the stamped one
  * (collection.ts runPrintingsForSet does the same for today's price).
  */
-export const shadowlessKey = (/** @type {string} */ key) =>
-  key.replace(/^unlimited|^normal$/, "shadowless");
+export const shadowlessKey = (/** @type {string} */ key) => runKey("shadowless", key);
+
+/**
+ * A run TCGplayer sells as a product of its own, under the run it is: the product's "Unlimited" or
+ * plain printing is the run ("normal" to "blue-border", "unlimited-holofoil" to
+ * "shadowless-holofoil"), and a stamped printing keeps its name.
+ *
+ * @param {string} edition
+ * @param {string} key
+ */
+export const runKey = (edition, key) => key.replace(/^unlimited|^normal$/, edition);
+
+/**
+ * The link fields tcgplayer-links.mjs writes for a card's separately sold runs, and the edition
+ * each is: Base Set's Shadowless run (its own group), and My First Battle's Blue Border cards
+ * (a product of their own beside the plain card).
+ */
+export const RUN_FIELDS = /** @type {const} */ ({
+  shadowless: "shadowless",
+  blueBorder: "blue-border",
+});
+
+/**
+ * A card's separately sold runs, as its link has them: the edition and the product.
+ *
+ * @param {Partial<Record<keyof typeof RUN_FIELDS, { productId: number, groupId?: number }>> | null | undefined} link
+ * @returns {{ edition: string, productId: number, groupId?: number }[]}
+ */
+export const runLinksOf = (link) =>
+  Object.entries(RUN_FIELDS).flatMap(([field, edition]) => {
+    const run = link?.[/** @type {keyof typeof RUN_FIELDS} */ (field)];
+    return run ? [{ edition, ...run }] : [];
+  });
 
 /**
  * @typedef {object} PrintingDay

@@ -139,7 +139,12 @@ export function printingsOf(
   );
 }
 
-type TcgplayerLink = { productId?: number; variants?: string[]; shadowless?: unknown } | null;
+type TcgplayerLink = {
+  productId?: number;
+  variants?: string[];
+  shadowless?: unknown;
+  blueBorder?: unknown;
+} | null;
 const LINKS = TCGPLAYER_IDS as Record<string, TcgplayerLink>;
 
 /**
@@ -184,6 +189,14 @@ export function pricesPlainReverse(tcgId: string): boolean {
  */
 const SHADOWLESS = new Set(Object.entries(LINKS).flatMap(([id, v]) => (v?.shadowless ? [id] : [])));
 
+/**
+ * The My First Battle cards TCGplayer sells a Blue Border print of, as tcgplayer-links.mjs linked
+ * them: the four starters and the four basic energies.
+ */
+const BLUE_BORDER = new Set(
+  Object.entries(LINKS).flatMap(([id, v]) => (v?.blueBorder ? [id] : [])),
+);
+
 const stamped = (variant: string): boolean => variant.startsWith("1st-edition");
 
 /**
@@ -210,11 +223,13 @@ export function editionsOf(
 ): Edition[] | null {
   const variants = LINKS[tcgId]?.variants ?? [];
   const listed = variants.length > 0;
-  if (firstEdition == null && !variants.some(stamped)) return null;
+  /* A Blue Border print is an answer about the runs on its own: no card that has one was stamped. */
+  if (firstEdition == null && !variants.some(stamped) && !BLUE_BORDER.has(tcgId)) return null;
   const runs: Edition[] = [];
   if (!listed || variants.some((v) => !stamped(v))) runs.push("unlimited");
   if (firstEdition || variants.some(stamped)) runs.push("1st-edition");
   if (SHADOWLESS.has(tcgId)) runs.push("shadowless");
+  if (BLUE_BORDER.has(tcgId)) runs.push("blue-border");
   return EDITIONS.filter((e) => runs.includes(e));
 }
 

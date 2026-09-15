@@ -102,10 +102,13 @@ export const isFoilPattern = (v: unknown): v is FoilPattern =>
  * the card. TCGdex does say whether a card exists as 1st Edition (`variants.firstEdition`),
  * which is what makes offering the choice honest rather than a guess.
  *
+ * `blue-border` is My First Battle's second print of its four starters and four basic energies,
+ * with a blue border where the first has a yellow one; TCGplayer sells it as a product of its own.
+ *
  * Null is not unlimited. Most of what anybody holds is unlimited, and saying that for a row
  * nobody has looked at would put a fact in the database that nobody established.
  */
-export const EDITIONS = ["1st-edition", "shadowless", "unlimited"] as const;
+export const EDITIONS = ["1st-edition", "shadowless", "unlimited", "blue-border"] as const;
 export type Edition = (typeof EDITIONS)[number];
 
 export const isEdition = (v: unknown): v is Edition =>

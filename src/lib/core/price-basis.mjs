@@ -136,12 +136,13 @@ export const printingKeysOf = (copy) => {
         : null;
   // "shadowless" is not TCGplayer's word: it files the run as a group of its own, and
   // tcgplayer-links.mjs names that group's printings "shadowless" and "shadowless-holofoil" so a
-  // Shadowless copy can ask for them here like any other run.
+  // Shadowless copy can ask for them here like any other run. "blue-border" the same, for My First
+  // Battle's Blue Border products.
   const run =
     copy.edition === "1st-edition"
       ? "1st-edition"
-      : copy.edition === "shadowless"
-        ? "shadowless"
+      : copy.edition === "shadowless" || copy.edition === "blue-border"
+        ? copy.edition
         : "unlimited";
   /*
    * A reverse reads a reverse figure and nothing else (Bart, 2026-09-14: a missing price shows as

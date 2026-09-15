@@ -140,6 +140,11 @@ describe("printingKeysOf and printingPriceOf", () => {
       "master-ball-reverse-holofoil": eur(18.63),
     };
     expect(printingKeysOf({ finish: "energy-symbol" })[0]).toBe("energy-symbol-reverse-holofoil");
+    // A Blue Border copy reads its own run first, then the plain card.
+    expect(printingKeysOf({ finish: "normal", edition: "blue-border" }).slice(0, 2)).toEqual([
+      "blue-border-normal",
+      "blue-border",
+    ]);
     expect(printingPriceOf({ finish: "poke-ball" }, eevee)?.market).toBe(1.5);
     expect(printingPriceOf({ finish: "master-ball" }, eevee)?.market).toBe(18.63);
     expect(printingPriceOf({ finish: "reverse-holo" }, eevee)?.market).toBe(0.29);

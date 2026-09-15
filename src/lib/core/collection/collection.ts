@@ -61,7 +61,13 @@ import {
 } from "../catalogue/tcgdex-client";
 import { TCGCSV_CATEGORY, groupPrintings } from "../catalogue/tcgcsv";
 import { finishPrintsFor, type PatternPrints } from "../catalogue/card-printings";
-import { type PriceLanguage, finishPrintingKey, historyKey } from "../price-months.mjs";
+import {
+  type PriceLanguage,
+  finishPrintingKey,
+  historyKey,
+  runKey,
+  runLinksOf,
+} from "../price-months.mjs";
 import type { Finish, FoilPattern } from "./collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "../tcgplayer-ids.ja.generated.json";
@@ -783,6 +789,8 @@ const TCGCSV_LINKS = TCGPLAYER_IDS as Record<
       groupId?: number;
       /** The card's Shadowless run, in TCGplayer's group for it: Base Set only. */
       shadowless?: { productId: number; groupId: number };
+      /** My First Battle's Blue Border print, a product of its own in the set's group. */
+      blueBorder?: { productId: number; groupId: number };
     }
   | null
   | undefined
@@ -857,24 +865,25 @@ export const runPrintingsForSet = async (
 ): Promise<
   Record<string, Pick<UsdPair, "firstEd"> & { printings: NonNullable<UsdPair["printings"]> }>
 > => {
-  const linked = ids.filter((id) => TCGCSV_LINKS[id]?.shadowless);
+  const linked = ids.filter((id) => runLinksOf(TCGCSV_LINKS[id]).length);
   if (!linked.length) return {};
   const out: Awaited<ReturnType<typeof runPrintingsForSet>> = {};
   const printings = await printingsOfProducts(
-    linked.map((id) => TCGCSV_LINKS[id]!.shadowless!.productId),
+    linked.flatMap((id) => runLinksOf(TCGCSV_LINKS[id]).map((run) => run.productId)),
   );
   {
     for (const id of linked) {
-      const run = TCGCSV_LINKS[id]!.shadowless!;
-      const tp = printings.get(run.productId);
-      if (!tp) continue;
-      // "unlimited" in the Shadowless group is the Shadowless run; "1st-edition" keeps its name.
+      // "unlimited" in the Shadowless group is the Shadowless run, a Blue Border product's "normal"
+      // the Blue Border run; "1st-edition" keeps its name.
       const renamed = Object.fromEntries(
-        Object.entries(tp).map(([name, v]) => [
-          name.replace(/^unlimited|^normal$/, "shadowless"),
-          v,
-        ]),
+        runLinksOf(TCGCSV_LINKS[id]).flatMap((run) =>
+          Object.entries(printings.get(run.productId) ?? {}).map(([name, v]) => [
+            runKey(run.edition, name),
+            v,
+          ]),
+        ),
       );
+      if (!Object.keys(renamed).length) continue;
       out[id] = { printings: usdPrintingsOf(renamed), firstEd: usdFirstEdOf(renamed) };
     }
   }

@@ -309,6 +309,7 @@ export function editionFrom(variant: string): Edition | null {
   if (isEdition(v)) return v;
   if (/(^|[^a-z])1st\.? ?ed(ition)?([^a-z]|$)|first ?edition/.test(v)) return "1st-edition";
   if (v.includes("shadowless")) return "shadowless";
+  if (/blue[ -]?border/.test(v)) return "blue-border";
   if (v.includes("unlimited")) return "unlimited";
   return null;
 }
