@@ -33,11 +33,13 @@ vi.mock("@/lib/api/viewer", () => ({
 const findFolder = vi.fn();
 const getCollection = vi.fn();
 const getCardPrices = vi.fn();
+const getRecentValue = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   getValueHistory: (...a: unknown[]) => getValueHistory(...a),
   findFolder: (...a: unknown[]) => findFolder(...a),
   getCollection: (...a: unknown[]) => getCollection(...a),
   getCardPrices: (...a: unknown[]) => getCardPrices(...a),
+  getRecentValue: (...a: unknown[]) => getRecentValue(...a),
 }));
 
 const flattenItems = vi.fn();
@@ -95,15 +97,18 @@ describe("GET /api/v1/value-history, the recent days", () => {
       acquiredAt: "2026-09-12T10:00:00Z",
     };
     getCollection.mockResolvedValue({ sets: [{ cards: [] }], failed: false });
-    getCardPrices.mockResolvedValue({
-      points: [
-        { language: "en", tcgId: "svp-085", date: "2026-09-12", market: 932, holo: null },
-        { language: "en", tcgId: "svp-085", date: "2026-09-13", market: 928, holo: null },
+    // The summed line, kept as a line (getRecentValue): the whole window of readings is past what
+    // the Data Cache keeps, so it is not getCardPrices that answers here.
+    getRecentValue.mockResolvedValue({
+      snapshots: [
+        { date: "2026-09-12", value: 932, cards: 1, priced: 1, unpriced: 0 },
+        { date: "2026-09-13", value: 928, cards: 1, priced: 1, unpriced: 0 },
       ],
       failed: false,
     });
     flattenItems.mockReturnValueOnce([pikachu]);
     const body = await (await get()).json();
+    expect(getRecentValue).toHaveBeenCalledWith("me-uuid", [pikachu], "t.o.k.e.n");
     expect(body.snapshots.map((p: { date: string; value: number }) => [p.date, p.value])).toEqual([
       ["2026-06-01", 900],
       ["2026-09-12", 932],
@@ -114,9 +119,10 @@ describe("GET /api/v1/value-history, the recent days", () => {
   it("answers the stored points alone when the readings cannot be read", async () => {
     getCollection.mockResolvedValue({ sets: [], failed: false });
     flattenItems.mockReturnValueOnce([]);
-    getCardPrices.mockResolvedValue({ points: [], failed: true });
+    getRecentValue.mockResolvedValue({ snapshots: [], failed: true });
     const body = await (await get()).json();
     expect(body.snapshots).toEqual([SNAPSHOT]);
+    expect(getCardPrices).not.toHaveBeenCalled();
   });
 });
 
