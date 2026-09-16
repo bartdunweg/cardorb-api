@@ -611,7 +611,7 @@ const keptFacts = (
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
     ["collection-facts", "v26", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
-    { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
+    { revalidate: DAY, tags: ["catalogue", pricesTag, factsTag(userId)] },
   )();
 
 const cachedFactsBundle = async (
@@ -763,7 +763,7 @@ const cachedSetFacts = (
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
       ["set-facts", "v34", setName, factsSignature(identities)],
-      { revalidate: DAY, tags: ["catalogue"] },
+      { revalidate: DAY, tags: ["catalogue", pricesTag] },
     )(),
   );
 
@@ -792,7 +792,7 @@ const cachedTcgdexUsd = (setName: string, ids: string[]) =>
       // runs alone. The Data Cache outlives a deploy, so a stale entry would leave every copy on
       // the old first-printing-wins figure until its day was up.
       ["tcgdex-usd", "v3", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
-      { revalidate: DAY, tags: ["catalogue"] },
+      { revalidate: DAY, tags: ["catalogue", pricesTag] },
     )(),
   );
 
@@ -825,7 +825,7 @@ const cachedGroupPrintings = (groupId: number, category: number = TCGCSV_CATEGOR
       },
       // v2: keyed by the shelf too, now that the Japanese one is read the same way.
       ["tcgcsv-group", "v2", String(category), String(groupId)],
-      { revalidate: DAY, tags: ["catalogue"] },
+      { revalidate: DAY, tags: ["catalogue", pricesTag] },
     )(),
   );
 
@@ -1678,6 +1678,17 @@ export const getValueHistory = cache(
  * that does not change.
  */
 export const cardPricesTag = (userId: string) => `card-prices:${userId}`;
+
+/**
+ * Every cached figure off TCGplayer's shelf, whoever asked: a set's facts, the collection's bundle
+ * of them, the TCGdex fallback and the tcgcsv groups. Each lives a day and, until 2026-09-16,
+ * nothing dropped one when the nightly job wrote a new shelf: the bundle, keyed by the day the
+ * table said, was then built from a set's entry that still held the day before, and stood for its
+ * day. Home's value and every tile read yesterday's shelf while the movers and the charts, which
+ * read the history the same job writes, had moved on: one card, two prices on one screen. The job
+ * drops this the moment the shelf is written (api/v1/cron/tcgplayer-prices/route.ts).
+ */
+export const pricesTag = "tcgplayer-prices";
 
 /** Every cached price history, whoever asked: dropped by the nightly job once the day is written. */
 export const priceHistoryTag = "card-prices";

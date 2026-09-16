@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
 import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
-import { priceHistoryTag, usdToEurForRequest } from "@/lib/core/collection/collection";
+import { priceHistoryTag, pricesTag, usdToEurForRequest } from "@/lib/core/collection/collection";
 import { allFinishPrints, allPatternPrints } from "@/lib/core/catalogue/card-printings";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
@@ -169,6 +169,9 @@ export async function GET(req: Request) {
     console.error("[cron] copying TCGplayer's Japanese prices failed:", err);
     japanese.skipped = "read or write failed";
   }
+  // The shelf is written: every set's cached facts and every collection's bundle of them carry
+  // the old figures until dropped (pricesTag). Before the history, which can be skipped tonight.
+  revalidateTag(pricesTag, { expire: 0 });
 
   let ok = true;
   const databaseBytes = await (async (): Promise<number | null> => {

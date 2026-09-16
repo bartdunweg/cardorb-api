@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - `GET /v1/cards` gives each copy a `printImage`: the picture of the printing it is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print), so a list shows the card the copy is. Null where the card's scan stands for it; `image` is unchanged.
 
+- The nightly TCGplayer job drops every cached price the moment the shelf is written: a set's facts, a collection's bundle of them, the TCGdex fallback and the tcgcsv groups. Each lived a day and nothing dropped it, so Home's value, the stats and every list priced yesterday's shelf for up to a day while the movers and the charts had moved on: one card, two prices on one screen (Pikachu EX XY124 at EUR 429.07 beside EUR 430.70, 2026-09-16).
+
 ## 2026-09-15
 
 - The Poké Ball, Master Ball and Energy Symbol reverse holos come from TCGplayer's own products, with their own prices and history. TCGplayer sells 645 of them apart from the plain card (Prismatic Evolutions, Black Bolt, White Flare, Ascended Heroes); each is priced under the card as `poke-ball-reverse-holofoil`, `master-ball-reverse-holofoil` or `energy-symbol-reverse-holofoil`, in today's price, the nightly price line and a backfilled history. A card's printings offer those finishes where TCGplayer sells them and no longer where only TCGdex names one (eight basic energies of Scarlet & Violet). A copy's `finish` can be `energy-symbol` (migration 20260915060000); the Dex export writes it as "Reverse Holo" and names every finish in a new Finish column after Edition, which the import reads first. data-health checks that every such product has its own price line and that no form offers a ball TCGplayer cannot confirm.

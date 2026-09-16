@@ -21,6 +21,7 @@ vi.mock("next/cache", () => ({
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
   priceHistoryTag: "card-prices",
+  pricesTag: "tcgplayer-prices",
   usdToEurForRequest: () => usdToEurForRequest(),
 }));
 vi.mock("@/lib/storage/postgres", () => ({
@@ -166,6 +167,22 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     expect(revalidateTag).toHaveBeenCalledWith("card-prices", { expire: 0 });
   });
 
+  it("drops every cached price the moment the shelf is written, history or not", async () => {
+    monday();
+    fetchUsdToEur.mockRejectedValue(new Error("Dollar rate: 503"));
+    usdToEurForRequest.mockResolvedValue(null);
+
+    const res = await get("Bearer s3cret");
+
+    expect(res.status).toBe(200);
+    // Written before the history is: a set's cached facts carry the figures, and until 2026-09-16
+    // nothing dropped them, so every list and Home priced yesterday's shelf for up to a day.
+    expect(revalidateTag).toHaveBeenCalledWith("tcgplayer-prices", { expire: 0 });
+    expect(revalidateTag.mock.invocationCallOrder[0]).toBeGreaterThan(
+      writeTcgplayerPrices.mock.invocationCallOrder[0]!,
+    );
+  });
+
   it("writes no history without a dollar rate, and still writes the latest prices", async () => {
     monday();
     fetchUsdToEur.mockRejectedValue(new Error("Dollar rate: 503"));
@@ -176,7 +193,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     expect(res.status).toBe(200);
     expect(writeTcgplayerPrices).toHaveBeenCalled();
     expect(writeCardPrices).not.toHaveBeenCalled();
-    expect(revalidateTag).not.toHaveBeenCalled();
+    expect(revalidateTag).not.toHaveBeenCalledWith("card-prices", { expire: 0 });
     expect(await res.json()).toMatchObject({
       ok: true,
       rate: { rate: null, stored: false, skipped: "read failed" },
