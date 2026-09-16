@@ -5,6 +5,7 @@ import { forPublic } from "@/lib/core/collection/cards";
 import {
   agreedOn,
   type CardItem,
+  copyPrice,
   filterItems,
   filterPublicItems,
   flattenItems,
@@ -14,6 +15,7 @@ import {
   publicWishes,
   readPublicQuery,
   sortPublicItems,
+  sumValue,
 } from "@/lib/core/collection/items";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { canonNumber } from "@/lib/core/card-number.mjs";
@@ -95,9 +97,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       edition: agreedOn(mine.map((c) => c.edition)),
       condition: agreedOn(mine.map((c) => c.condition)),
       grade: agreedOn(mine.map((c) => c.grade)),
+      // What one trades at, only for an owner who shows prices: the figure every copy reads
+      // (copyPrice, the printing's own where TCGplayer priced it), null where the copies differ
+      // or nothing prices the card. Absent otherwise, so a price never leaves as a null either.
+      ...(owner.pricesPublic ? { price: agreedOn(mine.map(copyPrice)) } : {}),
     };
   };
-  const stateHeld = stateOf(byCard(true));
+  const heldRows = byCard(true);
+  const stateHeld = stateOf(heldRows);
+  // The owner's rows behind the list a visitor reads: the wishes on the wishlist, the held copies
+  // on every other; what the list is worth is summed over them below.
+  const listRows = list === "wishlist" ? byCard(false) : heldRows;
   // Newest first is built here, not sorted later: only these items still know their dates, and
   // the dates do not go out with them.
   const owned = publicItems(shown, { newestFirst: read.query.sort === "added" }).map((it) => ({
@@ -109,7 +119,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   /* A wish says the same two things where its owner recorded them: which printing they are after
      and in what state they will take it. Off the wish rows, the same fold as the held ones. */
   const wished = () => {
-    const state = stateOf(byCard(false));
+    const state = stateOf(listRows);
     return publicWishes(shown).map((it) => ({ ...it, ...state(sameCard(it)) }));
   };
   const all =
@@ -149,8 +159,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   // hundred cannot count that for itself, and the whole collection is what this route exists
   // to spare the reader.
   const setCount = shown.filter((set) => set.cards.some((card) => card.variants.some((v) => v.owned))).length;
+  // What the list is worth, for an owner who shows prices: over the whole ordered list and not
+  // the page, the way sumValue() counts the owner's own, off their rows since a public item folds
+  // its copies into one price. `unpriced` says how many copies the figure leaves out.
+  const worth = owner.pricesPublic ? sumValue(ordered.flatMap((it) => listRows.get(sameCard(it)) ?? [])) : null;
   return NextResponse.json(
-    { cards: items, total, copies, sets: setCount, facets: publicFacets(all) },
+    {
+      cards: items,
+      total,
+      copies,
+      sets: setCount,
+      facets: publicFacets(all),
+      ...(worth ? { value: worth.value, unpriced: worth.unpriced } : {}),
+    },
     // A page without scans is an outage answer, not the collection; the CDN
     // must not hand it out for the minute after TCGdex comes back.
     { headers: { "Cache-Control": catalogueUnavailable ? "no-store" : PUBLIC_READ_CACHE } },

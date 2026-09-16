@@ -134,6 +134,23 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect(JSON.stringify(body)).not.toContain("private");
   });
 
+  it("prices the cards and the list only for an owner who shows prices", async () => {
+    const body = await (await get()).json();
+    expect(body.cards[0]).not.toHaveProperty("price");
+    expect(body).not.toHaveProperty("value");
+    expect(JSON.stringify(body)).not.toContain("9");
+    ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: true, favoritesPublic: false, pricesPublic: true });
+    const priced = await (await get()).json();
+    // Two copies at nine: one price on the card, the list worth both.
+    expect(priced.cards[0].price).toBe(9);
+    expect(priced.value).toBe(18);
+    expect(priced.unpriced).toBe(0);
+    // A wish is priced too: what its owner is looking for costs something.
+    const wishes = await (await get("?list=wishlist")).json();
+    expect(wishes.cards[0]).toMatchObject({ name: "Mew", price: 9 });
+    expect(wishes.value).toBe(9);
+  });
+
   it("pages and searches, and refuses a query it cannot mean", async () => {
     expect((await (await get("?q=pika&limit=1")).json()).total).toBe(1);
     expect((await get("?limit=0")).status).toBe(400);

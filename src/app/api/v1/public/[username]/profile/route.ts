@@ -32,6 +32,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       avatarUrl: owner.avatarUrl,
       wishlistPublic: owner.wishlistPublic,
       favoritesPublic: owner.favoritesPublic,
+      // Whether the cards route prices what it lists; the page reads it to say a value under the name.
+      pricesPublic: owner.pricesPublic,
     },
     { headers: { "Cache-Control": PUBLIC_READ_CACHE } },
   );
