@@ -681,6 +681,7 @@ const cachedSetFacts = (
   setName: string,
   identities: CardIdentity[],
   priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
+  priceDay: string,
 ) =>
   timedCache(`cache set-facts ${setName}`, (ran) =>
     unstable_cache(
@@ -688,6 +689,12 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v35: the day of the stored prices is in the key. The facts carry the dollar figure the
+      // store answered (priceSource), and an entry made the day before held it for its day: the
+      // collection's Charizard read yesterday's €753.12 while its line and movers read tonight's
+      // €764.38 (Bart, 2026-09-16). collection-facts had the day in its key already, but a new day
+      // only sent it back here, to the old entry.
+      //
       // v24: the facts carry no Cardmarket figure at all: `price` starts null here and is
       // TCGplayer's (factsWithUsd), and `priceHolo` and `priceShadowless` are gone (2026-09-14).
       //
@@ -762,7 +769,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v34", setName, factsSignature(identities)],
+      ["set-facts", "v35", setName, factsSignature(identities), priceDay],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -1002,7 +1009,7 @@ async function factsWithUsd(
   priceSource: (ids: string[]) => Promise<Map<string, CardPrices>>,
   usdToEur: number | null,
 ) {
-  const facts = await cachedSetFacts(setName, identities, priceSource);
+  const facts = await cachedSetFacts(setName, identities, priceSource, await latestPriceDay());
   /* No rate, no price. The rate is cached for a day, so this bites only on a cold cache during
      a frankfurter outage, and then every card reads "no price" rather than one at a guessed
      rate. */
