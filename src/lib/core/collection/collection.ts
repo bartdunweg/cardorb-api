@@ -96,6 +96,8 @@ import {
 import { rememberedScans } from "./remembered-scans";
 import { heldDays, holdShelfPrice, holdStrayPrices } from "./held-prices";
 import { endsOfLines, type CardPricePoint } from "./movers";
+import { holdingsSeries } from "./folder-history";
+import { type CardItem, pricedCardsOf } from "./items";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
 
@@ -1846,6 +1848,73 @@ export const getMoverPrices = cache(
     } catch (err) {
       console.error("Mover price readings unavailable, retrying on the next render:", err);
       return { points: [], failed: true };
+    }
+  },
+);
+
+/** How far back the Home line is built from the cards' own readings: the window getCardPrices reads. */
+export const RECENT_DAYS = WINDOW_DAYS;
+
+/** The line and whether it could be built: the shape getCardPrices answers, for the same reason. */
+export type RecentValue = { snapshots: ValueSnapshot[]; failed: boolean };
+
+/**
+ * The copies the line is built from, as one short key: the card, the printing, how many and since
+ * when, which is everything holdingsSeries reads off a copy. Order does not matter, the set does.
+ */
+const holdingsKey = (items: CardItem[]) =>
+  createHash("sha1")
+    .update(
+      items
+        .filter((it) => it.owned && it.tcgId)
+        .map(
+          (it) =>
+            `${historyKey(it.catalogue, it.tcgId!)}|${it.finish ?? ""}|${it.edition ?? ""}|${it.quantity}|${it.acquiredAt ?? ""}`,
+        )
+        .sort()
+        .join("\n"),
+    )
+    .digest("hex");
+
+/**
+ * The recent days of the Home line: what the held cards' readings add up to, day by day.
+ *
+ * The line is a few hundred bytes; the readings it is built from are not. Every reading of sixteen
+ * hundred held cards over ninety days is 22 MB, past the Data Cache's 2 MB an entry, so
+ * getCardPrices never kept it and /v1/value-history read and summed the lines again on every
+ * visit: nine seconds a time in production (2026-09-16), and the chart on Home was the last thing
+ * to draw. The readings are read in parallel chunks (listHistoryPrices, the movers' read) and it
+ * is the summed line that is kept, an hour, under the tags the readings carry, so the night's line
+ * still reaches Home the moment the cron writes it, and under the cards' tag, so a copy added or
+ * removed drops it.
+ *
+ * The window is part of the key for the reason getCardPrices gives: a date built inside the cache
+ * callback would be a stale window on a hit. So is what is held: a copy that changed printing or
+ * count is another line, whatever the tag did.
+ */
+export const getRecentValue = cache(
+  async (userId: string, items: CardItem[], token?: string): Promise<RecentValue> => {
+    const cards = pricedCardsOf(items.filter((it) => it.owned));
+    if (!cards.length) return { snapshots: [], failed: false };
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      if (!db) return { snapshots: [], failed: false };
+      const since = new Date(Date.now() - RECENT_DAYS * 86_400_000).toISOString().slice(0, 10);
+      const snapshots = await timedCache("cache recent-value", (ran) =>
+        unstable_cache(
+          async () => {
+            ran();
+            return holdingsSeries(items, await listHistoryPrices(db, cards, since));
+          },
+          // Versioned with getCardPrices: the same lines, so a change to how they are built is both.
+          ["recent-value", "v14", userId, since, holdingsKey(items)],
+          { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag, cardsTag(userId)] },
+        )(),
+      );
+      return { snapshots, failed: false };
+    } catch (err) {
+      console.error("Recent value line unavailable, the stored points alone:", err);
+      return { snapshots: [], failed: true };
     }
   },
 );

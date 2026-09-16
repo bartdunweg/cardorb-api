@@ -6,10 +6,11 @@ import {
   findFolder,
   getCardPrices,
   getCollection,
+  getRecentValue,
   getValueHistory,
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
-import { folderSeries, holdingsSeries, joinHistory } from "@/lib/core/collection/folder-history";
+import { folderSeries, joinHistory } from "@/lib/core/collection/folder-history";
 import { filterItems, flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
 import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
 
@@ -57,19 +58,14 @@ export async function GET(req: Request) {
         readHeaders(req),
       );
     /* The recent days as the cards' own lines add up (joinHistory): the same readings a card's chart
-       draws, the same ninety days the movers read. Where the collection or its readings cannot be
-       read, the stored points alone, as before. */
+       draws, the same ninety days the movers read, summed once and kept (getRecentValue). Where the
+       collection or its readings cannot be read, the stored points alone, as before. */
     let recent: ValueSnapshot[] = [];
     try {
       const collection = await getCollection(viewer.userId, token);
       if (collection && !collection.failed) {
-        const items = flattenItems(collection.sets);
-        const prices = await getCardPrices(
-          viewer.userId,
-          pricedCardsOf(items.filter((it) => it.owned)),
-          token,
-        );
-        if (!prices.failed) recent = holdingsSeries(items, prices.points);
+        const line = await getRecentValue(viewer.userId, flattenItems(collection.sets), token);
+        if (!line.failed) recent = line.snapshots;
       }
     } catch (err) {
       console.error("Recent value line unavailable, the stored points alone:", err);
