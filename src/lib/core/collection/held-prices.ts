@@ -1,5 +1,6 @@
 import { historyKey, priceLanguageOf } from "../price-months.mjs";
 import type { Price } from "../price-basis.mjs";
+import type { UsdPair } from "../catalogue/tcgdex-client";
 import type { CardSet, OwnedCard } from "./cards";
 import type { CardPricePoint } from "./movers";
 
@@ -22,14 +23,7 @@ export function holdStrayPrices(
   points: readonly CardPricePoint[],
   priceDay: string,
 ): CardSet[] {
-  const held = new Map<
-    string,
-    { printings: Record<string, number>; held: Record<string, number> }
-  >();
-  for (const p of points) {
-    if (p.date !== priceDay || !p.held || !p.printings) continue;
-    held.set(historyKey(p.language, p.tcgId), { printings: p.printings, held: p.held });
-  }
+  const held = heldDays(points, priceDay);
   if (!held.size) return sets;
   return sets.map((set) => {
     const language = priceLanguageOf(set.language);
@@ -44,10 +38,44 @@ export function holdStrayPrices(
   });
 }
 
-function holdCard(
-  card: OwnedCard,
-  day: { printings: Record<string, number>; held: Record<string, number> },
-): OwnedCard {
+/** What the line says about one card on the price day: every printing's figure, and the strays it held over. */
+export type HeldDay = { printings: Record<string, number>; held: Record<string, number> };
+
+/** The price day's held points by catalogue and card; a point of another day, or one that held nothing, is not one. */
+export function heldDays(
+  points: readonly CardPricePoint[],
+  priceDay: string,
+): Map<string, HeldDay> {
+  const held = new Map<string, HeldDay>();
+  for (const p of points) {
+    if (p.date !== priceDay || !p.held || !p.printings) continue;
+    held.set(historyKey(p.language, p.tcgId), { printings: p.printings, held: p.held });
+  }
+  return held;
+}
+
+/** Today's figure scaled by the held one over the stray one: the line is in euros at its night's rate, the price at today's. */
+const scaledBy = (market: number, kept: number, stray: number): Price => ({
+  market: Math.round(market * (kept / stray) * 100) / 100,
+});
+
+/**
+ * A browse card's one price with a stray sale held over, the same way: the set page, a search and
+ * the catalogue's card list carry one figure a card, TCGplayer's first printing with a market
+ * (usdOf), so the held printing is found by that dollar figure among the card's printings.
+ */
+export function holdShelfPrice(price: Price, pair: UsdPair, day: HeldDay): Price {
+  const headline = pair.usd?.market;
+  if (headline == null || price.market == null) return price;
+  for (const [printing, stray] of Object.entries(day.held)) {
+    const kept = day.printings[printing];
+    if (kept == null || !(stray > 0) || pair.printings?.[printing]?.market !== headline) continue;
+    return scaledBy(price.market, kept, stray);
+  }
+  return price;
+}
+
+function holdCard(card: OwnedCard, day: HeldDay): OwnedCard {
   if (!card.pricePrintings) return card;
   const pricePrintings = { ...card.pricePrintings };
   let price = card.price;
@@ -56,7 +84,7 @@ function holdCard(
     const kept = day.printings[printing];
     const now = pricePrintings[printing];
     if (kept == null || now?.market == null || !(stray > 0)) continue;
-    const scaled: Price = { market: Math.round(now.market * (kept / stray) * 100) / 100 };
+    const scaled = scaledBy(now.market, kept, stray);
     pricePrintings[printing] = scaled;
     // The card's own price and its stamped run's are one of its printings' figures: held with it.
     if (price?.market === now.market) price = scaled;
