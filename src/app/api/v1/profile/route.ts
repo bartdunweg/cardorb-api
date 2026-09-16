@@ -46,6 +46,7 @@ export async function PATCH(req: Request) {
     isPublic?: boolean;
     wishlistPublic?: boolean;
     favoritesPublic?: boolean;
+    pricesPublic?: boolean;
     onboardedAt?: string;
   } = {};
 
@@ -67,9 +68,10 @@ export async function PATCH(req: Request) {
     patch.isPublic = body.isPublic;
   }
 
-  // The two lists beside the collection, each its own flag on the public page. A Pokédex is a
-  // binder since 2026-09-12 and carries its own flag, like every other binder.
-  for (const key of ["wishlistPublic", "favoritesPublic"] as const) {
+  // The two lists beside the collection, each its own flag on the public page, and whether the
+  // page prices what it shows. A Pokédex is a binder since 2026-09-12 and carries its own flag,
+  // like every other binder.
+  for (const key of ["wishlistPublic", "favoritesPublic", "pricesPublic"] as const) {
     if (key in body) {
       if (typeof body[key] !== "boolean") {
         return apiError(400, "Invalid request");

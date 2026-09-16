@@ -1087,6 +1087,8 @@ export type PublicProfile = {
   wishlistPublic: boolean;
   /** The favorites, as a list of their own, on the public page too. */
   favoritesPublic: boolean;
+  /** Card prices and the collection's value on the public page too. */
+  pricesPublic: boolean;
 };
 
 /**
@@ -1106,7 +1108,7 @@ export async function profileByUsername(
 ): Promise<PublicProfile | null> {
   const { data, error } = await db
     .from("profiles")
-    .select("id,username,display_name,avatar_url,wishlist_public,favorites_public")
+    .select("id,username,display_name,avatar_url,wishlist_public,favorites_public,prices_public")
     .eq("username", username)
     .eq("is_public", true)
     .maybeSingle();
@@ -1121,6 +1123,7 @@ export async function profileByUsername(
     avatar_url: string | null;
     wishlist_public: boolean;
     favorites_public: boolean;
+    prices_public: boolean;
   };
   return {
     id: row.id,
@@ -1129,6 +1132,7 @@ export async function profileByUsername(
     avatarUrl: row.avatar_url,
     wishlistPublic: row.wishlist_public,
     favoritesPublic: row.favorites_public,
+    pricesPublic: row.prices_public,
   };
 }
 
@@ -1165,6 +1169,8 @@ export type OwnProfile = {
   wishlistPublic: boolean;
   /** The favorites on the public page too, while isPublic. */
   favoritesPublic: boolean;
+  /** Card prices and the collection's value on the public page too, while isPublic. */
+  pricesPublic: boolean;
   avatarUrl: string | null;
   /** Null until the welcome flow has been finished or skipped past. */
   onboardedAt: string | null;
@@ -1186,7 +1192,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
   const { data, error } = await db
     .from("profiles")
     .select(
-      "username,display_name,is_public,wishlist_public,favorites_public,avatar_url,onboarded_at",
+      "username,display_name,is_public,wishlist_public,favorites_public,prices_public,avatar_url,onboarded_at",
     )
     .eq("id", userId)
     .maybeSingle();
@@ -1200,6 +1206,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     is_public: boolean;
     wishlist_public: boolean;
     favorites_public: boolean;
+    prices_public: boolean;
     avatar_url: string | null;
     onboarded_at: string | null;
   };
@@ -1209,6 +1216,7 @@ export async function ownProfile(db: SupabaseClient, userId: string): Promise<Ow
     isPublic: row.is_public,
     wishlistPublic: row.wishlist_public,
     favoritesPublic: row.favorites_public,
+    pricesPublic: row.prices_public,
     avatarUrl: row.avatar_url,
     onboardedAt: row.onboarded_at,
   };
@@ -1235,6 +1243,7 @@ export async function updateProfile(
     isPublic?: boolean;
     wishlistPublic?: boolean;
     favoritesPublic?: boolean;
+    pricesPublic?: boolean;
     avatarUrl?: string | null;
     onboardedAt?: string;
   },
@@ -1244,6 +1253,7 @@ export async function updateProfile(
   if ("isPublic" in patch) row.is_public = patch.isPublic;
   if ("wishlistPublic" in patch) row.wishlist_public = patch.wishlistPublic;
   if ("favoritesPublic" in patch) row.favorites_public = patch.favoritesPublic;
+  if ("pricesPublic" in patch) row.prices_public = patch.pricesPublic;
   if ("avatarUrl" in patch) row.avatar_url = patch.avatarUrl;
   // Never null: finishing the welcome flow is a thing that happened, and
   // nothing in the app un-happens it. The route that sets this only ever
