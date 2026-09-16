@@ -6,6 +6,7 @@ import { authoriseWrite, refused } from "@/lib/api/guard";
 import { createRateLimiter } from "@/lib/api/rate-limit";
 import { bearer } from "@/lib/api/viewer";
 import { clientFor } from "@/lib/storage/collection";
+import { ImportFailed } from "@/lib/storage/postgres";
 import { cardsTag } from "@/lib/core/collection/collection-row";
 import { parseCsv, guessColumns, rowsFrom, type ColumnMap } from "@/lib/core/collection/csv";
 import { looksLikeDex, dexRows } from "@/lib/core/collection/dex";
@@ -124,7 +125,13 @@ export async function POST(req: Request) {
 
   const header = grid[0]!;
   const dex = looksLikeDex(header);
-  const guessed = dex ? undefined : { ...guessColumns(header), ...map };
+  /*
+   * A map the caller sends is the whole answer, not corrections laid over the guess: the screen
+   * starts from `guessed` and sends it back edited, and a column set to "Not in this file" is a key
+   * left out. Spread over the guess, that key came straight back, so a "Binder" column guessed as
+   * owned could never be let go of.
+   */
+  const guessed = dex ? undefined : (map ?? guessColumns(header));
 
   // Two columns are not optional: without them a row cannot be placed or drawn,
   // so the whole file would import as nothing. A recognised export is never
@@ -233,6 +240,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ ...outcome, source });
   } catch (err) {
     console.error("CSV import failed:", err);
-    return apiError(500, "That import could not be finished.");
+    // What the person does next depends on whether anything landed: pressing Add again after a
+    // half-written run doubled the half that was written.
+    if (err instanceof ImportFailed && err.undone) {
+      return apiError(
+        500,
+        "That import could not be finished. Nothing was added, so you can try again.",
+      );
+    }
+    return apiError(
+      500,
+      "That import could not be finished. Some cards may have been added; check your collection before trying again.",
+    );
   }
 }

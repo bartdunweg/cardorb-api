@@ -58,8 +58,14 @@ export const BODY_LIMIT = {
    * A collection export. Deliberately the outlier — 1,600 rows of card names
    * is a real file somebody means to send, and refusing it would break the
    * feature this limit is supposed to protect.
+   *
+   * Larger than the route's own 2 MB of text, which is the limit a person is
+   * told: the text arrives as a JSON string, where every line break and quote
+   * doubles and every "é" is two bytes, with the struck-off line numbers
+   * beside it. A file of 1.9 MB passed the preview's count on the web and was
+   * refused here as too large. The route checks the text itself after this.
    */
-  csv: 2_000_000,
+  csv: 6_000_000,
 } as const;
 
 /**
