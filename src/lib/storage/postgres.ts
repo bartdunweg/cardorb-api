@@ -924,6 +924,17 @@ async function foldCard(
 
 export type InsertResult = { added: number; skipped: number };
 
+/** An import that failed, and whether what it had already written was taken back. */
+export class ImportFailed extends Error {
+  constructor(
+    message: string,
+    readonly undone: boolean,
+  ) {
+    super(message);
+    this.name = "ImportFailed";
+  }
+}
+
 /**
  * Many rows at once, for an import.
  *
@@ -979,8 +990,28 @@ export async function createRows(
 
   const before = await count();
 
+  /*
+   * One mark for every row this run writes, so a run that fails halfway can take back what it
+   * already wrote. The batches are separate requests with no transaction around them: batch 3
+   * refused left batches 1 and 2 in the collection under an answer saying the import could not be
+   * finished, and the natural next step, pressing Add again, wrote them twice. A CSV row has no
+   * source_id of its own (see above), so the run's mark is free to use it; it is unique per row,
+   * which the unique index on (user_id, source, source_id) is content with.
+   */
+  const run = crypto.randomUUID();
+  const takeBack = async () => {
+    const { error } = await db
+      .from("cards")
+      .delete()
+      .eq("user_id", userId)
+      .eq("source", source)
+      .like("source_id", `${run}:%`);
+    if (error) console.error("Taking back a failed import failed:", error.message);
+    return !error;
+  };
+
   for (let i = 0; i < rows.length; i += chunk) {
-    const batch = rows.slice(i, i + chunk).map((r) => ({
+    const batch = rows.slice(i, i + chunk).map((r, j) => ({
       name: r.name,
       number: storedCardNumber(r.number),
       set_name: r.setName,
@@ -1003,19 +1034,31 @@ export async function createRows(
       condition: r.condition,
       language: r.language,
       notes: r.notes,
+      // What was paid, and the rest a file can say about a copy: a Dex export's "Purchase price"
+      // was read, kept in CollectionRow, and dropped here, the same last step as the finish above.
+      purchase_price: r.purchasePrice,
+      purchase_date: r.purchaseDate,
+      grade: r.grade,
+      is_favorite: r.isFavorite,
       // The one field an import must carry and a manual add must not. Null
       // falls back to the column default, which is now(), and the import says
       // out loud when that happened.
       ...(r.acquiredAt ? { acquired_at: r.acquiredAt } : {}),
       source,
-      source_id: r.id,
+      source_id: r.id ?? `${run}:${i + j}`,
     }));
 
     const { error } = await db
       .from("cards")
       .upsert(batch, { onConflict: "user_id,source,source_id", ignoreDuplicates: true });
 
-    if (error) throw new Error(`Importing rows ${i}–${i + batch.length} failed: ${error.message}`);
+    if (error) {
+      const undone = await takeBack();
+      throw new ImportFailed(
+        `Importing rows ${i}–${i + batch.length} failed: ${error.message}`,
+        undone,
+      );
+    }
   }
 
   const added = (await count()) - before;
@@ -1023,8 +1066,14 @@ export async function createRows(
   // A file lists copies, and a second copy of a card already held is a normal thing to own;
   // written, it is one more of that row. Folded after the count, so `added` still says how
   // many rows the file put in and not how many survived being the same as one held.
+  /*
+   * Not a failure of the import. Every row is written and right; unfolded, a second copy is a row
+   * of its own instead of one more on the row held, and the next fold merges it. Throwing here
+   * told the person nothing had happened after everything had, and a second run wrote it all again.
+   */
   const { error: foldError } = await db.rpc("fold_identical_cards", { p_user_id: userId });
-  if (foldError) throw new Error(`Folding the import failed: ${foldError.message}`);
+  if (foldError)
+    console.error("Folding an import failed; its rows stand unfolded:", foldError.message);
 
   return { added, skipped: rows.length - added };
 }

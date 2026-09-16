@@ -2380,7 +2380,11 @@ paths:
               required: [csv]
               properties:
                 csv: { type: string }
-                map: { $ref: "#/components/schemas/ColumnMap" }
+                map:
+                  allOf: [{ $ref: "#/components/schemas/ColumnMap" }]
+                  description: >-
+                    The whole mapping, replacing the guess: start from `guessed`, and
+                    leave a key out for a column the file does not have.
                 commit: { type: boolean, default: false }
                 exclude:
                   type: array
