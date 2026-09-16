@@ -34,6 +34,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   imageHigh: null,
   imageSize: null,
   speciesId: null,
+  speciesIds: [],
   variants: [variant()],
   owned: true,
   price: null,
@@ -155,6 +156,7 @@ describe("latestPull", () => {
       type: "Fire, Dragon",
       gen: "Base",
       speciesId: 6,
+      speciesIds: [],
       variants: [
         variant({
           acquiredAt: "2026-09-01T00:00:00.000Z",

@@ -1,0 +1,1 @@
+- Every card carries `speciesIds`, every National Pokédex number on it: two or three for a tag team ("Pikachu & Zekrom-GX" is 644 and 25), the first always equal to `speciesId`, empty for a trainer. A rule binder with a dex range takes a tag team when any Pokémon on it is in the range. `speciesId` is unchanged.

@@ -22,6 +22,7 @@ const sets: CardSet[] = [
         imageHigh: null,
         imageSize: null,
         speciesId: null,
+        speciesIds: [],
         owned: true,
         price: { market: 210 },
         tcgId: "base1-4",

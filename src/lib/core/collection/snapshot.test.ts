@@ -50,6 +50,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   imageHigh: null,
   imageSize: null,
   speciesId: null,
+  speciesIds: [],
   variants: [variant()],
   owned: true,
   // Deliberately null everywhere below: this runs on the output of

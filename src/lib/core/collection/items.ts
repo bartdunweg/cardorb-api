@@ -46,6 +46,8 @@ export type CardItem = {
    */
   printImage?: string | null;
   speciesId: number | null;
+  /** Every Pokémon the card is of: a tag team is two or three. `speciesId` is the first. */
+  speciesIds: number[];
   /** What the card prints where `name` is the English for it (a Japanese card); null otherwise. */
   localName: string | null;
   tcgId: string | null;
@@ -188,6 +190,7 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
   image: card.image,
   imageHigh: card.imageHigh,
   speciesId: card.speciesId,
+  speciesIds: card.speciesIds,
   localName: card.localName ?? null,
   tcgId: card.tcgId,
   catalogue: priceLanguageOf(set.language),
@@ -737,6 +740,8 @@ export type PublicItem = {
   /** The larger scan, where the catalogue has two sizes; a tile on a phone draws it. */
   imageHigh: string | null;
   speciesId: number | null;
+  /** Every Pokémon the card is of: a tag team is two or three. `speciesId` is the first. */
+  speciesIds: number[];
   /**
    * What the card prints where `name` is the English for it (a Japanese card); null otherwise.
    * Optional in the type, not the answer: the fixtures that build one by hand predate it.
@@ -813,6 +818,7 @@ export function publicItems(sets: CardSet[], { newestFirst = false } = {}): Publ
         image: card.image,
         imageHigh: card.imageHigh,
         speciesId: card.speciesId,
+        speciesIds: card.speciesIds,
         localName: card.localName ?? null,
         tcgId: card.tcgId,
         copies,
@@ -852,6 +858,7 @@ export function publicWishes(sets: CardSet[]): PublicItem[] {
         image: card.image,
         imageHigh: card.imageHigh,
         speciesId: card.speciesId,
+        speciesIds: card.speciesIds,
         localName: card.localName ?? null,
         tcgId: card.tcgId,
         copies,

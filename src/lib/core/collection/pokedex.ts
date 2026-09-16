@@ -116,6 +116,23 @@ export function speciesOf(cardName: string, catalogue?: BrowseLanguage | null): 
 
 const SPECIES_OF = new Map<string, number | null>();
 
+/**
+ * Every Pokémon a card is of: one for most cards, two or three for a tag team.
+ *
+ * "Pikachu & Zekrom-GX" is a card of Pikachu and of Zekrom, and a Pokédex binder that files it
+ * under one of them leaves the other grey while the card sits in the binder. The longest-match
+ * rule above answers one species for the whole name, so the name is split on its ampersand
+ * (full-width on the Japanese shelf) and each part asked on its own. The whole name's answer
+ * leads, so `speciesId` and the first of these always agree. A part naming no species (a
+ * trainer's half) adds nothing.
+ */
+export function speciesAllOf(cardName: string, catalogue?: BrowseLanguage | null): number[] {
+  const whole = speciesOf(cardName, catalogue);
+  const parts = cardName.split(/\s*[&＆]\s*/).filter(Boolean);
+  const ids = parts.length > 1 ? parts.map((part) => speciesOf(part, catalogue)) : [];
+  return [...new Set([whole, ...ids].filter((id): id is number => id !== null))];
+}
+
 export const speciesList = (origin: string): { id: number; name: string; artwork_url: string }[] =>
   SPECIES.map((name, i) => ({
     id: i + 1,

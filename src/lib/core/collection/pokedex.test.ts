@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalise, speciesList, speciesOf } from "./pokedex";
+import { normalise, speciesAllOf, speciesList, speciesOf } from "./pokedex";
 
 describe("normalise", () => {
   it("keeps the two Nidoran apart", () => {
@@ -66,3 +66,19 @@ describe("speciesOf", () => {
 function SPECIES_NAME(id: number) {
   return speciesList("https://api.cardorb.com")[id - 1]!.name;
 }
+
+describe("speciesAllOf", () => {
+  it("files a tag team under every Pokémon on it, the whole name's answer first", () => {
+    const ids = speciesAllOf("Pikachu & Zekrom-GX");
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).toBe(speciesOf("Pikachu & Zekrom-GX"));
+    expect(new Set(ids)).toEqual(new Set([25, 644]));
+    expect(new Set(speciesAllOf("Arceus & Dialga & Palkia-GX"))).toEqual(new Set([493, 483, 484]));
+    expect(new Set(speciesAllOf("Mewtwo & Mew-GX"))).toEqual(new Set([150, 151]));
+  });
+
+  it("answers one for a single Pokémon and none for a trainer", () => {
+    expect(speciesAllOf("Charizard ex")).toEqual([6]);
+    expect(speciesAllOf("Professor's Research")).toEqual([]);
+  });
+});

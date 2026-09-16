@@ -34,7 +34,7 @@
 import { compareCardNumbers, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices, usdOf } from "../catalogue/tcgdex-client";
-import { speciesOf } from "./pokedex";
+import { speciesAllOf, speciesOf } from "./pokedex";
 import {
   editionsOf,
   printingsOf,
@@ -193,6 +193,8 @@ export type OwnedCard = {
    * is the same for everyone and never changes, so the server can hold it.
    */
   speciesId: number | null;
+  /** Every Pokémon the card is of: a tag team is two or three. `speciesId` is the first. */
+  speciesIds: number[];
   /** The printed name of a card off another shelf, or null; see CardFacts.localName. */
   localName?: string | null;
   /** Every printing held or wanted, in the order Notion returned them. */
@@ -495,6 +497,8 @@ export type LatestPull = {
   imageHigh: string | null;
   rarity: string | null;
   speciesId: number | null;
+  /** Every Pokémon the card is of: a tag team is two or three. `speciesId` is the first. */
+  speciesIds: number[];
   tcgId: string | null;
   setName: string;
   setTitle: string;
@@ -553,6 +557,7 @@ export function latestPull(sets: CardSet[]): LatestPull | null {
     imageHigh: card.imageHigh,
     rarity: variant.rarity,
     speciesId: card.speciesId,
+    speciesIds: card.speciesIds,
     tcgId: card.tcgId,
     setName: set.name,
     setTitle: set.title,
@@ -1132,6 +1137,7 @@ export async function buildCollection(
           // With the shelf it came from: a Japanese card is named in Japanese, and the
           // English list cannot place it, so it used to land in no slot at all.
           speciesId: speciesOf(card?.matchedName ?? name, card?.catalogue),
+          speciesIds: speciesAllOf(card?.matchedName ?? name, card?.catalogue),
           localName: card?.localName ?? null,
           tcgId: card?.tcgId ?? null,
           price: card?.price ?? null,
@@ -1229,6 +1235,7 @@ export async function buildCollection(
           imageHigh: p.imageHigh,
           imageSize: p.imageSize,
           speciesId: p.speciesId,
+          speciesIds: p.speciesIds,
           price: p.price,
           priceFirstEd: p.priceFirstEd,
           pricePrintings: p.pricePrintings,

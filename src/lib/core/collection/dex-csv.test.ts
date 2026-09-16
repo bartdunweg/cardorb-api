@@ -19,6 +19,7 @@ const item = (over: Partial<CardItem>): CardItem => ({
   image: null,
   imageHigh: null,
   speciesId: 196,
+  speciesIds: [],
   localName: null,
   tcgId: "bw5-48",
   catalogue: "en",
