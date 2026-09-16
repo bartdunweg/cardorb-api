@@ -49,9 +49,15 @@ do $$
 declare
   stray text;
 begin
+  -- Only against a catalogue. A database built from nothing (supabase start, a preview branch, the
+  -- web repository's end-to-end stack) has none, because the nightly job fills it and no migration
+  -- does, while 20260915110000 still writes its 184 English readings; those stay English. Added
+  -- 2026-09-17, after production had run this file: there the catalogue held every id, so the
+  -- check ran as it did, and db push never runs a recorded version again.
   select string_agg(distinct m.tcg_id, ', ') into stray
   from public.card_price_months m
-  where not exists (select 1 from public.catalogue_cards k where k.id = m.tcg_id);
+  where not exists (select 1 from public.catalogue_cards k where k.id = m.tcg_id)
+    and exists (select 1 from public.catalogue_cards);
   if stray is not null then
     raise exception 'card_price_months ids in no catalogue, language unknown: %', stray;
   end if;

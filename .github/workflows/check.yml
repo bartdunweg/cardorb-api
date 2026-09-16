@@ -47,3 +47,19 @@ jobs:
       # Needs no secrets: every route handler is rendered on demand, so the
       # build compiles them without a database behind them.
       - run: pnpm run build
+
+  # Every migration from an empty database, the way a new checkout, a preview branch or the web
+  # repository's end-to-end stack builds one. Production only ever runs the newest files, so a file
+  # that leans on rows production happened to hold (20260915161000 on the catalogue) passes there
+  # and breaks here. Needs Docker, which the runner has, and no secrets.
+  migrations-from-nothing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.114.0
+
+      - run: supabase db start
