@@ -77,11 +77,24 @@ export function sniffDelimiter(text: string): string {
  * `delimiter` is sniffed from the header when it is not given, so a caller that
  * knows better — a test, mostly — can still say.
  */
+/**
+ * The line of the file each parsed row starts on, as a person counts lines in their editor.
+ *
+ * Not the row's place in the grid: a blank line is dropped from the grid and a note with a line
+ * break in it is one field over two lines, so after either the grid's count said "Line 12" for a
+ * row on line 13, and every row after it named the wrong line. Kept beside the rows rather than
+ * in them, so the grid stays a grid of strings.
+ */
+const LINE_OF = new WeakMap<readonly string[], number>();
+export const lineOf = (row: readonly string[]): number | undefined => LINE_OF.get(row);
+
 export function parseCsv(text: string, delimiter = sniffDelimiter(text)): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
   let quoted = false;
+  let line = 1;
+  let rowLine = 1;
 
   // The BOM. Not stripping it means the first column is called "﻿name"
   // and no mapping ever finds it. UTF-16's own mark is gone by now — the
@@ -92,6 +105,7 @@ export function parseCsv(text: string, delimiter = sniffDelimiter(text)): string
     const c = src[i]!;
 
     if (quoted) {
+      if (c === "\n" || (c === "\r" && src[i + 1] !== "\n")) line++;
       if (c === '"') {
         // A doubled quote inside a quoted field is one literal quote.
         if (src[i + 1] === '"') {
@@ -102,7 +116,10 @@ export function parseCsv(text: string, delimiter = sniffDelimiter(text)): string
       continue;
     }
 
-    if (c === '"') quoted = true;
+    // A quote opens a quoted field only where the field starts. In the middle of one it is a
+    // character: `Pikachu 5" promo` used to open a quote that swallowed every delimiter and line
+    // break down to the next quote in the file, merging rows.
+    if (c === '"' && field === "") quoted = true;
     else if (c === delimiter) {
       row.push(field);
       field = "";
@@ -110,9 +127,12 @@ export function parseCsv(text: string, delimiter = sniffDelimiter(text)): string
       // \r\n is one break, not two. Without this every other row is empty.
       if (c === "\r" && src[i + 1] === "\n") i++;
       row.push(field);
+      LINE_OF.set(row, rowLine);
       rows.push(row);
       row = [];
       field = "";
+      line++;
+      rowLine = line;
     } else field += c;
   }
 
@@ -120,6 +140,7 @@ export function parseCsv(text: string, delimiter = sniffDelimiter(text)): string
   // newline is the common case, not the edge one.
   if (field || row.length) {
     row.push(field);
+    LINE_OF.set(row, rowLine);
     rows.push(row);
   }
 
@@ -371,7 +392,7 @@ export function rowsFrom(grid: string[][], map: ColumnMap, hasHeader = true): Cs
 
   grid.slice(hasHeader ? 1 : 0).forEach((r, i) => {
     // The line as a person counts it, in the file they are looking at.
-    const line = i + (hasHeader ? 2 : 1);
+    const line = lineOf(r) ?? i + (hasHeader ? 2 : 1);
 
     const name = at(r, map.name);
     const set = at(r, map.set);
