@@ -58,6 +58,13 @@ describe("matchesRule", () => {
     expect(matchesRule(copy({ speciesId: 152 }), rule)).toBe(false);
     expect(matchesRule(copy({ speciesId: null }), rule)).toBe(false);
   });
+  it("takes a tag team when any Pokémon on it is in the range", () => {
+    // Pikachu & Zekrom-GX: the whole name answers Zekrom, and a Kanto binder wants Pikachu.
+    const tagTeam = copy({ speciesId: 644, speciesIds: [644, 25] });
+    expect(matchesRule(tagTeam, { dex: { from: 1, to: 151 } })).toBe(true);
+    expect(matchesRule(tagTeam, { dex: { from: 494, to: 649 } })).toBe(true);
+    expect(matchesRule(tagTeam, { dex: { from: 152, to: 251 } })).toBe(false);
+  });
   it("matches a set by its name or its title, in any case", () => {
     expect(matchesRule(copy(), { sets: ["SV04"] })).toBe(true);
     expect(matchesRule(copy(), { sets: ["paradox rift"] })).toBe(true);

@@ -174,6 +174,8 @@ export function validateFolderRule(
 /** What a rule reads on a copy; the whole CardItem satisfies it. */
 export type RuleSubject = {
   speciesId: number | null;
+  /** Every Pokémon on the card; a tag team fits a dex rule when any of them is in its range. */
+  speciesIds?: number[];
   set: string;
   setTitle: string;
   rarity: string | null;
@@ -191,8 +193,14 @@ export function ruleMatcher(rule: FolderRule): (it: RuleSubject) => boolean {
   const dex = rule.dex;
   return (it) => {
     if (!it.owned) return false;
-    if (dex && (it.speciesId === null || it.speciesId < dex.from || it.speciesId > dex.to))
-      return false;
+    if (dex) {
+      const ids = it.speciesIds?.length
+        ? it.speciesIds
+        : it.speciesId === null
+          ? []
+          : [it.speciesId];
+      if (!ids.some((id) => id >= dex.from && id <= dex.to)) return false;
+    }
     if (sets) {
       const name = it.set.toLowerCase();
       const title = it.setTitle.toLowerCase();

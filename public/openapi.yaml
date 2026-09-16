@@ -280,6 +280,7 @@ components:
         imageHigh: { type: [string, "null"], description: "Large scan. Only where TCGdex has the card." }
         imageSize: { $ref: "#/components/schemas/ImageSize" }
         speciesId: { type: [integer, "null"], description: "The National Pokédex number." }
+        speciesIds: { type: array, items: { type: integer }, description: "Every National Pokédex number on the card: two or three for a tag team, the first equal to speciesId, none for a trainer." }
         localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it (a Japanese card); null on English cards." }
         variants: { type: array, items: { $ref: "#/components/schemas/Variant" } }
         owned: { type: boolean }
@@ -655,6 +656,7 @@ components:
         imageHigh: { type: [string, "null"] }
         printImage: { type: [string, "null"], description: "The picture of the printing this copy is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print); null where the card's `image` stands for it. `image` stays the card's scan." }
         speciesId: { type: [integer, "null"] }
+        speciesIds: { type: array, items: { type: integer }, description: "Every National Pokédex number on the card: two or three for a tag team, the first equal to speciesId, none for a trainer." }
         localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it; null on English cards." }
         tcgId: { type: [string, "null"] }
         catalogue: { type: string, enum: [en, ja], description: "The catalogue `tcgId` is an id of: `ja` for a card of the Japanese catalogue, `en` for every other. Not `language`, which is the copy's. Pass it as `language` to `GET /v1/cards/{tcgId}/prices`." }
@@ -699,6 +701,7 @@ components:
         image: { type: [string, "null"] }
         imageHigh: { type: [string, "null"], description: "The larger scan, where the catalogue has two sizes." }
         speciesId: { type: [integer, "null"] }
+        speciesIds: { type: array, items: { type: integer }, description: "Every National Pokédex number on the card: two or three for a tag team, the first equal to speciesId, none for a trainer." }
         localName: { type: [string, "null"], description: "What the card prints where `name` is the English for it; null on English cards." }
         tcgId: { type: [string, "null"] }
         copies: { type: integer, minimum: 1 }
@@ -890,6 +893,7 @@ components:
         imageHigh: { type: [string, "null"] }
         rarity: { type: [string, "null"] }
         speciesId: { type: [integer, "null"] }
+        speciesIds: { type: array, items: { type: integer }, description: "Every National Pokédex number on the card: two or three for a tag team, the first equal to speciesId, none for a trainer." }
         tcgId: { type: [string, "null"] }
         setName: { type: string }
         setTitle: { type: string }

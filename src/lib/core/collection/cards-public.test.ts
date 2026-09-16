@@ -93,6 +93,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   imageHigh: "https://assets.tcgdex.net/x/high.webp",
   imageSize: null,
   speciesId: 6,
+  speciesIds: [],
   variants: [variant()],
   owned: true,
   price: PRICE,

@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - Prices on the public profile are the owner's to show: `PATCH /v1/profile` takes `pricesPublic`, `GET /v1/profile` and `GET /v1/public/{username}/profile` say it, and with it on `GET /v1/public/{username}/cards` carries a `price` on every card (what its copies trade at, null where they differ) and `value` and `unpriced` over the whole list. Off, the default, nothing about a price leaves the building, as before.
 
+- Every card carries `speciesIds`, every National Pokédex number on it: two or three for a tag team ("Pikachu & Zekrom-GX" is 644 and 25), the first always equal to `speciesId`, empty for a trainer. A rule binder with a dex range takes a tag team when any Pokémon on it is in the range. `speciesId` is unchanged.
+
 ## 2026-09-15
 
 - The Poké Ball, Master Ball and Energy Symbol reverse holos come from TCGplayer's own products, with their own prices and history. TCGplayer sells 645 of them apart from the plain card (Prismatic Evolutions, Black Bolt, White Flare, Ascended Heroes); each is priced under the card as `poke-ball-reverse-holofoil`, `master-ball-reverse-holofoil` or `energy-symbol-reverse-holofoil`, in today's price, the nightly price line and a backfilled history. A card's printings offer those finishes where TCGplayer sells them and no longer where only TCGdex names one (eight basic energies of Scarlet & Violet). A copy's `finish` can be `energy-symbol` (migration 20260915060000); the Dex export writes it as "Reverse Holo" and names every finish in a new Finish column after Edition, which the import reads first. data-health checks that every such product has its own price line and that no form offers a ball TCGplayer cannot confirm.

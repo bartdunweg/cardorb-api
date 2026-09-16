@@ -42,6 +42,7 @@ const card = (over: Partial<OwnedCard> = {}): OwnedCard => ({
   imageHigh: null,
   imageSize: null,
   speciesId: null,
+  speciesIds: [],
   variants: [variant({ owned: over.owned ?? true })],
   owned: true,
   price: null,
