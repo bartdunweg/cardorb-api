@@ -72,6 +72,9 @@ const HEADER = [
   "Purchase price",
   "Edition",
   "Finish",
+  "Grade",
+  "Purchase date",
+  "Favorite",
 ] as const;
 
 const FINISH_WORDS: Record<string, string> = {
@@ -167,6 +170,9 @@ export function dexCsv(items: readonly CardItem[]): string {
         it.purchasePrice === null ? "" : it.purchasePrice.toFixed(2).replace(".", ","),
         it.edition ?? "",
         it.finish ?? "",
+        it.grade ?? "",
+        it.purchaseDate ? it.purchaseDate.slice(0, 10) : "",
+        it.isFavorite ? "Yes" : "",
       ]),
     );
   }

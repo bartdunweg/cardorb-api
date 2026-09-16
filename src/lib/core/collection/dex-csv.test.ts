@@ -59,14 +59,14 @@ describe("dexCsv", () => {
   it("writes Dex's header first, and this app's own columns after it", () => {
     const [header] = dexCsv([]).split("\r\n");
     expect(header).toBe(
-      "Type;Category;Locale;Series;Set;Id;Number;Name;Variant;Rarity;Illustrator;Quantity;Price;Note 1;Note 2;Note 3;Note 4;Note 5;Condition;Language;Acquired;Purchase price;Edition;Finish",
+      "Type;Category;Locale;Series;Set;Id;Number;Name;Variant;Rarity;Illustrator;Quantity;Price;Note 1;Note 2;Note 3;Note 4;Note 5;Condition;Language;Acquired;Purchase price;Edition;Finish;Grade;Purchase date;Favorite",
     );
   });
 
   it("writes a held copy the way Dex does, the official set name and the count included", () => {
     const [, line] = dexCsv([item({ set: "Dark Explorers (BW5)", quantity: 3 })]).split("\r\n");
     expect(line).toBe(
-      "collection;My Collection;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Normal;Rare;;3;€ 8,63;;;;;;;;;;;normal",
+      "collection;My Collection;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Normal;Rare;;3;€ 8,63;;;;;;;;;;;normal;;;",
     );
   });
 
@@ -87,7 +87,7 @@ describe("dexCsv", () => {
       }),
     ]).split("\r\n");
     expect(line).toBe(
-      "collection;Wishlist;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Reverse Holo (Cosmos Holo);Rare;;1;—;Traded with Sam;;;;;Near Mint;de;2023-09-15;4,50;1st-edition;reverse-holo",
+      "collection;Wishlist;International;Black & White;Dark Explorers;bw5-48;48;Espeon;Reverse Holo (Cosmos Holo);Rare;;1;—;Traded with Sam;;;;;Near Mint;de;2023-09-15;4,50;1st-edition;reverse-holo;;;",
     );
   });
 
@@ -137,8 +137,32 @@ describe("dexCsv", () => {
     const csv = dexCsv([item({ finish: "energy-symbol", tcgId: "me02.5-55" })]);
     const [, line] = csv.split("\r\n");
     expect(line!.split(";")[8]).toBe("Reverse Holo");
-    expect(line!.split(";").at(-1)).toBe("energy-symbol");
+    expect(line!.split(";").at(-4)).toBe("energy-symbol");
     expect(dexRows(parseCsv(csv)).rows[0]?.finish).toBe("energy-symbol");
+  });
+
+  it("carries a copy's grade, the day it was bought and its star out and back in", () => {
+    const csv = dexCsv([
+      item({ grade: "PSA 9", purchasePrice: 12, purchaseDate: "2024-03-01", isFavorite: true }),
+      item({
+        id: "row-2",
+        name: "Umbreon",
+        number: "70",
+        tcgId: "bw5-70",
+        notes: "line one\nline two",
+      }),
+      item({ id: "row-3", name: "Leafeon", number: "11", tcgId: "bw5-11" }),
+    ]);
+    const { rows, lines } = dexRows(parseCsv(csv));
+    expect(rows[0]).toMatchObject({
+      grade: "PSA 9",
+      purchasePrice: 12,
+      purchaseDate: "2024-03-01",
+      isFavorite: true,
+    });
+    expect(rows[1]).toMatchObject({ grade: null, purchaseDate: null, isFavorite: false });
+    // The note over two lines pushes Leafeon to line 5 of the file.
+    expect(lines).toEqual([2, 3, 5]);
   });
 
   it("carries the catalogue id out and back in, which is what a row is recognised by", () => {

@@ -3,6 +3,7 @@ import { isTcgId } from "../catalogue/tcgdex-language";
 import {
   NOT_OWNED,
   cardNumber,
+  lineOf,
   editionFrom,
   finishFrom,
   patternFrom,
@@ -71,6 +72,9 @@ const columns = (header: string[]) => {
     language: at("language"),
     acquired: at("acquired"),
     purchase: at("purchase price"),
+    grade: at("grade"),
+    purchaseDate: at("purchase date"),
+    favorite: at("favorite"),
   };
 };
 
@@ -80,6 +84,10 @@ const acquiredFrom = (raw: string): string | null => {
   const parsed = new Date(raw.trim());
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 };
+
+/** A day as this app's export writes it (2023-09-15), or null: a purchase date is a day, not a moment. */
+const dayFrom = (raw: string): string | null =>
+  /^\d{4}-\d{2}-\d{2}$/.test(raw.trim()) ? raw.trim() : null;
 
 /** A language code this app knows, or null: a word it does not know is not a guess. */
 const language = (raw: string): Language | null => {
@@ -123,7 +131,7 @@ export function dexRows(grid: string[][]): CsvResult {
   const at = (r: string[], i: number) => (i < 0 ? "" : (r[i] ?? "").trim());
 
   grid.slice(1).forEach((r, i) => {
-    const line = i + 2;
+    const line = lineOf(r) ?? i + 2;
     const name = at(r, c.name);
     const set = at(r, c.set);
 
@@ -198,15 +206,16 @@ export function dexRows(grid: string[][]): CsvResult {
       // A wishlist row is a card you want one of, whatever Dex counted.
       quantity: wanted ? 1 : Math.max(1, quantity ?? 1),
       condition: at(r, c.condition) || null,
-      grade: null,
+      grade: at(r, c.grade) || null,
       language: language(at(r, c.language)),
       // Dex's Price is what the card is worth today, not what anybody paid for
       // it. This app fetches the first and would be lying about the second;
       // what was paid is its own column, written by this app's export alone.
       purchasePrice: c.purchase < 0 ? null : priceFrom(at(r, c.purchase)),
-      purchaseDate: null,
+      purchaseDate: dayFrom(at(r, c.purchaseDate)),
       notes: notes || null,
-      isFavorite: false,
+      // Written "Yes" by this app's export; a Dex file has no such column.
+      isFavorite: /^(yes|true|1)$/i.test(at(r, c.favorite)),
       dexFace: false,
       collectionId: null,
     });

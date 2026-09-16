@@ -33,6 +33,32 @@ describe("rowsFrom", () => {
     expect(skipped.map((s) => s.line)).toEqual([3, 5]);
   });
 
+  it("names the file's own line after a blank line and a note over two lines", () => {
+    const { lines } = rowsFrom(
+      parseCsv(
+        [
+          "Name,Set,Number,Quantity",
+          "Pikachu,Base Set,58,1", // line 2
+          "", // line 3, blank
+          '"Charizard, the ""big"" one",Base Set,4,1', // line 4
+          '"Blast\noise",Base Set,2,1', // lines 5 and 6
+          "Squirtle,Base Set,63,2", // line 7
+        ].join("\r\n"),
+      ),
+      MAP,
+    );
+    expect(lines).toEqual([2, 4, 5, 7]);
+  });
+
+  it("reads a quote in the middle of a field as a character, not the start of a quoted one", () => {
+    const grid = parseCsv(["Name,Set", 'Pikachu 5" promo,Base Set', "Raichu,Base Set"].join("\n"));
+    expect(grid).toEqual([
+      ["Name", "Set"],
+      ['Pikachu 5" promo', "Base Set"],
+      ["Raichu", "Base Set"],
+    ]);
+  });
+
   it("hands back exactly the row a line names", () => {
     const parsed = rowsFrom(
       parseCsv(["Name,Set,Number,Quantity", "A,S,1,1", "B,S,2,1", "C,S,3,1"].join("\n")),
