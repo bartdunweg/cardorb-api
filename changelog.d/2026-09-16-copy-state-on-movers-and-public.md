@@ -1,0 +1,1 @@
+- `GET /v1/movers` and `GET /v1/public/{username}/cards` say which printing a card is and what state it is in: `finish`, `foilPattern`, `edition`, `condition` and `grade`, where every copy of the card answers the same and null where they differ. On a public wishlist they are the printing and state its owner is looking for. What a copy cost, its notes and its binder stay private.

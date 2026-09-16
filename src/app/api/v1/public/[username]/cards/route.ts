@@ -3,6 +3,8 @@ import { apiError, PUBLIC_READ_CACHE, refuse, retryAfter } from "@/lib/api/respo
 import { getPublicCollection, getPublicFolders, ownerOf } from "@/lib/core/collection/collection";
 import { forPublic } from "@/lib/core/collection/cards";
 import {
+  agreedOn,
+  type CardItem,
   filterItems,
   filterPublicItems,
   flattenItems,
@@ -74,16 +76,45 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
   const held = new Map<string, number>();
   for (const it of filterItems(flattenItems(sets), { owned: true }))
     held.set(sameCard(it), (held.get(sameCard(it)) ?? 0) + Math.max(0, it.quantity));
+  // Which printing the cards are and what state they are in, for the line under the name a
+  // visitor reads ("Holo · Near Mint"), off the owner's own rows the way `held` is: the public
+  // payload carries none of these fields (forPublic) and is not being opened up. Only where every
+  // copy of a card answers the same (agreedOn), since an entry here is a card and not a copy.
+  // What a copy cost, its notes and the binder it is in are not published and are not here.
+  const byCard = (owned: boolean) => {
+    const out = new Map<string, CardItem[]>();
+    for (const it of filterItems(flattenItems(sets), { owned }))
+      out.set(sameCard(it), [...(out.get(sameCard(it)) ?? []), it]);
+    return out;
+  };
+  const stateOf = (copies: Map<string, CardItem[]>) => (key: string) => {
+    const mine = copies.get(key) ?? [];
+    return {
+      finish: agreedOn(mine.map((c) => c.finish)),
+      foilPattern: agreedOn(mine.map((c) => c.foilPattern)),
+      edition: agreedOn(mine.map((c) => c.edition)),
+      condition: agreedOn(mine.map((c) => c.condition)),
+      grade: agreedOn(mine.map((c) => c.grade)),
+    };
+  };
+  const stateHeld = stateOf(byCard(true));
   // Newest first is built here, not sorted later: only these items still know their dates, and
   // the dates do not go out with them.
   const owned = publicItems(shown, { newestFirst: read.query.sort === "added" }).map((it) => ({
     ...it,
     copies: held.get(sameCard(it)) ?? it.copies,
     favorite: starred.has(sameCard(it)),
+    ...stateHeld(sameCard(it)),
   }));
+  /* A wish says the same two things where its owner recorded them: which printing they are after
+     and in what state they will take it. Off the wish rows, the same fold as the held ones. */
+  const wished = () => {
+    const state = stateOf(byCard(false));
+    return publicWishes(shown).map((it) => ({ ...it, ...state(sameCard(it)) }));
+  };
   const all =
     list === "wishlist"
-      ? publicWishes(shown)
+      ? wished()
       : list === "favorites"
         ? owned.filter((it) => it.favorite)
         : owned;

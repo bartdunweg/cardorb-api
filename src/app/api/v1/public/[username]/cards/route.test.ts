@@ -14,10 +14,10 @@ const variant = (id: string, owned = true) => ({
   id,
   rarity: "Common",
   owned,
-  finish: null,
+  finish: null as string | null,
   quantity: 1,
-  condition: null,
-  grade: null,
+  condition: null as string | null,
+  grade: null as string | null,
   language: null,
   purchasePrice: 12,
   purchaseDate: null,
@@ -101,7 +101,37 @@ describe("GET /api/v1/public/{username}/cards", () => {
       localName: null,
       favorite: false,
       dexFace: false,
+      // The printing and the state, folded over the copies; nobody recorded any here.
+      finish: null,
+      foilPattern: null,
+      edition: null,
+      condition: null,
+      grade: null,
     });
+  });
+
+  it("says which printing a card is and what state it is in where every copy agrees, and nothing where they differ", async () => {
+    const holo = { ...variant("a"), finish: "holo", condition: "Near Mint" };
+    getPublicCollection.mockResolvedValue({
+      sets: [
+        {
+          ...SETS[0],
+          cards: [
+            card("Pikachu", [holo, { ...holo, id: "b" }]),
+            card("Raichu", [holo, { ...holo, id: "d", condition: "Played" }]),
+            card("Mew", [{ ...variant("e"), finish: "holo", grade: "PSA 10" }]),
+          ],
+        },
+      ],
+      failed: false,
+    });
+    const body = await (await get()).json();
+    const by = (name: string) => body.cards.find((c: { name: string }) => c.name === name);
+    expect(by("Pikachu")).toMatchObject({ finish: "holo", condition: "Near Mint", grade: null });
+    expect(by("Raichu")).toMatchObject({ finish: "holo", condition: null });
+    expect(by("Mew")).toMatchObject({ finish: "holo", grade: "PSA 10" });
+    // Still nothing a copy cost, nor its notes.
+    expect(JSON.stringify(body)).not.toContain("private");
   });
 
   it("pages and searches, and refuses a query it cannot mean", async () => {
@@ -150,5 +180,15 @@ describe("GET /api/v1/public/{username}/cards", () => {
     const favorites = await (await get("?list=favorites")).json();
     expect(favorites.cards.length).toBeGreaterThan(0);
     expect(favorites.cards.every((c: { favorite: boolean }) => c.favorite)).toBe(true);
+  });
+
+  it("says on a wish which printing its owner is after and in what state, where they said", async () => {
+    ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: true, favoritesPublic: false });
+    getPublicCollection.mockResolvedValue({
+      sets: [{ ...SETS[0], cards: [card("Mew", [{ ...variant("c", false), finish: "holo", condition: "Near Mint" }])] }],
+      failed: false,
+    });
+    const body = await (await get("?list=wishlist")).json();
+    expect(body.cards[0]).toMatchObject({ name: "Mew", finish: "holo", condition: "Near Mint" });
   });
 });
