@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CardSet } from "./cards";
-import { holdStrayPrices } from "./held-prices";
+import { holdShelfPrice, holdStrayPrices } from "./held-prices";
 import type { CardPricePoint } from "./movers";
 
 const charizard = {
@@ -53,5 +53,32 @@ describe("holdStrayPrices", () => {
     const sets = [{ ...set(), cards: [own] }] as unknown as CardSet[];
     const card = holdStrayPrices(sets, [point], "2026-07-15")[0]!.cards[0]!;
     expect(card.price).toEqual({ market: 8645.17 });
+  });
+});
+
+describe("holdShelfPrice", () => {
+  const day = { printings: point.printings!, held: point.held! };
+
+  it("holds the one price a browse card carries where it is the held printing's figure", () => {
+    // usdOf picked the 1st Edition holo as the card's figure ($250, €216.50 at the day's rate).
+    const pair = {
+      usd: { market: 250 },
+      firstEd: null,
+      printings: { "1st-edition-holofoil": { market: 250, productId: 1 } },
+    };
+    expect(holdShelfPrice({ market: 216.5 }, pair, day)).toEqual({ market: 8645.17 });
+  });
+
+  it("leaves it where the card's figure is another printing's", () => {
+    const pair = {
+      usd: { market: 870 },
+      firstEd: null,
+      printings: {
+        holofoil: { market: 870, productId: 1 },
+        "1st-edition-holofoil": { market: 250, productId: 2 },
+      },
+    };
+    const price = { market: 752 };
+    expect(holdShelfPrice(price, pair, day)).toBe(price);
   });
 });

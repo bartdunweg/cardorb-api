@@ -94,7 +94,7 @@ import {
   printProductsOfCards,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
-import { holdStrayPrices } from "./held-prices";
+import { heldDays, holdShelfPrice, holdStrayPrices } from "./held-prices";
 import { endsOfLines, type CardPricePoint } from "./movers";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -318,9 +318,27 @@ export const tcgplayerPricesFor = async (
   if (!ids.length) return out;
   const rate = await usdToEurForRequest();
   if (rate == null) return out;
-  for (const [id, { usd }] of Object.entries(await shelfUsdFor(ids, language))) {
-    const price = usd ? priceFromUsd(usd, rate) : null;
+  const pairs = await shelfUsdFor(ids, language);
+  for (const [id, pair] of Object.entries(pairs)) {
+    const price = pair.usd ? priceFromUsd(pair.usd, rate) : null;
     if (price) out.set(id, { price });
+  }
+  /* A stray sale held over, as the collection's prices are (withHeldPrices): a set page showed
+     Base Set Charizard's 1st Edition at the one sale's figure while the collection and its line
+     held the figure before it. Only the cards priced here, so a page of them is one line read,
+     kept a day under the price day. */
+  const priceLanguage = priceLanguageOf(language ?? "en");
+  const held = await timed(
+    "held shelf prices",
+    () => heldPointsFor([...out.keys()].map((tcgId) => ({ tcgId, language: priceLanguage }))),
+    `${out.size} cards`,
+  );
+  if (held) {
+    const days = heldDays(held.points, held.priceDay);
+    for (const [id, { price }] of out) {
+      const day = days.get(historyKey(priceLanguage, id));
+      if (day) out.set(id, { price: holdShelfPrice(price, pairs[id]!, day) });
+    }
   }
   return out;
 };
@@ -1331,24 +1349,34 @@ const HELD_PRICES_DAYS = 60;
  * leaves TCGplayer's figures as they are: a price is still better than none.
  */
 async function withHeldPrices(sets: CardSet[]): Promise<CardSet[]> {
+  const cards = new Map<string, PricedCard>();
+  for (const set of sets) {
+    const language = priceLanguageOf(set.language);
+    for (const card of set.cards)
+      if (card.tcgId) cards.set(historyKey(language, card.tcgId), { tcgId: card.tcgId, language });
+  }
+  const held = await heldPointsFor([...cards.values()]);
+  return held ? holdStrayPrices(sets, held.points, held.priceDay) : sets;
+}
+
+/**
+ * The price day's held points for these cards, and which day that is: what withHeldPrices and
+ * tcgplayerPricesFor both hold today's prices with. Null where there is nothing to hold with: no
+ * store, no price day, no cards, or a line that cannot be read, which leaves TCGplayer's figures
+ * as they are, since a price is still better than none.
+ */
+async function heldPointsFor(
+  list: PricedCard[],
+): Promise<{ priceDay: string; points: CardPricePoint[] } | null> {
   const db = adminClient();
-  if (!db) return sets;
+  if (!db || !list.length) return null;
   try {
     const priceDay = await latestPriceDay();
-    if (priceDay === "-") return sets;
-    const cards = new Map<string, PricedCard>();
-    for (const set of sets) {
-      const language = priceLanguageOf(set.language);
-      for (const card of set.cards)
-        if (card.tcgId)
-          cards.set(historyKey(language, card.tcgId), { tcgId: card.tcgId, language });
-    }
-    if (!cards.size) return sets;
-    const list = [...cards.values()];
+    if (priceDay === "-") return null;
     const since = new Date(Date.parse(`${priceDay}T00:00:00Z`) - HELD_PRICES_DAYS * 86_400_000)
       .toISOString()
       .slice(0, 10);
-    const held = await unstable_cache(
+    const points = await unstable_cache(
       async () =>
         (await listHistoryPrices(db, list, since)).flatMap((p) =>
           p.date === priceDay && p.held ? [p] : [],
@@ -1356,10 +1384,10 @@ async function withHeldPrices(sets: CardSet[]): Promise<CardSet[]> {
       ["held-prices", "v2", priceDay, idsKey(list)],
       { revalidate: DAY, tags: [priceHistoryTag] },
     )();
-    return holdStrayPrices(sets, held, priceDay);
+    return { priceDay, points };
   } catch (err) {
     console.error("Price lines unreadable, today's prices not held:", err);
-    return sets;
+    return null;
   }
 }
 
