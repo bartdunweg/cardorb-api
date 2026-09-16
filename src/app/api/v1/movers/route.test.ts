@@ -106,4 +106,88 @@ describe("GET /v1/movers", () => {
     getCollection.mockResolvedValue({ sets: [], failed: true });
     expect((await ask()).status).toBe(503);
   });
+
+  // The line under the name on Home reads as every list's: "Holo · Near Mint".
+  it("says which printing the copies are and what state they are in", async () => {
+    getCollection.mockResolvedValue({
+      sets: [
+        {
+          name: "Base Set",
+          cards: [
+            {
+              ...card,
+              variants: [
+                {
+                  owned: true,
+                  quantity: 1,
+                  finish: "holo",
+                  edition: "1st-edition",
+                  condition: "Near Mint",
+                  rarity: "Holo Rare",
+                },
+                {
+                  owned: true,
+                  quantity: 1,
+                  finish: "holo",
+                  edition: "1st-edition",
+                  condition: "Near Mint",
+                  rarity: "Holo Rare",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      failed: false,
+    });
+    const body = await (await ask("?days=7")).json();
+    expect(body.up[0]).toMatchObject({
+      finish: "holo",
+      edition: "1st-edition",
+      condition: "Near Mint",
+      grade: null,
+    });
+  });
+
+  it("says nothing where the copies held disagree, since the line is about the card", async () => {
+    getCollection.mockResolvedValue({
+      sets: [
+        {
+          name: "Base Set",
+          cards: [
+            {
+              ...card,
+              variants: [
+                {
+                  owned: true,
+                  quantity: 1,
+                  finish: "holo",
+                  condition: "Near Mint",
+                  rarity: "Holo Rare",
+                },
+                {
+                  owned: true,
+                  quantity: 1,
+                  finish: "holo",
+                  condition: "Played",
+                  rarity: "Holo Rare",
+                },
+                {
+                  owned: false,
+                  quantity: 1,
+                  finish: "reverse-holo",
+                  condition: "Mint",
+                  rarity: "Holo Rare",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      failed: false,
+    });
+    const body = await (await ask("?days=7")).json();
+    // The finish is one answer across the copies held; the condition is not, and the wish is not counted.
+    expect(body.up[0]).toMatchObject({ finish: "holo", condition: null });
+  });
 });

@@ -5,6 +5,7 @@ import { bearer } from "@/lib/api/viewer";
 import { ALL_READINGS, getCollection, getMoverPrices } from "@/lib/core/collection/collection";
 import { copiesHeld } from "@/lib/core/collection/cards-stats";
 import { moversOf } from "@/lib/core/collection/movers";
+import { agreedOn } from "@/lib/core/collection/items";
 import { printedNumberOf } from "@/lib/core/catalogue/set-codes";
 import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
 
@@ -75,24 +76,35 @@ export async function GET(req: Request) {
     );
 
   const { up, down } = moversOf(sets, prices.points, { top });
-  const out = (m: (typeof up)[number]) => ({
-    tcgId: m.card.tcgId,
-    name: m.card.name,
-    number: m.card.number,
-    printedNumber: printedNumberOf(m.card.tcgId),
-    set: m.set,
-    setAbbr: m.setAbbr,
-    // The rarity of a printing held, so the line under the name reads as every list's: "PFL 004 · Double Rare".
-    rarity: m.card.variants.find((v) => v.owned && v.rarity)?.rarity ?? null,
-    image: m.card.image,
-    copies: copiesHeld(m.card),
-    was: m.was,
-    now: m.now,
-    change: m.change,
-    pct: m.pct,
-    total: m.total,
-    from: m.from,
-    to: m.to,
-  });
+  const out = (m: (typeof up)[number]) => {
+    /* Which printing the copies are and what state they are in, for the line under the name
+       ("Holo · Near Mint"), and only where every copy held answers the same: a card held twice,
+       once graded and once loose, says nothing rather than the first row's answer (agreedOn). */
+    const held = m.card.variants.filter((v) => v.owned);
+    return {
+      tcgId: m.card.tcgId,
+      name: m.card.name,
+      number: m.card.number,
+      printedNumber: printedNumberOf(m.card.tcgId),
+      set: m.set,
+      setAbbr: m.setAbbr,
+      // The rarity of a printing held, so the line under the name reads as every list's: "PFL 004 · Double Rare".
+      rarity: m.card.variants.find((v) => v.owned && v.rarity)?.rarity ?? null,
+      image: m.card.image,
+      finish: agreedOn(held.map((v) => v.finish)),
+      foilPattern: agreedOn(held.map((v) => v.foilPattern)),
+      edition: agreedOn(held.map((v) => v.edition)),
+      condition: agreedOn(held.map((v) => v.condition)),
+      grade: agreedOn(held.map((v) => v.grade)),
+      copies: copiesHeld(m.card),
+      was: m.was,
+      now: m.now,
+      change: m.change,
+      pct: m.pct,
+      total: m.total,
+      from: m.from,
+      to: m.to,
+    };
+  };
   return NextResponse.json({ up: up.map(out), down: down.map(out) }, { headers: readHeaders(req) });
 }

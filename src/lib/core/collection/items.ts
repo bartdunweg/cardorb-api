@@ -752,7 +752,34 @@ export type PublicItem = {
    * opens on. Always false on a wish, which no Pokédex slot shows.
    */
   dexFace: boolean;
+  /**
+   * Which printing the copies are and what state they are in, where every copy of this card
+   * answers the same; null where they differ or where nobody said. One entry here is a card,
+   * not a copy, so "Holo · Near Mint" is only true of it when it is true of all of them.
+   *
+   * Laid over the item by the public cards route, off the owner's own rows: the public payload
+   * (forPublic) carries none of these, deliberately, and this is the one folded fact published
+   * from them. What somebody paid, their notes and how each copy is filed stay where they were.
+   */
+  finish?: string | null;
+  foilPattern?: string | null;
+  edition?: string | null;
+  condition?: string | null;
+  grade?: string | null;
 };
+
+/**
+ * The one answer every copy gives, or null where they differ or where there are none.
+ *
+ * A mover and a card on a public profile are cards, not copies: each folds however many copies
+ * the owner holds. Saying "Near Mint" under a card held twice, once mint and once played, is a
+ * fact about neither, so where the copies disagree the card says nothing at all.
+ */
+export function agreedOn<T>(values: (T | null | undefined)[]): T | null {
+  if (values.length === 0) return null;
+  const first = values[0] ?? null;
+  return values.every((v) => (v ?? null) === first) ? first : null;
+}
 
 /**
  * The owned cards as a public list. `newestFirst` orders by the day each card was got, which is

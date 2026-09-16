@@ -703,6 +703,11 @@ components:
         tcgId: { type: [string, "null"] }
         copies: { type: integer, minimum: 1 }
         favorite: { type: boolean, description: "One of the owned copies is starred; always false on a wish." }
+        finish: { type: [string, "null"], description: "Which printing the owned copies are, or on a wish the one looked for, where every copy answers the same; null where they differ or nobody said." }
+        foilPattern: { type: [string, "null"], description: "The foil's pattern, on the same terms as finish." }
+        edition: { type: [string, "null"], description: "The print run, on the same terms as finish." }
+        condition: { type: [string, "null"], description: "The copies' condition (\"Near Mint\"), on the same terms as finish." }
+        grade: { type: [string, "null"], description: "The copies' grade as written on the slab (\"PSA 10\"), on the same terms as finish." }
 
     Stats:
       type: object
@@ -849,6 +854,11 @@ components:
         setAbbr: { type: [string, "null"], description: "The set's code: the official abbreviation (\"XYP\"), or Pokémon TCG Online's where there is none (\"PR\")." }
         printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\")." }
         image: { type: [string, "null"] }
+        finish: { type: [string, "null"], description: "Which printing the copies held are, where every copy answers the same; null where they differ or nobody said." }
+        foilPattern: { type: [string, "null"], description: "The foil's pattern, on the same terms as finish." }
+        edition: { type: [string, "null"], description: "The print run, on the same terms as finish." }
+        condition: { type: [string, "null"], description: "The copies' condition (\"Near Mint\"), on the same terms as finish." }
+        grade: { type: [string, "null"], description: "The copies' grade as written on the slab (\"PSA 10\"), on the same terms as finish." }
         copies: { type: integer, description: "Copies held." }
         was: { type: number, description: "One copy at the earliest reading in the window, euros." }
         now: { type: number, description: "One copy at the latest reading, euros." }
