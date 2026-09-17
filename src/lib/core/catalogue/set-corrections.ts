@@ -46,13 +46,22 @@ const CORRECTIONS: Record<string, SetCorrection> = {
   "en:2023sv": { release_date: "2023/09/11" },
   "en:2024sv": { release_date: "2025/01/21" },
   "en:bog": { name: "Best of Game" },
+  /* Where TCGplayer's group and Scrydex's expansion agree against TCGdex, found by data-health's "Set
+     names and dates as TCGplayer and Scrydex agree" on its first run (2026-09-17). Team Up and EX
+     Team Magma vs Team Aqua as Bulbapedia dates them too (February 1, 2019; March 15, 2004); the two
+     basic Energy sets under the plural both write, and Mega Evolution Energies on Mega Evolution's
+     day. */
+  "en:sm9": { release_date: "2019/02/01" },
+  "en:ex4": { name: "EX Team Magma vs Team Aqua", release_date: "2004/03/15" },
+  "en:mee": { name: "Mega Evolution Energies", release_date: "2025/09/26" },
+  "en:sve": { name: "Scarlet & Violet Energies" },
   /* Naming pass against Bulbapedia's set lists (2026-09-15), where Bulbapedia and TCGplayer's group
      agree against TCGdex. The EX sets carry the EX their packs print ("EX Ruby & Sapphire"), which is
      also how the owner's collection files 285 cards of them. A trainer kit is a Trainer Kit. */
   "en:ex1": { name: "EX Ruby & Sapphire" },
   "en:ex2": { name: "EX Sandstorm" },
   "en:ex3": { name: "EX Dragon" },
-  "en:ex4": { name: "EX Team Magma vs Team Aqua" },
+  // "en:ex4": its name with its date, above.
   "en:ex5": { name: "EX Hidden Legends" },
   "en:ex6": { name: "EX FireRed & LeafGreen" },
   "en:ex7": { name: "EX Team Rocket Returns" },
