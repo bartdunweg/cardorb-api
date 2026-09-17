@@ -1,0 +1,1002 @@
+{
+  "2011bw": {
+    "card": "2011bw-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2012bw": {
+    "card": "2012bw-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2014xy": {
+    "card": "2014xy-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2015xy": {
+    "card": "2015xy-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2016xy": {
+    "card": "2016xy-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2017sm": {
+    "card": "2017sm-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2018sm": {
+    "card": "2018sm-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2019sm": {
+    "card": "2019sm-1",
+    "scrydex": "1/12",
+    "tcgplayer": "001/012"
+  },
+  "2021swsh": {
+    "card": "2021swsh-1",
+    "scrydex": "1/25",
+    "tcgplayer": "001/025"
+  },
+  "2022swsh": {
+    "card": "2022swsh-1",
+    "scrydex": "1/15",
+    "tcgplayer": "001/015"
+  },
+  "2023sv": {
+    "card": "2023sv-1",
+    "scrydex": "001/015",
+    "tcgplayer": "001/015"
+  },
+  "2024sv": {
+    "card": "2024sv-1",
+    "scrydex": "001/015",
+    "tcgplayer": "001/015"
+  },
+  "30th": {
+    "card": "30th-001",
+    "scrydex": "001/128",
+    "tcgplayer": null
+  },
+  "30th-c": {
+    "card": "30th-c-001",
+    "scrydex": null,
+    "tcgplayer": "4/102"
+  },
+  "A1": {
+    "card": "A1-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A1a": {
+    "card": "A1a-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A2": {
+    "card": "A2-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A2a": {
+    "card": "A2a-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A2b": {
+    "card": "A2b-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A3": {
+    "card": "A3-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A3a": {
+    "card": "A3a-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A3b": {
+    "card": "A3b-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A4": {
+    "card": "A4-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "A4a": {
+    "card": "A4a-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "B1": {
+    "card": "B1-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "B1a": {
+    "card": "B1a-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "B2": {
+    "card": "B2-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "B2a": {
+    "card": "B2a-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "base1": {
+    "card": "base1-1",
+    "scrydex": "1/102",
+    "tcgplayer": "001/102"
+  },
+  "base2": {
+    "card": "base2-1",
+    "scrydex": "1/64",
+    "tcgplayer": "01/64"
+  },
+  "base3": {
+    "card": "base3-1",
+    "scrydex": "1/62",
+    "tcgplayer": "01/62"
+  },
+  "base4": {
+    "card": "base4-1",
+    "scrydex": "1/130",
+    "tcgplayer": "001/130"
+  },
+  "base5": {
+    "card": "base5-1",
+    "scrydex": "1/82",
+    "tcgplayer": "01/82"
+  },
+  "basep": {
+    "card": "basep-1",
+    "scrydex": "1",
+    "tcgplayer": "01/53"
+  },
+  "bog": {
+    "card": "bog-1",
+    "scrydex": "1",
+    "tcgplayer": "001/009"
+  },
+  "bw1": {
+    "card": "bw1-1",
+    "scrydex": "1/114",
+    "tcgplayer": "1/114"
+  },
+  "bw10": {
+    "card": "bw10-1",
+    "scrydex": "1/101",
+    "tcgplayer": "1/101"
+  },
+  "bw11": {
+    "card": "bw11-1",
+    "scrydex": "1/113",
+    "tcgplayer": "1/113"
+  },
+  "bw2": {
+    "card": "bw2-1",
+    "scrydex": "1/98",
+    "tcgplayer": "1/98"
+  },
+  "bw3": {
+    "card": "bw3-1",
+    "scrydex": "1/101",
+    "tcgplayer": "1/101"
+  },
+  "bw4": {
+    "card": "bw4-1",
+    "scrydex": "1/99",
+    "tcgplayer": "1/99"
+  },
+  "bw5": {
+    "card": "bw5-1",
+    "scrydex": "1/108",
+    "tcgplayer": "1/108"
+  },
+  "bw6": {
+    "card": "bw6-1",
+    "scrydex": "1/124",
+    "tcgplayer": "1/124"
+  },
+  "bw7": {
+    "card": "bw7-1",
+    "scrydex": "1/149",
+    "tcgplayer": "1/149"
+  },
+  "bw8": {
+    "card": "bw8-1",
+    "scrydex": "1/135",
+    "tcgplayer": "1/135"
+  },
+  "bw9": {
+    "card": "bw9-1",
+    "scrydex": "1/116",
+    "tcgplayer": "1/116"
+  },
+  "cel25": {
+    "card": "cel25-1",
+    "scrydex": null,
+    "tcgplayer": "001/025"
+  },
+  "col1": {
+    "card": "col1-1",
+    "scrydex": "1/95",
+    "tcgplayer": "1/95"
+  },
+  "dc1": {
+    "card": "dc1-1",
+    "scrydex": "1/34",
+    "tcgplayer": "1/34"
+  },
+  "det1": {
+    "card": "det1-1",
+    "scrydex": "1/18",
+    "tcgplayer": "1/18"
+  },
+  "dp1": {
+    "card": "dp1-1",
+    "scrydex": "1/130",
+    "tcgplayer": "1/130"
+  },
+  "dp2": {
+    "card": "dp2-1",
+    "scrydex": "1/123",
+    "tcgplayer": "1/123"
+  },
+  "dp3": {
+    "card": "dp3-1",
+    "scrydex": "1/132",
+    "tcgplayer": "1/132"
+  },
+  "dp4": {
+    "card": "dp4-1",
+    "scrydex": "1/106",
+    "tcgplayer": "1/106"
+  },
+  "dp5": {
+    "card": "dp5-1",
+    "scrydex": "1/100",
+    "tcgplayer": "1/100"
+  },
+  "dp6": {
+    "card": "dp6-1",
+    "scrydex": "1/146",
+    "tcgplayer": "1/146"
+  },
+  "dp7": {
+    "card": "dp7-1",
+    "scrydex": "1/100",
+    "tcgplayer": "1/100"
+  },
+  "dv1": {
+    "card": "dv1-1",
+    "scrydex": "1/20",
+    "tcgplayer": "1/20"
+  },
+  "ecard1": {
+    "card": "ecard1-1",
+    "scrydex": "1/165",
+    "tcgplayer": "001/165"
+  },
+  "ecard2": {
+    "card": "ecard2-1",
+    "scrydex": "1/147",
+    "tcgplayer": "001/147"
+  },
+  "ecard3": {
+    "card": "ecard3-1",
+    "scrydex": "1/144",
+    "tcgplayer": "001/144"
+  },
+  "ex1": {
+    "card": "ex1-1",
+    "scrydex": "1/109",
+    "tcgplayer": "1/109"
+  },
+  "ex10": {
+    "card": "ex10-1",
+    "scrydex": "1/115",
+    "tcgplayer": "1/115"
+  },
+  "ex11": {
+    "card": "ex11-1",
+    "scrydex": "1/113",
+    "tcgplayer": "1/113"
+  },
+  "ex12": {
+    "card": "ex12-1",
+    "scrydex": "1/92",
+    "tcgplayer": "1/92"
+  },
+  "ex13": {
+    "card": "ex13-1",
+    "scrydex": "1/110",
+    "tcgplayer": "1/110"
+  },
+  "ex14": {
+    "card": "ex14-1",
+    "scrydex": "1/100",
+    "tcgplayer": "1/100"
+  },
+  "ex15": {
+    "card": "ex15-1",
+    "scrydex": "1/101",
+    "tcgplayer": "1/101"
+  },
+  "ex16": {
+    "card": "ex16-1",
+    "scrydex": "1/108",
+    "tcgplayer": "1/108"
+  },
+  "ex2": {
+    "card": "ex2-1",
+    "scrydex": "1/100",
+    "tcgplayer": "1/100"
+  },
+  "ex3": {
+    "card": "ex3-1",
+    "scrydex": "1/97",
+    "tcgplayer": "1/97"
+  },
+  "ex4": {
+    "card": "ex4-1",
+    "scrydex": "1/95",
+    "tcgplayer": "1/95"
+  },
+  "ex5": {
+    "card": "ex5-1",
+    "scrydex": "1/101",
+    "tcgplayer": "1/101"
+  },
+  "ex5.5": {
+    "card": "ex5.5-1",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "ex6": {
+    "card": "ex6-1",
+    "scrydex": "1/112",
+    "tcgplayer": "1/112"
+  },
+  "ex7": {
+    "card": "ex7-1",
+    "scrydex": "1/109",
+    "tcgplayer": "1/109"
+  },
+  "ex8": {
+    "card": "ex8-1",
+    "scrydex": "1/107",
+    "tcgplayer": "1/107"
+  },
+  "ex9": {
+    "card": "ex9-1",
+    "scrydex": "1/106",
+    "tcgplayer": "1/106"
+  },
+  "fut2020": {
+    "card": "fut2020-1",
+    "scrydex": "001/005",
+    "tcgplayer": "001/005"
+  },
+  "g1": {
+    "card": "g1-1",
+    "scrydex": "1/83",
+    "tcgplayer": "1/83"
+  },
+  "gym1": {
+    "card": "gym1-1",
+    "scrydex": "1/132",
+    "tcgplayer": "001/132"
+  },
+  "gym2": {
+    "card": "gym2-1",
+    "scrydex": "1/132",
+    "tcgplayer": "001/132"
+  },
+  "hgss1": {
+    "card": "hgss1-1",
+    "scrydex": "1/123",
+    "tcgplayer": "1/123"
+  },
+  "hgss2": {
+    "card": "hgss2-1",
+    "scrydex": "1/95",
+    "tcgplayer": "1/95"
+  },
+  "hgss3": {
+    "card": "hgss3-1",
+    "scrydex": "1/90",
+    "tcgplayer": "1/90"
+  },
+  "hgss4": {
+    "card": "hgss4-1",
+    "scrydex": "1/102",
+    "tcgplayer": "1/102"
+  },
+  "lc": {
+    "card": "lc-1",
+    "scrydex": "1/110",
+    "tcgplayer": "001/110"
+  },
+  "me01": {
+    "card": "me01-001",
+    "scrydex": "001/132",
+    "tcgplayer": "001/132"
+  },
+  "me02": {
+    "card": "me02-001",
+    "scrydex": "001/094",
+    "tcgplayer": "001/094"
+  },
+  "me02.5": {
+    "card": "me02.5-001",
+    "scrydex": "001/217",
+    "tcgplayer": "001/217"
+  },
+  "me03": {
+    "card": "me03-001",
+    "scrydex": "001/088",
+    "tcgplayer": "001/088"
+  },
+  "me04": {
+    "card": "me04-001",
+    "scrydex": "001/086",
+    "tcgplayer": "001/086"
+  },
+  "me05": {
+    "card": "me05-001",
+    "scrydex": "001/084",
+    "tcgplayer": "001/084"
+  },
+  "mee": {
+    "card": "mee-001",
+    "scrydex": "001",
+    "tcgplayer": "1"
+  },
+  "mep": {
+    "card": "mep-001",
+    "scrydex": "001",
+    "tcgplayer": "001"
+  },
+  "mfb": {
+    "card": "mfb-1",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "miscp": {
+    "card": "miscp-001",
+    "scrydex": null,
+    "tcgplayer": "1"
+  },
+  "neo1": {
+    "card": "neo1-1",
+    "scrydex": "1/111",
+    "tcgplayer": "001/111"
+  },
+  "neo2": {
+    "card": "neo2-1",
+    "scrydex": "1/75",
+    "tcgplayer": "01/75"
+  },
+  "neo3": {
+    "card": "neo3-1",
+    "scrydex": "1/64",
+    "tcgplayer": "01/64"
+  },
+  "neo4": {
+    "card": "neo4-1",
+    "scrydex": "1/105",
+    "tcgplayer": "001/105"
+  },
+  "np": {
+    "card": "np-1",
+    "scrydex": "001",
+    "tcgplayer": "001"
+  },
+  "P-A": {
+    "card": "P-A-001",
+    "scrydex": null,
+    "tcgplayer": null
+  },
+  "pl1": {
+    "card": "pl1-1",
+    "scrydex": "1/127",
+    "tcgplayer": "1/127"
+  },
+  "pl2": {
+    "card": "pl2-1",
+    "scrydex": "1/111",
+    "tcgplayer": "1/111"
+  },
+  "pl3": {
+    "card": "pl3-1",
+    "scrydex": "1/147",
+    "tcgplayer": "1"
+  },
+  "pl4": {
+    "card": "pl4-1",
+    "scrydex": "1/99",
+    "tcgplayer": "1/99"
+  },
+  "pop1": {
+    "card": "pop1-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop2": {
+    "card": "pop2-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop3": {
+    "card": "pop3-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop4": {
+    "card": "pop4-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop5": {
+    "card": "pop5-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop6": {
+    "card": "pop6-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop7": {
+    "card": "pop7-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop8": {
+    "card": "pop8-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "pop9": {
+    "card": "pop9-1",
+    "scrydex": "1/17",
+    "tcgplayer": "001/017"
+  },
+  "ru1": {
+    "card": "ru1-1",
+    "scrydex": "1/16",
+    "tcgplayer": "1"
+  },
+  "si1": {
+    "card": "si1-1",
+    "scrydex": "1/18",
+    "tcgplayer": "01/18"
+  },
+  "sm1": {
+    "card": "sm1-1",
+    "scrydex": "1/149",
+    "tcgplayer": "1/149"
+  },
+  "sm10": {
+    "card": "sm10-1",
+    "scrydex": "1/214",
+    "tcgplayer": "1/214"
+  },
+  "sm11": {
+    "card": "sm11-1",
+    "scrydex": "1/236",
+    "tcgplayer": "1/236"
+  },
+  "sm115": {
+    "card": "sm115-1",
+    "scrydex": "1/68",
+    "tcgplayer": "1/68"
+  },
+  "sm12": {
+    "card": "sm12-1",
+    "scrydex": "1/236",
+    "tcgplayer": "1/236"
+  },
+  "sm2": {
+    "card": "sm2-1",
+    "scrydex": "1/145",
+    "tcgplayer": "1/145"
+  },
+  "sm3": {
+    "card": "sm3-1",
+    "scrydex": "1/147",
+    "tcgplayer": "1/147"
+  },
+  "sm3.5": {
+    "card": "sm3.5-1",
+    "scrydex": "1/73",
+    "tcgplayer": "1/73"
+  },
+  "sm4": {
+    "card": "sm4-1",
+    "scrydex": "1/111",
+    "tcgplayer": "1/111"
+  },
+  "sm5": {
+    "card": "sm5-1",
+    "scrydex": "1/156",
+    "tcgplayer": "1/156"
+  },
+  "sm6": {
+    "card": "sm6-1",
+    "scrydex": "1/131",
+    "tcgplayer": "1/131"
+  },
+  "sm7": {
+    "card": "sm7-1",
+    "scrydex": "1/168",
+    "tcgplayer": "1/168"
+  },
+  "sm7.5": {
+    "card": "sm7.5-1",
+    "scrydex": "1/70",
+    "tcgplayer": "1/70"
+  },
+  "sm8": {
+    "card": "sm8-1",
+    "scrydex": "1/214",
+    "tcgplayer": "1/214"
+  },
+  "sm9": {
+    "card": "sm9-1",
+    "scrydex": "1/181",
+    "tcgplayer": "1/181"
+  },
+  "sv01": {
+    "card": "sv01-001",
+    "scrydex": "001/198",
+    "tcgplayer": "001/198"
+  },
+  "sv02": {
+    "card": "sv02-001",
+    "scrydex": "001/193",
+    "tcgplayer": "001/193"
+  },
+  "sv03": {
+    "card": "sv03-001",
+    "scrydex": "001/197",
+    "tcgplayer": "001/197"
+  },
+  "sv03.5": {
+    "card": "sv03.5-001",
+    "scrydex": "001/165",
+    "tcgplayer": "001/165"
+  },
+  "sv04": {
+    "card": "sv04-001",
+    "scrydex": "001/182",
+    "tcgplayer": "001/182"
+  },
+  "sv04.5": {
+    "card": "sv04.5-001",
+    "scrydex": "001/091",
+    "tcgplayer": "001/091"
+  },
+  "sv05": {
+    "card": "sv05-001",
+    "scrydex": "001/162",
+    "tcgplayer": "001/162"
+  },
+  "sv06": {
+    "card": "sv06-001",
+    "scrydex": "001/167",
+    "tcgplayer": "001/167"
+  },
+  "sv06.5": {
+    "card": "sv06.5-001",
+    "scrydex": "001/064",
+    "tcgplayer": "001/064"
+  },
+  "sv07": {
+    "card": "sv07-001",
+    "scrydex": "001/142",
+    "tcgplayer": "001/142"
+  },
+  "sv08": {
+    "card": "sv08-001",
+    "scrydex": "001/191",
+    "tcgplayer": "001/191"
+  },
+  "sv08.5": {
+    "card": "sv08.5-001",
+    "scrydex": "001/131",
+    "tcgplayer": "001/131"
+  },
+  "sv09": {
+    "card": "sv09-001",
+    "scrydex": "001/159",
+    "tcgplayer": "001/159"
+  },
+  "sv10": {
+    "card": "sv10-001",
+    "scrydex": "001/182",
+    "tcgplayer": "001/182"
+  },
+  "sv10.5b": {
+    "card": "sv10.5b-001",
+    "scrydex": "001/086",
+    "tcgplayer": "001/086"
+  },
+  "sv10.5w": {
+    "card": "sv10.5w-001",
+    "scrydex": "001/086",
+    "tcgplayer": "001/086"
+  },
+  "sve": {
+    "card": "sve-001",
+    "scrydex": "001",
+    "tcgplayer": "001"
+  },
+  "svp": {
+    "card": "svp-001",
+    "scrydex": "001",
+    "tcgplayer": "001"
+  },
+  "swsh1": {
+    "card": "swsh1-1",
+    "scrydex": "001/202",
+    "tcgplayer": "001/202"
+  },
+  "swsh10": {
+    "card": "swsh10-001",
+    "scrydex": "001/189",
+    "tcgplayer": "001/189"
+  },
+  "swsh10.5": {
+    "card": "swsh10.5-001",
+    "scrydex": "001/078",
+    "tcgplayer": "001/078"
+  },
+  "swsh11": {
+    "card": "swsh11-001",
+    "scrydex": "001/196",
+    "tcgplayer": "001/196"
+  },
+  "swsh12": {
+    "card": "swsh12-001",
+    "scrydex": "001/195",
+    "tcgplayer": "001/195"
+  },
+  "swsh12.5": {
+    "card": "swsh12.5-001",
+    "scrydex": "001/159",
+    "tcgplayer": "001/159"
+  },
+  "swsh2": {
+    "card": "swsh2-1",
+    "scrydex": "001/192",
+    "tcgplayer": "001/192"
+  },
+  "swsh3": {
+    "card": "swsh3-1",
+    "scrydex": "001/189",
+    "tcgplayer": "001/189"
+  },
+  "swsh3.5": {
+    "card": "swsh3.5-1",
+    "scrydex": "001/073",
+    "tcgplayer": "01/73"
+  },
+  "swsh4": {
+    "card": "swsh4-1",
+    "scrydex": "001/185",
+    "tcgplayer": "001/185"
+  },
+  "swsh4.5": {
+    "card": "swsh4.5-1",
+    "scrydex": "001/072",
+    "tcgplayer": "001/072"
+  },
+  "swsh5": {
+    "card": "swsh5-1",
+    "scrydex": "001/163",
+    "tcgplayer": "001/163"
+  },
+  "swsh6": {
+    "card": "swsh6-1",
+    "scrydex": "001/198",
+    "tcgplayer": "001/198"
+  },
+  "swsh7": {
+    "card": "swsh7-1",
+    "scrydex": "001/203",
+    "tcgplayer": "001/203"
+  },
+  "swsh8": {
+    "card": "swsh8-1",
+    "scrydex": "001/264",
+    "tcgplayer": "001/264"
+  },
+  "swsh9": {
+    "card": "swsh9-001",
+    "scrydex": "001/172",
+    "tcgplayer": "001/172"
+  },
+  "tk-bw-e": {
+    "card": "tk-bw-e-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-bw-z": {
+    "card": "tk-bw-z-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-dp-l": {
+    "card": "tk-dp-l-1",
+    "scrydex": "1/11",
+    "tcgplayer": "1/11"
+  },
+  "tk-dp-m": {
+    "card": "tk-dp-m-1",
+    "scrydex": "1/12",
+    "tcgplayer": "1/12"
+  },
+  "tk-ex-latia": {
+    "card": "tk-ex-latia-1",
+    "scrydex": "1/10",
+    "tcgplayer": "1/10"
+  },
+  "tk-ex-latio": {
+    "card": "tk-ex-latio-1",
+    "scrydex": "1/10",
+    "tcgplayer": "1/10"
+  },
+  "tk-ex-m": {
+    "card": "tk-ex-m-1",
+    "scrydex": "1/12",
+    "tcgplayer": "1/12"
+  },
+  "tk-ex-p": {
+    "card": "tk-ex-p-1",
+    "scrydex": "1/12",
+    "tcgplayer": "1/12"
+  },
+  "tk-hs-g": {
+    "card": "tk-hs-g-1",
+    "scrydex": null,
+    "tcgplayer": "1/30"
+  },
+  "tk-hs-r": {
+    "card": "tk-hs-r-1",
+    "scrydex": null,
+    "tcgplayer": "1/30"
+  },
+  "tk-sm-l": {
+    "card": "tk-sm-l-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-sm-r": {
+    "card": "tk-sm-r-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-b": {
+    "card": "tk-xy-b-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-latia": {
+    "card": "tk-xy-latia-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-latio": {
+    "card": "tk-xy-latio-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-n": {
+    "card": "tk-xy-n-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-p": {
+    "card": "tk-xy-p-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-su": {
+    "card": "tk-xy-su-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-sy": {
+    "card": "tk-xy-sy-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "tk-xy-w": {
+    "card": "tk-xy-w-1",
+    "scrydex": "1/30",
+    "tcgplayer": "1/30"
+  },
+  "xy0": {
+    "card": "xy0-1",
+    "scrydex": "1/39",
+    "tcgplayer": "1/39"
+  },
+  "xy1": {
+    "card": "xy1-1",
+    "scrydex": "1/146",
+    "tcgplayer": "1/146"
+  },
+  "xy10": {
+    "card": "xy10-1",
+    "scrydex": "1/124",
+    "tcgplayer": "1/124"
+  },
+  "xy11": {
+    "card": "xy11-1",
+    "scrydex": "1/114",
+    "tcgplayer": "1/114"
+  },
+  "xy12": {
+    "card": "xy12-1",
+    "scrydex": "1/108",
+    "tcgplayer": "1/108"
+  },
+  "xy2": {
+    "card": "xy2-1",
+    "scrydex": "1/106",
+    "tcgplayer": "1/106"
+  },
+  "xy3": {
+    "card": "xy3-1",
+    "scrydex": "1/111",
+    "tcgplayer": "1/111"
+  },
+  "xy4": {
+    "card": "xy4-1",
+    "scrydex": "1/119",
+    "tcgplayer": "1/119"
+  },
+  "xy5": {
+    "card": "xy5-1",
+    "scrydex": "1/160",
+    "tcgplayer": "1/160"
+  },
+  "xy6": {
+    "card": "xy6-1",
+    "scrydex": "1/108",
+    "tcgplayer": "1/108"
+  },
+  "xy7": {
+    "card": "xy7-1",
+    "scrydex": "1/98",
+    "tcgplayer": "1/98"
+  },
+  "xy8": {
+    "card": "xy8-1",
+    "scrydex": "1/162",
+    "tcgplayer": "1/162"
+  },
+  "xy9": {
+    "card": "xy9-1",
+    "scrydex": "1/122",
+    "tcgplayer": "1/122"
+  }
+}

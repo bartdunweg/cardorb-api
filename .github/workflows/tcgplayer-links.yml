@@ -48,11 +48,14 @@ jobs:
       # The printed number of every card that prints another card's number (a Classic Collection's
       # 4/102), for every set the rule in tcgplayer-rules.mjs finds of that kind: reads the links above.
       - run: node scripts/classic-collection-numbers.mjs
+      # Whether each set's cards print 001 or 1, as Scrydex's card page and TCGplayer's product give
+      # it (number-padding.mjs says why Scrydex decides): one card a set, a second apart.
+      - run: node scripts/number-padding.mjs
 
       - name: Anything new?
         id: diff
         run: |
-          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json src/lib/core/catalogue/classic-collection-numbers.generated.json scripts/tcgplayer-coverage.json; then
+          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json src/lib/core/catalogue/classic-collection-numbers.generated.json src/lib/core/catalogue/number-padding.generated.json scripts/tcgplayer-coverage.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Nothing new to link." >> "$GITHUB_STEP_SUMMARY"
           else
@@ -73,7 +76,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json src/lib/core/catalogue/classic-collection-numbers.generated.json scripts/tcgplayer-coverage.json
+          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json src/lib/core/catalogue/classic-collection-numbers.generated.json src/lib/core/catalogue/number-padding.generated.json scripts/tcgplayer-coverage.json
           git commit -m "TCGplayer links and printed numbers for the cards published this week"
           git push origin "$branch"
           classic="$(git diff --numstat -- src/lib/core/catalogue/classic-collection-numbers.generated.json | cut -f1)"
