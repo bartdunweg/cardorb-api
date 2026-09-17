@@ -35,6 +35,7 @@ import {
   typesDisagree,
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
+import { undecidedLinkedCards } from "../src/lib/core/reverse-holo-rules.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -671,14 +672,11 @@ if (day) {
   );
   const drift = new Map();
   const note = (setId, id) => drift.set(setId, [...(drift.get(setId) ?? []), id]);
-  let unseen = 0;
+  const unseenSets = undecidedLinkedCards(variants, links, reverseHolo.cards, disputed);
+  const unseen = [...unseenSets.values()].reduce((n, k) => n + k, 0);
   for (const c of variants) {
     const decided = reverseHolo.cards[c.id];
-    if (disputed.has(c.id)) continue;
-    if (decided === undefined) {
-      if (links[c.id]?.productId) unseen++;
-      continue;
-    }
+    if (disputed.has(c.id) || decided === undefined) continue;
     const energySold = (patterns[c.id]?.finishPrints ?? []).some(
       (p) => p.finish === "energy-symbol",
     );
@@ -694,6 +692,22 @@ if (day) {
        way where it prices the card tonight. */
     if ((tcgdex && !decided) || (tcgplayer === true && !decided)) note(c.set_id, c.id);
   }
+  /* A linked card the evidence run never saw offers the printings card-printings.ts guessed before
+     the witnesses (TCGdex's variants alone): a new set, until scripts/reverse-holo-evidence.mjs is
+     run for it and its file committed. 30th Celebration and its Classic Collection, on 2026-09-17. */
+  check(
+    "Every linked card has a reverse holo decision",
+    unseen === 0,
+    `${unseen} linked cards scripts/reverse-holo-evidence.mjs has not decided${
+      unseen
+        ? ` (${[...unseenSets]
+            .sort((x, y) => y[1] - x[1])
+            .slice(0, 8)
+            .map(([id, n]) => `${id} ${n}`)
+            .join(", ")}): run it and commit reverse-holo.generated.json`
+        : ""
+    }`,
+  );
   const bySet = [...drift].sort((x, y) => y[1].length - x[1].length);
   const disputedSets = Object.entries(reverseHolo.sets)
     .filter(([, v]) => v.disputed?.length)

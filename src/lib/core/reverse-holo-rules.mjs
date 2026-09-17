@@ -177,3 +177,24 @@ export function splitKinds(rows, decisions) {
   }
   return [...kinds.values()].filter((k) => k.yes.length && k.no.length);
 }
+
+/**
+ * The linked cards the evidence run has not decided, counted per set: a set published after the run
+ * (30th Celebration and its Classic Collection on 2026-09-17), whose cards offer the printings
+ * card-printings.ts guessed before the witnesses. A card the run found its witnesses split on is
+ * decided; a card with no TCGplayer link is one no witness but TCGdex can answer for.
+ *
+ * @param {{ id: string, set_id: string }[]} cards the copy's cards
+ * @param {Record<string, { productId?: number } | null>} links tcgplayer-ids.generated.json
+ * @param {Record<string, boolean>} decisions reverse-holo.generated.json's cards
+ * @param {Set<string>} disputed card ids the run found the witnesses split on
+ * @returns {Map<string, number>}
+ */
+export function undecidedLinkedCards(cards, links, decisions, disputed) {
+  const bySet = new Map();
+  for (const c of cards) {
+    if (c.id in decisions || disputed.has(c.id) || !links[c.id]?.productId) continue;
+    bySet.set(c.set_id, (bySet.get(c.set_id) ?? 0) + 1);
+  }
+  return bySet;
+}
