@@ -16,6 +16,8 @@ if the two have drifted apart.
 
 - A card TCGdex names no rarity for takes TCGplayer's, and an old holo TCGdex calls a plain Rare takes TCGplayer's grade, for every card the nightly copy writes, new sets included: 30th Classic Collection reads "Classic Collection" as Celebrations' does. A set whose cards print other cards' numbers is found by rule every week, not typed in, so a future Classic Collection's cards read the number they print.
 
+- A Pokédex face set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `dexFace` write, so the web forgets only the lists that keep a slot's face and keeps the numbers, binders, sets and value. A patch that changes anything beside it is still a `cards` write.
+
 - A star set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `favorite` write, so the web keeps its binders and set pages and forgets only the lists, the numbers and the value. A patch that changes anything beside the star is still a `cards` write.
 
 - Only Pokémon cards fill a Pokédex slot. A trainer whose name holds a Pokémon's (Aaron's Collection, Hypnotoxic Laser, Clefairy Doll, the Spirit Link tools) no longer turns a slot green or counts as that Pokémon, in English or Japanese.

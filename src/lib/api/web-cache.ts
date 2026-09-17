@@ -25,9 +25,10 @@ import { usernameOf } from "./viewer";
  * the profile, nor a profile flag every list. `all` is for a write whose reach
  * is not clear, an import; the web reads a name it does not know as `all` too.
  * `favorite` is a star and nothing else: the web keeps the binders and the set
- * pages, which no star changes.
+ * pages, which no star changes. `dexFace` is a Pokédex face chosen and nothing else: the web
+ * forgets only the lists that keep which card fronts a slot.
  */
-export const WEB_WRITES = ["all", "cards", "favorite", "binders", "profile"] as const;
+export const WEB_WRITES = ["all", "cards", "favorite", "binders", "profile", "dexFace"] as const;
 export type WebWrite = (typeof WEB_WRITES)[number];
 
 const WEB_TIMEOUT_MS = 2_000;
