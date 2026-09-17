@@ -63,3 +63,70 @@ jobs:
           version: 2.114.0
 
       - run: supabase db start
+
+  # The web app's own end-to-end suite, against this PR's API instead of the API's main. A route
+  # that changes shape or status here is a route cardorb.com reads: this catches it before merge
+  # instead of after, on the web side, where the API PR is long gone from view. Mirrors the "e2e"
+  # job in bartdunweg/cardorb-web's own workflow, reversed: there the web checkout is primary and
+  # the API is fetched and moved out; here the API checkout is primary and the web checkout is.
+  # scripts/e2e-stack.sh and the Playwright suite stay in the web repository, run from there, so
+  # this job cannot drift from what the web repository itself considers green.
+  web-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: bartdunweg/cardorb-web
+          ref: main
+          path: web
+
+      # web/ sits inside this checkout only long enough to move: left there, the API
+      # workspace's pnpm/tsc walk into it (its own @/* alias resolves against the wrong
+      # tsconfig). scripts/e2e-stack.sh gets the moved path.
+      - run: mv web "$RUNNER_TEMP/web"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          # Pinned to what the web repository's own "e2e" job pins, so the same stack builds the
+          # same way in both places.
+          version: 2.117.0
+
+      - run: cd "$RUNNER_TEMP/web" && pnpm install --frozen-lockfile
+      - run: cd "$RUNNER_TEMP/web" && pnpm exec playwright install --with-deps chromium
+
+      # Outside catalogues and picture hosts answer nothing, so an outage there never turns
+      # this job red. Same list as the web repository's own "e2e" job.
+      - name: Block outside hosts
+        run: |
+          for h in api.tcgdex.net assets.tcgdex.net api.pokemontcg.io images.pokemontcg.io \
+                   images.scrydex.com scrydex.com tcgcsv.com tcgplayer-cdn.tcgplayer.com \
+                   images.cardorb.com api.cardorb.com cardorb.com api.frankfurter.dev \
+                   limitlesstcg.nyc3.cdn.digitaloceanspaces.com bulbapedia.bulbagarden.net \
+                   www.cardmarket.com; do
+              echo "0.0.0.0 $h" | sudo tee -a /etc/hosts > /dev/null
+          done
+
+      # This checkout (the API PR's head) is the "cardorb-api checkout" scripts/e2e-stack.sh
+      # asks for; $GITHUB_WORKSPACE is where actions/checkout put it.
+      - run: $RUNNER_TEMP/web/scripts/e2e-stack.sh "$GITHUB_WORKSPACE"
+      - run: cd "$RUNNER_TEMP/web" && pnpm e2e
+
+      - if: ${{ !success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            ${{ runner.temp }}/web/playwright-report
+            ${{ runner.temp }}/web/test-results
+            ${{ runner.temp }}/web/e2e-api.log
+            ${{ runner.temp }}/web/e2e-web.log
+          retention-days: 7
