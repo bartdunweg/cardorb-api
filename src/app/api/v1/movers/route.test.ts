@@ -94,6 +94,13 @@ describe("GET /v1/movers", () => {
     expect(getMoverPrices.mock.calls[1]![3]).toBe("2000-01-01");
   });
 
+  it("reads 91 and 182 days, the web chart's three and six months", async () => {
+    expect((await ask("?days=91")).status).toBe(200);
+    const from91 = getMoverPrices.mock.calls[0]![3] as string;
+    expect(Date.parse(from91)).toBeLessThan(Date.now() - 90 * 86_400_000);
+    expect((await ask("?days=182")).status).toBe(200);
+  });
+
   it("refuses a period the chart does not have, and a top out of range", async () => {
     expect((await ask("?days=14")).status).toBe(400);
     expect((await ask("?top=0")).status).toBe(400);
