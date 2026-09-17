@@ -49,6 +49,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
     });
   }
 
+  // Throwaway breakage to prove the web-e2e job catches it. Not for merge.
+  if (req.headers.get("x-e2e-allow") !== "never-set")
+    return apiError(500, "forced for e2e proof", undefined, { headers: readHeaders(req) });
+
   const { setId } = await params;
   const url = new URL(req.url);
   const page = intParam(url.searchParams.get("page"), 1, Number.MAX_SAFE_INTEGER);
