@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-17
 
+- Every 30th Celebration and 30th Classic Collection card is offered as the holofoil it is, not a Standard copy, and the set's three RGB Mew (R, G and B) are in the catalogue. Pokémon Futsal's five promos and nine McDonald's Collection 2022 cards are offered as the plain cards they are, not holos. A set whose finishes share nothing with what TCGplayer sells is flagged every morning.
+
 - 30th Classic Collection's Solgaleo-GX, Darkrai & Cresselia LEGEND, Palkia LV.X, M Gardevoir-EX, Scizor ex, Arceus VSTAR and Metagross show the stage and types of the cards they reprint, and a new card whose type or stage differs from TCGplayer's is flagged the next morning.
 
 - A Classic Collection card reads the number it prints, its original card's with that set's total: 30th Classic Collection's Charizard is 4/102, no longer 001, which 30th Celebration's Exeggcute prints too; Celebrations Classic Collection's Blastoise is 2/102, no longer CC001. `printedNumber` on `GET /v1/cards`, the movers and the public cards answers it, and the set page, the search and `GET /v1/catalog/cards` carry `printedNumber` beside `number` on every card. `number`, card ids, matching and the Dex export do not move. The 55 numbers are TCGplayer's (scripts/classic-collection-numbers.mjs).

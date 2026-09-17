@@ -4340,6 +4340,17 @@
       }
     ]
   },
+  "sm2-51a": {
+    "standard": false,
+    "prints": [
+      {
+        "foilPattern": "cosmos",
+        "finish": "holo",
+        "printing": "holofoil",
+        "productId": 191907
+      }
+    ]
+  },
   "sm2-61": {
     "prints": [
       {
