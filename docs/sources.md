@@ -29,7 +29,7 @@ For an English card, in the catalogue cron (`mirror.ts`, `image-store.ts`):
 
 1. **Our bucket.** The copy already holds our address: nothing is asked.
 2. **TCGdex**, the scan its record names. When that answers 404, straight to TCGplayer (4).
-3. **Limitless**, by the set's printed code, never for a lettered number.
+3. **Limitless**, by the set's printed code, never for a lettered number, and never for a code another English set prints too (30th Celebration and its Classic Collection are both 30C).
 4. **TCGplayer**, by the card's product.
 5. **pokemontcg.io**, by set name.
 6. **Scrydex**, for the sets read by hand; its stand-in picture is refused by its ETag.

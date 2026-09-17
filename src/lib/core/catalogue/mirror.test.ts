@@ -4,13 +4,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 const englishSets = vi.fn();
 const englishSet = vi.fn();
 /** Which numbers TCGdex names no scan for, and the set's printed code; none unless a test says so. */
-const setScans = vi.fn(async () => ({ gaps: new Set<string>(), code: null as string | null }));
+const setScans = vi.fn(async (_setId: string) => ({
+  gaps: new Set<string>(),
+  code: null as string | null,
+}));
 vi.mock("./card-languages", () => ({ languagesOfSet: async () => () => ["en"] }));
 vi.mock("./scrydex-japan-logos", () => ({ scrydexEnglishLogo: async () => null }));
 vi.mock("./tcgdex-browse", () => ({
   englishSets: () => englishSets(),
   englishSet: (...a: unknown[]) => englishSet(...a),
-  englishSetScans: (...a: unknown[]) => setScans(...(a as [])),
+  englishSetScans: (...a: unknown[]) => setScans(...(a as [string])),
 }));
 
 /** Whether a built address holds a file, and what the two other catalogues have instead. */
@@ -490,6 +493,71 @@ describe("syncMirror", () => {
     expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
       expect.objectContaining({ image: "https://images.pokemontcg.io/svp/85.png" }),
     ]);
+  });
+
+  /* 30th Celebration and its Classic Collection both print 30C, and Limitless's 30C folder is the
+     parent's run: 30C_001 is Exeggcute, which the copy took as the Classic Collection's Charizard
+     (2026-09-17). Both sets came out the same day, so neither was in the copy when it guessed. */
+  it("never guesses Limitless for a set whose printed code another English set carries", async () => {
+    englishSets.mockResolvedValue([set("30th", 1, "2026/09/16"), set("30th-c", 1, "2026/09/16")]);
+    englishSet.mockImplementation(async (id: string) => ({
+      set: set(id, 1, "2026/09/16"),
+      cards: [hit(`${id}-001`, "001")],
+    }));
+    setScans.mockImplementation(async (id: string) => ({
+      gaps: new Set(id === "30th-c" ? ["001"] : []),
+      code: "30C",
+    }));
+    tcgdexScan.mockResolvedValue(null);
+    limitlessScan.mockResolvedValue("/api/cover?url=https%3A%2F%2Flimitless%2F30C_001.png");
+    tcgplayerScan.mockResolvedValue(
+      "https://tcgplayer-cdn.tcgplayer.com/product/714372_in_1000x1000.jpg",
+    );
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(limitlessScan).not.toHaveBeenCalled();
+    const written = calls
+      .filter((c) => c.table === "catalogue_cards" && c.op === "upsert")
+      .flatMap((c) => c.args[0] as { id: string; image: string | null }[]);
+    expect(written.find((c) => c.id === "30th-c-001")?.image).toBe(
+      "https://tcgplayer-cdn.tcgplayer.com/product/714372_in_1000x1000.jpg",
+    );
+  });
+
+  it("knows a shared code from the copy's own set rows, without asking TCGdex again", async () => {
+    englishSets.mockResolvedValue([set("cel25cc", 1, "2021/10/08")]);
+    englishSet.mockResolvedValue({
+      set: set("cel25cc", 1, "2021/10/08"),
+      cards: [hit("cel25cc-2", "2")],
+    });
+    setScans.mockResolvedValue({ gaps: new Set(["2"]), code: "CEL" });
+    tcgdexScan.mockResolvedValue(null);
+    limitlessScan.mockResolvedValue("/api/cover?url=https%3A%2F%2Flimitless%2FCEL_002.png");
+    const { db } = fakeStore({
+      catalogue_sets: [
+        { id: "cel25", abbreviation: "CEL" },
+        { id: "cel25cc", abbreviation: "CEL" },
+      ],
+    });
+    await syncMirror(db);
+    expect(limitlessScan).not.toHaveBeenCalled();
+  });
+
+  it("makes no Limitless guess at all where a set new to the copy cannot say its code", async () => {
+    englishSets.mockResolvedValue([set("new", 1, "2026/09/16"), set("svp", 1, "2023/06/30")]);
+    englishSet.mockImplementation(async (id: string) => ({
+      set: set(id, 1, "2023/06/30"),
+      cards: [hit(`${id}-102`, "102")],
+    }));
+    setScans.mockImplementation(async (id: string) => {
+      if (id === "new") throw new Error("TCGdex is down");
+      return { gaps: new Set(["102"]), code: "SVP" };
+    });
+    tcgdexScan.mockResolvedValue(null);
+    limitlessScan.mockResolvedValue("/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png");
+    const { db } = fakeStore();
+    await syncMirror(db);
+    expect(limitlessScan).not.toHaveBeenCalled();
   });
 
   it("asks Limitless before pokemontcg.io, under the set's printed code", async () => {
