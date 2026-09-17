@@ -400,6 +400,35 @@ describe("syncMirror", () => {
     ]);
   });
 
+  /* 30th Classic Collection was copied with no rarity on 2026-09-17, where TCGplayer names one, and
+     the old sets' holos as a plain Rare until card-fact-corrections.ts wrote TCGplayer's grade by
+     hand: the rule (tcgplayerRarity) does it for every card, a new set's too. */
+  it("takes TCGplayer's rarity where TCGdex names none, or a plain Rare of a holo", async () => {
+    englishSets.mockResolvedValue([set("30th-c", 3, "2026/02/27")]);
+    englishSet.mockResolvedValue({
+      set: set("30th-c", 3, "2026/02/27"),
+      cards: [
+        { ...hit("30th-c-001", "001"), name: "Charizard", rarity: null },
+        { ...hit("30th-c-002", "002"), name: "Venusaur", rarity: "Rare" },
+        { ...hit("30th-c-003", "003"), name: "Pikachu", rarity: "Rare" },
+      ],
+    });
+    productFactsOf.mockResolvedValue(
+      new Map([
+        ["30th-c-001", { name: "Charizard", stage: null, rarity: "Classic Collection" }],
+        ["30th-c-002", { name: "Venusaur", stage: null, rarity: "Holo Rare" }],
+        ["30th-c-003", { name: "Pikachu", stage: null, rarity: "Prism Rare" }],
+      ]),
+    );
+    const { db, calls } = fakeStore();
+    await syncMirror(db);
+    expect(calls.find((c) => c.table === "catalogue_cards" && c.op === "upsert")?.args[0]).toEqual([
+      expect.objectContaining({ id: "30th-c-001", rarity: "Classic Collection" }),
+      expect.objectContaining({ id: "30th-c-002", rarity: "Holo Rare" }),
+      expect.objectContaining({ id: "30th-c-003", rarity: "Rare" }),
+    ]);
+  });
+
   it("leaves a set for the next run where TCGplayer's products will not answer", async () => {
     englishSets.mockResolvedValue([set("bw11", 1, "2013/11/08")]);
     productFactsOf.mockRejectedValue(new Error("tcgcsv 503"));

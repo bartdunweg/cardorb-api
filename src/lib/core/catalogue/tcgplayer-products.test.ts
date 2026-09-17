@@ -46,6 +46,7 @@ describe("productFactsOf", () => {
             extendedData: [
               { name: "Number", value: "RC24/RC25" },
               { name: "Stage", value: "Basic" },
+              { name: "Rarity", value: "Ultra Rare" },
             ],
           },
         ],
@@ -53,7 +54,9 @@ describe("productFactsOf", () => {
     });
     const facts = await productFactsOf([card, "no-such-card"]);
     expect(asked).toEqual([`https://tcgcsv.com/tcgplayer/3/${groupId}/products`]);
-    expect([...facts]).toEqual([[card, { name: "Mew EX (Full Art)", stage: "Basic" }]]);
+    expect([...facts]).toEqual([
+      [card, { name: "Mew EX (Full Art)", stage: "Basic", rarity: "Ultra Rare" }],
+    ]);
   });
 
   it("throws where the group does not answer, so the set is not written without it", async () => {

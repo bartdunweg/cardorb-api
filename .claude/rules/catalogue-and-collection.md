@@ -52,3 +52,7 @@ paths:
 - **`cards.collection_id` is `on delete set null` on the live database**, so `deleteFolder()`
   emptying a folder first is belt and braces. The migration file declares the reference
   without it; harmless, already applied.
+- **A data fix reaches every card, the next set's too (R-DATA-004 in `CONVENTIONS.md`).** Put it
+  in the rule the nightly copy or the read applies, and hold the stored rows to it in
+  `scripts/data-health.mjs`. A list typed by hand or a migration on its own fixes the cards of the
+  day: 30th Classic Collection came without the numbers and rarity Celebrations' had been given.

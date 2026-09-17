@@ -45,11 +45,14 @@ jobs:
       - run: node scripts/tcgplayer-links.mjs
       # Which cosmos and cracked ice prints TCGplayer sells of each linked card: reads the links above.
       - run: node scripts/tcgplayer-patterns.mjs
+      # The printed number of every card that prints another card's number (a Classic Collection's
+      # 4/102), for every set the rule in tcgplayer-rules.mjs finds of that kind: reads the links above.
+      - run: node scripts/classic-collection-numbers.mjs
 
       - name: Anything new?
         id: diff
         run: |
-          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json scripts/tcgplayer-coverage.json; then
+          if git diff --quiet -- src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json src/lib/core/catalogue/classic-collection-numbers.generated.json scripts/tcgplayer-coverage.json; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Nothing new to link." >> "$GITHUB_STEP_SUMMARY"
           else
@@ -70,13 +73,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json scripts/tcgplayer-coverage.json
-          git commit -m "TCGplayer links for the cards published this week"
+          git add src/lib/core/tcgplayer-ids.generated.json src/lib/core/tcgplayer-groups.generated.json src/lib/core/tcgplayer-patterns.generated.json src/lib/core/catalogue/classic-collection-numbers.generated.json scripts/tcgplayer-coverage.json
+          git commit -m "TCGplayer links and printed numbers for the cards published this week"
           git push origin "$branch"
-          body="$(printf '%s\n\n%s\n\n%s\n' \
+          classic="$(git diff --numstat -- src/lib/core/catalogue/classic-collection-numbers.generated.json | cut -f1)"
+          body="$(printf '%s\n\n%s\n\n%s\n\n%s\n' \
             "The weekly links run (.github/workflows/tcgplayer-links.yml) found new cards or links." \
             "- Cards without a TCGplayer product, outside Pokémon TCG Pocket: ${before} before, ${after} after" \
-            "- Lines added to tcgplayer-ids.generated.json: ${added}. The per-set rest is in scripts/tcgplayer-coverage.json; the check is dispatched on this branch.")"
+            "- Lines added to tcgplayer-ids.generated.json: ${added}. The per-set rest is in scripts/tcgplayer-coverage.json; the check is dispatched on this branch." \
+            "- Lines added to classic-collection-numbers.generated.json (cards that print another card's number): ${classic:-0}.")"
           gh pr create --base main --head "$branch" --title "TCGplayer links for the cards published this week ($day)" --body "$body"
           gh workflow run check.yml --ref "$branch"
           echo "Opened a pull request from $branch: ${before} to ${after} unlinked." >> "$GITHUB_STEP_SUMMARY"

@@ -13,12 +13,16 @@
  *   "Piers (Full Art)" (swsh4.5-69) or "Grass Energy (Texture Full Art)" (swsh12.5-152), which the
  *   rule in full-art.ts misses because nothing else in their set is the same name.
  *
+ * - **rarity**: TCGplayer's word, for the rule in tcgplayer-rules.mjs (tcgplayerRarity): a card TCGdex
+ *   names no rarity for, or a plain Rare of a card TCGplayer grades higher.
+ *
  * One read of tcgcsv per group a set's cards are linked into, usually one, so a set costs a request
  * or two. A group that does not answer throws: a set written without these would lose its stages
  * and full arts until the next night, where a set not written keeps last night's.
  */
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_GROUPS from "../tcgplayer-groups.generated.json";
+import { rarityOfProduct } from "../tcgplayer-rules.mjs";
 import { mapLimit } from "../util";
 import { groupProducts, TCGCSV_CATEGORY } from "./tcgcsv";
 
@@ -32,6 +36,8 @@ export type ProductFacts = {
   name: string;
   /** TCGplayer's stage in TCGdex's words ("Stage1"), or null where it has none this can read. */
   stage: string | null;
+  /** TCGplayer's rarity word ("Holo Rare", "Classic Collection"), or null (tcgplayerRarity reads it). */
+  rarity: string | null;
 };
 
 /**
@@ -79,7 +85,8 @@ export async function productFactsOf(cardIds: string[]): Promise<Map<string, Pro
       const ids = wanted.get(product.productId);
       if (!ids) continue;
       const stage = product.extendedData?.find((e) => e.name === "Stage")?.value;
-      for (const id of ids) out.set(id, { name: product.name, stage: tcgdexStage(stage) });
+      const rarity = rarityOfProduct(product);
+      for (const id of ids) out.set(id, { name: product.name, stage: tcgdexStage(stage), rarity });
     }
   });
   return out;
