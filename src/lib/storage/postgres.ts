@@ -1721,9 +1721,12 @@ const SET_COLUMNS =
 /** A catalogue of its own also reads what its shelf needs beside: the printed name and the order. */
 const LANGUAGE_SET_COLUMNS: string = `${SET_COLUMNS}, serie_id, local_name, cards_recorded, sort_order`;
 
-/** What a reader of the copy's cards is given. The search adds its own filters on top. */
+/**
+ * What a reader of the copy's cards is given. The search adds its own filters on top. The category,
+ * because only a Pokémon card fills a Pokédex slot (species-match.mjs).
+ */
 const CARD_COLUMNS =
-  "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image";
+  "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category";
 
 /** Every set one catalogue of the copy holds. A few hundred rows, read whole and kept behind one cache entry. */
 export async function listCatalogueSets(

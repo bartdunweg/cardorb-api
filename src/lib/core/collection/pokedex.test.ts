@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalise, speciesAllOf, speciesList, speciesOf } from "./pokedex";
+import { normalise, slotSpeciesOf, speciesAllOf, speciesList, speciesOf } from "./pokedex";
 
 describe("normalise", () => {
   it("keeps the two Nidoran apart", () => {
@@ -80,5 +80,29 @@ describe("speciesAllOf", () => {
   it("answers one for a single Pokémon and none for a trainer", () => {
     expect(speciesAllOf("Charizard ex")).toEqual([6]);
     expect(speciesAllOf("Professor's Research")).toEqual([]);
+  });
+});
+
+describe("slotSpeciesOf", () => {
+  it("gives a trainer or an Energy no slot, whatever species its name holds", () => {
+    for (const name of [
+      "Aaron's Collection",
+      "Hypnotoxic Laser",
+      "Clefairy Doll",
+      "Gengar Spirit Link",
+    ])
+      expect(slotSpeciesOf(name, "Trainer"), name).toEqual({ speciesId: null, speciesIds: [] });
+    expect(speciesOf("Aaron's Collection")).toBe(304);
+    expect(slotSpeciesOf("Rainbow Energy", "Energy")).toEqual({ speciesId: null, speciesIds: [] });
+  });
+
+  it("keeps every Pokémon card's slots, a tag team's too, and a card of no known category", () => {
+    expect(slotSpeciesOf("Pikachu & Zekrom-GX", "Pokemon")).toEqual({
+      speciesId: 25,
+      speciesIds: [25, 644],
+    });
+    expect(slotSpeciesOf("Aron", null)).toEqual({ speciesId: 304, speciesIds: [304] });
+    expect(slotSpeciesOf("ピカチュウex", "Pokemon", "ja").speciesIds).toEqual([25]);
+    expect(slotSpeciesOf("グラードンソウルリンク", "Trainer", "ja").speciesIds).toEqual([]);
   });
 });

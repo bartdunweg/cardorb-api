@@ -23,47 +23,19 @@ import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 /** One row of the generated table: a species' name in each catalogue that is not English. */
 type LocalNames = { ja?: string };
 import SPECIES from "../pokedex.generated.json";
+import {
+  fillsPokedexSlot,
+  nameParts,
+  normalise,
+  normaliseLocal,
+  speciesInKey,
+  speciesIndex,
+} from "../species-match.mjs";
 
-/**
- * Down to letters and digits.
- *
- * Punctuation is what separates "Mr. Mime" from "Mr Mime" from "Mr.Mime", and
- * TCGdex, Notion and the cards themselves do not agree on which. The gender
- * signs stay, as letters: they are the only thing telling the two Nidoran
- * apart, and dropping them would merge a species with another one.
- */
-export function normalise(name: string) {
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/♀/g, "f")
-    .replace(/♂/g, "m")
-    .replace(/[^a-z0-9]/g, "");
-}
+export { normalise } from "../species-match.mjs";
 
 /** Every species, longest name first, so the longest match is the first hit. */
-const BY_LENGTH = SPECIES.map((name, i) => ({ id: i + 1, name, key: normalise(name) })).sort(
-  (a, b) => b.key.length - a.key.length,
-);
-
-/**
- * The same question in a language that is not written in this alphabet.
- *
- * `normalise` keeps `[a-z0-9]` and nothing else, which is right for the Latin catalogues and
- * empties a Japanese name completely, so every card off the Japanese shelf landed in no Pokédex
- * slot at all. This keeps any script's letters and digits and drops
- * only what separates them, so ピカチュウex reduces to ピカチュウex and still contains ピカチュウ.
- *
- * NFKC first: a card prints its suffix full-width often enough (ｅｘ), and without folding that
- * the same card is two different strings.
- */
-function normaliseLocal(name: string) {
-  return name
-    .normalize("NFKC")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]/gu, "");
-}
+const BY_LENGTH = speciesIndex(SPECIES, normalise);
 
 /** Which column of the generated table a catalogue reads. */
 const COLUMN: Record<BrowseLanguage, keyof LocalNames> = {
@@ -76,9 +48,10 @@ function localIndex(catalogue: BrowseLanguage) {
   const had = LOCAL_BY_LENGTH.get(catalogue);
   if (had) return had;
   const column = COLUMN[catalogue];
-  const built = LOCAL_NAMES.map((row, i) => ({ id: i + 1, key: normaliseLocal(row[column] ?? "") }))
-    .filter((e) => e.key)
-    .sort((a, b) => b.key.length - a.key.length);
+  const built = speciesIndex(
+    (LOCAL_NAMES as LocalNames[]).map((row) => row[column]),
+    normaliseLocal,
+  );
   LOCAL_BY_LENGTH.set(catalogue, built);
   return built;
 }
@@ -99,7 +72,7 @@ export function speciesOf(cardName: string, catalogue?: BrowseLanguage | null): 
     if (!key) return null;
     const cached = SPECIES_OF.get(`${catalogue}:${key}`);
     if (cached !== undefined) return cached;
-    const found = localIndex(catalogue).find((s) => key.includes(s.key))?.id ?? null;
+    const found = speciesInKey(key, localIndex(catalogue));
     if (SPECIES_OF.size < 20_000) SPECIES_OF.set(`${catalogue}:${key}`, found);
     return found;
   }
@@ -107,7 +80,7 @@ export function speciesOf(cardName: string, catalogue?: BrowseLanguage | null): 
   if (!key) return null;
   const known = SPECIES_OF.get(key);
   if (known !== undefined) return known;
-  const id = BY_LENGTH.find((s) => key.includes(s.key))?.id ?? null;
+  const id = speciesInKey(key, BY_LENGTH);
   // A collection names the same card many times over (its printings, its copies, every
   // request): the scan down a thousand names runs once per distinct name per instance.
   if (SPECIES_OF.size < 20_000) SPECIES_OF.set(key, id);
@@ -128,7 +101,7 @@ const SPECIES_OF = new Map<string, number | null>();
  */
 export function speciesAllOf(cardName: string, catalogue?: BrowseLanguage | null): number[] {
   const whole = speciesOf(cardName, catalogue);
-  const parts = cardName.split(/\s*[&＆]\s*/).filter(Boolean);
+  const parts = nameParts(cardName);
   const ids = parts.length > 1 ? parts.map((part) => speciesOf(part, catalogue)) : [];
   return [...new Set([whole, ...ids].filter((id): id is number => id !== null))];
 }
@@ -139,3 +112,20 @@ export const speciesList = (origin: string): { id: number; name: string; artwork
     name,
     artwork_url: `${origin}/artwork/pokedex/${i + 1}.png`,
   }));
+
+/**
+ * The Pokémon a card fills a slot for: speciesAllOf for a Pokémon card, none for a trainer or an
+ * Energy that happens to hold a species' name ("Aaron's Collection", "Clefairy Doll"). A card whose
+ * category is not known keeps its name match (fillsPokedexSlot).
+ */
+export function slotSpeciesOf(
+  cardName: string,
+  category: string | null | undefined,
+  catalogue?: BrowseLanguage | null,
+): { speciesId: number | null; speciesIds: number[] } {
+  if (!fillsPokedexSlot(category)) return { speciesId: null, speciesIds: [] };
+  return {
+    speciesId: speciesOf(cardName, catalogue),
+    speciesIds: speciesAllOf(cardName, catalogue),
+  };
+}

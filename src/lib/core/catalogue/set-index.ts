@@ -19,6 +19,12 @@ export type CatalogueCard = {
    * from one of the other two catalogues. Read through storedScan(), never by appending.
    */
   image: string | null;
+  /**
+   * "Pokemon", "Trainer" or "Energy", where the source says: the copy does, TCGdex's set list does
+   * not. Only a Pokémon card fills a Pokédex slot (species-match.mjs). Optional in the type for the
+   * fixtures.
+   */
+  category?: string | null;
 };
 
 /** A card as either source offers it here: the copy's row, or TCGdex's record. */
@@ -27,6 +33,7 @@ export type IndexableCard = {
   localId?: string | null;
   name?: string | null;
   image?: string | null;
+  category?: string | null;
 };
 
 /**
@@ -56,6 +63,7 @@ export function indexByNumber(groups: IndexableCard[][]): Record<string, Catalog
       localId: card.localId ?? "",
       name: card.name ?? "",
       image: card.image ?? null,
+      category: card.category ?? null,
     };
   };
   for (const cards of groups) {
