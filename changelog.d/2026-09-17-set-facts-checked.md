@@ -1,0 +1,1 @@
+- Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.

@@ -42,3 +42,20 @@ describe("correctedSet", () => {
     expect(correctedSet(english)).toBe(english);
   });
 });
+
+describe("the set facts TCGplayer and Scrydex agree on against TCGdex (2026-09-17)", () => {
+  it("dates Team Up and EX Team Magma vs Team Aqua as they were released, and names the Energy sets", () => {
+    expect(correctedSet({ id: "sm9", name: "Team Up", release_date: "2019/01/31" })).toMatchObject({
+      release_date: "2019/02/01",
+    });
+    expect(
+      correctedSet({ id: "ex4", name: "Team Magma vs Team Aqua", release_date: "2004/03/01" }),
+    ).toMatchObject({ name: "EX Team Magma vs Team Aqua", release_date: "2004/03/15" });
+    expect(
+      correctedSet({ id: "mee", name: "Mega Evolution Energy", release_date: "2025/09/25" }),
+    ).toMatchObject({ name: "Mega Evolution Energies", release_date: "2025/09/26" });
+    expect(correctedSet({ id: "sve", name: "Scarlet & Violet Energy" }).name).toBe(
+      "Scarlet & Violet Energies",
+    );
+  });
+});
