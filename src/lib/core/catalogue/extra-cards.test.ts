@@ -33,6 +33,17 @@ describe("extra-cards.json", () => {
     expect(extraCardsOf("en", "xya")).toEqual([]);
     // 30th Celebration's three RGB Mew, which TCGdex does not list: TCGplayer sells each.
     expect(extraCardsOf("en", "30th").map(([id]) => id)).toEqual(["30th-R", "30th-G", "30th-B"]);
+    // Its eight basic Energy, which print MEE 009 to 016: TCGplayer sells each, TCGdex lists none.
+    expect(extraCardsOf("en", "mee").map(([, c]) => c.number)).toEqual([
+      "009",
+      "010",
+      "011",
+      "012",
+      "013",
+      "014",
+      "015",
+      "016",
+    ]);
   });
 });
 

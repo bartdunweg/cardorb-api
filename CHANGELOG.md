@@ -20,7 +20,11 @@ if the two have drifted apart.
 
 - A star set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `favorite` write, so the web keeps its binders and set pages and forgets only the lists, the numbers and the value. A patch that changes anything beside the star is still a `cards` write.
 
+- 30th Celebration's evolved Pokémon ex read as the Stage 1 and Stage 2 cards they print, with what they evolve from; its cards carry the J regulation mark they print; the Classic Collection's Palkia LV.X and Metagross δ carry their marks; and its eight basic Energy (MEE 009 to 016) are in the catalogue. A newer set missing a card TCGplayer sells, a species, a regulation mark or a printed name mark is flagged every morning.
+
 - Only Pokémon cards fill a Pokédex slot. A trainer whose name holds a Pokémon's (Aaron's Collection, Hypnotoxic Laser, Clefairy Doll, the Spirit Link tools) no longer turns a slot green or counts as that Pokémon, in English or Japanese.
+
+- The sources document says Scrydex is used, with Bart's permission, for every kind of card and set fact beside TCGdex, TCGplayer and Bulbapedia, and lists its set facts and number padding reads.
 
 - Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.
 

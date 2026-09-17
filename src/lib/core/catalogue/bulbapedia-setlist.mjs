@@ -254,7 +254,13 @@ export function readNumber(cell) {
 export function parseSetlists(wikitext) {
   const lists = [];
   let current = null;
-  for (const inner of topLevelTemplates(stripComments(wikitext))) {
+  /* A page that lays its lists side by side wraps them in {{Flexitem|…}} (30th Celebration, 2026-09),
+     so the lists are one level down: a Flex template's own text is read as the page's. */
+  const templates = (text) =>
+    topLevelTemplates(text).flatMap((inner) =>
+      /^\s*Flex/i.test(inner) ? templates(inner.slice(inner.indexOf("|") + 1)) : [inner],
+    );
+  for (const inner of templates(stripComments(wikitext))) {
     const t = readTemplate(inner);
     const kind = /^(?:Setlist|Halfdecklist)\/(nm)?(header|entry|footer)$/i.exec(t.name);
     if (!kind) continue;
@@ -273,8 +279,12 @@ export function parseSetlists(wikitext) {
       const nameAt = kind[1] ? 1 : 2;
       const { number, printedTotal } = readNumber(t.positional[0]);
       const { name, ...beside } = cardEntry(t.positional[nameAt]);
+      /* The symbol column of an entry is the regulation mark from Sword & Shield on ("J"), and "-"
+         where the card prints none (a Classic Collection reprint). */
+      const symbol = kind[1] ? "" : tidy(plainText(t.positional[1] ?? ""));
+      const mark = /^[A-Z]$/.test(symbol) ? { mark: symbol } : symbol === "-" ? { mark: null } : {};
       // A promo list holds rows for numbers not yet announced, with nothing in them.
-      if (name) current.entries.push({ number, printedTotal, name, ...beside });
+      if (name) current.entries.push({ number, printedTotal, name, ...beside, ...mark });
     }
   }
   return lists;

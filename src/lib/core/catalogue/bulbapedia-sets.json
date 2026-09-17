@@ -1632,6 +1632,22 @@
     "how": "name"
   },
   {
+    "language": "en",
+    "id": "30th",
+    "name": "30th Celebration",
+    "page": "30th Celebration (TCG)",
+    "lists": ["30th Celebration"],
+    "how": "hand"
+  },
+  {
+    "language": "en",
+    "id": "30th-c",
+    "name": "30th Classic Collection",
+    "page": "30th Celebration (TCG)",
+    "lists": ["30th Celebration Classic Collection"],
+    "how": "hand"
+  },
+  {
     "language": "ja",
     "id": "PMCG1",
     "name": "Expansion Pack",

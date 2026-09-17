@@ -2228,6 +2228,28 @@ export const TYPE_STAGE_REVIEW_CORRECTIONS: Readonly<Record<string, FactCorrecti
   "miscp-001": { stage: ["Stage1", "Basic"] },
 };
 
+/**
+ * 30th Celebration (2026-09-17): TCGdex copied its evolved Pokémon ex as Basics that evolve from
+ * nothing, and the check "Card types and stages as TCGplayer's" flagged thirteen cards. Each card
+ * prints its stage and what it evolves from (read off TCGplayer's pictures, which Scrydex's subtypes
+ * agree with): Greninja ex a Stage 2 from Frogadier, Espeon ex, Sylveon ex and Umbreon ex Stage 1s
+ * from Eevee, Gengar ex a Stage 2 from Haunter, Salamence ex a Stage 2 from Shelgon, and their
+ * Special Illustration Rares the same. Meowth and Eevee print Colorless, as TCGdex has them
+ * (type-stage-accepted.json).
+ */
+export const NEW_SET_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
+  "30th-021": { stage: ["Basic", "Stage2"], evolveFrom: [null, "Frogadier"] },
+  "30th-070": { stage: ["Basic", "Stage1"], evolveFrom: [null, "Eevee"] },
+  "30th-071": { stage: ["Basic", "Stage1"], evolveFrom: [null, "Eevee"] },
+  "30th-090": { stage: ["Basic", "Stage2"], evolveFrom: [null, "Haunter"] },
+  "30th-092": { stage: ["Basic", "Stage1"], evolveFrom: [null, "Eevee"] },
+  "30th-109": { stage: ["Basic", "Stage2"], evolveFrom: [null, "Shelgon"] },
+  "30th-148": { stage: ["Basic", "Stage2"], evolveFrom: [null, "Frogadier"] },
+  "30th-153": { stage: ["Basic", "Stage1"], evolveFrom: [null, "Eevee"] },
+  "30th-154": { stage: ["Basic", "Stage2"], evolveFrom: [null, "Haunter"] },
+  "30th-156": { stage: ["Basic", "Stage2"], evolveFrom: [null, "Shelgon"] },
+};
+
 /** Every table's corrections for one card, field by field. */
 const correctionOf = (id: string): FactCorrection | undefined => {
   const tables = [
@@ -2236,6 +2258,7 @@ const correctionOf = (id: string): FactCorrection | undefined => {
     NAMING_CORRECTIONS[id],
     CLASSIC_REPRINT_CORRECTIONS[id],
     TYPE_STAGE_REVIEW_CORRECTIONS[id],
+    NEW_SET_CORRECTIONS[id],
   ];
   const found = tables.filter((t): t is FactCorrection => !!t);
   return found.length > 1 ? Object.assign({}, ...found) : found[0];

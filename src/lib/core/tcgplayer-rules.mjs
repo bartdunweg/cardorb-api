@@ -266,3 +266,33 @@ export function stageDisagrees(stage, productStage) {
   const basic = (s) => (s === "Baby" ? "Basic" : s);
   return basic(stage) !== basic(theirs);
 }
+
+/**
+ * A card's name with the mark TCGplayer's product prints and TCGdex's name leaves off: LV.X, δ (TCGplayer's
+ * "(Delta Species)"), ☆ ("Star") and ◇ ("Prism Star"). 30th Classic Collection came with "Palkia" and
+ * "Metagross" (2026-09-17), which print Palkia LV.X and Metagross δ, as TCGplayer's products name them.
+ * Only where the product's name is the card's name and that mark, so a product linked to another card
+ * never renames one.
+ *
+ * @param {string} name the card's name as the copy has it
+ * @param {string | null | undefined} productName "Palkia LV.X", "Metagross (Delta Species)", "Mewtwo ex - 157/128"
+ * @returns {string}
+ */
+export function nameWithProductMark(name, productName) {
+  if (!name || !productName) return name;
+  const base = productName.replace(/\s+-\s+[^-]*$/, "");
+  const qualifiers = [...base.matchAll(/\(([^)]*)\)/g)].map((m) => m[1].trim().toLowerCase());
+  const core = base.replace(/\s*\([^)]*\)/g, "").trim();
+  const fold = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const same = (s) => fold(s) === fold(name);
+  const lvx = /\s+LV\.?\s?X$/i;
+  if (lvx.test(core) && !/LV\.?\s?X/i.test(name) && same(core.replace(lvx, "")))
+    return `${name} LV.X`;
+  if (qualifiers.includes("delta species") && !name.includes("δ") && same(core)) return `${name} δ`;
+  if (/\s+Prism Star$/i.test(core)) {
+    return !name.includes("◇") && same(core.replace(/\s+Prism Star$/i, "")) ? `${name} ◇` : name;
+  }
+  if (/\s+Star$/i.test(core) && !name.includes("☆") && same(core.replace(/\s+Star$/i, "")))
+    return `${name} ☆`;
+  return name;
+}

@@ -226,7 +226,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v13: no picture that is not a file of ours, and no assetBase, setHasScans or fromCopy (2026-09-15).
 // v14: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
 // v15: a matched card carries its category, so a trainer fills no Pokédex slot (species-match.mjs).
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v15"], {
+// v16: names with the LV.X or δ their TCGplayer product prints (withProductName in mirror.ts).
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v16"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
@@ -243,6 +244,7 @@ export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "
  * unknown id throws too, so neither a set without its rarities nor a 404 is kept for a day; both
  * fall back to the uncached read, which answers exactly as it did before this cache.
  */
+// v7: 30th Celebration's evolved Pokémon ex as the Stage 1s and Stage 2s they print (NEW_SET_CORRECTIONS).
 // v6: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
 // v4: the third pass over the English facts: trainer types, evolutions, gallery rarities, Unown and ☆ names.
 // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000).
@@ -253,7 +255,7 @@ const englishSetEntry = unstable_cache(
     if (!found) throw new Error(`No English set ${setId}`);
     return found;
   },
-  ["english-set", "v6"],
+  ["english-set", "v7"],
   { revalidate: DAY, tags: ["catalogue"] },
 );
 
