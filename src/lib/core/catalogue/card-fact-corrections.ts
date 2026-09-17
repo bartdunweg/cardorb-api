@@ -2216,6 +2216,18 @@ export const CLASSIC_REPRINT_CORRECTIONS: Readonly<Record<string, FactCorrection
   "30th-c-027": { stage: ["Basic", "VSTAR"] },
 };
 
+/**
+ * The review of the 126 type and stage differences with TCGplayer that api#538 accepted unread
+ * (2026-09-17), each decided by the printed card. Two were TCGdex's error: McDonald's Collection
+ * 2023's Blissey prints STAGE 1 and evolves from Chansey (TCGdex: Stage2), and Ancient Mew is a
+ * Basic Pokémon, which evolves from nothing (TCGdex: Stage1; Bulbapedia and TCGplayer: Basic). The
+ * other 124 are TCGplayer's and stay in type-stage-accepted.json with a reason each.
+ */
+export const TYPE_STAGE_REVIEW_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
+  "2023sv-12": { stage: ["Stage2", "Stage1"] },
+  "miscp-001": { stage: ["Stage1", "Basic"] },
+};
+
 /** Every table's corrections for one card, field by field. */
 const correctionOf = (id: string): FactCorrection | undefined => {
   const tables = [
@@ -2223,6 +2235,7 @@ const correctionOf = (id: string): FactCorrection | undefined => {
     ROUND_TWO_CORRECTIONS[id],
     NAMING_CORRECTIONS[id],
     CLASSIC_REPRINT_CORRECTIONS[id],
+    TYPE_STAGE_REVIEW_CORRECTIONS[id],
   ];
   const found = tables.filter((t): t is FactCorrection => !!t);
   return found.length > 1 ? Object.assign({}, ...found) : found[0];

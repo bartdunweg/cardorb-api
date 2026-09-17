@@ -981,10 +981,10 @@ check(
   /*
    * A Pokémon's types and stage as TCGplayer's product names them (typesDisagree, stageDisagrees).
    * TCGplayer is not right every time (Base Set Arcanine is a Stage 1, TCGplayer says Stage 2), so a
-   * difference is a card to look at, not a rule to write: the differences standing on 2026-09-17,
-   * which the two passes of 2026-09-14 left as TCGdex has them (card-fact-corrections.ts), are named
-   * in type-stage-accepted.json with both sides' words. A new card that differs, or an accepted one
-   * whose words moved, fails; 30th Classic Collection's eight reprints did on the day this was written.
+   * difference is a card to look at, not a rule to write. Each one looked at is either put right in
+   * card-fact-corrections.ts or named in type-stage-accepted.json with both sides' words and the
+   * reason the copy is right (the 126 of 2026-09-17: 2 corrected, 124 TCGplayer's error). A new card
+   * that differs, an accepted one whose words moved, or one without a reason fails.
    */
   const acceptedTypeStage = JSON.parse(
     readFileSync(join(ROOT, "src", "lib", "core", "catalogue", "type-stage-accepted.json"), "utf8"),
@@ -999,19 +999,20 @@ check(
     const accepted = acceptedTypeStage[c.id] ?? {};
     const cardType = cardTypeOfProduct(product);
     const stage = stageOfProduct(product);
+    const reviewed = typeof accepted.reason === "string" && accepted.reason.trim() !== "";
     if (typesDisagree(c.types, cardType)) {
-      if (same(accepted.types, [c.types, cardType])) typeStageAccepted++;
+      if (reviewed && same(accepted.types, [c.types, cardType])) typeStageAccepted++;
       else typeStageNew.push(`${c.id} types ${(c.types ?? []).join("/")} vs ${cardType}`);
     }
     if (stageDisagrees(c.stage, stage)) {
-      if (same(accepted.stage, [c.stage, stage])) typeStageAccepted++;
+      if (reviewed && same(accepted.stage, [c.stage, stage])) typeStageAccepted++;
       else typeStageNew.push(`${c.id} stage ${c.stage} vs ${stage}`);
     }
   }
   check(
     "Card types and stages as TCGplayer's",
     unread === 0 && typeStageNew.length === 0,
-    `${typeStageNew.length} differences not in type-stage-accepted.json${
+    `${typeStageNew.length} differences unreviewed (not in type-stage-accepted.json with a reason)${
       typeStageNew.length ? `: ${typeStageNew.slice(0, 8).join(", ")}` : ""
     }; ${typeStageAccepted} accepted`,
   );
