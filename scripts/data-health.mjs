@@ -1097,6 +1097,9 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
  * import recognises a held row by id, and a row with a stale one looks new. An id the copy does not
  * have in the row's own catalogue is the same slip, and so is a deleted set's (sm2+, SM1+ and the
  * other SM+ ids the Japanese copy dropped), and a Japanese row on an English id or the reverse.
+ * Every account's rows since 2026-09-17: the owner decided the other accounts' 1,336 count
+ * (migration 20260917120000), and the write paths put the copy's id on a new row
+ * (catalogue-ids.ts), so an id outside the copy is a slip whoever's row it is.
  */
 {
   const unknown = `coalesce(c.tcg_id, '') <> '' and not exists (select 1 from catalogue_cards k where k.id = c.tcg_id and k.language = ${rowCatalogue})`;
@@ -1119,7 +1122,7 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
   );
   check(
     "Collection rows on a card the copy has",
-    owner.missing === 0,
+    owner.missing === 0 && sum("missing") === 0,
     `${owner.missing} of the owner's rows on an id their catalogue does not have (${owner.other_language} of them a card in the other language's)${
       owner.missing ? `: ${(owner.examples ?? []).join(", ")}` : ""
     }; other accounts ${sum("missing")} (${sum("other_language")} in the other language's)`,
