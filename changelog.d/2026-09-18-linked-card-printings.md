@@ -1,0 +1,1 @@
+- A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.

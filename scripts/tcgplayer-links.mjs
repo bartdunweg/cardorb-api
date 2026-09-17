@@ -96,7 +96,7 @@ const pick = (hits, localId) => {
   const key = ({ product }) => [
     Number(VARIANT.test(product.name)),
     Number(!carriesNumber(product.name)),
-    Number(!printingsOf.has(product.productId)),
+    Number(!pricedOf.has(product.productId)),
     product.name.match(/[([]/g)?.length ?? 0,
   ];
   return [...hits].sort((a, b) => {
@@ -292,13 +292,21 @@ const { results: groups } = await fetchJson("https://tcgcsv.com/tcgplayer/3/grou
 
 // Every English product, by number, with its group and the printings it is priced as.
 const byNumber = new Map();
-const printingsOf = new Map();
+/** The products TCGplayer put a market figure on this week: which of two products prices the card. */
+const pricedOf = new Map();
 /**
  * Every printing TCGplayer lists for a product, priced this week or not. A linked card's `variants`
  * gain these each run and never lose one (below): a printing TCGplayer sells does not stop existing
  * in a week nobody sold it, and card-printings.ts offers a plain reverse only where one is listed.
  */
 const subtypesOf = new Map();
+/**
+ * The printings of a linked card, whoever linked it and whenever: what TCGplayer lists for the
+ * product, never what sold this week. A card linked in a week nobody sold it used to start with
+ * none, and then offered no printing on a copy's form until a later run widened it; the three R/G/B
+ * Mew of 30th Celebration (linked by hand in #550) are $7,000 cards with listings and no sale.
+ */
+const printingsOf = (productId) => [...(subtypesOf.get(productId) ?? [])];
 const groupOfProduct = new Map();
 const nameOfProduct = new Map();
 /** Every product by each spelling of its name, for a card whose number TCGplayer writes differently. */
@@ -319,10 +327,7 @@ await mapLimit(groups, 8, async (g) => {
       new Set([...(subtypesOf.get(p.productId) ?? []), printingKey(p.subTypeName)]),
     );
     if (!(p.marketPrice > 0)) continue;
-    printingsOf.set(p.productId, [
-      ...(printingsOf.get(p.productId) ?? []),
-      printingKey(p.subTypeName),
-    ]);
+    pricedOf.set(p.productId, [...(pricedOf.get(p.productId) ?? []), printingKey(p.subTypeName)]);
   }
   for (const p of products?.results ?? []) {
     groupOfProduct.set(p.productId, g);
@@ -342,7 +347,7 @@ await mapLimit(groups, 8, async (g) => {
     if (plain !== key) byPlainNumber.set(plain, [...(byPlainNumber.get(plain) ?? []), hit]);
   }
 });
-console.log(`tcgcsv: ${groups.length} groups, ${printingsOf.size} priced products`);
+console.log(`tcgcsv: ${groups.length} groups, ${pricedOf.size} priced products`);
 
 // The sets that hold a card with no product, read once each.
 const unlinkedSets = [
@@ -418,7 +423,7 @@ for (const [set, catalogue] of catalogues) {
     if (
       previous !== null &&
       (previous?.groupId == null ||
-        printingsOf.has(previous.productId) ||
+        pricedOf.has(previous.productId) ||
         !VARIANT.test(nameOfProduct.get(previous.productId) ?? ""))
     )
       continue;
@@ -441,7 +446,7 @@ for (const [set, catalogue] of catalogues) {
         ids[card.id] = {
           ...previous,
           productId: product.productId,
-          variants: printingsOf.get(product.productId) ?? [],
+          variants: printingsOf(product.productId),
         };
         row.linked++;
         linked++;
@@ -517,7 +522,7 @@ for (const [set, catalogue] of catalogues) {
         const product = chosen ?? [...top.products.values()][0];
         ids[card.id] = {
           productId: product.productId,
-          variants: printingsOf.get(product.productId) ?? [],
+          variants: printingsOf(product.productId),
           groupId: top.group.groupId,
         };
         row.linked++;
@@ -538,7 +543,7 @@ for (const [set, catalogue] of catalogues) {
     ids[card.id] = {
       ...previous,
       productId: product.productId,
-      variants: printingsOf.get(product.productId) ?? [],
+      variants: printingsOf(product.productId),
       groupId: group.groupId,
     };
     row.linked++;

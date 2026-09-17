@@ -74,6 +74,7 @@ product, no photo), Pikachu at the Museum (a jumbo card) and the five Poké Card
 | Scrydex expansions   | https://scrydex.com/pokemon/expansions    | Which variants of each English card exist (its reverse holo), one witness of three; never its prices | Script `reverse-holo-evidence.mjs` (with permission, 2026-09-14), one page a second, cached |
 | Scrydex expansions and card pages | https://scrydex.com/pokemon/expansions, /pokemon/cards/card/{code}-{n} | A set's code, name and release date as one vote of four (`consensus.mjs` through `set-facts-rules.mjs`, data-health); how each set pads its printed numbers | Script `number-padding.mjs` in the weekly job, and data-health (with permission, extended 2026-09-17) |
 | TCGdex GraphQL | https://api.tcgdex.net/v2/graphql | Every English set's own name and release date, as its vote on those two facts | Data-health, one call a morning |
+| tcgcsv (TCGplayer's feed) | https://tcgcsv.com/tcgplayer/3/{group}/prices | Which printings TCGplayer lists for a product, priced that week or not: a linked card's printings | Script `tcgplayer-links.mjs` in the weekly job, writes `variants` in `tcgplayer-ids.generated.json`; data-health re-reads the groups of the links that still have none |
 | PokeAPI (GitHub raw) | https://raw.githubusercontent.com/PokeAPI | Species names                                                                         | Script `pokedex.mjs`, writes `pokedex.generated.json`                                              |
 
 ## What a page waits on

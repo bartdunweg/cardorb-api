@@ -2198,17 +2198,23 @@
   },
   "30th-B": {
     "productId": 717609,
-    "variants": [],
+    "variants": [
+      "holofoil"
+    ],
     "groupId": 24722
   },
   "30th-G": {
     "productId": 717608,
-    "variants": [],
+    "variants": [
+      "holofoil"
+    ],
     "groupId": 24722
   },
   "30th-R": {
     "productId": 717607,
-    "variants": [],
+    "variants": [
+      "holofoil"
+    ],
     "groupId": 24722
   },
   "30th-c-001": {
@@ -11525,7 +11531,8 @@
   "bw2-64": {
     "productId": 88458,
     "variants": [
-      "normal"
+      "normal",
+      "reverse-holofoil"
     ]
   },
   "bw2-65": {
@@ -39634,7 +39641,8 @@
     "productId": 89942,
     "variants": [
       "holofoil",
-      "reverse-holofoil"
+      "reverse-holofoil",
+      "normal"
     ]
   },
   "ex7-15": {
@@ -40353,7 +40361,9 @@
   },
   "ex8-106": {
     "productId": 86672,
-    "variants": [],
+    "variants": [
+      "holofoil"
+    ],
     "groupId": 1404
   },
   "ex8-107": {
@@ -41794,7 +41804,8 @@
   "ex9-98": {
     "productId": 88660,
     "variants": [
-      "holofoil"
+      "holofoil",
+      "normal"
     ]
   },
   "ex9-99": {
@@ -58504,7 +58515,9 @@
   },
   "np-11": {
     "productId": 87231,
-    "variants": [],
+    "variants": [
+      "normal"
+    ],
     "groupId": 1423
   },
   "np-12": {
