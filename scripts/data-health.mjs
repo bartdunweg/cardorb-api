@@ -36,6 +36,7 @@ import {
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
 import { undecidedLinkedCards } from "../src/lib/core/reverse-holo-rules.mjs";
+import { paddingReport, paddingWitness } from "../src/lib/core/number-padding.mjs";
 import {
   groupsOfSets,
   scrydexExpansions,
@@ -859,6 +860,52 @@ check(
             .join(", ")}`
         : ""
     }; ${unread} tcgcsv groups of ${groupIds.size} did not answer`,
+  );
+
+  /*
+   * Card numbers padded as the cards print them (number-padding.mjs): each set's lowest plain number
+   * below ten, as stored, against what number-padding.generated.json (weekly, tcgplayer-links.yml)
+   * says the card prints. Red on a set whose spelling is not Scrydex's reading, and on a set the file
+   * has no reading for, which is a set published since the last weekly run. TCGplayer's reading is
+   * compared with Scrydex's and the sets where they disagree are reported, not failed: TCGplayer pads
+   * the Wizards era and the POP Series, which print bare numbers. Two sets neither source prints a
+   * number for, both closed products, were read off Bulbapedia on 2026-09-15.
+   */
+  const NO_PRINTED_SOURCE = {
+    "ex5.5": "Poké Card Creator Pack: no Scrydex expansion, no TCGplayer number",
+    mfb: "My First Battle: no Scrydex expansion, TCGplayer writes no number",
+  };
+  const paddingReadings = JSON.parse(
+    readFileSync(
+      join(ROOT, "src", "lib", "core", "catalogue", "number-padding.generated.json"),
+      "utf8",
+    ),
+  );
+  const cardsOfSet = new Map();
+  for (const c of cards) {
+    if (!cardsOfSet.has(c.set_id)) cardsOfSet.set(c.set_id, []);
+    cardsOfSet.get(c.set_id).push({ id: c.id, number: c.local_id });
+  }
+  const padding = paddingReport(
+    [...cardsOfSet.values()]
+      .map(paddingWitness)
+      .filter(Boolean)
+      .map((w) => ({ ...w, classic: w.id in classic })),
+    paddingReadings,
+  );
+  const paddingUnread = padding.unread.filter((id) => !(id in NO_PRINTED_SOURCE));
+  check(
+    "Card numbers padded as the cards print them",
+    padding.wrong.length === 0 && paddingUnread.length === 0,
+    `${padding.wrong.length} sets spelt otherwise than Scrydex reads the card${
+      padding.wrong.length
+        ? ` (${padding.wrong.map((id) => `${id}: ${paddingReadings[id].scrydex}`).join(", ")}; THREE_DIGIT_SETS in card-number.mjs)`
+        : ""
+    }; ${paddingUnread.length} sets with no reading${
+      paddingUnread.length ? ` (${paddingUnread.join(", ")}): run scripts/number-padding.mjs` : ""
+    }; reported: Scrydex and TCGplayer disagree on ${padding.disputed.length} sets${
+      padding.disputed.length ? ` (${padding.disputed.slice(0, 8).join(", ")})` : ""
+    }`,
   );
 
   /*
