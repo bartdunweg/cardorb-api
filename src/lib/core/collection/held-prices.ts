@@ -54,6 +54,14 @@ export function heldDays(
   return held;
 }
 
+/** The printings the line held a stray sale over: the figure it kept, and the stray one it stands in for. */
+function* heldOver(day: HeldDay): Generator<[printing: string, kept: number, stray: number]> {
+  for (const [printing, stray] of Object.entries(day.held)) {
+    const kept = day.printings[printing];
+    if (kept != null && stray > 0) yield [printing, kept, stray];
+  }
+}
+
 /** Today's figure scaled by the held one over the stray one: the line is in euros at its night's rate, the price at today's. */
 const scaledBy = (market: number, kept: number, stray: number): Price => ({
   market: Math.round(market * (kept / stray) * 100) / 100,
@@ -67,10 +75,8 @@ const scaledBy = (market: number, kept: number, stray: number): Price => ({
 export function holdShelfPrice(price: Price, pair: UsdPair, day: HeldDay): Price {
   const headline = pair.usd?.market;
   if (headline == null || price.market == null) return price;
-  for (const [printing, stray] of Object.entries(day.held)) {
-    const kept = day.printings[printing];
-    if (kept == null || !(stray > 0) || pair.printings?.[printing]?.market !== headline) continue;
-    return scaledBy(price.market, kept, stray);
+  for (const [printing, kept, stray] of heldOver(day)) {
+    if (pair.printings?.[printing]?.market === headline) return scaledBy(price.market, kept, stray);
   }
   return price;
 }
@@ -80,10 +86,9 @@ function holdCard(card: OwnedCard, day: HeldDay): OwnedCard {
   const pricePrintings = { ...card.pricePrintings };
   let price = card.price;
   let priceFirstEd = card.priceFirstEd ?? null;
-  for (const [printing, stray] of Object.entries(day.held)) {
-    const kept = day.printings[printing];
+  for (const [printing, kept, stray] of heldOver(day)) {
     const now = pricePrintings[printing];
-    if (kept == null || now?.market == null || !(stray > 0)) continue;
+    if (now?.market == null) continue;
     const scaled = scaledBy(now.market, kept, stray);
     pricePrintings[printing] = scaled;
     // The card's own price and its stamped run's are one of its printings' figures: held with it.
