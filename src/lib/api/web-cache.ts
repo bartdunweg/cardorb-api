@@ -24,8 +24,10 @@ import { usernameOf } from "./viewer";
  * (cardorb-web `cache-scopes.ts`): a card written from the phone need not drop
  * the profile, nor a profile flag every list. `all` is for a write whose reach
  * is not clear, an import; the web reads a name it does not know as `all` too.
+ * `favorite` is a star and nothing else: the web keeps the binders and the set
+ * pages, which no star changes.
  */
-export const WEB_WRITES = ["all", "cards", "binders", "profile"] as const;
+export const WEB_WRITES = ["all", "cards", "favorite", "binders", "profile"] as const;
 export type WebWrite = (typeof WEB_WRITES)[number];
 
 const WEB_TIMEOUT_MS = 2_000;
