@@ -37,6 +37,9 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
+          # Actions runs this step as bash -e, which ended it at the first failed check with no
+          # summary and no issue (every failing morning since the workflow began, 2026-09-15 to 17).
+          set +e
           set -uo pipefail
           node scripts/data-health.mjs > report.md
           status=$?
