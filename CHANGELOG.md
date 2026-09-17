@@ -18,6 +18,8 @@ if the two have drifted apart.
 
 - Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.
 
+- McDonald's Collection 2023's Blissey is a Stage 1 and Ancient Mew a Basic, as the cards print them; every other card whose type or stage differs from TCGplayer's was checked against the printed card and keeps its own.
+
 ## 2026-09-16
 
 - `GET /v1/cards` gives each copy a `printImage`: the picture of the printing it is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print), so a list shows the card the copy is. Null where the card's scan stands for it; `image` is unchanged.

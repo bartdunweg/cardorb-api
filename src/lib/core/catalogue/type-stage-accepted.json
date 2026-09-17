@@ -1,380 +1,498 @@
 {
-  "2023sv-12": {
-    "stage": ["Stage2", "Stage 1"]
-  },
   "base1-23": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Arcanine is a Stage 1 that evolves from Growlithe (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "base3-40": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Omastar is a Stage 2 that evolves from Omanyte (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "base4-19": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Wigglytuff is a Stage 1 that evolves from Jigglypuff (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "bw11-5": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Carnivine is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "bw6-84": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Altaria is a Stage 1 that evolves from Swablu (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "bw7-152": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Altaria is a Stage 1 that evolves from Swablu (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "bwp-BW48": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Altaria is a Stage 1 that evolves from Swablu (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "cel25cc-CC014": {
-    "types": [["Fire"], "Psychic"]
+    "types": [["Fire"], "Psychic"],
+    "reason": "Gardevoir ex δ is Fire (the printed card and TCGdex); TCGplayer writes Psychic."
   },
   "dc1-2": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Team Magma's Camerupt is a Stage 1 that evolves from Team Magma's Numel (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "ex11-30": {
-    "types": [["Water", "Metal"], "Water"]
+    "types": [["Water", "Metal"], "Water"],
+    "reason": "Starmie δ is Water and Metal (pokemontcg.io and TCGdex); TCGplayer names only Water."
   },
   "ex4-24": {
-    "types": [["Grass", "Darkness"], "Grass"]
+    "types": [["Grass", "Darkness"], "Grass"],
+    "reason": "Team Aqua's Cacnea is Grass and Darkness (pokemontcg.io and TCGdex); TCGplayer names only Grass."
   },
   "ex4-7": {
-    "types": [["Fighting", "Darkness"], "Fighting"]
+    "types": [["Fighting", "Darkness"], "Fighting"],
+    "reason": "Team Magma's Aggron is Fighting and Darkness (pokemontcg.io and TCGdex); TCGplayer names only Fighting."
   },
   "ex5-8": {
-    "types": [["Psychic", "Metal"], "Psychic"]
+    "types": [["Psychic", "Metal"], "Psychic"],
+    "reason": "Jirachi is Psychic and Metal (pokemontcg.io and TCGdex); TCGplayer names only Psychic."
   },
   "mep-098": {
-    "types": [["Lightning"], "Water"]
-  },
-  "miscp-001": {
-    "stage": ["Stage1", "Basic"]
+    "types": [["Lightning"], "Water"],
+    "reason": "Zapdos is Lightning (the printed card); TCGplayer writes Water."
   },
   "sm1-8": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Masquerain is a Stage 1 that evolves from Surskit (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm11-91": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Beheeyem is a Stage 1 that evolves from Elgyem (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm12-116": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Palpitoad is a Stage 1 that evolves from Tympole (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm12-117": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Seismitoad is a Stage 2 that evolves from Palpitoad (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sm12-142": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Solgaleo is a Stage 2 that evolves from Cosmoem (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm2-16": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Salazzle is a Stage 1 that evolves from Salandit (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm2-61": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Lunala is a Stage 2 that evolves from Cosmoem (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm2-87": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Solgaleo is a Stage 2 that evolves from Cosmoem (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm4-86": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Cinccino is a Stage 1 that evolves from Minccino (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm5-61": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Cosmoem is a Stage 1 that evolves from Cosmog (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm6-124": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Yveltal-GX is a Basic and evolves from nothing (pokemontcg.io); TCGplayer writes Stage 1."
   },
   "sm6-137": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Yveltal-GX is a Basic and evolves from nothing (pokemontcg.io); TCGplayer writes Stage 1."
   },
   "sm6-28": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Aurorus is a Stage 2 that evolves from Amaura (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sm6-69": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Tyrantrum is a Stage 2 that evolves from Tyrunt (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sm7-70": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Lunala is a Stage 2 that evolves from Cosmoem (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm7-99": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Solgaleo is a Stage 2 that evolves from Cosmoem (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm7.5-53": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Hakamo-o is a Stage 1 that evolves from Jangmo-o (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm8-108": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Naganadel is a Stage 1 that evolves from Poipole (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm8-56": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Lapras is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sm9-114": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Alolan Exeggutor is a Stage 1 that evolves from Exeggcute (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm9-115": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Alolan Exeggutor is a Stage 1 that evolves from Exeggcute (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm9-130": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Aerodactyl is a Stage 1 that evolves from Unidentified Fossil (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm9-167": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Incineroar-GX is a Stage 2 that evolves from Torracat (pokemontcg.io); TCGplayer writes Basic."
   },
   "sm9-188": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Incineroar-GX is a Stage 2 that evolves from Torracat (pokemontcg.io); TCGplayer writes Basic."
   },
   "sm9-75": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Omanyte is a Stage 1 that evolves from Unidentified Fossil (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm9-76": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Omastar is a Stage 2 that evolves from Omanyte (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sm9-77": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Kabuto is a Stage 1 that evolves from Unidentified Fossil (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sm9-78": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Kabutops is a Stage 2 that evolves from Kabuto (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sm9-97": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Incineroar-GX is a Stage 2 that evolves from Torracat (pokemontcg.io); TCGplayer writes Basic."
   },
   "smp-SM07": {
-    "types": [["Colorless"], "Fighting"]
+    "types": [["Colorless"], "Fighting"],
+    "reason": "Pikipek is Colorless (pokemontcg.io and TCGdex); TCGplayer writes Fighting."
   },
   "smp-SM217": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Trevenant & Dusknoir-GX is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sv01-145": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Blissey is a Stage 1 that evolves from Chansey (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sv01-224": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Arcanine ex is a Stage 1 that evolves from Growlithe (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sv02-109": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Sudowoodo is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sv03-065": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Magnezone is a Stage 2 that evolves from Magneton (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sv03-149": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Bisharp is a Stage 1 that evolves from Pawniard (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sv03.5-109": {
-    "types": [["Darkness"], "Psychic"]
+    "types": [["Darkness"], "Psychic"],
+    "reason": "Koffing is Darkness (pokemontcg.io and TCGdex); TCGplayer writes Psychic."
   },
   "sv04-107": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Slither Wing is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sv04-203": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Slither Wing is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sv10-187": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Team Rocket's Spidops is a Stage 1 that evolves from Team Rocket's Tarountula (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "sv10.5b-106": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Tirtouga is a Stage 1 that evolves from Antique Cover Fossil (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sv10.5b-143": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Bisharp is a Stage 1 that evolves from Pawniard (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "sv10.5b-145": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Axew is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "sv10.5b-146": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Fraxure is a Stage 1 that evolves from Axew (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "sv10.5b-147": {
-    "stage": ["Stage2", "Basic"]
+    "stage": ["Stage2", "Basic"],
+    "reason": "Haxorus is a Stage 2 that evolves from Fraxure (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh1-106": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Mudsdale is a Stage 1 that evolves from Mudbray (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh1-119": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Galarian Obstagoon is a Stage 2 that evolves from Galarian Linoone (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "swsh1-135": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Corviknight is a Stage 2 that evolves from Corvisquire (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "swsh1-203": {
-    "stage": ["VMAX", "Basic"]
+    "stage": ["VMAX", "Basic"],
+    "reason": "Lapras VMAX is a VMAX of Lapras V (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh1-204": {
-    "stage": ["VMAX", "Basic"]
+    "stage": ["VMAX", "Basic"],
+    "reason": "Morpeko VMAX is a VMAX of Morpeko V (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh1-80": {
-    "stage": ["VMAX", "Basic"]
+    "stage": ["VMAX", "Basic"],
+    "reason": "Morpeko VMAX is a VMAX of Morpeko V (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh11-183": {
-    "types": [["Metal"], "Colorless"]
+    "types": [["Metal"], "Colorless"],
+    "reason": "Galarian Perrserker V is Metal (pokemontcg.io and TCGdex); TCGplayer writes Colorless."
   },
   "swsh12-146": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Archen is a Stage 1 that evolves from Unidentified Fossil (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh4-26": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Flareon is a Stage 1 that evolves from Eevee (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "swsh4-81": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Alcremie is a Stage 1 that evolves from Milcery (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh4.5-18": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Cinderace V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5-37": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Morpeko V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5-39": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Indeedee V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5-44": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Crobat V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5-50": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Ditto V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5-54": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Cramorant V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5-9": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Dhelmise V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh4.5sv-SV005": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Thwackey is a Stage 1 that evolves from Grookey (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh4.5sv-SV058": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Alcremie is a Stage 1 that evolves from Milcery (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh4.5sv-SV080": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Galarian Obstagoon is a Stage 2 that evolves from Galarian Linoone (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "swsh4.5sv-SV089": {
-    "types": [["Metal"], "Colorless"]
+    "types": [["Metal"], "Colorless"],
+    "reason": "Corviknight is Metal (pokemontcg.io and TCGdex); TCGplayer writes Colorless."
   },
   "swsh5-18": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Flapple V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-21": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Victini V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-50": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Tapu Koko V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-6": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Kricketune V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-62": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Mimikyu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-63": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Necrozma V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-85": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Single Strike Urshifu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh5-87": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Rapid Strike Urshifu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh8-38": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Simisear is a Stage 1 that evolves from Pansear (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh8-45": {
-    "stage": ["VMAX", "Basic"]
+    "stage": ["VMAX", "Basic"],
+    "reason": "Cinderace VMAX is a VMAX of Cinderace V (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh9-087": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Weavile is a Stage 1 that evolves from Sneasel (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh9-184": {
-    "stage": ["VSTAR", "Basic"]
+    "stage": ["VSTAR", "Basic"],
+    "reason": "Arceus VSTAR is a VSTAR of Arceus V (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swsh9tg-TG01": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Flareon is a Stage 1 that evolves from Eevee (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "swsh9tg-TG18": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Single Strike Urshifu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swsh9tg-TG20": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Rapid Strike Urshifu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swshp-SWSH100": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Venusaur V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swshp-SWSH101": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Blastoise V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swshp-SWSH106": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Single Strike Urshifu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swshp-SWSH107": {
-    "stage": ["Basic", "VMAX"]
+    "stage": ["Basic", "VMAX"],
+    "reason": "Rapid Strike Urshifu V is a Basic Pokémon V (pokemontcg.io and TCGdex); TCGplayer files it under VMAX."
   },
   "swshp-SWSH269": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Sunflora is a Stage 1 that evolves from Sunkern (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "swshp-SWSH272": {
-    "types": [["Colorless"], "Psychic"]
+    "types": [["Colorless"], "Psychic"],
+    "reason": "Archeops is Colorless (pokemontcg.io and TCGdex); TCGplayer writes Psychic."
   },
   "tk-xy-n-4": {
-    "types": [["Colorless"], "Psychic"]
+    "types": [["Colorless"], "Psychic"],
+    "reason": "Bunnelby is Colorless (the printed card and TCGdex); TCGplayer writes Psychic."
   },
   "tk-xy-p-22": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Manectric is a Stage 1 that evolves from Electrike (the printed card and TCGdex); TCGplayer writes Basic."
   },
   "xy11-109": {
-    "types": [["Metal", "Fighting"], "Metal"]
+    "types": [["Metal", "Fighting"], "Metal"],
+    "reason": "M Steelix-EX is Metal and Fighting (pokemontcg.io and TCGdex); TCGplayer names only Metal."
   },
   "xy11-68": {
-    "types": [["Metal", "Fighting"], "Metal"]
+    "types": [["Metal", "Fighting"], "Metal"],
+    "reason": "M Steelix-EX is Metal and Fighting (pokemontcg.io and TCGdex); TCGplayer names only Metal."
   },
   "xy3-11": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Magmortar is a Stage 1 that evolves from Magmar (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "xy3-16": {
-    "stage": ["Stage1", "Stage 2"]
+    "stage": ["Stage1", "Stage 2"],
+    "reason": "Poliwhirl is a Stage 1 that evolves from Poliwag (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."
   },
   "xy4-89": {
-    "stage": ["Basic", "Stage 1"]
+    "stage": ["Basic", "Stage 1"],
+    "reason": "Fletchling is a Basic and evolves from nothing (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "xy7-43": {
-    "stage": ["MEGA", "Basic"]
+    "stage": ["MEGA", "Basic"],
+    "reason": "M Tyranitar-EX is a Mega Evolution of Tyranitar-EX (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xy7-60": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Goodra is a Stage 2 that evolves from Sliggoo (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "xy7-92": {
-    "stage": ["MEGA", "Basic"]
+    "stage": ["MEGA", "Basic"],
+    "reason": "M Tyranitar-EX is a Mega Evolution of Tyranitar-EX (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xy8-156": {
-    "stage": ["MEGA", "Basic"]
+    "stage": ["MEGA", "Basic"],
+    "reason": "M Glalie-EX is a Mega Evolution of Glalie-EX (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xy8-35": {
-    "stage": ["MEGA", "Basic"]
+    "stage": ["MEGA", "Basic"],
+    "reason": "M Glalie-EX is a Mega Evolution of Glalie-EX (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xy8-47": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Frogadier is a Stage 1 that evolves from Froakie (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xy9-72": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Nuzleaf is a Stage 1 that evolves from Seedot (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xy9-73": {
-    "stage": ["Stage2", "Stage 1"]
+    "stage": ["Stage2", "Stage 1"],
+    "reason": "Shiftry is a Stage 2 that evolves from Nuzleaf (pokemontcg.io and TCGdex); TCGplayer writes Stage 1."
   },
   "xyp-XY12": {
-    "types": [["Metal"], "Grass"]
+    "types": [["Metal"], "Grass"],
+    "reason": "Honedge is Metal (pokemontcg.io and TCGdex); TCGplayer writes Grass."
   },
   "xyp-XY182": {
-    "types": [["Darkness"], "Psychic"]
+    "types": [["Darkness"], "Psychic"],
+    "reason": "Mandibuzz BREAK is Darkness (pokemontcg.io and TCGdex); TCGplayer writes Psychic."
   },
   "xyp-XY21": {
-    "types": [["Metal"], "Water"]
+    "types": [["Metal"], "Water"],
+    "reason": "Bronzong is Metal (pokemontcg.io and TCGdex); TCGplayer writes Water."
   },
   "xyp-XY55": {
-    "types": [["Water"], "Fire"]
+    "types": [["Water"], "Fire"],
+    "reason": "Swampert-EX is Water (pokemontcg.io and TCGdex); TCGplayer writes Fire."
   },
   "xyp-XY56": {
-    "stage": ["Stage1", "Basic"]
+    "stage": ["Stage1", "Basic"],
+    "reason": "Blissey is a Stage 1 that evolves from Chansey (pokemontcg.io and TCGdex); TCGplayer writes Basic."
   },
   "xyp-XY66": {
-    "types": [["Colorless"], "Dragon"]
+    "types": [["Colorless"], "Dragon"],
+    "reason": "Rayquaza-EX is Colorless (the printed card, pokemontcg.io and TCGdex); TCGplayer writes Dragon."
   },
   "xyp-XY69": {
-    "types": [["Colorless"], "Dragon"]
+    "types": [["Colorless"], "Dragon"],
+    "reason": "Rayquaza-EX is Colorless (the printed card, pokemontcg.io and TCGdex); TCGplayer writes Dragon."
   },
   "xyp-XY85": {
-    "types": [["Psychic"], "Lightning"]
+    "types": [["Psychic"], "Lightning"],
+    "reason": "Hoopa-EX is Psychic (the printed card, pokemontcg.io and TCGdex); TCGplayer writes Lightning."
   }
 }

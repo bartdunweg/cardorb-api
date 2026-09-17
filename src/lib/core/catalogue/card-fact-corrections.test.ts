@@ -9,6 +9,7 @@ import {
   ruledRarity,
 } from "./card-fact-corrections";
 import RARITY_WORDS from "./rarity-words.json";
+import TYPE_STAGE_ACCEPTED from "./type-stage-accepted.json";
 
 describe("correctedFacts", () => {
   it("gives a Best of Game card its type and rarity where TCGdex has none", () => {
@@ -303,5 +304,37 @@ describe("30th Classic Collection's reprints", () => {
         sheet: { ...sheet, stage: "Stage2" },
       }).sheet?.stage,
     ).toBe("Stage2");
+  });
+});
+
+describe("the reviewed type and stage differences", () => {
+  const sheet = { illustrator: null, hp: 150, stage: "Stage2", evolveFrom: "Chansey" };
+
+  it("give McDonald's Blissey and Ancient Mew the stage their cards print", () => {
+    expect(
+      correctedFacts("2023sv-12", { rarity: "None", types: ["Colorless"], sheet }).sheet?.stage,
+    ).toBe("Stage1");
+    const mew = correctedFacts("miscp-001", {
+      rarity: "Promo",
+      types: ["Psychic"],
+      sheet: { ...sheet, hp: 30, stage: "Stage1", evolveFrom: null },
+    });
+    expect(mew.sheet?.stage).toBe("Basic");
+    expect(mew.sheet?.evolveFrom).toBeNull();
+  });
+
+  it("keep a card's other corrections beside the stage", () => {
+    expect(
+      correctedFacts("2023sv-12", { rarity: "None", types: ["Colorless"], sheet }).rarity,
+    ).toBe("Promo");
+  });
+
+  it("name a reason for every difference with TCGplayer that stays", () => {
+    for (const [id, entry] of Object.entries(
+      TYPE_STAGE_ACCEPTED as Record<string, { reason?: string }>,
+    )) {
+      expect(entry.reason?.trim(), id).toBeTruthy();
+      expect(entry.reason, id).not.toMatch(/—/);
+    }
   });
 });
