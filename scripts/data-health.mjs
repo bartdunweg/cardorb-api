@@ -28,7 +28,11 @@ import {
   numberDisagrees,
   printedNumberOfProduct,
   rarityOfProduct,
+  cardTypeOfProduct,
+  stageDisagrees,
+  stageOfProduct,
   tcgplayerRarity,
+  typesDisagree,
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
 import { undecidedLinkedCards } from "../src/lib/core/reverse-holo-rules.mjs";
@@ -816,7 +820,7 @@ check(
     }),
   );
   const cards = await query(
-    "select id, set_id, local_id, rarity from catalogue_cards where language = 'en' order by id",
+    "select id, set_id, local_id, rarity, category, stage, types from catalogue_cards where language = 'en' order by id",
   );
   const productOf = (id) => products.get(tcgLinks[id]?.productId);
 
@@ -850,6 +854,44 @@ check(
             .join(", ")}`
         : ""
     }; ${unread} tcgcsv groups of ${groupIds.size} did not answer`,
+  );
+
+  /*
+   * A Pokémon's types and stage as TCGplayer's product names them (typesDisagree, stageDisagrees).
+   * TCGplayer is not right every time (Base Set Arcanine is a Stage 1, TCGplayer says Stage 2), so a
+   * difference is a card to look at, not a rule to write: the differences standing on 2026-09-17,
+   * which the two passes of 2026-09-14 left as TCGdex has them (card-fact-corrections.ts), are named
+   * in type-stage-accepted.json with both sides' words. A new card that differs, or an accepted one
+   * whose words moved, fails; 30th Classic Collection's eight reprints did on the day this was written.
+   */
+  const acceptedTypeStage = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "catalogue", "type-stage-accepted.json"), "utf8"),
+  );
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const typeStageNew = [];
+  let typeStageAccepted = 0;
+  for (const c of cards) {
+    if (c.category !== "Pokemon") continue;
+    const product = productOf(c.id);
+    if (!product) continue;
+    const accepted = acceptedTypeStage[c.id] ?? {};
+    const cardType = cardTypeOfProduct(product);
+    const stage = stageOfProduct(product);
+    if (typesDisagree(c.types, cardType)) {
+      if (same(accepted.types, [c.types, cardType])) typeStageAccepted++;
+      else typeStageNew.push(`${c.id} types ${(c.types ?? []).join("/")} vs ${cardType}`);
+    }
+    if (stageDisagrees(c.stage, stage)) {
+      if (same(accepted.stage, [c.stage, stage])) typeStageAccepted++;
+      else typeStageNew.push(`${c.id} stage ${c.stage} vs ${stage}`);
+    }
+  }
+  check(
+    "Card types and stages as TCGplayer's",
+    unread === 0 && typeStageNew.length === 0,
+    `${typeStageNew.length} differences not in type-stage-accepted.json${
+      typeStageNew.length ? `: ${typeStageNew.slice(0, 8).join(", ")}` : ""
+    }; ${typeStageAccepted} accepted`,
   );
 
   /*

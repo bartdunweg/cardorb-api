@@ -285,3 +285,23 @@ describe("correctedName", () => {
     expect(correctedName("sm10-184", "Red's Challenge")).toBe("Red's Challenge");
   });
 });
+
+describe("30th Classic Collection's reprints", () => {
+  it("take the stage and types of the cards they reprint", () => {
+    const sheet = { illustrator: null, hp: 150, stage: "Basic", evolveFrom: null };
+    const legend = correctedFacts("30th-c-019", { rarity: null, types: ["Psychic"], sheet });
+    expect(legend.types).toEqual(["Darkness", "Psychic"]);
+    expect(legend.sheet?.stage).toBe("LEGEND");
+    expect(
+      correctedFacts("30th-c-017", { rarity: null, types: ["Metal"], sheet }).sheet?.stage,
+    ).toBe("Stage2");
+    // A fix upstream wins: TCGdex writing the stage already leaves it alone.
+    expect(
+      correctedFacts("30th-c-017", {
+        rarity: null,
+        types: ["Metal"],
+        sheet: { ...sheet, stage: "Stage2" },
+      }).sheet?.stage,
+    ).toBe("Stage2");
+  });
+});

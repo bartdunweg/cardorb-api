@@ -1,0 +1,1 @@
+- 30th Classic Collection's Solgaleo-GX, Darkrai & Cresselia LEGEND, Palkia LV.X, M Gardevoir-EX, Scizor ex, Arceus VSTAR and Metagross show the stage and types of the cards they reprint, and a new card whose type or stage differs from TCGplayer's is flagged the next morning.
