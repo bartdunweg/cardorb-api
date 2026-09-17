@@ -6,6 +6,7 @@ import { createRateLimiter } from "@/lib/api/rate-limit";
 import { bearer, requestViewer } from "@/lib/api/viewer";
 import { serverClient, userClient } from "@/lib/storage/supabase";
 import { updateProfile } from "@/lib/storage/postgres";
+import { forgetOnTheWeb } from "@/lib/api/web-cache";
 
 /**
  * A profile picture, uploaded.
@@ -149,6 +150,8 @@ export async function POST(req: Request) {
     console.error("Saving the avatar URL failed:", err);
     return apiError(500, "That change could not be saved.");
   }
+  // The picture shows on the web's dashboard and the public page, kept five minutes there.
+  await forgetOnTheWeb({ userId: viewer.userId, token: token ?? undefined }, "profile");
 
   return NextResponse.json({ ok: true, avatarUrl });
 }
@@ -186,6 +189,7 @@ export async function DELETE(req: Request) {
     console.error("Clearing the avatar failed:", err);
     return apiError(500, "That change could not be saved.");
   }
+  await forgetOnTheWeb({ userId: viewer.userId, token: token ?? undefined }, "profile");
 
   return NextResponse.json({ ok: true });
 }

@@ -11,9 +11,12 @@ const authoriseWrite = vi.fn();
 const updateRow = vi.fn();
 const deleteRow = vi.fn();
 const findFolder = vi.fn();
-const forgetOnTheWeb = vi.fn(async (_who: { userId: string; username: string }) => undefined);
+const forgetOnTheWeb = vi.fn(
+  async (_who: { userId: string; token?: string }, _write: string) => undefined,
+);
 vi.mock("@/lib/api/web-cache", () => ({
-  forgetOnTheWeb: (who: { userId: string; username: string }) => forgetOnTheWeb(who),
+  forgetOnTheWeb: (who: { userId: string; token?: string }, write: string) =>
+    forgetOnTheWeb(who, write),
 }));
 
 // The real guard.ts pulls in lib/api/viewer.ts, which is `import "server-only"`
@@ -133,7 +136,10 @@ describe("PATCH /api/v1/cards/[id]", () => {
 
   it("tells the web whose collection changed, once the row is written", async () => {
     await patch({ isFavorite: true });
-    expect(forgetOnTheWeb).toHaveBeenCalledWith(expect.objectContaining({ userId: "me-uuid" }));
+    expect(forgetOnTheWeb).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+    );
   });
 
   it("takes the flag that makes a card its Pokédex slot's face, and refuses one that is not a flag", async () => {

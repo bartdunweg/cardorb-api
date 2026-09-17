@@ -279,7 +279,7 @@ export async function POST(req: Request) {
   // zero is what makes the card the writer's own write rather than the one
   // after it.
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined });
+  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined }, "cards");
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });
 }

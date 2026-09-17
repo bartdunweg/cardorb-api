@@ -236,7 +236,7 @@ export async function POST(req: Request) {
     // The rows are cached for an hour. Without this a successful import shows
     // nothing until it expires, which reads as a failed import.
     revalidateTag(cardsTag(viewer.userId), { expire: 0 });
-    await forgetOnTheWeb({ userId: viewer.userId, token: bearer(req) ?? undefined });
+    await forgetOnTheWeb({ userId: viewer.userId, token: bearer(req) ?? undefined }, "all");
     return NextResponse.json({ ...outcome, source });
   } catch (err) {
     console.error("CSV import failed:", err);

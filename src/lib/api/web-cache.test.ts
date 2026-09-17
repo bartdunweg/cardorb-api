@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { forgetOnTheWeb } from "./web-cache";
+import { forgetOnTheWeb, WEB_WRITES } from "./web-cache";
 
 // The name the web files a public page under is read here rather than carried on every
 // authorised request (viewer.ts); the routes hand over the id and their token.
@@ -26,13 +26,27 @@ describe("forgetOnTheWeb", () => {
   it("posts who changed, with the secret", async () => {
     const fetch = vi.fn(async () => new Response(null, { status: 204 }));
     globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
-    await forgetOnTheWeb({ userId: "me-uuid", token: "t" });
+    await forgetOnTheWeb({ userId: "me-uuid", token: "t" }, "cards");
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://cardorb.com/api/revalidate");
     expect(init.method).toBe("POST");
     expect((init.headers as Record<string, string>).authorization).toBe("Bearer s3cret");
-    expect(JSON.parse(String(init.body))).toEqual({ userId: "me-uuid", username: "me" });
+    expect(JSON.parse(String(init.body))).toEqual({
+      userId: "me-uuid",
+      username: "me",
+      write: "cards",
+    });
+  });
+
+  it("names the write, one of the four the web's route knows", async () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 204 }));
+    globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
+    for (const write of WEB_WRITES) await forgetOnTheWeb({ userId: "me-uuid" }, write);
+    const sent = fetch.mock.calls.map(
+      (call) => JSON.parse(String((call as unknown as [string, RequestInit])[1].body)).write,
+    );
+    expect(sent).toEqual(["all", "cards", "binders", "profile"]);
   });
 
   it("says nothing where it is not configured, and asks Postgres nothing either", async () => {
@@ -40,7 +54,7 @@ describe("forgetOnTheWeb", () => {
     usernameOf.mockClear();
     const fetch = vi.fn();
     globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
-    await forgetOnTheWeb({ userId: "me-uuid", token: "t" });
+    await forgetOnTheWeb({ userId: "me-uuid", token: "t" }, "all");
     expect(fetch).not.toHaveBeenCalled();
     expect(usernameOf).not.toHaveBeenCalled();
   });
@@ -49,10 +63,10 @@ describe("forgetOnTheWeb", () => {
     globalThis.fetch = vi.fn(async () => {
       throw new Error("fetch failed");
     }) as unknown as typeof globalThis.fetch;
-    await expect(forgetOnTheWeb({ userId: "me-uuid", token: "t" })).resolves.toBeUndefined();
+    await expect(forgetOnTheWeb({ userId: "me-uuid", token: "t" }, "all")).resolves.toBeUndefined();
     globalThis.fetch = vi.fn(
       async () => new Response("no", { status: 401 }),
     ) as unknown as typeof globalThis.fetch;
-    await expect(forgetOnTheWeb({ userId: "me-uuid", token: "t" })).resolves.toBeUndefined();
+    await expect(forgetOnTheWeb({ userId: "me-uuid", token: "t" }, "all")).resolves.toBeUndefined();
   });
 });

@@ -4,6 +4,7 @@ const authorise = vi.fn();
 const getFolders = vi.fn();
 const createFolder = vi.fn();
 const getCollection = vi.fn();
+const forgetOnTheWeb = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
@@ -18,6 +19,9 @@ vi.mock("@/lib/api/viewer", () => ({
 vi.mock("@/lib/core/collection/collection", () => ({
   getFolders: (...a: unknown[]) => getFolders(...a),
   getCollection: (...a: unknown[]) => getCollection(...a),
+}));
+vi.mock("@/lib/api/web-cache", () => ({
+  forgetOnTheWeb: (...a: unknown[]) => forgetOnTheWeb(...a),
 }));
 vi.mock("@/lib/storage/collection", () => ({
   createFolder: (...a: unknown[]) => createFolder(...a),
@@ -158,6 +162,11 @@ describe("POST /api/v1/folders", () => {
     const res = await post(JSON.stringify({ name: "  Binder   two " }));
     expect(createFolder).toHaveBeenCalledWith("me-uuid", "Binder two", null, null, false, "t");
     expect(await res.json()).toEqual({ ok: true, folder: { ...FOLDER, count: 0 } });
+    // A new binder changes the web's binder list, not its profile or every card list.
+    expect(forgetOnTheWeb).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "binders",
+    );
   });
 
   it("refuses a nameless folder", async () => {
