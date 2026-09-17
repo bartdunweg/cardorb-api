@@ -6,6 +6,7 @@ import { importKeys, splitExisting, type TitleOf } from "../core/collection/impo
 import { setCatalogue } from "../core/catalogue/catalogue";
 import { mapLimit } from "../core/util";
 import { withDefaultFinishes } from "../core/catalogue/default-finish";
+import { withCatalogueIds } from "../core/collection/catalogue-ids";
 import { createRows, pageRange, readAllPages } from "./postgres";
 
 /**
@@ -277,8 +278,10 @@ export async function commit(
   const id = (started as { id: string } | null)?.id;
 
   try {
+    // Each row on the copy's card id first (catalogue-ids.ts), so the finish is asked of that card.
     // A file that names no finish still writes copies that have one. See defaultFinish().
-    const { added } = await createRows(db, userId, await withDefaultFinishes(rows), kind);
+    const onCopy = await withCatalogueIds(rows, (r) => r.setName);
+    const { added } = await createRows(db, userId, await withDefaultFinishes(onCopy), kind);
     const skipped = rows.length - added + skippedCount;
     const total = await countCards(db, userId);
 

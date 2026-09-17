@@ -3,6 +3,7 @@ import { apiError, unavailable } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
 import { defaultFinishFor } from "@/lib/core/catalogue/default-finish";
+import { withCatalogueIds } from "@/lib/core/collection/catalogue-ids";
 import { createRow } from "@/lib/storage/collection";
 import {
   authorise,
@@ -244,6 +245,9 @@ export async function POST(req: Request) {
         { headers: readHeaders(req) },
       );
   }
+
+  // The copy's card id, whatever spelling the client sent (catalogue-ids.ts).
+  result.draft = (await withCatalogueIds([result.draft], (d) => d.set))[0] ?? result.draft;
 
   // A copy you own always has a finish: the catalogue's only printing, or normal. See defaultFinish().
   if (result.draft.collection && !result.draft.finish) {
