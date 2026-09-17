@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import REVERSE_HOLO from "./reverse-holo.generated.json";
-import { beforeReverseHolos, decideSet, energyKinds } from "./reverse-holo-rules.mjs";
+import {
+  beforeReverseHolos,
+  decideSet,
+  energyKinds,
+  undecidedLinkedCards,
+} from "./reverse-holo-rules.mjs";
 
 type Vote = boolean | null;
 const card = (setId: string, localId: string, name: string, rarity = "Common") => ({
@@ -136,5 +141,28 @@ describe("basic Energy decided as one kind", () => {
       expect(decided, setId).toEqual(new Set([false]));
       expect(committed.sets[setId]?.energyExceptions).toBeUndefined();
     }
+  });
+});
+
+describe("undecidedLinkedCards", () => {
+  const cards = [
+    { id: "30th-c-001", set_id: "30th-c" },
+    { id: "30th-c-002", set_id: "30th-c" },
+    { id: "base1-4", set_id: "base1" },
+    { id: "lc-64", set_id: "lc" },
+    { id: "tk-x-1", set_id: "tk-x" },
+  ];
+  const links = {
+    "30th-c-001": { productId: 714372 },
+    "30th-c-002": { productId: 714373 },
+    "base1-4": { productId: 42382 },
+    "lc-64": { productId: 1 },
+    "tk-x-1": null,
+  };
+
+  it("counts a linked card the run never decided, per set", () => {
+    expect(undecidedLinkedCards(cards, links, { "base1-4": false }, new Set(["lc-64"]))).toEqual(
+      new Map([["30th-c", 2]]),
+    );
   });
 });
