@@ -120,6 +120,28 @@ describe("GET /api/v1/catalog/search", () => {
     const { cards } = await res.json();
     expect(cards).toHaveLength(1);
     expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", rarity: "Rare Holo" });
+    expect(cards[0].printedNumber).toBe("4");
+  });
+
+  it("says a Classic Collection card's printed number beside the catalogue's", async () => {
+    searchCards.mockResolvedValueOnce({
+      total: 1,
+      cards: [
+        {
+          id: "cel25cc-CC001",
+          number: "CC001",
+          name: "Blastoise",
+          setName: "Celebrations Classic Collection",
+          image: null,
+          imageHigh: null,
+          rarity: null,
+          types: [],
+          tcgId: "cel25cc-CC001",
+        },
+      ],
+    });
+    const { cards } = await (await search(new URLSearchParams({ query: "blastoise" }))).json();
+    expect(cards[0]).toMatchObject({ number: "CC001", printedNumber: "2/102" });
   });
 
   it("switches to filter mode when any filter field is present, ignoring query", async () => {

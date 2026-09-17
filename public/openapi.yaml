@@ -614,7 +614,8 @@ components:
       required: [id, number, name, setName, image, imageHigh, rarity, types, owned, wishlist, quantity, itemIds]
       properties:
         id: { type: string }
-        number: { type: string }
+        number: { type: string, description: "The catalogue's number, what ownership and a new row match by." }
+        printedNumber: { type: string, description: "The number as the card prints it, for its label. The same as `number` except on a Classic Collection card, which prints its original card's number with that set's total (\"4/102\" for 30th Classic Collection's Charizard, `number` 001). Sent by GET /catalog/sets/{setId}, /catalog/search and /catalog/cards." }
         name: { type: string, description: "In English, on every shelf: a Japanese card is named off Cardmarket's product list or its species. Falls back to the printed name where neither names the card." }
         localName: { type: [string, "null"], description: "What the card itself prints, where `name` is a translation of it; null on English cards and where `name` is the printed one." }
         setName: { type: string }
@@ -638,7 +639,7 @@ components:
       required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
-        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\", \"001\" for Sword & Shield), from the catalogue's card id; null where nothing matched. `number` is the row's, which may be spelt without the zeros." }
+        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\", \"001\" for Sword & Shield, \"4/102\" for a Classic Collection card, which prints its original card's number), from the catalogue's card id; null where nothing matched. `number` is the row's, which may be spelt without the zeros." }
         priceChange:
           description: "Only with `sort=change`: the copy's price move over the window, or null without two readings in it."
           oneOf:
