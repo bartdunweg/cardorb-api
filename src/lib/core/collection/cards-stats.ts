@@ -64,11 +64,8 @@ export const copiesHeld = (card: OwnedCard): number =>
 /**
  * Whether a held copy has no price: no figure for its own printing, as copyPriceOf() reads it.
  *
- * The one rule both counts of unpriced copies read, countStats() for /v1/stats and
- * snapshotFromSets() for the nightly point on the Home chart. The point used to count cards
- * where the stats count copies, and a card held twice with one reverse unpriced counted as
- * priced: on 2026-09-13 and 09-14 it stored 1,928 copies, 1,611 priced and 0 unpriced, the
- * priced figure being the 1,611 different cards held.
+ * The rule countStats() reads for /v1/stats. The nightly point on the Home chart once read it too;
+ * it is summed from the readings since 2026-09-17 (nightlyPoints).
  */
 export const copyUnpriced = (card: OwnedCard, variant: Variant): boolean =>
   shownPrice(variantPrice(card, variant)) == null;
