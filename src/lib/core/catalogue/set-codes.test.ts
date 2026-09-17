@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { printedNumberOf, setCodeOf } from "./set-codes";
+import CLASSIC from "./classic-collection-numbers.generated.json";
+import { classicNumberOf, printedNumberOf, setCodeOf } from "./set-codes";
 
 describe("setCodeOf", () => {
   it("keeps the official abbreviation, and falls back to Pokémon TCG Online's code", () => {
@@ -29,5 +30,34 @@ describe("printedNumberOf", () => {
     expect(printedNumberOf("cel25-5")).toBe("005");
     expect(printedNumberOf("ecard3-H01")).toBe("H1");
     expect(printedNumberOf("sm12-1")).toBe("1");
+  });
+});
+
+describe("classicNumberOf", () => {
+  it("reads a Classic Collection card's original number, the only one it prints", () => {
+    expect(classicNumberOf("30th-c-001")).toBe("4/102");
+    expect(classicNumberOf("cel25cc-CC001")).toBe("2/102");
+    expect(printedNumberOf("30th-c-001")).toBe("4/102");
+    expect(printedNumberOf("cel25cc-CC002")).toBe("4/102");
+  });
+
+  it("is null for every other card, which prints its own set's number", () => {
+    expect(classicNumberOf("30th-001")).toBeNull();
+    expect(classicNumberOf("cel25-5")).toBeNull();
+    expect(classicNumberOf(null)).toBeNull();
+    expect(printedNumberOf("30th-001")).toBe("001");
+  });
+
+  it("holds all 30 cards of 30th Classic Collection and all 25 of Celebrations', no number twice in a set", () => {
+    const ids = Object.keys(CLASSIC);
+    expect(ids.filter((id) => id.startsWith("30th-c-"))).toHaveLength(30);
+    expect(ids.filter((id) => id.startsWith("cel25cc-"))).toHaveLength(25);
+    for (const set of ["30th-c-", "cel25cc-"]) {
+      const numbers = Object.entries(CLASSIC)
+        .filter(([id]) => id.startsWith(set))
+        .map(([, n]) => n);
+      expect(new Set(numbers).size).toBe(numbers.length);
+    }
+    for (const n of Object.values(CLASSIC)) expect(n).toMatch(/^\d+\/\d+$/);
   });
 });

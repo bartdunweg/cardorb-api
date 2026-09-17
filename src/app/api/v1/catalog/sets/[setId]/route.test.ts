@@ -228,6 +228,22 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.cards[2]).not.toHaveProperty("fullArt");
   });
 
+  /* A Classic Collection card prints another set's number (4/102), not the 001 its id and `number`
+     carry; `number` stays what the ownership mark and a new row match by. */
+  it("says the number each card prints, a Classic Collection card's original one", async () => {
+    englishSet.mockResolvedValue({
+      set: SET,
+      cards: [
+        { ...card("001", "Charizard"), id: "30th-c-001", tcgId: "30th-c-001" },
+        { ...card("001", "Exeggcute"), id: "30th-001", tcgId: "30th-001" },
+      ],
+    });
+    const body = await (await open()).json();
+
+    expect(body.cards[0]).toMatchObject({ number: "001", printedNumber: "4/102" });
+    expect(body.cards[1]).toMatchObject({ number: "001", printedNumber: "001" });
+  });
+
   it("does not ask the copy for another language's shelf, which it does not hold", async () => {
     setIn.mockResolvedValue({ set: SET, cards: [card("1")] });
     await open("language=ja", "sv2a");

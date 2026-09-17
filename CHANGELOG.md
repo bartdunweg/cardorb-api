@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-17
 
+- A Classic Collection card reads the number it prints, its original card's with that set's total: 30th Classic Collection's Charizard is 4/102, no longer 001, which 30th Celebration's Exeggcute prints too; Celebrations Classic Collection's Blastoise is 2/102, no longer CC001. `printedNumber` on `GET /v1/cards`, the movers and the public cards answers it, and the set page, the search and `GET /v1/catalog/cards` carry `printedNumber` beside `number` on every card. `number`, card ids, matching and the Dex export do not move. The 55 numbers are TCGplayer's (scripts/classic-collection-numbers.mjs).
+
 - The 30 cards of 30th Classic Collection no longer show 30th Celebration's pictures (Charizard showed Exeggcute). They show no picture until the next nightly catalogue copy, which takes TCGplayer's scans, and a set whose printed code another set shares is never pictured from Limitless again.
 
 ## 2026-09-16

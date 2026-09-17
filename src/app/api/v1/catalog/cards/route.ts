@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { classicNumberOf } from "@/lib/core/catalogue/set-codes";
 import { apiError, refuse } from "@/lib/api/respond";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
@@ -48,6 +49,8 @@ export async function GET(req: Request) {
       {
         cards: marked.map((c) => ({
           ...c,
+          // As the card prints it, for its label; the set route says why it can differ from `number`.
+          printedNumber: classicNumberOf(c.tcgId) ?? c.number,
           price: prices.get(c.tcgId ?? c.id)?.price ?? null,
         })),
       },
