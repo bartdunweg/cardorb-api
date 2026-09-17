@@ -12,7 +12,12 @@ const catalogue151 = {
     ],
   ]),
 };
-const row = (tcgId: string | null, number: string, name: string, language = null as null | "ja") => ({
+const row = (
+  tcgId: string | null,
+  number: string,
+  name: string,
+  language = null as null | "ja",
+) => ({
   tcgId,
   number,
   name,
