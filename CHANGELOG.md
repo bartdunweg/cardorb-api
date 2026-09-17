@@ -24,6 +24,8 @@ if the two have drifted apart.
 
 - Only Pokémon cards fill a Pokédex slot. A trainer whose name holds a Pokémon's (Aaron's Collection, Hypnotoxic Laser, Clefairy Doll, the Spirit Link tools) no longer turns a slot green or counts as that Pokémon, in English or Japanese.
 
+- The sources document says Scrydex is used, with Bart's permission, for every kind of card and set fact beside TCGdex, TCGplayer and Bulbapedia, and lists its set facts and number padding reads.
+
 - Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.
 
 - McDonald's Collection 2023's Blissey is a Stage 1 and Ancient Mew a Basic, as the cards print them; every other card whose type or stage differs from TCGplayer's was checked against the printed card and keeps its own.
