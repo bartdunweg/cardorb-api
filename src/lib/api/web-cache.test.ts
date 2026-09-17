@@ -39,14 +39,14 @@ describe("forgetOnTheWeb", () => {
     });
   });
 
-  it("names the write, one of the four the web's route knows", async () => {
+  it("names the write, one of the five the web's route knows", async () => {
     const fetch = vi.fn(async () => new Response(null, { status: 204 }));
     globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
     for (const write of WEB_WRITES) await forgetOnTheWeb({ userId: "me-uuid" }, write);
     const sent = fetch.mock.calls.map(
       (call) => JSON.parse(String((call as unknown as [string, RequestInit])[1].body)).write,
     );
-    expect(sent).toEqual(["all", "cards", "binders", "profile"]);
+    expect(sent).toEqual(["all", "cards", "favorite", "binders", "profile"]);
   });
 
   it("says nothing where it is not configured, and asks Postgres nothing either", async () => {

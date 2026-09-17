@@ -135,11 +135,35 @@ describe("PATCH /api/v1/cards/[id]", () => {
   });
 
   it("tells the web whose collection changed, once the row is written", async () => {
-    await patch({ isFavorite: true });
-    expect(forgetOnTheWeb).toHaveBeenCalledWith(
+    await patch({ quantity: 2 });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "cards",
     );
+  });
+
+  it("names a star alone a favorite write, so the web keeps the binders and the sets", async () => {
+    await patch({ isFavorite: false });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "favorite",
+    );
+  });
+
+  it("names a star beside any other field a card write", async () => {
+    await patch({ isFavorite: true, quantity: 3 });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+    );
+  });
+
+  it("names nothing when the row is not the caller's", async () => {
+    forgetOnTheWeb.mockClear();
+    updateRow.mockResolvedValueOnce(null);
+    const res = await patch({ isFavorite: true });
+    expect(res.status).toBe(404);
+    expect(forgetOnTheWeb).not.toHaveBeenCalled();
   });
 
   it("takes the flag that makes a card its Pokédex slot's face, and refuses one that is not a flag", async () => {

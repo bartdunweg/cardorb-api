@@ -6,11 +6,15 @@ if the two have drifted apart.
 
 ## 2026-09-17
 
+- 30th Classic Collection's Solgaleo-GX, Darkrai & Cresselia LEGEND, Palkia LV.X, M Gardevoir-EX, Scizor ex, Arceus VSTAR and Metagross show the stage and types of the cards they reprint, and a new card whose type or stage differs from TCGplayer's is flagged the next morning.
+
 - A Classic Collection card reads the number it prints, its original card's with that set's total: 30th Classic Collection's Charizard is 4/102, no longer 001, which 30th Celebration's Exeggcute prints too; Celebrations Classic Collection's Blastoise is 2/102, no longer CC001. `printedNumber` on `GET /v1/cards`, the movers and the public cards answers it, and the set page, the search and `GET /v1/catalog/cards` carry `printedNumber` beside `number` on every card. `number`, card ids, matching and the Dex export do not move. The 55 numbers are TCGplayer's (scripts/classic-collection-numbers.mjs).
 
 - The 30 cards of 30th Classic Collection no longer show 30th Celebration's pictures (Charizard showed Exeggcute). They show no picture until the next nightly catalogue copy, which takes TCGplayer's scans, and a set whose printed code another set shares is never pictured from Limitless again.
 
 - A card TCGdex names no rarity for takes TCGplayer's, and an old holo TCGdex calls a plain Rare takes TCGplayer's grade, for every card the nightly copy writes, new sets included: 30th Classic Collection reads "Classic Collection" as Celebrations' does. A set whose cards print other cards' numbers is found by rule every week, not typed in, so a future Classic Collection's cards read the number they print.
+
+- A star set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `favorite` write, so the web keeps its binders and set pages and forgets only the lists, the numbers and the value. A patch that changes anything beside the star is still a `cards` write.
 
 ## 2026-09-16
 

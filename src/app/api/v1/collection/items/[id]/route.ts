@@ -105,7 +105,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!row) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined }, "cards");
+  // A patch that sets the star and nothing else is `favorite`, which the web forgets less of
+  // (no binder and no set page shows a star). Any other field beside it is a card write.
+  const onlyTheStar = Object.keys(result.patch).length === 1 && "isFavorite" in result.patch;
+  await forgetOnTheWeb(
+    { userId: who.userId, token: bearer(req) ?? undefined },
+    onlyTheStar ? "favorite" : "cards",
+  );
 
   return NextResponse.json({ ok: true, card: row }, { headers: readHeaders(req) });
 }
