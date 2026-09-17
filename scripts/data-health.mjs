@@ -30,6 +30,7 @@ import {
   rarityOfProduct,
   tcgplayerRarity,
 } from "../src/lib/core/tcgplayer-rules.mjs";
+import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -181,6 +182,42 @@ for (const language of Object.keys(RARITY_WORDS)) {
     other.length === 0,
     `${other.length} words outside the list${
       other.length ? `: ${other.map((r) => `${r.rarity} (${r.n})`).join(", ")}` : ""
+    }`,
+  );
+}
+
+/**
+ * Every rarity a binder rule or a Pokédex setting names is one a card can have: a word of the list,
+ * one the copy holds, or a collection row's own (binder-rarity-words.mjs says why). A respelling
+ * that moves the cards and not the settings empties a binder with no error anywhere.
+ */
+{
+  const [entries, rowWords] = await Promise.all([
+    query(
+      `select w as entry, count(*)::int as n from (
+         select jsonb_array_elements_text(rule -> 'rarities') as w from collections where jsonb_typeof(rule -> 'rarities') = 'array'
+         union all
+         select jsonb_array_elements_text(pokedex -> 'rarities') from collections where jsonb_typeof(pokedex -> 'rarities') = 'array'
+       ) x group by 1`,
+    ),
+    query("select distinct rarity from cards where rarity is not null"),
+  ]);
+  const known = [
+    ...Object.values(RARITY_WORDS).flat(),
+    ...rarities.map((r) => r.rarity),
+    ...rowWords.map((r) => r.rarity),
+  ];
+  const stray = strayRarityEntries(
+    entries.map((e) => e.entry),
+    known,
+  );
+  check(
+    "Binder and Pokédex rarities are words a card has",
+    stray.length === 0,
+    `${stray.length} of ${entries.length} words in binder rules and Pokédex settings match no card${
+      stray.length
+        ? `: ${stray.map((w) => `${w} (${entries.find((e) => e.entry === w)?.n})`).join(", ")}`
+        : ""
     }`,
   );
 }
