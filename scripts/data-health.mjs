@@ -498,6 +498,93 @@ if (day) {
 }
 
 /**
+ * The printings of a linked card, and the cards a link leaves without a price.
+ *
+ * A link says which TCGplayer product a card is; its `variants` say which printings TCGplayer lists
+ * for that product, and those are what a copy's form offers (card-printings.ts printingsOf), which
+ * runs a card has and whether it has a plain reverse. They are written by
+ * scripts/tcgplayer-links.mjs out of tcgcsv, for every link it sees and whoever made it, so a link
+ * added by hand is filled on the next weekly run like any other. Until 2026-09-17 a new link took
+ * only the printings that had a market figure that week, so a card linked in a week nobody sold it
+ * started with none: the three R/G/B Mew of 30th Celebration (#550) are $7,000 cards with listings
+ * and no sale. This holds the committed map to what TCGplayer lists today.
+ *
+ * A linked card with no line in the price history is the second half of the same question. A
+ * product TCGplayer priced and a card with no line is a fault (that is the check above, per day);
+ * a product TCGplayer lists and has never put a market figure on can have no line at all, which is
+ * not a fault but is worth naming, so an empty printing list is never the silent reason.
+ */
+{
+  const linked = Object.entries(links).filter(([, v]) => v?.productId != null);
+  const noPrinting = linked.filter(([, v]) => !(v.variants ?? []).length);
+  const groupIds = new Set(
+    noPrinting.map(([, v]) => v.groupId).filter((g) => typeof g === "number"),
+  );
+  /** productId to the printings tcgcsv lists for it, priced this week or not. */
+  const listed = new Map();
+  let unread = 0;
+  const pending = [...groupIds];
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      for (let groupId = pending.pop(); groupId != null; groupId = pending.pop()) {
+        const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${groupId}/prices`, {
+          headers: { accept: "application/json", "User-Agent": "cardorb.com" },
+        }).catch(() => null);
+        if (!res?.ok) {
+          unread++;
+          continue;
+        }
+        for (const r of (await res.json()).results ?? [])
+          listed.set(r.productId, [...(listed.get(r.productId) ?? []), r.subTypeName]);
+      }
+    }),
+  );
+  const fillable = noPrinting.filter(([, v]) => listed.has(v.productId));
+  check(
+    "Linked cards have the printings TCGplayer lists",
+    fillable.length === 0 && unread === 0,
+    `${linked.length} linked cards; ${noPrinting.length} with no printing, of which ${fillable.length} TCGplayer lists one for${
+      fillable.length
+        ? ` (run scripts/tcgplayer-links.mjs): ${fillable
+            .slice(0, 10)
+            .map(([id, v]) => `${id} (${(listed.get(v.productId) ?? []).join(", ")})`)
+            .join("; ")}`
+        : ""
+    }; ${unread} of ${groupIds.size} tcgcsv groups did not answer`,
+  );
+
+  const everPriced = new Set(
+    (await query("select distinct product_id from tcgplayer_prices")).map((r) => r.product_id),
+  );
+  const withLine = new Set(
+    (await query("select distinct tcg_id from card_price_months where language = 'en'")).map(
+      (r) => r.tcg_id,
+    ),
+  );
+  const noLine = linked.filter(([id]) => !withLine.has(id));
+  const shouldHaveOne = noLine.filter(([, v]) => everPriced.has(v.productId));
+  check(
+    "Linked cards with no price line have a reason",
+    shouldHaveOne.length === 0,
+    `${noLine.length} of ${linked.length} linked English cards have no price line; ${shouldHaveOne.length} of them on a product TCGplayer has priced${
+      shouldHaveOne.length
+        ? `: ${shouldHaveOne
+            .slice(0, 10)
+            .map(([id]) => id)
+            .join(", ")}`
+        : ""
+    }; the rest are products TCGplayer lists and has never put a market figure on${
+      noLine.length
+        ? `, among them ${noLine
+            .slice(0, 6)
+            .map(([id]) => id)
+            .join(", ")}`
+        : ""
+    }`,
+  );
+}
+
+/**
  * The patterned reverses (Poké Ball, Master Ball, Friend, Love, Quick and Dusk Ball, Team Rocket,
  * Energy Symbol) are TCGplayer products of their own
  * (tcgplayer-patterns.generated.json finishPrints), priced under the card as
