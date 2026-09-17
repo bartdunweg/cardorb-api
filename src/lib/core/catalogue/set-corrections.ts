@@ -76,6 +76,12 @@ const CORRECTIONS: Record<string, SetCorrection> = {
   "en:ex14": { name: "EX Crystal Guardians" },
   "en:ex15": { name: "EX Dragon Frontiers" },
   "en:ex16": { name: "EX Power Keepers" },
+  /* A subset carries its parent set's name, the way the copy has written Celebrations Classic
+     Collection and Crown Zenith Galarian Gallery since those sets arrived. TCGplayer and Scrydex
+     both title it "30th Celebration: Classic Collection" and Bulbapedia's setlist "30th Celebration
+     Classic Collection", against TCGdex's "30th Classic Collection"; the colon is the shelf
+     separator that groupTitle already drops from an era prefix (consensus rule, 2026-09-17). */
+  "en:30th-c": { name: "30th Celebration Classic Collection" },
   "en:tk-ex-latia": { name: "EX Trainer Kit (Latias)" },
   "en:tk-ex-latio": { name: "EX Trainer Kit (Latios)" },
   "en:tk-ex-m": { name: "EX Trainer Kit 2 (Minun)" },

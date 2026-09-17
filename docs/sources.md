@@ -8,6 +8,14 @@ source you add, drop or move.
 reach a user. The crons are in `vercel.json`: catalogue 03:30 UTC, snapshot 04:00, health 06:00,
 TCGplayer prices 21:15, warm every 10 minutes.
 
+**Which source decides a fact is not written here.** It is declared once, per field, in
+`src/lib/core/consensus.mjs`: who votes, how heavily, and what each source is known to get wrong,
+each bias with its reason and the day it was written down. A majority wins; a tie or a split changes
+nothing and is reported; a declared bias takes that source's vote away. This page says what is
+fetched, from where and when; that file says what is believed. Every field it declares names the
+data-health check that holds the copy to it, and the check "Every fact the consensus rule decides is
+held by a check" fails where one of them is gone (R-DATA-004).
+
 Scrydex is used with Bart's permission. It began on 2026-09-14 with pictures, Japanese set logos
 and the reverse-holo evidence; on 2026-09-17 he extended it to every kind of card and set fact, as
 one source beside TCGdex, TCGplayer and Bulbapedia rather than in place of them.
@@ -64,7 +72,8 @@ product, no photo), Pikachu at the Museum (a jumbo card) and the five Poké Card
 | Bulbapedia           | https://bulbapedia.bulbagarden.net        | Which languages each pre-Black & White set was printed in                             | Script `set-languages.mjs`, writes `set-languages.generated.json`                                  |
 | Bulbapedia           | https://bulbapedia.bulbagarden.net        | Which cards of a set have a reverse holo (the general rule and each set page's own), a tie-breaker | Script `reverse-holo-evidence.mjs`, rules read by hand 2026-09-14, writes `reverse-holo.generated.json` |
 | Scrydex expansions   | https://scrydex.com/pokemon/expansions    | Which variants of each English card exist (its reverse holo), one witness of three; never its prices | Script `reverse-holo-evidence.mjs` (with permission, 2026-09-14), one page a second, cached |
-| Scrydex expansions and card pages | https://scrydex.com/pokemon/expansions, /pokemon/cards/card/{code}-{n} | A set's code, name and release date beside TCGplayer's (`set-facts-rules.mjs`, data-health); how each set pads its printed numbers | Script `number-padding.mjs` in the weekly job, and data-health (with permission, extended 2026-09-17) |
+| Scrydex expansions and card pages | https://scrydex.com/pokemon/expansions, /pokemon/cards/card/{code}-{n} | A set's code, name and release date as one vote of four (`consensus.mjs` through `set-facts-rules.mjs`, data-health); how each set pads its printed numbers | Script `number-padding.mjs` in the weekly job, and data-health (with permission, extended 2026-09-17) |
+| TCGdex GraphQL | https://api.tcgdex.net/v2/graphql | Every English set's own name and release date, as its vote on those two facts | Data-health, one call a morning |
 | PokeAPI (GitHub raw) | https://raw.githubusercontent.com/PokeAPI | Species names                                                                         | Script `pokedex.mjs`, writes `pokedex.generated.json`                                              |
 
 ## What a page waits on

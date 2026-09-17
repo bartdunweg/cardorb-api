@@ -25,44 +25,70 @@ describe("scrydexExpansions", () => {
 describe("setFactsAgainst", () => {
   const teamUp = { name: "SM09: Team Up", publishedOn: "2019-02-01T00:00:00" };
   const scrydex = { name: "Team Up", date: "2019-02-01" };
+  const sm9 = { id: "sm9", serie_id: "sm" };
 
-  it("flags a date TCGplayer and Scrydex agree on against the copy", () => {
+  it("flags a date a majority of the sources write otherwise", () => {
     // Team Up, as TCGdex dated it (Bulbapedia: February 1, 2019).
+    const off = setFactsAgainst(
+      { ...sm9, name: "Team Up", release_date: "2019/01/31" },
+      teamUp,
+      scrydex,
+    );
+    expect(off.date?.stored).toBe("2019/01/31");
+    expect(off.date?.value).toBe("2019-02-01");
+    expect(off.date?.why).toContain("TCGplayer and Scrydex");
     expect(
-      setFactsAgainst({ name: "Team Up", release_date: "2019/01/31" }, teamUp, scrydex),
-    ).toEqual({ date: ["2019/01/31", "2019-02-01"] });
-    expect(
-      setFactsAgainst({ name: "Team Up", release_date: "2019/02/01" }, teamUp, scrydex),
+      setFactsAgainst({ ...sm9, name: "Team Up", release_date: "2019/02/01" }, teamUp, scrydex),
     ).toEqual({});
   });
 
-  it("flags a name both write otherwise, punctuation and case aside", () => {
+  it("flags a name the majority writes otherwise, punctuation and case aside", () => {
+    const off = setFactsAgainst(
+      { id: "me5", serie_id: "me", name: "Mega Evolution Energy", release_date: "2025/09/26" },
+      { name: "MEE: Mega Evolution Energies", publishedOn: "2025-09-26T00:00:00" },
+      { name: "Mega Evolution Energies", date: "2025-09-26" },
+    );
+    expect(off.name?.value).toBe("Mega Evolution Energies");
     expect(
       setFactsAgainst(
-        { name: "Mega Evolution Energy", release_date: "2025/09/26" },
-        { name: "MEE: Mega Evolution Energies", publishedOn: "2025-09-26T00:00:00" },
-        { name: "Mega Evolution Energies", date: "2025-09-26" },
-      ),
-    ).toEqual({ name: ["Mega Evolution Energy", "Mega Evolution Energies"] });
-    expect(
-      setFactsAgainst(
-        { name: "Pokémon GO", release_date: "2022/07/01" },
+        { id: "swsh10.5", serie_id: "swsh", name: "Pokémon GO", release_date: "2022/07/01" },
         { name: "SWSH10.5: Pokemon GO", publishedOn: "2022-07-01T00:00:00" },
         { name: "Pokemon GO", date: "2022-07-01" },
       ),
     ).toEqual({});
   });
 
-  it("leaves the copy alone where the two disagree with each other, or one has no answer", () => {
+  it("writes a subset the way the copy always has, with no store colon", () => {
+    const off = setFactsAgainst(
+      { id: "30th-c", serie_id: "me", name: "30th Classic Collection", release_date: "2026/09/16" },
+      { name: "ME: 30th Celebration: Classic Collection", publishedOn: "2026-09-16T00:00:00" },
+      { name: "30th Celebration: Classic Collection", date: "2026-09-16" },
+      { tcgdex: { name: "30th Classic Collection", releaseDate: "2026-09-16" } },
+    );
+    expect(off.name?.value).toBe("30th Celebration Classic Collection");
+  });
+
+  it("leaves the copy alone where the sources are split, or nobody answers", () => {
+    expect(
+      setFactsAgainst({ ...sm9, name: "Team Up", release_date: "2019/01/31" }, teamUp, {
+        ...scrydex,
+        date: "2019-01-25",
+      }).date,
+    ).toBeUndefined();
+    expect(
+      setFactsAgainst({ ...sm9, name: "Team Up", release_date: "2019/01/31" }, teamUp, undefined),
+    ).toEqual({});
+  });
+
+  it("keeps Bulbapedia's day against the month placeholders the rest carry", () => {
+    // EX Team Rocket Returns: November 8, 2004 on Bulbapedia, the first of the month elsewhere.
     expect(
       setFactsAgainst(
-        { name: "Team Up", release_date: "2019/01/31" },
-        { ...teamUp, publishedOn: "2019-01-25T00:00:00" },
-        scrydex,
+        { id: "ex7", serie_id: "ex", name: "EX Team Rocket Returns", release_date: "2004/11/08" },
+        { name: "EX Team Rocket Returns", publishedOn: "2004-11-01T00:00:00" },
+        { name: "Team Rocket Returns", date: "2004-11-01" },
+        { tcgdex: { releaseDate: "2004-11-01" }, bulbapediaDate: "2004/11/08" },
       ),
-    ).toEqual({});
-    expect(
-      setFactsAgainst({ name: "Team Up", release_date: "2019/01/31" }, teamUp, undefined),
     ).toEqual({});
   });
 });
