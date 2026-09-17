@@ -18,3 +18,18 @@ export const SAYS_MORE = new Set([
   "Character Super Rare",
   "Mega Attack Rare",
 ]);
+
+/**
+ * TCGplayer's words for a Japanese card that are no rarity at all, and never fill one.
+ *
+ * Bart decided it on 2026-09-17: a Japanese card that prints no mark stays without a rarity, whatever
+ * TCGplayer files it under. Its Japanese shelf gives every product a word, and where the card prints
+ * nothing it writes its own default: "Common" on 843 cards and "None" on 1,328 (data-health,
+ * 2026-09-17). Neither is read off a card, so neither is evidence of a mark. The words that do say
+ * more than no mark are in SAYS_MORE above, and those still fill one.
+ *
+ * Declared here rather than left to each reader, so a rule written next month cannot quietly fill
+ * 843 cards with a rarity nobody printed (consensus.mjs declares the same as an exception: TCGplayer
+ * does not vote on a Japanese card's rarity).
+ */
+export const NEVER_FILLS = new Set(["Common", "None", "Unconfirmed"]);

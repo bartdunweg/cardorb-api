@@ -32,6 +32,8 @@ if the two have drifted apart.
 
 - Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.
 
+- Three questions the sources left open are decided. The three R/G/B Mew of 30th Celebration carry "RGB Rare", the rarity their own symbol stands for (a red, green and blue roundel where a Holo Rare prints a black star), rather than the "Holo Rare" TCGplayer falls back on for a rarity a day old. A Japanese card that prints no mark keeps no rarity, whatever TCGplayer files it under: its shelf gives every product a word and writes "Common" or "None" where the card prints nothing, and neither is read off a card. Base Set's 1999-2000 copyright line is a print run of the card, named and understood, and not an edition a copy can be recorded in, so nothing about the four editions the app offers changes.
+
 - McDonald's Collection 2023's Blissey is a Stage 1 and Ancient Mew a Basic, as the cards print them; every other card whose type or stage differs from TCGplayer's was checked against the printed card and keeps its own.
 
 ## 2026-09-16
