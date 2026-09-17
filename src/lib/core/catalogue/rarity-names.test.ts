@@ -10,6 +10,14 @@ describe("canonicalRarity", () => {
     expect(canonicalRarity("Rare Holo LV.X")).toBe("Holo Rare LV.X");
   });
 
+  it("holds 30th Celebration's own rarities as words of their own (owner, 2026-09-17)", () => {
+    // Pikachu 023 to 052 (Bulbapedia's Pikachu rare cards); Mewtwo ex 157/128 and Mew ex 158/128.
+    for (const word of ["Pikachu Rare", "Futuristic Rare"]) {
+      expect(RARITY_WORDS.en).toContain(word);
+      expect(canonicalRarity(word)).toBe(word);
+    }
+  });
+
   it("leaves a word it has no other spelling for, and nothing as nothing", () => {
     expect(canonicalRarity("Secret Rare")).toBe("Secret Rare");
     expect(canonicalRarity("レア")).toBe("レア");
