@@ -36,6 +36,11 @@ import {
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
 import { undecidedLinkedCards } from "../src/lib/core/reverse-holo-rules.mjs";
+import {
+  groupsOfSets,
+  scrydexExpansions,
+  setFactsAgainst,
+} from "../src/lib/core/set-facts-rules.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -916,6 +921,68 @@ check(
             .map(([set, n]) => `${set} ${n}`)
             .join(", ")}`
         : ""
+    }`,
+  );
+}
+
+/**
+ * Every English set's name and release date against TCGplayer's group and Scrydex's expansion
+ * (set-facts-rules.mjs): red where the two agree and the copy says otherwise, so a set published after
+ * the hand comparison of 2026-09-14 is looked at too. Put right in set-corrections.ts, which the copy
+ * lays over TCGdex. One read of tcgcsv's group list and one of Scrydex's expansions page; either one
+ * unanswered fails the check, since nothing was compared.
+ */
+{
+  const read = async (url, json) => {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "cardorb.com", accept: json ? "application/json" : "text/html" },
+      });
+      return res.ok ? (json ? res.json() : res.text()) : null;
+    } catch {
+      return null;
+    }
+  };
+  const [groupList, expansionsHtml, copySets] = await Promise.all([
+    read("https://tcgcsv.com/tcgplayer/3/groups", true),
+    read("https://scrydex.com/pokemon/expansions", false),
+    query("select id, name, release_date from catalogue_sets where language = 'en' order by id"),
+  ]);
+  const setLinks = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json"), "utf8"),
+  );
+  const setGroups = groupsOfSets(
+    setLinks,
+    JSON.parse(
+      readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-groups.generated.json"), "utf8"),
+    )["3"] ?? {},
+  );
+  const ptcgSets = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "catalogue", "ptcg-set-ids.json"), "utf8"),
+  );
+  const groupById = new Map((groupList?.results ?? []).map((g) => [g.groupId, g]));
+  const expansionOf = new Map(
+    scrydexExpansions(expansionsHtml ?? "").map((e) => [ptcgSets[e.code] ?? e.code, e]),
+  );
+  const off = [];
+  let compared = 0;
+  for (const set of copySets) {
+    const group = groupById.get(setGroups.get(set.id));
+    const expansion = expansionOf.get(set.id);
+    if (!group || !expansion) continue;
+    compared++;
+    const facts = setFactsAgainst(set, group, expansion);
+    if (facts.name) off.push(`${set.id} name "${facts.name[0]}" vs "${facts.name[1]}"`);
+    if (facts.date) off.push(`${set.id} date ${facts.date[0]} vs ${facts.date[1]}`);
+  }
+  const answered = groupById.size > 0 && expansionOf.size > 0;
+  check(
+    "Set names and dates as TCGplayer and Scrydex agree",
+    answered && off.length === 0,
+    `${off.length} set facts both write otherwise${off.length ? `: ${off.slice(0, 8).join(", ")}` : ""}; ${compared} of ${copySets.length} sets compared${
+      answered
+        ? ""
+        : `; not read: ${groupById.size ? "" : "tcgcsv groups "}${expansionOf.size ? "" : "Scrydex expansions"}`
     }`,
   );
 }
