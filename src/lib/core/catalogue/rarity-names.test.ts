@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { MARK_RARITY, canonicalRarity, japaneseRarity, japaneseRarityWord } from "./rarity-names";
 import RARITY_WORDS from "./rarity-words.json";
+import EXTRA_CARDS from "./extra-cards.json";
+import { NEVER_FILLS, SAYS_MORE } from "../japanese-rarity-rules.mjs";
 
 describe("canonicalRarity", () => {
   it("spells Scarlet & Violet's rarities in title case and a holo as Holo Rare", () => {
@@ -12,7 +14,8 @@ describe("canonicalRarity", () => {
 
   it("holds 30th Celebration's own rarities as words of their own (owner, 2026-09-17)", () => {
     // Pikachu 023 to 052 (Bulbapedia's Pikachu rare cards); Mewtwo ex 157/128 and Mew ex 158/128.
-    for (const word of ["Pikachu Rare", "Futuristic Rare"]) {
+    // R/RGB, G/RGB and B/RGB Mew print a red, green and blue roundel, not a Holo Rare's star.
+    for (const word of ["Pikachu Rare", "Futuristic Rare", "RGB Rare"]) {
       expect(RARITY_WORDS.en).toContain(word);
       expect(canonicalRarity(word)).toBe(word);
     }
@@ -22,6 +25,15 @@ describe("canonicalRarity", () => {
     expect(canonicalRarity("Secret Rare")).toBe("Secret Rare");
     expect(canonicalRarity("レア")).toBe("レア");
     expect(canonicalRarity(null)).toBeNull();
+  });
+});
+
+describe("the three R/G/B Mew", () => {
+  it("carry the rarity their symbol stands for, not TCGplayer's fallback", () => {
+    for (const id of ["30th-R", "30th-G", "30th-B"])
+      expect(EXTRA_CARDS.en[id as keyof typeof EXTRA_CARDS.en]).toMatchObject({
+        rarity: "RGB Rare",
+      });
   });
 });
 
@@ -79,5 +91,20 @@ describe("japaneseRarity", () => {
       "Rare Holo LEGEND",
     ])
       expect(RARITY_WORDS.ja).toContain(japaneseRarityWord(word));
+  });
+});
+
+describe("a Japanese card that prints no mark", () => {
+  it("keeps no rarity, whatever TCGplayer files it under (owner, 2026-09-17)", () => {
+    for (const word of NEVER_FILLS)
+      expect(japaneseRarity({ mark: "none", tcgplayer: word, tcgdex: word })).toBeNull();
+  });
+
+  it("still takes a word that says more than no mark", () => {
+    expect(japaneseRarity({ mark: "none", tcgplayer: "Radiant Rare" })).toBe("Radiant Rare");
+  });
+
+  it("names no word both as a default and as one that says more", () => {
+    for (const word of NEVER_FILLS) expect(SAYS_MORE.has(word)).toBe(false);
   });
 });

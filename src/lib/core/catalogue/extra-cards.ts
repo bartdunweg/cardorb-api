@@ -16,6 +16,12 @@
  *   filed under it; SV-P 147, 154 and 291 and M-P 135, 136 and 147 from Scrydex; M-P 052 and 082 from
  *   TCGplayer, which sells them without a picture yet.
  *
+ * The three R/G/B Mew of 30th Celebration carry "RGB Rare", not TCGplayer's "Holo Rare" (2026-09-17).
+ * TCGplayer has no word for a rarity a day old and falls back on its own, but the cards print a
+ * symbol of their own: a red, green and blue roundel beside "R/RGB" on the bottom line, where a Holo
+ * Rare prints a black star. Bulbapedia names it: RGB rare cards are "secret cards identified by the
+ * RGB Rare symbol", as Pikachu rare cards are by theirs, and both words are now in rarity-words.json.
+ *
  * `product` is the TCGplayer product a price is read from (tcgplayer-ids.generated.json and
  * tcgplayer-ids.ja.generated.json carry the same link), `image` the picture copied into our bucket.
  */

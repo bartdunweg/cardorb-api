@@ -1,4 +1,4 @@
-import { SAYS_MORE } from "../japanese-rarity-rules.mjs";
+import { NEVER_FILLS, SAYS_MORE } from "../japanese-rarity-rules.mjs";
 
 /**
  * One spelling for each English rarity.
@@ -126,6 +126,13 @@ export function japaneseRarityWord(word: string | null | undefined): string | nu
 /**
  * A Japanese card's rarity: Scrydex's mark, TCGplayer's word where Scrydex misreads it (see above),
  * and where Scrydex does not have the card, TCGplayer's word, then TCGdex's.
+ *
+ * A card Scrydex records without a mark keeps no rarity, whatever TCGplayer files it under. Bart
+ * decided it on 2026-09-17: TCGplayer gives every product on its Japanese shelf a word and writes
+ * its own default where the card prints nothing, "Common" on 843 cards and "None" on 1,328, and
+ * neither is read off a card. Only a word that says more than no mark (SAYS_MORE) overrules the
+ * dash, never one in NEVER_FILLS. A card Scrydex has no record of at all is a different question:
+ * nothing there says the card prints no mark, so TCGplayer's word still stands (37 cards).
  */
 export function japaneseRarity({
   mark,
@@ -139,7 +146,12 @@ export function japaneseRarity({
   const product = japaneseRarityWord(tcgplayer);
   if (mark != null && mark in MARK_RARITY) {
     const printed = MARK_RARITY[mark] ?? null;
-    if ((printed === "Rare" || printed === null) && product && SAYS_MORE.has(product))
+    if (
+      (printed === "Rare" || printed === null) &&
+      product &&
+      !NEVER_FILLS.has(product) &&
+      SAYS_MORE.has(product)
+    )
       return product;
     return printed;
   }

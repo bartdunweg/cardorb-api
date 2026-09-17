@@ -36,8 +36,8 @@ import {
   typesDisagree,
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
-import { UNMAPPED_SUBTYPES, runsOfSubtypes } from "../src/lib/core/print-runs.mjs";
-import { SAYS_MORE } from "../src/lib/core/japanese-rarity-rules.mjs";
+import { PRINT_RUN_NAMES, UNMAPPED_SUBTYPES, runsOfSubtypes } from "../src/lib/core/print-runs.mjs";
+import { NEVER_FILLS, SAYS_MORE } from "../src/lib/core/japanese-rarity-rules.mjs";
 import {
   disjointFinishesBySet,
   undecidedLinkedCards,
@@ -1328,9 +1328,12 @@ check(
     (r) => runsOfSubtypes(r.variants).includes("shadowless") && !links[r.id]?.shadowless,
   );
   const unmapped = new Map();
+  const named = new Map();
   for (const r of rows)
-    for (const kind of new Set((r.variants ?? []).map((v) => v.subtype).filter(Boolean)))
-      if (UNMAPPED_SUBTYPES.has(kind)) unmapped.set(kind, (unmapped.get(kind) ?? 0) + 1);
+    for (const kind of new Set((r.variants ?? []).map((v) => v.subtype).filter(Boolean))) {
+      if (kind in PRINT_RUN_NAMES) named.set(kind, (named.get(kind) ?? 0) + 1);
+      else if (UNMAPPED_SUBTYPES.has(kind)) unmapped.set(kind, (unmapped.get(kind) ?? 0) + 1);
+    }
   check(
     "Print runs TCGdex names reach the sheet",
     unnamed.length === 0,
@@ -1341,7 +1344,9 @@ check(
             .map((r) => r.id)
             .join(", ")}): the copy has not read TCGdex's runs yet`
         : ""
-    }; ${unpricedShadowless.length} Shadowless runs with no TCGplayer product; runs no edition is: ${
+    }; ${unpricedShadowless.length} Shadowless runs with no TCGplayer product; print runs that are no edition, on purpose (the iOS app knows four words and this adds none): ${
+      [...named].map(([k, n]) => `${PRINT_RUN_NAMES[k]} ${n}`).join(", ") || "none"
+    }; runs nobody has decided yet: ${
       [...unmapped].map(([k, n]) => `${k} ${n}`).join(", ") || "none"
     }`,
   );
@@ -1390,10 +1395,13 @@ check(
     tally.set(word, (tally.get(word) ?? 0) + 1);
     if (SAYS_MORE.has(word) || word === "Kagayaku") saysMore.push(`${r.id} ${word}`);
   }
+  const defaults = [...tally]
+    .filter(([word]) => NEVER_FILLS.has(word))
+    .reduce((n, [, count]) => n + count, 0);
   check(
     "Japanese cards without a rarity print no mark",
     unread === 0 && saysMore.length === 0,
-    `${rows.length} Japanese cards without a rarity; ${saysMore.length} where TCGplayer's word says more${
+    `${rows.length} Japanese cards without a rarity, and they stay without one: ${defaults} of them are TCGplayer's own default for a shelf it has no word for (${[...NEVER_FILLS].join(", ")}), which is never read off a card and never fills a rarity (NEVER_FILLS, Bart 2026-09-17); ${saysMore.length} where TCGplayer's word says more${
       saysMore.length ? ` (${saysMore.slice(0, 6).join(", ")})` : ""
     }; TCGplayer calls the rest: ${[...tally]
       .sort((a, b) => b[1] - a[1])
