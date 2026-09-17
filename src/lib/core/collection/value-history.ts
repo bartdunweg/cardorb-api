@@ -1,3 +1,8 @@
+import { holdingsSeries } from "./folder-history";
+import type { CardItem } from "./items";
+import type { CardPricePoint } from "./movers";
+import type { ValueSnapshot } from "./value-snapshot";
+
 /**
  * Where the Home line's history starts, and when an account's has to be built again.
  *
@@ -43,4 +48,36 @@ export function needsHistoryRebuild(
   return items.some(
     (it) => it.owned && (!it.acquiredAt || it.acquiredAt.slice(0, 10) < HISTORY_DAILY_FROM),
   );
+}
+
+/** How far back the night reads the held cards' readings: past CARRY_DAYS, and past two Saturdays. */
+export const NIGHT_READ_DAYS = 30;
+
+/** How many days before tonight the night writes again, so a late or corrected reading still lands. */
+export const NIGHT_WRITE_DAYS = 7;
+
+const daysBefore = (date: string, days: number) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+
+/** The first day of readings the night reads, for the night of `date`. */
+export const nightReadFrom = (date: string) => daysBefore(date, NIGHT_READ_DAYS);
+
+/**
+ * The points the 04:00 cron stores for the night of `date`: the last NIGHT_WRITE_DAYS before it,
+ * built by holdingsSeries, the same sum the recent days of the Home line are (getRecentValue).
+ *
+ * The cron used to store one point dated tonight from the collection as assembled at 04:00: a day
+ * behind the cards' lines and a few cents off. Home shows the recent line over the last ninety days
+ * and the stored points before that, so a point stored that way came into view on its ninety-first
+ * day as a step the collection never took. Tonight itself has no point: the price job writes its
+ * readings at 21:15 UTC, and the next night stores it. `readings` start at nightReadFrom(date), which
+ * is far enough back that every point written sums as the whole history would sum that day.
+ */
+export function nightlyPoints(
+  items: CardItem[],
+  readings: CardPricePoint[],
+  date: string,
+): ValueSnapshot[] {
+  const from = daysBefore(date, NIGHT_WRITE_DAYS);
+  return holdingsSeries(items, readings).filter((p) => p.date >= from && p.date < date);
 }

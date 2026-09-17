@@ -3,7 +3,6 @@ import { refuse, apiError } from "@/lib/api/respond";
 import { assembleFor } from "@/lib/core/collection/collection";
 import {
   cardPricesFromSets,
-  snapshotFromSets,
   unlinkedCardPrices,
   type TcgplayerLink,
 } from "@/lib/core/collection/snapshot";
@@ -23,7 +22,12 @@ import {
 } from "@/lib/storage/postgres";
 import { holdingsSeries } from "@/lib/core/collection/folder-history";
 import { flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
-import { HISTORY_FROM, needsHistoryRebuild } from "@/lib/core/collection/value-history";
+import {
+  HISTORY_FROM,
+  needsHistoryRebuild,
+  nightReadFrom,
+  nightlyPoints,
+} from "@/lib/core/collection/value-history";
 import { adminClient } from "@/lib/storage/supabase";
 
 /**
@@ -41,7 +45,8 @@ const LINKS = {
 };
 
 /**
- * One value reading per account, once a night.
+ * One value reading per account, once a night: since 2026-09-17 the last week before the night, summed
+ * from the held cards' readings (nightlyPoints), so the stored points and the Home line agree.
  *
  * It was once a week, which is why the chart on the dashboard had four points
  * in it eight months after the table shipped. Nightly is both the ceiling and
@@ -130,11 +135,19 @@ export async function GET(req: Request) {
       // The same assembly every request reads, blended prices and memo included: what the
       // night writes is what the day shows, and the warm cron has usually just built it.
       const sets = await assembleFor(userId, db);
-      // Read before tonight's point is written: `added` counts the copies since the point before.
+      // Read before the night's points are written: whether the history was ever built, below.
       const stored = await listValueSnapshots(db, userId);
-      const since = stored.filter((p) => p.date < date).at(-1)?.date ?? null;
-      const point = snapshotFromSets(sets, date, since);
-      await writeValueSnapshot(db, userId, point);
+      /* The last week before tonight, summed from the held cards' readings as the recent days of the
+         Home line are (nightlyPoints). A point from the collection as assembled at 04:00 was a day
+         behind that line and a few cents off, and stepped into view on its ninety-first day. */
+      const items = flattenItems(sets);
+      const readings = await listHistoryPrices(
+        db,
+        pricedCardsOf(items.filter((it) => it.owned)),
+        nightReadFrom(date),
+      );
+      const points = nightlyPoints(items, readings, date);
+      for (const point of points) await writeValueSnapshot(db, userId, point);
       // The read path caches for an hour under this tag and nothing else can
       // drop it: the manual script writes from plain node, where this does not
       // exist. Here it does, so the new point is on the dashboard immediately.
@@ -148,7 +161,6 @@ export async function GET(req: Request) {
        * rebuild that fails costs the past and never the night.
        */
       try {
-        const items = flattenItems(sets);
         if (
           forceHistory ||
           needsHistoryRebuild(
@@ -181,7 +193,8 @@ export async function GET(req: Request) {
         else prices.set(key, [p]);
       }
 
-      written.push({ user: userId, value: Math.round(point.value), cards: point.cards });
+      const last = points.at(-1);
+      written.push({ user: userId, value: Math.round(last?.value ?? 0), cards: last?.cards ?? 0 });
     } catch (err) {
       // One account's failure is not the others'. Logged with the id so it can
       // be chased, and reported in the body so a monitor sees a partial run as

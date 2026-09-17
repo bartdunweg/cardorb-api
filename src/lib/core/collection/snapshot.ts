@@ -1,21 +1,21 @@
 /**
- * What a collection is worth on a day, and what each card it holds traded at.
+ * What each card a collection holds traded at, for the nightly cron.
  *
  * Pure functions over an assembled collection, so the nightly cron and its tests read the same
  * arithmetic. Every figure here is TCGplayer's since 2026-09-12, the same market every screen
- * shows (see price-basis.mjs): the value point off the card's own price, the card points off
- * TCGplayer's printings, and the weekly point for every card nobody holds off tcgcsv.
+ * shows (see price-basis.mjs): the card points off TCGplayer's printings, and the weekly point for
+ * every card nobody holds off tcgcsv. The collection's own value point is summed from those
+ * readings since 2026-09-17 (value-history.ts, nightlyPoints).
  *
  * Cardmarket's guide used to price all three. The functions that read it (snapshotOf,
  * cardPricesOf, cardPricesFromGuide) are gone with it, and since the set page and search moved
  * too the guide is not read anywhere.
  */
 
-import { copiesHeld, copyUnpriced } from "./cards-stats";
-import { copyPriceOf, shownPrice } from "../price-basis.mjs";
+import { copiesHeld } from "./cards-stats";
+import { shownPrice } from "../price-basis.mjs";
 import type { ShelfPrices, ShelfPrinting } from "../catalogue/tcgcsv";
 import type { CardSet } from "./cards";
-import type { ValueSnapshot } from "./value-snapshot";
 import type { PrintingDay } from "./movers";
 import {
   LEGACY,
@@ -28,51 +28,6 @@ import {
   runKey,
   runLinksOf,
 } from "../price-months.mjs";
-
-/**
- * The reading off an assembled collection: the card's own blended price, the one
- * the tile and the sheet show, so the line ends where the number stands. Printing
- * by printing, through copyPriceOf(). Every count is of copies, as countStats() counts them:
- * `cards` is the copies held, and each is `priced` or `unpriced` by copyUnpriced(), so the two
- * add up to `cards` and `unpriced` is the number /v1/stats says.
- * The guide's date is not to hand here, so the caller dates it.
- */
-export function snapshotFromSets(
-  sets: CardSet[],
-  date: string,
-  /** The date of the point before, for `added`; null where there is none. */
-  since: string | null = null,
-): ValueSnapshot {
-  let value = 0;
-  let copies = 0;
-  let priced = 0;
-  let unpriced = 0;
-  let added = 0;
-  let addedValue = 0;
-  for (const set of sets) {
-    for (const card of set.cards) {
-      const held = copiesHeld(card);
-      if (!held) continue;
-      copies += held;
-      for (const v of card.variants) {
-        if (!v.owned) continue;
-        const n = Math.max(0, v.quantity ?? 0);
-        const day = v.acquiredAt?.slice(0, 10);
-        const isNew = since != null && day != null && day > since && day <= date;
-        if (isNew) added += n;
-        if (copyUnpriced(card, v)) {
-          unpriced += n;
-          continue;
-        }
-        const each = shownPrice(copyPriceOf(v, card))!;
-        value += each * n;
-        priced += n;
-        if (isNew) addedValue += each * n;
-      }
-    }
-  }
-  return { date, value, cards: copies, priced, unpriced, added, addedValue };
-}
 
 /**
  * Every card TCGplayer prices, on this day, for the line under every card.
