@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   findList,
+  nameKey,
   numberKey,
   parseSetlists,
 } from "../src/lib/core/catalogue/bulbapedia-setlist.mjs";
@@ -76,7 +77,10 @@ for (const [setId, rows] of [...bySet].sort(([a], [b]) => a.localeCompare(b))) {
   const entries = map.lists.flatMap((ref) => findList(lists, ref)?.entries ?? []);
   const withTotal = new Map();
   const plain = new Map();
+  /* A promo Bulbapedia numbers "None" (MEP's Pikachu at the Museum) is found by its name. */
+  const unnumbered = new Map();
   for (const e of entries) {
+    if ("mark" in e && !e.number) unnumbered.set(nameKey(e.name), e.mark);
     if (!("mark" in e) || !e.number) continue;
     withTotal.set(keyOf(e.number, e.printedTotal), e.mark);
     if (!plain.has(numberKey(e.number))) plain.set(numberKey(e.number), e.mark);
@@ -84,7 +88,11 @@ for (const [setId, rows] of [...bySet].sort(([a], [b]) => a.localeCompare(b))) {
   }
   for (const c of rows) {
     const [n, total] = (printed[c.id] ?? "").split("/");
-    const mark = printed[c.id] ? withTotal.get(keyOf(n, total)) : plain.get(numberKey(c.local_id));
+    const mark = printed[c.id]
+      ? withTotal.get(keyOf(n, total))
+      : plain.has(numberKey(c.local_id)) || /\d/.test(c.local_id)
+        ? plain.get(numberKey(c.local_id))
+        : unnumbered.get(nameKey(c.name));
     if (mark !== undefined) out[c.id] = mark;
   }
 }
