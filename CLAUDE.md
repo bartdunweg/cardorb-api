@@ -47,6 +47,8 @@ docs/*.md, docs/*.json            open data worklists and rollback files for the
 
 `types/` does not exist: types live beside what defines them. Path-scoped rules for the
 route handlers and the domain code are in `.claude/rules/`.
+Rules with an ID (R-DATA-004: a data fix is a rule for every card, with a data-health check)
+are in `CONVENTIONS.md`.
 
 ## Domain terms
 

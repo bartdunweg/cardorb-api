@@ -62,6 +62,8 @@ import { scrydexEnglishLogo } from "./scrydex-japan-logos";
 import { languagesOfSet } from "./card-languages";
 import { correctedSet } from "./set-corrections";
 import { correctedNumber } from "./card-fact-corrections";
+import { canonicalRarity } from "./rarity-names";
+import { tcgplayerRarity } from "../tcgplayer-rules.mjs";
 
 /** The energy types a card can carry, as TCGdex names them. A word that is one is a type filter, not a name. */
 export const ENERGY_TYPES = [
@@ -284,6 +286,22 @@ export const withProductStage = (
   card.sheet && !card.sheet.stage && product?.stage && card.category === "Pokemon"
     ? { ...card, sheet: { ...card.sheet, stage: product.stage } }
     : card;
+
+/**
+ * A card with TCGplayer's rarity where the rule takes it (tcgplayerRarity in tcgplayer-rules.mjs):
+ * TCGdex names none, or says a plain Rare of a card TCGplayer grades Holo Rare, Ultra Rare or Secret
+ * Rare. Applied to every card of every set the copy writes, so a new set gets it without a hand list
+ * and a set copied before the rule changed gets it on its next refresh; data-health.mjs fails on a
+ * stored rarity the rule would write otherwise.
+ */
+export const withProductRarity = (
+  card: CatalogueMatch,
+  product: ProductFacts | undefined,
+): CatalogueMatch => {
+  if (!product?.rarity) return card;
+  const rarity = canonicalRarity(tcgplayerRarity(card.rarity ?? null, product.rarity));
+  return rarity === (card.rarity ?? null) ? card : { ...card, rarity };
+};
 
 /** The scan's stem, off the address the set page builds: the size and the format are the reader's. */
 const stemOf = (image: string | null) => image?.replace(/\/(low|high)\.webp$/, "") ?? null;
@@ -563,7 +581,9 @@ export async function syncMirror(
            full art. A group that will not answer fails the set, which keeps last night's copy of it
            and is tried again ahead of the rest (tcgplayer-products.ts). */
         const products = await productFactsOf(read.cards.map((c) => c.id));
-        const cards = read.cards.map((c) => withProductStage(c, products.get(c.id)));
+        const cards = read.cards.map((c) =>
+          withProductRarity(withProductStage(c, products.get(c.id)), products.get(c.id)),
+        );
         /* Which Western languages each card was printed in: one read of the set per catalogue.
            A failure leaves the set's languages unknown, which the sheet answers as TCGdex would. */
         const languagesOf = await languagesOfSet(id).catch(() => () => null);

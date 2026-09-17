@@ -10,6 +10,8 @@ if the two have drifted apart.
 
 - The 30 cards of 30th Classic Collection no longer show 30th Celebration's pictures (Charizard showed Exeggcute). They show no picture until the next nightly catalogue copy, which takes TCGplayer's scans, and a set whose printed code another set shares is never pictured from Limitless again.
 
+- A card TCGdex names no rarity for takes TCGplayer's, and an old holo TCGdex calls a plain Rare takes TCGplayer's grade, for every card the nightly copy writes, new sets included: 30th Classic Collection reads "Classic Collection" as Celebrations' does. A set whose cards print other cards' numbers is found by rule every week, not typed in, so a future Classic Collection's cards read the number they print.
+
 ## 2026-09-16
 
 - `GET /v1/cards` gives each copy a `printImage`: the picture of the printing it is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print), so a list shows the card the copy is. Null where the card's scan stands for it; `image` is unchanged.

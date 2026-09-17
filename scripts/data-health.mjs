@@ -24,6 +24,12 @@ import {
 } from "../src/lib/core/price-basis.mjs";
 import { runKey, runLinksOf } from "../src/lib/core/price-months.mjs";
 import { THREE_DIGIT_SETS, canonNumber, correctedNumber } from "../src/lib/core/card-number.mjs";
+import {
+  numberDisagrees,
+  printedNumberOfProduct,
+  rarityOfProduct,
+  tcgplayerRarity,
+} from "../src/lib/core/tcgplayer-rules.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -708,6 +714,113 @@ check(
         ? `: ${spelt
             .slice(0, 8)
             .map((c) => `${c.id} ${c.local_id}`)
+            .join(", ")}`
+        : ""
+    }`,
+  );
+}
+
+// ── What TCGplayer's products say, held to the rules that read them ─────────────
+
+/**
+ * TCGplayer's product for every linked English card: its printed number and its rarity word, one
+ * read of tcgcsv per group. The rules in tcgplayer-rules.mjs read the same fields at night and in the
+ * weekly links run; these checks compare what is stored and committed with what the rules give
+ * today, so a rule that changes, or a new set the rule should have caught, turns a check red.
+ */
+{
+  const tcgLinks = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json"), "utf8"),
+  );
+  const groupOf =
+    JSON.parse(
+      readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-groups.generated.json"), "utf8"),
+    )["3"] ?? {};
+  const classic = JSON.parse(
+    readFileSync(
+      join(ROOT, "src", "lib", "core", "catalogue", "classic-collection-numbers.generated.json"),
+      "utf8",
+    ),
+  );
+  const groupIds = new Set();
+  for (const link of Object.values(tcgLinks)) {
+    const group = link?.groupId ?? (link?.productId != null ? groupOf[link.productId] : undefined);
+    if (group != null) groupIds.add(group);
+  }
+  const products = new Map();
+  let unread = 0;
+  const pending = [...groupIds];
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      for (let groupId = pending.pop(); groupId != null; groupId = pending.pop()) {
+        const res = await fetch(`https://tcgcsv.com/tcgplayer/3/${groupId}/products`, {
+          headers: { accept: "application/json", "User-Agent": "cardorb.com" },
+        }).catch(() => null);
+        if (!res?.ok) {
+          unread++;
+          continue;
+        }
+        for (const p of (await res.json()).results ?? []) products.set(p.productId, p);
+      }
+    }),
+  );
+  const cards = await query(
+    "select id, set_id, local_id, rarity from catalogue_cards where language = 'en' order by id",
+  );
+  const productOf = (id) => products.get(tcgLinks[id]?.productId);
+
+  /**
+   * Products whose printed number at TCGplayer is a slip, checked against the card: the XY Trainer
+   * Kit's Switch is 29/30 and TCGplayer writes 4/30 (Bunnelby's); the Alolan Raichu kit's second
+   * Lightning Energy is 3/30 and TCGplayer writes 2/30 (2026-09-17).
+   */
+  const NUMBER_SLIPS = { "tk-xy-n-29": "4/30", "tk-sm-r-3": "2/30" };
+  const wrong = cards.filter((c) => {
+    const number = printedNumberOfProduct(productOf(c.id));
+    if (!number || NUMBER_SLIPS[c.id] === number) return false;
+    return numberDisagrees(classic[c.id] ?? c.local_id, number);
+  });
+  const uncovered = [...new Set(wrong.filter((c) => !classic[c.id]).map((c) => c.set_id))];
+  check(
+    "Card labels show the number the card prints",
+    unread === 0 && wrong.length === 0,
+    `${wrong.length} cards whose label shows another number than TCGplayer's printed one${
+      uncovered.length
+        ? ` (sets not in classic-collection-numbers.generated.json: ${uncovered.join(", ")})`
+        : ""
+    }${
+      wrong.length
+        ? `: ${wrong
+            .slice(0, 8)
+            .map(
+              (c) =>
+                `${c.id} ${classic[c.id] ?? c.local_id} vs ${printedNumberOfProduct(productOf(c.id))}`,
+            )
+            .join(", ")}`
+        : ""
+    }; ${unread} tcgcsv groups of ${groupIds.size} did not answer`,
+  );
+
+  /*
+   * A stored rarity the rule would write otherwise (tcgplayerRarity): no rarity where TCGplayer names
+   * one, or a plain Rare TCGplayer grades higher. Zero once every set has been copied since the rule
+   * last changed; 30th Classic Collection's 30 cards on the day it was written (2026-09-17).
+   */
+  const unruled = cards.filter((c) => {
+    const word = rarityOfProduct(productOf(c.id));
+    const ruled = tcgplayerRarity(c.rarity, word);
+    return (ruled ?? "").toLowerCase() !== (c.rarity ?? "").toLowerCase();
+  });
+  const unruledSets = new Map();
+  for (const c of unruled) unruledSets.set(c.set_id, (unruledSets.get(c.set_id) ?? 0) + 1);
+  check(
+    "Rarities as TCGplayer's rule gives them",
+    unread === 0 && unruled.length === 0,
+    `${unruled.length} cards store another rarity than the rule gives${
+      unruled.length
+        ? `: ${[...unruledSets]
+            .slice(0, 8)
+            .map(([set, n]) => `${set} ${n}`)
             .join(", ")}`
         : ""
     }`,
