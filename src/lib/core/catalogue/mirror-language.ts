@@ -303,7 +303,15 @@ export async function syncLanguageMirror(
     parallel = 2,
     cardParallel = 8,
     now = Date.now,
-  }: { budgetMs?: number; parallel?: number; cardParallel?: number; now?: () => number } = {},
+    only,
+  }: {
+    budgetMs?: number;
+    parallel?: number;
+    cardParallel?: number;
+    now?: () => number;
+    /** These sets alone, whatever their turn (the cron's `?sets=`, for a rule changed today). */
+    only?: string[];
+  } = {},
 ): Promise<SyncReport> {
   const start = now();
   const [shelf, done] = await Promise.all([listSetsIn(lang), listCatalogueSync(db, lang)]);
@@ -317,6 +325,7 @@ export async function syncLanguageMirror(
     return [2, seen.syncedAt];
   };
   const queue = shelf
+    .filter((s) => !only?.length || only.includes(s.id))
     .map((s, i) => ({ id: s.id, key: rank(s.id, s.total), i }))
     .sort((a, b) => a.key[0] - b.key[0] || a.key[1].localeCompare(b.key[1]) || a.i - b.i)
     .map((s) => s.id);

@@ -1,3 +1,5 @@
+import { SAYS_MORE } from "../japanese-rarity-rules.mjs";
+
 /**
  * One spelling for each English rarity.
  *
@@ -120,21 +122,6 @@ export function japaneseRarityWord(word: string | null | undefined): string | nu
   if (key in OTHER_WORDS) return OTHER_WORDS[key] ?? null;
   return canonicalRarity(trimmed);
 }
-
-/**
- * TCGplayer's words that say more than a plain Rare or no mark: Scrydex reads Shiny Star V's and GX
- * Ultra Shiny's S as R, the LEGEND era's holos as R, and records no mark on Radiant, Trainer Rare
- * and Amazing Rare cards that print one.
- */
-const SAYS_MORE = new Set([
-  "Shiny Rare",
-  "Holo Rare",
-  "Super Rare Holo",
-  "Trainer Rare",
-  "Radiant Rare",
-  "Amazing Rare",
-  "Character Super Rare",
-]);
 
 /**
  * A Japanese card's rarity: Scrydex's mark, TCGplayer's word where Scrydex misreads it (see above),

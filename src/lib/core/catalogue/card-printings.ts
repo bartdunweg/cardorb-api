@@ -1,4 +1,5 @@
 import { EDITIONS, FINISHES, isFoilPattern } from "../collection/collection-row";
+import { runsOfSubtypes } from "../print-runs.mjs";
 import { PATTERNED_REVERSES } from "../price-basis.mjs";
 import type { Edition, Finish, FoilPattern } from "../collection/collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
@@ -63,7 +64,7 @@ const BALL_OF: Record<string, Finish> = {
  */
 const ENERGY_FOIL = "energy";
 
-export type TcgVariant = { type?: string; foil?: string; stamp?: string[] };
+export type TcgVariant = { type?: string; foil?: string; stamp?: string[]; subtype?: string };
 
 /** One patterned reverse TCGplayer sells as a product of its own: "Eevee (Poke Ball Pattern)". */
 export type FinishPrint = {
@@ -323,21 +324,28 @@ const stamped = (variant: string): boolean => variant.startsWith("1st-edition");
  * printed at least once, and nearly all of them unstamped). Shadowless is Base Set's middle run,
  * where TCGplayer has a product for it.
  *
+ * TCGdex names Base Set's runs as well (`subtype` on its variants: "shadowless",
+ * "shadowless-red-cheek"), so a Shadowless run is offered where either names one (runsOfSubtypes in
+ * print-runs.mjs). The runs TCGdex names that no Edition is (red cheeks, the 1999-2000 copyright line)
+ * are not offered: an Edition is the iOS app's enum too.
+ *
  * Null where neither source said anything about a stamped run, which is the rule the printings
  * follow: no answer is not "none exist", and a client offers every run then.
  */
 export function editionsOf(
   tcgId: string,
   firstEdition: boolean | null | undefined,
+  tcgdexVariants?: TcgVariant[] | null,
 ): Edition[] | null {
   const variants = LINKS[tcgId]?.variants ?? [];
+  const named = runsOfSubtypes(tcgdexVariants);
   const listed = variants.length > 0;
   /* A Blue Border print is an answer about the runs on its own: no card that has one was stamped. */
   if (firstEdition == null && !variants.some(stamped) && !BLUE_BORDER.has(tcgId)) return null;
   const runs: Edition[] = [];
   if (!listed || variants.some((v) => !stamped(v))) runs.push("unlimited");
   if (firstEdition || variants.some(stamped)) runs.push("1st-edition");
-  if (SHADOWLESS.has(tcgId)) runs.push("shadowless");
+  if (SHADOWLESS.has(tcgId) || named.includes("shadowless")) runs.push("shadowless");
   if (BLUE_BORDER.has(tcgId)) runs.push("blue-border");
   return EDITIONS.filter((e) => runs.includes(e));
 }

@@ -7,6 +7,7 @@ import {
   cardName,
   nameKey,
   numberKey,
+  infoboxDate,
   parseInfobox,
   parseSetlists,
   readNumber,
@@ -350,5 +351,17 @@ describe("compareSet, naming pass", () => {
         "Plusle Half Deck",
       ),
     ).toEqual([]);
+  });
+});
+
+describe("infoboxDate", () => {
+  it("reads the English release day, from enrelease or release, and no month alone", () => {
+    const box = (fields: string) => `{{TCGExpansionInfobox\n${fields}\n}}\nText.`;
+    expect(infoboxDate(box("|enrelease=May 23, 2007\n|jarelease=November 30, 2006"))).toBe(
+      "2007/05/23",
+    );
+    expect(infoboxDate(box("|release=February 13, 2008"))).toBe("2008/02/13");
+    expect(infoboxDate(box("|release=June 2004"))).toBeNull();
+    expect(infoboxDate("No infobox")).toBeNull();
   });
 });

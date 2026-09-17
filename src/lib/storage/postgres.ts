@@ -1660,7 +1660,7 @@ export type CatalogueCardRecord = {
   evolve_from?: string | null;
   regulation_mark?: string | null;
   first_edition?: boolean | null;
-  variants?: { type?: string; foil?: string; stamp?: string[] }[] | null;
+  variants?: { type?: string; foil?: string; stamp?: string[]; subtype?: string }[] | null;
   /** The Western languages it was printed in; null where nobody could say. */
   languages?: string[] | null;
   /** What the card itself says where `name` is the English the app shows; null on an English card. */

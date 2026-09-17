@@ -227,7 +227,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v14: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
 // v15: a matched card carries its category, so a trainer fills no Pokédex slot (species-match.mjs).
 // v16: names with the LV.X or δ their TCGplayer product prints (withProductName in mirror.ts).
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v16"], {
+// v17: English release days from Bulbapedia before Black & White (release-dates.generated.json).
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v17"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });
@@ -244,6 +245,7 @@ export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "
  * unknown id throws too, so neither a set without its rarities nor a 404 is kept for a day; both
  * fall back to the uncached read, which answers exactly as it did before this cache.
  */
+// v8: a card's variants carry the print run TCGdex names (`subtype`), for editionsOf.
 // v7: 30th Celebration's evolved Pokémon ex as the Stage 1s and Stage 2s they print (NEW_SET_CORRECTIONS).
 // v6: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
 // v4: the third pass over the English facts: trainer types, evolutions, gallery rarities, Unown and ☆ names.
@@ -255,7 +257,7 @@ const englishSetEntry = unstable_cache(
     if (!found) throw new Error(`No English set ${setId}`);
     return found;
   },
-  ["english-set", "v7"],
+  ["english-set", "v8"],
   { revalidate: DAY, tags: ["catalogue"] },
 );
 

@@ -40,19 +40,22 @@ export async function GET(req: Request) {
        already has. For the day a source is added to the chain, whose cards were copied without
        a picture before it existed; the nightly schedule never asks for it. */
     const params = new URL(req.url).searchParams;
+    /* `?sets=ex5.5,mep`: those sets alone, worked out from scratch, for a source added for a few of
+       their cards; the nightly schedule never sets it. */
+    const only = params.get("sets")?.split(",").filter(Boolean);
     /* `?language=ja`: the Japanese catalogue into the same copy (mirror-language.ts), on a schedule
-       of its own so each has the whole minute. */
+       of its own so each has the whole minute. `?sets=` narrows it as it does the English copy. */
     if (params.get("language") === "ja") {
-      const report = await syncLanguageMirror(db, "ja", { budgetMs: 200_000 });
+      const report = await syncLanguageMirror(db, "ja", {
+        budgetMs: 200_000,
+        ...(only?.length ? { only } : {}),
+      });
       console.log(
         `[cron] catalogue ja: ${report.copied.length} sets copied, ${report.failed.length} failed, ${report.left} left, ${report.pictures} pictures changed, ${report.ms} ms`,
       );
       return NextResponse.json(report);
     }
     const full = params.get("full") === "1";
-    /* `?sets=ex5.5,mep`: those sets alone, worked out from scratch, for a source added for a few of
-       their cards; the nightly schedule never sets it. */
-    const only = params.get("sets")?.split(",").filter(Boolean);
     const report = await syncMirror(db, { full, ...(only?.length ? { only } : {}) });
     // The document the browser searches in, rebuilt from what was just copied (mirror.ts).
     if (report.copied.length) await catalogueIndex(db);

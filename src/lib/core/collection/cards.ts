@@ -1509,7 +1509,7 @@ export async function getCardDetail(
     regulationMark: card.regulationMark ?? null,
     firstEdition: card.variants?.firstEdition ?? null,
     printings: printingsOf(card.variants_detailed, language ? null : card.id),
-    editions: editionsOf(card.id, card.variants?.firstEdition ?? null),
+    editions: editionsOf(card.id, card.variants?.firstEdition ?? null, card.variants_detailed),
     set: card.set?.id
       ? {
           id: card.set.id,

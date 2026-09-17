@@ -458,15 +458,27 @@ const sheetOf = (fact: SetFact | undefined): { sheet?: CardSheetFacts } =>
 const intOrNull = (n: unknown): number | null =>
   typeof n === "number" && Number.isFinite(n) ? Math.round(n) : null;
 
-/** The variants as printingsOf() reads them, nothing TCGdex adds beside (pricing, ids). */
+/**
+ * The variants as printingsOf() and editionsOf() read them, nothing TCGdex adds beside (pricing,
+ * ids). `subtype` is the print run TCGdex names on Base Set ("unlimited", "shadowless",
+ * "shadowless-red-cheek", "1999-2000-copyright").
+ */
 const trimmedVariants = (
   list:
-    { type?: string | null; foil?: string | null; stamp?: string[] | null }[] | null | undefined,
+    | {
+        type?: string | null;
+        foil?: string | null;
+        stamp?: string[] | null;
+        subtype?: string | null;
+      }[]
+    | null
+    | undefined,
 ): CardSheetFacts["variants"] =>
   (list ?? []).map((v) => ({
     ...(v.type ? { type: v.type } : {}),
     ...(v.foil ? { foil: v.foil } : {}),
     ...(v.stamp?.length ? { stamp: v.stamp } : {}),
+    ...(v.subtype ? { subtype: v.subtype } : {}),
   }));
 
 /** The fact with its rarity in the one spelling (rarity-names.ts). */
@@ -483,7 +495,7 @@ async function englishFacts(
   const out = new Map<string, SetFact>();
   try {
     const body = (await graphql(
-      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id name rarity types category trainerType illustrator hp stage evolveFrom regulationMark variants { firstEdition } variants_detailed { type foil stamp } } }`,
+      `{ cards(filters: { id: ${JSON.stringify(`${setId}-`)} }, pagination: { page: 1, itemsPerPage: 500 }) { id name rarity types category trainerType illustrator hp stage evolveFrom regulationMark variants { firstEdition } variants_detailed { type foil stamp subtype } } }`,
       `en set ${setId} facts`,
       { retries },
     )) as {
@@ -501,7 +513,13 @@ async function englishFacts(
         regulationMark?: string | null;
         variants?: { firstEdition?: boolean | null } | null;
         variants_detailed?:
-          { type?: string | null; foil?: string | null; stamp?: string[] | null }[] | null;
+          | {
+              type?: string | null;
+              foil?: string | null;
+              stamp?: string[] | null;
+              subtype?: string | null;
+            }[]
+          | null;
       } | null)[];
     } | null;
     for (const c of body?.cards ?? [])

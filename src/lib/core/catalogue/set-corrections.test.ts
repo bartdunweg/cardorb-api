@@ -59,3 +59,31 @@ describe("the set facts TCGplayer and Scrydex agree on against TCGdex (2026-09-1
     );
   });
 });
+
+describe("release days from Bulbapedia (release-dates.generated.json)", () => {
+  it("dates a set TCGdex puts on the first of its month to the day it came out", () => {
+    expect(
+      correctedSet({ id: "dp1", name: "Diamond & Pearl", release_date: "2007/05/01" }),
+    ).toMatchObject({ release_date: "2007/05/23" });
+    expect(
+      correctedSet({ id: "dp6", name: "Legends Awakened", release_date: "2008/08/01" }),
+    ).toMatchObject({ release_date: "2008/08/20" });
+  });
+
+  it("leaves a set with no date field, a hand correction and another catalogue's set to themselves", () => {
+    expect(correctedSet({ id: "dp1", name: "Diamond & Pearl" })).toEqual({
+      id: "dp1",
+      name: "Diamond & Pearl",
+    });
+    expect(
+      correctedSet({ id: "sm9", name: "Team Up", release_date: "2019/01/31" }).release_date,
+    ).toBe("2019/02/01");
+    const japanese = {
+      id: "dp1",
+      name: "Space-Time Creation",
+      language: "ja",
+      release_date: "2006/11/30",
+    };
+    expect(correctedSet(japanese)).toBe(japanese);
+  });
+});

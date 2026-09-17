@@ -55,6 +55,10 @@ describe("japaneseRarity", () => {
     expect(japaneseRarity({ mark: "none", tcgplayer: "Trainer Rare" })).toBe("Trainer Rare");
     expect(japaneseRarity({ mark: "none", tcgplayer: "Kagayaku" })).toBe("Radiant Rare");
     expect(japaneseRarity({ mark: "R", tcgplayer: "Rare" })).toBe("Rare");
+    // M2a-232 Mega Dragonite ex prints MA; Scrydex records no mark.
+    expect(japaneseRarity({ mark: "none", tcgplayer: "Mega Attack Rare" })).toBe(
+      "Mega Attack Rare",
+    );
   });
 
   it("falls back to TCGplayer's word, then TCGdex's, where Scrydex does not have the card", () => {
