@@ -158,6 +158,9 @@ const NO_REVERSE_RARITIES = new Set([
   "Black White Rare",
   "Radiant Rare",
   "Amazing Rare",
+  // 30th Celebration's 30 Pikachu art cards and its two Futuristic Rares print no reverse.
+  "Pikachu Rare",
+  "Futuristic Rare",
 ]);
 
 /**
