@@ -1,15 +1,18 @@
 /**
- * A set's name and release date held to TCGplayer's group and Scrydex's expansion, apart from the
- * fetching, so a test can hold it (set-facts-rules.test.ts) and scripts/data-health.mjs can run it.
+ * A set's name and release day resolved from the sources, apart from the fetching, so a test can
+ * hold it (set-facts-rules.test.ts) and scripts/data-health.mjs can run it.
  *
- * On 2026-09-14 every set was laid beside both by hand, and where both agreed against TCGdex the
- * copy was put right (set-corrections.ts). A set published after that day was never looked at: this
- * is the same comparison for every set, every time data-health runs (R-DATA-004). A fact is flagged
- * only where TCGplayer and Scrydex say the same thing and the copy says another; where the two
- * disagree with each other, nobody has a better answer than the copy.
+ * On 2026-09-14 every set was laid beside TCGplayer and Scrydex by hand, and where both agreed
+ * against TCGdex the copy was put right (set-corrections.ts). A set published after that day was
+ * never looked at: this is the same comparison for every set, every time data-health runs
+ * (R-DATA-004). Since 2026-09-17 the comparison is the shared consensus rule (consensus.mjs) rather
+ * than a rule of its own: TCGdex, TCGplayer, Scrydex and Bulbapedia vote, the biases each of them is
+ * known to have are declared exceptions that take its vote away, and a majority decides. A tie or a
+ * three-way split changes nothing and is reported with what each source said.
  *
  * Plain JavaScript, because the script runs on plain node and cannot import TypeScript.
  */
+import { explain, resolve, subsetName } from "./consensus.mjs";
 
 /**
  * Scrydex's English expansions table (https://scrydex.com/pokemon/expansions): each row's code, name
@@ -51,22 +54,46 @@ export const nameKey = (name) =>
 export const dayOf = (date) => (date ? String(date).slice(0, 10).replaceAll("/", "-") : null);
 
 /**
- * The copy's facts of one set that TCGplayer and Scrydex agree against, each as [copy, theirs].
+ * The copy's facts of one set the sources decide otherwise, each as `{ stored, value, why }`.
  *
- * @param {{ name: string, release_date: string | null }} set the copy's set
- * @param {{ name: string, publishedOn: string } | undefined} group TCGplayer's group
- * @param {{ name: string, date: string } | undefined} expansion Scrydex's expansion
- * @returns {{ name?: [string, string], date?: [string | null, string] }}
+ * The answers are given as they come: TCGdex's own record, TCGplayer's group (its era prefix
+ * dropped), Scrydex's expansion row, and Bulbapedia's day where scripts/release-dates.mjs has read
+ * one. A source with nothing to say is left out. Nothing is flagged unless a majority of the sources
+ * that do vote say the same other thing, so the copy stands wherever they are split.
+ *
+ * @param {{ id?: string, name: string, release_date: string | null, serie_id?: string | null }} set
+ * @param {{ name: string, publishedOn: string } | undefined | null} group TCGplayer's group
+ * @param {{ name: string, date: string } | undefined | null} expansion Scrydex's expansion
+ * @param {{ tcgdex?: { name?: string | null, releaseDate?: string | null } | null,
+ *           bulbapediaDate?: string | null, promo?: boolean }} [others]
+ * @returns {{ name?: { stored: string, value: string, why: string },
+ *             date?: { stored: string | null, value: string, why: string } }}
  */
-export function setFactsAgainst(set, group, expansion) {
+export function setFactsAgainst(set, group, expansion, others = {}) {
+  const subject = {
+    setId: set.id ?? null,
+    series: set.serie_id ?? null,
+    promo: others.promo === true,
+  };
   const out = {};
-  if (!group || !expansion) return out;
-  const title = groupTitle(group.name);
-  if (nameKey(title) === nameKey(expansion.name) && nameKey(title) !== nameKey(set.name))
-    out.name = [set.name, expansion.name];
-  const day = dayOf(group.publishedOn);
-  if (day && day === expansion.date && day !== dayOf(set.release_date))
-    out.date = [set.release_date, day];
+
+  const name = resolve("set.name", subject, {
+    tcgdex: others.tcgdex?.name ?? null,
+    tcgplayer: group ? groupTitle(group.name) : null,
+    scrydex: expansion?.name ?? null,
+  });
+  if (name.value != null && nameKey(name.value) !== nameKey(set.name))
+    out.name = { stored: set.name, value: subsetName(name.value), why: explain(name) };
+
+  const date = resolve("set.releaseDate", subject, {
+    tcgdex: dayOf(others.tcgdex?.releaseDate),
+    tcgplayer: dayOf(group?.publishedOn),
+    scrydex: expansion?.date ?? null,
+    bulbapedia: dayOf(others.bulbapediaDate),
+  });
+  if (date.value && date.value !== dayOf(set.release_date))
+    out.date = { stored: set.release_date, value: date.value, why: explain(date) };
+
   return out;
 }
 

@@ -52,6 +52,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { decideSet, splitKinds } from "../src/lib/core/reverse-holo-rules.mjs";
+import { resolve } from "../src/lib/core/consensus.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const CORE = join(ROOT, "src", "lib", "core");
@@ -395,17 +396,29 @@ const witnessed = cards.map((c) => {
         ),
       ])
     : new Set();
+  /* Whether the card was printed holofoil is the shared consensus rule's (consensus.mjs): TCGdex,
+     TCGplayer and Scrydex vote, two of them must have answered, and a source declared wrong here
+     stands aside. Two witnesses saying holofoil against TCGdex is what this always asked for; the
+     declaration adds the sets TCGdex files as plain throughout, where TCGplayer alone decides
+     because Scrydex files their cards under the parent sets (Yellow A Alternate, 2026-09-17). */
+  const plainOnly = types.has("normal") && !types.has("holo");
+  const holoSold = resolve(
+    "card.holo",
+    { setId: c.set_id, cardId: c.id },
+    {
+      tcgdex: plainOnly ? false : null,
+      tcgplayer: sold.size ? sold.has("holofoil") || sold.has("unlimited-holofoil") : null,
+      scrydex: onScrydex ? onScrydex.has("holofoil") : null,
+    },
+  ).value;
   return {
     card: c,
     tcgdex,
     tcgplayer,
     scrydex: onScrydex ? onScrydex.has("reverseHolofoil") : null,
     holo:
-      types.has("normal") &&
-      !types.has("holo") &&
-      (sold.has("holofoil") || sold.has("unlimited-holofoil")) &&
-      !!onScrydex?.has("holofoil")
-        ? sold.has("normal") || sold.has("unlimited") || onScrydex.has("normal")
+      plainOnly && holoSold === true
+        ? sold.has("normal") || sold.has("unlimited") || onScrydex?.has("normal")
           ? "beside"
           : "instead"
         : null,

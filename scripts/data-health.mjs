@@ -57,6 +57,7 @@ import {
   scrydexExpansions,
   setFactsAgainst,
 } from "../src/lib/core/set-facts-rules.mjs";
+import { EXCEPTIONS, FIELDS, SOURCES } from "../src/lib/core/consensus.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const PROJECT_REF = "fprjroupecdhosfdrqhv";
@@ -675,12 +676,14 @@ if (day) {
  * Stored copies follow the decision: a row on a card decided a holo (holoNotNormal) recorded as a
  * normal, or on a card decided plain (normalNotHolo) recorded as a holo, fails too.
  *
- * DISJOINT_PENDING: sets that already disagreed when the check began, with what the witnesses say,
- * waiting on the owner.
+ * DISJOINT_PENDING: sets that disagree and that nobody has decided yet, with what the witnesses say.
+ * Yellow A Alternate stood here until 2026-09-17, when the consensus rule decided it: TCGdex does not
+ * vote for a set it files as plain throughout (HOLO_THROUGHOUT in consensus.mjs), Scrydex files those
+ * six cards under their parent sets and says nothing, so TCGplayer's products decide, and its five
+ * holofoils are five holos. The pictures agree: xya-107a's card face carries the foil, xya-92a's does
+ * not, and TCGplayer sells that one as normal.
  */
-const DISJOINT_PENDING = {
-  xya: "TCGdex normal; TCGplayer holofoil on 5 of 6; Scrydex files the Yellow A cards under their parent sets (xy4-24a), which the evidence run does not read",
-};
+const DISJOINT_PENDING = {};
 {
   const decided = JSON.parse(
     readFileSync(join(ROOT, "src", "lib", "core", "reverse-holo.generated.json"), "utf8"),
@@ -1166,11 +1169,17 @@ check(
 }
 
 /**
- * Every English set's name and release date against TCGplayer's group and Scrydex's expansion
- * (set-facts-rules.mjs): red where the two agree and the copy says otherwise, so a set published after
- * the hand comparison of 2026-09-14 is looked at too. Put right in set-corrections.ts, which the copy
- * lays over TCGdex. One read of tcgcsv's group list and one of Scrydex's expansions page; either one
- * unanswered fails the check, since nothing was compared.
+ * Every English set's name and release day put to the consensus rule (consensus.mjs, through
+ * setFactsAgainst): TCGdex's own record, TCGplayer's group with its era prefix dropped, Scrydex's
+ * expansion row and Bulbapedia's day where scripts/release-dates.mjs has read one. Red where a
+ * majority of them says something the copy does not, so a set published after the hand comparison of
+ * 2026-09-14 is looked at too; put right in set-corrections.ts, which the copy lays over TCGdex. The
+ * biases each source is known to have (TCGdex's and Scrydex's month placeholders before Black &
+ * White, TCGplayer's dates for the older eras and promo lines, pokemontcg.io's missing "EX") are
+ * declared exceptions there, so nothing here has to know about them.
+ *
+ * Three reads: tcgcsv's group list, Scrydex's expansions page and one TCGdex GraphQL call for every
+ * set's raw name and date. Any of them unanswered fails the check, since nothing was compared.
  */
 {
   const read = async (url, json) => {
@@ -1183,11 +1192,27 @@ check(
       return null;
     }
   };
-  const [groupList, expansionsHtml, copySets] = await Promise.all([
+  const graphql = async () => {
+    try {
+      const res = await fetch("https://api.tcgdex.net/v2/graphql", {
+        method: "POST",
+        headers: { "User-Agent": "cardorb.com", "content-type": "application/json" },
+        body: JSON.stringify({ query: "{ sets { id name releaseDate } }" }),
+      });
+      return res.ok ? ((await res.json()).data?.sets ?? null) : null;
+    } catch {
+      return null;
+    }
+  };
+  const [groupList, expansionsHtml, tcgdexSets, copySets] = await Promise.all([
     read("https://tcgcsv.com/tcgplayer/3/groups", true),
     read("https://scrydex.com/pokemon/expansions", false),
-    query("select id, name, release_date from catalogue_sets where language = 'en' order by id"),
+    graphql(),
+    query(
+      "select id, name, serie_id, release_date from catalogue_sets where language = 'en' order by id",
+    ),
   ]);
+  const tcgdexOf = new Map((tcgdexSets ?? []).map((s) => [s.id, s]));
   const setLinks = JSON.parse(
     readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-ids.generated.json"), "utf8"),
   );
@@ -1205,6 +1230,7 @@ check(
     scrydexExpansions(expansionsHtml ?? "").map((e) => [ptcgSets[e.code] ?? e.code, e]),
   );
   const off = [];
+  const why = [];
   let compared = 0;
   /* A date read off Bulbapedia (release-dates.generated.json) is the set's before Black & White,
      where TCGplayer and Scrydex can agree on a placeholder: EX Team Rocket Returns, November 1 at
@@ -1215,29 +1241,31 @@ check(
       "utf8",
     ),
   );
-  const keptDays = [];
+  const PROMO_LINES = new Set(PROMO_SETS);
   for (const set of copySets) {
     const group = groupById.get(setGroups.get(set.id));
     const expansion = expansionOf.get(set.id);
     if (!group || !expansion) continue;
     compared++;
-    const facts = setFactsAgainst(set, group, expansion);
-    if (facts.name) off.push(`${set.id} name "${facts.name[0]}" vs "${facts.name[1]}"`);
-    if (
-      facts.date &&
-      releaseDates.dates[set.id]?.date === dayOf(facts.date[0])?.replaceAll("-", "/")
-    )
-      keptDays.push(`${set.id} ${facts.date[0]} (both ${facts.date[1]})`);
-    else if (facts.date) off.push(`${set.id} date ${facts.date[0]} vs ${facts.date[1]}`);
+    const facts = setFactsAgainst(set, group, expansion, {
+      tcgdex: tcgdexOf.get(set.id) ?? null,
+      bulbapediaDate: releaseDates.dates[set.id]?.date ?? null,
+      promo: PROMO_LINES.has(set.id),
+    });
+    if (facts.name) off.push(`${set.id} name "${facts.name.stored}" vs "${facts.name.value}"`);
+    if (facts.date) off.push(`${set.id} date ${facts.date.stored} vs ${facts.date.value}`);
+    if (facts.name || facts.date) why.push((facts.name ?? facts.date).why);
   }
-  const answered = groupById.size > 0 && expansionOf.size > 0;
+  const answered = groupById.size > 0 && expansionOf.size > 0 && tcgdexOf.size > 0;
   check(
-    "Set names and dates as TCGplayer and Scrydex agree",
+    "Set names and days as the sources agree",
     answered && off.length === 0,
-    `${off.length} set facts both write otherwise${off.length ? `: ${off.slice(0, 8).join(", ")}` : ""}; Bulbapedia's day kept against both on ${keptDays.length}${keptDays.length ? ` (${keptDays.join(", ")})` : ""}; ${compared} of ${copySets.length} sets compared${
+    `${off.length} set facts the sources decide otherwise${off.length ? `: ${off.slice(0, 8).join(", ")}` : ""}${
+      why.length ? `; ${why.slice(0, 3).join("; ")}` : ""
+    }; ${compared} of ${copySets.length} sets compared${
       answered
         ? ""
-        : `; not read: ${groupById.size ? "" : "tcgcsv groups "}${expansionOf.size ? "" : "Scrydex expansions"}`
+        : `; not read: ${groupById.size ? "" : "tcgcsv groups "}${expansionOf.size ? "" : "Scrydex expansions "}${tcgdexOf.size ? "" : "TCGdex sets"}`
     }`,
   );
 }
@@ -2027,6 +2055,40 @@ if (day) {
       }`,
     );
   }
+}
+
+/**
+ * Every fact the consensus rule decides is held by a check that ran this morning.
+ *
+ * The rule (src/lib/core/consensus.mjs) says where each field comes from; this says that saying it
+ * costs something. A field declared with no check, or with the name of a check that no longer runs,
+ * is a rule nothing enforces (CONVENTIONS.md), and a field whose check went red this morning is
+ * named here too, so the roll call fails with it rather than beside it. Reported: which source each
+ * field's biases are declared against, so the report carries the whole rule in one line.
+ */
+{
+  const ran = new Map(checks.map((c) => [c.name, c]));
+  const undeclared = Object.entries(FIELDS).filter(([, f]) => !f.held);
+  const missing = Object.entries(FIELDS).filter(([, f]) => f.held && !ran.has(f.held));
+  const red = Object.entries(FIELDS).filter(([, f]) => ran.get(f.held)?.ok === false);
+  const biases = new Map();
+  for (const e of EXCEPTIONS) biases.set(e.source, (biases.get(e.source) ?? 0) + 1);
+  check(
+    "Every fact the consensus rule decides is held by a check",
+    undeclared.length === 0 && missing.length === 0 && red.length === 0,
+    `${Object.keys(FIELDS).length} fields declared, ${EXCEPTIONS.length} declared exceptions (${[
+      ...biases,
+    ]
+      .sort((a, b) => b[1] - a[1])
+      .map(([source, n]) => `${SOURCES[source].name} ${n}`)
+      .join(", ")}); ${undeclared.length} fields no check holds${
+      undeclared.length ? ` (${undeclared.map(([k]) => k).join(", ")})` : ""
+    }; ${missing.length} naming a check that did not run${
+      missing.length ? ` (${missing.map(([k, f]) => `${k}: "${f.held}"`).join(", ")})` : ""
+    }; ${red.length} whose check failed this morning${
+      red.length ? ` (${red.map(([k, f]) => `${k}: "${f.held}"`).join(", ")})` : ""
+    }`,
+  );
 }
 
 // ── Report ──────────────────────────────────────────────────────────────────
