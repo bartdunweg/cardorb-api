@@ -1,0 +1,94 @@
+{
+ "dates": {
+  "neo2": {
+   "date": "2001/06/01",
+   "tcgdex": "2001/06/01"
+  },
+  "ex1": {
+   "date": "2003/06/18",
+   "tcgdex": "2003/07/01"
+  },
+  "ex5": {
+   "date": "2004/06/14",
+   "tcgdex": "2004/06/01"
+  },
+  "ex6": {
+   "date": "2004/08/30",
+   "tcgdex": "2004/09/01"
+  },
+  "ex7": {
+   "date": "2004/11/08",
+   "tcgdex": "2004/11/01"
+  },
+  "ex8": {
+   "date": "2005/02/14",
+   "tcgdex": "2005/02/01"
+  },
+  "dp1": {
+   "date": "2007/05/23",
+   "tcgdex": "2007/05/01"
+  },
+  "dp2": {
+   "date": "2007/08/22",
+   "tcgdex": "2007/08/01"
+  },
+  "dp3": {
+   "date": "2007/11/07",
+   "tcgdex": "2007/11/01"
+  },
+  "dp4": {
+   "date": "2008/02/13",
+   "tcgdex": "2008/02/01"
+  },
+  "dp5": {
+   "date": "2008/05/21",
+   "tcgdex": "2008/05/01"
+  },
+  "dp6": {
+   "date": "2008/08/20",
+   "tcgdex": "2008/08/01"
+  },
+  "dp7": {
+   "date": "2008/11/05",
+   "tcgdex": "2008/11/01"
+  }
+ },
+ "firstOfMonth": [
+  "sm9",
+  "sm12",
+  "swsh2",
+  "swsh10.5"
+ ],
+ "noDay": {
+  "miscp": "no Bulbapedia page (Bulbapedia lists miscellaneous promos by year of release, with no list for this one-card set)",
+  "basep": "Bulbapedia's page \"Wizards Black Star Promos (TCG)\" gives no English release day",
+  "wp": "Bulbapedia's page \"W Promotional cards (TCG)\" gives no English release day",
+  "jumbo": "no Bulbapedia page (Bulbapedia lists jumbo cards as oversized reprints by era, none of them this set)",
+  "sp": "no Bulbapedia page (Bulbapedia's Sample Set is five event lists, none of them this set)",
+  "bog": "Bulbapedia's page \"Best of Game (TCG)\" gives no English release day",
+  "np": "Bulbapedia's page \"Nintendo Black Star Promos (TCG)\" gives no English release day",
+  "ex5.5": "Bulbapedia's page \"Poké Card Creator Pack (TCG)\" gives no English release day",
+  "tk-ex-latia": "Bulbapedia's page \"EX Trainer Kit (TCG)\" gives no English release day",
+  "tk-ex-latio": "Bulbapedia's page \"EX Trainer Kit (TCG)\" gives no English release day",
+  "pop1": "Bulbapedia's page \"POP Series 1 (TCG)\" gives no English release day",
+  "pop2": "Bulbapedia's page \"POP Series 2 (TCG)\" gives no English release day",
+  "tk-ex-m": "Bulbapedia's page \"EX Trainer Kit 2 (TCG)\" gives no English release day",
+  "tk-ex-p": "Bulbapedia's page \"EX Trainer Kit 2 (TCG)\" gives no English release day",
+  "pop3": "Bulbapedia's page \"POP Series 3 (TCG)\" gives no English release day",
+  "pop4": "Bulbapedia's page \"POP Series 4 (TCG)\" gives no English release day",
+  "pop5": "Bulbapedia's page \"POP Series 5 (TCG)\" gives no English release day",
+  "dpp": "Bulbapedia's page \"DP Black Star Promos (TCG)\" gives no English release day",
+  "pop6": "Bulbapedia's page \"POP Series 6 (TCG)\" gives no English release day",
+  "tk-dp-l": "Bulbapedia's page \"Diamond & Pearl Trainer Kit (TCG)\" gives no English release day",
+  "tk-dp-m": "Bulbapedia's page \"Diamond & Pearl Trainer Kit (TCG)\" gives no English release day",
+  "pop7": "Bulbapedia's page \"POP Series 7 (TCG)\" gives no English release day",
+  "pop8": "Bulbapedia's page \"POP Series 8 (TCG)\" gives no English release day",
+  "pop9": "Bulbapedia's page \"POP Series 9 (TCG)\" gives no English release day",
+  "tk-hs-g": "Bulbapedia's page \"HS Trainer Kit (TCG)\" gives no English release day",
+  "tk-hs-r": "Bulbapedia's page \"HS Trainer Kit (TCG)\" gives no English release day",
+  "tk-bw-e": "Bulbapedia's page \"Black & White Trainer Kit (TCG)\" gives no English release day",
+  "tk-bw-z": "Bulbapedia's page \"Black & White Trainer Kit (TCG)\" gives no English release day",
+  "tk-xy-b": "Bulbapedia's page \"XY Trainer Kit: Bisharp & Wigglytuff (TCG)\" gives no English release day",
+  "tk-xy-w": "Bulbapedia's page \"XY Trainer Kit: Bisharp & Wigglytuff (TCG)\" gives no English release day"
+ }
+}

@@ -36,6 +36,8 @@ import {
   typesDisagree,
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
+import { UNMAPPED_SUBTYPES, runsOfSubtypes } from "../src/lib/core/print-runs.mjs";
+import { SAYS_MORE } from "../src/lib/core/japanese-rarity-rules.mjs";
 import {
   disjointFinishesBySet,
   undecidedLinkedCards,
@@ -50,6 +52,7 @@ import {
   speciesIndex,
 } from "../src/lib/core/species-match.mjs";
 import {
+  dayOf,
   groupsOfSets,
   scrydexExpansions,
   setFactsAgainst,
@@ -1203,6 +1206,16 @@ check(
   );
   const off = [];
   let compared = 0;
+  /* A date read off Bulbapedia (release-dates.generated.json) is the set's before Black & White,
+     where TCGplayer and Scrydex can agree on a placeholder: EX Team Rocket Returns, November 1 at
+     both, November 8, 2004 on Bulbapedia. Kept, and named here. */
+  const releaseDates = JSON.parse(
+    readFileSync(
+      join(ROOT, "src", "lib", "core", "catalogue", "release-dates.generated.json"),
+      "utf8",
+    ),
+  );
+  const keptDays = [];
   for (const set of copySets) {
     const group = groupById.get(setGroups.get(set.id));
     const expansion = expansionOf.get(set.id);
@@ -1210,17 +1223,154 @@ check(
     compared++;
     const facts = setFactsAgainst(set, group, expansion);
     if (facts.name) off.push(`${set.id} name "${facts.name[0]}" vs "${facts.name[1]}"`);
-    if (facts.date) off.push(`${set.id} date ${facts.date[0]} vs ${facts.date[1]}`);
+    if (
+      facts.date &&
+      releaseDates.dates[set.id]?.date === dayOf(facts.date[0])?.replaceAll("-", "/")
+    )
+      keptDays.push(`${set.id} ${facts.date[0]} (both ${facts.date[1]})`);
+    else if (facts.date) off.push(`${set.id} date ${facts.date[0]} vs ${facts.date[1]}`);
   }
   const answered = groupById.size > 0 && expansionOf.size > 0;
   check(
     "Set names and dates as TCGplayer and Scrydex agree",
     answered && off.length === 0,
-    `${off.length} set facts both write otherwise${off.length ? `: ${off.slice(0, 8).join(", ")}` : ""}; ${compared} of ${copySets.length} sets compared${
+    `${off.length} set facts both write otherwise${off.length ? `: ${off.slice(0, 8).join(", ")}` : ""}; Bulbapedia's day kept against both on ${keptDays.length}${keptDays.length ? ` (${keptDays.join(", ")})` : ""}; ${compared} of ${copySets.length} sets compared${
       answered
         ? ""
         : `; not read: ${groupById.size ? "" : "tcgcsv groups "}${expansionOf.size ? "" : "Scrydex expansions"}`
     }`,
+  );
+}
+
+/**
+ * Release dates to the day. TCGdex dates about forty English sets to the first of their month, and
+ * scripts/release-dates.mjs reads Bulbapedia's day for the ones before Black & White into
+ * release-dates.generated.json, which the copy lays over TCGdex's (correctedSet). Red where a set the
+ * file dates holds another date, and where a set dated a first is not in the file at all: a set
+ * published or changed since the script last ran, whose date may be a placeholder (run the script).
+ * Sets Bulbapedia gives no day for (the promo lines, POP Series, trainer kits) are counted.
+ */
+{
+  const file = JSON.parse(
+    readFileSync(
+      join(ROOT, "src", "lib", "core", "catalogue", "release-dates.generated.json"),
+      "utf8",
+    ),
+  );
+  const sets = await query(
+    "select id, release_date::text as release_date from catalogue_sets where language = 'en' order by id",
+  );
+  const stale = sets.filter((s) => file.dates[s.id] && file.dates[s.id].date !== s.release_date);
+  const unread = sets.filter(
+    (s) =>
+      String(s.release_date ?? "").endsWith("/01") &&
+      !(s.id in file.dates) &&
+      !file.firstOfMonth.includes(s.id) &&
+      !(s.id in file.noDay),
+  );
+  check(
+    "Release dates to the day, not the month",
+    stale.length === 0 && unread.length === 0,
+    `${Object.keys(file.dates).length} sets dated from Bulbapedia, ${stale.length} stored otherwise${
+      stale.length
+        ? ` (${stale.map((s) => `${s.id} ${s.release_date} vs ${file.dates[s.id].date}`).join(", ")})`
+        : ""
+    }; ${unread.length} dated a first that scripts/release-dates.mjs has not read${
+      unread.length ? ` (${unread.map((s) => `${s.id} ${s.release_date}`).join(", ")})` : ""
+    }; ${file.firstOfMonth.length} confirmed on the first; ${Object.keys(file.noDay).length} with no day on Bulbapedia (${Object.keys(file.noDay).slice(0, 8).join(", ")})`,
+  );
+}
+
+/**
+ * The print runs TCGdex names (its variants' `subtype`, kept in the copy since 2026-09-17): Base Set's
+ * Unlimited, Shadowless and red-cheeked Shadowless Pikachu, which the sheet offers as editions
+ * (runsOfSubtypes in print-runs.mjs, editionsOf). Red where a Base Set card is stored without any run
+ * named (the copy is behind TCGdex). Reported: cards whose Shadowless run TCGdex names and TCGplayer
+ * links no product for (offered, unpriced), and the runs TCGdex names that no edition is, by kind
+ * (the 1999-2000 copyright line, error prints), which only a new edition could offer.
+ */
+{
+  const rows = await query(
+    "select id, set_id, variants from catalogue_cards where language = 'en' and set_id in ('base1', 'base2', 'base3', 'base4', 'base5') and jsonb_array_length(coalesce(variants, '[]'::jsonb)) > 0",
+  );
+  const unnamed = rows.filter(
+    (r) => r.set_id === "base1" && !(r.variants ?? []).some((v) => v.subtype),
+  );
+  const unpricedShadowless = rows.filter(
+    (r) => runsOfSubtypes(r.variants).includes("shadowless") && !links[r.id]?.shadowless,
+  );
+  const unmapped = new Map();
+  for (const r of rows)
+    for (const kind of new Set((r.variants ?? []).map((v) => v.subtype).filter(Boolean)))
+      if (UNMAPPED_SUBTYPES.has(kind)) unmapped.set(kind, (unmapped.get(kind) ?? 0) + 1);
+  check(
+    "Print runs TCGdex names reach the sheet",
+    unnamed.length === 0,
+    `${unnamed.length} Base Set cards stored with no run named${
+      unnamed.length
+        ? ` (${unnamed
+            .slice(0, 4)
+            .map((r) => r.id)
+            .join(", ")}): the copy has not read TCGdex's runs yet`
+        : ""
+    }; ${unpricedShadowless.length} Shadowless runs with no TCGplayer product; runs no edition is: ${
+      [...unmapped].map(([k, n]) => `${k} ${n}`).join(", ") || "none"
+    }`,
+  );
+}
+
+/**
+ * A Japanese card with no rarity is one that prints no mark (japaneseRarity in rarity-names.ts): the
+ * rule since 2026-09-14, and 2,545 cards on 2026-09-17. Red where TCGplayer's word for one of them says
+ * more than no mark (SAYS_MORE in japanese-rarity-rules.mjs): Scrydex misread the mark, as on M2a-232
+ * Mega Dragonite ex, which prints MA. Reported: what TCGplayer calls the rest ("None", "Common"), and
+ * how many it has no word for.
+ */
+{
+  const groupOf85 =
+    JSON.parse(
+      readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-groups.generated.json"), "utf8"),
+    )["85"] ?? {};
+  const rows = await query(
+    "select id, tcgplayer_product_id as pid from catalogue_cards where language = 'ja' and rarity is null",
+  );
+  const productOf = (r) => r.pid ?? jaLinks[r.id] ?? null;
+  const groups = [...new Set(rows.map((r) => groupOf85[String(productOf(r))]).filter(Boolean))];
+  const words = new Map();
+  let unread = 0;
+  await Promise.all(
+    Array.from({ length: 6 }, async () => {
+      for (let g = groups.pop(); g != null; g = groups.pop()) {
+        const res = await fetch(`https://tcgcsv.com/tcgplayer/85/${g}/products`, {
+          headers: { accept: "application/json", "User-Agent": "cardorb.com" },
+        }).catch(() => null);
+        if (!res?.ok) {
+          unread++;
+          continue;
+        }
+        for (const p of (await res.json()).results ?? []) {
+          const word = p.extendedData?.find((e) => e.name === "Rarity")?.value?.trim();
+          if (word) words.set(p.productId, word);
+        }
+      }
+    }),
+  );
+  const tally = new Map();
+  const saysMore = [];
+  for (const r of rows) {
+    const word = words.get(productOf(r)) ?? "no word";
+    tally.set(word, (tally.get(word) ?? 0) + 1);
+    if (SAYS_MORE.has(word) || word === "Kagayaku") saysMore.push(`${r.id} ${word}`);
+  }
+  check(
+    "Japanese cards without a rarity print no mark",
+    unread === 0 && saysMore.length === 0,
+    `${rows.length} Japanese cards without a rarity; ${saysMore.length} where TCGplayer's word says more${
+      saysMore.length ? ` (${saysMore.slice(0, 6).join(", ")})` : ""
+    }; TCGplayer calls the rest: ${[...tally]
+      .sort((a, b) => b[1] - a[1])
+      .map(([w, n]) => `${w} ${n}`)
+      .join(", ")}; ${unread} tcgcsv groups did not answer`,
   );
 }
 

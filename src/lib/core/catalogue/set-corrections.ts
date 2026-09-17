@@ -6,6 +6,8 @@
  * and nine release dates were off by up to a year (XY3 wore XY4's, which put it after XY4 on the
  * shelf). Keyed by language and TCGdex's set id; a field left out is TCGdex's.
  */
+import RELEASE_DATES from "./release-dates.generated.json";
+
 export type SetCorrection = {
   name?: string;
   local_name?: string;
@@ -118,10 +120,22 @@ const CORRECTIONS: Record<string, SetCorrection> = {
   "ja:SV11B": { printed_total: 86 },
 };
 
-/** The set as the copy should hold it: TCGdex's answer with any correction read by hand laid over it. */
+/**
+ * English release dates to the day from Bulbapedia, for sets before Black & White that TCGdex dates to
+ * the first of their month (Diamond & Pearl 2007/05/01 for May 23, 2007). Written by
+ * scripts/release-dates.mjs, which runs where Bulbapedia answers; data-health.mjs holds the copy to it.
+ */
+const BULBAPEDIA_DATES = (RELEASE_DATES as { dates: Record<string, { date: string }> }).dates;
+
+/**
+ * The set as the copy should hold it: TCGdex's answer with any correction read by hand laid over it,
+ * and an English set's release day from Bulbapedia where TCGdex gave a month (a hand correction wins).
+ */
 export function correctedSet<T extends { id: string; name: string; language?: string }>(set: T): T {
   const fix = CORRECTIONS[`${set.language ?? "en"}:${set.id}`];
-  return fix ? { ...set, ...fix } : set;
+  const day = (set.language ?? "en") === "en" ? BULBAPEDIA_DATES[set.id]?.date : undefined;
+  const dated = day && "release_date" in set && !fix?.release_date ? { release_date: day } : {};
+  return fix || day ? { ...set, ...dated, ...fix } : set;
 }
 
 /** Every correction, for the migration that puts the copy right today and for the tests. */

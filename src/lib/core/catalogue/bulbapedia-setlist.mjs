@@ -303,6 +303,47 @@ export function parseInfobox(wikitext) {
   return { setname: field("setname"), jasetname: field("jasetname") };
 }
 
+const MONTHS = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+];
+
+/**
+ * A release date the infobox gives to the day ("May 23, 2007", or "23 May 2007"), as the copy writes
+ * dates ("2007/05/23"); null where it gives none or only a month ("June 2004"). A page for a set
+ * released in English only has `release` where others have `enrelease` (Great Encounters).
+ *
+ * @param {string} wikitext
+ * @param {string} field "enrelease" for the English set
+ * @returns {string | null}
+ */
+export function infoboxDate(wikitext, field = "enrelease") {
+  const box = topLevelTemplates(stripComments(wikitext))
+    .map(readTemplate)
+    .find((t) => /^TCGExpansionInfobox$/i.test(t.name));
+  const raw = box?.named[field] ?? (field === "enrelease" ? box?.named.release : undefined);
+  if (raw == null) return null;
+  const text = tidy(
+    plainText(raw.replace(/<br\s*\/?>/gi, " ").replace(/\{\{tt\|[^{}]*\}\}/gi, "")),
+  );
+  const us = /([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})/.exec(text);
+  const eu = /(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/.exec(text);
+  const [month, day, year] = us ? [us[1], us[2], us[3]] : eu ? [eu[2], eu[1], eu[3]] : [];
+  const m = MONTHS.indexOf(String(month ?? "").toLowerCase());
+  if (m < 0) return null;
+  return `${year}/${String(m + 1).padStart(2, "0")}/${String(day).padStart(2, "0")}`;
+}
+
 /**
  * A number as both sides can agree on it: case folded and leading zeros gone from the digits, so
  * "001", "1" and "TG01"/"tg1" meet. The exact spelling is compared on its own.

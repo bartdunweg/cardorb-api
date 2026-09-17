@@ -58,7 +58,7 @@ export function detailFromSheet(
     regulationMark: card.regulation_mark,
     firstEdition: card.first_edition,
     printings: printingsOf(card.variants, language === "en" ? card.id : null),
-    editions: editionsOf(card.id, card.first_edition),
+    editions: editionsOf(card.id, card.first_edition, card.variants),
     set: set
       ? {
           id: set.id,

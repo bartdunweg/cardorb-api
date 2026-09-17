@@ -311,3 +311,24 @@ describe("finishPrintsFor", () => {
     expect(finishPrintsFor("no-such-card")).toBeNull();
   });
 });
+
+describe("editionsOf with TCGdex's named runs", () => {
+  it("offers a Shadowless run TCGdex names, and no edition for a run no edition is", () => {
+    // A Base Set card with no TCGplayer link: TCGdex's subtypes alone say it had a Shadowless run.
+    const runs = [
+      { type: "normal", subtype: "unlimited" },
+      { type: "normal", subtype: "shadowless", stamp: ["1st-edition"] },
+      { type: "normal", subtype: "shadowless-red-cheek" },
+      { type: "normal", subtype: "1999-2000-copyright" },
+    ];
+    expect(editionsOf("base1-no-link", true, runs)).toEqual([
+      "1st-edition",
+      "shadowless",
+      "unlimited",
+    ]);
+    expect(editionsOf("base1-no-link", true, [{ type: "normal" }])).toEqual([
+      "1st-edition",
+      "unlimited",
+    ]);
+  });
+});

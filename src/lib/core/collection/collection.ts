@@ -712,6 +712,8 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v37: English release days from Bulbapedia before Black & White (correctedSet, 2026-09-17).
+      //
       // v36: a card's facts carry its category (slotSpeciesOf, 2026-09-17).
       //
       // v35: the day of the stored prices is in the key. The facts carry the dollar figure the
@@ -794,7 +796,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v36", setName, factsSignature(identities), priceDay],
+      ["set-facts", "v37", setName, factsSignature(identities), priceDay],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

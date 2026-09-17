@@ -1,0 +1,1 @@
+- Twelve English sets before Black & White carry the day they came out instead of the first of their month (Diamond & Pearl on May 23, 2007, Legends Awakened on August 20, 2008), Base Set's Shadowless run is offered wherever TCGdex names it, and MEGA Dream ex's Mega Dragonite ex (232/193) reads Mega Attack Rare. A set dated to a month is flagged every morning.

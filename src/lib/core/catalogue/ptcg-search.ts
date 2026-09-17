@@ -80,7 +80,7 @@ export type CardSheetFacts = {
   regulationMark: string | null;
   firstEdition: boolean | null;
   /** variants_detailed, trimmed to what printingsOf() reads. */
-  variants: { type?: string; foil?: string; stamp?: string[] }[];
+  variants: { type?: string; foil?: string; stamp?: string[]; subtype?: string }[];
 };
 
 /** One page of hits. Also read by the dialog, to know whether a full page means more might exist. */

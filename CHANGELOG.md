@@ -24,6 +24,8 @@ if the two have drifted apart.
 
 - Only Pokémon cards fill a Pokédex slot. A trainer whose name holds a Pokémon's (Aaron's Collection, Hypnotoxic Laser, Clefairy Doll, the Spirit Link tools) no longer turns a slot green or counts as that Pokémon, in English or Japanese.
 
+- Twelve English sets before Black & White carry the day they came out instead of the first of their month (Diamond & Pearl on May 23, 2007, Legends Awakened on August 20, 2008), Base Set's Shadowless run is offered wherever TCGdex names it, and MEGA Dream ex's Mega Dragonite ex (232/193) reads Mega Attack Rare. A set dated to a month is flagged every morning.
+
 - The sources document says Scrydex is used, with Bart's permission, for every kind of card and set fact beside TCGdex, TCGplayer and Bulbapedia, and lists its set facts and number padding reads.
 
 - Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.
