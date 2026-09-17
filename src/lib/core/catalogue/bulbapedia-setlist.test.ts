@@ -83,7 +83,29 @@ describe("parseSetlists", () => {
       number: "GG70",
       printedTotal: "GG70",
       name: "Arceus VSTAR",
+      mark: "F",
     });
+  });
+
+  it("reads the lists a page lays side by side, with each card's regulation mark or none", () => {
+    const page = [
+      "{{Flexheader|justify-content=start}}",
+      "{{Flexitem|extra-style=flex: 1|",
+      "{{Setlist/header|title=30th Celebration|rarity=yes}}",
+      "{{Setlist/entry|020/128|J|{{TCG ID|30th Celebration|Palkia|20}}|Water||Rare}}",
+      "{{Setlist/footer}}",
+      "{{Setlist/header|title=30th Celebration Classic Collection|rarity=yes}}",
+      "{{Setlist/entry|106/106|-|{{TCG ID|Great Encounters|Palkia LV.X|106}}|Water||Rare Holo LV.X}}",
+      "{{Setlist/footer}}",
+      "}}",
+    ].join("\n");
+    const lists = parseSetlists(page);
+    expect(lists.map((l) => l.title)).toEqual([
+      "30th Celebration",
+      "30th Celebration Classic Collection",
+    ]);
+    expect(lists[0]?.entries[0]).toMatchObject({ number: "020", name: "Palkia", mark: "J" });
+    expect(lists[1]?.entries[0]).toMatchObject({ number: "106", name: "Palkia LV.X", mark: null });
   });
 
   it("puts a Mega prefix and an EX suffix on a linked name once", () => {

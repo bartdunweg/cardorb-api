@@ -8,6 +8,7 @@ import {
   typesDisagree,
   typesOfCardType,
   tcgplayerRarity,
+  nameWithProductMark,
 } from "./tcgplayer-rules.mjs";
 
 const product = (number?: string, rarity?: string) => ({
@@ -175,5 +176,24 @@ describe("stageDisagrees", () => {
     expect(stageDisagrees(null, "Basic")).toBe(false);
     expect(stageDisagrees("Basic", null)).toBe(false);
     expect(stageDisagrees("Basic", "Item")).toBe(false);
+  });
+});
+
+describe("nameWithProductMark", () => {
+  it("puts the LV.X, δ, ☆ or ◇ a card's product prints on a name that lacks it", () => {
+    // 30th Classic Collection, 2026-09-17: TCGdex named both without their marks.
+    expect(nameWithProductMark("Palkia", "Palkia LV.X")).toBe("Palkia LV.X");
+    expect(nameWithProductMark("Metagross", "Metagross (Delta Species)")).toBe("Metagross δ");
+    expect(nameWithProductMark("Mewtwo", "Mewtwo Star - 102/110")).toBe("Mewtwo ☆");
+    expect(nameWithProductMark("Lunala", "Lunala Prism Star - 62/156")).toBe("Lunala ◇");
+  });
+
+  it("leaves a name that carries its mark, or a product of another card, as it is", () => {
+    expect(nameWithProductMark("Lunala ◇", "Lunala Prism Star - 62/156")).toBe("Lunala ◇");
+    expect(nameWithProductMark("Torterra LV.X", "Torterra LV.X - 122/130")).toBe("Torterra LV.X");
+    expect(nameWithProductMark("Latias δ", "Latias (Delta Species) - 12/110")).toBe("Latias δ");
+    expect(nameWithProductMark("Mewtwo ex", "Mewtwo ex - 157/128")).toBe("Mewtwo ex");
+    expect(nameWithProductMark("Dialga", "Palkia LV.X")).toBe("Dialga");
+    expect(nameWithProductMark("Ho-Oh", "Ho-Oh - 012/128")).toBe("Ho-Oh");
   });
 });

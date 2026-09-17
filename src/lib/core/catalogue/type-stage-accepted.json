@@ -1,4 +1,16 @@
 {
+  "30th-113": {
+    "types": [["Colorless"], "Psychic"],
+    "reason": "Meowth (113/128) prints the Colorless type (the printed card and TCGdex); TCGplayer writes Psychic."
+  },
+  "30th-116": {
+    "types": [["Colorless"], "Psychic"],
+    "reason": "Eevee (116/128) prints the Colorless type (the printed card and TCGdex); TCGplayer writes Psychic."
+  },
+  "30th-144": {
+    "types": [["Colorless"], "Psychic"],
+    "reason": "Meowth (144/128) prints the Colorless type (the printed card and TCGdex); TCGplayer writes Psychic."
+  },
   "base1-23": {
     "stage": ["Stage1", "Stage 2"],
     "reason": "Arcanine is a Stage 1 that evolves from Growlithe (pokemontcg.io and TCGdex); TCGplayer writes Stage 2."

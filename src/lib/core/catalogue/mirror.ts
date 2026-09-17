@@ -38,6 +38,8 @@ import { MAX_RESULTS, type CatalogueMatch, type SearchFilters } from "./ptcg-sea
 import { englishSet, englishSets, englishSetScans } from "./tcgdex-browse";
 import { fullArtFlags } from "./full-art";
 import { type ProductFacts, productFactsOf } from "./tcgplayer-products";
+import { nameWithProductMark } from "../tcgplayer-rules.mjs";
+import REGULATION_MARKS from "./regulation-marks.generated.json";
 import {
   isScanFile,
   limitlessScan,
@@ -301,6 +303,33 @@ export const withProductRarity = (
   if (!product?.rarity) return card;
   const rarity = canonicalRarity(tcgplayerRarity(card.rarity ?? null, product.rarity));
   return rarity === (card.rarity ?? null) ? card : { ...card, rarity };
+};
+
+/**
+ * A card with the LV.X, δ, ☆ or ◇ its TCGplayer product prints and TCGdex's name leaves off
+ * (nameWithProductMark in tcgplayer-rules.mjs): 30th Classic Collection's Palkia LV.X and Metagross δ.
+ * data-health.mjs fails on a stored name the rule would write otherwise.
+ */
+export const withProductName = (
+  card: CatalogueMatch,
+  product: ProductFacts | undefined,
+): CatalogueMatch => {
+  const name = nameWithProductMark(card.name, product?.name);
+  return name === card.name ? card : { ...card, name };
+};
+
+const MARKS = REGULATION_MARKS as Record<string, string | null>;
+
+/**
+ * A card with the regulation mark Bulbapedia's set list gives it, where TCGdex gives none
+ * (regulation-marks.generated.json, written by scripts/regulation-marks.mjs): 30th Celebration came
+ * out with none on 155 of its 158 cards, which print J. TCGdex's own mark stands wherever it has one.
+ */
+export const withRegulationMark = (card: CatalogueMatch): CatalogueMatch => {
+  const mark = MARKS[card.id];
+  return card.sheet && !card.sheet.regulationMark && mark
+    ? { ...card, sheet: { ...card.sheet, regulationMark: mark } }
+    : card;
 };
 
 /** The scan's stem, off the address the set page builds: the size and the format are the reader's. */
@@ -582,7 +611,12 @@ export async function syncMirror(
            and is tried again ahead of the rest (tcgplayer-products.ts). */
         const products = await productFactsOf(read.cards.map((c) => c.id));
         const cards = read.cards.map((c) =>
-          withProductRarity(withProductStage(c, products.get(c.id)), products.get(c.id)),
+          withRegulationMark(
+            withProductName(
+              withProductRarity(withProductStage(c, products.get(c.id)), products.get(c.id)),
+              products.get(c.id),
+            ),
+          ),
         );
         /* Which Western languages each card was printed in: one read of the set per catalogue.
            A failure leaves the set's languages unknown, which the sheet answers as TCGdex would. */

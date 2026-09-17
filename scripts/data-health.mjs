@@ -31,6 +31,7 @@ import {
   cardTypeOfProduct,
   stageDisagrees,
   stageOfProduct,
+  nameWithProductMark,
   tcgplayerRarity,
   typesDisagree,
 } from "../src/lib/core/tcgplayer-rules.mjs";
@@ -1039,6 +1040,124 @@ check(
             .map(([set, n]) => `${set} ${n}`)
             .join(", ")}`
         : ""
+    }`,
+  );
+
+  /*
+   * A newer set whole and as printed, against TCGplayer's products. 30th Celebration arrived on
+   * 2026-09-16 with three RGB Mew TCGplayer sells and TCGdex lacked, "Palkia" and "Metagross" for
+   * Palkia LV.X and Metagross δ, no regulation mark on 155 cards that print J, and nothing checked
+   * any of it. For every English set released in the last NEWER_SET_DAYS:
+   *
+   *   - a card TCGplayer sells with a printed number no card of the set has (a numbered product,
+   *     patterned prints of a held number included);
+   *   - a Pokémon card no species name is found in, which no Pokédex slot takes (species-match.mjs);
+   *   - a card of a marked series (Sword & Shield on) with no regulation mark, unless Bulbapedia's
+   *     list says it prints none (regulation-marks.generated.json, scripts/regulation-marks.mjs); a
+   *     basic Energy prints none.
+   *
+   * And over every linked card, old or new: a stored name without the LV.X, δ, ☆ or ◇ its product
+   * prints (nameWithProductMark, which the nightly copy writes). pokemontcg.io's data on GitHub is
+   * read for the newer sets only to report the numbers it lists that the copy lacks (its README: not a
+   * primary source).
+   */
+  const NEWER_SET_DAYS = 365;
+  const MARKED_SERIES = new Set(["swsh", "sv", "me"]);
+  const marks = JSON.parse(
+    readFileSync(
+      join(ROOT, "src", "lib", "core", "catalogue", "regulation-marks.generated.json"),
+      "utf8",
+    ),
+  );
+  const newerSets = await query(
+    `select id, name, serie_id from catalogue_sets where language = 'en' and release_date is not null and replace(release_date::text, '/', '-')::date >= current_date - ${NEWER_SET_DAYS}`,
+  );
+  const newerIds = new Set(newerSets.map((s) => s.id));
+  const facts = new Map(
+    (
+      await query(
+        "select id, name, regulation_mark from catalogue_cards where language = 'en' order by id",
+      )
+    ).map((r) => [r.id, r]),
+  );
+  const speciesKeys = speciesIndex(
+    JSON.parse(readFileSync(join(ROOT, "src", "lib", "core", "pokedex.generated.json"), "utf8")),
+    normalise,
+  );
+  const notAsPrinted = [];
+  for (const c of cards) {
+    const product = productOf(c.id);
+    const name = facts.get(c.id)?.name;
+    if (product && name && nameWithProductMark(name, product.name) !== name)
+      notAsPrinted.push(`${c.id} "${name}" vs "${product.name}"`);
+  }
+  const missing = [];
+  const noSpecies = [];
+  const noMark = [];
+  const ptcgLacks = [];
+  const toPtcg = new Map(
+    Object.entries(
+      JSON.parse(
+        readFileSync(join(ROOT, "src", "lib", "core", "catalogue", "ptcg-set-ids.json"), "utf8"),
+      ),
+    ).map(([ptcg, tcgdex]) => [tcgdex, ptcg]),
+  );
+  for (const set of newerSets) {
+    const own = cards.filter((c) => c.set_id === set.id);
+    const labels = own.map((c) => classic[c.id] ?? c.local_id);
+    const groups = new Set(own.map((c) => productOf(c.id)?.groupId).filter((g) => g != null));
+    for (const p of products.values()) {
+      if (!groups.has(p.groupId)) continue;
+      const number = printedNumberOfProduct(p);
+      if (!number || !(p.extendedData ?? []).some((e) => e.name === "Rarity")) continue;
+      if (labels.every((label) => numberDisagrees(label, number)))
+        missing.push(`${set.id} ${number} ${p.name}`);
+    }
+    for (const c of own) {
+      const name = facts.get(c.id)?.name ?? "";
+      if (
+        c.category === "Pokemon" &&
+        !nameParts(name)
+          .concat(name)
+          .some((part) => speciesInKey(normalise(part), speciesKeys) !== null)
+      )
+        noSpecies.push(c.id);
+      if (
+        MARKED_SERIES.has(set.serie_id) &&
+        !facts.get(c.id)?.regulation_mark &&
+        !(c.id in marks && marks[c.id] === null) &&
+        // A basic Energy prints none; an Energy Bulbapedia gives a mark is held to it.
+        !(c.category === "Energy" && !(c.id in marks))
+      )
+        noMark.push(c.id);
+    }
+    const res = await fetch(
+      `https://raw.githubusercontent.com/PokemonTCG/pokemon-tcg-data/master/cards/en/${toPtcg.get(set.id) ?? set.id}.json`,
+    ).catch(() => null);
+    if (res?.ok) {
+      const numbers = (await res.json()).map((c) => c.number);
+      for (const n of numbers)
+        if (labels.every((label) => canonNumber(label.split("/")[0]) !== canonNumber(n)))
+          ptcgLacks.push(`${set.id} ${n}`);
+    }
+  }
+  check(
+    "Newer sets are whole and named as printed",
+    unread === 0 &&
+      missing.length === 0 &&
+      noSpecies.length === 0 &&
+      noMark.length === 0 &&
+      notAsPrinted.length === 0,
+    `${newerSets.length} sets released in the last ${NEWER_SET_DAYS} days; ${missing.length} numbered TCGplayer cards the copy lacks${
+      missing.length ? ` (${missing.slice(0, 6).join(", ")})` : ""
+    }; ${noSpecies.length} Pokémon cards with no species${
+      noSpecies.length ? ` (${noSpecies.slice(0, 6).join(", ")})` : ""
+    }; ${noMark.length} cards without a regulation mark${
+      noMark.length ? ` (${noMark.slice(0, 6).join(", ")}): run scripts/regulation-marks.mjs` : ""
+    }; ${notAsPrinted.length} linked cards named without the mark their product prints${
+      notAsPrinted.length ? ` (${notAsPrinted.slice(0, 4).join(", ")})` : ""
+    }; reported: pokemontcg.io lists ${ptcgLacks.length} numbers the copy lacks${
+      ptcgLacks.length ? ` (${ptcgLacks.slice(0, 6).join(", ")})` : ""
     }`,
   );
 }

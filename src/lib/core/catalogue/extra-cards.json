@@ -1,5 +1,85 @@
 {
   "en": {
+    "mee-009": {
+      "set": "mee",
+      "number": "009",
+      "name": "Grass Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713248,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713248_in_1000x1000.jpg"
+    },
+    "mee-010": {
+      "set": "mee",
+      "number": "010",
+      "name": "Fire Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713249,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713249_in_1000x1000.jpg"
+    },
+    "mee-011": {
+      "set": "mee",
+      "number": "011",
+      "name": "Water Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713250,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713250_in_1000x1000.jpg"
+    },
+    "mee-012": {
+      "set": "mee",
+      "number": "012",
+      "name": "Lightning Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713251,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713251_in_1000x1000.jpg"
+    },
+    "mee-013": {
+      "set": "mee",
+      "number": "013",
+      "name": "Psychic Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713252,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713252_in_1000x1000.jpg"
+    },
+    "mee-014": {
+      "set": "mee",
+      "number": "014",
+      "name": "Fighting Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713253,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713253_in_1000x1000.jpg"
+    },
+    "mee-015": {
+      "set": "mee",
+      "number": "015",
+      "name": "Darkness Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713254,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713254_in_1000x1000.jpg"
+    },
+    "mee-016": {
+      "set": "mee",
+      "number": "016",
+      "name": "Metal Energy",
+      "category": "Energy",
+      "types": [],
+      "illustrator": "YOSHIROTTEN",
+      "product": 713255,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/713255_in_1000x1000.jpg"
+    },
     "30th-R": {
       "set": "30th",
       "number": "R",
