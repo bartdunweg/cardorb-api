@@ -158,6 +158,22 @@ describe("PATCH /api/v1/cards/[id]", () => {
     );
   });
 
+  it("names a Pokédex face alone a dexFace write, so the web keeps everything but the lists", async () => {
+    await patch({ dexFace: true });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "dexFace",
+    );
+  });
+
+  it("names a Pokédex face beside any other field a card write", async () => {
+    await patch({ dexFace: false, quantity: 2 });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+    );
+  });
+
   it("names nothing when the row is not the caller's", async () => {
     forgetOnTheWeb.mockClear();
     updateRow.mockResolvedValueOnce(null);

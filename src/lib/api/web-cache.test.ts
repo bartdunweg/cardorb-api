@@ -46,7 +46,7 @@ describe("forgetOnTheWeb", () => {
     const sent = fetch.mock.calls.map(
       (call) => JSON.parse(String((call as unknown as [string, RequestInit])[1].body)).write,
     );
-    expect(sent).toEqual(["all", "cards", "favorite", "binders", "profile"]);
+    expect(sent).toEqual(["all", "cards", "favorite", "binders", "profile", "dexFace"]);
   });
 
   it("says nothing where it is not configured, and asks Postgres nothing either", async () => {
