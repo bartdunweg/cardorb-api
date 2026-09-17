@@ -1,5 +1,44 @@
 {
   "en": {
+    "30th-R": {
+      "set": "30th",
+      "number": "R",
+      "name": "Mew",
+      "category": "Pokemon",
+      "stage": "Basic",
+      "hp": 60,
+      "types": ["Psychic"],
+      "rarity": "Holo Rare",
+      "illustrator": "YOSHIROTTEN",
+      "product": 717607,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/717607_in_1000x1000.jpg"
+    },
+    "30th-G": {
+      "set": "30th",
+      "number": "G",
+      "name": "Mew",
+      "category": "Pokemon",
+      "stage": "Basic",
+      "hp": 60,
+      "types": ["Psychic"],
+      "rarity": "Holo Rare",
+      "illustrator": "YOSHIROTTEN",
+      "product": 717608,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/717608_in_1000x1000.jpg"
+    },
+    "30th-B": {
+      "set": "30th",
+      "number": "B",
+      "name": "Mew",
+      "category": "Pokemon",
+      "stage": "Basic",
+      "hp": 60,
+      "types": ["Psychic"],
+      "rarity": "Holo Rare",
+      "illustrator": "YOSHIROTTEN",
+      "product": 717609,
+      "image": "https://tcgplayer-cdn.tcgplayer.com/product/717609_in_1000x1000.jpg"
+    },
     "mep-089": {
       "set": "mep",
       "number": "089",

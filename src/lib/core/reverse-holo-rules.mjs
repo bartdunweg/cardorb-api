@@ -198,3 +198,76 @@ export function undecidedLinkedCards(cards, links, decisions, disputed) {
   }
   return bySet;
 }
+
+/** TCGdex's variant types as this app's finishes. */
+const TCGDEX_FINISH = { normal: "normal", holo: "holo", reverse: "reverse-holo" };
+
+/**
+ * The finishes a card offers from TCGdex's variants once the evidence run's holo decisions are
+ * applied, as card-printings.ts applies them: a holo filed as a normal (holoNotNormal), a holo beside
+ * the normal (holoBesideNormal), a pre-reverse holo filed as a reverse (holoBeforeReverses), a plain
+ * card filed as a holo (normalNotHolo).
+ *
+ * @param {{ id: string, variants?: { type?: string }[] | null }} card
+ * @param {{ holoNotNormal?: string[], holoBesideNormal?: string[], holoBeforeReverses?: string[], normalNotHolo?: string[] }} decided
+ * @returns {Set<string>}
+ */
+export function tcgdexFinishesOf(card, decided) {
+  const out = new Set();
+  const instead = decided.holoNotNormal?.includes(card.id);
+  const beside = decided.holoBesideNormal?.includes(card.id);
+  const before = decided.holoBeforeReverses?.includes(card.id);
+  const plain = decided.normalNotHolo?.includes(card.id);
+  for (const v of card.variants ?? []) {
+    let finish = TCGDEX_FINISH[v.type ?? ""];
+    if (!finish) continue;
+    if (finish === "normal" && instead) finish = "holo";
+    if (finish === "reverse-holo" && before) finish = "holo";
+    else if (finish === "holo" && plain) finish = "normal";
+    out.add(finish);
+    if (finish === "normal" && beside) out.add("holo");
+  }
+  return out;
+}
+
+/**
+ * The plain finishes a TCGplayer link names ("1st-edition-holofoil" is a holo, "unlimited" a normal).
+ * Patterned prints are other products and name nothing here.
+ *
+ * @param {{ variants?: string[] } | null | undefined} link
+ * @returns {Set<string>}
+ */
+export function tcgplayerFinishesOf(link) {
+  const out = new Set();
+  for (const v of link?.variants ?? []) {
+    const bare = v.replace(/^(1st-edition|unlimited)(-|$)/, "") || "normal";
+    const finish = { normal: "normal", holofoil: "holo", "reverse-holofoil": "reverse-holo" }[bare];
+    if (finish) out.add(finish);
+  }
+  return out;
+}
+
+/**
+ * Per set, the linked cards whose finishes after the evidence rules share nothing with what
+ * TCGplayer sells of them. 30th Celebration on 2026-09-17: TCGdex said normal for all 188 cards,
+ * TCGplayer sold every one as Holofoil only, and a form offered each a Standard copy. A card either
+ * side names no finish for is not compared.
+ *
+ * @param {{ id: string, set_id: string, variants?: { type?: string }[] | null }[]} cards
+ * @param {Record<string, { variants?: string[] } | null>} links tcgplayer-ids.generated.json
+ * @param {Parameters<typeof tcgdexFinishesOf>[1]} decided reverse-holo.generated.json
+ * @returns {Map<string, { compared: number, disjoint: string[] }>}
+ */
+export function disjointFinishesBySet(cards, links, decided) {
+  const bySet = new Map();
+  for (const c of cards) {
+    const ours = tcgdexFinishesOf(c, decided);
+    const theirs = tcgplayerFinishesOf(links[c.id]);
+    if (!ours.size || !theirs.size) continue;
+    const entry = bySet.get(c.set_id) ?? { compared: 0, disjoint: [] };
+    entry.compared++;
+    if (![...ours].some((f) => theirs.has(f))) entry.disjoint.push(c.id);
+    bySet.set(c.set_id, entry);
+  }
+  return bySet;
+}

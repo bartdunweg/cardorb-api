@@ -3,6 +3,7 @@ import REVERSE_HOLO from "./reverse-holo.generated.json";
 import {
   beforeReverseHolos,
   decideSet,
+  disjointFinishesBySet,
   energyKinds,
   undecidedLinkedCards,
 } from "./reverse-holo-rules.mjs";
@@ -164,5 +165,59 @@ describe("undecidedLinkedCards", () => {
     expect(undecidedLinkedCards(cards, links, { "base1-4": false }, new Set(["lc-64"]))).toEqual(
       new Map([["30th-c", 2]]),
     );
+  });
+});
+
+describe("disjointFinishesBySet", () => {
+  const normal = [{ type: "normal" }];
+  const holofoil = { variants: ["holofoil"] };
+
+  it("fails a set TCGdex files as normal where TCGplayer sells every card as a holo, until decided", () => {
+    const cards = ["001", "002"].map((n) => ({
+      id: `30th-${n}`,
+      set_id: "30th",
+      variants: normal,
+    }));
+    const links = { "30th-001": holofoil, "30th-002": holofoil };
+    expect(disjointFinishesBySet(cards, links, {}).get("30th")).toEqual({
+      compared: 2,
+      disjoint: ["30th-001", "30th-002"],
+    });
+    expect(
+      disjointFinishesBySet(cards, links, { holoNotNormal: ["30th-001", "30th-002"] }).get("30th"),
+    ).toEqual({ compared: 2, disjoint: [] });
+  });
+
+  it("reads a run's printings as their finish and skips a card either side names none for", () => {
+    const cards = [
+      { id: "base1-4", set_id: "base1", variants: [{ type: "holo" }] },
+      { id: "base1-58", set_id: "base1", variants: normal },
+      { id: "tk-x-1", set_id: "tk-x", variants: [] },
+    ];
+    const links = {
+      "base1-4": { variants: ["1st-edition-holofoil", "unlimited-holofoil"] },
+      "base1-58": { variants: ["1st-edition", "unlimited"] },
+      "tk-x-1": holofoil,
+    };
+    expect(disjointFinishesBySet(cards, links, {})).toEqual(
+      new Map([["base1", { compared: 2, disjoint: [] }]]),
+    );
+  });
+
+  it("reads a plain card TCGdex files as a holo as the plain card the witnesses name", () => {
+    const cards = [{ id: "fut2020-1", set_id: "fut2020", variants: [{ type: "holo" }] }];
+    const links = { "fut2020-1": { variants: ["normal"] } };
+    expect(disjointFinishesBySet(cards, links, {}).get("fut2020")?.disjoint).toEqual(["fut2020-1"]);
+    expect(
+      disjointFinishesBySet(cards, links, { normalNotHolo: ["fut2020-1"] }).get("fut2020")
+        ?.disjoint,
+    ).toEqual([]);
+  });
+
+  it("holds every 30th Celebration and Classic Collection card to TCGplayer's holofoil", () => {
+    const decided = committed as unknown as { holoNotNormal: string[] };
+    for (const setId of ["30th", "30th-c"])
+      expect(committed.sets[setId]?.bulbapedia, setId).toBe("none: every card is holofoil");
+    expect(decided.holoNotNormal.filter((id) => /^30th-(c-)?\d/.test(id))).toHaveLength(188);
   });
 });

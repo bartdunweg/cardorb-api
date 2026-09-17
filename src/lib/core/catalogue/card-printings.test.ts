@@ -134,6 +134,13 @@ describe("printingsOf", () => {
   it("offers the holo, not a Standard copy, of a holo TCGdex lists as normal", () => {
     // Reshiram, Black & White's Ultra Rare: one printing, the holo.
     expect(printingsOf([{ type: "normal" }], "bw1-113").map((p) => p.finish)).toEqual(["holo"]);
+    // 30th Celebration Charizard ex and its Classic Collection Charizard: TCGdex says normal, every
+    // card of the set is a holofoil.
+    expect(printingsOf([{ type: "normal" }], "30th-020").map((p) => p.finish)).toEqual(["holo"]);
+    expect(printingsOf([{ type: "normal" }], "30th-c-001").map((p) => p.finish)).toEqual(["holo"]);
+    // Pikachu on the Ball, a Pokémon Futsal promo TCGdex files as a holo: TCGplayer and Scrydex
+    // both list the plain card only.
+    expect(printingsOf([{ type: "holo" }], "fut2020-1").map((p) => p.finish)).toEqual(["normal"]);
     // Emboar, a Holo Rare: the holo beside the plain print its theme deck had, and the reverse.
     expect(printingsOf([{ type: "normal" }], "bw1-19").map((p) => p.finish)).toEqual([
       "normal",

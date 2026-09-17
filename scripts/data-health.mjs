@@ -35,7 +35,10 @@ import {
   typesDisagree,
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
-import { undecidedLinkedCards } from "../src/lib/core/reverse-holo-rules.mjs";
+import {
+  disjointFinishesBySet,
+  undecidedLinkedCards,
+} from "../src/lib/core/reverse-holo-rules.mjs";
 import { paddingReport, paddingWitness } from "../src/lib/core/number-padding.mjs";
 import {
   groupsOfSets,
@@ -644,6 +647,65 @@ if (day) {
             .join(", ")}): rerun scripts/reverse-holo-evidence.mjs and review its holo lists`
         : ""
     }`,
+  );
+}
+
+/**
+ * A set whose finishes share nothing with TCGplayer's. 30th Celebration and its Classic Collection
+ * arrived on 2026-09-16 with TCGdex saying "normal" for all 188 cards, where TCGplayer sells every one
+ * as Holofoil only (and Bulbapedia: every card of the set is holofoil), so a form offered each a
+ * Standard copy. Per linked set, the cards whose finishes after the evidence run's holo decisions
+ * (reverse-holo.generated.json) name nothing TCGplayer's printings name; more than half of a set's
+ * compared cards is a set TCGdex filled in wrong, and fails until scripts/reverse-holo-evidence.mjs
+ * --sets <id> decides it. A card here and there is a print TCGplayer does not sell apart (Southern
+ * Islands' holos it files as reverses, a deck-only reverse), reported.
+ *
+ * Stored copies follow the decision: a row on a card decided a holo (holoNotNormal) recorded as a
+ * normal, or on a card decided plain (normalNotHolo) recorded as a holo, fails too.
+ *
+ * DISJOINT_PENDING: sets that already disagreed when the check began, with what the witnesses say,
+ * waiting on the owner.
+ */
+const DISJOINT_PENDING = {
+  xya: "TCGdex normal; TCGplayer holofoil on 5 of 6; Scrydex files the Yellow A cards under their parent sets (xy4-24a), which the evidence run does not read",
+};
+{
+  const decided = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "reverse-holo.generated.json"), "utf8"),
+  );
+  const withVariants = await query(
+    "select id, set_id, variants from catalogue_cards where language = 'en' and jsonb_array_length(coalesce(variants, '[]'::jsonb)) > 0",
+  );
+  const bySet = disjointFinishesBySet(withVariants, links, decided);
+  const quoted = (ids) => (ids ?? []).map((id) => `'${id}'`).join(", ") || "''";
+  const [stored] = await query(
+    `select count(*)::int as n, (array_agg(distinct tcg_id || ' ' || finish))[1:6] as examples from cards
+     where language is distinct from 'ja'
+       and ((finish = 'normal' and tcg_id in (${quoted(decided.holoNotNormal)}))
+         or (finish = 'holo' and tcg_id in (${quoted(decided.normalNotHolo)})))`,
+  );
+  const wrong = [...bySet].filter(([, v]) => v.disjoint.length * 2 > v.compared);
+  const failing = wrong.filter(([id]) => !(id in DISJOINT_PENDING));
+  const scattered = [...bySet].filter(
+    ([, v]) => v.disjoint.length && v.disjoint.length * 2 <= v.compared,
+  );
+  const describe = ([id, v]) =>
+    `${id} ${v.disjoint.length}/${v.compared} (${v.disjoint.slice(0, 3).join(", ")})`;
+  check(
+    "A set's finishes overlap TCGplayer's",
+    failing.length === 0 && stored.n === 0,
+    `${stored.n} stored copies on a finish the decision took away${
+      stored.n ? ` (${(stored.examples ?? []).join(", ")})` : ""
+    }; ${bySet.size} linked sets compared; ${failing.length} with most cards offering no finish TCGplayer sells${
+      failing.length
+        ? `: ${failing.map(describe).join("; ")}; run scripts/reverse-holo-evidence.mjs --sets ${failing.map(([id]) => id).join(",")}`
+        : ""
+    }; pending the owner: ${
+      wrong
+        .filter(([id]) => id in DISJOINT_PENDING)
+        .map(([id, v]) => `${id} ${v.disjoint.length}/${v.compared} (${DISJOINT_PENDING[id]})`)
+        .join("; ") || "none"
+    }; single cards in ${scattered.length} sets (${scattered.slice(0, 6).map(describe).join("; ")})`,
   );
 }
 

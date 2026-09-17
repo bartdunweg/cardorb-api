@@ -36,12 +36,17 @@
  * and Scrydex's page both name a holofoil and no plain printing. Where both name a holofoil and
  * one of them a plain printing too (Emboar bw1-19, whose plain print came in a theme deck), the card
  * is `holoBesideNormal`: the holo is added and the plain card kept. Anything short of both naming a
- * holofoil is left as TCGdex has it.
+ * holofoil is left as TCGdex has it. The same two witnesses turn a holo TCGdex lists alone into the
+ * plain card it is (`normalNotHolo`), where both name a plain printing and no holofoil.
  *
  * Read-only against the database (the catalogue copy) and polite to Scrydex: one page a second,
  * cached under --cache so a second run asks nothing. About 500 Scrydex pages and 440 tcgcsv requests.
  *
- *   SUPABASE_CLI=… SUPABASE_WORKDIR=… node scripts/reverse-holo-evidence.mjs [--cache <dir>] [--dry]
+ * `--sets 30th,30th-c` decides those sets only and keeps every other decision in the file as it was:
+ * a set published after the last full run (30th Celebration, 2026-09-17) is read in a minute, and
+ * no other set's decision moves without its own review.
+ *
+ *   SUPABASE_CLI=… SUPABASE_WORKDIR=… node scripts/reverse-holo-evidence.mjs [--sets <ids>] [--cache <dir>] [--dry]
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -55,6 +60,9 @@ const PROJECT_REF = "fprjroupecdhosfdrqhv";
 const DRY = process.argv.includes("--dry");
 const cacheArg = process.argv.indexOf("--cache");
 const CACHE = cacheArg > 0 ? process.argv[cacheArg + 1] : join(ROOT, ".cache", "reverse-holo");
+const setsArg = process.argv.indexOf("--sets");
+/** The sets to decide again, or null for every set. */
+const ONLY = setsArg > 0 ? new Set(process.argv[setsArg + 1].split(",").filter(Boolean)) : null;
 for (const dir of ["scrydex", "tcgcsv"]) mkdirSync(join(CACHE, dir), { recursive: true });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -195,6 +203,10 @@ const SET_RULES = {
   pop9: { rule: "Raichu only", decides: true, has: (c) => numberKey(c.local_id) === "3" },
   // "There is no Reverse Holo parallel set for Celebrations"
   cel25: { rule: "none", has: () => false },
+  // "Every single card included in this set, including Basic Energy cards, is Holofoil": no card of
+  // 30th Celebration or its Classic Collection has a reverse beside its holo.
+  "30th": { rule: "none: every card is holofoil", has: () => false },
+  "30th-c": { rule: "none: every card is holofoil", has: () => false },
   // "All Basic Energy cards were only included as Reverse Holofoil"
   col1: {
     rule: "every card but the Pokémon LEGEND and Shiny cards; basic Energy only as reverses",
@@ -217,7 +229,7 @@ function bulbapedia(card) {
 
 const cards = (
   await query(
-    "select c.id, c.set_id, c.local_id, c.name, c.rarity, c.variants, s.name as set_name, s.serie_id, s.release_date::text as released from catalogue_cards c left join catalogue_sets s on s.language = c.language and s.id = c.set_id where c.language = 'en' and coalesce(s.serie_id, '') <> 'tcgp'",
+    `select c.id, c.set_id, c.local_id, c.name, c.rarity, c.variants, s.name as set_name, s.serie_id, s.release_date::text as released from catalogue_cards c left join catalogue_sets s on s.language = c.language and s.id = c.set_id where c.language = 'en' and coalesce(s.serie_id, '') <> 'tcgp'${ONLY ? ` and c.set_id in (${[...ONLY].map((id) => `'${id.replaceAll("'", "''")}'`).join(", ")})` : ""}`,
   )
 ).sort((a, b) => a.id.localeCompare(b.id));
 console.error(`catalogue: ${cards.length} English cards`);
@@ -235,7 +247,13 @@ const { results: groups } = await cached(
 const printingsOf = new Map();
 const groupOf = new Map();
 const reverseProducts = new Set();
+/* With --sets, only the groups those sets' cards are linked into: their reverse products and printings
+   are all a decision reads. */
+const wantedGroups = ONLY
+  ? new Set(cards.map((c) => links[c.id]?.groupId).filter((id) => id != null))
+  : null;
 for (const g of groups) {
+  if (wantedGroups && !wantedGroups.has(g.groupId)) continue;
   const [products, prices] = await Promise.all([
     cached(
       `tcgcsv/${g.groupId}-products.json`,
@@ -273,11 +291,18 @@ const expansions = [
       (m) => m[1],
     ),
   ),
-].filter((path) => !path.endsWith("_ja"));
+]
+  .filter((path) => !path.endsWith("_ja"))
+  .filter((path) => {
+    const code = path.split("/").pop();
+    return !ONLY || ONLY.has(ptcgToTcgdex[code] ?? code);
+  });
 const scrydex = new Map();
+const scrydexSlugs = new Map();
 for (const path of expansions) {
   const code = path.split("/").pop();
   const variants = new Map();
+  const slugs = new Map();
   for (let page = 1; page < 40; page++) {
     const html = await cached(
       `scrydex/${code}-${page}.html`,
@@ -286,18 +311,55 @@ for (const path of expansions) {
     );
     const before = [...variants.values()].reduce((n, v) => n + v.size, 0);
     for (const m of html.matchAll(
-      /href="\/pokemon\/cards\/[^"/]*\/([^"?]+)\?variant=([A-Za-z0-9]+)"/g,
+      /href="\/pokemon\/cards\/([^"/]*)\/([^"?]+)\?variant=([A-Za-z0-9]+)"/g,
     )) {
       const number = numberKey(
-        m[1].startsWith(`${code}-`) ? m[1].slice(code.length + 1) : m[1].split("-").pop(),
+        m[2].startsWith(`${code}-`) ? m[2].slice(code.length + 1) : m[2].split("-").pop(),
       );
-      variants.set(number, new Set([...(variants.get(number) ?? []), m[2]]));
+      variants.set(number, new Set([...(variants.get(number) ?? []), m[3]]));
+      // The card's name as Scrydex writes it in the address, for a set it files by printed number.
+      slugs.set(number, m[1]);
     }
     if ([...variants.values()].reduce((n, v) => n + v.size, 0) === before) break;
   }
   scrydex.set(ptcgToTcgdex[code] ?? code, variants);
+  scrydexSlugs.set(ptcgToTcgdex[code] ?? code, slugs);
 }
 console.error(`scrydex: ${scrydex.size} expansions`);
+
+const printedNumbers = JSON.parse(
+  readFileSync(join(CORE, "catalogue", "classic-collection-numbers.generated.json"), "utf8"),
+);
+const slug = (name) =>
+  name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/**
+ * A card's variants on Scrydex. By its number, except a card that prints another card's number (a
+ * Classic Collection's 4/102, classic-collection-numbers.generated.json): Scrydex files those by the
+ * printed number, with a letter where two share it (30th Classic Collection's 106 Shining Celebi,
+ * 106m M Gardevoir-EX, 106p Palkia LV.X), so the name picks among them, and no single match is no
+ * answer.
+ */
+function scrydexCard(c) {
+  const set = scrydex.get(c.set_id);
+  const printed = printedNumbers[c.id];
+  if (!set) return undefined;
+  if (!printed) return set.get(numberKey(c.local_id));
+  const digits = numberKey(printed.split("/")[0]);
+  const own = slug(c.name);
+  const candidates = [...set.keys()].filter((k) => k.replace(/[a-z]+$/, "") === digits);
+  const named = candidates.filter((k) => {
+    const s = scrydexSlugs.get(c.set_id)?.get(k) ?? "";
+    return s === own || s.startsWith(`${own}-`);
+  });
+  const pick = named.length === 1 ? named : candidates.length === 1 ? candidates : [];
+  return pick.length ? set.get(pick[0]) : undefined;
+}
 
 const witnessed = cards.map((c) => {
   const variants = Array.isArray(c.variants) ? c.variants : [];
@@ -322,7 +384,7 @@ const witnessed = cards.map((c) => {
         tonight.has("Reverse Holofoil") ||
         reverseProducts.has(`${groupOf.get(link.productId)}|${numberKey(c.local_id)}`);
   }
-  const onScrydex = scrydex.get(c.set_id)?.get(numberKey(c.local_id));
+  const onScrydex = scrydexCard(c);
   /* Holo or plain: the three answers about the card's non-reverse printing. */
   const types = new Set(variants.map((v) => v.type));
   const sold = link?.productId
@@ -347,6 +409,17 @@ const witnessed = cards.map((c) => {
           ? "beside"
           : "instead"
         : null,
+    /* And the other way round: a card TCGdex lists as a holo only that TCGplayer's product and
+       Scrydex's page both list as a plain printing only (Pokémon Futsal's five promos, nine of
+       McDonald's Collection 2022, 2026-09-17). */
+    plain:
+      types.has("holo") &&
+      !types.has("normal") &&
+      (sold.has("normal") || sold.has("unlimited")) &&
+      !sold.has("holofoil") &&
+      !sold.has("unlimited-holofoil") &&
+      !!onScrydex?.has("normal") &&
+      !onScrydex.has("holofoil"),
   };
 });
 
@@ -407,16 +480,58 @@ const holoBesideNormal = witnessed
   .filter((w) => w.holo === "beside")
   .map((w) => w.card.id)
   .sort();
+const normalNotHolo = witnessed
+  .filter((w) => w.plain)
+  .map((w) => w.card.id)
+  .sort();
 console.error(
-  `TCGdex lists as normal: ${holoNotNormal.length} holos, ${holoBesideNormal.length} with a holo beside the plain card`,
+  `TCGdex lists as holo: ${normalNotHolo.length} plain cards; as normal: ${holoNotNormal.length} holos, ${holoBesideNormal.length} with a holo beside the plain card`,
 );
 
 const disputedCount = Object.values(sets).reduce((n, s) => n + (s.disputed?.length ?? 0), 0);
 console.error(
   `decided ${Object.keys(decisions).length} cards: ${Object.values(decisions).filter(Boolean).length} with a plain reverse; ${disputedCount} disputed`,
 );
-if (!DRY)
-  writeFileSync(
-    OUT,
-    `${JSON.stringify({ sets, holoBeforeReverses: holoBeforeReverses.sort(), holoNotNormal, holoBesideNormal, cards: decisions }, null, 1)}\n`,
-  );
+/* With --sets, the file's other sets stay exactly as the run that decided them left them, in the
+   order they were written: a decided set's entries replace its old ones where those stood. */
+const merged = (() => {
+  const fresh = {
+    sets,
+    holoBeforeReverses,
+    holoNotNormal,
+    holoBesideNormal,
+    normalNotHolo,
+    cards: decisions,
+  };
+  if (!ONLY) return fresh;
+  const before = JSON.parse(readFileSync(OUT, "utf8"));
+  const setOf = new Map(cards.map((c) => [c.id, c.set_id]));
+  const inOnly = (id) => ONLY.has(setOf.get(id) ?? id.replace(/-[^-]+$/, ""));
+  const list = (key) => [...(before[key] ?? []).filter((id) => !inOnly(id)), ...fresh[key]].sort();
+  /** Entries in their old order, a decided set's new ones where its first old one stood. */
+  const replaceIn = (old, next, setKey) => {
+    const out = {};
+    const placed = new Set();
+    const emit = (setId) => {
+      if (placed.has(setId)) return;
+      placed.add(setId);
+      for (const [k, v] of Object.entries(next)) if (setKey(k) === setId) out[k] = v;
+    };
+    for (const [k, v] of Object.entries(old)) {
+      const setId = setKey(k);
+      if (ONLY.has(setId)) emit(setId);
+      else out[k] = v;
+    }
+    for (const setId of ONLY) emit(setId);
+    return out;
+  };
+  return {
+    sets: replaceIn(before.sets, sets, (id) => id),
+    holoBeforeReverses: list("holoBeforeReverses"),
+    holoNotNormal: list("holoNotNormal"),
+    holoBesideNormal: list("holoBesideNormal"),
+    normalNotHolo: list("normalNotHolo"),
+    cards: replaceIn(before.cards, decisions, (id) => setOf.get(id) ?? id.replace(/-[^-]+$/, "")),
+  };
+})();
+if (!DRY) writeFileSync(OUT, `${JSON.stringify(merged, null, 1)}\n`);

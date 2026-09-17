@@ -113,14 +113,18 @@ export function printingsOf(
   const holoNotReverse = tcgId ? HOLO_BEFORE_REVERSES.has(tcgId) : false;
   const holoNotNormal = tcgId ? HOLO_NOT_NORMAL.has(tcgId) : false;
   const holoBeside = tcgId ? HOLO_BESIDE_NORMAL.has(tcgId) : false;
+  const normalNotHolo = tcgId ? NORMAL_NOT_HOLO.has(tcgId) : false;
   for (const v of variants ?? []) {
     /* A card sold before reverse holos existed (Southern Islands, Wizards promos to May 2002) whose
        foil print TCGdex files as a reverse: it is the holo. And a holo TCGdex files as a normal
-       (HOLO_NOT_NORMAL): the holo too. */
+       (HOLO_NOT_NORMAL): the holo too. And a plain card TCGdex files as a holo (NORMAL_NOT_HOLO):
+       the plain card. */
     const type =
       (holoNotReverse && v.type === "reverse" && !v.foil) || (holoNotNormal && v.type === "normal")
         ? "holo"
-        : v.type;
+        : normalNotHolo && v.type === "holo" && !v.foil
+          ? "normal"
+          : v.type;
     const base = FINISH_OF[type ?? ""];
     if (!base) continue;
     const foil = (v.foil ?? "").toLowerCase();
@@ -241,6 +245,11 @@ const HOLO_NOT_NORMAL = new Set((REVERSE_HOLO as { holoNotNormal?: string[] }).h
 const HOLO_BESIDE_NORMAL = new Set(
   (REVERSE_HOLO as { holoBesideNormal?: string[] }).holoBesideNormal ?? [],
 );
+/**
+ * Cards TCGdex lists as a holo only that are plain cards: TCGplayer and Scrydex both name a plain
+ * printing and no holofoil (Pokémon Futsal's five promos, 2026-09-17).
+ */
+const NORMAL_NOT_HOLO = new Set((REVERSE_HOLO as { normalNotHolo?: string[] }).normalNotHolo ?? []);
 
 /**
  * Whether a plain reverse holo of this English card exists, as scripts/reverse-holo-evidence.mjs
