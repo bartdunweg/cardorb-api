@@ -122,7 +122,10 @@ export function variantWord(finish: string | null, pattern: string | null): stri
  * copy's "001" and a row's "1" write the same line.
  */
 export function dexNumber(it: Pick<CardItem, "number" | "printedNumber">): string {
-  const n = (it.printedNumber ?? it.number).trim();
+  // A Classic Collection card prints another set's number with its total (4/102): the export keeps
+  // the row's number, as it wrote before the catalogue said so, so an export imports back the same.
+  const printed = it.printedNumber?.includes("/") ? null : it.printedNumber;
+  const n = (printed ?? it.number).trim();
   return /^\d/.test(n) ? n.replace(/^0+(?=\d)/, "") : n;
 }
 

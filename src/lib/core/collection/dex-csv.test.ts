@@ -46,6 +46,9 @@ const item = (over: Partial<CardItem>): CardItem => ({
 describe("dexNumber", () => {
   it("writes a number as a real Dex export does: digits without their zeros, letters as printed", () => {
     expect(dexNumber({ number: "1", printedNumber: "001" })).toBe("1");
+    // A Classic Collection card prints another set's number with its total; the export keeps the row's.
+    expect(dexNumber({ number: "001", printedNumber: "4/102" })).toBe("1");
+    expect(dexNumber({ number: "CC001", printedNumber: "2/102" })).toBe("CC001");
     expect(dexNumber({ number: "003", printedNumber: "003" })).toBe("3");
     expect(dexNumber({ number: "010", printedNumber: null })).toBe("10");
     expect(dexNumber({ number: "0", printedNumber: "0" })).toBe("0");

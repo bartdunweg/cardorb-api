@@ -84,6 +84,7 @@ describe("GET /api/v1/catalog/cards", () => {
       wishlist: false,
       quantity: 0,
       price: { market: 12.5 },
+      printedNumber: "4",
     });
   });
 

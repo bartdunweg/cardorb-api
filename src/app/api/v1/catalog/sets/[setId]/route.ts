@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { classicNumberOf } from "@/lib/core/catalogue/set-codes";
 import { apiError, refuse } from "@/lib/api/respond";
 import { isBrowseLanguage, setIn } from "@/lib/core/catalogue/tcgdex-browse";
 import { withOwnArt, withOwnScans } from "@/lib/core/catalogue/image-store";
@@ -174,6 +175,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       cards: shown.map((c) =>
         withOwnScans({
           ...c,
+          /* The number as the card prints it, for its label. `number` stays the catalogue's, which
+             ownership and a new row match by; they differ on a Classic Collection card only, which
+             prints its original card's number (classicNumberOf). */
+          printedNumber: classicNumberOf(c.tcgId) ?? c.number,
           price: prices.get(priceKey(c))?.price ?? null,
         }),
       ),
