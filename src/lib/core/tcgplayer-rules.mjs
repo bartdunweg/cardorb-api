@@ -134,3 +134,135 @@ export function tcgplayerRarity(rarity, productRarity) {
   if (given.trim().toLowerCase() === "rare" && ABOVE_RARE.has(word.toLowerCase())) return word;
   return given;
 }
+
+// ── Card type and stage ──────────────────────────────────────────────────────
+
+/**
+ * TCGplayer's stage words in TCGdex's: the spellings the copy already holds for the cards both name
+ * (2026-09-14). TCGplayer writes one stage several ways ("Level Up" and "Level-Up", "Mega" and
+ * "Primal", "Stage 1" and "1"); a word not listed here is no answer.
+ */
+const STAGE_WORDS = {
+  basic: "Basic",
+  "stage 1": "Stage1",
+  1: "Stage1",
+  "stage 2": "Stage2",
+  vmax: "VMAX",
+  gigantamax: "VMAX",
+  vstar: "VSTAR",
+  "v-union": "V-UNION",
+  mega: "MEGA",
+  "mega evolution": "MEGA",
+  primal: "MEGA",
+  "level up": "LEVEL-UP",
+  "level-up": "LEVEL-UP",
+  "break evolution": "BREAK",
+  restored: "RESTORED",
+  baby: "Baby",
+  legend: "LEGEND",
+};
+
+/**
+ * A TCGplayer stage word in TCGdex's spelling, or null for none or a word that is no stage.
+ *
+ * @param {string | null | undefined} stage
+ * @returns {string | null}
+ */
+export function tcgdexStage(stage) {
+  return (stage && STAGE_WORDS[stage.trim().toLowerCase()]) || null;
+}
+
+/**
+ * A product's stage as TCGplayer writes it ("Stage 1", "Level Up"), or null.
+ *
+ * @param {{ extendedData?: { name: string, value: string }[] } | null | undefined} product
+ * @returns {string | null}
+ */
+export function stageOfProduct(product) {
+  const value = product?.extendedData?.find((e) => e.name === "Stage")?.value?.trim();
+  return value || null;
+}
+
+/**
+ * A product's card type as TCGplayer writes it ("Fire", "Metal Lightning", "Trainer - Item"), or null.
+ *
+ * @param {{ extendedData?: { name: string, value: string }[] } | null | undefined} product
+ * @returns {string | null}
+ */
+export function cardTypeOfProduct(product) {
+  const value = product?.extendedData?.find((e) => e.name === "Card Type")?.value?.trim();
+  return value || null;
+}
+
+const ENERGY_TYPE_WORDS = [
+  "Grass",
+  "Fire",
+  "Water",
+  "Lightning",
+  "Psychic",
+  "Fighting",
+  "Darkness",
+  "Metal",
+  "Fairy",
+  "Dragon",
+  "Colorless",
+];
+/** TCGplayer's other words for a type, its two typos included (Electric, Lighnting; 2026-09-17). */
+const TYPE_ALIASES = {
+  dark: "Darkness",
+  normal: "Colorless",
+  steel: "Metal",
+  electric: "Lightning",
+  lighnting: "Lightning",
+};
+
+/**
+ * TCGplayer's card type as TCGdex's energy types, sorted: "Metal Lightning" is Lightning and Metal.
+ * Null where any word is no energy type ("Trainer - Item", "Basic Energy"): a trainer or an energy
+ * card, whose type this does not read.
+ *
+ * @param {string | null | undefined} cardType
+ * @returns {string[] | null}
+ */
+export function typesOfCardType(cardType) {
+  const words = cardType?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (!words.length) return null;
+  const types = words.map(
+    (w) =>
+      ENERGY_TYPE_WORDS.find((t) => t.toLowerCase() === w.toLowerCase()) ??
+      TYPE_ALIASES[w.toLowerCase()],
+  );
+  return types.every(Boolean) ? [...new Set(types)].sort() : null;
+}
+
+/**
+ * Whether a Pokémon's stored types are other types than TCGplayer's card type names. No answer from
+ * TCGplayer, or a card with no stored type, is no disagreement; the order and a type sent twice do
+ * not count (TCGdex sends Dark Houndoom's Darkness twice).
+ *
+ * @param {string[] | null | undefined} types the copy's types
+ * @param {string | null | undefined} cardType TCGplayer's card type
+ * @returns {boolean}
+ */
+export function typesDisagree(types, cardType) {
+  const theirs = typesOfCardType(cardType);
+  if (!theirs || !types?.length) return false;
+  const ours = [...new Set(types)].sort();
+  return ours.join("|") !== theirs.join("|");
+}
+
+/**
+ * Whether a Pokémon's stored stage is another stage than TCGplayer's. No answer from TCGplayer, a
+ * word that is no stage, or a card with no stored stage is no disagreement. A Baby is a Basic that
+ * TCGplayer does not tell apart (Neo Genesis Elekid is "Basic" there).
+ *
+ * @param {string | null | undefined} stage the copy's stage, TCGdex's words
+ * @param {string | null | undefined} productStage TCGplayer's stage
+ * @returns {boolean}
+ */
+export function stageDisagrees(stage, productStage) {
+  const theirs = tcgdexStage(productStage);
+  if (!theirs || !stage) return false;
+  const basic = (s) => (s === "Baby" ? "Basic" : s);
+  return basic(stage) !== basic(theirs);
+}

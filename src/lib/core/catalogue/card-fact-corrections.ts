@@ -2197,9 +2197,33 @@ export const NAMING_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
   "xyp-XY153": { name: ["Ho Oh", "Ho-Oh"] },
 };
 
+/**
+ * 30th Classic Collection (2026-09-17): TCGdex copied eight reprints with a stage or a type their
+ * original never had, and the check "Card types and stages as TCGplayer's" flagged them. Each is
+ * what TCGplayer's product says and what the card it reprints holds in the copy: Solgaleo-GX a
+ * Stage 2 (sm1-89), the Darkrai & Cresselia LEGEND halves a Darkness and Psychic LEGEND (hgss4-99,
+ * hgss4-100), Palkia LV.X a LEVEL-UP (dp4-106), M Gardevoir-EX a MEGA (xy5-106), Scizor ex a Stage 1
+ * (ex10-108), Arceus VSTAR a VSTAR (swsh9-123), Metagross δ Lightning and Metal (ex11-11).
+ */
+export const CLASSIC_REPRINT_CORRECTIONS: Readonly<Record<string, FactCorrection>> = {
+  "30th-c-003": { types: [["Lightning"], ["Lightning", "Metal"]] },
+  "30th-c-017": { stage: ["Basic", "Stage2"] },
+  "30th-c-019": { types: [["Psychic"], ["Darkness", "Psychic"]], stage: ["Basic", "LEGEND"] },
+  "30th-c-020": { types: [["Psychic"], ["Darkness", "Psychic"]], stage: ["Basic", "LEGEND"] },
+  "30th-c-022": { stage: ["Basic", "LEVEL-UP"] },
+  "30th-c-023": { stage: ["Basic", "MEGA"] },
+  "30th-c-025": { stage: ["Basic", "Stage1"] },
+  "30th-c-027": { stage: ["Basic", "VSTAR"] },
+};
+
 /** Every table's corrections for one card, field by field. */
 const correctionOf = (id: string): FactCorrection | undefined => {
-  const tables = [CARD_FACT_CORRECTIONS[id], ROUND_TWO_CORRECTIONS[id], NAMING_CORRECTIONS[id]];
+  const tables = [
+    CARD_FACT_CORRECTIONS[id],
+    ROUND_TWO_CORRECTIONS[id],
+    NAMING_CORRECTIONS[id],
+    CLASSIC_REPRINT_CORRECTIONS[id],
+  ];
   const found = tables.filter((t): t is FactCorrection => !!t);
   return found.length > 1 ? Object.assign({}, ...found) : found[0];
 };

@@ -4,6 +4,9 @@ import {
   classicCollectionNumbers,
   numberDisagrees,
   printedNumberOfProduct,
+  stageDisagrees,
+  typesDisagree,
+  typesOfCardType,
   tcgplayerRarity,
 } from "./tcgplayer-rules.mjs";
 
@@ -136,5 +139,41 @@ describe("tcgplayerRarity", () => {
     expect(tcgplayerRarity(null, "Unconfirmed")).toBeNull();
     expect(tcgplayerRarity(null, null)).toBeNull();
     expect(tcgplayerRarity("Rare", undefined)).toBe("Rare");
+  });
+});
+
+describe("typesDisagree", () => {
+  it("reads TCGplayer's card type as TCGdex's types, in any order and spelling", () => {
+    expect(typesDisagree(["Lightning", "Metal"], "Metal Lightning")).toBe(false);
+    expect(typesDisagree(["Darkness", "Darkness"], "Dark")).toBe(false);
+    expect(typesDisagree(["Colorless"], "Normal")).toBe(false);
+    expect(typesDisagree(["Lightning"], "Lighnting")).toBe(false);
+    expect(typesDisagree(["Psychic"], "Darkness Psychic")).toBe(true);
+    expect(typesDisagree(["Metal"], "Colorless")).toBe(true);
+  });
+
+  it("gives no answer for a trainer or energy word, no type from TCGplayer or none stored", () => {
+    expect(typesDisagree(["Fairy"], "Basic Energy")).toBe(false);
+    expect(typesDisagree([], "Fire")).toBe(false);
+    expect(typesDisagree(["Fire"], null)).toBe(false);
+    expect(typesOfCardType("Trainer - Item")).toBeNull();
+  });
+});
+
+describe("stageDisagrees", () => {
+  it("reads TCGplayer's stage words as TCGdex's", () => {
+    expect(stageDisagrees("Stage1", "Stage 1")).toBe(false);
+    expect(stageDisagrees("LEVEL-UP", "Level Up")).toBe(false);
+    expect(stageDisagrees("MEGA", "Primal")).toBe(false);
+    expect(stageDisagrees("Baby", "Basic")).toBe(false);
+    // 30th Classic Collection's Solgaleo-GX, copied as a Basic (2026-09-17).
+    expect(stageDisagrees("Basic", "Stage 2")).toBe(true);
+    expect(stageDisagrees("Basic", "Legend")).toBe(true);
+  });
+
+  it("gives no answer for no stage on either side or a word that is none", () => {
+    expect(stageDisagrees(null, "Basic")).toBe(false);
+    expect(stageDisagrees("Basic", null)).toBe(false);
+    expect(stageDisagrees("Basic", "Item")).toBe(false);
   });
 });
