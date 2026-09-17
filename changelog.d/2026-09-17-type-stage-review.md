@@ -1,0 +1,1 @@
+- McDonald's Collection 2023's Blissey is a Stage 1 and Ancient Mew a Basic, as the cards print them; every other card whose type or stage differs from TCGplayer's was checked against the printed card and keeps its own.
