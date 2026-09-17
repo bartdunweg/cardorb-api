@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-17
+
+- The 30 cards of 30th Classic Collection no longer show 30th Celebration's pictures (Charizard showed Exeggcute). They show no picture until the next nightly catalogue copy, which takes TCGplayer's scans, and a set whose printed code another set shares is never pictured from Limitless again.
+
 ## 2026-09-16
 
 - `GET /v1/cards` gives each copy a `printImage`: the picture of the printing it is, where that printing or its print run has its own (a Poké Ball reverse, Base Set's Unlimited print), so a list shows the card the copy is. Null where the card's scan stands for it; `image` is unchanged.

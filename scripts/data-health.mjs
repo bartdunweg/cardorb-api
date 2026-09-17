@@ -106,6 +106,45 @@ for (const p of pictures) {
   );
 }
 
+/**
+ * A picture copied from a Limitless folder whose code more than one English set prints. The folder
+ * is one of those sets' cards, and a HEAD answers 200 for the other's number all the same: the 30
+ * cards of 30th Classic Collection were copied from 30th Celebration's 30C folder, Charizard as
+ * Exeggcute (2026-09-17). The copy no longer guesses in such a folder (sharedSetCodes in
+ * artwork.ts), so a row here is one copied before that, or a guard that stopped holding.
+ *
+ * The folder is read from the address itself, not the card's set, so a card filed under another
+ * set's code shows up too. A card opened and found right is listed with what it showed.
+ */
+const LIMITLESS_SHARED_CHECKED = {
+  // Mew 025/025, Celebrations' own gold Mew, opened 2026-09-17.
+  "cel25-25": "Mew",
+};
+const sharedLimitless = await query(
+  `with codes as (
+     select upper(split_part(abbreviation, ':', 1)) as code
+     from catalogue_sets where language = 'en' and abbreviation is not null
+     group by 1 having count(*) > 1
+   )
+   select c.id, c.name, split_part(c.image, '/', 6) as code
+   from catalogue_cards c join codes on codes.code = upper(split_part(c.image, '/', 6))
+   where c.language = 'en' and c.image like 'https://images.cardorb.com/limitless/tpci/%'
+   order by c.id`,
+);
+const sharedUnchecked = sharedLimitless.filter((r) => !(r.id in LIMITLESS_SHARED_CHECKED));
+check(
+  "No pictures from a shared Limitless code (en)",
+  sharedUnchecked.length === 0,
+  `${sharedUnchecked.length} cards${
+    sharedUnchecked.length
+      ? `: ${sharedUnchecked
+          .slice(0, 10)
+          .map((r) => `${r.id} ${r.name} (${r.code})`)
+          .join(", ")}${sharedUnchecked.length > 10 ? ", ..." : ""}`
+      : ""
+  }; ${sharedLimitless.length - sharedUnchecked.length} opened by hand and right`,
+);
+
 // ── The copy's facts ────────────────────────────────────────────────────────
 
 /**

@@ -42,6 +42,7 @@ import {
   isScanFile,
   limitlessScan,
   scrydexScan,
+  sharedSetCodes,
   ownScan,
   tcgdexScan,
   tcgplayerScan,
@@ -339,6 +340,11 @@ async function withResolvedScans(
   fresh: boolean,
   /** The pictures the copy holds for these cards now, by id: one of ours is never asked again. */
   held: Map<string, string | null>,
+  /**
+   * The printed codes another English set carries too (sharedSetCodes in artwork.ts), or null
+   * where the run could not find out, which makes no Limitless guess at all.
+   */
+  sharedCodes: ReadonlySet<string> | null,
 ): Promise<CatalogueMatch[]> {
   const { gaps, code } = await englishSetScans(setId).catch(() => ({
     gaps: new Set<string>(),
@@ -390,11 +396,12 @@ async function withResolvedScans(
     asked++;
     /* Limitless first, where the set has a code there, and never for a lettered number: it
        renumbers a gallery's cards into the parent's run, and a guessed offset shows a
-       confidently wrong card (cards.ts). Then TCGplayer, by the product the price links name
+       confidently wrong card (cards.ts). Nor for a code another set prints as well, whose
+       folder is only one of the two sets (sharedSetCodes). Then TCGplayer, by the product the price links name
        for this card id, so nothing is guessed. Then pokemontcg.io, which is asked by set name, and
        last Scrydex, for the sets read by hand in artwork.ts. */
     const file =
-      (code && !/^[A-Za-z]/.test(card.number)
+      (code && sharedCodes && !sharedCodes.has(code) && !/^[A-Za-z]/.test(card.number)
         ? await limitlessScan(code, card.number).catch(() => null)
         : null) ??
       (await tcgplayerScan(card.id).catch(() => null)) ??
@@ -508,6 +515,32 @@ export async function syncMirror(
   // Each set's logo and symbol as the copy holds them, read once for the run. A store that will not
   // answer ends the run before it writes anything it could not compare.
   const heldSets = new Map((await listCatalogueSets(db)).map((s) => [s.id, s]));
+  /* Which printed codes more than one set carries, before any set's pictures are worked out: the
+     copy's own set rows, and TCGdex's word for every set the copy has no row of yet (the same
+     day-cached read the set's own pass makes). Both from the whole shelf, not the sets this run
+     reaches, because a set and the subset sharing its code are new on the same night: 30th
+     Celebration and its Classic Collection were. A new set whose code cannot be read could be
+     the other carrier of any code, so that run guesses nothing at Limitless. */
+  const sharedCodes = await Promise.all(
+    index
+      .filter((s) => !heldSets.has(s.id))
+      .map(async (s) => ({ id: s.id, code: (await englishSetScans(s.id)).code })),
+  )
+    .then((fresh) =>
+      sharedSetCodes([
+        ...[...heldSets.values()]
+          .filter((s) => !fresh.some((f) => f.id === s.id))
+          .map((s) => ({ id: s.id, code: s.abbreviation })),
+        ...fresh,
+      ]),
+    )
+    .catch((err) => {
+      console.error(
+        "[cron] a set's printed code could not be read, no Limitless guesses this run:",
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    });
   // Every set's logo and symbol into our bucket first: a few hundred small files, and after the
   // first night only the sets whose art is not ours yet are looked at.
   if (storing)
@@ -542,7 +575,7 @@ export async function syncMirror(
           cards.map((c) => c.id),
         ).then((rows) => new Map(rows.map((r) => [r.id, r.image])));
         const pictured = await withStoredImages(
-          await withResolvedScans(db, id, set.name, cards, fresh.has(id), held),
+          await withResolvedScans(db, id, set.name, cards, fresh.has(id), held, sharedCodes),
           held,
           storing,
         );

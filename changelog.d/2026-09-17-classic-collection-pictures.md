@@ -1,0 +1,1 @@
+- The 30 cards of 30th Classic Collection no longer show 30th Celebration's pictures (Charizard showed Exeggcute). They show no picture until the next nightly catalogue copy, which takes TCGplayer's scans, and a set whose printed code another set shares is never pictured from Limitless again.

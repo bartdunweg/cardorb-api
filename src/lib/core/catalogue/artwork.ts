@@ -67,6 +67,35 @@ export async function limitlessScan(code: string, number: string): Promise<strin
 }
 
 /**
+ * The printed codes more than one English set carries, which no Limitless guess may be built
+ * from.
+ *
+ * Limitless has one folder per code, and where two sets print the same code the folder is one of
+ * them: 30th Celebration and its Classic Collection both print 30C, and tpci/30C holds the
+ * parent's 158 cards and nothing of the Classic Collection. Both number from 001, so every guess
+ * for the Classic Collection answered 200 with the parent's card: Charizard 30th-c-001 was copied
+ * as Exeggcute 001/128 (2026-09-17), all thirty of them the same way, and a HEAD cannot tell a
+ * right file from a wrong one. The galleries (ASR:TG and the like) were only safe because their
+ * numbers are lettered. So a shared code is no folder to guess in, for either set: which of the
+ * two the folder belongs to is not something the code says. The parents lose Limitless as a
+ * fallback, which cost nothing on 2026-09-17 (one picture among eight parents, Celebrations' Mew,
+ * held already and right), and TCGplayer by product is asked next.
+ *
+ * A code is compared as the guess uses it: the part before a colon, upper case.
+ */
+export function sharedSetCodes(
+  sets: readonly { id: string; code: string | null | undefined }[],
+): Set<string> {
+  const carriers = new Map<string, Set<string>>();
+  for (const { id, code } of sets) {
+    const key = code?.split(":")[0]?.trim().toUpperCase();
+    if (!key) continue;
+    carriers.set(key, (carriers.get(key) ?? new Set()).add(id));
+  }
+  return new Set([...carriers].filter(([, ids]) => ids.size > 1).map(([key]) => key));
+}
+
+/**
  * Is there a file behind a TCGdex path we worked out ourselves?
  *
  * TCGdex lists a gallery subset's cards with no `image` at all while the files
