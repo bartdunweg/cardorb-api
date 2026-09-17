@@ -22,7 +22,7 @@
  */
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import TCGPLAYER_GROUPS from "../tcgplayer-groups.generated.json";
-import { rarityOfProduct } from "../tcgplayer-rules.mjs";
+import { rarityOfProduct, tcgdexStage } from "../tcgplayer-rules.mjs";
 import { mapLimit } from "../util";
 import { groupProducts, TCGCSV_CATEGORY } from "./tcgcsv";
 
@@ -40,33 +40,8 @@ export type ProductFacts = {
   rarity: string | null;
 };
 
-/**
- * TCGplayer's stage words in TCGdex's: the spellings the copy already holds for the cards both name
- * (2026-09-14). TCGplayer writes one stage several ways ("Level Up" and "Level-Up", "Mega" and
- * "Primal", "Stage 1" and "1"); a word not listed here fills nothing.
- */
-const STAGE_WORDS: Readonly<Record<string, string>> = {
-  basic: "Basic",
-  "stage 1": "Stage1",
-  "1": "Stage1",
-  "stage 2": "Stage2",
-  vmax: "VMAX",
-  gigantamax: "VMAX",
-  vstar: "VSTAR",
-  "v-union": "V-UNION",
-  mega: "MEGA",
-  "mega evolution": "MEGA",
-  primal: "MEGA",
-  "level up": "LEVEL-UP",
-  "level-up": "LEVEL-UP",
-  "break evolution": "BREAK",
-  restored: "RESTORED",
-  baby: "Baby",
-  legend: "LEGEND",
-};
-
-export const tcgdexStage = (stage: string | null | undefined): string | null =>
-  (stage && STAGE_WORDS[stage.trim().toLowerCase()]) || null;
+/** TCGplayer's stage words in TCGdex's (tcgplayer-rules.mjs, where the morning check reads them too). */
+export { tcgdexStage };
 
 /** Every linked card's product facts, by card id. Cards with no product are left out. */
 export async function productFactsOf(cardIds: string[]): Promise<Map<string, ProductFacts>> {
