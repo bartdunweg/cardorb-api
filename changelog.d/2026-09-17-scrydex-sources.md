@@ -1,0 +1,1 @@
+- The sources document says Scrydex is used, with Bart's permission, for every kind of card and set fact beside TCGdex, TCGplayer and Bulbapedia, and lists its set facts and number padding reads.

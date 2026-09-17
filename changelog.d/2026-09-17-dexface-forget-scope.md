@@ -1,0 +1,1 @@
+- A Pokédex face set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `dexFace` write, so the web forgets only the lists that keep a slot's face and keeps the numbers, binders, sets and value. A patch that changes anything beside it is still a `cards` write.

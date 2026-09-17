@@ -106,11 +106,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
   // A patch that sets the star and nothing else is `favorite`, which the web forgets less of
-  // (no binder and no set page shows a star). Any other field beside it is a card write.
-  const onlyTheStar = Object.keys(result.patch).length === 1 && "isFavorite" in result.patch;
+  // (no binder and no set page shows a star). One that sets the Pokédex face and nothing else
+  // is `dexFace`: it changes which card a slot shows and no list, number or value. Any other
+  // field beside either is a card write.
+  const fields = Object.keys(result.patch);
+  const only = fields.length === 1 ? fields[0] : undefined;
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
-    onlyTheStar ? "favorite" : "cards",
+    only === "isFavorite" ? "favorite" : only === "dexFace" ? "dexFace" : "cards",
   );
 
   return NextResponse.json({ ok: true, card: row }, { headers: readHeaders(req) });

@@ -16,6 +16,8 @@ if the two have drifted apart.
 
 - A card TCGdex names no rarity for takes TCGplayer's, and an old holo TCGdex calls a plain Rare takes TCGplayer's grade, for every card the nightly copy writes, new sets included: 30th Classic Collection reads "Classic Collection" as Celebrations' does. A set whose cards print other cards' numbers is found by rule every week, not typed in, so a future Classic Collection's cards read the number they print.
 
+- A Pokédex face set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `dexFace` write, so the web forgets only the lists that keep a slot's face and keeps the numbers, binders, sets and value. A patch that changes anything beside it is still a `cards` write.
+
 - A star set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `favorite` write, so the web keeps its binders and set pages and forgets only the lists, the numbers and the value. A patch that changes anything beside the star is still a `cards` write.
 
 - 30th Celebration's evolved Pokémon ex read as the Stage 1 and Stage 2 cards they print, with what they evolve from; its cards carry the J regulation mark they print; the Classic Collection's Palkia LV.X and Metagross δ carry their marks; and its eight basic Energy (MEE 009 to 016) are in the catalogue. A newer set missing a card TCGplayer sells, a species, a regulation mark or a printed name mark is flagged every morning.
