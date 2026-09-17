@@ -573,6 +573,9 @@ const keptFacts = (
     // tonight's price job held yesterday's for its day while tiles and sheets read tonight's
     // (pricing audit, 2026-09-14). The rate alone did not move it on a weekend.
     //
+    // v27: a card's facts carry its category, so a trainer fills no Pokédex slot (slotSpeciesOf,
+    // 2026-09-17). A v26 entry has none, and every trainer keeps its name match for its day.
+    //
     // v26: a Japanese card's mirror holo and ball reverses priced from their own products
     // (japaneseFinishPrintingsFor, 2026-09-15). A v25 entry prices those copies from the plain one.
     //
@@ -630,7 +633,7 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v26", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    ["collection-facts", "v27", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -709,6 +712,8 @@ const cachedSetFacts = (
         ran();
         return resolveSetFacts(setName, identities, { priceSource });
       },
+      // v36: a card's facts carry its category (slotSpeciesOf, 2026-09-17).
+      //
       // v35: the day of the stored prices is in the key. The facts carry the dollar figure the
       // store answered (priceSource), and an entry made the day before held it for its day: the
       // collection's Charizard read yesterday's €753.12 while its line and movers read tonight's
@@ -789,7 +794,7 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v35", setName, factsSignature(identities), priceDay],
+      ["set-facts", "v36", setName, factsSignature(identities), priceDay],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );

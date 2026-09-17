@@ -34,7 +34,7 @@
 import { compareCardNumbers, mapLimit, measure, numberForms } from "../util";
 import { json, pricesFor, setCatalogue, type SetCatalogue } from "../catalogue/catalogue";
 import { CatalogueNotFound, type CardPrices, usdOf } from "../catalogue/tcgdex-client";
-import { speciesAllOf, speciesOf } from "./pokedex";
+import { slotSpeciesOf } from "./pokedex";
 import {
   editionsOf,
   printingsOf,
@@ -769,6 +769,12 @@ export type CardFacts = {
   rarity: string | null;
   /** Which catalogue answered, or null for the English one. Kept so the blend can skip these. */
   catalogue: BrowseLanguage | null;
+  /**
+   * "Pokemon", "Trainer" or "Energy", where the matched card says: only a Pokémon card fills a
+   * Pokédex slot (slotSpeciesOf). Null where nothing matched or the source does not say. Optional
+   * in the type for the fixtures.
+   */
+  category?: string | null;
 };
 
 /** A set as the catalogue knows it, and the facts of each printing asked about. */
@@ -834,6 +840,7 @@ function factsOfLanguageCard(identity: CardIdentity, card: LanguageCard): CardFa
     priceFirstEd: null,
     rarity: card.rarity,
     catalogue: card.catalogue,
+    category: card.category ?? null,
   };
 }
 
@@ -924,6 +931,7 @@ export async function resolveSetFacts(
       imageHigh,
       tcgId: matched?.id ?? null,
       matchedName: matched?.name ?? null,
+      category: matched?.category ?? null,
     };
   });
 
@@ -957,6 +965,7 @@ export async function resolveSetFacts(
       // the one source for an English card's rarity and is to stay so.
       rarity: null,
       catalogue: null,
+      category: r.category,
     };
   }
   // After the English cards, so an entry keyed the same way cannot be
@@ -1136,8 +1145,10 @@ export async function buildCollection(
           // rest of that.
           // With the shelf it came from: a Japanese card is named in Japanese, and the
           // English list cannot place it, so it used to land in no slot at all.
-          speciesId: speciesOf(card?.matchedName ?? name, card?.catalogue),
-          speciesIds: speciesAllOf(card?.matchedName ?? name, card?.catalogue),
+          //
+          // Only a Pokémon card fills a slot: "Aaron's Collection" holds Aron and "Clefairy Doll"
+          // Clefairy, and a name match alone put 61 English trainers in the Pokédex (2026-09-17).
+          ...slotSpeciesOf(card?.matchedName ?? name, card?.category, card?.catalogue),
           localName: card?.localName ?? null,
           tcgId: card?.tcgId ?? null,
           price: card?.price ?? null,

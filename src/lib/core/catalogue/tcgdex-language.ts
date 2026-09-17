@@ -108,7 +108,13 @@ export type LanguageCard = {
   scan: { low: string; high: string } | null;
   setId: string | null;
   setName: string | null;
+  /** "Pokemon", "Trainer" or "Energy", or null where the catalogue does not say it in those words. */
+  category?: string | null;
 };
+
+/** TCGdex's category where it is one of the three English words the copy keeps. */
+const categoryWord = (c: string | null | undefined): string | null =>
+  c === "Pokemon" || c === "Trainer" || c === "Energy" ? c : null;
 
 type TcgLanguageCard = {
   id: string;
@@ -116,6 +122,7 @@ type TcgLanguageCard = {
   name?: string;
   rarity?: string | null;
   image?: string | null;
+  category?: string | null;
   set?: { id?: string; name?: string };
 };
 
@@ -170,6 +177,7 @@ export async function languageCard(
       scan: file ? { low: file, high: file } : null,
       setId: card.set_id,
       setName: set?.local_name ?? set?.name ?? null,
+      category: categoryWord(card.category),
     };
   }
   for (const lang of langs) {
@@ -204,6 +212,7 @@ export async function languageCard(
       scan: null,
       setId: card.set?.id ?? setIdOf(tcgId),
       setName: card.set?.name ?? null,
+      category: categoryWord(card.category),
     };
   }
   return null;

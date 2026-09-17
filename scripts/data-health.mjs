@@ -41,6 +41,14 @@ import {
 } from "../src/lib/core/reverse-holo-rules.mjs";
 import { paddingReport, paddingWitness } from "../src/lib/core/number-padding.mjs";
 import {
+  fillsPokedexSlot,
+  nameParts,
+  normalise,
+  normaliseLocal,
+  speciesInKey,
+  speciesIndex,
+} from "../src/lib/core/species-match.mjs";
+import {
   groupsOfSets,
   scrydexExpansions,
   setFactsAgainst,
@@ -1345,6 +1353,64 @@ const FLIP_ACCEPTED = new Map([
         ? `: ${holes.map((r) => `${r.missing} ${r.cards} cards (${(r.examples ?? []).join(", ")})`).join("; ")}`
         : ""
     }`,
+  );
+}
+
+/**
+ * Only a Pokémon card fills a Pokédex slot. The collection finds a card's Pokémon by the species
+ * name inside its name (collection/pokedex.ts), and that alone put 61 English trainers and 77
+ * Japanese trainers and Energy in a slot until 2026-09-17: "Aaron's Collection" as Aron, "Hypnotoxic
+ * Laser" as Hypno, "Clefairy Doll" as Clefairy, the Spirit Link tools. The rule
+ * (fillsPokedexSlot in species-match.mjs) is held over every card of the copy: a card that is not a
+ * Pokémon and would still fill a slot fails, and so does a card with no category, which keeps its
+ * name match. A Pokémon card no species name is found in is counted against a ceiling: "Buried
+ * Fossil" names none, and the Japanese copy holds a few English names from Scrydex.
+ */
+const POKEMON_WITHOUT_SPECIES_CEILING = { en: 5, ja: 40 };
+{
+  const english = speciesIndex(
+    JSON.parse(readFileSync(join(ROOT, "src", "lib", "core", "pokedex.generated.json"), "utf8")),
+    normalise,
+  );
+  const japanese = speciesIndex(
+    JSON.parse(
+      readFileSync(join(ROOT, "src", "lib", "core", "species-names.generated.json"), "utf8"),
+    ).map((row) => row.ja),
+    normaliseLocal,
+  );
+  const holds = (name, language) =>
+    [name, ...nameParts(name)].some(
+      (part) =>
+        speciesInKey(
+          language === "ja" ? normaliseLocal(part) : normalise(part),
+          language === "ja" ? japanese : english,
+        ) !== null,
+    );
+  const cards = await query(
+    "select id, language, name, local_name, category from catalogue_cards where language in ('en', 'ja')",
+  );
+  const count = { en: {}, ja: {} };
+  const inSlot = [];
+  const heldOut = { en: 0, ja: 0 };
+  const noSpecies = { en: [], ja: [] };
+  let uncategorised = 0;
+  for (const c of cards) {
+    const name = c.language === "ja" ? (c.local_name ?? c.name) : c.name;
+    const named = holds(name, c.language);
+    if (c.category == null) uncategorised++;
+    if (named && fillsPokedexSlot(c.category)) {
+      count[c.language][c.category] = (count[c.language][c.category] ?? 0) + 1;
+      if (c.category !== "Pokemon") inSlot.push(`${c.id} ${name}`);
+    } else if (named) heldOut[c.language]++;
+    if (!named && c.category === "Pokemon") noSpecies[c.language].push(c.id);
+  }
+  const over = ["en", "ja"].filter((l) => noSpecies[l].length > POKEMON_WITHOUT_SPECIES_CEILING[l]);
+  check(
+    "Only Pokémon cards fill a Pokédex slot",
+    inSlot.length === 0 && uncategorised === 0 && over.length === 0,
+    `in a slot: English Pokémon ${count.en.Pokemon ?? 0}, Japanese Pokémon ${count.ja.Pokemon ?? 0}, other cards ${inSlot.length}${
+      inSlot.length ? ` (${inSlot.slice(0, 6).join(", ")})` : ""
+    }; ${uncategorised} cards without a category; trainers and Energy holding a species name, kept out: English ${heldOut.en}, Japanese ${heldOut.ja}; Pokémon cards naming no species: English ${noSpecies.en.length} of at most ${POKEMON_WITHOUT_SPECIES_CEILING.en} (${noSpecies.en.slice(0, 4).join(", ")}), Japanese ${noSpecies.ja.length} of at most ${POKEMON_WITHOUT_SPECIES_CEILING.ja}`,
   );
 }
 

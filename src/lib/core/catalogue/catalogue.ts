@@ -225,7 +225,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
 // v12: numbers as the cards print them (CATALOGUE_FORMAT 5): the byNumber of a set copied again holds 001.
 // v13: no picture that is not a file of ours, and no assetBase, setHasScans or fromCopy (2026-09-15).
 // v14: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000).
-export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v14"], {
+// v15: a matched card carries its category, so a trainer fills no Pokédex slot (species-match.mjs).
+export const setCatalogue = unstable_cache(loadSetCatalogue, ["set-catalogue", "v15"], {
   revalidate: DAY,
   tags: ["catalogue"],
 });

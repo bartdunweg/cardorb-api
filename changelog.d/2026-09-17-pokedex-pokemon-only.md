@@ -1,0 +1,1 @@
+- Only Pokémon cards fill a Pokédex slot. A trainer whose name holds a Pokémon's (Aaron's Collection, Hypnotoxic Laser, Clefairy Doll, the Spirit Link tools) no longer turns a slot green or counts as that Pokémon, in English or Japanese.

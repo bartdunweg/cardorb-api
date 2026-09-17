@@ -126,6 +126,7 @@ export async function mirrorSetCatalogue(setName: string): Promise<SetCatalogue 
         localId: c.local_id,
         name: c.name,
         image: ownPicture(c.image),
+        category: c.category ?? null,
       })),
     ),
   );

@@ -18,6 +18,8 @@ if the two have drifted apart.
 
 - A star set or cleared through `PATCH /v1/collection/items/{id}`, with no other field, tells cardorb.com it was a `favorite` write, so the web keeps its binders and set pages and forgets only the lists, the numbers and the value. A patch that changes anything beside the star is still a `cards` write.
 
+- Only Pokémon cards fill a Pokédex slot. A trainer whose name holds a Pokémon's (Aaron's Collection, Hypnotoxic Laser, Clefairy Doll, the Spirit Link tools) no longer turns a slot green or counts as that Pokémon, in English or Japanese.
+
 - Team Up and EX Team Magma vs Team Aqua carry their release dates (February 1, 2019 and March 15, 2004), and the two basic Energy sets read Scarlet & Violet Energies and Mega Evolution Energies, as TCGplayer and Scrydex write them. A set whose name or date both write otherwise is flagged every morning.
 
 ## 2026-09-16
