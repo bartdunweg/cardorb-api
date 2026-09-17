@@ -115,7 +115,7 @@ export async function PATCH(req: Request) {
   // is gone from every edge within a minute. The web app keeps its own copy
   // for five minutes and is told, so a switch made in the iOS app is not
   // open on cardorb.com for the rest of them (cardorb-web, /api/revalidate).
-  await forgetOnTheWeb({ userId: viewer.userId, token: token ?? undefined });
+  await forgetOnTheWeb({ userId: viewer.userId, token: token ?? undefined }, "profile");
 
   return NextResponse.json({ ok: true, ...patch });
 }

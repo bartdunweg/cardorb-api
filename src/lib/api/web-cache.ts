@@ -19,9 +19,20 @@ import { usernameOf } from "./viewer";
  * Called after every write the web keeps a copy of: the profile, and since
  * the card and folder routes joined, everything that changes what a
  * dashboard or a public page shows.
+ *
+ * `write` names what changed, so the web drops only that part of what it keeps
+ * (cardorb-web `cache-scopes.ts`): a card written from the phone need not drop
+ * the profile, nor a profile flag every list. `all` is for a write whose reach
+ * is not clear, an import; the web reads a name it does not know as `all` too.
  */
+export const WEB_WRITES = ["all", "cards", "binders", "profile"] as const;
+export type WebWrite = (typeof WEB_WRITES)[number];
+
 const WEB_TIMEOUT_MS = 2_000;
-export async function forgetOnTheWeb(who: { userId: string; token?: string }): Promise<void> {
+export async function forgetOnTheWeb(
+  who: { userId: string; token?: string },
+  write: WebWrite,
+): Promise<void> {
   const url = process.env.WEB_REVALIDATE_URL?.trim();
   const secret = process.env.WEB_REVALIDATE_SECRET?.trim();
   if (!url || !secret) return;
@@ -34,7 +45,7 @@ export async function forgetOnTheWeb(who: { userId: string; token?: string }): P
     const res = await fetch(url, {
       method: "POST",
       headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
-      body: JSON.stringify({ userId: who.userId, username }),
+      body: JSON.stringify({ userId: who.userId, username, write }),
       cache: "no-store",
       signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
     });

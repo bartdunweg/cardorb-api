@@ -9,9 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const authoriseWrite = vi.fn();
 const updateRows = vi.fn();
 const findFolder = vi.fn();
-const forgetOnTheWeb = vi.fn(async (_who: { userId: string; username: string }) => undefined);
+const forgetOnTheWeb = vi.fn(
+  async (_who: { userId: string; token?: string }, _write: string) => undefined,
+);
 vi.mock("@/lib/api/web-cache", () => ({
-  forgetOnTheWeb: (who: { userId: string; username: string }) => forgetOnTheWeb(who),
+  forgetOnTheWeb: (who: { userId: string; token?: string }, write: string) =>
+    forgetOnTheWeb(who, write),
 }));
 vi.mock("@/lib/api/guard", () => ({
   authoriseWrite: (...a: unknown[]) => authoriseWrite(...a),
@@ -78,7 +81,10 @@ describe("PATCH /api/v1/collection/items", () => {
       "t.o.k.e.n",
     );
     expect(await res.json()).toEqual({ ok: true, cards: [{ id: A, condition: "Near Mint" }] });
-    expect(forgetOnTheWeb).toHaveBeenCalledWith(expect.objectContaining({ userId: "me-uuid" }));
+    expect(forgetOnTheWeb).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+    );
   });
 
   it("refuses ids that are missing, empty, not row ids, repeated or too many", async () => {

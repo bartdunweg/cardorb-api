@@ -16,9 +16,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const requestViewer = vi.fn();
 const updateProfile = vi.fn();
-const forgetOnTheWeb = vi.fn(async (_who: { userId: string; token?: string }) => undefined);
+const forgetOnTheWeb = vi.fn(
+  async (_who: { userId: string; token?: string }, _write: string) => undefined,
+);
 vi.mock("@/lib/api/web-cache", () => ({
-  forgetOnTheWeb: (who: { userId: string; token?: string }) => forgetOnTheWeb(who),
+  forgetOnTheWeb: (who: { userId: string; token?: string }, write: string) =>
+    forgetOnTheWeb(who, write),
 }));
 const ownProfile = vi.fn();
 
@@ -95,7 +98,7 @@ describe("PATCH /api/v1/profile", () => {
   it("tells the web whose profile changed, once the change is saved", async () => {
     await patch({ isPublic: false });
     // The id and the token; the purge reads the name itself (lib/api/web-cache.ts).
-    expect(forgetOnTheWeb).toHaveBeenCalledWith({ userId: "me-uuid", token: undefined });
+    expect(forgetOnTheWeb).toHaveBeenCalledWith({ userId: "me-uuid", token: undefined }, "profile");
   });
 
   it("does not tell the web of a change that was refused", async () => {
