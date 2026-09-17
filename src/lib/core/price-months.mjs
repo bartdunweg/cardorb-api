@@ -306,6 +306,22 @@ function dropScarcerRunsUnderTheirBase(days, taken) {
 }
 
 /**
+ * Every figure of every day, the TCGplayer printings and the old series alike, with the record it
+ * sits in: the passes below take a figure out of that record and put one back into it.
+ *
+ * @template {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number> }} D
+ * @param {D[]} days
+ * @param {(day: D, figures: Record<string, number>, printing: string, value: number) => void} visit
+ */
+function eachFigure(days, visit) {
+  for (const d of days) {
+    for (const figures of [d.real, d.legacy]) {
+      for (const [printing, value] of Object.entries(figures)) visit(d, figures, printing, value);
+    }
+  }
+}
+
+/**
  * Takes out of each day a printing's figure that is STRAY_RATIO times off the median of that
  * printing's figures within STRAY_WINDOW_DAYS either side.
  *
@@ -326,24 +342,20 @@ function dropScarcerRunsUnderTheirBase(days, taken) {
 function dropStrayFigures(days, taken) {
   /** @type {Map<string, (Taken & { day: number })[]>} */
   const series = new Map();
-  for (const d of days) {
-    for (const figures of [d.real, d.legacy]) {
-      for (const [printing, value] of Object.entries(figures)) {
-        const key = `${d.card}|${printing}`;
-        const list = series.get(key) ?? [];
-        list.push({
-          card: d.card,
-          date: d.date,
-          day: dayNumber(d.date),
-          figures,
-          held: d.held,
-          printing,
-          value,
-        });
-        series.set(key, list);
-      }
-    }
-  }
+  eachFigure(days, (d, figures, printing, value) => {
+    const key = `${d.card}|${printing}`;
+    const list = series.get(key) ?? [];
+    list.push({
+      card: d.card,
+      date: d.date,
+      day: dayNumber(d.date),
+      figures,
+      held: d.held,
+      printing,
+      value,
+    });
+    series.set(key, list);
+  });
   for (const list of series.values()) {
     if (list.length < STRAY_MIN_FIGURES) continue;
     list.sort((a, b) => a.day - b.day);
@@ -406,17 +418,13 @@ function holdLastFigure(days, taken) {
   const wanted = new Set(taken.map((t) => `${t.card}|${t.printing}`));
   /** @type {Map<string, { date: string, value: number }[]>} */
   const kept = new Map();
-  for (const d of days) {
-    for (const figures of [d.real, d.legacy]) {
-      for (const [printing, value] of Object.entries(figures)) {
-        const key = `${d.card}|${printing}`;
-        if (!wanted.has(key)) continue;
-        const list = kept.get(key) ?? [];
-        list.push({ date: d.date, value });
-        kept.set(key, list);
-      }
-    }
-  }
+  eachFigure(days, (d, _figures, printing, value) => {
+    const key = `${d.card}|${printing}`;
+    if (!wanted.has(key)) return;
+    const list = kept.get(key) ?? [];
+    list.push({ date: d.date, value });
+    kept.set(key, list);
+  });
   for (const list of kept.values()) list.sort((a, b) => (a.date < b.date ? -1 : 1));
   for (const t of taken) {
     const list = kept.get(`${t.card}|${t.printing}`) ?? [];
@@ -432,19 +440,18 @@ function holdLastFigure(days, taken) {
 }
 
 /**
- * Rows laid out as days, one per card per date with a figure, from `since` on, oldest first. A card
- * is its catalogue and its id: an English and a Japanese card under one id are two lines.
- *
- * Each day carries its printings and the two series every chart and line has read (`market`, the
- * plain run before the foil, and `holo`, the foil), in the order pointFromTcgplayer takes them. A
- * day with only the old series has those and no printings.
+ * @typedef {{ language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }} MonthDay
+ */
+
+/**
+ * The rows' figures as days, one per card per date with a figure: the TCGplayer printings in `real`,
+ * the old two series in `legacy`, and `held` empty for the passes to fill.
  *
  * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null }[]} rows
- * @param {string} [since] yyyy-mm-dd
- * @returns {DayPrices[]}
+ * @returns {Map<string, MonthDay>} by card and date
  */
-export function daysFromMonths(rows, since = "0000-00-00") {
-  /** @type {Map<string, { language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }>} */
+function layOutDays(rows) {
+  /** @type {Map<string, MonthDay>} */
   const days = new Map();
   for (const row of rows) {
     const language = languageOrThrow(row.language);
@@ -467,17 +474,16 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       (isLegacy ? day.legacy : day.real)[row.printing] = c / 100;
     }
   }
-  /* Judged on every day read, the days before `since` too: they are the neighbours the first days
-     after it are weighed against, and the last figure a stray one right after it holds. */
-  /** @type {Taken[]} */
-  const taken = [];
-  dropScarcerRunsUnderTheirBase([...days.values()], taken);
-  dropStrayFigures([...days.values()], taken);
-  holdLastFigure([...days.values()], taken);
-  for (const [key, d] of days) {
-    if (d.date < since || (!Object.keys(d.real).length && !Object.keys(d.legacy).length))
-      days.delete(key);
-  }
+  return days;
+}
+
+/**
+ * Which printing stands for each card's plain series and which for its foil one.
+ *
+ * @param {Iterable<MonthDay>} days
+ * @returns {Map<string, { plain: string | null, foil: string | null }>} by card
+ */
+function printingLines(days) {
   /* One printing per card for each series, the same on every day. Chosen per day, a day the
      card's own printing had no figure fell to the next in line: Base Set Charizard read its
      1st Edition ($5,266) on 14 days its unlimited holo ($869) was missing, and its chart climbed
@@ -486,7 +492,7 @@ export function daysFromMonths(rows, since = "0000-00-00") {
      has no figure in that series. */
   /** @type {Map<string, Record<string, number>>} */
   const counts = new Map();
-  for (const d of days.values()) {
+  for (const d of days) {
     const c = counts.get(d.card) ?? {};
     for (const name of Object.keys(d.real)) c[name] = (c[name] ?? 0) + 1;
     counts.set(d.card, c);
@@ -496,8 +502,7 @@ export function daysFromMonths(rows, since = "0000-00-00") {
     const most = Math.max(0, ...names.map((n) => c[n] ?? 0));
     return most ? (names.find((n) => (c[n] ?? 0) * 2 >= most) ?? null) : null;
   };
-  /** @type {Map<string, { plain: string | null, foil: string | null }>} */
-  const lines = new Map(
+  return new Map(
     [...counts].map(([card, c]) => {
       /* The plain line only where it is the card's own: a printing read on at least half as many
          days as the card's most-read printing of any kind. ex8-15's 95 days of "normal" beside
@@ -510,45 +515,84 @@ export function daysFromMonths(rows, since = "0000-00-00") {
       ];
     }),
   );
-  const out = [];
-  for (const d of days.values()) {
-    if (Object.keys(d.real).length) {
-      const line = lines.get(d.card) ?? { plain: null, foil: null };
-      const foil = line.foil ? (d.real[line.foil] ?? null) : null;
-      const plain = line.plain ? (d.real[line.plain] ?? null) : null;
-      out.push({
-        language: d.language,
-        tcgId: d.tcgId,
-        date: d.date,
-        market: line.plain ? plain : foil,
-        holo: foil,
-        printings: d.real,
-        ...(Object.keys(d.held).some((k) => k in d.real) ? { held: d.held } : {}),
-      });
-    } else {
-      const market = d.legacy[LEGACY.market] ?? null;
-      out.push({
-        language: d.language,
-        tcgId: d.tcgId,
-        date: d.date,
-        market,
-        holo: d.legacy[LEGACY.holo] ?? null,
-      });
-    }
+}
+
+/**
+ * A day as the app reads it: its printings and the plain and foil series, or the old two series
+ * where no printing was stored.
+ *
+ * @param {MonthDay} d
+ * @param {{ plain: string | null, foil: string | null }} line
+ * @returns {DayPrices}
+ */
+function dayPrices(d, line) {
+  if (Object.keys(d.real).length) {
+    const foil = line.foil ? (d.real[line.foil] ?? null) : null;
+    const plain = line.plain ? (d.real[line.plain] ?? null) : null;
+    return {
+      language: d.language,
+      tcgId: d.tcgId,
+      date: d.date,
+      market: line.plain ? plain : foil,
+      holo: foil,
+      printings: d.real,
+      ...(Object.keys(d.held).some((k) => k in d.real) ? { held: d.held } : {}),
+    };
   }
-  return out.sort((a, b) =>
-    a.date < b.date
-      ? -1
-      : a.date > b.date
-        ? 1
-        : a.tcgId < b.tcgId
-          ? -1
-          : a.tcgId > b.tcgId
-            ? 1
-            : a.language < b.language
-              ? -1
-              : 1,
+  return {
+    language: d.language,
+    tcgId: d.tcgId,
+    date: d.date,
+    market: d.legacy[LEGACY.market] ?? null,
+    holo: d.legacy[LEGACY.holo] ?? null,
+  };
+}
+
+/** Oldest first, then by card id, then English before Japanese. @param {DayPrices} a @param {DayPrices} b */
+const byDateCardLanguage = (a, b) =>
+  a.date < b.date
+    ? -1
+    : a.date > b.date
+      ? 1
+      : a.tcgId < b.tcgId
+        ? -1
+        : a.tcgId > b.tcgId
+          ? 1
+          : a.language < b.language
+            ? -1
+            : 1;
+
+/**
+ * Rows laid out as days, one per card per date with a figure, from `since` on, oldest first. A card
+ * is its catalogue and its id: an English and a Japanese card under one id are two lines.
+ *
+ * Each day carries its printings and the two series every chart and line has read (`market`, the
+ * plain run before the foil, and `holo`, the foil), in the order pointFromTcgplayer takes them. A
+ * day with only the old series has those and no printings.
+ *
+ * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null }[]} rows
+ * @param {string} [since] yyyy-mm-dd
+ * @returns {DayPrices[]}
+ */
+export function daysFromMonths(rows, since = "0000-00-00") {
+  const days = layOutDays(rows);
+  /* Judged on every day read, the days before `since` too: they are the neighbours the first days
+     after it are weighed against, and the last figure a stray one right after it holds. */
+  /** @type {Taken[]} */
+  const taken = [];
+  const all = [...days.values()];
+  dropScarcerRunsUnderTheirBase(all, taken);
+  dropStrayFigures(all, taken);
+  holdLastFigure(all, taken);
+  for (const [key, d] of days) {
+    if (d.date < since || (!Object.keys(d.real).length && !Object.keys(d.legacy).length))
+      days.delete(key);
+  }
+  const lines = printingLines(days.values());
+  const out = [...days.values()].map((d) =>
+    dayPrices(d, lines.get(d.card) ?? { plain: null, foil: null }),
   );
+  return out.sort(byDateCardLanguage);
 }
 
 /** The first of the month a date falls in, for a query on `month`. */
