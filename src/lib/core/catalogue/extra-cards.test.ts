@@ -31,6 +31,8 @@ describe("extra-cards.json", () => {
     );
     expect(extraCardsOf("ja", "SM12a").map(([id]) => id)).toContain("SM12a-GRA");
     expect(extraCardsOf("en", "xya")).toEqual([]);
+    // 30th Celebration's three RGB Mew, which TCGdex does not list: TCGplayer sells each.
+    expect(extraCardsOf("en", "30th").map(([id]) => id)).toEqual(["30th-R", "30th-G", "30th-B"]);
   });
 });
 
