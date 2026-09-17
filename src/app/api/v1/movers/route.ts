@@ -13,7 +13,9 @@ import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
  * The caller's cards whose price moved most over a period, up and down.
  *
  * Home draws it under the value line, over the same period the chart shows, so `days` is the
- * chart's periods: 7, 30, 90, 180, or `all`. Each card is compared between its earliest and its
+ * chart's periods: 7, 30, 91, 182, or `all`. 90 and 180 stay accepted for clients that still ask
+ * for them; the web chart cuts three and six months at 91 and 182 days, and the movers under it
+ * read the same window. Each card is compared between its earliest and its
  * latest reading in the window (moversOf), per copy at its own printing, and ranked by what the
  * move did to the collection: the change times the copies held. `top` is how many each way.
  *
@@ -22,7 +24,15 @@ import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
  */
 export const dynamic = "force-dynamic";
 
-const PERIODS = { "7": 7, "30": 30, "90": 90, "180": 180, all: null } as const;
+const PERIODS = {
+  "7": 7,
+  "30": 30,
+  "90": 90,
+  "91": 91,
+  "180": 180,
+  "182": 182,
+  all: null,
+} as const;
 const MAX_TOP = 10;
 
 export async function GET(req: Request) {
@@ -35,7 +45,7 @@ export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
   const period = params.get("days") ?? "30";
   if (!(period in PERIODS))
-    return apiError(400, "days must be 7, 30, 90, 180 or `all`.", undefined, {
+    return apiError(400, "days must be 7, 30, 90, 91, 180, 182 or `all`.", undefined, {
       headers: readHeaders(req),
     });
   const topRaw = params.get("top");
