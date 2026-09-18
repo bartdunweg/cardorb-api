@@ -10,6 +10,12 @@ if the two have drifted apart.
 
 - A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.
 
+- Card search is answered by our own copy of the catalogue and never by TCGdex while somebody waits: the copy is there when it holds cards, not when a nightly run left a record, so a database filled any other way no longer answered "The card service didn't answer." with every card in it.
+- A search now comes back in the order the word typed asks for, the same order the browser's own copy has used since cardorb-web #656: what the name starts with first, then what holds it further in, then a match on the number or the set. "charizard ex" answers Charizard ex before Mega Charizard Y ex.
+- A diacritic is no longer something anyone has to type: "poke ball" finds Poké Ball, "pokemon center" finds Pokémon Center Lady, "flabebe" finds Flabébé. All three found nothing before.
+- A hyphen reads as a space and a space as a hyphen, so "ho oh" and "ho-oh" are one question.
+- A set's id beside a word narrows the search to that set ("sv03.5 charizard").
+
 ## 2026-09-17
 
 - Every 30th Celebration and 30th Classic Collection card is offered as the holofoil it is, not a Standard copy, and the set's three RGB Mew (R, G and B) are in the catalogue. Pokémon Futsal's five promos and nine McDonald's Collection 2022 cards are offered as the plain cards they are, not holos. A set whose finishes share nothing with what TCGplayer sells is flagged every morning.

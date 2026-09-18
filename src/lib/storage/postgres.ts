@@ -1671,7 +1671,11 @@ export type CatalogueCardRecord = {
 
 /** What the copy asks of a search: every word in the row's text, and the filters as typed. */
 export type CatalogueQuery = {
-  /** Each must appear in the name, the number or the set name. */
+  /**
+   * Each must appear in the name, the number, the set name or the set's code, and together they
+   * decide the order (search_catalogue_cards). Folded and lowercased by mirrorQuery, hyphens
+   * split out, because the copy's index holds the folded text.
+   */
   words: string[];
   /** Filter mode's own fields; each matches its own column, as a contains. */
   name?: string;
@@ -1815,17 +1819,30 @@ export async function listCatalogueSync(
   }));
 }
 
-/** True once at least one set has been copied: the search may read the copy. */
+/**
+ * True once the copy holds a card in this language: the search may read the copy.
+ *
+ * The cards, not the sync record. It counted catalogue_sync until 2026-09-18, which is a record
+ * of what the nightly run did rather than of what is there to read: a database whose cards are
+ * loaded any other way (the end-to-end stack seeds catalogue_sets and catalogue_cards, and no
+ * sync row) answered "no copy" with 23,000 cards in it, and every search went to TCGdex per
+ * keystroke. With outside hosts blocked, as the e2e job blocks them, that is the palette saying
+ * "The card service didn't answer." about a catalogue sitting in the same database.
+ *
+ * One row is asked for, not a count: the question is whether there is anything, and counting
+ * 38,000 rows to learn that costs more than reading one.
+ */
 export async function catalogueCopied(
   db: SupabaseClient,
   language: CatalogueLanguage = "en",
 ): Promise<boolean> {
-  const { count, error } = await db
-    .from("catalogue_sync")
-    .select("set_id", { count: "exact", head: true })
-    .eq("language", language);
-  if (error) throw new Error(`Reading the catalogue's sync record failed: ${error.message}`);
-  return (count ?? 0) > 0;
+  const { data, error } = await db
+    .from("catalogue_cards")
+    .select("id")
+    .eq("language", language)
+    .limit(1);
+  if (error) throw new Error(`Reading the catalogue's copy failed: ${error.message}`);
+  return (data?.length ?? 0) > 0;
 }
 
 /**
@@ -1886,13 +1903,20 @@ export async function writeCatalogueSet(
  * TG cards sat inside its main run. The search pages on this order, so it has to be the query's.
  */
 
-/** `%word%` for PostgREST's ilike, with the pattern characters in the word made literal. */
-const contains = (word: string) => `%${word.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
-
 /**
- * One page of the copy, newest set first and by number within one, with how many the whole
- * query matched. Every word is a contains on the search column, AND'd, which is what the
- * trigram index answers; the filter mode's fields each take their own column.
+ * One page of the copy, ranked, with how many the whole query matched.
+ *
+ * One call to search_catalogue_cards (migration 20260918090000), which is one query: the words
+ * are contains clauses over the folded search column, AND'd, which is what the trigram index
+ * answers; a word that names a set also takes that set; the filter mode's fields each take their
+ * own column. The order is the name first ("charizard" answers Charizard before Dark Charizard
+ * before a Charizard-numbered card of another name), then newest set, set, number.
+ *
+ * It was PostgREST until 2026-09-18, with release_date as the only order. PostgREST can express
+ * the matching but not the ranking, and the two have to be one query or the count is wrong.
+ *
+ * `total_count` rides on every row, which is what a window function over the matched set costs:
+ * no second query, and exact rather than the window-capped "at least" TCGdex could give.
  */
 export async function searchCatalogueCards(
   db: SupabaseClient,
@@ -1901,29 +1925,26 @@ export async function searchCatalogueCards(
   pageSize: number,
   language: CatalogueLanguage = "en",
 ): Promise<{ rows: CatalogueCardRecord[]; total: number }> {
-  let q = db
-    .from("catalogue_cards")
-    .select(
-      "id, set_id, local_id, name, set_name, series, release_date, rarity, types, image, category, trainer_type, full_art, local_name",
-      {
-        count: "exact",
-      },
-    )
-    .eq("language", language);
-  for (const word of query.words) q = q.ilike("search", contains(word.toLowerCase()));
-  if (query.name) q = q.ilike("name", contains(query.name));
-  if (query.number) q = q.ilike("local_id", contains(query.number));
-  if (query.set) q = q.ilike("set_name", contains(query.set));
-  if (query.type) q = q.contains("types", [query.type]);
-  if (query.fullArt) q = q.eq("full_art", true);
-  const from = (Math.max(1, page) - 1) * pageSize;
-  const { data, count, error } = await q
-    .order("release_date", { ascending: false, nullsFirst: false })
-    .order("set_id", { ascending: true })
-    .order("number_order", { ascending: true })
-    .range(from, from + pageSize - 1);
+  const { data, error } = await db.rpc("search_catalogue_cards", {
+    p_language: language,
+    p_words: query.words,
+    p_name: query.name ?? null,
+    p_number: query.number ?? null,
+    p_set: query.set ?? null,
+    p_type: query.type ?? null,
+    p_full_art: query.fullArt ?? false,
+    p_limit: pageSize,
+    p_offset: (Math.max(1, page) - 1) * pageSize,
+  });
   if (error) throw new Error(`Searching the catalogue's copy failed: ${error.message}`);
-  return { rows: (data ?? []) as CatalogueCardRecord[], total: count ?? 0 };
+  const rows = (data ?? []) as (CatalogueCardRecord & { total_count: number })[];
+  /* An empty page is an empty answer: the count rides on the rows, so there is none to read.
+     That is right for a search that matched nothing, and for a page past the end it says 0
+     where the truth is "not on this page", which no screen asks. */
+  return {
+    rows: rows.map(({ total_count: _total, ...row }) => row),
+    total: Number(rows[0]?.total_count ?? 0),
+  };
 }
 
 /** The copy's latest write, as the version everything built from it carries. Null before the first night. */

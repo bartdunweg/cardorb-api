@@ -1,0 +1,5 @@
+- Card search is answered by our own copy of the catalogue and never by TCGdex while somebody waits: the copy is there when it holds cards, not when a nightly run left a record, so a database filled any other way no longer answered "The card service didn't answer." with every card in it.
+- A search now comes back in the order the word typed asks for, the same order the browser's own copy has used since cardorb-web #656: what the name starts with first, then what holds it further in, then a match on the number or the set. "charizard ex" answers Charizard ex before Mega Charizard Y ex.
+- A diacritic is no longer something anyone has to type: "poke ball" finds Poké Ball, "pokemon center" finds Pokémon Center Lady, "flabebe" finds Flabébé. All three found nothing before.
+- A hyphen reads as a space and a space as a hyphen, so "ho oh" and "ho-oh" are one question.
+- A set's id beside a word narrows the search to that set ("sv03.5 charizard").
