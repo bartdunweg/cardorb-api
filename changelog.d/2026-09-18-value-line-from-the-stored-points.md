@@ -1,0 +1,1 @@
+- Home's value line draws at once: the nightly points answer every day they cover, and only today is worked out from the readings. It also no longer has a notch at exactly ninety days back, where the worked-out days met the stored ones.

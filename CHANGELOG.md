@@ -18,6 +18,8 @@ if the two have drifted apart.
 
 - A search on a word of one or two letters ("ho oh", "mr mime") is back to the speed it had before today's search change: 16 ms rather than 129 ms, for the same hits. Nothing a word that short can carry is lost.
 
+- Home's value line draws at once: the nightly points answer every day they cover, and only today is worked out from the readings. It also no longer has a notch at exactly ninety days back, where the worked-out days met the stored ones.
+
 ## 2026-09-17
 
 - Every 30th Celebration and 30th Classic Collection card is offered as the holofoil it is, not a Standard copy, and the set's three RGB Mew (R, G and B) are in the catalogue. Pokémon Futsal's five promos and nine McDonald's Collection 2022 cards are offered as the plain cards they are, not holos. A set whose finishes share nothing with what TCGplayer sells is flagged every morning.

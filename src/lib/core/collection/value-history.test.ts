@@ -4,9 +4,12 @@ import type { CardItem } from "./items";
 import type { CardPricePoint } from "./movers";
 import {
   HISTORY_DAILY_FROM,
+  HISTORY_WINDOW_DAYS,
   needsHistoryRebuild,
   nightReadFrom,
   nightlyPoints,
+  recentFrom,
+  tailReadFrom,
 } from "./value-history";
 
 describe("needsHistoryRebuild", () => {
@@ -81,5 +84,52 @@ describe("nightlyPoints", () => {
 
   it("writes nothing for tonight itself, whose readings the price job has not written yet", () => {
     expect(nightlyPoints([pikachu], readings, tonight).some((p) => p.date >= tonight)).toBe(false);
+  });
+});
+
+/**
+ * Which days the line still has to be worked out for.
+ *
+ * Home summed every reading of every held card over ninety days on every visit and drew the result
+ * over stored points that said the same figures: 144,574 readings, 1,678 ms to read and 241 ms to
+ * add up (production, 2026-09-17). The table answers every night the cron wrote; this is what is
+ * left.
+ */
+describe("recentFrom", () => {
+  const through = (last: string, days: number) =>
+    Array.from({ length: days }, (_, i) =>
+      new Date(Date.parse(`${last}T00:00:00Z`) - (days - 1 - i) * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+    );
+
+  it("leaves today alone to be worked out, where the cron kept up", () => {
+    expect(recentFrom(through("2026-09-17", 95), "2026-09-18")).toBe("2026-09-18");
+  });
+
+  it("starts at the earliest night the cron missed, so a gap is drawn and not stepped over", () => {
+    const stored = through("2026-09-17", 95).filter((d) => d !== "2026-09-10");
+    expect(recentFrom(stored, "2026-09-18")).toBe("2026-09-10");
+  });
+
+  it("works out the whole window for an account with no points at all", () => {
+    expect(recentFrom([], "2026-09-18")).toBe("2026-06-20");
+  });
+
+  it("works out the whole window for a history that stopped months ago", () => {
+    expect(recentFrom(through("2026-01-10", 30), "2026-09-18")).toBe("2026-06-20");
+  });
+
+  it("holds the window it falls back to at the readings' ninety days", () => {
+    expect(HISTORY_WINDOW_DAYS).toBe(90);
+  });
+});
+
+describe("tailReadFrom", () => {
+  // A card with no reading on the day is priced at its last one, up to CARRY_DAYS old
+  // (holdingsSeries): the tail has to read that fortnight or it prices the collection from
+  // whatever happened to have a reading that morning.
+  it("reads one day further back than a reading can stand", () => {
+    expect(tailReadFrom("2026-09-18")).toBe("2026-09-03");
   });
 });

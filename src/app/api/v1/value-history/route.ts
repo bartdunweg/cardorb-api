@@ -12,6 +12,7 @@ import {
 import { UUID } from "@/lib/core/collection/collection-row";
 import { folderSeries, joinHistory } from "@/lib/core/collection/folder-history";
 import { filterItems, flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
+import { recentFrom } from "@/lib/core/collection/value-history";
 import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
 
 /**
@@ -27,6 +28,16 @@ import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
  * The bearer is forwarded for the same reason /v1/collection forwards it: row
  * level security has to see the caller who is actually asking, and this table's
  * only policy is `user_id = auth.uid()`.
+ *
+ * The stored points answer every day they cover. Until now the last ninety days were summed from
+ * the readings on every visit and drawn over them: 144,574 readings, 1,678 ms to read and 241 ms
+ * to add up (production, 2026-09-17), for figures the table already held. It was also visibly
+ * wrong at the seam. A copy sold is gone from the collection, so a line worked out today values
+ * the past without it, while the points before the window keep it: the owner's line stepped from
+ * EUR 41,471 on 2026-06-19 (stored) to EUR 41,424 on 2026-06-20 (worked out) where the stored
+ * series rose EUR 30, and that notch walked a day forward every day. recentFrom() takes the
+ * earliest day the table has no point for, so what is worked out is today and any night the cron
+ * missed, and nothing is drawn over a point that already says it.
  *
  * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, built from
  * the per-card daily readings (see folderSeries): the same shape, a shorter
@@ -57,19 +68,32 @@ export async function GET(req: Request) {
         "The value history could not be read. Try again in a moment.",
         readHeaders(req),
       );
-    /* The recent days as the cards' own lines add up (joinHistory): the same readings a card's chart
-       draws, the same ninety days the movers read, summed once and kept (getRecentValue). Where the
-       collection or its readings cannot be read, the stored points alone, as before. */
+    /* The days the table has no point for, as the cards' own lines add up (joinHistory): the same
+       readings a card's chart draws, summed once and kept (getRecentValue). For an account the
+       04:00 cron has kept up with that is today alone; recentFrom() takes the earliest missing day,
+       so a gap or a history the cron stopped writing is worked out and drawn rather than left to a
+       stored point that does not cover it. Where the collection or its readings cannot be read, the
+       stored points alone, as before. */
+    const since = recentFrom(
+      snapshots.map((p) => p.date),
+      new Date().toISOString().slice(0, 10),
+    );
     let recent: ValueSnapshot[] = [];
-    try {
-      const collection = await getCollection(viewer.userId, token);
-      if (collection && !collection.failed) {
-        const line = await getRecentValue(viewer.userId, flattenItems(collection.sets), token);
-        if (!line.failed) recent = line.snapshots;
+    if (since)
+      try {
+        const collection = await getCollection(viewer.userId, token);
+        if (collection && !collection.failed) {
+          const line = await getRecentValue(
+            viewer.userId,
+            flattenItems(collection.sets),
+            token,
+            since,
+          );
+          if (!line.failed) recent = line.snapshots;
+        }
+      } catch (err) {
+        console.error("Recent value line unavailable, the stored points alone:", err);
       }
-    } catch (err) {
-      console.error("Recent value line unavailable, the stored points alone:", err);
-    }
     return NextResponse.json(
       { snapshots: joinHistory(snapshots, recent) },
       { headers: readHeaders(req) },
