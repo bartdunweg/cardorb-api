@@ -20,3 +20,4 @@ one it departs from, then do it.
 
 **Where a rule and the code disagree**, the rule is dead or the code is wrong. Do not decide that
 alone: say so in the pull request, and ask the owner.
+| R-SEC-002 | The direct Postgres connection (`src/lib/storage/direct.ts`, `DATABASE_POOLER_URL`) logs in as `cardorb_direct` and runs only the queries in `DIRECT_SQL`: parameterised, and naming a person's row by the id the caller already verified. A read whose safety rests on RLS stays on PostgREST. Reading more is a migration that grants the column to `cardorb_direct`, beside the query that needs it. | enforced by `src/lib/storage/direct-role-migration.test.ts` (the role reads the two queries' columns and is refused every other) and `direct.test.ts` (values travel as parameters) | The connection carries no JWT, so RLS cannot tell one person from another there, and the pooler's default user `postgres` reads every account. |
