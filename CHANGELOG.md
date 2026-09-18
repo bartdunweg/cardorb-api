@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - The collection answers sooner once the direct database connection is switched on: the check for a newer copy of your cards no longer waits on Supabase's gateway.
 
+- The search, the catalogue's card list and a card's sheet price a card as its set page does: at the first printing in the sheet's order that TCGplayer prices, and they say which (`printing`). A holo rare that also came as a reverse now shows the reverse's price in the search and above its sheet, the figure its tile shows. What a copy you hold is worth is unchanged.
+
 - A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.
 
 - A card list asked with `from` (and no change sort) answers each card on the page with what its price did since that day, so the collection, the wishlist and a binder can show it under the price as a set page does.

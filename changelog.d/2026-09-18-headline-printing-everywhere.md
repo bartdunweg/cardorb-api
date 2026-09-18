@@ -1,0 +1,1 @@
+- The search, the catalogue's card list and a card's sheet price a card as its set page does: at the first printing in the sheet's order that TCGplayer prices, and they say which (`printing`). A holo rare that also came as a reverse now shows the reverse's price in the search and above its sheet, the figure its tile shows. What a copy you hold is worth is unchanged.

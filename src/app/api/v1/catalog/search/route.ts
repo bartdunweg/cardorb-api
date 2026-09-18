@@ -5,6 +5,7 @@ import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
 import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
+import { pagePrintings } from "@/lib/core/catalogue/page-printings";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -54,6 +55,12 @@ import { adminClient } from "@/lib/storage/supabase";
  * price line. TCGplayer's, from the tcgcsv groups cached for the day, for the
  * reason tcgplayerPricesFor gives; a card TCGplayer does not price carries
  * null, as it does on the set page.
+ *
+ * That price is the set page's: the headline printing's, the one the card's
+ * sheet opens on (headline-printing.ts), and `printing` names it. It was
+ * TCGplayer's first printing with a market, so a holo rare with a reverse
+ * showed the holo's figure here and the reverse's on its set page. The
+ * printings are one read of the copy for the page, beside the prices.
  */
 export const dynamic = "force-dynamic";
 
@@ -125,8 +132,12 @@ export async function GET(req: Request) {
     /* Keyed by the TCGdex id, which every hit carries and which everything priced is keyed by;
        the fallback is the set route's, for a card that came without the one. */
     const priceKey = (c: (typeof marked)[number]) => c.tcgId ?? c.id;
+    const printingsRead = pagePrintings(
+      marked.map((c) => ({ key: priceKey(c), sheet: c.sheet })),
+      language,
+    );
     const prices = await timed("tcgplayer prices", () =>
-      tcgplayerPricesFor(marked.map(priceKey), language),
+      tcgplayerPricesFor(marked.map(priceKey), language, printingsRead),
     );
     return NextResponse.json(
       /* `total` is how many the whole search matched, at most the window it reads (250,
@@ -137,6 +148,8 @@ export async function GET(req: Request) {
           // As the card prints it, for its label; the set route says why it can differ from `number`.
           printedNumber: classicNumberOf(c.tcgId) ?? c.number,
           price: prices.get(priceKey(c))?.price ?? null,
+          // The printing that price is, keyed as the sheet's buttons are; null without a price.
+          printing: prices.get(priceKey(c))?.printing ?? null,
         })),
         total,
       },

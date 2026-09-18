@@ -5,6 +5,7 @@ import { authorise, readHeaders, refused } from "@/lib/api/guard";
 import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { mirrorCards } from "@/lib/core/catalogue/mirror";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
+import { pagePrintings } from "@/lib/core/catalogue/page-printings";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { bearer } from "@/lib/api/viewer";
 import { adminClient } from "@/lib/storage/supabase";
@@ -15,6 +16,9 @@ import { adminClient } from "@/lib/storage/supabase";
  * showing its hits — the part of a search result that is personal or daily, for the twenty on
  * screen. Same shape as a search hit, same reads, in parallel. `ids` is comma-separated
  * TCGdex ids, fifty at most; an id the copy lacks is left out.
+ *
+ * The price is a search hit's and a set tile's: the headline printing's, the one the card's sheet
+ * opens on (headline-printing.ts), named in `printing`.
  */
 export const dynamic = "force-dynamic";
 const MAX_IDS = 50;
@@ -44,14 +48,21 @@ export async function GET(req: Request) {
       englishShelfSets().catch(() => []),
     ]);
     const marked = markOwnership(ownershipIndex(rows, null, sets), cards);
-    const prices = await tcgplayerPricesFor(marked.map((c) => c.tcgId ?? c.id));
+    const priceKey = (c: (typeof marked)[number]) => c.tcgId ?? c.id;
+    const printingsRead = pagePrintings(
+      marked.map((c) => ({ key: priceKey(c), sheet: c.sheet })),
+      null,
+    );
+    const prices = await tcgplayerPricesFor(marked.map(priceKey), null, printingsRead);
     return NextResponse.json(
       {
         cards: marked.map((c) => ({
           ...c,
           // As the card prints it, for its label; the set route says why it can differ from `number`.
           printedNumber: classicNumberOf(c.tcgId) ?? c.number,
-          price: prices.get(c.tcgId ?? c.id)?.price ?? null,
+          price: prices.get(priceKey(c))?.price ?? null,
+          // The printing that price is, keyed as the sheet's buttons are; null without a price.
+          printing: prices.get(priceKey(c))?.printing ?? null,
         })),
       },
       { headers: readHeaders(req) },
