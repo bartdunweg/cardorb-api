@@ -12,6 +12,7 @@ import {
   type HeadlineChange,
   headlineChanges,
   readFromDay,
+  editionOfSeries,
 } from "@/lib/core/collection/headline-printing";
 import { priceLanguageOf } from "@/lib/core/price-months.mjs";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
@@ -234,6 +235,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
           /* The printing that price is, keyed as the sheet's buttons are ("reverse-holo",
              "holo/cosmos"); null where the card has no price. */
           printing: prices.get(priceKey(c))?.printing ?? null,
+          /* The print run that price is, for a card sold in runs ("unlimited", "1st-edition"): the
+             choice such a card's sheet offers, so the tile names it rather than the finish. Null for
+             a card sold in one run. */
+          edition: editionOfSeries(prices.get(priceKey(c))?.series),
           ...(changes ? { priceChange: changes.get(c.id) ?? null } : {}),
         }),
       ),

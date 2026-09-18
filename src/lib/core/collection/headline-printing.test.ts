@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Printing } from "../catalogue/card-printings";
-import { headlineChanges, headlinePrinting, readFromDay } from "./headline-printing";
+import {
+  editionOfSeries,
+  headlineChanges,
+  headlinePrinting,
+  readFromDay,
+} from "./headline-printing";
 import type { CardPricePoint } from "./movers";
 
 const p = (finish: Printing["finish"], foilPattern: Printing["foilPattern"] = null): Printing => ({
@@ -158,5 +163,20 @@ describe("readFromDay", () => {
     expect(readFromDay("18-09-2026", today)).toHaveProperty("error");
     expect(readFromDay("2026-09-19", today)).toHaveProperty("error");
     expect(readFromDay("2025-09-17", today)).toHaveProperty("error");
+  });
+});
+
+describe("editionOfSeries", () => {
+  it("names the run of a card sold in runs", () => {
+    expect(editionOfSeries("unlimited-holofoil")).toBe("unlimited");
+    expect(editionOfSeries("unlimited")).toBe("unlimited");
+    expect(editionOfSeries("1st-edition-holofoil")).toBe("1st-edition");
+    expect(editionOfSeries("shadowless-holofoil")).toBe("shadowless");
+  });
+
+  it("is null for a card sold in one run, or no series", () => {
+    expect(editionOfSeries("holofoil")).toBeNull();
+    expect(editionOfSeries("reverse-holofoil")).toBeNull();
+    expect(editionOfSeries(null)).toBeNull();
   });
 });
