@@ -1,0 +1,1 @@
+- `GET /v1/cards` takes `pictures=0`, for a caller that counts the copies rather than drawing them. The printings' own pictures are a second read over the page's card ids: nothing on a page of forty-eight, and 1,191 ms of the 1,442 ms a whole-collection page cost. The Pokémon tile on Home asks for that page, and now asks without them.
