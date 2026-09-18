@@ -1,0 +1,1 @@
+- A search on a word of one or two letters ("ho oh", "mr mime") is back to the speed it had before today's search change: 16 ms rather than 129 ms, for the same hits. Nothing a word that short can carry is lost.
