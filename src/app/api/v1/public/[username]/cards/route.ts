@@ -5,6 +5,7 @@ import { forPublic } from "@/lib/core/collection/cards";
 import {
   agreedOn,
   type CardItem,
+  copyListing,
   copyPrice,
   filterItems,
   filterPublicItems,
@@ -101,7 +102,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       // (copyPrice, the printing's own where TCGplayer priced it), null where the copies differ
       // or nothing prices the card. Absent otherwise, so a price never leaves as a null either.
       ...(owner.pricesPublic ? { price: agreedOn(mine.map(copyPrice)) } : {}),
+      /* Where no copy has a market figure and every copy is listed at the same lowest listing,
+         that listing (cardorb-api#561): shown as "From €…", never summed. Only for an owner who
+         shows prices, and only where there is one. */
+      ...(owner.pricesPublic ? listingOf(mine) : {}),
     };
+  };
+  const listingOf = (mine: CardItem[]) => {
+    const listing = agreedOn(mine.map(copyListing));
+    return listing != null && agreedOn(mine.map(copyPrice)) == null ? { listingPrice: listing } : {};
   };
   const heldRows = byCard(true);
   const stateHeld = stateOf(heldRows);
@@ -170,7 +179,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ username
       copies,
       sets: setCount,
       facets: publicFacets(all),
-      ...(worth ? { value: worth.value, unpriced: worth.unpriced } : {}),
+      ...(worth ? { value: worth.value, unpriced: worth.unpriced, listed: worth.listed } : {}),
     },
     // A page without scans is an outage answer, not the collection; the CDN
     // must not hand it out for the minute after TCGdex comes back.

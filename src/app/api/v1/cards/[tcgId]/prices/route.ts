@@ -9,6 +9,7 @@ import {
   getCardPrices,
 } from "@/lib/core/collection/collection";
 import { type PriceLanguage, PRICE_LANGUAGES } from "@/lib/core/price-months.mjs";
+import { printingListingsOf } from "@/lib/core/collection/printing-listings";
 
 /**
  * One card's price, day by day, as far back as there is a reading: the nightly
@@ -54,12 +55,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
       readHeaders(req),
     );
   }
-  const { points, failed } = await getCardPrices(
-    who.userId,
-    [{ tcgId, language }],
-    bearer(req) ?? undefined,
-    ALL_READINGS,
-  );
+  /* Beside the line, today's lowest listing of each printing TCGplayer lists and has no market
+     figure for (printing-listings.ts): such a printing has no line, and a sheet pressing it shows
+     its listing, labelled. A listing that cannot be read costs the listings, not the line. */
+  const [{ points, failed }, listings] = await Promise.all([
+    getCardPrices(who.userId, [{ tcgId, language }], bearer(req) ?? undefined, ALL_READINGS),
+    printingListingsOf(tcgId, language).catch((err) => {
+      console.error(`The printings' listings of ${tcgId} could not be read:`, err);
+      return {} as Record<string, number>;
+    }),
+  ]);
   if (failed)
     return unavailable(
       "That card's price history could not be read. Try again in a moment.",
@@ -79,6 +84,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
           holo: p.holo,
           ...(p.printings ? { printings: p.printings } : {}),
         })),
+      // Since 2026-09-18, and only where a printing has one: absent reads as none.
+      ...(Object.keys(listings).length ? { listings } : {}),
     },
     { headers: readHeaders(req) },
   );

@@ -441,6 +441,15 @@ export const listedOnly = (it: CardItem): boolean => {
 };
 
 /**
+ * The lowest listing a copy is shown at where it has no market figure (listedOnly), in euros; null
+ * wherever copyPrice() has a figure or TCGplayer lists nothing. Shown as "From €…", never summed.
+ */
+export const copyListing = (it: CardItem): number | null => {
+  if (copyPrice(it) != null || !listedOnly(it)) return null;
+  return (it.printingPrice ?? copyPriceOf(it, it))?.lowestListing ?? null;
+};
+
+/**
  * `listed` is how many of the `unpriced` copies have a lowest listing on TCGplayer and no market
  * figure (since 2026-09-18): shown at the listing, left out of `value`, as the line leaves them out.
  */

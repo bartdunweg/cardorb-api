@@ -722,6 +722,8 @@ components:
         edition: { type: [string, "null"], description: "The print run, on the same terms as finish." }
         condition: { type: [string, "null"], description: "The copies' condition (\"Near Mint\"), on the same terms as finish." }
         grade: { type: [string, "null"], description: "The copies' grade as written on the slab (\"PSA 10\"), on the same terms as finish." }
+        price: { type: [number, "null"], description: "Only for an owner who shows prices: what one copy trades at in euros, TCGplayer's market figure, where every copy reads the same; null where they differ or none has one. Absent where prices are not shown." }
+        listingPrice: { type: number, description: "Only for an owner who shows prices, and only where no copy has a market figure and every copy is listed at the same figure: TCGplayer's lowest listing in euros (since 2026-09-18). Show it labelled as a listing; never sum it." }
 
     Stats:
       type: object
@@ -1292,6 +1294,14 @@ paths:
                 required: [points]
                 properties:
                   points: { type: array, items: { $ref: "#/components/schemas/CardPricePoint" } }
+                  listings:
+                    type: object
+                    additionalProperties: { type: number }
+                    description: >-
+                      Since 2026-09-18: today's lowest listing in euros of each printing TCGplayer lists and
+                      has no market figure for, keyed as `printings` on a point keys them
+                      (`reverse-holofoil`, `cosmos-holofoil`). Such a printing has no line; show its
+                      listing labelled as one, never summed. Absent where no printing has one.
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -2637,6 +2647,9 @@ paths:
                   total: { type: integer, description: "Cards behind the page, after the filters." }
                   sets: { type: integer, description: "Sets with at least one owned card, over the whole collection rather than the page." }
                   facets: { $ref: "#/components/schemas/Facets" }
+                  value: { type: number, description: "Only for an owner who shows prices: what the whole filtered list is worth in euros, market figures only." }
+                  unpriced: { type: integer, description: "Only beside `value`: copies with no market figure, which add nothing to it." }
+                  listed: { type: integer, description: "Only beside `value`: of the unpriced copies, those shown at TCGplayer's lowest listing. Not in `value`." }
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
