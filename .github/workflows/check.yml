@@ -80,7 +80,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: bartdunweg/cardorb-web
-          ref: main
+          # TEMPORARY, reverted before merge: the web branch that carries e2e/search.spec.ts, the
+          # only test that runs search_catalogue_cards against a real Postgres. Pointed here once
+          # to prove the function works before this merges, then back to main.
+          ref: claude/search-from-the-copy
           path: web
 
       # web/ sits inside this checkout only long enough to move: left there, the API
