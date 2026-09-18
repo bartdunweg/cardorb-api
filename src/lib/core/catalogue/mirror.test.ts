@@ -79,6 +79,7 @@ function fakeStore(seed: Record<string, unknown[]> = {}) {
       "contains",
       "order",
       "range",
+      "limit",
       "eq",
       "in",
       "lt",
@@ -97,8 +98,26 @@ function fakeStore(seed: Record<string, unknown[]> = {}) {
     };
     return chain;
   };
-  return { db: { from } as unknown as SupabaseClient, calls };
+  /* The search is one call to search_catalogue_cards now (migration 20260918090000), so the fake
+     answers an rpc as PostgREST does: the rows seeded under "rpc", each already carrying the
+     total the window function puts on them. */
+  const rpc = (name: string, params: unknown) => {
+    calls.push({ table: `rpc:${name}`, op: "rpc", args: [params] });
+    const data = seed.rpc ?? [];
+    return Promise.resolve({ data, error: null });
+  };
+  return { db: { from, rpc } as unknown as SupabaseClient, calls };
 }
+
+/** A row as search_catalogue_cards answers it: the card, and how many the whole search matched. */
+const hitRow = (over: Record<string, unknown> = {}, total = 1) => ({
+  ...row(over),
+  local_name: null,
+  category: null,
+  trainer_type: null,
+  full_art: false,
+  total_count: total,
+});
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: "sv03.5-006",
@@ -137,6 +156,36 @@ describe("mirrorQuery", () => {
     expect(mirrorQuery("   ")).toBeNull();
   });
 
+  /* "poke ball" found none of the 159 English cards whose name carries a diacritic until
+     2026-09-18, "Poké Ball" among them: the copy held the name with its accent and matched the
+     letters as they were typed. */
+  it("drops a diacritic, because the copy's index holds the letter alone", () => {
+    expect(mirrorQuery("Poké Ball")?.words).toEqual(["poke", "ball"]);
+    expect(mirrorQuery("poke ball")?.words).toEqual(["poke", "ball"]);
+    expect(mirrorQuery("Flabébé")?.words).toEqual(["flabebe"]);
+  });
+
+  /* The browser's own copy of the catalogue has read a hyphen as a space since cardorb-web #656,
+     and its comment said this side did too. It did not: "shaymin ex" found Shaymin-EX in the
+     browser and nothing through the API. */
+  it("reads a hyphen as a space, so the two spellings are one question", () => {
+    expect(mirrorQuery("shaymin-ex")?.words).toEqual(["shaymin", "ex"]);
+    expect(mirrorQuery("shaymin ex")?.words).toEqual(["shaymin", "ex"]);
+    expect(mirrorQuery("ho-oh")?.words).toEqual(["ho", "oh"]);
+  });
+
+  /* A name in its own script is what the Japanese shelf is searched by, and nothing in it is a
+     Latin letter with a diacritic: the fold has to leave it exactly as typed or the copy's
+     local_name never matches. */
+  it("leaves a name in another script alone", () => {
+    expect(mirrorQuery("リザードン")?.words).toEqual(["リザードン"]);
+    expect(mirrorQuery("リザードン ex")?.words).toEqual(["リザードン", "ex"]);
+  });
+
+  it("folds the term before an energy word is looked for, so nothing is lost to the fold", () => {
+    expect(mirrorQuery("Charizard Fire")).toEqual({ words: ["charizard"], type: "Fire" });
+  });
+
   // Full art cuts across the rarities rather than being one of them, so it narrows whatever was
   // asked; on its own it is still a question, every full art in the catalogue.
   it("carries full art beside a term, and stands as a query on its own", () => {
@@ -165,28 +214,44 @@ describe("mirrorQuery", () => {
 });
 
 describe("searchMirror", () => {
-  it("pages in binder order: the number_order column, never local_id as a string", async () => {
-    const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "xyp" }],
-      catalogue_cards: [row()],
-    });
+  /** The rpc's parameters, for a test that cares what the copy was asked. */
+  const asked = (calls: Call[]) =>
+    calls.find((c) => c.table === "rpc:search_catalogue_cards")?.args[0] as Record<string, unknown>;
+
+  it("orders by the band the name reaches, then newest set: the function's job, in one call", async () => {
+    const { db, calls } = fakeStore({ catalogue_cards: [row()], rpc: [hitRow()] });
     await searchMirror(db, "venusaur", 1);
-    const orders = calls
-      .filter((c) => c.table === "catalogue_cards" && c.op === "order")
-      .map((c) => c.args[0]);
-    expect(orders).toEqual(["release_date", "set_id", "number_order"]);
+    /* One call, not a select with three orders on it: the ranking and the count have to be the
+       same query or the count is of another question (migration 20260918090000). */
+    expect(calls.filter((c) => c.op === "rpc")).toHaveLength(1);
+    expect(calls.some((c) => c.table === "catalogue_cards" && c.op === "order")).toBe(false);
   });
 
-  it("answers null before the first night has copied anything", async () => {
+  it("answers null before anything has been copied", async () => {
     const { db, calls } = fakeStore();
     expect(await searchMirror(db, "charizard")).toBeNull();
-    expect(calls.find((c) => c.table === "catalogue_cards")).toBeUndefined();
+    expect(calls.some((c) => c.op === "rpc")).toBe(false);
+  });
+
+  /* The copy is there when it holds cards, not when a sync record says a run happened. The
+     end-to-end stack seeds catalogue_cards and no sync row, and every search in it went to
+     TCGdex: with outside hosts blocked, the palette said "The card service didn't answer."
+     about a catalogue in the same database. */
+  it("reads the cards to know there is a copy, not the sync record", async () => {
+    const { db, calls } = fakeStore({ catalogue_sync: [{ set_id: "sv03.5" }] });
+    expect(await searchMirror(db, "charizard")).toBeNull();
+    expect(calls.some((c) => c.table === "catalogue_sync")).toBe(false);
+  });
+
+  it("reads the copy once a card is in it, sync record or not", async () => {
+    const { db } = fakeStore({ catalogue_cards: [row()], rpc: [hitRow()] });
+    expect(await searchMirror(db, "charizard")).not.toBeNull();
   });
 
   it("asks the copy for every word, and hands a hit back in the add-card form's shape", async () => {
     const { db, calls } = fakeStore({
-      catalogue_sync: [{ set_id: "sv03.5" }],
-      catalogue_cards: [row({ image: "https://images.cardorb.com/en/sv/sv03.5/006" })],
+      catalogue_cards: [row()],
+      rpc: [hitRow({ image: "https://images.cardorb.com/en/sv/sv03.5/006" })],
     });
     const found = await searchMirror(db, "Charizard 151 fire", 1);
     expect(found).toEqual({
@@ -209,41 +274,57 @@ describe("searchMirror", () => {
         },
       ],
     });
-    const asked = calls.filter((c) => c.table === "catalogue_cards");
-    expect(asked.filter((c) => c.op === "ilike").map((c) => c.args)).toEqual([
-      ["search", "%charizard%"],
-      ["search", "%151%"],
-    ]);
-    expect(asked.find((c) => c.op === "contains")?.args).toEqual(["types", ["Fire"]]);
-    expect(asked.find((c) => c.op === "range")?.args).toEqual([0, 19]);
+    expect(asked(calls)).toMatchObject({
+      p_language: "en",
+      p_words: ["charizard", "151"],
+      p_type: "Fire",
+      p_limit: 20,
+      p_offset: 0,
+    });
   });
 
-  it("makes a pattern character in a word literal", async () => {
-    const { db, calls } = fakeStore({ catalogue_sync: [{ set_id: "x" }] });
+  it("hands a word over as typed: the pattern characters are the function's to quote", async () => {
+    const { db, calls } = fakeStore({ catalogue_cards: [row()] });
     await searchMirror(db, "100%");
-    expect(calls.find((c) => c.op === "ilike")?.args).toEqual(["search", "%100\\%%"]);
+    expect(asked(calls).p_words).toEqual(["100%"]);
   });
 
   it("pages twenty at a time", async () => {
-    const { db, calls } = fakeStore({ catalogue_sync: [{ set_id: "x" }] });
+    const { db, calls } = fakeStore({ catalogue_cards: [row()] });
     await searchMirror(db, "charizard", 3);
-    expect(calls.find((c) => c.op === "range")?.args).toEqual([40, 59]);
+    expect(asked(calls)).toMatchObject({ p_limit: 20, p_offset: 40 });
   });
 
-  it("remembers that the copy is there, rather than counting before every search", async () => {
-    const { db, calls } = fakeStore({ catalogue_sync: [{ set_id: "x" }] });
+  it("remembers that the copy is there, rather than asking before every search", async () => {
+    const { db, calls } = fakeStore({ catalogue_cards: [row()] });
     await searchMirror(db, "a");
     await searchMirror(db, "b");
-    expect(calls.filter((c) => c.table === "catalogue_sync" && c.op === "select")).toHaveLength(1);
+    expect(calls.filter((c) => c.table === "catalogue_cards" && c.op === "select")).toHaveLength(1);
   });
 
   it("draws a hit without a scan as its name", async () => {
     const { db } = fakeStore({
-      catalogue_sync: [{ set_id: "x" }],
-      catalogue_cards: [row({ image: null })],
+      catalogue_cards: [row()],
+      rpc: [hitRow({ image: null })],
     });
     const found = await searchMirror(db, "charizard");
     expect(found?.cards[0]).toMatchObject({ image: null, imageHigh: null });
+  });
+
+  it("reads the total off the rows, so one query says how many matched", async () => {
+    const { db } = fakeStore({
+      catalogue_cards: [row()],
+      rpc: [hitRow({}, 113), hitRow({ id: "base1-4" }, 113)],
+    });
+    expect((await searchMirror(db, "charizard"))?.total).toBe(113);
+  });
+
+  /* Neither the count nor the card carries total_count onward: it is the query's bookkeeping,
+     and a hit that carried it would put an unknown field into the add-card form's shape. */
+  it("keeps the window function's count out of the hit", async () => {
+    const { db } = fakeStore({ catalogue_cards: [row()], rpc: [hitRow()] });
+    const found = await searchMirror(db, "charizard");
+    expect(found?.cards[0]).not.toHaveProperty("total_count");
   });
 });
 
@@ -1057,8 +1138,8 @@ describe("syncMirror", () => {
 describe("searchMirror, pictures", () => {
   it("hands a hit whose copied picture is not a file of ours no picture at all", async () => {
     const { db } = fakeStore({
-      catalogue_sync: [{ set_id: "sv03.5" }],
-      catalogue_cards: [row({ image: "/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png" })],
+      catalogue_cards: [row()],
+      rpc: [hitRow({ image: "/api/cover?url=https%3A%2F%2Flimitless%2FSVP_102.png" })],
     });
     const found = await searchMirror(db, "Charizard", 1);
     expect(found?.cards[0]).toMatchObject({ image: null, imageHigh: null });

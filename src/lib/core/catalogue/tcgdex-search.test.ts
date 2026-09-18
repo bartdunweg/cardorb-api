@@ -314,23 +314,23 @@ describe("searchCards", () => {
 });
 
 describe("searchCards with the catalogue's copy", () => {
-  /** A store whose copy holds one row, or nothing yet. Every builder call answers the seed. */
-  const store = (cards: unknown[], copied = true) => {
+  /**
+   * A store whose copy holds one row, or nothing yet. Whether there is a copy is a read of
+   * catalogue_cards, and the search itself is the search_catalogue_cards call: both answer the
+   * seed, the rpc with the total the window function puts on every row.
+   */
+  const store = (cards: Record<string, unknown>[], copied = true) => {
     const chain: Record<string, unknown> = {};
-    let table = "";
-    for (const op of ["select", "eq", "ilike", "contains", "order", "range"])
+    for (const op of ["select", "eq", "ilike", "contains", "order", "range", "limit"])
       chain[op] = () => chain;
     chain.then = (resolve: (v: unknown) => unknown) =>
-      resolve(
-        table === "catalogue_sync"
-          ? { data: null, error: null, count: copied ? 1 : 0 }
-          : { data: cards, error: null, count: cards.length },
-      );
+      resolve({ data: copied ? cards : [], error: null, count: copied ? cards.length : 0 });
     return {
-      from: (t: string) => {
-        table = t;
-        return chain;
-      },
+      from: () => chain,
+      rpc: async () => ({
+        data: copied ? cards.map((c) => ({ ...c, total_count: cards.length })) : [],
+        error: null,
+      }),
     } as never;
   };
   const copy = {
@@ -386,6 +386,26 @@ describe("searchCards with the catalogue's copy", () => {
       ["SV1a-006", "Charizard ex", "リザードンex"],
     ]);
     expect(calls.some((c) => c.url.includes("/ja/"))).toBe(false);
+  });
+
+  /* The fallback is not the road: three attempts eight seconds apart is twenty-five seconds of
+     somebody watching a spinner, and the route's "the catalogue did not answer" is a better
+     answer than nothing at all after half a minute. */
+  it("gives up on TCGdex after four seconds rather than waiting out its three attempts", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() => new Promise<Response>(() => {})),
+      );
+      const { searchCards } = await load();
+      const answer = searchCards("charizard", 1, null, store([], false));
+      const failed = expect(answer).rejects.toThrow(/did not answer in 4000 ms/);
+      await vi.advanceTimersByTimeAsync(4_000);
+      await failed;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("asks TCGdex for another language's shelf while its copy is empty", async () => {
