@@ -125,6 +125,8 @@ export function cardPricesFromShelf(
 ): PrintingDay[] {
   const shelf: ShelfPrices = new Map();
   for (const r of rows) {
+    // A lowest listing is never a point on a card's line: the history is market figures only.
+    if (r.market == null) continue;
     const printings = shelf.get(r.productId) ?? new Map<string, number>();
     printings.set(r.printing, r.market);
     shelf.set(r.productId, printings);

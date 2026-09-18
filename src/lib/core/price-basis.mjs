@@ -16,15 +16,30 @@
  * @typedef {object} Price
  * @property {number | null} market
  *   What one copy trades at: TCGplayer's market figure for the printing, in euros.
+ * @property {number | null} [lowestListing]
+ *   TCGplayer's lowest asking price for the printing, in euros: only where it has no market
+ *   figure (a card listed and never sold, the R/G/B Mew of 30th Celebration). Absent otherwise.
+ * @property {PriceBasis} [basis]
+ *   Which of the two the price is. Every price priceFromUsd() hands out carries it.
  */
 
 /**
- * The one number a card is shown at, ranked by and totalled on: TCGplayer's market figure.
+ * @typedef {"market" | "lowest-listing"} PriceBasis
+ */
+
+/**
+ * The one number a card is ranked by and totalled on: TCGplayer's market figure.
  *
  * Null is a real answer and every screen says so out loud, rather than reaching for a
- * second market that prices a different card. Everything that puts a figure on a card
+ * second market that prices a different card. Everything that sums or ranks a card
  * goes through here, so the grid, the dashboard total, the sort order and the home
  * page's chart cannot disagree about what a card is worth.
+ *
+ * A lowest listing (`basis: "lowest-listing"`, since 2026-09-18) is shown on the card and never
+ * summed: the value lines are built from the price history, which holds what copies sold for, and
+ * an asking price with no sale behind it counted in a total would put a figure in the total that no
+ * line can follow (the R/G/B Mew of 30th Celebration: $6,790 to $9,000 asked, nothing sold). A
+ * list says how many of its copies it leaves out that way (sumValue's `listed`).
  *
  * @param {Price | null | undefined} p
  * @returns {number | null}
@@ -32,6 +47,27 @@
 // `?? null` at the end rather than for tidiness: undefined reaching the money formatters is a
 // crash, not a missing price.
 export const shownPrice = (p) => (p ? (p.market ?? null) : null);
+
+/**
+ * The figure a card is shown at: its market figure, or its lowest listing where it has none.
+ * For a screen that labels it by `basis`; never for a total (shownPrice).
+ *
+ * @param {Price | null | undefined} p
+ * @returns {number | null}
+ */
+export const displayedPrice = (p) => (p ? (p.market ?? p.lowestListing ?? null) : null);
+
+/**
+ * @param {Price | null | undefined} p
+ * @returns {Price | null}
+ */
+const withMarket = (p) => (p && p.market != null ? p : null);
+
+/**
+ * @param {Price | null | undefined} p
+ * @returns {Price | null}
+ */
+const anyFigure = (p) => (p && displayedPrice(p) != null ? p : null);
 
 /**
  * @param {unknown} v
@@ -185,17 +221,66 @@ export const printingKeysOf = (copy) => {
  * @param {Record<string, Price | null | undefined> | null | undefined} printings
  * @returns {Price | null}
  */
-export const printingPriceOf = (copy, printings) => {
+export const printingPriceOf = (copy, printings) =>
+  pickPrinting(copy, printings, withMarket) ?? pickPrinting(copy, printings, anyFigure);
+
+/**
+ * The first of the copy's printings `accept` takes.
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {Record<string, Price | null | undefined> | null | undefined} printings
+ * @param {(p: Price | null | undefined) => Price | null} accept
+ * @returns {Price | null}
+ */
+const pickPrinting = (copy, printings, accept) => {
   if (!printings) return null;
-  for (const key of printingKeysOf(copy)) if (printings[key]) return printings[key];
+  for (const key of printingKeysOf(copy)) {
+    const p = accept(printings[key]);
+    if (p) return p;
+  }
   return null;
 };
 
+/**
+ * The printing name the copy's price is read from, by the same order copyPriceOf() reads in:
+ * a market figure on any of its printings first, a lowest listing only where none has one.
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {Record<string, Price | null | undefined> | null | undefined} printings
+ * @returns {string | undefined}
+ */
+export const pricedPrintingOf = (copy, printings) => {
+  if (!printings) return undefined;
+  const keys = printingKeysOf(copy);
+  return (
+    keys.find((key) => withMarket(printings[key])) ?? keys.find((key) => anyFigure(printings[key]))
+  );
+};
+
+/**
+ * What one copy is worth: a market figure wherever the chain below finds one, and only where
+ * none of it has one, the first lowest listing along the same chain (Bart, 2026-09-18: "market
+ * stays the price wherever it exists"). So no figure a copy was shown at before listings came
+ * back changes; a copy that had none may now show a listing.
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
+ * @returns {Price | null}
+ */
 export const copyPriceOf = (copy, card) =>
+  copyChain(copy, card, withMarket) ?? copyChain(copy, card, anyFigure);
+
+/**
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
+ * @param {(p: Price | null | undefined) => Price | null} accept
+ * @returns {Price | null}
+ */
+const copyChain = (copy, card, accept) =>
   isReverseFinish(copy.finish)
     ? /* A reverse has its own figure or none: the stamped run and the card's headline figure are
          other printings (printingKeysOf). */
-      printingPriceOf(copy, card.pricePrintings)
+      pickPrinting(copy, card.pricePrintings, accept)
     : /*
        * TCGplayer's own printing first, then the stamped run, then the card's own figure, which
        * is TCGplayer's too. One market, all the way down (Bart's call, 2026-09-12).
@@ -209,9 +294,9 @@ export const copyPriceOf = (copy, card) =>
        * eight, mostly promos, and the Shadowless run, which Cardmarket filed as a product of
        * its own and TCGplayer does not separate.
        */
-      printingPriceOf(copy, card.pricePrintings) ||
-      (copy.edition === "1st-edition" && card.priceFirstEd) ||
-      card.price ||
+      pickPrinting(copy, card.pricePrintings, accept) ||
+      (copy.edition === "1st-edition" && accept(card.priceFirstEd)) ||
+      accept(card.price) ||
       null;
 
 /*
@@ -229,23 +314,56 @@ export const copyPriceOf = (copy, card) =>
  * against TCGplayer, before a single card is shown at one.
  *
  * Cardmarket's own readers went with it on 2026-09-14, and so did TCGplayer's lowest listing:
- * a price here is TCGplayer's market figure and nothing else (Bart's call).
+ * a price here was TCGplayer's market figure and nothing else (Bart's call). The listing came back
+ * on 2026-09-18 as a fallback only, for a printing with no market figure, and labelled as such.
  */
 
 /**
  * A price out of TCGplayer's dollars: the market figure converted at the day's rate, to the
- * cent, since a converted figure otherwise carries a tail no shop would print. Null where
- * TCGplayer publishes no market figure.
+ * cent, since a converted figure otherwise carries a tail no shop would print.
  *
- * @param {{ market: number | null }} usd
+ * Where TCGplayer publishes no market figure for the printing, its lowest listing, labelled
+ * `basis: "lowest-listing"` with `market` null, so a client that reads `market` alone still reads
+ * what it always did. Null where TCGplayer publishes neither.
+ *
+ * @param {{ market: number | null, listing?: number | null }} usd
  * @param {number} rate euros per dollar
  * @returns {Price | null}
  */
 export function priceFromUsd(usd, rate) {
   const market = num(usd.market);
-  if (market === null) return null;
-  return { market: Math.round(market * rate * 100) / 100 };
+  if (market !== null) return { market: toEuros(market, rate), basis: "market" };
+  const listing = num(usd.listing);
+  if (listing !== null && listing > 0)
+    return { market: null, lowestListing: toEuros(listing, rate), basis: "lowest-listing" };
+  return null;
 }
+
+/**
+ * A tcgcsv price row's figure as tcgplayer_prices keeps it: the market figure, or, where TCGplayer
+ * publishes none, the lowest listing (Bart, 2026-09-18). Never both. Null where it publishes
+ * neither, and the row is left out.
+ *
+ * Here, in plain JavaScript, for the reason at the top of this file: the price job (tcgcsv.ts)
+ * writes by it and the morning check (scripts/data-health.mjs) holds the store to it.
+ *
+ * @param {{ marketPrice?: number | null, lowPrice?: number | null }} r
+ * @returns {{ market: number, listing: null } | { market: null, listing: number } | null}
+ */
+export function shelfFigureOf(r) {
+  if (typeof r.marketPrice === "number" && r.marketPrice > 0)
+    return { market: r.marketPrice, listing: null };
+  if (typeof r.lowPrice === "number" && r.lowPrice > 0)
+    return { market: null, listing: r.lowPrice };
+  return null;
+}
+
+/**
+ * @param {number} usd
+ * @param {number} rate
+ * @returns {number}
+ */
+const toEuros = (usd, rate) => Math.round(usd * rate * 100) / 100;
 
 /**
  * One price history point out of TCGplayer's printings, as tcgcsv names them, in the currency

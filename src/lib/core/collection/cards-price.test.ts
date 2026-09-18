@@ -12,12 +12,15 @@ import { describe, expect, it } from "vitest";
 import { shownPrice } from "./cards";
 import {
   copyPriceOf,
+  displayedPrice,
   pointFromTcgplayer,
   priceFromUsd,
+  pricedPrintingOf,
   printingKeysOf,
   printingPriceOf,
+  shelfFigureOf,
 } from "../price-basis.mjs";
-import { usdFirstEdOf, usdOf } from "../catalogue/tcgdex-client";
+import { usdFirstEdOf, usdOf, usdPrintingsOf } from "../catalogue/tcgdex-client";
 
 describe("shownPrice", () => {
   it("is the market figure", () => {
@@ -34,15 +37,78 @@ describe("shownPrice", () => {
 describe("priceFromUsd", () => {
   it("turns TCGplayer's market figure into euros to the cent", () => {
     const p = priceFromUsd({ market: 12.34 }, 0.92)!;
-    expect(p).toEqual({ market: 11.35 });
+    expect(p).toEqual({ market: 11.35, basis: "market" });
     expect(shownPrice(p)).toBe(11.35);
   });
 
-  // A lowest listing was never a price and is not read at all now: a printing with no market
-  // figure has no price, whatever else TCGplayer publishes for it.
-  it("is nothing when TCGplayer has no market figure", () => {
+  it("is nothing when TCGplayer has neither a market figure nor a listing", () => {
     expect(priceFromUsd({ market: null }, 0.92)).toBeNull();
-    expect(priceFromUsd({ market: null, low: 9.99 } as { market: null }, 0.92)).toBeNull();
+    expect(priceFromUsd({ market: null, listing: null }, 0.92)).toBeNull();
+    expect(priceFromUsd({ market: null, listing: 0 }, 0.92)).toBeNull();
+  });
+
+  /* Bart, 2026-09-18: a printing listed and never sold shows its lowest listing, labelled. The
+     three R/G/B Mew of 30th Celebration (products 717607 to 717609) had no market figure and
+     $6,789.99 to $9,000 asked, and showed no price at all. */
+  it("is the lowest listing, labelled, where TCGplayer has no market figure", () => {
+    const p = priceFromUsd({ market: null, listing: 6789.99 }, 0.85)!;
+    expect(p).toEqual({ market: null, lowestListing: 5771.49, basis: "lowest-listing" });
+    // Shown, never summed: a total and a sort read the market figure alone.
+    expect(displayedPrice(p)).toBe(5771.49);
+    expect(shownPrice(p)).toBeNull();
+  });
+
+  it("is the market figure wherever there is one, whatever the listing", () => {
+    expect(priceFromUsd({ market: 10, listing: 4 }, 1)).toEqual({ market: 10, basis: "market" });
+  });
+});
+
+describe("shelfFigureOf", () => {
+  it("keeps the market figure and drops the listing beside it", () => {
+    expect(shelfFigureOf({ marketPrice: 12, lowPrice: 9 })).toEqual({ market: 12, listing: null });
+  });
+
+  it("keeps the lowest listing where tcgcsv publishes no market figure", () => {
+    // Group 24722 on 2026-09-18: Mew - R/RGB.
+    expect(shelfFigureOf({ marketPrice: null, lowPrice: 6789.99 })).toEqual({
+      market: null,
+      listing: 6789.99,
+    });
+  });
+
+  it("leaves out a row with neither", () => {
+    expect(shelfFigureOf({ marketPrice: null, lowPrice: null })).toBeNull();
+    expect(shelfFigureOf({ marketPrice: 0, lowPrice: 0 })).toBeNull();
+  });
+});
+
+describe("the lowest listing on a copy", () => {
+  const listed = (n: number) => ({
+    market: null,
+    lowestListing: n,
+    basis: "lowest-listing" as const,
+  });
+  const market = (n: number) => ({ market: n, basis: "market" as const });
+
+  it("never stands in where any printing the copy reads has a market figure", () => {
+    // A holo copy reads its holo printing first, then the plain card: a market figure on the plain
+    // card wins over a listing on the holo, as it did before listings came back.
+    const card = { price: market(3), pricePrintings: { holofoil: listed(50), normal: market(3) } };
+    expect(copyPriceOf({ finish: "holo", edition: null }, card)).toEqual(market(3));
+    expect(pricedPrintingOf({ finish: "holo", edition: null }, card.pricePrintings)).toBe("normal");
+  });
+
+  it("is the copy's price where nothing it reads has a market figure", () => {
+    const card = { price: listed(7000), pricePrintings: { holofoil: listed(7000) } };
+    expect(copyPriceOf({ finish: "holo", edition: null }, card)).toEqual(listed(7000));
+    expect(pricedPrintingOf({ finish: "holo", edition: null }, card.pricePrintings)).toBe(
+      "holofoil",
+    );
+  });
+
+  it("keeps a reverse on its own printing: another printing's listing is not its price", () => {
+    const card = { price: market(1), pricePrintings: { normal: market(1), holofoil: listed(9) } };
+    expect(copyPriceOf({ finish: "reverse-holo", edition: null }, card)).toBeNull();
   });
 });
 
@@ -269,5 +335,28 @@ describe("pointFromTcgplayer", () => {
   it("is nothing where TCGplayer has no market figure at all", () => {
     expect(pointFromTcgplayer(of({}))).toBeNull();
     expect(pointFromTcgplayer(undefined)).toBeNull();
+  });
+});
+
+describe("usdOf and usdPrintingsOf with a lowest listing", () => {
+  it("take a market figure on any printing over a listing on an earlier one", () => {
+    const tp = {
+      normal: { marketPrice: null, lowPrice: 20, productId: 1 },
+      holofoil: { marketPrice: 5, productId: 1 },
+    };
+    expect(usdOf(tp)).toEqual({ market: 5, productId: 1 });
+  });
+
+  it("take the listing where no printing has a market figure", () => {
+    const tp = { holofoil: { marketPrice: null, lowPrice: 8000, productId: 717609 } };
+    expect(usdOf(tp)).toEqual({ market: null, listing: 8000, productId: 717609 });
+    expect(usdPrintingsOf(tp)).toEqual({
+      holofoil: { market: null, listing: 8000, productId: 717609 },
+    });
+  });
+
+  it("never carry a listing beside a market figure", () => {
+    const tp = { normal: { marketPrice: 2, lowPrice: 1, productId: 3 } };
+    expect(usdPrintingsOf(tp)).toEqual({ normal: { market: 2, productId: 3 } });
   });
 });

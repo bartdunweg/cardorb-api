@@ -20,9 +20,11 @@ import {
   copyPriceOf,
   isPatternedReverse,
   isReverseFinish,
+  priceFromUsd,
   printingKeysOf,
+  shelfFigureOf,
 } from "../src/lib/core/price-basis.mjs";
-import { runKey, runLinksOf } from "../src/lib/core/price-months.mjs";
+import { printingKey as printingName, runKey, runLinksOf } from "../src/lib/core/price-months.mjs";
 import { THREE_DIGIT_SETS, canonNumber, correctedNumber } from "../src/lib/core/card-number.mjs";
 import {
   numberDisagrees,
@@ -415,7 +417,7 @@ if (day) {
       `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where language = 'en' and month = '${month}' and cents[${dayIndex}] is not null`,
     ),
     query(
-      `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}'`,
+      `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and market is not null`,
     ),
   ]);
   const market = new Map(prices.map((p) => [`${p.product_id}${p.printing}`, p.market]));
@@ -451,6 +453,107 @@ if (day) {
   );
 }
 
+const jaLinks = JSON.parse(
+  readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-ids.ja.generated.json"), "utf8"),
+);
+
+/**
+ * A printing TCGplayer lists and has no market figure for is priced at its lowest listing, and
+ * labelled so (Bart, 2026-09-18; R-DATA-004).
+ *
+ * The rule is shelfFigureOf() in tcgcsv.ts, which the price job writes tcgplayer_prices with, and
+ * priceFromUsd() in price-basis.mjs, which every answer's price is made by. This holds the store to
+ * the rule for every linked card, old and new: every linked product's printing tcgcsv publishes
+ * with a `lowPrice` and no `marketPrice` has a row with that listing and no market figure, no row
+ * holds a listing where tcgcsv has a market figure, and every stored listing becomes a price
+ * labelled `lowest-listing` with no market figure. Read against tcgcsv's files, which are the
+ * night's until 20:00 UTC.
+ */
+if (day) {
+  const TOLERANCE = 0.011;
+  const groupsOf = JSON.parse(
+    readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-groups.generated.json"), "utf8"),
+  );
+  /** category to the groups of every linked product, and the linked products themselves. */
+  const wanted = { 3: new Set(), 85: new Set() };
+  const linkedProducts = new Set();
+  for (const v of Object.values(links))
+    if (v?.productId) {
+      linkedProducts.add(v.productId);
+      const g = v.groupId ?? groupsOf["3"]?.[String(v.productId)];
+      if (g != null) wanted[3].add(g);
+    }
+  for (const pid of Object.values(jaLinks))
+    if (pid) {
+      linkedProducts.add(pid);
+      const g = groupsOf["85"]?.[String(pid)];
+      if (g != null) wanted[85].add(g);
+    }
+  const shelf = new Map();
+  let unread = 0;
+  const pending = Object.entries(wanted).flatMap(([cat, gs]) => [...gs].map((g) => [cat, g]));
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      for (let next = pending.pop(); next; next = pending.pop()) {
+        const [cat, groupId] = next;
+        const res = await fetch(`https://tcgcsv.com/tcgplayer/${cat}/${groupId}/prices`, {
+          headers: { accept: "application/json", "User-Agent": "cardorb.com" },
+        }).catch(() => null);
+        if (!res?.ok) {
+          unread++;
+          continue;
+        }
+        for (const r of (await res.json()).results ?? []) {
+          if (!linkedProducts.has(r.productId)) continue;
+          shelf.set(`${r.productId}|${printingName(r.subTypeName)}`, shelfFigureOf(r));
+        }
+      }
+    }),
+  );
+  const stored = new Map(
+    (
+      await query(
+        `select product_id, printing, market::float as market, listing::float as listing from tcgplayer_prices where updated_on = '${day}' and product_id in (${[...linkedProducts].join(",") || "0"})`,
+      )
+    ).map((r) => [`${r.product_id}|${r.printing}`, r]),
+  );
+  const rate = 0.9;
+  const unlisted = [];
+  const wrongListing = [];
+  const listingBesideMarket = [];
+  const unlabelled = [];
+  let listedOnShelf = 0;
+  for (const [key, figure] of shelf) {
+    if (figure?.market != null) {
+      if (stored.get(key)?.listing != null) listingBesideMarket.push(key);
+      continue;
+    }
+    if (figure?.listing == null) continue;
+    listedOnShelf++;
+    const row = stored.get(key);
+    if (!row || row.listing == null) unlisted.push(key);
+    else if (row.market != null || Math.abs(row.listing - figure.listing) > TOLERANCE)
+      wrongListing.push(`${key} (stored ${row.listing}, tcgcsv ${figure.listing})`);
+  }
+  for (const [key, row] of stored) {
+    if (row.listing == null) continue;
+    const price = priceFromUsd({ market: row.market, listing: row.listing }, rate);
+    if (price?.basis !== "lowest-listing" || price.market != null || !(price.lowestListing > 0))
+      unlabelled.push(key);
+  }
+  /* A group tcgcsv did not answer this morning leaves its printings unread, not wrong: named, and
+     a failure only when most of the shelf is missing. */
+  const readEnough = unread <= (wanted[3].size + wanted[85].size) * 0.1;
+  const worst = [...unlisted, ...wrongListing, ...listingBesideMarket, ...unlabelled];
+  check(
+    "A printing with no market figure is priced at its lowest listing",
+    readEnough && listedOnShelf > 0 && worst.length === 0,
+    `${listedOnShelf} linked printings with a listing and no market figure on ${day}; ${unlisted.length} not stored at their listing, ${wrongListing.length} stored at another figure, ${listingBesideMarket.length} holding a listing beside a market figure, ${unlabelled.length} of ${[...stored.values()].filter((r) => r.listing != null).length} stored listings not labelled as one${
+      worst.length ? `: ${worst.slice(0, 10).join("; ")}` : ""
+    }; ${unread} of ${wanted[3].size + wanted[85].size} tcgcsv groups did not answer`,
+  );
+}
+
 // ── What a page would show wrong ────────────────────────────────────────────
 
 /**
@@ -458,9 +561,6 @@ if (day) {
  * price is shown above it: 4,300 Japanese cards on 2026-09-14 before their history was backfilled.
  * Per catalogue, through the product the copy or the committed map links.
  */
-const jaLinks = JSON.parse(
-  readFileSync(join(ROOT, "src", "lib", "core", "tcgplayer-ids.ja.generated.json"), "utf8"),
-);
 if (day) {
   const [copyProducts, historyIds, pricedProducts] = await Promise.all([
     query(
@@ -469,7 +569,9 @@ if (day) {
     query(
       `select distinct language, tcg_id from card_price_months where month >= '${day.slice(0, 7)}-01'::date - interval '1 month'`,
     ),
-    query(`select distinct product_id from tcgplayer_prices where updated_on = '${day}'`),
+    query(
+      `select distinct product_id from tcgplayer_prices where updated_on = '${day}' and market is not null`,
+    ),
   ]);
   const withHistory = new Set(historyIds.map((r) => `${r.language}|${r.tcg_id}`));
   const priced = new Set(pricedProducts.map((r) => r.product_id));
@@ -554,7 +656,9 @@ if (day) {
   );
 
   const everPriced = new Set(
-    (await query("select distinct product_id from tcgplayer_prices")).map((r) => r.product_id),
+    (await query("select distinct product_id from tcgplayer_prices where market is not null")).map(
+      (r) => r.product_id,
+    ),
   );
   const withLine = new Set(
     (await query("select distinct tcg_id from card_price_months where language = 'en'")).map(
@@ -620,7 +724,7 @@ if (day) {
       `select tcg_id, printing, cents[${dayIndex}]::int as cents from card_price_months where language = 'en' and month = '${month}' and printing in (${[...new Set(prints.map((p) => `'${p.key}'`))].join(",") || "''"})`,
     ),
     query(
-      `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and product_id in (${prints.map((p) => p.productId).join(",") || "0"})`,
+      `select product_id, printing, market::float as market from tcgplayer_prices where updated_on = '${day}' and market is not null and product_id in (${prints.map((p) => p.productId).join(",") || "0"})`,
     ),
     query(
       `select rate::float as rate from usd_eur_rates where day <= '${day}' order by day desc limit 1`,
@@ -829,7 +933,7 @@ if (day) {
       "select id, set_id, variants from catalogue_cards where language = 'en' and jsonb_array_length(coalesce(variants, '[]'::jsonb)) > 0",
     ),
     query(
-      `select distinct product_id from tcgplayer_prices where updated_on = '${day}' and printing = 'reverse-holofoil'`,
+      `select distinct product_id from tcgplayer_prices where updated_on = '${day}' and printing = 'reverse-holofoil' and market is not null`,
     ),
     query(
       "select tcg_id, count(*)::int as n from cards where finish = 'reverse-holo' and tcg_id is not null and language is distinct from 'ja' group by 1",
