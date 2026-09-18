@@ -97,6 +97,7 @@ import { rememberedScans } from "./remembered-scans";
 import { heldDays, holdShelfPrice, holdStrayPrices } from "./held-prices";
 import { endsOfLines, type CardPricePoint } from "./movers";
 import { holdingsSeries } from "./folder-history";
+import { tailReadFrom } from "./value-history";
 import { type CardItem, pricedCardsOf } from "./items";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -1859,9 +1860,6 @@ export const getMoverPrices = cache(
   },
 );
 
-/** How far back the Home line is built from the cards' own readings: the window getCardPrices reads. */
-export const RECENT_DAYS = WINDOW_DAYS;
-
 /** The line and whether it could be built: the shape getCardPrices answers, for the same reason. */
 export type RecentValue = { snapshots: ValueSnapshot[]; failed: boolean };
 
@@ -1884,7 +1882,8 @@ const holdingsKey = (items: CardItem[]) =>
     .digest("hex");
 
 /**
- * The recent days of the Home line: what the held cards' readings add up to, day by day.
+ * The days of the Home line the table cannot answer: what the held cards' readings add up to, from
+ * `since` on, day by day.
  *
  * The line is a few hundred bytes; the readings it is built from are not. Every reading of sixteen
  * hundred held cards over ninety days is 22 MB, past the Data Cache's 2 MB an entry, so
@@ -1895,32 +1894,46 @@ const holdingsKey = (items: CardItem[]) =>
  * still reaches Home the moment the cron writes it, and under the cards' tag, so a copy added or
  * removed drops it.
  *
- * The window is part of the key for the reason getCardPrices gives: a date built inside the cache
+ * Keeping the summed line was not enough: the miss still read ninety days of readings, 1,678 ms of
+ * them in production, to draw over stored points that already said the same figures. `since` is
+ * recentFrom() (value-history.ts): the first day the table has no point for, which for an account
+ * the cron has kept up with is today. The read starts TAIL_READ_DAYS earlier, because a card with
+ * no reading today is priced at its last one, and the points before `since` are dropped again.
+ *
+ * `since` is part of the key for the reason getCardPrices gives: a date built inside the cache
  * callback would be a stale window on a hit. So is what is held: a copy that changed printing or
  * count is another line, whatever the tag did.
  */
 export const getRecentValue = cache(
-  async (userId: string, items: CardItem[], token?: string): Promise<RecentValue> => {
+  async (
+    userId: string,
+    items: CardItem[],
+    token: string | undefined,
+    /** The first day wanted, yyyy-mm-dd (recentFrom). */
+    since: string,
+  ): Promise<RecentValue> => {
     const cards = pricedCardsOf(items.filter((it) => it.owned));
     if (!cards.length) return { snapshots: [], failed: false };
     try {
       const db = token ? userClient(token) : await serverClient();
       if (!db) return { snapshots: [], failed: false };
-      const since = new Date(Date.now() - RECENT_DAYS * 86_400_000).toISOString().slice(0, 10);
+      const read = tailReadFrom(since);
       const snapshots = await timedCache("cache recent-value", (ran) =>
         unstable_cache(
           async () => {
             ran();
             const readings = await timed("recent-value readings", () =>
-              listHistoryPrices(db, cards, since),
+              listHistoryPrices(db, cards, read),
             );
             const start = performance.now();
-            const line = holdingsSeries(items, readings);
+            const line = holdingsSeries(items, readings).filter((p) => p.date >= since);
             logTiming("recent-value series", elapsed(start), `${readings.length} readings`);
             return line;
           },
           // Versioned with getCardPrices: the same lines, so a change to how they are built is both.
-          ["recent-value", "v14", userId, since, holdingsKey(items)],
+          // v15: the stored points answer every day they cover, and this is the tail alone; a v14
+          // entry under the same `since` is ninety days of line where one day is wanted.
+          ["recent-value", "v15", userId, since, holdingsKey(items)],
           { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag, cardsTag(userId)] },
         )(),
       );

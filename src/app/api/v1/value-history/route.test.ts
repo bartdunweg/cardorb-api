@@ -64,6 +64,18 @@ const SNAPSHOT = {
   unpriced: 313,
 };
 
+/** A stored point a day, oldest first, ending on `last`: a history the cron has kept up with. */
+const storedThrough = (last: string, days = 95) =>
+  Array.from({ length: days }, (_, i) => ({
+    date: new Date(Date.parse(`${last}T00:00:00Z`) - (days - 1 - i) * 86_400_000)
+      .toISOString()
+      .slice(0, 10),
+    value: 900 + i,
+    cards: 1,
+    priced: 1,
+    unpriced: 0,
+  }));
+
 const get = (token = "t.o.k.e.n", query = "") =>
   GET(
     new Request(`https://cardorb.com/api/v1/value-history${query}`, {
@@ -80,6 +92,7 @@ beforeEach(() => {
 describe("GET /api/v1/value-history, the recent days", () => {
   // Bart, 2026-09-15: a collection's value is its cards' prices added up, and moves with them.
   it("answers the recent days as the held cards' readings add up, after the stored points before them", async () => {
+    vi.setSystemTime(new Date("2026-09-14T09:00:00Z"));
     getValueHistory.mockResolvedValue({
       snapshots: [
         { date: "2026-06-01", value: 900, cards: 1, priced: 1, unpriced: 0 },
@@ -108,12 +121,44 @@ describe("GET /api/v1/value-history, the recent days", () => {
     });
     flattenItems.mockReturnValueOnce([pikachu]);
     const body = await (await get()).json();
-    expect(getRecentValue).toHaveBeenCalledWith("me-uuid", [pikachu], "t.o.k.e.n");
+    // Two points in a ninety-day window leave every other day of it to be worked out, and the
+    // earliest of those is where the working out starts (recentFrom).
+    expect(getRecentValue).toHaveBeenCalledWith("me-uuid", [pikachu], "t.o.k.e.n", "2026-06-16");
+    vi.useRealTimers();
     expect(body.snapshots.map((p: { date: string; value: number }) => [p.date, p.value])).toEqual([
       ["2026-06-01", 900],
       ["2026-09-12", 932],
       ["2026-09-13", 928],
     ]);
+  });
+
+  it("works out only the days the table has no point for", async () => {
+    // The whole of this change: the stored points answer every day they cover, and the readings
+    // are read for the days they do not. A history the cron kept up with leaves today alone.
+    vi.setSystemTime(new Date("2026-09-18T09:00:00Z"));
+    getValueHistory.mockResolvedValue({ snapshots: storedThrough("2026-09-17"), failed: false });
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([]);
+    getRecentValue.mockResolvedValue({ snapshots: [], failed: false });
+    await get();
+    expect(getRecentValue).toHaveBeenCalledWith("me-uuid", [], "t.o.k.e.n", "2026-09-18");
+    vi.useRealTimers();
+  });
+
+  it("works out the earliest night the cron missed, not just today", async () => {
+    // A gap left standing would be a stored point drawn where none covers the day. The earliest
+    // missing day is where the working out starts, so the gap is drawn from the readings.
+    vi.setSystemTime(new Date("2026-09-18T09:00:00Z"));
+    getValueHistory.mockResolvedValue({
+      snapshots: storedThrough("2026-09-17").filter((p) => p.date !== "2026-09-16"),
+      failed: false,
+    });
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([]);
+    getRecentValue.mockResolvedValue({ snapshots: [], failed: false });
+    await get();
+    expect(getRecentValue).toHaveBeenCalledWith("me-uuid", [], "t.o.k.e.n", "2026-09-16");
+    vi.useRealTimers();
   });
 
   it("answers the stored points alone when the readings cannot be read", async () => {

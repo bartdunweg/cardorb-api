@@ -1,4 +1,4 @@
-import { holdingsSeries } from "./folder-history";
+import { CARRY_DAYS, holdingsSeries } from "./folder-history";
 import type { CardItem } from "./items";
 import type { CardPricePoint } from "./movers";
 import type { ValueSnapshot } from "./value-snapshot";
@@ -80,4 +80,61 @@ export function nightlyPoints(
 ): ValueSnapshot[] {
   const from = daysBefore(date, NIGHT_WRITE_DAYS);
   return holdingsSeries(items, readings).filter((p) => p.date >= from && p.date < date);
+}
+
+/**
+ * How far back the live tail reads, before the first day it answers for.
+ *
+ * A card with no reading on a day is valued at its last one, up to CARRY_DAYS old (holdingsSeries).
+ * A tail that read only the days it answers for would price the collection from whatever happened
+ * to have a reading that morning: on 2026-09-13, 184 held promos and gallery cards had none, which
+ * is a third of Kanto missing from the line. One day more than CARRY_DAYS is exactly enough, because
+ * a reading older than that no longer stands anywhere in the answer.
+ */
+export const TAIL_READ_DAYS = CARRY_DAYS + 1;
+
+const dayAfter = (date: string) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+
+const daysBeforeDate = (date: string, days: number) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+
+/** The first day of readings the tail reads, for a tail that answers from `since`. */
+export const tailReadFrom = (since: string) => daysBeforeDate(since, TAIL_READ_DAYS);
+
+/** The window the line falls back to where nothing is stored: the readings' own ninety days. */
+export const HISTORY_WINDOW_DAYS = 90;
+
+/**
+ * The first day the Home line has to be worked out rather than read: the earliest day of the window
+ * with no stored point, or the day after the last one.
+ *
+ * The line used to sum every reading of every held card over the last ninety days on every visit,
+ * and draw those ninety days over the stored points that already said the same thing: 144,574
+ * readings, 1,678 ms to read and 241 ms to add up, measured in production on 2026-09-17. The 04:00
+ * cron writes one exact point a night (nightlyPoints), built by the same holdingsSeries over the
+ * same readings, so for every night it has written the answer is already in the table.
+ *
+ * What is left is today, whose readings arrive at 21:15 UTC and whose point the cron stores
+ * tomorrow, and any night the cron missed. The *earliest* missing day is taken rather than the
+ * latest, so a gap or a stale history is worked out again and drawn, instead of a stored point
+ * quietly standing where none belongs. An account with no points at all gets the whole window, as
+ * it did before there was anything to read.
+ *
+ * Null where the window is covered to and including today, which is a day the cron cannot have
+ * written yet (nightlyPoints stores `date` exclusive) and so does not happen in practice.
+ */
+export function recentFrom(
+  storedDates: string[],
+  today: string,
+  windowDays = HISTORY_WINDOW_DAYS,
+): string | null {
+  const stored = new Set(storedDates);
+  const last = storedDates.length ? storedDates[storedDates.length - 1]! : null;
+  let day = daysBeforeDate(today, windowDays);
+  while (day <= today) {
+    if (!stored.has(day)) return day;
+    day = dayAfter(day);
+  }
+  return last ? dayAfter(last) : null;
 }

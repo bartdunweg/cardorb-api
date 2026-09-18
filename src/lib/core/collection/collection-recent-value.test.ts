@@ -62,7 +62,7 @@ beforeEach(() => {
 
 describe("getRecentValue", () => {
   it("caches the summed line, under the readings' tags and the cards' tag", async () => {
-    const { snapshots, failed } = await getRecentValue("me", [pikachu], "token");
+    const { snapshots, failed } = await getRecentValue("me", [pikachu], "token", "2026-09-12");
     expect(failed).toBe(false);
     expect(snapshots.map((p) => [p.date, p.value])).toEqual([
       ["2026-09-12", 932],
@@ -76,28 +76,52 @@ describe("getRecentValue", () => {
     expect(key[0]).toBe("recent-value");
     expect(key).toContain("me");
     expect(options.tags).toEqual(["card-prices:me", "card-prices", "cards:me"]);
-    // The parallel read, over the held cards, since ninety days back.
-    const [, cards, since] = listHistoryPrices.mock.calls[0] as [unknown, unknown, string];
+    // The parallel read, over the held cards, from CARRY_DAYS + 1 before the first day wanted.
+    const [, cards, from] = listHistoryPrices.mock.calls[0] as [unknown, unknown, string];
     expect(cards).toEqual([{ tcgId: "svp-085", language: "en" }]);
-    expect(since).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(from).toBe("2026-08-28");
   });
 
   it("keys on what is held, so a copy that changed count is another line", async () => {
-    await getRecentValue("me", [pikachu], "token");
-    await getRecentValue("me", [{ ...pikachu, quantity: 2 }], "token");
+    await getRecentValue("me", [pikachu], "token", "2026-09-12");
+    await getRecentValue("me", [{ ...pikachu, quantity: 2 }], "token", "2026-09-12");
     const keyOf = (n: number) => (unstable_cache.mock.calls[n] as [unknown, string[]])[1].join("/");
     expect(keyOf(0)).not.toBe(keyOf(1));
   });
 
   it("reads nothing for a collection with no priced card", async () => {
-    const out = await getRecentValue("me", [{ ...pikachu, owned: false }], "token");
+    const out = await getRecentValue("me", [{ ...pikachu, owned: false }], "token", "2026-09-12");
     expect(out).toEqual({ snapshots: [], failed: false });
     expect(listHistoryPrices).not.toHaveBeenCalled();
   });
 
   it("says so when the readings cannot be read, rather than an empty line", async () => {
     listHistoryPrices.mockRejectedValue(new Error("down"));
-    const out = await getRecentValue("me", [pikachu], "token");
+    const out = await getRecentValue("me", [pikachu], "token", "2026-09-12");
     expect(out).toEqual({ snapshots: [], failed: true });
+  });
+});
+
+describe("the tail alone", () => {
+  /**
+   * Home read ninety days of readings to draw over stored points that already said the same
+   * figures: 144,574 readings, 1,678 ms of them in production on 2026-09-17. Only the days the
+   * table has no point for are worked out now, and the days read before them are context, not
+   * answer: a card with no reading today is priced at its last one, up to CARRY_DAYS old.
+   */
+  it("answers from `since` on, although it reads the fortnight before it", async () => {
+    const { snapshots } = await getRecentValue("me", [pikachu], "token", "2026-09-13");
+    expect(snapshots.map((p) => p.date)).toEqual(["2026-09-13"]);
+    const [, , from] = listHistoryPrices.mock.calls[0] as [unknown, unknown, string];
+    expect(from).toBe("2026-08-29");
+  });
+
+  it("keys on the first day wanted, so yesterday's tail is not today's", async () => {
+    await getRecentValue("me", [pikachu], "token", "2026-09-12");
+    await getRecentValue("me", [pikachu], "token", "2026-09-13");
+    const keyOf = (n: number) => (unstable_cache.mock.calls[n] as [unknown, string[]])[1];
+    expect(keyOf(0)).toContain("2026-09-12");
+    expect(keyOf(1)).toContain("2026-09-13");
+    expect(keyOf(0).join("/")).not.toBe(keyOf(1).join("/"));
   });
 });
