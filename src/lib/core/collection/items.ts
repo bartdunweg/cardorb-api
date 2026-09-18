@@ -1,7 +1,7 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice } from "./cards";
-import { copyPriceOf, pricedPrintingOf } from "../price-basis.mjs";
+import { copyPriceOf, copyPricingOf } from "../price-basis.mjs";
 import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
@@ -217,8 +217,10 @@ const itemOf = (set: CardSet, card: OwnedCard, v: Variant, id: string): CardItem
 
 /**
  * Which market answered for this copy, which printing of the card it was, and the page it came
- * from. The same order copyPriceOf() reads in, asked a second time: it returns a figure and not
- * where the figure is from, and a price nobody can check is a price nobody believes.
+ * from. The same chain copyPriceOf() reads, asked at the same time rather than a second time
+ * over the printings alone: a market figure on the stamped run or the card itself must still win
+ * over a listing on the copy's own printing (api#570 / web#732 follow-up, 2026-09-18), which a
+ * plain pricedPrintingOf(v, card.pricePrintings) lookup here could not see.
  */
 function sourceOf(
   v: Variant,
@@ -229,20 +231,19 @@ function sourceOf(
   tcgplayerId: number | null;
   printingPrice?: Price | null;
 } {
-  // A market figure on any of its printings first, a lowest listing only where none has one.
-  const printing = pricedPrintingOf(v, card.pricePrintings);
+  // A market figure anywhere on the chain first, a lowest listing only where none of it has one.
+  const { printing, price } = copyPricingOf(v, card);
   if (printing) {
     return {
       priceSource: "tcgplayer",
       pricePrinting: printing,
       tcgplayerId: card.printingIds?.[printing] ?? null,
-      printingPrice: card.pricePrintings?.[printing] ?? null,
+      printingPrice: price,
     };
   }
   // No printing of its own, and still TCGplayer's where there is a figure: the card's price is
   // TCGplayer's since 2026-09-12, and a card it does not price has no source to name.
-  const own = copyPriceOf(v, card);
-  return { priceSource: own ? "tcgplayer" : null, pricePrinting: null, tcgplayerId: null };
+  return { priceSource: price ? "tcgplayer" : null, pricePrinting: null, tcgplayerId: null };
 }
 
 /** A filter key that takes several values: a copy matches when it matches any of them. */

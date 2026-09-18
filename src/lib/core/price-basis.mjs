@@ -245,6 +245,13 @@ const pickPrinting = (copy, printings, accept) => {
  * The printing name the copy's price is read from, by the same order copyPriceOf() reads in:
  * a market figure on any of its printings first, a lowest listing only where none has one.
  *
+ * Scoped to `printings` alone, so it cannot see the stamped run's or the card's own figure. Use
+ * copyPricingOf() for the printing name a copy's actual price (copyPriceOf) is credited to: on a
+ * copy whose own printings carry only a listing while the stamped run or the card itself carries
+ * a market figure, this function still names the listing's printing even though copyPriceOf()
+ * reads the market elsewhere on the chain instead (api#561 read too narrowly; fixed in
+ * copyPricingOf below, api#570 / web#732 follow-up, 2026-09-18).
+ *
  * @param {{ finish?: string | null, edition?: string | null }} copy
  * @param {Record<string, Price | null | undefined> | null | undefined} printings
  * @returns {string | undefined}
@@ -258,6 +265,27 @@ export const pricedPrintingOf = (copy, printings) => {
 };
 
 /**
+ * What one copy is worth, and the printing name to credit it to when the figure came from one of
+ * the card's own printings (`pricePrintings`); `printing` is null where it came from the stamped
+ * run's figure or the card's headline figure instead.
+ *
+ * One pass over the whole chain for a market figure before either pass looks at a listing
+ * anywhere on it (Bart, 2026-09-18: "market stays the price wherever it exists"), so copyPriceOf()
+ * below and sourceOf() in collection/items.ts, which used to run pricedPrintingOf() over the
+ * printings alone and only fall back to copyPriceOf() when the printings had nothing at all, can
+ * no longer disagree: a copy whose own printings carried only a listing, while the stamped run or
+ * the card's figure carried a market price, was shown and counted at nothing (the printing's
+ * listing has no market) where the collection view priced the same copy at the market figure.
+ *
+ * @param {{ finish?: string | null, edition?: string | null }} copy
+ * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
+ * @returns {{ printing: string | null, price: Price | null }}
+ */
+export const copyPricingOf = (copy, card) =>
+  copyChain(copy, card, withMarket) ??
+  copyChain(copy, card, anyFigure) ?? { printing: null, price: null };
+
+/**
  * What one copy is worth: a market figure wherever the chain below finds one, and only where
  * none of it has one, the first lowest listing along the same chain (Bart, 2026-09-18: "market
  * stays the price wherever it exists"). So no figure a copy was shown at before listings came
@@ -267,37 +295,42 @@ export const pricedPrintingOf = (copy, printings) => {
  * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
  * @returns {Price | null}
  */
-export const copyPriceOf = (copy, card) =>
-  copyChain(copy, card, withMarket) ?? copyChain(copy, card, anyFigure);
+export const copyPriceOf = (copy, card) => copyPricingOf(copy, card).price;
 
 /**
  * @param {{ finish?: string | null, edition?: string | null }} copy
  * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
  * @param {(p: Price | null | undefined) => Price | null} accept
- * @returns {Price | null}
+ * @returns {{ printing: string | null, price: Price | null } | null}
  */
-const copyChain = (copy, card, accept) =>
-  isReverseFinish(copy.finish)
-    ? /* A reverse has its own figure or none: the stamped run and the card's headline figure are
-         other printings (printingKeysOf). */
-      pickPrinting(copy, card.pricePrintings, accept)
-    : /*
-       * TCGplayer's own printing first, then the stamped run, then the card's own figure, which
-       * is TCGplayer's too. One market, all the way down (Bart's call, 2026-09-12).
-       *
-       * Cardmarket used to answer where TCGplayer says nothing. It no longer does, and that is
-       * the point rather than an oversight: it names a product after the card and never after
-       * its number, so several printings share one figure and a plain rare reads the holo's
-       * price. A copy TCGplayer does not price now has no price, and every screen says so.
-       *
-       * What that costs is on the record in cardorb-web's docs/prices.md: about one card in
-       * eight, mostly promos, and the Shadowless run, which Cardmarket filed as a product of
-       * its own and TCGplayer does not separate.
-       */
-      pickPrinting(copy, card.pricePrintings, accept) ||
-      (copy.edition === "1st-edition" && accept(card.priceFirstEd)) ||
-      accept(card.price) ||
-      null;
+const copyChain = (copy, card, accept) => {
+  for (const key of printingKeysOf(copy)) {
+    const p = accept(card.pricePrintings?.[key]);
+    if (p) return { printing: key, price: p };
+  }
+  // A reverse has its own figure or none: the stamped run and the card's headline figure are
+  // other printings (printingKeysOf), never a fallback for a reverse.
+  if (isReverseFinish(copy.finish)) return null;
+  /*
+   * TCGplayer's own printing first, then the stamped run, then the card's own figure, which
+   * is TCGplayer's too. One market, all the way down (Bart's call, 2026-09-12).
+   *
+   * Cardmarket used to answer where TCGplayer says nothing. It no longer does, and that is
+   * the point rather than an oversight: it names a product after the card and never after
+   * its number, so several printings share one figure and a plain rare reads the holo's
+   * price. A copy TCGplayer does not price now has no price, and every screen says so.
+   *
+   * What that costs is on the record in cardorb-web's docs/prices.md: about one card in
+   * eight, mostly promos, and the Shadowless run, which Cardmarket filed as a product of
+   * its own and TCGplayer does not separate.
+   */
+  if (copy.edition === "1st-edition") {
+    const p = accept(card.priceFirstEd);
+    if (p) return { printing: null, price: p };
+  }
+  const p = accept(card.price);
+  return p ? { printing: null, price: p } : null;
+};
 
 /*
  * The estimated Near Mint band used to live here: a ratio of about 1.15 to 1.40 above €20

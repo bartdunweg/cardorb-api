@@ -857,6 +857,30 @@ describe("sumValue", () => {
     expect(mew.printingPrice).toEqual(listing);
     expect(mew.pricePrinting).toBe("holofoil");
   });
+
+  /* Bart, 2026-09-18, api#563/web#732 follow-up: a copy's own printing can carry only a listing
+     while the stamped run or the card's own figure carries a market price beside it. sourceOf()
+     used to name the printing's listing here (pricedPrintingOf() reads the printings alone) and
+     never look further along the chain, so the copy showed and counted as unpriced-and-listed
+     where the API's own copyPriceOf() already read the market figure elsewhere on the chain. The
+     two must agree: market anywhere on the chain wins over a listing anywhere on it. */
+  it("prices a copy by a market figure elsewhere on the chain, not by a listing on its own printing", () => {
+    const listing: Price = { market: null, lowestListing: 7000, basis: "lowest-listing" };
+    const market = price(50);
+    const items = flattenItems([
+      set("30th Celebration", [
+        card("Mew", [variant({ id: "r", quantity: 1, finish: "holo" })], {
+          price: market,
+          pricePrintings: { holofoil: listing },
+        }),
+      ]),
+    ]);
+    const mew = items.find((it) => it.id === "r")!;
+    // The price is the card's own figure, not one of its printings: no printing to credit it to.
+    expect(mew.printingPrice).toBeUndefined();
+    expect(mew.pricePrinting).toBeNull();
+    expect(sumValue(items)).toEqual({ value: 50, unpriced: 0, listed: 0, copies: 1 });
+  });
 });
 
 describe("sortItems by dex", () => {
