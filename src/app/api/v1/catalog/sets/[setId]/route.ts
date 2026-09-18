@@ -6,7 +6,14 @@ import { withOwnArt, withOwnScans } from "@/lib/core/catalogue/image-store";
 import { languageSetFromCopy } from "@/lib/core/catalogue/set-catalogue-mirror";
 import { mirrorScans } from "@/lib/core/catalogue/mirror";
 import { adminClient } from "@/lib/storage/supabase";
-import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
+import { getCardPrices, getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
+import { pagePrintings } from "@/lib/core/catalogue/page-printings";
+import {
+  type HeadlineChange,
+  headlineChanges,
+  readFromDay,
+} from "@/lib/core/collection/headline-printing";
+import { priceLanguageOf } from "@/lib/core/price-months.mjs";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { galleriesByParent } from "@/lib/core/catalogue/set-galleries";
 import { englishSetOfDay, englishShelfSets } from "@/lib/core/catalogue/catalogue";
@@ -28,6 +35,11 @@ import { elapsed, logTiming, timed } from "@/lib/core/timing";
  * whole set asks for pageSize=500 and gets it in one request. It was 250 until
  * 2026-09-14, and a Scarlet & Violet set then took two requests, each reading
  * the whole set again.
+ *
+ * Each card's `price` is its headline printing's, the one its sheet opens on, and `printing` names
+ * it (headline-printing.ts). `from=yyyy-mm-dd` adds `priceChange`, what that printing did since
+ * then: one read of the page's lines, only when asked, so a page that does not ask costs what it
+ * always did.
  */
 export const dynamic = "force-dynamic";
 
@@ -60,6 +72,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
     return apiError(400, "language must be en or ja.", undefined, {
       headers: readHeaders(req),
     });
+
+  /* The window's first day, checked as `GET /v1/cards` checks its own: a day, and here also no
+     later than today and no earlier than a year back, the longest period a set page offers. */
+  const today = new Date().toISOString().slice(0, 10);
+  const fromRaw = url.searchParams.get("from");
+  const fromDay = fromRaw === null ? null : readFromDay(fromRaw, today);
+  if (fromDay && "error" in fromDay)
+    return apiError(400, fromDay.error, undefined, { headers: readHeaders(req) });
+  const from = fromDay?.from ?? null;
 
   /* The viewer's rows do not wait on the catalogue: both are read at once. getRows never throws,
      it says `failed`, so a set that turns out not to exist leaves nothing unhandled. */
@@ -153,12 +174,42 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
      The copy only swaps a card's pictures, never its ids, so the prices are asked for at the same
      time as the pictures rather than after them. */
   const priceKey = (c: (typeof onPage)[number]) => c.tcgId ?? c.id;
-  const [scans, prices] = await timed("set scans and prices", () =>
-    Promise.all([
-      scansRead,
-      tcgplayerPricesFor(onPage.map(priceKey), isBrowseLanguage(language) ? language : null),
-    ]),
+  const shelf = isBrowseLanguage(language) ? language : null;
+  /* The printings each card's sheet lists, read beside the prices: a tile's figure is the first of
+     them TCGplayer prices, the one the sheet opens on (headline-printing.ts). */
+  const printingsRead = pagePrintings(
+    onPage.map((c) => ({ key: priceKey(c), sheet: c.sheet })),
+    shelf,
   );
+  const [scans, prices] = await timed("set scans and prices", () =>
+    Promise.all([scansRead, tcgplayerPricesFor(onPage.map(priceKey), shelf, printingsRead)]),
+  );
+  /* What each tile's printing did since `from`, out of the lines the chart draws: one read for the
+     page's priced cards (getCardPrices, cached an hour as the card lists' is), each card's first
+     and last reading of its own printing. A line that cannot be read is null on every card and
+     says so, rather than failing a page that has everything else. */
+  let changes: Map<string, HeadlineChange> | null = null;
+  let changesFailed = false;
+  if (from) {
+    const priceLanguage = priceLanguageOf(shelf ?? "en");
+    const priced = onPage.flatMap((c) => {
+      const series = prices.get(priceKey(c))?.series;
+      return series ? [{ id: c.id, tcgId: priceKey(c), language: priceLanguage, series }] : [];
+    });
+    const lines = await timed(
+      "set price changes",
+      () =>
+        getCardPrices(
+          who.userId,
+          priced.map(({ tcgId, language }) => ({ tcgId, language })),
+          bearer(req) ?? undefined,
+          from,
+        ),
+      `${priced.length} cards`,
+    );
+    changesFailed = lines.failed;
+    changes = headlineChanges(priced, lines.points, from, today);
+  }
   const shown = scans?.size ? onPage.map((c) => ({ ...c, ...(scans.get(c.id) ?? {}) })) : onPage;
 
   logTiming("route catalog/sets/:id", elapsed(began), `${cards.length} cards`);
@@ -180,6 +231,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
              prints its original card's number (classicNumberOf). */
           printedNumber: classicNumberOf(c.tcgId) ?? c.number,
           price: prices.get(priceKey(c))?.price ?? null,
+          /* The printing that price is, keyed as the sheet's buttons are ("reverse-holo",
+             "holo/cosmos"); null where the card has no price. */
+          printing: prices.get(priceKey(c))?.printing ?? null,
+          ...(changes ? { priceChange: changes.get(c.id) ?? null } : {}),
         }),
       ),
       page,
@@ -190,6 +245,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       ownedCount: marked.filter((c) => c.owned).length,
       hasMore: start + pageSize < marked.length,
       ...(failed ? { collectionUnavailable: true } : {}),
+      ...(changesFailed ? { priceChangesUnavailable: true } : {}),
     },
     { headers: readHeaders(req) },
   );

@@ -631,7 +631,15 @@ components:
         fullArt: { type: boolean, description: "The illustration covers the whole card, as the catalogue's copy decides it at night. Only sent by GET /catalog/sets/{setId}, and only for a set read out of the copy: a set read live from the catalogue leaves it out rather than guess." }
         price:
           $ref: "#/components/schemas/Price"
-          description: "TCGplayer's price, in euros, from the day's figures for the card's set. Null where TCGplayer does not price the card; only sent by GET /catalog/sets/{setId}."
+          description: "TCGplayer's price, in euros, from the day's figures for the card's set. Null where TCGplayer does not price the card; only sent by GET /catalog/sets/{setId}. On that route it is the price of `printing`: the first printing in the card sheet's order (`CardDetail.printings`: normal, reverse holo, holo, the ball reverses) that TCGplayer prices, the unlimited run before the stamped one, so a holo rare with a reverse is priced at its reverse, the printing its sheet opens on. The search and the catalogue's card list keep TCGplayer's first printing with a market."
+        printing:
+          type: [string, "null"]
+          description: "Only sent by GET /catalog/sets/{setId}: which printing `price` is, keyed as the card sheet keys its printings, the finish and a foil pattern after a slash (`normal`, `reverse-holo`, `holo`, `poke-ball`, `reverse-holo/cosmos`). Null where the card has no price, and on the rare card priced at a printing its catalogue does not list."
+        priceChange:
+          description: "Only sent by GET /catalog/sets/{setId}, and only with `from`: what `printing` did since then, its first and last reading in the window, in euros. Null without two readings of that printing in the window, or without a price."
+          oneOf:
+            - { $ref: "#/components/schemas/HeadlinePriceChange" }
+            - { type: "null" }
 
     CardItem:
       type: object
@@ -844,6 +852,17 @@ components:
         now: { type: number, description: "One copy at its last reading on or before `to`." }
         change: { type: number, description: "now minus was, per copy." }
         total: { type: number, description: "change times the copies (a wish once)." }
+        from: { type: string, format: date, description: "The day of the first reading." }
+        to: { type: string, format: date, description: "The day of the last reading." }
+
+    HeadlinePriceChange:
+      type: object
+      description: One card's price move over a window, at the printing its tile shows. `PriceChange` without the copies.
+      required: [was, now, change, from, to]
+      properties:
+        was: { type: number, description: "The printing's first reading on or after `from`, euros." }
+        now: { type: number, description: "Its last reading, today at the latest." }
+        change: { type: number, description: "now minus was." }
         from: { type: string, format: date, description: "The day of the first reading." }
         to: { type: string, format: date, description: "The day of the last reading." }
 
@@ -1551,6 +1570,7 @@ paths:
         - { name: setId, in: path, required: true, schema: { type: string }, description: "pokemontcg.io's set id, e.g. `swsh3`." }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 60 }, description: "Clamped to 500." }
+        - { name: from, in: query, required: false, schema: { type: string, format: date }, description: "yyyy-mm-dd, no later than today and no more than a year back: adds `priceChange` to every card, the move of its `printing` since that day. Left out, no card carries the field and no price line is read. Anything else is a 400." }
       responses:
         "200":
           description: The page.
@@ -1581,6 +1601,7 @@ paths:
                   ownedCount: { type: integer }
                   hasMore: { type: boolean }
                   collectionUnavailable: { type: boolean, const: true }
+                  priceChangesUnavailable: { type: boolean, const: true, description: "With `from`: the price lines could not be read, and every `priceChange` on the page is null for that reason rather than for want of readings." }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }

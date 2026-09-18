@@ -87,6 +87,40 @@ describe("tcgplayerPricesFor", () => {
     expect((await tcgplayerPricesFor(["A1-001"])).size).toBe(0);
     expect(groupPrintings).not.toHaveBeenCalled();
   });
+
+  /* The set page's rule: the figure is the printing the sheet opens on, and says which. */
+  it("prices the first printing in the sheet's order where the printings are given", async () => {
+    groupPrintings.mockImplementation(
+      async () =>
+        new Map([
+          [
+            42382,
+            {
+              holofoil: { marketPrice: 800, productId: 42382 },
+              "reverse-holofoil": { marketPrice: 10, productId: 42382 },
+            },
+          ],
+        ]),
+    );
+    const sheet = [
+      { finish: "reverse-holo" as const, foilPattern: null },
+      { finish: "holo" as const, foilPattern: null },
+    ];
+    const headline = await tcgplayerPricesFor(
+      ["base1-4"],
+      null,
+      Promise.resolve(new Map([["base1-4", sheet]])),
+    );
+    expect(headline.get("base1-4")).toEqual({
+      price: { market: 5 },
+      printing: "reverse-holo",
+      series: "reverse-holofoil",
+    });
+    // Without them, the search's and the card list's figure as before.
+    expect((await tcgplayerPricesFor(["base1-4"])).get("base1-4")).toEqual({
+      price: { market: 400 },
+    });
+  });
 });
 
 /**

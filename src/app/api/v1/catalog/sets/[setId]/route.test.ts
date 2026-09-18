@@ -16,6 +16,8 @@ const SET = {
 
 const getRows = vi.fn();
 const tcgplayerPricesFor = vi.fn();
+const getCardPrices = vi.fn();
+const pagePrintings = vi.fn(async () => new Map());
 const setIn = vi.fn();
 
 /* Same three server-only modules replaced wholesale as in the sibling route's
@@ -29,6 +31,11 @@ vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
   tcgplayerPricesFor: (...a: unknown[]) => tcgplayerPricesFor(...a),
+  getCardPrices: (...a: unknown[]) => getCardPrices(...a),
+}));
+/* The printings are read out of the copy; their rule has its own tests (headline-printing.test.ts). */
+vi.mock("@/lib/core/catalogue/page-printings", () => ({
+  pagePrintings: (...a: unknown[]) => pagePrintings(...(a as [])),
 }));
 /* Both shelves are network reads; the language check is the real, pure one, and so is
    the set index the ownership join resolves a row's set name against. */
@@ -273,7 +280,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     tcgplayerPricesFor.mockResolvedValue(new Map([["me05-085", { price: { market: 2.81 } }]]));
     const body = await (await open()).json();
 
-    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["me05-085"], null);
+    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["me05-085"], null, expect.any(Promise));
     expect(body.cards[0].price).toEqual({ market: 2.81 });
   });
 
@@ -298,7 +305,7 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     tcgplayerPricesFor.mockResolvedValue(new Map([["M1S-001", { price: { market: 0.04 } }]]));
     const body = await (await open("language=ja", "M1S")).json();
 
-    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["M1S-001"], "ja");
+    expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(["M1S-001"], "ja", expect.any(Promise));
     expect(body.cards[0].price).toEqual({ market: 0.04 });
   });
 
@@ -311,7 +318,10 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(tcgplayerPricesFor).toHaveBeenLastCalledWith(
       expect.objectContaining({ length: 1 }),
       null,
+      expect.any(Promise),
     );
+    // And the printings for the same one card.
+    expect(pagePrintings).toHaveBeenLastCalledWith([{ key: "base1-1", sheet: undefined }], null);
   });
 
   it("counts owned over the whole set rather than over the page", async () => {
@@ -356,6 +366,93 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     const res = await open();
     expect(res.status).toBe(502);
     expect((await res.json()).error).toBe("The catalogue did not answer. Try again in a moment.");
+  });
+
+  it("names the printing each price is, and null where there is no price", async () => {
+    tcgplayerPricesFor.mockResolvedValue(
+      new Map([
+        ["base1-4", { price: { market: 340 }, printing: "holo", series: "unlimited-holofoil" }],
+        [
+          "base1-1",
+          { price: { market: 0.5 }, printing: "reverse-holo", series: "reverse-holofoil" },
+        ],
+      ]),
+    );
+    const body = await (await open()).json();
+    const by = (id: string) => body.cards.find((c: { id: string }) => c.id === id);
+    expect(by("base1-4").printing).toBe("holo");
+    expect(by("base1-1").printing).toBe("reverse-holo");
+    expect(by("base1-2")).toMatchObject({ price: null, printing: null });
+    // Without `from` the page reads no lines and carries no change.
+    expect(getCardPrices).not.toHaveBeenCalled();
+    expect(by("base1-4")).not.toHaveProperty("priceChange");
+  });
+
+  it("adds each tile's change since `from`, over its own printing, in one read of the page", async () => {
+    const day = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+    tcgplayerPricesFor.mockResolvedValue(
+      new Map([
+        ["base1-4", { price: { market: 340 }, printing: "holo", series: "unlimited-holofoil" }],
+        [
+          "base1-1",
+          { price: { market: 0.5 }, printing: "reverse-holo", series: "reverse-holofoil" },
+        ],
+      ]),
+    );
+    const point = (tcgId: string, date: string, printings: Record<string, number>) => ({
+      language: "en",
+      tcgId,
+      date,
+      market: null,
+      holo: null,
+      printings,
+    });
+    getCardPrices.mockResolvedValue({
+      failed: false,
+      points: [
+        point("base1-4", day(20), { "unlimited-holofoil": 300, "1st-edition-holofoil": 900 }),
+        point("base1-4", day(1), { "unlimited-holofoil": 340, "1st-edition-holofoil": 800 }),
+        point("base1-1", day(1), { "reverse-holofoil": 0.5 }),
+      ],
+    });
+    const body = await (await open(`from=${day(30)}`)).json();
+    const by = (id: string) => body.cards.find((c: { id: string }) => c.id === id);
+
+    expect(getCardPrices).toHaveBeenCalledTimes(1);
+    expect(getCardPrices.mock.calls[0]![1]).toEqual([
+      { tcgId: "base1-1", language: "en" },
+      { tcgId: "base1-4", language: "en" },
+    ]);
+    expect(by("base1-4").priceChange).toEqual({
+      was: 300,
+      now: 340,
+      change: 40,
+      from: day(20),
+      to: day(1),
+    });
+    // One reading is no change; an unpriced card has none either.
+    expect(by("base1-1").priceChange).toBeNull();
+    expect(by("base1-2").priceChange).toBeNull();
+  });
+
+  it("refuses a `from` that is not a day inside the past year", async () => {
+    const future = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
+    for (const from of ["2026-02-30", "yesterday", future, "2020-01-01"]) {
+      const res = await open(`from=${from}`);
+      expect(res.status).toBe(400);
+    }
+    expect(getCardPrices).not.toHaveBeenCalled();
+  });
+
+  it("serves the page when the lines cannot be read, and says so", async () => {
+    const day = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+    tcgplayerPricesFor.mockResolvedValue(
+      new Map([["base1-4", { price: { market: 340 }, printing: "holo", series: "holofoil" }]]),
+    );
+    getCardPrices.mockResolvedValue({ failed: true, points: [] });
+    const body = await (await open(`from=${day}`)).json();
+    expect(body.priceChangesUnavailable).toBe(true);
+    expect(body.cards.find((c: { id: string }) => c.id === "base1-4").priceChange).toBeNull();
   });
 
   it("still serves the set when the collection could not be read, and says so", async () => {

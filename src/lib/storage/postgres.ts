@@ -2284,6 +2284,35 @@ export async function catalogueSetVariants(
   return new Map(rows.map((r) => [r.id, r.variants]));
 }
 
+/**
+ * These cards' variants as the copy keeps them, by id: what printingsOf() reads, for a page of
+ * tiles (the set page's headline printing). A card the copy holds without variants, or does not
+ * hold, is left out. One read a bite of ids, since `.in()` goes out in the query string.
+ */
+export async function catalogueCardVariants(
+  db: SupabaseClient,
+  ids: string[],
+  language: CatalogueLanguage,
+): Promise<Map<string, { type?: string; foil?: string; stamp?: string[]; subtype?: string }[]>> {
+  const out = new Map<
+    string,
+    { type?: string; foil?: string; stamp?: string[]; subtype?: string }[]
+  >();
+  const BITE = 200;
+  const wanted = [...new Set(ids)];
+  for (let at = 0; at < wanted.length; at += BITE) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select("id, variants")
+      .eq("language", language)
+      .in("id", wanted.slice(at, at + BITE));
+    if (error) throw new Error(`Reading variants from the copy failed: ${error.message}`);
+    for (const r of (data ?? []) as { id: string; variants: CatalogueCardRecord["variants"] }[])
+      if (r.variants != null) out.set(r.id, r.variants);
+  }
+  return out;
+}
+
 /** Printings' pictures, written over what each printing held. */
 export async function writePrintPictures(
   db: SupabaseClient,

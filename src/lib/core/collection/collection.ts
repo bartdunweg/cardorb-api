@@ -60,7 +60,8 @@ import {
   type UsdPair,
 } from "../catalogue/tcgdex-client";
 import { TCGCSV_CATEGORY, groupPrintings } from "../catalogue/tcgcsv";
-import { finishPrintsFor, type PatternPrints } from "../catalogue/card-printings";
+import { finishPrintsFor, type PatternPrints, type Printing } from "../catalogue/card-printings";
+import { headlinePrinting } from "./headline-printing";
 import {
   type PriceLanguage,
   finishPrintingKey,
@@ -351,13 +352,31 @@ export const tcgplayerPricesFor = async (
   ids: string[],
   /** Which catalogue the ids are from. A Japanese set page prices from the Japanese shelf. */
   language: BrowseLanguage | null = null,
-): Promise<Map<string, { price: Price }>> => {
-  const out = new Map<string, { price: Price }>();
+  /**
+   * Each card's printings in its sheet's order (printingsOf), by the same ids, for a caller whose
+   * figure has to be the one the sheet opens on (headlinePrinting): the set page. Each answer then
+   * says which printing it priced, and the series its figure is filed under. Left out, a card is
+   * priced at TCGplayer's first printing with a market (usdOf), as the search and the catalogue's
+   * card list have always been; a promise, so the caller can read the printings while this reads
+   * the prices.
+   */
+  printingsRead?: Promise<Map<string, Printing[]>>,
+): Promise<Map<string, { price: Price; printing?: string | null; series?: string | null }>> => {
+  const out = new Map<string, { price: Price; printing?: string | null; series?: string | null }>();
   if (!ids.length) return out;
   const rate = await usdToEurForRequest();
   if (rate == null) return out;
   const pairs = await shelfUsdFor(ids, language);
+  const printings = printingsRead ? await printingsRead : null;
   for (const [id, pair] of Object.entries(pairs)) {
+    if (printings) {
+      const headline = headlinePrinting(printings.get(id) ?? [], pair.printings, pair.usd);
+      const price = headline ? priceFromUsd(headline.usd, rate) : null;
+      /* The pair as the hold below reads it: the headline is the figure it looks for. */
+      if (headline) pairs[id] = { ...pair, usd: headline.usd };
+      if (price) out.set(id, { price, printing: headline!.printing, series: headline!.series });
+      continue;
+    }
     const price = pair.usd ? priceFromUsd(pair.usd, rate) : null;
     if (price) out.set(id, { price });
   }
@@ -375,7 +394,7 @@ export const tcgplayerPricesFor = async (
     const days = heldDays(held.points, held.priceDay);
     for (const [id, { price }] of out) {
       const day = days.get(historyKey(priceLanguage, id));
-      if (day) out.set(id, { price: holdShelfPrice(price, pairs[id]!, day) });
+      if (day) out.set(id, { ...out.get(id)!, price: holdShelfPrice(price, pairs[id]!, day) });
     }
   }
   return out;
