@@ -5,6 +5,7 @@ const searchCards = vi.fn();
 const getRows = vi.fn();
 const tcgplayerPricesFor = vi.fn(async (..._a: unknown[]) => new Map());
 const englishSets = vi.fn(async () => [{ id: "base1", name: "Base" }]);
+const pagePrintings = vi.fn(async (..._a: unknown[]) => new Map());
 
 // See app/api/v1/cards/[id]/route.test.ts for why guard.ts is replaced
 // wholesale rather than importOriginal()-ed.
@@ -30,6 +31,10 @@ vi.mock("@/lib/core/catalogue/tcgdex-browse", () => ({
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
   tcgplayerPricesFor: (...a: unknown[]) => tcgplayerPricesFor(...a),
+}));
+/* The printings are read out of the copy; their rule has its own tests (headline-printing.test.ts). */
+vi.mock("@/lib/core/catalogue/page-printings", () => ({
+  pagePrintings: (...a: unknown[]) => pagePrintings(...a),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 /* `import "server-only"` underneath, like the two above. The route hands the search the
@@ -249,15 +254,45 @@ describe("GET /api/v1/catalog/search", () => {
     tcgplayerPricesFor.mockResolvedValue(new Map([["base1-4", { price: { market: 12.5 } }]]));
     const res = await search(new URLSearchParams({ query: "char", language: "ja" }));
     const { cards } = await res.json();
-    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], "ja");
+    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], "ja", expect.any(Promise));
     expect(cards[0]).toMatchObject({ price: { market: 12.5 } });
   });
 
   it("leaves a null price under a result TCGplayer does not price", async () => {
     const res = await search(new URLSearchParams({ query: "char" }));
     const { cards } = await res.json();
-    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], null);
-    expect(cards[0]).toMatchObject({ price: null });
+    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], null, expect.any(Promise));
+    expect(cards[0]).toMatchObject({ price: null, printing: null });
+  });
+
+  /* The set page's rule on a search hit: the figure is the printing the card's sheet opens on. The
+     prices here are headlinePrinting over the printings the route hands over, so what is asserted
+     is that the route reads each hit's printings and gives them to the pricing. */
+  it("prices a holo rare with a reverse at the reverse, as its set page and sheet do", async () => {
+    const { headlinePrinting } = await import("@/lib/core/collection/headline-printing");
+    pagePrintings.mockResolvedValue(
+      new Map([
+        [
+          "base1-4",
+          [
+            { finish: "reverse-holo", foilPattern: null },
+            { finish: "holo", foilPattern: null },
+          ],
+        ],
+      ]),
+    );
+    const shelf = {
+      holofoil: { market: 20, productId: 1 },
+      "reverse-holofoil": { market: 3, productId: 1 },
+    };
+    tcgplayerPricesFor.mockImplementation(async (...a: unknown[]) => {
+      const printings = await (a[2] as Promise<Map<string, never[]>>);
+      const h = headlinePrinting(printings.get("base1-4") ?? [], shelf, shelf.holofoil)!;
+      return new Map([["base1-4", { price: { market: h.usd.market }, printing: h.printing }]]);
+    });
+    const { cards } = await (await search(new URLSearchParams({ query: "char" }))).json();
+    expect(pagePrintings).toHaveBeenCalledWith([{ key: "base1-4", sheet: undefined }], null);
+    expect(cards[0]).toMatchObject({ price: { market: 3 }, printing: "reverse-holo" });
   });
 
   it("refuses a language it has no catalogue for", async () => {

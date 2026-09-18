@@ -6,6 +6,11 @@ const getRows = vi.fn();
 const tcgplayerPricesFor = vi.fn(
   async (..._a: unknown[]): Promise<Map<string, unknown>> => new Map(),
 );
+const pagePrintings = vi.fn(async (..._a: unknown[]) => new Map());
+/* The printings are read out of the copy; their rule has its own tests (headline-printing.test.ts). */
+vi.mock("@/lib/core/catalogue/page-printings", () => ({
+  pagePrintings: (...a: unknown[]) => pagePrintings(...a),
+}));
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
@@ -86,6 +91,16 @@ describe("GET /api/v1/catalog/cards", () => {
       price: { market: 12.5 },
       printedNumber: "4",
     });
+  });
+
+  it("prices each card at its headline printing and names it, as a search hit is", async () => {
+    tcgplayerPricesFor.mockImplementation(
+      async () => new Map([["base1-4", { price: { market: 1.5 }, printing: "reverse-holo" }]]),
+    );
+    const { cards } = await (await get("base1-4")).json();
+    expect(pagePrintings).toHaveBeenCalledWith([{ key: "base1-4", sheet: undefined }], null);
+    expect(tcgplayerPricesFor).toHaveBeenCalledWith(["base1-4"], null, expect.any(Promise));
+    expect(cards[0]).toMatchObject({ price: { market: 1.5 }, printing: "reverse-holo" });
   });
 
   it("marks a card the viewer holds", async () => {
