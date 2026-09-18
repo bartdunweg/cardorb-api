@@ -13,6 +13,11 @@ import { DAY, mapLimit, catalogueTimeout } from "../util";
 /** TCGplayer's market figure for one printing, in dollars, as TCGdex relays it. */
 export type UsdPrice = {
   market: number | null;
+  /**
+   * TCGplayer's lowest listing for the printing, in dollars: only where it has no market figure
+   * (usdFigureOf). A price made from it says so (priceFromUsd, `basis`).
+   */
+  listing?: number | null;
   /** TCGplayer's product id for the printing the figure is from: an address a person can open. */
   productId?: number | null;
 };
@@ -254,21 +259,40 @@ const TCGPLAYER_PRINTINGS = [
  */
 const TCGPLAYER_FIRST_ED = ["1st-edition-holofoil", "1st-edition"];
 
-/** TCGplayer's market figure for the first of `printings` that has one, or null. */
+/** One printing's figures as TCGdex and tcgcsv hand them over: `lowPrice` is the lowest listing. */
+export type PrintingFigures = {
+  marketPrice?: number | null;
+  lowPrice?: number | null;
+  productId?: number | null;
+};
+
+/**
+ * One printing's dollars: its market figure, or, where TCGplayer has none, its lowest listing
+ * (Bart, 2026-09-18). A listing never sits beside a market figure: market is the price wherever
+ * it exists. Null where the printing has neither.
+ */
+export function usdFigureOf(
+  v: PrintingFigures | null | undefined,
+): (UsdPrice & { productId: number | null }) | null {
+  if (!v) return null;
+  const productId = typeof v.productId === "number" ? v.productId : null;
+  if (typeof v.marketPrice === "number") return { market: v.marketPrice, productId };
+  if (typeof v.lowPrice === "number" && v.lowPrice > 0)
+    return { market: null, listing: v.lowPrice, productId };
+  return null;
+}
+
+/**
+ * TCGplayer's market figure for the first of `printings` that has one; where none has one, the
+ * lowest listing of the first that is listed; null where neither.
+ */
 function firstWithMarket(
-  tp:
-    | Record<string, { marketPrice?: number | null; productId?: number | null } | null | undefined>
-    | null
-    | undefined,
+  tp: Record<string, PrintingFigures | null | undefined> | null | undefined,
   printings: string[],
 ): UsdPrice | null {
   if (!tp) return null;
-  const printing = printings.map((p) => tp[p]).find((p) => p && typeof p.marketPrice === "number");
-  if (!printing) return null;
-  return {
-    market: printing.marketPrice ?? null,
-    productId: typeof printing.productId === "number" ? printing.productId : null,
-  };
+  const figures = printings.map((p) => usdFigureOf(tp[p]));
+  return figures.find((f) => f?.market != null) ?? figures.find((f) => f != null) ?? null;
 }
 
 /**
@@ -301,28 +325,19 @@ export const usdFirstEdOf = (tp: Parameters<typeof firstWithMarket>[0]): UsdPric
  * what a person checking a figure needs (Bart, 2026-09-12).
  */
 export const usdPrintingsOf = (
-  tp:
-    | Record<string, { marketPrice?: number | null; productId?: number | null } | null | undefined>
-    | null
-    | undefined,
+  tp: Record<string, PrintingFigures | null | undefined> | null | undefined,
 ): Record<string, UsdPrice & { productId: number | null }> => {
   const out: Record<string, UsdPrice & { productId: number | null }> = {};
   for (const [printing, v] of Object.entries(tp ?? {})) {
-    if (!v || typeof v.marketPrice !== "number") continue;
-    out[printing] = {
-      market: v.marketPrice,
-      productId: typeof v.productId === "number" ? v.productId : null,
-    };
+    const figure = usdFigureOf(v);
+    if (figure) out[printing] = figure;
   }
   return out;
 };
 
-/** TCGplayer's market figure for the first printing that has one, or null. */
+/** TCGplayer's market figure for the first printing that has one, its lowest listing where none has, or null. */
 export function usdOf(
-  tp:
-    | Record<string, { marketPrice?: number | null; productId?: number | null } | null | undefined>
-    | null
-    | undefined,
+  tp: Record<string, PrintingFigures | null | undefined> | null | undefined,
 ): UsdPrice | null {
   return firstWithMarket(tp, TCGPLAYER_PRINTINGS);
 }
@@ -333,17 +348,14 @@ export function usdOf(
  * One request per card, because the set endpoint carries only id, image, localId and name: the
  * prices live on the individual card. Eight at a time; json() caches each for a day, so two
  * people who own the same card still only cost one request between them. A card TCGdex relays
- * no TCGplayer market figure for is left out.
+ * no TCGplayer market figure or listing for is left out.
  */
 export async function pricesFor(ids: string[]): Promise<Map<string, CardPrices>> {
   const out = new Map<string, CardPrices>();
   await mapLimit(ids, 8, async (id) => {
     const card = (await json(`https://api.tcgdex.net/v2/en/cards/${id}`, `card ${id}`)) as {
       pricing?: {
-        tcgplayer?: Record<
-          string,
-          { marketPrice?: number | null; productId?: number | null } | null | undefined
-        > | null;
+        tcgplayer?: Record<string, PrintingFigures | null | undefined> | null;
       };
     } | null;
     const usd = usdOf(card?.pricing?.tcgplayer);

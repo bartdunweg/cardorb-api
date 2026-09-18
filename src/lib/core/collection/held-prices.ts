@@ -65,6 +65,7 @@ function* heldOver(day: HeldDay): Generator<[printing: string, kept: number, str
 /** Today's figure scaled by the held one over the stray one: the line is in euros at its night's rate, the price at today's. */
 const scaledBy = (market: number, kept: number, stray: number): Price => ({
   market: Math.round(market * (kept / stray) * 100) / 100,
+  basis: "market",
 });
 
 /**

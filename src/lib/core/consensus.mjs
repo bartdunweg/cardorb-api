@@ -211,6 +211,11 @@ export const FIELDS = {
     held: "Today's TCGplayer prices",
     voters: { tcgplayer: 2, tcgdex: 1 },
   },
+  "price.listing": {
+    what: "What a printing with no market figure is asked for: its lowest listing, labelled (2026-09-18)",
+    held: "A printing with no market figure is priced at its lowest listing",
+    voters: { tcgplayer: 2, tcgdex: 1 },
+  },
 };
 
 /**
@@ -431,6 +436,13 @@ export const EXCEPTIONS = [
     source: "tcgdex",
     since: "2026-09-12",
     why: "TCGdex relays TCGplayer's own figure a day late and for fewer printings, so it is the fallback for a card with no TCGplayer link and never a second opinion",
+    when: (s) => s.linked === true,
+  },
+  {
+    field: "price.listing",
+    source: "tcgdex",
+    since: "2026-09-18",
+    why: "The listing TCGdex relays is TCGplayer's lowPrice a day late, read under the same rule as its market figure: the fallback for a card with no TCGplayer link only",
     when: (s) => s.linked === true,
   },
 ];
