@@ -1,0 +1,1 @@
+- A set page prices each card at the printing its sheet opens on, the first one TCGplayer prices in the sheet's order, and says which (`printing`). A holo rare that also came as a reverse now shows the reverse's price on its tile, as its sheet does. With `from`, each card also carries what that printing did since then (`priceChange`).

@@ -22,6 +22,8 @@ if the two have drifted apart.
 - A hyphen reads as a space and a space as a hyphen, so "ho oh" and "ho-oh" are one question.
 - A set's id beside a word narrows the search to that set ("sv03.5 charizard").
 
+- A set page prices each card at the printing its sheet opens on, the first one TCGplayer prices in the sheet's order, and says which (`printing`). A holo rare that also came as a reverse now shows the reverse's price on its tile, as its sheet does. With `from`, each card also carries what that printing did since then (`priceChange`).
+
 - A search on a word of one or two letters ("ho oh", "mr mime") is back to the speed it had before today's search change: 16 ms rather than 129 ms, for the same hits. Nothing a word that short can carry is lost.
 
 - Home's value line draws at once: the nightly points answer every day they cover, and only today is worked out from the readings. It also no longer has a notch at exactly ninety days back, where the worked-out days met the stored ones.
