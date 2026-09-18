@@ -10,6 +10,8 @@ if the two have drifted apart.
 
 - `GET /v1/cards` takes `pictures=0`, for a caller that counts the copies rather than drawing them. The printings' own pictures are a second read over the page's card ids: nothing on a page of forty-eight, and 1,191 ms of the 1,442 ms a whole-collection page cost. The Pokémon tile on Home asks for that page, and now asks without them.
 
+- A copy whose own printing carried only a lowest listing, while the stamped run or the card's own figure carried a market price, is priced by that market figure again, as `copyPriceOf` always read it. The item's `printingPrice` (which `priceSource`, `pricePrinting` and the public list's `listingPrice` are read from) used to be chosen from the copy's printings alone, so it could name and count a listing that the rest of the chain's market figure should have outranked.
+
 - The collection answers sooner once the direct database connection is switched on: the check for a newer copy of your cards no longer waits on Supabase's gateway.
 
 - The search, the catalogue's card list and a card's sheet price a card as its set page does: at the first printing in the sheet's order that TCGplayer prices, and they say which (`printing`). A holo rare that also came as a reverse now shows the reverse's price in the search and above its sheet, the figure its tile shows. What a copy you hold is worth is unchanged.
