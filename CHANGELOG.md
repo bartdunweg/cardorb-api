@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - A printing TCGplayer lists and has never sold has a price again: its lowest listing, only where there is no market figure (the R/G/B Mew of 30th Celebration). `Price` gains `lowestListing` and `basis` (`market` or `lowest-listing`); `market` keeps its meaning and is null on a listing. A listing is shown, never summed: the lists' `value` leaves it out and the new `listed` says how many of the `unpriced` copies have one. `tcgplayer_prices` stores the listing for those printings only, and the price history stays market figures only.
 
+- A set's printed code finds the set in the card search: "pal 123" is Paldea Evolved's 123, "svi" is every Scarlet & Violet card, and a code two sets share ("BRS") finds both. A name search is answered as before: "charizard ex" is still every Charizard ex, and "mew" still lists the Mew cards first, with 151's cards after them.
+
 - Card search is answered by our own copy of the catalogue and never by TCGdex while somebody waits: the copy is there when it holds cards, not when a nightly run left a record, so a database filled any other way no longer answered "The card service didn't answer." with every card in it.
 - A search now comes back in the order the word typed asks for, the same order the browser's own copy has used since cardorb-web #656: what the name starts with first, then what holds it further in, then a match on the number or the set. "charizard ex" answers Charizard ex before Mega Charizard Y ex.
 - A diacritic is no longer something anyone has to type: "poke ball" finds Poké Ball, "pokemon center" finds Pokémon Center Lady, "flabebe" finds Flabébé. All three found nothing before.

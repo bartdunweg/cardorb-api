@@ -1930,10 +1930,11 @@ export async function writeCatalogueSet(
 /**
  * One page of the copy, ranked, with how many the whole query matched.
  *
- * One call to search_catalogue_cards (migration 20260918090000), which is one query: the words
- * are contains clauses over the folded search column, AND'd, which is what the trigram index
- * answers; a word that names a set also takes that set; the filter mode's fields each take their
- * own column. The order is the name first ("charizard" answers Charizard before Dark Charizard
+ * One call to search_catalogue_cards (migrations 20260918090000 and 20260918130000), which is
+ * one query: the words are contains clauses over the folded search column, AND'd, which is what
+ * the trigram index answers; a word that is a set's id also takes that set, and a word that is a
+ * set's printed code narrows to it beside other words and adds it on its own; the filter mode's
+ * fields each take their own column. The order is the name first ("charizard" answers Charizard before Dark Charizard
  * before a Charizard-numbered card of another name), then newest set, set, number.
  *
  * It was PostgREST until 2026-09-18, with release_date as the only order. PostgREST can express
