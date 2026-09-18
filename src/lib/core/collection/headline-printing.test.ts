@@ -74,6 +74,28 @@ describe("headlinePrinting", () => {
     });
   });
 
+  /* #561: a printing listed and never sold carries its lowest listing. A market figure anywhere still
+     comes first; where there is none, the first listed printing in the sheet's order is the tile's. */
+  it("takes a market figure over an earlier printing's listing", () => {
+    const listed = { market: null, listing: 2, productId: 1 };
+    const got = headlinePrinting(
+      [p("normal"), p("reverse-holo")],
+      { normal: listed, "reverse-holofoil": usd(0.5) },
+      usd(0.5),
+    );
+    expect(got).toMatchObject({ printing: "reverse-holo", series: "reverse-holofoil" });
+  });
+
+  it("takes the first listed printing where none has a market figure", () => {
+    const listed = { market: null, listing: 2, productId: 1 };
+    const got = headlinePrinting(
+      [p("normal"), p("reverse-holo")],
+      { "reverse-holofoil": listed },
+      listed,
+    );
+    expect(got).toEqual({ printing: "reverse-holo", series: "reverse-holofoil", usd: listed });
+  });
+
   it("is null where TCGplayer prices nothing", () => {
     expect(headlinePrinting([p("normal")], {}, null)).toBeNull();
   });

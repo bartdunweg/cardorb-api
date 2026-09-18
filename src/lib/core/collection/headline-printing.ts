@@ -78,20 +78,28 @@ export function headlinePrinting(
   priced: Record<string, UsdPrice> | null | undefined,
   fallback: UsdPrice | null,
 ): Headline | null {
-  for (const run of ["unlimited", "1st-edition"] as const) {
-    for (const p of printings) {
-      for (const series of seriesOf(p, run)) {
-        const usd = priced?.[series];
-        if (usd && typeof usd.market === "number")
-          return { printing: printingKeyOf(p), series, usd };
+  /* A market figure first, in the sheet's order; where no printing has one, the first that is
+     listed, at its lowest listing, as usdOf reads a card since #561. Without the second pass a
+     card TCGplayer lists and has never sold lost its "From" figure on the set page. */
+  const hasMarket = (usd: UsdPrice) => typeof usd.market === "number";
+  const isListed = (usd: UsdPrice) => typeof usd.listing === "number" && usd.listing > 0;
+  for (const takes of [hasMarket, isListed]) {
+    for (const run of ["unlimited", "1st-edition"] as const) {
+      for (const p of printings) {
+        for (const series of seriesOf(p, run)) {
+          const usd = priced?.[series];
+          if (usd && takes(usd)) return { printing: printingKeyOf(p), series, usd };
+        }
       }
     }
   }
-  if (!fallback || typeof fallback.market !== "number") return null;
+  if (!fallback || (!hasMarket(fallback) && !isListed(fallback))) return null;
   const series =
     Object.entries(priced ?? {}).find(
       ([, v]) =>
-        v.market === fallback.market && (v.productId ?? null) === (fallback.productId ?? null),
+        v.market === fallback.market &&
+        (v.listing ?? null) === (fallback.listing ?? null) &&
+        (v.productId ?? null) === (fallback.productId ?? null),
     )?.[0] ?? null;
   const finish = series ? finishOfSeries(series) : null;
   const listed =

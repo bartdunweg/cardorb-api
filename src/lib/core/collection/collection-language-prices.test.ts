@@ -112,13 +112,13 @@ describe("tcgplayerPricesFor", () => {
       Promise.resolve(new Map([["base1-4", sheet]])),
     );
     expect(headline.get("base1-4")).toEqual({
-      price: { market: 5 },
+      price: { market: 5, basis: "market" },
       printing: "reverse-holo",
       series: "reverse-holofoil",
     });
     // Without them, the search's and the card list's figure as before.
     expect((await tcgplayerPricesFor(["base1-4"])).get("base1-4")).toEqual({
-      price: { market: 400 },
+      price: { market: 400, basis: "market" },
     });
   });
 });
